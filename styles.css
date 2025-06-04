@@ -1,0 +1,1122 @@
+/* ==========================================================================
+   Sonigraph Plugin Stylesheet
+   ========================================================================== */
+
+/* Sonigraph: Your Notes, Orchestrated.
+ * An Obsidian plugin that transforms the visual structure of your knowledge graph into music.
+ * 
+ * Author: John Banister
+ * GitHub: https://github.com/banisterious
+ *
+ * NOTE: These styles are designed to be compatible with the Minimal theme and other popular Obsidian themes.
+ * - Uses max-width: 100vw and width: 100% for containers and tables
+ * - Uses box-sizing: border-box for all table elements
+ * - Avoids hard min-widths to allow for theme constraints
+ * 
+ * IMPORTANT: This plugin requires Reading View to function properly.
+ * Live Preview mode is not supported as it may cause layout issues and inconsistent behavior.
+ * Please ensure you are in Reading View when working with OneiroMetrics notes.
+ * Theme Strategy: NO visual styling overrides - structural/functional only
+ * Browser Support: Modern CSS for current Obsidian versions
+ */
+
+/* ==========================================================================
+   COMPONENT STYLES
+   ========================================================================== */
+
+/* Toggle Components
+   ============================================================================= */
+
+/* Ensure our standardized toggles integrate perfectly with existing themes */
+.checkbox-container {
+    /* Fallback styling in case Obsidian's native styles aren't available */
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    /* Ensure checkbox is properly styled */
+    cursor: pointer;
+}
+
+/* Control Panel Modal
+   ============================================================================= */
+
+.modal:has(.sonigraph-modal-container) {
+    padding: 0;
+    width: var(--modal-width);
+    height: var(--modal-height);
+    max-width: var(--modal-max-width);
+    max-height: var(--modal-max-height);
+}
+
+/* Sonigraph Control Panel Styling */
+.sonigraph-control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-3);
+    min-width: 400px;
+    max-width: 500px;
+    padding: var(--size-4-3);
+}
+
+.sonigraph-control-panel .modal-title {
+    margin-bottom: var(--size-4-3);
+    font-size: var(--font-ui-large);
+    font-weight: var(--font-semibold);
+}
+
+/* Control Panel Sections */
+.sonigraph-controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-2-3);
+    padding: var(--size-4-1);
+    border-radius: var(--radius-s);
+    background: var(--background-secondary);
+}
+
+.sonigraph-controls-section h3 {
+    margin: 0 0 var(--size-2-3) 0;
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-medium);
+}
+
+/* Playback Controls */
+.sonigraph-playback-controls {
+    display: flex;
+    gap: var(--size-2-3);
+    align-items: center;
+}
+
+.sonigraph-play-button,
+.sonigraph-stop-button {
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--size-2-1);
+}
+
+.sonigraph-play-button:disabled,
+.sonigraph-stop-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Status Display */
+.sonigraph-status {
+    display: flex;
+    align-items: center;
+    gap: var(--size-2-1);
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+}
+
+.sonigraph-status-indicator {
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.sonigraph-status-indicator.is-active {
+    animation: pulse 2s infinite;
+    background: var(--color-accent);
+}
+
+.sonigraph-status-indicator.is-error {
+    background: var(--color-red);
+}
+
+/* Real-time Display */
+.sonigraph-realtime-display {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-2-1);
+    padding: var(--size-4-1);
+    border-radius: var(--radius-s);
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-smaller);
+    background: var(--background-primary-alt);
+}
+
+.sonigraph-realtime-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sonigraph-realtime-label {
+    color: var(--text-muted);
+}
+
+.sonigraph-realtime-value {
+    font-weight: var(--font-medium);
+}
+
+/* Settings Integration
+   ============================================================================= */
+
+/* Ensure settings toggles have proper spacing */
+.sonigraph-settings .setting-item {
+    margin-bottom: var(--size-4-2);
+}
+
+.sonigraph-settings .setting-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Ribbon Integration
+   ============================================================================= */
+
+/* Ensure ribbon icon is properly styled */
+.sonigraph-ribbon-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Animations
+   ============================================================================= */
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design
+   ============================================================================= */
+
+@media screen and (max-width: 480px) {
+    .sonigraph-control-panel {
+        min-width: 300px;
+        max-width: 90vw;
+    }
+    
+    .sonigraph-playback-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .sonigraph-realtime-display {
+        font-size: var(--font-ui-small);
+    }
+}
+
+/* Theme Compatibility
+   ============================================================================= */
+
+/* Dark theme adjustments */
+.theme-dark .sonigraph-controls-section {
+    border: 1px solid var(--background-modifier-border);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .sonigraph-status-indicator {
+        border: 1px solid var(--text-normal);
+    }
+    
+    .sonigraph-controls-section {
+        border: 2px solid var(--background-modifier-border);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .sonigraph-status-indicator.is-active {
+        animation: none;
+    }
+    
+    * {
+        transition: none !important;
+    }
+}
+
+/* Future-Proofing
+   ============================================================================= */
+
+/* Graph visualization styles (Phase 2) */
+.sonigraph-graph-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    border-radius: var(--radius-s);
+    overflow: hidden;
+    background: var(--background-secondary);
+}
+
+/* Audio visualization styles (Phase 3) */
+.sonigraph-audio-visualizer {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    border-radius: var(--radius-s);
+    overflow: hidden;
+    background: var(--background-primary-alt);
+}
+
+/* Error states */
+.sonigraph-error {
+    margin-top: var(--size-2-1);
+    font-size: var(--font-ui-small);
+    color: var(--color-red);
+}
+
+.sonigraph-warning {
+    margin-top: var(--size-2-1);
+    font-size: var(--font-ui-small);
+    color: var(--color-orange);
+}
+
+/* ===== SONIGRAPH MODAL SYSTEM ===== */
+
+.sonigraph-modal-container {
+    display: flex;
+    flex-direction: column;
+    /*height: 80vh;
+    min-height: 600px;
+    max-width: 1000px;*/
+    margin: 0 auto;
+}
+
+.sonigraph-modal-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+}
+
+.sonigraph-modal-title {
+    margin: 0 0 8px 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.sonigraph-modal-subtitle {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-muted);
+}
+
+.sonigraph-modal-main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ===== VERTICAL TABS SIDEBAR ===== */
+
+.sonigraph-modal-sidebar {
+    width: 240px;
+    border-right: 1px solid var(--background-modifier-border);
+    flex-shrink: 0;
+    background: var(--background-secondary);
+}
+
+.sonigraph-tab-container {
+    padding: 16px 0;
+}
+
+.sonigraph-tab {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    margin: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.sonigraph-tab:hover {
+    background: var(--background-modifier-hover);
+}
+
+.sonigraph-tab.active {
+    border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
+}
+
+.sonigraph-tab-icon {
+    margin-right: 12px;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+.sonigraph-tab.active .sonigraph-tab-icon {
+    opacity: 1;
+}
+
+.sonigraph-tab-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sonigraph-tab-name {
+    margin-bottom: 2px;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.sonigraph-tab-desc {
+    font-size: 0.75em;
+    opacity: 0.7;
+    line-height: 1.2;
+}
+
+.sonigraph-tab.active .sonigraph-tab-desc {
+    opacity: 0.9;
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+
+.sonigraph-modal-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: var(--background-primary);
+}
+
+.sonigraph-tab-section {
+    max-width: 700px;
+}
+
+.sonigraph-section-title {
+    margin: 0 0 8px 0;
+    font-size: 1.3em;
+    font-weight: 600;
+    /*color: var(--text-normal);*/
+}
+
+.sonigraph-section-desc {
+    margin: 0 0 24px 0;
+    font-size: 0.9em;
+    line-height: 1.4;
+    /*color: var(--text-muted);*/
+}
+
+/* ===== SETTINGS GROUPS ===== */
+
+.sonigraph-settings-group {
+    margin-bottom: 32px;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+}
+
+.sonigraph-group-title {
+    margin: 0 0 6px 0;
+    font-size: 1.1em;
+    font-weight: 500;
+    /*color: var(--text-normal);*/
+}
+
+.sonigraph-group-desc {
+    margin: 0 0 16px 0;
+    line-height: 1.3;
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+/* ===== BUTTONS ===== */
+
+.sonigraph-button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.sonigraph-primary-button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
+}
+
+.sonigraph-primary-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: var(--interactive-accent-hover);
+}
+
+.sonigraph-primary-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.sonigraph-secondary-button {
+    padding: 8px 16px;
+    font-size: 0.85em;
+    border-radius: 5px;
+    border: 1px solid var(--background-modifier-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    /*background: var(--background-primary);*/
+    /*color: var(--text-normal);*/
+}
+
+.sonigraph-secondary-button:hover {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+}
+
+/* ===== INFO BOXES & CONTENT ===== */
+
+.sonigraph-info-box {
+    margin: 12px 0;
+    padding: 16px;
+    border-radius: 6px;
+    border-left: 3px solid var(--interactive-accent);
+    background: var(--background-primary-alt);
+}
+
+.sonigraph-info-box h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.9em;
+    font-weight: 500;
+    /*color: var(--text-normal);*/
+}
+
+.sonigraph-info-box p {
+    margin: 4px 0;
+    font-size: 0.8em;
+    line-height: 1.3;
+    /*color: var(--text-muted);*/
+}
+
+.sonigraph-instrument-section {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--background-modifier-border-focus);
+}
+
+.sonigraph-instrument-section:last-child {
+    border-bottom: none;
+}
+
+.sonigraph-instrument-title {
+    margin: 0 0 6px 0;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.sonigraph-instrument-section p {
+    margin: 0;
+    line-height: 1.3;
+    font-size: 0.8em;
+    color: var(--text-muted);
+}
+
+/* ===== EFFECTS LIST ===== */
+
+.sonigraph-effects-list {
+    display: grid;
+    gap: 16px;
+}
+
+.sonigraph-effect-item {
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border-focus);
+    background: var(--background-primary-alt);
+}
+
+.sonigraph-effect-item h4 {
+    margin: 0 0 6px 0;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.sonigraph-effect-item p {
+    margin: 0;
+    line-height: 1.3;
+    font-size: 0.8em;
+    color: var(--text-muted);
+}
+
+.sonigraph-placeholder {
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px dashed var(--background-modifier-border);
+    background: var(--background-secondary-alt);
+}
+
+.sonigraph-placeholder p {
+    margin: 4px 0;
+    font-size: 0.8em;
+    line-height: 1.4;
+    /*color: var(--text-muted);*/
+}
+
+/* ===== STATUS DISPLAYS ===== */
+
+.sonigraph-status-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.sonigraph-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--background-modifier-border-focus);
+    background: var(--background-primary-alt);
+}
+
+.sonigraph-status-label {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.sonigraph-status-value {
+    font-size: 0.85em;
+    color: var(--text-normal);
+    font-weight: 500;
+    font-family: var(--font-monospace);
+}
+
+/* ===== ERROR HANDLING ===== */
+
+.sonigraph-error-message {
+    background: var(--background-modifier-error);
+    color: var(--text-error);
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-error-border);
+    margin: 16px 0;
+    font-size: 0.85em;
+    line-height: 1.4;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 768px) {
+    .sonigraph-modal-container {
+        height: 90vh;
+        min-height: 500px;
+    }
+    
+    .sonigraph-modal-main {
+        flex-direction: column;
+    }
+    
+    .sonigraph-modal-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--background-modifier-border);
+    }
+    
+    .sonigraph-tab-container {
+        display: flex;
+        overflow-x: auto;
+        padding: 8px 16px;
+        gap: 8px;
+    }
+    
+    .sonigraph-tab {
+        flex-shrink: 0;
+        margin: 0;
+        min-width: 120px;
+    }
+    
+    .sonigraph-tab-desc {
+        display: none;
+    }
+    
+    .sonigraph-modal-content {
+        padding: 16px;
+    }
+    
+    .sonigraph-button-group {
+        flex-direction: column;
+    }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+.sonigraph-tab:focus {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+.sonigraph-primary-button:focus,
+.sonigraph-secondary-button:focus {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+/* ===== OBSIDIAN SETTING INTEGRATION ===== */
+
+.sonigraph-settings-group .setting-item {
+    border: none;
+    padding: 8px 0;
+}
+
+.sonigraph-settings-group .setting-item-info {
+    padding-right: 0;
+}
+
+.sonigraph-settings-group .setting-item-control {
+    min-width: 150px;
+}
+
+
+
+
+
+/* =============================================================================
+   TEMPLATE TABS MODAL
+   ============================================================================= */
+
+/* Template-Specific Modal Container */
+
+.modal:has(.template-tabs-modal) {
+    contain: layout style;
+    width: var(--modal-width);
+    max-width: var(--modal-max-width);
+    height: var(--modal-height);
+    max-height: var(--modal-max-height);
+    padding: 0;
+}
+
+.template-tabs-modal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin: 0;
+    padding: var(--oom-spacing-sm);
+}
+
+/* Template Header Styling */
+
+.template-tabs-header {
+    margin-bottom: 0;
+    margin-block-start: 0;
+    padding-bottom: 0;
+    text-align: center;
+    font-size: var(--h1-size);
+    font-weight: var(--h1-weight);
+}
+
+/* Template Two-Column Layout */
+
+.template-tabs-container {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    gap: 0;
+    border-radius: var(--oom-radius-md);
+}
+
+/* Template Sidebar Navigation */
+
+.template-tabs-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    width: var(--oom-tab-sidebar-width);
+    min-width: var(--oom-tab-sidebar-width);
+    padding: var(--oom-spacing-sm) 0;
+    scrollbar-width: thin;
+}
+
+.template-tabs-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.template-tabs-sidebar::-webkit-scrollbar-track {
+    /* Let theme handle scrollbar track styling */
+}
+
+.template-tabs-sidebar::-webkit-scrollbar-thumb {
+    border-radius: var(--oom-radius-sm);
+    
+    /* Let theme handle scrollbar thumb styling */
+}
+
+.template-tabs-sidebar::-webkit-scrollbar-thumb:hover {
+    /* Let theme handle scrollbar hover styling */
+}
+
+/* Template Tab Group Headers */
+
+.template-tab-group-title {
+    margin: var(--oom-spacing-sm) 0 var(--oom-spacing-xs) 0;
+    padding: 0 .32em;
+    font-weight: 700;
+    font-size: var(--font-ui-smaller);
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+}
+
+.template-tab-group-title:first-child {
+    margin-top: 0;
+}
+
+/* Template Tab Navigation Items */
+
+.template-tab-nav-item {
+    display: flex;
+    align-items: center;
+    padding: .45em 0;
+    gap: var(--oom-spacing-sm);
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: all var(--oom-transition-fast);
+}
+
+.template-tab-nav-item:hover {
+    /* Let theme handle hover styling */
+}
+
+.template-tab-nav-item:focus {
+    outline: none;
+    
+    /* Let theme handle focus styling */
+}
+
+.template-tab-nav-item.is-active {
+    /* Typography */
+    font-weight: 600;
+    
+    /* Let theme handle active state colors */
+}
+
+/* Template Tab Labels */
+
+.template-tab-label {
+    /* Inherits from the navigation item styling */
+    /* Add any specific label styling here */
+}
+
+/* Template Content Area */
+
+.template-tabs-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--oom-spacing-lg);
+    scrollbar-width: thin;
+}
+
+.template-tabs-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.template-tabs-content::-webkit-scrollbar-track {
+    /* Let theme handle scrollbar track styling */
+}
+
+.template-tabs-content::-webkit-scrollbar-thumb {
+    border-radius: var(--oom-radius-sm);
+    
+    /* Let theme handle scrollbar thumb styling */
+}
+
+.template-tabs-content::-webkit-scrollbar-thumb:hover {
+    /* Let theme handle scrollbar hover styling */
+}
+
+/* Template Content Headers */
+
+.template-content-header {
+    margin-bottom: var(--oom-spacing-md);
+    font-size: var(--h2-size);
+    font-weight: var(--h2-weight);
+}
+
+.template-content-description {
+    margin-bottom: var(--oom-spacing-lg);
+    line-height: var(--line-height-normal);
+    color: var(--text-muted);
+}
+
+/* Template Dashboard Components */
+
+.template-dashboard-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--oom-spacing-md);
+    margin-bottom: var(--oom-spacing-lg);
+}
+
+.template-stat-widget {
+    flex: 1;
+    min-width: 120px;
+    padding: var(--oom-spacing-md);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--oom-radius-md);
+    background: var(--background-secondary);
+}
+
+.template-stat-label {
+    margin-bottom: var(--oom-spacing-xs);
+    color: var(--text-muted);
+    font-size: var(--font-ui-smaller);
+}
+
+.template-stat-value {
+    color: var(--text-normal);
+    font-size: var(--h3-size);
+    font-weight: 600;
+}
+
+.template-dashboard-actions {
+    margin-top: var(--oom-spacing-lg);
+}
+
+.template-dashboard-actions h3 {
+    margin-bottom: var(--oom-spacing-md);
+    font-size: var(--h3-size);
+}
+
+/* Template Action Buttons */
+
+.template-action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--oom-spacing-sm);
+    padding: var(--oom-spacing-sm) var(--oom-spacing-md);
+    margin-right: var(--oom-spacing-sm);
+    margin-bottom: var(--oom-spacing-sm);
+    border: none;
+    border-radius: var(--oom-radius-sm);
+    cursor: pointer;
+    transition: background-color var(--oom-transition-fast);
+    color: var(--text-on-accent);
+    background: var(--interactive-normal);
+}
+
+.template-action-button:hover {
+    background: var(--interactive-hover);
+}
+
+.template-tool-button {
+    display: block;
+    width: 100%;
+    padding: var(--oom-spacing-sm) var(--oom-spacing-md);
+    margin-bottom: var(--oom-spacing-xs);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--oom-radius-sm);
+    cursor: pointer;
+    transition: all var(--oom-transition-fast);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+}
+
+.template-tool-button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--background-modifier-border-hover);
+}
+
+/* Template Data Table */
+
+.template-data-table {
+    margin: var(--oom-spacing-lg) 0;
+}
+
+.template-data-table table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.template-data-table th,
+.template-data-table td {
+    padding: var(--oom-spacing-sm);
+    border-bottom: 1px solid var(--background-modifier-border);
+    text-align: left;
+}
+
+.template-data-table th {
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    font-weight: 600;
+}
+
+.template-data-table td {
+    color: var(--text-normal);
+}
+
+.template-data-table tr:hover {
+    background: var(--background-modifier-hover);
+}
+
+.template-add-button {
+    margin-top: var(--oom-spacing-md);
+}
+
+/* Template Tools Sections */
+
+.template-tools-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--oom-spacing-lg);
+}
+
+.template-tool-section {
+    padding: var(--oom-spacing-md);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--oom-radius-md);
+    background: var(--background-secondary);
+}
+
+.template-tool-section h3 {
+    margin-bottom: var(--oom-spacing-md);
+    color: var(--text-normal);
+    font-size: var(--h4-size);
+}
+
+/* Template Help Content */
+
+.template-help-content {
+    max-width: none;
+    line-height: var(--line-height-normal);
+}
+
+.template-help-content h3 {
+    margin: var(--oom-spacing-lg) 0 var(--oom-spacing-md) 0;
+    font-size: var(--h3-size);
+}
+
+.template-help-content h4 {
+    margin: var(--oom-spacing-md) 0 var(--oom-spacing-sm) 0;
+    font-size: var(--h4-size);
+}
+
+.template-help-content p {
+    margin-bottom: var(--oom-spacing-md);
+    color: var(--text-normal);
+}
+
+.template-help-content ul {
+    margin: var(--oom-spacing-sm) 0 var(--oom-spacing-md) var(--oom-spacing-lg);
+}
+
+.template-help-content li {
+    margin-bottom: var(--oom-spacing-xs);
+    color: var(--text-normal);
+}
+
+.template-help-content code {
+    padding: 2px 4px;
+    border-radius: var(--oom-radius-xs);
+    background: var(--background-primary-alt);
+    font-family: var(--font-monospace);
+}
+
+/* Template Item Details */
+
+.template-item-details {
+    margin: var(--oom-spacing-lg) 0;
+}
+
+.template-item-actions {
+    display: flex;
+    
+    gap: var(--oom-spacing-sm);
+    margin-top: var(--oom-spacing-lg);
+}
+
+.template-item-actions button {
+    padding: var(--oom-spacing-sm) var(--oom-spacing-md);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--oom-radius-sm);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all var(--oom-transition-fast);
+}
+
+.template-item-actions button:hover {
+    background: var(--background-modifier-hover);
+}
+
+.template-item-actions button.mod-warning {
+    border-color: var(--background-modifier-error);
+    background: var(--background-modifier-error);
+    color: var(--text-error);
+}
+
+/* Responsive Design */
+
+@media screen and (max-width: var(--oom-breakpoint-tablet)) {
+    .template-tabs-container {
+        flex-direction: column;
+    }
+    
+    .template-tabs-sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        
+        width: 100%;
+        min-width: 100%;
+        max-height: 200px;
+    }
+    
+    .template-tab-nav-item {
+        flex-shrink: 0;
+        
+        /* Typography */
+        white-space: nowrap;
+    }
+    
+    .template-dashboard-stats {
+        flex-direction: column;
+    }
+}
+
+@media screen and (max-width: var(--oom-breakpoint-mobile)) {
+    .template-tabs-modal {
+        padding: var(--oom-spacing-xs);
+    }
+    
+    .template-tabs-content {
+        padding: var(--oom-spacing-md);
+    }
+    
+    .template-item-actions {
+        flex-direction: column;
+    }
+    
+    .template-tool-section {
+        padding: var(--oom-spacing-sm);
+    }
+}
