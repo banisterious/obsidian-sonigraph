@@ -80,18 +80,54 @@ export function createObsidianToggle(
 	}
 	
 	// Handle state changes
-	checkbox.addEventListener('change', () => {
-		const newValue = checkbox.checked;
+	checkbox.addEventListener('change', async (event) => {
+		const originalDisabled = checkbox.disabled;
+		const checkboxId = Math.random().toString(36).substr(2, 9); // Generate unique ID for tracking
 		
-		// Update visual state
-		if (newValue) {
-			checkboxContainer.addClass('is-enabled');
-		} else {
-			checkboxContainer.removeClass('is-enabled');
+		try {
+			const newValue = checkbox.checked;
+			console.log(`[${checkboxId}] Checkbox change event fired: ${newValue}, element disabled: ${checkbox.disabled}`);
+			console.log(`[${checkboxId}] Checkbox element:`, checkbox, 'Container:', checkboxContainer);
+			
+			// Temporarily disable to prevent multiple rapid clicks
+			checkbox.disabled = true;
+			
+			// Update visual state immediately
+			if (newValue) {
+				checkboxContainer.addClass('is-enabled');
+			} else {
+				checkboxContainer.removeClass('is-enabled');
+			}
+			
+			// Call the onChange callback
+			console.log(`[${checkboxId}] Calling onChange callback...`);
+			await onChange(newValue);
+			console.log(`[${checkboxId}] Checkbox onChange callback completed: ${newValue}`);
+		} catch (error) {
+			console.error(`[${checkboxId}] Error in checkbox change handler:`, error);
+			// Revert the checkbox state if the callback failed
+			checkbox.checked = !checkbox.checked;
+			if (checkbox.checked) {
+				checkboxContainer.addClass('is-enabled');
+			} else {
+				checkboxContainer.removeClass('is-enabled');
+			}
+		} finally {
+			// Re-enable the checkbox
+			checkbox.disabled = originalDisabled;
+			console.log(`[${checkboxId}] Checkbox re-enabled, disabled state: ${checkbox.disabled}`);
 		}
-		
-		// Call the onChange callback
-		onChange(newValue);
+	});
+
+	// CRITICAL FIX: Add click handler to container to ensure clicks reach the checkbox
+	checkboxContainer.addEventListener('click', (event) => {
+		// If the click wasn't on the checkbox itself, forward it to the checkbox
+		if (event.target !== checkbox && !checkbox.disabled) {
+			console.log('Container clicked, forwarding to checkbox. Target was:', event.target);
+			event.preventDefault();
+			event.stopPropagation();
+			checkbox.click(); // This will trigger the change event
+		}
 	});
 	
 	// Return the checkbox element for external control if needed

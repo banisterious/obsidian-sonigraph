@@ -14,20 +14,20 @@ interface TabConfig {
 }
 
 const TABS: TabConfig[] = [
-	{ id: 'playback', name: 'Playback', icon: 'play', description: 'Control audio playback and processing' },
-	{ id: 'music', name: 'Musical', icon: 'music', description: 'Configure scales, tempo, and musical parameters' },
+	{ id: 'status', name: 'Status', icon: 'activity', description: 'Real-time system status and diagnostics' },
 	{ id: 'instruments', name: 'Instruments', icon: 'piano', description: 'Manage voices and instrument assignments' },
+	{ id: 'music', name: 'Musical', icon: 'music', description: 'Configure scales, tempo, and musical parameters' },
 	{ id: 'harmony', name: 'Harmony', icon: 'sparkles', description: 'Advanced harmonic processing and chord settings' },
-	{ id: 'effects', name: 'Effects', icon: 'headphones', description: 'Audio effects and spatial processing' },
-	{ id: 'status', name: 'Status', icon: 'activity', description: 'Real-time system status and diagnostics' }
+	{ id: 'effects', name: 'Effects', icon: 'headphones', description: 'Audio effects and spatial processing' }
 ];
 
 export class ControlPanelModal extends Modal {
 	plugin: SonigraphPlugin;
 	private statusInterval: number | null = null;
-	private activeTab: string = 'playback';
+	private activeTab: string = 'status';
 	private tabContainer: HTMLElement;
 	private contentContainer: HTMLElement;
+	private instrumentToggles: Map<string, HTMLElement> = new Map();
 
 	constructor(app: App, plugin: SonigraphPlugin) {
 		super(app);
@@ -45,8 +45,15 @@ export class ControlPanelModal extends Modal {
 
 		// Header
 		const header = modalContainer.createDiv({ cls: 'sonigraph-modal-header' });
-		header.createEl('h1', { text: 'Sonigraph Audio Control Center', cls: 'sonigraph-modal-title' });
-		header.createEl('p', { text: 'Transform your knowledge graph into immersive soundscapes', cls: 'sonigraph-modal-subtitle' });
+		
+		// Header text section
+		const headerText = header.createDiv({ cls: 'sonigraph-modal-header-text' });
+		headerText.createEl('h1', { text: 'Sonigraph Audio Control Center', cls: 'sonigraph-modal-title' });
+		headerText.createEl('p', { text: 'Transform your knowledge graph into immersive soundscapes', cls: 'sonigraph-modal-subtitle' });
+		
+		// Quick playback controls in header
+		const headerControls = header.createDiv({ cls: 'sonigraph-modal-header-controls' });
+		this.createQuickPlaybackControls(headerControls);
 
 		// Main content area with sidebar
 		const mainContent = modalContainer.createDiv({ cls: 'sonigraph-modal-main' });
@@ -66,11 +73,78 @@ export class ControlPanelModal extends Modal {
 
 		// Start status updates
 		this.startStatusUpdates();
+		
+
 	}
 
 	onClose() {
 		logger.debug('ui', 'Closing Audio Control Center');
 		this.stopStatusUpdates();
+	}
+
+	private createQuickPlaybackControls(container: HTMLElement): void {
+		// Quick test button (positioned first/leftmost)
+		const quickTestButton = container.createEl('button', {
+			cls: 'sonigraph-quick-control-button',
+			attr: { 'aria-label': 'Test Audio System' }
+		});
+		quickTestButton.innerHTML = this.getIconSvg('headphones');
+		
+		// Quick play button
+		const quickPlayButton = container.createEl('button', {
+			cls: 'sonigraph-quick-control-button',
+			attr: { 'aria-label': 'Play Knowledge Graph' }
+		});
+		quickPlayButton.innerHTML = this.getIconSvg('play');
+		
+		// Quick stop button
+		const quickStopButton = container.createEl('button', {
+			cls: 'sonigraph-quick-control-button',
+			attr: { 'aria-label': 'Stop Playback' }
+		});
+		quickStopButton.innerHTML = this.getIconSvg('stop');
+
+		// Play button event handler
+		quickPlayButton.addEventListener('click', async () => {
+			try {
+				quickPlayButton.disabled = true;
+				quickPlayButton.addClass('is-loading');
+				
+				logger.info('user-action', 'Quick play button clicked');
+				await this.plugin.processVault();
+				await this.plugin.playSequence();
+				
+				quickPlayButton.removeClass('is-loading');
+				quickPlayButton.addClass('is-playing');
+				logger.info('debug', 'Quick playback started successfully');
+				
+			} catch (error) {
+				logger.error('playback', 'Failed to start quick playback', error);
+				quickPlayButton.disabled = false;
+				quickPlayButton.removeClass('is-loading');
+				this.showError(error.message);
+			}
+		});
+
+		// Stop button event handler
+		quickStopButton.addEventListener('click', () => {
+			this.plugin.stopPlayback();
+			quickPlayButton.disabled = false;
+			quickPlayButton.removeClass('is-playing');
+			logger.info('user-action', 'Quick stop button clicked');
+		});
+
+		// Test button event handler
+		quickTestButton.addEventListener('click', async () => {
+			try {
+				logger.info('user-action', 'Quick test button clicked');
+				if (this.plugin.audioEngine) {
+					await this.plugin.audioEngine.playTestNote();
+				}
+			} catch (error) {
+				this.showError('Audio test failed: ' + error.message);
+			}
+		});
 	}
 
 	private createTabs(): void {
@@ -111,14 +185,11 @@ export class ControlPanelModal extends Modal {
 		this.contentContainer.empty();
 
 		switch (tabId) {
-			case 'playback':
-				this.createPlaybackTab();
+			case 'instruments':
+				this.createInstrumentsTab();
 				break;
 			case 'music':
 				this.createMusicalTab();
-				break;
-			case 'instruments':
-				this.createInstrumentsTab();
 				break;
 			case 'harmony':
 				this.createHarmonyTab();
@@ -132,86 +203,7 @@ export class ControlPanelModal extends Modal {
 		}
 	}
 
-	private createPlaybackTab(): void {
-		const section = this.createTabSection('Playback Controls', 'Control audio playback and graph processing');
 
-		// Main playback controls
-		const controlsGroup = this.createSettingsGroup(section, 'Playback', 'Primary audio controls');
-		const playbackControls = controlsGroup.createDiv({ cls: 'sonigraph-button-group' });
-
-		// Play button
-		const playButton = playbackControls.createEl('button', {
-			text: 'Play Knowledge Graph',
-			cls: 'mod-cta sonigraph-primary-button'
-		});
-
-		playButton.addEventListener('click', async () => {
-			try {
-				playButton.disabled = true;
-				playButton.textContent = 'Processing Vault...';
-				
-				logger.info('user-action', 'Play button clicked');
-				await this.plugin.processVault();
-				
-				playButton.textContent = 'Generating Music...';
-				await this.plugin.playSequence();
-				
-				playButton.textContent = 'Playing...';
-				logger.info('debug', 'Playback started successfully');
-				
-			} catch (error) {
-				logger.error('playback', 'Failed to start playback', error);
-				playButton.disabled = false;
-				playButton.textContent = 'Play Knowledge Graph';
-				this.showError(error.message);
-			}
-		});
-
-		// Stop button
-		const stopButton = playbackControls.createEl('button', {
-			text: 'Stop Playback',
-			cls: 'mod-warning sonigraph-secondary-button'
-		});
-
-		stopButton.addEventListener('click', () => {
-			this.plugin.stopPlayback();
-			playButton.disabled = false;
-			playButton.textContent = 'Play Knowledge Graph';
-		});
-
-		// Test audio button
-		const testButton = playbackControls.createEl('button', {
-			text: 'Test Audio System',
-			cls: 'sonigraph-secondary-button'
-		});
-
-		testButton.addEventListener('click', async () => {
-			try {
-				if (this.plugin.audioEngine) {
-					await this.plugin.audioEngine.playTestNote();
-				}
-			} catch (error) {
-				this.showError('Audio test failed: ' + error.message);
-			}
-		});
-
-		// Processing options
-		const processingGroup = this.createSettingsGroup(section, 'Processing Options', 'Configure how your vault is analyzed');
-
-		// Enable toggle
-		createObsidianToggle(
-			processingGroup,
-			this.plugin.settings.isEnabled,
-			async (value) => {
-				this.plugin.settings.isEnabled = value;
-				await this.plugin.saveSettings();
-			},
-			{
-				name: 'Enable Sonigraph Processing',
-				description: 'Turn audio generation on or off globally'
-			}
-		);
-	}
 
 	private createMusicalTab(): void {
 		const section = this.createTabSection('Musical Parameters', 'Configure scales, tempo, and musical characteristics');
@@ -285,28 +277,217 @@ export class ControlPanelModal extends Modal {
 		const section = this.createTabSection('Instrument Configuration', 'Manage voices and instrument assignments');
 
 		// Voice assignment strategy
-		const assignmentGroup = this.createSettingsGroup(section, 'Voice Assignment', 'How instruments are chosen for notes');
+		const assignmentGroup = this.createSettingsGroup(section, 'Voice Assignment Strategy', 'How instruments are chosen for notes');
 
-		const strategyInfo = assignmentGroup.createDiv({ cls: 'sonigraph-info-box' });
-		strategyInfo.createEl('h4', { text: 'Current Assignment Strategy: Frequency-Based' });
-		strategyInfo.createEl('p', { text: 'High frequencies (>800Hz) → Piano (crisp, percussive)' });
-		strategyInfo.createEl('p', { text: 'Medium frequencies (300-800Hz) → Organ (rich, sustained)' });
-		strategyInfo.createEl('p', { text: 'Low frequencies (<300Hz) → Strings (warm, flowing)' });
+		new Setting(assignmentGroup)
+			.setName('Assignment Strategy')
+			.setDesc('Method for assigning notes to instruments')
+			.addDropdown(dropdown => {
+				dropdown
+					.addOption('frequency', 'Frequency-Based (Automatic)')
+					.addOption('round-robin', 'Round-Robin (Cycling)')
+					.addOption('connection-based', 'Connection-Based (Graph)')
+					.setValue(this.plugin.settings.voiceAssignmentStrategy)
+					.onChange(async (value: 'frequency' | 'round-robin' | 'connection-based') => {
+						this.plugin.settings.voiceAssignmentStrategy = value;
+						await this.plugin.saveSettings();
+						this.updateAssignmentStrategyInfo();
+					});
+			});
 
-		// Instrument controls (placeholders for future expansion)
-		const instrumentGroup = this.createSettingsGroup(section, 'Instrument Settings', 'Individual instrument configuration');
+		// Strategy description area
+		const strategyInfo = assignmentGroup.createDiv({ 
+			cls: 'sonigraph-strategy-info',
+			attr: { id: 'sonigraph-strategy-info' }
+		});
+		this.updateAssignmentStrategyInfo();
 
-		const pianoSection = instrumentGroup.createDiv({ cls: 'sonigraph-instrument-section' });
-		pianoSection.createEl('h4', { text: '🎹 Piano', cls: 'sonigraph-instrument-title' });
-		pianoSection.createEl('p', { text: 'Triangle waves with quick attack/decay for percussive clarity' });
+		// Real-time voice activity monitor
+		const activityGroup = this.createSettingsGroup(section, 'Live Voice Activity', 'Real-time instrument usage monitoring');
+		const activityDisplay = activityGroup.createDiv({ cls: 'sonigraph-voice-activity' });
 
-		const organSection = instrumentGroup.createDiv({ cls: 'sonigraph-instrument-section' });
-		organSection.createEl('h4', { text: '🎹 Organ', cls: 'sonigraph-instrument-title' });
-		organSection.createEl('p', { text: 'FM synthesis with chorus effect for rich, sustained tones' });
+		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
+			const info = this.getInstrumentInfo(instrumentKey);
+			const activityRow = activityDisplay.createDiv({ cls: 'sonigraph-activity-row' });
+			
+			const label = activityRow.createDiv({ cls: 'sonigraph-activity-label' });
+			label.createSpan({ text: info.icon, cls: 'sonigraph-activity-icon' });
+			label.createSpan({ text: info.name, cls: 'sonigraph-activity-name' });
+			
+			const voices = activityRow.createDiv({ cls: 'sonigraph-activity-voices' });
+			for (let i = 0; i < 8; i++) {
+				voices.createDiv({ 
+					cls: 'sonigraph-voice-indicator',
+					attr: { id: `voice-${instrumentKey}-${i}` }
+				});
+			}
+			
+			const count = activityRow.createDiv({ 
+				cls: 'sonigraph-activity-count',
+				text: '0/8',
+				attr: { id: `count-${instrumentKey}` }
+			});
+		});
 
-		const stringsSection = instrumentGroup.createDiv({ cls: 'sonigraph-instrument-section' });
-		stringsSection.createEl('h4', { text: '🎻 Strings', cls: 'sonigraph-instrument-title' });
-		stringsSection.createEl('p', { text: 'AM synthesis with filtering for warm, flowing sounds' });
+		// Individual instrument controls
+		const instrumentsGroup = this.createSettingsGroup(section, 'Individual Instrument Controls', 'Configure each instrument separately');
+
+		Object.entries(this.plugin.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
+			console.log(`Creating toggle for instrument: ${instrumentKey}, enabled: ${instrumentSettings.enabled}`);
+			
+			const info = this.getInstrumentInfo(instrumentKey);
+			const instrumentContainer = instrumentsGroup.createDiv({ cls: 'sonigraph-instrument-control' });
+			
+			// Header with icon and name
+			const header = instrumentContainer.createDiv({ cls: 'sonigraph-instrument-header' });
+			header.createSpan({ text: info.icon, cls: 'sonigraph-instrument-icon' });
+			header.createSpan({ text: info.name, cls: 'sonigraph-instrument-name' });
+			
+
+			// Enable/disable toggle - each toggle gets its own updating flag
+			const toggle = createObsidianToggle(
+				instrumentContainer,
+				instrumentSettings.enabled,
+				async (value) => {
+					console.log(`✓ Toggle ${instrumentKey} (${info.name}) changed to:`, value);
+					console.log(`✓ Toggle UI state - checked: ${(toggle as HTMLInputElement).checked}, container classes:`, toggle.parentElement?.className);
+					
+					this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].enabled = value;
+					await this.plugin.saveSettings();
+					await this.updateInstrumentState(instrumentKey, value);
+					
+					// Verify UI state after update
+					console.log(`✓ After update - Toggle UI state - checked: ${(toggle as HTMLInputElement).checked}, container classes:`, toggle.parentElement?.className);
+				},
+				{
+					name: `Enable ${info.name}`,
+					description: info.description
+				}
+			);
+			
+			// Store reference for programmatic updates
+			this.instrumentToggles.set(instrumentKey, toggle);
+			console.log(`✓ Toggle created and stored for ${instrumentKey} (${info.name})`);
+			
+			// Add click handler to the entire toggle container for debugging
+			instrumentContainer.addEventListener('click', (event) => {
+				console.log(`Container clicked for ${instrumentKey} (${info.name}), target:`, event.target);
+			});
+			
+
+
+			// Volume control
+			new Setting(instrumentContainer)
+				.setName('Volume')
+				.setDesc(`Individual volume for ${info.name.toLowerCase()} (0-100%)`)
+				.addSlider(slider => slider
+					.setLimits(0, 100, 5)
+					.setValue(Math.round(instrumentSettings.volume * 100))
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].volume = value / 100;
+						await this.plugin.saveSettings();
+						if (this.plugin.audioEngine) {
+							this.plugin.audioEngine.updateInstrumentVolume(instrumentKey, value / 100);
+						}
+					}));
+
+			// Max voices control
+			new Setting(instrumentContainer)
+				.setName('Maximum Voices')
+				.setDesc(`Voice limit for ${info.name.toLowerCase()} (1-16)`)
+				.addSlider(slider => slider
+					.setLimits(1, 16, 1)
+					.setValue(instrumentSettings.maxVoices)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].maxVoices = value;
+						await this.plugin.saveSettings();
+						if (this.plugin.audioEngine) {
+							this.plugin.audioEngine.updateInstrumentVoices(instrumentKey, value);
+						}
+					}));
+
+			// Frequency range info (for frequency-based strategy)
+			const rangeInfo = instrumentContainer.createDiv({ cls: 'sonigraph-frequency-info' });
+			rangeInfo.createEl('small', { 
+				text: `Default range: ${info.defaultFrequencyRange}`,
+				cls: 'sonigraph-frequency-range'
+			});
+		});
+	}
+
+	private updateAssignmentStrategyInfo(): void {
+		const strategyInfo = document.getElementById('sonigraph-strategy-info');
+		if (!strategyInfo) return;
+
+		strategyInfo.empty();
+		
+		const strategy = this.plugin.settings.voiceAssignmentStrategy;
+		const infoBox = strategyInfo.createDiv({ cls: 'sonigraph-info-box' });
+		
+		switch (strategy) {
+			case 'frequency':
+				infoBox.createEl('h4', { text: 'Frequency-Based Assignment' });
+				infoBox.createEl('p', { text: 'High frequencies (>800Hz) → Piano (crisp, percussive)' });
+				infoBox.createEl('p', { text: 'Medium frequencies (300-800Hz) → Organ (rich, sustained)' });
+				infoBox.createEl('p', { text: 'Low frequencies (<300Hz) → Strings (warm, flowing)' });
+				break;
+			case 'round-robin':
+				infoBox.createEl('h4', { text: 'Round-Robin Assignment' });
+				infoBox.createEl('p', { text: 'Cycles through instruments in order: Piano → Organ → Strings' });
+				infoBox.createEl('p', { text: 'Ensures equal distribution across all enabled instruments' });
+				break;
+			case 'connection-based':
+				infoBox.createEl('h4', { text: 'Connection-Based Assignment' });
+				infoBox.createEl('p', { text: 'Highly connected nodes → Piano (prominent, percussive)' });
+				infoBox.createEl('p', { text: 'Medium connections → Organ (harmonic foundation)' });
+				infoBox.createEl('p', { text: 'Low connections → Strings (ambient, atmospheric)' });
+				break;
+		}
+	}
+
+	private async updateInstrumentState(instrumentKey: string, enabled: boolean): Promise<void> {
+		if (this.plugin.audioEngine) {
+			const status = this.plugin.audioEngine.getStatus();
+			
+			// Initialize audio engine if not already initialized
+			if (!status.isInitialized) {
+				try {
+					await this.plugin.audioEngine.initialize();
+				} catch (error) {
+					console.error('Failed to initialize audio engine:', error);
+					return;
+				}
+			}
+			
+			this.plugin.audioEngine.setInstrumentEnabled(instrumentKey, enabled);
+		}
+	}
+
+	private getInstrumentInfo(instrumentKey: string): { name: string; icon: string; description: string; defaultFrequencyRange: string } {
+		const INSTRUMENT_INFO = {
+			piano: {
+				name: 'Piano',
+				icon: '🎹',
+				description: 'Triangle waves with quick attack/decay for percussive clarity',
+				defaultFrequencyRange: 'High (>800Hz)'
+			},
+			organ: {
+				name: 'Organ', 
+				icon: '🎛️',
+				description: 'FM synthesis with chorus effect for rich, sustained tones',
+				defaultFrequencyRange: 'Medium (300-800Hz)'
+			},
+			strings: {
+				name: 'Strings',
+				icon: '🎻',
+				description: 'AM synthesis with filtering for warm, flowing sounds',
+				defaultFrequencyRange: 'Low (<300Hz)'
+			}
+		};
+		
+		return INSTRUMENT_INFO[instrumentKey as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
 	}
 
 	private createHarmonyTab(): void {
@@ -521,9 +702,12 @@ export class ControlPanelModal extends Modal {
 		}, 5000);
 	}
 
+
+
 	private getIconSvg(iconName: string): string {
 		const icons: Record<string, string> = {
 			play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+			stop: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>',
 			music: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>',
 			piano: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>',
 			sparkles: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 12L7 7.5 5.5 12 1 13.5l4.5 1.5L7 20l2.5-4.5L14 13.5 9.5 12zM19 3l-1 4h-4l4 1 1 4 1-4 4-1-4-1L19 3z"/></svg>',

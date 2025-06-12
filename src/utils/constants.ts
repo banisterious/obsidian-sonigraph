@@ -1,3 +1,9 @@
+export interface InstrumentSettings {
+	enabled: boolean;
+	volume: number;
+	maxVoices: number;
+}
+
 export interface SonigraphSettings {
 	tempo: number;
 	volume: number;
@@ -5,6 +11,12 @@ export interface SonigraphSettings {
 	rootNote: string;
 	traversalMethod: string;
 	isEnabled: boolean;
+	instruments: {
+		piano: InstrumentSettings;
+		organ: InstrumentSettings;
+		strings: InstrumentSettings;
+	};
+	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
 }
 
 export const DEFAULT_SETTINGS: SonigraphSettings = {
@@ -13,7 +25,13 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	scale: 'major',
 	rootNote: 'C',
 	traversalMethod: 'breadth-first',
-	isEnabled: true
+	isEnabled: true,
+	instruments: {
+		piano: { enabled: true, volume: 0.8, maxVoices: 8 },
+		organ: { enabled: true, volume: 0.7, maxVoices: 8 },
+		strings: { enabled: true, volume: 0.6, maxVoices: 8 }
+	},
+	voiceAssignmentStrategy: 'frequency'
 };
 
 export const MUSICAL_SCALES = {
@@ -25,4 +43,31 @@ export const MUSICAL_SCALES = {
 
 export const ROOT_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-export const TRAVERSAL_METHODS = ['breadth-first', 'depth-first', 'sequential']; 
+export const TRAVERSAL_METHODS = ['breadth-first', 'depth-first', 'sequential'];
+
+export const VOICE_ASSIGNMENT_STRATEGIES = {
+	frequency: 'Frequency-Based (Automatic)',
+	'round-robin': 'Round-Robin (Cycling)',
+	'connection-based': 'Connection-Based (Graph)'
+};
+
+export const INSTRUMENT_INFO = {
+	piano: {
+		name: 'Piano',
+		icon: '🎹',
+		description: 'Triangle waves with quick attack/decay for percussive clarity',
+		defaultFrequencyRange: 'High (>800Hz)'
+	},
+	organ: {
+		name: 'Organ', 
+		icon: '🎛️',
+		description: 'FM synthesis with chorus effect for rich, sustained tones',
+		defaultFrequencyRange: 'Medium (300-800Hz)'
+	},
+	strings: {
+		name: 'Strings',
+		icon: '🎻',
+		description: 'AM synthesis with filtering for warm, flowing sounds',
+		defaultFrequencyRange: 'Low (<300Hz)'
+	}
+}; 
