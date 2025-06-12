@@ -36,7 +36,13 @@ var DEFAULT_SETTINGS = {
   scale: "major",
   rootNote: "C",
   traversalMethod: "breadth-first",
-  isEnabled: true
+  isEnabled: true,
+  instruments: {
+    piano: { enabled: true, volume: 0.8, maxVoices: 8 },
+    organ: { enabled: true, volume: 0.7, maxVoices: 8 },
+    strings: { enabled: true, volume: 0.6, maxVoices: 8 }
+  },
+  voiceAssignmentStrategy: "frequency"
 };
 var MUSICAL_SCALES = {
   major: [0, 2, 4, 5, 7, 9, 11],
@@ -175,14 +181,42 @@ function createObsidianToggle(container, initialValue, onChange, options) {
     checkbox.disabled = true;
     checkboxContainer.addClass("is-disabled");
   }
-  checkbox.addEventListener("change", () => {
-    const newValue = checkbox.checked;
-    if (newValue) {
-      checkboxContainer.addClass("is-enabled");
-    } else {
-      checkboxContainer.removeClass("is-enabled");
+  checkbox.addEventListener("change", async (event) => {
+    const originalDisabled = checkbox.disabled;
+    const checkboxId = Math.random().toString(36).substr(2, 9);
+    try {
+      const newValue = checkbox.checked;
+      console.log(`[${checkboxId}] Checkbox change event fired: ${newValue}, element disabled: ${checkbox.disabled}`);
+      console.log(`[${checkboxId}] Checkbox element:`, checkbox, "Container:", checkboxContainer);
+      checkbox.disabled = true;
+      if (newValue) {
+        checkboxContainer.addClass("is-enabled");
+      } else {
+        checkboxContainer.removeClass("is-enabled");
+      }
+      console.log(`[${checkboxId}] Calling onChange callback...`);
+      await onChange(newValue);
+      console.log(`[${checkboxId}] Checkbox onChange callback completed: ${newValue}`);
+    } catch (error) {
+      console.error(`[${checkboxId}] Error in checkbox change handler:`, error);
+      checkbox.checked = !checkbox.checked;
+      if (checkbox.checked) {
+        checkboxContainer.addClass("is-enabled");
+      } else {
+        checkboxContainer.removeClass("is-enabled");
+      }
+    } finally {
+      checkbox.disabled = originalDisabled;
+      console.log(`[${checkboxId}] Checkbox re-enabled, disabled state: ${checkbox.disabled}`);
     }
-    onChange(newValue);
+  });
+  checkboxContainer.addEventListener("click", (event) => {
+    if (event.target !== checkbox && !checkbox.disabled) {
+      console.log("Container clicked, forwarding to checkbox. Target was:", event.target);
+      event.preventDefault();
+      event.stopPropagation();
+      checkbox.click();
+    }
   });
   return checkbox;
 }
@@ -243,18 +277,18 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
 var import_obsidian2 = require("obsidian");
 var logger2 = getLogger("control-panel");
 var TABS = [
-  { id: "playback", name: "Playback", icon: "play", description: "Control audio playback and processing" },
-  { id: "music", name: "Musical", icon: "music", description: "Configure scales, tempo, and musical parameters" },
+  { id: "status", name: "Status", icon: "activity", description: "Real-time system status and diagnostics" },
   { id: "instruments", name: "Instruments", icon: "piano", description: "Manage voices and instrument assignments" },
+  { id: "music", name: "Musical", icon: "music", description: "Configure scales, tempo, and musical parameters" },
   { id: "harmony", name: "Harmony", icon: "sparkles", description: "Advanced harmonic processing and chord settings" },
-  { id: "effects", name: "Effects", icon: "headphones", description: "Audio effects and spatial processing" },
-  { id: "status", name: "Status", icon: "activity", description: "Real-time system status and diagnostics" }
+  { id: "effects", name: "Effects", icon: "headphones", description: "Audio effects and spatial processing" }
 ];
 var ControlPanelModal = class extends import_obsidian2.Modal {
   constructor(app, plugin) {
     super(app);
     this.statusInterval = null;
-    this.activeTab = "playback";
+    this.activeTab = "status";
+    this.instrumentToggles = /* @__PURE__ */ new Map();
     this.plugin = plugin;
   }
   onOpen() {
@@ -263,8 +297,11 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     logger2.debug("ui", "Opening Audio Control Center");
     const modalContainer = contentEl.createDiv({ cls: "sonigraph-modal-container" });
     const header = modalContainer.createDiv({ cls: "sonigraph-modal-header" });
-    header.createEl("h1", { text: "Sonigraph Audio Control Center", cls: "sonigraph-modal-title" });
-    header.createEl("p", { text: "Transform your knowledge graph into immersive soundscapes", cls: "sonigraph-modal-subtitle" });
+    const headerText = header.createDiv({ cls: "sonigraph-modal-header-text" });
+    headerText.createEl("h1", { text: "Sonigraph Audio Control Center", cls: "sonigraph-modal-title" });
+    headerText.createEl("p", { text: "Transform your knowledge graph into immersive soundscapes", cls: "sonigraph-modal-subtitle" });
+    const headerControls = header.createDiv({ cls: "sonigraph-modal-header-controls" });
+    this.createQuickPlaybackControls(headerControls);
     const mainContent = modalContainer.createDiv({ cls: "sonigraph-modal-main" });
     const sidebar = mainContent.createDiv({ cls: "sonigraph-modal-sidebar" });
     this.tabContainer = sidebar.createDiv({ cls: "sonigraph-tab-container" });
@@ -276,6 +313,56 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
   onClose() {
     logger2.debug("ui", "Closing Audio Control Center");
     this.stopStatusUpdates();
+  }
+  createQuickPlaybackControls(container) {
+    const quickTestButton = container.createEl("button", {
+      cls: "sonigraph-quick-control-button",
+      attr: { "aria-label": "Test Audio System" }
+    });
+    quickTestButton.innerHTML = this.getIconSvg("headphones");
+    const quickPlayButton = container.createEl("button", {
+      cls: "sonigraph-quick-control-button",
+      attr: { "aria-label": "Play Knowledge Graph" }
+    });
+    quickPlayButton.innerHTML = this.getIconSvg("play");
+    const quickStopButton = container.createEl("button", {
+      cls: "sonigraph-quick-control-button",
+      attr: { "aria-label": "Stop Playback" }
+    });
+    quickStopButton.innerHTML = this.getIconSvg("stop");
+    quickPlayButton.addEventListener("click", async () => {
+      try {
+        quickPlayButton.disabled = true;
+        quickPlayButton.addClass("is-loading");
+        logger2.info("user-action", "Quick play button clicked");
+        await this.plugin.processVault();
+        await this.plugin.playSequence();
+        quickPlayButton.removeClass("is-loading");
+        quickPlayButton.addClass("is-playing");
+        logger2.info("debug", "Quick playback started successfully");
+      } catch (error) {
+        logger2.error("playback", "Failed to start quick playback", error);
+        quickPlayButton.disabled = false;
+        quickPlayButton.removeClass("is-loading");
+        this.showError(error.message);
+      }
+    });
+    quickStopButton.addEventListener("click", () => {
+      this.plugin.stopPlayback();
+      quickPlayButton.disabled = false;
+      quickPlayButton.removeClass("is-playing");
+      logger2.info("user-action", "Quick stop button clicked");
+    });
+    quickTestButton.addEventListener("click", async () => {
+      try {
+        logger2.info("user-action", "Quick test button clicked");
+        if (this.plugin.audioEngine) {
+          await this.plugin.audioEngine.playTestNote();
+        }
+      } catch (error) {
+        this.showError("Audio test failed: " + error.message);
+      }
+    });
   }
   createTabs() {
     TABS.forEach((tab) => {
@@ -305,14 +392,11 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
   showTab(tabId) {
     this.contentContainer.empty();
     switch (tabId) {
-      case "playback":
-        this.createPlaybackTab();
+      case "instruments":
+        this.createInstrumentsTab();
         break;
       case "music":
         this.createMusicalTab();
-        break;
-      case "instruments":
-        this.createInstrumentsTab();
         break;
       case "harmony":
         this.createHarmonyTab();
@@ -324,67 +408,6 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
         this.createStatusTab();
         break;
     }
-  }
-  createPlaybackTab() {
-    const section = this.createTabSection("Playback Controls", "Control audio playback and graph processing");
-    const controlsGroup = this.createSettingsGroup(section, "Playback", "Primary audio controls");
-    const playbackControls = controlsGroup.createDiv({ cls: "sonigraph-button-group" });
-    const playButton = playbackControls.createEl("button", {
-      text: "Play Knowledge Graph",
-      cls: "mod-cta sonigraph-primary-button"
-    });
-    playButton.addEventListener("click", async () => {
-      try {
-        playButton.disabled = true;
-        playButton.textContent = "Processing Vault...";
-        logger2.info("user-action", "Play button clicked");
-        await this.plugin.processVault();
-        playButton.textContent = "Generating Music...";
-        await this.plugin.playSequence();
-        playButton.textContent = "Playing...";
-        logger2.info("debug", "Playback started successfully");
-      } catch (error) {
-        logger2.error("playback", "Failed to start playback", error);
-        playButton.disabled = false;
-        playButton.textContent = "Play Knowledge Graph";
-        this.showError(error.message);
-      }
-    });
-    const stopButton = playbackControls.createEl("button", {
-      text: "Stop Playback",
-      cls: "mod-warning sonigraph-secondary-button"
-    });
-    stopButton.addEventListener("click", () => {
-      this.plugin.stopPlayback();
-      playButton.disabled = false;
-      playButton.textContent = "Play Knowledge Graph";
-    });
-    const testButton = playbackControls.createEl("button", {
-      text: "Test Audio System",
-      cls: "sonigraph-secondary-button"
-    });
-    testButton.addEventListener("click", async () => {
-      try {
-        if (this.plugin.audioEngine) {
-          await this.plugin.audioEngine.playTestNote();
-        }
-      } catch (error) {
-        this.showError("Audio test failed: " + error.message);
-      }
-    });
-    const processingGroup = this.createSettingsGroup(section, "Processing Options", "Configure how your vault is analyzed");
-    createObsidianToggle(
-      processingGroup,
-      this.plugin.settings.isEnabled,
-      async (value) => {
-        this.plugin.settings.isEnabled = value;
-        await this.plugin.saveSettings();
-      },
-      {
-        name: "Enable Sonigraph Processing",
-        description: "Turn audio generation on or off globally"
-      }
-    );
   }
   createMusicalTab() {
     const section = this.createTabSection("Musical Parameters", "Configure scales, tempo, and musical characteristics");
@@ -419,22 +442,154 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
   }
   createInstrumentsTab() {
     const section = this.createTabSection("Instrument Configuration", "Manage voices and instrument assignments");
-    const assignmentGroup = this.createSettingsGroup(section, "Voice Assignment", "How instruments are chosen for notes");
-    const strategyInfo = assignmentGroup.createDiv({ cls: "sonigraph-info-box" });
-    strategyInfo.createEl("h4", { text: "Current Assignment Strategy: Frequency-Based" });
-    strategyInfo.createEl("p", { text: "High frequencies (>800Hz) \u2192 Piano (crisp, percussive)" });
-    strategyInfo.createEl("p", { text: "Medium frequencies (300-800Hz) \u2192 Organ (rich, sustained)" });
-    strategyInfo.createEl("p", { text: "Low frequencies (<300Hz) \u2192 Strings (warm, flowing)" });
-    const instrumentGroup = this.createSettingsGroup(section, "Instrument Settings", "Individual instrument configuration");
-    const pianoSection = instrumentGroup.createDiv({ cls: "sonigraph-instrument-section" });
-    pianoSection.createEl("h4", { text: "\u{1F3B9} Piano", cls: "sonigraph-instrument-title" });
-    pianoSection.createEl("p", { text: "Triangle waves with quick attack/decay for percussive clarity" });
-    const organSection = instrumentGroup.createDiv({ cls: "sonigraph-instrument-section" });
-    organSection.createEl("h4", { text: "\u{1F3B9} Organ", cls: "sonigraph-instrument-title" });
-    organSection.createEl("p", { text: "FM synthesis with chorus effect for rich, sustained tones" });
-    const stringsSection = instrumentGroup.createDiv({ cls: "sonigraph-instrument-section" });
-    stringsSection.createEl("h4", { text: "\u{1F3BB} Strings", cls: "sonigraph-instrument-title" });
-    stringsSection.createEl("p", { text: "AM synthesis with filtering for warm, flowing sounds" });
+    const assignmentGroup = this.createSettingsGroup(section, "Voice Assignment Strategy", "How instruments are chosen for notes");
+    new import_obsidian2.Setting(assignmentGroup).setName("Assignment Strategy").setDesc("Method for assigning notes to instruments").addDropdown((dropdown) => {
+      dropdown.addOption("frequency", "Frequency-Based (Automatic)").addOption("round-robin", "Round-Robin (Cycling)").addOption("connection-based", "Connection-Based (Graph)").setValue(this.plugin.settings.voiceAssignmentStrategy).onChange(async (value) => {
+        this.plugin.settings.voiceAssignmentStrategy = value;
+        await this.plugin.saveSettings();
+        this.updateAssignmentStrategyInfo();
+      });
+    });
+    const strategyInfo = assignmentGroup.createDiv({
+      cls: "sonigraph-strategy-info",
+      attr: { id: "sonigraph-strategy-info" }
+    });
+    this.updateAssignmentStrategyInfo();
+    const activityGroup = this.createSettingsGroup(section, "Live Voice Activity", "Real-time instrument usage monitoring");
+    const activityDisplay = activityGroup.createDiv({ cls: "sonigraph-voice-activity" });
+    Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
+      const info = this.getInstrumentInfo(instrumentKey);
+      const activityRow = activityDisplay.createDiv({ cls: "sonigraph-activity-row" });
+      const label = activityRow.createDiv({ cls: "sonigraph-activity-label" });
+      label.createSpan({ text: info.icon, cls: "sonigraph-activity-icon" });
+      label.createSpan({ text: info.name, cls: "sonigraph-activity-name" });
+      const voices = activityRow.createDiv({ cls: "sonigraph-activity-voices" });
+      for (let i = 0; i < 8; i++) {
+        voices.createDiv({
+          cls: "sonigraph-voice-indicator",
+          attr: { id: `voice-${instrumentKey}-${i}` }
+        });
+      }
+      const count = activityRow.createDiv({
+        cls: "sonigraph-activity-count",
+        text: "0/8",
+        attr: { id: `count-${instrumentKey}` }
+      });
+    });
+    const instrumentsGroup = this.createSettingsGroup(section, "Individual Instrument Controls", "Configure each instrument separately");
+    Object.entries(this.plugin.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
+      console.log(`Creating toggle for instrument: ${instrumentKey}, enabled: ${instrumentSettings.enabled}`);
+      const info = this.getInstrumentInfo(instrumentKey);
+      const instrumentContainer = instrumentsGroup.createDiv({ cls: "sonigraph-instrument-control" });
+      const header = instrumentContainer.createDiv({ cls: "sonigraph-instrument-header" });
+      header.createSpan({ text: info.icon, cls: "sonigraph-instrument-icon" });
+      header.createSpan({ text: info.name, cls: "sonigraph-instrument-name" });
+      const toggle = createObsidianToggle(
+        instrumentContainer,
+        instrumentSettings.enabled,
+        async (value) => {
+          var _a, _b;
+          console.log(`\u2713 Toggle ${instrumentKey} (${info.name}) changed to:`, value);
+          console.log(`\u2713 Toggle UI state - checked: ${toggle.checked}, container classes:`, (_a = toggle.parentElement) == null ? void 0 : _a.className);
+          this.plugin.settings.instruments[instrumentKey].enabled = value;
+          await this.plugin.saveSettings();
+          await this.updateInstrumentState(instrumentKey, value);
+          console.log(`\u2713 After update - Toggle UI state - checked: ${toggle.checked}, container classes:`, (_b = toggle.parentElement) == null ? void 0 : _b.className);
+        },
+        {
+          name: `Enable ${info.name}`,
+          description: info.description
+        }
+      );
+      this.instrumentToggles.set(instrumentKey, toggle);
+      console.log(`\u2713 Toggle created and stored for ${instrumentKey} (${info.name})`);
+      instrumentContainer.addEventListener("click", (event) => {
+        console.log(`Container clicked for ${instrumentKey} (${info.name}), target:`, event.target);
+      });
+      new import_obsidian2.Setting(instrumentContainer).setName("Volume").setDesc(`Individual volume for ${info.name.toLowerCase()} (0-100%)`).addSlider((slider) => slider.setLimits(0, 100, 5).setValue(Math.round(instrumentSettings.volume * 100)).setDynamicTooltip().onChange(async (value) => {
+        this.plugin.settings.instruments[instrumentKey].volume = value / 100;
+        await this.plugin.saveSettings();
+        if (this.plugin.audioEngine) {
+          this.plugin.audioEngine.updateInstrumentVolume(instrumentKey, value / 100);
+        }
+      }));
+      new import_obsidian2.Setting(instrumentContainer).setName("Maximum Voices").setDesc(`Voice limit for ${info.name.toLowerCase()} (1-16)`).addSlider((slider) => slider.setLimits(1, 16, 1).setValue(instrumentSettings.maxVoices).setDynamicTooltip().onChange(async (value) => {
+        this.plugin.settings.instruments[instrumentKey].maxVoices = value;
+        await this.plugin.saveSettings();
+        if (this.plugin.audioEngine) {
+          this.plugin.audioEngine.updateInstrumentVoices(instrumentKey, value);
+        }
+      }));
+      const rangeInfo = instrumentContainer.createDiv({ cls: "sonigraph-frequency-info" });
+      rangeInfo.createEl("small", {
+        text: `Default range: ${info.defaultFrequencyRange}`,
+        cls: "sonigraph-frequency-range"
+      });
+    });
+  }
+  updateAssignmentStrategyInfo() {
+    const strategyInfo = document.getElementById("sonigraph-strategy-info");
+    if (!strategyInfo)
+      return;
+    strategyInfo.empty();
+    const strategy = this.plugin.settings.voiceAssignmentStrategy;
+    const infoBox = strategyInfo.createDiv({ cls: "sonigraph-info-box" });
+    switch (strategy) {
+      case "frequency":
+        infoBox.createEl("h4", { text: "Frequency-Based Assignment" });
+        infoBox.createEl("p", { text: "High frequencies (>800Hz) \u2192 Piano (crisp, percussive)" });
+        infoBox.createEl("p", { text: "Medium frequencies (300-800Hz) \u2192 Organ (rich, sustained)" });
+        infoBox.createEl("p", { text: "Low frequencies (<300Hz) \u2192 Strings (warm, flowing)" });
+        break;
+      case "round-robin":
+        infoBox.createEl("h4", { text: "Round-Robin Assignment" });
+        infoBox.createEl("p", { text: "Cycles through instruments in order: Piano \u2192 Organ \u2192 Strings" });
+        infoBox.createEl("p", { text: "Ensures equal distribution across all enabled instruments" });
+        break;
+      case "connection-based":
+        infoBox.createEl("h4", { text: "Connection-Based Assignment" });
+        infoBox.createEl("p", { text: "Highly connected nodes \u2192 Piano (prominent, percussive)" });
+        infoBox.createEl("p", { text: "Medium connections \u2192 Organ (harmonic foundation)" });
+        infoBox.createEl("p", { text: "Low connections \u2192 Strings (ambient, atmospheric)" });
+        break;
+    }
+  }
+  async updateInstrumentState(instrumentKey, enabled) {
+    if (this.plugin.audioEngine) {
+      const status = this.plugin.audioEngine.getStatus();
+      if (!status.isInitialized) {
+        try {
+          await this.plugin.audioEngine.initialize();
+        } catch (error) {
+          console.error("Failed to initialize audio engine:", error);
+          return;
+        }
+      }
+      this.plugin.audioEngine.setInstrumentEnabled(instrumentKey, enabled);
+    }
+  }
+  getInstrumentInfo(instrumentKey) {
+    const INSTRUMENT_INFO = {
+      piano: {
+        name: "Piano",
+        icon: "\u{1F3B9}",
+        description: "Triangle waves with quick attack/decay for percussive clarity",
+        defaultFrequencyRange: "High (>800Hz)"
+      },
+      organ: {
+        name: "Organ",
+        icon: "\u{1F39B}\uFE0F",
+        description: "FM synthesis with chorus effect for rich, sustained tones",
+        defaultFrequencyRange: "Medium (300-800Hz)"
+      },
+      strings: {
+        name: "Strings",
+        icon: "\u{1F3BB}",
+        description: "AM synthesis with filtering for warm, flowing sounds",
+        defaultFrequencyRange: "Low (<300Hz)"
+      }
+    };
+    return INSTRUMENT_INFO[instrumentKey] || INSTRUMENT_INFO.piano;
   }
   createHarmonyTab() {
     const section = this.createTabSection("Harmonic Processing", "Advanced harmony and chord progression settings");
@@ -587,6 +742,7 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
   getIconSvg(iconName) {
     const icons = {
       play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+      stop: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>',
       music: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>',
       piano: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>',
       sparkles: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 12L7 7.5 5.5 12 1 13.5l4.5 1.5L7 20l2.5-4.5L14 13.5 9.5 12zM19 3l-1 4h-4l4 1 1 4 1-4 4-1-4-1L19 3z"/></svg>',
@@ -12738,64 +12894,6 @@ var ToneAudioBuffers = class extends Tone {
   }
 };
 
-// node_modules/tone/build/esm/core/type/Midi.js
-var MidiClass = class extends FrequencyClass {
-  constructor() {
-    super(...arguments);
-    this.name = "MidiClass";
-    this.defaultUnits = "midi";
-  }
-  /**
-   * Returns the value of a frequency in the current units
-   */
-  _frequencyToUnits(freq) {
-    return ftom(super._frequencyToUnits(freq));
-  }
-  /**
-   * Returns the value of a tick in the current time units
-   */
-  _ticksToUnits(ticks) {
-    return ftom(super._ticksToUnits(ticks));
-  }
-  /**
-   * Return the value of the beats in the current units
-   */
-  _beatsToUnits(beats) {
-    return ftom(super._beatsToUnits(beats));
-  }
-  /**
-   * Returns the value of a second in the current units
-   */
-  _secondsToUnits(seconds) {
-    return ftom(super._secondsToUnits(seconds));
-  }
-  /**
-   * Return the value of the frequency as a MIDI note
-   * @example
-   * Tone.Midi(60).toMidi(); // 60
-   */
-  toMidi() {
-    return this.valueOf();
-  }
-  /**
-   * Return the value of the frequency as a MIDI note
-   * @example
-   * Tone.Midi(60).toFrequency(); // 261.6255653005986
-   */
-  toFrequency() {
-    return mtof(this.toMidi());
-  }
-  /**
-   * Transposes the frequency by the given number of semitones.
-   * @return A new transposed MidiClass
-   * @example
-   * Tone.Midi("A4").transpose(3); // "C5"
-   */
-  transpose(interval) {
-    return new MidiClass(this.context, this.toMidi() + interval);
-  }
-};
-
 // node_modules/tone/build/esm/core/type/Ticks.js
 var TicksClass = class extends TransportTimeClass {
   constructor() {
@@ -17670,132 +17768,6 @@ var Synth = class extends Monophonic {
   }
 };
 
-// node_modules/tone/build/esm/instrument/ModulationSynth.js
-var ModulationSynth = class extends Monophonic {
-  constructor() {
-    super(optionsFromArguments(ModulationSynth.getDefaults(), arguments));
-    this.name = "ModulationSynth";
-    const options = optionsFromArguments(ModulationSynth.getDefaults(), arguments);
-    this._carrier = new Synth({
-      context: this.context,
-      oscillator: options.oscillator,
-      envelope: options.envelope,
-      onsilence: () => this.onsilence(this),
-      volume: -10
-    });
-    this._modulator = new Synth({
-      context: this.context,
-      oscillator: options.modulation,
-      envelope: options.modulationEnvelope,
-      volume: -10
-    });
-    this.oscillator = this._carrier.oscillator;
-    this.envelope = this._carrier.envelope;
-    this.modulation = this._modulator.oscillator;
-    this.modulationEnvelope = this._modulator.envelope;
-    this.frequency = new Signal({
-      context: this.context,
-      units: "frequency"
-    });
-    this.detune = new Signal({
-      context: this.context,
-      value: options.detune,
-      units: "cents"
-    });
-    this.harmonicity = new Multiply({
-      context: this.context,
-      value: options.harmonicity,
-      minValue: 0
-    });
-    this._modulationNode = new Gain({
-      context: this.context,
-      gain: 0
-    });
-    readOnly(this, ["frequency", "harmonicity", "oscillator", "envelope", "modulation", "modulationEnvelope", "detune"]);
-  }
-  static getDefaults() {
-    return Object.assign(Monophonic.getDefaults(), {
-      harmonicity: 3,
-      oscillator: Object.assign(omitFromObject(OmniOscillator.getDefaults(), [
-        ...Object.keys(Source.getDefaults()),
-        "frequency",
-        "detune"
-      ]), {
-        type: "sine"
-      }),
-      envelope: Object.assign(omitFromObject(Envelope.getDefaults(), Object.keys(ToneAudioNode.getDefaults())), {
-        attack: 0.01,
-        decay: 0.01,
-        sustain: 1,
-        release: 0.5
-      }),
-      modulation: Object.assign(omitFromObject(OmniOscillator.getDefaults(), [
-        ...Object.keys(Source.getDefaults()),
-        "frequency",
-        "detune"
-      ]), {
-        type: "square"
-      }),
-      modulationEnvelope: Object.assign(omitFromObject(Envelope.getDefaults(), Object.keys(ToneAudioNode.getDefaults())), {
-        attack: 0.5,
-        decay: 0,
-        sustain: 1,
-        release: 0.5
-      })
-    });
-  }
-  /**
-   * Trigger the attack portion of the note
-   */
-  _triggerEnvelopeAttack(time, velocity) {
-    this._carrier._triggerEnvelopeAttack(time, velocity);
-    this._modulator._triggerEnvelopeAttack(time, velocity);
-  }
-  /**
-   * Trigger the release portion of the note
-   */
-  _triggerEnvelopeRelease(time) {
-    this._carrier._triggerEnvelopeRelease(time);
-    this._modulator._triggerEnvelopeRelease(time);
-    return this;
-  }
-  getLevelAtTime(time) {
-    time = this.toSeconds(time);
-    return this.envelope.getValueAtTime(time);
-  }
-  dispose() {
-    super.dispose();
-    this._carrier.dispose();
-    this._modulator.dispose();
-    this.frequency.dispose();
-    this.detune.dispose();
-    this.harmonicity.dispose();
-    this._modulationNode.dispose();
-    return this;
-  }
-};
-
-// node_modules/tone/build/esm/instrument/AMSynth.js
-var AMSynth = class extends ModulationSynth {
-  constructor() {
-    super(optionsFromArguments(AMSynth.getDefaults(), arguments));
-    this.name = "AMSynth";
-    this._modulationScale = new AudioToGain({
-      context: this.context
-    });
-    this.frequency.connect(this._carrier.frequency);
-    this.frequency.chain(this.harmonicity, this._modulator.frequency);
-    this.detune.fan(this._carrier.detune, this._modulator.detune);
-    this._modulator.chain(this._modulationScale, this._modulationNode.gain);
-    this._carrier.chain(this._modulationNode, this.output);
-  }
-  dispose() {
-    super.dispose();
-    this._modulationScale.dispose();
-    return this;
-  }
-};
-
 // node_modules/tone/build/esm/component/filter/BiquadFilter.js
 var BiquadFilter = class extends ToneAudioNode {
   constructor() {
@@ -18029,36 +18001,6 @@ var Filter = class extends ToneAudioNode {
     this.Q.dispose();
     this.detune.dispose();
     this.gain.dispose();
-    return this;
-  }
-};
-
-// node_modules/tone/build/esm/instrument/FMSynth.js
-var FMSynth = class extends ModulationSynth {
-  constructor() {
-    super(optionsFromArguments(FMSynth.getDefaults(), arguments));
-    this.name = "FMSynth";
-    const options = optionsFromArguments(FMSynth.getDefaults(), arguments);
-    this.modulationIndex = new Multiply({
-      context: this.context,
-      value: options.modulationIndex
-    });
-    this.frequency.connect(this._carrier.frequency);
-    this.frequency.chain(this.harmonicity, this._modulator.frequency);
-    this.frequency.chain(this.modulationIndex, this._modulationNode);
-    this.detune.fan(this._carrier.detune, this._modulator.detune);
-    this._modulator.connect(this._modulationNode.gain);
-    this._modulationNode.connect(this._carrier.frequency);
-    this._carrier.connect(this.output);
-  }
-  static getDefaults() {
-    return Object.assign(ModulationSynth.getDefaults(), {
-      modulationIndex: 10
-    });
-  }
-  dispose() {
-    super.dispose();
-    this.modulationIndex.dispose();
     return this;
   }
 };
@@ -18322,259 +18264,6 @@ var feedbackCombFilter = (
 `
 );
 registerProcessor(workletName, feedbackCombFilter);
-
-// node_modules/tone/build/esm/instrument/PolySynth.js
-var PolySynth = class extends Instrument {
-  constructor() {
-    super(optionsFromArguments(PolySynth.getDefaults(), arguments, ["voice", "options"]));
-    this.name = "PolySynth";
-    this._availableVoices = [];
-    this._activeVoices = [];
-    this._voices = [];
-    this._gcTimeout = -1;
-    this._averageActiveVoices = 0;
-    this._syncedRelease = (time) => this.releaseAll(time);
-    const options = optionsFromArguments(PolySynth.getDefaults(), arguments, ["voice", "options"]);
-    assert(!isNumber(options.voice), "DEPRECATED: The polyphony count is no longer the first argument.");
-    const defaults = options.voice.getDefaults();
-    this.options = Object.assign(defaults, options.options);
-    this.voice = options.voice;
-    this.maxPolyphony = options.maxPolyphony;
-    this._dummyVoice = this._getNextAvailableVoice();
-    const index = this._voices.indexOf(this._dummyVoice);
-    this._voices.splice(index, 1);
-    this._gcTimeout = this.context.setInterval(this._collectGarbage.bind(this), 1);
-  }
-  static getDefaults() {
-    return Object.assign(Instrument.getDefaults(), {
-      maxPolyphony: 32,
-      options: {},
-      voice: Synth
-    });
-  }
-  /**
-   * The number of active voices.
-   */
-  get activeVoices() {
-    return this._activeVoices.length;
-  }
-  /**
-   * Invoked when the source is done making sound, so that it can be
-   * readded to the pool of available voices
-   */
-  _makeVoiceAvailable(voice) {
-    this._availableVoices.push(voice);
-    const activeVoiceIndex = this._activeVoices.findIndex((e) => e.voice === voice);
-    this._activeVoices.splice(activeVoiceIndex, 1);
-  }
-  /**
-   * Get an available voice from the pool of available voices.
-   * If one is not available and the maxPolyphony limit is reached,
-   * steal a voice, otherwise return null.
-   */
-  _getNextAvailableVoice() {
-    if (this._availableVoices.length) {
-      return this._availableVoices.shift();
-    } else if (this._voices.length < this.maxPolyphony) {
-      const voice = new this.voice(Object.assign(this.options, {
-        context: this.context,
-        onsilence: this._makeVoiceAvailable.bind(this)
-      }));
-      assert(voice instanceof Monophonic, "Voice must extend Monophonic class");
-      voice.connect(this.output);
-      this._voices.push(voice);
-      return voice;
-    } else {
-      warn("Max polyphony exceeded. Note dropped.");
-    }
-  }
-  /**
-   * Occasionally check if there are any allocated voices which can be cleaned up.
-   */
-  _collectGarbage() {
-    this._averageActiveVoices = Math.max(this._averageActiveVoices * 0.95, this.activeVoices);
-    if (this._availableVoices.length && this._voices.length > Math.ceil(this._averageActiveVoices + 1)) {
-      const firstAvail = this._availableVoices.shift();
-      const index = this._voices.indexOf(firstAvail);
-      this._voices.splice(index, 1);
-      if (!this.context.isOffline) {
-        firstAvail.dispose();
-      }
-    }
-  }
-  /**
-   * Internal method which triggers the attack
-   */
-  _triggerAttack(notes, time, velocity) {
-    notes.forEach((note) => {
-      const midiNote = new MidiClass(this.context, note).toMidi();
-      const voice = this._getNextAvailableVoice();
-      if (voice) {
-        voice.triggerAttack(note, time, velocity);
-        this._activeVoices.push({
-          midi: midiNote,
-          voice,
-          released: false
-        });
-        this.log("triggerAttack", note, time);
-      }
-    });
-  }
-  /**
-   * Internal method which triggers the release
-   */
-  _triggerRelease(notes, time) {
-    notes.forEach((note) => {
-      const midiNote = new MidiClass(this.context, note).toMidi();
-      const event = this._activeVoices.find(({ midi, released }) => midi === midiNote && !released);
-      if (event) {
-        event.voice.triggerRelease(time);
-        event.released = true;
-        this.log("triggerRelease", note, time);
-      }
-    });
-  }
-  /**
-   * Schedule the attack/release events. If the time is in the future, then it should set a timeout
-   * to wait for just-in-time scheduling
-   */
-  _scheduleEvent(type, notes, time, velocity) {
-    assert(!this.disposed, "Synth was already disposed");
-    if (time <= this.now()) {
-      if (type === "attack") {
-        this._triggerAttack(notes, time, velocity);
-      } else {
-        this._triggerRelease(notes, time);
-      }
-    } else {
-      this.context.setTimeout(() => {
-        if (!this.disposed) {
-          this._scheduleEvent(type, notes, time, velocity);
-        }
-      }, time - this.now());
-    }
-  }
-  /**
-   * Trigger the attack portion of the note
-   * @param  notes The notes to play. Accepts a single Frequency or an array of frequencies.
-   * @param  time  The start time of the note.
-   * @param velocity The velocity of the note.
-   * @example
-   * const synth = new Tone.PolySynth(Tone.FMSynth).toDestination();
-   * // trigger a chord immediately with a velocity of 0.2
-   * synth.triggerAttack(["Ab3", "C4", "F5"], Tone.now(), 0.2);
-   */
-  triggerAttack(notes, time, velocity) {
-    if (!Array.isArray(notes)) {
-      notes = [notes];
-    }
-    const computedTime = this.toSeconds(time);
-    this._scheduleEvent("attack", notes, computedTime, velocity);
-    return this;
-  }
-  /**
-   * Trigger the release of the note. Unlike monophonic instruments,
-   * a note (or array of notes) needs to be passed in as the first argument.
-   * @param  notes The notes to play. Accepts a single Frequency or an array of frequencies.
-   * @param  time  When the release will be triggered.
-   * @example
-   * const poly = new Tone.PolySynth(Tone.AMSynth).toDestination();
-   * poly.triggerAttack(["Ab3", "C4", "F5"]);
-   * // trigger the release of the given notes.
-   * poly.triggerRelease(["Ab3", "C4"], "+1");
-   * poly.triggerRelease("F5", "+3");
-   */
-  triggerRelease(notes, time) {
-    if (!Array.isArray(notes)) {
-      notes = [notes];
-    }
-    const computedTime = this.toSeconds(time);
-    this._scheduleEvent("release", notes, computedTime);
-    return this;
-  }
-  /**
-   * Trigger the attack and release after the specified duration
-   * @param  notes The notes to play. Accepts a single  Frequency or an array of frequencies.
-   * @param  duration the duration of the note
-   * @param  time  if no time is given, defaults to now
-   * @param  velocity the velocity of the attack (0-1)
-   * @example
-   * const poly = new Tone.PolySynth(Tone.AMSynth).toDestination();
-   * // can pass in an array of durations as well
-   * poly.triggerAttackRelease(["Eb3", "G4", "Bb4", "D5"], [4, 3, 2, 1]);
-   */
-  triggerAttackRelease(notes, duration, time, velocity) {
-    const computedTime = this.toSeconds(time);
-    this.triggerAttack(notes, computedTime, velocity);
-    if (isArray(duration)) {
-      assert(isArray(notes), "If the duration is an array, the notes must also be an array");
-      notes = notes;
-      for (let i = 0; i < notes.length; i++) {
-        const d = duration[Math.min(i, duration.length - 1)];
-        const durationSeconds = this.toSeconds(d);
-        assert(durationSeconds > 0, "The duration must be greater than 0");
-        this.triggerRelease(notes[i], computedTime + durationSeconds);
-      }
-    } else {
-      const durationSeconds = this.toSeconds(duration);
-      assert(durationSeconds > 0, "The duration must be greater than 0");
-      this.triggerRelease(notes, computedTime + durationSeconds);
-    }
-    return this;
-  }
-  sync() {
-    if (this._syncState()) {
-      this._syncMethod("triggerAttack", 1);
-      this._syncMethod("triggerRelease", 1);
-      this.context.transport.on("stop", this._syncedRelease);
-      this.context.transport.on("pause", this._syncedRelease);
-      this.context.transport.on("loopEnd", this._syncedRelease);
-    }
-    return this;
-  }
-  /**
-   * Set a member/attribute of the voices
-   * @example
-   * const poly = new Tone.PolySynth().toDestination();
-   * // set all of the voices using an options object for the synth type
-   * poly.set({
-   * 	envelope: {
-   * 		attack: 0.25
-   * 	}
-   * });
-   * poly.triggerAttackRelease("Bb3", 0.2);
-   */
-  set(options) {
-    const sanitizedOptions = omitFromObject(options, ["onsilence", "context"]);
-    this.options = deepMerge(this.options, sanitizedOptions);
-    this._voices.forEach((voice) => voice.set(sanitizedOptions));
-    this._dummyVoice.set(sanitizedOptions);
-    return this;
-  }
-  get() {
-    return this._dummyVoice.get();
-  }
-  /**
-   * Trigger the release portion of all the currently active voices immediately.
-   * Useful for silencing the synth.
-   */
-  releaseAll(time) {
-    const computedTime = this.toSeconds(time);
-    this._activeVoices.forEach(({ voice }) => {
-      voice.triggerRelease(computedTime);
-    });
-    return this;
-  }
-  dispose() {
-    super.dispose();
-    this._dummyVoice.dispose();
-    this._voices.forEach((v) => v.dispose());
-    this._activeVoices = [];
-    this._availableVoices = [];
-    this.context.clearInterval(this._gcTimeout);
-    return this;
-  }
-};
 
 // node_modules/tone/build/esm/instrument/Sampler.js
 var Sampler = class extends Instrument {
@@ -19856,35 +19545,92 @@ var HarmonicEngine = class {
 
 // src/audio/engine.ts
 var logger4 = getLogger("audio-engine");
-var INSTRUMENT_CONFIGS = {
+var SAMPLER_CONFIGS = {
   piano: {
-    synth: Synth,
-    options: {
-      oscillator: { type: "triangle" },
-      envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 1.2 }
+    urls: {
+      "A0": "A0.mp3",
+      "C1": "C1.mp3",
+      "D#1": "Ds1.mp3",
+      "F#1": "Fs1.mp3",
+      "A1": "A1.mp3",
+      "C2": "C2.mp3",
+      "D#2": "Ds2.mp3",
+      "F#2": "Fs2.mp3",
+      "A2": "A2.mp3",
+      "C3": "C3.mp3",
+      "D#3": "Ds3.mp3",
+      "F#3": "Fs3.mp3",
+      "A3": "A3.mp3",
+      "C4": "C4.mp3",
+      "D#4": "Ds4.mp3",
+      "F#4": "Fs4.mp3",
+      "A4": "A4.mp3",
+      "C5": "C5.mp3",
+      "D#5": "Ds5.mp3",
+      "F#5": "Fs5.mp3",
+      "A5": "A5.mp3",
+      "C6": "C6.mp3",
+      "D#6": "Ds6.mp3",
+      "F#6": "Fs6.mp3",
+      "A6": "A6.mp3",
+      "C7": "C7.mp3",
+      "D#7": "Ds7.mp3",
+      "F#7": "Fs7.mp3",
+      "A7": "A7.mp3",
+      "C8": "C8.mp3"
     },
+    release: 1,
+    baseUrl: "https://tonejs.github.io/audio/salamander/",
     effects: ["reverb"]
   },
   organ: {
-    synth: FMSynth,
-    options: {
-      harmonicity: 3,
-      modulationIndex: 10,
-      oscillator: { type: "sine" },
-      envelope: { attack: 0.01, decay: 0.01, sustain: 1, release: 0.5 },
-      modulation: { type: "square" },
-      modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0.2, release: 0.2 }
+    urls: {
+      "C2": "C2.mp3",
+      "C3": "C3.mp3",
+      "C4": "C4.mp3",
+      "C5": "C5.mp3",
+      "C6": "C6.mp3",
+      "F2": "F2.mp3",
+      "F3": "F3.mp3",
+      "F4": "F4.mp3",
+      "F5": "F5.mp3",
+      "F6": "F6.mp3",
+      "F#2": "Fs2.mp3",
+      "F#3": "Fs3.mp3",
+      "F#4": "Fs4.mp3",
+      "F#5": "Fs5.mp3",
+      "F#6": "Fs6.mp3",
+      "G2": "G2.mp3",
+      "G3": "G3.mp3",
+      "G4": "G4.mp3",
+      "G5": "G5.mp3",
+      "G6": "G6.mp3"
     },
+    release: 0.8,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
     effects: ["chorus", "reverb"]
   },
   strings: {
-    synth: AMSynth,
-    options: {
-      oscillator: { type: "sawtooth" },
-      envelope: { attack: 0.3, decay: 0.1, sustain: 0.8, release: 2 },
-      modulation: { type: "sine" },
-      modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0.2, release: 0.1 }
+    urls: {
+      "C3": "C3.mp3",
+      "D#3": "Ds3.mp3",
+      "F#3": "Fs3.mp3",
+      "A3": "A3.mp3",
+      "C4": "C4.mp3",
+      "D#4": "Ds4.mp3",
+      "F#4": "Fs4.mp3",
+      "A4": "A4.mp3",
+      "C5": "C5.mp3",
+      "D#5": "Ds5.mp3",
+      "F#5": "Fs5.mp3",
+      "A5": "A5.mp3",
+      "C6": "C6.mp3",
+      "D#6": "Ds6.mp3",
+      "F#6": "Fs6.mp3",
+      "A6": "A6.mp3"
     },
+    release: 2,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
     effects: ["reverb", "filter"]
   }
 };
@@ -19892,6 +19638,7 @@ var AudioEngine = class {
   constructor(settings) {
     this.settings = settings;
     this.instruments = /* @__PURE__ */ new Map();
+    this.instrumentVolumes = /* @__PURE__ */ new Map();
     this.effects = /* @__PURE__ */ new Map();
     this.isInitialized = false;
     this.isPlaying = false;
@@ -19936,25 +19683,37 @@ var AudioEngine = class {
   }
   async initializeEffects() {
     const reverb = new Reverb({
-      decay: 2,
-      preDelay: 0.01,
-      wet: 0.3
+      decay: 1.8,
+      // Slightly shorter for clarity
+      preDelay: 0.02,
+      // Small pre-delay for natural space
+      wet: 0.25
+      // Reduced wetness to maintain definition
     });
     await reverb.generate();
     this.effects.set("reverb", reverb);
     const chorus = new Chorus({
-      frequency: 1.5,
-      delayTime: 3.5,
-      depth: 0.7,
-      feedback: 0.1,
-      spread: 180
+      frequency: 0.8,
+      // Slower rate for more musical effect
+      delayTime: 4,
+      // Slightly longer delay
+      depth: 0.5,
+      // Moderate depth to avoid seasickness
+      feedback: 0.05,
+      // Minimal feedback for cleaner sound
+      spread: 120
+      // Narrower spread for focus
     });
     chorus.start();
     this.effects.set("chorus", chorus);
     const filter = new Filter({
-      frequency: 2e3,
+      frequency: 3500,
+      // Higher cutoff to preserve brightness
       type: "lowpass",
-      rolloff: -12
+      rolloff: -24,
+      // Steeper rolloff for smoother sound
+      Q: 0.8
+      // Slight resonance for character
     });
     this.effects.set("filter", filter);
     logger4.debug("effects", "Audio effects initialized", {
@@ -19962,42 +19721,47 @@ var AudioEngine = class {
     });
   }
   async initializeInstruments() {
-    const pianoSynth = new PolySynth(Synth, INSTRUMENT_CONFIGS.piano.options);
-    pianoSynth.maxPolyphony = this.maxVoicesPerInstrument;
-    let pianoOutput = pianoSynth;
-    for (const effectName of INSTRUMENT_CONFIGS.piano.effects) {
+    const pianoSampler = new Sampler(SAMPLER_CONFIGS.piano);
+    const pianoVolume = new Volume(-6);
+    this.instrumentVolumes.set("piano", pianoVolume);
+    let pianoOutput = pianoSampler.connect(pianoVolume);
+    for (const effectName of SAMPLER_CONFIGS.piano.effects) {
       const effect = this.effects.get(effectName);
       if (effect) {
         pianoOutput = pianoOutput.connect(effect);
       }
     }
     pianoOutput.connect(this.volume);
-    this.instruments.set("piano", pianoSynth);
-    const organSynth = new PolySynth(FMSynth, INSTRUMENT_CONFIGS.organ.options);
-    organSynth.maxPolyphony = this.maxVoicesPerInstrument;
-    let organOutput = organSynth;
-    for (const effectName of INSTRUMENT_CONFIGS.organ.effects) {
+    this.instruments.set("piano", pianoSampler);
+    const organSampler = new Sampler(SAMPLER_CONFIGS.organ);
+    const organVolume = new Volume(-6);
+    this.instrumentVolumes.set("organ", organVolume);
+    let organOutput = organSampler.connect(organVolume);
+    for (const effectName of SAMPLER_CONFIGS.organ.effects) {
       const effect = this.effects.get(effectName);
       if (effect) {
         organOutput = organOutput.connect(effect);
       }
     }
     organOutput.connect(this.volume);
-    this.instruments.set("organ", organSynth);
-    const stringsSynth = new PolySynth(AMSynth, INSTRUMENT_CONFIGS.strings.options);
-    stringsSynth.maxPolyphony = this.maxVoicesPerInstrument;
-    let stringsOutput = stringsSynth;
-    for (const effectName of INSTRUMENT_CONFIGS.strings.effects) {
+    this.instruments.set("organ", organSampler);
+    const stringsSampler = new Sampler(SAMPLER_CONFIGS.strings);
+    const stringsVolume = new Volume(-6);
+    this.instrumentVolumes.set("strings", stringsVolume);
+    let stringsOutput = stringsSampler.connect(stringsVolume);
+    for (const effectName of SAMPLER_CONFIGS.strings.effects) {
       const effect = this.effects.get(effectName);
       if (effect) {
         stringsOutput = stringsOutput.connect(effect);
       }
     }
     stringsOutput.connect(this.volume);
-    this.instruments.set("strings", stringsSynth);
-    logger4.debug("instruments", "All instruments initialized", {
+    this.instruments.set("strings", stringsSampler);
+    this.applyInstrumentSettings();
+    logger4.debug("instruments", "All sampled instruments initialized", {
       instrumentCount: this.instruments.size,
-      instruments: Array.from(this.instruments.keys())
+      instruments: Array.from(this.instruments.keys()),
+      volumeControls: Array.from(this.instrumentVolumes.keys())
     });
   }
   async playSequence(sequence) {
@@ -20147,6 +19911,72 @@ var AudioEngine = class {
     this.harmonicEngine.updateSettings(harmonicSettings);
     logger4.debug("harmonic-settings", "Harmonic settings updated", harmonicSettings);
   }
+  /**
+   * Update individual instrument volume
+   */
+  updateInstrumentVolume(instrumentKey, volume) {
+    const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
+    if (instrumentVolume) {
+      const previousVolume = instrumentVolume.volume.value;
+      const dbVolume = Math.log10(Math.max(0.01, volume)) * 20;
+      instrumentVolume.volume.value = dbVolume;
+      logger4.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume.toFixed(1)}dB`);
+    } else {
+      logger4.error("instrument-control", `No volume control found for ${instrumentKey} in updateInstrumentVolume`);
+    }
+  }
+  /**
+   * Update instrument voice limit
+   */
+  updateInstrumentVoices(instrumentKey, maxVoices) {
+    const instrument = this.instruments.get(instrumentKey);
+    if (instrument) {
+      if ("maxPolyphony" in instrument) {
+        instrument.maxPolyphony = maxVoices;
+        logger4.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
+      } else {
+        logger4.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
+      }
+    }
+  }
+  /**
+   * Enable or disable an instrument
+   */
+  setInstrumentEnabled(instrumentKey, enabled) {
+    const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
+    if (instrumentVolume) {
+      if (enabled) {
+        const instrumentSettings = this.settings.instruments[instrumentKey];
+        if (instrumentSettings) {
+          logger4.debug("instrument-control", `Re-enabling ${instrumentKey} with volume ${instrumentSettings.volume}`);
+          this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
+          logger4.debug("instrument-control", `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
+        } else {
+          logger4.warn("instrument-control", `No settings found for ${instrumentKey}`);
+        }
+      } else {
+        logger4.debug("instrument-control", `Disabling ${instrumentKey}, setting volume to -Infinity`);
+        instrumentVolume.volume.value = -Infinity;
+        logger4.debug("instrument-control", `${instrumentKey} volume after disable: ${instrumentVolume.volume.value}`);
+      }
+      logger4.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
+    } else {
+      logger4.error("instrument-control", `No volume control found for ${instrumentKey}`);
+    }
+  }
+  /**
+   * Apply initial instrument settings from plugin configuration
+   */
+  applyInstrumentSettings() {
+    logger4.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
+    Object.entries(this.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
+      logger4.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
+      this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
+      this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
+      this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
+    });
+    logger4.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
+  }
   updateVolume() {
     if (this.volume) {
       const volumeDb = this.settings.volume / 100 * 20 - 20;
@@ -20169,13 +19999,60 @@ var AudioEngine = class {
     this.scheduledEvents = [];
   }
   getDefaultInstrument(mapping) {
-    if (mapping.pitch > 800) {
+    const enabledInstruments = this.getEnabledInstruments();
+    if (enabledInstruments.length === 0) {
       return "piano";
-    } else if (mapping.pitch > 300) {
-      return "organ";
-    } else {
-      return "strings";
     }
+    if (enabledInstruments.length === 1) {
+      return enabledInstruments[0];
+    }
+    switch (this.settings.voiceAssignmentStrategy) {
+      case "frequency":
+        return this.assignByFrequency(mapping, enabledInstruments);
+      case "round-robin":
+        return this.assignByRoundRobin(mapping, enabledInstruments);
+      case "connection-based":
+        return this.assignByConnections(mapping, enabledInstruments);
+      default:
+        return this.assignByFrequency(mapping, enabledInstruments);
+    }
+  }
+  getEnabledInstruments() {
+    const enabled = [];
+    Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
+      if (settings.enabled) {
+        enabled.push(instrumentKey);
+      }
+    });
+    return enabled;
+  }
+  assignByFrequency(mapping, enabledInstruments) {
+    const sortedInstruments = enabledInstruments.sort();
+    if (mapping.pitch > 800) {
+      return enabledInstruments.includes("piano") ? "piano" : sortedInstruments[0];
+    } else if (mapping.pitch > 300) {
+      return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
+    } else {
+      return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
+    }
+  }
+  assignByRoundRobin(mapping, enabledInstruments) {
+    const instrumentIndex = this.voiceAssignments.size % enabledInstruments.length;
+    return enabledInstruments[instrumentIndex];
+  }
+  assignByConnections(mapping, enabledInstruments) {
+    const hash = this.simpleHash(mapping.nodeId);
+    const instrumentIndex = hash % enabledInstruments.length;
+    return enabledInstruments[instrumentIndex];
+  }
+  simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
   }
   /**
    * Get current playback status
@@ -20215,6 +20092,10 @@ var AudioEngine = class {
       synth.dispose();
     });
     this.instruments.clear();
+    this.instrumentVolumes.forEach((volume, instrumentName) => {
+      volume.dispose();
+    });
+    this.instrumentVolumes.clear();
     if (this.volume) {
       this.volume.dispose();
       this.volume = null;

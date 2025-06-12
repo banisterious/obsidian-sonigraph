@@ -1,5 +1,5 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, Synth, FMSynth, AMSynth, context, now, Transport, Reverb, Chorus, Filter } from 'tone';
+import { start, Volume, PolySynth, Synth, FMSynth, AMSynth, Sampler, context, now, Transport, Reverb, Chorus, Filter } from 'tone';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings } from '../utils/constants';
 import { getLogger } from '../logging';
@@ -7,48 +7,63 @@ import { HarmonicEngine, HarmonicSettings } from './harmonic-engine';
 
 const logger = getLogger('audio-engine');
 
-// Instrument voice configurations
-const INSTRUMENT_CONFIGS = {
+// Sampled instrument configurations using high-quality samples
+const SAMPLER_CONFIGS = {
 	piano: {
-		synth: Synth,
-		options: {
-			oscillator: { type: 'triangle' as const },
-			envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 1.2 }
+		urls: {
+			"A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3",
+			"F#1": "Fs1.mp3", "A1": "A1.mp3", "C2": "C2.mp3",
+			"D#2": "Ds2.mp3", "F#2": "Fs2.mp3", "A2": "A2.mp3",
+			"C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
+			"A3": "A3.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3",
+			"F#4": "Fs4.mp3", "A4": "A4.mp3", "C5": "C5.mp3",
+			"D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
+			"C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
+			"A6": "A6.mp3", "C7": "C7.mp3", "D#7": "Ds7.mp3",
+			"F#7": "Fs7.mp3", "A7": "A7.mp3", "C8": "C8.mp3"
 		},
+		release: 1,
+		baseUrl: "https://tonejs.github.io/audio/salamander/",
 		effects: ['reverb']
 	},
 	organ: {
-		synth: FMSynth,
-		options: {
-			harmonicity: 3,
-			modulationIndex: 10,
-			oscillator: { type: 'sine' as const },
-			envelope: { attack: 0.01, decay: 0.01, sustain: 1, release: 0.5 },
-			modulation: { type: 'square' as const },
-			modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0.2, release: 0.2 }
+		urls: {
+			"C2": "C2.mp3", "C3": "C3.mp3", "C4": "C4.mp3",
+			"C5": "C5.mp3", "C6": "C6.mp3", "F2": "F2.mp3",
+			"F3": "F3.mp3", "F4": "F4.mp3", "F5": "F5.mp3",
+			"F6": "F6.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3",
+			"F#4": "Fs4.mp3", "F#5": "Fs5.mp3", "F#6": "Fs6.mp3",
+			"G2": "G2.mp3", "G3": "G3.mp3", "G4": "G4.mp3",
+			"G5": "G5.mp3", "G6": "G6.mp3"
 		},
+		release: 0.8,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
 		effects: ['chorus', 'reverb']
 	},
 	strings: {
-		synth: AMSynth,
-		options: {
-			oscillator: { type: 'sawtooth' as const },
-			envelope: { attack: 0.3, decay: 0.1, sustain: 0.8, release: 2.0 },
-			modulation: { type: 'sine' as const },
-			modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0.2, release: 0.1 }
+		urls: {
+			"C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
+			"A3": "A3.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3",
+			"F#4": "Fs4.mp3", "A4": "A4.mp3", "C5": "C5.mp3",
+			"D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
+			"C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
+			"A6": "A6.mp3"
 		},
+		release: 2.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
 		effects: ['reverb', 'filter']
 	}
 };
 
 export interface VoiceAssignment {
 	nodeId: string;
-	instrument: keyof typeof INSTRUMENT_CONFIGS;
+	instrument: keyof typeof SAMPLER_CONFIGS;
 	voiceIndex: number;
 }
 
 export class AudioEngine {
-	private instruments: Map<string, PolySynth> = new Map();
+	private instruments: Map<string, PolySynth | Sampler> = new Map();
+	private instrumentVolumes: Map<string, Volume> = new Map();
 	private effects: Map<string, any> = new Map();
 	private harmonicEngine: HarmonicEngine;
 	private isInitialized = false;
@@ -113,31 +128,32 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Reverb for spatial depth
+		// Reverb for spatial depth - optimized for instrument realism
 		const reverb = new Reverb({
-			decay: 2.0,
-			preDelay: 0.01,
-			wet: 0.3
+			decay: 1.8,      // Slightly shorter for clarity
+			preDelay: 0.02,  // Small pre-delay for natural space
+			wet: 0.25        // Reduced wetness to maintain definition
 		});
 		await reverb.generate();
 		this.effects.set('reverb', reverb);
 
-		// Chorus for richness
+		// Chorus for organ richness - classic organ effect
 		const chorus = new Chorus({
-			frequency: 1.5,
-			delayTime: 3.5,
-			depth: 0.7,
-			feedback: 0.1,
-			spread: 180
+			frequency: 0.8,   // Slower rate for more musical effect
+			delayTime: 4.0,   // Slightly longer delay
+			depth: 0.5,       // Moderate depth to avoid seasickness
+			feedback: 0.05,   // Minimal feedback for cleaner sound
+			spread: 120       // Narrower spread for focus
 		});
 		chorus.start();
 		this.effects.set('chorus', chorus);
 
-		// Low-pass filter for strings
+		// Low-pass filter for strings - warmer, more natural
 		const filter = new Filter({
-			frequency: 2000,
+			frequency: 3500,  // Higher cutoff to preserve brightness
 			type: 'lowpass',
-			rolloff: -12
+			rolloff: -24,     // Steeper rolloff for smoother sound
+			Q: 0.8           // Slight resonance for character
 		});
 		this.effects.set('filter', filter);
 
@@ -147,48 +163,58 @@ export class AudioEngine {
 	}
 
 	private async initializeInstruments(): Promise<void> {
-		// Piano - using basic Synth
-		const pianoSynth = new PolySynth(Synth, INSTRUMENT_CONFIGS.piano.options);
-		pianoSynth.maxPolyphony = this.maxVoicesPerInstrument;
-		let pianoOutput = pianoSynth;
-		for (const effectName of INSTRUMENT_CONFIGS.piano.effects) {
+		// Piano - using Sampler with high-quality samples
+		const pianoSampler = new Sampler(SAMPLER_CONFIGS.piano);
+		const pianoVolume = new Volume(-6); // Individual volume control
+		this.instrumentVolumes.set('piano', pianoVolume);
+		
+		let pianoOutput = pianoSampler.connect(pianoVolume);
+		for (const effectName of SAMPLER_CONFIGS.piano.effects) {
 			const effect = this.effects.get(effectName);
 			if (effect) {
 				pianoOutput = pianoOutput.connect(effect);
 			}
 		}
 		pianoOutput.connect(this.volume);
-		this.instruments.set('piano', pianoSynth);
+		this.instruments.set('piano', pianoSampler);
 
-		// Organ - using FMSynth
-		const organSynth = new PolySynth(FMSynth, INSTRUMENT_CONFIGS.organ.options);
-		organSynth.maxPolyphony = this.maxVoicesPerInstrument;
-		let organOutput = organSynth;
-		for (const effectName of INSTRUMENT_CONFIGS.organ.effects) {
+		// Organ - using Sampler with harmonium samples
+		const organSampler = new Sampler(SAMPLER_CONFIGS.organ);
+		const organVolume = new Volume(-6); // Individual volume control
+		this.instrumentVolumes.set('organ', organVolume);
+		
+		let organOutput = organSampler.connect(organVolume);
+		for (const effectName of SAMPLER_CONFIGS.organ.effects) {
 			const effect = this.effects.get(effectName);
 			if (effect) {
 				organOutput = organOutput.connect(effect);
 			}
 		}
 		organOutput.connect(this.volume);
-		this.instruments.set('organ', organSynth);
+		this.instruments.set('organ', organSampler);
 
-		// Strings - using AMSynth
-		const stringsSynth = new PolySynth(AMSynth, INSTRUMENT_CONFIGS.strings.options);
-		stringsSynth.maxPolyphony = this.maxVoicesPerInstrument;
-		let stringsOutput = stringsSynth;
-		for (const effectName of INSTRUMENT_CONFIGS.strings.effects) {
+		// Strings - using Sampler with violin samples
+		const stringsSampler = new Sampler(SAMPLER_CONFIGS.strings);
+		const stringsVolume = new Volume(-6); // Individual volume control
+		this.instrumentVolumes.set('strings', stringsVolume);
+		
+		let stringsOutput = stringsSampler.connect(stringsVolume);
+		for (const effectName of SAMPLER_CONFIGS.strings.effects) {
 			const effect = this.effects.get(effectName);
 			if (effect) {
 				stringsOutput = stringsOutput.connect(effect);
 			}
 		}
 		stringsOutput.connect(this.volume);
-		this.instruments.set('strings', stringsSynth);
+		this.instruments.set('strings', stringsSampler);
 
-		logger.debug('instruments', 'All instruments initialized', {
+		// Apply initial volume settings from plugin settings
+		this.applyInstrumentSettings();
+
+		logger.debug('instruments', 'All sampled instruments initialized', {
 			instrumentCount: this.instruments.size,
-			instruments: Array.from(this.instruments.keys())
+			instruments: Array.from(this.instruments.keys()),
+			volumeControls: Array.from(this.instrumentVolumes.keys())
 		});
 	}
 
@@ -386,6 +412,87 @@ export class AudioEngine {
 		logger.debug('harmonic-settings', 'Harmonic settings updated', harmonicSettings);
 	}
 
+	/**
+	 * Update individual instrument volume
+	 */
+	updateInstrumentVolume(instrumentKey: string, volume: number): void {
+		const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
+		if (instrumentVolume) {
+			const previousVolume = instrumentVolume.volume.value;
+			const dbVolume = Math.log10(Math.max(0.01, volume)) * 20; // Convert to dB
+			instrumentVolume.volume.value = dbVolume;
+			logger.debug('instrument-control', `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume.toFixed(1)}dB`);
+		} else {
+			logger.error('instrument-control', `No volume control found for ${instrumentKey} in updateInstrumentVolume`);
+		}
+	}
+
+	/**
+	 * Update instrument voice limit
+	 */
+	updateInstrumentVoices(instrumentKey: string, maxVoices: number): void {
+		const instrument = this.instruments.get(instrumentKey);
+		if (instrument) {
+			// Only PolySynth has maxPolyphony property, Samplers handle polyphony internally
+			if ('maxPolyphony' in instrument) {
+				instrument.maxPolyphony = maxVoices;
+				logger.debug('instrument-control', `Updated ${instrumentKey} max voices to ${maxVoices}`);
+			} else {
+				logger.debug('instrument-control', `${instrumentKey} is a Sampler - polyphony handled internally`);
+			}
+		}
+	}
+
+	/**
+	 * Enable or disable an instrument
+	 */
+	setInstrumentEnabled(instrumentKey: string, enabled: boolean): void {
+		const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
+		if (instrumentVolume) {
+			if (enabled) {
+				// Re-enable instrument by setting volume to stored settings
+				const instrumentSettings = this.settings.instruments[instrumentKey as 'piano' | 'organ' | 'strings'];
+				if (instrumentSettings) {
+					logger.debug('instrument-control', `Re-enabling ${instrumentKey} with volume ${instrumentSettings.volume}`);
+					this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
+					logger.debug('instrument-control', `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
+				} else {
+					logger.warn('instrument-control', `No settings found for ${instrumentKey}`);
+				}
+			} else {
+				// Disable by setting volume to -Infinity (mute)
+				logger.debug('instrument-control', `Disabling ${instrumentKey}, setting volume to -Infinity`);
+				instrumentVolume.volume.value = -Infinity;
+				logger.debug('instrument-control', `${instrumentKey} volume after disable: ${instrumentVolume.volume.value}`);
+			}
+			logger.debug('instrument-control', `${enabled ? 'Enabled' : 'Disabled'} ${instrumentKey}`);
+		} else {
+			logger.error('instrument-control', `No volume control found for ${instrumentKey}`);
+		}
+	}
+
+	/**
+	 * Apply initial instrument settings from plugin configuration
+	 */
+	private applyInstrumentSettings(): void {
+		logger.debug('instrument-settings', 'Applying initial instrument settings', this.settings.instruments);
+		
+		Object.entries(this.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
+			logger.debug('instrument-settings', `Processing ${instrumentKey}:`, instrumentSettings);
+			
+			// Apply volume setting
+			this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
+			
+			// Apply voice limit
+			this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
+			
+			// Apply enabled/disabled state
+			this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
+		});
+		
+		logger.debug('instrument-settings', 'Applied initial instrument settings', this.settings.instruments);
+	}
+
 	private updateVolume(): void {
 		if (this.volume) {
 			// Convert 0-100 range to decibels (-20dB to 0dB)
@@ -413,15 +520,80 @@ export class AudioEngine {
 	}
 
 	private getDefaultInstrument(mapping: MusicalMapping): string {
-		// Simple assignment based on pitch range for now
-		// Higher pitches = piano, medium = organ, lower = strings
-		if (mapping.pitch > 800) {
-			return 'piano';
-		} else if (mapping.pitch > 300) {
-			return 'organ';
-		} else {
-			return 'strings';
+		const enabledInstruments = this.getEnabledInstruments();
+		
+		if (enabledInstruments.length === 0) {
+			return 'piano'; // Fallback if no instruments enabled
 		}
+		
+		if (enabledInstruments.length === 1) {
+			return enabledInstruments[0];
+		}
+		
+		// Implement different voice assignment strategies
+		switch (this.settings.voiceAssignmentStrategy) {
+			case 'frequency':
+				return this.assignByFrequency(mapping, enabledInstruments);
+			
+			case 'round-robin':
+				return this.assignByRoundRobin(mapping, enabledInstruments);
+			
+			case 'connection-based':
+				return this.assignByConnections(mapping, enabledInstruments);
+			
+			default:
+				return this.assignByFrequency(mapping, enabledInstruments);
+		}
+	}
+
+	private getEnabledInstruments(): string[] {
+		const enabled: string[] = [];
+		Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
+			if (settings.enabled) {
+				enabled.push(instrumentKey);
+			}
+		});
+		return enabled;
+	}
+
+	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
+		// Distribute based on pitch ranges, but only among enabled instruments
+		const sortedInstruments = enabledInstruments.sort();
+		
+		if (mapping.pitch > 800) {
+			// High pitch - prefer piano if available
+			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
+		} else if (mapping.pitch > 300) {
+			// Medium pitch - prefer organ if available
+			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+		} else {
+			// Low pitch - prefer strings if available
+			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
+		}
+	}
+
+	private assignByRoundRobin(mapping: MusicalMapping, enabledInstruments: string[]): string {
+		// Cycle through enabled instruments
+		const instrumentIndex = this.voiceAssignments.size % enabledInstruments.length;
+		return enabledInstruments[instrumentIndex];
+	}
+
+	private assignByConnections(mapping: MusicalMapping, enabledInstruments: string[]): string {
+		// For now, use a hash of the nodeId to distribute consistently
+		// This could be enhanced to use actual graph connection data
+		const hash = this.simpleHash(mapping.nodeId);
+		const instrumentIndex = hash % enabledInstruments.length;
+		return enabledInstruments[instrumentIndex];
+	}
+
+	private simpleHash(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i);
+			hash = ((hash << 5) - hash) + char;
+			hash = hash & hash; // Convert to 32-bit integer
+		}
+		return Math.abs(hash);
 	}
 
 	/**
@@ -473,6 +645,11 @@ export class AudioEngine {
 			synth.dispose();
 		});
 		this.instruments.clear();
+
+		this.instrumentVolumes.forEach((volume, instrumentName) => {
+			volume.dispose();
+		});
+		this.instrumentVolumes.clear();
 
 		if (this.volume) {
 			this.volume.dispose();
