@@ -221,8 +221,6 @@ export class ControlPanelModal extends Modal {
 		}
 	}
 
-
-
 	private createMusicalTab(): void {
 		const section = this.createTabSection('Musical Parameters', 'Configure scales, tempo, and musical characteristics');
 
@@ -581,28 +579,238 @@ export class ControlPanelModal extends Modal {
 	private createEffectsTab(): void {
 		const section = this.createTabSection('Audio Effects', 'Spatial audio and effect processing');
 
-		const effectsGroup = this.createSettingsGroup(section, 'Active Effects', 'Current audio processing chain');
+		// Reverb Controls
+		const reverbGroup = this.createSettingsGroup(section, '🌊 Reverb', 'Spatial depth and ambience');
 
-		const effectsList = effectsGroup.createDiv({ cls: 'sonigraph-effects-list' });
+		// Reverb Enable/Disable Toggle
+		createObsidianToggle(
+			reverbGroup,
+			true, // Default enabled
+			async (value) => {
+				if (this.plugin.audioEngine) {
+					this.plugin.audioEngine.setReverbEnabled(value);
+				}
+			},
+			{
+				name: 'Enable reverb',
+				description: 'Turn reverb effect on or off'
+			}
+		);
 
-		const reverbEffect = effectsList.createDiv({ cls: 'sonigraph-effect-item' });
-		reverbEffect.createEl('h4', { text: '🌊 Reverb' });
-		reverbEffect.createEl('p', { text: 'Spatial depth and ambience for all instruments' });
+		new Setting(reverbGroup)
+			.setName('Decay time')
+			.setDesc('How long the reverb tail lasts (0.1 - 10 seconds)')
+			.addSlider(slider => slider
+				.setLimits(0.1, 10, 0.1)
+				.setValue(1.8) // Current default
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateReverbSettings({ decay: value });
+					}
+				}));
 
-		const chorusEffect = effectsList.createDiv({ cls: 'sonigraph-effect-item' });
-		chorusEffect.createEl('h4', { text: '🌀 Chorus' });
-		chorusEffect.createEl('p', { text: 'Rich modulation and width for organ sounds' });
+		new Setting(reverbGroup)
+			.setName('Pre-delay')
+			.setDesc('Initial delay before reverb starts (0 - 0.1 seconds)')
+			.addSlider(slider => slider
+				.setLimits(0, 0.1, 0.005)
+				.setValue(0.02) // Current default
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateReverbSettings({ preDelay: value });
+					}
+				}));
 
-		const filterEffect = effectsList.createDiv({ cls: 'sonigraph-effect-item' });
-		filterEffect.createEl('h4', { text: '🎚️ Filter' });
-		filterEffect.createEl('p', { text: 'Low-pass filtering for warm string tones' });
+		new Setting(reverbGroup)
+			.setName('Wet level')
+			.setDesc('Amount of reverb mixed in (0 - 100%)')
+			.addSlider(slider => slider
+				.setLimits(0, 100, 1)
+				.setValue(25) // Current default (0.25 * 100)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateReverbSettings({ wet: value / 100 });
+					}
+				}));
 
-		// Future features placeholder
-		const futureGroup = this.createSettingsGroup(section, 'Coming Soon', 'Features in development');
-		const placeholder = futureGroup.createDiv({ cls: 'sonigraph-placeholder' });
-		placeholder.createEl('p', { text: '• Spatial positioning based on graph layout' });
-		placeholder.createEl('p', { text: '• Dynamic reverb based on note connections' });
-		placeholder.createEl('p', { text: '• Stereo panning for graph clusters' });
+		// Chorus Controls
+		const chorusGroup = this.createSettingsGroup(section, '🌀 Chorus', 'Rich modulation and width');
+
+		// Chorus Enable/Disable Toggle
+		createObsidianToggle(
+			chorusGroup,
+			true, // Default enabled
+			async (value) => {
+				if (this.plugin.audioEngine) {
+					this.plugin.audioEngine.setChorusEnabled(value);
+				}
+			},
+			{
+				name: 'Enable chorus',
+				description: 'Turn chorus effect on or off'
+			}
+		);
+
+		new Setting(chorusGroup)
+			.setName('Rate')
+			.setDesc('Modulation speed (0.1 - 5 Hz)')
+			.addSlider(slider => slider
+				.setLimits(0.1, 5, 0.1)
+				.setValue(0.8) // Current default
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateChorusSettings({ frequency: value });
+					}
+				}));
+
+		new Setting(chorusGroup)
+			.setName('Depth')
+			.setDesc('Modulation intensity (0 - 100%)')
+			.addSlider(slider => slider
+				.setLimits(0, 100, 1)
+				.setValue(50) // Current default (0.5 * 100)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateChorusSettings({ depth: value / 100 });
+					}
+				}));
+
+		new Setting(chorusGroup)
+			.setName('Delay time')
+			.setDesc('Base delay amount (1 - 20 ms)')
+			.addSlider(slider => slider
+				.setLimits(1, 20, 0.5)
+				.setValue(4.0) // Current default
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateChorusSettings({ delayTime: value });
+					}
+				}));
+
+		new Setting(chorusGroup)
+			.setName('Feedback')
+			.setDesc('Amount of signal fed back (0 - 50%)')
+			.addSlider(slider => slider
+				.setLimits(0, 50, 1)
+				.setValue(5) // Current default (0.05 * 100)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateChorusSettings({ feedback: value / 100 });
+					}
+				}));
+
+		// Filter Controls
+		const filterGroup = this.createSettingsGroup(section, '🎚️ Filter', 'Frequency shaping for warmth');
+
+		// Filter Enable/Disable Toggle
+		createObsidianToggle(
+			filterGroup,
+			true, // Default enabled
+			async (value) => {
+				if (this.plugin.audioEngine) {
+					this.plugin.audioEngine.setFilterEnabled(value);
+				}
+			},
+			{
+				name: 'Enable filter',
+				description: 'Turn filter effect on or off'
+			}
+		);
+
+		new Setting(filterGroup)
+			.setName('Cutoff frequency')
+			.setDesc('Filter cutoff point (200 - 8000 Hz)')
+			.addSlider(slider => slider
+				.setLimits(200, 8000, 50)
+				.setValue(3500) // Current default
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateFilterSettings({ frequency: value });
+					}
+				}));
+
+		new Setting(filterGroup)
+			.setName('Resonance (Q)')
+			.setDesc('Filter sharpness and character (0.1 - 5.0)')
+			.addSlider(slider => slider
+				.setLimits(0.1, 5.0, 0.1)
+				.setValue(0.8) // Current default
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateFilterSettings({ Q: value });
+					}
+				}));
+
+		new Setting(filterGroup)
+			.setName('Filter type')
+			.setDesc('Type of frequency filtering')
+			.addDropdown(dropdown => dropdown
+				.addOption('lowpass', 'Low-pass (warm, removes highs)')
+				.addOption('highpass', 'High-pass (bright, removes lows)')
+				.addOption('bandpass', 'Band-pass (focused, removes highs & lows)')
+				.setValue('lowpass') // Current default
+				.onChange(async (value: 'lowpass' | 'highpass' | 'bandpass') => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateFilterSettings({ type: value });
+					}
+				}));
+
+		// Effect Status Display
+		const statusGroup = this.createSettingsGroup(section, 'Effect status', 'Current effect routing and parameters');
+		const statusDisplay = statusGroup.createDiv({ cls: 'sonigraph-effects-status' });
+
+		// Real-time effect parameters display
+		const parametersDisplay = statusDisplay.createDiv({ cls: 'sonigraph-effect-parameters' });
+		parametersDisplay.createEl('h4', { text: 'Current parameters:' });
+		
+		const reverbStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
+		reverbStatus.createSpan({ text: '🌊 Reverb: ', cls: 'sonigraph-effect-label' });
+		reverbStatus.createSpan({ text: 'Enabled', cls: 'sonigraph-effect-state', attr: { id: 'reverb-state' } });
+		reverbStatus.createSpan({ text: ' | Decay: 1.8s | Wet: 25%', cls: 'sonigraph-effect-params', attr: { id: 'reverb-params' } });
+
+		const chorusStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
+		chorusStatus.createSpan({ text: '🌀 Chorus: ', cls: 'sonigraph-effect-label' });
+		chorusStatus.createSpan({ text: 'Enabled', cls: 'sonigraph-effect-state', attr: { id: 'chorus-state' } });
+		chorusStatus.createSpan({ text: ' | Rate: 0.8Hz | Depth: 50%', cls: 'sonigraph-effect-params', attr: { id: 'chorus-params' } });
+
+		const filterStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
+		filterStatus.createSpan({ text: '🎚️ Filter: ', cls: 'sonigraph-effect-label' });
+		filterStatus.createSpan({ text: 'Enabled', cls: 'sonigraph-effect-state', attr: { id: 'filter-state' } });
+		filterStatus.createSpan({ text: ' | Cutoff: 3500Hz | Q: 0.8', cls: 'sonigraph-effect-params', attr: { id: 'filter-params' } });
+
+		// Effect routing diagram
+		const effectRouting = statusDisplay.createDiv({ cls: 'sonigraph-effect-routing' });
+		effectRouting.createEl('h4', { text: 'Signal flow:' });
+		effectRouting.createEl('p', { text: '🎹 Piano → Reverb → Master Output' });
+		effectRouting.createEl('p', { text: '🎛️ Organ → Chorus → Reverb → Master Output' });
+		effectRouting.createEl('p', { text: '🎻 Strings → Filter → Reverb → Master Output' });
+	}
+
+	private updateEffectStatus(): void {
+		if (!this.plugin.audioEngine) return;
+
+		try {
+			const effectStates = this.plugin.audioEngine.getEffectStates();
+
+			// Update effect states
+			this.updateStatusValue('reverb-state', effectStates.reverb ? 'Enabled' : 'Disabled');
+			this.updateStatusValue('chorus-state', effectStates.chorus ? 'Enabled' : 'Disabled');
+			this.updateStatusValue('filter-state', effectStates.filter ? 'Enabled' : 'Disabled');
+
+			// Note: Parameter values would need to be tracked separately for real-time updates
+			// For now, we show the current states
+		} catch (error) {
+			// Silently handle if audio engine isn't initialized yet
+		}
 	}
 
 	private createStatusTab(): void {
@@ -699,6 +907,9 @@ export class ControlPanelModal extends Modal {
 		// Musical information
 		this.updateStatusValue('musical-events', status.audio.currentNotes?.toString() || '0');
 		this.updateStatusValue('active-voices', status.audio.currentNotes?.toString() || '0');
+
+		// Update effect status
+		this.updateEffectStatus();
 	}
 
 	private updateStatusValue(id: string, value: string): void {
@@ -719,8 +930,6 @@ export class ControlPanelModal extends Modal {
 			errorEl.remove();
 		}, 5000);
 	}
-
-
 
 	private getIconSvg(iconName: string): string {
 		const icons: Record<string, string> = {
