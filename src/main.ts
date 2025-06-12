@@ -5,7 +5,7 @@ import { ControlPanelModal } from './ui/control-panel';
 import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';
 import { MusicalMapper } from './graph/musical-mapper';
-import { getLogger } from './logging';
+import { getLogger, LoggerFactory } from './logging';
 
 const logger = getLogger('main');
 
@@ -80,7 +80,7 @@ export default class SonigraphPlugin extends Plugin {
 		logger.debug('initialization', 'All components initialized');
 	}
 
-	private openControlPanel(): void {
+	public openControlPanel(): void {
 		logger.info('ui', 'Opening control panel');
 
 		const modal = new ControlPanelModal(this.app, this);
@@ -256,5 +256,10 @@ export default class SonigraphPlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		logger.debug('settings', 'Settings saved');
+	}
+
+	getLogs(): any[] {
+		// Return all collected logs
+		return LoggerFactory.getLogs();
 	}
 } 

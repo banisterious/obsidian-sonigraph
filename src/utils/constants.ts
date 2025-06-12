@@ -11,6 +11,7 @@ export interface SonigraphSettings {
 	rootNote: string;
 	traversalMethod: string;
 	isEnabled: boolean;
+	audioFormat: 'mp3' | 'wav';
 	instruments: {
 		piano: InstrumentSettings;
 		organ: InstrumentSettings;
@@ -26,6 +27,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	rootNote: 'C',
 	traversalMethod: 'breadth-first',
 	isEnabled: true,
+	audioFormat: 'mp3',
 	instruments: {
 		piano: { enabled: true, volume: 0.8, maxVoices: 8 },
 		organ: { enabled: true, volume: 0.7, maxVoices: 8 },
