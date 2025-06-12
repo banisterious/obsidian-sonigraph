@@ -37,6 +37,7 @@ var DEFAULT_SETTINGS = {
   rootNote: "C",
   traversalMethod: "breadth-first",
   isEnabled: true,
+  audioFormat: "mp3",
   instruments: {
     piano: { enabled: true, volume: 0.8, maxVoices: 8 },
     organ: { enabled: true, volume: 0.7, maxVoices: 8 },
@@ -55,6 +56,13 @@ var MUSICAL_SCALES = {
 var import_obsidian = require("obsidian");
 
 // src/logging.ts
+var LOG_LEVELS = {
+  "off": 0,
+  "error": 1,
+  "warn": 2,
+  "info": 3,
+  "debug": 4
+};
 var Logger = class {
   constructor(component, context2) {
     this.component = component;
@@ -91,6 +99,10 @@ var Logger = class {
     return enrichedError;
   }
   log(level, category, message, data) {
+    if (LOG_LEVELS[level] > LoggerFactory.getLogLevelValue())
+      return;
+    if (level === "off")
+      return;
     const entry = {
       timestamp: new Date(),
       level,
@@ -103,6 +115,7 @@ var Logger = class {
     this.output(entry);
   }
   output(entry) {
+    LoggerFactory.collectLog(entry);
     const contextStr = entry.context ? ` [${JSON.stringify(entry.context)}]` : "";
     const dataStr = entry.data ? ` | ${JSON.stringify(entry.data)}` : "";
     const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
@@ -130,9 +143,18 @@ var ContextualLoggerImpl = class extends Logger {
     return { ...this.context };
   }
 };
-var LoggerFactory = class {
+var _LoggerFactory = class {
   constructor() {
     this.loggers = /* @__PURE__ */ new Map();
+  }
+  static collectLog(entry) {
+    _LoggerFactory.logs.push(entry);
+  }
+  static getLogs() {
+    return _LoggerFactory.logs.slice();
+  }
+  static clearLogs() {
+    _LoggerFactory.logs = [];
   }
   getLogger(component) {
     if (!this.loggers.has(component)) {
@@ -140,15 +162,98 @@ var LoggerFactory = class {
     }
     return this.loggers.get(component);
   }
+  static setLogLevel(level) {
+    _LoggerFactory.logLevel = level;
+  }
+  static getLogLevel() {
+    return _LoggerFactory.logLevel;
+  }
+  static getLogLevelValue() {
+    return LOG_LEVELS[_LoggerFactory.logLevel];
+  }
   // For future configuration
   initialize(config) {
+    if (config && config.logLevel) {
+      _LoggerFactory.setLogLevel(config.logLevel);
+    }
     console.log("Logger factory initialized");
   }
 };
+var LoggerFactory = _LoggerFactory;
+LoggerFactory.logLevel = "warn";
+LoggerFactory.logs = [];
 var loggerFactory = new LoggerFactory();
 function getLogger(component) {
   return loggerFactory.getLogger(component);
 }
+
+// src/ui/settings.ts
+var logger = getLogger("settings");
+var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    logger.debug("rendering", "Rendering settings tab", {
+      settings: this.plugin.settings
+    });
+    const onboardingSection = containerEl.createEl("div", { cls: "sonigraph-onboarding-section sonigraph-onboarding-bordered" });
+    const onboardingContent = onboardingSection.createEl("div", { cls: "sonigraph-onboarding-content" });
+    onboardingContent.createEl("h3", { text: "\u{1F3B5} Welcome to Sonigraph!" });
+    onboardingContent.createEl("p", { text: "Use the Control Center to configure audio settings, instruments, and musical parameters. Click the ribbon icon or use the command palette to open it." });
+    const onboardingActions = onboardingContent.createEl("div", { cls: "sonigraph-onboarding-actions" });
+    const openControlPanelBtn = onboardingActions.createEl("button", { text: "Open Control Center", cls: "mod-cta" });
+    const dismissBtn = onboardingActions.createEl("button", { text: "Dismiss", cls: "mod-muted" });
+    openControlPanelBtn.addEventListener("click", () => {
+      this.plugin.openControlPanel();
+    });
+    dismissBtn.addEventListener("click", () => {
+      onboardingSection.style.display = "none";
+    });
+    new import_obsidian.Setting(containerEl).setName("Audio format").setDesc("Choose between MP3 (smaller size) or WAV (higher quality)").addDropdown((dropdown) => dropdown.addOption("mp3", "MP3 (Recommended)").addOption("wav", "WAV (High Quality)").setValue(this.plugin.settings.audioFormat).onChange(async (value) => {
+      this.plugin.settings.audioFormat = value;
+      await this.plugin.saveSettings();
+      logger.debug("settings-change", "Audio format changed", { format: value });
+    }));
+    new import_obsidian.Setting(containerEl).setName("Control center").setDesc("Open the Sonigraph Audio Control Center to configure instruments, musical parameters, and effects").addButton((button) => button.setButtonText("Open Control Center").setCta().onClick(() => {
+      this.plugin.openControlPanel();
+    }));
+    const advancedSection = containerEl.createEl("details", { cls: "osp-advanced-settings" });
+    advancedSection.createEl("summary", { text: "Advanced", cls: "osp-advanced-summary" });
+    advancedSection.open = false;
+    new import_obsidian.Setting(advancedSection).setName("Logging level").setDesc('Control the verbosity of plugin logs. Default is "Warnings".').addDropdown(
+      (dropdown) => dropdown.addOption("off", "Off").addOption("error", "Errors Only").addOption("warn", "Warnings").addOption("info", "Info").addOption("debug", "Debug").setValue(LoggerFactory.getLogLevel()).onChange((value) => {
+        LoggerFactory.setLogLevel(value);
+        logger.info("settings-change", "Log level changed", { level: value });
+      })
+    );
+    new import_obsidian.Setting(advancedSection).setName("Export logs").setDesc("Download all plugin logs as a JSON file for support or debugging.").addButton(
+      (button) => button.setButtonText("Export Logs").onClick(async () => {
+        const now2 = new Date();
+        const pad = (n) => n.toString().padStart(2, "0");
+        const filename = `osp-logs-${now2.getFullYear()}${pad(now2.getMonth() + 1)}${pad(now2.getDate())}-${pad(now2.getHours())}${pad(now2.getMinutes())}${pad(now2.getSeconds())}.json`;
+        const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
+        const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        logger.info("export", "Logs exported", { filename });
+      })
+    );
+    logger.debug("rendering", "Settings tab rendered successfully");
+  }
+};
+
+// src/ui/control-panel.ts
+var import_obsidian2 = require("obsidian");
 
 // src/ui/components.ts
 function createObsidianToggle(container, initialValue, onChange, options) {
@@ -221,60 +326,7 @@ function createObsidianToggle(container, initialValue, onChange, options) {
   return checkbox;
 }
 
-// src/ui/settings.ts
-var logger = getLogger("settings");
-var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    logger.debug("rendering", "Rendering settings tab", {
-      settings: this.plugin.settings
-    });
-    containerEl.createEl("h2", { text: "Sonigraph Settings" });
-    const toggleContainer = containerEl.createDiv();
-    createObsidianToggle(
-      toggleContainer,
-      this.plugin.settings.isEnabled,
-      async (value) => {
-        this.plugin.settings.isEnabled = value;
-        await this.plugin.saveSettings();
-        logger.info("state-change", "Plugin enabled state changed", { enabled: value });
-      },
-      {
-        name: "Enable Sonigraph",
-        description: "Turn the plugin on or off"
-      }
-    );
-    new import_obsidian.Setting(containerEl).setName("Tempo").setDesc("The speed of the musical output (BPM)").addSlider((slider) => slider.setLimits(60, 200, 1).setValue(this.plugin.settings.tempo).setDynamicTooltip().onChange(async (value) => {
-      this.plugin.settings.tempo = value;
-      await this.plugin.saveSettings();
-      logger.debug("settings-change", "Tempo changed", { tempo: value });
-    }));
-    new import_obsidian.Setting(containerEl).setName("Volume").setDesc("The volume of the musical output (%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(this.plugin.settings.volume).setDynamicTooltip().onChange(async (value) => {
-      this.plugin.settings.volume = value;
-      await this.plugin.saveSettings();
-      logger.debug("settings-change", "Volume changed", { volume: value });
-    }));
-    new import_obsidian.Setting(containerEl).setName("Musical Scale").setDesc("The scale to use for pitch mapping").addDropdown((dropdown) => dropdown.addOption("major", "Major").addOption("minor", "Minor").addOption("pentatonic", "Pentatonic").addOption("chromatic", "Chromatic").setValue(this.plugin.settings.scale).onChange(async (value) => {
-      this.plugin.settings.scale = value;
-      await this.plugin.saveSettings();
-      logger.debug("settings-change", "Scale changed", { scale: value });
-    }));
-    new import_obsidian.Setting(containerEl).setName("Root Note").setDesc("The root note for the musical scale").addDropdown((dropdown) => dropdown.addOption("C", "C").addOption("C#", "C#").addOption("D", "D").addOption("D#", "D#").addOption("E", "E").addOption("F", "F").addOption("F#", "F#").addOption("G", "G").addOption("G#", "G#").addOption("A", "A").addOption("A#", "A#").addOption("B", "B").setValue(this.plugin.settings.rootNote).onChange(async (value) => {
-      this.plugin.settings.rootNote = value;
-      await this.plugin.saveSettings();
-      logger.debug("settings-change", "Root note changed", { rootNote: value });
-    }));
-    logger.debug("rendering", "Settings tab rendered successfully");
-  }
-};
-
 // src/ui/control-panel.ts
-var import_obsidian2 = require("obsidian");
 var logger2 = getLogger("control-panel");
 var TABS = [
   { id: "status", name: "Status", icon: "activity", description: "Real-time system status and diagnostics" },
@@ -361,6 +413,22 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
         }
       } catch (error) {
         this.showError("Audio test failed: " + error.message);
+      }
+    });
+    const volumeContainer = container.createDiv({ cls: "sonigraph-volume-slider-container" });
+    const volumeLabel = volumeContainer.createEl("label", { text: "Volume", cls: "sonigraph-volume-label" });
+    const volumeSlider = volumeContainer.createEl("input", { type: "range", cls: "sonigraph-volume-slider" });
+    volumeSlider.min = "0";
+    volumeSlider.max = "100";
+    volumeSlider.value = String(this.plugin.settings.volume);
+    volumeSlider.step = "1";
+    volumeSlider.style.width = "120px";
+    volumeSlider.addEventListener("input", async (e) => {
+      const value = Number(e.target.value);
+      this.plugin.settings.volume = value;
+      await this.plugin.saveSettings();
+      if (this.plugin.audioEngine) {
+        this.plugin.audioEngine.updateVolume();
       }
     });
   }
@@ -19548,36 +19616,36 @@ var logger4 = getLogger("audio-engine");
 var SAMPLER_CONFIGS = {
   piano: {
     urls: {
-      "A0": "A0.mp3",
-      "C1": "C1.mp3",
-      "D#1": "Ds1.mp3",
-      "F#1": "Fs1.mp3",
-      "A1": "A1.mp3",
-      "C2": "C2.mp3",
-      "D#2": "Ds2.mp3",
-      "F#2": "Fs2.mp3",
-      "A2": "A2.mp3",
-      "C3": "C3.mp3",
-      "D#3": "Ds3.mp3",
-      "F#3": "Fs3.mp3",
-      "A3": "A3.mp3",
-      "C4": "C4.mp3",
-      "D#4": "Ds4.mp3",
-      "F#4": "Fs4.mp3",
-      "A4": "A4.mp3",
-      "C5": "C5.mp3",
-      "D#5": "Ds5.mp3",
-      "F#5": "Fs5.mp3",
-      "A5": "A5.mp3",
-      "C6": "C6.mp3",
-      "D#6": "Ds6.mp3",
-      "F#6": "Fs6.mp3",
-      "A6": "A6.mp3",
-      "C7": "C7.mp3",
-      "D#7": "Ds7.mp3",
-      "F#7": "Fs7.mp3",
-      "A7": "A7.mp3",
-      "C8": "C8.mp3"
+      "A0": "A0.[format]",
+      "C1": "C1.[format]",
+      "D#1": "Ds1.[format]",
+      "F#1": "Fs1.[format]",
+      "A1": "A1.[format]",
+      "C2": "C2.[format]",
+      "D#2": "Ds2.[format]",
+      "F#2": "Fs2.[format]",
+      "A2": "A2.[format]",
+      "C3": "C3.[format]",
+      "D#3": "Ds3.[format]",
+      "F#3": "Fs3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "D#4": "Ds4.[format]",
+      "F#4": "Fs4.[format]",
+      "A4": "A4.[format]",
+      "C5": "C5.[format]",
+      "D#5": "Ds5.[format]",
+      "F#5": "Fs5.[format]",
+      "A5": "A5.[format]",
+      "C6": "C6.[format]",
+      "D#6": "Ds6.[format]",
+      "F#6": "Fs6.[format]",
+      "A6": "A6.[format]",
+      "C7": "C7.[format]",
+      "D#7": "Ds7.[format]",
+      "F#7": "Fs7.[format]",
+      "A7": "A7.[format]",
+      "C8": "C8.[format]"
     },
     release: 1,
     baseUrl: "https://tonejs.github.io/audio/salamander/",
@@ -19585,26 +19653,26 @@ var SAMPLER_CONFIGS = {
   },
   organ: {
     urls: {
-      "C2": "C2.mp3",
-      "C3": "C3.mp3",
-      "C4": "C4.mp3",
-      "C5": "C5.mp3",
-      "C6": "C6.mp3",
-      "F2": "F2.mp3",
-      "F3": "F3.mp3",
-      "F4": "F4.mp3",
-      "F5": "F5.mp3",
-      "F6": "F6.mp3",
-      "F#2": "Fs2.mp3",
-      "F#3": "Fs3.mp3",
-      "F#4": "Fs4.mp3",
-      "F#5": "Fs5.mp3",
-      "F#6": "Fs6.mp3",
-      "G2": "G2.mp3",
-      "G3": "G3.mp3",
-      "G4": "G4.mp3",
-      "G5": "G5.mp3",
-      "G6": "G6.mp3"
+      "C2": "C2.[format]",
+      "C3": "C3.[format]",
+      "C4": "C4.[format]",
+      "C5": "C5.[format]",
+      "C6": "C6.[format]",
+      "F2": "F2.[format]",
+      "F3": "F3.[format]",
+      "F4": "F4.[format]",
+      "F5": "F5.[format]",
+      "F6": "F6.[format]",
+      "F#2": "Fs2.[format]",
+      "F#3": "Fs3.[format]",
+      "F#4": "Fs4.[format]",
+      "F#5": "Fs5.[format]",
+      "F#6": "Fs6.[format]",
+      "G2": "G2.[format]",
+      "G3": "G3.[format]",
+      "G4": "G4.[format]",
+      "G5": "G5.[format]",
+      "G6": "G6.[format]"
     },
     release: 0.8,
     baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
@@ -19612,22 +19680,22 @@ var SAMPLER_CONFIGS = {
   },
   strings: {
     urls: {
-      "C3": "C3.mp3",
-      "D#3": "Ds3.mp3",
-      "F#3": "Fs3.mp3",
-      "A3": "A3.mp3",
-      "C4": "C4.mp3",
-      "D#4": "Ds4.mp3",
-      "F#4": "Fs4.mp3",
-      "A4": "A4.mp3",
-      "C5": "C5.mp3",
-      "D#5": "Ds5.mp3",
-      "F#5": "Fs5.mp3",
-      "A5": "A5.mp3",
-      "C6": "C6.mp3",
-      "D#6": "Ds6.mp3",
-      "F#6": "Fs6.mp3",
-      "A6": "A6.mp3"
+      "C3": "C3.[format]",
+      "D#3": "Ds3.[format]",
+      "F#3": "Fs3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "D#4": "Ds4.[format]",
+      "F#4": "Fs4.[format]",
+      "A4": "A4.[format]",
+      "C5": "C5.[format]",
+      "D#5": "Ds5.[format]",
+      "F#5": "Fs5.[format]",
+      "A5": "A5.[format]",
+      "C6": "C6.[format]",
+      "D#6": "Ds6.[format]",
+      "F#6": "Fs6.[format]",
+      "A6": "A6.[format]"
     },
     release: 2,
     baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
@@ -19654,6 +19722,17 @@ var AudioEngine = class {
       consonanceStrength: 0.7,
       voiceSpreadMin: 2
     });
+  }
+  getSamplerConfigs() {
+    const format = this.settings.audioFormat;
+    const configs = JSON.parse(JSON.stringify(SAMPLER_CONFIGS));
+    Object.values(configs).forEach((config) => {
+      Object.keys(config.urls).forEach((note) => {
+        const noteKey = note;
+        config.urls[noteKey] = config.urls[noteKey].replace("[format]", format);
+      });
+    });
+    return configs;
   }
   async initialize() {
     if (this.isInitialized) {
@@ -19721,11 +19800,12 @@ var AudioEngine = class {
     });
   }
   async initializeInstruments() {
-    const pianoSampler = new Sampler(SAMPLER_CONFIGS.piano);
+    const configs = this.getSamplerConfigs();
+    const pianoSampler = new Sampler(configs.piano);
     const pianoVolume = new Volume(-6);
     this.instrumentVolumes.set("piano", pianoVolume);
     let pianoOutput = pianoSampler.connect(pianoVolume);
-    for (const effectName of SAMPLER_CONFIGS.piano.effects) {
+    for (const effectName of configs.piano.effects) {
       const effect = this.effects.get(effectName);
       if (effect) {
         pianoOutput = pianoOutput.connect(effect);
@@ -19733,11 +19813,11 @@ var AudioEngine = class {
     }
     pianoOutput.connect(this.volume);
     this.instruments.set("piano", pianoSampler);
-    const organSampler = new Sampler(SAMPLER_CONFIGS.organ);
+    const organSampler = new Sampler(configs.organ);
     const organVolume = new Volume(-6);
     this.instrumentVolumes.set("organ", organVolume);
     let organOutput = organSampler.connect(organVolume);
-    for (const effectName of SAMPLER_CONFIGS.organ.effects) {
+    for (const effectName of configs.organ.effects) {
       const effect = this.effects.get(effectName);
       if (effect) {
         organOutput = organOutput.connect(effect);
@@ -19745,11 +19825,11 @@ var AudioEngine = class {
     }
     organOutput.connect(this.volume);
     this.instruments.set("organ", organSampler);
-    const stringsSampler = new Sampler(SAMPLER_CONFIGS.strings);
+    const stringsSampler = new Sampler(configs.strings);
     const stringsVolume = new Volume(-6);
     this.instrumentVolumes.set("strings", stringsVolume);
     let stringsOutput = stringsSampler.connect(stringsVolume);
-    for (const effectName of SAMPLER_CONFIGS.strings.effects) {
+    for (const effectName of configs.strings.effects) {
       const effect = this.effects.get(effectName);
       if (effect) {
         stringsOutput = stringsOutput.connect(effect);
@@ -20615,6 +20695,9 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
     logger7.debug("settings", "Settings saved");
+  }
+  getLogs() {
+    return LoggerFactory.getLogs();
   }
 };
 /*! Bundled license information:

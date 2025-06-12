@@ -11,16 +11,16 @@ const logger = getLogger('audio-engine');
 const SAMPLER_CONFIGS = {
 	piano: {
 		urls: {
-			"A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3",
-			"F#1": "Fs1.mp3", "A1": "A1.mp3", "C2": "C2.mp3",
-			"D#2": "Ds2.mp3", "F#2": "Fs2.mp3", "A2": "A2.mp3",
-			"C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
-			"A3": "A3.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3",
-			"F#4": "Fs4.mp3", "A4": "A4.mp3", "C5": "C5.mp3",
-			"D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
-			"C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
-			"A6": "A6.mp3", "C7": "C7.mp3", "D#7": "Ds7.mp3",
-			"F#7": "Fs7.mp3", "A7": "A7.mp3", "C8": "C8.mp3"
+			"A0": "A0.[format]", "C1": "C1.[format]", "D#1": "Ds1.[format]",
+			"F#1": "Fs1.[format]", "A1": "A1.[format]", "C2": "C2.[format]",
+			"D#2": "Ds2.[format]", "F#2": "Fs2.[format]", "A2": "A2.[format]",
+			"C3": "C3.[format]", "D#3": "Ds3.[format]", "F#3": "Fs3.[format]",
+			"A3": "A3.[format]", "C4": "C4.[format]", "D#4": "Ds4.[format]",
+			"F#4": "Fs4.[format]", "A4": "A4.[format]", "C5": "C5.[format]",
+			"D#5": "Ds5.[format]", "F#5": "Fs5.[format]", "A5": "A5.[format]",
+			"C6": "C6.[format]", "D#6": "Ds6.[format]", "F#6": "Fs6.[format]",
+			"A6": "A6.[format]", "C7": "C7.[format]", "D#7": "Ds7.[format]",
+			"F#7": "Fs7.[format]", "A7": "A7.[format]", "C8": "C8.[format]"
 		},
 		release: 1,
 		baseUrl: "https://tonejs.github.io/audio/salamander/",
@@ -28,13 +28,13 @@ const SAMPLER_CONFIGS = {
 	},
 	organ: {
 		urls: {
-			"C2": "C2.mp3", "C3": "C3.mp3", "C4": "C4.mp3",
-			"C5": "C5.mp3", "C6": "C6.mp3", "F2": "F2.mp3",
-			"F3": "F3.mp3", "F4": "F4.mp3", "F5": "F5.mp3",
-			"F6": "F6.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3",
-			"F#4": "Fs4.mp3", "F#5": "Fs5.mp3", "F#6": "Fs6.mp3",
-			"G2": "G2.mp3", "G3": "G3.mp3", "G4": "G4.mp3",
-			"G5": "G5.mp3", "G6": "G6.mp3"
+			"C2": "C2.[format]", "C3": "C3.[format]", "C4": "C4.[format]",
+			"C5": "C5.[format]", "C6": "C6.[format]", "F2": "F2.[format]",
+			"F3": "F3.[format]", "F4": "F4.[format]", "F5": "F5.[format]",
+			"F6": "F6.[format]", "F#2": "Fs2.[format]", "F#3": "Fs3.[format]",
+			"F#4": "Fs4.[format]", "F#5": "Fs5.[format]", "F#6": "Fs6.[format]",
+			"G2": "G2.[format]", "G3": "G3.[format]", "G4": "G4.[format]",
+			"G5": "G5.[format]", "G6": "G6.[format]"
 		},
 		release: 0.8,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
@@ -42,12 +42,12 @@ const SAMPLER_CONFIGS = {
 	},
 	strings: {
 		urls: {
-			"C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
-			"A3": "A3.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3",
-			"F#4": "Fs4.mp3", "A4": "A4.mp3", "C5": "C5.mp3",
-			"D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
-			"C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
-			"A6": "A6.mp3"
+			"C3": "C3.[format]", "D#3": "Ds3.[format]", "F#3": "Fs3.[format]",
+			"A3": "A3.[format]", "C4": "C4.[format]", "D#4": "Ds4.[format]",
+			"F#4": "Fs4.[format]", "A4": "A4.[format]", "C5": "C5.[format]",
+			"D#5": "Ds5.[format]", "F#5": "Fs5.[format]", "A5": "A5.[format]",
+			"C6": "C6.[format]", "D#6": "Ds6.[format]", "F#6": "Fs6.[format]",
+			"A6": "A6.[format]"
 		},
 		release: 2.0,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
@@ -84,6 +84,21 @@ export class AudioEngine {
 			consonanceStrength: 0.7,
 			voiceSpreadMin: 2
 		});
+	}
+
+	private getSamplerConfigs(): typeof SAMPLER_CONFIGS {
+		// Replace [format] placeholder with actual format
+		const format = this.settings.audioFormat;
+		const configs = JSON.parse(JSON.stringify(SAMPLER_CONFIGS)) as typeof SAMPLER_CONFIGS;
+		
+		Object.values(configs).forEach(config => {
+			Object.keys(config.urls).forEach(note => {
+				const noteKey = note as keyof typeof config.urls;
+				config.urls[noteKey] = config.urls[noteKey].replace('[format]', format);
+			});
+		});
+		
+		return configs;
 	}
 
 	async initialize(): Promise<void> {
@@ -163,13 +178,15 @@ export class AudioEngine {
 	}
 
 	private async initializeInstruments(): Promise<void> {
+		const configs = this.getSamplerConfigs();
+		
 		// Piano - using Sampler with high-quality samples
-		const pianoSampler = new Sampler(SAMPLER_CONFIGS.piano);
+		const pianoSampler = new Sampler(configs.piano);
 		const pianoVolume = new Volume(-6); // Individual volume control
 		this.instrumentVolumes.set('piano', pianoVolume);
 		
 		let pianoOutput = pianoSampler.connect(pianoVolume);
-		for (const effectName of SAMPLER_CONFIGS.piano.effects) {
+		for (const effectName of configs.piano.effects) {
 			const effect = this.effects.get(effectName);
 			if (effect) {
 				pianoOutput = pianoOutput.connect(effect);
@@ -179,12 +196,12 @@ export class AudioEngine {
 		this.instruments.set('piano', pianoSampler);
 
 		// Organ - using Sampler with harmonium samples
-		const organSampler = new Sampler(SAMPLER_CONFIGS.organ);
+		const organSampler = new Sampler(configs.organ);
 		const organVolume = new Volume(-6); // Individual volume control
 		this.instrumentVolumes.set('organ', organVolume);
 		
 		let organOutput = organSampler.connect(organVolume);
-		for (const effectName of SAMPLER_CONFIGS.organ.effects) {
+		for (const effectName of configs.organ.effects) {
 			const effect = this.effects.get(effectName);
 			if (effect) {
 				organOutput = organOutput.connect(effect);
@@ -194,12 +211,12 @@ export class AudioEngine {
 		this.instruments.set('organ', organSampler);
 
 		// Strings - using Sampler with violin samples
-		const stringsSampler = new Sampler(SAMPLER_CONFIGS.strings);
+		const stringsSampler = new Sampler(configs.strings);
 		const stringsVolume = new Volume(-6); // Individual volume control
 		this.instrumentVolumes.set('strings', stringsVolume);
 		
 		let stringsOutput = stringsSampler.connect(stringsVolume);
-		for (const effectName of SAMPLER_CONFIGS.strings.effects) {
+		for (const effectName of configs.strings.effects) {
 			const effect = this.effects.get(effectName);
 			if (effect) {
 				stringsOutput = stringsOutput.connect(effect);
@@ -493,12 +510,11 @@ export class AudioEngine {
 		logger.debug('instrument-settings', 'Applied initial instrument settings', this.settings.instruments);
 	}
 
-	private updateVolume(): void {
+	public updateVolume(): void {
 		if (this.volume) {
 			// Convert 0-100 range to decibels (-20dB to 0dB)
 			const volumeDb = (this.settings.volume / 100) * 20 - 20;
 			this.volume.volume.value = volumeDb;
-			
 			logger.debug('volume', 'Volume updated', {
 				settingValue: this.settings.volume,
 				decibelValue: volumeDb.toFixed(1)

@@ -23,7 +23,16 @@ export interface LogEntry {
 	context?: Record<string, any>;
 }
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'off' | 'error' | 'warn' | 'info' | 'debug';
+
+// Helper to compare log levels
+const LOG_LEVELS: Record<LogLevel, number> = {
+	'off': 0,
+	'error': 1,
+	'warn': 2,
+	'info': 3,
+	'debug': 4
+};
 
 // Simple Logger implementation
 class Logger implements ILogger {
@@ -74,6 +83,9 @@ class Logger implements ILogger {
 	}
 
 	private log(level: LogLevel, category: string, message: string, data?: any): void {
+		// Filter based on global log level
+		if (LOG_LEVELS[level] > LoggerFactory.getLogLevelValue()) return;
+		if (level === 'off') return;
 		const entry: LogEntry = {
 			timestamp: new Date(),
 			level,
@@ -83,16 +95,15 @@ class Logger implements ILogger {
 			data,
 			context: this.context
 		};
-
 		this.output(entry);
 	}
 
 	private output(entry: LogEntry): void {
+		// Collect logs for export
+		LoggerFactory.collectLog(entry);
 		const contextStr = entry.context ? ` [${JSON.stringify(entry.context)}]` : '';
 		const dataStr = entry.data ? ` | ${JSON.stringify(entry.data)}` : '';
-		
 		const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
-
 		switch (entry.level) {
 			case 'debug':
 				console.debug(logMessage);
@@ -123,6 +134,20 @@ class ContextualLoggerImpl extends Logger implements ContextualLogger {
 // Logger factory
 class LoggerFactory {
 	private loggers = new Map<string, ILogger>();
+	private static logLevel: LogLevel = 'warn';
+	private static logs: LogEntry[] = [];
+
+	static collectLog(entry: LogEntry) {
+		LoggerFactory.logs.push(entry);
+	}
+
+	static getLogs(): LogEntry[] {
+		return LoggerFactory.logs.slice();
+	}
+
+	static clearLogs() {
+		LoggerFactory.logs = [];
+	}
 
 	getLogger(component: string): ILogger {
 		if (!this.loggers.has(component)) {
@@ -131,9 +156,22 @@ class LoggerFactory {
 		return this.loggers.get(component)!;
 	}
 
+	static setLogLevel(level: LogLevel) {
+		LoggerFactory.logLevel = level;
+	}
+	static getLogLevel(): LogLevel {
+		return LoggerFactory.logLevel;
+	}
+	static getLogLevelValue(): number {
+		return LOG_LEVELS[LoggerFactory.logLevel];
+	}
+
 	// For future configuration
 	initialize(config?: any): void {
 		// Future: Add configuration support
+		if (config && config.logLevel) {
+			LoggerFactory.setLogLevel(config.logLevel);
+		}
 		console.log('Logger factory initialized');
 	}
 }
@@ -147,4 +185,4 @@ export function getLogger(component: string): ILogger {
 }
 
 // Export factory for configuration
-export { loggerFactory }; 
+export { loggerFactory, LoggerFactory }; 

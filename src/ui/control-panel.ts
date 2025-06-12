@@ -145,6 +145,24 @@ export class ControlPanelModal extends Modal {
 				this.showError('Audio test failed: ' + error.message);
 			}
 		});
+
+		// Volume slider beneath the buttons
+		const volumeContainer = container.createDiv({ cls: 'sonigraph-volume-slider-container' });
+		const volumeLabel = volumeContainer.createEl('label', { text: 'Volume', cls: 'sonigraph-volume-label' });
+		const volumeSlider = volumeContainer.createEl('input', { type: 'range', cls: 'sonigraph-volume-slider' }) as HTMLInputElement;
+		volumeSlider.min = '0';
+		volumeSlider.max = '100';
+		volumeSlider.value = String(this.plugin.settings.volume);
+		volumeSlider.step = '1';
+		volumeSlider.style.width = '120px';
+		volumeSlider.addEventListener('input', async (e) => {
+			const value = Number((e.target as HTMLInputElement).value);
+			this.plugin.settings.volume = value;
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				this.plugin.audioEngine.updateVolume();
+			}
+		});
 	}
 
 	private createTabs(): void {
