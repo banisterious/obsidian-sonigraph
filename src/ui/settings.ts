@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import SonigraphPlugin from '../main';
-import { getLogger } from '../logging';
+import { getLogger, loggerFactory, LoggerFactory } from '../logging';
 import { createObsidianToggle } from './components';
 
 const logger = getLogger('settings');
@@ -22,91 +22,94 @@ export class SonigraphSettingTab extends PluginSettingTab {
 			settings: this.plugin.settings 
 		});
 
-		containerEl.createEl('h2', { text: 'Sonigraph Settings' });
+		// Onboarding section (dismissible)
+		const onboardingSection = containerEl.createEl('div', { cls: 'sonigraph-onboarding-section sonigraph-onboarding-bordered' });
+		const onboardingContent = onboardingSection.createEl('div', { cls: 'sonigraph-onboarding-content' });
+		onboardingContent.createEl('h3', { text: '🎵 Welcome to Sonigraph!' });
+		onboardingContent.createEl('p', { text: 'Use the Control Center to configure audio settings, instruments, and musical parameters. Click the ribbon icon or use the command palette to open it.' });
+		
+		const onboardingActions = onboardingContent.createEl('div', { cls: 'sonigraph-onboarding-actions' });
+		const openControlPanelBtn = onboardingActions.createEl('button', { text: 'Open Control Center', cls: 'mod-cta' });
+		const dismissBtn = onboardingActions.createEl('button', { text: 'Dismiss', cls: 'mod-muted' });
+		
+		openControlPanelBtn.addEventListener('click', () => {
+			this.plugin.openControlPanel();
+		});
+		
+		dismissBtn.addEventListener('click', () => {
+			onboardingSection.style.display = 'none';
+		});
 
-		// Enable/Disable Toggle using standardized component
-		const toggleContainer = containerEl.createDiv();
-		createObsidianToggle(
-			toggleContainer,
-			this.plugin.settings.isEnabled,
-			async (value) => {
-				this.plugin.settings.isEnabled = value;
-				await this.plugin.saveSettings();
-				logger.info('state-change', 'Plugin enabled state changed', { enabled: value });
-			},
-			{
-				name: 'Enable Sonigraph',
-				description: 'Turn the plugin on or off'
-			}
-		);
-
-		// Tempo Setting
+		// Audio Format Setting
 		new Setting(containerEl)
-			.setName('Tempo')
-			.setDesc('The speed of the musical output (BPM)')
-			.addSlider(slider => slider
-				.setLimits(60, 200, 1)
-				.setValue(this.plugin.settings.tempo)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.tempo = value;
-					await this.plugin.saveSettings();
-					logger.debug('settings-change', 'Tempo changed', { tempo: value });
-				}));
-
-		// Volume Setting
-		new Setting(containerEl)
-			.setName('Volume')
-			.setDesc('The volume of the musical output (%)')
-			.addSlider(slider => slider
-				.setLimits(0, 100, 1)
-				.setValue(this.plugin.settings.volume)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.volume = value;
-					await this.plugin.saveSettings();
-					logger.debug('settings-change', 'Volume changed', { volume: value });
-				}));
-
-		// Musical Scale Setting
-		new Setting(containerEl)
-			.setName('Musical Scale')
-			.setDesc('The scale to use for pitch mapping')
+			.setName('Audio format')
+			.setDesc('Choose between MP3 (smaller size) or WAV (higher quality)')
 			.addDropdown(dropdown => dropdown
-				.addOption('major', 'Major')
-				.addOption('minor', 'Minor')
-				.addOption('pentatonic', 'Pentatonic')
-				.addOption('chromatic', 'Chromatic')
-				.setValue(this.plugin.settings.scale)
-				.onChange(async (value: 'major' | 'minor' | 'pentatonic' | 'chromatic') => {
-					this.plugin.settings.scale = value;
+				.addOption('mp3', 'MP3 (Recommended)')
+				.addOption('wav', 'WAV (High Quality)')
+				.setValue(this.plugin.settings.audioFormat)
+				.onChange(async (value: 'mp3' | 'wav') => {
+					this.plugin.settings.audioFormat = value;
 					await this.plugin.saveSettings();
-					logger.debug('settings-change', 'Scale changed', { scale: value });
+					logger.debug('settings-change', 'Audio format changed', { format: value });
 				}));
 
-		// Root Note Setting
+		// Control Center Setting
 		new Setting(containerEl)
-			.setName('Root Note')
-			.setDesc('The root note for the musical scale')
-			.addDropdown(dropdown => dropdown
-				.addOption('C', 'C')
-				.addOption('C#', 'C#')
-				.addOption('D', 'D')
-				.addOption('D#', 'D#')
-				.addOption('E', 'E')
-				.addOption('F', 'F')
-				.addOption('F#', 'F#')
-				.addOption('G', 'G')
-				.addOption('G#', 'G#')
-				.addOption('A', 'A')
-				.addOption('A#', 'A#')
-				.addOption('B', 'B')
-				.setValue(this.plugin.settings.rootNote)
-				.onChange(async (value: string) => {
-					this.plugin.settings.rootNote = value;
-					await this.plugin.saveSettings();
-					logger.debug('settings-change', 'Root note changed', { rootNote: value });
+			.setName('Control center')
+			.setDesc('Open the Sonigraph Audio Control Center to configure instruments, musical parameters, and effects')
+			.addButton(button => button
+				.setButtonText('Open Control Center')
+				.setCta()
+				.onClick(() => {
+					this.plugin.openControlPanel();
 				}));
+
+		// --- Advanced Section ---
+		const advancedSection = containerEl.createEl('details', { cls: 'osp-advanced-settings' });
+		advancedSection.createEl('summary', { text: 'Advanced', cls: 'osp-advanced-summary' });
+		advancedSection.open = false;
+
+		// Logging Level Setting
+		new Setting(advancedSection)
+			.setName('Logging level')
+			.setDesc('Control the verbosity of plugin logs. Default is "Warnings".')
+			.addDropdown(dropdown => dropdown
+				.addOption('off', 'Off')
+				.addOption('error', 'Errors Only')
+				.addOption('warn', 'Warnings')
+				.addOption('info', 'Info')
+				.addOption('debug', 'Debug')
+				.setValue(LoggerFactory.getLogLevel())
+				.onChange((value: 'off' | 'error' | 'warn' | 'info' | 'debug') => {
+					LoggerFactory.setLogLevel(value);
+					logger.info('settings-change', 'Log level changed', { level: value });
+				})
+			);
+
+		// Export Logs Button
+		new Setting(advancedSection)
+			.setName('Export logs')
+			.setDesc('Download all plugin logs as a JSON file for support or debugging.')
+			.addButton(button => button
+				.setButtonText('Export Logs')
+				.onClick(async () => {
+					const now = new Date();
+					const pad = (n: number) => n.toString().padStart(2, '0');
+					const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+					const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
+					const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = filename;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+					logger.info('export', 'Logs exported', { filename });
+				})
+			);
 
 		logger.debug('rendering', 'Settings tab rendered successfully');
 	}
