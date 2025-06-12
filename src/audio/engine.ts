@@ -430,6 +430,134 @@ export class AudioEngine {
 	}
 
 	/**
+	 * Update reverb effect parameters
+	 */
+	updateReverbSettings(settings: { decay?: number; preDelay?: number; wet?: number }): void {
+		const reverb = this.effects.get('reverb');
+		if (reverb) {
+			if (settings.decay !== undefined) {
+				reverb.decay = settings.decay;
+			}
+			if (settings.preDelay !== undefined) {
+				reverb.preDelay = settings.preDelay;
+			}
+			if (settings.wet !== undefined) {
+				reverb.wet.value = settings.wet;
+			}
+			logger.debug('effects', 'Reverb settings updated', settings);
+		} else {
+			logger.error('effects', 'Reverb effect not found');
+		}
+	}
+
+	/**
+	 * Update chorus effect parameters
+	 */
+	updateChorusSettings(settings: { frequency?: number; delayTime?: number; depth?: number; feedback?: number; spread?: number }): void {
+		const chorus = this.effects.get('chorus');
+		if (chorus) {
+			if (settings.frequency !== undefined) {
+				chorus.frequency.value = settings.frequency;
+			}
+			if (settings.delayTime !== undefined) {
+				chorus.delayTime = settings.delayTime;
+			}
+			if (settings.depth !== undefined) {
+				chorus.depth = settings.depth;
+			}
+			if (settings.feedback !== undefined) {
+				chorus.feedback.value = settings.feedback;
+			}
+			if (settings.spread !== undefined) {
+				chorus.spread = settings.spread;
+			}
+			logger.debug('effects', 'Chorus settings updated', settings);
+		} else {
+			logger.error('effects', 'Chorus effect not found');
+		}
+	}
+
+	/**
+	 * Update filter effect parameters
+	 */
+	updateFilterSettings(settings: { frequency?: number; Q?: number; type?: 'lowpass' | 'highpass' | 'bandpass' }): void {
+		const filter = this.effects.get('filter');
+		if (filter) {
+			if (settings.frequency !== undefined) {
+				filter.frequency.value = settings.frequency;
+			}
+			if (settings.Q !== undefined) {
+				filter.Q.value = settings.Q;
+			}
+			if (settings.type !== undefined) {
+				filter.type = settings.type;
+			}
+			logger.debug('effects', 'Filter settings updated', settings);
+		} else {
+			logger.error('effects', 'Filter effect not found');
+		}
+	}
+
+	/**
+	 * Enable or disable reverb effect
+	 */
+	setReverbEnabled(enabled: boolean): void {
+		const reverb = this.effects.get('reverb');
+		if (reverb) {
+			reverb.wet.value = enabled ? 0.25 : 0; // Default wet level or 0
+			logger.debug('effects', `Reverb ${enabled ? 'enabled' : 'disabled'}`);
+		} else {
+			logger.error('effects', 'Reverb effect not found');
+		}
+	}
+
+	/**
+	 * Enable or disable chorus effect
+	 */
+	setChorusEnabled(enabled: boolean): void {
+		const chorus = this.effects.get('chorus');
+		if (chorus) {
+			chorus.wet.value = enabled ? 1 : 0; // Full wet when enabled, dry when disabled
+			logger.debug('effects', `Chorus ${enabled ? 'enabled' : 'disabled'}`);
+		} else {
+			logger.error('effects', 'Chorus effect not found');
+		}
+	}
+
+	/**
+	 * Enable or disable filter effect
+	 */
+	setFilterEnabled(enabled: boolean): void {
+		const filter = this.effects.get('filter');
+		if (filter) {
+			// For filters, we can't use wet/dry, so we bypass by setting frequency very high or very low
+			if (enabled) {
+				filter.frequency.value = 3500; // Default cutoff
+			} else {
+				filter.frequency.value = 20000; // Effectively bypass (above audible range)
+			}
+			logger.debug('effects', `Filter ${enabled ? 'enabled' : 'disabled'}`);
+		} else {
+			logger.error('effects', 'Filter effect not found');
+		}
+	}
+
+	/**
+	 * Get current effect states
+	 */
+	getEffectStates(): { reverb: boolean; chorus: boolean; filter: boolean } {
+		const reverb = this.effects.get('reverb');
+		const chorus = this.effects.get('chorus');
+		const filter = this.effects.get('filter');
+
+		return {
+			reverb: reverb ? reverb.wet.value > 0 : false,
+			chorus: chorus ? chorus.wet.value > 0 : false,
+			filter: filter ? filter.frequency.value < 15000 : false // Consider enabled if cutoff is reasonable
+		};
+	}
+
+	/**
 	 * Update individual instrument volume
 	 */
 	updateInstrumentVolume(instrumentKey: string, volume: number): void {
