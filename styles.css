@@ -784,39 +784,47 @@
 }
 
 .sonigraph-instrument-control {
-    margin-bottom: 24px;
-    padding: 20px;
-    border-radius: 8px;
+    margin-bottom: var(--size-4-3);
+    padding: var(--size-4-2);
+    border-radius: var(--radius-s);
+    background: var(--background-secondary);
     border: 1px solid var(--background-modifier-border);
-    background: var(--background-primary-alt);
 }
 
 .sonigraph-instrument-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: var(--size-2-1);
+    margin-bottom: var(--size-2-3);
 }
 
 .sonigraph-instrument-icon {
-    font-size: 1.2em;
+    font-size: var(--font-ui-large);
 }
 
 .sonigraph-instrument-name {
-    font-size: 1.1em;
-    font-weight: 600;
-    color: var(--text-normal);
+    font-weight: var(--font-medium);
+    font-size: var(--font-ui-medium);
+}
+
+.sonigraph-instrument-controls {
+    overflow: hidden;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.sonigraph-instrument-controls[style*="display: none"] {
+    opacity: 0;
 }
 
 .sonigraph-frequency-info {
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: var(--size-2-3);
+    padding-top: var(--size-2-3);
     border-top: 1px solid var(--background-modifier-border);
 }
 
 .sonigraph-frequency-range {
-    font-style: italic;
     color: var(--text-muted);
+    font-style: italic;
 }
 
 /* ===== EFFECTS LIST ===== */
@@ -987,10 +995,6 @@
 .sonigraph-settings-group .setting-item-control {
     min-width: 150px;
 }
-
-
-
-
 
 /* =============================================================================
    TEMPLATE TABS MODAL
@@ -1413,4 +1417,366 @@
     .template-tool-section {
         padding: var(--oom-spacing-sm);
     }
+}
+
+/* Effect Presets Styling */
+.sonigraph-preset-group {
+	margin-bottom: 20px;
+}
+
+.sonigraph-preset-category {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-muted);
+	margin: 0 0 10px 0;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.sonigraph-preset-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 15px;
+}
+
+.sonigraph-preset-button {
+	background: var(--interactive-normal);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px 12px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-normal);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+.sonigraph-preset-button:hover {
+	background: var(--interactive-hover);
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sonigraph-preset-button:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.sonigraph-reset-button {
+	background: var(--background-modifier-error-hover);
+	border-color: var(--background-modifier-error);
+	color: var(--text-on-accent);
+}
+
+.sonigraph-reset-button:hover {
+	background: var(--background-modifier-error);
+	border-color: var(--background-modifier-error);
+}
+
+.sonigraph-section-separator {
+	border: none;
+	height: 1px;
+	background: var(--background-modifier-border);
+	margin: 25px 0;
+}
+
+.sonigraph-notification {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	padding: 12px 16px;
+	border-radius: 6px;
+	font-size: 13px;
+	font-weight: 500;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index: 1000;
+	animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+/* Smart Parameter Suggestion Buttons */
+.sonigraph-suggestions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 8px;
+	margin-bottom: 12px;
+}
+
+.sonigraph-suggestion-button {
+	background: var(--background-modifier-border);
+	border: 1px solid var(--background-modifier-border-hover);
+	border-radius: 4px;
+	padding: 4px 8px;
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.sonigraph-suggestion-button:hover {
+	background: var(--interactive-accent);
+	border-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.sonigraph-suggestion-button:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced effect settings descriptions */
+.setting-item-description {
+	font-style: italic;
+	color: var(--text-muted) !important;
+	font-size: 12px;
+	line-height: 1.4;
+	margin-top: 4px;
+}
+
+/* Musical context styling */
+.sonigraph-effect-settings-container .setting-item-description {
+	background: var(--background-secondary);
+	border-left: 3px solid var(--interactive-accent);
+	padding: 6px 10px;
+	border-radius: 4px;
+	margin: 6px 0 12px 0;
+	font-style: normal;
+}
+
+/* Smart range indicators */
+.sonigraph-effect-settings-container .setting-item-control {
+	position: relative;
+}
+
+.sonigraph-effect-settings-container .slider {
+	position: relative;
+}
+
+.sonigraph-effect-settings-container .slider::after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: linear-gradient(
+		to right,
+		var(--color-red) 0%,
+		var(--color-orange) 25%,
+		var(--color-green) 50%,
+		var(--color-blue) 75%,
+		var(--color-purple) 100%
+	);
+	border-radius: 1px;
+	opacity: 0.3;
+}
+
+/* Real-time Feedback UI Styling */
+.sonigraph-instrument-group {
+	margin-bottom: 25px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 16px;
+	background: var(--background-primary);
+}
+
+.sonigraph-instrument-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.sonigraph-instrument-header-left {
+	flex: 1;
+}
+
+.sonigraph-instrument-header-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sonigraph-instrument-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.sonigraph-preview-button {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: 6px;
+	padding: 6px 12px;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+.sonigraph-preview-button:hover {
+	background: var(--interactive-accent-hover);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sonigraph-preview-button.active {
+	background: var(--color-red);
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.7; }
+}
+
+.sonigraph-performance-indicator {
+	font-size: 11px;
+	font-weight: 500;
+	padding: 4px 8px;
+	border-radius: 4px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	white-space: nowrap;
+	font-family: var(--font-monospace);
+}
+
+.sonigraph-performance-indicator.good {
+	background: var(--color-green);
+	color: var(--text-on-accent);
+	border-color: var(--color-green);
+}
+
+.sonigraph-performance-indicator.warning {
+	background: var(--color-orange);
+	color: var(--text-on-accent);
+	border-color: var(--color-orange);
+}
+
+.sonigraph-performance-indicator.danger {
+	background: var(--color-red);
+	color: var(--text-on-accent);
+	border-color: var(--color-red);
+}
+
+.sonigraph-effect-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.sonigraph-bypass-button {
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border-hover);
+	border-radius: 4px;
+	padding: 4px 8px;
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.sonigraph-bypass-button:hover {
+	background: var(--interactive-hover);
+	border-color: var(--interactive-accent);
+	color: var(--text-normal);
+}
+
+.sonigraph-bypass-button.bypassed {
+	background: var(--color-orange);
+	border-color: var(--color-orange);
+	color: var(--text-on-accent);
+}
+
+.sonigraph-bypass-button.bypassed:hover {
+	background: var(--color-orange);
+	opacity: 0.8;
+}
+
+/* Enhanced effect group styling */
+.sonigraph-effect-group {
+	margin-bottom: 18px;
+	padding: 12px;
+	background: var(--background-secondary);
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-effect-group:last-child {
+	margin-bottom: 0;
+}
+
+/* Real-time parameter feedback enhancements */
+.sonigraph-effect-settings-container .setting-item {
+	border-bottom: 1px solid var(--background-modifier-border-hover);
+	padding-bottom: 8px;
+	margin-bottom: 12px;
+}
+
+.sonigraph-effect-settings-container .setting-item:last-child {
+	border-bottom: none;
+	margin-bottom: 0;
+}
+
+/* Slider enhancements for real-time feedback */
+.sonigraph-effect-settings-container .slider {
+	transition: all 0.1s ease;
+}
+
+.sonigraph-effect-settings-container .slider:active {
+	transform: scale(1.02);
+}
+
+.sonigraph-effect-settings-container .slider-thumb {
+	transition: all 0.1s ease;
+}
+
+.sonigraph-effect-settings-container .slider:active .slider-thumb {
+	box-shadow: 0 0 0 4px rgba(var(--interactive-accent-rgb), 0.3);
+}
+
+/* Placeholder content styling */
+.sonigraph-placeholder {
+	padding: 20px;
+	text-align: center;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px dashed var(--background-modifier-border);
+	margin: 10px 0;
+}
+
+.sonigraph-placeholder-text {
+	color: var(--text-muted);
+	font-size: 0.9em;
+	line-height: 1.5;
+	margin: 8px 0;
 }

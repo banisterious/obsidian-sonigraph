@@ -72,7 +72,7 @@ var DEFAULT_SETTINGS = {
       }
     },
     organ: {
-      enabled: true,
+      enabled: false,
       volume: 0.7,
       maxVoices: 8,
       effects: {
@@ -109,7 +109,7 @@ var DEFAULT_SETTINGS = {
       maxVoices: 8,
       effects: {
         reverb: {
-          enabled: false,
+          enabled: true,
           params: {
             decay: 2.8,
             preDelay: 0.04,
@@ -126,7 +126,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         filter: {
-          enabled: false,
+          enabled: true,
           params: {
             frequency: 3500,
             Q: 0.8,
@@ -136,7 +136,7 @@ var DEFAULT_SETTINGS = {
       }
     },
     choir: {
-      enabled: true,
+      enabled: false,
       volume: 0.7,
       maxVoices: 8,
       effects: {
@@ -168,7 +168,7 @@ var DEFAULT_SETTINGS = {
       }
     },
     vocalPads: {
-      enabled: true,
+      enabled: false,
       volume: 0.5,
       maxVoices: 8,
       effects: {
@@ -200,7 +200,7 @@ var DEFAULT_SETTINGS = {
       }
     },
     pad: {
-      enabled: true,
+      enabled: false,
       volume: 0.4,
       maxVoices: 8,
       effects: {
@@ -296,7 +296,7 @@ var DEFAULT_SETTINGS = {
       }
     },
     saxophone: {
-      enabled: true,
+      enabled: false,
       volume: 0.7,
       maxVoices: 6,
       effects: {
@@ -464,6 +464,521 @@ var MUSICAL_SCALES = {
   pentatonic: [0, 2, 4, 7, 9],
   chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 };
+var EFFECT_PRESETS = {
+  // Venue-based presets
+  "concert-hall": {
+    name: "Concert Hall",
+    description: "Large reverberant space with natural acoustics",
+    category: "venue",
+    effects: {
+      reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.6 } },
+      chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3, feedback: 0.03 } },
+      filter: { enabled: true, params: { frequency: 6e3, Q: 0.5, type: "lowpass" } }
+    }
+  },
+  "cathedral": {
+    name: "Cathedral",
+    description: "Massive stone space with long, ethereal reverb",
+    category: "venue",
+    effects: {
+      reverb: { enabled: true, params: { decay: 8, preDelay: 0.15, wet: 0.8 } },
+      chorus: { enabled: true, params: { frequency: 0.3, depth: 0.4, delayTime: 6, feedback: 0.08 } },
+      filter: { enabled: true, params: { frequency: 4e3, Q: 0.6, type: "lowpass" } }
+    }
+  },
+  "studio": {
+    name: "Studio",
+    description: "Clean, controlled recording environment",
+    category: "venue",
+    effects: {
+      reverb: { enabled: true, params: { decay: 1.2, preDelay: 0.01, wet: 0.25 } },
+      chorus: { enabled: false, params: { frequency: 0.8, depth: 0.2, delayTime: 2, feedback: 0.02 } },
+      filter: { enabled: false, params: { frequency: 8e3, Q: 0.7, type: "lowpass" } }
+    }
+  },
+  "jazz-club": {
+    name: "Jazz Club",
+    description: "Intimate, warm venue with subtle ambience",
+    category: "venue",
+    effects: {
+      reverb: { enabled: true, params: { decay: 2, preDelay: 0.03, wet: 0.35 } },
+      chorus: { enabled: true, params: { frequency: 0.6, depth: 0.3, delayTime: 3.5, feedback: 0.05 } },
+      filter: { enabled: true, params: { frequency: 5e3, Q: 0.8, type: "lowpass" } }
+    }
+  },
+  "arena": {
+    name: "Arena",
+    description: "Large venue with powerful, booming acoustics",
+    category: "venue",
+    effects: {
+      reverb: { enabled: true, params: { decay: 4.5, preDelay: 0.12, wet: 0.7 } },
+      chorus: { enabled: true, params: { frequency: 0.4, depth: 0.5, delayTime: 4, feedback: 0.06 } },
+      filter: { enabled: true, params: { frequency: 3500, Q: 1, type: "lowpass" } }
+    }
+  },
+  // Genre-based presets
+  "ambient": {
+    name: "Ambient",
+    description: "Spacious, ethereal soundscape",
+    category: "genre",
+    effects: {
+      reverb: { enabled: true, params: { decay: 6, preDelay: 0.1, wet: 0.75 } },
+      chorus: { enabled: true, params: { frequency: 0.2, depth: 0.6, delayTime: 8, feedback: 0.1 } },
+      filter: { enabled: true, params: { frequency: 2500, Q: 1.2, type: "lowpass" } }
+    }
+  },
+  "classical": {
+    name: "Classical",
+    description: "Natural, balanced orchestral sound",
+    category: "genre",
+    effects: {
+      reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.06, wet: 0.5 } },
+      chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3, feedback: 0.03 } },
+      filter: { enabled: true, params: { frequency: 7e3, Q: 0.6, type: "lowpass" } }
+    }
+  },
+  "electronic": {
+    name: "Electronic",
+    description: "Clean, precise digital processing",
+    category: "genre",
+    effects: {
+      reverb: { enabled: true, params: { decay: 1.5, preDelay: 0.02, wet: 0.3 } },
+      chorus: { enabled: true, params: { frequency: 1.2, depth: 0.4, delayTime: 2.5, feedback: 0.04 } },
+      filter: { enabled: true, params: { frequency: 8e3, Q: 1.5, type: "lowpass" } }
+    }
+  },
+  "cinematic": {
+    name: "Cinematic",
+    description: "Epic, dramatic film score atmosphere",
+    category: "genre",
+    effects: {
+      reverb: { enabled: true, params: { decay: 5, preDelay: 0.09, wet: 0.65 } },
+      chorus: { enabled: true, params: { frequency: 0.3, depth: 0.5, delayTime: 5, feedback: 0.07 } },
+      filter: { enabled: true, params: { frequency: 4500, Q: 0.9, type: "lowpass" } }
+    }
+  },
+  // Special presets
+  "dry": {
+    name: "Dry",
+    description: "Minimal effects for clarity",
+    category: "instrument",
+    effects: {
+      reverb: { enabled: false, params: { decay: 1, preDelay: 0.01, wet: 0.1 } },
+      chorus: { enabled: false, params: { frequency: 0.5, depth: 0.2, delayTime: 2, feedback: 0.02 } },
+      filter: { enabled: false, params: { frequency: 8e3, Q: 0.7, type: "lowpass" } }
+    }
+  },
+  "lush": {
+    name: "Lush",
+    description: "Rich, full processing with all effects",
+    category: "instrument",
+    effects: {
+      reverb: { enabled: true, params: { decay: 4, preDelay: 0.07, wet: 0.6 } },
+      chorus: { enabled: true, params: { frequency: 0.5, depth: 0.5, delayTime: 4, feedback: 0.06 } },
+      filter: { enabled: true, params: { frequency: 6e3, Q: 0.8, type: "lowpass" } }
+    }
+  }
+};
+var INSTRUMENT_SMART_RANGES = {
+  piano: {
+    reverb: {
+      decay: {
+        min: 0.5,
+        max: 6,
+        step: 0.1,
+        defaultValue: 1.8,
+        musicalContext: "Piano benefits from shorter, cleaner reverb tails",
+        suggestions: [
+          { value: 1.2, label: "Intimate" },
+          { value: 1.8, label: "Studio" },
+          { value: 3, label: "Concert Hall" }
+        ]
+      },
+      preDelay: {
+        min: 5e-3,
+        max: 0.08,
+        step: 5e-3,
+        defaultValue: 0.02,
+        musicalContext: "Short pre-delay maintains piano clarity and attack"
+      },
+      wet: {
+        min: 0.1,
+        max: 0.6,
+        step: 0.05,
+        defaultValue: 0.25,
+        musicalContext: "Moderate reverb preserves piano definition"
+      }
+    },
+    chorus: {
+      frequency: {
+        min: 0.3,
+        max: 2,
+        step: 0.1,
+        defaultValue: 0.8,
+        musicalContext: "Subtle modulation enhances piano warmth without wobble"
+      },
+      depth: {
+        min: 0.1,
+        max: 0.6,
+        step: 0.05,
+        defaultValue: 0.3,
+        musicalContext: "Light chorus depth maintains piano naturalness"
+      },
+      delayTime: {
+        min: 2,
+        max: 8,
+        step: 0.5,
+        defaultValue: 4,
+        musicalContext: "Medium delay times work best for piano chorus"
+      },
+      feedback: {
+        min: 0.01,
+        max: 0.15,
+        step: 0.01,
+        defaultValue: 0.05,
+        musicalContext: "Low feedback prevents chorus from overwhelming piano tone"
+      }
+    },
+    filter: {
+      frequency: {
+        min: 2e3,
+        max: 8e3,
+        step: 100,
+        defaultValue: 3500,
+        musicalContext: "Piano harmonics extend well into higher frequencies",
+        suggestions: [
+          { value: 2500, label: "Warm" },
+          { value: 3500, label: "Natural" },
+          { value: 5e3, label: "Bright" }
+        ]
+      },
+      Q: {
+        min: 0.3,
+        max: 2,
+        step: 0.1,
+        defaultValue: 0.8,
+        musicalContext: "Moderate Q maintains piano frequency balance"
+      }
+    }
+  },
+  strings: {
+    reverb: {
+      decay: {
+        min: 1.5,
+        max: 10,
+        step: 0.2,
+        defaultValue: 2.8,
+        musicalContext: "Strings thrive with longer, lush reverb tails",
+        suggestions: [
+          { value: 2, label: "Chamber" },
+          { value: 2.8, label: "Orchestral" },
+          { value: 5, label: "Cathedral" }
+        ]
+      },
+      preDelay: {
+        min: 0.02,
+        max: 0.12,
+        step: 0.01,
+        defaultValue: 0.04,
+        musicalContext: "Longer pre-delay creates spacious string sections"
+      },
+      wet: {
+        min: 0.2,
+        max: 0.8,
+        step: 0.05,
+        defaultValue: 0.45,
+        musicalContext: "Strings can handle more reverb for lush soundscapes"
+      }
+    },
+    chorus: {
+      frequency: {
+        min: 0.2,
+        max: 1.2,
+        step: 0.05,
+        defaultValue: 0.6,
+        musicalContext: "Slower modulation creates organic string ensemble feel"
+      },
+      depth: {
+        min: 0.1,
+        max: 0.5,
+        step: 0.05,
+        defaultValue: 0.3,
+        musicalContext: "Gentle chorus depth adds string section width"
+      },
+      delayTime: {
+        min: 2,
+        max: 6,
+        step: 0.5,
+        defaultValue: 3,
+        musicalContext: "Shorter delays work better for string textures"
+      },
+      feedback: {
+        min: 0.01,
+        max: 0.08,
+        step: 0.01,
+        defaultValue: 0.03,
+        musicalContext: "Minimal feedback prevents string muddiness"
+      }
+    },
+    filter: {
+      frequency: {
+        min: 1500,
+        max: 6e3,
+        step: 100,
+        defaultValue: 3500,
+        musicalContext: "String frequencies focus in the mid-high range",
+        suggestions: [
+          { value: 2e3, label: "Mellow" },
+          { value: 3500, label: "Balanced" },
+          { value: 4500, label: "Articulate" }
+        ]
+      },
+      Q: {
+        min: 0.4,
+        max: 1.5,
+        step: 0.1,
+        defaultValue: 0.8,
+        musicalContext: "Gentle filtering preserves string harmonic richness"
+      }
+    }
+  },
+  organ: {
+    reverb: {
+      decay: {
+        min: 2,
+        max: 12,
+        step: 0.3,
+        defaultValue: 2.2,
+        musicalContext: "Organ reverb simulates large church acoustics",
+        suggestions: [
+          { value: 2.2, label: "Chapel" },
+          { value: 4, label: "Church" },
+          { value: 8, label: "Cathedral" }
+        ]
+      },
+      preDelay: {
+        min: 0.02,
+        max: 0.15,
+        step: 0.01,
+        defaultValue: 0.03,
+        musicalContext: "Organ pre-delay mimics architectural space"
+      },
+      wet: {
+        min: 0.3,
+        max: 0.9,
+        step: 0.05,
+        defaultValue: 0.35,
+        musicalContext: "Organ traditionally played in reverberant spaces"
+      }
+    },
+    chorus: {
+      frequency: {
+        min: 0.2,
+        max: 1.5,
+        step: 0.1,
+        defaultValue: 0.8,
+        musicalContext: "Classic organ chorus creates that Hammond-style swirl"
+      },
+      depth: {
+        min: 0.2,
+        max: 0.8,
+        step: 0.05,
+        defaultValue: 0.5,
+        musicalContext: "Rich chorus depth for classic organ character"
+      },
+      delayTime: {
+        min: 3,
+        max: 8,
+        step: 0.5,
+        defaultValue: 4,
+        musicalContext: "Medium-long delays for organ chorus character"
+      },
+      feedback: {
+        min: 0.02,
+        max: 0.12,
+        step: 0.01,
+        defaultValue: 0.05,
+        musicalContext: "Moderate feedback for organ warmth without mud"
+      }
+    },
+    filter: {
+      frequency: {
+        min: 2e3,
+        max: 8e3,
+        step: 150,
+        defaultValue: 4e3,
+        musicalContext: "Organ harmonics are rich and extend high",
+        suggestions: [
+          { value: 3e3, label: "Warm" },
+          { value: 4e3, label: "Classic" },
+          { value: 6e3, label: "Bright" }
+        ]
+      },
+      Q: {
+        min: 0.3,
+        max: 1.2,
+        step: 0.1,
+        defaultValue: 0.6,
+        musicalContext: "Gentle Q maintains organ harmonic complexity"
+      }
+    }
+  },
+  flute: {
+    reverb: {
+      decay: {
+        min: 1,
+        max: 8,
+        step: 0.2,
+        defaultValue: 2.2,
+        musicalContext: "Flute needs airy, light reverb for natural sound",
+        suggestions: [
+          { value: 1.5, label: "Intimate" },
+          { value: 2.2, label: "Recital Hall" },
+          { value: 4, label: "Concert Hall" }
+        ]
+      },
+      preDelay: {
+        min: 5e-3,
+        max: 0.06,
+        step: 5e-3,
+        defaultValue: 0.02,
+        musicalContext: "Short pre-delay preserves flute attack and breath"
+      },
+      wet: {
+        min: 0.15,
+        max: 0.65,
+        step: 0.05,
+        defaultValue: 0.4,
+        musicalContext: "Moderate reverb enhances flute airiness"
+      }
+    },
+    chorus: {
+      frequency: {
+        min: 0.4,
+        max: 1.5,
+        step: 0.1,
+        defaultValue: 0.8,
+        musicalContext: "Light, fast modulation for flute shimmer"
+      },
+      depth: {
+        min: 0.05,
+        max: 0.3,
+        step: 0.05,
+        defaultValue: 0.2,
+        musicalContext: "Subtle chorus preserves flute purity"
+      },
+      delayTime: {
+        min: 1.5,
+        max: 4,
+        step: 0.5,
+        defaultValue: 2,
+        musicalContext: "Short delays work best for wind instruments"
+      },
+      feedback: {
+        min: 5e-3,
+        max: 0.05,
+        step: 5e-3,
+        defaultValue: 0.02,
+        musicalContext: "Minimal feedback maintains flute clarity"
+      }
+    },
+    filter: {
+      frequency: {
+        min: 3e3,
+        max: 12e3,
+        step: 200,
+        defaultValue: 6e3,
+        musicalContext: "Flute has strong high-frequency content and harmonics",
+        suggestions: [
+          { value: 4e3, label: "Mellow" },
+          { value: 6e3, label: "Natural" },
+          { value: 8e3, label: "Brilliant" }
+        ]
+      },
+      Q: {
+        min: 0.2,
+        max: 1,
+        step: 0.1,
+        defaultValue: 0.5,
+        musicalContext: "Gentle filtering preserves flute breath and harmonics"
+      }
+    }
+  }
+};
+var DEFAULT_SMART_RANGES = {
+  reverb: {
+    decay: {
+      min: 0.5,
+      max: 8,
+      step: 0.2,
+      defaultValue: 2.5,
+      musicalContext: "General purpose reverb settings"
+    },
+    preDelay: {
+      min: 0.01,
+      max: 0.1,
+      step: 5e-3,
+      defaultValue: 0.03,
+      musicalContext: "Balanced pre-delay for most instruments"
+    },
+    wet: {
+      min: 0.1,
+      max: 0.7,
+      step: 0.05,
+      defaultValue: 0.4,
+      musicalContext: "Moderate reverb mix for versatility"
+    }
+  },
+  chorus: {
+    frequency: {
+      min: 0.2,
+      max: 2,
+      step: 0.1,
+      defaultValue: 0.6,
+      musicalContext: "Universal chorus modulation rate"
+    },
+    depth: {
+      min: 0.1,
+      max: 0.6,
+      step: 0.05,
+      defaultValue: 0.3,
+      musicalContext: "Balanced chorus intensity"
+    },
+    delayTime: {
+      min: 2,
+      max: 6,
+      step: 0.5,
+      defaultValue: 3.5,
+      musicalContext: "Medium delay for general chorus effect"
+    },
+    feedback: {
+      min: 0.01,
+      max: 0.1,
+      step: 0.01,
+      defaultValue: 0.04,
+      musicalContext: "Safe feedback levels for most applications"
+    }
+  },
+  filter: {
+    frequency: {
+      min: 500,
+      max: 1e4,
+      step: 100,
+      defaultValue: 4e3,
+      musicalContext: "Wide frequency range for various instruments"
+    },
+    Q: {
+      min: 0.3,
+      max: 2,
+      step: 0.1,
+      defaultValue: 0.8,
+      musicalContext: "Moderate Q factor for musical filtering"
+    }
+  }
+};
+function getSmartRanges(instrumentName) {
+  return INSTRUMENT_SMART_RANGES[instrumentName] || DEFAULT_SMART_RANGES;
+}
 
 // src/ui/settings.ts
 var import_obsidian = require("obsidian");
@@ -981,6 +1496,7 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
           self2.plugin.settings.instruments[instrumentKey].enabled = value;
           await self2.plugin.saveSettings();
           await self2.updateInstrumentState(instrumentKey, value);
+          controlsContainer.style.display = value ? "block" : "none";
           console.log(`\u2713 After update - Toggle UI state - checked: ${toggle.checked}, container classes:`, (_b = toggle.parentElement) == null ? void 0 : _b.className);
         },
         {
@@ -993,21 +1509,23 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
       instrumentContainer.addEventListener("click", (event) => {
         console.log(`Container clicked for ${instrumentKey} (${info.name}), target:`, event.target);
       });
-      new import_obsidian2.Setting(instrumentContainer).setName("Volume").setDesc(`Individual volume for ${info.name.toLowerCase()} (0-100%)`).addSlider((slider) => slider.setLimits(0, 100, 5).setValue(Math.round(instrumentSettings.volume * 100)).setDynamicTooltip().onChange(async (value) => {
+      const controlsContainer = instrumentContainer.createDiv({ cls: "sonigraph-instrument-controls" });
+      controlsContainer.style.display = instrumentSettings.enabled ? "block" : "none";
+      new import_obsidian2.Setting(controlsContainer).setName("Volume").setDesc(`Individual volume for ${info.name.toLowerCase()} (0-100%)`).addSlider((slider) => slider.setLimits(0, 100, 5).setValue(Math.round(instrumentSettings.volume * 100)).setDynamicTooltip().onChange(async (value) => {
         self2.plugin.settings.instruments[instrumentKey].volume = value / 100;
         await self2.plugin.saveSettings();
         if (self2.plugin.audioEngine) {
           self2.plugin.audioEngine.updateInstrumentVolume(instrumentKey, value / 100);
         }
       }));
-      new import_obsidian2.Setting(instrumentContainer).setName("Maximum Voices").setDesc(`Voice limit for ${info.name.toLowerCase()} (1-16)`).addSlider((slider) => slider.setLimits(1, 16, 1).setValue(instrumentSettings.maxVoices).setDynamicTooltip().onChange(async (value) => {
+      new import_obsidian2.Setting(controlsContainer).setName("Maximum Voices").setDesc(`Voice limit for ${info.name.toLowerCase()} (1-16)`).addSlider((slider) => slider.setLimits(1, 16, 1).setValue(instrumentSettings.maxVoices).setDynamicTooltip().onChange(async (value) => {
         self2.plugin.settings.instruments[instrumentKey].maxVoices = value;
         await self2.plugin.saveSettings();
         if (self2.plugin.audioEngine) {
           self2.plugin.audioEngine.updateInstrumentVoices(instrumentKey, value);
         }
       }));
-      const rangeInfo = instrumentContainer.createDiv({ cls: "sonigraph-frequency-info" });
+      const rangeInfo = controlsContainer.createDiv({ cls: "sonigraph-frequency-info" });
       rangeInfo.createEl("small", {
         text: `Default range: ${info.defaultFrequencyRange}`,
         cls: "sonigraph-frequency-range"
@@ -1147,66 +1665,168 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     return INSTRUMENT_INFO[instrumentKey] || INSTRUMENT_INFO.piano;
   }
   createHarmonyTab() {
-    const section = this.createTabSection("Harmonic Processing", "Advanced harmony and chord progression settings");
-    const voicesGroup = this.createSettingsGroup(section, "Voice Management", "Control simultaneous note limits");
-    const maxVoicesSlider = new import_obsidian2.Setting(voicesGroup).setName("Maximum Simultaneous Voices").setDesc("Limit concurrent notes to prevent discord (1-12)").addSlider((slider) => slider.setLimits(1, 12, 1).setValue(6).setDynamicTooltip().onChange(async (value) => {
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateHarmonicSettings({ maxSimultaneousNotes: value });
-      }
-    }));
-    const consonanceGroup = this.createSettingsGroup(section, "Harmonic Consonance", "Chord progression and harmony strength");
-    new import_obsidian2.Setting(consonanceGroup).setName("Consonance Strength").setDesc("How aggressively to enforce harmonic compatibility (0-100%)").addSlider((slider) => slider.setLimits(0, 100, 5).setValue(70).setDynamicTooltip().onChange(async (value) => {
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateHarmonicSettings({
-          consonanceStrength: value / 100
-        });
-      }
-    }));
-    createObsidianToggle(
-      consonanceGroup,
-      true,
-      // Default enabled
-      async (value) => {
-        if (this.plugin.audioEngine) {
-          this.plugin.audioEngine.updateHarmonicSettings({
-            enableChordProgression: value
-          });
-        }
-      },
-      {
-        name: "Enable Chord Progression",
-        description: "Automatically group notes into musical chords"
-      }
-    );
-    new import_obsidian2.Setting(consonanceGroup).setName("Voice Spacing").setDesc("Minimum semitones between simultaneous voices (1-6)").addSlider((slider) => slider.setLimits(1, 6, 1).setValue(2).setDynamicTooltip().onChange(async (value) => {
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateHarmonicSettings({
-          voiceSpreadMin: value
-        });
-      }
-    }));
+    const section = this.createTabSection("Harmonic Control", "Advanced harmony features coming soon");
+    const placeholderGroup = this.createSettingsGroup(section, "\u{1F6A7} Coming Soon", "Advanced harmonic features are planned for future releases");
+    const placeholder = placeholderGroup.createDiv({ cls: "sonigraph-placeholder" });
+    placeholder.createEl("p", {
+      text: "Advanced harmonic control features including voice leading, chord progression analysis, and intelligent harmony generation are planned for future development.",
+      cls: "sonigraph-placeholder-text"
+    });
+    placeholder.createEl("p", {
+      text: "Current focus is on perfecting the core audio engine and effect system. Stay tuned for updates!",
+      cls: "sonigraph-placeholder-text"
+    });
   }
   createEffectsTab() {
     const section = this.createTabSection("Audio Effects", "Configure reverb, chorus, and filter effects");
+    const presetsSection = this.createSettingsGroup(section, "\u{1F3AD} Effect Presets", "Instantly apply professional effect combinations");
+    const venueGroup = presetsSection.createDiv({ cls: "sonigraph-preset-group" });
+    venueGroup.createEl("h4", { text: "Venue Presets", cls: "sonigraph-preset-category" });
+    const venueButtons = venueGroup.createDiv({ cls: "sonigraph-preset-buttons" });
+    Object.entries(EFFECT_PRESETS).forEach(([key, preset]) => {
+      if (preset.category === "venue") {
+        const button = venueButtons.createEl("button", {
+          cls: "sonigraph-preset-button",
+          text: preset.name,
+          attr: { title: preset.description }
+        });
+        button.addEventListener("click", async () => {
+          if (this.plugin.audioEngine) {
+            this.plugin.audioEngine.applyEffectPresetToAll(key);
+            await this.plugin.saveSettings();
+            this.showTab("effects");
+            const notification = this.contentContainer.createEl("div", {
+              cls: "sonigraph-notification",
+              text: `Applied "${preset.name}" preset to all enabled instruments`
+            });
+            setTimeout(() => notification.remove(), 3e3);
+          }
+        });
+      }
+    });
+    const genreGroup = presetsSection.createDiv({ cls: "sonigraph-preset-group" });
+    genreGroup.createEl("h4", { text: "Genre Presets", cls: "sonigraph-preset-category" });
+    const genreButtons = genreGroup.createDiv({ cls: "sonigraph-preset-buttons" });
+    Object.entries(EFFECT_PRESETS).forEach(([key, preset]) => {
+      if (preset.category === "genre") {
+        const button = genreButtons.createEl("button", {
+          cls: "sonigraph-preset-button",
+          text: preset.name,
+          attr: { title: preset.description }
+        });
+        button.addEventListener("click", async () => {
+          if (this.plugin.audioEngine) {
+            this.plugin.audioEngine.applyEffectPresetToAll(key);
+            await this.plugin.saveSettings();
+            this.showTab("effects");
+            const notification = this.contentContainer.createEl("div", {
+              cls: "sonigraph-notification",
+              text: `Applied "${preset.name}" preset to all enabled instruments`
+            });
+            setTimeout(() => notification.remove(), 3e3);
+          }
+        });
+      }
+    });
+    const resetGroup = presetsSection.createDiv({ cls: "sonigraph-preset-group" });
+    resetGroup.createEl("h4", { text: "Reset", cls: "sonigraph-preset-category" });
+    const resetButton = resetGroup.createEl("button", {
+      cls: "sonigraph-preset-button sonigraph-reset-button",
+      text: "Reset All to Defaults"
+    });
+    resetButton.addEventListener("click", async () => {
+      if (this.plugin.audioEngine) {
+        Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
+          const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+          if (instrumentSettings == null ? void 0 : instrumentSettings.enabled) {
+            this.plugin.audioEngine.resetInstrumentEffects(instrumentKey);
+          }
+        });
+        await this.plugin.saveSettings();
+        this.showTab("effects");
+        const notification = this.contentContainer.createEl("div", {
+          cls: "sonigraph-notification",
+          text: "Reset all instruments to default effect settings"
+        });
+        setTimeout(() => notification.remove(), 3e3);
+      }
+    });
+    section.createEl("hr", { cls: "sonigraph-section-separator" });
     ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass"].forEach((instrumentKey) => {
       this.createInstrumentEffectControls(section, instrumentKey);
     });
   }
   createInstrumentEffectControls(parent, instrumentKey, title, description, updateStatusCallback) {
+    const smartRanges = getSmartRanges(instrumentKey);
     const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
-    if (!(instrumentSettings == null ? void 0 : instrumentSettings.effects)) {
-      console.warn(`Instrument ${instrumentKey} not found in settings or missing effects - skipping effect controls`);
+    if (!instrumentSettings) {
+      console.warn(`Instrument '${instrumentKey}' not found in settings, skipping effect controls`);
       return;
     }
-    const info = this.getInstrumentInfo(instrumentKey);
-    const finalTitle = title || info.name;
-    const finalDescription = description || info.description;
-    const finalUpdateCallback = updateStatusCallback || (() => {
+    const instrumentInfo = this.getInstrumentInfo(instrumentKey);
+    const instrumentGroup = parent.createDiv({ cls: "sonigraph-instrument-group" });
+    const instrumentHeader = instrumentGroup.createDiv({ cls: "sonigraph-instrument-header" });
+    const headerLeft = instrumentHeader.createDiv({ cls: "sonigraph-instrument-header-left" });
+    const headerRight = instrumentHeader.createDiv({ cls: "sonigraph-instrument-header-right" });
+    headerLeft.createEl("h3", { text: `${instrumentInfo.icon} ${instrumentInfo.name}`, cls: "sonigraph-instrument-title" });
+    const previewButton = headerRight.createEl("button", {
+      cls: "sonigraph-preview-button",
+      text: "\u{1F3B5} Preview",
+      attr: { title: "Play sustained note to hear effect changes in real-time" }
     });
-    const instrumentGroup = this.createSettingsGroup(parent, finalTitle, finalDescription);
+    const performanceIndicator = headerRight.createDiv({ cls: "sonigraph-performance-indicator" });
+    let isPreviewActive = false;
+    previewButton.addEventListener("click", () => {
+      if (!this.plugin.audioEngine)
+        return;
+      if (isPreviewActive) {
+        this.plugin.audioEngine.disableParameterPreview();
+        previewButton.setText("\u{1F3B5} Preview");
+        previewButton.removeClass("active");
+        isPreviewActive = false;
+      } else {
+        this.plugin.audioEngine.enableParameterPreview(instrumentKey);
+        previewButton.setText("\u23F9\uFE0F Stop");
+        previewButton.addClass("active");
+        isPreviewActive = true;
+      }
+    });
+    const updatePerformance = () => {
+      if (this.plugin.audioEngine) {
+        const metrics = this.plugin.audioEngine.getPerformanceMetrics();
+        performanceIndicator.setText(`CPU: ${Math.round(metrics.cpuUsage)}% | ${Math.round(metrics.latency)}ms`);
+        performanceIndicator.removeClass("good", "warning", "danger");
+        if (metrics.cpuUsage < 50)
+          performanceIndicator.addClass("good");
+        else if (metrics.cpuUsage < 80)
+          performanceIndicator.addClass("warning");
+        else
+          performanceIndicator.addClass("danger");
+      }
+    };
+    setInterval(updatePerformance, 2e3);
+    updatePerformance();
+    const finalUpdateCallback = () => {
+      if (updateStatusCallback)
+        updateStatusCallback();
+      updatePerformance();
+    };
     const effectStates = instrumentSettings.effects;
     const reverbGroup = instrumentGroup.createDiv({ cls: "sonigraph-effect-group" });
-    reverbGroup.createEl("h4", { text: "\u{1F30A} Reverb", cls: "sonigraph-effect-title" });
+    const reverbHeader = reverbGroup.createDiv({ cls: "sonigraph-effect-header" });
+    reverbHeader.createEl("h4", { text: "\u{1F3DB}\uFE0F Reverb", cls: "sonigraph-effect-title" });
+    const reverbBypassButton = reverbHeader.createEl("button", {
+      cls: "sonigraph-bypass-button",
+      text: "Bypass",
+      attr: { title: "A/B compare with/without reverb" }
+    });
+    reverbBypassButton.addEventListener("click", () => {
+      if (!this.plugin.audioEngine)
+        return;
+      const bypassed = this.plugin.audioEngine.toggleEffectBypass(instrumentKey, "reverb");
+      reverbBypassButton.setText(bypassed ? "Bypassed" : "Bypass");
+      reverbBypassButton.toggleClass("bypassed", bypassed);
+    });
     createObsidianToggle(
       reverbGroup,
       effectStates.reverb.enabled,
@@ -1221,33 +1841,80 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
       },
       {
         name: "Enable reverb",
-        description: "Spatial depth and ambience"
+        description: "Natural spatial ambience"
       }
     );
     const reverbSettingsContainer = reverbGroup.createDiv({ cls: "sonigraph-effect-settings-container" });
-    new import_obsidian2.Setting(reverbSettingsContainer).setName("Decay time").setDesc("How long the reverb tail lasts (0.1 - 10 seconds)").addSlider((slider) => slider.setLimits(0.1, 10, 0.1).setValue(effectStates.reverb.params.decay).setDynamicTooltip().onChange(async (value) => {
-      effectStates.reverb.params.decay = value;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateReverbSettings({ decay: value }, instrumentKey);
+    const decayRange = smartRanges.reverb.decay;
+    new import_obsidian2.Setting(reverbSettingsContainer).setName("Decay time").setDesc(`${decayRange.musicalContext} (${decayRange.min} - ${decayRange.max} seconds)`).addSlider((slider) => {
+      slider.setLimits(decayRange.min, decayRange.max, decayRange.step).setValue(effectStates.reverb.params.decay).setDynamicTooltip().onChange(async (value) => {
+        if (this.plugin.audioEngine && isPreviewActive) {
+          this.plugin.audioEngine.previewParameterChange(instrumentKey, "reverb", "decay", value);
+        }
+        effectStates.reverb.params.decay = value;
+        await this.plugin.saveSettings();
+        if (this.plugin.audioEngine) {
+          this.plugin.audioEngine.updateReverbSettings({ decay: value }, instrumentKey);
+        }
+      });
+      if (decayRange.suggestions) {
+        const suggestionsDiv = reverbSettingsContainer.createDiv({ cls: "sonigraph-suggestions" });
+        decayRange.suggestions.forEach((suggestion) => {
+          const btn = suggestionsDiv.createEl("button", {
+            cls: "sonigraph-suggestion-button",
+            text: suggestion.label,
+            attr: { title: `Set to ${suggestion.value}s` }
+          });
+          btn.addEventListener("click", async () => {
+            slider.setValue(suggestion.value);
+            effectStates.reverb.params.decay = suggestion.value;
+            await this.plugin.saveSettings();
+            if (this.plugin.audioEngine) {
+              this.plugin.audioEngine.updateReverbSettings({ decay: suggestion.value }, instrumentKey);
+            }
+          });
+        });
       }
-    }));
-    new import_obsidian2.Setting(reverbSettingsContainer).setName("Pre-delay").setDesc("Initial delay before reverb starts (0 - 0.1 seconds)").addSlider((slider) => slider.setLimits(0, 0.1, 5e-3).setValue(effectStates.reverb.params.preDelay).setDynamicTooltip().onChange(async (value) => {
+      return slider;
+    });
+    const preDelayRange = smartRanges.reverb.preDelay;
+    new import_obsidian2.Setting(reverbSettingsContainer).setName("Pre-delay").setDesc(`${preDelayRange.musicalContext} (${preDelayRange.min} - ${preDelayRange.max} seconds)`).addSlider((slider) => slider.setLimits(preDelayRange.min, preDelayRange.max, preDelayRange.step).setValue(effectStates.reverb.params.preDelay).setDynamicTooltip().onChange(async (value) => {
+      if (this.plugin.audioEngine && isPreviewActive) {
+        this.plugin.audioEngine.previewParameterChange(instrumentKey, "reverb", "preDelay", value);
+      }
       effectStates.reverb.params.preDelay = value;
       await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
         this.plugin.audioEngine.updateReverbSettings({ preDelay: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(reverbSettingsContainer).setName("Wet level").setDesc("Amount of reverb mixed in (0 - 100%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(effectStates.reverb.params.wet * 100).setDynamicTooltip().onChange(async (value) => {
+    const wetRange = smartRanges.reverb.wet;
+    new import_obsidian2.Setting(reverbSettingsContainer).setName("Wet level").setDesc(`${wetRange.musicalContext} (${Math.round(wetRange.min * 100)} - ${Math.round(wetRange.max * 100)}%)`).addSlider((slider) => slider.setLimits(wetRange.min * 100, wetRange.max * 100, wetRange.step * 100).setValue(effectStates.reverb.params.wet * 100).setDynamicTooltip().onChange(async (value) => {
+      if (this.plugin.audioEngine && isPreviewActive) {
+        this.plugin.audioEngine.previewParameterChange(instrumentKey, "reverb", "wet", value / 100);
+      }
       effectStates.reverb.params.wet = value / 100;
       await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
         this.plugin.audioEngine.updateReverbSettings({ wet: value / 100 }, instrumentKey);
       }
     }));
+    reverbSettingsContainer.style.display = effectStates.reverb.enabled ? "block" : "none";
     const chorusGroup = instrumentGroup.createDiv({ cls: "sonigraph-effect-group" });
-    chorusGroup.createEl("h4", { text: "\u{1F300} Chorus", cls: "sonigraph-effect-title" });
+    const chorusHeader = chorusGroup.createDiv({ cls: "sonigraph-effect-header" });
+    chorusHeader.createEl("h4", { text: "\u{1F300} Chorus", cls: "sonigraph-effect-title" });
+    const chorusBypassButton = chorusHeader.createEl("button", {
+      cls: "sonigraph-bypass-button",
+      text: "Bypass",
+      attr: { title: "A/B compare with/without chorus" }
+    });
+    chorusBypassButton.addEventListener("click", () => {
+      if (!this.plugin.audioEngine)
+        return;
+      const bypassed = this.plugin.audioEngine.toggleEffectBypass(instrumentKey, "chorus");
+      chorusBypassButton.setText(bypassed ? "Bypassed" : "Bypass");
+      chorusBypassButton.toggleClass("bypassed", bypassed);
+    });
     createObsidianToggle(
       chorusGroup,
       effectStates.chorus.enabled,
@@ -1266,78 +1933,18 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
       }
     );
     const chorusSettingsContainer = chorusGroup.createDiv({ cls: "sonigraph-effect-settings-container" });
-    new import_obsidian2.Setting(chorusSettingsContainer).setName("Rate").setDesc("Modulation speed (0.1 - 5 Hz)").addSlider((slider) => slider.setLimits(0.1, 5, 0.1).setValue(effectStates.chorus.params.frequency).setDynamicTooltip().onChange(async (value) => {
+    const frequencyRange = smartRanges.chorus.frequency;
+    new import_obsidian2.Setting(chorusSettingsContainer).setName("Rate").setDesc(`${frequencyRange.musicalContext} (${frequencyRange.min} - ${frequencyRange.max} Hz)`).addSlider((slider) => slider.setLimits(frequencyRange.min, frequencyRange.max, frequencyRange.step).setValue(effectStates.chorus.params.frequency).setDynamicTooltip().onChange(async (value) => {
+      if (this.plugin.audioEngine && isPreviewActive) {
+        this.plugin.audioEngine.previewParameterChange(instrumentKey, "chorus", "frequency", value);
+      }
       effectStates.chorus.params.frequency = value;
       await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
         this.plugin.audioEngine.updateChorusSettings({ frequency: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(chorusSettingsContainer).setName("Depth").setDesc("Modulation intensity (0 - 100%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(effectStates.chorus.params.depth * 100).setDynamicTooltip().onChange(async (value) => {
-      effectStates.chorus.params.depth = value / 100;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ depth: value / 100 }, instrumentKey);
-      }
-    }));
-    new import_obsidian2.Setting(chorusSettingsContainer).setName("Delay time").setDesc("Base delay amount (1 - 20 ms)").addSlider((slider) => slider.setLimits(1, 20, 0.5).setValue(effectStates.chorus.params.delayTime).setDynamicTooltip().onChange(async (value) => {
-      effectStates.chorus.params.delayTime = value;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ delayTime: value }, instrumentKey);
-      }
-    }));
-    new import_obsidian2.Setting(chorusSettingsContainer).setName("Feedback").setDesc("Amount of signal fed back (0 - 50%)").addSlider((slider) => slider.setLimits(0, 50, 1).setValue(effectStates.chorus.params.feedback * 100).setDynamicTooltip().onChange(async (value) => {
-      effectStates.chorus.params.feedback = value / 100;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ feedback: value / 100 }, instrumentKey);
-      }
-    }));
-    const filterGroup = instrumentGroup.createDiv({ cls: "sonigraph-effect-group" });
-    filterGroup.createEl("h4", { text: "\u{1F39A}\uFE0F Filter", cls: "sonigraph-effect-title" });
-    createObsidianToggle(
-      filterGroup,
-      effectStates.filter.enabled,
-      async (value) => {
-        effectStates.filter.enabled = value;
-        await this.plugin.saveSettings();
-        if (this.plugin.audioEngine) {
-          this.plugin.audioEngine.setFilterEnabled(value, instrumentKey);
-        }
-        filterSettingsContainer.style.display = value ? "block" : "none";
-        finalUpdateCallback();
-      },
-      {
-        name: "Enable filter",
-        description: "Frequency shaping for tone"
-      }
-    );
-    const filterSettingsContainer = filterGroup.createDiv({ cls: "sonigraph-effect-settings-container" });
-    new import_obsidian2.Setting(filterSettingsContainer).setName("Cutoff frequency").setDesc("Filter cutoff point (200 - 8000 Hz)").addSlider((slider) => slider.setLimits(200, 8e3, 50).setValue(effectStates.filter.params.frequency).setDynamicTooltip().onChange(async (value) => {
-      effectStates.filter.params.frequency = value;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateFilterSettings({ frequency: value }, instrumentKey);
-      }
-    }));
-    new import_obsidian2.Setting(filterSettingsContainer).setName("Resonance (Q)").setDesc("Filter sharpness and character (0.1 - 5.0)").addSlider((slider) => slider.setLimits(0.1, 5, 0.1).setValue(effectStates.filter.params.Q).setDynamicTooltip().onChange(async (value) => {
-      effectStates.filter.params.Q = value;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateFilterSettings({ Q: value }, instrumentKey);
-      }
-    }));
-    new import_obsidian2.Setting(filterSettingsContainer).setName("Filter type").setDesc("Type of frequency filtering").addDropdown((dropdown) => dropdown.addOption("lowpass", "Low-pass (warm, removes highs)").addOption("highpass", "High-pass (bright, removes lows)").addOption("bandpass", "Band-pass (focused, removes highs & lows)").setValue(effectStates.filter.params.type).onChange(async (value) => {
-      effectStates.filter.params.type = value;
-      await this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateFilterSettings({ type: value }, instrumentKey);
-      }
-    }));
-    reverbSettingsContainer.style.display = effectStates.reverb.enabled ? "block" : "none";
     chorusSettingsContainer.style.display = effectStates.chorus.enabled ? "block" : "none";
-    filterSettingsContainer.style.display = effectStates.filter.enabled ? "block" : "none";
   }
   createStatusTab() {
     const section = this.createTabSection("System Status", "Real-time monitoring and diagnostics");
@@ -20122,242 +20729,8 @@ var Listener = getContext().listener;
 var Draw = getContext().draw;
 var context = getContext();
 
-// src/audio/harmonic-engine.ts
-var logger3 = getLogger("harmonic-engine");
-var CHORD_PATTERNS = {
-  major: [0, 4, 7],
-  minor: [0, 3, 7],
-  diminished: [0, 3, 6],
-  augmented: [0, 4, 8],
-  major7: [0, 4, 7, 11],
-  minor7: [0, 3, 7, 10],
-  suspended: [0, 5, 7]
-};
-var HarmonicEngine = class {
-  // MIDI note C4
-  constructor(settings = {}) {
-    this.currentChord = [0, 4, 7];
-    // Default to C major
-    this.rootNote = 60;
-    this.settings = {
-      maxSimultaneousNotes: 6,
-      enableChordProgression: true,
-      consonanceStrength: 0.7,
-      voiceSpreadMin: 2,
-      ...settings
-    };
-    logger3.debug("initialization", "HarmonicEngine created", this.settings);
-  }
-  /**
-   * Process a sequence of musical mappings to improve harmonic content
-   */
-  harmonizeSequence(sequence) {
-    const startTime = logger3.time("harmonization");
-    logger3.info("harmonization", "Starting harmonic analysis", {
-      inputNotes: sequence.length,
-      maxSimultaneous: this.settings.maxSimultaneousNotes
-    });
-    const timeGroups = this.groupNotesByTime(sequence);
-    const harmonizedGroups = timeGroups.map(
-      (group) => this.harmonizeTimeGroup(group)
-    );
-    const harmonizedSequence = harmonizedGroups.flat();
-    startTime();
-    logger3.info("harmonization", "Harmonic processing complete", {
-      originalNotes: sequence.length,
-      harmonizedNotes: harmonizedSequence.length,
-      timeGroups: timeGroups.length,
-      avgNotesPerGroup: (harmonizedSequence.length / timeGroups.length).toFixed(1)
-    });
-    return harmonizedSequence;
-  }
-  /**
-   * Group notes that play within a small time window
-   */
-  groupNotesByTime(sequence) {
-    const groups = [];
-    const timeWindow = 0.5;
-    let currentGroup = [];
-    let groupStartTime = -1;
-    for (const note of sequence) {
-      if (groupStartTime === -1 || note.timing - groupStartTime <= timeWindow) {
-        currentGroup.push(note);
-        if (groupStartTime === -1) {
-          groupStartTime = note.timing;
-        }
-      } else {
-        if (currentGroup.length > 0) {
-          groups.push([...currentGroup]);
-        }
-        currentGroup = [note];
-        groupStartTime = note.timing;
-      }
-    }
-    if (currentGroup.length > 0) {
-      groups.push(currentGroup);
-    }
-    return groups;
-  }
-  /**
-   * Harmonize a group of simultaneous notes
-   */
-  harmonizeTimeGroup(notes) {
-    if (notes.length <= 1) {
-      return notes;
-    }
-    logger3.debug("group-harmonization", `Processing group of ${notes.length} notes`);
-    const sortedNotes = [...notes].sort((a, b) => a.pitch - b.pitch);
-    const limitedNotes = this.limitVoices(sortedNotes);
-    const harmonizedNotes = this.applyHarmonicAdjustments(limitedNotes);
-    const spacedNotes = this.ensureVoiceSpacing(harmonizedNotes);
-    return spacedNotes;
-  }
-  /**
-   * Limit the number of simultaneous voices
-   */
-  limitVoices(notes) {
-    if (notes.length <= this.settings.maxSimultaneousNotes) {
-      return notes;
-    }
-    const sorted = [...notes].sort((a, b) => b.velocity - a.velocity);
-    const selected = [];
-    if (sorted.length > 0)
-      selected.push(sorted[0]);
-    if (sorted.length > 1 && sorted[sorted.length - 1] !== sorted[0]) {
-      selected.push(sorted[sorted.length - 1]);
-    }
-    for (const note of sorted) {
-      if (selected.length >= this.settings.maxSimultaneousNotes)
-        break;
-      if (!selected.includes(note)) {
-        selected.push(note);
-      }
-    }
-    logger3.debug("voice-limiting", `Reduced ${notes.length} notes to ${selected.length}`);
-    return selected;
-  }
-  /**
-   * Apply harmonic adjustments to make notes more consonant
-   */
-  applyHarmonicAdjustments(notes) {
-    if (!this.settings.enableChordProgression || notes.length < 2) {
-      return notes;
-    }
-    const adjustedNotes = notes.map((note) => ({ ...note }));
-    const midiNotes = adjustedNotes.map((note) => this.frequencyToMidi(note.pitch));
-    const rootMidi = Math.min(...midiNotes);
-    const chordPattern = this.findBestChord(midiNotes, rootMidi);
-    if (this.settings.consonanceStrength > 0.5) {
-      for (let i = 0; i < adjustedNotes.length; i++) {
-        const originalMidi = midiNotes[i];
-        const targetMidi = this.findNearestChordTone(originalMidi, rootMidi, chordPattern);
-        const adjustmentFactor = this.settings.consonanceStrength;
-        const adjustedMidi = originalMidi + (targetMidi - originalMidi) * adjustmentFactor;
-        adjustedNotes[i].pitch = this.midiToFrequency(adjustedMidi);
-      }
-    }
-    return adjustedNotes;
-  }
-  /**
-   * Ensure minimum spacing between voices
-   */
-  ensureVoiceSpacing(notes) {
-    if (notes.length < 2)
-      return notes;
-    const sorted = [...notes].sort((a, b) => a.pitch - b.pitch);
-    const adjusted = [sorted[0]];
-    for (let i = 1; i < sorted.length; i++) {
-      const prevNote = adjusted[adjusted.length - 1];
-      const currentNote = { ...sorted[i] };
-      const prevMidi = this.frequencyToMidi(prevNote.pitch);
-      const currentMidi = this.frequencyToMidi(currentNote.pitch);
-      if (currentMidi - prevMidi < this.settings.voiceSpreadMin) {
-        const adjustedMidi = prevMidi + this.settings.voiceSpreadMin;
-        currentNote.pitch = this.midiToFrequency(adjustedMidi);
-      }
-      adjusted.push(currentNote);
-    }
-    return adjusted;
-  }
-  /**
-   * Find the chord pattern that best fits the given notes
-   */
-  findBestChord(midiNotes, rootMidi) {
-    let bestChord = CHORD_PATTERNS.major;
-    let bestScore = -1;
-    for (const [chordName, pattern] of Object.entries(CHORD_PATTERNS)) {
-      const score = this.scoreChordFit(midiNotes, rootMidi, pattern);
-      if (score > bestScore) {
-        bestScore = score;
-        bestChord = pattern;
-      }
-    }
-    logger3.debug("chord-analysis", "Selected chord pattern", {
-      chordPattern: bestChord,
-      score: bestScore.toFixed(2)
-    });
-    return bestChord;
-  }
-  /**
-   * Score how well the notes fit a chord pattern
-   */
-  scoreChordFit(midiNotes, rootMidi, chordPattern) {
-    let score = 0;
-    for (const midiNote of midiNotes) {
-      const noteInOctave = (midiNote - rootMidi) % 12;
-      const distance = Math.min(
-        ...chordPattern.map(
-          (chordTone) => Math.min(
-            Math.abs(noteInOctave - chordTone),
-            Math.abs(noteInOctave - chordTone + 12),
-            Math.abs(noteInOctave - chordTone - 12)
-          )
-        )
-      );
-      score += Math.max(0, 6 - distance);
-    }
-    return score / midiNotes.length;
-  }
-  /**
-   * Find the nearest chord tone to a given note
-   */
-  findNearestChordTone(midiNote, rootMidi, chordPattern) {
-    const noteInOctave = (midiNote - rootMidi) % 12;
-    const octave = Math.floor((midiNote - rootMidi) / 12);
-    let nearestChordTone = chordPattern[0];
-    let minDistance = 12;
-    for (const chordTone of chordPattern) {
-      const distance = Math.abs(noteInOctave - chordTone);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestChordTone = chordTone;
-      }
-    }
-    return rootMidi + octave * 12 + nearestChordTone;
-  }
-  /**
-   * Convert frequency to MIDI note number
-   */
-  frequencyToMidi(frequency) {
-    return Math.round(12 * Math.log2(frequency / 440) + 69);
-  }
-  /**
-   * Convert MIDI note number to frequency
-   */
-  midiToFrequency(midiNote) {
-    return 440 * Math.pow(2, (midiNote - 69) / 12);
-  }
-  /**
-   * Update harmonic settings
-   */
-  updateSettings(newSettings) {
-    this.settings = { ...this.settings, ...newSettings };
-    logger3.debug("settings-update", "Harmonic settings updated", this.settings);
-  }
-};
-
 // src/audio/engine.ts
-var logger4 = getLogger("audio-engine");
+var logger3 = getLogger("audio-engine");
 var SAMPLER_CONFIGS = {
   piano: {
     urls: {
@@ -20669,6 +21042,7 @@ var AudioEngine = class {
     this.instruments = /* @__PURE__ */ new Map();
     this.instrumentVolumes = /* @__PURE__ */ new Map();
     this.instrumentEffects = /* @__PURE__ */ new Map();
+    // Per-instrument effects
     this.isInitialized = false;
     this.isPlaying = false;
     this.currentSequence = [];
@@ -20676,13 +21050,15 @@ var AudioEngine = class {
     this.volume = null;
     this.voiceAssignments = /* @__PURE__ */ new Map();
     this.maxVoicesPerInstrument = 8;
-    logger4.debug("initialization", "AudioEngine created");
-    this.harmonicEngine = new HarmonicEngine({
-      maxSimultaneousNotes: 6,
-      enableChordProgression: true,
-      consonanceStrength: 0.7,
-      voiceSpreadMin: 2
-    });
+    // Real-time feedback properties
+    this.previewTimeouts = /* @__PURE__ */ new Map();
+    this.bypassStates = /* @__PURE__ */ new Map();
+    // instrument -> effect -> bypassed
+    this.performanceMetrics = /* @__PURE__ */ new Map();
+    this.isPreviewMode = false;
+    this.previewInstrument = null;
+    this.previewNote = null;
+    logger3.debug("initialization", "AudioEngine created");
   }
   getSamplerConfigs() {
     const format = this.settings.audioFormat;
@@ -20697,29 +21073,24 @@ var AudioEngine = class {
   }
   async initialize() {
     if (this.isInitialized) {
-      logger4.debug("initialization", "AudioEngine already initialized");
+      console.warn("AudioEngine already initialized");
       return;
     }
-    const startTime = logger4.time("audio-initialization");
     try {
+      logger3.debug("audio", "Initializing AudioEngine");
       await start();
-      logger4.debug("initialization", "Tone.js audio context started");
-      this.volume = new Volume(-6);
-      this.volume.toDestination();
-      await this.initializeEffects();
-      await this.initializeInstruments();
-      this.updateVolume();
+      logger3.debug("audio", "Tone.js started successfully");
+      this.volume = new Volume(this.settings.volume).toDestination();
+      logger3.debug("audio", "Master volume created");
+      this.initializeInstruments();
+      this.initializeEffects();
       this.applyEffectSettings();
       this.isInitialized = true;
-      startTime();
-      logger4.info("initialization", "Multi-instrument AudioEngine initialized", {
-        instruments: Array.from(this.instruments.keys()),
-        effects: Array.from(this.instrumentEffects.keys()),
-        audioContext: context.state
-      });
+      this.startPerformanceMonitoring();
+      logger3.info("audio", "AudioEngine initialized successfully");
     } catch (error) {
-      logger4.error("initialization", "Failed to initialize AudioEngine", error);
-      throw new Error("Failed to initialize audio engine: " + error.message);
+      logger3.error("audio", "Failed to initialize AudioEngine", error);
+      throw error;
     }
   }
   async initializeEffects() {
@@ -20751,7 +21122,7 @@ var AudioEngine = class {
       effectMap.set("filter", filter);
       this.instrumentEffects.set(instrumentName, effectMap);
     }
-    logger4.debug("effects", "Per-instrument audio effects initialized", {
+    logger3.debug("effects", "Per-instrument audio effects initialized", {
       instrumentCount: instruments.length,
       effectsPerInstrument: 3
     });
@@ -20975,7 +21346,7 @@ var AudioEngine = class {
     saxophoneOutput.connect(this.volume);
     this.instruments.set("saxophone", saxophoneSampler);
     this.applyInstrumentSettings();
-    logger4.debug("instruments", "All sampled instruments initialized", {
+    logger3.debug("instruments", "All sampled instruments initialized", {
       instrumentCount: this.instruments.size,
       instruments: Array.from(this.instruments.keys()),
       volumeControls: Array.from(this.instrumentVolumes.keys())
@@ -20983,27 +21354,27 @@ var AudioEngine = class {
   }
   async playSequence(sequence) {
     if (!this.isInitialized || !this.instruments.size) {
-      logger4.warn("playback", "AudioEngine not initialized, initializing now");
+      logger3.warn("playback", "AudioEngine not initialized, initializing now");
       await this.initialize();
     }
     if (this.isPlaying) {
-      logger4.info("playback", "Stopping current sequence before starting new one");
+      logger3.info("playback", "Stopping current sequence before starting new one");
       this.stop();
     }
     if (sequence.length === 0) {
-      logger4.error("playback", "Empty sequence provided");
+      logger3.error("playback", "Empty sequence provided");
       throw new Error("No musical sequence to play");
     }
     const invalidNotes = sequence.filter(
       (note) => !note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
     );
     if (invalidNotes.length > 0) {
-      logger4.error("playback", "Invalid notes in sequence", {
+      logger3.error("playback", "Invalid notes in sequence", {
         invalidCount: invalidNotes.length,
         examples: invalidNotes.slice(0, 3)
       });
     }
-    logger4.info("playback", "Starting sequence playback", {
+    logger3.info("playback", "Starting sequence playback", {
       noteCount: sequence.length,
       totalDuration: this.getSequenceDuration(sequence),
       pitchRange: {
@@ -21015,89 +21386,89 @@ var AudioEngine = class {
         max: Math.max(...sequence.map((n) => n.duration))
       }
     });
-    logger4.info("harmonization", "Applying harmonic processing");
-    const harmonizedSequence = this.harmonicEngine.harmonizeSequence(sequence);
-    logger4.info("harmonization", "Harmonic processing complete", {
-      originalNotes: sequence.length,
-      harmonizedNotes: harmonizedSequence.length,
-      reduction: ((sequence.length - harmonizedSequence.length) / sequence.length * 100).toFixed(1) + "%"
-    });
-    this.currentSequence = harmonizedSequence;
-    this.isPlaying = true;
-    this.scheduledEvents = [];
-    if (Transport.state === "started") {
-      Transport.stop();
-      Transport.cancel();
-    }
-    const sequenceDuration = this.getSequenceDuration(harmonizedSequence);
-    Transport.loopEnd = sequenceDuration + 2;
-    logger4.info("debug", "Starting sequence playback", {
-      sequenceDuration: sequenceDuration.toFixed(2),
-      transportState: Transport.state,
-      currentTime: context.currentTime.toFixed(3)
-    });
-    for (const mapping of harmonizedSequence) {
-      const playTime = mapping.timing;
-      const frequency = mapping.pitch;
-      const duration = mapping.duration;
-      const velocity = mapping.velocity;
-      logger4.debug("schedule", `Scheduling note: freq=${frequency.toFixed(1)}Hz, dur=${duration.toFixed(2)}s, vel=${velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
-      const eventId = Transport.schedule((time) => {
-        if (this.instruments.size > 0 && this.isPlaying) {
-          logger4.debug("trigger", `Triggering note at ${time.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
-          const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
-          const synth = this.instruments.get(instrumentName);
-          if (synth) {
-            synth.triggerAttackRelease(frequency, duration, time, velocity);
-            logger4.debug("playback", "Note triggered", {
-              nodeId: mapping.nodeId,
-              instrument: instrumentName,
-              frequency: frequency.toFixed(2),
-              duration: duration.toFixed(2),
-              velocity: velocity.toFixed(2),
-              scheduledTime: playTime.toFixed(3),
-              actualTime: time.toFixed(3)
-            });
-          } else {
-            logger4.warn("trigger", `Instrument ${instrumentName} not found, using piano`);
-            const pianoSynth = this.instruments.get("piano");
-            if (pianoSynth) {
-              pianoSynth.triggerAttackRelease(frequency, duration, time, velocity);
-            }
-          }
-        } else {
-          logger4.warn("trigger", "Skipping note - instruments unavailable or stopped");
-        }
-      }, playTime);
-      this.scheduledEvents.push(eventId);
-    }
-    Transport.schedule(() => {
-      logger4.info("playback", "Sequence completed via scheduler");
-      this.handleSequenceComplete();
-    }, sequenceDuration + 1);
-    logger4.info("transport", "Starting Tone.js Transport from time 0");
-    Transport.start("+0.1");
-    logger4.info("playback", "Sequence scheduled and playing", {
-      eventsScheduled: this.scheduledEvents.length,
-      sequenceDuration: sequenceDuration.toFixed(2),
-      transportState: Transport.state,
-      audioContextState: context.state
-    });
-    logger4.info("test", "Playing immediate test note to verify audio");
-    if (this.instruments.size > 0) {
-      this.instruments.forEach((synth, instrumentName) => {
-        if (instrumentName === "piano") {
-          synth.triggerAttackRelease(440, "8n", "+0.05");
-        }
+    try {
+      logger3.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
+      const processedSequence = sequence;
+      this.currentSequence = processedSequence;
+      this.isPlaying = true;
+      this.scheduledEvents = [];
+      if (Transport.state === "started") {
+        Transport.stop();
+        Transport.cancel();
+      }
+      const sequenceDuration = this.getSequenceDuration(processedSequence);
+      Transport.loopEnd = sequenceDuration + 2;
+      logger3.info("debug", "Starting sequence playback", {
+        sequenceDuration: sequenceDuration.toFixed(2),
+        transportState: Transport.state,
+        currentTime: context.currentTime.toFixed(3)
       });
+      for (const mapping of processedSequence) {
+        const playTime = mapping.timing;
+        const frequency = mapping.pitch;
+        const duration = mapping.duration;
+        const velocity = mapping.velocity;
+        logger3.debug("schedule", `Scheduling note: freq=${frequency.toFixed(1)}Hz, dur=${duration.toFixed(2)}s, vel=${velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
+        const eventId = Transport.schedule((time) => {
+          if (this.instruments.size > 0 && this.isPlaying) {
+            logger3.debug("trigger", `Triggering note at ${time.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
+            const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+            const synth = this.instruments.get(instrumentName);
+            if (synth) {
+              synth.triggerAttackRelease(frequency, duration, time, velocity);
+              logger3.debug("playback", "Note triggered", {
+                nodeId: mapping.nodeId,
+                instrument: instrumentName,
+                frequency: frequency.toFixed(2),
+                duration: duration.toFixed(2),
+                velocity: velocity.toFixed(2),
+                scheduledTime: playTime.toFixed(3),
+                actualTime: time.toFixed(3)
+              });
+            } else {
+              logger3.warn("trigger", `Instrument ${instrumentName} not found, using piano`);
+              const pianoSynth = this.instruments.get("piano");
+              if (pianoSynth) {
+                pianoSynth.triggerAttackRelease(frequency, duration, time, velocity);
+              }
+            }
+          } else {
+            logger3.warn("trigger", "Skipping note - instruments unavailable or stopped");
+          }
+        }, playTime);
+        this.scheduledEvents.push(eventId);
+      }
+      Transport.schedule(() => {
+        logger3.info("playback", "Sequence completed via scheduler");
+        this.handleSequenceComplete();
+      }, sequenceDuration + 1);
+      logger3.info("transport", "Starting Tone.js Transport from time 0");
+      Transport.start("+0.1");
+      logger3.info("playback", "Sequence scheduled and playing", {
+        eventsScheduled: this.scheduledEvents.length,
+        sequenceDuration: sequenceDuration.toFixed(2),
+        transportState: Transport.state,
+        audioContextState: context.state
+      });
+      logger3.info("test", "Playing immediate test note to verify audio");
+      if (this.instruments.size > 0) {
+        this.instruments.forEach((synth, instrumentName) => {
+          if (instrumentName === "piano") {
+            synth.triggerAttackRelease(440, "8n", "+0.05");
+          }
+        });
+      }
+    } catch (error) {
+      logger3.error("playback", "Error processing sequence", error);
+      throw error;
     }
   }
   stop() {
     if (!this.isPlaying) {
-      logger4.debug("playback", "Stop called but no sequence is playing");
+      logger3.debug("playback", "Stop called but no sequence is playing");
       return;
     }
-    logger4.info("playback", "Stopping sequence playback");
+    logger3.info("playback", "Stopping sequence playback");
     this.isPlaying = false;
     if (Transport.state === "started") {
       Transport.stop();
@@ -21111,7 +21482,7 @@ var AudioEngine = class {
       synth.releaseAll();
     });
     this.currentSequence = [];
-    logger4.info("playback", "Sequence stopped and Transport reset");
+    logger3.info("playback", "Sequence stopped and Transport reset");
   }
   updateSettings(settings) {
     this.settings = settings;
@@ -21119,18 +21490,11 @@ var AudioEngine = class {
     if (this.isInitialized) {
       this.applyEffectSettings();
     }
-    logger4.debug("settings", "Audio settings updated", {
+    logger3.debug("settings", "Audio settings updated", {
       volume: settings.volume,
       tempo: settings.tempo,
       effectsApplied: this.isInitialized
     });
-  }
-  /**
-   * Update harmonic engine settings
-   */
-  updateHarmonicSettings(harmonicSettings) {
-    this.harmonicEngine.updateSettings(harmonicSettings);
-    logger4.debug("harmonic-settings", "Harmonic settings updated", harmonicSettings);
   }
   /**
    * Update reverb effect parameters for a specific instrument
@@ -21148,9 +21512,9 @@ var AudioEngine = class {
       if (settings.wet !== void 0) {
         reverb.wet.value = settings.wet;
       }
-      logger4.debug("effects", `Reverb settings updated for ${instrument}`, settings);
+      logger3.debug("effects", `Reverb settings updated for ${instrument}`, settings);
     } else {
-      logger4.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
+      logger3.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -21175,9 +21539,9 @@ var AudioEngine = class {
       if (settings.spread !== void 0) {
         chorus.spread = settings.spread;
       }
-      logger4.debug("effects", `Chorus settings updated for ${instrument}`, settings);
+      logger3.debug("effects", `Chorus settings updated for ${instrument}`, settings);
     } else {
-      logger4.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
+      logger3.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -21196,9 +21560,9 @@ var AudioEngine = class {
       if (settings.type !== void 0) {
         filter.type = settings.type;
       }
-      logger4.debug("effects", `Filter settings updated for ${instrument}`, settings);
+      logger3.debug("effects", `Filter settings updated for ${instrument}`, settings);
     } else {
-      logger4.warn("effects", `Filter effect not found for instrument: ${instrument}`);
+      logger3.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -21212,9 +21576,9 @@ var AudioEngine = class {
       const instrumentSettings = this.settings.instruments[instrument];
       const wetLevel = ((_c = (_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.params) == null ? void 0 : _c.wet) || 0.25;
       reverb.wet.value = enabled ? wetLevel : 0;
-      logger4.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger3.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger4.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
+      logger3.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -21225,9 +21589,9 @@ var AudioEngine = class {
     const chorus = instrumentEffects == null ? void 0 : instrumentEffects.get("chorus");
     if (chorus) {
       chorus.wet.value = enabled ? 1 : 0;
-      logger4.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger3.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger4.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
+      logger3.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -21245,9 +21609,9 @@ var AudioEngine = class {
       } else {
         filter.frequency.value = 2e4;
       }
-      logger4.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger3.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger4.warn("effects", `Filter effect not found for instrument: ${instrument}`);
+      logger3.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -21277,9 +21641,9 @@ var AudioEngine = class {
       const previousVolume = instrumentVolume.volume.value;
       const dbVolume = Math.log10(Math.max(0.01, volume)) * 20;
       instrumentVolume.volume.value = dbVolume;
-      logger4.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume.toFixed(1)}dB`);
+      logger3.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume.toFixed(1)}dB`);
     } else {
-      logger4.error("instrument-control", `No volume control found for ${instrumentKey} in updateInstrumentVolume`);
+      logger3.error("instrument-control", `No volume control found for ${instrumentKey} in updateInstrumentVolume`);
     }
   }
   /**
@@ -21290,9 +21654,9 @@ var AudioEngine = class {
     if (instrument) {
       if ("maxPolyphony" in instrument) {
         instrument.maxPolyphony = maxVoices;
-        logger4.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
+        logger3.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
       } else {
-        logger4.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
+        logger3.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
       }
     }
   }
@@ -21305,42 +21669,45 @@ var AudioEngine = class {
       if (enabled) {
         const instrumentSettings = this.settings.instruments[instrumentKey];
         if (instrumentSettings) {
-          logger4.debug("instrument-control", `Re-enabling ${instrumentKey} with volume ${instrumentSettings.volume}`);
+          logger3.debug("instrument-control", `Re-enabling ${instrumentKey} with volume ${instrumentSettings.volume}`);
           this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
-          logger4.debug("instrument-control", `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
+          logger3.debug("instrument-control", `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
         } else {
-          logger4.warn("instrument-control", `No settings found for ${instrumentKey}`);
+          logger3.warn("instrument-control", `No settings found for ${instrumentKey}`);
         }
       } else {
-        logger4.debug("instrument-control", `Disabling ${instrumentKey}, setting volume to -Infinity`);
+        logger3.debug("instrument-control", `Disabling ${instrumentKey}, setting volume to -Infinity`);
         instrumentVolume.volume.value = -Infinity;
-        logger4.debug("instrument-control", `${instrumentKey} volume after disable: ${instrumentVolume.volume.value}`);
+        logger3.debug("instrument-control", `${instrumentKey} volume after disable: ${instrumentVolume.volume.value}`);
       }
-      logger4.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
+      logger3.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
     } else {
-      logger4.error("instrument-control", `No volume control found for ${instrumentKey}`);
+      logger3.error("instrument-control", `No volume control found for ${instrumentKey}`);
     }
   }
   /**
    * Apply initial instrument settings from plugin configuration
    */
   applyInstrumentSettings() {
-    logger4.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
+    logger3.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
     Object.entries(this.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
-      logger4.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
+      logger3.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
       this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
       this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
       this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
     });
-    logger4.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
+    logger3.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
   }
+  /**
+   * Update volume setting
+   */
   updateVolume() {
-    if (this.volume) {
-      const volumeDb = this.settings.volume / 100 * 20 - 20;
-      this.volume.volume.value = volumeDb;
-      logger4.debug("volume", "Volume updated", {
-        settingValue: this.settings.volume,
-        decibelValue: volumeDb.toFixed(1)
+    if (this.isInitialized && this.volume) {
+      const dbValue = this.settings.volume === 0 ? -Infinity : 20 * Math.log10(this.settings.volume);
+      this.volume.volume.value = dbValue;
+      logger3.debug("audio", "Master volume updated", {
+        rawValue: this.settings.volume,
+        dbValue
       });
     }
   }
@@ -21350,7 +21717,7 @@ var AudioEngine = class {
     return Math.max(...sequence.map((mapping) => mapping.timing + mapping.duration));
   }
   handleSequenceComplete() {
-    logger4.info("playback", "Sequence playback completed");
+    logger3.info("playback", "Sequence playback completed");
     this.isPlaying = false;
     this.currentSequence = [];
     this.scheduledEvents = [];
@@ -21467,7 +21834,7 @@ var AudioEngine = class {
       await this.initialize();
     }
     if (this.instruments.size > 0) {
-      logger4.debug("test", "Playing test note", { frequency });
+      logger3.debug("test", "Playing test note", { frequency });
       this.instruments.forEach((synth, instrumentName) => {
         if (instrumentName === "piano") {
           synth.triggerAttackRelease(frequency, "4n");
@@ -21479,7 +21846,7 @@ var AudioEngine = class {
    * Clean up resources
    */
   dispose() {
-    logger4.info("cleanup", "Disposing AudioEngine");
+    logger3.info("cleanup", "Disposing AudioEngine");
     this.stop();
     this.instruments.forEach((synth, instrumentName) => {
       synth.dispose();
@@ -21500,7 +21867,7 @@ var AudioEngine = class {
     });
     this.instrumentEffects.clear();
     this.isInitialized = false;
-    logger4.info("cleanup", "AudioEngine disposed");
+    logger3.info("cleanup", "AudioEngine disposed");
   }
   applyEffectSettings() {
     if (!this.settings.instruments || !this.isInitialized)
@@ -21553,25 +21920,359 @@ var AudioEngine = class {
           }
         }
       });
-      logger4.debug("effects", "Applied per-instrument effect settings from plugin settings", {
+      logger3.debug("effects", "Applied per-instrument effect settings from plugin settings", {
         instruments: Object.keys(this.settings.instruments)
       });
     } catch (error) {
-      logger4.error("effects", "Failed to apply effect settings", error);
+      logger3.error("effects", "Failed to apply effect settings", error);
     }
+  }
+  /**
+   * Apply an effect preset to a specific instrument
+   */
+  applyEffectPreset(presetKey, instrumentName) {
+    const preset = EFFECT_PRESETS[presetKey];
+    if (!preset) {
+      console.warn(`Effect preset '${presetKey}' not found`);
+      return;
+    }
+    if (!this.settings.instruments[instrumentName]) {
+      console.warn(`Instrument '${instrumentName}' not found in settings`);
+      return;
+    }
+    const instrumentSettings = this.settings.instruments[instrumentName];
+    if (instrumentSettings) {
+      instrumentSettings.effects.reverb.enabled = preset.effects.reverb.enabled;
+      instrumentSettings.effects.reverb.params = { ...preset.effects.reverb.params };
+      instrumentSettings.effects.chorus.enabled = preset.effects.chorus.enabled;
+      instrumentSettings.effects.chorus.params = { ...preset.effects.chorus.params };
+      instrumentSettings.effects.filter.enabled = preset.effects.filter.enabled;
+      instrumentSettings.effects.filter.params = { ...preset.effects.filter.params };
+      if (this.isInitialized) {
+        this.setReverbEnabled(preset.effects.reverb.enabled, instrumentName);
+        if (preset.effects.reverb.enabled) {
+          this.updateReverbSettings(preset.effects.reverb.params, instrumentName);
+        }
+        this.setChorusEnabled(preset.effects.chorus.enabled, instrumentName);
+        if (preset.effects.chorus.enabled) {
+          this.updateChorusSettings(preset.effects.chorus.params, instrumentName);
+        }
+        this.setFilterEnabled(preset.effects.filter.enabled, instrumentName);
+        if (preset.effects.filter.enabled) {
+          this.updateFilterSettings(preset.effects.filter.params, instrumentName);
+        }
+      }
+    }
+  }
+  /**
+   * Apply an effect preset to all enabled instruments
+   */
+  applyEffectPresetToAll(presetKey) {
+    const preset = EFFECT_PRESETS[presetKey];
+    if (!preset) {
+      console.warn(`Effect preset '${presetKey}' not found`);
+      return;
+    }
+    Object.keys(this.settings.instruments).forEach((instrumentName) => {
+      const instrumentSettings = this.settings.instruments[instrumentName];
+      if (instrumentSettings == null ? void 0 : instrumentSettings.enabled) {
+        this.applyEffectPreset(presetKey, instrumentName);
+      }
+    });
+  }
+  /**
+   * Create a custom preset from current instrument settings
+   */
+  createCustomPreset(instrumentName, presetName, description) {
+    const instrumentSettings = this.settings.instruments[instrumentName];
+    if (!instrumentSettings) {
+      console.warn(`Instrument '${instrumentName}' not found in settings`);
+      return null;
+    }
+    return {
+      name: presetName,
+      description,
+      category: "custom",
+      effects: {
+        reverb: { ...instrumentSettings.effects.reverb },
+        chorus: { ...instrumentSettings.effects.chorus },
+        filter: { ...instrumentSettings.effects.filter }
+      }
+    };
+  }
+  /**
+   * Reset instrument effects to default settings
+   */
+  resetInstrumentEffects(instrumentName) {
+    const defaultInstrumentSettings = DEFAULT_SETTINGS.instruments[instrumentName];
+    if (!defaultInstrumentSettings) {
+      console.warn(`Default settings for instrument '${instrumentName}' not found`);
+      return;
+    }
+    const instrumentSettings = this.settings.instruments[instrumentName];
+    if (instrumentSettings) {
+      instrumentSettings.effects.reverb.enabled = defaultInstrumentSettings.effects.reverb.enabled;
+      instrumentSettings.effects.reverb.params = { ...defaultInstrumentSettings.effects.reverb.params };
+      instrumentSettings.effects.chorus.enabled = defaultInstrumentSettings.effects.chorus.enabled;
+      instrumentSettings.effects.chorus.params = { ...defaultInstrumentSettings.effects.chorus.params };
+      instrumentSettings.effects.filter.enabled = defaultInstrumentSettings.effects.filter.enabled;
+      instrumentSettings.effects.filter.params = { ...defaultInstrumentSettings.effects.filter.params };
+      if (this.isInitialized) {
+        this.setReverbEnabled(defaultInstrumentSettings.effects.reverb.enabled, instrumentName);
+        if (defaultInstrumentSettings.effects.reverb.enabled) {
+          this.updateReverbSettings(defaultInstrumentSettings.effects.reverb.params, instrumentName);
+        }
+        this.setChorusEnabled(defaultInstrumentSettings.effects.chorus.enabled, instrumentName);
+        if (defaultInstrumentSettings.effects.chorus.enabled) {
+          this.updateChorusSettings(defaultInstrumentSettings.effects.chorus.params, instrumentName);
+        }
+        this.setFilterEnabled(defaultInstrumentSettings.effects.filter.enabled, instrumentName);
+        if (defaultInstrumentSettings.effects.filter.enabled) {
+          this.updateFilterSettings(defaultInstrumentSettings.effects.filter.params, instrumentName);
+        }
+      }
+    }
+  }
+  /**
+   * Enable real-time parameter preview mode
+   */
+  enableParameterPreview(instrumentName) {
+    this.isPreviewMode = true;
+    this.previewInstrument = instrumentName;
+    this.startPreviewNote(instrumentName);
+  }
+  /**
+   * Disable real-time parameter preview mode
+   */
+  disableParameterPreview() {
+    this.isPreviewMode = false;
+    this.previewInstrument = null;
+    this.stopPreviewNote();
+  }
+  /**
+   * Start a sustained preview note for parameter testing
+   */
+  startPreviewNote(instrumentName) {
+    if (!this.isInitialized || this.previewNote)
+      return;
+    try {
+      const synth = this.instruments.get(instrumentName);
+      if (synth) {
+        this.previewNote = synth.triggerAttack("C4");
+        setTimeout(() => {
+          this.stopPreviewNote();
+        }, 1e4);
+      }
+    } catch (error) {
+      console.warn("Failed to start preview note:", error);
+    }
+  }
+  /**
+   * Stop the preview note
+   */
+  stopPreviewNote() {
+    if (this.previewNote && this.previewInstrument) {
+      try {
+        const synth = this.instruments.get(this.previewInstrument);
+        if (synth) {
+          synth.triggerRelease("C4");
+        }
+      } catch (error) {
+        console.warn("Failed to stop preview note:", error);
+      }
+    }
+    this.previewNote = null;
+  }
+  /**
+   * Apply parameter change with real-time preview
+   */
+  previewParameterChange(instrumentName, effectType, paramName, value, delay = 50) {
+    const timeoutKey = `${instrumentName}-${effectType}-${paramName}`;
+    const existingTimeout = this.previewTimeouts.get(timeoutKey);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+    this.applyParameterChangeImmediate(instrumentName, effectType, paramName, value);
+    const timeout = window.setTimeout(() => {
+      this.commitParameterChange(instrumentName, effectType, paramName, value);
+      this.previewTimeouts.delete(timeoutKey);
+    }, delay);
+    this.previewTimeouts.set(timeoutKey, timeout);
+  }
+  /**
+   * Apply parameter change immediately (for preview)
+   */
+  applyParameterChangeImmediate(instrumentName, effectType, paramName, value) {
+    if (!this.isInitialized)
+      return;
+    try {
+      const effectMap = this.instrumentEffects.get(instrumentName);
+      if (!effectMap)
+        return;
+      const effect = effectMap.get(effectType);
+      if (!effect)
+        return;
+      switch (effectType) {
+        case "reverb":
+          if (paramName === "decay")
+            effect.decay = value;
+          else if (paramName === "preDelay")
+            effect.preDelay = value;
+          else if (paramName === "wet")
+            effect.wet.value = value;
+          break;
+        case "chorus":
+          if (paramName === "frequency")
+            effect.frequency.value = value;
+          else if (paramName === "depth")
+            effect.depth.value = value;
+          else if (paramName === "delayTime")
+            effect.delayTime.value = value;
+          else if (paramName === "feedback")
+            effect.feedback.value = value;
+          break;
+        case "filter":
+          if (paramName === "frequency")
+            effect.frequency.value = value;
+          else if (paramName === "Q")
+            effect.Q.value = value;
+          else if (paramName === "type")
+            effect.type = value;
+          break;
+      }
+    } catch (error) {
+      console.warn("Failed to apply immediate parameter change:", error);
+    }
+  }
+  /**
+   * Commit parameter change (for settings persistence)
+   */
+  commitParameterChange(instrumentName, effectType, paramName, value) {
+    console.debug(`Parameter committed: ${instrumentName}.${effectType}.${paramName} = ${value}`);
+  }
+  /**
+   * Toggle effect bypass for A/B comparison
+   */
+  toggleEffectBypass(instrumentName, effectType) {
+    if (!this.bypassStates.has(instrumentName)) {
+      this.bypassStates.set(instrumentName, /* @__PURE__ */ new Map());
+    }
+    const instrumentBypasses = this.bypassStates.get(instrumentName);
+    const currentBypass = instrumentBypasses.get(effectType) || false;
+    const newBypass = !currentBypass;
+    instrumentBypasses.set(effectType, newBypass);
+    this.applyEffectBypass(instrumentName, effectType, newBypass);
+    return newBypass;
+  }
+  /**
+   * Apply effect bypass state
+   */
+  applyEffectBypass(instrumentName, effectType, bypassed) {
+    if (!this.isInitialized)
+      return;
+    try {
+      const effectMap = this.instrumentEffects.get(instrumentName);
+      if (!effectMap)
+        return;
+      const effect = effectMap.get(effectType);
+      if (!effect)
+        return;
+      if (effectType === "reverb" || effectType === "chorus") {
+        if (bypassed) {
+          effect.wet.value = 0;
+        } else {
+          const instrumentSettings = this.settings.instruments[instrumentName];
+          if (instrumentSettings == null ? void 0 : instrumentSettings.effects[effectType]) {
+            const effectSettings = instrumentSettings.effects[effectType];
+            if ("wet" in effectSettings.params) {
+              effect.wet.value = effectSettings.params.wet;
+            }
+          }
+        }
+      } else if (effectType === "filter") {
+        if (bypassed) {
+          effect.frequency.value = 2e4;
+        } else {
+          const instrumentSettings = this.settings.instruments[instrumentName];
+          if (instrumentSettings == null ? void 0 : instrumentSettings.effects.filter) {
+            effect.frequency.value = instrumentSettings.effects.filter.params.frequency;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to apply effect bypass:", error);
+    }
+  }
+  /**
+   * Get effect bypass state
+   */
+  isEffectBypassed(instrumentName, effectType) {
+    const instrumentBypasses = this.bypassStates.get(instrumentName);
+    return (instrumentBypasses == null ? void 0 : instrumentBypasses.get(effectType)) || false;
+  }
+  /**
+   * Start performance monitoring
+   */
+  startPerformanceMonitoring() {
+    setInterval(() => {
+      this.updatePerformanceMetrics();
+    }, 1e3);
+  }
+  /**
+   * Update performance metrics
+   */
+  updatePerformanceMetrics() {
+    if (!this.isInitialized)
+      return;
+    try {
+      const audioContext = context;
+      const baseLatency = audioContext.baseLatency || 0;
+      const outputLatency = audioContext.outputLatency || 0;
+      const currentLatency = baseLatency + outputLatency;
+      let estimatedCPU = 0;
+      this.instruments.forEach((synth, instrumentName) => {
+        const activeVoices = synth.activeVoices || 0;
+        estimatedCPU += activeVoices * 5;
+        const effectMap = this.instrumentEffects.get(instrumentName);
+        if (effectMap) {
+          effectMap.forEach((effect, effectType) => {
+            if (effectType === "reverb" && effect.wet.value > 0)
+              estimatedCPU += 10;
+            if (effectType === "chorus" && effect.wet.value > 0)
+              estimatedCPU += 5;
+            if (effectType === "filter")
+              estimatedCPU += 2;
+          });
+        }
+      });
+      estimatedCPU = Math.min(estimatedCPU, 100);
+      this.performanceMetrics.set("overall", {
+        cpuUsage: estimatedCPU,
+        latency: currentLatency * 1e3
+        // Convert to milliseconds
+      });
+    } catch (error) {
+      console.warn("Failed to update performance metrics:", error);
+    }
+  }
+  /**
+   * Get current performance metrics
+   */
+  getPerformanceMetrics() {
+    return this.performanceMetrics.get("overall") || { cpuUsage: 0, latency: 0 };
   }
 };
 
 // src/graph/parser.ts
-var logger5 = getLogger("graph-parser");
+var logger4 = getLogger("graph-parser");
 var GraphParser = class {
   constructor(vault, metadataCache) {
     this.vault = vault;
     this.metadataCache = metadataCache;
   }
   async parseVault() {
-    const startTime = logger5.time("vault-parsing");
-    logger5.info("parsing", "Starting vault parsing", {
+    const startTime = logger4.time("vault-parsing");
+    logger4.info("parsing", "Starting vault parsing", {
       totalFiles: this.vault.getMarkdownFiles().length
     });
     const nodes = /* @__PURE__ */ new Map();
@@ -21583,7 +22284,7 @@ var GraphParser = class {
         nodes.set(file.path, node);
       }
     }
-    logger5.debug("parsing", "Created nodes", { nodeCount: nodes.size });
+    logger4.debug("parsing", "Created nodes", { nodeCount: nodes.size });
     for (const file of markdownFiles) {
       const connections = await this.extractConnectionsFromFile(file);
       const sourceNode = nodes.get(file.path);
@@ -21602,7 +22303,7 @@ var GraphParser = class {
       }
     }
     startTime();
-    logger5.info("parsing", "Vault parsing complete", {
+    logger4.info("parsing", "Vault parsing complete", {
       nodeCount: nodes.size,
       edgeCount: edges.length,
       avgConnectionsPerNode: edges.length / nodes.size
@@ -21631,7 +22332,7 @@ var GraphParser = class {
         modified: file.stat.mtime
       };
     } catch (error) {
-      logger5.error("file-parsing", `Failed to create node for file: ${file.path}`, error);
+      logger4.error("file-parsing", `Failed to create node for file: ${file.path}`, error);
       return null;
     }
   }
@@ -21648,7 +22349,7 @@ var GraphParser = class {
       }
       return [...new Set(connections)].filter((link) => link.trim().length > 0);
     } catch (error) {
-      logger5.error("connection-extraction", `Failed to extract connections from: ${file.path}`, error);
+      logger4.error("connection-extraction", `Failed to extract connections from: ${file.path}`, error);
       return [];
     }
   }
@@ -21702,7 +22403,7 @@ var GraphParser = class {
     const maxConnections = Math.max(...connectionCounts, 0);
     const minConnections = Math.min(...connectionCounts, 0);
     const isolatedNodes = connectionCounts.filter((count) => count === 0).length;
-    logger5.debug("graph-stats", "Calculated graph statistics", {
+    logger4.debug("graph-stats", "Calculated graph statistics", {
       nodeCount,
       edgeCount,
       avgConnections,
@@ -21724,7 +22425,7 @@ var GraphParser = class {
 };
 
 // src/graph/musical-mapper.ts
-var logger6 = getLogger("musical-mapper");
+var logger5 = getLogger("musical-mapper");
 var MusicalMapper = class {
   // C4 in Hz
   constructor(settings) {
@@ -21740,7 +22441,7 @@ var MusicalMapper = class {
   updateMusicalParams() {
     this.scale = MUSICAL_SCALES[this.settings.scale] || MUSICAL_SCALES.major;
     this.rootNoteFreq = this.getRootNoteFrequency(this.settings.rootNote);
-    logger6.debug("params-update", "Musical parameters updated", {
+    logger5.debug("params-update", "Musical parameters updated", {
       scale: this.settings.scale,
       rootNote: this.settings.rootNote,
       rootFreq: this.rootNoteFreq,
@@ -21751,8 +22452,8 @@ var MusicalMapper = class {
    * Map graph nodes to musical parameters
    */
   mapGraphToMusic(graphData, stats) {
-    const startTime = logger6.time("musical-mapping");
-    logger6.info("mapping", "Starting musical mapping", {
+    const startTime = logger5.time("musical-mapping");
+    logger5.info("mapping", "Starting musical mapping", {
       nodeCount: stats.totalNodes,
       edgeCount: stats.totalEdges
     });
@@ -21765,7 +22466,7 @@ var MusicalMapper = class {
       mappings.push(mapping);
     }
     startTime();
-    logger6.info("mapping", "Musical mapping complete", {
+    logger5.info("mapping", "Musical mapping complete", {
       mappingsCreated: mappings.length,
       avgPitch: mappings.reduce((sum, m) => sum + m.pitch, 0) / mappings.length,
       totalDuration: mappings.reduce((sum, m) => sum + m.duration, 0)
@@ -21777,7 +22478,7 @@ var MusicalMapper = class {
     const duration = this.mapWordCountToDuration(node.wordCount);
     const velocity = this.mapPositionToVelocity(index, totalNodes);
     const timing = this.mapTimestampToTiming(node.created, node.modified);
-    logger6.debug("node-mapping", `Mapped node: ${node.name}`, {
+    logger5.debug("node-mapping", `Mapped node: ${node.name}`, {
       connections: node.connectionCount,
       wordCount: node.wordCount,
       pitch,
@@ -21847,7 +22548,7 @@ var MusicalMapper = class {
    */
   generateSequence(mappings, graphData) {
     var _a, _b;
-    logger6.debug("sequence", "Generating playback sequence", {
+    logger5.debug("sequence", "Generating playback sequence", {
       totalMappings: mappings.length
     });
     const sequence = [...mappings];
@@ -21865,7 +22566,7 @@ var MusicalMapper = class {
     });
     sequence.sort((a, b) => a.timing - b.timing);
     const finalDuration = Math.max(...sequence.map((m) => m.timing + m.duration));
-    logger6.info("sequence", "Sequence generated with improved timing", {
+    logger5.info("sequence", "Sequence generated with improved timing", {
       totalDuration: finalDuration.toFixed(2),
       noteCount: sequence.length,
       firstNote: ((_a = sequence[0]) == null ? void 0 : _a.timing.toFixed(2)) || 0,
@@ -21888,7 +22589,7 @@ var MusicalMapper = class {
 };
 
 // src/main.ts
-var logger7 = getLogger("main");
+var logger6 = getLogger("main");
 var SonigraphPlugin = class extends import_obsidian3.Plugin {
   constructor() {
     super(...arguments);
@@ -21898,7 +22599,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
     this.currentGraphData = null;
   }
   async onload() {
-    logger7.info("lifecycle", "Sonigraph plugin loading...");
+    logger6.info("lifecycle", "Sonigraph plugin loading...");
     await this.loadSettings();
     this.initializeComponents();
     this.addRibbonIcon("music", "Sonigraph: Open Control Panel", () => {
@@ -21912,13 +22613,13 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       }
     });
     this.addSettingTab(new SonigraphSettingTab(this.app, this));
-    logger7.info("lifecycle", "Sonigraph plugin loaded successfully", {
+    logger6.info("lifecycle", "Sonigraph plugin loaded successfully", {
       settingsLoaded: true,
       componentsInitialized: true
     });
   }
   async onunload() {
-    logger7.info("lifecycle", "Sonigraph plugin unloading...");
+    logger6.info("lifecycle", "Sonigraph plugin unloading...");
     if (this.audioEngine) {
       this.audioEngine.dispose();
       this.audioEngine = null;
@@ -21926,17 +22627,17 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
     this.graphParser = null;
     this.musicalMapper = null;
     this.currentGraphData = null;
-    logger7.info("lifecycle", "Sonigraph plugin unloaded");
+    logger6.info("lifecycle", "Sonigraph plugin unloaded");
   }
   initializeComponents() {
-    logger7.debug("initialization", "Initializing plugin components");
+    logger6.debug("initialization", "Initializing plugin components");
     this.audioEngine = new AudioEngine(this.settings);
     this.graphParser = new GraphParser(this.app.vault, this.app.metadataCache);
     this.musicalMapper = new MusicalMapper(this.settings);
-    logger7.debug("initialization", "All components initialized");
+    logger6.debug("initialization", "All components initialized");
   }
   openControlPanel() {
-    logger7.info("ui", "Opening control panel");
+    logger6.info("ui", "Opening control panel");
     const modal = new ControlPanelModal(this.app, this);
     modal.open();
   }
@@ -21945,10 +22646,10 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
    */
   async processVault() {
     if (!this.graphParser || !this.musicalMapper) {
-      logger7.error("processing", "Components not initialized");
+      logger6.error("processing", "Components not initialized");
       throw new Error("Plugin components not initialized");
     }
-    logger7.info("processing", "Starting vault processing");
+    logger6.info("processing", "Starting vault processing");
     try {
       const graphData = await this.graphParser.parseVault();
       const stats = this.graphParser.getGraphStats(graphData);
@@ -21960,14 +22661,14 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
         mappings,
         sequence
       };
-      logger7.info("processing", "Vault processing complete", {
+      logger6.info("processing", "Vault processing complete", {
         nodes: stats.totalNodes,
         edges: stats.totalEdges,
         mappings: mappings.length,
         sequenceLength: sequence.length
       });
     } catch (error) {
-      logger7.error("processing", "Failed to process vault", error);
+      logger6.error("processing", "Failed to process vault", error);
       throw error;
     }
   }
@@ -21977,23 +22678,23 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
   async playSequence() {
     var _a, _b;
     if (!this.audioEngine) {
-      logger7.error("playback", "Audio engine not initialized");
+      logger6.error("playback", "Audio engine not initialized");
       throw new Error("Audio engine not initialized");
     }
     if (!((_a = this.currentGraphData) == null ? void 0 : _a.sequence)) {
-      logger7.info("playback", "No sequence available, processing vault first");
+      logger6.info("playback", "No sequence available, processing vault first");
       await this.processVault();
     }
     if (!((_b = this.currentGraphData) == null ? void 0 : _b.sequence)) {
-      logger7.error("playback", "Failed to generate sequence");
+      logger6.error("playback", "Failed to generate sequence");
       throw new Error("No musical sequence available");
     }
-    logger7.info("playback", "Starting sequence playback", {
+    logger6.info("playback", "Starting sequence playback", {
       sequenceLength: this.currentGraphData.sequence.length,
       firstNote: this.currentGraphData.sequence[0],
       lastNote: this.currentGraphData.sequence[this.currentGraphData.sequence.length - 1]
     });
-    logger7.info("debug", "Sequence details", {
+    logger6.info("debug", "Sequence details", {
       totalNotes: this.currentGraphData.sequence.length,
       sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note) => ({
         pitch: note.pitch,
@@ -22005,7 +22706,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
     try {
       await this.audioEngine.playSequence(this.currentGraphData.sequence);
     } catch (error) {
-      logger7.error("playback", "Failed to play sequence", error);
+      logger6.error("playback", "Failed to play sequence", error);
       throw error;
     }
   }
@@ -22015,7 +22716,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
   stopPlayback() {
     if (this.audioEngine) {
       this.audioEngine.stop();
-      logger7.info("playback", "Playback stopped");
+      logger6.info("playback", "Playback stopped");
     }
   }
   /**
@@ -22049,7 +22750,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
    * Update settings and refresh components
    */
   async updateSettings(newSettings) {
-    logger7.debug("settings", "Updating plugin settings", newSettings);
+    logger6.debug("settings", "Updating plugin settings", newSettings);
     this.settings = { ...this.settings, ...newSettings };
     if (this.audioEngine) {
       this.audioEngine.updateSettings(this.settings);
@@ -22058,13 +22759,13 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       this.musicalMapper.updateSettings(this.settings);
     }
     await this.saveSettings();
-    logger7.info("settings", "Settings updated successfully");
+    logger6.info("settings", "Settings updated successfully");
   }
   async loadSettings() {
     const data = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
     this.migrateSettings();
-    logger7.debug("settings", "Settings loaded", { settings: this.settings });
+    logger6.debug("settings", "Settings loaded", { settings: this.settings });
   }
   /**
    * Migrate settings from old structure to new per-instrument effects structure
@@ -22073,7 +22774,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     let migrationNeeded = false;
     if ("effects" in this.settings && !((_a = this.settings.effects) == null ? void 0 : _a.piano)) {
-      logger7.info("settings", "Migrating old effects structure to per-instrument structure");
+      logger6.info("settings", "Migrating old effects structure to per-instrument structure");
       migrationNeeded = true;
       const oldEffects = this.settings.effects;
       delete this.settings.effects;
@@ -22127,7 +22828,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       }
     }
     if (!this.settings.instruments.choir) {
-      logger7.info("settings", "Adding missing Choir instrument");
+      logger6.info("settings", "Adding missing Choir instrument");
       migrationNeeded = true;
       this.settings.instruments.choir = {
         enabled: true,
@@ -22141,7 +22842,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.vocalPads) {
-      logger7.info("settings", "Adding missing Vocal Pads instrument");
+      logger6.info("settings", "Adding missing Vocal Pads instrument");
       migrationNeeded = true;
       this.settings.instruments.vocalPads = {
         enabled: true,
@@ -22155,7 +22856,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.pad) {
-      logger7.info("settings", "Adding missing Pad instrument");
+      logger6.info("settings", "Adding missing Pad instrument");
       migrationNeeded = true;
       this.settings.instruments.pad = {
         enabled: true,
@@ -22169,7 +22870,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.flute) {
-      logger7.info("settings", "Adding missing Flute instrument");
+      logger6.info("settings", "Adding missing Flute instrument");
       migrationNeeded = true;
       this.settings.instruments.flute = {
         enabled: true,
@@ -22183,7 +22884,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.clarinet) {
-      logger7.info("settings", "Adding missing Clarinet instrument");
+      logger6.info("settings", "Adding missing Clarinet instrument");
       migrationNeeded = true;
       this.settings.instruments.clarinet = {
         enabled: true,
@@ -22197,7 +22898,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.saxophone) {
-      logger7.info("settings", "Adding missing Saxophone instrument");
+      logger6.info("settings", "Adding missing Saxophone instrument");
       migrationNeeded = true;
       this.settings.instruments.saxophone = {
         enabled: true,
@@ -22211,7 +22912,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.soprano) {
-      logger7.info("settings", "Adding missing Soprano instrument (Phase 6A)");
+      logger6.info("settings", "Adding missing Soprano instrument (Phase 6A)");
       migrationNeeded = true;
       this.settings.instruments.soprano = {
         enabled: false,
@@ -22226,7 +22927,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.alto) {
-      logger7.info("settings", "Adding missing Alto instrument (Phase 6A)");
+      logger6.info("settings", "Adding missing Alto instrument (Phase 6A)");
       migrationNeeded = true;
       this.settings.instruments.alto = {
         enabled: false,
@@ -22241,7 +22942,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.tenor) {
-      logger7.info("settings", "Adding missing Tenor instrument (Phase 6A)");
+      logger6.info("settings", "Adding missing Tenor instrument (Phase 6A)");
       migrationNeeded = true;
       this.settings.instruments.tenor = {
         enabled: false,
@@ -22256,7 +22957,7 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
       };
     }
     if (!this.settings.instruments.bass) {
-      logger7.info("settings", "Adding missing Bass instrument (Phase 6A)");
+      logger6.info("settings", "Adding missing Bass instrument (Phase 6A)");
       migrationNeeded = true;
       this.settings.instruments.bass = {
         enabled: false,
@@ -22272,12 +22973,12 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
     }
     if (migrationNeeded) {
       this.saveSettings();
-      logger7.info("settings", "Settings migration completed");
+      logger6.info("settings", "Settings migration completed");
     }
   }
   async saveSettings() {
     await this.saveData(this.settings);
-    logger7.debug("settings", "Settings saved");
+    logger6.debug("settings", "Settings saved");
   }
   getLogs() {
     return LoggerFactory.getLogs();
