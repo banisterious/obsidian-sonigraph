@@ -52,6 +52,40 @@ const SAMPLER_CONFIGS = {
 		release: 2.0,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
 		effects: ['reverb', 'filter']
+	},
+	choir: {
+		urls: {
+			"C3": "C3.[format]", "D#3": "Ds3.[format]", "F#3": "Fs3.[format]",
+			"A3": "A3.[format]", "C4": "C4.[format]", "D#4": "Ds4.[format]",
+			"F#4": "Fs4.[format]", "A4": "A4.[format]", "C5": "C5.[format]",
+			"D#5": "Ds5.[format]", "F#5": "Fs5.[format]", "A5": "A5.[format]",
+			"C6": "C6.[format]", "D#6": "Ds6.[format]"
+		},
+		release: 3.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/choir/",
+		effects: ['reverb', 'chorus']
+	},
+	vocalPads: {
+		urls: {
+			"C2": "C2.[format]", "F2": "F2.[format]", "A2": "A2.[format]",
+			"C3": "C3.[format]", "F3": "F3.[format]", "A3": "A3.[format]",
+			"C4": "C4.[format]", "F4": "F4.[format]", "A4": "A4.[format]",
+			"C5": "C5.[format]", "F5": "F5.[format]", "A5": "A5.[format]"
+		},
+		release: 4.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/",
+		effects: ['reverb', 'filter']
+	},
+	pad: {
+		urls: {
+			"C1": "C1.[format]", "G1": "G1.[format]", "C2": "C2.[format]",
+			"G2": "G2.[format]", "C3": "C3.[format]", "G3": "G3.[format]",
+			"C4": "C4.[format]", "G4": "G4.[format]", "C5": "C5.[format]",
+			"G5": "G5.[format]", "C6": "C6.[format]"
+		},
+		release: 5.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/",
+		effects: ['reverb', 'filter']
 	}
 };
 
@@ -64,7 +98,7 @@ export interface VoiceAssignment {
 export class AudioEngine {
 	private instruments: Map<string, PolySynth | Sampler> = new Map();
 	private instrumentVolumes: Map<string, Volume> = new Map();
-	private effects: Map<string, any> = new Map();
+	private instrumentEffects: Map<string, Map<string, any>> = new Map(); // Per-instrument effects
 	private harmonicEngine: HarmonicEngine;
 	private isInitialized = false;
 	private isPlaying = false;
@@ -127,12 +161,15 @@ export class AudioEngine {
 			// Apply volume setting
 			this.updateVolume();
 
+			// Apply initial effect settings from plugin settings
+			this.applyEffectSettings();
+
 			this.isInitialized = true;
 			startTime();
 
 			logger.info('initialization', 'Multi-instrument AudioEngine initialized', {
 				instruments: Array.from(this.instruments.keys()),
-				effects: Array.from(this.effects.keys()),
+				effects: Array.from(this.instrumentEffects.keys()),
 				audioContext: context.state
 			});
 
@@ -143,37 +180,47 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Reverb for spatial depth - optimized for instrument realism
-		const reverb = new Reverb({
-			decay: 1.8,      // Slightly shorter for clarity
-			preDelay: 0.02,  // Small pre-delay for natural space
-			wet: 0.25        // Reduced wetness to maintain definition
-		});
-		await reverb.generate();
-		this.effects.set('reverb', reverb);
+		// Initialize per-instrument effects
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad'];
+		
+		for (const instrumentName of instruments) {
+			const effectMap = new Map<string, any>();
+			
+			// Create reverb for this instrument
+			const reverb = new Reverb({
+				decay: 1.8,      
+				preDelay: 0.02,  
+				wet: 0.25        
+			});
+			await reverb.generate();
+			effectMap.set('reverb', reverb);
 
-		// Chorus for organ richness - classic organ effect
-		const chorus = new Chorus({
-			frequency: 0.8,   // Slower rate for more musical effect
-			delayTime: 4.0,   // Slightly longer delay
-			depth: 0.5,       // Moderate depth to avoid seasickness
-			feedback: 0.05,   // Minimal feedback for cleaner sound
-			spread: 120       // Narrower spread for focus
-		});
-		chorus.start();
-		this.effects.set('chorus', chorus);
+			// Create chorus for this instrument
+			const chorus = new Chorus({
+				frequency: 0.8,   
+				delayTime: 4.0,   
+				depth: 0.5,       
+				feedback: 0.05,   
+				spread: 120       
+			});
+			chorus.start();
+			effectMap.set('chorus', chorus);
 
-		// Low-pass filter for strings - warmer, more natural
-		const filter = new Filter({
-			frequency: 3500,  // Higher cutoff to preserve brightness
-			type: 'lowpass',
-			rolloff: -24,     // Steeper rolloff for smoother sound
-			Q: 0.8           // Slight resonance for character
-		});
-		this.effects.set('filter', filter);
+			// Create filter for this instrument
+			const filter = new Filter({
+				frequency: 3500,  
+				type: 'lowpass',
+				rolloff: -24,     
+				Q: 0.8           
+			});
+			effectMap.set('filter', filter);
+			
+			this.instrumentEffects.set(instrumentName, effectMap);
+		}
 
-		logger.debug('effects', 'Audio effects initialized', {
-			effectCount: this.effects.size
+		logger.debug('effects', 'Per-instrument audio effects initialized', {
+			instrumentCount: instruments.length,
+			effectsPerInstrument: 3
 		});
 	}
 
@@ -182,14 +229,25 @@ export class AudioEngine {
 		
 		// Piano - using Sampler with high-quality samples
 		const pianoSampler = new Sampler(configs.piano);
-		const pianoVolume = new Volume(-6); // Individual volume control
+		const pianoVolume = new Volume(-6);
 		this.instrumentVolumes.set('piano', pianoVolume);
 		
 		let pianoOutput = pianoSampler.connect(pianoVolume);
-		for (const effectName of configs.piano.effects) {
-			const effect = this.effects.get(effectName);
-			if (effect) {
-				pianoOutput = pianoOutput.connect(effect);
+		
+		// Connect piano to its specific effects based on settings
+		const pianoEffects = this.instrumentEffects.get('piano');
+		if (pianoEffects && this.settings.instruments.piano.effects) {
+			if (this.settings.instruments.piano.effects.reverb.enabled) {
+				const reverb = pianoEffects.get('reverb');
+				if (reverb) pianoOutput = pianoOutput.connect(reverb);
+			}
+			if (this.settings.instruments.piano.effects.chorus.enabled) {
+				const chorus = pianoEffects.get('chorus');
+				if (chorus) pianoOutput = pianoOutput.connect(chorus);
+			}
+			if (this.settings.instruments.piano.effects.filter.enabled) {
+				const filter = pianoEffects.get('filter');
+				if (filter) pianoOutput = pianoOutput.connect(filter);
 			}
 		}
 		pianoOutput.connect(this.volume);
@@ -197,14 +255,25 @@ export class AudioEngine {
 
 		// Organ - using Sampler with harmonium samples
 		const organSampler = new Sampler(configs.organ);
-		const organVolume = new Volume(-6); // Individual volume control
+		const organVolume = new Volume(-6);
 		this.instrumentVolumes.set('organ', organVolume);
 		
 		let organOutput = organSampler.connect(organVolume);
-		for (const effectName of configs.organ.effects) {
-			const effect = this.effects.get(effectName);
-			if (effect) {
-				organOutput = organOutput.connect(effect);
+		
+		// Connect organ to its specific effects based on settings
+		const organEffects = this.instrumentEffects.get('organ');
+		if (organEffects && this.settings.instruments.organ.effects) {
+			if (this.settings.instruments.organ.effects.reverb.enabled) {
+				const reverb = organEffects.get('reverb');
+				if (reverb) organOutput = organOutput.connect(reverb);
+			}
+			if (this.settings.instruments.organ.effects.chorus.enabled) {
+				const chorus = organEffects.get('chorus');
+				if (chorus) organOutput = organOutput.connect(chorus);
+			}
+			if (this.settings.instruments.organ.effects.filter.enabled) {
+				const filter = organEffects.get('filter');
+				if (filter) organOutput = organOutput.connect(filter);
 			}
 		}
 		organOutput.connect(this.volume);
@@ -212,18 +281,107 @@ export class AudioEngine {
 
 		// Strings - using Sampler with violin samples
 		const stringsSampler = new Sampler(configs.strings);
-		const stringsVolume = new Volume(-6); // Individual volume control
+		const stringsVolume = new Volume(-6);
 		this.instrumentVolumes.set('strings', stringsVolume);
 		
 		let stringsOutput = stringsSampler.connect(stringsVolume);
-		for (const effectName of configs.strings.effects) {
-			const effect = this.effects.get(effectName);
-			if (effect) {
-				stringsOutput = stringsOutput.connect(effect);
+		
+		// Connect strings to its specific effects based on settings
+		const stringsEffects = this.instrumentEffects.get('strings');
+		if (stringsEffects && this.settings.instruments.strings.effects) {
+			if (this.settings.instruments.strings.effects.reverb.enabled) {
+				const reverb = stringsEffects.get('reverb');
+				if (reverb) stringsOutput = stringsOutput.connect(reverb);
+			}
+			if (this.settings.instruments.strings.effects.chorus.enabled) {
+				const chorus = stringsEffects.get('chorus');
+				if (chorus) stringsOutput = stringsOutput.connect(chorus);
+			}
+			if (this.settings.instruments.strings.effects.filter.enabled) {
+				const filter = stringsEffects.get('filter');
+				if (filter) stringsOutput = stringsOutput.connect(filter);
 			}
 		}
 		stringsOutput.connect(this.volume);
 		this.instruments.set('strings', stringsSampler);
+
+		// Choir - using Sampler with choir samples
+		const choirSampler = new Sampler(configs.choir);
+		const choirVolume = new Volume(-6);
+		this.instrumentVolumes.set('choir', choirVolume);
+		
+		let choirOutput = choirSampler.connect(choirVolume);
+		
+		// Connect choir to its specific effects based on settings
+		const choirEffects = this.instrumentEffects.get('choir');
+		if (choirEffects && this.settings.instruments.choir.effects) {
+			if (this.settings.instruments.choir.effects.reverb.enabled) {
+				const reverb = choirEffects.get('reverb');
+				if (reverb) choirOutput = choirOutput.connect(reverb);
+			}
+			if (this.settings.instruments.choir.effects.chorus.enabled) {
+				const chorus = choirEffects.get('chorus');
+				if (chorus) choirOutput = choirOutput.connect(chorus);
+			}
+			if (this.settings.instruments.choir.effects.filter.enabled) {
+				const filter = choirEffects.get('filter');
+				if (filter) choirOutput = choirOutput.connect(filter);
+			}
+		}
+		choirOutput.connect(this.volume);
+		this.instruments.set('choir', choirSampler);
+
+		// Vocal Pads - using Sampler with vocal pad samples
+		const vocalPadsSampler = new Sampler(configs.vocalPads);
+		const vocalPadsVolume = new Volume(-6);
+		this.instrumentVolumes.set('vocalPads', vocalPadsVolume);
+		
+		let vocalPadsOutput = vocalPadsSampler.connect(vocalPadsVolume);
+		
+		// Connect vocal pads to its specific effects based on settings
+		const vocalPadsEffects = this.instrumentEffects.get('vocalPads');
+		if (vocalPadsEffects && this.settings.instruments.vocalPads.effects) {
+			if (this.settings.instruments.vocalPads.effects.reverb.enabled) {
+				const reverb = vocalPadsEffects.get('reverb');
+				if (reverb) vocalPadsOutput = vocalPadsOutput.connect(reverb);
+			}
+			if (this.settings.instruments.vocalPads.effects.chorus.enabled) {
+				const chorus = vocalPadsEffects.get('chorus');
+				if (chorus) vocalPadsOutput = vocalPadsOutput.connect(chorus);
+			}
+			if (this.settings.instruments.vocalPads.effects.filter.enabled) {
+				const filter = vocalPadsEffects.get('filter');
+				if (filter) vocalPadsOutput = vocalPadsOutput.connect(filter);
+			}
+		}
+		vocalPadsOutput.connect(this.volume);
+		this.instruments.set('vocalPads', vocalPadsSampler);
+
+		// Pad - using Sampler with synthetic pad samples
+		const padSampler = new Sampler(configs.pad);
+		const padVolume = new Volume(-6);
+		this.instrumentVolumes.set('pad', padVolume);
+		
+		let padOutput = padSampler.connect(padVolume);
+		
+		// Connect pad to its specific effects based on settings
+		const padEffects = this.instrumentEffects.get('pad');
+		if (padEffects && this.settings.instruments.pad.effects) {
+			if (this.settings.instruments.pad.effects.reverb.enabled) {
+				const reverb = padEffects.get('reverb');
+				if (reverb) padOutput = padOutput.connect(reverb);
+			}
+			if (this.settings.instruments.pad.effects.chorus.enabled) {
+				const chorus = padEffects.get('chorus');
+				if (chorus) padOutput = padOutput.connect(chorus);
+			}
+			if (this.settings.instruments.pad.effects.filter.enabled) {
+				const filter = padEffects.get('filter');
+				if (filter) padOutput = padOutput.connect(filter);
+			}
+		}
+		padOutput.connect(this.volume);
+		this.instruments.set('pad', padSampler);
 
 		// Apply initial volume settings from plugin settings
 		this.applyInstrumentSettings();
@@ -415,9 +573,15 @@ export class AudioEngine {
 		this.settings = settings;
 		this.updateVolume();
 		
+		// Apply effect settings if engine is initialized
+		if (this.isInitialized) {
+			this.applyEffectSettings();
+		}
+		
 		logger.debug('settings', 'Audio settings updated', {
 			volume: settings.volume,
-			tempo: settings.tempo
+			tempo: settings.tempo,
+			effectsApplied: this.isInitialized
 		});
 	}
 
@@ -430,10 +594,11 @@ export class AudioEngine {
 	}
 
 	/**
-	 * Update reverb effect parameters
+	 * Update reverb effect parameters for a specific instrument
 	 */
-	updateReverbSettings(settings: { decay?: number; preDelay?: number; wet?: number }): void {
-		const reverb = this.effects.get('reverb');
+	updateReverbSettings(settings: { decay?: number; preDelay?: number; wet?: number }, instrument: string): void {
+		const instrumentEffects = this.instrumentEffects.get(instrument);
+		const reverb = instrumentEffects?.get('reverb');
 		if (reverb) {
 			if (settings.decay !== undefined) {
 				reverb.decay = settings.decay;
@@ -444,17 +609,18 @@ export class AudioEngine {
 			if (settings.wet !== undefined) {
 				reverb.wet.value = settings.wet;
 			}
-			logger.debug('effects', 'Reverb settings updated', settings);
+			logger.debug('effects', `Reverb settings updated for ${instrument}`, settings);
 		} else {
-			logger.error('effects', 'Reverb effect not found');
+			logger.warn('effects', `Reverb effect not found for instrument: ${instrument}`);
 		}
 	}
 
 	/**
-	 * Update chorus effect parameters
+	 * Update chorus effect parameters for a specific instrument
 	 */
-	updateChorusSettings(settings: { frequency?: number; delayTime?: number; depth?: number; feedback?: number; spread?: number }): void {
-		const chorus = this.effects.get('chorus');
+	updateChorusSettings(settings: { frequency?: number; delayTime?: number; depth?: number; feedback?: number; spread?: number }, instrument: string): void {
+		const instrumentEffects = this.instrumentEffects.get(instrument);
+		const chorus = instrumentEffects?.get('chorus');
 		if (chorus) {
 			if (settings.frequency !== undefined) {
 				chorus.frequency.value = settings.frequency;
@@ -471,17 +637,18 @@ export class AudioEngine {
 			if (settings.spread !== undefined) {
 				chorus.spread = settings.spread;
 			}
-			logger.debug('effects', 'Chorus settings updated', settings);
+			logger.debug('effects', `Chorus settings updated for ${instrument}`, settings);
 		} else {
-			logger.error('effects', 'Chorus effect not found');
+			logger.warn('effects', `Chorus effect not found for instrument: ${instrument}`);
 		}
 	}
 
 	/**
-	 * Update filter effect parameters
+	 * Update filter effect parameters for a specific instrument
 	 */
-	updateFilterSettings(settings: { frequency?: number; Q?: number; type?: 'lowpass' | 'highpass' | 'bandpass' }): void {
-		const filter = this.effects.get('filter');
+	updateFilterSettings(settings: { frequency?: number; Q?: number; type?: 'lowpass' | 'highpass' | 'bandpass' }, instrument: string): void {
+		const instrumentEffects = this.instrumentEffects.get(instrument);
+		const filter = instrumentEffects?.get('filter');
 		if (filter) {
 			if (settings.frequency !== undefined) {
 				filter.frequency.value = settings.frequency;
@@ -492,69 +659,82 @@ export class AudioEngine {
 			if (settings.type !== undefined) {
 				filter.type = settings.type;
 			}
-			logger.debug('effects', 'Filter settings updated', settings);
+			logger.debug('effects', `Filter settings updated for ${instrument}`, settings);
 		} else {
-			logger.error('effects', 'Filter effect not found');
+			logger.warn('effects', `Filter effect not found for instrument: ${instrument}`);
 		}
 	}
 
 	/**
-	 * Enable or disable reverb effect
+	 * Enable or disable reverb effect for a specific instrument
 	 */
-	setReverbEnabled(enabled: boolean): void {
-		const reverb = this.effects.get('reverb');
+	setReverbEnabled(enabled: boolean, instrument: string): void {
+		const instrumentEffects = this.instrumentEffects.get(instrument);
+		const reverb = instrumentEffects?.get('reverb');
 		if (reverb) {
-			reverb.wet.value = enabled ? 0.25 : 0; // Default wet level or 0
-			logger.debug('effects', `Reverb ${enabled ? 'enabled' : 'disabled'}`);
+			const instrumentSettings = (this.settings.instruments as any)[instrument];
+			const wetLevel = instrumentSettings?.effects?.reverb?.params?.wet as number || 0.25;
+			reverb.wet.value = enabled ? wetLevel : 0;
+			logger.debug('effects', `Reverb ${enabled ? 'enabled' : 'disabled'} for ${instrument}`);
 		} else {
-			logger.error('effects', 'Reverb effect not found');
+			logger.warn('effects', `Reverb effect not found for instrument: ${instrument}`);
 		}
 	}
 
 	/**
-	 * Enable or disable chorus effect
+	 * Enable or disable chorus effect for a specific instrument
 	 */
-	setChorusEnabled(enabled: boolean): void {
-		const chorus = this.effects.get('chorus');
+	setChorusEnabled(enabled: boolean, instrument: string): void {
+		const instrumentEffects = this.instrumentEffects.get(instrument);
+		const chorus = instrumentEffects?.get('chorus');
 		if (chorus) {
 			chorus.wet.value = enabled ? 1 : 0; // Full wet when enabled, dry when disabled
-			logger.debug('effects', `Chorus ${enabled ? 'enabled' : 'disabled'}`);
+			logger.debug('effects', `Chorus ${enabled ? 'enabled' : 'disabled'} for ${instrument}`);
 		} else {
-			logger.error('effects', 'Chorus effect not found');
+			logger.warn('effects', `Chorus effect not found for instrument: ${instrument}`);
 		}
 	}
 
 	/**
-	 * Enable or disable filter effect
+	 * Enable or disable filter effect for a specific instrument
 	 */
-	setFilterEnabled(enabled: boolean): void {
-		const filter = this.effects.get('filter');
+	setFilterEnabled(enabled: boolean, instrument: string): void {
+		const instrumentEffects = this.instrumentEffects.get(instrument);
+		const filter = instrumentEffects?.get('filter');
 		if (filter) {
 			// For filters, we can't use wet/dry, so we bypass by setting frequency very high or very low
 			if (enabled) {
-				filter.frequency.value = 3500; // Default cutoff
+				const instrumentSettings = (this.settings.instruments as any)[instrument];
+				const cutoffFreq = instrumentSettings?.effects?.filter?.params?.frequency as number || 3500;
+				filter.frequency.value = cutoffFreq; // Restore saved cutoff
 			} else {
 				filter.frequency.value = 20000; // Effectively bypass (above audible range)
 			}
-			logger.debug('effects', `Filter ${enabled ? 'enabled' : 'disabled'}`);
+			logger.debug('effects', `Filter ${enabled ? 'enabled' : 'disabled'} for ${instrument}`);
 		} else {
-			logger.error('effects', 'Filter effect not found');
+			logger.warn('effects', `Filter effect not found for instrument: ${instrument}`);
 		}
 	}
 
 	/**
-	 * Get current effect states
+	 * Get current effect states for all instruments
 	 */
-	getEffectStates(): { reverb: boolean; chorus: boolean; filter: boolean } {
-		const reverb = this.effects.get('reverb');
-		const chorus = this.effects.get('chorus');
-		const filter = this.effects.get('filter');
+	getEffectStates(): { [instrument: string]: { reverb: boolean; chorus: boolean; filter: boolean } } {
+		const states: { [instrument: string]: { reverb: boolean; chorus: boolean; filter: boolean } } = {};
+		
+		this.instrumentEffects.forEach((effectMap, instrumentName) => {
+			const reverb = effectMap.get('reverb');
+			const chorus = effectMap.get('chorus');
+			const filter = effectMap.get('filter');
 
-		return {
-			reverb: reverb ? reverb.wet.value > 0 : false,
-			chorus: chorus ? chorus.wet.value > 0 : false,
-			filter: filter ? filter.frequency.value < 15000 : false // Consider enabled if cutoff is reasonable
-		};
+			states[instrumentName] = {
+				reverb: reverb ? reverb.wet.value > 0 : false,
+				chorus: chorus ? chorus.wet.value > 0 : false,
+				filter: filter ? filter.frequency.value < 15000 : false // Consider enabled if cutoff is reasonable
+			};
+		});
+
+		return states;
 	}
 
 	/**
@@ -704,14 +884,26 @@ export class AudioEngine {
 		// Distribute based on pitch ranges, but only among enabled instruments
 		const sortedInstruments = enabledInstruments.sort();
 		
-		if (mapping.pitch > 800) {
-			// High pitch - prefer piano if available
+		if (mapping.pitch > 1200) {
+			// Very high pitch - prefer piano if available
 			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
+		} else if (mapping.pitch > 800) {
+			// High pitch - prefer choir if available, fallback to piano
+			if (enabledInstruments.includes('choir')) return 'choir';
+			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
+		} else if (mapping.pitch > 600) {
+			// Mid-high pitch - prefer vocal pads if available
+			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
+			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
 		} else if (mapping.pitch > 300) {
 			// Medium pitch - prefer organ if available
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+		} else if (mapping.pitch > 150) {
+			// Low-medium pitch - prefer pad if available
+			if (enabledInstruments.includes('pad')) return 'pad';
+			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else {
-			// Low pitch - prefer strings if available
+			// Very low pitch - prefer strings if available
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		}
 	}
@@ -800,13 +992,82 @@ export class AudioEngine {
 			this.volume = null;
 		}
 
-		this.effects.forEach((effect, effectName) => {
-			effect.dispose();
+		this.instrumentEffects.forEach((effect, instrumentName) => {
+			effect.forEach((effectInstance, effectName) => {
+				effectInstance.dispose();
+			});
 		});
-		this.effects.clear();
+		this.instrumentEffects.clear();
 
 		this.isInitialized = false;
 
 		logger.info('cleanup', 'AudioEngine disposed');
+	}
+
+	private applyEffectSettings(): void {
+		if (!this.settings.instruments || !this.isInitialized) return;
+
+		try {
+			// Apply effect settings for each instrument
+			Object.keys(this.settings.instruments).forEach(instrumentName => {
+				const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+				if (!instrumentSettings?.effects) return;
+
+				// Apply reverb settings
+				const reverbSettings = instrumentSettings.effects.reverb;
+				if (reverbSettings) {
+					this.setReverbEnabled(reverbSettings.enabled, instrumentName);
+					if (reverbSettings.params.decay) {
+						this.updateReverbSettings({ decay: reverbSettings.params.decay as number }, instrumentName);
+					}
+					if (reverbSettings.params.preDelay) {
+						this.updateReverbSettings({ preDelay: reverbSettings.params.preDelay as number }, instrumentName);
+					}
+					if (reverbSettings.params.wet) {
+						this.updateReverbSettings({ wet: reverbSettings.params.wet as number }, instrumentName);
+					}
+				}
+
+				// Apply chorus settings
+				const chorusSettings = instrumentSettings.effects.chorus;
+				if (chorusSettings) {
+					this.setChorusEnabled(chorusSettings.enabled, instrumentName);
+					if (chorusSettings.params.frequency) {
+						this.updateChorusSettings({ frequency: chorusSettings.params.frequency as number }, instrumentName);
+					}
+					if (chorusSettings.params.depth) {
+						this.updateChorusSettings({ depth: chorusSettings.params.depth as number }, instrumentName);
+					}
+					if (chorusSettings.params.delayTime) {
+						this.updateChorusSettings({ delayTime: chorusSettings.params.delayTime as number }, instrumentName);
+					}
+					if (chorusSettings.params.feedback) {
+						this.updateChorusSettings({ feedback: chorusSettings.params.feedback as number }, instrumentName);
+					}
+				}
+
+				// Apply filter settings
+				const filterSettings = instrumentSettings.effects.filter;
+				if (filterSettings) {
+					this.setFilterEnabled(filterSettings.enabled, instrumentName);
+					if (filterSettings.params.frequency) {
+						this.updateFilterSettings({ frequency: filterSettings.params.frequency as number }, instrumentName);
+					}
+					if (filterSettings.params.Q) {
+						this.updateFilterSettings({ Q: filterSettings.params.Q as number }, instrumentName);
+					}
+					if (filterSettings.params.type) {
+						this.updateFilterSettings({ type: filterSettings.params.type as 'lowpass' | 'highpass' | 'bandpass' }, instrumentName);
+					}
+				}
+			});
+
+			logger.debug('effects', 'Applied per-instrument effect settings from plugin settings', {
+				instruments: Object.keys(this.settings.instruments)
+			});
+
+		} catch (error) {
+			logger.error('effects', 'Failed to apply effect settings', error);
+		}
 	}
 } 
