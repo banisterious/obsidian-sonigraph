@@ -322,7 +322,8 @@ export class ControlPanelModal extends Modal {
 		const activityGroup = this.createSettingsGroup(section, 'Live Voice Activity', 'Real-time instrument usage monitoring');
 		const activityDisplay = activityGroup.createDiv({ cls: 'sonigraph-voice-activity' });
 
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad'].forEach(instrumentKey => {
+		// Updated for Phase 6A: All 13 instruments including new vocal sections
+		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach(instrumentKey => {
 			const info = this.getInstrumentInfo(instrumentKey);
 			const activityRow = activityDisplay.createDiv({ cls: 'sonigraph-activity-row' });
 			
@@ -331,7 +332,9 @@ export class ControlPanelModal extends Modal {
 			label.createSpan({ text: info.name, cls: 'sonigraph-activity-name' });
 			
 			const voices = activityRow.createDiv({ cls: 'sonigraph-activity-voices' });
-			for (let i = 0; i < 8; i++) {
+			// Use different voice counts: 8 for original instruments, 4 for vocal sections
+			const maxVoices = ['soprano', 'alto', 'tenor', 'bass'].includes(instrumentKey) ? 4 : 8;
+			for (let i = 0; i < maxVoices; i++) {
 				voices.createDiv({ 
 					cls: 'sonigraph-voice-indicator',
 					attr: { id: `voice-${instrumentKey}-${i}` }
@@ -340,7 +343,7 @@ export class ControlPanelModal extends Modal {
 			
 			const count = activityRow.createDiv({ 
 				cls: 'sonigraph-activity-count',
-				text: '0/8',
+				text: `0/${maxVoices}`,
 				attr: { id: `count-${instrumentKey}` }
 			});
 		});
@@ -348,12 +351,20 @@ export class ControlPanelModal extends Modal {
 		// Individual instrument controls
 		const instrumentsGroup = this.createSettingsGroup(section, 'Individual Instrument Controls', 'Configure each instrument separately');
 
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad'].forEach(instrumentKey => {
+		// Updated for Phase 6A: All 13 instruments including new vocal sections
+		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach(instrumentKey => {
+			// Check if instrument exists in settings - skip if missing
 			const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
-			console.log(`Creating toggle for instrument: ${instrumentKey}, enabled: ${instrumentSettings.enabled}`);
+			if (!instrumentSettings) {
+				console.warn(`Instrument ${instrumentKey} not found in settings - skipping`);
+				return;
+			}
 			
 			const info = this.getInstrumentInfo(instrumentKey);
 			const instrumentContainer = instrumentsGroup.createDiv({ cls: 'sonigraph-instrument-control' });
+			
+			// Capture this reference for callbacks
+			const self = this;
 			
 			// Header with icon and name
 			const header = instrumentContainer.createDiv({ cls: 'sonigraph-instrument-header' });
@@ -369,9 +380,9 @@ export class ControlPanelModal extends Modal {
 					console.log(`✓ Toggle ${instrumentKey} (${info.name}) changed to:`, value);
 					console.log(`✓ Toggle UI state - checked: ${(toggle as HTMLInputElement).checked}, container classes:`, toggle.parentElement?.className);
 					
-					this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].enabled = value;
-					await this.plugin.saveSettings();
-					await this.updateInstrumentState(instrumentKey, value);
+					(self.plugin.settings.instruments as any)[instrumentKey].enabled = value;
+					await self.plugin.saveSettings();
+					await self.updateInstrumentState(instrumentKey, value);
 					
 					// Verify UI state after update
 					console.log(`✓ After update - Toggle UI state - checked: ${(toggle as HTMLInputElement).checked}, container classes:`, toggle.parentElement?.className);
@@ -402,10 +413,10 @@ export class ControlPanelModal extends Modal {
 					.setValue(Math.round(instrumentSettings.volume * 100))
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].volume = value / 100;
-						await this.plugin.saveSettings();
-						if (this.plugin.audioEngine) {
-							this.plugin.audioEngine.updateInstrumentVolume(instrumentKey, value / 100);
+						(self.plugin.settings.instruments as any)[instrumentKey].volume = value / 100;
+						await self.plugin.saveSettings();
+						if (self.plugin.audioEngine) {
+							self.plugin.audioEngine.updateInstrumentVolume(instrumentKey, value / 100);
 						}
 					}));
 
@@ -418,10 +429,10 @@ export class ControlPanelModal extends Modal {
 					.setValue(instrumentSettings.maxVoices)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].maxVoices = value;
-						await this.plugin.saveSettings();
-						if (this.plugin.audioEngine) {
-							this.plugin.audioEngine.updateInstrumentVoices(instrumentKey, value);
+						(self.plugin.settings.instruments as any)[instrumentKey].maxVoices = value;
+						await self.plugin.saveSettings();
+						if (self.plugin.audioEngine) {
+							self.plugin.audioEngine.updateInstrumentVoices(instrumentKey, value);
 						}
 					}));
 
@@ -445,24 +456,28 @@ export class ControlPanelModal extends Modal {
 		
 		switch (strategy) {
 			case 'frequency':
-				infoBox.createEl('h4', { text: 'Frequency-Based Assignment' });
-				infoBox.createEl('p', { text: 'Very High (>1200Hz) → Piano (crisp, percussive)' });
-				infoBox.createEl('p', { text: 'High (800-1200Hz) → Choir (ethereal voices)' });
-				infoBox.createEl('p', { text: 'Mid-High (600-800Hz) → Vocal Pads (atmospheric)' });
-				infoBox.createEl('p', { text: 'Medium (300-600Hz) → Organ (rich, sustained)' });
-				infoBox.createEl('p', { text: 'Low-Med (150-300Hz) → Pad (ambient foundation)' });
-				infoBox.createEl('p', { text: 'Very Low (<150Hz) → Strings (warm, flowing)' });
+				infoBox.createEl('h4', { text: 'Frequency-Based Assignment (13 Instruments)' });
+				infoBox.createEl('p', { text: 'Ultra High (>1600Hz) → 🎺 Flute (airy, crystalline)' });
+				infoBox.createEl('p', { text: 'Very High (>1400Hz) → 🎹 Piano (crisp, percussive)' });
+				infoBox.createEl('p', { text: 'High-Mid (800-1200Hz) → 👩‍🎤 Soprano, 🎵 Clarinet' });
+				infoBox.createEl('p', { text: 'High (1000-1400Hz) → 🎤 Choir, 🎙️ Alto' });
+				infoBox.createEl('p', { text: 'Mid-High (600-1000Hz) → 🌊 Vocal Pads, 🧑‍🎤 Tenor' });
+				infoBox.createEl('p', { text: 'Medium (400-800Hz) → 🎛️ Organ (rich, sustained)' });
+				infoBox.createEl('p', { text: 'Mid-Low (300-600Hz) → 🎷 Saxophone (expressive)' });
+				infoBox.createEl('p', { text: 'Low-Med (200-400Hz) → 🎛️ Pad (ambient foundation)' });
+				infoBox.createEl('p', { text: 'Low (100-200Hz) → 🎻 Strings (warm, flowing)' });
+				infoBox.createEl('p', { text: 'Very Low (<100Hz) → 🎤 Bass (deep, resonant)' });
 				break;
 			case 'round-robin':
-				infoBox.createEl('h4', { text: 'Round-Robin Assignment' });
+				infoBox.createEl('h4', { text: 'Round-Robin Assignment (13 Instruments)' });
 				infoBox.createEl('p', { text: 'Cycles through all enabled instruments in order' });
-				infoBox.createEl('p', { text: 'Ensures equal distribution across Piano, Organ, Strings, Choir, Vocal Pads, Pad' });
+				infoBox.createEl('p', { text: 'Ensures equal distribution across Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass' });
 				break;
 			case 'connection-based':
-				infoBox.createEl('h4', { text: 'Connection-Based Assignment' });
-				infoBox.createEl('p', { text: 'Highly connected nodes → Piano (prominent, percussive)' });
-				infoBox.createEl('p', { text: 'Medium connections → Organ, Choir (harmonic foundation)' });
-				infoBox.createEl('p', { text: 'Low connections → Strings, Vocal Pads, Pad (ambient, atmospheric)' });
+				infoBox.createEl('h4', { text: 'Connection-Based Assignment (13 Instruments)' });
+				infoBox.createEl('p', { text: 'Highly connected nodes → Piano, Flute (prominent, percussive)' });
+				infoBox.createEl('p', { text: 'Medium connections → Organ, Choir, Soprano, Alto (harmonic foundation)' });
+				infoBox.createEl('p', { text: 'Low connections → Strings, Vocal Pads, Pad, Tenor, Bass (ambient, atmospheric)' });
 				break;
 		}
 	}
@@ -491,37 +506,80 @@ export class ControlPanelModal extends Modal {
 				name: 'Piano',
 				icon: '🎹',
 				description: 'Triangle waves with quick attack/decay for percussive clarity',
-				defaultFrequencyRange: 'High (>800Hz)'
+				defaultFrequencyRange: 'Very High (>1400Hz)'
 			},
 			organ: {
 				name: 'Organ', 
 				icon: '🎛️',
 				description: 'FM synthesis with chorus effect for rich, sustained tones',
-				defaultFrequencyRange: 'Medium (300-800Hz)'
+				defaultFrequencyRange: 'Medium (400-800Hz)'
 			},
 			strings: {
 				name: 'Strings',
 				icon: '🎻',
 				description: 'AM synthesis with filtering for warm, flowing sounds',
-				defaultFrequencyRange: 'Low (<300Hz)'
+				defaultFrequencyRange: 'Very Low (<200Hz)'
 			},
 			choir: {
 				name: 'Choir',
 				icon: '🎤',
 				description: 'Additive synthesis with formant filtering for ethereal human voices',
-				defaultFrequencyRange: 'Mid-High (400-1200Hz)'
+				defaultFrequencyRange: 'High (1000-1400Hz)'
 			},
 			vocalPads: {
 				name: 'Vocal Pads',
 				icon: '🌊',
 				description: 'Multi-layer sine waves with formant filtering for atmospheric textures',
-				defaultFrequencyRange: 'Mid (300-800Hz)'
+				defaultFrequencyRange: 'Mid-High (600-1000Hz)'
 			},
 			pad: {
 				name: 'Pad',
 				icon: '🎛️',
 				description: 'Multi-oscillator synthesis with filter sweeps for ambient foundations',
-				defaultFrequencyRange: 'Full Spectrum (100-2000Hz)'
+				defaultFrequencyRange: 'Low-Mid (200-400Hz)'
+			},
+			flute: {
+				name: 'Flute',
+				icon: '🎺',
+				description: 'Pure sine waves with breath noise for airy, crystalline tones',
+				defaultFrequencyRange: 'Ultra High (>1600Hz)'
+			},
+			clarinet: {
+				name: 'Clarinet',
+				icon: '🎵',
+				description: 'Square wave harmonics for warm, hollow woodwind character',
+				defaultFrequencyRange: 'High-Mid (800-1200Hz)'
+			},
+			saxophone: {
+				name: 'Saxophone',
+				icon: '🎷',
+				description: 'Sawtooth waves with reedy harmonics for rich, expressive tone',
+				defaultFrequencyRange: 'Mid (300-600Hz)'
+			},
+			// Phase 6A: Individual Vocal Sections with advanced formant synthesis
+			soprano: {
+				name: 'Soprano',
+				icon: '👩‍🎤',
+				description: 'High female voice with AM synthesis and formant filtering for vowel morphing',
+				defaultFrequencyRange: 'High-Mid (800-1200Hz)'
+			},
+			alto: {
+				name: 'Alto',
+				icon: '🎙️',
+				description: 'Lower female voice with rich harmonics and breath noise modeling',
+				defaultFrequencyRange: 'High (1000-1400Hz)'
+			},
+			tenor: {
+				name: 'Tenor',
+				icon: '🧑‍🎤',
+				description: 'High male voice with FM synthesis and vocal fry characteristics',
+				defaultFrequencyRange: 'Mid-High (600-1000Hz)'
+			},
+			bass: {
+				name: 'Bass',
+				icon: '🎤',
+				description: 'Low male voice with sub-harmonics and chest resonance modeling',
+				defaultFrequencyRange: 'Very Low (<100Hz)'
 			}
 		};
 		
@@ -599,119 +657,36 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private createEffectsTab(): void {
-		const section = this.createTabSection('Audio Effects', 'Per-instrument effect routing and processing');
+		const section = this.createTabSection('Audio Effects', 'Configure reverb, chorus, and filter effects');
 
-		// Effect Status Display - Show per-instrument routing
-		const statusGroup = this.createSettingsGroup(section, 'Effect routing status', 'Current per-instrument effect states');
-		const statusDisplay = statusGroup.createDiv({ cls: 'sonigraph-effects-status' });
-
-		// Real-time effect parameters display
-		const parametersDisplay = statusDisplay.createDiv({ cls: 'sonigraph-effect-parameters' });
-		parametersDisplay.createEl('h4', { text: 'Active effects by instrument:' });
-
-		// Status rows for each instrument
-		const pianoStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
-		pianoStatus.createSpan({ text: '🎹 Piano: ', cls: 'sonigraph-effect-label' });
-		const pianoStateSpan = pianoStatus.createSpan({ text: 'Loading...', cls: 'sonigraph-effect-state', attr: { id: 'piano-effects-state' } });
-
-		const organStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
-		organStatus.createSpan({ text: '🎛️ Organ: ', cls: 'sonigraph-effect-label' });
-		const organStateSpan = organStatus.createSpan({ text: 'Loading...', cls: 'sonigraph-effect-state', attr: { id: 'organ-effects-state' } });
-
-		const stringsStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
-		stringsStatus.createSpan({ text: '🎻 Strings: ', cls: 'sonigraph-effect-label' });
-		const stringsStateSpan = stringsStatus.createSpan({ text: 'Loading...', cls: 'sonigraph-effect-state', attr: { id: 'strings-effects-state' } });
-
-		const choirStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
-		choirStatus.createSpan({ text: '🎤 Choir: ', cls: 'sonigraph-effect-label' });
-		const choirStateSpan = choirStatus.createSpan({ text: 'Loading...', cls: 'sonigraph-effect-state', attr: { id: 'choir-effects-state' } });
-
-		const vocalPadsStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
-		vocalPadsStatus.createSpan({ text: '🌊 Vocal Pads: ', cls: 'sonigraph-effect-label' });
-		const vocalPadsStateSpan = vocalPadsStatus.createSpan({ text: 'Loading...', cls: 'sonigraph-effect-state', attr: { id: 'vocalPads-effects-state' } });
-
-		const padStatus = parametersDisplay.createDiv({ cls: 'sonigraph-effect-status-row' });
-		padStatus.createSpan({ text: '🎛️ Pad: ', cls: 'sonigraph-effect-label' });
-		const padStateSpan = padStatus.createSpan({ text: 'Loading...', cls: 'sonigraph-effect-state', attr: { id: 'pad-effects-state' } });
-
-		// Function to update status display
-		const updateStatusDisplay = () => {
-			// Update piano effects status
-			const pianoEffects = this.plugin.settings.instruments.piano.effects;
-			const pianoActiveEffects = [];
-			if (pianoEffects.reverb.enabled) pianoActiveEffects.push('Reverb');
-			if (pianoEffects.chorus.enabled) pianoActiveEffects.push('Chorus');
-			if (pianoEffects.filter.enabled) pianoActiveEffects.push('Filter');
-			pianoStateSpan.textContent = pianoActiveEffects.length > 0 ? pianoActiveEffects.join(', ') : 'No effects';
-			pianoStateSpan.className = `sonigraph-effect-state ${pianoActiveEffects.length > 0 ? 'enabled' : 'disabled'}`;
-
-			// Update organ effects status
-			const organEffects = this.plugin.settings.instruments.organ.effects;
-			const organActiveEffects = [];
-			if (organEffects.reverb.enabled) organActiveEffects.push('Reverb');
-			if (organEffects.chorus.enabled) organActiveEffects.push('Chorus');
-			if (organEffects.filter.enabled) organActiveEffects.push('Filter');
-			organStateSpan.textContent = organActiveEffects.length > 0 ? organActiveEffects.join(', ') : 'No effects';
-			organStateSpan.className = `sonigraph-effect-state ${organActiveEffects.length > 0 ? 'enabled' : 'disabled'}`;
-
-			// Update strings effects status
-			const stringsEffects = this.plugin.settings.instruments.strings.effects;
-			const stringsActiveEffects = [];
-			if (stringsEffects.reverb.enabled) stringsActiveEffects.push('Reverb');
-			if (stringsEffects.chorus.enabled) stringsActiveEffects.push('Chorus');
-			if (stringsEffects.filter.enabled) stringsActiveEffects.push('Filter');
-			stringsStateSpan.textContent = stringsActiveEffects.length > 0 ? stringsActiveEffects.join(', ') : 'No effects';
-			stringsStateSpan.className = `sonigraph-effect-state ${stringsActiveEffects.length > 0 ? 'enabled' : 'disabled'}`;
-
-			// Update choir effects status
-			const choirEffects = this.plugin.settings.instruments.choir.effects;
-			const choirActiveEffects = [];
-			if (choirEffects.reverb.enabled) choirActiveEffects.push('Reverb');
-			if (choirEffects.chorus.enabled) choirActiveEffects.push('Chorus');
-			if (choirEffects.filter.enabled) choirActiveEffects.push('Filter');
-			choirStateSpan.textContent = choirActiveEffects.length > 0 ? choirActiveEffects.join(', ') : 'No effects';
-			choirStateSpan.className = `sonigraph-effect-state ${choirActiveEffects.length > 0 ? 'enabled' : 'disabled'}`;
-
-			// Update vocal pads effects status
-			const vocalPadsEffects = this.plugin.settings.instruments.vocalPads.effects;
-			const vocalPadsActiveEffects = [];
-			if (vocalPadsEffects.reverb.enabled) vocalPadsActiveEffects.push('Reverb');
-			if (vocalPadsEffects.chorus.enabled) vocalPadsActiveEffects.push('Chorus');
-			if (vocalPadsEffects.filter.enabled) vocalPadsActiveEffects.push('Filter');
-			vocalPadsStateSpan.textContent = vocalPadsActiveEffects.length > 0 ? vocalPadsActiveEffects.join(', ') : 'No effects';
-			vocalPadsStateSpan.className = `sonigraph-effect-state ${vocalPadsActiveEffects.length > 0 ? 'enabled' : 'disabled'}`;
-
-			// Update pad effects status
-			const padEffects = this.plugin.settings.instruments.pad.effects;
-			const padActiveEffects = [];
-			if (padEffects.reverb.enabled) padActiveEffects.push('Reverb');
-			if (padEffects.chorus.enabled) padActiveEffects.push('Chorus');
-			if (padEffects.filter.enabled) padActiveEffects.push('Filter');
-			padStateSpan.textContent = padActiveEffects.length > 0 ? padActiveEffects.join(', ') : 'No effects';
-			padStateSpan.className = `sonigraph-effect-state ${padActiveEffects.length > 0 ? 'enabled' : 'disabled'}`;
-		};
-
-		// Create per-instrument effect controls
-		this.createInstrumentEffectControls(section, 'piano', '🎹 Piano Effects', 'Percussive clarity and brightness', updateStatusDisplay);
-		this.createInstrumentEffectControls(section, 'organ', '🎛️ Organ Effects', 'Rich harmonic content and sustain', updateStatusDisplay);
-		this.createInstrumentEffectControls(section, 'strings', '🎻 Strings Effects', 'Warm, flowing textures', updateStatusDisplay);
-		this.createInstrumentEffectControls(section, 'choir', '🎤 Choir Effects', 'Ethereal human voices with formant filtering', updateStatusDisplay);
-		this.createInstrumentEffectControls(section, 'vocalPads', '🌊 Vocal Pads Effects', 'Atmospheric voice textures with sustained envelopes', updateStatusDisplay);
-		this.createInstrumentEffectControls(section, 'pad', '🎛️ Pad Effects', 'Ambient synthetic textures with filter sweeps', updateStatusDisplay);
-
-		// Initialize display
-		updateStatusDisplay();
+		// Individual instrument effect controls - Updated for Phase 6A: All 13 instruments
+		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach(instrumentKey => {
+			this.createInstrumentEffectControls(section, instrumentKey);
+		});
 	}
 
 	private createInstrumentEffectControls(
 		parent: HTMLElement, 
 		instrumentKey: string, 
-		title: string, 
-		description: string,
-		updateStatusCallback: () => void
+		title?: string, 
+		description?: string,
+		updateStatusCallback?: () => void
 	): void {
-		const instrumentGroup = this.createSettingsGroup(parent, title, description);
-		const effectStates = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments].effects;
+		// Check if instrument exists in settings - skip if missing
+		const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
+		if (!instrumentSettings?.effects) {
+			console.warn(`Instrument ${instrumentKey} not found in settings or missing effects - skipping effect controls`);
+			return;
+		}
+
+		// Get instrument info if title/description not provided
+		const info = this.getInstrumentInfo(instrumentKey);
+		const finalTitle = title || info.name;
+		const finalDescription = description || info.description;
+		const finalUpdateCallback = updateStatusCallback || (() => {});
+
+		const instrumentGroup = this.createSettingsGroup(parent, finalTitle, finalDescription);
+		const effectStates = instrumentSettings.effects;
 
 		// Reverb Controls
 		const reverbGroup = instrumentGroup.createDiv({ cls: 'sonigraph-effect-group' });
@@ -729,7 +704,7 @@ export class ControlPanelModal extends Modal {
 				}
 				// Show/hide reverb settings
 				reverbSettingsContainer.style.display = value ? 'block' : 'none';
-				updateStatusCallback();
+				finalUpdateCallback();
 			},
 			{
 				name: 'Enable reverb',
@@ -801,7 +776,7 @@ export class ControlPanelModal extends Modal {
 				}
 				// Show/hide chorus settings
 				chorusSettingsContainer.style.display = value ? 'block' : 'none';
-				updateStatusCallback();
+				finalUpdateCallback();
 			},
 			{
 				name: 'Enable chorus',
@@ -888,7 +863,7 @@ export class ControlPanelModal extends Modal {
 				}
 				// Show/hide filter settings
 				filterSettingsContainer.style.display = value ? 'block' : 'none';
-				updateStatusCallback();
+				finalUpdateCallback();
 			},
 			{
 				name: 'Enable filter',
@@ -1027,6 +1002,70 @@ export class ControlPanelModal extends Modal {
 			attr: { id: 'sonigraph-effects-status-pad' }
 		});
 		
+		// Flute status
+		const fluteStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		fluteStatus.createSpan({ text: '🎺 Flute: ', cls: 'sonigraph-effect-instrument-label' });
+		fluteStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-flute' }
+		});
+		
+		// Clarinet status
+		const clarinetStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		clarinetStatus.createSpan({ text: '🎵 Clarinet: ', cls: 'sonigraph-effect-instrument-label' });
+		clarinetStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-clarinet' }
+		});
+		
+		// Saxophone status
+		const saxophoneStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		saxophoneStatus.createSpan({ text: '🎷 Saxophone: ', cls: 'sonigraph-effect-instrument-label' });
+		saxophoneStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-saxophone' }
+		});
+		
+		// Phase 6A: Individual Vocal Sections status displays
+		// Soprano status
+		const sopranoStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		sopranoStatus.createSpan({ text: '👩‍🎤 Soprano: ', cls: 'sonigraph-effect-instrument-label' });
+		sopranoStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-soprano' }
+		});
+		
+		// Alto status
+		const altoStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		altoStatus.createSpan({ text: '🎙️ Alto: ', cls: 'sonigraph-effect-instrument-label' });
+		altoStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-alto' }
+		});
+		
+		// Tenor status
+		const tenorStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		tenorStatus.createSpan({ text: '🧑‍🎤 Tenor: ', cls: 'sonigraph-effect-instrument-label' });
+		tenorStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-tenor' }
+		});
+		
+		// Bass status
+		const bassVoiceStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
+		bassVoiceStatus.createSpan({ text: '🎤 Bass: ', cls: 'sonigraph-effect-instrument-label' });
+		bassVoiceStatus.createSpan({ 
+			text: 'Loading...', 
+			cls: 'sonigraph-effect-instrument-effects',
+			attr: { id: 'sonigraph-effects-status-bass' }
+		});
+		
 		// Add configuration hint
 		const configHint = effectsDisplay.createDiv({ cls: 'sonigraph-effects-config-hint' });
 		configHint.createSpan({ text: '→ Configure effects in the ', cls: 'sonigraph-hint-text' });
@@ -1128,8 +1167,8 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private updateEffectsStatus(): void {
-		// Update effects status for each instrument
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad'].forEach((instrumentKey) => {
+		// Update effects status for each instrument - now includes Phase 6A vocal instruments
+		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach((instrumentKey) => {
 			const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentKey];
 			if (!instrumentSettings?.effects) return;
 			

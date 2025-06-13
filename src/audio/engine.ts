@@ -86,6 +86,91 @@ const SAMPLER_CONFIGS = {
 		release: 5.0,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/",
 		effects: ['reverb', 'filter']
+	},
+	flute: {
+		urls: {
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
+			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
+			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
+			"D6": "D6.[format]", "E6": "E6.[format]"
+		},
+		release: 1.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/flute/",
+		effects: ['reverb', 'filter']
+	},
+	clarinet: {
+		urls: {
+			"D3": "D3.[format]", "F3": "F3.[format]", "A3": "A3.[format]",
+			"C4": "C4.[format]", "E4": "E4.[format]", "G4": "G4.[format]",
+			"B4": "B4.[format]", "D5": "D5.[format]", "F5": "F5.[format]",
+			"A5": "A5.[format]", "C6": "C6.[format]", "E6": "E6.[format]"
+		},
+		release: 2.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/",
+		effects: ['reverb', 'filter']
+	},
+	saxophone: {
+		urls: {
+			"D3": "D3.[format]", "F#3": "Fs3.[format]", "A3": "A3.[format]",
+			"C4": "C4.[format]", "D#4": "Ds4.[format]", "F#4": "Fs4.[format]",
+			"A4": "A4.[format]", "C5": "C5.[format]", "D#5": "Ds5.[format]",
+			"F#5": "Fs5.[format]", "A5": "A5.[format]", "C6": "C6.[format]"
+		},
+		release: 2.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/",
+		effects: ['reverb', 'chorus']
+	},
+	// Phase 6A: Individual Vocal Sections with formant synthesis
+	soprano: {
+		urls: {
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
+			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
+			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
+			"D6": "D6.[format]", "E6": "E6.[format]", "F6": "F6.[format]"
+		},
+		release: 2.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/",
+		effects: ['reverb', 'chorus', 'filter'] // Full vocal effects suite
+	},
+	alto: {
+		urls: {
+			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
+			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]"
+		},
+		release: 2.8,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/",
+		effects: ['reverb', 'chorus', 'filter'] // Full vocal effects suite
+	},
+	tenor: {
+		urls: {
+			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
+			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
+			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
+			"E4": "E4.[format]", "F4": "F4.[format]", "G4": "G4.[format]",
+			"A4": "A4.[format]", "B4": "B4.[format]", "C5": "C5.[format]"
+		},
+		release: 2.3,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/",
+		effects: ['reverb', 'filter'] // Less chorus for male voice clarity
+	},
+	bass: {
+		urls: {
+			"E2": "E2.[format]", "F2": "F2.[format]", "G2": "G2.[format]",
+			"A2": "A2.[format]", "B2": "B2.[format]", "C3": "C3.[format]",
+			"D3": "D3.[format]", "E3": "E3.[format]", "F3": "F3.[format]",
+			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]"
+		},
+		release: 3.2,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/",
+		effects: ['reverb'] // Minimal effects for deep bass clarity
 	}
 };
 
@@ -181,7 +266,7 @@ export class AudioEngine {
 
 	private async initializeEffects(): Promise<void> {
 		// Initialize per-instrument effects
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad'];
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone'];
 		
 		for (const instrumentName of instruments) {
 			const effectMap = new Map<string, any>();
@@ -382,6 +467,84 @@ export class AudioEngine {
 		}
 		padOutput.connect(this.volume);
 		this.instruments.set('pad', padSampler);
+
+		// Flute - using Sampler with flute samples
+		const fluteSampler = new Sampler(configs.flute);
+		const fluteVolume = new Volume(-6);
+		this.instrumentVolumes.set('flute', fluteVolume);
+		
+		let fluteOutput = fluteSampler.connect(fluteVolume);
+		
+		// Connect flute to its specific effects based on settings
+		const fluteEffects = this.instrumentEffects.get('flute');
+		if (fluteEffects && this.settings.instruments.flute.effects) {
+			if (this.settings.instruments.flute.effects.reverb.enabled) {
+				const reverb = fluteEffects.get('reverb');
+				if (reverb) fluteOutput = fluteOutput.connect(reverb);
+			}
+			if (this.settings.instruments.flute.effects.chorus.enabled) {
+				const chorus = fluteEffects.get('chorus');
+				if (chorus) fluteOutput = fluteOutput.connect(chorus);
+			}
+			if (this.settings.instruments.flute.effects.filter.enabled) {
+				const filter = fluteEffects.get('filter');
+				if (filter) fluteOutput = fluteOutput.connect(filter);
+			}
+		}
+		fluteOutput.connect(this.volume);
+		this.instruments.set('flute', fluteSampler);
+
+		// Clarinet - using Sampler with clarinet samples
+		const clarinetSampler = new Sampler(configs.clarinet);
+		const clarinetVolume = new Volume(-6);
+		this.instrumentVolumes.set('clarinet', clarinetVolume);
+		
+		let clarinetOutput = clarinetSampler.connect(clarinetVolume);
+		
+		// Connect clarinet to its specific effects based on settings
+		const clarinetEffects = this.instrumentEffects.get('clarinet');
+		if (clarinetEffects && this.settings.instruments.clarinet.effects) {
+			if (this.settings.instruments.clarinet.effects.reverb.enabled) {
+				const reverb = clarinetEffects.get('reverb');
+				if (reverb) clarinetOutput = clarinetOutput.connect(reverb);
+			}
+			if (this.settings.instruments.clarinet.effects.chorus.enabled) {
+				const chorus = clarinetEffects.get('chorus');
+				if (chorus) clarinetOutput = clarinetOutput.connect(chorus);
+			}
+			if (this.settings.instruments.clarinet.effects.filter.enabled) {
+				const filter = clarinetEffects.get('filter');
+				if (filter) clarinetOutput = clarinetOutput.connect(filter);
+			}
+		}
+		clarinetOutput.connect(this.volume);
+		this.instruments.set('clarinet', clarinetSampler);
+
+		// Saxophone - using Sampler with saxophone samples
+		const saxophoneSampler = new Sampler(configs.saxophone);
+		const saxophoneVolume = new Volume(-6);
+		this.instrumentVolumes.set('saxophone', saxophoneVolume);
+		
+		let saxophoneOutput = saxophoneSampler.connect(saxophoneVolume);
+		
+		// Connect saxophone to its specific effects based on settings
+		const saxophoneEffects = this.instrumentEffects.get('saxophone');
+		if (saxophoneEffects && this.settings.instruments.saxophone.effects) {
+			if (this.settings.instruments.saxophone.effects.reverb.enabled) {
+				const reverb = saxophoneEffects.get('reverb');
+				if (reverb) saxophoneOutput = saxophoneOutput.connect(reverb);
+			}
+			if (this.settings.instruments.saxophone.effects.chorus.enabled) {
+				const chorus = saxophoneEffects.get('chorus');
+				if (chorus) saxophoneOutput = saxophoneOutput.connect(chorus);
+			}
+			if (this.settings.instruments.saxophone.effects.filter.enabled) {
+				const filter = saxophoneEffects.get('filter');
+				if (filter) saxophoneOutput = saxophoneOutput.connect(filter);
+			}
+		}
+		saxophoneOutput.connect(this.volume);
+		this.instruments.set('saxophone', saxophoneSampler);
 
 		// Apply initial volume settings from plugin settings
 		this.applyInstrumentSettings();
@@ -882,28 +1045,51 @@ export class AudioEngine {
 
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
 		// Distribute based on pitch ranges, but only among enabled instruments
+		// Updated for 13 total instruments (9 existing + 4 new vocal sections)
 		const sortedInstruments = enabledInstruments.sort();
 		
-		if (mapping.pitch > 1200) {
+		if (mapping.pitch > 1600) {
+			// Ultra high pitch - prefer flute if available
+			if (enabledInstruments.includes('flute')) return 'flute';
+			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
+		} else if (mapping.pitch > 1400) {
 			// Very high pitch - prefer piano if available
 			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
-		} else if (mapping.pitch > 800) {
-			// High pitch - prefer choir if available, fallback to piano
+		} else if (mapping.pitch > 1200) {
+			// High-mid pitch - prefer soprano, clarinet if available
+			if (enabledInstruments.includes('soprano')) return 'soprano';
+			if (enabledInstruments.includes('clarinet')) return 'clarinet';
+			return enabledInstruments.includes('choir') ? 'choir' : sortedInstruments[0];
+		} else if (mapping.pitch > 1000) {
+			// High pitch - prefer choir, alto if available
 			if (enabledInstruments.includes('choir')) return 'choir';
-			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
-		} else if (mapping.pitch > 600) {
-			// Mid-high pitch - prefer vocal pads if available
-			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
+			if (enabledInstruments.includes('alto')) return 'alto';
+			return enabledInstruments.includes('clarinet') ? 'clarinet' : sortedInstruments[0];
+		} else if (mapping.pitch > 800) {
+			// Mid-high pitch - prefer organ if available
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
-		} else if (mapping.pitch > 300) {
+		} else if (mapping.pitch > 600) {
+			// Mid-high pitch - prefer vocal pads, tenor if available
+			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
+			if (enabledInstruments.includes('tenor')) return 'tenor';
+			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+		} else if (mapping.pitch > 400) {
 			// Medium pitch - prefer organ if available
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
-		} else if (mapping.pitch > 150) {
+		} else if (mapping.pitch > 300) {
+			// Mid-low pitch - prefer saxophone if available
+			if (enabledInstruments.includes('saxophone')) return 'saxophone';
+			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+		} else if (mapping.pitch > 200) {
 			// Low-medium pitch - prefer pad if available
 			if (enabledInstruments.includes('pad')) return 'pad';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
+		} else if (mapping.pitch > 100) {
+			// Low pitch - prefer strings if available
+			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else {
-			// Very low pitch - prefer strings if available
+			// Very low pitch - prefer bass voice if available
+			if (enabledInstruments.includes('bass')) return 'bass';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		}
 	}
