@@ -2,7 +2,7 @@
 
 **Project**: Obsidian Sonigraph Plugin  
 **Version**: 0.2.0 (Expanding to Multi-Voice Orchestral System)  
-**Status**: Phase 4 Complete, Phase 5 Planning
+**Status**: Phase 6A Complete - 13 Instruments Operational
 
 ---
 
@@ -19,38 +19,50 @@
 
 ## 1. Current Status & Achievements
 
-### ✅ **Completed: Phase 3 - Per-Instrument Effects System**
+### ✅ **Completed: Phase 6A - Individual Vocal Sections**
+
+**Latest Achievement: 13 Instruments Operational**
+- **Individual vocal sections**: Soprano, Alto, Tenor, Bass with sample-based synthesis
+- **Vocal-specific effects**: Optimized reverb, chorus, and filter settings per voice type
+- **Frequency range optimization**: Vocal sections assigned to specialized frequency bands
+- **Settings migration**: Automatic upgrade from 9 to 13 instruments for existing users
+- **UI scaling**: All interface tabs support 13 instruments with individual controls
 
 **Core Features Implemented:**
-- **Multi-instrument orchestral engine**: Piano, Organ, Strings with distinct synthesis
+- **Multi-instrument orchestral engine**: 13 instruments with distinct synthesis and effects
 - **Per-instrument effect routing**: Individual reverb, chorus, and filter effects
-- **Professional Control Center**: 6-tab interface (Status, Instruments, Musical, Harmony, Effects, Playback)
-- **Persistent settings system**: All configurations save/load correctly
-- **Settings migration**: Automatic conversion from global to per-instrument effects
-- **Real-time status monitoring**: Live updates across all tabs
-- **Optimized defaults**: Piano reverb only for clean starting experience
+- **Professional Control Center**: 6-tab interface supporting all 13 instruments
+- **Persistent settings system**: All configurations save/load correctly with automatic migration
+- **Real-time status monitoring**: Live updates across all tabs and instruments
+- **Optimized defaults**: New vocals disabled by default for user-friendliness
 
 **Technical Infrastructure:**
-- **AudioEngine**: Per-instrument effect maps with isolated processing
-- **Settings architecture**: Hierarchical structure supporting unlimited instruments
+- **AudioEngine**: Per-instrument effect maps with isolated processing for 13 instruments
+- **Settings architecture**: Hierarchical structure supporting unlimited instrument expansion
 - **UI framework**: Dynamic tab system with real-time parameter updates
-- **CSS styling**: Modern, professional interface matching Obsidian design
+- **Migration system**: Robust upgrade path from 9→13 instruments with backward compatibility
 
 ---
 
 ## 2. Instrument Expansion Roadmap
 
-### 🎵 **Current Status: 9 Instruments Implemented**
+### 🎵 **Current Status: 13 Instruments Implemented**
 
-**✅ Phase 4: Vocal & Atmospheric - COMPLETED**
-- **🎤 Choir**: Layered voices (sample-based synthesis + reverb)
-- **🌊 Vocal Pads**: Ethereal voice textures (sample-based synthesis + formant filtering)
-- **🎛️ Pad**: Ambient synthetic textures (sample-based synthesis + filter sweeps)
+**✅ Phase 6A: Individual Vocal Sections - COMPLETED**
+- **👩‍🎤 Soprano**: High female voice with formant filtering (disabled by default)
+- **🎙️ Alto**: Lower female voice with rich harmonics (disabled by default)
+- **🧑‍🎤 Tenor**: High male voice with vocal expression (disabled by default)
+- **🎤 Bass**: Low male voice with chest resonance (disabled by default)
 
 **✅ Phase 5: Woodwinds Section - COMPLETED**
 - **🎺 Flute**: Breathy pure tone (sample-based synthesis + noise)
 - **🎵 Clarinet**: Hollow timbre (sample-based synthesis + odd harmonics)
 - **🎷 Saxophone**: Reedy richness (sample-based synthesis + distortion)
+
+**✅ Phase 4: Vocal & Atmospheric - COMPLETED**
+- **🎤 Choir**: Layered voices (sample-based synthesis + reverb)
+- **🌊 Vocal Pads**: Ethereal voice textures (sample-based synthesis + formant filtering)
+- **🎛️ Pad**: Ambient synthetic textures (sample-based synthesis + filter sweeps)
 
 **✅ Foundation Instruments (Phase 1-3) - COMPLETED**
 - **🎹 Piano**: Acoustic piano (sample-based synthesis)
@@ -65,10 +77,10 @@
 |--------|------------|--------|-------|-------------------|----------------|-------------|
 | **🎤 Vocal** | Choir | ✅ | Complete | Sample-based + reverb | High (1000-1400Hz) | Layered SATB voices |
 | | Vocal Pads | ✅ | Complete | Sample-based + formant filtering | Mid-High (600-1000Hz) | Ethereal sustained textures |
-| | Soprano | 🔄 | 6A | AM + formant filtering | High-Mid (800-1200Hz) | High female voice, vowel morphing |
-| | Alto | 🔄 | 6A | Rich harmonics + breath noise | High (1000-1400Hz) | Lower female voice, breath realism |
-| | Tenor | 🔄 | 6A | FM + vocal fry | Mid-High (600-1000Hz) | High male voice, vocal expression |
-| | Bass | 🔄 | 6A | Sub-harmonics + chest resonance | Very Low (<100Hz) | Low male voice, chest resonance |
+| | Soprano | ✅ | 6A Complete | Sample-based + formant filtering | High-Mid (800-1200Hz) | High female voice, disabled by default |
+| | Alto | ✅ | 6A Complete | Sample-based + breath noise | High (1000-1400Hz) | Lower female voice, disabled by default |
+| | Tenor | ✅ | 6A Complete | Sample-based + vocal expression | Mid-High (600-1000Hz) | High male voice, disabled by default |
+| | Bass | ✅ | 6A Complete | Sample-based + chest resonance | Very Low (<100Hz) | Low male voice, disabled by default |
 | **🎹 Keyboard** | Piano | ✅ | Complete | Sample-based | Very High (1400-1600Hz) | Acoustic piano dynamics |
 | | Organ | ✅ | Complete | Additive synthesis | Mid (400-800Hz) | Hammond-style drawbars |
 | | Electric Piano | 🔄 | 6B | AM + tremolo | Mid-Low (200-400Hz) | Rhodes/Wurlitzer character |
@@ -98,10 +110,10 @@
 | | Arp | 🔄 | 8B | Various waves + envelope + sequencer | - | Sequenced patterns, graph-synced |
 
 #### **Implementation Summary by Phase**
-- **✅ Complete (9/31)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone
-- **🔄 Phase 6 (6 instruments → 15/31)**: Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta
-- **🔄 Phase 7 (8 instruments → 23/31)**: Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba  
-- **🔄 Phase 8 (8 instruments → 31/31)**: Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead Synth, Bass Synth, Arp Synth
+- **✅ Complete (13/31)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass
+- **🔄 Phase 6B (4 instruments → 17/31)**: Electric Piano, Harpsichord, Accordion, Celesta
+- **🔄 Phase 7 (8 instruments → 25/31)**: Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba  
+- **🔄 Phase 8 (6 instruments → 31/31)**: Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead Synth, Bass Synth, Arp Synth
 
 #### **Key Implementation Approaches by Family**
 
@@ -129,12 +141,20 @@
 - Per-instrument effects system operational
 - UI framework scalable to full orchestral scope
 
-#### **🔄 Phase 6: Vocal & Keyboard Extensions (6 new instruments)**
-**Target**: 15/31 total instruments
-- Individual vocal sections (Soprano, Alto, Tenor, Bass)
+#### **✅ Phase 6A: Individual Vocal Sections - COMPLETED (4 new instruments)**
+**Target**: 13/31 total instruments - **ACHIEVED**
+- ✅ Individual vocal sections (Soprano, Alto, Tenor, Bass) with sample-based synthesis
+- ✅ Vocal-specific effects optimization (reverb, chorus, filter per voice type)  
+- ✅ Frequency range specialization for optimal vocal separation
+- ✅ Settings migration system for 9→13 instrument upgrade
+- ✅ UI scaling to support 13 instruments across all interface tabs
+- ✅ User-friendly defaults (new vocals disabled by default)
+
+#### **🔄 Phase 6B: Extended Keyboard Family (4 new instruments)**
+**Target**: 17/31 total instruments
 - Extended keyboard family (Electric Piano, Harpsichord, Accordion, Celesta)
-- Advanced formant synthesis implementation
-- Vocal expression and keyboard articulation systems
+- Advanced keyboard articulation systems
+- Instrument-specific synthesis approaches (AM, FM, tremolo, vibrato)
 
 #### **🔄 Phase 7: Strings & Brass Completion (8 new instruments)**  
 **Target**: 23/31 total instruments
@@ -255,6 +275,30 @@
 - **Scope**: Complete woodwind section (Flute, Clarinet, Saxophone) 
 - **Achievement**: 9/31 total instruments operational
 
+### **Phase 6A: Individual Vocal Sections ✅ COMPLETED**
+- **Duration**: 1 week (completed) 
+- **Scope**: Individual vocal sections (Soprano, Alto, Tenor, Bass)
+- **Achievement**: 13/31 total instruments operational - **Major milestone reached**
+
+**✅ Key Achievements:**
+- [x] **Soprano vocal synthesis**: High female voice with formant filtering and reverb+chorus+filter
+- [x] **Alto vocal synthesis**: Lower female voice with rich harmonics and reverb+chorus+filter  
+- [x] **Tenor vocal synthesis**: High male voice with vocal expression and reverb+filter
+- [x] **Bass vocal synthesis**: Low male voice with chest resonance and reverb only
+- [x] **Frequency range optimization**: Vocal-specific frequency assignments for clear separation
+- [x] **Settings migration system**: Robust 9→13 instrument upgrade with backward compatibility
+- [x] **UI framework scaling**: All 6 interface tabs support 13 instruments seamlessly
+- [x] **User experience optimization**: New vocals disabled by default to avoid overwhelming users
+- [x] **Effect routing expansion**: Per-instrument effects for all 13 instruments
+- [x] **Real-time status monitoring**: Live updates across all instruments and interface tabs
+
+**🎯 Technical Implementation:**
+- Extended AudioEngine to support 13 concurrent instruments with individual effect chains
+- Updated frequency assignment algorithm for optimal 13-instrument distribution
+- Implemented automatic settings migration with fallback safety for existing users
+- Enhanced UI components to dynamically handle expanding instrument arrays
+- Added comprehensive error handling for missing instrument configurations
+
 ### **Phase 6: Vocal & Keyboard Extensions (Future)**
 - **Duration**: 4-5 weeks
 - **Scope**: Individual vocal sections + extended keyboard family (6 new instruments)
@@ -361,7 +405,8 @@ class PadSynth extends BaseSynth {
 |-------|--------|----------|-------|--------|----------------|----------------|
 | **Phase 4** | ✅ Complete | 4 weeks | Vocal & Atmospheric | 6/31 | Sample-based synthesis, UI scaling | Choir, Vocal Pads, Pad |
 | **Phase 5** | ✅ Complete | 2 weeks | Woodwind Completion | 9/31 | 9-instrument UI, frequency optimization | Flute, Clarinet, Saxophone |
-| **Phase 6** | 🔄 Next | 4-5 weeks | Vocal & Keyboard Extensions | 15/31 | Formant synthesis, keyboard articulation | Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta |
+| **Phase 6A** | ✅ Complete | 1 week | Individual Vocal Sections | 13/31 | Vocal synthesis, effects optimization | Soprano, Alto, Tenor, Bass |
+| **Phase 6B** | 🔄 Next | 3-4 weeks | Extended Keyboard Family | 17/31 | Keyboard articulation, AM/FM synthesis | Electric Piano, Harpsichord, Accordion, Celesta |
 | **Phase 7** | 🔄 Future | 5-6 weeks | Strings & Brass Completion | 23/31 | String modeling, brass formant synthesis | Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba |
 | **Phase 8** | 🔄 Future | 4-5 weeks | Percussion & Electronic Finale | 31/31 | Percussion modeling, analog synthesis | Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead, Bass, Arp |
 | **Phase 9** | 🔄 Future | 6-8 weeks | Orchestral Intelligence | 31/31+ | AI orchestration, conductor interface | Advanced features only |
@@ -378,10 +423,15 @@ class PadSynth extends BaseSynth {
 - **Week 1**: ✅ Woodwind synthesis implementation (flute, clarinet, saxophone)
 - **Week 2**: ✅ 9-instrument UI scaling and frequency range optimization
 
-#### **🔄 Phase 6: Vocal & Keyboard Extensions (Next Priority)**
-- **Focus**: Advanced formant synthesis and keyboard articulation systems
-- **Technical Challenges**: Formant filtering, AM/FM synthesis, breath noise modeling
-- **UI Requirements**: Support for 15 total instruments with individual controls
+#### **✅ Phase 6A: Individual Vocal Sections (Completed)**
+- **Focus**: Individual vocal sections with sample-based synthesis and effects optimization
+- **Technical Achievement**: 13-instrument system with robust settings migration
+- **UI Success**: Seamless scaling to 13 instruments across all interface components
+
+#### **🔄 Phase 6B: Extended Keyboard Family (Next Priority)**
+- **Focus**: Advanced keyboard articulation systems and synthesis techniques
+- **Technical Challenges**: AM/FM synthesis, authentic articulation models, tremolo/vibrato
+- **UI Requirements**: Support for 17 total instruments with expanded keyboard controls
 
 #### **🔄 Phase 7: Strings & Brass Completion (Future)**
 - **Focus**: String modeling, brass formant synthesis, and articulation systems
