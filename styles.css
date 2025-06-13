@@ -114,6 +114,144 @@
     color: var(--text-muted);
 }
 
+/* Effects Status Styling */
+.sonigraph-effects-status {
+    margin-bottom: var(--size-4-3);
+    padding: var(--size-4-2);
+    border-radius: var(--radius-s);
+    background: var(--background-secondary);
+}
+
+.sonigraph-effect-parameters h4 {
+    margin: 0 0 var(--size-2-3) 0;
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-medium);
+}
+
+.sonigraph-effect-status-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--size-2-1);
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-small);
+}
+
+.sonigraph-effect-label {
+    font-weight: var(--font-medium);
+    min-width: 80px;
+}
+
+.sonigraph-effect-state.enabled {
+    color: var(--color-green);
+    font-weight: var(--font-medium);
+}
+
+.sonigraph-effect-state.disabled {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.sonigraph-effect-params {
+    color: var(--text-muted);
+    margin-left: var(--size-2-1);
+}
+
+.sonigraph-effect-routing {
+    margin-top: var(--size-4-2);
+    padding-top: var(--size-4-2);
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-effect-routing h4 {
+    margin: 0 0 var(--size-2-3) 0;
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-medium);
+}
+
+.sonigraph-effect-routing p {
+    margin: var(--size-2-1) 0;
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+}
+
+/* Effect Settings Container */
+.sonigraph-effect-settings-container {
+    margin-top: var(--size-4-2);
+    padding-top: var(--size-4-2);
+    border-top: 1px solid var(--background-modifier-border-focus);
+}
+
+/* Per-Instrument Effect Groups */
+.sonigraph-effect-group {
+    margin-bottom: var(--size-4-3);
+    padding: var(--size-4-2);
+    border-radius: var(--radius-s);
+    background: var(--background-primary-alt);
+}
+
+.sonigraph-effect-title {
+    margin: 0 0 var(--size-2-3) 0;
+    font-size: var(--font-ui-medium);
+    font-weight: var(--font-medium);
+    color: var(--text-normal);
+}
+
+/* Status tab effects display */
+.sonigraph-effects-status {
+    background: var(--background-secondary);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.sonigraph-effects-status-content {
+    margin-bottom: 12px;
+}
+
+.sonigraph-effects-status-title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.sonigraph-effects-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sonigraph-effect-instrument-status {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.sonigraph-effect-instrument-label {
+    font-weight: 500;
+    color: var(--text-normal);
+    min-width: 80px;
+}
+
+.sonigraph-effect-instrument-effects {
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+    font-size: 12px;
+}
+
+.sonigraph-effects-config-hint {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--background-modifier-border);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.sonigraph-hint-link {
+    color: var(--text-accent);
+    font-weight: 500;
+}
+
 .sonigraph-status-indicator {
     height: 8px;
     width: 8px;

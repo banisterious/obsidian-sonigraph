@@ -39,9 +39,198 @@ var DEFAULT_SETTINGS = {
   isEnabled: true,
   audioFormat: "mp3",
   instruments: {
-    piano: { enabled: true, volume: 0.8, maxVoices: 8 },
-    organ: { enabled: true, volume: 0.7, maxVoices: 8 },
-    strings: { enabled: true, volume: 0.6, maxVoices: 8 }
+    piano: {
+      enabled: true,
+      volume: 0.8,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 1.8,
+            preDelay: 0.02,
+            wet: 0.25
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.8,
+            depth: 0.5,
+            delayTime: 4,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 3500,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    organ: {
+      enabled: true,
+      volume: 0.7,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: false,
+          params: {
+            decay: 2.2,
+            preDelay: 0.03,
+            wet: 0.35
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.8,
+            depth: 0.5,
+            delayTime: 4,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 4e3,
+            Q: 0.6,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    strings: {
+      enabled: true,
+      volume: 0.6,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: false,
+          params: {
+            decay: 2.8,
+            preDelay: 0.04,
+            wet: 0.45
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.6,
+            depth: 0.3,
+            delayTime: 3,
+            feedback: 0.03
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 3500,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    choir: {
+      enabled: true,
+      volume: 0.7,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 3.2,
+            preDelay: 0.05,
+            wet: 0.6
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 0.4,
+            depth: 0.6,
+            delayTime: 5,
+            feedback: 0.08
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 2e3,
+            Q: 0.7,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    vocalPads: {
+      enabled: true,
+      volume: 0.5,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 4,
+            preDelay: 0.06,
+            wet: 0.7
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.3,
+            depth: 0.4,
+            delayTime: 6,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 1500,
+            Q: 1.2,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    pad: {
+      enabled: true,
+      volume: 0.4,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 3.5,
+            preDelay: 0.08,
+            wet: 0.8
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.2,
+            depth: 0.7,
+            delayTime: 8,
+            feedback: 0.1
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 1200,
+            Q: 1.5,
+            type: "lowpass"
+          }
+        }
+      }
+    }
   },
   voiceAssignmentStrategy: "frequency"
 };
@@ -525,7 +714,7 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     this.updateAssignmentStrategyInfo();
     const activityGroup = this.createSettingsGroup(section, "Live Voice Activity", "Real-time instrument usage monitoring");
     const activityDisplay = activityGroup.createDiv({ cls: "sonigraph-voice-activity" });
-    Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
+    ["piano", "organ", "strings", "choir", "vocalPads", "pad"].forEach((instrumentKey) => {
       const info = this.getInstrumentInfo(instrumentKey);
       const activityRow = activityDisplay.createDiv({ cls: "sonigraph-activity-row" });
       const label = activityRow.createDiv({ cls: "sonigraph-activity-label" });
@@ -545,7 +734,8 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
       });
     });
     const instrumentsGroup = this.createSettingsGroup(section, "Individual Instrument Controls", "Configure each instrument separately");
-    Object.entries(this.plugin.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
+    ["piano", "organ", "strings", "choir", "vocalPads", "pad"].forEach((instrumentKey) => {
+      const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
       console.log(`Creating toggle for instrument: ${instrumentKey}, enabled: ${instrumentSettings.enabled}`);
       const info = this.getInstrumentInfo(instrumentKey);
       const instrumentContainer = instrumentsGroup.createDiv({ cls: "sonigraph-instrument-control" });
@@ -605,20 +795,23 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     switch (strategy) {
       case "frequency":
         infoBox.createEl("h4", { text: "Frequency-Based Assignment" });
-        infoBox.createEl("p", { text: "High frequencies (>800Hz) \u2192 Piano (crisp, percussive)" });
-        infoBox.createEl("p", { text: "Medium frequencies (300-800Hz) \u2192 Organ (rich, sustained)" });
-        infoBox.createEl("p", { text: "Low frequencies (<300Hz) \u2192 Strings (warm, flowing)" });
+        infoBox.createEl("p", { text: "Very High (>1200Hz) \u2192 Piano (crisp, percussive)" });
+        infoBox.createEl("p", { text: "High (800-1200Hz) \u2192 Choir (ethereal voices)" });
+        infoBox.createEl("p", { text: "Mid-High (600-800Hz) \u2192 Vocal Pads (atmospheric)" });
+        infoBox.createEl("p", { text: "Medium (300-600Hz) \u2192 Organ (rich, sustained)" });
+        infoBox.createEl("p", { text: "Low-Med (150-300Hz) \u2192 Pad (ambient foundation)" });
+        infoBox.createEl("p", { text: "Very Low (<150Hz) \u2192 Strings (warm, flowing)" });
         break;
       case "round-robin":
         infoBox.createEl("h4", { text: "Round-Robin Assignment" });
-        infoBox.createEl("p", { text: "Cycles through instruments in order: Piano \u2192 Organ \u2192 Strings" });
-        infoBox.createEl("p", { text: "Ensures equal distribution across all enabled instruments" });
+        infoBox.createEl("p", { text: "Cycles through all enabled instruments in order" });
+        infoBox.createEl("p", { text: "Ensures equal distribution across Piano, Organ, Strings, Choir, Vocal Pads, Pad" });
         break;
       case "connection-based":
         infoBox.createEl("h4", { text: "Connection-Based Assignment" });
         infoBox.createEl("p", { text: "Highly connected nodes \u2192 Piano (prominent, percussive)" });
-        infoBox.createEl("p", { text: "Medium connections \u2192 Organ (harmonic foundation)" });
-        infoBox.createEl("p", { text: "Low connections \u2192 Strings (ambient, atmospheric)" });
+        infoBox.createEl("p", { text: "Medium connections \u2192 Organ, Choir (harmonic foundation)" });
+        infoBox.createEl("p", { text: "Low connections \u2192 Strings, Vocal Pads, Pad (ambient, atmospheric)" });
         break;
     }
   }
@@ -655,6 +848,24 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
         icon: "\u{1F3BB}",
         description: "AM synthesis with filtering for warm, flowing sounds",
         defaultFrequencyRange: "Low (<300Hz)"
+      },
+      choir: {
+        name: "Choir",
+        icon: "\u{1F3A4}",
+        description: "Additive synthesis with formant filtering for ethereal human voices",
+        defaultFrequencyRange: "Mid-High (400-1200Hz)"
+      },
+      vocalPads: {
+        name: "Vocal Pads",
+        icon: "\u{1F30A}",
+        description: "Multi-layer sine waves with formant filtering for atmospheric textures",
+        defaultFrequencyRange: "Mid (300-800Hz)"
+      },
+      pad: {
+        name: "Pad",
+        icon: "\u{1F39B}\uFE0F",
+        description: "Multi-oscillator synthesis with filter sweeps for ambient foundations",
+        defaultFrequencyRange: "Full Spectrum (100-2000Hz)"
       }
     };
     return INSTRUMENT_INFO[instrumentKey] || INSTRUMENT_INFO.piano;
@@ -700,134 +911,235 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     }));
   }
   createEffectsTab() {
-    const section = this.createTabSection("Audio Effects", "Spatial audio and effect processing");
-    const reverbGroup = this.createSettingsGroup(section, "\u{1F30A} Reverb", "Spatial depth and ambience");
+    const section = this.createTabSection("Audio Effects", "Per-instrument effect routing and processing");
+    const statusGroup = this.createSettingsGroup(section, "Effect routing status", "Current per-instrument effect states");
+    const statusDisplay = statusGroup.createDiv({ cls: "sonigraph-effects-status" });
+    const parametersDisplay = statusDisplay.createDiv({ cls: "sonigraph-effect-parameters" });
+    parametersDisplay.createEl("h4", { text: "Active effects by instrument:" });
+    const pianoStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
+    pianoStatus.createSpan({ text: "\u{1F3B9} Piano: ", cls: "sonigraph-effect-label" });
+    const pianoStateSpan = pianoStatus.createSpan({ text: "Loading...", cls: "sonigraph-effect-state", attr: { id: "piano-effects-state" } });
+    const organStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
+    organStatus.createSpan({ text: "\u{1F39B}\uFE0F Organ: ", cls: "sonigraph-effect-label" });
+    const organStateSpan = organStatus.createSpan({ text: "Loading...", cls: "sonigraph-effect-state", attr: { id: "organ-effects-state" } });
+    const stringsStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
+    stringsStatus.createSpan({ text: "\u{1F3BB} Strings: ", cls: "sonigraph-effect-label" });
+    const stringsStateSpan = stringsStatus.createSpan({ text: "Loading...", cls: "sonigraph-effect-state", attr: { id: "strings-effects-state" } });
+    const choirStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
+    choirStatus.createSpan({ text: "\u{1F3A4} Choir: ", cls: "sonigraph-effect-label" });
+    const choirStateSpan = choirStatus.createSpan({ text: "Loading...", cls: "sonigraph-effect-state", attr: { id: "choir-effects-state" } });
+    const vocalPadsStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
+    vocalPadsStatus.createSpan({ text: "\u{1F30A} Vocal Pads: ", cls: "sonigraph-effect-label" });
+    const vocalPadsStateSpan = vocalPadsStatus.createSpan({ text: "Loading...", cls: "sonigraph-effect-state", attr: { id: "vocalPads-effects-state" } });
+    const padStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
+    padStatus.createSpan({ text: "\u{1F39B}\uFE0F Pad: ", cls: "sonigraph-effect-label" });
+    const padStateSpan = padStatus.createSpan({ text: "Loading...", cls: "sonigraph-effect-state", attr: { id: "pad-effects-state" } });
+    const updateStatusDisplay = () => {
+      const pianoEffects = this.plugin.settings.instruments.piano.effects;
+      const pianoActiveEffects = [];
+      if (pianoEffects.reverb.enabled)
+        pianoActiveEffects.push("Reverb");
+      if (pianoEffects.chorus.enabled)
+        pianoActiveEffects.push("Chorus");
+      if (pianoEffects.filter.enabled)
+        pianoActiveEffects.push("Filter");
+      pianoStateSpan.textContent = pianoActiveEffects.length > 0 ? pianoActiveEffects.join(", ") : "No effects";
+      pianoStateSpan.className = `sonigraph-effect-state ${pianoActiveEffects.length > 0 ? "enabled" : "disabled"}`;
+      const organEffects = this.plugin.settings.instruments.organ.effects;
+      const organActiveEffects = [];
+      if (organEffects.reverb.enabled)
+        organActiveEffects.push("Reverb");
+      if (organEffects.chorus.enabled)
+        organActiveEffects.push("Chorus");
+      if (organEffects.filter.enabled)
+        organActiveEffects.push("Filter");
+      organStateSpan.textContent = organActiveEffects.length > 0 ? organActiveEffects.join(", ") : "No effects";
+      organStateSpan.className = `sonigraph-effect-state ${organActiveEffects.length > 0 ? "enabled" : "disabled"}`;
+      const stringsEffects = this.plugin.settings.instruments.strings.effects;
+      const stringsActiveEffects = [];
+      if (stringsEffects.reverb.enabled)
+        stringsActiveEffects.push("Reverb");
+      if (stringsEffects.chorus.enabled)
+        stringsActiveEffects.push("Chorus");
+      if (stringsEffects.filter.enabled)
+        stringsActiveEffects.push("Filter");
+      stringsStateSpan.textContent = stringsActiveEffects.length > 0 ? stringsActiveEffects.join(", ") : "No effects";
+      stringsStateSpan.className = `sonigraph-effect-state ${stringsActiveEffects.length > 0 ? "enabled" : "disabled"}`;
+      const choirEffects = this.plugin.settings.instruments.choir.effects;
+      const choirActiveEffects = [];
+      if (choirEffects.reverb.enabled)
+        choirActiveEffects.push("Reverb");
+      if (choirEffects.chorus.enabled)
+        choirActiveEffects.push("Chorus");
+      if (choirEffects.filter.enabled)
+        choirActiveEffects.push("Filter");
+      choirStateSpan.textContent = choirActiveEffects.length > 0 ? choirActiveEffects.join(", ") : "No effects";
+      choirStateSpan.className = `sonigraph-effect-state ${choirActiveEffects.length > 0 ? "enabled" : "disabled"}`;
+      const vocalPadsEffects = this.plugin.settings.instruments.vocalPads.effects;
+      const vocalPadsActiveEffects = [];
+      if (vocalPadsEffects.reverb.enabled)
+        vocalPadsActiveEffects.push("Reverb");
+      if (vocalPadsEffects.chorus.enabled)
+        vocalPadsActiveEffects.push("Chorus");
+      if (vocalPadsEffects.filter.enabled)
+        vocalPadsActiveEffects.push("Filter");
+      vocalPadsStateSpan.textContent = vocalPadsActiveEffects.length > 0 ? vocalPadsActiveEffects.join(", ") : "No effects";
+      vocalPadsStateSpan.className = `sonigraph-effect-state ${vocalPadsActiveEffects.length > 0 ? "enabled" : "disabled"}`;
+      const padEffects = this.plugin.settings.instruments.pad.effects;
+      const padActiveEffects = [];
+      if (padEffects.reverb.enabled)
+        padActiveEffects.push("Reverb");
+      if (padEffects.chorus.enabled)
+        padActiveEffects.push("Chorus");
+      if (padEffects.filter.enabled)
+        padActiveEffects.push("Filter");
+      padStateSpan.textContent = padActiveEffects.length > 0 ? padActiveEffects.join(", ") : "No effects";
+      padStateSpan.className = `sonigraph-effect-state ${padActiveEffects.length > 0 ? "enabled" : "disabled"}`;
+    };
+    this.createInstrumentEffectControls(section, "piano", "\u{1F3B9} Piano Effects", "Percussive clarity and brightness", updateStatusDisplay);
+    this.createInstrumentEffectControls(section, "organ", "\u{1F39B}\uFE0F Organ Effects", "Rich harmonic content and sustain", updateStatusDisplay);
+    this.createInstrumentEffectControls(section, "strings", "\u{1F3BB} Strings Effects", "Warm, flowing textures", updateStatusDisplay);
+    this.createInstrumentEffectControls(section, "choir", "\u{1F3A4} Choir Effects", "Ethereal human voices with formant filtering", updateStatusDisplay);
+    this.createInstrumentEffectControls(section, "vocalPads", "\u{1F30A} Vocal Pads Effects", "Atmospheric voice textures with sustained envelopes", updateStatusDisplay);
+    this.createInstrumentEffectControls(section, "pad", "\u{1F39B}\uFE0F Pad Effects", "Ambient synthetic textures with filter sweeps", updateStatusDisplay);
+    updateStatusDisplay();
+  }
+  createInstrumentEffectControls(parent, instrumentKey, title, description, updateStatusCallback) {
+    const instrumentGroup = this.createSettingsGroup(parent, title, description);
+    const effectStates = this.plugin.settings.instruments[instrumentKey].effects;
+    const reverbGroup = instrumentGroup.createDiv({ cls: "sonigraph-effect-group" });
+    reverbGroup.createEl("h4", { text: "\u{1F30A} Reverb", cls: "sonigraph-effect-title" });
     createObsidianToggle(
       reverbGroup,
-      true,
-      // Default enabled
+      effectStates.reverb.enabled,
       async (value) => {
+        effectStates.reverb.enabled = value;
+        await this.plugin.saveSettings();
         if (this.plugin.audioEngine) {
-          this.plugin.audioEngine.setReverbEnabled(value);
+          this.plugin.audioEngine.setReverbEnabled(value, instrumentKey);
         }
+        reverbSettingsContainer.style.display = value ? "block" : "none";
+        updateStatusCallback();
       },
       {
         name: "Enable reverb",
-        description: "Turn reverb effect on or off"
+        description: "Spatial depth and ambience"
       }
     );
-    new import_obsidian2.Setting(reverbGroup).setName("Decay time").setDesc("How long the reverb tail lasts (0.1 - 10 seconds)").addSlider((slider) => slider.setLimits(0.1, 10, 0.1).setValue(1.8).setDynamicTooltip().onChange(async (value) => {
+    const reverbSettingsContainer = reverbGroup.createDiv({ cls: "sonigraph-effect-settings-container" });
+    new import_obsidian2.Setting(reverbSettingsContainer).setName("Decay time").setDesc("How long the reverb tail lasts (0.1 - 10 seconds)").addSlider((slider) => slider.setLimits(0.1, 10, 0.1).setValue(effectStates.reverb.params.decay).setDynamicTooltip().onChange(async (value) => {
+      effectStates.reverb.params.decay = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateReverbSettings({ decay: value });
+        this.plugin.audioEngine.updateReverbSettings({ decay: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(reverbGroup).setName("Pre-delay").setDesc("Initial delay before reverb starts (0 - 0.1 seconds)").addSlider((slider) => slider.setLimits(0, 0.1, 5e-3).setValue(0.02).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian2.Setting(reverbSettingsContainer).setName("Pre-delay").setDesc("Initial delay before reverb starts (0 - 0.1 seconds)").addSlider((slider) => slider.setLimits(0, 0.1, 5e-3).setValue(effectStates.reverb.params.preDelay).setDynamicTooltip().onChange(async (value) => {
+      effectStates.reverb.params.preDelay = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateReverbSettings({ preDelay: value });
+        this.plugin.audioEngine.updateReverbSettings({ preDelay: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(reverbGroup).setName("Wet level").setDesc("Amount of reverb mixed in (0 - 100%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(25).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian2.Setting(reverbSettingsContainer).setName("Wet level").setDesc("Amount of reverb mixed in (0 - 100%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(effectStates.reverb.params.wet * 100).setDynamicTooltip().onChange(async (value) => {
+      effectStates.reverb.params.wet = value / 100;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateReverbSettings({ wet: value / 100 });
+        this.plugin.audioEngine.updateReverbSettings({ wet: value / 100 }, instrumentKey);
       }
     }));
-    const chorusGroup = this.createSettingsGroup(section, "\u{1F300} Chorus", "Rich modulation and width");
+    const chorusGroup = instrumentGroup.createDiv({ cls: "sonigraph-effect-group" });
+    chorusGroup.createEl("h4", { text: "\u{1F300} Chorus", cls: "sonigraph-effect-title" });
     createObsidianToggle(
       chorusGroup,
-      true,
-      // Default enabled
+      effectStates.chorus.enabled,
       async (value) => {
+        effectStates.chorus.enabled = value;
+        await this.plugin.saveSettings();
         if (this.plugin.audioEngine) {
-          this.plugin.audioEngine.setChorusEnabled(value);
+          this.plugin.audioEngine.setChorusEnabled(value, instrumentKey);
         }
+        chorusSettingsContainer.style.display = value ? "block" : "none";
+        updateStatusCallback();
       },
       {
         name: "Enable chorus",
-        description: "Turn chorus effect on or off"
+        description: "Rich modulation and width"
       }
     );
-    new import_obsidian2.Setting(chorusGroup).setName("Rate").setDesc("Modulation speed (0.1 - 5 Hz)").addSlider((slider) => slider.setLimits(0.1, 5, 0.1).setValue(0.8).setDynamicTooltip().onChange(async (value) => {
+    const chorusSettingsContainer = chorusGroup.createDiv({ cls: "sonigraph-effect-settings-container" });
+    new import_obsidian2.Setting(chorusSettingsContainer).setName("Rate").setDesc("Modulation speed (0.1 - 5 Hz)").addSlider((slider) => slider.setLimits(0.1, 5, 0.1).setValue(effectStates.chorus.params.frequency).setDynamicTooltip().onChange(async (value) => {
+      effectStates.chorus.params.frequency = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ frequency: value });
+        this.plugin.audioEngine.updateChorusSettings({ frequency: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(chorusGroup).setName("Depth").setDesc("Modulation intensity (0 - 100%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(50).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian2.Setting(chorusSettingsContainer).setName("Depth").setDesc("Modulation intensity (0 - 100%)").addSlider((slider) => slider.setLimits(0, 100, 1).setValue(effectStates.chorus.params.depth * 100).setDynamicTooltip().onChange(async (value) => {
+      effectStates.chorus.params.depth = value / 100;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ depth: value / 100 });
+        this.plugin.audioEngine.updateChorusSettings({ depth: value / 100 }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(chorusGroup).setName("Delay time").setDesc("Base delay amount (1 - 20 ms)").addSlider((slider) => slider.setLimits(1, 20, 0.5).setValue(4).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian2.Setting(chorusSettingsContainer).setName("Delay time").setDesc("Base delay amount (1 - 20 ms)").addSlider((slider) => slider.setLimits(1, 20, 0.5).setValue(effectStates.chorus.params.delayTime).setDynamicTooltip().onChange(async (value) => {
+      effectStates.chorus.params.delayTime = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ delayTime: value });
+        this.plugin.audioEngine.updateChorusSettings({ delayTime: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(chorusGroup).setName("Feedback").setDesc("Amount of signal fed back (0 - 50%)").addSlider((slider) => slider.setLimits(0, 50, 1).setValue(5).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian2.Setting(chorusSettingsContainer).setName("Feedback").setDesc("Amount of signal fed back (0 - 50%)").addSlider((slider) => slider.setLimits(0, 50, 1).setValue(effectStates.chorus.params.feedback * 100).setDynamicTooltip().onChange(async (value) => {
+      effectStates.chorus.params.feedback = value / 100;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateChorusSettings({ feedback: value / 100 });
+        this.plugin.audioEngine.updateChorusSettings({ feedback: value / 100 }, instrumentKey);
       }
     }));
-    const filterGroup = this.createSettingsGroup(section, "\u{1F39A}\uFE0F Filter", "Frequency shaping for warmth");
+    const filterGroup = instrumentGroup.createDiv({ cls: "sonigraph-effect-group" });
+    filterGroup.createEl("h4", { text: "\u{1F39A}\uFE0F Filter", cls: "sonigraph-effect-title" });
     createObsidianToggle(
       filterGroup,
-      true,
-      // Default enabled
+      effectStates.filter.enabled,
       async (value) => {
+        effectStates.filter.enabled = value;
+        await this.plugin.saveSettings();
         if (this.plugin.audioEngine) {
-          this.plugin.audioEngine.setFilterEnabled(value);
+          this.plugin.audioEngine.setFilterEnabled(value, instrumentKey);
         }
+        filterSettingsContainer.style.display = value ? "block" : "none";
+        updateStatusCallback();
       },
       {
         name: "Enable filter",
-        description: "Turn filter effect on or off"
+        description: "Frequency shaping for tone"
       }
     );
-    new import_obsidian2.Setting(filterGroup).setName("Cutoff frequency").setDesc("Filter cutoff point (200 - 8000 Hz)").addSlider((slider) => slider.setLimits(200, 8e3, 50).setValue(3500).setDynamicTooltip().onChange(async (value) => {
+    const filterSettingsContainer = filterGroup.createDiv({ cls: "sonigraph-effect-settings-container" });
+    new import_obsidian2.Setting(filterSettingsContainer).setName("Cutoff frequency").setDesc("Filter cutoff point (200 - 8000 Hz)").addSlider((slider) => slider.setLimits(200, 8e3, 50).setValue(effectStates.filter.params.frequency).setDynamicTooltip().onChange(async (value) => {
+      effectStates.filter.params.frequency = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateFilterSettings({ frequency: value });
+        this.plugin.audioEngine.updateFilterSettings({ frequency: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(filterGroup).setName("Resonance (Q)").setDesc("Filter sharpness and character (0.1 - 5.0)").addSlider((slider) => slider.setLimits(0.1, 5, 0.1).setValue(0.8).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian2.Setting(filterSettingsContainer).setName("Resonance (Q)").setDesc("Filter sharpness and character (0.1 - 5.0)").addSlider((slider) => slider.setLimits(0.1, 5, 0.1).setValue(effectStates.filter.params.Q).setDynamicTooltip().onChange(async (value) => {
+      effectStates.filter.params.Q = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateFilterSettings({ Q: value });
+        this.plugin.audioEngine.updateFilterSettings({ Q: value }, instrumentKey);
       }
     }));
-    new import_obsidian2.Setting(filterGroup).setName("Filter type").setDesc("Type of frequency filtering").addDropdown((dropdown) => dropdown.addOption("lowpass", "Low-pass (warm, removes highs)").addOption("highpass", "High-pass (bright, removes lows)").addOption("bandpass", "Band-pass (focused, removes highs & lows)").setValue("lowpass").onChange(async (value) => {
+    new import_obsidian2.Setting(filterSettingsContainer).setName("Filter type").setDesc("Type of frequency filtering").addDropdown((dropdown) => dropdown.addOption("lowpass", "Low-pass (warm, removes highs)").addOption("highpass", "High-pass (bright, removes lows)").addOption("bandpass", "Band-pass (focused, removes highs & lows)").setValue(effectStates.filter.params.type).onChange(async (value) => {
+      effectStates.filter.params.type = value;
+      await this.plugin.saveSettings();
       if (this.plugin.audioEngine) {
-        this.plugin.audioEngine.updateFilterSettings({ type: value });
+        this.plugin.audioEngine.updateFilterSettings({ type: value }, instrumentKey);
       }
     }));
-    const statusGroup = this.createSettingsGroup(section, "Effect status", "Current effect routing and parameters");
-    const statusDisplay = statusGroup.createDiv({ cls: "sonigraph-effects-status" });
-    const parametersDisplay = statusDisplay.createDiv({ cls: "sonigraph-effect-parameters" });
-    parametersDisplay.createEl("h4", { text: "Current parameters:" });
-    const reverbStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
-    reverbStatus.createSpan({ text: "\u{1F30A} Reverb: ", cls: "sonigraph-effect-label" });
-    reverbStatus.createSpan({ text: "Enabled", cls: "sonigraph-effect-state", attr: { id: "reverb-state" } });
-    reverbStatus.createSpan({ text: " | Decay: 1.8s | Wet: 25%", cls: "sonigraph-effect-params", attr: { id: "reverb-params" } });
-    const chorusStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
-    chorusStatus.createSpan({ text: "\u{1F300} Chorus: ", cls: "sonigraph-effect-label" });
-    chorusStatus.createSpan({ text: "Enabled", cls: "sonigraph-effect-state", attr: { id: "chorus-state" } });
-    chorusStatus.createSpan({ text: " | Rate: 0.8Hz | Depth: 50%", cls: "sonigraph-effect-params", attr: { id: "chorus-params" } });
-    const filterStatus = parametersDisplay.createDiv({ cls: "sonigraph-effect-status-row" });
-    filterStatus.createSpan({ text: "\u{1F39A}\uFE0F Filter: ", cls: "sonigraph-effect-label" });
-    filterStatus.createSpan({ text: "Enabled", cls: "sonigraph-effect-state", attr: { id: "filter-state" } });
-    filterStatus.createSpan({ text: " | Cutoff: 3500Hz | Q: 0.8", cls: "sonigraph-effect-params", attr: { id: "filter-params" } });
-    const effectRouting = statusDisplay.createDiv({ cls: "sonigraph-effect-routing" });
-    effectRouting.createEl("h4", { text: "Signal flow:" });
-    effectRouting.createEl("p", { text: "\u{1F3B9} Piano \u2192 Reverb \u2192 Master Output" });
-    effectRouting.createEl("p", { text: "\u{1F39B}\uFE0F Organ \u2192 Chorus \u2192 Reverb \u2192 Master Output" });
-    effectRouting.createEl("p", { text: "\u{1F3BB} Strings \u2192 Filter \u2192 Reverb \u2192 Master Output" });
-  }
-  updateEffectStatus() {
-    if (!this.plugin.audioEngine)
-      return;
-    try {
-      const effectStates = this.plugin.audioEngine.getEffectStates();
-      this.updateStatusValue("reverb-state", effectStates.reverb ? "Enabled" : "Disabled");
-      this.updateStatusValue("chorus-state", effectStates.chorus ? "Enabled" : "Disabled");
-      this.updateStatusValue("filter-state", effectStates.filter ? "Enabled" : "Disabled");
-    } catch (error) {
-    }
+    reverbSettingsContainer.style.display = effectStates.reverb.enabled ? "block" : "none";
+    chorusSettingsContainer.style.display = effectStates.chorus.enabled ? "block" : "none";
+    filterSettingsContainer.style.display = effectStates.filter.enabled ? "block" : "none";
   }
   createStatusTab() {
     const section = this.createTabSection("System Status", "Real-time monitoring and diagnostics");
@@ -837,6 +1149,57 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     this.createStatusRow(systemDisplay, "Audio Context", "audio-context", "Loading...");
     this.createStatusRow(systemDisplay, "Playback State", "playback-status", "Stopped");
     this.createStatusRow(systemDisplay, "Graph Data", "graph-status", "Not Loaded");
+    const effectsGroup = this.createSettingsGroup(section, "Audio Effects Status", "Active effects by instrument");
+    const effectsDisplay = effectsGroup.createDiv({ cls: "sonigraph-effects-status" });
+    const statusContent = effectsDisplay.createDiv({ cls: "sonigraph-effects-status-content" });
+    statusContent.createEl("h4", { text: "Active effects by instrument:", cls: "sonigraph-effects-status-title" });
+    const statusList = statusContent.createDiv({ cls: "sonigraph-effects-status-list" });
+    const pianoStatus = statusList.createDiv({ cls: "sonigraph-effect-instrument-status" });
+    pianoStatus.createSpan({ text: "\u{1F3B9} Piano: ", cls: "sonigraph-effect-instrument-label" });
+    pianoStatus.createSpan({
+      text: "Loading...",
+      cls: "sonigraph-effect-instrument-effects",
+      attr: { id: "sonigraph-effects-status-piano" }
+    });
+    const organStatus = statusList.createDiv({ cls: "sonigraph-effect-instrument-status" });
+    organStatus.createSpan({ text: "\u{1F39B}\uFE0F Organ: ", cls: "sonigraph-effect-instrument-label" });
+    organStatus.createSpan({
+      text: "Loading...",
+      cls: "sonigraph-effect-instrument-effects",
+      attr: { id: "sonigraph-effects-status-organ" }
+    });
+    const stringsStatus = statusList.createDiv({ cls: "sonigraph-effect-instrument-status" });
+    stringsStatus.createSpan({ text: "\u{1F3BB} Strings: ", cls: "sonigraph-effect-instrument-label" });
+    stringsStatus.createSpan({
+      text: "Loading...",
+      cls: "sonigraph-effect-instrument-effects",
+      attr: { id: "sonigraph-effects-status-strings" }
+    });
+    const choirStatus = statusList.createDiv({ cls: "sonigraph-effect-instrument-status" });
+    choirStatus.createSpan({ text: "\u{1F3A4} Choir: ", cls: "sonigraph-effect-instrument-label" });
+    choirStatus.createSpan({
+      text: "Loading...",
+      cls: "sonigraph-effect-instrument-effects",
+      attr: { id: "sonigraph-effects-status-choir" }
+    });
+    const vocalPadsStatus = statusList.createDiv({ cls: "sonigraph-effect-instrument-status" });
+    vocalPadsStatus.createSpan({ text: "\u{1F30A} Vocal Pads: ", cls: "sonigraph-effect-instrument-label" });
+    vocalPadsStatus.createSpan({
+      text: "Loading...",
+      cls: "sonigraph-effect-instrument-effects",
+      attr: { id: "sonigraph-effects-status-vocalPads" }
+    });
+    const padStatus = statusList.createDiv({ cls: "sonigraph-effect-instrument-status" });
+    padStatus.createSpan({ text: "\u{1F39B}\uFE0F Pad: ", cls: "sonigraph-effect-instrument-label" });
+    padStatus.createSpan({
+      text: "Loading...",
+      cls: "sonigraph-effect-instrument-effects",
+      attr: { id: "sonigraph-effects-status-pad" }
+    });
+    const configHint = effectsDisplay.createDiv({ cls: "sonigraph-effects-config-hint" });
+    configHint.createSpan({ text: "\u2192 Configure effects in the ", cls: "sonigraph-hint-text" });
+    configHint.createSpan({ text: "Effects", cls: "sonigraph-hint-link" });
+    configHint.createSpan({ text: " tab", cls: "sonigraph-hint-text" });
     const graphGroup = this.createSettingsGroup(section, "Vault Analysis", "Knowledge graph metrics");
     const graphDisplay = graphGroup.createDiv({ cls: "sonigraph-status-grid" });
     this.createStatusRow(graphDisplay, "Total Notes", "total-nodes", "0");
@@ -902,13 +1265,36 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     }
     this.updateStatusValue("musical-events", ((_d = status.audio.currentNotes) == null ? void 0 : _d.toString()) || "0");
     this.updateStatusValue("active-voices", ((_e = status.audio.currentNotes) == null ? void 0 : _e.toString()) || "0");
-    this.updateEffectStatus();
+    this.updateEffectsStatus();
   }
   updateStatusValue(id, value) {
     const element = this.contentContainer.querySelector(`#sonigraph-${id}`);
     if (element) {
       element.textContent = value;
     }
+  }
+  updateEffectsStatus() {
+    ["piano", "organ", "strings", "choir", "vocalPads", "pad"].forEach((instrumentKey) => {
+      var _a, _b, _c;
+      const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+      if (!(instrumentSettings == null ? void 0 : instrumentSettings.effects))
+        return;
+      const activeEffects = [];
+      if ((_a = instrumentSettings.effects.reverb) == null ? void 0 : _a.enabled) {
+        activeEffects.push("Reverb");
+      }
+      if ((_b = instrumentSettings.effects.chorus) == null ? void 0 : _b.enabled) {
+        activeEffects.push("Chorus");
+      }
+      if ((_c = instrumentSettings.effects.filter) == null ? void 0 : _c.enabled) {
+        activeEffects.push("Filter");
+      }
+      const statusText = activeEffects.length > 0 ? activeEffects.join(", ") : "None";
+      const statusElement = this.contentContainer.querySelector(`#sonigraph-effects-status-${instrumentKey}`);
+      if (statusElement) {
+        statusElement.textContent = statusText;
+      }
+    });
   }
   showError(message) {
     const errorEl = this.contentContainer.createDiv({
@@ -19812,6 +20198,64 @@ var SAMPLER_CONFIGS = {
     release: 2,
     baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
     effects: ["reverb", "filter"]
+  },
+  choir: {
+    urls: {
+      "C3": "C3.[format]",
+      "D#3": "Ds3.[format]",
+      "F#3": "Fs3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "D#4": "Ds4.[format]",
+      "F#4": "Fs4.[format]",
+      "A4": "A4.[format]",
+      "C5": "C5.[format]",
+      "D#5": "Ds5.[format]",
+      "F#5": "Fs5.[format]",
+      "A5": "A5.[format]",
+      "C6": "C6.[format]",
+      "D#6": "Ds6.[format]"
+    },
+    release: 3,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/choir/",
+    effects: ["reverb", "chorus"]
+  },
+  vocalPads: {
+    urls: {
+      "C2": "C2.[format]",
+      "F2": "F2.[format]",
+      "A2": "A2.[format]",
+      "C3": "C3.[format]",
+      "F3": "F3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "F4": "F4.[format]",
+      "A4": "A4.[format]",
+      "C5": "C5.[format]",
+      "F5": "F5.[format]",
+      "A5": "A5.[format]"
+    },
+    release: 4,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/",
+    effects: ["reverb", "filter"]
+  },
+  pad: {
+    urls: {
+      "C1": "C1.[format]",
+      "G1": "G1.[format]",
+      "C2": "C2.[format]",
+      "G2": "G2.[format]",
+      "C3": "C3.[format]",
+      "G3": "G3.[format]",
+      "C4": "C4.[format]",
+      "G4": "G4.[format]",
+      "C5": "C5.[format]",
+      "G5": "G5.[format]",
+      "C6": "C6.[format]"
+    },
+    release: 5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/",
+    effects: ["reverb", "filter"]
   }
 };
 var AudioEngine = class {
@@ -19819,7 +20263,7 @@ var AudioEngine = class {
     this.settings = settings;
     this.instruments = /* @__PURE__ */ new Map();
     this.instrumentVolumes = /* @__PURE__ */ new Map();
-    this.effects = /* @__PURE__ */ new Map();
+    this.instrumentEffects = /* @__PURE__ */ new Map();
     this.isInitialized = false;
     this.isPlaying = false;
     this.currentSequence = [];
@@ -19860,11 +20304,12 @@ var AudioEngine = class {
       await this.initializeEffects();
       await this.initializeInstruments();
       this.updateVolume();
+      this.applyEffectSettings();
       this.isInitialized = true;
       startTime();
       logger4.info("initialization", "Multi-instrument AudioEngine initialized", {
         instruments: Array.from(this.instruments.keys()),
-        effects: Array.from(this.effects.keys()),
+        effects: Array.from(this.instrumentEffects.keys()),
         audioContext: context.state
       });
     } catch (error) {
@@ -19873,42 +20318,37 @@ var AudioEngine = class {
     }
   }
   async initializeEffects() {
-    const reverb = new Reverb({
-      decay: 1.8,
-      // Slightly shorter for clarity
-      preDelay: 0.02,
-      // Small pre-delay for natural space
-      wet: 0.25
-      // Reduced wetness to maintain definition
-    });
-    await reverb.generate();
-    this.effects.set("reverb", reverb);
-    const chorus = new Chorus({
-      frequency: 0.8,
-      // Slower rate for more musical effect
-      delayTime: 4,
-      // Slightly longer delay
-      depth: 0.5,
-      // Moderate depth to avoid seasickness
-      feedback: 0.05,
-      // Minimal feedback for cleaner sound
-      spread: 120
-      // Narrower spread for focus
-    });
-    chorus.start();
-    this.effects.set("chorus", chorus);
-    const filter = new Filter({
-      frequency: 3500,
-      // Higher cutoff to preserve brightness
-      type: "lowpass",
-      rolloff: -24,
-      // Steeper rolloff for smoother sound
-      Q: 0.8
-      // Slight resonance for character
-    });
-    this.effects.set("filter", filter);
-    logger4.debug("effects", "Audio effects initialized", {
-      effectCount: this.effects.size
+    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad"];
+    for (const instrumentName of instruments) {
+      const effectMap = /* @__PURE__ */ new Map();
+      const reverb = new Reverb({
+        decay: 1.8,
+        preDelay: 0.02,
+        wet: 0.25
+      });
+      await reverb.generate();
+      effectMap.set("reverb", reverb);
+      const chorus = new Chorus({
+        frequency: 0.8,
+        delayTime: 4,
+        depth: 0.5,
+        feedback: 0.05,
+        spread: 120
+      });
+      chorus.start();
+      effectMap.set("chorus", chorus);
+      const filter = new Filter({
+        frequency: 3500,
+        type: "lowpass",
+        rolloff: -24,
+        Q: 0.8
+      });
+      effectMap.set("filter", filter);
+      this.instrumentEffects.set(instrumentName, effectMap);
+    }
+    logger4.debug("effects", "Per-instrument audio effects initialized", {
+      instrumentCount: instruments.length,
+      effectsPerInstrument: 3
     });
   }
   async initializeInstruments() {
@@ -19917,10 +20357,22 @@ var AudioEngine = class {
     const pianoVolume = new Volume(-6);
     this.instrumentVolumes.set("piano", pianoVolume);
     let pianoOutput = pianoSampler.connect(pianoVolume);
-    for (const effectName of configs.piano.effects) {
-      const effect = this.effects.get(effectName);
-      if (effect) {
-        pianoOutput = pianoOutput.connect(effect);
+    const pianoEffects = this.instrumentEffects.get("piano");
+    if (pianoEffects && this.settings.instruments.piano.effects) {
+      if (this.settings.instruments.piano.effects.reverb.enabled) {
+        const reverb = pianoEffects.get("reverb");
+        if (reverb)
+          pianoOutput = pianoOutput.connect(reverb);
+      }
+      if (this.settings.instruments.piano.effects.chorus.enabled) {
+        const chorus = pianoEffects.get("chorus");
+        if (chorus)
+          pianoOutput = pianoOutput.connect(chorus);
+      }
+      if (this.settings.instruments.piano.effects.filter.enabled) {
+        const filter = pianoEffects.get("filter");
+        if (filter)
+          pianoOutput = pianoOutput.connect(filter);
       }
     }
     pianoOutput.connect(this.volume);
@@ -19929,10 +20381,22 @@ var AudioEngine = class {
     const organVolume = new Volume(-6);
     this.instrumentVolumes.set("organ", organVolume);
     let organOutput = organSampler.connect(organVolume);
-    for (const effectName of configs.organ.effects) {
-      const effect = this.effects.get(effectName);
-      if (effect) {
-        organOutput = organOutput.connect(effect);
+    const organEffects = this.instrumentEffects.get("organ");
+    if (organEffects && this.settings.instruments.organ.effects) {
+      if (this.settings.instruments.organ.effects.reverb.enabled) {
+        const reverb = organEffects.get("reverb");
+        if (reverb)
+          organOutput = organOutput.connect(reverb);
+      }
+      if (this.settings.instruments.organ.effects.chorus.enabled) {
+        const chorus = organEffects.get("chorus");
+        if (chorus)
+          organOutput = organOutput.connect(chorus);
+      }
+      if (this.settings.instruments.organ.effects.filter.enabled) {
+        const filter = organEffects.get("filter");
+        if (filter)
+          organOutput = organOutput.connect(filter);
       }
     }
     organOutput.connect(this.volume);
@@ -19941,14 +20405,98 @@ var AudioEngine = class {
     const stringsVolume = new Volume(-6);
     this.instrumentVolumes.set("strings", stringsVolume);
     let stringsOutput = stringsSampler.connect(stringsVolume);
-    for (const effectName of configs.strings.effects) {
-      const effect = this.effects.get(effectName);
-      if (effect) {
-        stringsOutput = stringsOutput.connect(effect);
+    const stringsEffects = this.instrumentEffects.get("strings");
+    if (stringsEffects && this.settings.instruments.strings.effects) {
+      if (this.settings.instruments.strings.effects.reverb.enabled) {
+        const reverb = stringsEffects.get("reverb");
+        if (reverb)
+          stringsOutput = stringsOutput.connect(reverb);
+      }
+      if (this.settings.instruments.strings.effects.chorus.enabled) {
+        const chorus = stringsEffects.get("chorus");
+        if (chorus)
+          stringsOutput = stringsOutput.connect(chorus);
+      }
+      if (this.settings.instruments.strings.effects.filter.enabled) {
+        const filter = stringsEffects.get("filter");
+        if (filter)
+          stringsOutput = stringsOutput.connect(filter);
       }
     }
     stringsOutput.connect(this.volume);
     this.instruments.set("strings", stringsSampler);
+    const choirSampler = new Sampler(configs.choir);
+    const choirVolume = new Volume(-6);
+    this.instrumentVolumes.set("choir", choirVolume);
+    let choirOutput = choirSampler.connect(choirVolume);
+    const choirEffects = this.instrumentEffects.get("choir");
+    if (choirEffects && this.settings.instruments.choir.effects) {
+      if (this.settings.instruments.choir.effects.reverb.enabled) {
+        const reverb = choirEffects.get("reverb");
+        if (reverb)
+          choirOutput = choirOutput.connect(reverb);
+      }
+      if (this.settings.instruments.choir.effects.chorus.enabled) {
+        const chorus = choirEffects.get("chorus");
+        if (chorus)
+          choirOutput = choirOutput.connect(chorus);
+      }
+      if (this.settings.instruments.choir.effects.filter.enabled) {
+        const filter = choirEffects.get("filter");
+        if (filter)
+          choirOutput = choirOutput.connect(filter);
+      }
+    }
+    choirOutput.connect(this.volume);
+    this.instruments.set("choir", choirSampler);
+    const vocalPadsSampler = new Sampler(configs.vocalPads);
+    const vocalPadsVolume = new Volume(-6);
+    this.instrumentVolumes.set("vocalPads", vocalPadsVolume);
+    let vocalPadsOutput = vocalPadsSampler.connect(vocalPadsVolume);
+    const vocalPadsEffects = this.instrumentEffects.get("vocalPads");
+    if (vocalPadsEffects && this.settings.instruments.vocalPads.effects) {
+      if (this.settings.instruments.vocalPads.effects.reverb.enabled) {
+        const reverb = vocalPadsEffects.get("reverb");
+        if (reverb)
+          vocalPadsOutput = vocalPadsOutput.connect(reverb);
+      }
+      if (this.settings.instruments.vocalPads.effects.chorus.enabled) {
+        const chorus = vocalPadsEffects.get("chorus");
+        if (chorus)
+          vocalPadsOutput = vocalPadsOutput.connect(chorus);
+      }
+      if (this.settings.instruments.vocalPads.effects.filter.enabled) {
+        const filter = vocalPadsEffects.get("filter");
+        if (filter)
+          vocalPadsOutput = vocalPadsOutput.connect(filter);
+      }
+    }
+    vocalPadsOutput.connect(this.volume);
+    this.instruments.set("vocalPads", vocalPadsSampler);
+    const padSampler = new Sampler(configs.pad);
+    const padVolume = new Volume(-6);
+    this.instrumentVolumes.set("pad", padVolume);
+    let padOutput = padSampler.connect(padVolume);
+    const padEffects = this.instrumentEffects.get("pad");
+    if (padEffects && this.settings.instruments.pad.effects) {
+      if (this.settings.instruments.pad.effects.reverb.enabled) {
+        const reverb = padEffects.get("reverb");
+        if (reverb)
+          padOutput = padOutput.connect(reverb);
+      }
+      if (this.settings.instruments.pad.effects.chorus.enabled) {
+        const chorus = padEffects.get("chorus");
+        if (chorus)
+          padOutput = padOutput.connect(chorus);
+      }
+      if (this.settings.instruments.pad.effects.filter.enabled) {
+        const filter = padEffects.get("filter");
+        if (filter)
+          padOutput = padOutput.connect(filter);
+      }
+    }
+    padOutput.connect(this.volume);
+    this.instruments.set("pad", padSampler);
     this.applyInstrumentSettings();
     logger4.debug("instruments", "All sampled instruments initialized", {
       instrumentCount: this.instruments.size,
@@ -20091,9 +20639,13 @@ var AudioEngine = class {
   updateSettings(settings) {
     this.settings = settings;
     this.updateVolume();
+    if (this.isInitialized) {
+      this.applyEffectSettings();
+    }
     logger4.debug("settings", "Audio settings updated", {
       volume: settings.volume,
-      tempo: settings.tempo
+      tempo: settings.tempo,
+      effectsApplied: this.isInitialized
     });
   }
   /**
@@ -20104,10 +20656,11 @@ var AudioEngine = class {
     logger4.debug("harmonic-settings", "Harmonic settings updated", harmonicSettings);
   }
   /**
-   * Update reverb effect parameters
+   * Update reverb effect parameters for a specific instrument
    */
-  updateReverbSettings(settings) {
-    const reverb = this.effects.get("reverb");
+  updateReverbSettings(settings, instrument) {
+    const instrumentEffects = this.instrumentEffects.get(instrument);
+    const reverb = instrumentEffects == null ? void 0 : instrumentEffects.get("reverb");
     if (reverb) {
       if (settings.decay !== void 0) {
         reverb.decay = settings.decay;
@@ -20118,16 +20671,17 @@ var AudioEngine = class {
       if (settings.wet !== void 0) {
         reverb.wet.value = settings.wet;
       }
-      logger4.debug("effects", "Reverb settings updated", settings);
+      logger4.debug("effects", `Reverb settings updated for ${instrument}`, settings);
     } else {
-      logger4.error("effects", "Reverb effect not found");
+      logger4.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
-   * Update chorus effect parameters
+   * Update chorus effect parameters for a specific instrument
    */
-  updateChorusSettings(settings) {
-    const chorus = this.effects.get("chorus");
+  updateChorusSettings(settings, instrument) {
+    const instrumentEffects = this.instrumentEffects.get(instrument);
+    const chorus = instrumentEffects == null ? void 0 : instrumentEffects.get("chorus");
     if (chorus) {
       if (settings.frequency !== void 0) {
         chorus.frequency.value = settings.frequency;
@@ -20144,16 +20698,17 @@ var AudioEngine = class {
       if (settings.spread !== void 0) {
         chorus.spread = settings.spread;
       }
-      logger4.debug("effects", "Chorus settings updated", settings);
+      logger4.debug("effects", `Chorus settings updated for ${instrument}`, settings);
     } else {
-      logger4.error("effects", "Chorus effect not found");
+      logger4.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
-   * Update filter effect parameters
+   * Update filter effect parameters for a specific instrument
    */
-  updateFilterSettings(settings) {
-    const filter = this.effects.get("filter");
+  updateFilterSettings(settings, instrument) {
+    const instrumentEffects = this.instrumentEffects.get(instrument);
+    const filter = instrumentEffects == null ? void 0 : instrumentEffects.get("filter");
     if (filter) {
       if (settings.frequency !== void 0) {
         filter.frequency.value = settings.frequency;
@@ -20164,64 +20719,77 @@ var AudioEngine = class {
       if (settings.type !== void 0) {
         filter.type = settings.type;
       }
-      logger4.debug("effects", "Filter settings updated", settings);
+      logger4.debug("effects", `Filter settings updated for ${instrument}`, settings);
     } else {
-      logger4.error("effects", "Filter effect not found");
+      logger4.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
-   * Enable or disable reverb effect
+   * Enable or disable reverb effect for a specific instrument
    */
-  setReverbEnabled(enabled) {
-    const reverb = this.effects.get("reverb");
+  setReverbEnabled(enabled, instrument) {
+    var _a, _b, _c;
+    const instrumentEffects = this.instrumentEffects.get(instrument);
+    const reverb = instrumentEffects == null ? void 0 : instrumentEffects.get("reverb");
     if (reverb) {
-      reverb.wet.value = enabled ? 0.25 : 0;
-      logger4.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"}`);
+      const instrumentSettings = this.settings.instruments[instrument];
+      const wetLevel = ((_c = (_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.params) == null ? void 0 : _c.wet) || 0.25;
+      reverb.wet.value = enabled ? wetLevel : 0;
+      logger4.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger4.error("effects", "Reverb effect not found");
+      logger4.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
-   * Enable or disable chorus effect
+   * Enable or disable chorus effect for a specific instrument
    */
-  setChorusEnabled(enabled) {
-    const chorus = this.effects.get("chorus");
+  setChorusEnabled(enabled, instrument) {
+    const instrumentEffects = this.instrumentEffects.get(instrument);
+    const chorus = instrumentEffects == null ? void 0 : instrumentEffects.get("chorus");
     if (chorus) {
       chorus.wet.value = enabled ? 1 : 0;
-      logger4.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"}`);
+      logger4.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger4.error("effects", "Chorus effect not found");
+      logger4.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
-   * Enable or disable filter effect
+   * Enable or disable filter effect for a specific instrument
    */
-  setFilterEnabled(enabled) {
-    const filter = this.effects.get("filter");
+  setFilterEnabled(enabled, instrument) {
+    var _a, _b, _c;
+    const instrumentEffects = this.instrumentEffects.get(instrument);
+    const filter = instrumentEffects == null ? void 0 : instrumentEffects.get("filter");
     if (filter) {
       if (enabled) {
-        filter.frequency.value = 3500;
+        const instrumentSettings = this.settings.instruments[instrument];
+        const cutoffFreq = ((_c = (_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.filter) == null ? void 0 : _b.params) == null ? void 0 : _c.frequency) || 3500;
+        filter.frequency.value = cutoffFreq;
       } else {
         filter.frequency.value = 2e4;
       }
-      logger4.debug("effects", `Filter ${enabled ? "enabled" : "disabled"}`);
+      logger4.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger4.error("effects", "Filter effect not found");
+      logger4.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
-   * Get current effect states
+   * Get current effect states for all instruments
    */
   getEffectStates() {
-    const reverb = this.effects.get("reverb");
-    const chorus = this.effects.get("chorus");
-    const filter = this.effects.get("filter");
-    return {
-      reverb: reverb ? reverb.wet.value > 0 : false,
-      chorus: chorus ? chorus.wet.value > 0 : false,
-      filter: filter ? filter.frequency.value < 15e3 : false
-      // Consider enabled if cutoff is reasonable
-    };
+    const states = {};
+    this.instrumentEffects.forEach((effectMap, instrumentName) => {
+      const reverb = effectMap.get("reverb");
+      const chorus = effectMap.get("chorus");
+      const filter = effectMap.get("filter");
+      states[instrumentName] = {
+        reverb: reverb ? reverb.wet.value > 0 : false,
+        chorus: chorus ? chorus.wet.value > 0 : false,
+        filter: filter ? filter.frequency.value < 15e3 : false
+        // Consider enabled if cutoff is reasonable
+      };
+    });
+    return states;
   }
   /**
    * Update individual instrument volume
@@ -20340,10 +20908,22 @@ var AudioEngine = class {
   }
   assignByFrequency(mapping, enabledInstruments) {
     const sortedInstruments = enabledInstruments.sort();
-    if (mapping.pitch > 800) {
+    if (mapping.pitch > 1200) {
       return enabledInstruments.includes("piano") ? "piano" : sortedInstruments[0];
+    } else if (mapping.pitch > 800) {
+      if (enabledInstruments.includes("choir"))
+        return "choir";
+      return enabledInstruments.includes("piano") ? "piano" : sortedInstruments[0];
+    } else if (mapping.pitch > 600) {
+      if (enabledInstruments.includes("vocalPads"))
+        return "vocalPads";
+      return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
     } else if (mapping.pitch > 300) {
       return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
+    } else if (mapping.pitch > 150) {
+      if (enabledInstruments.includes("pad"))
+        return "pad";
+      return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     } else {
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     }
@@ -20412,12 +20992,72 @@ var AudioEngine = class {
       this.volume.dispose();
       this.volume = null;
     }
-    this.effects.forEach((effect, effectName) => {
-      effect.dispose();
+    this.instrumentEffects.forEach((effect, instrumentName) => {
+      effect.forEach((effectInstance, effectName) => {
+        effectInstance.dispose();
+      });
     });
-    this.effects.clear();
+    this.instrumentEffects.clear();
     this.isInitialized = false;
     logger4.info("cleanup", "AudioEngine disposed");
+  }
+  applyEffectSettings() {
+    if (!this.settings.instruments || !this.isInitialized)
+      return;
+    try {
+      Object.keys(this.settings.instruments).forEach((instrumentName) => {
+        const instrumentSettings = this.settings.instruments[instrumentName];
+        if (!(instrumentSettings == null ? void 0 : instrumentSettings.effects))
+          return;
+        const reverbSettings = instrumentSettings.effects.reverb;
+        if (reverbSettings) {
+          this.setReverbEnabled(reverbSettings.enabled, instrumentName);
+          if (reverbSettings.params.decay) {
+            this.updateReverbSettings({ decay: reverbSettings.params.decay }, instrumentName);
+          }
+          if (reverbSettings.params.preDelay) {
+            this.updateReverbSettings({ preDelay: reverbSettings.params.preDelay }, instrumentName);
+          }
+          if (reverbSettings.params.wet) {
+            this.updateReverbSettings({ wet: reverbSettings.params.wet }, instrumentName);
+          }
+        }
+        const chorusSettings = instrumentSettings.effects.chorus;
+        if (chorusSettings) {
+          this.setChorusEnabled(chorusSettings.enabled, instrumentName);
+          if (chorusSettings.params.frequency) {
+            this.updateChorusSettings({ frequency: chorusSettings.params.frequency }, instrumentName);
+          }
+          if (chorusSettings.params.depth) {
+            this.updateChorusSettings({ depth: chorusSettings.params.depth }, instrumentName);
+          }
+          if (chorusSettings.params.delayTime) {
+            this.updateChorusSettings({ delayTime: chorusSettings.params.delayTime }, instrumentName);
+          }
+          if (chorusSettings.params.feedback) {
+            this.updateChorusSettings({ feedback: chorusSettings.params.feedback }, instrumentName);
+          }
+        }
+        const filterSettings = instrumentSettings.effects.filter;
+        if (filterSettings) {
+          this.setFilterEnabled(filterSettings.enabled, instrumentName);
+          if (filterSettings.params.frequency) {
+            this.updateFilterSettings({ frequency: filterSettings.params.frequency }, instrumentName);
+          }
+          if (filterSettings.params.Q) {
+            this.updateFilterSettings({ Q: filterSettings.params.Q }, instrumentName);
+          }
+          if (filterSettings.params.type) {
+            this.updateFilterSettings({ type: filterSettings.params.type }, instrumentName);
+          }
+        }
+      });
+      logger4.debug("effects", "Applied per-instrument effect settings from plugin settings", {
+        instruments: Object.keys(this.settings.instruments)
+      });
+    } catch (error) {
+      logger4.error("effects", "Failed to apply effect settings", error);
+    }
   }
 };
 
@@ -20922,7 +21562,105 @@ var SonigraphPlugin = class extends import_obsidian3.Plugin {
   async loadSettings() {
     const data = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+    this.migrateSettings();
     logger7.debug("settings", "Settings loaded", { settings: this.settings });
+  }
+  /**
+   * Migrate settings from old structure to new per-instrument effects structure
+   */
+  migrateSettings() {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+    if ("effects" in this.settings && !((_a = this.settings.effects) == null ? void 0 : _a.piano)) {
+      logger7.info("settings", "Migrating old effects structure to per-instrument structure");
+      const oldEffects = this.settings.effects;
+      delete this.settings.effects;
+      if (!this.settings.instruments.piano.effects) {
+        this.settings.instruments.piano.effects = {
+          reverb: {
+            enabled: ((_b = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _b.enabled) || true,
+            params: { decay: 1.8, preDelay: 0.02, wet: ((_c = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _c.wetness) || 0.25 }
+          },
+          chorus: {
+            enabled: false,
+            params: { frequency: 0.8, depth: 0.5, delayTime: 4, feedback: 0.05 }
+          },
+          filter: {
+            enabled: false,
+            params: { frequency: 3500, Q: 0.8, type: "lowpass" }
+          }
+        };
+      }
+      if (!this.settings.instruments.organ.effects) {
+        this.settings.instruments.organ.effects = {
+          reverb: {
+            enabled: ((_d = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _d.enabled) || true,
+            params: { decay: 2.2, preDelay: 0.03, wet: ((_e = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _e.wetness) || 0.35 }
+          },
+          chorus: {
+            enabled: ((_f = oldEffects == null ? void 0 : oldEffects.chorus) == null ? void 0 : _f.enabled) || true,
+            params: { frequency: 0.8, depth: 0.5, delayTime: 4, feedback: 0.05 }
+          },
+          filter: {
+            enabled: false,
+            params: { frequency: 4e3, Q: 0.6, type: "lowpass" }
+          }
+        };
+      }
+      if (!this.settings.instruments.strings.effects) {
+        this.settings.instruments.strings.effects = {
+          reverb: {
+            enabled: ((_g = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _g.enabled) || true,
+            params: { decay: 2.8, preDelay: 0.04, wet: ((_h = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _h.wetness) || 0.45 }
+          },
+          chorus: {
+            enabled: false,
+            params: { frequency: 0.6, depth: 0.3, delayTime: 3, feedback: 0.03 }
+          },
+          filter: {
+            enabled: ((_i = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _i.enabled) || true,
+            params: { frequency: ((_j = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _j.frequency) || 3500, Q: ((_k = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _k.Q) || 0.8, type: ((_l = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _l.type) || "lowpass" }
+          }
+        };
+      }
+      if (!this.settings.instruments.choir) {
+        this.settings.instruments.choir = {
+          enabled: true,
+          volume: 0.7,
+          maxVoices: 8,
+          effects: {
+            reverb: { enabled: true, params: { decay: 3.2, preDelay: 0.05, wet: 0.6 } },
+            chorus: { enabled: true, params: { frequency: 0.4, depth: 0.6, delayTime: 5, feedback: 0.08 } },
+            filter: { enabled: false, params: { frequency: 2e3, Q: 0.7, type: "lowpass" } }
+          }
+        };
+      }
+      if (!this.settings.instruments.vocalPads) {
+        this.settings.instruments.vocalPads = {
+          enabled: true,
+          volume: 0.5,
+          maxVoices: 8,
+          effects: {
+            reverb: { enabled: true, params: { decay: 4, preDelay: 0.06, wet: 0.7 } },
+            chorus: { enabled: false, params: { frequency: 0.3, depth: 0.4, delayTime: 6, feedback: 0.05 } },
+            filter: { enabled: true, params: { frequency: 1500, Q: 1.2, type: "lowpass" } }
+          }
+        };
+      }
+      if (!this.settings.instruments.pad) {
+        this.settings.instruments.pad = {
+          enabled: true,
+          volume: 0.4,
+          maxVoices: 8,
+          effects: {
+            reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.8 } },
+            chorus: { enabled: false, params: { frequency: 0.2, depth: 0.7, delayTime: 8, feedback: 0.1 } },
+            filter: { enabled: true, params: { frequency: 1200, Q: 1.5, type: "lowpass" } }
+          }
+        };
+      }
+      this.saveSettings();
+      logger7.info("settings", "Settings migration completed");
+    }
   }
   async saveSettings() {
     await this.saveData(this.settings);
