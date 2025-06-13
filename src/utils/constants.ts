@@ -3,12 +3,41 @@ export interface InstrumentSettings {
 	volume: number;
 	maxVoices: number;
 	effects: {
-		reverb: EffectSettings;
-		chorus: EffectSettings;
-		filter: EffectSettings;
+		reverb: ReverbSettings;
+		chorus: ChorusSettings;
+		filter: FilterSettings;
 	};
 }
 
+export interface ReverbSettings {
+	enabled: boolean;
+	params: {
+		decay: number;
+		preDelay: number;
+		wet: number;
+	};
+}
+
+export interface ChorusSettings {
+	enabled: boolean;
+	params: {
+		frequency: number;
+		depth: number;
+		delayTime: number;
+		feedback: number;
+	};
+}
+
+export interface FilterSettings {
+	enabled: boolean;
+	params: {
+		frequency: number;
+		Q: number;
+		type: 'lowpass' | 'highpass' | 'bandpass';
+	};
+}
+
+// Legacy interface for backward compatibility (if needed)
 export interface EffectSettings {
 	enabled: boolean;
 	params: {
@@ -84,7 +113,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		organ: { 
-			enabled: true, 
+			enabled: false, 
 			volume: 0.7, 
 			maxVoices: 8,
 			effects: {
@@ -121,7 +150,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			maxVoices: 8,
 			effects: {
 				reverb: { 
-					enabled: false, 
+					enabled: true, 
 					params: { 
 						decay: 2.8, 
 						preDelay: 0.04, 
@@ -138,7 +167,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				filter: { 
-					enabled: false, 
+					enabled: true, 
 					params: { 
 						frequency: 3500, 
 						Q: 0.8, 
@@ -148,7 +177,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		choir: { 
-			enabled: true, 
+			enabled: false, 
 			volume: 0.7, 
 			maxVoices: 8,
 			effects: {
@@ -180,7 +209,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		vocalPads: { 
-			enabled: true, 
+			enabled: false, 
 			volume: 0.5, 
 			maxVoices: 8,
 			effects: {
@@ -212,7 +241,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		pad: { 
-			enabled: true, 
+			enabled: false, 
 			volume: 0.4, 
 			maxVoices: 8,
 			effects: {
@@ -308,7 +337,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		saxophone: { 
-			enabled: true, 
+			enabled: false, 
 			volume: 0.7, 
 			maxVoices: 6,
 			effects: {
@@ -543,4 +572,445 @@ export const INSTRUMENT_INFO = {
 		description: 'Sawtooth waves with reedy harmonics for rich, expressive tone',
 		defaultFrequencyRange: 'Mid (300-600Hz)'
 	}
-}; 
+};
+
+// Effect Presets System
+export interface EffectPreset {
+	name: string;
+	description: string;
+	category: 'venue' | 'genre' | 'instrument' | 'custom';
+	effects: {
+		reverb: ReverbSettings;
+		chorus: ChorusSettings;
+		filter: FilterSettings;
+	};
+}
+
+export const EFFECT_PRESETS: { [key: string]: EffectPreset } = {
+	// Venue-based presets
+	'concert-hall': {
+		name: 'Concert Hall',
+		description: 'Large reverberant space with natural acoustics',
+		category: 'venue',
+		effects: {
+			reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.6 } },
+			chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3.0, feedback: 0.03 } },
+			filter: { enabled: true, params: { frequency: 6000, Q: 0.5, type: 'lowpass' } }
+		}
+	},
+	'cathedral': {
+		name: 'Cathedral',
+		description: 'Massive stone space with long, ethereal reverb',
+		category: 'venue',
+		effects: {
+			reverb: { enabled: true, params: { decay: 8.0, preDelay: 0.15, wet: 0.8 } },
+			chorus: { enabled: true, params: { frequency: 0.3, depth: 0.4, delayTime: 6.0, feedback: 0.08 } },
+			filter: { enabled: true, params: { frequency: 4000, Q: 0.6, type: 'lowpass' } }
+		}
+	},
+	'studio': {
+		name: 'Studio',
+		description: 'Clean, controlled recording environment',
+		category: 'venue',
+		effects: {
+			reverb: { enabled: true, params: { decay: 1.2, preDelay: 0.01, wet: 0.25 } },
+			chorus: { enabled: false, params: { frequency: 0.8, depth: 0.2, delayTime: 2.0, feedback: 0.02 } },
+			filter: { enabled: false, params: { frequency: 8000, Q: 0.7, type: 'lowpass' } }
+		}
+	},
+	'jazz-club': {
+		name: 'Jazz Club',
+		description: 'Intimate, warm venue with subtle ambience',
+		category: 'venue',
+		effects: {
+			reverb: { enabled: true, params: { decay: 2.0, preDelay: 0.03, wet: 0.35 } },
+			chorus: { enabled: true, params: { frequency: 0.6, depth: 0.3, delayTime: 3.5, feedback: 0.05 } },
+			filter: { enabled: true, params: { frequency: 5000, Q: 0.8, type: 'lowpass' } }
+		}
+	},
+	'arena': {
+		name: 'Arena',
+		description: 'Large venue with powerful, booming acoustics',
+		category: 'venue',
+		effects: {
+			reverb: { enabled: true, params: { decay: 4.5, preDelay: 0.12, wet: 0.7 } },
+			chorus: { enabled: true, params: { frequency: 0.4, depth: 0.5, delayTime: 4.0, feedback: 0.06 } },
+			filter: { enabled: true, params: { frequency: 3500, Q: 1.0, type: 'lowpass' } }
+		}
+	},
+
+	// Genre-based presets
+	'ambient': {
+		name: 'Ambient',
+		description: 'Spacious, ethereal soundscape',
+		category: 'genre',
+		effects: {
+			reverb: { enabled: true, params: { decay: 6.0, preDelay: 0.10, wet: 0.75 } },
+			chorus: { enabled: true, params: { frequency: 0.2, depth: 0.6, delayTime: 8.0, feedback: 0.1 } },
+			filter: { enabled: true, params: { frequency: 2500, Q: 1.2, type: 'lowpass' } }
+		}
+	},
+	'classical': {
+		name: 'Classical',
+		description: 'Natural, balanced orchestral sound',
+		category: 'genre',
+		effects: {
+			reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.06, wet: 0.5 } },
+			chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3.0, feedback: 0.03 } },
+			filter: { enabled: true, params: { frequency: 7000, Q: 0.6, type: 'lowpass' } }
+		}
+	},
+	'electronic': {
+		name: 'Electronic',
+		description: 'Clean, precise digital processing',
+		category: 'genre',
+		effects: {
+			reverb: { enabled: true, params: { decay: 1.5, preDelay: 0.02, wet: 0.3 } },
+			chorus: { enabled: true, params: { frequency: 1.2, depth: 0.4, delayTime: 2.5, feedback: 0.04 } },
+			filter: { enabled: true, params: { frequency: 8000, Q: 1.5, type: 'lowpass' } }
+		}
+	},
+	'cinematic': {
+		name: 'Cinematic',
+		description: 'Epic, dramatic film score atmosphere',
+		category: 'genre',
+		effects: {
+			reverb: { enabled: true, params: { decay: 5.0, preDelay: 0.09, wet: 0.65 } },
+			chorus: { enabled: true, params: { frequency: 0.3, depth: 0.5, delayTime: 5.0, feedback: 0.07 } },
+			filter: { enabled: true, params: { frequency: 4500, Q: 0.9, type: 'lowpass' } }
+		}
+	},
+
+	// Special presets
+	'dry': {
+		name: 'Dry',
+		description: 'Minimal effects for clarity',
+		category: 'instrument',
+		effects: {
+			reverb: { enabled: false, params: { decay: 1.0, preDelay: 0.01, wet: 0.1 } },
+			chorus: { enabled: false, params: { frequency: 0.5, depth: 0.2, delayTime: 2.0, feedback: 0.02 } },
+			filter: { enabled: false, params: { frequency: 8000, Q: 0.7, type: 'lowpass' } }
+		}
+	},
+	'lush': {
+		name: 'Lush',
+		description: 'Rich, full processing with all effects',
+		category: 'instrument',
+		effects: {
+			reverb: { enabled: true, params: { decay: 4.0, preDelay: 0.07, wet: 0.6 } },
+			chorus: { enabled: true, params: { frequency: 0.5, depth: 0.5, delayTime: 4.0, feedback: 0.06 } },
+			filter: { enabled: true, params: { frequency: 6000, Q: 0.8, type: 'lowpass' } }
+		}
+	}
+};
+
+// Smart Parameter Ranges System
+export interface ParameterRange {
+	min: number;
+	max: number;
+	step: number;
+	defaultValue: number;
+	musicalContext: string;
+	suggestions?: { value: number; label: string }[];
+}
+
+export interface SmartRanges {
+	reverb: {
+		decay: ParameterRange;
+		preDelay: ParameterRange;
+		wet: ParameterRange;
+	};
+	chorus: {
+		frequency: ParameterRange;
+		depth: ParameterRange;
+		delayTime: ParameterRange;
+		feedback: ParameterRange;
+	};
+	filter: {
+		frequency: ParameterRange;
+		Q: ParameterRange;
+	};
+}
+
+// Instrument-specific smart parameter ranges
+export const INSTRUMENT_SMART_RANGES: { [instrument: string]: SmartRanges } = {
+	piano: {
+		reverb: {
+			decay: {
+				min: 0.5, max: 6.0, step: 0.1, defaultValue: 1.8,
+				musicalContext: 'Piano benefits from shorter, cleaner reverb tails',
+				suggestions: [
+					{ value: 1.2, label: 'Intimate' },
+					{ value: 1.8, label: 'Studio' },
+					{ value: 3.0, label: 'Concert Hall' }
+				]
+			},
+			preDelay: {
+				min: 0.005, max: 0.08, step: 0.005, defaultValue: 0.02,
+				musicalContext: 'Short pre-delay maintains piano clarity and attack'
+			},
+			wet: {
+				min: 0.1, max: 0.6, step: 0.05, defaultValue: 0.25,
+				musicalContext: 'Moderate reverb preserves piano definition'
+			}
+		},
+		chorus: {
+			frequency: {
+				min: 0.3, max: 2.0, step: 0.1, defaultValue: 0.8,
+				musicalContext: 'Subtle modulation enhances piano warmth without wobble'
+			},
+			depth: {
+				min: 0.1, max: 0.6, step: 0.05, defaultValue: 0.3,
+				musicalContext: 'Light chorus depth maintains piano naturalness'
+			},
+			delayTime: {
+				min: 2.0, max: 8.0, step: 0.5, defaultValue: 4.0,
+				musicalContext: 'Medium delay times work best for piano chorus'
+			},
+			feedback: {
+				min: 0.01, max: 0.15, step: 0.01, defaultValue: 0.05,
+				musicalContext: 'Low feedback prevents chorus from overwhelming piano tone'
+			}
+		},
+		filter: {
+			frequency: {
+				min: 2000, max: 8000, step: 100, defaultValue: 3500,
+				musicalContext: 'Piano harmonics extend well into higher frequencies',
+				suggestions: [
+					{ value: 2500, label: 'Warm' },
+					{ value: 3500, label: 'Natural' },
+					{ value: 5000, label: 'Bright' }
+				]
+			},
+			Q: {
+				min: 0.3, max: 2.0, step: 0.1, defaultValue: 0.8,
+				musicalContext: 'Moderate Q maintains piano frequency balance'
+			}
+		}
+	},
+	strings: {
+		reverb: {
+			decay: {
+				min: 1.5, max: 10.0, step: 0.2, defaultValue: 2.8,
+				musicalContext: 'Strings thrive with longer, lush reverb tails',
+				suggestions: [
+					{ value: 2.0, label: 'Chamber' },
+					{ value: 2.8, label: 'Orchestral' },
+					{ value: 5.0, label: 'Cathedral' }
+				]
+			},
+			preDelay: {
+				min: 0.02, max: 0.12, step: 0.01, defaultValue: 0.04,
+				musicalContext: 'Longer pre-delay creates spacious string sections'
+			},
+			wet: {
+				min: 0.2, max: 0.8, step: 0.05, defaultValue: 0.45,
+				musicalContext: 'Strings can handle more reverb for lush soundscapes'
+			}
+		},
+		chorus: {
+			frequency: {
+				min: 0.2, max: 1.2, step: 0.05, defaultValue: 0.6,
+				musicalContext: 'Slower modulation creates organic string ensemble feel'
+			},
+			depth: {
+				min: 0.1, max: 0.5, step: 0.05, defaultValue: 0.3,
+				musicalContext: 'Gentle chorus depth adds string section width'
+			},
+			delayTime: {
+				min: 2.0, max: 6.0, step: 0.5, defaultValue: 3.0,
+				musicalContext: 'Shorter delays work better for string textures'
+			},
+			feedback: {
+				min: 0.01, max: 0.08, step: 0.01, defaultValue: 0.03,
+				musicalContext: 'Minimal feedback prevents string muddiness'
+			}
+		},
+		filter: {
+			frequency: {
+				min: 1500, max: 6000, step: 100, defaultValue: 3500,
+				musicalContext: 'String frequencies focus in the mid-high range',
+				suggestions: [
+					{ value: 2000, label: 'Mellow' },
+					{ value: 3500, label: 'Balanced' },
+					{ value: 4500, label: 'Articulate' }
+				]
+			},
+			Q: {
+				min: 0.4, max: 1.5, step: 0.1, defaultValue: 0.8,
+				musicalContext: 'Gentle filtering preserves string harmonic richness'
+			}
+		}
+	},
+	organ: {
+		reverb: {
+			decay: {
+				min: 2.0, max: 12.0, step: 0.3, defaultValue: 2.2,
+				musicalContext: 'Organ reverb simulates large church acoustics',
+				suggestions: [
+					{ value: 2.2, label: 'Chapel' },
+					{ value: 4.0, label: 'Church' },
+					{ value: 8.0, label: 'Cathedral' }
+				]
+			},
+			preDelay: {
+				min: 0.02, max: 0.15, step: 0.01, defaultValue: 0.03,
+				musicalContext: 'Organ pre-delay mimics architectural space'
+			},
+			wet: {
+				min: 0.3, max: 0.9, step: 0.05, defaultValue: 0.35,
+				musicalContext: 'Organ traditionally played in reverberant spaces'
+			}
+		},
+		chorus: {
+			frequency: {
+				min: 0.2, max: 1.5, step: 0.1, defaultValue: 0.8,
+				musicalContext: 'Classic organ chorus creates that Hammond-style swirl'
+			},
+			depth: {
+				min: 0.2, max: 0.8, step: 0.05, defaultValue: 0.5,
+				musicalContext: 'Rich chorus depth for classic organ character'
+			},
+			delayTime: {
+				min: 3.0, max: 8.0, step: 0.5, defaultValue: 4.0,
+				musicalContext: 'Medium-long delays for organ chorus character'
+			},
+			feedback: {
+				min: 0.02, max: 0.12, step: 0.01, defaultValue: 0.05,
+				musicalContext: 'Moderate feedback for organ warmth without mud'
+			}
+		},
+		filter: {
+			frequency: {
+				min: 2000, max: 8000, step: 150, defaultValue: 4000,
+				musicalContext: 'Organ harmonics are rich and extend high',
+				suggestions: [
+					{ value: 3000, label: 'Warm' },
+					{ value: 4000, label: 'Classic' },
+					{ value: 6000, label: 'Bright' }
+				]
+			},
+			Q: {
+				min: 0.3, max: 1.2, step: 0.1, defaultValue: 0.6,
+				musicalContext: 'Gentle Q maintains organ harmonic complexity'
+			}
+		}
+	},
+	flute: {
+		reverb: {
+			decay: {
+				min: 1.0, max: 8.0, step: 0.2, defaultValue: 2.2,
+				musicalContext: 'Flute needs airy, light reverb for natural sound',
+				suggestions: [
+					{ value: 1.5, label: 'Intimate' },
+					{ value: 2.2, label: 'Recital Hall' },
+					{ value: 4.0, label: 'Concert Hall' }
+				]
+			},
+			preDelay: {
+				min: 0.005, max: 0.06, step: 0.005, defaultValue: 0.02,
+				musicalContext: 'Short pre-delay preserves flute attack and breath'
+			},
+			wet: {
+				min: 0.15, max: 0.65, step: 0.05, defaultValue: 0.4,
+				musicalContext: 'Moderate reverb enhances flute airiness'
+			}
+		},
+		chorus: {
+			frequency: {
+				min: 0.4, max: 1.5, step: 0.1, defaultValue: 0.8,
+				musicalContext: 'Light, fast modulation for flute shimmer'
+			},
+			depth: {
+				min: 0.05, max: 0.3, step: 0.05, defaultValue: 0.2,
+				musicalContext: 'Subtle chorus preserves flute purity'
+			},
+			delayTime: {
+				min: 1.5, max: 4.0, step: 0.5, defaultValue: 2.0,
+				musicalContext: 'Short delays work best for wind instruments'
+			},
+			feedback: {
+				min: 0.005, max: 0.05, step: 0.005, defaultValue: 0.02,
+				musicalContext: 'Minimal feedback maintains flute clarity'
+			}
+		},
+		filter: {
+			frequency: {
+				min: 3000, max: 12000, step: 200, defaultValue: 6000,
+				musicalContext: 'Flute has strong high-frequency content and harmonics',
+				suggestions: [
+					{ value: 4000, label: 'Mellow' },
+					{ value: 6000, label: 'Natural' },
+					{ value: 8000, label: 'Brilliant' }
+				]
+			},
+			Q: {
+				min: 0.2, max: 1.0, step: 0.1, defaultValue: 0.5,
+				musicalContext: 'Gentle filtering preserves flute breath and harmonics'
+			}
+		}
+	}
+};
+
+// Universal smart ranges for instruments not specifically defined
+export const DEFAULT_SMART_RANGES: SmartRanges = {
+	reverb: {
+		decay: {
+			min: 0.5, max: 8.0, step: 0.2, defaultValue: 2.5,
+			musicalContext: 'General purpose reverb settings'
+		},
+		preDelay: {
+			min: 0.01, max: 0.1, step: 0.005, defaultValue: 0.03,
+			musicalContext: 'Balanced pre-delay for most instruments'
+		},
+		wet: {
+			min: 0.1, max: 0.7, step: 0.05, defaultValue: 0.4,
+			musicalContext: 'Moderate reverb mix for versatility'
+		}
+	},
+	chorus: {
+		frequency: {
+			min: 0.2, max: 2.0, step: 0.1, defaultValue: 0.6,
+			musicalContext: 'Universal chorus modulation rate'
+		},
+		depth: {
+			min: 0.1, max: 0.6, step: 0.05, defaultValue: 0.3,
+			musicalContext: 'Balanced chorus intensity'
+		},
+		delayTime: {
+			min: 2.0, max: 6.0, step: 0.5, defaultValue: 3.5,
+			musicalContext: 'Medium delay for general chorus effect'
+		},
+		feedback: {
+			min: 0.01, max: 0.1, step: 0.01, defaultValue: 0.04,
+			musicalContext: 'Safe feedback levels for most applications'
+		}
+	},
+	filter: {
+		frequency: {
+			min: 500, max: 10000, step: 100, defaultValue: 4000,
+			musicalContext: 'Wide frequency range for various instruments'
+		},
+		Q: {
+			min: 0.3, max: 2.0, step: 0.1, defaultValue: 0.8,
+			musicalContext: 'Moderate Q factor for musical filtering'
+		}
+	}
+};
+
+// Utility function to get smart ranges for any instrument
+export function getSmartRanges(instrumentName: string): SmartRanges {
+	return INSTRUMENT_SMART_RANGES[instrumentName] || DEFAULT_SMART_RANGES;
+}
+
+// Utility function to get parameter range for a specific effect and parameter
+export function getParameterRange(instrumentName: string, effectName: keyof SmartRanges, paramName: string): ParameterRange | null {
+	const ranges = getSmartRanges(instrumentName);
+	const effectRanges = ranges[effectName];
+	
+	if (effectRanges && paramName in effectRanges) {
+		return effectRanges[paramName as keyof typeof effectRanges];
+	}
+	
+	return null;
+} 
