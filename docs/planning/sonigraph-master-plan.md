@@ -2,8 +2,7 @@
 
 **Project**: Obsidian Sonigraph Plugin  
 **Version**: 0.2.0 (Expanding to Multi-Voice Orchestral System)  
-**Last Updated**: December 2024  
-**Status**: Phase 3 Complete, Phase 4 Planning
+**Status**: Phase 4 Complete, Phase 5 Planning
 
 ---
 
@@ -118,6 +117,47 @@
 
 ## 3. Phase-by-Phase Development Plan
 
+### **Phase 3 Refinements: Advanced Effects & UX (Identified)**
+
+**Status**: 📋 Identified for Future Implementation  
+**Priority**: High Quality-of-Life Improvements  
+**Scope**: Enhance existing 6-instrument system with advanced features
+
+#### **1. Effect Presets & Templates**
+- **Instrument-specific presets**: "Piano: Concert Hall", "Organ: Cathedral", "Strings: Cinematic"
+- **Genre templates**: "Ambient", "Classical", "Electronic", "Jazz", "Rock"
+- **One-click reset**: Return to optimal defaults instantly
+- **Save/load custom presets**: User-defined effect combinations
+- **Preset sharing**: Import/export preset files between users
+
+#### **2. Real-Time Audio Feedback**
+- **Parameter preview**: Hear changes as you drag sliders (not just on release)
+- **Effect bypass button**: A/B compare with/without effects instantly
+- **Visual waveform**: Real-time display showing effect processing
+- **CPU usage indicator**: Per-effect performance monitoring
+- **Latency monitoring**: Real-time audio latency display
+
+#### **3. Smart Parameter Ranges**
+- **Context-aware limits**: Filter frequencies optimized per instrument range
+- **Musical parameter mapping**: Reverb "room size" instead of raw decay values
+- **Auto-scaling**: Parameters adapt to current tempo/key signatures
+- **Intelligent defaults**: Better starting values based on vault content analysis
+- **Parameter constraints**: Prevent musically inappropriate settings
+
+#### **4. Enhanced Effect Routing**
+- **Effect chain reordering**: Drag-and-drop effect order per instrument
+- **Parallel routing**: Split signal for complex textures and processing
+- **Cross-instrument routing**: Piano reverb sent to Strings for cohesion
+- **Master effect bus**: Global effects affecting final mix output
+- **Send/return system**: Flexible routing for creative processing
+
+#### **5. Graph-Responsive Effects**
+- **Dynamic modulation**: Effect intensity based on node connections
+- **Spatial effects**: Pan/reverb based on graph position and clustering
+- **Temporal effects**: Delay time sync'd to graph traversal speed
+- **Harmonic effects**: Chorus depth based on note relationships
+- **Adaptive processing**: Effects respond to vault structure changes
+
 ### **Phase 4: Vocal & Atmospheric Implementation ✅ COMPLETED**
 
 **✅ Week 1: Core Infrastructure - COMPLETED**
@@ -163,7 +203,7 @@
 
 ## 4. Technical Architecture Evolution
 
-### **Current Architecture (Phase 3)**
+### **Previous Architecture (Phase 3)**
 ```typescript
 interface SonigraphSettings {
     instruments: {
@@ -174,7 +214,7 @@ interface SonigraphSettings {
 }
 ```
 
-### **Phase 4 Architecture (Target)**  
+### **Current Architecture (Phase 4 - Implemented)**  
 ```typescript
 interface SonigraphSettings {
     instruments: {
@@ -238,25 +278,21 @@ class PadSynth extends BaseSynth {
 
 ## 5. Implementation Timeline
 
-### **December 2024: Phase 4 Vocal & Atmospheric**
-- **Week 1**: Infrastructure expansion (settings, interfaces, audio engine)
-- **Week 2**: Synthesis implementation (choir, vocal pads, pad)  
-- **Week 3**: UI integration and effect routing
-- **Week 4**: Testing, optimization, and polish
+### **✅ Phase 4 Vocal & Atmospheric - COMPLETED**
+- **Week 1**: ✅ Infrastructure expansion (settings, interfaces, audio engine)
+- **Week 2**: ✅ Synthesis implementation (choir, vocal pads, pad)  
+- **Week 3**: ✅ UI integration and effect routing
+- **Week 4**: ✅ Testing, optimization, and polish
 
-### **January 2025: Phase 4 Refinement & Phase 5 Planning**
-- **Week 1-2**: User feedback integration and bug fixes
-- **Week 3-4**: Phase 5 detailed planning and prototyping
-
-### **February-March 2025: Phase 5 Extended Orchestral**
+### **Phase 5 Extended Orchestral (Next)**
 - **4-6 weeks**: Traditional orchestral instruments implementation
 - **Focus**: Musical authenticity and ensemble balance
 
-### **April 2025: Phase 6 Specialized & Electronic** 
+### **Phase 6 Specialized & Electronic (Future)** 
 - **3-4 weeks**: Electronic and specialized instruments
 - **Focus**: Modern synthesis and sound design
 
-### **May-June 2025: Phase 7 Advanced Features**
+### **Phase 7 Advanced Features (Future)**
 - **6-8 weeks**: AI orchestration, advanced effects, preset system
 - **Focus**: Intelligence and user experience enhancement
 
@@ -305,19 +341,25 @@ class PadSynth extends BaseSynth {
 
 ## Next Actions
 
-### **Immediate Sprint (This Week):**
-1. **Implement Choir instrument** with formant filtering and vibrato
-2. **Implement Vocal Pads** with multi-layer sine synthesis  
-3. **Implement Pad instrument** with multi-oscillator synthesis
-4. **Update settings structure** to support 6 instruments
-5. **Extend UI** to display and control new instruments
+### **Phase 5: Extended Orchestral (Next Sprint)**
+1. **Woodwinds Section**: Flute, Clarinet, Saxophone
+2. **Brass Section**: Trumpet, French Horn, Trombone  
+3. **Extended Strings**: Violin, Guitar, Harp
+4. **UI Scaling**: Support for 9+ instruments
+5. **Performance Optimization**: Handle increased complexity
 
-### **Priority Order:**
-1. **Choir** (highest musical impact)
-2. **Vocal Pads** (atmospheric depth)  
-3. **Pad** (harmonic foundation)
-4. **UI integration** (essential for usability)
-5. **Testing & optimization** (quality assurance)
+### **Phase 3 Refinements (High-Impact UX)**
+1. **Effect Presets System** (huge usability improvement)
+2. **Real-Time Audio Feedback** (professional workflow)
+3. **Smart Parameter Ranges** (musical intelligence)
+4. **Enhanced Effect Routing** (creative flexibility)
+5. **Graph-Responsive Effects** (unique innovation)
+
+### **Implementation Priority:**
+1. **Phase 5 Orchestral** (expand instrument palette)
+2. **Phase 3 Refinements** (enhance existing system)
+3. **Phase 6 Electronic** (modern synthesis)
+4. **Phase 7 Advanced Features** (AI and automation)
 
 ---
 
