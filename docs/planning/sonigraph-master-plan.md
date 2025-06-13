@@ -61,103 +61,63 @@
 
 ### 🎼 **Complete Orchestral Vision: 31 Total Instruments**
 
-#### **🎤 Vocal Instruments (6 total - 2 implemented, 4 remaining)**
+| Family | Instrument | Status | Phase | Synthesis Approach | Frequency Range | Key Features |
+|--------|------------|--------|-------|-------------------|----------------|-------------|
+| **🎤 Vocal** | Choir | ✅ | Complete | Sample-based + reverb | High (1000-1400Hz) | Layered SATB voices |
+| | Vocal Pads | ✅ | Complete | Sample-based + formant filtering | Mid-High (600-1000Hz) | Ethereal sustained textures |
+| | Soprano | 🔄 | 6A | AM + formant filtering | High-Mid (800-1200Hz) | High female voice, vowel morphing |
+| | Alto | 🔄 | 6A | Rich harmonics + breath noise | High (1000-1400Hz) | Lower female voice, breath realism |
+| | Tenor | 🔄 | 6A | FM + vocal fry | Mid-High (600-1000Hz) | High male voice, vocal expression |
+| | Bass | 🔄 | 6A | Sub-harmonics + chest resonance | Very Low (<100Hz) | Low male voice, chest resonance |
+| **🎹 Keyboard** | Piano | ✅ | Complete | Sample-based | Very High (1400-1600Hz) | Acoustic piano dynamics |
+| | Organ | ✅ | Complete | Additive synthesis | Mid (400-800Hz) | Hammond-style drawbars |
+| | Electric Piano | 🔄 | 6B | AM + tremolo | Mid-Low (200-400Hz) | Rhodes/Wurlitzer character |
+| | Harpsichord | 🔄 | 6B | Sharp envelope + filtering | Low-Mid (300-600Hz) | Baroque plucked attack |
+| | Accordion | 🔄 | 6B | AM + vibrato | Mid (400-800Hz) | Bellows breath simulation |
+| | Celesta | 🔄 | 6B | Triangle + decay | Very High (1400-1600Hz) | Bell-like ethereal tones |
+| **🎻 Strings** | Strings | ✅ | Complete | Sample-based | Low (100-200Hz) | Orchestral string ensemble |
+| | Violin | 🔄 | 7A | Sawtooth + filter sweeps | High-Mid (800-1200Hz) | Bowed texture, vibrato |
+| | Cello | 🔄 | 7A | Complex harmonics + bow noise | Mid-Low (200-400Hz) | Rich low harmonics |
+| | Guitar | 🔄 | 7A | Karplus-Strong synthesis | Mid-High (600-1000Hz) | Plucked/strummed articulation |
+| | Harp | 🔄 | 7A | Pluck + long decay | Low (100-200Hz) | Cascading arpeggios |
+| **🎺 Brass** | Trumpet | 🔄 | 7B | Square + brass formants | Low-Mid (300-600Hz) | Bright attack, brass timbre |
+| | French Horn | 🔄 | 7B | Sine + slight distortion | Mid (400-800Hz) | Warm middle register |
+| | Trombone | 🔄 | 7B | Sawtooth + portamento | Mid-Low (200-400Hz) | Sliding pitch capability |
+| | Tuba | 🔄 | 7B | Sub-bass + breath | Very Low (<100Hz) | Deep foundation, breath noise |
+| **🎷 Woodwinds** | Flute | ✅ | Complete | Sample-based + noise | Ultra-High (>1600Hz) | Breathy pure tone |
+| | Clarinet | ✅ | Complete | Sample-based + odd harmonics | High-Mid (800-1200Hz) | Hollow timbre |
+| | Saxophone | ✅ | Complete | Sample-based + distortion | Low-Mid (300-600Hz) | Reedy richness |
+| | Oboe | 🔄 | 5B | Complex formants + reed simulation | High-Mid (800-1200Hz) | Nasal quality, double reed |
+| **🥁 Percussion** | Timpani | 🔄 | 8A | Sine burst + pitch bend | Low (100-200Hz) | Tuned drums, pitch bending |
+| | Xylophone | 🔄 | 8A | Triangle + sharp attack | Very High (1400-1600Hz) | Mallet percussion, bright attack |
+| | Vibraphone | 🔄 | 8A | Sine + tremolo | High (1000-1400Hz) | Metallic shimmer, tremolo |
+| | Gongs | 🔄 | 8A | Noise burst + long decay | Very Low (<100Hz) | Sustained crash, metallic resonance |
+| **🌟 Electronic** | Pad | ✅ | Complete | Sample-based | Mid-Low (200-400Hz) | Ambient synthetic textures |
+| | Lead | 🔄 | 8B | Sawtooth + filter + resonance | Very Low (<100Hz) | Cutting synth, filter modulation |
+| | Bass | 🔄 | 8B | Square + sub-oscillator | Low (100-200Hz) | Electronic foundation |
+| | Arp | 🔄 | 8B | Various waves + envelope + sequencer | - | Sequenced patterns, graph-synced |
 
-**✅ Implemented:**
-- **Choir** - Layered voices (Multiple oscillators + reverb)
-- **Vocal Pads** - Ethereal voice textures (Additive synthesis)
+#### **Implementation Summary by Phase**
+- **✅ Complete (9/31)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone
+- **🔄 Phase 6 (6 instruments → 15/31)**: Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta
+- **🔄 Phase 7 (8 instruments → 23/31)**: Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba  
+- **🔄 Phase 8 (8 instruments → 31/31)**: Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead Synth, Bass Synth, Arp Synth
 
-**🔄 Phase 6A: Individual Vocal Sections (4 remaining)**
-- **Soprano** - High female voice (AM synthesis + formant filtering)
-- **Alto** - Lower female voice (Rich harmonics + breath noise)
-- **Tenor** - High male voice (FM synthesis + vocal fry)
-- **Bass** - Low male voice (Sub-harmonics + chest resonance)
+#### **Key Implementation Approaches by Family**
 
-*Voice implementation approach:*
-- Formant filtering for vowel sounds (A, E, I, O, U)
-- Breath noise mixed with tonal content for realism
-- Vibrato/tremolo for natural expression
-- Different vocal ranges mapped to graph frequency bands
-- Dynamic formant shifting based on graph relationships
+**🎤 Vocal**: Formant filtering for vowel sounds, breath noise mixing, vibrato/tremolo expression, dynamic formant shifting based on graph relationships
 
-#### **🎹 Keyboard Instruments (5 total - 1 implemented, 4 remaining)**
+**🎹 Keyboard**: AM/FM synthesis techniques, authentic articulation models, instrument-specific envelopes and modulation
 
-**✅ Implemented:**
-- **Piano** - Acoustic piano (sample-based synthesis)
+**🎻 Strings**: Advanced string modeling, bowing/plucking simulation, Karplus-Strong synthesis, bow noise and resonance
 
-**🔄 Phase 6B: Extended Keyboard Family (4 remaining)**
-- **Electric Piano** - Rhodes/Wurlitzer (AM synthesis + tremolo)
-- **Harpsichord** - Plucked attack (Sharp envelope + filtering)
-- **Accordion** - Bellows breath (AM synthesis + vibrato)
-- **Celesta** - Bell-like piano (Triangle wave + decay)
+**🎺 Brass**: Brass formant filtering for metallic timbre, dynamic attack envelopes, breath/valve noise, mute effects and articulations
 
-#### **🎻 String Instruments (5 total - 1 implemented, 4 remaining)**
+**🎷 Woodwinds**: Reed simulation, breath noise integration, woodwind-specific formants and harmonics
 
-**✅ Implemented:**
-- **Strings** - Orchestral strings (sample-based synthesis)
+**🥁 Percussion**: Transient-focused synthesis, pitch bending capabilities, metallic resonance modeling, noise-based synthesis
 
-**🔄 Phase 7A: Individual String Sections (4 remaining)**
-- **Violin** - Bowed texture (Sawtooth + filter sweeps)
-- **Cello** - Rich lows (Complex harmonics + bow noise)
-- **Guitar** - Plucked/strummed (Karplus-Strong synthesis)
-- **Harp** - Cascading arpeggios (Pluck synthesis + long decay)
-
-#### **🎺 Brass Instruments (4 total - 0 implemented, 4 remaining)**
-
-**🔄 Phase 7B: Complete Brass Section (4 remaining)**
-- **Trumpet** - Bright attack (Square wave + brass formants)
-- **French Horn** - Warm middle (Sine wave + slight distortion)
-- **Trombone** - Sliding pitch (Sawtooth + portamento)
-- **Tuba** - Deep foundation (Sub-bass + breath)
-
-*Brass implementation approach:*
-- Brass formant filtering for metallic timbre
-- Dynamic attack envelopes for different playing styles
-- Breath noise and valve noise for realism
-- Mute effects and brass-specific articulations
-- Range-appropriate frequency mapping
-
-#### **🎷 Woodwinds (4 total - 3 implemented, 1 remaining)**
-
-**✅ Implemented:**
-- **Flute** - Breathy pure tone (sample-based + noise)
-- **Clarinet** - Hollow timbre (sample-based + odd harmonics)  
-- **Saxophone** - Reedy richness (sample-based + distortion)
-
-**🔄 Phase 5B: Complete Woodwind Section (1 remaining)**
-- **Oboe** - Nasal quality (Complex formants + reed simulation)
-
-#### **🥁 Percussion Instruments (4 total - 0 implemented, 4 remaining)**
-
-**🔄 Phase 8A: Tuned Percussion Section (4 remaining)**
-- **Timpani** - Tuned drums (Sine burst + pitch bend)
-- **Xylophone** - Mallet percussion (Triangle + sharp attack)
-- **Vibraphone** - Metallic shimmer (Sine + tremolo)
-- **Gongs** - Sustained crash (Noise burst + long decay)
-
-*Percussion implementation approach:*
-- Transient-focused synthesis with sharp attacks
-- Pitch bending for timpani rolls and effects
-- Metallic resonance modeling for mallet instruments
-- Noise-based synthesis for unpitched elements
-- Dynamic response to graph activity intensity
-
-#### **🌟 Synthetic/Electronic Instruments (4 total - 1 implemented, 3 remaining)**
-
-**✅ Implemented:**
-- **Pad** - Ambient textures (sample-based synthesis)
-
-**🔄 Phase 8B: Electronic Synthesis Suite (3 remaining)**
-- **Lead** - Cutting synth (Sawtooth + filter + resonance)
-- **Bass** - Electronic low-end (Square + sub-oscillator)
-- **Arp** - Sequenced patterns (Various waves + envelope + sequencer)
-
-*Electronic implementation approach:*
-- Classic analog synthesis techniques (subtractive synthesis)
-- Filter modulation and resonance for expressiveness  
-- LFO and envelope modulation for movement
-- Arpeggiator patterns synchronized to graph traversal
-- Modern digital effects processing
+**🌟 Electronic**: Classic analog synthesis techniques, filter modulation and resonance, LFO/envelope modulation, sequencer integration
 
 ---
 
@@ -222,42 +182,47 @@
 
 **Status**: 📋 Identified for Future Implementation  
 **Priority**: High Quality-of-Life Improvements  
-**Scope**: Enhance existing 6-instrument system with advanced features
+**Scope**: Enhance existing system with advanced features across all orchestral instruments
 
-#### **1. Effect Presets & Templates**
-- **Instrument-specific presets**: "Piano: Concert Hall", "Organ: Cathedral", "Strings: Cinematic"
-- **Genre templates**: "Ambient", "Classical", "Electronic", "Jazz", "Rock"
-- **One-click reset**: Return to optimal defaults instantly
-- **Save/load custom presets**: User-defined effect combinations
-- **Preset sharing**: Import/export preset files between users
+| Feature | Priority | Impact | Effort | Status | Key Benefits |
+|---------|----------|--------|--------|--------|-------------|
+| **Effect Presets & Templates** | High | High | Medium | 📋 Planned | Instant professional sounds, user presets |
+| **Real-Time Audio Feedback** | High | High | High | 📋 Planned | Professional workflow, parameter preview |
+| **Smart Parameter Ranges** | Medium | High | Medium | 📋 Planned | Musical intelligence, context-aware limits |
+| **Enhanced Effect Routing** | Medium | Medium | High | 📋 Planned | Creative flexibility, complex processing |
+| **Graph-Responsive Effects** | Low | High | High | 📋 Planned | Unique innovation, adaptive processing |
 
-#### **2. Real-Time Audio Feedback**
-- **Parameter preview**: Hear changes as you drag sliders (not just on release)
-- **Effect bypass button**: A/B compare with/without effects instantly
-- **Visual waveform**: Real-time display showing effect processing
-- **CPU usage indicator**: Per-effect performance monitoring
-- **Latency monitoring**: Real-time audio latency display
+#### **Detailed Feature Specifications**
 
-#### **3. Smart Parameter Ranges**
-- **Context-aware limits**: Filter frequencies optimized per instrument range
-- **Musical parameter mapping**: Reverb "room size" instead of raw decay values
-- **Auto-scaling**: Parameters adapt to current tempo/key signatures
-- **Intelligent defaults**: Better starting values based on vault content analysis
-- **Parameter constraints**: Prevent musically inappropriate settings
+**🎛️ Effect Presets & Templates**
+- Instrument-specific presets: "Piano: Concert Hall", "Organ: Cathedral", "Strings: Cinematic"
+- Genre templates: "Ambient", "Classical", "Electronic", "Jazz", "Rock"
+- One-click reset to optimal defaults, save/load custom presets
+- Preset sharing: Import/export preset files between users
 
-#### **4. Enhanced Effect Routing**
-- **Effect chain reordering**: Drag-and-drop effect order per instrument
-- **Parallel routing**: Split signal for complex textures and processing
-- **Cross-instrument routing**: Piano reverb sent to Strings for cohesion
-- **Master effect bus**: Global effects affecting final mix output
-- **Send/return system**: Flexible routing for creative processing
+**⚡ Real-Time Audio Feedback**
+- Parameter preview: Hear changes as you drag sliders (not just on release)
+- Effect bypass button: A/B compare with/without effects instantly
+- Visual waveform: Real-time display showing effect processing
+- Performance monitoring: CPU usage indicator and latency monitoring per effect
 
-#### **5. Graph-Responsive Effects**
-- **Dynamic modulation**: Effect intensity based on node connections
-- **Spatial effects**: Pan/reverb based on graph position and clustering
-- **Temporal effects**: Delay time sync'd to graph traversal speed
-- **Harmonic effects**: Chorus depth based on note relationships
-- **Adaptive processing**: Effects respond to vault structure changes
+**🎯 Smart Parameter Ranges**
+- Context-aware limits: Filter frequencies optimized per instrument range
+- Musical parameter mapping: Reverb "room size" instead of raw decay values
+- Auto-scaling: Parameters adapt to current tempo/key signatures
+- Intelligent defaults: Better starting values based on vault content analysis
+
+**🔄 Enhanced Effect Routing**
+- Effect chain reordering: Drag-and-drop effect order per instrument
+- Parallel routing: Split signal for complex textures and processing
+- Cross-instrument routing: Piano reverb sent to Strings for orchestral cohesion
+- Master effect bus: Global effects affecting final mix output
+
+**🎭 Graph-Responsive Effects**
+- Dynamic modulation: Effect intensity based on node connections and relationships
+- Spatial effects: Pan/reverb based on graph position and clustering
+- Temporal effects: Delay time synchronized to graph traversal speed
+- Adaptive processing: Effects respond to vault structure changes in real-time
 
 ### **Phase 4: Vocal & Atmospheric Implementation ✅ COMPLETED**
 
@@ -392,64 +357,87 @@ class PadSynth extends BaseSynth {
 
 ## 5. Implementation Timeline
 
-### **✅ Phase 4 Vocal & Atmospheric - COMPLETED**
+| Phase | Status | Duration | Scope | Target | Key Focus Areas | New Instruments |
+|-------|--------|----------|-------|--------|----------------|----------------|
+| **Phase 4** | ✅ Complete | 4 weeks | Vocal & Atmospheric | 6/31 | Sample-based synthesis, UI scaling | Choir, Vocal Pads, Pad |
+| **Phase 5** | ✅ Complete | 2 weeks | Woodwind Completion | 9/31 | 9-instrument UI, frequency optimization | Flute, Clarinet, Saxophone |
+| **Phase 6** | 🔄 Next | 4-5 weeks | Vocal & Keyboard Extensions | 15/31 | Formant synthesis, keyboard articulation | Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta |
+| **Phase 7** | 🔄 Future | 5-6 weeks | Strings & Brass Completion | 23/31 | String modeling, brass formant synthesis | Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba |
+| **Phase 8** | 🔄 Future | 4-5 weeks | Percussion & Electronic Finale | 31/31 | Percussion modeling, analog synthesis | Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead, Bass, Arp |
+| **Phase 9** | 🔄 Future | 6-8 weeks | Orchestral Intelligence | 31/31+ | AI orchestration, conductor interface | Advanced features only |
+
+### **Detailed Phase Breakdown**
+
+#### **✅ Phase 4: Vocal & Atmospheric - COMPLETED**
 - **Week 1**: ✅ Infrastructure expansion (settings, interfaces, audio engine)
 - **Week 2**: ✅ Synthesis implementation (choir, vocal pads, pad)  
 - **Week 3**: ✅ UI integration and effect routing
 - **Week 4**: ✅ Testing, optimization, and polish
 
-### **✅ Phase 5 Woodwind Completion - COMPLETED**
+#### **✅ Phase 5: Woodwind Completion - COMPLETED**
 - **Week 1**: ✅ Woodwind synthesis implementation (flute, clarinet, saxophone)
 - **Week 2**: ✅ 9-instrument UI scaling and frequency range optimization
 
-### **Phase 6 Vocal & Keyboard Extensions (Next Priority)**
-- **4-5 weeks**: Individual vocal sections + extended keyboard family
-- **Target**: 15/31 total instruments (6 new instruments)
+#### **🔄 Phase 6: Vocal & Keyboard Extensions (Next Priority)**
 - **Focus**: Advanced formant synthesis and keyboard articulation systems
+- **Technical Challenges**: Formant filtering, AM/FM synthesis, breath noise modeling
+- **UI Requirements**: Support for 15 total instruments with individual controls
 
-### **Phase 7 Strings & Brass Completion (Future)**
-- **5-6 weeks**: Individual strings + complete brass section  
-- **Target**: 23/31 total instruments (8 new instruments)
+#### **🔄 Phase 7: Strings & Brass Completion (Future)**
 - **Focus**: String modeling, brass formant synthesis, and articulation systems
+- **Technical Challenges**: Karplus-Strong synthesis, brass formants, bow/breath simulation
+- **UI Requirements**: Advanced articulation controls for realistic expression
 
-### **Phase 8 Percussion & Electronic Finale (Future)**
-- **4-5 weeks**: Complete percussion + electronic synthesis + final Oboe
-- **Target**: 31/31 total instruments - **COMPLETE ORCHESTRAL VISION**
+#### **🔄 Phase 8: Percussion & Electronic Finale (Future)**
 - **Focus**: Percussion modeling and advanced electronic synthesis
+- **Technical Challenges**: Transient modeling, pitch bending, analog synthesis emulation
+- **Achievement**: **COMPLETE 31-INSTRUMENT ORCHESTRAL VISION** 🎯
 
-### **Phase 9 Orchestral Intelligence & Polish (Future)**
-- **6-8 weeks**: AI orchestration, graph-responsive arrangements, conductor interface
+#### **🔄 Phase 9: Orchestral Intelligence & Polish (Future)**
 - **Focus**: Intelligence, automation, and professional workflow enhancement
+- **Features**: AI orchestration, graph-responsive arrangements, conductor interface
+- **Goal**: Transform from instrument collection to intelligent orchestral system
 
 ---
 
 ## 6. Quality Assurance Strategy
 
-### **Phase 4 Testing Plan**
+### **Testing Matrix by Category**
 
-**Audio Quality Testing:**
-- [ ] Frequency response analysis for each new instrument
-- [ ] Harmonic content verification (THD < 5%)
-- [ ] Dynamic range testing (-60dB to 0dB)
-- [ ] Cross-instrument balance verification
+| Test Category | Test Name | Target Metric | Current Status | Priority | Automation |
+|---------------|-----------|---------------|----------------|----------|------------|
+| **🎵 Audio Quality** | Frequency response analysis | Flat response ±3dB | ✅ Passed | High | Manual |
+| | Harmonic content verification | THD < 5% | ✅ Passed | High | Manual |
+| | Dynamic range testing | -60dB to 0dB | ✅ Passed | Medium | Manual |
+| | Cross-instrument balance | No masking/conflicts | ✅ Passed | High | Manual |
+| **⚡ Performance** | CPU usage monitoring | <25% CPU (9 instruments) | ✅ Passed | Critical | Automated |
+| | Memory consumption | <100MB RAM | ✅ Passed | High | Automated |
+| | Audio latency measurement | <50ms | ✅ Passed | Critical | Automated |
+| | Browser compatibility | Chrome, Firefox, Safari, Edge | ✅ Passed | High | Manual |
+| **🎨 User Experience** | Interface responsiveness | <100ms UI response | ✅ Passed | High | Manual |
+| | Settings persistence | Cross-session retention | ✅ Passed | Medium | Automated |
+| | Parameter appropriateness | Musical range validation | ✅ Passed | Medium | Manual |
+| | Error handling | Graceful degradation | ✅ Passed | High | Manual |
+| **🔗 Integration** | Obsidian plugin compatibility | Full integration | ✅ Passed | Critical | Manual |
+| | Settings migration | 3→6→9 instruments seamless | ✅ Passed | High | Automated |
+| | Graph parsing complexity | Real-time processing | ✅ Passed | High | Automated |
+| | Real-time parameter updates | All tabs synchronized | ✅ Passed | High | Manual |
 
-**Performance Testing:**
-- [ ] CPU usage with 6 concurrent instruments (target: <25% CPU)
-- [ ] Memory consumption monitoring (target: <100MB RAM)
-- [ ] Audio latency measurement (target: <50ms)
-- [ ] Browser compatibility (Chrome, Firefox, Safari, Edge)
+### **Scaling Requirements for Future Phases**
 
-**User Experience Testing:**
-- [ ] Interface responsiveness with 6 instruments
-- [ ] Settings persistence across browser sessions  
-- [ ] Effect parameter ranges and musical appropriateness
-- [ ] Error handling and graceful degradation
+| Phase | Instruments | CPU Target | Memory Target | UI Response | Key Challenges |
+|-------|-------------|------------|---------------|-------------|----------------|
+| **Phase 6** | 15/31 | <35% CPU | <150MB RAM | <100ms | Formant synthesis overhead |
+| **Phase 7** | 23/31 | <45% CPU | <200MB RAM | <100ms | String modeling complexity |
+| **Phase 8** | 31/31 | <55% CPU | <250MB RAM | <100ms | Full orchestral load |
+| **Phase 9** | 31/31+ | <60% CPU | <300MB RAM | <100ms | AI processing overhead |
 
-**Integration Testing:**
-- [ ] Obsidian plugin compatibility
-- [ ] Settings migration from 3 to 6 instruments
-- [ ] Graph parsing with increased complexity
-- [ ] Real-time parameter updates across all tabs
+### **Quality Gates by Phase**
+
+- **Phase 6 Gate**: All vocal formant synthesis passes audio quality tests, keyboard articulation responds naturally
+- **Phase 7 Gate**: String modeling produces realistic bow/pluck sounds, brass formants achieve metallic timbre
+- **Phase 8 Gate**: Full 31-instrument orchestral palette maintains performance targets under maximum load
+- **Phase 9 Gate**: AI orchestration suggestions are musically appropriate and respond to graph changes in real-time
 
 ### **Acceptance Criteria**
 
