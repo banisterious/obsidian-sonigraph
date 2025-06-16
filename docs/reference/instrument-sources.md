@@ -11,6 +11,18 @@
 
 This document provides a comprehensive catalog of all sample sources, synthesis approaches, and technical specifications for each of the 34 instruments implemented in the Sonigraph plugin. Each entry includes the synthesis method, sample library sources, effects processing, and technical details.
 
+## Default Enabled Instruments
+
+For optimal user experience, **5 core instruments** are enabled by default:
+
+✅ **Piano** - Essential keyboard instrument with professional grand piano samples  
+✅ **Strings** - Orchestral foundation with rich string ensemble sounds  
+✅ **Flute** - Clean, crystalline woodwind representative  
+✅ **Clarinet** - Warm, expressive woodwind with hollow timbre  
+✅ **Saxophone** - Distinctive reedy character for musical variety  
+
+All other instruments are **disabled by default** to avoid overwhelming new users while maintaining excellent performance. Users can easily enable additional instruments through the Control Center interface.
+
 ---
 
 ## 🎤 Vocal Family (6 Instruments)
@@ -78,8 +90,9 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 - **Source**: https://tonejs.github.io/audio/salamander/
 - **Sample Range**: A0-C8 (88 keys, full piano range)
 - **Release Time**: 1.0s
-- **Effects**: Reverb (enabled)
+- **Effects**: Reverb (enabled by default)
 - **Frequency Range**: Very High (1400-1600Hz)
+- **Default Status**: ✅ **ENABLED** (core instrument)
 - **Notes**: Salamander Grand Piano samples, industry standard
 
 ### Organ
@@ -87,8 +100,9 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 - **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/
 - **Sample Range**: C2-G6 (21 samples)
 - **Release Time**: 0.8s
-- **Effects**: Chorus (enabled), Reverb (enabled)
+- **Effects**: Chorus (enabled by default), Reverb (enabled by default)
 - **Frequency Range**: Mid (400-800Hz)
+- **Default Status**: ❌ **DISABLED** (specialized instrument)
 - **Notes**: Hammond organ character with drawbar simulation
 
 ### Electric Piano
@@ -136,8 +150,9 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 - **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/violin/
 - **Sample Range**: C3-A6 (16 samples)
 - **Release Time**: 2.0s
-- **Effects**: Reverb (enabled), Filter (enabled)
+- **Effects**: Reverb (enabled by default)
 - **Frequency Range**: Low (100-200Hz)
+- **Default Status**: ✅ **ENABLED** (orchestral foundation)
 - **Notes**: Orchestral string ensemble samples
 
 ### Violin
@@ -225,8 +240,9 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 - **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/flute/
 - **Sample Range**: C4-E6 (17 samples)
 - **Release Time**: 1.5s
-- **Effects**: Reverb (enabled), Filter (enabled)
+- **Effects**: Reverb (enabled by default)
 - **Frequency Range**: Ultra-High (>1600Hz)
+- **Default Status**: ✅ **ENABLED** (clean woodwind representative)
 - **Notes**: Breathy pure tone with noise texture
 
 ### Clarinet
@@ -234,8 +250,9 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 - **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/
 - **Sample Range**: Clarinet range samples
 - **Release Time**: 1.8s
-- **Effects**: Odd harmonic emphasis, hollow timbre
+- **Effects**: Reverb (enabled by default)
 - **Frequency Range**: High-Mid (800-1200Hz)
+- **Default Status**: ✅ **ENABLED** (warm woodwind with character)
 - **Notes**: Characteristic clarinet hollow sound
 
 ### Saxophone
@@ -243,8 +260,9 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 - **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/
 - **Sample Range**: Saxophone samples with reedy character
 - **Release Time**: 1.5s
-- **Effects**: Reedy distortion, harmonic richness
+- **Effects**: Reverb (enabled by default)
 - **Frequency Range**: Low-Mid (300-600Hz)
+- **Default Status**: ✅ **ENABLED** (distinctive reedy character)
 - **Notes**: Rich saxophone timbre with reed character
 
 ### Oboe
