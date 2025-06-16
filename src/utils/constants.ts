@@ -67,6 +67,11 @@ export interface SonigraphSettings {
 		alto: InstrumentSettings;
 		tenor: InstrumentSettings;
 		bass: InstrumentSettings;
+		// Phase 6B: Extended Keyboard Family
+		electricPiano: InstrumentSettings;
+		harpsichord: InstrumentSettings;
+		accordion: InstrumentSettings;
+		celesta: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
 }
@@ -495,6 +500,135 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				}
 			}
+		},
+		// Phase 6B: Extended Keyboard Family
+		electricPiano: { 
+			enabled: false,
+			volume: 0.7, 
+			maxVoices: 8,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.0, 
+						preDelay: 0.025, 
+						wet: 0.3 
+					} 
+				},
+				chorus: { 
+					enabled: true, 
+					params: { 
+						frequency: 1.2, 
+						depth: 0.4, 
+						delayTime: 3.0, 
+						feedback: 0.04 
+					} 
+				},
+				filter: { 
+					enabled: false, 
+					params: { 
+						frequency: 5000,
+						Q: 0.7, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		harpsichord: { 
+			enabled: false,
+			volume: 0.6, 
+			maxVoices: 8,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 1.5, 
+						preDelay: 0.02, 
+						wet: 0.25 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.6, 
+						depth: 0.2, 
+						delayTime: 2.0, 
+						feedback: 0.02 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 4500,
+						Q: 1.0, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		accordion: { 
+			enabled: false,
+			volume: 0.6, 
+			maxVoices: 8,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.2, 
+						preDelay: 0.03, 
+						wet: 0.35 
+					} 
+				},
+				chorus: { 
+					enabled: true, 
+					params: { 
+						frequency: 0.8, 
+						depth: 0.5, 
+						delayTime: 4.0, 
+						feedback: 0.06 
+					} 
+				},
+				filter: { 
+					enabled: false, 
+					params: { 
+						frequency: 3500,
+						Q: 0.8, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		celesta: { 
+			enabled: false,
+			volume: 0.5, 
+			maxVoices: 6,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 3.0, 
+						preDelay: 0.04, 
+						wet: 0.5 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.4, 
+						depth: 0.3, 
+						delayTime: 3.5, 
+						feedback: 0.03 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 6000,
+						Q: 0.6, 
+						type: 'lowpass' 
+					} 
+				}
+			}
 		}
 	},
 	voiceAssignmentStrategy: 'frequency'
@@ -571,6 +705,31 @@ export const INSTRUMENT_INFO = {
 		icon: '🎷',
 		description: 'Sawtooth waves with reedy harmonics for rich, expressive tone',
 		defaultFrequencyRange: 'Mid (300-600Hz)'
+	},
+	// Phase 6B: Extended Keyboard Family
+	electricPiano: {
+		name: 'Electric Piano',
+		icon: '🎹',
+		description: 'AM synthesis with tremolo for vintage Rhodes/Wurlitzer character',
+		defaultFrequencyRange: 'Mid-Low (200-400Hz)'
+	},
+	harpsichord: {
+		name: 'Harpsichord',
+		icon: '🎼',
+		description: 'Sharp envelope with filtering for baroque plucked attack',
+		defaultFrequencyRange: 'Low-Mid (300-600Hz)'
+	},
+	accordion: {
+		name: 'Accordion',
+		icon: '🪗',
+		description: 'AM synthesis with vibrato for bellows breath simulation',
+		defaultFrequencyRange: 'Mid (400-800Hz)'
+	},
+	celesta: {
+		name: 'Celesta',
+		icon: '🔔',
+		description: 'Triangle waves with decay for bell-like ethereal tones',
+		defaultFrequencyRange: 'Very High (1400-1600Hz)'
 	}
 };
 
