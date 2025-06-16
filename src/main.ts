@@ -1,7 +1,7 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, SonigraphSettings } from './utils/constants';
 import { SonigraphSettingTab } from './ui/settings';
-import { ControlPanelModal } from './ui/control-panel';
+import { MaterialControlPanelModal } from './ui/control-panel-md';
 import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';
 import { MusicalMapper } from './graph/musical-mapper';
@@ -81,11 +81,12 @@ export default class SonigraphPlugin extends Plugin {
 	}
 
 	public openControlPanel(): void {
-		logger.info('ui', 'Opening control panel');
+		logger.info('ui', 'Opening Material Design control panel');
 
-		const modal = new ControlPanelModal(this.app, this);
+		const modal = new MaterialControlPanelModal(this.app, this);
 		modal.open();
 	}
+
 
 	/**
 	 * Parse the current vault and generate musical data
