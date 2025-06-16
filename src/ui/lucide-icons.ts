@@ -1,0 +1,372 @@
+/**
+ * Lucide Icon Integration for Sonigraph Control Center
+ * Maps Material Design concepts to Lucide icons available in Obsidian
+ */
+
+import { setIcon } from 'obsidian';
+
+/**
+ * Icon mapping for different UI elements and instrument families
+ * All icons are from the Lucide icon set that Obsidian provides
+ */
+export const LUCIDE_ICONS = {
+  // Navigation and UI
+  menu: 'menu',
+  close: 'x',
+  settings: 'settings',
+  search: 'search',
+  filter: 'filter',
+  more: 'more-horizontal',
+  
+  // Audio Controls
+  play: 'play',
+  pause: 'pause',
+  stop: 'square',
+  volume: 'volume-2',
+  volumeOff: 'volume-x',
+  headphones: 'headphones',
+  
+  // Status and Monitoring
+  activity: 'activity',
+  analytics: 'bar-chart-3',
+  cpu: 'cpu',
+  zap: 'zap',
+  checkCircle: 'check-circle',
+  alertCircle: 'alert-circle',
+  info: 'info',
+  
+  // Musical Elements
+  music: 'music',
+  musicNote: 'music-4',
+  waveform: 'activity',
+  equalizer: 'sliders-horizontal',
+  
+  // Instrument Families
+  strings: 'music', // Piano/keyboard for strings
+  woodwinds: 'wind', // Wind symbol for woodwinds
+  brass: 'megaphone', // Horn/megaphone for brass
+  vocals: 'mic', // Microphone for vocals
+  percussion: 'drum', // Would use 'drum' if available, fallback to 'circle'
+  electronic: 'monitor-speaker', // Speaker for electronic
+  experimental: 'flask', // Science flask for experimental
+  
+  // Individual Instruments - Strings
+  piano: 'piano', // If available, otherwise 'music'
+  violin: 'music',
+  viola: 'music',
+  cello: 'music',
+  doubleBass: 'music',
+  harp: 'music-3',
+  guitar: 'guitar', // If available, otherwise 'music'
+  
+  // Individual Instruments - Woodwinds
+  flute: 'wind',
+  clarinet: 'wind',
+  saxophone: 'wind',
+  bassoon: 'wind',
+  oboe: 'wind',
+  
+  // Individual Instruments - Brass
+  trumpet: 'megaphone',
+  frenchHorn: 'megaphone',
+  trombone: 'megaphone',
+  tuba: 'megaphone',
+  
+  // Individual Instruments - Vocals
+  soprano: 'mic',
+  alto: 'mic',
+  tenor: 'mic',
+  bass: 'mic',
+  
+  // Individual Instruments - Percussion
+  timpani: 'circle',
+  xylophone: 'grid-3x3',
+  vibraphone: 'grid-3x3',
+  gongs: 'circle',
+  
+  // Individual Instruments - Electronic
+  leadSynth: 'monitor-speaker',
+  bassSynth: 'speaker',
+  arpSynth: 'waveform',
+  
+  // Individual Instruments - Experimental
+  whaleHumpback: 'waves',
+  
+  // Effects
+  reverb: 'waves',
+  chorus: 'repeat',
+  filter: 'sliders-horizontal',
+  delay: 'timer',
+  distortion: 'zap',
+  compressor: 'maximize-2',
+  
+  // Controls
+  enable: 'toggle-right',
+  disable: 'toggle-left',
+  volumeControl: 'volume-2',
+  voices: 'users',
+  
+  // Actions
+  save: 'save',
+  load: 'folder-open',
+  reset: 'rotate-ccw',
+  copy: 'copy',
+  paste: 'clipboard',
+  delete: 'trash-2',
+  
+  // States
+  enabled: 'check-circle-2',
+  disabled: 'circle',
+  active: 'radio',
+  inactive: 'circle',
+  warning: 'alert-triangle',
+  error: 'x-circle',
+  success: 'check-circle',
+  
+  // Arrows and Navigation
+  arrowLeft: 'arrow-left',
+  arrowRight: 'arrow-right',
+  arrowUp: 'arrow-up',
+  arrowDown: 'arrow-down',
+  chevronLeft: 'chevron-left',
+  chevronRight: 'chevron-right',
+  chevronUp: 'chevron-up',
+  chevronDown: 'chevron-down',
+  
+  // Plus/Minus
+  plus: 'plus',
+  minus: 'minus',
+  plusCircle: 'plus-circle',
+  minusCircle: 'minus-circle',
+  
+  // Toggles and Controls
+  toggleOn: 'toggle-right',
+  toggleOff: 'toggle-left',
+  powerOn: 'power',
+  powerOff: 'power-off',
+} as const;
+
+/**
+ * Icon mapping for instrument families with proper categorization
+ */
+export const FAMILY_ICONS = {
+  strings: LUCIDE_ICONS.strings,
+  woodwinds: LUCIDE_ICONS.woodwinds,
+  brass: LUCIDE_ICONS.brass,
+  vocals: LUCIDE_ICONS.vocals,
+  percussion: LUCIDE_ICONS.percussion,
+  electronic: LUCIDE_ICONS.electronic,
+  experimental: LUCIDE_ICONS.experimental,
+} as const;
+
+/**
+ * Icon mapping for individual instruments
+ */
+export const INSTRUMENT_ICONS = {
+  // Strings
+  violin: LUCIDE_ICONS.violin,
+  viola: LUCIDE_ICONS.viola,
+  cello: LUCIDE_ICONS.cello,
+  doubleBass: LUCIDE_ICONS.doubleBass,
+  harp: LUCIDE_ICONS.harp,
+  piano: LUCIDE_ICONS.piano,
+  guitar: LUCIDE_ICONS.guitar,
+  
+  // Woodwinds
+  flute: LUCIDE_ICONS.flute,
+  clarinet: LUCIDE_ICONS.clarinet,
+  saxophone: LUCIDE_ICONS.saxophone,
+  bassoon: LUCIDE_ICONS.bassoon,
+  oboe: LUCIDE_ICONS.oboe,
+  
+  // Brass
+  trumpet: LUCIDE_ICONS.trumpet,
+  frenchHorn: LUCIDE_ICONS.frenchHorn,
+  trombone: LUCIDE_ICONS.trombone,
+  tuba: LUCIDE_ICONS.tuba,
+  
+  // Vocals
+  soprano: LUCIDE_ICONS.soprano,
+  alto: LUCIDE_ICONS.alto,
+  tenor: LUCIDE_ICONS.tenor,
+  bass: LUCIDE_ICONS.bass,
+  
+  // Percussion
+  timpani: LUCIDE_ICONS.timpani,
+  xylophone: LUCIDE_ICONS.xylophone,
+  vibraphone: LUCIDE_ICONS.vibraphone,
+  gongs: LUCIDE_ICONS.gongs,
+  
+  // Electronic
+  leadSynth: LUCIDE_ICONS.leadSynth,
+  bassSynth: LUCIDE_ICONS.bassSynth,
+  arpSynth: LUCIDE_ICONS.arpSynth,
+  
+  // Experimental
+  whaleHumpback: LUCIDE_ICONS.whaleHumpback,
+} as const;
+
+/**
+ * Effect icons mapping
+ */
+export const EFFECT_ICONS = {
+  reverb: LUCIDE_ICONS.reverb,
+  chorus: LUCIDE_ICONS.chorus,
+  filter: LUCIDE_ICONS.filter,
+  delay: LUCIDE_ICONS.delay,
+  distortion: LUCIDE_ICONS.distortion,
+  compressor: LUCIDE_ICONS.compressor,
+} as const;
+
+/**
+ * Utility function to set Lucide icons on elements
+ * @param element - HTML element to set icon on
+ * @param iconName - Name of the Lucide icon
+ * @param size - Optional size (defaults to 20)
+ */
+export function setLucideIcon(
+  element: HTMLElement, 
+  iconName: keyof typeof LUCIDE_ICONS, 
+  size: number = 20
+): void {
+  // Clear any existing content
+  element.empty();
+  
+  // Set the icon using Obsidian's setIcon function
+  setIcon(element, LUCIDE_ICONS[iconName]);
+  
+  // Add classes for styling
+  element.addClass('lucide-icon');
+  element.style.width = `${size}px`;
+  element.style.height = `${size}px`;
+  element.style.display = 'inline-flex';
+  element.style.alignItems = 'center';
+  element.style.justifyContent = 'center';
+}
+
+/**
+ * Create an icon element with Lucide icon
+ * @param iconName - Name of the Lucide icon
+ * @param size - Optional size (defaults to 20)
+ * @returns HTMLElement with the icon
+ */
+export function createLucideIcon(
+  iconName: keyof typeof LUCIDE_ICONS, 
+  size: number = 20
+): HTMLElement {
+  const iconElement = document.createElement('span');
+  setLucideIcon(iconElement, iconName, size);
+  return iconElement;
+}
+
+/**
+ * Get the appropriate icon for an instrument family
+ * @param familyName - Name of the instrument family
+ * @returns Lucide icon name
+ */
+export function getFamilyIcon(familyName: string): keyof typeof LUCIDE_ICONS {
+  const family = familyName.toLowerCase() as keyof typeof FAMILY_ICONS;
+  return FAMILY_ICONS[family] || LUCIDE_ICONS.music;
+}
+
+/**
+ * Get the appropriate icon for an individual instrument
+ * @param instrumentName - Name of the instrument
+ * @returns Lucide icon name
+ */
+export function getInstrumentIcon(instrumentName: string): keyof typeof LUCIDE_ICONS {
+  const instrument = instrumentName.toLowerCase().replace(/\s+/g, '') as keyof typeof INSTRUMENT_ICONS;
+  return INSTRUMENT_ICONS[instrument] || LUCIDE_ICONS.music;
+}
+
+/**
+ * Get the appropriate icon for an effect type
+ * @param effectName - Name of the effect
+ * @returns Lucide icon name
+ */
+export function getEffectIcon(effectName: string): keyof typeof LUCIDE_ICONS {
+  const effect = effectName.toLowerCase() as keyof typeof EFFECT_ICONS;
+  return EFFECT_ICONS[effect] || LUCIDE_ICONS.equalizer;
+}
+
+/**
+ * Tab configuration with Lucide icons for the new family-based structure
+ */
+export const TAB_CONFIGS = [
+  {
+    id: 'status',
+    name: 'Status',
+    icon: LUCIDE_ICONS.analytics,
+    description: 'System monitoring and diagnostics'
+  },
+  {
+    id: 'musical',
+    name: 'Musical',
+    icon: LUCIDE_ICONS.musicNote,
+    description: 'Scale, tempo, and musical parameters'
+  },
+  {
+    id: 'master',
+    name: 'Master',
+    icon: LUCIDE_ICONS.equalizer,
+    description: 'Global controls and presets'
+  },
+  {
+    id: 'strings',
+    name: 'Strings',
+    icon: LUCIDE_ICONS.strings,
+    description: '7 string instruments',
+    instrumentCount: 7
+  },
+  {
+    id: 'woodwinds',
+    name: 'Woodwinds',
+    icon: LUCIDE_ICONS.woodwinds,
+    description: '5 woodwind instruments',
+    instrumentCount: 5
+  },
+  {
+    id: 'brass',
+    name: 'Brass',
+    icon: LUCIDE_ICONS.brass,
+    description: '4 brass instruments',
+    instrumentCount: 4
+  },
+  {
+    id: 'vocals',
+    name: 'Vocals',
+    icon: LUCIDE_ICONS.vocals,
+    description: '4 vocal ranges',
+    instrumentCount: 4
+  },
+  {
+    id: 'percussion',
+    name: 'Percussion',
+    icon: LUCIDE_ICONS.percussion,
+    description: '4 percussion instruments',
+    instrumentCount: 4
+  },
+  {
+    id: 'electronic',
+    name: 'Electronic',
+    icon: LUCIDE_ICONS.electronic,
+    description: '3 electronic synthesizers',
+    instrumentCount: 3
+  },
+  {
+    id: 'experimental',
+    name: 'Experimental',
+    icon: LUCIDE_ICONS.experimental,
+    description: 'Experimental sound sources',
+    instrumentCount: 1
+  }
+] as const;
+
+/**
+ * Type definitions for better TypeScript support
+ */
+export type LucideIconName = keyof typeof LUCIDE_ICONS;
+export type FamilyName = keyof typeof FAMILY_ICONS;
+export type InstrumentName = keyof typeof INSTRUMENT_ICONS;
+export type EffectName = keyof typeof EFFECT_ICONS;
+export type TabConfig = typeof TAB_CONFIGS[number];
