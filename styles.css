@@ -40,6 +40,18 @@
     cursor: pointer;
 }
 
+/* Settings interface */
+
+details.osp-advanced-settings {
+    padding: .5em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.osp-advanced-settings .setting-item:first-of-type {
+    border-top: 0;
+}
+
 /* Control Panel Modal
    ============================================================================= */
 
@@ -1774,12 +1786,493 @@
 	margin: 10px 0;
 }
 
+/* ==========================================================================
+   SETTINGS PAGE - Onboarding Section
+   ========================================================================== */
+
+.sonigraph-onboarding-bordered {
+    border: 2px solid var(--interactive-accent);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    background: var(--background-secondary);
+    position: relative;
+}
+
+.sonigraph-onboarding-bordered::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+    border-radius: 8px;
+    z-index: -1;
+    opacity: 0.1;
+}
+
+.sonigraph-onboarding-content h3 {
+    margin-top: 0;
+}
+
+.sonigraph-onboarding-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
 .sonigraph-placeholder-text {
 	color: var(--text-muted);
 	font-size: 0.9em;
 	line-height: 1.5;
 	margin: 8px 0;
-}/* ==========================================================================
+}
+
+/* ==========================================================================
+   OSP CONTROL CENTER MODAL - Material Design Integration
+   ========================================================================== */
+
+/* Modal container styling */
+.osp-control-center-modal {
+    padding: 0;
+    width: var(--modal-width);
+    height: var(--modal-height);
+    max-width: var(--modal-max-width);
+    max-height: var(--modal-max-height);
+    overflow: hidden; /* Prevent modal-level scrolling */
+}
+
+.osp-control-center-modal .modal-content {
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* Modal close button positioning to avoid overlap with header buttons */
+.osp-control-center-modal .modal-close-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1002;
+    /* Let Obsidian handle all styling */
+}
+
+.osp-modal-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Sticky header */
+.osp-sticky-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--background-primary);
+    border-bottom: 1px solid var(--background-modifier-border);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.osp-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.osp-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-right: 36px; /* Make space for close button */
+}
+
+/* Header volume control */
+.osp-header-volume {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--background-secondary);
+    border-radius: 4px;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.osp-header-slider {
+    width: 60px;
+}
+
+.osp-header-slider .mdc-slider-container {
+    margin: 0;
+}
+
+.osp-header-slider .slider-value {
+    display: none; /* Hide value display in header */
+}
+
+/* Compact header buttons */
+.osp-header-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.osp-header-btn:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+
+.osp-header-btn--primary {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.osp-header-btn--primary:hover {
+    background: var(--interactive-accent-hover);
+}
+
+.osp-header-btn--secondary {
+    background: var(--background-secondary);
+    border-color: var(--background-modifier-border-hover);
+}
+
+.osp-header-btn--loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Spinning animation for loading icon */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Main container below header */
+.osp-main-container {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Navigation drawer */
+.osp-drawer {
+    width: 240px;
+    border-right: 1px solid var(--background-modifier-border);
+    flex-shrink: 0;
+    background: var(--background-secondary);
+    overflow-y: auto;
+}
+
+.osp-drawer__header {
+    padding: 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.osp-drawer__title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+.osp-drawer__content {
+    padding: 8px 0;
+}
+
+/* Navigation list */
+.osp-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.osp-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    margin: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.osp-nav-item:hover {
+    background: var(--background-modifier-hover);
+}
+
+.osp-nav-item--active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.osp-nav-item__icon {
+    margin-right: 12px;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+.osp-nav-item--active .osp-nav-item__icon {
+    opacity: 1;
+}
+
+.osp-nav-item__text {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.osp-nav-item__meta {
+    font-size: 11px;
+    opacity: 0.7;
+    background: var(--background-modifier-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.osp-nav-item--active .osp-nav-item__meta {
+    background: var(--text-on-accent);
+    color: var(--interactive-accent);
+    opacity: 1;
+}
+
+.osp-nav-divider {
+    height: 1px;
+    background: var(--background-modifier-border);
+    margin: 8px 16px;
+}
+
+/* Content area */
+.osp-content-area {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--background-primary);
+    min-height: 0; /* Ensure scrollable behavior */
+}
+
+/* Status tab styling */
+.osp-status-note {
+    padding: 16px;
+    background: var(--background-secondary);
+    border-radius: 8px;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.osp-status-note p {
+    margin: 4px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.osp-status-note strong {
+    color: var(--text-accent);
+}
+
+/* Compact family overview styling */
+.osp-stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--background-secondary);
+    border-radius: 6px;
+}
+
+.osp-stat-compact {
+    text-align: center;
+    flex: 1;
+}
+
+.osp-stat-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-normal);
+    line-height: 1.2;
+}
+
+.osp-stat-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.osp-actions-row {
+    display: flex;
+    gap: 8px;
+}
+
+.osp-action-btn {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.osp-action-btn:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+
+.osp-action-btn--primary {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.osp-action-btn--primary:hover {
+    background: var(--interactive-accent-hover);
+}
+
+/* Form controls */
+.osp-control-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    gap: 6px;
+}
+
+/* Toggle controls use grid layout */
+.control-group--toggle {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+/* Slider controls use column layout */
+.control-group--slider {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    gap: 6px;
+}
+
+/* Fallback for generic control-group */
+.control-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    gap: 6px;
+}
+
+.osp-control-label, .control-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.control-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.osp-select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+}
+
+.osp-toggle {
+    margin-left: 8px;
+}
+
+/* Instrument status rows */
+.osp-instrument-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.osp-instrument-status-row:last-child {
+    border-bottom: none;
+}
+
+.osp-instrument-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.osp-instrument-voices {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.osp-status-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 20px;
+    font-style: italic;
+}
+
+/* System info styling */
+.osp-system-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.osp-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.osp-info-label {
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.osp-info-value {
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+}
+
+/* ==========================================================================
    Sonigraph Material Design Framework - Monochrome
    ========================================================================== */
 
@@ -2137,6 +2630,7 @@
    ========================================================================== */
 
 .mdc-card {
+  margin-top: 1em;
   background: var(--md-surface);
   border-radius: var(--md-corner-md);
   box-shadow: var(--md-elevation-1);
@@ -2146,6 +2640,10 @@
 
 .mdc-card:hover {
   box-shadow: var(--md-elevation-2);
+}
+
+.mdc-card:first-of-type {
+    margin-top: 0;
 }
 
 .mdc-card__header {
@@ -2226,9 +2724,13 @@
 
 .mdc-switch__input {
   opacity: 0;
-  width: 0;
-  height: 0;
+  width: 100%;
+  height: 100%;
   position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  z-index: 1;
 }
 
 .mdc-switch__track {
@@ -2271,6 +2773,148 @@
   box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb, 25, 118, 210), 0.2);
 }
 
+/* Instrument toggle enhancements */
+.control-group .mdc-switch {
+  position: relative;
+  cursor: pointer;
+}
+
+.control-group .mdc-switch::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-tooltip);
+  color: var(--text-on-tooltip);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  z-index: 1000;
+}
+
+.control-group .mdc-switch:hover::before {
+  opacity: 1;
+}
+
+/* Make the entire switch clickable */
+.mdc-switch {
+  cursor: pointer;
+  user-select: none;
+}
+
+.mdc-switch__input {
+  cursor: pointer;
+}
+
+/* Improved switch styling for better visibility */
+.mdc-switch__track {
+  opacity: 1;
+  background: var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border-hover);
+}
+
+.mdc-switch__thumb {
+  background: var(--text-muted);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mdc-switch__input:checked + .mdc-switch__track .mdc-switch__thumb {
+  background: var(--background-primary);
+}
+
+/* ==========================================================================
+   HORIZONTAL EFFECT SECTIONS (Master Effects)
+   ========================================================================== */
+
+.osp-effect-section-horizontal {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--background-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.osp-effect-header-horizontal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.osp-effect-title-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-normal);
+}
+
+.osp-effect-params-horizontal {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.osp-param-group-horizontal {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    flex: 1;
+}
+
+.osp-param-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: 6px;
+}
+
+.osp-param-slider {
+    flex: 1;
+}
+
+/* Effect toggles for instruments */
+.osp-effects-toggles {
+    min-width: 200px;
+}
+
+.osp-effects-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.osp-effect-toggle-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.osp-effect-toggle-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.osp-effect-toggle {
+    /* transform: scale(0.8); */
+    /* transform-origin: center; */
+}
+
+/* .osp-effect-toggle .mdc-switch__input {
+    transform: scale(1.25); 
+    transform-origin: center;
+} */
+
 /* ==========================================================================
    SLIDERS
    ========================================================================== */
@@ -2300,7 +2944,7 @@
 
 .mdc-slider__track {
   height: 100%;
-  background: var(--md-outline-variant);
+  background: var(--background-modifier-border);
   border-radius: var(--md-corner-xs);
   position: relative;
   overflow: hidden;
@@ -2311,7 +2955,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  background: var(--md-primary);
+  background: var(--interactive-accent);
   border-radius: var(--md-corner-xs);
   width: 60%;
   transition: width var(--md-motion-duration-short4) var(--md-motion-easing-standard);
@@ -2320,19 +2964,50 @@
 .mdc-slider__thumb {
   position: absolute;
   top: 50%;
-  width: 20px;
-  height: 20px;
-  background: var(--md-primary);
+  width: 16px;
+  height: 16px;
+  background: var(--interactive-accent);
+  border: 2px solid var(--background-primary);
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  box-shadow: var(--md-elevation-2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
   left: 60%;
+  cursor: grab;
+}
+
+.mdc-slider__thumb:active {
+  cursor: grabbing;
 }
 
 .mdc-slider:hover .mdc-slider__thumb {
-  box-shadow: var(--md-elevation-3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Slider tooltip */
+.mdc-slider__thumb::after {
+  content: attr(data-value);
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-tooltip);
+  color: var(--text-on-tooltip);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  z-index: 1000;
+}
+
+.mdc-slider:hover .mdc-slider__thumb::after,
+.mdc-slider__thumb:active::after {
+  opacity: 1;
 }
 
 .slider-value {

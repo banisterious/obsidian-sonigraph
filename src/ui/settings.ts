@@ -25,34 +25,14 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		// Onboarding section (dismissible)
 		const onboardingSection = containerEl.createEl('div', { cls: 'sonigraph-onboarding-section sonigraph-onboarding-bordered' });
 		const onboardingContent = onboardingSection.createEl('div', { cls: 'sonigraph-onboarding-content' });
-		onboardingContent.createEl('h3', { text: '🎵 Welcome to Sonigraph!' });
-		onboardingContent.createEl('p', { text: 'Use the Control Center to configure audio settings, instruments, and musical parameters. Click the ribbon icon or use the command palette to open it.' });
+		onboardingContent.createEl('p', { text: 'Use the Sonigraph Control Center to configure audio settings, instruments, and musical parameters. Use the command palette, the ribbon button, or the button below to open the Control Center.' });
 		
 		const onboardingActions = onboardingContent.createEl('div', { cls: 'sonigraph-onboarding-actions' });
-		const openControlPanelBtn = onboardingActions.createEl('button', { text: 'Open Control Center', cls: 'mod-cta' });
 		const dismissBtn = onboardingActions.createEl('button', { text: 'Dismiss', cls: 'mod-muted' });
-		
-		openControlPanelBtn.addEventListener('click', () => {
-			this.plugin.openControlPanel();
-		});
 		
 		dismissBtn.addEventListener('click', () => {
 			onboardingSection.style.display = 'none';
 		});
-
-		// Audio Format Setting
-		new Setting(containerEl)
-			.setName('Audio format')
-			.setDesc('Choose between MP3 (smaller size) or WAV (higher quality)')
-			.addDropdown(dropdown => dropdown
-				.addOption('mp3', 'MP3 (Recommended)')
-				.addOption('wav', 'WAV (High Quality)')
-				.setValue(this.plugin.settings.audioFormat)
-				.onChange(async (value: 'mp3' | 'wav') => {
-					this.plugin.settings.audioFormat = value;
-					await this.plugin.saveSettings();
-					logger.debug('settings-change', 'Audio format changed', { format: value });
-				}));
 
 		// Control Center Setting
 		new Setting(containerEl)
@@ -62,6 +42,8 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.setButtonText('Open Control Center')
 				.setCta()
 				.onClick(() => {
+					// Close settings before opening Control Center
+					(this.app as any).setting.close();
 					this.plugin.openControlPanel();
 				}));
 
