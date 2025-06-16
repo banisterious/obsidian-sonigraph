@@ -840,6 +840,263 @@ var DEFAULT_SETTINGS = {
           }
         }
       }
+    },
+    // Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
+    oboe: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2.5,
+            preDelay: 0.03,
+            wet: 0.35
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 1.2,
+            depth: 0.3,
+            delayTime: 2.5,
+            feedback: 0.1
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 2500,
+            Q: 1.2,
+            type: "bandpass"
+          }
+        }
+      }
+    },
+    timpani: {
+      enabled: false,
+      volume: 0.9,
+      maxVoices: 2,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 6,
+            preDelay: 0.08,
+            wet: 0.6
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.1,
+            depth: 0.2,
+            delayTime: 8,
+            feedback: 0.02
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 800,
+            Q: 0.5,
+            type: "highpass"
+          }
+        }
+      }
+    },
+    xylophone: {
+      enabled: false,
+      volume: 0.8,
+      maxVoices: 6,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2,
+            preDelay: 0.02,
+            wet: 0.3
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 2,
+            depth: 0.2,
+            delayTime: 1.5,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 8e3,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    vibraphone: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 4.5,
+            preDelay: 0.04,
+            wet: 0.4
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 6,
+            depth: 0.3,
+            delayTime: 2,
+            feedback: 0.08
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 4e3,
+            Q: 1,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    gongs: {
+      enabled: false,
+      volume: 0.9,
+      maxVoices: 2,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 12,
+            preDelay: 0.1,
+            wet: 0.7
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.05,
+            depth: 0.4,
+            delayTime: 15,
+            feedback: 0.1
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 200,
+            Q: 2,
+            type: "bandpass"
+          }
+        }
+      }
+    },
+    leadSynth: {
+      enabled: false,
+      volume: 0.6,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 1.5,
+            preDelay: 0.02,
+            wet: 0.2
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 1.5,
+            depth: 0.3,
+            delayTime: 3,
+            feedback: 0.1
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 2e3,
+            Q: 4,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    bassSynth: {
+      enabled: false,
+      volume: 0.8,
+      maxVoices: 2,
+      effects: {
+        reverb: {
+          enabled: false,
+          params: {
+            decay: 1,
+            preDelay: 0.01,
+            wet: 0.1
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.8,
+            depth: 0.2,
+            delayTime: 4,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 300,
+            Q: 1.5,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    arpSynth: {
+      enabled: false,
+      volume: 0.6,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 1.8,
+            preDelay: 0.02,
+            wet: 0.25
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 2,
+            depth: 0.2,
+            delayTime: 2,
+            feedback: 0.06
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 3e3,
+            Q: 1.2,
+            type: "lowpass"
+          }
+        }
+      }
     }
   },
   voiceAssignmentStrategy: "frequency",
@@ -22129,6 +22386,128 @@ var SAMPLER_CONFIGS = {
     baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
     effects: ["reverb"]
     // Deep foundation with breath noise
+  },
+  // Phase 8: Percussion & Electronic Finale (8 instruments)
+  oboe: {
+    urls: {
+      "Bb3": "Bb3.[format]",
+      "D4": "D4.[format]",
+      "F4": "F4.[format]",
+      "A4": "A4.[format]",
+      "C5": "C5.[format]",
+      "E5": "E5.[format]",
+      "G5": "G5.[format]",
+      "Bb5": "Bb5.[format]",
+      "D6": "D6.[format]"
+    },
+    release: 2.2,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/",
+    effects: ["reverb", "filter", "chorus"]
+    // Nasal formants + expression
+  },
+  timpani: {
+    urls: {
+      "C2": "C2.[format]",
+      "F2": "F2.[format]",
+      "Bb2": "Bb2.[format]",
+      "D3": "D3.[format]"
+    },
+    release: 4,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/",
+    effects: ["reverb", "filter"]
+    // Hall acoustics + rumble control
+  },
+  xylophone: {
+    urls: {
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "B4": "B4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "E5": "E5.[format]",
+      "F5": "F5.[format]",
+      "G5": "G5.[format]",
+      "A5": "A5.[format]",
+      "B5": "B5.[format]",
+      "C6": "C6.[format]",
+      "D6": "D6.[format]",
+      "E6": "E6.[format]",
+      "F6": "F6.[format]"
+    },
+    release: 2.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/",
+    effects: ["reverb", "filter"]
+    // Bright attack + resonance
+  },
+  vibraphone: {
+    urls: {
+      "F3": "F3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "E4": "E4.[format]",
+      "G4": "G4.[format]",
+      "B4": "B4.[format]",
+      "D5": "D5.[format]",
+      "F5": "F5.[format]",
+      "A5": "A5.[format]"
+    },
+    release: 6,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/",
+    effects: ["reverb", "chorus", "filter"]
+    // Metallic + vibrato motor
+  },
+  gongs: {
+    urls: {
+      "C2": "C2.[format]",
+      "F2": "F2.[format]",
+      "C3": "C3.[format]"
+    },
+    release: 12,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/gong/",
+    effects: ["reverb", "filter", "distortion"]
+    // Massive hall + metallic
+  },
+  leadSynth: {
+    urls: {
+      "C2": "C2.[format]",
+      "C3": "C3.[format]",
+      "C4": "C4.[format]",
+      "C5": "C5.[format]",
+      "C6": "C6.[format]"
+    },
+    release: 0.2,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-lead/",
+    effects: ["filter", "distortion", "delay"]
+    // Cutting + modulation
+  },
+  bassSynth: {
+    urls: {
+      "C1": "C1.[format]",
+      "F1": "F1.[format]",
+      "C2": "C2.[format]",
+      "F2": "F2.[format]",
+      "C3": "C3.[format]"
+    },
+    release: 0.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-bass/",
+    effects: ["filter", "compressor"]
+    // Foundation + punch
+  },
+  arpSynth: {
+    urls: {
+      "C3": "C3.[format]",
+      "C4": "C4.[format]",
+      "C5": "C5.[format]",
+      "C6": "C6.[format]"
+    },
+    release: 0.1,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/",
+    effects: ["filter", "delay", "reverb"]
+    // Sequenced + space
   }
 };
 var AudioEngine = class {
@@ -22206,7 +22585,7 @@ var AudioEngine = class {
     }
   }
   async initializeEffects() {
-    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba"];
+    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth"];
     for (const instrumentName of instruments) {
       const effectMap = /* @__PURE__ */ new Map();
       const reverb = new Reverb({
@@ -23312,6 +23691,8 @@ var AudioEngine = class {
     if (mapping.pitch > 1600) {
       if (enabledInstruments.includes("flute"))
         return "flute";
+      if (enabledInstruments.includes("xylophone"))
+        return "xylophone";
       if (enabledInstruments.includes("celesta"))
         return "celesta";
       return enabledInstruments.includes("piano") ? "piano" : sortedInstruments[0];
@@ -23320,6 +23701,8 @@ var AudioEngine = class {
         return "piano";
       if (enabledInstruments.includes("celesta"))
         return "celesta";
+      if (enabledInstruments.includes("xylophone"))
+        return "xylophone";
       return sortedInstruments[0];
     } else if (mapping.pitch > 1200) {
       if (enabledInstruments.includes("soprano"))
@@ -23328,30 +23711,26 @@ var AudioEngine = class {
         return "clarinet";
       if (enabledInstruments.includes("violin"))
         return "violin";
+      if (enabledInstruments.includes("oboe"))
+        return "oboe";
       return enabledInstruments.includes("choir") ? "choir" : sortedInstruments[0];
     } else if (mapping.pitch > 1e3) {
       if (enabledInstruments.includes("choir"))
         return "choir";
       if (enabledInstruments.includes("alto"))
         return "alto";
+      if (enabledInstruments.includes("vibraphone"))
+        return "vibraphone";
       return enabledInstruments.includes("clarinet") ? "clarinet" : sortedInstruments[0];
     } else if (mapping.pitch > 800) {
-      if (enabledInstruments.includes("organ"))
-        return "organ";
-      if (enabledInstruments.includes("accordion"))
-        return "accordion";
-      if (enabledInstruments.includes("violin"))
-        return "violin";
-      return sortedInstruments[0];
-    } else if (mapping.pitch > 600) {
       if (enabledInstruments.includes("vocalPads"))
         return "vocalPads";
-      if (enabledInstruments.includes("tenor"))
-        return "tenor";
       if (enabledInstruments.includes("guitar"))
         return "guitar";
+      if (enabledInstruments.includes("tenor"))
+        return "tenor";
       return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
-    } else if (mapping.pitch > 400) {
+    } else if (mapping.pitch > 600) {
       if (enabledInstruments.includes("organ"))
         return "organ";
       if (enabledInstruments.includes("accordion"))
@@ -23359,7 +23738,7 @@ var AudioEngine = class {
       if (enabledInstruments.includes("frenchHorn"))
         return "frenchHorn";
       return sortedInstruments[0];
-    } else if (mapping.pitch > 300) {
+    } else if (mapping.pitch > 400) {
       if (enabledInstruments.includes("saxophone"))
         return "saxophone";
       if (enabledInstruments.includes("harpsichord"))
@@ -23367,7 +23746,7 @@ var AudioEngine = class {
       if (enabledInstruments.includes("trumpet"))
         return "trumpet";
       return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
-    } else if (mapping.pitch > 200) {
+    } else if (mapping.pitch > 300) {
       if (enabledInstruments.includes("pad"))
         return "pad";
       if (enabledInstruments.includes("electricPiano"))
@@ -23377,17 +23756,33 @@ var AudioEngine = class {
       if (enabledInstruments.includes("trombone"))
         return "trombone";
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
-    } else if (mapping.pitch > 100) {
+    } else if (mapping.pitch > 200) {
       if (enabledInstruments.includes("strings"))
         return "strings";
       if (enabledInstruments.includes("harp"))
         return "harp";
+      if (enabledInstruments.includes("timpani"))
+        return "timpani";
+      if (enabledInstruments.includes("bassSynth"))
+        return "bassSynth";
       return sortedInstruments[0];
-    } else {
+    } else if (mapping.pitch > 100) {
       if (enabledInstruments.includes("bass"))
         return "bass";
       if (enabledInstruments.includes("tuba"))
         return "tuba";
+      if (enabledInstruments.includes("bassSynth"))
+        return "bassSynth";
+      return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
+    } else {
+      if (enabledInstruments.includes("gongs"))
+        return "gongs";
+      if (enabledInstruments.includes("leadSynth"))
+        return "leadSynth";
+      if (enabledInstruments.includes("tuba"))
+        return "tuba";
+      if (enabledInstruments.includes("bass"))
+        return "bass";
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     }
   }

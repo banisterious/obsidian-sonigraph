@@ -326,6 +326,82 @@ const SAMPLER_CONFIGS = {
 		release: 3.5,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
 		effects: ['reverb'] // Deep foundation with breath noise
+	},
+	// Phase 8: Percussion & Electronic Finale (8 instruments)
+	oboe: {
+		urls: {
+			"Bb3": "Bb3.[format]", "D4": "D4.[format]", "F4": "F4.[format]",
+			"A4": "A4.[format]", "C5": "C5.[format]", "E5": "E5.[format]",
+			"G5": "G5.[format]", "Bb5": "Bb5.[format]", "D6": "D6.[format]"
+		},
+		release: 2.2,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/",
+		effects: ['reverb', 'filter', 'chorus'] // Nasal formants + expression
+	},
+	timpani: {
+		urls: {
+			"C2": "C2.[format]", "F2": "F2.[format]", "Bb2": "Bb2.[format]", "D3": "D3.[format]"
+		},
+		release: 4.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/",
+		effects: ['reverb', 'filter'] // Hall acoustics + rumble control
+	},
+	xylophone: {
+		urls: {
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
+			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
+			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
+			"D6": "D6.[format]", "E6": "E6.[format]", "F6": "F6.[format]"
+		},
+		release: 2.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/",
+		effects: ['reverb', 'filter'] // Bright attack + resonance
+	},
+	vibraphone: {
+		urls: {
+			"F3": "F3.[format]", "A3": "A3.[format]", "C4": "C4.[format]",
+			"E4": "E4.[format]", "G4": "G4.[format]", "B4": "B4.[format]",
+			"D5": "D5.[format]", "F5": "F5.[format]", "A5": "A5.[format]"
+		},
+		release: 6.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/",
+		effects: ['reverb', 'chorus', 'filter'] // Metallic + vibrato motor
+	},
+	gongs: {
+		urls: {
+			"C2": "C2.[format]", "F2": "F2.[format]", "C3": "C3.[format]"
+		},
+		release: 12.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/gong/",
+		effects: ['reverb', 'filter', 'distortion'] // Massive hall + metallic
+	},
+	leadSynth: {
+		urls: {
+			"C2": "C2.[format]", "C3": "C3.[format]", "C4": "C4.[format]",
+			"C5": "C5.[format]", "C6": "C6.[format]"
+		},
+		release: 0.2,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-lead/",
+		effects: ['filter', 'distortion', 'delay'] // Cutting + modulation
+	},
+	bassSynth: {
+		urls: {
+			"C1": "C1.[format]", "F1": "F1.[format]", "C2": "C2.[format]",
+			"F2": "F2.[format]", "C3": "C3.[format]"
+		},
+		release: 0.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-bass/",
+		effects: ['filter', 'compressor'] // Foundation + punch
+	},
+	arpSynth: {
+		urls: {
+			"C3": "C3.[format]", "C4": "C4.[format]", "C5": "C5.[format]", "C6": "C6.[format]"
+		},
+		release: 0.1,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/",
+		effects: ['filter', 'delay', 'reverb'] // Sequenced + space
 	}
 };
 
@@ -423,8 +499,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects - Phase 7: Now supporting 25 instruments
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba'];
+		// Initialize per-instrument effects - Phase 8: Now supporting 33 instruments (Complete Orchestral Vision)
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth'];
 		
 		for (const instrumentName of instruments) {
 			const effectMap = new Map<string, any>();
@@ -1719,70 +1795,78 @@ export class AudioEngine {
 
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
 		// Distribute based on pitch ranges, but only among enabled instruments
-		// Updated for 25 total instruments (Phase 7: Strings & Brass Completion)
+		// Updated for 33 total instruments (Phase 8: Complete Orchestral Vision)
 		const sortedInstruments = enabledInstruments.sort();
 		
 		if (mapping.pitch > 1600) {
-			// Ultra high pitch - prefer flute, celesta if available
+			// Ultra high pitch - prefer flute, xylophone if available
 			if (enabledInstruments.includes('flute')) return 'flute';
+			if (enabledInstruments.includes('xylophone')) return 'xylophone';
 			if (enabledInstruments.includes('celesta')) return 'celesta';
 			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
 		} else if (mapping.pitch > 1400) {
-			// Very high pitch - prefer piano, celesta if available
+			// Very high pitch - prefer piano, celesta, xylophone if available
 			if (enabledInstruments.includes('piano')) return 'piano';
 			if (enabledInstruments.includes('celesta')) return 'celesta';
+			if (enabledInstruments.includes('xylophone')) return 'xylophone';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 1200) {
-			// High-mid pitch - prefer soprano, clarinet, violin if available
+			// High-mid pitch - prefer soprano, clarinet, violin, oboe if available
 			if (enabledInstruments.includes('soprano')) return 'soprano';
 			if (enabledInstruments.includes('clarinet')) return 'clarinet';
 			if (enabledInstruments.includes('violin')) return 'violin';
+			if (enabledInstruments.includes('oboe')) return 'oboe';
 			return enabledInstruments.includes('choir') ? 'choir' : sortedInstruments[0];
 		} else if (mapping.pitch > 1000) {
-			// High pitch - prefer choir, alto if available
+			// High pitch - prefer choir, alto, vibraphone if available
 			if (enabledInstruments.includes('choir')) return 'choir';
 			if (enabledInstruments.includes('alto')) return 'alto';
+			if (enabledInstruments.includes('vibraphone')) return 'vibraphone';
 			return enabledInstruments.includes('clarinet') ? 'clarinet' : sortedInstruments[0];
 		} else if (mapping.pitch > 800) {
-			// Mid-high pitch - prefer organ, accordion, violin if available
-			if (enabledInstruments.includes('organ')) return 'organ';
-			if (enabledInstruments.includes('accordion')) return 'accordion';
-			if (enabledInstruments.includes('violin')) return 'violin';
-			return sortedInstruments[0];
-		} else if (mapping.pitch > 600) {
-			// Mid-high pitch - prefer vocal pads, tenor, guitar if available
+			// Mid-high pitch - prefer vocalPads, guitar, tenor if available
 			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
-			if (enabledInstruments.includes('tenor')) return 'tenor';
 			if (enabledInstruments.includes('guitar')) return 'guitar';
+			if (enabledInstruments.includes('tenor')) return 'tenor';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
-		} else if (mapping.pitch > 400) {
-			// Medium pitch - prefer organ, accordion, frenchHorn if available
+		} else if (mapping.pitch > 600) {
+			// Mid pitch - prefer organ, accordion, frenchHorn if available
 			if (enabledInstruments.includes('organ')) return 'organ';
 			if (enabledInstruments.includes('accordion')) return 'accordion';
 			if (enabledInstruments.includes('frenchHorn')) return 'frenchHorn';
 			return sortedInstruments[0];
-		} else if (mapping.pitch > 300) {
+		} else if (mapping.pitch > 400) {
 			// Mid-low pitch - prefer saxophone, harpsichord, trumpet if available
 			if (enabledInstruments.includes('saxophone')) return 'saxophone';
 			if (enabledInstruments.includes('harpsichord')) return 'harpsichord';
 			if (enabledInstruments.includes('trumpet')) return 'trumpet';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
-		} else if (mapping.pitch > 200) {
-			// Low-medium pitch - prefer pad, electricPiano, cello, trombone if available
+		} else if (mapping.pitch > 300) {
+			// Low-mid pitch - prefer pad, electricPiano, cello, trombone if available
 			if (enabledInstruments.includes('pad')) return 'pad';
 			if (enabledInstruments.includes('electricPiano')) return 'electricPiano';
 			if (enabledInstruments.includes('cello')) return 'cello';
 			if (enabledInstruments.includes('trombone')) return 'trombone';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
-		} else if (mapping.pitch > 100) {
-			// Low pitch - prefer strings, harp if available
+		} else if (mapping.pitch > 200) {
+			// Low pitch - prefer strings, harp, timpani, bassSynth if available
 			if (enabledInstruments.includes('strings')) return 'strings';
 			if (enabledInstruments.includes('harp')) return 'harp';
+			if (enabledInstruments.includes('timpani')) return 'timpani';
+			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
 			return sortedInstruments[0];
-		} else {
-			// Very low pitch - prefer bass voice, tuba if available
+		} else if (mapping.pitch > 100) {
+			// Very low pitch - prefer bass voice, tuba, bassSynth if available
 			if (enabledInstruments.includes('bass')) return 'bass';
 			if (enabledInstruments.includes('tuba')) return 'tuba';
+			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
+			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
+		} else {
+			// Ultra low pitch - prefer gongs, leadSynth fundamentals, tuba if available
+			if (enabledInstruments.includes('gongs')) return 'gongs';
+			if (enabledInstruments.includes('leadSynth')) return 'leadSynth';
+			if (enabledInstruments.includes('tuba')) return 'tuba';
+			if (enabledInstruments.includes('bass')) return 'bass';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		}
 	}
