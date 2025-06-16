@@ -454,9 +454,449 @@ var DEFAULT_SETTINGS = {
           }
         }
       }
+    },
+    // Phase 6B: Extended Keyboard Family
+    electricPiano: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2,
+            preDelay: 0.025,
+            wet: 0.3
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 1.2,
+            depth: 0.4,
+            delayTime: 3,
+            feedback: 0.04
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 5e3,
+            Q: 0.7,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    harpsichord: {
+      enabled: false,
+      volume: 0.6,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 1.5,
+            preDelay: 0.02,
+            wet: 0.25
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.6,
+            depth: 0.2,
+            delayTime: 2,
+            feedback: 0.02
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 4500,
+            Q: 1,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    accordion: {
+      enabled: false,
+      volume: 0.6,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2.2,
+            preDelay: 0.03,
+            wet: 0.35
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 0.8,
+            depth: 0.5,
+            delayTime: 4,
+            feedback: 0.06
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 3500,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    celesta: {
+      enabled: false,
+      volume: 0.5,
+      maxVoices: 6,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 3,
+            preDelay: 0.04,
+            wet: 0.5
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.4,
+            depth: 0.3,
+            delayTime: 3.5,
+            feedback: 0.03
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 6e3,
+            Q: 0.6,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    // Phase 7: Strings & Brass Completion
+    violin: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 6,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2.5,
+            preDelay: 0.03,
+            wet: 0.4
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.6,
+            depth: 0.3,
+            delayTime: 2.5,
+            feedback: 0.04
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 5e3,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    cello: {
+      enabled: false,
+      volume: 0.8,
+      maxVoices: 6,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 3.2,
+            preDelay: 0.04,
+            wet: 0.5
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.4,
+            depth: 0.4,
+            delayTime: 3.5,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 3e3,
+            Q: 0.9,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    guitar: {
+      enabled: false,
+      volume: 0.6,
+      maxVoices: 8,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2,
+            preDelay: 0.02,
+            wet: 0.3
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 0.8,
+            depth: 0.3,
+            delayTime: 2,
+            feedback: 0.03
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 4e3,
+            Q: 0.7,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    harp: {
+      enabled: false,
+      volume: 0.5,
+      maxVoices: 12,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 4,
+            preDelay: 0.05,
+            wet: 0.6
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.3,
+            depth: 0.2,
+            delayTime: 4,
+            feedback: 0.02
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 6e3,
+            Q: 0.5,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    trumpet: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2.2,
+            preDelay: 0.03,
+            wet: 0.35
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.7,
+            depth: 0.2,
+            delayTime: 2.5,
+            feedback: 0.03
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 4500,
+            Q: 1,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    frenchHorn: {
+      enabled: false,
+      volume: 0.6,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2.8,
+            preDelay: 0.04,
+            wet: 0.45
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 0.5,
+            depth: 0.3,
+            delayTime: 3,
+            feedback: 0.04
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 3500,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    trombone: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 2.5,
+            preDelay: 0.03,
+            wet: 0.4
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.6,
+            depth: 0.3,
+            delayTime: 3,
+            feedback: 0.04
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 2500,
+            Q: 0.9,
+            type: "lowpass"
+          }
+        }
+      }
+    },
+    tuba: {
+      enabled: false,
+      volume: 0.8,
+      maxVoices: 3,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 3.5,
+            preDelay: 0.05,
+            wet: 0.5
+          }
+        },
+        chorus: {
+          enabled: false,
+          params: {
+            frequency: 0.3,
+            depth: 0.4,
+            delayTime: 4,
+            feedback: 0.05
+          }
+        },
+        filter: {
+          enabled: false,
+          params: {
+            frequency: 1500,
+            Q: 0.8,
+            type: "lowpass"
+          }
+        }
+      }
     }
   },
-  voiceAssignmentStrategy: "frequency"
+  voiceAssignmentStrategy: "frequency",
+  // Phase 3.5: Enhanced Effect Routing (disabled by default for backward compatibility)
+  enhancedRouting: {
+    enabled: false,
+    effectChains: /* @__PURE__ */ new Map(),
+    routingMatrix: {
+      sends: /* @__PURE__ */ new Map(),
+      returns: /* @__PURE__ */ new Map(),
+      groups: /* @__PURE__ */ new Map(),
+      masterEffects: {
+        reverb: {
+          enabled: false,
+          roomSize: 0.8,
+          damping: 0.5,
+          params: {
+            decay: 3,
+            preDelay: 0.05,
+            wet: 0.3
+          }
+        },
+        eq: {
+          enabled: false,
+          params: {
+            lowGain: 0,
+            midGain: 0,
+            highGain: 0,
+            lowFreq: 100,
+            midFreq: 1e3,
+            highFreq: 8e3
+          }
+        },
+        compressor: {
+          enabled: false,
+          params: {
+            threshold: -18,
+            ratio: 4,
+            attack: 3e-3,
+            release: 0.1,
+            makeupGain: 2
+          }
+        },
+        limiter: {
+          enabled: false,
+          params: {
+            threshold: -0.5,
+            lookAhead: 5e-3,
+            release: 0.01
+          }
+        },
+        enabled: false
+      },
+      automations: []
+    },
+    version: "3.5.0"
+  }
 };
 var MUSICAL_SCALES = {
   major: [0, 2, 4, 5, 7, 9, 11],
@@ -978,6 +1418,69 @@ var DEFAULT_SMART_RANGES = {
 };
 function getSmartRanges(instrumentName) {
   return INSTRUMENT_SMART_RANGES[instrumentName] || DEFAULT_SMART_RANGES;
+}
+function createDefaultEffectChain(instrumentName) {
+  const instrumentSettings = DEFAULT_SETTINGS.instruments[instrumentName];
+  const nodes = [
+    {
+      id: `${instrumentName}-reverb`,
+      type: "reverb",
+      enabled: instrumentSettings.effects.reverb.enabled,
+      order: 0,
+      settings: instrumentSettings.effects.reverb,
+      bypass: false
+    },
+    {
+      id: `${instrumentName}-chorus`,
+      type: "chorus",
+      enabled: instrumentSettings.effects.chorus.enabled,
+      order: 1,
+      settings: instrumentSettings.effects.chorus,
+      bypass: false
+    },
+    {
+      id: `${instrumentName}-filter`,
+      type: "filter",
+      enabled: instrumentSettings.effects.filter.enabled,
+      order: 2,
+      settings: instrumentSettings.effects.filter,
+      bypass: false
+    }
+  ];
+  return {
+    instrumentName,
+    routing: "serial",
+    nodes,
+    sendLevels: /* @__PURE__ */ new Map()
+  };
+}
+function migrateToEnhancedRouting(settings) {
+  var _a;
+  if ((_a = settings.enhancedRouting) == null ? void 0 : _a.enabled) {
+    return settings;
+  }
+  const effectChains = /* @__PURE__ */ new Map();
+  const instrumentNames = Object.keys(settings.instruments);
+  for (const instrumentName of instrumentNames) {
+    effectChains.set(instrumentName, createDefaultEffectChain(instrumentName));
+  }
+  const routingMatrix = {
+    sends: /* @__PURE__ */ new Map(),
+    returns: /* @__PURE__ */ new Map(),
+    groups: /* @__PURE__ */ new Map(),
+    masterEffects: DEFAULT_SETTINGS.enhancedRouting.routingMatrix.masterEffects,
+    automations: []
+  };
+  return {
+    ...settings,
+    enhancedRouting: {
+      enabled: false,
+      // User must explicitly enable
+      effectChains,
+      routingMatrix,
+      version: "3.5.0"
+    }
+  };
 }
 
 // src/ui/settings.ts
@@ -20312,6 +20815,61 @@ var Chorus = class extends StereoFeedbackEffect {
   }
 };
 
+// node_modules/tone/build/esm/effect/Distortion.js
+var Distortion = class extends Effect {
+  constructor() {
+    super(optionsFromArguments(Distortion.getDefaults(), arguments, ["distortion"]));
+    this.name = "Distortion";
+    const options = optionsFromArguments(Distortion.getDefaults(), arguments, ["distortion"]);
+    this._shaper = new WaveShaper({
+      context: this.context,
+      length: 4096
+    });
+    this._distortion = options.distortion;
+    this.connectEffect(this._shaper);
+    this.distortion = options.distortion;
+    this.oversample = options.oversample;
+  }
+  static getDefaults() {
+    return Object.assign(Effect.getDefaults(), {
+      distortion: 0.4,
+      oversample: "none"
+    });
+  }
+  /**
+   * The amount of distortion. Nominal range is between 0 and 1.
+   */
+  get distortion() {
+    return this._distortion;
+  }
+  set distortion(amount) {
+    this._distortion = amount;
+    const k = amount * 100;
+    const deg = Math.PI / 180;
+    this._shaper.setMap((x) => {
+      if (Math.abs(x) < 1e-3) {
+        return 0;
+      } else {
+        return (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+      }
+    });
+  }
+  /**
+   * The oversampling of the effect. Can either be "none", "2x" or "4x".
+   */
+  get oversample() {
+    return this._shaper.oversample;
+  }
+  set oversample(oversampling) {
+    this._shaper.oversample = oversampling;
+  }
+  dispose() {
+    super.dispose();
+    this._shaper.dispose();
+    return this;
+  }
+};
+
 // node_modules/tone/build/esm/effect/Freeverb.js
 var combFilterTunings = [1557 / 44100, 1617 / 44100, 1491 / 44100, 1422 / 44100, 1277 / 44100, 1356 / 44100, 1188 / 44100, 1116 / 44100];
 
@@ -20645,6 +21203,84 @@ var Channel = class extends ToneAudioNode {
 };
 Channel.buses = /* @__PURE__ */ new Map();
 
+// node_modules/tone/build/esm/component/channel/MultibandSplit.js
+var MultibandSplit = class extends ToneAudioNode {
+  constructor() {
+    super(optionsFromArguments(MultibandSplit.getDefaults(), arguments, ["lowFrequency", "highFrequency"]));
+    this.name = "MultibandSplit";
+    this.input = new Gain({ context: this.context });
+    this.output = void 0;
+    this.low = new Filter({
+      context: this.context,
+      frequency: 0,
+      type: "lowpass"
+    });
+    this._lowMidFilter = new Filter({
+      context: this.context,
+      frequency: 0,
+      type: "highpass"
+    });
+    this.mid = new Filter({
+      context: this.context,
+      frequency: 0,
+      type: "lowpass"
+    });
+    this.high = new Filter({
+      context: this.context,
+      frequency: 0,
+      type: "highpass"
+    });
+    this._internalChannels = [this.low, this.mid, this.high];
+    const options = optionsFromArguments(MultibandSplit.getDefaults(), arguments, ["lowFrequency", "highFrequency"]);
+    this.lowFrequency = new Signal({
+      context: this.context,
+      units: "frequency",
+      value: options.lowFrequency
+    });
+    this.highFrequency = new Signal({
+      context: this.context,
+      units: "frequency",
+      value: options.highFrequency
+    });
+    this.Q = new Signal({
+      context: this.context,
+      units: "positive",
+      value: options.Q
+    });
+    this.input.fan(this.low, this.high);
+    this.input.chain(this._lowMidFilter, this.mid);
+    this.lowFrequency.fan(this.low.frequency, this._lowMidFilter.frequency);
+    this.highFrequency.fan(this.mid.frequency, this.high.frequency);
+    this.Q.connect(this.low.Q);
+    this.Q.connect(this._lowMidFilter.Q);
+    this.Q.connect(this.mid.Q);
+    this.Q.connect(this.high.Q);
+    readOnly(this, ["high", "mid", "low", "highFrequency", "lowFrequency"]);
+  }
+  static getDefaults() {
+    return Object.assign(ToneAudioNode.getDefaults(), {
+      Q: 1,
+      highFrequency: 2500,
+      lowFrequency: 400
+    });
+  }
+  /**
+   * Clean up.
+   */
+  dispose() {
+    super.dispose();
+    writable(this, ["high", "mid", "low", "highFrequency", "lowFrequency"]);
+    this.low.dispose();
+    this._lowMidFilter.dispose();
+    this.mid.dispose();
+    this.high.dispose();
+    this.lowFrequency.dispose();
+    this.highFrequency.dispose();
+    this.Q.dispose();
+    return this;
+  }
+};
+
 // node_modules/tone/build/esm/core/context/Listener.js
 var ListenerClass = class extends ToneAudioNode {
   constructor() {
@@ -20720,6 +21356,157 @@ onContextInit((context2) => {
 onContextClose((context2) => {
   context2.listener.dispose();
 });
+
+// node_modules/tone/build/esm/component/dynamics/Compressor.js
+var Compressor = class extends ToneAudioNode {
+  constructor() {
+    super(optionsFromArguments(Compressor.getDefaults(), arguments, ["threshold", "ratio"]));
+    this.name = "Compressor";
+    this._compressor = this.context.createDynamicsCompressor();
+    this.input = this._compressor;
+    this.output = this._compressor;
+    const options = optionsFromArguments(Compressor.getDefaults(), arguments, ["threshold", "ratio"]);
+    this.threshold = new Param({
+      minValue: this._compressor.threshold.minValue,
+      maxValue: this._compressor.threshold.maxValue,
+      context: this.context,
+      convert: false,
+      param: this._compressor.threshold,
+      units: "decibels",
+      value: options.threshold
+    });
+    this.attack = new Param({
+      minValue: this._compressor.attack.minValue,
+      maxValue: this._compressor.attack.maxValue,
+      context: this.context,
+      param: this._compressor.attack,
+      units: "time",
+      value: options.attack
+    });
+    this.release = new Param({
+      minValue: this._compressor.release.minValue,
+      maxValue: this._compressor.release.maxValue,
+      context: this.context,
+      param: this._compressor.release,
+      units: "time",
+      value: options.release
+    });
+    this.knee = new Param({
+      minValue: this._compressor.knee.minValue,
+      maxValue: this._compressor.knee.maxValue,
+      context: this.context,
+      convert: false,
+      param: this._compressor.knee,
+      units: "decibels",
+      value: options.knee
+    });
+    this.ratio = new Param({
+      minValue: this._compressor.ratio.minValue,
+      maxValue: this._compressor.ratio.maxValue,
+      context: this.context,
+      convert: false,
+      param: this._compressor.ratio,
+      units: "positive",
+      value: options.ratio
+    });
+    readOnly(this, ["knee", "release", "attack", "ratio", "threshold"]);
+  }
+  static getDefaults() {
+    return Object.assign(ToneAudioNode.getDefaults(), {
+      attack: 3e-3,
+      knee: 30,
+      ratio: 12,
+      release: 0.25,
+      threshold: -24
+    });
+  }
+  /**
+   * A read-only decibel value for metering purposes, representing the current amount of gain
+   * reduction that the compressor is applying to the signal. If fed no signal the value will be 0 (no gain reduction).
+   */
+  get reduction() {
+    return this._compressor.reduction;
+  }
+  dispose() {
+    super.dispose();
+    this._compressor.disconnect();
+    this.attack.dispose();
+    this.release.dispose();
+    this.threshold.dispose();
+    this.ratio.dispose();
+    this.knee.dispose();
+    return this;
+  }
+};
+
+// node_modules/tone/build/esm/component/filter/EQ3.js
+var EQ3 = class extends ToneAudioNode {
+  constructor() {
+    super(optionsFromArguments(EQ3.getDefaults(), arguments, ["low", "mid", "high"]));
+    this.name = "EQ3";
+    this.output = new Gain({ context: this.context });
+    this._internalChannels = [];
+    const options = optionsFromArguments(EQ3.getDefaults(), arguments, ["low", "mid", "high"]);
+    this.input = this._multibandSplit = new MultibandSplit({
+      context: this.context,
+      highFrequency: options.highFrequency,
+      lowFrequency: options.lowFrequency
+    });
+    this._lowGain = new Gain({
+      context: this.context,
+      gain: options.low,
+      units: "decibels"
+    });
+    this._midGain = new Gain({
+      context: this.context,
+      gain: options.mid,
+      units: "decibels"
+    });
+    this._highGain = new Gain({
+      context: this.context,
+      gain: options.high,
+      units: "decibels"
+    });
+    this.low = this._lowGain.gain;
+    this.mid = this._midGain.gain;
+    this.high = this._highGain.gain;
+    this.Q = this._multibandSplit.Q;
+    this.lowFrequency = this._multibandSplit.lowFrequency;
+    this.highFrequency = this._multibandSplit.highFrequency;
+    this._multibandSplit.low.chain(this._lowGain, this.output);
+    this._multibandSplit.mid.chain(this._midGain, this.output);
+    this._multibandSplit.high.chain(this._highGain, this.output);
+    readOnly(this, ["low", "mid", "high", "lowFrequency", "highFrequency"]);
+    this._internalChannels = [this._multibandSplit];
+  }
+  static getDefaults() {
+    return Object.assign(ToneAudioNode.getDefaults(), {
+      high: 0,
+      highFrequency: 2500,
+      low: 0,
+      lowFrequency: 400,
+      mid: 0
+    });
+  }
+  /**
+   * Clean up.
+   */
+  dispose() {
+    super.dispose();
+    writable(this, ["low", "mid", "high", "lowFrequency", "highFrequency"]);
+    this._multibandSplit.dispose();
+    this.lowFrequency.dispose();
+    this.highFrequency.dispose();
+    this._lowGain.dispose();
+    this._midGain.dispose();
+    this._highGain.dispose();
+    this.low.dispose();
+    this.mid.dispose();
+    this.high.dispose();
+    this.Q.dispose();
+    return this;
+  }
+};
 
 // node_modules/tone/build/esm/index.js
 var Transport = getContext().transport;
@@ -21034,9 +21821,318 @@ var SAMPLER_CONFIGS = {
     baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/",
     effects: ["reverb"]
     // Minimal effects for deep bass clarity
+  },
+  // Phase 6B: Extended Keyboard Family
+  electricPiano: {
+    urls: {
+      "A1": "A1.[format]",
+      "C2": "C2.[format]",
+      "E2": "E2.[format]",
+      "G2": "G2.[format]",
+      "C3": "C3.[format]",
+      "E3": "E3.[format]",
+      "G3": "G3.[format]",
+      "C4": "C4.[format]",
+      "E4": "E4.[format]",
+      "G4": "G4.[format]",
+      "C5": "C5.[format]",
+      "E5": "E5.[format]",
+      "G5": "G5.[format]",
+      "C6": "C6.[format]",
+      "E6": "E6.[format]"
+    },
+    release: 2.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/electric-piano/",
+    effects: ["reverb", "chorus"]
+    // Classic electric piano effects
+  },
+  harpsichord: {
+    urls: {
+      "C2": "C2.[format]",
+      "D2": "D2.[format]",
+      "F2": "F2.[format]",
+      "G2": "G2.[format]",
+      "A2": "A2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "F5": "F5.[format]"
+    },
+    release: 1,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harpsichord/",
+    effects: ["reverb", "filter"]
+    // Baroque clarity with filtering
+  },
+  accordion: {
+    urls: {
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "B4": "B4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "E5": "E5.[format]",
+      "F5": "F5.[format]"
+    },
+    release: 2.8,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/accordion/",
+    effects: ["reverb", "chorus"]
+    // Bellows character with chorus
+  },
+  celesta: {
+    urls: {
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "B4": "B4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "E5": "E5.[format]",
+      "F5": "F5.[format]",
+      "G5": "G5.[format]",
+      "A5": "A5.[format]",
+      "B5": "B5.[format]",
+      "C6": "C6.[format]",
+      "D6": "D6.[format]",
+      "E6": "E6.[format]",
+      "F6": "F6.[format]"
+    },
+    release: 3.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/celesta/",
+    effects: ["reverb", "filter"]
+    // Bell-like with ethereal reverb
+  },
+  // Phase 7: Strings & Brass Completion
+  violin: {
+    urls: {
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "B4": "B4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "E5": "E5.[format]",
+      "F5": "F5.[format]",
+      "G5": "G5.[format]",
+      "A5": "A5.[format]",
+      "B5": "B5.[format]",
+      "C6": "C6.[format]"
+    },
+    release: 2,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
+    effects: ["reverb", "filter"]
+    // Expressive bowing with vibrato
+  },
+  cello: {
+    urls: {
+      "C2": "C2.[format]",
+      "D2": "D2.[format]",
+      "E2": "E2.[format]",
+      "F2": "F2.[format]",
+      "G2": "G2.[format]",
+      "A2": "A2.[format]",
+      "B2": "B2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]"
+    },
+    release: 3,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/cello/",
+    effects: ["reverb", "filter"]
+    // Rich low harmonics with bow noise
+  },
+  guitar: {
+    urls: {
+      "E2": "E2.[format]",
+      "F2": "F2.[format]",
+      "G2": "G2.[format]",
+      "A2": "A2.[format]",
+      "B2": "B2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]"
+    },
+    release: 1.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/guitar-acoustic/",
+    effects: ["reverb", "chorus"]
+    // Plucked string with natural resonance
+  },
+  harp: {
+    urls: {
+      "C1": "C1.[format]",
+      "D1": "D1.[format]",
+      "F1": "F1.[format]",
+      "G1": "G1.[format]",
+      "A1": "A1.[format]",
+      "C2": "C2.[format]",
+      "D2": "D2.[format]",
+      "F2": "F2.[format]",
+      "G2": "G2.[format]",
+      "A2": "A2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "F4": "F4.[format]"
+    },
+    release: 4,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harp/",
+    effects: ["reverb", "filter"]
+    // Cascading arpeggios with long decay
+  },
+  trumpet: {
+    urls: {
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "B4": "B4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "E5": "E5.[format]",
+      "F5": "F5.[format]"
+    },
+    release: 1.8,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/",
+    effects: ["reverb", "filter"]
+    // Bright brass with metallic formants
+  },
+  frenchHorn: {
+    urls: {
+      "B2": "B2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]",
+      "E4": "E4.[format]",
+      "F4": "F4.[format]",
+      "G4": "G4.[format]",
+      "A4": "A4.[format]",
+      "B4": "B4.[format]",
+      "C5": "C5.[format]",
+      "D5": "D5.[format]",
+      "E5": "E5.[format]"
+    },
+    release: 2.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/french-horn/",
+    effects: ["reverb", "chorus", "filter"]
+    // Warm middle register with slight distortion
+  },
+  trombone: {
+    urls: {
+      "A1": "A1.[format]",
+      "B1": "B1.[format]",
+      "C2": "C2.[format]",
+      "D2": "D2.[format]",
+      "E2": "E2.[format]",
+      "F2": "F2.[format]",
+      "G2": "G2.[format]",
+      "A2": "A2.[format]",
+      "B2": "B2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]",
+      "F3": "F3.[format]",
+      "G3": "G3.[format]",
+      "A3": "A3.[format]",
+      "B3": "B3.[format]",
+      "C4": "C4.[format]",
+      "D4": "D4.[format]"
+    },
+    release: 2.2,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
+    effects: ["reverb", "filter"]
+    // Sliding pitch with sawtooth character
+  },
+  tuba: {
+    urls: {
+      "E1": "E1.[format]",
+      "F1": "F1.[format]",
+      "G1": "G1.[format]",
+      "A1": "A1.[format]",
+      "B1": "B1.[format]",
+      "C2": "C2.[format]",
+      "D2": "D2.[format]",
+      "E2": "E2.[format]",
+      "F2": "F2.[format]",
+      "G2": "G2.[format]",
+      "A2": "A2.[format]",
+      "B2": "B2.[format]",
+      "C3": "C3.[format]",
+      "D3": "D3.[format]",
+      "E3": "E3.[format]"
+    },
+    release: 3.5,
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
+    effects: ["reverb"]
+    // Deep foundation with breath noise
   }
 };
 var AudioEngine = class {
+  // effect id -> tone.js instance
   constructor(settings) {
     this.settings = settings;
     this.instruments = /* @__PURE__ */ new Map();
@@ -21058,6 +22154,17 @@ var AudioEngine = class {
     this.isPreviewMode = false;
     this.previewInstrument = null;
     this.previewNote = null;
+    // Phase 3.5: Enhanced Effect Routing properties
+    this.enhancedRouting = false;
+    this.effectChains = /* @__PURE__ */ new Map();
+    // instrument -> effect nodes
+    this.sendBuses = /* @__PURE__ */ new Map();
+    // bus id -> send bus
+    this.returnBuses = /* @__PURE__ */ new Map();
+    // bus id -> return bus
+    this.masterEffectsNodes = /* @__PURE__ */ new Map();
+    // master effect instances
+    this.effectNodeInstances = /* @__PURE__ */ new Map();
     logger3.debug("initialization", "AudioEngine created");
   }
   getSamplerConfigs() {
@@ -21072,6 +22179,7 @@ var AudioEngine = class {
     return configs;
   }
   async initialize() {
+    var _a;
     if (this.isInitialized) {
       console.warn("AudioEngine already initialized");
       return;
@@ -21083,8 +22191,12 @@ var AudioEngine = class {
       this.volume = new Volume(this.settings.volume).toDestination();
       logger3.debug("audio", "Master volume created");
       this.initializeInstruments();
-      this.initializeEffects();
-      this.applyEffectSettings();
+      if ((_a = this.settings.enhancedRouting) == null ? void 0 : _a.enabled) {
+        this.initializeEnhancedRouting();
+      } else {
+        this.initializeEffects();
+        this.applyEffectSettings();
+      }
       this.isInitialized = true;
       this.startPerformanceMonitoring();
       logger3.info("audio", "AudioEngine initialized successfully");
@@ -21094,7 +22206,7 @@ var AudioEngine = class {
     }
   }
   async initializeEffects() {
-    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone"];
+    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba"];
     for (const instrumentName of instruments) {
       const effectMap = /* @__PURE__ */ new Map();
       const reverb = new Reverb({
@@ -21126,6 +22238,163 @@ var AudioEngine = class {
       instrumentCount: instruments.length,
       effectsPerInstrument: 3
     });
+  }
+  // Phase 3.5: Enhanced Effect Routing initialization
+  async initializeEnhancedRouting() {
+    logger3.debug("enhanced-routing", "Initializing enhanced effect routing");
+    this.enhancedRouting = true;
+    if (!this.settings.enhancedRouting) {
+      this.settings = migrateToEnhancedRouting(this.settings);
+    }
+    const instruments = Object.keys(this.settings.instruments);
+    for (const instrumentName of instruments) {
+      await this.initializeInstrumentEffectChain(instrumentName);
+    }
+    await this.initializeMasterEffects();
+    this.initializeSendReturnBuses();
+    this.connectInstrumentsEnhanced();
+    logger3.info("enhanced-routing", "Enhanced effect routing initialized", {
+      instrumentCount: instruments.length,
+      enhancedRouting: true
+    });
+  }
+  async initializeInstrumentEffectChain(instrumentName) {
+    var _a;
+    const effectChain = (_a = this.settings.enhancedRouting) == null ? void 0 : _a.effectChains.get(instrumentName);
+    if (!effectChain) {
+      logger3.warn("enhanced-routing", `No effect chain found for ${instrumentName}`);
+      return;
+    }
+    const effectNodes = [];
+    for (const node of effectChain.nodes) {
+      const effectInstance = await this.createEffectInstance(node);
+      if (effectInstance) {
+        this.effectNodeInstances.set(node.id, effectInstance);
+        effectNodes.push(node);
+      }
+    }
+    this.effectChains.set(instrumentName, effectNodes);
+    logger3.debug("enhanced-routing", `Effect chain initialized for ${instrumentName}`, {
+      nodeCount: effectNodes.length
+    });
+  }
+  async createEffectInstance(node) {
+    try {
+      switch (node.type) {
+        case "reverb":
+          const reverbSettings = node.settings;
+          const reverb = new Reverb(reverbSettings.params);
+          await reverb.generate();
+          return reverb;
+        case "chorus":
+          const chorusSettings = node.settings;
+          const chorus = new Chorus(chorusSettings.params);
+          chorus.start();
+          return chorus;
+        case "filter":
+          const filterSettings = node.settings;
+          const filter = new Filter(filterSettings.params);
+          return filter;
+        case "delay":
+          const delaySettings = node.settings;
+          const delay = new Delay(delaySettings.params);
+          return delay;
+        case "distortion":
+          const distortionSettings = node.settings;
+          const distortion = new Distortion(distortionSettings.params);
+          return distortion;
+        case "compressor":
+          const compressorSettings = node.settings;
+          const compressor = new Compressor(compressorSettings.params);
+          return compressor;
+        default:
+          logger3.warn("enhanced-routing", `Unknown effect type: ${node.type}`);
+          return null;
+      }
+    } catch (error) {
+      logger3.error("enhanced-routing", `Failed to create effect ${node.type}`, error);
+      return null;
+    }
+  }
+  async initializeMasterEffects() {
+    var _a;
+    const masterEffects = (_a = this.settings.enhancedRouting) == null ? void 0 : _a.routingMatrix.masterEffects;
+    if (!masterEffects)
+      return;
+    if (masterEffects.reverb.enabled) {
+      const masterReverb = new Reverb(masterEffects.reverb.params);
+      await masterReverb.generate();
+      this.masterEffectsNodes.set("reverb", masterReverb);
+    }
+    if (masterEffects.eq.enabled) {
+      const eqParams = masterEffects.eq.params;
+      const masterEQ = new EQ3({
+        low: eqParams.lowGain,
+        mid: eqParams.midGain,
+        high: eqParams.highGain,
+        lowFrequency: eqParams.lowFreq,
+        highFrequency: eqParams.highFreq
+      });
+      this.masterEffectsNodes.set("eq", masterEQ);
+    }
+    if (masterEffects.compressor.enabled) {
+      const masterCompressor = new Compressor(masterEffects.compressor.params);
+      this.masterEffectsNodes.set("compressor", masterCompressor);
+    }
+    logger3.debug("enhanced-routing", "Master effects initialized");
+  }
+  initializeSendReturnBuses() {
+    var _a;
+    const routingMatrix = (_a = this.settings.enhancedRouting) == null ? void 0 : _a.routingMatrix;
+    if (!routingMatrix)
+      return;
+    for (const [busId, sendBusArray] of routingMatrix.sends) {
+      for (const sendBus of sendBusArray) {
+        this.sendBuses.set(sendBus.id, sendBus);
+      }
+    }
+    for (const [busId, returnBus] of routingMatrix.returns) {
+      this.returnBuses.set(busId, returnBus);
+    }
+    logger3.debug("enhanced-routing", "Send/return buses initialized", {
+      sendBuses: this.sendBuses.size,
+      returnBuses: this.returnBuses.size
+    });
+  }
+  connectInstrumentsEnhanced() {
+    for (const [instrumentName, effectNodes] of this.effectChains) {
+      const instrument = this.instruments.get(instrumentName);
+      const volume = this.instrumentVolumes.get(instrumentName);
+      if (!instrument || !volume)
+        continue;
+      let output = instrument.connect(volume);
+      const sortedNodes = [...effectNodes].sort((a, b) => a.order - b.order);
+      for (const node of sortedNodes) {
+        if (node.enabled && !node.bypass) {
+          const effect = this.effectNodeInstances.get(node.id);
+          if (effect) {
+            output = output.connect(effect);
+          }
+        }
+      }
+      this.connectToMasterChain(output);
+    }
+    logger3.debug("enhanced-routing", "Enhanced instrument connections established");
+  }
+  connectToMasterChain(instrumentOutput) {
+    let output = instrumentOutput;
+    if (this.masterEffectsNodes.has("compressor")) {
+      output = output.connect(this.masterEffectsNodes.get("compressor"));
+    }
+    if (this.masterEffectsNodes.has("eq")) {
+      output = output.connect(this.masterEffectsNodes.get("eq"));
+    }
+    if (this.masterEffectsNodes.has("reverb")) {
+      output = output.connect(this.masterEffectsNodes.get("reverb"));
+    }
+    if (this.volume) {
+      output.connect(this.volume);
+    }
   }
   async initializeInstruments() {
     const configs = this.getSamplerConfigs();
@@ -21345,6 +22614,294 @@ var AudioEngine = class {
     }
     saxophoneOutput.connect(this.volume);
     this.instruments.set("saxophone", saxophoneSampler);
+    const electricPianoSampler = new Sampler(configs.electricPiano);
+    const electricPianoVolume = new Volume(-6);
+    this.instrumentVolumes.set("electricPiano", electricPianoVolume);
+    let electricPianoOutput = electricPianoSampler.connect(electricPianoVolume);
+    const electricPianoEffects = this.instrumentEffects.get("electricPiano");
+    if (electricPianoEffects && this.settings.instruments.electricPiano.effects) {
+      if (this.settings.instruments.electricPiano.effects.reverb.enabled) {
+        const reverb = electricPianoEffects.get("reverb");
+        if (reverb)
+          electricPianoOutput = electricPianoOutput.connect(reverb);
+      }
+      if (this.settings.instruments.electricPiano.effects.chorus.enabled) {
+        const chorus = electricPianoEffects.get("chorus");
+        if (chorus)
+          electricPianoOutput = electricPianoOutput.connect(chorus);
+      }
+      if (this.settings.instruments.electricPiano.effects.filter.enabled) {
+        const filter = electricPianoEffects.get("filter");
+        if (filter)
+          electricPianoOutput = electricPianoOutput.connect(filter);
+      }
+    }
+    electricPianoOutput.connect(this.volume);
+    this.instruments.set("electricPiano", electricPianoSampler);
+    const harpsichordSampler = new Sampler(configs.harpsichord);
+    const harpsichordVolume = new Volume(-6);
+    this.instrumentVolumes.set("harpsichord", harpsichordVolume);
+    let harpsichordOutput = harpsichordSampler.connect(harpsichordVolume);
+    const harpsichordEffects = this.instrumentEffects.get("harpsichord");
+    if (harpsichordEffects && this.settings.instruments.harpsichord.effects) {
+      if (this.settings.instruments.harpsichord.effects.reverb.enabled) {
+        const reverb = harpsichordEffects.get("reverb");
+        if (reverb)
+          harpsichordOutput = harpsichordOutput.connect(reverb);
+      }
+      if (this.settings.instruments.harpsichord.effects.chorus.enabled) {
+        const chorus = harpsichordEffects.get("chorus");
+        if (chorus)
+          harpsichordOutput = harpsichordOutput.connect(chorus);
+      }
+      if (this.settings.instruments.harpsichord.effects.filter.enabled) {
+        const filter = harpsichordEffects.get("filter");
+        if (filter)
+          harpsichordOutput = harpsichordOutput.connect(filter);
+      }
+    }
+    harpsichordOutput.connect(this.volume);
+    this.instruments.set("harpsichord", harpsichordSampler);
+    const accordionSampler = new Sampler(configs.accordion);
+    const accordionVolume = new Volume(-6);
+    this.instrumentVolumes.set("accordion", accordionVolume);
+    let accordionOutput = accordionSampler.connect(accordionVolume);
+    const accordionEffects = this.instrumentEffects.get("accordion");
+    if (accordionEffects && this.settings.instruments.accordion.effects) {
+      if (this.settings.instruments.accordion.effects.reverb.enabled) {
+        const reverb = accordionEffects.get("reverb");
+        if (reverb)
+          accordionOutput = accordionOutput.connect(reverb);
+      }
+      if (this.settings.instruments.accordion.effects.chorus.enabled) {
+        const chorus = accordionEffects.get("chorus");
+        if (chorus)
+          accordionOutput = accordionOutput.connect(chorus);
+      }
+      if (this.settings.instruments.accordion.effects.filter.enabled) {
+        const filter = accordionEffects.get("filter");
+        if (filter)
+          accordionOutput = accordionOutput.connect(filter);
+      }
+    }
+    accordionOutput.connect(this.volume);
+    this.instruments.set("accordion", accordionSampler);
+    const celestaSampler = new Sampler(configs.celesta);
+    const celestaVolume = new Volume(-6);
+    this.instrumentVolumes.set("celesta", celestaVolume);
+    let celestaOutput = celestaSampler.connect(celestaVolume);
+    const celestaEffects = this.instrumentEffects.get("celesta");
+    if (celestaEffects && this.settings.instruments.celesta.effects) {
+      if (this.settings.instruments.celesta.effects.reverb.enabled) {
+        const reverb = celestaEffects.get("reverb");
+        if (reverb)
+          celestaOutput = celestaOutput.connect(reverb);
+      }
+      if (this.settings.instruments.celesta.effects.chorus.enabled) {
+        const chorus = celestaEffects.get("chorus");
+        if (chorus)
+          celestaOutput = celestaOutput.connect(chorus);
+      }
+      if (this.settings.instruments.celesta.effects.filter.enabled) {
+        const filter = celestaEffects.get("filter");
+        if (filter)
+          celestaOutput = celestaOutput.connect(filter);
+      }
+    }
+    celestaOutput.connect(this.volume);
+    this.instruments.set("celesta", celestaSampler);
+    const violinSampler = new Sampler(configs.violin);
+    const violinVolume = new Volume(-6);
+    this.instrumentVolumes.set("violin", violinVolume);
+    let violinOutput = violinSampler.connect(violinVolume);
+    const violinEffects = this.instrumentEffects.get("violin");
+    if (violinEffects && this.settings.instruments.violin.effects) {
+      if (this.settings.instruments.violin.effects.reverb.enabled) {
+        const reverb = violinEffects.get("reverb");
+        if (reverb)
+          violinOutput = violinOutput.connect(reverb);
+      }
+      if (this.settings.instruments.violin.effects.chorus.enabled) {
+        const chorus = violinEffects.get("chorus");
+        if (chorus)
+          violinOutput = violinOutput.connect(chorus);
+      }
+      if (this.settings.instruments.violin.effects.filter.enabled) {
+        const filter = violinEffects.get("filter");
+        if (filter)
+          violinOutput = violinOutput.connect(filter);
+      }
+    }
+    violinOutput.connect(this.volume);
+    this.instruments.set("violin", violinSampler);
+    const celloSampler = new Sampler(configs.cello);
+    const celloVolume = new Volume(-6);
+    this.instrumentVolumes.set("cello", celloVolume);
+    let celloOutput = celloSampler.connect(celloVolume);
+    const celloEffects = this.instrumentEffects.get("cello");
+    if (celloEffects && this.settings.instruments.cello.effects) {
+      if (this.settings.instruments.cello.effects.reverb.enabled) {
+        const reverb = celloEffects.get("reverb");
+        if (reverb)
+          celloOutput = celloOutput.connect(reverb);
+      }
+      if (this.settings.instruments.cello.effects.chorus.enabled) {
+        const chorus = celloEffects.get("chorus");
+        if (chorus)
+          celloOutput = celloOutput.connect(chorus);
+      }
+      if (this.settings.instruments.cello.effects.filter.enabled) {
+        const filter = celloEffects.get("filter");
+        if (filter)
+          celloOutput = celloOutput.connect(filter);
+      }
+    }
+    celloOutput.connect(this.volume);
+    this.instruments.set("cello", celloSampler);
+    const guitarSampler = new Sampler(configs.guitar);
+    const guitarVolume = new Volume(-6);
+    this.instrumentVolumes.set("guitar", guitarVolume);
+    let guitarOutput = guitarSampler.connect(guitarVolume);
+    const guitarEffects = this.instrumentEffects.get("guitar");
+    if (guitarEffects && this.settings.instruments.guitar.effects) {
+      if (this.settings.instruments.guitar.effects.reverb.enabled) {
+        const reverb = guitarEffects.get("reverb");
+        if (reverb)
+          guitarOutput = guitarOutput.connect(reverb);
+      }
+      if (this.settings.instruments.guitar.effects.chorus.enabled) {
+        const chorus = guitarEffects.get("chorus");
+        if (chorus)
+          guitarOutput = guitarOutput.connect(chorus);
+      }
+      if (this.settings.instruments.guitar.effects.filter.enabled) {
+        const filter = guitarEffects.get("filter");
+        if (filter)
+          guitarOutput = guitarOutput.connect(filter);
+      }
+    }
+    guitarOutput.connect(this.volume);
+    this.instruments.set("guitar", guitarSampler);
+    const harpSampler = new Sampler(configs.harp);
+    const harpVolume = new Volume(-6);
+    this.instrumentVolumes.set("harp", harpVolume);
+    let harpOutput = harpSampler.connect(harpVolume);
+    const harpEffects = this.instrumentEffects.get("harp");
+    if (harpEffects && this.settings.instruments.harp.effects) {
+      if (this.settings.instruments.harp.effects.reverb.enabled) {
+        const reverb = harpEffects.get("reverb");
+        if (reverb)
+          harpOutput = harpOutput.connect(reverb);
+      }
+      if (this.settings.instruments.harp.effects.chorus.enabled) {
+        const chorus = harpEffects.get("chorus");
+        if (chorus)
+          harpOutput = harpOutput.connect(chorus);
+      }
+      if (this.settings.instruments.harp.effects.filter.enabled) {
+        const filter = harpEffects.get("filter");
+        if (filter)
+          harpOutput = harpOutput.connect(filter);
+      }
+    }
+    harpOutput.connect(this.volume);
+    this.instruments.set("harp", harpSampler);
+    const trumpetSampler = new Sampler(configs.trumpet);
+    const trumpetVolume = new Volume(-6);
+    this.instrumentVolumes.set("trumpet", trumpetVolume);
+    let trumpetOutput = trumpetSampler.connect(trumpetVolume);
+    const trumpetEffects = this.instrumentEffects.get("trumpet");
+    if (trumpetEffects && this.settings.instruments.trumpet.effects) {
+      if (this.settings.instruments.trumpet.effects.reverb.enabled) {
+        const reverb = trumpetEffects.get("reverb");
+        if (reverb)
+          trumpetOutput = trumpetOutput.connect(reverb);
+      }
+      if (this.settings.instruments.trumpet.effects.chorus.enabled) {
+        const chorus = trumpetEffects.get("chorus");
+        if (chorus)
+          trumpetOutput = trumpetOutput.connect(chorus);
+      }
+      if (this.settings.instruments.trumpet.effects.filter.enabled) {
+        const filter = trumpetEffects.get("filter");
+        if (filter)
+          trumpetOutput = trumpetOutput.connect(filter);
+      }
+    }
+    trumpetOutput.connect(this.volume);
+    this.instruments.set("trumpet", trumpetSampler);
+    const frenchHornSampler = new Sampler(configs.frenchHorn);
+    const frenchHornVolume = new Volume(-6);
+    this.instrumentVolumes.set("frenchHorn", frenchHornVolume);
+    let frenchHornOutput = frenchHornSampler.connect(frenchHornVolume);
+    const frenchHornEffects = this.instrumentEffects.get("frenchHorn");
+    if (frenchHornEffects && this.settings.instruments.frenchHorn.effects) {
+      if (this.settings.instruments.frenchHorn.effects.reverb.enabled) {
+        const reverb = frenchHornEffects.get("reverb");
+        if (reverb)
+          frenchHornOutput = frenchHornOutput.connect(reverb);
+      }
+      if (this.settings.instruments.frenchHorn.effects.chorus.enabled) {
+        const chorus = frenchHornEffects.get("chorus");
+        if (chorus)
+          frenchHornOutput = frenchHornOutput.connect(chorus);
+      }
+      if (this.settings.instruments.frenchHorn.effects.filter.enabled) {
+        const filter = frenchHornEffects.get("filter");
+        if (filter)
+          frenchHornOutput = frenchHornOutput.connect(filter);
+      }
+    }
+    frenchHornOutput.connect(this.volume);
+    this.instruments.set("frenchHorn", frenchHornSampler);
+    const tromboneSampler = new Sampler(configs.trombone);
+    const tromboneVolume = new Volume(-6);
+    this.instrumentVolumes.set("trombone", tromboneVolume);
+    let tromboneOutput = tromboneSampler.connect(tromboneVolume);
+    const tromboneEffects = this.instrumentEffects.get("trombone");
+    if (tromboneEffects && this.settings.instruments.trombone.effects) {
+      if (this.settings.instruments.trombone.effects.reverb.enabled) {
+        const reverb = tromboneEffects.get("reverb");
+        if (reverb)
+          tromboneOutput = tromboneOutput.connect(reverb);
+      }
+      if (this.settings.instruments.trombone.effects.chorus.enabled) {
+        const chorus = tromboneEffects.get("chorus");
+        if (chorus)
+          tromboneOutput = tromboneOutput.connect(chorus);
+      }
+      if (this.settings.instruments.trombone.effects.filter.enabled) {
+        const filter = tromboneEffects.get("filter");
+        if (filter)
+          tromboneOutput = tromboneOutput.connect(filter);
+      }
+    }
+    tromboneOutput.connect(this.volume);
+    this.instruments.set("trombone", tromboneSampler);
+    const tubaSampler = new Sampler(configs.tuba);
+    const tubaVolume = new Volume(-6);
+    this.instrumentVolumes.set("tuba", tubaVolume);
+    let tubaOutput = tubaSampler.connect(tubaVolume);
+    const tubaEffects = this.instrumentEffects.get("tuba");
+    if (tubaEffects && this.settings.instruments.tuba.effects) {
+      if (this.settings.instruments.tuba.effects.reverb.enabled) {
+        const reverb = tubaEffects.get("reverb");
+        if (reverb)
+          tubaOutput = tubaOutput.connect(reverb);
+      }
+      if (this.settings.instruments.tuba.effects.chorus.enabled) {
+        const chorus = tubaEffects.get("chorus");
+        if (chorus)
+          tubaOutput = tubaOutput.connect(chorus);
+      }
+      if (this.settings.instruments.tuba.effects.filter.enabled) {
+        const filter = tubaEffects.get("filter");
+        if (filter)
+          tubaOutput = tubaOutput.connect(filter);
+      }
+    }
+    tubaOutput.connect(this.volume);
+    this.instruments.set("tuba", tubaSampler);
     this.applyInstrumentSettings();
     logger3.debug("instruments", "All sampled instruments initialized", {
       instrumentCount: this.instruments.size,
@@ -21755,14 +23312,22 @@ var AudioEngine = class {
     if (mapping.pitch > 1600) {
       if (enabledInstruments.includes("flute"))
         return "flute";
+      if (enabledInstruments.includes("celesta"))
+        return "celesta";
       return enabledInstruments.includes("piano") ? "piano" : sortedInstruments[0];
     } else if (mapping.pitch > 1400) {
-      return enabledInstruments.includes("piano") ? "piano" : sortedInstruments[0];
+      if (enabledInstruments.includes("piano"))
+        return "piano";
+      if (enabledInstruments.includes("celesta"))
+        return "celesta";
+      return sortedInstruments[0];
     } else if (mapping.pitch > 1200) {
       if (enabledInstruments.includes("soprano"))
         return "soprano";
       if (enabledInstruments.includes("clarinet"))
         return "clarinet";
+      if (enabledInstruments.includes("violin"))
+        return "violin";
       return enabledInstruments.includes("choir") ? "choir" : sortedInstruments[0];
     } else if (mapping.pitch > 1e3) {
       if (enabledInstruments.includes("choir"))
@@ -21771,28 +23336,58 @@ var AudioEngine = class {
         return "alto";
       return enabledInstruments.includes("clarinet") ? "clarinet" : sortedInstruments[0];
     } else if (mapping.pitch > 800) {
-      return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
+      if (enabledInstruments.includes("organ"))
+        return "organ";
+      if (enabledInstruments.includes("accordion"))
+        return "accordion";
+      if (enabledInstruments.includes("violin"))
+        return "violin";
+      return sortedInstruments[0];
     } else if (mapping.pitch > 600) {
       if (enabledInstruments.includes("vocalPads"))
         return "vocalPads";
       if (enabledInstruments.includes("tenor"))
         return "tenor";
+      if (enabledInstruments.includes("guitar"))
+        return "guitar";
       return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
     } else if (mapping.pitch > 400) {
-      return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
+      if (enabledInstruments.includes("organ"))
+        return "organ";
+      if (enabledInstruments.includes("accordion"))
+        return "accordion";
+      if (enabledInstruments.includes("frenchHorn"))
+        return "frenchHorn";
+      return sortedInstruments[0];
     } else if (mapping.pitch > 300) {
       if (enabledInstruments.includes("saxophone"))
         return "saxophone";
+      if (enabledInstruments.includes("harpsichord"))
+        return "harpsichord";
+      if (enabledInstruments.includes("trumpet"))
+        return "trumpet";
       return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
     } else if (mapping.pitch > 200) {
       if (enabledInstruments.includes("pad"))
         return "pad";
+      if (enabledInstruments.includes("electricPiano"))
+        return "electricPiano";
+      if (enabledInstruments.includes("cello"))
+        return "cello";
+      if (enabledInstruments.includes("trombone"))
+        return "trombone";
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     } else if (mapping.pitch > 100) {
-      return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
+      if (enabledInstruments.includes("strings"))
+        return "strings";
+      if (enabledInstruments.includes("harp"))
+        return "harp";
+      return sortedInstruments[0];
     } else {
       if (enabledInstruments.includes("bass"))
         return "bass";
+      if (enabledInstruments.includes("tuba"))
+        return "tuba";
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     }
   }
@@ -22260,6 +23855,296 @@ var AudioEngine = class {
    */
   getPerformanceMetrics() {
     return this.performanceMetrics.get("overall") || { cpuUsage: 0, latency: 0 };
+  }
+  // Phase 3.5: Enhanced Effect Routing API Methods
+  /**
+   * Enable enhanced effect routing for the audio engine
+   */
+  async enableEnhancedRouting() {
+    if (this.enhancedRouting) {
+      logger3.warn("enhanced-routing", "Enhanced routing already enabled");
+      return;
+    }
+    this.settings = migrateToEnhancedRouting(this.settings);
+    this.settings.enhancedRouting.enabled = true;
+    await this.initializeEnhancedRouting();
+    logger3.info("enhanced-routing", "Enhanced routing enabled successfully");
+  }
+  /**
+   * Disable enhanced effect routing and revert to classic mode
+   */
+  async disableEnhancedRouting() {
+    if (!this.enhancedRouting) {
+      logger3.warn("enhanced-routing", "Enhanced routing already disabled");
+      return;
+    }
+    this.enhancedRouting = false;
+    this.settings.enhancedRouting.enabled = false;
+    this.effectChains.clear();
+    this.sendBuses.clear();
+    this.returnBuses.clear();
+    this.masterEffectsNodes.clear();
+    this.effectNodeInstances.clear();
+    await this.initializeEffects();
+    this.applyEffectSettings();
+    logger3.info("enhanced-routing", "Enhanced routing disabled, reverted to classic mode");
+  }
+  /**
+   * Get the current effect chain for an instrument
+   */
+  getEffectChain(instrumentName) {
+    if (!this.enhancedRouting) {
+      logger3.warn("enhanced-routing", "Enhanced routing not enabled");
+      return null;
+    }
+    return this.effectChains.get(instrumentName) || null;
+  }
+  /**
+   * Reorder effects in an instrument's effect chain
+   */
+  async reorderEffectChain(instrumentName, newOrder) {
+    if (!this.enhancedRouting) {
+      throw new Error("Enhanced routing not enabled");
+    }
+    const effectChain = this.effectChains.get(instrumentName);
+    if (!effectChain) {
+      throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+    }
+    const reorderedChain = [];
+    const effectMap = new Map(effectChain.map((node) => [node.id, node]));
+    for (let i = 0; i < newOrder.length; i++) {
+      const effectId = newOrder[i];
+      const effect = effectMap.get(effectId);
+      if (effect) {
+        effect.order = i;
+        reorderedChain.push(effect);
+      }
+    }
+    this.effectChains.set(instrumentName, reorderedChain);
+    await this.reconnectInstrument(instrumentName);
+    logger3.debug("enhanced-routing", `Effect chain reordered for ${instrumentName}`, {
+      newOrder
+    });
+  }
+  /**
+   * Add a new effect to an instrument's effect chain
+   */
+  async addEffectToChain(instrumentName, effectType, position) {
+    if (!this.enhancedRouting) {
+      throw new Error("Enhanced routing not enabled");
+    }
+    const effectChain = this.effectChains.get(instrumentName) || [];
+    const effectId = `${instrumentName}-${effectType}-${Date.now()}`;
+    const defaultSettings = this.getDefaultEffectSettings(effectType);
+    const newEffect = {
+      id: effectId,
+      type: effectType,
+      enabled: true,
+      order: position !== void 0 ? position : effectChain.length,
+      settings: defaultSettings,
+      bypass: false
+    };
+    const effectInstance = await this.createEffectInstance(newEffect);
+    if (effectInstance) {
+      this.effectNodeInstances.set(effectId, effectInstance);
+    }
+    if (position !== void 0) {
+      effectChain.forEach((effect) => {
+        if (effect.order >= position) {
+          effect.order++;
+        }
+      });
+      effectChain.splice(position, 0, newEffect);
+    } else {
+      effectChain.push(newEffect);
+    }
+    this.effectChains.set(instrumentName, effectChain);
+    await this.reconnectInstrument(instrumentName);
+    logger3.debug("enhanced-routing", `Added ${effectType} effect to ${instrumentName}`, {
+      effectId,
+      position
+    });
+    return effectId;
+  }
+  /**
+   * Remove an effect from an instrument's effect chain
+   */
+  async removeEffectFromChain(instrumentName, effectId) {
+    if (!this.enhancedRouting) {
+      throw new Error("Enhanced routing not enabled");
+    }
+    const effectChain = this.effectChains.get(instrumentName);
+    if (!effectChain) {
+      throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+    }
+    const effectIndex = effectChain.findIndex((effect) => effect.id === effectId);
+    if (effectIndex === -1) {
+      throw new Error(`Effect ${effectId} not found in ${instrumentName} chain`);
+    }
+    effectChain.splice(effectIndex, 1);
+    effectChain.forEach((effect, index) => {
+      effect.order = index;
+    });
+    const effectInstance = this.effectNodeInstances.get(effectId);
+    if (effectInstance) {
+      effectInstance.dispose();
+      this.effectNodeInstances.delete(effectId);
+    }
+    this.effectChains.set(instrumentName, effectChain);
+    await this.reconnectInstrument(instrumentName);
+    logger3.debug("enhanced-routing", `Removed effect ${effectId} from ${instrumentName}`);
+  }
+  /**
+   * Toggle an effect's enabled state
+   */
+  async toggleEffect(instrumentName, effectId) {
+    if (!this.enhancedRouting) {
+      throw new Error("Enhanced routing not enabled");
+    }
+    const effectChain = this.effectChains.get(instrumentName);
+    if (!effectChain) {
+      throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+    }
+    const effect = effectChain.find((e) => e.id === effectId);
+    if (!effect) {
+      throw new Error(`Effect ${effectId} not found in ${instrumentName} chain`);
+    }
+    effect.enabled = !effect.enabled;
+    await this.reconnectInstrument(instrumentName);
+    logger3.debug("enhanced-routing", `Toggled effect ${effectId} for ${instrumentName}`, {
+      enabled: effect.enabled
+    });
+  }
+  /**
+   * Toggle an effect's bypass state in enhanced routing mode
+   */
+  async toggleEnhancedEffectBypass(instrumentName, effectId) {
+    if (!this.enhancedRouting) {
+      throw new Error("Enhanced routing not enabled");
+    }
+    const effectChain = this.effectChains.get(instrumentName);
+    if (!effectChain) {
+      throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+    }
+    const effect = effectChain.find((e) => e.id === effectId);
+    if (!effect) {
+      throw new Error(`Effect ${effectId} not found in ${instrumentName} chain`);
+    }
+    effect.bypass = !effect.bypass;
+    await this.reconnectInstrument(instrumentName);
+    logger3.debug("enhanced-routing", `Toggled bypass for effect ${effectId} on ${instrumentName}`, {
+      bypass: effect.bypass
+    });
+  }
+  /**
+   * Update effect parameters
+   */
+  updateEffectParameters(instrumentName, effectId, parameters) {
+    if (!this.enhancedRouting) {
+      throw new Error("Enhanced routing not enabled");
+    }
+    const effectInstance = this.effectNodeInstances.get(effectId);
+    if (!effectInstance) {
+      throw new Error(`Effect instance ${effectId} not found`);
+    }
+    Object.keys(parameters).forEach((paramName) => {
+      if (effectInstance[paramName] !== void 0) {
+        effectInstance[paramName].value = parameters[paramName];
+      }
+    });
+    const effectChain = this.effectChains.get(instrumentName);
+    if (effectChain) {
+      const effect = effectChain.find((e) => e.id === effectId);
+      if (effect) {
+        effect.settings.params = { ...effect.settings.params, ...parameters };
+      }
+    }
+    logger3.debug("enhanced-routing", `Updated parameters for effect ${effectId}`, {
+      instrumentName,
+      parameters
+    });
+  }
+  /**
+   * Get default effect settings for a given effect type
+   */
+  getDefaultEffectSettings(effectType) {
+    switch (effectType) {
+      case "reverb":
+        return {
+          enabled: true,
+          params: { decay: 1.8, preDelay: 0.02, wet: 0.25 }
+        };
+      case "chorus":
+        return {
+          enabled: true,
+          params: { frequency: 0.8, delayTime: 4, depth: 0.5, feedback: 0.05 }
+        };
+      case "filter":
+        return {
+          enabled: true,
+          params: { frequency: 3500, type: "lowpass", Q: 0.8 }
+        };
+      case "delay":
+        return {
+          enabled: true,
+          params: { delayTime: 0.25, feedback: 0.3, wet: 0.2, maxDelay: 1 }
+        };
+      case "distortion":
+        return {
+          enabled: true,
+          params: { distortion: 0.4, oversample: "2x", wet: 0.5 }
+        };
+      case "compressor":
+        return {
+          enabled: true,
+          params: { threshold: -18, ratio: 4, attack: 3e-3, release: 0.1, knee: 30 }
+        };
+      default:
+        throw new Error(`Unknown effect type: ${effectType}`);
+    }
+  }
+  /**
+   * Reconnect an instrument with its current effect chain
+   */
+  async reconnectInstrument(instrumentName) {
+    const instrument = this.instruments.get(instrumentName);
+    const volume = this.instrumentVolumes.get(instrumentName);
+    const effectNodes = this.effectChains.get(instrumentName);
+    if (!instrument || !volume || !effectNodes) {
+      logger3.warn("enhanced-routing", `Cannot reconnect ${instrumentName}: missing components`);
+      return;
+    }
+    instrument.disconnect();
+    let output = instrument.connect(volume);
+    const sortedNodes = [...effectNodes].sort((a, b) => a.order - b.order);
+    for (const node of sortedNodes) {
+      if (node.enabled && !node.bypass) {
+        const effect = this.effectNodeInstances.get(node.id);
+        if (effect) {
+          output = output.connect(effect);
+        }
+      }
+    }
+    this.connectToMasterChain(output);
+    logger3.debug("enhanced-routing", `Reconnected ${instrumentName} with updated effect chain`);
+  }
+  /**
+   * Get current enhanced routing status
+   */
+  isEnhancedRoutingEnabled() {
+    return this.enhancedRouting;
+  }
+  /**
+   * Get all available send buses
+   */
+  getSendBuses() {
+    return new Map(this.sendBuses);
+  }
+  /**
+   * Get all available return buses
+   */
+  getReturnBuses() {
+    return new Map(this.returnBuses);
   }
 };
 

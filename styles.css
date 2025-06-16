@@ -1546,11 +1546,11 @@
 
 /* Enhanced effect settings descriptions */
 .setting-item-description {
-	font-style: italic;
+	/*font-style: italic;
 	color: var(--text-muted) !important;
 	font-size: 12px;
 	line-height: 1.4;
-	margin-top: 4px;
+	margin-top: 4px;*/
 }
 
 /* Musical context styling */
