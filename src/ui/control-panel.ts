@@ -324,8 +324,12 @@ export class ControlPanelModal extends Modal {
 		const activityDisplay = activityGroup.createDiv({ cls: 'sonigraph-voice-activity' });
 
 		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
-		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
+		const instrumentKeys = Object.keys(this.plugin.settings.instruments);
+		console.log('Control Panel: Found instruments:', instrumentKeys);
+		console.log('Control Panel: Total instrument count:', instrumentKeys.length);
+		instrumentKeys.forEach(instrumentKey => {
 			const info = this.getInstrumentInfo(instrumentKey);
+			console.log(`Processing instrument: ${instrumentKey} -> ${info.name}`);
 			const activityRow = activityDisplay.createDiv({ cls: 'sonigraph-activity-row' });
 			
 			const label = activityRow.createDiv({ cls: 'sonigraph-activity-label' });
@@ -462,30 +466,32 @@ export class ControlPanelModal extends Modal {
 		const strategy = this.plugin.settings.voiceAssignmentStrategy;
 		const infoBox = strategyInfo.createDiv({ cls: 'sonigraph-info-box' });
 		
+		const instrumentCount = Object.keys(this.plugin.settings.instruments).length;
 		switch (strategy) {
 			case 'frequency':
-				infoBox.createEl('h4', { text: 'Frequency-Based Assignment (13 Instruments)' });
-				infoBox.createEl('p', { text: 'Ultra High (>1600Hz) → 🎺 Flute (airy, crystalline)' });
-				infoBox.createEl('p', { text: 'Very High (>1400Hz) → 🎹 Piano (crisp, percussive)' });
-				infoBox.createEl('p', { text: 'High-Mid (800-1200Hz) → 👩‍🎤 Soprano, 🎵 Clarinet' });
-				infoBox.createEl('p', { text: 'High (1000-1400Hz) → 🎤 Choir, 🎙️ Alto' });
-				infoBox.createEl('p', { text: 'Mid-High (600-1000Hz) → 🌊 Vocal Pads, 🧑‍🎤 Tenor' });
-				infoBox.createEl('p', { text: 'Medium (400-800Hz) → 🎛️ Organ (rich, sustained)' });
-				infoBox.createEl('p', { text: 'Mid-Low (300-600Hz) → 🎷 Saxophone (expressive)' });
-				infoBox.createEl('p', { text: 'Low-Med (200-400Hz) → 🎛️ Pad (ambient foundation)' });
-				infoBox.createEl('p', { text: 'Low (100-200Hz) → 🎻 Strings (warm, flowing)' });
-				infoBox.createEl('p', { text: 'Very Low (<100Hz) → 🎤 Bass (deep, resonant)' });
+				infoBox.createEl('h4', { text: `Frequency-Based Assignment (${instrumentCount} Instruments)` });
+				infoBox.createEl('p', { text: 'Ultra High (>1600Hz) → 🎺 Flute, 🎵 Xylophone' });
+				infoBox.createEl('p', { text: 'Very High (1400-1600Hz) → 🎹 Piano, 🔔 Celesta' });
+				infoBox.createEl('p', { text: 'High-Mid (800-1200Hz) → 👩‍🎤 Soprano, 🎵 Clarinet, 🎻 Violin, 🎺 Oboe' });
+				infoBox.createEl('p', { text: 'High (1000-1400Hz) → 🎤 Choir, 🎙️ Alto, 🎼 Vibraphone' });
+				infoBox.createEl('p', { text: 'Mid-High (600-1000Hz) → 🌊 Vocal Pads, 🧑‍🎤 Tenor, 🎸 Guitar' });
+				infoBox.createEl('p', { text: 'Medium (400-800Hz) → 🎛️ Organ, 🎺 French Horn, 🪗 Accordion' });
+				infoBox.createEl('p', { text: 'Mid-Low (300-600Hz) → 🎷 Saxophone, 🎺 Trumpet, 🎼 Harpsichord' });
+				infoBox.createEl('p', { text: 'Low-Med (200-400Hz) → 🎛️ Pad, 🎻 Cello, 🎺 Trombone, 🎹 Electric Piano' });
+				infoBox.createEl('p', { text: 'Low (100-200Hz) → 🎻 Strings, 🎵 Harp, 🥁 Timpani, 🎛️ Bass Synth' });
+				infoBox.createEl('p', { text: 'Very Low (<100Hz) → 🎤 Bass, 🎺 Tuba, 🥁 Gongs, 🐋 Whale Song' });
+				infoBox.createEl('p', { text: 'Variable Range → 🎛️ Lead Synth, 🎛️ Arp Synth (pattern-dependent)' });
 				break;
 			case 'round-robin':
-				infoBox.createEl('h4', { text: 'Round-Robin Assignment (13 Instruments)' });
+				infoBox.createEl('h4', { text: `Round-Robin Assignment (${instrumentCount} Instruments)` });
 				infoBox.createEl('p', { text: 'Cycles through all enabled instruments in order' });
-				infoBox.createEl('p', { text: 'Ensures equal distribution across Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass' });
+				infoBox.createEl('p', { text: 'Ensures equal distribution across all orchestral families: keyboard, vocal, strings, brass, woodwinds, percussion, electronic, and environmental instruments' });
 				break;
 			case 'connection-based':
-				infoBox.createEl('h4', { text: 'Connection-Based Assignment (13 Instruments)' });
-				infoBox.createEl('p', { text: 'Highly connected nodes → Piano, Flute (prominent, percussive)' });
-				infoBox.createEl('p', { text: 'Medium connections → Organ, Choir, Soprano, Alto (harmonic foundation)' });
-				infoBox.createEl('p', { text: 'Low connections → Strings, Vocal Pads, Pad, Tenor, Bass (ambient, atmospheric)' });
+				infoBox.createEl('h4', { text: `Connection-Based Assignment (${instrumentCount} Instruments)` });
+				infoBox.createEl('p', { text: 'Highly connected nodes → Piano, Flute, Lead Synth (prominent, percussive)' });
+				infoBox.createEl('p', { text: 'Medium connections → Organ, Choir, Strings, Brass section (harmonic foundation)' });
+				infoBox.createEl('p', { text: 'Low connections → Pads, Environmental sounds, Extended instruments (ambient, atmospheric)' });
 				break;
 		}
 	}
