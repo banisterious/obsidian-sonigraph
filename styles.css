@@ -1779,4 +1779,695 @@
 	font-size: 0.9em;
 	line-height: 1.5;
 	margin: 8px 0;
+}/* ==========================================================================
+   Sonigraph Material Design Framework - Monochrome
+   ========================================================================== */
+
+/* Material Design 3 principles adapted for Obsidian's monochrome aesthetic
+ * Uses only Obsidian's native color system for seamless integration
+ * Follows Google's Material Design elevation, spacing, and component patterns
+ */
+
+/* ==========================================================================
+   DESIGN TOKENS - Material Design Variables
+   ========================================================================== */
+
+:root {
+  /* Material Design Color Tokens - Monochrome Obsidian Integration */
+  --md-surface: var(--background-secondary);
+  --md-surface-variant: var(--background-modifier-border-hover);
+  --md-surface-container: var(--background-primary-alt);
+  --md-surface-container-high: var(--background-secondary);
+  --md-surface-container-highest: var(--background-modifier-hover);
+  
+  --md-primary: var(--interactive-accent);
+  --md-primary-container: var(--interactive-accent-hover);
+  --md-secondary: var(--text-accent);
+  --md-secondary-container: var(--background-modifier-border-focus);
+  
+  --md-on-surface: var(--text-normal);
+  --md-on-surface-variant: var(--text-muted);
+  --md-on-primary: var(--text-on-accent);
+  --md-on-secondary: var(--text-normal);
+  
+  --md-outline: var(--background-modifier-border);
+  --md-outline-variant: var(--background-modifier-border-hover);
+  
+  --md-success: var(--color-green);
+  --md-warning: var(--color-orange);
+  --md-error: var(--color-red);
+  
+  /* Material Design Elevation System */
+  --md-elevation-0: none;
+  --md-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --md-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  --md-elevation-3: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  --md-elevation-4: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  --md-elevation-5: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+  
+  /* Material Design Spacing System (4dp base unit) */
+  --md-space-1: 4px;   /* 1 unit */
+  --md-space-2: 8px;   /* 2 units */
+  --md-space-3: 12px;  /* 3 units */
+  --md-space-4: 16px;  /* 4 units */
+  --md-space-6: 24px;  /* 6 units */
+  --md-space-8: 32px;  /* 8 units */
+  --md-space-12: 48px; /* 12 units */
+  --md-space-16: 64px; /* 16 units */
+  
+  /* Material Design Typography Scale */
+  --md-font-display-large: 57px;
+  --md-font-display-medium: 45px;
+  --md-font-display-small: 36px;
+  --md-font-headline-large: 32px;
+  --md-font-headline-medium: 28px;
+  --md-font-headline-small: 24px;
+  --md-font-title-large: 22px;
+  --md-font-title-medium: 16px;
+  --md-font-title-small: 14px;
+  --md-font-label-large: 14px;
+  --md-font-label-medium: 12px;
+  --md-font-label-small: 11px;
+  --md-font-body-large: 16px;
+  --md-font-body-medium: 14px;
+  --md-font-body-small: 12px;
+  
+  /* Material Design Corner Radius */
+  --md-corner-none: 0px;
+  --md-corner-xs: 4px;
+  --md-corner-sm: 8px;
+  --md-corner-md: 12px;
+  --md-corner-lg: 16px;
+  --md-corner-xl: 28px;
+  --md-corner-full: 9999px;
+  
+  /* Material Design Motion */
+  --md-motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);
+  --md-motion-easing-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --md-motion-easing-legacy: cubic-bezier(0.4, 0.0, 0.6, 1);
+  --md-motion-duration-short1: 50ms;
+  --md-motion-duration-short2: 100ms;
+  --md-motion-duration-short3: 150ms;
+  --md-motion-duration-short4: 200ms;
+  --md-motion-duration-medium1: 250ms;
+  --md-motion-duration-medium2: 300ms;
+  --md-motion-duration-medium3: 350ms;
+  --md-motion-duration-medium4: 400ms;
+  --md-motion-duration-long1: 450ms;
+  --md-motion-duration-long2: 500ms;
+  --md-motion-duration-long3: 550ms;
+  --md-motion-duration-long4: 600ms;
+}
+
+/* ==========================================================================
+   APP BAR - Top Navigation
+   ========================================================================== */
+
+.mdc-app-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 64px;
+  background: var(--md-surface);
+  box-shadow: var(--md-elevation-2);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--md-space-6);
+  transition: box-shadow var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.mdc-app-bar__title {
+  font-size: var(--md-font-title-large);
+  font-weight: 500;
+  color: var(--md-on-surface);
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-3);
+  margin: 0;
+}
+
+.mdc-app-bar__subtitle {
+  font-size: var(--md-font-body-medium);
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+  margin-left: var(--md-space-2);
+}
+
+.mdc-app-bar__actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--md-space-2);
+}
+
+/* ==========================================================================
+   BUTTONS - Material Design Button System
+   ========================================================================== */
+
+.mdc-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-space-2);
+  min-height: 40px;
+  padding: var(--md-space-2) var(--md-space-6);
+  border: none;
+  border-radius: var(--md-corner-full);
+  font-family: inherit;
+  font-size: var(--md-font-label-large);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  text-transform: none;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  overflow: hidden;
+}
+
+.mdc-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Button Variants */
+.mdc-button--text {
+  background: transparent;
+  color: var(--md-primary);
+}
+
+.mdc-button--text:hover:not(:disabled) {
+  background: rgba(var(--interactive-accent-rgb, 25, 118, 210), 0.08);
+}
+
+.mdc-button--outlined {
+  background: transparent;
+  color: var(--md-primary);
+  border: 1px solid var(--md-outline);
+}
+
+.mdc-button--outlined:hover:not(:disabled) {
+  background: rgba(var(--interactive-accent-rgb, 25, 118, 210), 0.08);
+  border-color: var(--md-primary);
+}
+
+.mdc-button--filled {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  box-shadow: var(--md-elevation-1);
+}
+
+.mdc-button--filled:hover:not(:disabled) {
+  background: var(--md-primary-container);
+  box-shadow: var(--md-elevation-2);
+}
+
+.mdc-button--tonal {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary);
+}
+
+.mdc-button--tonal:hover:not(:disabled) {
+  background: var(--md-surface-container-highest);
+  box-shadow: var(--md-elevation-1);
+}
+
+/* ==========================================================================
+   FLOATING ACTION BUTTON
+   ========================================================================== */
+
+.mdc-fab {
+  position: fixed;
+  bottom: var(--md-space-6);
+  right: var(--md-space-6);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--md-corner-lg);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  box-shadow: var(--md-elevation-3);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.mdc-fab:hover:not(:disabled) {
+  box-shadow: var(--md-elevation-4);
+  transform: scale(1.05);
+}
+
+.mdc-fab:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   NAVIGATION DRAWER
+   ========================================================================== */
+
+.mdc-drawer {
+  width: 256px;
+  background: var(--md-surface);
+  border-right: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elevation-1);
+  display: flex;
+  flex-direction: column;
+}
+
+.mdc-drawer__header {
+  padding: var(--md-space-4);
+  border-bottom: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-variant);
+}
+
+.mdc-drawer__title {
+  font-size: var(--md-font-title-small);
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+  margin: 0;
+}
+
+.mdc-drawer__content {
+  flex: 1;
+  padding: var(--md-space-2) 0;
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   LIST COMPONENTS
+   ========================================================================== */
+
+.mdc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mdc-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--md-space-3) var(--md-space-4);
+  cursor: pointer;
+  transition: background-color var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  border-radius: 0 var(--md-corner-xl) var(--md-corner-xl) 0;
+  margin-right: var(--md-space-3);
+  text-decoration: none;
+  color: inherit;
+}
+
+.mdc-list-item:hover:not(.mdc-list-item--activated) {
+  background: var(--md-surface-container);
+}
+
+.mdc-list-item--activated {
+  background: var(--md-primary-container);
+  color: var(--md-primary);
+}
+
+.mdc-list-item--activated::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--md-primary);
+  border-radius: 0 var(--md-corner-xs) var(--md-corner-xs) 0;
+}
+
+.mdc-list-item__graphic {
+  margin-right: var(--md-space-4);
+  color: var(--md-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.mdc-list-item--activated .mdc-list-item__graphic {
+  color: var(--md-primary);
+}
+
+.mdc-list-item__text {
+  font-size: var(--md-font-body-medium);
+  font-weight: 500;
+  color: var(--md-on-surface);
+  flex: 1;
+}
+
+.mdc-list-item__meta {
+  margin-left: auto;
+  font-size: var(--md-font-label-medium);
+  color: var(--md-on-surface-variant);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
+
+.mdc-card {
+  background: var(--md-surface);
+  border-radius: var(--md-corner-md);
+  box-shadow: var(--md-elevation-1);
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  overflow: hidden;
+}
+
+.mdc-card:hover {
+  box-shadow: var(--md-elevation-2);
+}
+
+.mdc-card__header {
+  padding: var(--md-space-4) var(--md-space-6);
+  border-bottom: 1px solid var(--md-outline-variant);
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-4);
+  background: var(--md-surface-variant);
+}
+
+.mdc-card__title {
+  font-size: var(--md-font-title-medium);
+  font-weight: 500;
+  color: var(--md-on-surface);
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-3);
+  margin: 0;
+}
+
+.mdc-card__subtitle {
+  font-size: var(--md-font-body-small);
+  color: var(--md-on-surface-variant);
+  margin-left: auto;
+}
+
+.mdc-card__content {
+  padding: var(--md-space-6);
+}
+
+/* ==========================================================================
+   CHIPS
+   ========================================================================== */
+
+.mdc-chip-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-space-2);
+}
+
+.mdc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  height: 32px;
+  padding: 0 var(--md-space-3);
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-corner-sm);
+  font-size: var(--md-font-label-large);
+  color: var(--md-on-surface-variant);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  user-select: none;
+}
+
+.mdc-chip:hover:not(.mdc-chip--selected) {
+  background: var(--md-surface-container-high);
+}
+
+.mdc-chip--selected {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-color: var(--md-primary);
+}
+
+/* ==========================================================================
+   SWITCHES
+   ========================================================================== */
+
+.mdc-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+}
+
+.mdc-switch__input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.mdc-switch__track {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--md-surface-container-highest);
+  border: 2px solid var(--md-outline);
+  border-radius: var(--md-corner-full);
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.mdc-switch__thumb {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background: var(--md-outline);
+  border-radius: 50%;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  box-shadow: var(--md-elevation-1);
+}
+
+.mdc-switch__input:checked + .mdc-switch__track {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+}
+
+.mdc-switch__input:checked + .mdc-switch__track .mdc-switch__thumb {
+  transform: translateX(20px);
+  background: var(--md-on-primary);
+}
+
+.mdc-switch__input:focus + .mdc-switch__track {
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb, 25, 118, 210), 0.2);
+}
+
+/* ==========================================================================
+   SLIDERS
+   ========================================================================== */
+
+.mdc-slider-container {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-3);
+}
+
+.mdc-slider {
+  flex: 1;
+  height: 20px;
+  background: transparent;
+  position: relative;
+  cursor: pointer;
+}
+
+.mdc-slider__track-container {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transform: translateY(-50%);
+}
+
+.mdc-slider__track {
+  height: 100%;
+  background: var(--md-outline-variant);
+  border-radius: var(--md-corner-xs);
+  position: relative;
+  overflow: hidden;
+}
+
+.mdc-slider__track-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--md-primary);
+  border-radius: var(--md-corner-xs);
+  width: 60%;
+  transition: width var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.mdc-slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: var(--md-primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: var(--md-elevation-2);
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  left: 60%;
+}
+
+.mdc-slider:hover .mdc-slider__thumb {
+  box-shadow: var(--md-elevation-3);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.slider-value {
+  font-size: var(--md-font-body-small);
+  color: var(--md-on-surface-variant);
+  min-width: 40px;
+  text-align: right;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+}
+
+/* ==========================================================================
+   LAYOUT COMPONENTS
+   ========================================================================== */
+
+.main-container {
+  display: flex;
+  margin-top: 64px;
+  height: calc(100vh - 64px);
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--md-space-6);
+  overflow-y: auto;
+  background: var(--background-primary);
+}
+
+/* Grid System */
+.mdc-grid {
+  display: grid;
+  gap: var(--md-space-4);
+}
+
+.mdc-grid--2-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.mdc-grid--3-col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.mdc-grid--auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.mdc-grid--auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+.hidden {
+  display: none !important;
+}
+
+.mdc-divider {
+  height: 1px;
+  background: var(--md-outline-variant);
+  margin: var(--md-space-4) 0;
+  border: none;
+}
+
+/* Elevation utilities */
+.mdc-elevation-0 { box-shadow: var(--md-elevation-0); }
+.mdc-elevation-1 { box-shadow: var(--md-elevation-1); }
+.mdc-elevation-2 { box-shadow: var(--md-elevation-2); }
+.mdc-elevation-3 { box-shadow: var(--md-elevation-3); }
+.mdc-elevation-4 { box-shadow: var(--md-elevation-4); }
+.mdc-elevation-5 { box-shadow: var(--md-elevation-5); }
+
+/* Surface utilities */
+.mdc-surface { background: var(--md-surface); }
+.mdc-surface-variant { background: var(--md-surface-variant); }
+.mdc-surface-container { background: var(--md-surface-container); }
+
+/* Text utilities */
+.mdc-text-primary { color: var(--md-on-surface); }
+.mdc-text-secondary { color: var(--md-on-surface-variant); }
+.mdc-text-accent { color: var(--md-primary); }
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(0.95); 
+  }
+}
+
+.mdc-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .mdc-drawer {
+    width: 240px;
+  }
+  
+  .content-area {
+    padding: var(--md-space-4);
+  }
+  
+  .mdc-grid--auto-fit {
+    grid-template-columns: 1fr;
+  }
+  
+  .mdc-grid--auto-fill {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .mdc-app-bar {
+    padding: 0 var(--md-space-4);
+  }
+  
+  .mdc-app-bar__title {
+    font-size: var(--md-font-title-medium);
+  }
+  
+  .mdc-fab {
+    bottom: var(--md-space-4);
+    right: var(--md-space-4);
+  }
 }
