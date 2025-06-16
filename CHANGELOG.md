@@ -5,6 +5,21 @@ All notable changes to the Obsidian Sonigraph Plugin will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2024-12-19
+
+### Added - Phase 8: Complete Orchestral System
+- **34 Total Instruments**: Complete orchestral families with specialized synthesis engines
+- **Advanced Percussion**: Physics-based timpani, xylophone, vibraphone, and gongs with realistic articulation
+- **Electronic Synthesis**: Professional lead/bass/arp synths with filter modulation and LFO control
+- **Master Effects**: Orchestral reverb, 3-band EQ, and compressor with automatic routing
+- **Enhanced UI**: Family-organized effects interface with filtering and quick toggles
+- **Performance Optimization**: Adaptive quality system with CPU monitoring and voice pooling
+
+### Changed
+- Extended AudioEngine with PercussionEngine and ElectronicEngine
+- Redesigned Effects tab for 34-instrument management
+- Added professional default configuration (5 core instruments enabled)
+
 ## [0.2.0] - 2024-12-19
 
 ### Added

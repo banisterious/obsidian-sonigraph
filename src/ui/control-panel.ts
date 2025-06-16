@@ -539,10 +539,23 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private createEffectsTab(): void {
-		const section = this.createTabSection('Audio Effects', 'Configure reverb, chorus, and filter effects');
+		const section = this.createTabSection('Audio Effects', 'Configure reverb, chorus, and filter effects for 34 instruments');
 
-		// Effect Presets Section
-		const presetsSection = this.createSettingsGroup(section, '🎭 Effect Presets', 'Instantly apply professional effect combinations');
+		// Enhanced Effects UI with grouping and filtering
+		this.createEnhancedEffectsInterface(section);
+	}
+
+	private createEnhancedEffectsInterface(parent: HTMLElement): void {
+		// Master Effects Controls
+		const masterSection = this.createSettingsGroup(parent, '🎛️ Master Effects', 'Global orchestral processing controls');
+		this.createMasterEffectsControls(masterSection);
+
+		// Instrument Family Organization
+		const familySection = this.createSettingsGroup(parent, '🎼 Instrument Families', 'Organized effects for all 34 instruments');
+		this.createInstrumentFamiliesInterface(familySection);
+
+		// Effect Presets Section  
+		const presetsSection = this.createSettingsGroup(parent, '🎭 Effect Presets', 'Instantly apply professional effect combinations to all instruments');
 		
 		// Venue Presets
 		const venueGroup = presetsSection.createDiv({ cls: 'sonigraph-preset-group' });
@@ -643,13 +656,6 @@ export class ControlPanelModal extends Modal {
 			}
 		});
 
-		// Separator
-		section.createEl('hr', { cls: 'sonigraph-section-separator' });
-
-		// Individual instrument effect controls - Updated for Phase 8B: All 34 instruments
-		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
-			this.createInstrumentEffectControls(section, instrumentKey);
-		});
 	}
 
 	private createInstrumentEffectControls(
@@ -1239,5 +1245,304 @@ export class ControlPanelModal extends Modal {
 			activity: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
 		};
 		return icons[iconName] || icons.play;
+	}
+
+	private createMasterEffectsControls(parent: HTMLElement): void {
+		// Master Reverb
+		const masterReverbGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
+		masterReverbGroup.createEl('h4', { text: '🏛️ Master Reverb Hall', cls: 'sonigraph-master-effect-title' });
+		
+		new Setting(masterReverbGroup)
+			.setName('Hall Size')
+			.setDesc('Overall orchestral hall size and decay')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.05)
+				.setValue(0.7)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					// Apply to all enabled instruments
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.setMasterReverbDecay(value * 8 + 1); // 1-9 second range
+					}
+				}));
+
+		// Master EQ
+		const masterEQGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
+		masterEQGroup.createEl('h4', { text: '🎚️ Master EQ', cls: 'sonigraph-master-effect-title' });
+		
+		new Setting(masterEQGroup)
+			.setName('Bass Boost')
+			.setDesc('Enhance low-end frequencies for orchestral warmth')
+			.addSlider(slider => slider
+				.setLimits(-12, 12, 1)
+				.setValue(0)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.setMasterBassBoost(value);
+					}
+				}));
+
+		new Setting(masterEQGroup)
+			.setName('Treble Clarity')
+			.setDesc('Adjust high frequencies for instrumental clarity')
+			.addSlider(slider => slider
+				.setLimits(-12, 12, 1)
+				.setValue(0)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.setMasterTrebleBoost(value);
+					}
+				}));
+
+		// Master Compressor
+		const masterCompGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
+		masterCompGroup.createEl('h4', { text: '🎛️ Master Dynamics', cls: 'sonigraph-master-effect-title' });
+		
+		new Setting(masterCompGroup)
+			.setName('Orchestral Compression')
+			.setDesc('Balance dynamics across all 34 instruments')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.05)
+				.setValue(0.3)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.setMasterCompression(value);
+					}
+				}));
+	}
+
+	private createInstrumentFamiliesInterface(parent: HTMLElement): void {
+		// Group instruments by family for better organization
+		const instrumentFamilies = {
+			'🎤 Vocal Family': ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'],
+			'🎹 Keyboard Family': ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta'],
+			'🎻 Strings Family': ['strings', 'violin', 'cello', 'guitar', 'harp'],
+			'🎺 Brass Family': ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
+			'🎷 Woodwinds Family': ['flute', 'clarinet', 'saxophone', 'oboe'],
+			'🥁 Percussion Family': ['timpani', 'xylophone', 'vibraphone', 'gongs'],
+			'⚡ Electronic Family': ['pad', 'leadSynth', 'bassSynth', 'arpSynth'],
+			'🌊 Environmental': ['whaleHumpback']
+		};
+
+		// Create family filter controls
+		const filterContainer = parent.createDiv({ cls: 'sonigraph-family-filters' });
+		filterContainer.createEl('h4', { text: 'Filter by Family:', cls: 'sonigraph-filter-title' });
+		
+		const filterButtons = filterContainer.createDiv({ cls: 'sonigraph-filter-buttons' });
+		
+		// Show All button
+		const showAllButton = filterButtons.createEl('button', {
+			cls: 'sonigraph-filter-button active',
+			text: '🎼 Show All'
+		});
+		
+		let activeFilter = 'all';
+		
+		showAllButton.addEventListener('click', () => {
+			activeFilter = 'all';
+			this.updateFamilyFilter(activeFilter);
+			this.updateFilterButtonStates(filterButtons, showAllButton);
+		});
+
+		// Family filter buttons
+		Object.keys(instrumentFamilies).forEach(familyName => {
+			const button = filterButtons.createEl('button', {
+				cls: 'sonigraph-filter-button',
+				text: familyName
+			});
+			
+			button.addEventListener('click', () => {
+				activeFilter = familyName;
+				this.updateFamilyFilter(activeFilter);
+				this.updateFilterButtonStates(filterButtons, button);
+			});
+		});
+
+		// Enabled/Disabled filter toggle
+		const enabledToggle = filterContainer.createDiv({ cls: 'sonigraph-enabled-filter' });
+		enabledToggle.createEl('span', { text: 'Show: ' });
+		
+		const enabledButton = enabledToggle.createEl('button', {
+			cls: 'sonigraph-enabled-filter-button active',
+			text: '✅ Enabled Only'
+		});
+		
+		let showOnlyEnabled = true;
+		
+		enabledButton.addEventListener('click', () => {
+			showOnlyEnabled = !showOnlyEnabled;
+			enabledButton.setText(showOnlyEnabled ? '✅ Enabled Only' : '📋 All Instruments');
+			enabledButton.toggleClass('active', showOnlyEnabled);
+			this.updateEnabledFilter(showOnlyEnabled);
+		});
+
+		// Create collapsible family sections
+		const familiesContainer = parent.createDiv({ cls: 'sonigraph-families-container' });
+		
+		Object.entries(instrumentFamilies).forEach(([familyName, instruments]) => {
+			const familyGroup = familiesContainer.createDiv({ 
+				cls: 'sonigraph-family-group',
+				attr: { 'data-family': familyName }
+			});
+			
+			// Family header with collapse toggle
+			const familyHeader = familyGroup.createDiv({ cls: 'sonigraph-family-header' });
+			const collapseIcon = familyHeader.createSpan({ cls: 'sonigraph-collapse-icon', text: '▼' });
+			familyHeader.createEl('h3', { text: familyName, cls: 'sonigraph-family-title' });
+			
+			const familyContent = familyGroup.createDiv({ cls: 'sonigraph-family-content' });
+			
+			// Collapse toggle functionality
+			let isCollapsed = false;
+			familyHeader.addEventListener('click', () => {
+				isCollapsed = !isCollapsed;
+				collapseIcon.setText(isCollapsed ? '▶' : '▼');
+				familyContent.style.display = isCollapsed ? 'none' : 'block';
+			});
+
+			// Create compact instrument controls for each family member
+			instruments.forEach(instrumentKey => {
+				if (this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments]) {
+					this.createCompactInstrumentEffectControls(familyContent, instrumentKey);
+				}
+			});
+		});
+	}
+
+	private createCompactInstrumentEffectControls(parent: HTMLElement, instrumentKey: string): void {
+		const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
+		if (!instrumentSettings) return;
+
+		const instrumentInfo = this.getInstrumentInfo(instrumentKey);
+		
+		const compactGroup = parent.createDiv({ 
+			cls: 'sonigraph-compact-instrument',
+			attr: { 
+				'data-instrument': instrumentKey,
+				'data-enabled': instrumentSettings.enabled.toString()
+			}
+		});
+		
+		// Compact header
+		const header = compactGroup.createDiv({ cls: 'sonigraph-compact-header' });
+		header.createEl('span', { 
+			text: `${instrumentInfo.icon} ${instrumentInfo.name}`, 
+			cls: 'sonigraph-compact-title' 
+		});
+		
+		// Enabled indicator
+		const enabledIndicator = header.createEl('span', {
+			cls: `sonigraph-enabled-indicator ${instrumentSettings.enabled ? 'enabled' : 'disabled'}`,
+			text: instrumentSettings.enabled ? '●' : '○'
+		});
+
+		// Quick effect toggles
+		const quickToggles = compactGroup.createDiv({ cls: 'sonigraph-quick-toggles' });
+		
+		// Reverb toggle
+		const reverbToggle = quickToggles.createEl('button', {
+			cls: `sonigraph-quick-toggle ${instrumentSettings.effects.reverb.enabled ? 'active' : ''}`,
+			text: '🏛️',
+			attr: { title: 'Reverb' }
+		});
+		
+		reverbToggle.addEventListener('click', async () => {
+			instrumentSettings.effects.reverb.enabled = !instrumentSettings.effects.reverb.enabled;
+			reverbToggle.toggleClass('active', instrumentSettings.effects.reverb.enabled);
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				this.plugin.audioEngine.setReverbEnabled(instrumentSettings.effects.reverb.enabled, instrumentKey);
+			}
+		});
+
+		// Chorus toggle
+		const chorusToggle = quickToggles.createEl('button', {
+			cls: `sonigraph-quick-toggle ${instrumentSettings.effects.chorus.enabled ? 'active' : ''}`,
+			text: '🌊',
+			attr: { title: 'Chorus' }
+		});
+		
+		chorusToggle.addEventListener('click', async () => {
+			instrumentSettings.effects.chorus.enabled = !instrumentSettings.effects.chorus.enabled;
+			chorusToggle.toggleClass('active', instrumentSettings.effects.chorus.enabled);
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				this.plugin.audioEngine.setChorusEnabled(instrumentSettings.effects.chorus.enabled, instrumentKey);
+			}
+		});
+
+		// Filter toggle
+		const filterToggle = quickToggles.createEl('button', {
+			cls: `sonigraph-quick-toggle ${instrumentSettings.effects.filter.enabled ? 'active' : ''}`,
+			text: '🎚️',
+			attr: { title: 'Filter' }
+		});
+		
+		filterToggle.addEventListener('click', async () => {
+			instrumentSettings.effects.filter.enabled = !instrumentSettings.effects.filter.enabled;
+			filterToggle.toggleClass('active', instrumentSettings.effects.filter.enabled);
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				this.plugin.audioEngine.setFilterEnabled(instrumentSettings.effects.filter.enabled, instrumentKey);
+			}
+		});
+
+		// Expand button for detailed controls
+		const expandButton = quickToggles.createEl('button', {
+			cls: 'sonigraph-expand-button',
+			text: '⚙️',
+			attr: { title: 'Detailed controls' }
+		});
+		
+		expandButton.addEventListener('click', () => {
+			this.showDetailedEffectsModal(instrumentKey);
+		});
+	}
+
+	private updateFamilyFilter(activeFilter: string): void {
+		const familyGroups = document.querySelectorAll('.sonigraph-family-group');
+		familyGroups.forEach(group => {
+			const familyName = group.getAttribute('data-family');
+			const element = group as HTMLElement;
+			if (activeFilter === 'all' || familyName === activeFilter) {
+				element.style.display = 'block';
+			} else {
+				element.style.display = 'none';
+			}
+		});
+	}
+
+	private updateEnabledFilter(showOnlyEnabled: boolean): void {
+		const instruments = document.querySelectorAll('.sonigraph-compact-instrument');
+		instruments.forEach(instrument => {
+			const isEnabled = instrument.getAttribute('data-enabled') === 'true';
+			const element = instrument as HTMLElement;
+			if (!showOnlyEnabled || isEnabled) {
+				element.style.display = 'block';
+			} else {
+				element.style.display = 'none';
+			}
+		});
+	}
+
+	private updateFilterButtonStates(container: HTMLElement, activeButton: HTMLElement): void {
+		container.querySelectorAll('.sonigraph-filter-button').forEach(button => {
+			button.removeClass('active');
+		});
+		activeButton.addClass('active');
+	}
+
+	private showDetailedEffectsModal(instrumentKey: string): void {
+		// Create a detailed effects modal for the specific instrument
+		const modal = new Modal(this.app);
+		modal.setTitle(`${this.getInstrumentInfo(instrumentKey).name} - Detailed Effects`);
+		
+		const { contentEl } = modal;
+		this.createInstrumentEffectControls(contentEl, instrumentKey);
+		
+		modal.open();
 	}
 } 
