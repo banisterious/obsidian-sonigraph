@@ -33,8 +33,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		logger.debug('ui', 'Opening Material Design Audio Control Center');
 
-		// Add Material Design CSS
-		this.loadMaterialDesignStyles();
+		// Material Design CSS is loaded via styles.css
 
 		// Create app structure
 		this.createAppBar();
@@ -49,18 +48,6 @@ export class MaterialControlPanelModal extends Modal {
 		this.stopStatusUpdates();
 	}
 
-	/**
-	 * Load Material Design CSS framework
-	 */
-	private loadMaterialDesignStyles(): void {
-		// Check if styles are already loaded
-		if (!document.querySelector('link[href*="material-design.css"]')) {
-			const link = document.createElement('link');
-			link.rel = 'stylesheet';
-			link.href = 'app://obsidian.md/src/ui/material-design.css';
-			document.head.appendChild(link);
-		}
-	}
 
 	/**
 	 * Create Material Design App Bar
