@@ -1194,6 +1194,192 @@ var MUSICAL_SCALES = {
   pentatonic: [0, 2, 4, 7, 9],
   chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 };
+var INSTRUMENT_INFO = {
+  piano: {
+    name: "Piano",
+    icon: "\u{1F3B9}",
+    description: "Triangle waves with quick attack/decay for percussive clarity",
+    defaultFrequencyRange: "Very High (>1400Hz)"
+  },
+  organ: {
+    name: "Organ",
+    icon: "\u{1F39B}\uFE0F",
+    description: "FM synthesis with chorus effect for rich, sustained tones",
+    defaultFrequencyRange: "Medium (400-800Hz)"
+  },
+  strings: {
+    name: "Strings",
+    icon: "\u{1F3BB}",
+    description: "AM synthesis with filtering for warm, flowing sounds",
+    defaultFrequencyRange: "Very Low (<200Hz)"
+  },
+  choir: {
+    name: "Choir",
+    icon: "\u{1F3A4}",
+    description: "Additive synthesis with formant filtering for ethereal human voices",
+    defaultFrequencyRange: "High (1000-1400Hz)"
+  },
+  vocalPads: {
+    name: "Vocal Pads",
+    icon: "\u{1F30A}",
+    description: "Multi-layer sine waves with formant filtering for atmospheric textures",
+    defaultFrequencyRange: "Mid-High (600-1000Hz)"
+  },
+  pad: {
+    name: "Pad",
+    icon: "\u{1F39B}\uFE0F",
+    description: "Multi-oscillator synthesis with filter sweeps for ambient foundations",
+    defaultFrequencyRange: "Low-Mid (200-400Hz)"
+  },
+  flute: {
+    name: "Flute",
+    icon: "\u{1F3BA}",
+    description: "Pure sine waves with breath noise for airy, crystalline tones",
+    defaultFrequencyRange: "Ultra High (>1600Hz)"
+  },
+  clarinet: {
+    name: "Clarinet",
+    icon: "\u{1F3B5}",
+    description: "Square wave harmonics for warm, hollow woodwind character",
+    defaultFrequencyRange: "High-Mid (800-1200Hz)"
+  },
+  saxophone: {
+    name: "Saxophone",
+    icon: "\u{1F3B7}",
+    description: "Sawtooth waves with reedy harmonics for rich, expressive tone",
+    defaultFrequencyRange: "Mid (300-600Hz)"
+  },
+  // Phase 6B: Extended Keyboard Family
+  electricPiano: {
+    name: "Electric Piano",
+    icon: "\u{1F3B9}",
+    description: "AM synthesis with tremolo for vintage Rhodes/Wurlitzer character",
+    defaultFrequencyRange: "Mid-Low (200-400Hz)"
+  },
+  harpsichord: {
+    name: "Harpsichord",
+    icon: "\u{1F3BC}",
+    description: "Sharp envelope with filtering for baroque plucked attack",
+    defaultFrequencyRange: "Low-Mid (300-600Hz)"
+  },
+  accordion: {
+    name: "Accordion",
+    icon: "\u{1FA97}",
+    description: "AM synthesis with vibrato for bellows breath simulation",
+    defaultFrequencyRange: "Mid (400-800Hz)"
+  },
+  celesta: {
+    name: "Celesta",
+    icon: "\u{1F514}",
+    description: "Triangle waves with decay for bell-like ethereal tones",
+    defaultFrequencyRange: "Very High (1400-1600Hz)"
+  },
+  // Phase 7: Strings & Brass Completion
+  violin: {
+    name: "Violin",
+    icon: "\u{1F3BB}",
+    description: "Sawtooth waves with filter sweeps and vibrato for expressive bowing",
+    defaultFrequencyRange: "High-Mid (800-1200Hz)"
+  },
+  cello: {
+    name: "Cello",
+    icon: "\u{1F3BB}",
+    description: "Complex harmonics with bow noise for rich low register character",
+    defaultFrequencyRange: "Mid-Low (200-400Hz)"
+  },
+  guitar: {
+    name: "Guitar",
+    icon: "\u{1F3B8}",
+    description: "Karplus-Strong synthesis for authentic plucked string physics",
+    defaultFrequencyRange: "Mid-High (600-1000Hz)"
+  },
+  harp: {
+    name: "Harp",
+    icon: "\u{1FA84}",
+    description: "Sharp pluck envelope with long decay for cascading arpeggios",
+    defaultFrequencyRange: "Low (100-200Hz)"
+  },
+  trumpet: {
+    name: "Trumpet",
+    icon: "\u{1F3BA}",
+    description: "Square waves with brass formants for bright metallic timbre",
+    defaultFrequencyRange: "Low-Mid (300-600Hz)"
+  },
+  frenchHorn: {
+    name: "French Horn",
+    icon: "\u{1F3AF}",
+    description: "Sine waves with slight distortion for warm middle register",
+    defaultFrequencyRange: "Mid (400-800Hz)"
+  },
+  trombone: {
+    name: "Trombone",
+    icon: "\u{1F3BA}",
+    description: "Sawtooth waves with portamento for characteristic sliding pitch",
+    defaultFrequencyRange: "Mid-Low (200-400Hz)"
+  },
+  tuba: {
+    name: "Tuba",
+    icon: "\u{1F3BA}",
+    description: "Sub-bass frequencies with breath noise for deep foundation",
+    defaultFrequencyRange: "Very Low (<100Hz)"
+  },
+  // Phase 8: Percussion & Electronic Finale
+  oboe: {
+    name: "Oboe",
+    icon: "\u{1F3BC}",
+    description: "Nasal quality with double reed simulation and formant filtering",
+    defaultFrequencyRange: "High-Mid (800-1200Hz)"
+  },
+  timpani: {
+    name: "Timpani",
+    icon: "\u{1F941}",
+    description: "Tuned drums with pitch bending and hall acoustics",
+    defaultFrequencyRange: "Low (100-200Hz)"
+  },
+  xylophone: {
+    name: "Xylophone",
+    icon: "\u{1F3B5}",
+    description: "Bright mallet percussion with wooden resonance",
+    defaultFrequencyRange: "Very High (1400-1600Hz)"
+  },
+  vibraphone: {
+    name: "Vibraphone",
+    icon: "\u{1F3BC}",
+    description: "Metallic shimmer with tremolo motor and long sustain",
+    defaultFrequencyRange: "High (1000-1400Hz)"
+  },
+  gongs: {
+    name: "Gongs",
+    icon: "\u{1F941}",
+    description: "Sustained crash with metallic resonance and massive reverb",
+    defaultFrequencyRange: "Very Low (<100Hz)"
+  },
+  leadSynth: {
+    name: "Lead Synth",
+    icon: "\u{1F39B}\uFE0F",
+    description: "Cutting synth lead with filter modulation and resonance",
+    defaultFrequencyRange: "Variable (200-8000Hz)"
+  },
+  bassSynth: {
+    name: "Bass Synth",
+    icon: "\u{1F39B}\uFE0F",
+    description: "Electronic foundation with sub-oscillator and tight filtering",
+    defaultFrequencyRange: "Low (100-200Hz)"
+  },
+  arpSynth: {
+    name: "Arp Synth",
+    icon: "\u{1F39B}\uFE0F",
+    description: "Sequenced patterns with graph-sync capability and delay",
+    defaultFrequencyRange: "Variable (Pattern-dependent)"
+  },
+  // Phase 8B: Environmental & Natural Sounds
+  whaleHumpback: {
+    name: "Humpback Whale",
+    icon: "\u{1F40B}",
+    description: "Authentic whale song recordings with oceanic processing and deep resonance",
+    defaultFrequencyRange: "Low-Mid (20-1000Hz)"
+  }
+};
 var EFFECT_PRESETS = {
   // Venue-based presets
   "concert-hall": {
@@ -2374,87 +2560,6 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     }
   }
   getInstrumentInfo(instrumentKey) {
-    const INSTRUMENT_INFO = {
-      piano: {
-        name: "Piano",
-        icon: "\u{1F3B9}",
-        description: "Triangle waves with quick attack/decay for percussive clarity",
-        defaultFrequencyRange: "Very High (>1400Hz)"
-      },
-      organ: {
-        name: "Organ",
-        icon: "\u{1F39B}\uFE0F",
-        description: "FM synthesis with chorus effect for rich, sustained tones",
-        defaultFrequencyRange: "Medium (400-800Hz)"
-      },
-      strings: {
-        name: "Strings",
-        icon: "\u{1F3BB}",
-        description: "AM synthesis with filtering for warm, flowing sounds",
-        defaultFrequencyRange: "Very Low (<200Hz)"
-      },
-      choir: {
-        name: "Choir",
-        icon: "\u{1F3A4}",
-        description: "Additive synthesis with formant filtering for ethereal human voices",
-        defaultFrequencyRange: "High (1000-1400Hz)"
-      },
-      vocalPads: {
-        name: "Vocal Pads",
-        icon: "\u{1F30A}",
-        description: "Multi-layer sine waves with formant filtering for atmospheric textures",
-        defaultFrequencyRange: "Mid-High (600-1000Hz)"
-      },
-      pad: {
-        name: "Pad",
-        icon: "\u{1F39B}\uFE0F",
-        description: "Multi-oscillator synthesis with filter sweeps for ambient foundations",
-        defaultFrequencyRange: "Low-Mid (200-400Hz)"
-      },
-      flute: {
-        name: "Flute",
-        icon: "\u{1F3BA}",
-        description: "Pure sine waves with breath noise for airy, crystalline tones",
-        defaultFrequencyRange: "Ultra High (>1600Hz)"
-      },
-      clarinet: {
-        name: "Clarinet",
-        icon: "\u{1F3B5}",
-        description: "Square wave harmonics for warm, hollow woodwind character",
-        defaultFrequencyRange: "High-Mid (800-1200Hz)"
-      },
-      saxophone: {
-        name: "Saxophone",
-        icon: "\u{1F3B7}",
-        description: "Sawtooth waves with reedy harmonics for rich, expressive tone",
-        defaultFrequencyRange: "Mid (300-600Hz)"
-      },
-      // Phase 6A: Individual Vocal Sections with advanced formant synthesis
-      soprano: {
-        name: "Soprano",
-        icon: "\u{1F469}\u200D\u{1F3A4}",
-        description: "High female voice with AM synthesis and formant filtering for vowel morphing",
-        defaultFrequencyRange: "High-Mid (800-1200Hz)"
-      },
-      alto: {
-        name: "Alto",
-        icon: "\u{1F399}\uFE0F",
-        description: "Lower female voice with rich harmonics and breath noise modeling",
-        defaultFrequencyRange: "High (1000-1400Hz)"
-      },
-      tenor: {
-        name: "Tenor",
-        icon: "\u{1F9D1}\u200D\u{1F3A4}",
-        description: "High male voice with FM synthesis and vocal fry characteristics",
-        defaultFrequencyRange: "Mid-High (600-1000Hz)"
-      },
-      bass: {
-        name: "Bass",
-        icon: "\u{1F3A4}",
-        description: "Low male voice with sub-harmonics and chest resonance modeling",
-        defaultFrequencyRange: "Very Low (<100Hz)"
-      }
-    };
     return INSTRUMENT_INFO[instrumentKey] || INSTRUMENT_INFO.piano;
   }
   createHarmonyTab() {

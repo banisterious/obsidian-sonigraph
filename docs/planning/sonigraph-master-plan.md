@@ -107,11 +107,11 @@
 | **🎷 Woodwinds** | Flute | ✅ | Complete | Sample-based + noise | Ultra-High (>1600Hz) | Breathy pure tone |
 | | Clarinet | ✅ | Complete | Sample-based + odd harmonics | High-Mid (800-1200Hz) | Hollow timbre |
 | | Saxophone | ✅ | Complete | Sample-based + distortion | Low-Mid (300-600Hz) | Reedy richness |
-| | Oboe | 🔄 | 5B | Complex formants + reed simulation | High-Mid (800-1200Hz) | Nasal quality, double reed |
-| **🥁 Percussion** | Timpani | 🔄 | 8A | Sine burst + pitch bend | Low (100-200Hz) | Tuned drums, pitch bending |
-| | Xylophone | 🔄 | 8A | Triangle + sharp attack | Very High (1400-1600Hz) | Mallet percussion, bright attack |
-| | Vibraphone | 🔄 | 8A | Sine + tremolo | High (1000-1400Hz) | Metallic shimmer, tremolo |
-| | Gongs | 🔄 | 8A | Noise burst + long decay | Very Low (<100Hz) | Sustained crash, metallic resonance |
+| | Oboe | ✅ | 8 Complete | Complex formants + reed simulation | High-Mid (800-1200Hz) | Nasal quality, double reed, disabled by default |
+| **🥁 Percussion** | Timpani | ✅ | 8 Complete | Sine burst + pitch bend | Low (100-200Hz) | Tuned drums, pitch bending, disabled by default |
+| | Xylophone | ✅ | 8 Complete | Triangle + sharp attack | Very High (1400-1600Hz) | Mallet percussion, bright attack, disabled by default |
+| | Vibraphone | ✅ | 8 Complete | Sine + tremolo | High (1000-1400Hz) | Metallic shimmer, tremolo, disabled by default |
+| | Gongs | ✅ | 8 Complete | Noise burst + long decay | Very Low (<100Hz) | Sustained crash, metallic resonance, disabled by default |
 | **🌟 Electronic** | Pad | ✅ | Complete | Sample-based | Mid-Low (200-400Hz) | Ambient synthetic textures |
 | | Lead Synth | ✅ | 8 Complete | Sawtooth + filter + resonance | Variable (200-8000Hz) | Cutting synth, filter modulation |
 | | Bass Synth | ✅ | 8 Complete | Square + sub-oscillator | Low (100-200Hz) | Electronic foundation |
