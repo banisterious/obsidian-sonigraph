@@ -1596,6 +1596,31 @@ export const INSTRUMENT_INFO = {
 		description: 'Sequenced patterns with graph-sync capability and delay',
 		defaultFrequencyRange: 'Variable (Pattern-dependent)'
 	},
+	// Phase 6A: Individual Vocal Sections
+	soprano: {
+		name: 'Soprano',
+		icon: '👩‍🎤',
+		description: 'High female voice with formant filtering and vowel morphing',
+		defaultFrequencyRange: 'High-Mid (800-1200Hz)'
+	},
+	alto: {
+		name: 'Alto',
+		icon: '🎙️',
+		description: 'Lower female voice with rich harmonics and breath noise modeling',
+		defaultFrequencyRange: 'High (1000-1400Hz)'
+	},
+	tenor: {
+		name: 'Tenor',
+		icon: '🧑‍🎤',
+		description: 'High male voice with vocal expression and characteristics',
+		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
+	},
+	bass: {
+		name: 'Bass',
+		icon: '🎤',
+		description: 'Low male voice with chest resonance and sub-harmonics',
+		defaultFrequencyRange: 'Very Low (<100Hz)'
+	},
 	// Phase 8B: Environmental & Natural Sounds
 	whaleHumpback: {
 		name: 'Humpback Whale',
