@@ -220,7 +220,7 @@ export interface SonigraphSettings {
 		frenchHorn: InstrumentSettings;
 		trombone: InstrumentSettings;
 		tuba: InstrumentSettings;
-		// Phase 8: Percussion & Electronic Finale (8 instruments → 31/31 total)
+		// Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
 		oboe: InstrumentSettings;
 		timpani: InstrumentSettings;
 		xylophone: InstrumentSettings;
@@ -229,6 +229,8 @@ export interface SonigraphSettings {
 		leadSynth: InstrumentSettings;
 		bassSynth: InstrumentSettings;
 		arpSynth: InstrumentSettings;
+		// Phase 8B: Environmental & Natural Sounds
+		whaleHumpback: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
 	// Phase 3.5: Enhanced Effect Routing
@@ -1307,6 +1309,39 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					}
 				}
 			}
+		},
+		// Phase 8B: Environmental & Natural Sounds
+		whaleHumpback: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 4,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 8.0,
+						preDelay: 0.15,
+						wet: 0.85
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.1,
+						depth: 0.8,
+						delayTime: 12.0,
+						feedback: 0.15
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 800,
+						Q: 0.4,
+						type: 'lowpass'
+					}
+				}
+			}
 		}
 	},
 	voiceAssignmentStrategy: 'frequency',
@@ -1560,6 +1595,13 @@ export const INSTRUMENT_INFO = {
 		icon: '🎛️',
 		description: 'Sequenced patterns with graph-sync capability and delay',
 		defaultFrequencyRange: 'Variable (Pattern-dependent)'
+	},
+	// Phase 8B: Environmental & Natural Sounds
+	whaleHumpback: {
+		name: 'Humpback Whale',
+		icon: '🐋',
+		description: 'Authentic whale song recordings with oceanic processing and deep resonance',
+		defaultFrequencyRange: 'Low-Mid (20-1000Hz)'
 	}
 };
 

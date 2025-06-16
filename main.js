@@ -1097,6 +1097,39 @@ var DEFAULT_SETTINGS = {
           }
         }
       }
+    },
+    // Phase 8B: Environmental & Natural Sounds
+    whaleHumpback: {
+      enabled: false,
+      volume: 0.7,
+      maxVoices: 4,
+      effects: {
+        reverb: {
+          enabled: true,
+          params: {
+            decay: 8,
+            preDelay: 0.15,
+            wet: 0.85
+          }
+        },
+        chorus: {
+          enabled: true,
+          params: {
+            frequency: 0.1,
+            depth: 0.8,
+            delayTime: 12,
+            feedback: 0.15
+          }
+        },
+        filter: {
+          enabled: true,
+          params: {
+            frequency: 800,
+            Q: 0.4,
+            type: "lowpass"
+          }
+        }
+      }
     }
   },
   voiceAssignmentStrategy: "frequency",
@@ -22508,6 +22541,25 @@ var SAMPLER_CONFIGS = {
     baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/",
     effects: ["filter", "delay", "reverb"]
     // Sequenced + space
+  },
+  // Phase 8B: Environmental & Natural Sounds
+  whaleHumpback: {
+    urls: {
+      "C1": "C1.[format]",
+      "F1": "F1.[format]",
+      "Bb1": "Bb1.[format]",
+      "C2": "C2.[format]",
+      "F2": "F2.[format]",
+      "Bb2": "Bb2.[format]",
+      "C3": "C3.[format]",
+      "F3": "F3.[format]"
+    },
+    release: 12,
+    // Long whale song sustains
+    baseUrl: "https://freesound.org/data/previews/316/316847_5245022-hq.mp3",
+    // Scientific whale recordings
+    effects: ["reverb", "chorus", "filter"]
+    // Deep oceanic processing
   }
 };
 var AudioEngine = class {
@@ -22585,7 +22637,7 @@ var AudioEngine = class {
     }
   }
   async initializeEffects() {
-    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth"];
+    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback"];
     for (const instrumentName of instruments) {
       const effectMap = /* @__PURE__ */ new Map();
       const reverb = new Reverb({
@@ -23765,6 +23817,8 @@ var AudioEngine = class {
         return "timpani";
       if (enabledInstruments.includes("bassSynth"))
         return "bassSynth";
+      if (enabledInstruments.includes("whaleHumpback"))
+        return "whaleHumpback";
       return sortedInstruments[0];
     } else if (mapping.pitch > 100) {
       if (enabledInstruments.includes("bass"))
@@ -23773,10 +23827,14 @@ var AudioEngine = class {
         return "tuba";
       if (enabledInstruments.includes("bassSynth"))
         return "bassSynth";
+      if (enabledInstruments.includes("whaleHumpback"))
+        return "whaleHumpback";
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     } else {
       if (enabledInstruments.includes("gongs"))
         return "gongs";
+      if (enabledInstruments.includes("whaleHumpback"))
+        return "whaleHumpback";
       if (enabledInstruments.includes("leadSynth"))
         return "leadSynth";
       if (enabledInstruments.includes("tuba"))

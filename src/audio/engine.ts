@@ -402,6 +402,17 @@ const SAMPLER_CONFIGS = {
 		release: 0.1,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/",
 		effects: ['filter', 'delay', 'reverb'] // Sequenced + space
+	},
+	// Phase 8B: Environmental & Natural Sounds
+	whaleHumpback: {
+		urls: {
+			"C1": "C1.[format]", "F1": "F1.[format]", "Bb1": "Bb1.[format]",
+			"C2": "C2.[format]", "F2": "F2.[format]", "Bb2": "Bb2.[format]",
+			"C3": "C3.[format]", "F3": "F3.[format]"
+		},
+		release: 12.0, // Long whale song sustains
+		baseUrl: "https://freesound.org/data/previews/316/316847_5245022-hq.mp3", // Scientific whale recordings
+		effects: ['reverb', 'chorus', 'filter'] // Deep oceanic processing
 	}
 };
 
@@ -499,8 +510,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects - Phase 8: Now supporting 33 instruments (Complete Orchestral Vision)
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth'];
+		// Initialize per-instrument effects - Phase 8B: Now supporting 34 instruments (Complete Orchestral Vision + Environmental Sounds)
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'];
 		
 		for (const instrumentName of instruments) {
 			const effectMap = new Map<string, any>();
@@ -1795,7 +1806,7 @@ export class AudioEngine {
 
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
 		// Distribute based on pitch ranges, but only among enabled instruments
-		// Updated for 33 total instruments (Phase 8: Complete Orchestral Vision)
+		// Updated for 34 total instruments (Phase 8B: Complete Orchestral Vision + Environmental Sounds)
 		const sortedInstruments = enabledInstruments.sort();
 		
 		if (mapping.pitch > 1600) {
@@ -1849,21 +1860,24 @@ export class AudioEngine {
 			if (enabledInstruments.includes('trombone')) return 'trombone';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else if (mapping.pitch > 200) {
-			// Low pitch - prefer strings, harp, timpani, bassSynth if available
+			// Low pitch - prefer strings, harp, timpani, bassSynth, whaleHumpback if available
 			if (enabledInstruments.includes('strings')) return 'strings';
 			if (enabledInstruments.includes('harp')) return 'harp';
 			if (enabledInstruments.includes('timpani')) return 'timpani';
 			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
+			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 100) {
-			// Very low pitch - prefer bass voice, tuba, bassSynth if available
+			// Very low pitch - prefer bass voice, tuba, bassSynth, whaleHumpback if available
 			if (enabledInstruments.includes('bass')) return 'bass';
 			if (enabledInstruments.includes('tuba')) return 'tuba';
 			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
+			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else {
-			// Ultra low pitch - prefer gongs, leadSynth fundamentals, tuba if available
+			// Ultra low pitch - prefer gongs, whaleHumpback, tuba, bass if available
 			if (enabledInstruments.includes('gongs')) return 'gongs';
+			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			if (enabledInstruments.includes('leadSynth')) return 'leadSynth';
 			if (enabledInstruments.includes('tuba')) return 'tuba';
 			if (enabledInstruments.includes('bass')) return 'bass';
