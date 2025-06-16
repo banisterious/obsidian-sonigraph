@@ -7,13 +7,13 @@
  * USAGE EXAMPLES:
  * 
  * // Full setting item with name and description
- * createObsidianToggle(container, true, (value) => console.log(value), {
+ * createObsidianToggle(container, true, (value) => logger.debug('toggle', 'value changed', { value }), {
  *   name: 'Enable Feature',
  *   description: 'Turn this feature on or off'
  * });
  * 
  * // Simple inline toggle
- * createSimpleToggle(container, false, (value) => console.log(value), {
+ * createSimpleToggle(container, false, (value) => logger.debug('toggle', 'value changed', { value }), {
  *   ariaLabel: 'Toggle notification'
  * });
  * 
@@ -22,6 +22,10 @@
  * updateToggleValue(checkbox, false);
  * setToggleDisabled(checkbox, true);
  */
+
+import { getLogger } from '../logging';
+
+const logger = getLogger('components');
 
 /**
  * Creates an Obsidian-style toggle that matches the native implementation
@@ -86,8 +90,12 @@ export function createObsidianToggle(
 		
 		try {
 			const newValue = checkbox.checked;
-			console.log(`[${checkboxId}] Checkbox change event fired: ${newValue}, element disabled: ${checkbox.disabled}`);
-			console.log(`[${checkboxId}] Checkbox element:`, checkbox, 'Container:', checkboxContainer);
+			logger.debug('ui', 'Checkbox change event fired', { 
+				checkboxId, 
+				newValue, 
+				disabled: checkbox.disabled,
+				containerElement: checkboxContainer 
+			});
 			
 			// Temporarily disable to prevent multiple rapid clicks
 			checkbox.disabled = true;
@@ -100,11 +108,11 @@ export function createObsidianToggle(
 			}
 			
 			// Call the onChange callback
-			console.log(`[${checkboxId}] Calling onChange callback...`);
+			logger.debug('ui', 'Calling onChange callback', { checkboxId });
 			await onChange(newValue);
-			console.log(`[${checkboxId}] Checkbox onChange callback completed: ${newValue}`);
+			logger.debug('ui', 'Checkbox onChange callback completed', { checkboxId, newValue });
 		} catch (error) {
-			console.error(`[${checkboxId}] Error in checkbox change handler:`, error);
+			logger.error('ui', 'Error in checkbox change handler', { checkboxId, error });
 			// Revert the checkbox state if the callback failed
 			checkbox.checked = !checkbox.checked;
 			if (checkbox.checked) {
@@ -115,7 +123,7 @@ export function createObsidianToggle(
 		} finally {
 			// Re-enable the checkbox
 			checkbox.disabled = originalDisabled;
-			console.log(`[${checkboxId}] Checkbox re-enabled, disabled state: ${checkbox.disabled}`);
+			logger.debug('ui', 'Checkbox re-enabled', { checkboxId, disabled: checkbox.disabled });
 		}
 	});
 
@@ -123,7 +131,7 @@ export function createObsidianToggle(
 	checkboxContainer.addEventListener('click', (event) => {
 		// If the click wasn't on the checkbox itself, forward it to the checkbox
 		if (event.target !== checkbox && !checkbox.disabled) {
-			console.log('Container clicked, forwarding to checkbox. Target was:', event.target);
+			logger.debug('ui', 'Container clicked, forwarding to checkbox', { target: event.target });
 			event.preventDefault();
 			event.stopPropagation();
 			checkbox.click(); // This will trigger the change event

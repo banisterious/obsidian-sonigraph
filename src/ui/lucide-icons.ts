@@ -37,40 +37,40 @@ export const LUCIDE_ICONS = {
   
   // Musical Elements
   music: 'music',
-  musicNote: 'music-4',
+  musicNote: 'music',
   waveform: 'activity',
   equalizer: 'sliders-horizontal',
   
   // Instrument Families
   strings: 'music', // Piano/keyboard for strings
-  woodwinds: 'wind', // Wind symbol for woodwinds
-  brass: 'megaphone', // Horn/megaphone for brass
+  woodwinds: 'circle', // Using circle for woodwinds
+  brass: 'volume-2', // Horn-like icon for brass
   vocals: 'mic', // Microphone for vocals
-  percussion: 'drum', // Would use 'drum' if available, fallback to 'circle'
-  electronic: 'monitor-speaker', // Speaker for electronic
+  percussion: 'circle', // Circle for percussion
+  electronic: 'zap', // Electronic/synthesizer
   experimental: 'flask', // Science flask for experimental
   
   // Individual Instruments - Strings
-  piano: 'piano', // If available, otherwise 'music'
+  piano: 'music',
   violin: 'music',
   viola: 'music',
   cello: 'music',
   doubleBass: 'music',
-  harp: 'music-3',
-  guitar: 'guitar', // If available, otherwise 'music'
+  harp: 'music',
+  guitar: 'music',
   
   // Individual Instruments - Woodwinds
-  flute: 'wind',
-  clarinet: 'wind',
-  saxophone: 'wind',
-  bassoon: 'wind',
-  oboe: 'wind',
+  flute: 'circle',
+  clarinet: 'circle',
+  saxophone: 'circle',
+  bassoon: 'circle',
+  oboe: 'circle',
   
   // Individual Instruments - Brass
-  trumpet: 'megaphone',
-  frenchHorn: 'megaphone',
-  trombone: 'megaphone',
-  tuba: 'megaphone',
+  trumpet: 'volume-2',
+  frenchHorn: 'volume-2',
+  trombone: 'volume-2',
+  tuba: 'volume-2',
   
   // Individual Instruments - Vocals
   soprano: 'mic',
@@ -85,18 +85,17 @@ export const LUCIDE_ICONS = {
   gongs: 'circle',
   
   // Individual Instruments - Electronic
-  leadSynth: 'monitor-speaker',
-  bassSynth: 'speaker',
-  arpSynth: 'waveform',
+  leadSynth: 'zap',
+  bassSynth: 'zap',
+  arpSynth: 'zap',
   
   // Individual Instruments - Experimental
-  whaleHumpback: 'waves',
+  whaleHumpback: 'activity',
   
   // Effects
-  reverb: 'waves',
+  reverb: 'activity',
   chorus: 'repeat',
-  filter: 'sliders-horizontal',
-  delay: 'timer',
+  delay: 'clock',
   distortion: 'zap',
   compressor: 'maximize-2',
   
@@ -115,9 +114,9 @@ export const LUCIDE_ICONS = {
   delete: 'trash-2',
   
   // States
-  enabled: 'check-circle-2',
+  enabled: 'check-circle',
   disabled: 'circle',
-  active: 'radio',
+  active: 'circle',
   inactive: 'circle',
   warning: 'alert-triangle',
   error: 'x-circle',
@@ -226,14 +225,17 @@ export const EFFECT_ICONS = {
  */
 export function setLucideIcon(
   element: HTMLElement, 
-  iconName: keyof typeof LUCIDE_ICONS, 
+  iconName: string, 
   size: number = 20
 ): void {
   // Clear any existing content
   element.empty();
   
+  // Get the actual icon name from our mapping or use the provided name directly
+  const actualIconName = (LUCIDE_ICONS as any)[iconName] || iconName;
+  
   // Set the icon using Obsidian's setIcon function
-  setIcon(element, LUCIDE_ICONS[iconName]);
+  setIcon(element, actualIconName);
   
   // Add classes for styling
   element.addClass('lucide-icon');
@@ -251,7 +253,7 @@ export function setLucideIcon(
  * @returns HTMLElement with the icon
  */
 export function createLucideIcon(
-  iconName: keyof typeof LUCIDE_ICONS, 
+  iconName: string, 
   size: number = 20
 ): HTMLElement {
   const iconElement = document.createElement('span');
@@ -264,9 +266,9 @@ export function createLucideIcon(
  * @param familyName - Name of the instrument family
  * @returns Lucide icon name
  */
-export function getFamilyIcon(familyName: string): keyof typeof LUCIDE_ICONS {
+export function getFamilyIcon(familyName: string): string {
   const family = familyName.toLowerCase() as keyof typeof FAMILY_ICONS;
-  return FAMILY_ICONS[family] || LUCIDE_ICONS.music;
+  return FAMILY_ICONS[family] || 'music';
 }
 
 /**
@@ -274,9 +276,9 @@ export function getFamilyIcon(familyName: string): keyof typeof LUCIDE_ICONS {
  * @param instrumentName - Name of the instrument
  * @returns Lucide icon name
  */
-export function getInstrumentIcon(instrumentName: string): keyof typeof LUCIDE_ICONS {
+export function getInstrumentIcon(instrumentName: string): string {
   const instrument = instrumentName.toLowerCase().replace(/\s+/g, '') as keyof typeof INSTRUMENT_ICONS;
-  return INSTRUMENT_ICONS[instrument] || LUCIDE_ICONS.music;
+  return INSTRUMENT_ICONS[instrument] || 'music';
 }
 
 /**
@@ -284,9 +286,9 @@ export function getInstrumentIcon(instrumentName: string): keyof typeof LUCIDE_I
  * @param effectName - Name of the effect
  * @returns Lucide icon name
  */
-export function getEffectIcon(effectName: string): keyof typeof LUCIDE_ICONS {
+export function getEffectIcon(effectName: string): string {
   const effect = effectName.toLowerCase() as keyof typeof EFFECT_ICONS;
-  return EFFECT_ICONS[effect] || LUCIDE_ICONS.equalizer;
+  return EFFECT_ICONS[effect] || 'sliders-horizontal';
 }
 
 /**
@@ -296,67 +298,67 @@ export const TAB_CONFIGS = [
   {
     id: 'status',
     name: 'Status',
-    icon: LUCIDE_ICONS.analytics,
+    icon: 'bar-chart-3',
     description: 'System monitoring and diagnostics'
   },
   {
     id: 'musical',
     name: 'Musical',
-    icon: LUCIDE_ICONS.musicNote,
+    icon: 'music',
     description: 'Scale, tempo, and musical parameters'
   },
   {
     id: 'master',
     name: 'Master',
-    icon: LUCIDE_ICONS.equalizer,
+    icon: 'sliders-horizontal',
     description: 'Global controls and presets'
   },
   {
     id: 'strings',
     name: 'Strings',
-    icon: LUCIDE_ICONS.strings,
+    icon: 'music',
     description: '7 string instruments',
     instrumentCount: 7
   },
   {
     id: 'woodwinds',
     name: 'Woodwinds',
-    icon: LUCIDE_ICONS.woodwinds,
+    icon: 'circle',
     description: '5 woodwind instruments',
     instrumentCount: 5
   },
   {
     id: 'brass',
     name: 'Brass',
-    icon: LUCIDE_ICONS.brass,
+    icon: 'volume-2',
     description: '4 brass instruments',
     instrumentCount: 4
   },
   {
     id: 'vocals',
     name: 'Vocals',
-    icon: LUCIDE_ICONS.vocals,
+    icon: 'mic',
     description: '4 vocal ranges',
     instrumentCount: 4
   },
   {
     id: 'percussion',
     name: 'Percussion',
-    icon: LUCIDE_ICONS.percussion,
+    icon: 'circle',
     description: '4 percussion instruments',
     instrumentCount: 4
   },
   {
     id: 'electronic',
     name: 'Electronic',
-    icon: LUCIDE_ICONS.electronic,
+    icon: 'zap',
     description: '3 electronic synthesizers',
     instrumentCount: 3
   },
   {
     id: 'experimental',
     name: 'Experimental',
-    icon: LUCIDE_ICONS.experimental,
+    icon: 'flask',
     description: 'Experimental sound sources',
     instrumentCount: 1
   }
@@ -365,7 +367,7 @@ export const TAB_CONFIGS = [
 /**
  * Type definitions for better TypeScript support
  */
-export type LucideIconName = keyof typeof LUCIDE_ICONS;
+export type LucideIconName = string; // Simplified to allow any valid Lucide icon name
 export type FamilyName = keyof typeof FAMILY_ICONS;
 export type InstrumentName = keyof typeof INSTRUMENT_ICONS;
 export type EffectName = keyof typeof EFFECT_ICONS;
