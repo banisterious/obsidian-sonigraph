@@ -222,6 +222,110 @@ const SAMPLER_CONFIGS = {
 		release: 3.5,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/celesta/",
 		effects: ['reverb', 'filter'] // Bell-like with ethereal reverb
+	},
+	// Phase 7: Strings & Brass Completion
+	violin: {
+		urls: {
+			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
+			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
+			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]"
+		},
+		release: 2.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
+		effects: ['reverb', 'filter'] // Expressive bowing with vibrato
+	},
+	cello: {
+		urls: {
+			"C2": "C2.[format]", "D2": "D2.[format]", "E2": "E2.[format]",
+			"F2": "F2.[format]", "G2": "G2.[format]", "A2": "A2.[format]",
+			"B2": "B2.[format]", "C3": "C3.[format]", "D3": "D3.[format]",
+			"E3": "E3.[format]", "F3": "F3.[format]", "G3": "G3.[format]",
+			"A3": "A3.[format]", "B3": "B3.[format]", "C4": "C4.[format]",
+			"D4": "D4.[format]", "E4": "E4.[format]", "F4": "F4.[format]"
+		},
+		release: 3.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/cello/",
+		effects: ['reverb', 'filter'] // Rich low harmonics with bow noise
+	},
+	guitar: {
+		urls: {
+			"E2": "E2.[format]", "F2": "F2.[format]", "G2": "G2.[format]",
+			"A2": "A2.[format]", "B2": "B2.[format]", "C3": "C3.[format]",
+			"D3": "D3.[format]", "E3": "E3.[format]", "F3": "F3.[format]",
+			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]"
+		},
+		release: 1.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/guitar-acoustic/",
+		effects: ['reverb', 'chorus'] // Plucked string with natural resonance
+	},
+	harp: {
+		urls: {
+			"C1": "C1.[format]", "D1": "D1.[format]", "F1": "F1.[format]",
+			"G1": "G1.[format]", "A1": "A1.[format]", "C2": "C2.[format]",
+			"D2": "D2.[format]", "F2": "F2.[format]", "G2": "G2.[format]",
+			"A2": "A2.[format]", "C3": "C3.[format]", "D3": "D3.[format]",
+			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
+			"C4": "C4.[format]", "D4": "D4.[format]", "F4": "F4.[format]"
+		},
+		release: 4.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harp/",
+		effects: ['reverb', 'filter'] // Cascading arpeggios with long decay
+	},
+	trumpet: {
+		urls: {
+			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
+			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
+			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
+			"E4": "E4.[format]", "F4": "F4.[format]", "G4": "G4.[format]",
+			"A4": "A4.[format]", "B4": "B4.[format]", "C5": "C5.[format]",
+			"D5": "D5.[format]", "E5": "E5.[format]", "F5": "F5.[format]"
+		},
+		release: 1.8,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/",
+		effects: ['reverb', 'filter'] // Bright brass with metallic formants
+	},
+	frenchHorn: {
+		urls: {
+			"B2": "B2.[format]", "C3": "C3.[format]", "D3": "D3.[format]",
+			"E3": "E3.[format]", "F3": "F3.[format]", "G3": "G3.[format]",
+			"A3": "A3.[format]", "B3": "B3.[format]", "C4": "C4.[format]",
+			"D4": "D4.[format]", "E4": "E4.[format]", "F4": "F4.[format]",
+			"G4": "G4.[format]", "A4": "A4.[format]", "B4": "B4.[format]",
+			"C5": "C5.[format]", "D5": "D5.[format]", "E5": "E5.[format]"
+		},
+		release: 2.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/french-horn/",
+		effects: ['reverb', 'chorus', 'filter'] // Warm middle register with slight distortion
+	},
+	trombone: {
+		urls: {
+			"A1": "A1.[format]", "B1": "B1.[format]", "C2": "C2.[format]",
+			"D2": "D2.[format]", "E2": "E2.[format]", "F2": "F2.[format]",
+			"G2": "G2.[format]", "A2": "A2.[format]", "B2": "B2.[format]",
+			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
+			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
+			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]"
+		},
+		release: 2.2,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
+		effects: ['reverb', 'filter'] // Sliding pitch with sawtooth character
+	},
+	tuba: {
+		urls: {
+			"E1": "E1.[format]", "F1": "F1.[format]", "G1": "G1.[format]",
+			"A1": "A1.[format]", "B1": "B1.[format]", "C2": "C2.[format]",
+			"D2": "D2.[format]", "E2": "E2.[format]", "F2": "F2.[format]",
+			"G2": "G2.[format]", "A2": "A2.[format]", "B2": "B2.[format]",
+			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]"
+		},
+		release: 3.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
+		effects: ['reverb'] // Deep foundation with breath noise
 	}
 };
 
@@ -262,8 +366,8 @@ export class AudioEngine {
 		
 		Object.values(configs).forEach(config => {
 			Object.keys(config.urls).forEach(note => {
-				const noteKey = note as keyof typeof config.urls;
-				config.urls[noteKey] = config.urls[noteKey].replace('[format]', format);
+				const noteKey = note as string;
+				(config.urls as any)[noteKey] = (config.urls as any)[noteKey].replace('[format]', format);
 			});
 		});
 		
@@ -305,8 +409,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects - Phase 6B: Now supporting 17 instruments
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta'];
+		// Initialize per-instrument effects - Phase 7: Now supporting 25 instruments
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba'];
 		
 		for (const instrumentName of instruments) {
 			const effectMap = new Map<string, any>();
@@ -689,6 +793,214 @@ export class AudioEngine {
 		}
 		celestaOutput.connect(this.volume);
 		this.instruments.set('celesta', celestaSampler);
+
+		// Phase 7: Strings & Brass Completion - Violin
+		const violinSampler = new Sampler(configs.violin);
+		const violinVolume = new Volume(-6);
+		this.instrumentVolumes.set('violin', violinVolume);
+		
+		let violinOutput = violinSampler.connect(violinVolume);
+		
+		// Connect violin to its specific effects based on settings
+		const violinEffects = this.instrumentEffects.get('violin');
+		if (violinEffects && this.settings.instruments.violin.effects) {
+			if (this.settings.instruments.violin.effects.reverb.enabled) {
+				const reverb = violinEffects.get('reverb');
+				if (reverb) violinOutput = violinOutput.connect(reverb);
+			}
+			if (this.settings.instruments.violin.effects.chorus.enabled) {
+				const chorus = violinEffects.get('chorus');
+				if (chorus) violinOutput = violinOutput.connect(chorus);
+			}
+			if (this.settings.instruments.violin.effects.filter.enabled) {
+				const filter = violinEffects.get('filter');
+				if (filter) violinOutput = violinOutput.connect(filter);
+			}
+		}
+		violinOutput.connect(this.volume);
+		this.instruments.set('violin', violinSampler);
+
+		// Cello - using Sampler with cello samples
+		const celloSampler = new Sampler(configs.cello);
+		const celloVolume = new Volume(-6);
+		this.instrumentVolumes.set('cello', celloVolume);
+		
+		let celloOutput = celloSampler.connect(celloVolume);
+		
+		// Connect cello to its specific effects based on settings
+		const celloEffects = this.instrumentEffects.get('cello');
+		if (celloEffects && this.settings.instruments.cello.effects) {
+			if (this.settings.instruments.cello.effects.reverb.enabled) {
+				const reverb = celloEffects.get('reverb');
+				if (reverb) celloOutput = celloOutput.connect(reverb);
+			}
+			if (this.settings.instruments.cello.effects.chorus.enabled) {
+				const chorus = celloEffects.get('chorus');
+				if (chorus) celloOutput = celloOutput.connect(chorus);
+			}
+			if (this.settings.instruments.cello.effects.filter.enabled) {
+				const filter = celloEffects.get('filter');
+				if (filter) celloOutput = celloOutput.connect(filter);
+			}
+		}
+		celloOutput.connect(this.volume);
+		this.instruments.set('cello', celloSampler);
+
+		// Guitar - using Sampler with guitar samples
+		const guitarSampler = new Sampler(configs.guitar);
+		const guitarVolume = new Volume(-6);
+		this.instrumentVolumes.set('guitar', guitarVolume);
+		
+		let guitarOutput = guitarSampler.connect(guitarVolume);
+		
+		// Connect guitar to its specific effects based on settings
+		const guitarEffects = this.instrumentEffects.get('guitar');
+		if (guitarEffects && this.settings.instruments.guitar.effects) {
+			if (this.settings.instruments.guitar.effects.reverb.enabled) {
+				const reverb = guitarEffects.get('reverb');
+				if (reverb) guitarOutput = guitarOutput.connect(reverb);
+			}
+			if (this.settings.instruments.guitar.effects.chorus.enabled) {
+				const chorus = guitarEffects.get('chorus');
+				if (chorus) guitarOutput = guitarOutput.connect(chorus);
+			}
+			if (this.settings.instruments.guitar.effects.filter.enabled) {
+				const filter = guitarEffects.get('filter');
+				if (filter) guitarOutput = guitarOutput.connect(filter);
+			}
+		}
+		guitarOutput.connect(this.volume);
+		this.instruments.set('guitar', guitarSampler);
+
+		// Harp - using Sampler with harp samples
+		const harpSampler = new Sampler(configs.harp);
+		const harpVolume = new Volume(-6);
+		this.instrumentVolumes.set('harp', harpVolume);
+		
+		let harpOutput = harpSampler.connect(harpVolume);
+		
+		// Connect harp to its specific effects based on settings
+		const harpEffects = this.instrumentEffects.get('harp');
+		if (harpEffects && this.settings.instruments.harp.effects) {
+			if (this.settings.instruments.harp.effects.reverb.enabled) {
+				const reverb = harpEffects.get('reverb');
+				if (reverb) harpOutput = harpOutput.connect(reverb);
+			}
+			if (this.settings.instruments.harp.effects.chorus.enabled) {
+				const chorus = harpEffects.get('chorus');
+				if (chorus) harpOutput = harpOutput.connect(chorus);
+			}
+			if (this.settings.instruments.harp.effects.filter.enabled) {
+				const filter = harpEffects.get('filter');
+				if (filter) harpOutput = harpOutput.connect(filter);
+			}
+		}
+		harpOutput.connect(this.volume);
+		this.instruments.set('harp', harpSampler);
+
+		// Trumpet - using Sampler with trumpet samples
+		const trumpetSampler = new Sampler(configs.trumpet);
+		const trumpetVolume = new Volume(-6);
+		this.instrumentVolumes.set('trumpet', trumpetVolume);
+		
+		let trumpetOutput = trumpetSampler.connect(trumpetVolume);
+		
+		// Connect trumpet to its specific effects based on settings
+		const trumpetEffects = this.instrumentEffects.get('trumpet');
+		if (trumpetEffects && this.settings.instruments.trumpet.effects) {
+			if (this.settings.instruments.trumpet.effects.reverb.enabled) {
+				const reverb = trumpetEffects.get('reverb');
+				if (reverb) trumpetOutput = trumpetOutput.connect(reverb);
+			}
+			if (this.settings.instruments.trumpet.effects.chorus.enabled) {
+				const chorus = trumpetEffects.get('chorus');
+				if (chorus) trumpetOutput = trumpetOutput.connect(chorus);
+			}
+			if (this.settings.instruments.trumpet.effects.filter.enabled) {
+				const filter = trumpetEffects.get('filter');
+				if (filter) trumpetOutput = trumpetOutput.connect(filter);
+			}
+		}
+		trumpetOutput.connect(this.volume);
+		this.instruments.set('trumpet', trumpetSampler);
+
+		// French Horn - using Sampler with french horn samples
+		const frenchHornSampler = new Sampler(configs.frenchHorn);
+		const frenchHornVolume = new Volume(-6);
+		this.instrumentVolumes.set('frenchHorn', frenchHornVolume);
+		
+		let frenchHornOutput = frenchHornSampler.connect(frenchHornVolume);
+		
+		// Connect french horn to its specific effects based on settings
+		const frenchHornEffects = this.instrumentEffects.get('frenchHorn');
+		if (frenchHornEffects && this.settings.instruments.frenchHorn.effects) {
+			if (this.settings.instruments.frenchHorn.effects.reverb.enabled) {
+				const reverb = frenchHornEffects.get('reverb');
+				if (reverb) frenchHornOutput = frenchHornOutput.connect(reverb);
+			}
+			if (this.settings.instruments.frenchHorn.effects.chorus.enabled) {
+				const chorus = frenchHornEffects.get('chorus');
+				if (chorus) frenchHornOutput = frenchHornOutput.connect(chorus);
+			}
+			if (this.settings.instruments.frenchHorn.effects.filter.enabled) {
+				const filter = frenchHornEffects.get('filter');
+				if (filter) frenchHornOutput = frenchHornOutput.connect(filter);
+			}
+		}
+		frenchHornOutput.connect(this.volume);
+		this.instruments.set('frenchHorn', frenchHornSampler);
+
+		// Trombone - using Sampler with trombone samples
+		const tromboneSampler = new Sampler(configs.trombone);
+		const tromboneVolume = new Volume(-6);
+		this.instrumentVolumes.set('trombone', tromboneVolume);
+		
+		let tromboneOutput = tromboneSampler.connect(tromboneVolume);
+		
+		// Connect trombone to its specific effects based on settings
+		const tromboneEffects = this.instrumentEffects.get('trombone');
+		if (tromboneEffects && this.settings.instruments.trombone.effects) {
+			if (this.settings.instruments.trombone.effects.reverb.enabled) {
+				const reverb = tromboneEffects.get('reverb');
+				if (reverb) tromboneOutput = tromboneOutput.connect(reverb);
+			}
+			if (this.settings.instruments.trombone.effects.chorus.enabled) {
+				const chorus = tromboneEffects.get('chorus');
+				if (chorus) tromboneOutput = tromboneOutput.connect(chorus);
+			}
+			if (this.settings.instruments.trombone.effects.filter.enabled) {
+				const filter = tromboneEffects.get('filter');
+				if (filter) tromboneOutput = tromboneOutput.connect(filter);
+			}
+		}
+		tromboneOutput.connect(this.volume);
+		this.instruments.set('trombone', tromboneSampler);
+
+		// Tuba - using Sampler with tuba samples
+		const tubaSampler = new Sampler(configs.tuba);
+		const tubaVolume = new Volume(-6);
+		this.instrumentVolumes.set('tuba', tubaVolume);
+		
+		let tubaOutput = tubaSampler.connect(tubaVolume);
+		
+		// Connect tuba to its specific effects based on settings
+		const tubaEffects = this.instrumentEffects.get('tuba');
+		if (tubaEffects && this.settings.instruments.tuba.effects) {
+			if (this.settings.instruments.tuba.effects.reverb.enabled) {
+				const reverb = tubaEffects.get('reverb');
+				if (reverb) tubaOutput = tubaOutput.connect(reverb);
+			}
+			if (this.settings.instruments.tuba.effects.chorus.enabled) {
+				const chorus = tubaEffects.get('chorus');
+				if (chorus) tubaOutput = tubaOutput.connect(chorus);
+			}
+			if (this.settings.instruments.tuba.effects.filter.enabled) {
+				const filter = tubaEffects.get('filter');
+				if (filter) tubaOutput = tubaOutput.connect(filter);
+			}
+		}
+		tubaOutput.connect(this.volume);
+		this.instruments.set('tuba', tubaSampler);
 
 		// Apply initial volume settings from plugin settings
 		this.applyInstrumentSettings();
@@ -1184,7 +1496,7 @@ export class AudioEngine {
 
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
 		// Distribute based on pitch ranges, but only among enabled instruments
-		// Updated for 17 total instruments (Phase 6B: Extended Keyboard Family)
+		// Updated for 25 total instruments (Phase 7: Strings & Brass Completion)
 		const sortedInstruments = enabledInstruments.sort();
 		
 		if (mapping.pitch > 1600) {
@@ -1198,9 +1510,10 @@ export class AudioEngine {
 			if (enabledInstruments.includes('celesta')) return 'celesta';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 1200) {
-			// High-mid pitch - prefer soprano, clarinet if available
+			// High-mid pitch - prefer soprano, clarinet, violin if available
 			if (enabledInstruments.includes('soprano')) return 'soprano';
 			if (enabledInstruments.includes('clarinet')) return 'clarinet';
+			if (enabledInstruments.includes('violin')) return 'violin';
 			return enabledInstruments.includes('choir') ? 'choir' : sortedInstruments[0];
 		} else if (mapping.pitch > 1000) {
 			// High pitch - prefer choir, alto if available
@@ -1208,36 +1521,45 @@ export class AudioEngine {
 			if (enabledInstruments.includes('alto')) return 'alto';
 			return enabledInstruments.includes('clarinet') ? 'clarinet' : sortedInstruments[0];
 		} else if (mapping.pitch > 800) {
-			// Mid-high pitch - prefer organ, accordion if available
+			// Mid-high pitch - prefer organ, accordion, violin if available
 			if (enabledInstruments.includes('organ')) return 'organ';
 			if (enabledInstruments.includes('accordion')) return 'accordion';
+			if (enabledInstruments.includes('violin')) return 'violin';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 600) {
-			// Mid-high pitch - prefer vocal pads, tenor if available
+			// Mid-high pitch - prefer vocal pads, tenor, guitar if available
 			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
 			if (enabledInstruments.includes('tenor')) return 'tenor';
+			if (enabledInstruments.includes('guitar')) return 'guitar';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
 		} else if (mapping.pitch > 400) {
-			// Medium pitch - prefer organ, accordion if available
+			// Medium pitch - prefer organ, accordion, frenchHorn if available
 			if (enabledInstruments.includes('organ')) return 'organ';
 			if (enabledInstruments.includes('accordion')) return 'accordion';
+			if (enabledInstruments.includes('frenchHorn')) return 'frenchHorn';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 300) {
-			// Mid-low pitch - prefer saxophone, harpsichord if available
+			// Mid-low pitch - prefer saxophone, harpsichord, trumpet if available
 			if (enabledInstruments.includes('saxophone')) return 'saxophone';
 			if (enabledInstruments.includes('harpsichord')) return 'harpsichord';
+			if (enabledInstruments.includes('trumpet')) return 'trumpet';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
 		} else if (mapping.pitch > 200) {
-			// Low-medium pitch - prefer pad, electric piano if available
+			// Low-medium pitch - prefer pad, electricPiano, cello, trombone if available
 			if (enabledInstruments.includes('pad')) return 'pad';
 			if (enabledInstruments.includes('electricPiano')) return 'electricPiano';
+			if (enabledInstruments.includes('cello')) return 'cello';
+			if (enabledInstruments.includes('trombone')) return 'trombone';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else if (mapping.pitch > 100) {
-			// Low pitch - prefer strings if available
-			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
+			// Low pitch - prefer strings, harp if available
+			if (enabledInstruments.includes('strings')) return 'strings';
+			if (enabledInstruments.includes('harp')) return 'harp';
+			return sortedInstruments[0];
 		} else {
-			// Very low pitch - prefer bass voice if available
+			// Very low pitch - prefer bass voice, tuba if available
 			if (enabledInstruments.includes('bass')) return 'bass';
+			if (enabledInstruments.includes('tuba')) return 'tuba';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		}
 	}

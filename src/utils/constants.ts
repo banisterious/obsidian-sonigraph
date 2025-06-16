@@ -72,6 +72,15 @@ export interface SonigraphSettings {
 		harpsichord: InstrumentSettings;
 		accordion: InstrumentSettings;
 		celesta: InstrumentSettings;
+		// Phase 7: Strings & Brass Completion
+		violin: InstrumentSettings;
+		cello: InstrumentSettings;
+		guitar: InstrumentSettings;
+		harp: InstrumentSettings;
+		trumpet: InstrumentSettings;
+		frenchHorn: InstrumentSettings;
+		trombone: InstrumentSettings;
+		tuba: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
 }
@@ -629,6 +638,263 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				}
 			}
+		},
+		// Phase 7: Strings & Brass Completion
+		violin: { 
+			enabled: false,
+			volume: 0.7, 
+			maxVoices: 6,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.5, 
+						preDelay: 0.03, 
+						wet: 0.4 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.6, 
+						depth: 0.3, 
+						delayTime: 2.5, 
+						feedback: 0.04 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 5000,
+						Q: 0.8, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		cello: { 
+			enabled: false,
+			volume: 0.8, 
+			maxVoices: 6,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 3.2, 
+						preDelay: 0.04, 
+						wet: 0.5 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.4, 
+						depth: 0.4, 
+						delayTime: 3.5, 
+						feedback: 0.05 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 3000,
+						Q: 0.9, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		guitar: { 
+			enabled: false,
+			volume: 0.6, 
+			maxVoices: 8,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.0, 
+						preDelay: 0.02, 
+						wet: 0.3 
+					} 
+				},
+				chorus: { 
+					enabled: true, 
+					params: { 
+						frequency: 0.8, 
+						depth: 0.3, 
+						delayTime: 2.0, 
+						feedback: 0.03 
+					} 
+				},
+				filter: { 
+					enabled: false, 
+					params: { 
+						frequency: 4000,
+						Q: 0.7, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		harp: { 
+			enabled: false,
+			volume: 0.5, 
+			maxVoices: 12,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 4.0, 
+						preDelay: 0.05, 
+						wet: 0.6 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.3, 
+						depth: 0.2, 
+						delayTime: 4.0, 
+						feedback: 0.02 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 6000,
+						Q: 0.5, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		trumpet: { 
+			enabled: false,
+			volume: 0.7, 
+			maxVoices: 4,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.2, 
+						preDelay: 0.03, 
+						wet: 0.35 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.7, 
+						depth: 0.2, 
+						delayTime: 2.5, 
+						feedback: 0.03 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 4500,
+						Q: 1.0, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		frenchHorn: { 
+			enabled: false,
+			volume: 0.6, 
+			maxVoices: 4,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.8, 
+						preDelay: 0.04, 
+						wet: 0.45 
+					} 
+				},
+				chorus: { 
+					enabled: true, 
+					params: { 
+						frequency: 0.5, 
+						depth: 0.3, 
+						delayTime: 3.0, 
+						feedback: 0.04 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 3500,
+						Q: 0.8, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		trombone: { 
+			enabled: false,
+			volume: 0.7, 
+			maxVoices: 4,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.5, 
+						preDelay: 0.03, 
+						wet: 0.4 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.6, 
+						depth: 0.3, 
+						delayTime: 3.0, 
+						feedback: 0.04 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 2500,
+						Q: 0.9, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		tuba: { 
+			enabled: false,
+			volume: 0.8, 
+			maxVoices: 3,
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 3.5, 
+						preDelay: 0.05, 
+						wet: 0.5 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.3, 
+						depth: 0.4, 
+						delayTime: 4.0, 
+						feedback: 0.05 
+					} 
+				},
+				filter: { 
+					enabled: false, 
+					params: { 
+						frequency: 1500,
+						Q: 0.8, 
+						type: 'lowpass' 
+					} 
+				}
+			}
 		}
 	},
 	voiceAssignmentStrategy: 'frequency'
@@ -730,6 +996,55 @@ export const INSTRUMENT_INFO = {
 		icon: '🔔',
 		description: 'Triangle waves with decay for bell-like ethereal tones',
 		defaultFrequencyRange: 'Very High (1400-1600Hz)'
+	},
+	// Phase 7: Strings & Brass Completion
+	violin: {
+		name: 'Violin',
+		icon: '🎻',
+		description: 'Sawtooth waves with filter sweeps and vibrato for expressive bowing',
+		defaultFrequencyRange: 'High-Mid (800-1200Hz)'
+	},
+	cello: {
+		name: 'Cello',
+		icon: '🎻',
+		description: 'Complex harmonics with bow noise for rich low register character',
+		defaultFrequencyRange: 'Mid-Low (200-400Hz)'
+	},
+	guitar: {
+		name: 'Guitar',
+		icon: '🎸',
+		description: 'Karplus-Strong synthesis for authentic plucked string physics',
+		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
+	},
+	harp: {
+		name: 'Harp',
+		icon: '🪄',
+		description: 'Sharp pluck envelope with long decay for cascading arpeggios',
+		defaultFrequencyRange: 'Low (100-200Hz)'
+	},
+	trumpet: {
+		name: 'Trumpet',
+		icon: '🎺',
+		description: 'Square waves with brass formants for bright metallic timbre',
+		defaultFrequencyRange: 'Low-Mid (300-600Hz)'
+	},
+	frenchHorn: {
+		name: 'French Horn',
+		icon: '🎯',
+		description: 'Sine waves with slight distortion for warm middle register',
+		defaultFrequencyRange: 'Mid (400-800Hz)'
+	},
+	trombone: {
+		name: 'Trombone',
+		icon: '🎺',
+		description: 'Sawtooth waves with portamento for characteristic sliding pitch',
+		defaultFrequencyRange: 'Mid-Low (200-400Hz)'
+	},
+	tuba: {
+		name: 'Tuba',
+		icon: '🎺',
+		description: 'Sub-bass frequencies with breath noise for deep foundation',
+		defaultFrequencyRange: 'Very Low (<100Hz)'
 	}
 };
 
