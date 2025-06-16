@@ -3,7 +3,7 @@ import SonigraphPlugin from '../main';
 import { getLogger } from '../logging';
 import { createObsidianToggle } from './components';
 import { HarmonicSettings } from '../audio/harmonic-engine';
-import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmartRanges, getParameterRange } from '../utils/constants';
+import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmartRanges, getParameterRange, INSTRUMENT_INFO } from '../utils/constants';
 
 const logger = getLogger('control-panel');
 
@@ -508,88 +508,6 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private getInstrumentInfo(instrumentKey: string): { name: string; icon: string; description: string; defaultFrequencyRange: string } {
-		const INSTRUMENT_INFO = {
-			piano: {
-				name: 'Piano',
-				icon: '🎹',
-				description: 'Triangle waves with quick attack/decay for percussive clarity',
-				defaultFrequencyRange: 'Very High (>1400Hz)'
-			},
-			organ: {
-				name: 'Organ', 
-				icon: '🎛️',
-				description: 'FM synthesis with chorus effect for rich, sustained tones',
-				defaultFrequencyRange: 'Medium (400-800Hz)'
-			},
-			strings: {
-				name: 'Strings',
-				icon: '🎻',
-				description: 'AM synthesis with filtering for warm, flowing sounds',
-				defaultFrequencyRange: 'Very Low (<200Hz)'
-			},
-			choir: {
-				name: 'Choir',
-				icon: '🎤',
-				description: 'Additive synthesis with formant filtering for ethereal human voices',
-				defaultFrequencyRange: 'High (1000-1400Hz)'
-			},
-			vocalPads: {
-				name: 'Vocal Pads',
-				icon: '🌊',
-				description: 'Multi-layer sine waves with formant filtering for atmospheric textures',
-				defaultFrequencyRange: 'Mid-High (600-1000Hz)'
-			},
-			pad: {
-				name: 'Pad',
-				icon: '🎛️',
-				description: 'Multi-oscillator synthesis with filter sweeps for ambient foundations',
-				defaultFrequencyRange: 'Low-Mid (200-400Hz)'
-			},
-			flute: {
-				name: 'Flute',
-				icon: '🎺',
-				description: 'Pure sine waves with breath noise for airy, crystalline tones',
-				defaultFrequencyRange: 'Ultra High (>1600Hz)'
-			},
-			clarinet: {
-				name: 'Clarinet',
-				icon: '🎵',
-				description: 'Square wave harmonics for warm, hollow woodwind character',
-				defaultFrequencyRange: 'High-Mid (800-1200Hz)'
-			},
-			saxophone: {
-				name: 'Saxophone',
-				icon: '🎷',
-				description: 'Sawtooth waves with reedy harmonics for rich, expressive tone',
-				defaultFrequencyRange: 'Mid (300-600Hz)'
-			},
-			// Phase 6A: Individual Vocal Sections with advanced formant synthesis
-			soprano: {
-				name: 'Soprano',
-				icon: '👩‍🎤',
-				description: 'High female voice with AM synthesis and formant filtering for vowel morphing',
-				defaultFrequencyRange: 'High-Mid (800-1200Hz)'
-			},
-			alto: {
-				name: 'Alto',
-				icon: '🎙️',
-				description: 'Lower female voice with rich harmonics and breath noise modeling',
-				defaultFrequencyRange: 'High (1000-1400Hz)'
-			},
-			tenor: {
-				name: 'Tenor',
-				icon: '🧑‍🎤',
-				description: 'High male voice with FM synthesis and vocal fry characteristics',
-				defaultFrequencyRange: 'Mid-High (600-1000Hz)'
-			},
-			bass: {
-				name: 'Bass',
-				icon: '🎤',
-				description: 'Low male voice with sub-harmonics and chest resonance modeling',
-				defaultFrequencyRange: 'Very Low (<100Hz)'
-			}
-		};
-		
 		return INSTRUMENT_INFO[instrumentKey as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
 	}
 
