@@ -2432,14 +2432,15 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     this.updateAssignmentStrategyInfo();
     const activityGroup = this.createSettingsGroup(section, "Live Voice Activity", "Real-time instrument usage monitoring");
     const activityDisplay = activityGroup.createDiv({ cls: "sonigraph-voice-activity" });
-    ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass"].forEach((instrumentKey) => {
+    Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
       const info = this.getInstrumentInfo(instrumentKey);
       const activityRow = activityDisplay.createDiv({ cls: "sonigraph-activity-row" });
       const label = activityRow.createDiv({ cls: "sonigraph-activity-label" });
       label.createSpan({ text: info.icon, cls: "sonigraph-activity-icon" });
       label.createSpan({ text: info.name, cls: "sonigraph-activity-name" });
       const voices = activityRow.createDiv({ cls: "sonigraph-activity-voices" });
-      const maxVoices = ["soprano", "alto", "tenor", "bass"].includes(instrumentKey) ? 4 : 8;
+      const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+      const maxVoices = (instrumentSettings == null ? void 0 : instrumentSettings.maxVoices) || 8;
       for (let i = 0; i < maxVoices; i++) {
         voices.createDiv({
           cls: "sonigraph-voice-indicator",
@@ -2453,7 +2454,7 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
       });
     });
     const instrumentsGroup = this.createSettingsGroup(section, "Individual Instrument Controls", "Configure each instrument separately");
-    ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass"].forEach((instrumentKey) => {
+    Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
       const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
       if (!instrumentSettings) {
         console.warn(`Instrument ${instrumentKey} not found in settings - skipping`);
@@ -2650,7 +2651,7 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
       }
     });
     section.createEl("hr", { cls: "sonigraph-section-separator" });
-    ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass"].forEach((instrumentKey) => {
+    Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
       this.createInstrumentEffectControls(section, instrumentKey);
     });
   }
