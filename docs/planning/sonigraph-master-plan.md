@@ -2,7 +2,7 @@
 
 **Project**: Obsidian Sonigraph Plugin  
 **Version**: 0.2.0 (Expanding to Multi-Voice Orchestral System)  
-**Status**: Phase 6A Complete - 13 Instruments Operational
+**Status**: Phase 6B Complete - 17 Instruments Operational
 
 ---
 
@@ -19,34 +19,40 @@
 
 ## 1. Current Status & Achievements
 
-### ✅ **Completed: Phase 6A - Individual Vocal Sections**
+### ✅ **Completed: Phase 6B - Extended Keyboard Family**
 
-**Latest Achievement: 13 Instruments Operational**
-- **Individual vocal sections**: Soprano, Alto, Tenor, Bass with sample-based synthesis
-- **Vocal-specific effects**: Optimized reverb, chorus, and filter settings per voice type
-- **Frequency range optimization**: Vocal sections assigned to specialized frequency bands
-- **Settings migration**: Automatic upgrade from 9 to 13 instruments for existing users
-- **UI scaling**: All interface tabs support 13 instruments with individual controls
+**Latest Achievement: 17 Instruments Operational**
+- **Extended keyboard family**: Electric Piano, Harpsichord, Accordion, Celesta with dedicated synthesis
+- **Keyboard-specific effects**: Optimized AM/FM synthesis, tremolo, and vibrato per instrument type
+- **Frequency range optimization**: Keyboard instruments distributed across mid-low to very-high ranges
+- **Settings migration**: Automatic upgrade from 13 to 17 instruments for existing users
+- **UI scaling**: All interface tabs support 17 instruments with individual controls
 
 **Core Features Implemented:**
-- **Multi-instrument orchestral engine**: 13 instruments with distinct synthesis and effects
+- **Multi-instrument orchestral engine**: 17 instruments with distinct synthesis and effects
 - **Per-instrument effect routing**: Individual reverb, chorus, and filter effects
-- **Professional Control Center**: 6-tab interface supporting all 13 instruments
+- **Professional Control Center**: 6-tab interface supporting all 17 instruments
 - **Persistent settings system**: All configurations save/load correctly with automatic migration
 - **Real-time status monitoring**: Live updates across all tabs and instruments
-- **Optimized defaults**: New vocals disabled by default for user-friendliness
+- **Optimized defaults**: New keyboard instruments disabled by default for user-friendliness
 
 **Technical Infrastructure:**
-- **AudioEngine**: Per-instrument effect maps with isolated processing for 13 instruments
+- **AudioEngine**: Per-instrument effect maps with isolated processing for 17 instruments
 - **Settings architecture**: Hierarchical structure supporting unlimited instrument expansion
 - **UI framework**: Dynamic tab system with real-time parameter updates
-- **Migration system**: Robust upgrade path from 9→13 instruments with backward compatibility
+- **Migration system**: Robust upgrade path from 9→13→17 instruments with backward compatibility
 
 ---
 
 ## 2. Instrument Expansion Roadmap
 
-### 🎵 **Current Status: 13 Instruments Implemented**
+### 🎵 **Current Status: 17 Instruments Implemented**
+
+**✅ Phase 6B: Extended Keyboard Family - COMPLETED**
+- **🎹 Electric Piano**: Rhodes/Wurlitzer character with AM synthesis + tremolo (disabled by default)
+- **🎼 Harpsichord**: Baroque plucked attack with sharp envelope + filtering (disabled by default)
+- **🪗 Accordion**: Bellows breath simulation with AM synthesis + vibrato (disabled by default)
+- **🔔 Celesta**: Bell-like ethereal tones with triangle waves + decay (disabled by default)
 
 **✅ Phase 6A: Individual Vocal Sections - COMPLETED**
 - **👩‍🎤 Soprano**: High female voice with formant filtering (disabled by default)
@@ -83,10 +89,10 @@
 | | Bass | ✅ | 6A Complete | Sample-based + chest resonance | Very Low (<100Hz) | Low male voice, disabled by default |
 | **🎹 Keyboard** | Piano | ✅ | Complete | Sample-based | Very High (1400-1600Hz) | Acoustic piano dynamics |
 | | Organ | ✅ | Complete | Additive synthesis | Mid (400-800Hz) | Hammond-style drawbars |
-| | Electric Piano | 🔄 | 6B | AM + tremolo | Mid-Low (200-400Hz) | Rhodes/Wurlitzer character |
-| | Harpsichord | 🔄 | 6B | Sharp envelope + filtering | Low-Mid (300-600Hz) | Baroque plucked attack |
-| | Accordion | 🔄 | 6B | AM + vibrato | Mid (400-800Hz) | Bellows breath simulation |
-| | Celesta | 🔄 | 6B | Triangle + decay | Very High (1400-1600Hz) | Bell-like ethereal tones |
+| | Electric Piano | ✅ | 6B Complete | AM + tremolo | Mid-Low (200-400Hz) | Rhodes/Wurlitzer character, disabled by default |
+| | Harpsichord | ✅ | 6B Complete | Sharp envelope + filtering | Low-Mid (300-600Hz) | Baroque plucked attack, disabled by default |
+| | Accordion | ✅ | 6B Complete | AM + vibrato | Mid (400-800Hz) | Bellows breath simulation, disabled by default |
+| | Celesta | ✅ | 6B Complete | Triangle + decay | Very High (1400-1600Hz) | Bell-like ethereal tones, disabled by default |
 | **🎻 Strings** | Strings | ✅ | Complete | Sample-based | Low (100-200Hz) | Orchestral string ensemble |
 | | Violin | 🔄 | 7A | Sawtooth + filter sweeps | High-Mid (800-1200Hz) | Bowed texture, vibrato |
 | | Cello | 🔄 | 7A | Complex harmonics + bow noise | Mid-Low (200-400Hz) | Rich low harmonics |
@@ -110,8 +116,7 @@
 | | Arp | 🔄 | 8B | Various waves + envelope + sequencer | - | Sequenced patterns, graph-synced |
 
 #### **Implementation Summary by Phase**
-- **✅ Complete (13/31)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass
-- **🔄 Phase 6B (4 instruments → 17/31)**: Electric Piano, Harpsichord, Accordion, Celesta
+- **✅ Complete (17/31)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta
 - **🔄 Phase 7 (8 instruments → 25/31)**: Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba  
 - **🔄 Phase 8 (6 instruments → 31/31)**: Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead Synth, Bass Synth, Arp Synth
 
@@ -150,11 +155,14 @@
 - ✅ UI scaling to support 13 instruments across all interface tabs
 - ✅ User-friendly defaults (new vocals disabled by default)
 
-#### **🔄 Phase 6B: Extended Keyboard Family (4 new instruments)**
-**Target**: 17/31 total instruments
-- Extended keyboard family (Electric Piano, Harpsichord, Accordion, Celesta)
-- Advanced keyboard articulation systems
-- Instrument-specific synthesis approaches (AM, FM, tremolo, vibrato)
+#### **✅ Phase 6B: Extended Keyboard Family - COMPLETED (4 new instruments)**
+**Target**: 17/31 total instruments - **ACHIEVED**
+- ✅ Extended keyboard family (Electric Piano, Harpsichord, Accordion, Celesta) with sample-based synthesis
+- ✅ Keyboard-specific effects optimization (AM synthesis, tremolo, vibrato per instrument type)
+- ✅ Frequency range specialization for optimal keyboard separation across frequency spectrum
+- ✅ Settings migration system for 13→17 instrument upgrade
+- ✅ UI scaling to support 17 instruments across all interface tabs
+- ✅ User-friendly defaults (new keyboards disabled by default)
 
 #### **🔄 Phase 7: Strings & Brass Completion (8 new instruments)**  
 **Target**: 23/31 total instruments
