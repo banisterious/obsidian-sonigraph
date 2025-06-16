@@ -192,6 +192,13 @@ export interface SonigraphSettings {
 	traversalMethod: string;
 	isEnabled: boolean;
 	audioFormat: 'mp3' | 'wav';
+	microtuning?: boolean;
+	effects?: {
+		[key: string]: {
+			enabled: boolean;
+			[param: string]: any;
+		};
+	};
 	instruments: {
 		piano: InstrumentSettings;
 		organ: InstrumentSettings;
@@ -250,6 +257,12 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	traversalMethod: 'breadth-first',
 	isEnabled: true,
 	audioFormat: 'mp3',
+	microtuning: false,
+	effects: {
+		orchestralreverbhall: { enabled: true },
+		'3bandeq': { enabled: true },
+		dynamiccompressor: { enabled: false }
+	},
 	instruments: {
 		piano: { 
 			enabled: true, 

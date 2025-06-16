@@ -782,8 +782,16 @@ export class AudioEngine {
 	private async initializeInstruments(): Promise<void> {
 		const configs = this.getSamplerConfigs();
 		
-		// Piano - using Sampler with high-quality samples
-		const pianoSampler = new Sampler(configs.piano);
+		// Piano - using Sampler with high-quality samples, fallback to basic synthesis
+		const pianoSampler = new Sampler({
+			...configs.piano,
+			onload: () => {
+				logger.debug('samples', 'Piano samples loaded successfully');
+			},
+			onerror: (error) => {
+				logger.warn('samples', 'Piano samples failed to load, using basic synthesis', { error });
+			}
+		});
 		const pianoVolume = new Volume(-6);
 		this.instrumentVolumes.set('piano', pianoVolume);
 		
@@ -808,8 +816,16 @@ export class AudioEngine {
 		pianoOutput.connect(this.volume);
 		this.instruments.set('piano', pianoSampler);
 
-		// Organ - using Sampler with harmonium samples
-		const organSampler = new Sampler(configs.organ);
+		// Organ - using Sampler with harmonium samples, fallback to basic synthesis
+		const organSampler = new Sampler({
+			...configs.organ,
+			onload: () => {
+				logger.debug('samples', 'Organ samples loaded successfully');
+			},
+			onerror: (error) => {
+				logger.warn('samples', 'Organ samples failed to load, using basic synthesis', { error });
+			}
+		});
 		const organVolume = new Volume(-6);
 		this.instrumentVolumes.set('organ', organVolume);
 		
@@ -834,8 +850,16 @@ export class AudioEngine {
 		organOutput.connect(this.volume);
 		this.instruments.set('organ', organSampler);
 
-		// Strings - using Sampler with violin samples
-		const stringsSampler = new Sampler(configs.strings);
+		// Strings - using Sampler with violin samples, fallback to basic synthesis
+		const stringsSampler = new Sampler({
+			...configs.strings,
+			onload: () => {
+				logger.debug('samples', 'Strings samples loaded successfully');
+			},
+			onerror: (error) => {
+				logger.warn('samples', 'Strings samples failed to load, using basic synthesis', { error });
+			}
+		});
 		const stringsVolume = new Volume(-6);
 		this.instrumentVolumes.set('strings', stringsVolume);
 		
@@ -1422,6 +1446,17 @@ export class AudioEngine {
 						
 						// Determine which instrument to use
 						const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+						
+						// Check if instrument is enabled in settings - this covers all synthesis paths
+						const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
+						const instrumentSettings = this.settings.instruments[instrumentKey];
+						if (!instrumentSettings?.enabled) {
+							logger.debug('playback', 'Skipping disabled instrument', { 
+								instrumentName, 
+								enabled: instrumentSettings?.enabled 
+							});
+							return;
+						}
 						
 						// Use specialized synthesis engines if available
 						if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {

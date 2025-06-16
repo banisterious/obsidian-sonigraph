@@ -2,3 +2,4 @@ node_modules
 .cursor
 .cursor/rules
 ui-mockups
+logs/

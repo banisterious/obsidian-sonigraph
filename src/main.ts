@@ -81,7 +81,7 @@ export default class SonigraphPlugin extends Plugin {
 	}
 
 	public openControlPanel(): void {
-		logger.info('ui', 'Opening Material Design control panel');
+		logger.info('ui', 'Opening Sonigraph Control Center');
 
 		const modal = new MaterialControlPanelModal(this.app, this);
 		modal.open();
@@ -168,6 +168,10 @@ export default class SonigraphPlugin extends Plugin {
 				timing: note.timing
 			}))
 		});
+
+		// Update audio engine with current settings before playing
+		this.audioEngine.updateSettings(this.settings);
+		logger.debug('playback', 'Audio engine settings updated before playback');
 
 		try {
 			await this.audioEngine.playSequence(this.currentGraphData.sequence);

@@ -385,8 +385,13 @@ export class ControlPanelModal extends Modal {
 				instrumentContainer,
 				instrumentSettings.enabled,
 				async (value) => {
-					console.log(`✓ Toggle ${instrumentKey} (${info.name}) changed to:`, value);
-					console.log(`✓ Toggle UI state - checked: ${(toggle as HTMLInputElement).checked}, container classes:`, toggle.parentElement?.className);
+					logger.debug('ui', 'Instrument toggle changed', { 
+						instrumentKey, 
+						instrumentName: info.name, 
+						value, 
+						checked: (toggle as HTMLInputElement).checked,
+						containerClasses: toggle.parentElement?.className 
+					});
 					
 					(self.plugin.settings.instruments as any)[instrumentKey].enabled = value;
 					await self.plugin.saveSettings();
@@ -396,7 +401,11 @@ export class ControlPanelModal extends Modal {
 					controlsContainer.style.display = value ? 'block' : 'none';
 					
 					// Verify UI state after update
-					console.log(`✓ After update - Toggle UI state - checked: ${(toggle as HTMLInputElement).checked}, container classes:`, toggle.parentElement?.className);
+					logger.debug('ui', 'Instrument state updated', { 
+						instrumentKey, 
+						checked: (toggle as HTMLInputElement).checked,
+						containerClasses: toggle.parentElement?.className 
+					});
 				},
 				{
 					name: `Enable ${info.name}`,
@@ -406,11 +415,11 @@ export class ControlPanelModal extends Modal {
 			
 			// Store reference for programmatic updates
 			this.instrumentToggles.set(instrumentKey, toggle);
-			console.log(`✓ Toggle created and stored for ${instrumentKey} (${info.name})`);
+			logger.debug('ui', 'Instrument toggle created', { instrumentKey, instrumentName: info.name });
 			
 			// Add click handler to the entire toggle container for debugging
 			instrumentContainer.addEventListener('click', (event) => {
-				console.log(`Container clicked for ${instrumentKey} (${info.name}), target:`, event.target);
+				logger.debug('ui', 'Instrument container clicked', { instrumentKey, instrumentName: info.name, target: event.target });
 			});
 			
 			// Container for instrument controls (volume, voices, frequency info)
