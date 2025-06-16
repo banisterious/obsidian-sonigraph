@@ -45,6 +45,145 @@ export interface EffectSettings {
 	};
 }
 
+// Phase 3.5: Enhanced Effect Routing Architecture
+export interface EffectNode {
+	id: string;
+	type: 'reverb' | 'chorus' | 'filter' | 'delay' | 'distortion' | 'compressor';
+	enabled: boolean;
+	order: number;
+	settings: ReverbSettings | ChorusSettings | FilterSettings | DelaySettings | DistortionSettings | CompressorSettings;
+	bypass: boolean; // For A/B testing
+}
+
+export interface EffectChain {
+	instrumentName: string;
+	routing: 'serial' | 'parallel' | 'custom';
+	nodes: EffectNode[];
+	wetDryMix?: number; // For parallel routing
+	sendLevels?: Map<string, number>; // Send levels to buses
+}
+
+export interface SendBus {
+	id: string;
+	name: string;
+	type: 'reverb' | 'delay' | 'custom';
+	effects: EffectNode[];
+	returnLevel: number;
+	prePost: 'pre' | 'post'; // Pre or post-fader send
+}
+
+export interface ReturnBus {
+	id: string;
+	name: string;
+	inputLevel: number;
+	effects: EffectNode[];
+	panPosition: number; // -1 (left) to 1 (right)
+}
+
+export interface InstrumentGroup {
+	id: string;
+	name: string;
+	instruments: string[];
+	groupEffects: EffectNode[];
+	groupVolume: number;
+	groupMute: boolean;
+	groupSolo: boolean;
+}
+
+export interface MasterEffects {
+	reverb: MasterReverbSettings;
+	eq: MasterEQSettings;
+	compressor: MasterCompressorSettings;
+	limiter: MasterLimiterSettings;
+	enabled: boolean;
+}
+
+export interface MasterReverbSettings extends ReverbSettings {
+	roomSize: number;
+	damping: number;
+}
+
+export interface MasterEQSettings {
+	enabled: boolean;
+	params: {
+		lowGain: number;
+		midGain: number;
+		highGain: number;
+		lowFreq: number;
+		midFreq: number;
+		highFreq: number;
+	};
+}
+
+export interface MasterCompressorSettings {
+	enabled: boolean;
+	params: {
+		threshold: number;
+		ratio: number;
+		attack: number;
+		release: number;
+		makeupGain: number;
+	};
+}
+
+export interface MasterLimiterSettings {
+	enabled: boolean;
+	params: {
+		threshold: number;
+		lookAhead: number;
+		release: number;
+	};
+}
+
+// Additional effect types for enhanced routing
+export interface DelaySettings {
+	enabled: boolean;
+	params: {
+		delayTime: number;
+		feedback: number;
+		wet: number;
+		maxDelay: number;
+	};
+}
+
+export interface DistortionSettings {
+	enabled: boolean;
+	params: {
+		distortion: number;
+		oversample: '2x' | '4x' | 'none';
+		wet: number;
+	};
+}
+
+export interface CompressorSettings {
+	enabled: boolean;
+	params: {
+		threshold: number;
+		ratio: number;
+		attack: number;
+		release: number;
+		knee: number;
+	};
+}
+
+export interface EffectAutomation {
+	effectId: string;
+	parameter: string;
+	modulation: 'lfo' | 'envelope' | 'random' | 'expression';
+	amount: number;
+	rate?: number; // For LFO modulation
+	shape?: 'sine' | 'triangle' | 'square' | 'sawtooth'; // For LFO
+	sync?: boolean; // Sync to tempo
+}
+
+export interface RoutingMatrix {
+	sends: Map<string, SendBus[]>; // instrument -> send buses
+	returns: Map<string, ReturnBus>; // bus name -> return bus
+	groups: Map<string, InstrumentGroup>; // group name -> instruments
+	masterEffects: MasterEffects;
+	automations: EffectAutomation[];
+}
+
 export interface SonigraphSettings {
 	tempo: number;
 	volume: number;
@@ -83,6 +222,13 @@ export interface SonigraphSettings {
 		tuba: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
+	// Phase 3.5: Enhanced Effect Routing
+	enhancedRouting?: {
+		enabled: boolean;
+		effectChains: Map<string, EffectChain>; // instrument -> effect chain
+		routingMatrix: RoutingMatrix;
+		version: string; // For migration compatibility
+	};
 }
 
 export const DEFAULT_SETTINGS: SonigraphSettings = {
@@ -897,7 +1043,61 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		}
 	},
-	voiceAssignmentStrategy: 'frequency'
+	voiceAssignmentStrategy: 'frequency',
+	// Phase 3.5: Enhanced Effect Routing (disabled by default for backward compatibility)
+	enhancedRouting: {
+		enabled: false,
+		effectChains: new Map(),
+		routingMatrix: {
+			sends: new Map(),
+			returns: new Map(),
+			groups: new Map(),
+			masterEffects: {
+				reverb: {
+					enabled: false,
+					roomSize: 0.8,
+					damping: 0.5,
+					params: {
+						decay: 3.0,
+						preDelay: 0.05,
+						wet: 0.3
+					}
+				},
+				eq: {
+					enabled: false,
+					params: {
+						lowGain: 0,
+						midGain: 0,
+						highGain: 0,
+						lowFreq: 100,
+						midFreq: 1000,
+						highFreq: 8000
+					}
+				},
+				compressor: {
+					enabled: false,
+					params: {
+						threshold: -18,
+						ratio: 4,
+						attack: 0.003,
+						release: 0.1,
+						makeupGain: 2
+					}
+				},
+				limiter: {
+					enabled: false,
+					params: {
+						threshold: -0.5,
+						lookAhead: 0.005,
+						release: 0.01
+					}
+				},
+				enabled: false
+			},
+			automations: []
+		},
+		version: '3.5.0'
+	}
 };
 
 export const MUSICAL_SCALES = {
@@ -1487,4 +1687,109 @@ export function getParameterRange(instrumentName: string, effectName: keyof Smar
 	}
 	
 	return null;
+}
+
+// Phase 3.5: Enhanced Effect Routing utility functions
+export function createDefaultEffectChain(instrumentName: string): EffectChain {
+	const instrumentSettings = DEFAULT_SETTINGS.instruments[instrumentName as keyof typeof DEFAULT_SETTINGS.instruments];
+	
+	const nodes: EffectNode[] = [
+		{
+			id: `${instrumentName}-reverb`,
+			type: 'reverb',
+			enabled: instrumentSettings.effects.reverb.enabled,
+			order: 0,
+			settings: instrumentSettings.effects.reverb,
+			bypass: false
+		},
+		{
+			id: `${instrumentName}-chorus`,
+			type: 'chorus',
+			enabled: instrumentSettings.effects.chorus.enabled,
+			order: 1,
+			settings: instrumentSettings.effects.chorus,
+			bypass: false
+		},
+		{
+			id: `${instrumentName}-filter`,
+			type: 'filter',
+			enabled: instrumentSettings.effects.filter.enabled,
+			order: 2,
+			settings: instrumentSettings.effects.filter,
+			bypass: false
+		}
+	];
+	
+	return {
+		instrumentName,
+		routing: 'serial',
+		nodes,
+		sendLevels: new Map()
+	};
+}
+
+export function createDefaultSendBus(id: string, name: string, type: 'reverb' | 'delay' | 'custom'): SendBus {
+	return {
+		id,
+		name,
+		type,
+		effects: [],
+		returnLevel: 0.5,
+		prePost: 'post'
+	};
+}
+
+export function createDefaultReturnBus(id: string, name: string): ReturnBus {
+	return {
+		id,
+		name,
+		inputLevel: 1.0,
+		effects: [],
+		panPosition: 0
+	};
+}
+
+export function createDefaultInstrumentGroup(id: string, name: string, instruments: string[]): InstrumentGroup {
+	return {
+		id,
+		name,
+		instruments,
+		groupEffects: [],
+		groupVolume: 1.0,
+		groupMute: false,
+		groupSolo: false
+	};
+}
+
+export function migrateToEnhancedRouting(settings: SonigraphSettings): SonigraphSettings {
+	if (settings.enhancedRouting?.enabled) {
+		return settings; // Already migrated
+	}
+
+	// Create effect chains from existing per-instrument settings
+	const effectChains = new Map<string, EffectChain>();
+	const instrumentNames = Object.keys(settings.instruments) as (keyof typeof settings.instruments)[];
+	
+	for (const instrumentName of instrumentNames) {
+		effectChains.set(instrumentName, createDefaultEffectChain(instrumentName));
+	}
+
+	// Create default routing matrix
+	const routingMatrix: RoutingMatrix = {
+		sends: new Map(),
+		returns: new Map(),
+		groups: new Map(),
+		masterEffects: DEFAULT_SETTINGS.enhancedRouting!.routingMatrix.masterEffects,
+		automations: []
+	};
+
+	return {
+		...settings,
+		enhancedRouting: {
+			enabled: false, // User must explicitly enable
+			effectChains,
+			routingMatrix,
+			version: '3.5.0'
+		}
+	};
 } 

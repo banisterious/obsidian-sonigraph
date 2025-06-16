@@ -5,6 +5,25 @@ All notable changes to the Obsidian Sonigraph Plugin will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2024-12-19
+
+### Added
+- **Per-Instrument Effect Routing**: Individual reverb, chorus, and filter chains for each of 13 instruments
+- **Effect Presets**: 11 professional presets (Concert Hall, Cathedral, Studio, Jazz Club, Arena, Ambient, Classical, Electronic, Cinematic, Dry, Lush)
+- **Real-Time Audio Feedback**: Parameter preview with sustained notes, A/B bypass comparison, performance monitoring
+- **Smart Parameter Ranges**: Instrument-specific intelligent limits with musical context and suggestions
+- **Professional UI**: Categorized presets, color-coded performance indicators, comprehensive styling system
+
+### Changed
+- **AudioEngine Architecture**: Refactored for per-instrument effect processing with proper type safety
+- **Settings Migration**: Automatic upgrade system for existing users from global to per-instrument effects
+- **Harmony Tab**: Replaced with placeholder for future development
+
+### Technical
+- Complete TypeScript type safety with specific effect interfaces (ReverbSettings, ChorusSettings, FilterSettings)
+- 1700+ lines of organized CSS styling
+- Clean build system with resolved compilation errors
+
 ## [Unreleased]
 
 ### Added
