@@ -323,8 +323,8 @@ export class ControlPanelModal extends Modal {
 		const activityGroup = this.createSettingsGroup(section, 'Live Voice Activity', 'Real-time instrument usage monitoring');
 		const activityDisplay = activityGroup.createDiv({ cls: 'sonigraph-voice-activity' });
 
-		// Updated for Phase 6A: All 13 instruments including new vocal sections
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach(instrumentKey => {
+		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
+		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
 			const info = this.getInstrumentInfo(instrumentKey);
 			const activityRow = activityDisplay.createDiv({ cls: 'sonigraph-activity-row' });
 			
@@ -333,8 +333,9 @@ export class ControlPanelModal extends Modal {
 			label.createSpan({ text: info.name, cls: 'sonigraph-activity-name' });
 			
 			const voices = activityRow.createDiv({ cls: 'sonigraph-activity-voices' });
-			// Use different voice counts: 8 for original instruments, 4 for vocal sections
-			const maxVoices = ['soprano', 'alto', 'tenor', 'bass'].includes(instrumentKey) ? 4 : 8;
+			// Use maxVoices from instrument settings
+			const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
+			const maxVoices = instrumentSettings?.maxVoices || 8;
 			for (let i = 0; i < maxVoices; i++) {
 				voices.createDiv({ 
 					cls: 'sonigraph-voice-indicator',
@@ -352,8 +353,8 @@ export class ControlPanelModal extends Modal {
 		// Individual instrument controls
 		const instrumentsGroup = this.createSettingsGroup(section, 'Individual Instrument Controls', 'Configure each instrument separately');
 
-		// Updated for Phase 6A: All 13 instruments including new vocal sections
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach(instrumentKey => {
+		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
+		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
 			// Check if instrument exists in settings - skip if missing
 			const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
 			if (!instrumentSettings) {
@@ -637,8 +638,8 @@ export class ControlPanelModal extends Modal {
 		// Separator
 		section.createEl('hr', { cls: 'sonigraph-section-separator' });
 
-		// Individual instrument effect controls - Updated for Phase 6A: All 13 instruments
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach(instrumentKey => {
+		// Individual instrument effect controls - Updated for Phase 8B: All 34 instruments
+		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
 			this.createInstrumentEffectControls(section, instrumentKey);
 		});
 	}
