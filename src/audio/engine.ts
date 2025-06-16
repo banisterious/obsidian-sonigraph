@@ -1,7 +1,7 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, Synth, FMSynth, AMSynth, Sampler, context, now, Transport, Reverb, Chorus, Filter } from 'tone';
+import { start, Volume, PolySynth, Synth, FMSynth, AMSynth, Sampler, context, now, Transport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
 import { MusicalMapping } from '../graph/types';
-import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS } from '../utils/constants';
+import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectChain, EffectNode, RoutingMatrix, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { getLogger } from '../logging';
 
 const logger = getLogger('audio-engine');
@@ -355,6 +355,14 @@ export class AudioEngine {
 	private previewInstrument: string | null = null;
 	private previewNote: any = null;
 
+	// Phase 3.5: Enhanced Effect Routing properties
+	private enhancedRouting: boolean = false;
+	private effectChains: Map<string, EffectNode[]> = new Map(); // instrument -> effect nodes
+	private sendBuses: Map<string, SendBus> = new Map(); // bus id -> send bus
+	private returnBuses: Map<string, ReturnBus> = new Map(); // bus id -> return bus
+	private masterEffectsNodes: Map<string, any> = new Map(); // master effect instances
+	private effectNodeInstances: Map<string, any> = new Map(); // effect id -> tone.js instance
+
 	constructor(private settings: SonigraphSettings) {
 		logger.debug('initialization', 'AudioEngine created');
 	}
@@ -393,8 +401,14 @@ export class AudioEngine {
 
 			// Initialize instruments
 			this.initializeInstruments();
-			this.initializeEffects();
-			this.applyEffectSettings();
+			
+			// Check if enhanced routing is enabled
+			if (this.settings.enhancedRouting?.enabled) {
+				this.initializeEnhancedRouting();
+			} else {
+				this.initializeEffects();
+				this.applyEffectSettings();
+			}
 
 			this.isInitialized = true;
 			
@@ -451,6 +465,215 @@ export class AudioEngine {
 			instrumentCount: instruments.length,
 			effectsPerInstrument: 3
 		});
+	}
+
+	// Phase 3.5: Enhanced Effect Routing initialization
+	private async initializeEnhancedRouting(): Promise<void> {
+		logger.debug('enhanced-routing', 'Initializing enhanced effect routing');
+		
+		this.enhancedRouting = true;
+		
+		// Migrate settings if needed
+		if (!this.settings.enhancedRouting) {
+			this.settings = migrateToEnhancedRouting(this.settings);
+		}
+		
+		// Initialize effect chains for each instrument
+		const instruments = Object.keys(this.settings.instruments);
+		for (const instrumentName of instruments) {
+			await this.initializeInstrumentEffectChain(instrumentName);
+		}
+		
+		// Initialize master effects
+		await this.initializeMasterEffects();
+		
+		// Initialize send/return buses
+		this.initializeSendReturnBuses();
+		
+		// Connect instruments with enhanced routing
+		this.connectInstrumentsEnhanced();
+		
+		logger.info('enhanced-routing', 'Enhanced effect routing initialized', {
+			instrumentCount: instruments.length,
+			enhancedRouting: true
+		});
+	}
+
+	private async initializeInstrumentEffectChain(instrumentName: string): Promise<void> {
+		const effectChain = this.settings.enhancedRouting?.effectChains.get(instrumentName);
+		if (!effectChain) {
+			logger.warn('enhanced-routing', `No effect chain found for ${instrumentName}`);
+			return;
+		}
+
+		const effectNodes: EffectNode[] = [];
+		
+		// Create effect instances for each node in the chain
+		for (const node of effectChain.nodes) {
+			const effectInstance = await this.createEffectInstance(node);
+			if (effectInstance) {
+				this.effectNodeInstances.set(node.id, effectInstance);
+				effectNodes.push(node);
+			}
+		}
+		
+		// Store the processed effect chain
+		this.effectChains.set(instrumentName, effectNodes);
+		
+		logger.debug('enhanced-routing', `Effect chain initialized for ${instrumentName}`, {
+			nodeCount: effectNodes.length
+		});
+	}
+
+	private async createEffectInstance(node: EffectNode): Promise<any> {
+		try {
+			switch (node.type) {
+				case 'reverb':
+					const reverbSettings = node.settings as any;
+					const reverb = new Reverb(reverbSettings.params);
+					await reverb.generate();
+					return reverb;
+					
+				case 'chorus':
+					const chorusSettings = node.settings as any;
+					const chorus = new Chorus(chorusSettings.params);
+					chorus.start();
+					return chorus;
+					
+				case 'filter':
+					const filterSettings = node.settings as any;
+					const filter = new Filter(filterSettings.params);
+					return filter;
+					
+				case 'delay':
+					const delaySettings = node.settings as any;
+					const delay = new Delay(delaySettings.params);
+					return delay;
+					
+				case 'distortion':
+					const distortionSettings = node.settings as any;
+					const distortion = new Distortion(distortionSettings.params);
+					return distortion;
+					
+				case 'compressor':
+					const compressorSettings = node.settings as any;
+					const compressor = new Compressor(compressorSettings.params);
+					return compressor;
+					
+				default:
+					logger.warn('enhanced-routing', `Unknown effect type: ${node.type}`);
+					return null;
+			}
+		} catch (error) {
+			logger.error('enhanced-routing', `Failed to create effect ${node.type}`, error);
+			return null;
+		}
+	}
+
+	private async initializeMasterEffects(): Promise<void> {
+		const masterEffects = this.settings.enhancedRouting?.routingMatrix.masterEffects;
+		if (!masterEffects) return;
+
+		// Master Reverb
+		if (masterEffects.reverb.enabled) {
+			const masterReverb = new Reverb(masterEffects.reverb.params);
+			await masterReverb.generate();
+			this.masterEffectsNodes.set('reverb', masterReverb);
+		}
+
+		// Master EQ (using EQ3 for 3-band)
+		if (masterEffects.eq.enabled) {
+			const eqParams = masterEffects.eq.params;
+			const masterEQ = new EQ3({
+				low: eqParams.lowGain,
+				mid: eqParams.midGain,
+				high: eqParams.highGain,
+				lowFrequency: eqParams.lowFreq,
+				highFrequency: eqParams.highFreq
+			});
+			this.masterEffectsNodes.set('eq', masterEQ);
+		}
+
+		// Master Compressor
+		if (masterEffects.compressor.enabled) {
+			const masterCompressor = new Compressor(masterEffects.compressor.params);
+			this.masterEffectsNodes.set('compressor', masterCompressor);
+		}
+
+		logger.debug('enhanced-routing', 'Master effects initialized');
+	}
+
+	private initializeSendReturnBuses(): void {
+		const routingMatrix = this.settings.enhancedRouting?.routingMatrix;
+		if (!routingMatrix) return;
+
+		// Initialize send buses
+		for (const [busId, sendBusArray] of routingMatrix.sends) {
+			for (const sendBus of sendBusArray) {
+				this.sendBuses.set(sendBus.id, sendBus);
+			}
+		}
+
+		// Initialize return buses  
+		for (const [busId, returnBus] of routingMatrix.returns) {
+			this.returnBuses.set(busId, returnBus);
+		}
+
+		logger.debug('enhanced-routing', 'Send/return buses initialized', {
+			sendBuses: this.sendBuses.size,
+			returnBuses: this.returnBuses.size
+		});
+	}
+
+	private connectInstrumentsEnhanced(): void {
+		// Enhanced connection logic with effect chains
+		for (const [instrumentName, effectNodes] of this.effectChains) {
+			const instrument = this.instruments.get(instrumentName);
+			const volume = this.instrumentVolumes.get(instrumentName);
+			
+			if (!instrument || !volume) continue;
+
+			// Connect instrument through its effect chain
+			let output = instrument.connect(volume);
+			
+			// Process effects in order
+			const sortedNodes = [...effectNodes].sort((a, b) => a.order - b.order);
+			for (const node of sortedNodes) {
+				if (node.enabled && !node.bypass) {
+					const effect = this.effectNodeInstances.get(node.id);
+					if (effect) {
+						output = output.connect(effect);
+					}
+				}
+			}
+			
+			// Connect to master effects chain or directly to output
+			this.connectToMasterChain(output);
+		}
+		
+		logger.debug('enhanced-routing', 'Enhanced instrument connections established');
+	}
+
+	private connectToMasterChain(instrumentOutput: any): void {
+		let output = instrumentOutput;
+		
+		// Connect through master effects if enabled
+		if (this.masterEffectsNodes.has('compressor')) {
+			output = output.connect(this.masterEffectsNodes.get('compressor'));
+		}
+		
+		if (this.masterEffectsNodes.has('eq')) {
+			output = output.connect(this.masterEffectsNodes.get('eq'));
+		}
+		
+		if (this.masterEffectsNodes.has('reverb')) {
+			output = output.connect(this.masterEffectsNodes.get('reverb'));
+		}
+		
+		// Finally connect to master volume
+		if (this.volume) {
+			output.connect(this.volume);
+		}
 	}
 
 	private async initializeInstruments(): Promise<void> {
@@ -2123,5 +2346,385 @@ export class AudioEngine {
 	 */
 	getPerformanceMetrics(): { cpuUsage: number; latency: number } {
 		return this.performanceMetrics.get('overall') || { cpuUsage: 0, latency: 0 };
+	}
+
+	// Phase 3.5: Enhanced Effect Routing API Methods
+
+	/**
+	 * Enable enhanced effect routing for the audio engine
+	 */
+	async enableEnhancedRouting(): Promise<void> {
+		if (this.enhancedRouting) {
+			logger.warn('enhanced-routing', 'Enhanced routing already enabled');
+			return;
+		}
+
+		// Migrate settings and reinitialize
+		this.settings = migrateToEnhancedRouting(this.settings);
+		this.settings.enhancedRouting!.enabled = true;
+
+		// Reinitialize with enhanced routing
+		await this.initializeEnhancedRouting();
+		
+		logger.info('enhanced-routing', 'Enhanced routing enabled successfully');
+	}
+
+	/**
+	 * Disable enhanced effect routing and revert to classic mode
+	 */
+	async disableEnhancedRouting(): Promise<void> {
+		if (!this.enhancedRouting) {
+			logger.warn('enhanced-routing', 'Enhanced routing already disabled');
+			return;
+		}
+
+		this.enhancedRouting = false;
+		this.settings.enhancedRouting!.enabled = false;
+
+		// Clear enhanced routing data
+		this.effectChains.clear();
+		this.sendBuses.clear();
+		this.returnBuses.clear();
+		this.masterEffectsNodes.clear();
+		this.effectNodeInstances.clear();
+
+		// Reinitialize with classic effects
+		await this.initializeEffects();
+		this.applyEffectSettings();
+
+		logger.info('enhanced-routing', 'Enhanced routing disabled, reverted to classic mode');
+	}
+
+	/**
+	 * Get the current effect chain for an instrument
+	 */
+	getEffectChain(instrumentName: string): EffectNode[] | null {
+		if (!this.enhancedRouting) {
+			logger.warn('enhanced-routing', 'Enhanced routing not enabled');
+			return null;
+		}
+
+		return this.effectChains.get(instrumentName) || null;
+	}
+
+	/**
+	 * Reorder effects in an instrument's effect chain
+	 */
+	async reorderEffectChain(instrumentName: string, newOrder: string[]): Promise<void> {
+		if (!this.enhancedRouting) {
+			throw new Error('Enhanced routing not enabled');
+		}
+
+		const effectChain = this.effectChains.get(instrumentName);
+		if (!effectChain) {
+			throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+		}
+
+		// Create new ordered chain
+		const reorderedChain: EffectNode[] = [];
+		const effectMap = new Map(effectChain.map(node => [node.id, node]));
+
+		for (let i = 0; i < newOrder.length; i++) {
+			const effectId = newOrder[i];
+			const effect = effectMap.get(effectId);
+			if (effect) {
+				effect.order = i;
+				reorderedChain.push(effect);
+			}
+		}
+
+		// Update the chain
+		this.effectChains.set(instrumentName, reorderedChain);
+
+		// Reconnect the instrument with new order
+		await this.reconnectInstrument(instrumentName);
+
+		logger.debug('enhanced-routing', `Effect chain reordered for ${instrumentName}`, {
+			newOrder
+		});
+	}
+
+	/**
+	 * Add a new effect to an instrument's effect chain
+	 */
+	async addEffectToChain(instrumentName: string, effectType: 'reverb' | 'chorus' | 'filter' | 'delay' | 'distortion' | 'compressor', position?: number): Promise<string> {
+		if (!this.enhancedRouting) {
+			throw new Error('Enhanced routing not enabled');
+		}
+
+		const effectChain = this.effectChains.get(instrumentName) || [];
+		const effectId = `${instrumentName}-${effectType}-${Date.now()}`;
+
+		// Create default settings for the effect type
+		const defaultSettings = this.getDefaultEffectSettings(effectType);
+		
+		const newEffect: EffectNode = {
+			id: effectId,
+			type: effectType,
+			enabled: true,
+			order: position !== undefined ? position : effectChain.length,
+			settings: defaultSettings,
+			bypass: false
+		};
+
+		// Create the effect instance
+		const effectInstance = await this.createEffectInstance(newEffect);
+		if (effectInstance) {
+			this.effectNodeInstances.set(effectId, effectInstance);
+		}
+
+		// Add to chain
+		if (position !== undefined) {
+			// Reorder existing effects
+			effectChain.forEach(effect => {
+				if (effect.order >= position) {
+					effect.order++;
+				}
+			});
+			effectChain.splice(position, 0, newEffect);
+		} else {
+			effectChain.push(newEffect);
+		}
+
+		this.effectChains.set(instrumentName, effectChain);
+
+		// Reconnect the instrument
+		await this.reconnectInstrument(instrumentName);
+
+		logger.debug('enhanced-routing', `Added ${effectType} effect to ${instrumentName}`, {
+			effectId,
+			position
+		});
+
+		return effectId;
+	}
+
+	/**
+	 * Remove an effect from an instrument's effect chain
+	 */
+	async removeEffectFromChain(instrumentName: string, effectId: string): Promise<void> {
+		if (!this.enhancedRouting) {
+			throw new Error('Enhanced routing not enabled');
+		}
+
+		const effectChain = this.effectChains.get(instrumentName);
+		if (!effectChain) {
+			throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+		}
+
+		const effectIndex = effectChain.findIndex(effect => effect.id === effectId);
+		if (effectIndex === -1) {
+			throw new Error(`Effect ${effectId} not found in ${instrumentName} chain`);
+		}
+
+		// Remove the effect
+		effectChain.splice(effectIndex, 1);
+
+		// Reorder remaining effects
+		effectChain.forEach((effect, index) => {
+			effect.order = index;
+		});
+
+		// Cleanup effect instance
+		const effectInstance = this.effectNodeInstances.get(effectId);
+		if (effectInstance) {
+			effectInstance.dispose();
+			this.effectNodeInstances.delete(effectId);
+		}
+
+		this.effectChains.set(instrumentName, effectChain);
+
+		// Reconnect the instrument
+		await this.reconnectInstrument(instrumentName);
+
+		logger.debug('enhanced-routing', `Removed effect ${effectId} from ${instrumentName}`);
+	}
+
+	/**
+	 * Toggle an effect's enabled state
+	 */
+	async toggleEffect(instrumentName: string, effectId: string): Promise<void> {
+		if (!this.enhancedRouting) {
+			throw new Error('Enhanced routing not enabled');
+		}
+
+		const effectChain = this.effectChains.get(instrumentName);
+		if (!effectChain) {
+			throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+		}
+
+		const effect = effectChain.find(e => e.id === effectId);
+		if (!effect) {
+			throw new Error(`Effect ${effectId} not found in ${instrumentName} chain`);
+		}
+
+		effect.enabled = !effect.enabled;
+
+		// Reconnect the instrument to apply the change
+		await this.reconnectInstrument(instrumentName);
+
+		logger.debug('enhanced-routing', `Toggled effect ${effectId} for ${instrumentName}`, {
+			enabled: effect.enabled
+		});
+	}
+
+	/**
+	 * Toggle an effect's bypass state in enhanced routing mode
+	 */
+	async toggleEnhancedEffectBypass(instrumentName: string, effectId: string): Promise<void> {
+		if (!this.enhancedRouting) {
+			throw new Error('Enhanced routing not enabled');
+		}
+
+		const effectChain = this.effectChains.get(instrumentName);
+		if (!effectChain) {
+			throw new Error(`No effect chain found for instrument: ${instrumentName}`);
+		}
+
+		const effect = effectChain.find(e => e.id === effectId);
+		if (!effect) {
+			throw new Error(`Effect ${effectId} not found in ${instrumentName} chain`);
+		}
+
+		effect.bypass = !effect.bypass;
+
+		// Reconnect the instrument to apply the change
+		await this.reconnectInstrument(instrumentName);
+
+		logger.debug('enhanced-routing', `Toggled bypass for effect ${effectId} on ${instrumentName}`, {
+			bypass: effect.bypass
+		});
+	}
+
+	/**
+	 * Update effect parameters
+	 */
+	updateEffectParameters(instrumentName: string, effectId: string, parameters: any): void {
+		if (!this.enhancedRouting) {
+			throw new Error('Enhanced routing not enabled');
+		}
+
+		const effectInstance = this.effectNodeInstances.get(effectId);
+		if (!effectInstance) {
+			throw new Error(`Effect instance ${effectId} not found`);
+		}
+
+		// Update the effect instance parameters
+		Object.keys(parameters).forEach(paramName => {
+			if (effectInstance[paramName] !== undefined) {
+				effectInstance[paramName].value = parameters[paramName];
+			}
+		});
+
+		// Update the stored settings
+		const effectChain = this.effectChains.get(instrumentName);
+		if (effectChain) {
+			const effect = effectChain.find(e => e.id === effectId);
+			if (effect) {
+				effect.settings.params = { ...effect.settings.params, ...parameters };
+			}
+		}
+
+		logger.debug('enhanced-routing', `Updated parameters for effect ${effectId}`, {
+			instrumentName,
+			parameters
+		});
+	}
+
+	/**
+	 * Get default effect settings for a given effect type
+	 */
+	private getDefaultEffectSettings(effectType: string): any {
+		switch (effectType) {
+			case 'reverb':
+				return {
+					enabled: true,
+					params: { decay: 1.8, preDelay: 0.02, wet: 0.25 }
+				};
+			case 'chorus':
+				return {
+					enabled: true,
+					params: { frequency: 0.8, delayTime: 4.0, depth: 0.5, feedback: 0.05 }
+				};
+			case 'filter':
+				return {
+					enabled: true,
+					params: { frequency: 3500, type: 'lowpass', Q: 0.8 }
+				};
+			case 'delay':
+				return {
+					enabled: true,
+					params: { delayTime: 0.25, feedback: 0.3, wet: 0.2, maxDelay: 1.0 }
+				};
+			case 'distortion':
+				return {
+					enabled: true,
+					params: { distortion: 0.4, oversample: '2x', wet: 0.5 }
+				};
+			case 'compressor':
+				return {
+					enabled: true,
+					params: { threshold: -18, ratio: 4, attack: 0.003, release: 0.1, knee: 30 }
+				};
+			default:
+				throw new Error(`Unknown effect type: ${effectType}`);
+		}
+	}
+
+	/**
+	 * Reconnect an instrument with its current effect chain
+	 */
+	private async reconnectInstrument(instrumentName: string): Promise<void> {
+		const instrument = this.instruments.get(instrumentName);
+		const volume = this.instrumentVolumes.get(instrumentName);
+		const effectNodes = this.effectChains.get(instrumentName);
+
+		if (!instrument || !volume || !effectNodes) {
+			logger.warn('enhanced-routing', `Cannot reconnect ${instrumentName}: missing components`);
+			return;
+		}
+
+		// Disconnect existing connections
+		instrument.disconnect();
+
+		// Reconnect through the effect chain
+		let output = instrument.connect(volume);
+
+		// Process effects in order
+		const sortedNodes = [...effectNodes].sort((a, b) => a.order - b.order);
+		for (const node of sortedNodes) {
+			if (node.enabled && !node.bypass) {
+				const effect = this.effectNodeInstances.get(node.id);
+				if (effect) {
+					output = output.connect(effect);
+				}
+			}
+		}
+
+		// Connect to master chain
+		this.connectToMasterChain(output);
+
+		logger.debug('enhanced-routing', `Reconnected ${instrumentName} with updated effect chain`);
+	}
+
+	/**
+	 * Get current enhanced routing status
+	 */
+	isEnhancedRoutingEnabled(): boolean {
+		return this.enhancedRouting;
+	}
+
+	/**
+	 * Get all available send buses
+	 */
+	getSendBuses(): Map<string, SendBus> {
+		return new Map(this.sendBuses);
+	}
+
+	/**
+	 * Get all available return buses
+	 */
+	getReturnBuses(): Map<string, ReturnBus> {
+		return new Map(this.returnBuses);
 	}
 } 
