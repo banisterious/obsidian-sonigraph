@@ -2,6 +2,8 @@
 import { start, Volume, PolySynth, Synth, FMSynth, AMSynth, Sampler, context, now, Transport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectChain, EffectNode, RoutingMatrix, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
+import { PercussionEngine } from './percussion-engine';
+import { ElectronicEngine } from './electronic-engine';
 import { getLogger } from '../logging';
 
 const logger = getLogger('audio-engine');
@@ -442,6 +444,12 @@ export class AudioEngine {
 	private previewInstrument: string | null = null;
 	private previewNote: any = null;
 
+	// Performance optimization properties
+	private voicePool: Map<string, any[]> = new Map(); // Pre-allocated voice pools
+	private lastCPUCheck: number = 0;
+	private adaptiveQuality: boolean = true;
+	private currentQualityLevel: 'high' | 'medium' | 'low' = 'high';
+
 	// Phase 3.5: Enhanced Effect Routing properties
 	private enhancedRouting: boolean = false;
 	private effectChains: Map<string, EffectNode[]> = new Map(); // instrument -> effect nodes
@@ -449,6 +457,15 @@ export class AudioEngine {
 	private returnBuses: Map<string, ReturnBus> = new Map(); // bus id -> return bus
 	private masterEffectsNodes: Map<string, any> = new Map(); // master effect instances
 	private effectNodeInstances: Map<string, any> = new Map(); // effect id -> tone.js instance
+
+	// Phase 8: Advanced Synthesis Engines
+	private percussionEngine: PercussionEngine | null = null;
+	private electronicEngine: ElectronicEngine | null = null;
+	
+	// Master Effects Processing
+	private masterReverb: Reverb | null = null;
+	private masterEQ: EQ3 | null = null;
+	private masterCompressor: Compressor | null = null;
 
 	constructor(private settings: SonigraphSettings) {
 		logger.debug('initialization', 'AudioEngine created');
@@ -489,6 +506,9 @@ export class AudioEngine {
 			// Initialize instruments
 			this.initializeInstruments();
 			
+			// Initialize advanced synthesis engines
+			await this.initializeAdvancedSynthesis();
+			
 			// Check if enhanced routing is enabled
 			if (this.settings.enhancedRouting?.enabled) {
 				this.initializeEnhancedRouting();
@@ -499,13 +519,42 @@ export class AudioEngine {
 
 			this.isInitialized = true;
 			
-			// Start performance monitoring
-			this.startPerformanceMonitoring();
 			
 			logger.info('audio', 'AudioEngine initialized successfully');
 		} catch (error) {
 			logger.error('audio', 'Failed to initialize AudioEngine', error);
 			throw error;
+		}
+	}
+
+	private async initializeAdvancedSynthesis(): Promise<void> {
+		logger.info('advanced-synthesis', 'Initializing Phase 8 advanced synthesis engines');
+		
+		try {
+			// Initialize percussion engine
+			if (this.volume) {
+				this.percussionEngine = new PercussionEngine(this.volume);
+				await this.percussionEngine.initializePercussion();
+				logger.debug('percussion', 'Advanced percussion synthesis initialized');
+			}
+			
+			// Initialize electronic synthesis engine
+			if (this.volume) {
+				this.electronicEngine = new ElectronicEngine(this.volume);
+				await this.electronicEngine.initializeElectronic();
+				logger.debug('electronic', 'Advanced electronic synthesis initialized');
+			}
+			
+			// Initialize master effects
+			this.initializeMasterEffects();
+			
+			// Initialize performance optimization
+			this.initializePerformanceOptimization();
+			
+			logger.info('advanced-synthesis', 'Advanced synthesis engines ready');
+		} catch (error) {
+			logger.error('advanced-synthesis', 'Failed to initialize advanced synthesis', error);
+			// Don't throw - fall back to basic synthesis
 		}
 	}
 
@@ -572,7 +621,6 @@ export class AudioEngine {
 		}
 		
 		// Initialize master effects
-		await this.initializeMasterEffects();
 		
 		// Initialize send/return buses
 		this.initializeSendReturnBuses();
@@ -657,38 +705,6 @@ export class AudioEngine {
 		}
 	}
 
-	private async initializeMasterEffects(): Promise<void> {
-		const masterEffects = this.settings.enhancedRouting?.routingMatrix.masterEffects;
-		if (!masterEffects) return;
-
-		// Master Reverb
-		if (masterEffects.reverb.enabled) {
-			const masterReverb = new Reverb(masterEffects.reverb.params);
-			await masterReverb.generate();
-			this.masterEffectsNodes.set('reverb', masterReverb);
-		}
-
-		// Master EQ (using EQ3 for 3-band)
-		if (masterEffects.eq.enabled) {
-			const eqParams = masterEffects.eq.params;
-			const masterEQ = new EQ3({
-				low: eqParams.lowGain,
-				mid: eqParams.midGain,
-				high: eqParams.highGain,
-				lowFrequency: eqParams.lowFreq,
-				highFrequency: eqParams.highFreq
-			});
-			this.masterEffectsNodes.set('eq', masterEQ);
-		}
-
-		// Master Compressor
-		if (masterEffects.compressor.enabled) {
-			const masterCompressor = new Compressor(masterEffects.compressor.params);
-			this.masterEffectsNodes.set('compressor', masterCompressor);
-		}
-
-		logger.debug('enhanced-routing', 'Master effects initialized');
-	}
 
 	private initializeSendReturnBuses(): void {
 		const routingMatrix = this.settings.enhancedRouting?.routingMatrix;
@@ -1406,10 +1422,20 @@ export class AudioEngine {
 						
 						// Determine which instrument to use
 						const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
-						const synth = this.instruments.get(instrumentName);
 						
-						if (synth) {
-							synth.triggerAttackRelease(frequency, duration, time, velocity);
+						// Use specialized synthesis engines if available
+						if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
+							this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time);
+						} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
+							this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time);
+						} else {
+							const synth = this.instruments.get(instrumentName);
+							if (synth) {
+								synth.triggerAttackRelease(frequency, duration, time, velocity);
+							}
+						}
+						
+						if (this.instruments.get(instrumentName)) {
 							logger.debug('playback', 'Note triggered', {
 								nodeId: mapping.nodeId,
 								instrument: instrumentName,
@@ -2387,14 +2413,6 @@ export class AudioEngine {
 		return instrumentBypasses?.get(effectType) || false;
 	}
 
-	/**
-	 * Start performance monitoring
-	 */
-	startPerformanceMonitoring(): void {
-		setInterval(() => {
-			this.updatePerformanceMetrics();
-		}, 1000); // Update every second
-	}
 
 	/**
 	 * Update performance metrics
@@ -2824,5 +2842,524 @@ export class AudioEngine {
 	 */
 	getReturnBuses(): Map<string, ReturnBus> {
 		return new Map(this.returnBuses);
+	}
+
+	// Phase 8: Advanced Percussion Methods
+	
+	/**
+	 * Check if an instrument is a percussion instrument
+	 */
+	private isPercussionInstrument(instrumentName: string): boolean {
+		return ['timpani', 'xylophone', 'vibraphone', 'gongs'].includes(instrumentName);
+	}
+
+	private isElectronicInstrument(instrumentName: string): boolean {
+		return ['leadSynth', 'bassSynth', 'arpSynth'].includes(instrumentName);
+	}
+
+	/**
+	 * Trigger advanced percussion with specialized synthesis
+	 */
+	private triggerAdvancedPercussion(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
+		if (!this.percussionEngine) return;
+
+		// Convert frequency to note name for percussion engines
+		const note = this.frequencyToNoteName(frequency);
+		
+		try {
+			switch (instrumentName) {
+				case 'timpani':
+					// Add slight pitch bend for realistic timpani tuning
+					const pitchBend = (Math.random() - 0.5) * 0.1; // ±0.05 semitones
+					this.percussionEngine.triggerTimpani(note, velocity, duration, pitchBend);
+					break;
+					
+				case 'xylophone':
+					// Use harder mallets for brighter attack
+					const hardness = Math.min(velocity * 1.2, 1.0);
+					this.percussionEngine.triggerMallet('xylophone', note, velocity, duration, hardness);
+					break;
+					
+				case 'vibraphone':
+					// Softer mallets with motor enabled for sustained notes
+					const motorEnabled = duration > 2.0; // Enable motor for long notes
+					if (motorEnabled) {
+						this.percussionEngine.setVibraphoneMotorEnabled(true);
+					}
+					this.percussionEngine.triggerMallet('vibraphone', note, velocity, duration, velocity * 0.7);
+					break;
+					
+				case 'gongs':
+					// Resonance based on velocity
+					const resonance = Math.min(velocity * 1.5, 1.0);
+					this.percussionEngine.triggerGong(note, velocity, duration, resonance);
+					break;
+			}
+			
+			logger.debug('advanced-percussion', `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
+		} catch (error) {
+			logger.error('advanced-percussion', `Failed to trigger ${instrumentName}`, error);
+			// Fall back to regular synthesis
+			const synth = this.instruments.get(instrumentName);
+			if (synth) {
+				synth.triggerAttackRelease(frequency, duration, time, velocity);
+			}
+		}
+	}
+
+	/**
+	 * Trigger advanced electronic synthesis with specialized modulation
+	 */
+	private triggerAdvancedElectronic(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
+		if (!this.electronicEngine) return;
+
+		// Convert frequency to note name for electronic engines
+		const note = this.frequencyToNoteName(frequency);
+		
+		try {
+			switch (instrumentName) {
+				case 'leadSynth':
+					// Dynamic filter modulation based on frequency
+					const filterMod = Math.min(frequency / 2000, 1.0); // Higher frequencies = more filter opening
+					this.electronicEngine.triggerLeadSynth(note, velocity, duration, filterMod);
+					break;
+					
+				case 'bassSynth':
+					// Sub-oscillator level based on velocity and low frequencies
+					const subLevel = frequency < 200 ? Math.min(velocity * 1.5, 1.0) : velocity * 0.5;
+					this.electronicEngine.triggerBassSynth(note, velocity, duration, subLevel);
+					break;
+					
+				case 'arpSynth':
+					// Arpeggiator pattern based on note position in scale
+					const patterns = ['up', 'down', 'updown'] as const;
+					const patternIndex = Math.floor((frequency / 100) % patterns.length);
+					this.electronicEngine.triggerArpSynth(note, velocity, duration, patterns[patternIndex]);
+					break;
+			}
+			
+			logger.debug('advanced-electronic', `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
+		} catch (error) {
+			logger.error('advanced-electronic', `Failed to trigger ${instrumentName}`, error);
+			// Fall back to regular synthesis
+			const synth = this.instruments.get(instrumentName);
+			if (synth) {
+				synth.triggerAttackRelease(frequency, duration, time, velocity);
+			}
+		}
+	}
+
+	/**
+	 * Convert frequency to closest note name
+	 */
+	private frequencyToNoteName(frequency: number): string {
+		const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+		const referenceFreq = 440; // A4
+		const semitoneRatio = Math.pow(2, 1/12);
+		
+		// Calculate semitones from A4
+		const semitones = Math.round(12 * Math.log2(frequency / referenceFreq));
+		
+		// Calculate octave and note
+		const octave = Math.floor((semitones + 9) / 12) + 4; // A4 is reference
+		const noteIndex = ((semitones + 9) % 12 + 12) % 12;
+		
+		return `${noteNames[noteIndex]}${octave}`;
+	}
+
+	/**
+	 * Dispose of advanced synthesis engines
+	 */
+	private disposeAdvancedSynthesis(): void {
+		if (this.percussionEngine) {
+			this.percussionEngine.dispose();
+			this.percussionEngine = null;
+		}
+		
+		if (this.electronicEngine) {
+			this.electronicEngine.dispose();
+			this.electronicEngine = null;
+		}
+	}
+
+	/**
+	 * Master effects controls for orchestral processing
+	 */
+	setMasterReverbDecay(decay: number): void {
+		logger.debug('master-effects', `Setting master reverb decay: ${decay}s`);
+		// Apply to all enabled instruments' reverb effects
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled && instrumentSettings.effects.reverb.enabled) {
+				instrumentSettings.effects.reverb.params.decay = decay;
+				this.updateReverbSettings({ decay }, instrumentName);
+			}
+		});
+	}
+
+	setMasterBassBoost(boost: number): void {
+		logger.debug('master-effects', `Setting master bass boost: ${boost}dB`);
+		if (this.masterEQ) {
+			this.masterEQ.low.value = boost;
+		}
+	}
+
+	setMasterTrebleBoost(boost: number): void {
+		logger.debug('master-effects', `Setting master treble boost: ${boost}dB`);
+		if (this.masterEQ) {
+			this.masterEQ.high.value = boost;
+		}
+	}
+
+	setMasterCompression(ratio: number): void {
+		logger.debug('master-effects', `Setting master compression: ${ratio}`);
+		if (this.masterCompressor) {
+			// Convert 0-1 range to compression parameters
+			this.masterCompressor.threshold.value = -20 + (ratio * 15); // -20dB to -5dB
+			this.masterCompressor.ratio.value = 2 + (ratio * 8); // 2:1 to 10:1
+		}
+	}
+
+	private initializeMasterEffects(): void {
+		logger.debug('master-effects', 'Initializing master effects chain');
+		
+		try {
+			// Master reverb for orchestral hall simulation
+			this.masterReverb = new Reverb({
+				decay: 5.0,
+				preDelay: 0.1,
+				wet: 0.2 // Subtle by default
+			});
+
+			// Master 3-band EQ for tonal shaping
+			this.masterEQ = new EQ3({
+				low: 0,
+				mid: 0, 
+				high: 0,
+				lowFrequency: 200,
+				highFrequency: 3000
+			});
+
+			// Master compressor for dynamic control
+			this.masterCompressor = new Compressor({
+				threshold: -12,
+				ratio: 3,
+				attack: 0.003,
+				release: 0.1
+			});
+
+			// Chain master effects to output
+			if (this.volume) {
+				// Create the master effects chain: EQ -> Compressor -> Reverb -> Output
+				this.masterEQ.chain(this.masterCompressor, this.masterReverb, this.volume);
+				
+				// Reroute all instruments through master effects
+				this.routeInstrumentsThroughMasterEffects();
+			}
+
+			logger.info('master-effects', 'Master effects chain initialized');
+		} catch (error) {
+			logger.error('master-effects', 'Failed to initialize master effects', error);
+		}
+	}
+
+	private routeInstrumentsThroughMasterEffects(): void {
+		if (!this.masterEQ) return;
+
+		// Reroute all existing instruments through master effects
+		this.instruments.forEach((instrument, instrumentName) => {
+			// Disconnect from direct output and connect to master chain
+			try {
+				instrument.disconnect();
+				instrument.connect(this.masterEQ!);
+				logger.debug('master-effects', `Routed ${instrumentName} through master effects`);
+			} catch (error) {
+				logger.warn('master-effects', `Failed to route ${instrumentName} through master effects`, error);
+			}
+		});
+	}
+
+	private disposeMasterEffects(): void {
+		if (this.masterReverb) {
+			this.masterReverb.dispose();
+			this.masterReverb = null;
+		}
+		
+		if (this.masterEQ) {
+			this.masterEQ.dispose();
+			this.masterEQ = null;
+		}
+		
+		if (this.masterCompressor) {
+			this.masterCompressor.dispose();
+			this.masterCompressor = null;
+		}
+		
+		logger.debug('master-effects', 'Master effects disposed');
+	}
+
+	/**
+	 * Performance optimization methods for 34-instrument orchestral load
+	 */
+	private initializePerformanceOptimization(): void {
+		logger.debug('performance', 'Initializing performance optimization systems');
+		
+		// Pre-allocate voice pools for enabled instruments
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled) {
+				this.createVoicePool(instrumentName, instrumentSettings.maxVoices || 4);
+			}
+		});
+
+		// Start adaptive quality monitoring
+		this.startPerformanceMonitoring();
+		
+		logger.info('performance', 'Performance optimization initialized');
+	}
+
+	private createVoicePool(instrumentName: string, poolSize: number): void {
+		const pool: any[] = [];
+		for (let i = 0; i < poolSize; i++) {
+			// Pre-allocate voice instances (simplified for now)
+			pool.push({ available: true, lastUsed: 0 });
+		}
+		this.voicePool.set(instrumentName, pool);
+		logger.debug('performance', `Created voice pool for ${instrumentName}: ${poolSize} voices`);
+	}
+
+	private startPerformanceMonitoring(): void {
+		// Monitor performance every 5 seconds
+		setInterval(() => {
+			this.checkPerformanceAndAdapt();
+		}, 5000);
+	}
+
+	private checkPerformanceAndAdapt(): void {
+		if (!this.adaptiveQuality) return;
+
+		const now = performance.now();
+		const cpuUsage = this.estimateCPUUsage();
+		const latency = (context as any).baseLatency ? (context as any).baseLatency * 1000 : 5; // Convert to ms or use 5ms default
+
+		// Update metrics
+		this.performanceMetrics.set('system', { cpuUsage, latency });
+
+		// Adaptive quality adjustment
+		if (cpuUsage > 80 && this.currentQualityLevel !== 'low') {
+			this.reduceQuality();
+		} else if (cpuUsage < 40 && this.currentQualityLevel !== 'high') {
+			this.increaseQuality();
+		}
+
+		this.lastCPUCheck = now;
+		logger.debug('performance', `CPU: ${cpuUsage.toFixed(1)}%, Latency: ${latency.toFixed(1)}ms, Quality: ${this.currentQualityLevel}`);
+	}
+
+	private estimateCPUUsage(): number {
+		// Estimate CPU usage based on active voices and effects
+		let activeVoices = 0;
+		let activeEffects = 0;
+
+		this.instruments.forEach((instrument, name) => {
+			const instrumentSettings = this.settings.instruments[name as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled) {
+				activeVoices += instrumentSettings.maxVoices || 4;
+				
+				// Count active effects
+				if (instrumentSettings.effects.reverb.enabled) activeEffects++;
+				if (instrumentSettings.effects.chorus.enabled) activeEffects++;
+				if (instrumentSettings.effects.filter.enabled) activeEffects++;
+			}
+		});
+
+		// Simple heuristic: base load + voice load + effect load
+		const baseLoad = 10; // Base system overhead
+		const voiceLoad = activeVoices * 1.5; // ~1.5% per voice
+		const effectLoad = activeEffects * 2; // ~2% per effect
+
+		return Math.min(baseLoad + voiceLoad + effectLoad, 100);
+	}
+
+	private reduceQuality(): void {
+		switch (this.currentQualityLevel) {
+			case 'high':
+				this.currentQualityLevel = 'medium';
+				this.applyMediumQuality();
+				break;
+			case 'medium':
+				this.currentQualityLevel = 'low';
+				this.applyLowQuality();
+				break;
+		}
+		logger.info('performance', `Reduced quality to ${this.currentQualityLevel} due to high CPU usage`);
+	}
+
+	private increaseQuality(): void {
+		switch (this.currentQualityLevel) {
+			case 'low':
+				this.currentQualityLevel = 'medium';
+				this.applyMediumQuality();
+				break;
+			case 'medium':
+				this.currentQualityLevel = 'high';
+				this.applyHighQuality();
+				break;
+		}
+		logger.info('performance', `Increased quality to ${this.currentQualityLevel} due to low CPU usage`);
+	}
+
+	private applyHighQuality(): void {
+		// Full quality: All effects enabled, full voice counts
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled) {
+				// Restore full voice count
+				const instrument = this.instruments.get(instrumentName);
+				if (instrument && 'maxPolyphony' in instrument) {
+					(instrument as any).maxPolyphony = instrumentSettings.maxVoices || 8;
+				}
+			}
+		});
+	}
+
+	private applyMediumQuality(): void {
+		// Medium quality: Reduce voices, keep essential effects
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled) {
+				// Reduce voice count
+				const instrument = this.instruments.get(instrumentName);
+				if (instrument && 'maxPolyphony' in instrument) {
+					(instrument as any).maxPolyphony = Math.max(Math.floor((instrumentSettings.maxVoices || 4) * 0.75), 2);
+				}
+			}
+		});
+	}
+
+	private applyLowQuality(): void {
+		// Low quality: Minimal voices, disable non-essential effects
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled) {
+				// Minimize voice count
+				const instrument = this.instruments.get(instrumentName);
+				if (instrument && 'maxPolyphony' in instrument) {
+					(instrument as any).maxPolyphony = Math.max(Math.floor((instrumentSettings.maxVoices || 4) * 0.5), 1);
+				}
+
+				// Temporarily disable chorus and filter effects for performance
+				if (instrumentSettings.effects.chorus.enabled) {
+					this.setChorusEnabled(false, instrumentName);
+				}
+				if (instrumentSettings.effects.filter.enabled) {
+					this.setFilterEnabled(false, instrumentName);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Memory management for 34-instrument load
+	 */
+	private optimizeMemoryUsage(): void {
+		// Clean up unused voice allocations
+		this.voicePool.forEach((pool, instrumentName) => {
+			const now = Date.now();
+			pool.forEach(voice => {
+				if (voice.lastUsed && (now - voice.lastUsed) > 30000) { // 30 seconds
+					voice.available = true;
+				}
+			});
+		});
+
+		// Force garbage collection hint if supported
+		if ('gc' in window && typeof (window as any).gc === 'function') {
+			(window as any).gc();
+		}
+
+		logger.debug('performance', 'Memory optimization completed');
+	}
+
+	/**
+	 * Public performance monitoring API
+	 */
+	getDetailedPerformanceMetrics(): {
+		totalInstruments: number;
+		enabledInstruments: number;
+		activeVoices: number;
+		activeEffects: number;
+		cpuUsage: number;
+		latency: number;
+		qualityLevel: string;
+		memoryEstimate: string;
+	} {
+		let enabledCount = 0;
+		let totalVoices = 0;
+		let totalEffects = 0;
+
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings?.enabled) {
+				enabledCount++;
+				totalVoices += instrumentSettings.maxVoices || 4;
+				if (instrumentSettings.effects.reverb.enabled) totalEffects++;
+				if (instrumentSettings.effects.chorus.enabled) totalEffects++;
+				if (instrumentSettings.effects.filter.enabled) totalEffects++;
+			}
+		});
+
+		const metrics = this.performanceMetrics.get('system') || { cpuUsage: 0, latency: 0 };
+		
+		return {
+			totalInstruments: Object.keys(this.settings.instruments).length,
+			enabledInstruments: enabledCount,
+			activeVoices: totalVoices,
+			activeEffects: totalEffects,
+			cpuUsage: metrics.cpuUsage,
+			latency: metrics.latency,
+			qualityLevel: this.currentQualityLevel,
+			memoryEstimate: this.estimateMemoryUsage()
+		};
+	}
+
+	private estimateMemoryUsage(): string {
+		// Rough memory estimation
+		const enabledInstruments = Object.values(this.settings.instruments).filter(i => i?.enabled).length;
+		const estimatedMB = enabledInstruments * 2 + 10; // ~2MB per instrument + 10MB base
+		return `~${estimatedMB}MB`;
+	}
+
+	/**
+	 * Emergency performance recovery
+	 */
+	enablePerformanceEmergencyMode(): void {
+		logger.warn('performance', 'Activating emergency performance mode');
+		
+		// Disable all non-essential instruments (keep only the 5 defaults)
+		const essentialInstruments = ['piano', 'strings', 'flute', 'clarinet', 'saxophone'];
+		
+		Object.keys(this.settings.instruments).forEach(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			if (instrumentSettings && !essentialInstruments.includes(instrumentName)) {
+				instrumentSettings.enabled = false;
+			}
+		});
+
+		// Apply low quality settings
+		this.currentQualityLevel = 'low';
+		this.applyLowQuality();
+
+		// Disable adaptive quality to prevent thrashing
+		this.adaptiveQuality = false;
+
+		logger.info('performance', 'Emergency performance mode activated - disabled non-essential instruments');
+	}
+
+	disablePerformanceEmergencyMode(): void {
+		this.adaptiveQuality = true;
+		this.currentQualityLevel = 'high';
+		this.applyHighQuality();
+		logger.info('performance', 'Emergency performance mode deactivated');
 	}
 } 
