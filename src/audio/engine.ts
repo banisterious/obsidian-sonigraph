@@ -170,6 +170,58 @@ const SAMPLER_CONFIGS = {
 		release: 3.2,
 		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/",
 		effects: ['reverb'] // Minimal effects for deep bass clarity
+	},
+	// Phase 6B: Extended Keyboard Family
+	electricPiano: {
+		urls: {
+			"A1": "A1.[format]", "C2": "C2.[format]", "E2": "E2.[format]",
+			"G2": "G2.[format]", "C3": "C3.[format]", "E3": "E3.[format]",
+			"G3": "G3.[format]", "C4": "C4.[format]", "E4": "E4.[format]",
+			"G4": "G4.[format]", "C5": "C5.[format]", "E5": "E5.[format]",
+			"G5": "G5.[format]", "C6": "C6.[format]", "E6": "E6.[format]"
+		},
+		release: 2.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/electric-piano/",
+		effects: ['reverb', 'chorus'] // Classic electric piano effects
+	},
+	harpsichord: {
+		urls: {
+			"C2": "C2.[format]", "D2": "D2.[format]", "F2": "F2.[format]",
+			"G2": "G2.[format]", "A2": "A2.[format]", "C3": "C3.[format]",
+			"D3": "D3.[format]", "F3": "F3.[format]", "G3": "G3.[format]",
+			"A3": "A3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"C5": "C5.[format]", "D5": "D5.[format]", "F5": "F5.[format]"
+		},
+		release: 1.0,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harpsichord/",
+		effects: ['reverb', 'filter'] // Baroque clarity with filtering
+	},
+	accordion: {
+		urls: {
+			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
+			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
+			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
+			"E4": "E4.[format]", "F4": "F4.[format]", "G4": "G4.[format]",
+			"A4": "A4.[format]", "B4": "B4.[format]", "C5": "C5.[format]",
+			"D5": "D5.[format]", "E5": "E5.[format]", "F5": "F5.[format]"
+		},
+		release: 2.8,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/accordion/",
+		effects: ['reverb', 'chorus'] // Bellows character with chorus
+	},
+	celesta: {
+		urls: {
+			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
+			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
+			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
+			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
+			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
+			"D6": "D6.[format]", "E6": "E6.[format]", "F6": "F6.[format]"
+		},
+		release: 3.5,
+		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/celesta/",
+		effects: ['reverb', 'filter'] // Bell-like with ethereal reverb
 	}
 };
 
@@ -253,8 +305,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone'];
+		// Initialize per-instrument effects - Phase 6B: Now supporting 17 instruments
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta'];
 		
 		for (const instrumentName of instruments) {
 			const effectMap = new Map<string, any>();
@@ -533,6 +585,110 @@ export class AudioEngine {
 		}
 		saxophoneOutput.connect(this.volume);
 		this.instruments.set('saxophone', saxophoneSampler);
+
+		// Phase 6B: Extended Keyboard Family - Electric Piano
+		const electricPianoSampler = new Sampler(configs.electricPiano);
+		const electricPianoVolume = new Volume(-6);
+		this.instrumentVolumes.set('electricPiano', electricPianoVolume);
+		
+		let electricPianoOutput = electricPianoSampler.connect(electricPianoVolume);
+		
+		// Connect electric piano to its specific effects based on settings
+		const electricPianoEffects = this.instrumentEffects.get('electricPiano');
+		if (electricPianoEffects && this.settings.instruments.electricPiano.effects) {
+			if (this.settings.instruments.electricPiano.effects.reverb.enabled) {
+				const reverb = electricPianoEffects.get('reverb');
+				if (reverb) electricPianoOutput = electricPianoOutput.connect(reverb);
+			}
+			if (this.settings.instruments.electricPiano.effects.chorus.enabled) {
+				const chorus = electricPianoEffects.get('chorus');
+				if (chorus) electricPianoOutput = electricPianoOutput.connect(chorus);
+			}
+			if (this.settings.instruments.electricPiano.effects.filter.enabled) {
+				const filter = electricPianoEffects.get('filter');
+				if (filter) electricPianoOutput = electricPianoOutput.connect(filter);
+			}
+		}
+		electricPianoOutput.connect(this.volume);
+		this.instruments.set('electricPiano', electricPianoSampler);
+
+		// Harpsichord - using Sampler with harpsichord samples
+		const harpsichordSampler = new Sampler(configs.harpsichord);
+		const harpsichordVolume = new Volume(-6);
+		this.instrumentVolumes.set('harpsichord', harpsichordVolume);
+		
+		let harpsichordOutput = harpsichordSampler.connect(harpsichordVolume);
+		
+		// Connect harpsichord to its specific effects based on settings
+		const harpsichordEffects = this.instrumentEffects.get('harpsichord');
+		if (harpsichordEffects && this.settings.instruments.harpsichord.effects) {
+			if (this.settings.instruments.harpsichord.effects.reverb.enabled) {
+				const reverb = harpsichordEffects.get('reverb');
+				if (reverb) harpsichordOutput = harpsichordOutput.connect(reverb);
+			}
+			if (this.settings.instruments.harpsichord.effects.chorus.enabled) {
+				const chorus = harpsichordEffects.get('chorus');
+				if (chorus) harpsichordOutput = harpsichordOutput.connect(chorus);
+			}
+			if (this.settings.instruments.harpsichord.effects.filter.enabled) {
+				const filter = harpsichordEffects.get('filter');
+				if (filter) harpsichordOutput = harpsichordOutput.connect(filter);
+			}
+		}
+		harpsichordOutput.connect(this.volume);
+		this.instruments.set('harpsichord', harpsichordSampler);
+
+		// Accordion - using Sampler with accordion samples
+		const accordionSampler = new Sampler(configs.accordion);
+		const accordionVolume = new Volume(-6);
+		this.instrumentVolumes.set('accordion', accordionVolume);
+		
+		let accordionOutput = accordionSampler.connect(accordionVolume);
+		
+		// Connect accordion to its specific effects based on settings
+		const accordionEffects = this.instrumentEffects.get('accordion');
+		if (accordionEffects && this.settings.instruments.accordion.effects) {
+			if (this.settings.instruments.accordion.effects.reverb.enabled) {
+				const reverb = accordionEffects.get('reverb');
+				if (reverb) accordionOutput = accordionOutput.connect(reverb);
+			}
+			if (this.settings.instruments.accordion.effects.chorus.enabled) {
+				const chorus = accordionEffects.get('chorus');
+				if (chorus) accordionOutput = accordionOutput.connect(chorus);
+			}
+			if (this.settings.instruments.accordion.effects.filter.enabled) {
+				const filter = accordionEffects.get('filter');
+				if (filter) accordionOutput = accordionOutput.connect(filter);
+			}
+		}
+		accordionOutput.connect(this.volume);
+		this.instruments.set('accordion', accordionSampler);
+
+		// Celesta - using Sampler with celesta samples
+		const celestaSampler = new Sampler(configs.celesta);
+		const celestaVolume = new Volume(-6);
+		this.instrumentVolumes.set('celesta', celestaVolume);
+		
+		let celestaOutput = celestaSampler.connect(celestaVolume);
+		
+		// Connect celesta to its specific effects based on settings
+		const celestaEffects = this.instrumentEffects.get('celesta');
+		if (celestaEffects && this.settings.instruments.celesta.effects) {
+			if (this.settings.instruments.celesta.effects.reverb.enabled) {
+				const reverb = celestaEffects.get('reverb');
+				if (reverb) celestaOutput = celestaOutput.connect(reverb);
+			}
+			if (this.settings.instruments.celesta.effects.chorus.enabled) {
+				const chorus = celestaEffects.get('chorus');
+				if (chorus) celestaOutput = celestaOutput.connect(chorus);
+			}
+			if (this.settings.instruments.celesta.effects.filter.enabled) {
+				const filter = celestaEffects.get('filter');
+				if (filter) celestaOutput = celestaOutput.connect(filter);
+			}
+		}
+		celestaOutput.connect(this.volume);
+		this.instruments.set('celesta', celestaSampler);
 
 		// Apply initial volume settings from plugin settings
 		this.applyInstrumentSettings();
@@ -1028,16 +1184,19 @@ export class AudioEngine {
 
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
 		// Distribute based on pitch ranges, but only among enabled instruments
-		// Updated for 13 total instruments (9 existing + 4 new vocal sections)
+		// Updated for 17 total instruments (Phase 6B: Extended Keyboard Family)
 		const sortedInstruments = enabledInstruments.sort();
 		
 		if (mapping.pitch > 1600) {
-			// Ultra high pitch - prefer flute if available
+			// Ultra high pitch - prefer flute, celesta if available
 			if (enabledInstruments.includes('flute')) return 'flute';
+			if (enabledInstruments.includes('celesta')) return 'celesta';
 			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
 		} else if (mapping.pitch > 1400) {
-			// Very high pitch - prefer piano if available
-			return enabledInstruments.includes('piano') ? 'piano' : sortedInstruments[0];
+			// Very high pitch - prefer piano, celesta if available
+			if (enabledInstruments.includes('piano')) return 'piano';
+			if (enabledInstruments.includes('celesta')) return 'celesta';
+			return sortedInstruments[0];
 		} else if (mapping.pitch > 1200) {
 			// High-mid pitch - prefer soprano, clarinet if available
 			if (enabledInstruments.includes('soprano')) return 'soprano';
@@ -1049,23 +1208,29 @@ export class AudioEngine {
 			if (enabledInstruments.includes('alto')) return 'alto';
 			return enabledInstruments.includes('clarinet') ? 'clarinet' : sortedInstruments[0];
 		} else if (mapping.pitch > 800) {
-			// Mid-high pitch - prefer organ if available
-			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+			// Mid-high pitch - prefer organ, accordion if available
+			if (enabledInstruments.includes('organ')) return 'organ';
+			if (enabledInstruments.includes('accordion')) return 'accordion';
+			return sortedInstruments[0];
 		} else if (mapping.pitch > 600) {
 			// Mid-high pitch - prefer vocal pads, tenor if available
 			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
 			if (enabledInstruments.includes('tenor')) return 'tenor';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
 		} else if (mapping.pitch > 400) {
-			// Medium pitch - prefer organ if available
-			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+			// Medium pitch - prefer organ, accordion if available
+			if (enabledInstruments.includes('organ')) return 'organ';
+			if (enabledInstruments.includes('accordion')) return 'accordion';
+			return sortedInstruments[0];
 		} else if (mapping.pitch > 300) {
-			// Mid-low pitch - prefer saxophone if available
+			// Mid-low pitch - prefer saxophone, harpsichord if available
 			if (enabledInstruments.includes('saxophone')) return 'saxophone';
+			if (enabledInstruments.includes('harpsichord')) return 'harpsichord';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
 		} else if (mapping.pitch > 200) {
-			// Low-medium pitch - prefer pad if available
+			// Low-medium pitch - prefer pad, electric piano if available
 			if (enabledInstruments.includes('pad')) return 'pad';
+			if (enabledInstruments.includes('electricPiano')) return 'electricPiano';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else if (mapping.pitch > 100) {
 			// Low pitch - prefer strings if available
