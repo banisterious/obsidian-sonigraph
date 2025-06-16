@@ -77,7 +77,7 @@ var DEFAULT_SETTINGS = {
       maxVoices: 8,
       effects: {
         reverb: {
-          enabled: false,
+          enabled: true,
           params: {
             decay: 2.2,
             preDelay: 0.03,
@@ -85,7 +85,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         chorus: {
-          enabled: false,
+          enabled: true,
           params: {
             frequency: 0.8,
             depth: 0.5,
@@ -126,7 +126,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         filter: {
-          enabled: true,
+          enabled: false,
           params: {
             frequency: 3500,
             Q: 0.8,
@@ -181,7 +181,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         chorus: {
-          enabled: false,
+          enabled: true,
           params: {
             frequency: 0.3,
             depth: 0.4,
@@ -213,7 +213,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         chorus: {
-          enabled: false,
+          enabled: true,
           params: {
             frequency: 0.2,
             depth: 0.7,
@@ -254,7 +254,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         filter: {
-          enabled: true,
+          enabled: false,
           params: {
             frequency: 6e3,
             Q: 0.5,
@@ -286,7 +286,7 @@ var DEFAULT_SETTINGS = {
           }
         },
         filter: {
-          enabled: true,
+          enabled: false,
           params: {
             frequency: 4500,
             Q: 0.8,

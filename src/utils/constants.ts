@@ -289,7 +289,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			maxVoices: 8,
 			effects: {
 				reverb: { 
-					enabled: false, 
+					enabled: true, 
 					params: { 
 						decay: 2.2, 
 						preDelay: 0.03, 
@@ -297,7 +297,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				chorus: { 
-					enabled: false, 
+					enabled: true, 
 					params: { 
 						frequency: 0.8, 
 						depth: 0.5, 
@@ -338,7 +338,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				filter: { 
-					enabled: true, 
+					enabled: false, 
 					params: { 
 						frequency: 3500, 
 						Q: 0.8, 
@@ -393,7 +393,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				chorus: { 
-					enabled: false, 
+					enabled: true, 
 					params: { 
 						frequency: 0.3, 
 						depth: 0.4, 
@@ -425,7 +425,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				chorus: { 
-					enabled: false, 
+					enabled: true, 
 					params: { 
 						frequency: 0.2, 
 						depth: 0.7, 
@@ -466,7 +466,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				filter: { 
-					enabled: true, 
+					enabled: false, 
 					params: { 
 						frequency: 6000, 
 						Q: 0.5, 
@@ -498,7 +498,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				},
 				filter: { 
-					enabled: true, 
+					enabled: false, 
 					params: { 
 						frequency: 4500, 
 						Q: 0.8, 
