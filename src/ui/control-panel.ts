@@ -325,11 +325,13 @@ export class ControlPanelModal extends Modal {
 
 		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
 		const instrumentKeys = Object.keys(this.plugin.settings.instruments);
-		console.log('Control Panel: Found instruments:', instrumentKeys);
-		console.log('Control Panel: Total instrument count:', instrumentKeys.length);
+		// Debug: Check for piano duplicates
+		const pianoCount = instrumentKeys.filter(key => key.includes('piano')).length;
+		if (pianoCount > 1) {
+			console.error('DUPLICATE PIANO ISSUE:', instrumentKeys.filter(key => key.includes('piano')));
+		}
 		instrumentKeys.forEach(instrumentKey => {
 			const info = this.getInstrumentInfo(instrumentKey);
-			console.log(`Processing instrument: ${instrumentKey} -> ${info.name}`);
 			const activityRow = activityDisplay.createDiv({ cls: 'sonigraph-activity-row' });
 			
 			const label = activityRow.createDiv({ cls: 'sonigraph-activity-label' });

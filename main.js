@@ -1372,6 +1372,31 @@ var INSTRUMENT_INFO = {
     description: "Sequenced patterns with graph-sync capability and delay",
     defaultFrequencyRange: "Variable (Pattern-dependent)"
   },
+  // Phase 6A: Individual Vocal Sections
+  soprano: {
+    name: "Soprano",
+    icon: "\u{1F469}\u200D\u{1F3A4}",
+    description: "High female voice with formant filtering and vowel morphing",
+    defaultFrequencyRange: "High-Mid (800-1200Hz)"
+  },
+  alto: {
+    name: "Alto",
+    icon: "\u{1F399}\uFE0F",
+    description: "Lower female voice with rich harmonics and breath noise modeling",
+    defaultFrequencyRange: "High (1000-1400Hz)"
+  },
+  tenor: {
+    name: "Tenor",
+    icon: "\u{1F9D1}\u200D\u{1F3A4}",
+    description: "High male voice with vocal expression and characteristics",
+    defaultFrequencyRange: "Mid-High (600-1000Hz)"
+  },
+  bass: {
+    name: "Bass",
+    icon: "\u{1F3A4}",
+    description: "Low male voice with chest resonance and sub-harmonics",
+    defaultFrequencyRange: "Very Low (<100Hz)"
+  },
   // Phase 8B: Environmental & Natural Sounds
   whaleHumpback: {
     name: "Humpback Whale",
@@ -2433,11 +2458,12 @@ var ControlPanelModal = class extends import_obsidian2.Modal {
     const activityGroup = this.createSettingsGroup(section, "Live Voice Activity", "Real-time instrument usage monitoring");
     const activityDisplay = activityGroup.createDiv({ cls: "sonigraph-voice-activity" });
     const instrumentKeys = Object.keys(this.plugin.settings.instruments);
-    console.log("Control Panel: Found instruments:", instrumentKeys);
-    console.log("Control Panel: Total instrument count:", instrumentKeys.length);
+    const pianoCount = instrumentKeys.filter((key) => key.includes("piano")).length;
+    if (pianoCount > 1) {
+      console.error("DUPLICATE PIANO ISSUE:", instrumentKeys.filter((key) => key.includes("piano")));
+    }
     instrumentKeys.forEach((instrumentKey) => {
       const info = this.getInstrumentInfo(instrumentKey);
-      console.log(`Processing instrument: ${instrumentKey} -> ${info.name}`);
       const activityRow = activityDisplay.createDiv({ cls: "sonigraph-activity-row" });
       const label = activityRow.createDiv({ cls: "sonigraph-activity-label" });
       label.createSpan({ text: info.icon, cls: "sonigraph-activity-icon" });
