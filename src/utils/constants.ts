@@ -220,6 +220,15 @@ export interface SonigraphSettings {
 		frenchHorn: InstrumentSettings;
 		trombone: InstrumentSettings;
 		tuba: InstrumentSettings;
+		// Phase 8: Percussion & Electronic Finale (8 instruments → 31/31 total)
+		oboe: InstrumentSettings;
+		timpani: InstrumentSettings;
+		xylophone: InstrumentSettings;
+		vibraphone: InstrumentSettings;
+		gongs: InstrumentSettings;
+		leadSynth: InstrumentSettings;
+		bassSynth: InstrumentSettings;
+		arpSynth: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
 	// Phase 3.5: Enhanced Effect Routing
@@ -1041,6 +1050,263 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					} 
 				}
 			}
+		},
+		// Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
+		oboe: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 4,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 2.5,
+						preDelay: 0.03,
+						wet: 0.35
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 1.2,
+						depth: 0.3,
+						delayTime: 2.5,
+						feedback: 0.1
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 2500,
+						Q: 1.2,
+						type: 'bandpass'
+					}
+				}
+			}
+		},
+		timpani: {
+			enabled: false,
+			volume: 0.9,
+			maxVoices: 2,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 6.0,
+						preDelay: 0.08,
+						wet: 0.6
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 0.1,
+						depth: 0.2,
+						delayTime: 8.0,
+						feedback: 0.02
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 800,
+						Q: 0.5,
+						type: 'highpass'
+					}
+				}
+			}
+		},
+		xylophone: {
+			enabled: false,
+			volume: 0.8,
+			maxVoices: 6,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 2.0,
+						preDelay: 0.02,
+						wet: 0.3
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 2.0,
+						depth: 0.2,
+						delayTime: 1.5,
+						feedback: 0.05
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 8000,
+						Q: 0.8,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		vibraphone: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 4,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 4.5,
+						preDelay: 0.04,
+						wet: 0.4
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 6.0,
+						depth: 0.3,
+						delayTime: 2.0,
+						feedback: 0.08
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 4000,
+						Q: 1.0,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		gongs: {
+			enabled: false,
+			volume: 0.9,
+			maxVoices: 2,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 12.0,
+						preDelay: 0.1,
+						wet: 0.7
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 0.05,
+						depth: 0.4,
+						delayTime: 15.0,
+						feedback: 0.1
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 200,
+						Q: 2.0,
+						type: 'bandpass'
+					}
+				}
+			}
+		},
+		leadSynth: {
+			enabled: false,
+			volume: 0.6,
+			maxVoices: 4,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 1.5,
+						preDelay: 0.02,
+						wet: 0.2
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 1.5,
+						depth: 0.3,
+						delayTime: 3.0,
+						feedback: 0.1
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 2000,
+						Q: 4.0,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		bassSynth: {
+			enabled: false,
+			volume: 0.8,
+			maxVoices: 2,
+			effects: {
+				reverb: {
+					enabled: false,
+					params: {
+						decay: 1.0,
+						preDelay: 0.01,
+						wet: 0.1
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 0.8,
+						depth: 0.2,
+						delayTime: 4.0,
+						feedback: 0.05
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 300,
+						Q: 1.5,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		arpSynth: {
+			enabled: false,
+			volume: 0.6,
+			maxVoices: 8,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 1.8,
+						preDelay: 0.02,
+						wet: 0.25
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 2.0,
+						depth: 0.2,
+						delayTime: 2.0,
+						feedback: 0.06
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 3000,
+						Q: 1.2,
+						type: 'lowpass'
+					}
+				}
+			}
 		}
 	},
 	voiceAssignmentStrategy: 'frequency',
@@ -1245,6 +1511,55 @@ export const INSTRUMENT_INFO = {
 		icon: '🎺',
 		description: 'Sub-bass frequencies with breath noise for deep foundation',
 		defaultFrequencyRange: 'Very Low (<100Hz)'
+	},
+	// Phase 8: Percussion & Electronic Finale
+	oboe: {
+		name: 'Oboe',
+		icon: '🎼',
+		description: 'Nasal quality with double reed simulation and formant filtering',
+		defaultFrequencyRange: 'High-Mid (800-1200Hz)'
+	},
+	timpani: {
+		name: 'Timpani',
+		icon: '🥁',
+		description: 'Tuned drums with pitch bending and hall acoustics',
+		defaultFrequencyRange: 'Low (100-200Hz)'
+	},
+	xylophone: {
+		name: 'Xylophone',
+		icon: '🎵',
+		description: 'Bright mallet percussion with wooden resonance',
+		defaultFrequencyRange: 'Very High (1400-1600Hz)'
+	},
+	vibraphone: {
+		name: 'Vibraphone',
+		icon: '🎼',
+		description: 'Metallic shimmer with tremolo motor and long sustain',
+		defaultFrequencyRange: 'High (1000-1400Hz)'
+	},
+	gongs: {
+		name: 'Gongs',
+		icon: '🥁',
+		description: 'Sustained crash with metallic resonance and massive reverb',
+		defaultFrequencyRange: 'Very Low (<100Hz)'
+	},
+	leadSynth: {
+		name: 'Lead Synth',
+		icon: '🎛️',
+		description: 'Cutting synth lead with filter modulation and resonance',
+		defaultFrequencyRange: 'Variable (200-8000Hz)'
+	},
+	bassSynth: {
+		name: 'Bass Synth',
+		icon: '🎛️',
+		description: 'Electronic foundation with sub-oscillator and tight filtering',
+		defaultFrequencyRange: 'Low (100-200Hz)'
+	},
+	arpSynth: {
+		name: 'Arp Synth',
+		icon: '🎛️',
+		description: 'Sequenced patterns with graph-sync capability and delay',
+		defaultFrequencyRange: 'Variable (Pattern-dependent)'
 	}
 };
 
