@@ -1,0 +1,336 @@
+/* ==========================================================================
+   SONIGRAPH NAVIGATION STYLESHEET
+   ========================================================================== */
+
+/* Sonigraph: Your Notes, Orchestrated.
+ * Navigation components including tabs, sidebars, app bars, navigation drawer, breadcrumbs
+ * 
+ * Author: John Banister
+ * GitHub: https://github.com/banisterious
+ *
+ * This file contains all navigation-related components including:
+ * - App Bar (Top Navigation)
+ * - Navigation Drawer
+ * - List Navigation Components
+ * - Tabs
+ * - Breadcrumbs
+ */
+
+/* ==========================================================================
+   RIBBON INTEGRATION
+   ========================================================================== */
+
+/* Ensure ribbon icon is properly styled */
+.sonigraph-ribbon-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   APP BAR - Top Navigation
+   ========================================================================== */
+
+.ospcc-app-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 64px;
+  background: var(--md-surface);
+  box-shadow: var(--md-elevation-2);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--md-space-6);
+  transition: box-shadow var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.ospcc-app-bar__title {
+  font-size: var(--md-font-title-large);
+  font-weight: 500;
+  color: var(--md-on-surface);
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-3);
+  margin: 0;
+}
+
+.ospcc-app-bar__subtitle {
+  font-size: var(--md-font-body-medium);
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+  margin-left: var(--md-space-2);
+}
+
+.ospcc-app-bar__actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--md-space-2);
+}
+
+/* ==========================================================================
+   NAVIGATION DRAWER
+   ========================================================================== */
+
+.ospcc-drawer {
+  width: 256px;
+  background: var(--md-surface);
+  border-right: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elevation-1);
+  display: flex;
+  flex-direction: column;
+}
+
+.ospcc-drawer__header {
+  padding: var(--md-space-4);
+  border-bottom: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-variant);
+}
+
+.ospcc-drawer__title {
+  font-size: var(--md-font-title-small);
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+  margin: 0;
+}
+
+.ospcc-drawer__content {
+  flex: 1;
+  padding: var(--md-space-2) 0;
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   NAVIGATION LIST COMPONENTS
+   ========================================================================== */
+
+.ospcc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ospcc-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--md-space-3) var(--md-space-4);
+  cursor: pointer;
+  transition: background-color var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  border-radius: 0 var(--md-corner-xl) var(--md-corner-xl) 0;
+  margin-right: var(--md-space-3);
+  text-decoration: none;
+  color: inherit;
+}
+
+.ospcc-list-item:hover:not(.ospcc-list-item--activated) {
+  background: var(--md-surface-container);
+}
+
+.ospcc-list-item--activated {
+  background: var(--md-primary-container);
+  color: var(--md-primary);
+}
+
+.ospcc-list-item--activated::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--md-primary);
+  border-radius: 0 var(--md-corner-xs) var(--md-corner-xs) 0;
+}
+
+.ospcc-list-item__graphic {
+  margin-right: var(--md-space-4);
+  color: var(--md-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.ospcc-list-item--activated .ospcc-list-item__graphic {
+  color: var(--md-primary);
+}
+
+.ospcc-list-item__text {
+  font-size: var(--md-font-body-medium);
+  font-weight: 500;
+  color: var(--md-on-surface);
+  flex: 1;
+}
+
+.ospcc-list-item__meta {
+  margin-left: auto;
+  font-size: var(--md-font-label-medium);
+  color: var(--md-on-surface-variant);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   TAB COMPONENTS
+   ========================================================================== */
+
+.sonigraph-tab-section {
+  max-width: 700px;
+}
+
+.sonigraph-section-title {
+  margin: 0 0 8px;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.sonigraph-section-desc {
+  margin: 0 0 24px;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   BREADCRUMB COMPONENTS
+   ========================================================================== */
+
+.ospcc-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  padding: var(--md-space-2) 0;
+  font-size: var(--md-font-body-small);
+  color: var(--md-on-surface-variant);
+}
+
+.ospcc-breadcrumb__item {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+}
+
+.ospcc-breadcrumb__separator {
+  color: var(--md-on-surface-variant);
+  opacity: 0.6;
+}
+
+.ospcc-breadcrumb__link {
+  color: var(--md-primary);
+  text-decoration: none;
+  transition: color var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.ospcc-breadcrumb__link:hover {
+  color: var(--md-primary-container);
+  text-decoration: underline;
+}
+
+.ospcc-breadcrumb__current {
+  color: var(--md-on-surface);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   SIDEBAR COMPONENTS
+   ========================================================================== */
+
+.ospcc-sidebar {
+  width: 280px;
+  background: var(--md-surface);
+  border-right: 1px solid var(--md-outline-variant);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ospcc-sidebar__header {
+  padding: var(--md-space-4);
+  border-bottom: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-variant);
+}
+
+.ospcc-sidebar__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--md-space-2);
+}
+
+.ospcc-sidebar__footer {
+  padding: var(--md-space-4);
+  border-top: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-variant);
+}
+
+/* ==========================================================================
+   FLOATING ACTION BUTTON (Navigation Related)
+   ========================================================================== */
+
+.ospcc-fab {
+  position: fixed;
+  bottom: var(--md-space-6);
+  right: var(--md-space-6);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--md-corner-lg);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  box-shadow: var(--md-elevation-3);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ospcc-fab:hover:not(:disabled) {
+  box-shadow: var(--md-elevation-4);
+  transform: scale(1.05);
+}
+
+.ospcc-fab:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   NAVIGATION RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .ospcc-drawer {
+    width: 240px;
+  }
+
+  .ospcc-sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ospcc-app-bar {
+    padding: 0 var(--md-space-4);
+  }
+
+  .ospcc-app-bar__title {
+    font-size: var(--md-font-title-medium);
+  }
+
+  .ospcc-fab {
+    bottom: var(--md-space-4);
+    right: var(--md-space-4);
+  }
+
+  .ospcc-drawer {
+    width: 200px;
+  }
+
+  .ospcc-sidebar {
+    width: 200px;
+  }
+}

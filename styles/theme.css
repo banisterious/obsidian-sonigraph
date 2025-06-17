@@ -1,0 +1,119 @@
+/* ==========================================================================
+   SONIGRAPH THEME COMPATIBILITY & ACCESSIBILITY
+   ========================================================================== */
+
+/* Theme compatibility, accessibility enhancements, and user preferences */
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media screen and (max-width: 480px) {
+  .sonigraph-control-panel {
+    min-width: 300px;
+    max-width: 90vw;
+  }
+
+  .sonigraph-playback-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sonigraph-realtime-display {
+    font-size: var(--font-ui-small);
+  }
+}
+
+/* ==========================================================================
+   THEME COMPATIBILITY
+   ========================================================================== */
+
+/* Dark theme adjustments */
+.theme-dark .sonigraph-controls-section {
+  border: 1px solid var(--background-modifier-border);
+}
+
+/* ==========================================================================
+   ACCESSIBILITY ENHANCEMENTS
+   ========================================================================== */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .sonigraph-status-indicator {
+    border: 1px solid var(--text-normal);
+  }
+
+  .sonigraph-controls-section {
+    border: 2px solid var(--background-modifier-border);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sonigraph-status-indicator.is-active {
+    animation: none;
+  }
+
+  * {
+    transition: none !important;
+  }
+}
+
+/* Focus indicators for accessibility */
+.sonigraph-primary-button:focus,
+.sonigraph-secondary-button:focus {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   RESPONSIVE GRID LAYOUTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sonigraph-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sonigraph-content-grid--2-col,
+  .sonigraph-content-grid--3-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   MATERIAL DESIGN RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .ospcc-drawer {
+    width: 240px;
+  }
+
+  .content-area {
+    padding: var(--md-space-4);
+  }
+
+  .ospcc-grid--auto-fit {
+    grid-template-columns: 1fr;
+  }
+
+  .ospcc-grid--auto-fill {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .ospcc-app-bar {
+    padding: 0 var(--md-space-4);
+  }
+
+  .ospcc-app-bar__title {
+    font-size: var(--md-font-title-medium);
+  }
+
+  .ospcc-fab {
+    bottom: var(--md-space-4);
+    right: var(--md-space-4);
+  }
+}

@@ -1,0 +1,282 @@
+/* ==========================================================================
+   Sonigraph Plugin - Utility Classes
+   ========================================================================== */
+
+/* Spacing Utilities */
+.osp-m-0 {
+  margin: 0;
+}
+
+.osp-m-1 {
+  margin: var(--osp-spacing-xs);
+}
+
+.osp-m-2 {
+  margin: var(--osp-spacing-sm);
+}
+
+.osp-m-3 {
+  margin: var(--osp-spacing-md);
+}
+
+.osp-m-4 {
+  margin: var(--osp-spacing-lg);
+}
+
+.osp-m-5 {
+  margin: var(--osp-spacing-xl);
+}
+
+.osp-p-0 {
+  padding: 0;
+}
+
+.osp-p-1 {
+  padding: var(--osp-spacing-xs);
+}
+
+.osp-p-2 {
+  padding: var(--osp-spacing-sm);
+}
+
+.osp-p-3 {
+  padding: var(--osp-spacing-md);
+}
+
+.osp-p-4 {
+  padding: var(--osp-spacing-lg);
+}
+
+.osp-p-5 {
+  padding: var(--osp-spacing-xl);
+}
+
+/* Display Utilities */
+.osp-d-none {
+  display: none !important;
+}
+
+.osp-d-block {
+  display: block !important;
+}
+
+.osp-d-inline {
+  display: inline !important;
+}
+
+.osp-d-inline-block {
+  display: inline-block !important;
+}
+
+.osp-d-flex {
+  display: flex !important;
+}
+
+.osp-d-grid {
+  display: grid !important;
+}
+
+/* Flexbox Utilities */
+.osp-flex-row {
+  flex-direction: row;
+}
+
+.osp-flex-column {
+  flex-direction: column;
+}
+
+.osp-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.osp-flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+.osp-justify-start {
+  justify-content: flex-start;
+}
+
+.osp-justify-center {
+  justify-content: center;
+}
+
+.osp-justify-end {
+  justify-content: flex-end;
+}
+
+.osp-justify-between {
+  justify-content: space-between;
+}
+
+.osp-align-start {
+  align-items: flex-start;
+}
+
+.osp-align-center {
+  align-items: center;
+}
+
+.osp-align-end {
+  align-items: flex-end;
+}
+
+.osp-align-stretch {
+  align-items: stretch;
+}
+
+/* Position Utilities */
+.osp-position-relative {
+  position: relative;
+}
+
+.osp-position-absolute {
+  position: absolute;
+}
+
+.osp-position-fixed {
+  position: fixed;
+}
+
+.osp-position-sticky {
+  position: sticky;
+}
+
+/* Width/Height Utilities */
+.osp-w-100 {
+  width: 100%;
+}
+
+.osp-h-100 {
+  height: 100%;
+}
+
+.osp-w-auto {
+  width: auto;
+}
+
+.osp-h-auto {
+  height: auto;
+}
+
+/* Border Utilities */
+.osp-border {
+  border: 1px solid var(--background-modifier-border);
+}
+
+.osp-border-top {
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.osp-border-bottom {
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.osp-border-0 {
+  border: 0;
+}
+
+.osp-rounded {
+  border-radius: var(--osp-border-radius-md);
+}
+
+.osp-rounded-sm {
+  border-radius: var(--osp-border-radius-sm);
+}
+
+.osp-rounded-lg {
+  border-radius: var(--osp-border-radius-lg);
+}
+
+/* Shadow Utilities */
+.osp-shadow-sm {
+  box-shadow: var(--osp-shadow-sm);
+}
+
+.osp-shadow-md {
+  box-shadow: var(--osp-shadow-md);
+}
+
+.osp-shadow-lg {
+  box-shadow: var(--osp-shadow-lg);
+}
+
+.osp-shadow-none {
+  box-shadow: none;
+}
+
+/* Color Utilities */
+.osp-text-primary {
+  color: var(--osp-primary);
+}
+
+.osp-text-secondary {
+  color: var(--osp-secondary);
+}
+
+.osp-text-error {
+  color: var(--osp-error);
+}
+
+.osp-bg-primary {
+  background-color: var(--osp-primary);
+}
+
+.osp-bg-secondary {
+  background-color: var(--osp-secondary);
+}
+
+.osp-bg-surface {
+  background-color: var(--osp-surface);
+}
+
+/* Cursor Utilities */
+.osp-cursor-pointer {
+  cursor: pointer;
+}
+
+.osp-cursor-default {
+  cursor: default;
+}
+
+.osp-cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* Overflow Utilities */
+.osp-overflow-hidden {
+  overflow: hidden;
+}
+
+.osp-overflow-auto {
+  overflow: auto;
+}
+
+.osp-overflow-scroll {
+  overflow: scroll;
+}
+
+/* Z-index Utilities */
+.osp-z-0 {
+  z-index: 0;
+}
+
+.osp-z-10 {
+  z-index: 10;
+}
+
+.osp-z-20 {
+  z-index: 20;
+}
+
+.osp-z-30 {
+  z-index: 30;
+}
+
+.osp-z-40 {
+  z-index: 40;
+}
+
+.osp-z-50 {
+  z-index: 50;
+}

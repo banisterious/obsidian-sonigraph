@@ -1,0 +1,114 @@
+/* ==========================================================================
+   SONIGRAPH ANIMATIONS & TRANSITIONS
+   ========================================================================== */
+
+/* Animation keyframes, transitions, and motion utilities */
+
+/* ==========================================================================
+   KEYFRAME ANIMATIONS
+   ========================================================================== */
+
+/* Primary pulse animation - used throughout the application */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* Simple opacity pulse for status indicators */
+@keyframes pulseOpacity {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Slide in animation for error messages */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   ANIMATION UTILITIES
+   ========================================================================== */
+
+.ospcc-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   FUTURE-PROOFING ANIMATIONS
+   ========================================================================== */
+
+/* Graph visualization animations (Phase 2) */
+@keyframes graphNodePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Audio visualization animations (Phase 3) */
+@keyframes audioWave {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  50% {
+    transform: scaleY(0.3);
+  }
+}
+
+/* Connection line animation */
+@keyframes connectionFlow {
+  0% {
+    stroke-dashoffset: 20;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Data flow animation */
+@keyframes dataFlow {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

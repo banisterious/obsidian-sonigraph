@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Sonigraph Plugin - Base Styles
+   ========================================================================== */
+
+/* Base component styling - structural and functional only */
+* {
+  box-sizing: border-box;
+}
+
+/* Base container classes */
+.osp-container {
+  max-width: 100vw;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.osp-flex {
+  display: flex;
+}
+
+.osp-flex-column {
+  flex-direction: column;
+}
+
+.osp-flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.osp-grid {
+  display: grid;
+}
+
+/* Checkbox containers - theme integration */
+.checkbox-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Base typography */
+.osp-text-center {
+  text-align: center;
+}
+
+.osp-text-left {
+  text-align: left;
+}
+
+.osp-text-right {
+  text-align: right;
+}
+
+/* Basic visibility utilities */
+.osp-hidden {
+  display: none !important;
+}
+
+.osp-visible {
+  display: block !important;
+}
+
+.osp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

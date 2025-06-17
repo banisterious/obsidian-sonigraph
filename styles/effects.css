@@ -1,0 +1,566 @@
+/* ==========================================================================
+   SONIGRAPH EFFECTS & AUDIO COMPONENTS
+   ========================================================================== */
+
+/* Effects status, presets, parameters, real-time feedback, and audio controls */
+
+/* ==========================================================================
+   EFFECTS STATUS STYLING
+   ========================================================================== */
+
+/* Effects Status Styling */
+.sonigraph-effects-status {
+  margin-bottom: var(--size-4-3);
+  padding: var(--size-4-2);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+}
+
+.sonigraph-effect-parameters h4 {
+  margin: 0 0 var(--size-2-3) 0;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+}
+
+.sonigraph-effect-status-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--size-2-1);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-small);
+}
+
+.sonigraph-effect-label {
+  font-weight: var(--font-medium);
+  min-width: 80px;
+}
+
+.sonigraph-effect-state.enabled {
+  color: var(--color-green);
+  font-weight: var(--font-medium);
+}
+
+.sonigraph-effect-state.disabled {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.sonigraph-effect-params {
+  color: var(--text-muted);
+  margin-left: var(--size-2-1);
+}
+
+.sonigraph-effect-routing {
+  margin-top: var(--size-4-2);
+  padding-top: var(--size-4-2);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-effect-routing h4 {
+  margin: 0 0 var(--size-2-3) 0;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+}
+
+.sonigraph-effect-routing p {
+  margin: var(--size-2-1) 0;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+/* Status tab effects display */
+.sonigraph-effects-status {
+  background: var(--background-secondary);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.sonigraph-effects-status-content {
+  margin-bottom: 12px;
+}
+
+.sonigraph-effects-status-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.sonigraph-effects-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sonigraph-effect-instrument-status {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.sonigraph-effect-instrument-label {
+  font-weight: 500;
+  color: var(--text-normal);
+  min-width: 80px;
+}
+
+.sonigraph-effect-instrument-effects {
+  color: var(--text-muted);
+  font-family: var(--font-monospace);
+  font-size: 12px;
+}
+
+.sonigraph-effects-config-hint {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--background-modifier-border);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sonigraph-hint-link {
+  color: var(--text-accent);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   EFFECT SETTINGS CONTAINER
+   ========================================================================== */
+
+/* Effect Settings Container */
+.sonigraph-effect-settings-container {
+  margin-top: var(--size-4-2);
+  padding-top: var(--size-4-2);
+  border-top: 1px solid var(--background-modifier-border-focus);
+}
+
+/* Per-Instrument Effect Groups */
+.sonigraph-effect-group {
+  margin-bottom: var(--size-4-3);
+  padding: var(--size-4-2);
+  border-radius: var(--radius-s);
+  background: var(--background-primary-alt);
+}
+
+.sonigraph-effect-title {
+  margin: 0 0 var(--size-2-3) 0;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+  color: var(--text-normal);
+}
+
+/* ==========================================================================
+   EFFECT PRESETS STYLING
+   ========================================================================== */
+
+.sonigraph-preset-group {
+  margin-bottom: 20px;
+}
+
+.sonigraph-preset-category {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sonigraph-preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.sonigraph-preset-button {
+  background: var(--interactive-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sonigraph-preset-button:hover {
+  background: var(--interactive-hover);
+  border-color: var(--interactive-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+.sonigraph-preset-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+}
+
+.sonigraph-reset-button {
+  background: var(--background-modifier-error-hover);
+  border-color: var(--background-modifier-error);
+  color: var(--text-on-accent);
+}
+
+.sonigraph-reset-button:hover {
+  background: var(--background-modifier-error);
+  border-color: var(--background-modifier-error);
+}
+
+.sonigraph-section-separator {
+  border: none;
+  height: 1px;
+  background: var(--background-modifier-border);
+  margin: 25px 0;
+}
+
+/* ==========================================================================
+   SMART PARAMETER SUGGESTION BUTTONS
+   ========================================================================== */
+
+.sonigraph-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.sonigraph-suggestion-button {
+  background: var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border-hover);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sonigraph-suggestion-button:hover {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
+}
+
+.sonigraph-suggestion-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 15%);
+}
+
+/* ==========================================================================
+   ENHANCED EFFECT SETTINGS DESCRIPTIONS
+   ========================================================================== */
+
+/* Enhanced effect settings descriptions */
+.setting-item-description {
+  /* font-style: italic;
+	color: var(--text-muted) !important;
+	font-size: 12px;
+	line-height: 1.4;
+	margin-top: 4px; */
+}
+
+/* Musical context styling */
+.sonigraph-effect-settings-container .setting-item-description {
+  background: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin: 6px 0 12px;
+  font-style: normal;
+}
+
+/* Smart range indicators */
+.sonigraph-effect-settings-container .setting-item-control {
+  position: relative;
+}
+
+.sonigraph-effect-settings-container .slider {
+  position: relative;
+}
+
+.sonigraph-effect-settings-container .slider::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--color-red) 0%,
+    var(--color-orange) 25%,
+    var(--color-green) 50%,
+    var(--color-blue) 75%,
+    var(--color-purple) 100%
+  );
+  border-radius: 1px;
+  opacity: 0.3;
+}
+
+/* ==========================================================================
+   REAL-TIME FEEDBACK UI STYLING
+   ========================================================================== */
+
+.sonigraph-instrument-group {
+  margin-bottom: 25px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--background-primary);
+}
+
+.sonigraph-instrument-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.sonigraph-instrument-header-left {
+  flex: 1;
+}
+
+.sonigraph-instrument-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sonigraph-instrument-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.sonigraph-preview-button {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sonigraph-preview-button:hover {
+  background: var(--interactive-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+.sonigraph-preview-button.active {
+  background: var(--color-red);
+  animation: pulse 2s infinite;
+}
+
+.sonigraph-performance-indicator {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  white-space: nowrap;
+  font-family: var(--font-monospace);
+}
+
+.sonigraph-performance-indicator.good {
+  background: var(--color-green);
+  color: var(--text-on-accent);
+  border-color: var(--color-green);
+}
+
+.sonigraph-performance-indicator.warning {
+  background: var(--color-orange);
+  color: var(--text-on-accent);
+  border-color: var(--color-orange);
+}
+
+.sonigraph-performance-indicator.danger {
+  background: var(--color-red);
+  color: var(--text-on-accent);
+  border-color: var(--color-red);
+}
+
+.sonigraph-effect-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sonigraph-bypass-button {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border-hover);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sonigraph-bypass-button:hover {
+  background: var(--interactive-hover);
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
+.sonigraph-bypass-button.bypassed {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--text-on-accent);
+}
+
+.sonigraph-bypass-button.bypassed:hover {
+  background: var(--color-orange);
+  opacity: 0.8;
+}
+
+/* Enhanced effect group styling */
+.sonigraph-effect-group {
+  margin-bottom: 18px;
+  padding: 12px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-effect-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Real-time parameter feedback enhancements */
+.sonigraph-effect-settings-container .setting-item {
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.sonigraph-effect-settings-container .setting-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* Slider enhancements for real-time feedback */
+.sonigraph-effect-settings-container .slider {
+  transition: all 0.1s ease;
+}
+
+.sonigraph-effect-settings-container .slider:active {
+  transform: scale(1.02);
+}
+
+.sonigraph-effect-settings-container .slider-thumb {
+  transition: all 0.1s ease;
+}
+
+.sonigraph-effect-settings-container .slider:active .slider-thumb {
+  box-shadow: 0 0 0 4px rgb(var(--interactive-accent-rgb) 0.3);
+}
+
+/* ==========================================================================
+   HORIZONTAL EFFECT SECTIONS (Master Effects)
+   ========================================================================== */
+
+.osp-effect-section-horizontal {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.osp-effect-header-horizontal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.osp-effect-title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-normal);
+}
+
+.osp-effect-params-horizontal {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.osp-param-group-horizontal {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  flex: 1;
+}
+
+.osp-param-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 6px;
+}
+
+.osp-param-slider {
+  flex: 1;
+}
+
+/* Effect toggles for instruments */
+.osp-effects-toggles {
+  min-width: 200px;
+}
+
+.osp-effects-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.osp-effect-toggle-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.osp-effect-toggle-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.osp-effect-toggle {
+  /* transform: scale(0.8); */
+
+  /* transform-origin: center; */
+}
+
+/* .osp-effect-toggle .ospcc-switch__input {
+    transform: scale(1.25); 
+    transform-origin: center;
+} */
