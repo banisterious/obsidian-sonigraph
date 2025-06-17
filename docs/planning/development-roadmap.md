@@ -243,6 +243,21 @@
 - Master conductor interface for ensemble control
 - Professional orchestral templates and presets
 
+#### **Timeline Integration Challenges & Solutions**
+Based on comprehensive research of Obsidian's plugin API:
+
+**🚧 Technical Challenges:**
+- **Limited Graph API**: No official timeline controls API in Obsidian core
+- **Experimental Access**: Graph functionality requires DOM-based workarounds
+- **State Synchronization**: Complex sync between visual timeline and audio playback
+- **Performance Constraints**: Real-time audio generation for historical graph states
+
+**💡 Implementation Strategy:**
+- **Custom Timeline Engine**: Independent audio timeline synchronized with visual graph
+- **DOM Monitoring**: Use MutationObserver to track graph timeline state changes  
+- **Metadata Integration**: Leverage file timestamps and MetadataCache for temporal data
+- **Plugin Collaboration**: Extend existing community timeline plugins (Extended Graph, Timeline View)
+
 #### **🔄 Phase 9B: Natural Soundscapes Expansion**
 - **Animal Sounds Collection**: Birds, Cats, Dogs, Wolves, Owls, Crows/Ravens, Dolphins, Big Cats, Elephants, Bears, Horses with authentic natural recordings
 - **Environmental Atmospheres**: Ocean Waves, Rain, Wind, Thunder, Fire for ambient soundscaping  
@@ -286,7 +301,31 @@
   - Export quality settings and compression options
   - Automatic thumbnail/cover art generation based on graph visualization
 
-### **🔄 Phase 12: Content Filtering & Selection**
+### **🔄 Phase 12: Graph Timeline Integration**
+- **Timeline Synchronization**: Connect Sonigraph with Obsidian's graph timeline animation
+  - **Visual-Audio Sync**: Synchronized playback of graph growth and musical evolution
+  - **Timeline Controls Integration**: Play, pause, scrub controls affect both visual and audio
+  - **Custom Timeline Engine**: Independent timeline system due to limited Obsidian graph API
+  - **DOM-Based Monitoring**: Monitor graph timeline state changes for audio synchronization
+- **Temporal Sonification Features**:
+  - **Node Birth Sounds**: Musical notes when nodes appear chronologically (pitch based on eventual connections)
+  - **Connection Chimes**: Distinct sounds when links form between existing notes
+  - **Growth Themes**: Musical themes that evolve as graph density and complexity increase
+  - **Temporal Harmony**: Chord progressions reflecting graph structural development over time
+  - **Era-Based Instruments**: Different instrument families for different time periods
+- **Timeline Audio Features**:
+  - **Speed Control**: Audio playback speed matches timeline animation speed
+  - **Scrubbing Audio**: Real-time audio preview while scrubbing through timeline
+  - **Timeline Bookmarks**: Audio markers for significant graph growth events
+  - **Growth Intensity**: Audio volume and complexity reflect rate of graph changes
+  - **Historical Themes**: Musical motifs that represent different periods of vault development
+- **Technical Implementation**:
+  - **File Metadata Integration**: Use note creation/modification timestamps for temporal mapping
+  - **Graph State Reconstruction**: Rebuild historical graph states for audio generation
+  - **Performance Optimization**: Efficient timeline audio rendering for large vaults
+  - **Plugin Compatibility**: Integration with Extended Graph and Timeline View plugins
+
+### **🔄 Phase 13: Content Filtering & Selection**
 - **Folder Exclusion System**: Option to exclude specific folders from graph processing
   - Settings UI with folder picker/browser
   - Pattern-based exclusion (e.g., exclude all folders starting with "_")
