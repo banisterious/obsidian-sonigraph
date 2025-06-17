@@ -125,11 +125,35 @@
 | | Rain | 📋 | Future | Natural recordings + atmospheric processing | Full Spectrum (20-8000Hz) | Light drizzle to thunderstorms |
 | | Wind | 📋 | Future | Natural recordings + spatial processing | Mid-High (200-6000Hz) | Through trees, mountain gusts |
 | | Thunder | 📋 | Future | Natural recordings + dramatic processing | Ultra-Low (10-200Hz) | Distant rumbles to close strikes |
+| | Owls | 📋 | Future | Natural recordings + nocturnal processing | Mid-High (300-2000Hz) | Mysterious night calls, hooting |
+| | Crows/Ravens | 📋 | Future | Natural recordings + intelligent processing | Mid (400-1200Hz) | Complex vocalizations, cawing |
+| | Dolphins | 📋 | Future | Natural recordings + echolocation processing | High (1000-8000Hz) | Clicks, whistles, echolocation |
+| | Big Cats | 📋 | Future | Natural recordings + powerful processing | Low-Mid (50-600Hz) | Lions, tigers, leopards - roars |
+| | Elephants | 📋 | Future | Natural recordings + infrasonic processing | Ultra-Low (5-200Hz) | Trumpeting, infrasonic communication |
+| | Bears | 📋 | Future | Natural recordings + deep processing | Low (80-400Hz) | Deep growls, forest presence |
+| | Horses | 📋 | Future | Natural recordings + dynamic processing | Mid-Low (200-800Hz) | Neighing, galloping, breathing |
+| | Crickets | 📋 | Future | Natural recordings + rhythmic processing | High (2000-8000Hz) | Rhythmic chirping, percussion-like |
+| | Bees | 📋 | Future | Natural recordings + swarm processing | Mid-High (200-4000Hz) | Buzzing swarms, hive activity |
+| | Frogs | 📋 | Future | Natural recordings + pond processing | Mid (300-2000Hz) | Pond chorus, various species |
+| | Fire | 📋 | Future | Natural recordings + crackling processing | Mid-High (100-6000Hz) | Crackling, burning, campfire ambience |
+| | Theremin | 📋 | Future | Electronic synthesis + ethereal processing | Variable (50-4000Hz) | Electronic, otherworldly, sci-fi |
+| | Mechanical | 📋 | Future | Industrial synthesis + steampunk processing | Low-Mid (50-2000Hz) | Industrial, steampunk-inspired |
+| | Cosmic | 📋 | Future | Synthesized drones + space processing | Ultra-Low-High (10-8000Hz) | Space-like drones, sci-fi atmospheres |
+| | Glass Harmonics | 📋 | Future | Physical modeling + crystal processing | High (400-4000Hz) | Crystal bowls, glass instruments |
+| | Didgeridoo | 📋 | Future | Physical modeling + aboriginal processing | Ultra-Low (30-300Hz) | Aboriginal wind instrument, drones |
+| | Hang Drum | 📋 | Future | Physical modeling + meditative processing | Mid (200-1000Hz) | Meditative, metallic percussion |
+| | Singing Bowls | 📋 | Future | Physical modeling + resonant processing | Mid-High (200-3000Hz) | Tibetan/crystal bowl resonances |
+| | Kalimba | 📋 | Future | Physical modeling + plucked processing | High-Mid (400-2000Hz) | Thumb piano, plucked metal tines |
 
 #### **Implementation Summary by Phase**
 - **✅ Complete (34/34)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta, Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba, Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead Synth, Bass Synth, Arp Synth, Whale Song (Humpback)
 - **✅ Phase 8B Complete**: Environmental & Natural Sounds expansion with authentic whale song implementation
-- **📋 Phase 9B Future**: Natural Soundscapes expansion (Birds, Cats, Dogs, Wolves, Ocean Waves, Rain, Wind, Thunder) targeting 42+ total instruments
+- **📋 Phase 9B Future**: Natural Soundscapes expansion targeting 55+ total instruments:
+  - **Animal Sounds**: Birds, Cats, Dogs, Wolves, Owls, Crows/Ravens, Dolphins, Big Cats, Elephants, Bears, Horses
+  - **Environmental**: Ocean Waves, Rain, Wind, Thunder, Fire
+  - **Insects/Creatures**: Crickets, Bees, Frogs
+  - **Experimental**: Theremin, Mechanical, Cosmic, Glass Harmonics
+  - **World Instruments**: Didgeridoo, Hang Drum, Singing Bowls, Kalimba
 
 #### **Key Implementation Approaches by Family**
 
@@ -220,12 +244,15 @@
 - Professional orchestral templates and presets
 
 #### **🔄 Phase 9B: Natural Soundscapes Expansion**
-- **Animal Sounds Collection**: Birds, Cats, Dogs, Wolves with authentic natural recordings
-- **Environmental Atmospheres**: Ocean Waves, Rain, Wind, Thunder for ambient soundscaping
+- **Animal Sounds Collection**: Birds, Cats, Dogs, Wolves, Owls, Crows/Ravens, Dolphins, Big Cats, Elephants, Bears, Horses with authentic natural recordings
+- **Environmental Atmospheres**: Ocean Waves, Rain, Wind, Thunder, Fire for ambient soundscaping  
+- **Insects & Small Creatures**: Crickets, Bees, Frogs with rhythmic and textural patterns
+- **Experimental Synthesis**: Theremin, Mechanical, Cosmic, Glass Harmonics for otherworldly textures
+- **World Instruments**: Didgeridoo, Hang Drum, Singing Bowls, Kalimba for cultural diversity
 - **Specialized Processing**: Species-specific audio processing and environmental acoustics
 - **Graph Integration**: Natural sound assignment based on vault themes and content patterns
-- **Soundscape Mixing**: Intelligent layering of multiple environmental sounds
-- **Real-time Adaptation**: Dynamic environmental sounds responding to graph complexity
+- **Soundscape Mixing**: Intelligent layering of multiple environmental and experimental sounds
+- **Real-time Adaptation**: Dynamic soundscapes responding to graph complexity and content themes
 
 ### **🔄 Phase 10: Sample Manager & Audio Infrastructure**
 - **Sample Manager UI**: Comprehensive sample management system
@@ -272,7 +299,12 @@
 **Low (100-200Hz)**: Strings, Harp, Timpani, Bass synth
 **Very Low (<100Hz)**: Tuba, Bass vocal, Gongs, Lead synth fundamentals
 **Environmental (20-1000Hz)**: Whale Song (Humpback) - Wide spectrum natural sounds
-**Future Natural Soundscapes**: Birds (800-3000Hz), Ocean Waves (20-4000Hz), Rain (20-8000Hz), Wind (200-6000Hz), Thunder (10-200Hz), Cats (400-2000Hz), Dogs (200-1500Hz), Wolves (100-800Hz)
+**Future Natural Soundscapes & Experimental**: 
+- **Animals**: Birds (800-3000Hz), Cats (400-2000Hz), Dogs (200-1500Hz), Wolves (100-800Hz), Owls (300-2000Hz), Crows (400-1200Hz), Dolphins (1000-8000Hz), Big Cats (50-600Hz), Elephants (5-200Hz), Bears (80-400Hz), Horses (200-800Hz)
+- **Environmental**: Ocean Waves (20-4000Hz), Rain (20-8000Hz), Wind (200-6000Hz), Thunder (10-200Hz), Fire (100-6000Hz)
+- **Creatures**: Crickets (2000-8000Hz), Bees (200-4000Hz), Frogs (300-2000Hz)
+- **Experimental**: Theremin (50-4000Hz), Mechanical (50-2000Hz), Cosmic (10-8000Hz), Glass Harmonics (400-4000Hz)
+- **World**: Didgeridoo (30-300Hz), Hang Drum (200-1000Hz), Singing Bowls (200-3000Hz), Kalimba (400-2000Hz)
 
 *This distribution ensures optimal frequency separation and prevents masking between instruments while maintaining musical authenticity. Environmental sounds provide natural textures across the full spectrum.*
 
