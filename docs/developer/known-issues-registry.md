@@ -3,6 +3,7 @@
 ## Table of Contents
 
 1. [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off)
+2. [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture)
 
 ---
 
@@ -11,6 +12,7 @@
 | Issue # | Status | Priority | Component | Summary | Details |
 |---------|--------|----------|-----------|---------|---------|
 | 001 | In Progress | High | Audio Engine | Audio crackling vs musical density trade-off | [Technical Analysis](./issue-001-audio-crackling-solution.md) |
+| 002 | Identified | High | Audio Engine | Monolithic audio engine architecture | [Refactoring Plan](./issue-002-monolithic-architecture-refactoring.md) |
 
 ---
 
@@ -59,5 +61,36 @@ Audio crackling occurs during real-time synthesis playback when multiple notes t
 
 ---
 
+## Issue #002: Monolithic Audio Engine Architecture
+
+**Status:** Identified  
+**Priority:** High  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts` (3,765 lines)
+
+### Summary
+
+The main audio engine file has grown to 3,765 lines handling instrument configs, voice management, effects, and scheduling in a single monolithic structure. This prevents implementing the performance optimizations needed for Issue #001.
+
+### Root Causes
+- Mixed abstraction levels and responsibilities
+- 48 instrument configurations embedded directly in code  
+- Complex state management scattered throughout
+- Cannot implement proper voice management or centralized effects
+
+### Current Status
+- **Blocker**: Prevents Issue #001 performance solutions
+- **Next Phase**: Extract voice management, effect buses, and instrument configs
+- **Target**: Modular architecture enabling performance optimizations
+
+### Refactoring Plan
+1. Extract instrument configurations to `/src/audio/configs/`
+2. Create voice management system in `/src/audio/voice-management/`  
+3. Build effect bus architecture in `/src/audio/effects/`
+4. Separate audio context management
+5. Target: 6-8 focused modules (~300-600 lines each)
+
+---
+
 *Last Updated: 2025-06-17*  
-*Next Review: TBD based on user feedback*
+*Next Review: After refactoring plan approval*
