@@ -401,13 +401,13 @@ class MaterialControlPanelModal extends Modal {
 3. **Master Tab**: Global controls, master effects, and bulk operations
 
 **Instrument Family Tabs (7 tabs):**
-4. **Strings Tab**: String family instruments (violin, cello, guitar, harp, piano, strings)
-5. **Woodwinds Tab**: Woodwind family (flute, clarinet, saxophone, oboe)
-6. **Brass Tab**: Brass family (trumpet, french horn, trombone, tuba)
-7. **Vocals Tab**: Vocal family (choir, vocal pads, soprano, alto, tenor, bass)
-8. **Percussion Tab**: Percussion family (timpani, xylophone, vibraphone, gongs)
-9. **Electronic Tab**: Electronic family (pad, lead synth, bass synth, arp synth)
-10. **Experimental Tab**: Experimental/environmental sounds (whale song)
+1. **Strings Tab**: String family instruments (violin, cello, guitar, harp, piano, strings)
+2. **Woodwinds Tab**: Woodwind family (flute, clarinet, saxophone, oboe)
+3. **Brass Tab**: Brass family (trumpet, french horn, trombone, tuba)
+4. **Vocals Tab**: Vocal family (choir, vocal pads, soprano, alto, tenor, bass)
+5. **Percussion Tab**: Percussion family (timpani, xylophone, vibraphone, gongs)
+6. **Electronic Tab**: Electronic family (pad, lead synth, bass synth, arp synth)
+7. **Experimental Tab**: Experimental/environmental sounds (whale song)
 
 **Material Components:**
 - **MaterialCard**: Standardized card components with elevation
