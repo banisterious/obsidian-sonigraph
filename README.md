@@ -4,6 +4,11 @@
 
 Sonigraph is an advanced Obsidian plugin that maps the visual structure of your knowledge graph to rich musical parameters, creating dynamic orchestral compositions with 34 instruments, advanced effects processing, and real-time audio synthesis.
 
+<p align="center">
+  <img src="docs/images/sonigraph-control-center.gif" alt="Animated demonstration of the Sonigraph Control Center" width="600"/>
+</p>
+<p align="center"><em>Sonigraph Control Center</em></p>
+
 ## 🎼 Features
 
 ### Core Sonification
