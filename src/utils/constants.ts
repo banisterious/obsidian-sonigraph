@@ -191,7 +191,7 @@ export interface SonigraphSettings {
 	rootNote: string;
 	traversalMethod: string;
 	isEnabled: boolean;
-	audioFormat: 'mp3' | 'wav';
+	audioFormat: 'synthesis' | 'mp3' | 'wav';
 	microtuning?: boolean;
 	effects?: {
 		[key: string]: {
@@ -256,7 +256,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	rootNote: 'C',
 	traversalMethod: 'breadth-first',
 	isEnabled: true,
-	audioFormat: 'mp3',
+	audioFormat: 'synthesis',
 	microtuning: false,
 	effects: {
 		orchestralreverbhall: { enabled: true },

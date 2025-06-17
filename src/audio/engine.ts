@@ -408,12 +408,15 @@ const SAMPLER_CONFIGS = {
 	// Phase 8B: Environmental & Natural Sounds
 	whaleHumpback: {
 		urls: {
-			"C1": "C1.[format]", "F1": "F1.[format]", "Bb1": "Bb1.[format]",
-			"C2": "C2.[format]", "F2": "F2.[format]", "Bb2": "Bb2.[format]",
-			"C3": "C3.[format]", "F3": "F3.[format]"
+			// Public domain NOAA humpback whale recordings from Internet Archive
+			// Single whale recording mapped to multiple pitches for musical use
+			// Available for download when sample downloading feature is implemented
+			"C1": "whale_song.mp3", "F1": "whale_song.mp3", "Bb1": "whale_song.mp3",
+			"C2": "whale_song.mp3", "F2": "whale_song.mp3", "Bb2": "whale_song.mp3",
+			"C3": "whale_song.mp3", "F3": "whale_song.mp3"
 		},
 		release: 12.0, // Long whale song sustains
-		baseUrl: "https://freesound.org/data/previews/316/316847_5245022-hq.mp3", // Scientific whale recordings
+		baseUrl: "https://archive.org/download/WhaleSong_928/", // Public domain NOAA scientific recordings
 		effects: ['reverb', 'chorus', 'filter'] // Deep oceanic processing
 	}
 };
@@ -472,16 +475,19 @@ export class AudioEngine {
 	}
 
 	private getSamplerConfigs(): typeof SAMPLER_CONFIGS {
-		// Replace [format] placeholder with actual format
+		// Replace [format] placeholder with actual format (unless synthesis-only mode)
 		const format = this.settings.audioFormat;
 		const configs = JSON.parse(JSON.stringify(SAMPLER_CONFIGS)) as typeof SAMPLER_CONFIGS;
 		
-		Object.values(configs).forEach(config => {
-			Object.keys(config.urls).forEach(note => {
-				const noteKey = note as string;
-				(config.urls as any)[noteKey] = (config.urls as any)[noteKey].replace('[format]', format);
+		// Skip format replacement in synthesis-only mode
+		if (format !== 'synthesis') {
+			Object.values(configs).forEach(config => {
+				Object.keys(config.urls).forEach(note => {
+					const noteKey = note as string;
+					(config.urls as any)[noteKey] = (config.urls as any)[noteKey].replace('[format]', format);
+				});
 			});
-		});
+		}
 		
 		return configs;
 	}
@@ -1352,6 +1358,12 @@ export class AudioEngine {
 		tubaOutput.connect(this.volume);
 		this.instruments.set('tuba', tubaSampler);
 
+		// Initialize persistent whale synthesizer for environmental sounds
+		this.initializeWhaleSynthesizer();
+
+		// Initialize any missing instruments dynamically (for instruments not manually coded above)
+		this.initializeMissingInstruments();
+
 		// Apply initial volume settings from plugin settings
 		this.applyInstrumentSettings();
 
@@ -1359,6 +1371,162 @@ export class AudioEngine {
 			instrumentCount: this.instruments.size,
 			instruments: Array.from(this.instruments.keys()),
 			volumeControls: Array.from(this.instrumentVolumes.keys())
+		});
+	}
+
+	/**
+	 * Initialize persistent whale synthesizer for environmental sounds
+	 */
+	private initializeWhaleSynthesizer(): void {
+		logger.debug('environmental', 'Initializing persistent whale synthesizer');
+
+		// Create persistent whale synthesizer with FM synthesis
+		const whaleSynth = new PolySynth(FMSynth, {
+			harmonicity: 0.5,
+			modulationIndex: 12,
+			oscillator: { type: 'sine' },
+			modulation: { type: 'sine' },
+			envelope: {
+				attack: 0.3 + (Math.random() * 0.4), // 0.3-0.7 second attack
+				decay: 0.5,
+				sustain: 0.9,
+				release: 2.0 + (Math.random() * 3.0) // 2-5 second release
+			},
+			modulationEnvelope: {
+				attack: 1.0,
+				decay: 0.5,
+				sustain: 0.6,
+				release: 4.0
+			}
+		});
+
+		// Create volume control for whale
+		const whaleVolume = new Volume(-6);
+		this.instrumentVolumes.set('whaleHumpback', whaleVolume);
+
+		// Create persistent effects for whale
+		const whaleReverb = new Reverb({
+			decay: 8.0, // Very long reverb for oceanic effect
+			wet: 0.4
+		});
+		
+		const whaleChorus = new Chorus({
+			frequency: 0.3, // Very slow chorus for underwater movement
+			depth: 0.8,
+			delayTime: 8,
+			feedback: 0.1
+		});
+
+		// Generate reverb and connect chain
+		whaleReverb.generate().then(() => {
+			// Connect: whale -> reverb -> chorus -> volume -> master
+			whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+			logger.debug('environmental', 'Whale synthesizer effects chain connected');
+		}).catch((error) => {
+			logger.warn('environmental', 'Failed to generate whale reverb, using fallback', error);
+			// Fallback without reverb
+			whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+		});
+
+		// Store persistent synthesizer and effects
+		this.instruments.set('whaleHumpback', whaleSynth);
+		
+		// Store effects for potential later control
+		if (!this.instrumentEffects.has('whaleHumpback')) {
+			this.instrumentEffects.set('whaleHumpback', new Map());
+		}
+		const whaleEffects = this.instrumentEffects.get('whaleHumpback');
+		if (whaleEffects) {
+			whaleEffects.set('reverb', whaleReverb);
+			whaleEffects.set('chorus', whaleChorus);
+		}
+
+		logger.info('environmental', 'Persistent whale synthesizer initialized successfully');
+	}
+
+	/**
+	 * Initialize any instruments that exist in SAMPLER_CONFIGS but weren't manually created above
+	 */
+	private initializeMissingInstruments(): void {
+		// Skip all sampling if synthesis-only mode is enabled
+		if (this.settings.audioFormat === 'synthesis') {
+			logger.info('instruments', 'Synthesis-only mode enabled - skipping all sample loading');
+			return;
+		}
+
+		const configs = this.getSamplerConfigs();
+		const configKeys = Object.keys(configs);
+		const initializedKeys = Array.from(this.instruments.keys());
+		const missingKeys = configKeys.filter(key => !initializedKeys.includes(key));
+
+		logger.debug('instruments', 'Initializing missing instruments', {
+			totalConfigs: configKeys.length,
+			alreadyInitialized: initializedKeys.length,
+			missing: missingKeys.length,
+			missingInstruments: missingKeys,
+			audioFormat: this.settings.audioFormat
+		});
+
+		missingKeys.forEach(instrumentName => {
+			try {
+				// Environmental instruments prefer synthesis over samples until sample downloading is implemented
+				if (this.isEnvironmentalInstrument(instrumentName)) {
+					logger.debug('instruments', `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
+					
+					// Create volume control for environmental instruments
+					const volume = new Volume(-6);
+					this.instrumentVolumes.set(instrumentName, volume);
+					logger.debug('instruments', `Created volume control for environmental instrument: ${instrumentName}`);
+					return;
+				}
+				
+				const config = configs[instrumentName as keyof typeof configs];
+				
+				// Create sampler with error handling
+				const sampler = new Sampler({
+					...config,
+					onload: () => {
+						logger.debug('samples', `${instrumentName} samples loaded successfully`);
+					},
+					onerror: (error) => {
+						logger.warn('samples', `${instrumentName} samples failed to load, using basic synthesis`, { error });
+					}
+				});
+
+				// Create volume control
+				const volume = new Volume(-6);
+				this.instrumentVolumes.set(instrumentName, volume);
+
+				// Connect to effects if available
+				let output = sampler.connect(volume);
+				const effects = this.instrumentEffects.get(instrumentName);
+				const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+
+				if (effects && instrumentSettings?.effects) {
+					if (instrumentSettings.effects.reverb?.enabled) {
+						const reverb = effects.get('reverb');
+						if (reverb) output = output.connect(reverb);
+					}
+					if (instrumentSettings.effects.chorus?.enabled) {
+						const chorus = effects.get('chorus');
+						if (chorus) output = output.connect(chorus);
+					}
+					if (instrumentSettings.effects.filter?.enabled) {
+						const filter = effects.get('filter');
+						if (filter) output = output.connect(filter);
+					}
+				}
+
+				// Connect to master volume
+				output.connect(this.volume);
+				
+				// Register the instrument
+				this.instruments.set(instrumentName, sampler);
+				
+				logger.debug('instruments', `Dynamically initialized ${instrumentName}`);
+			} catch (error) {
+				logger.error('instruments', `Failed to initialize ${instrumentName}`, { error });
+			}
 		});
 	}
 
@@ -1463,6 +1631,8 @@ export class AudioEngine {
 							this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time);
 						} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
 							this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time);
+						} else if (this.isEnvironmentalInstrument(instrumentName)) {
+							this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, time);
 						} else {
 							const synth = this.instruments.get(instrumentName);
 							if (synth) {
@@ -1470,7 +1640,8 @@ export class AudioEngine {
 							}
 						}
 						
-						if (this.instruments.get(instrumentName)) {
+						// Log successful triggering for all instrument types
+						if (this.instruments.get(instrumentName) || this.isEnvironmentalInstrument(instrumentName) || this.isElectronicInstrument(instrumentName) || this.isPercussionInstrument(instrumentName)) {
 							logger.debug('playback', 'Note triggered', {
 								nodeId: mapping.nodeId,
 								instrument: instrumentName,
@@ -1481,11 +1652,8 @@ export class AudioEngine {
 								actualTime: time.toFixed(3)
 							});
 						} else {
-							logger.warn('trigger', `Instrument ${instrumentName} not found, using piano`);
-							const pianoSynth = this.instruments.get('piano');
-							if (pianoSynth) {
-								pianoSynth.triggerAttackRelease(frequency, duration, time, velocity);
-							}
+							logger.warn('trigger', `Instrument ${instrumentName} not found - skipping note (no fallback)`);
+							// No fallback - just skip the note silently
 						}
 					} else {
 						logger.warn('trigger', 'Skipping note - instruments unavailable or stopped');
@@ -2892,6 +3060,10 @@ export class AudioEngine {
 		return ['leadSynth', 'bassSynth', 'arpSynth'].includes(instrumentName);
 	}
 
+	private isEnvironmentalInstrument(instrumentName: string): boolean {
+		return ['whaleHumpback'].includes(instrumentName);
+	}
+
 	/**
 	 * Trigger advanced percussion with specialized synthesis
 	 */
@@ -2981,6 +3153,36 @@ export class AudioEngine {
 			if (synth) {
 				synth.triggerAttackRelease(frequency, duration, time, velocity);
 			}
+		}
+	}
+
+	/**
+	 * Trigger environmental sounds with specialized synthesis
+	 */
+	private triggerEnvironmentalSound(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
+		try {
+			switch (instrumentName) {
+				case 'whaleHumpback':
+					// Use persistent whale synthesizer
+					const whaleSynth = this.instruments.get('whaleHumpback') as PolySynth;
+					if (!whaleSynth) {
+						logger.warn('environmental-sound', 'Persistent whale synthesizer not found');
+						return;
+					}
+
+					// Whale songs are often in very low frequencies with slow pitch bends
+					const whaleFreq = Math.max(frequency * 0.5, 40); // Lower the frequency, minimum 40Hz
+					whaleSynth.triggerAttackRelease(whaleFreq, duration, time, velocity * 0.8); // Match sequence duration, slightly quieter
+					
+					logger.debug('environmental-sound', `Whale sound triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
+					
+					break;
+			}
+			
+			logger.debug('environmental-sound', `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
+		} catch (error) {
+			logger.error('environmental-sound', `Failed to trigger ${instrumentName}`, error);
+			// No fallback - environmental sounds should be silent if they fail
 		}
 	}
 
