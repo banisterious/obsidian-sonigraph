@@ -1,0 +1,179 @@
+/* ==========================================================================
+   SONIGRAPH RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Responsive breakpoints, mobile layouts, and adaptive design */
+
+/* ==========================================================================
+   BASE RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media screen and (max-width: 480px) {
+  .sonigraph-control-panel {
+    min-width: 300px;
+    max-width: 90vw;
+  }
+
+  .sonigraph-playback-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sonigraph-realtime-display {
+    font-size: var(--font-ui-small);
+  }
+}
+
+/* ==========================================================================
+   COMPONENT GRID RESPONSIVE LAYOUT
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sonigraph-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sonigraph-content-grid--2-col,
+  .sonigraph-content-grid--3-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   CONTROL CENTER RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .ospcc-drawer {
+    width: 240px;
+  }
+
+  .content-area {
+    padding: var(--md-space-4);
+  }
+
+  .ospcc-grid--auto-fit {
+    grid-template-columns: 1fr;
+  }
+
+  .ospcc-grid--auto-fill {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .ospcc-app-bar {
+    padding: 0 var(--md-space-4);
+  }
+
+  .ospcc-app-bar__title {
+    font-size: var(--md-font-title-medium);
+  }
+
+  .ospcc-fab {
+    bottom: var(--md-space-4);
+    right: var(--md-space-4);
+  }
+}
+
+/* ==========================================================================
+   BUTTON GROUP RESPONSIVE LAYOUT
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sonigraph-button-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sonigraph-button-group .sonigraph-primary-button,
+  .sonigraph-button-group .sonigraph-secondary-button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* ==========================================================================
+   EFFECTS LAYOUT RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .osp-effect-params-horizontal {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .osp-param-group-horizontal {
+    min-width: auto;
+  }
+
+  .osp-effects-container {
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   SETTINGS PAGE RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sonigraph-tab-section {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+
+  .sonigraph-settings-group {
+    margin-bottom: 24px;
+    padding: 16px;
+  }
+
+  .sonigraph-onboarding-bordered {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+/* ==========================================================================
+   CARD LAYOUT RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .ospcc-card {
+    margin: 0.5em 0;
+  }
+
+  .ospcc-card__header {
+    padding: var(--md-space-3) var(--md-space-4);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--md-space-2);
+  }
+
+  .ospcc-card__content {
+    padding: var(--md-space-4);
+  }
+}
+
+/* ==========================================================================
+   STATUS DISPLAYS RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .sonigraph-status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px;
+  }
+
+  .sonigraph-status-label,
+  .sonigraph-status-value {
+    font-size: 0.8em;
+  }
+
+  .sonigraph-realtime-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}

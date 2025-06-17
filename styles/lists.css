@@ -1,0 +1,135 @@
+/* ==========================================================================
+   SONIGRAPH LISTS & LIST COMPONENTS
+   ========================================================================== */
+
+/* List components, navigation lists, option lists, and structured data display */
+
+/* ==========================================================================
+   NAVIGATION LISTS
+   ========================================================================== */
+
+.ospcc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ospcc-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--md-space-3) var(--md-space-4);
+  cursor: pointer;
+  transition: background-color var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  border-radius: 0 var(--md-corner-xl) var(--md-corner-xl) 0;
+  margin-right: var(--md-space-3);
+  text-decoration: none;
+  color: inherit;
+}
+
+.ospcc-list-item:hover:not(.ospcc-list-item--activated) {
+  background: var(--md-surface-container);
+}
+
+.ospcc-list-item--activated {
+  background: var(--md-primary-container);
+  color: var(--md-primary);
+}
+
+.ospcc-list-item--activated::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--md-primary);
+  border-radius: 0 var(--md-corner-xs) var(--md-corner-xs) 0;
+}
+
+.ospcc-list-item__graphic {
+  margin-right: var(--md-space-4);
+  color: var(--md-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.ospcc-list-item--activated .ospcc-list-item__graphic {
+  color: var(--md-primary);
+}
+
+.ospcc-list-item__text {
+  font-size: var(--md-font-body-medium);
+  font-weight: 500;
+  color: var(--md-on-surface);
+  flex: 1;
+}
+
+.ospcc-list-item__meta {
+  margin-left: auto;
+  font-size: var(--md-font-label-medium);
+  color: var(--md-on-surface-variant);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   EFFECTS LISTS
+   ========================================================================== */
+
+.sonigraph-effects-list {
+  display: grid;
+  gap: 16px;
+}
+
+.sonigraph-effect-item {
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border-focus);
+  background: var(--background-primary-alt);
+}
+
+.sonigraph-effect-item h4 {
+  margin: 0 0 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.sonigraph-effect-item p {
+  margin: 0;
+  line-height: 1.3;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   STATUS EFFECTS LISTS
+   ========================================================================== */
+
+.sonigraph-effects-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sonigraph-effect-instrument-status {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.sonigraph-effect-instrument-label {
+  font-weight: 500;
+  color: var(--text-normal);
+  min-width: 80px;
+}
+
+.sonigraph-effect-instrument-effects {
+  color: var(--text-muted);
+  font-family: var(--font-monospace);
+  font-size: 12px;
+}

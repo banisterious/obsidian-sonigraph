@@ -3,3 +3,35 @@ node_modules
 .cursor/rules
 ui-mockups
 logs/
+
+# Build artifacts
+main.js
+styles.css
+
+# CSS build system temporary files
+styles.css.backup
+styles.css.pre-modal-extraction
+*.tmp.css
+
+# Development cache files
+.stylelintcache
+.prettierache
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Zone Identifier files (Windows)
+*.Zone.Identifier

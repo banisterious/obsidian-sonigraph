@@ -1,0 +1,932 @@
+/* ==========================================================================
+   SONIGRAPH LAYOUT STYLESHEET
+   ========================================================================== */
+
+/* Sonigraph: Your Notes, Orchestrated.
+ * Layout utilities, grid systems, spacing, containers, and structural components
+ * 
+ * Author: John Banister
+ * GitHub: https://github.com/banisterious
+ *
+ * This file contains all layout-related utilities including:
+ * - Grid Systems
+ * - Container Layouts
+ * - Spacing Utilities
+ * - Flexbox Layouts
+ * - Structural Components
+ * - Responsive Layout Classes
+ */
+
+/* ==========================================================================
+   MAIN LAYOUT CONTAINERS
+   ========================================================================== */
+
+.main-container {
+  display: flex;
+  margin-top: 64px;
+  height: calc(100vh - 64px);
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--md-space-6);
+  overflow-y: auto;
+  background: var(--background-primary);
+}
+
+/* Base container classes */
+.osp-container {
+  max-width: 100vw;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.osp-container--narrow {
+  max-width: 600px;
+}
+
+.osp-container--medium {
+  max-width: 900px;
+}
+
+.osp-container--wide {
+  max-width: 1200px;
+}
+
+/* ==========================================================================
+   FLEXBOX LAYOUT SYSTEM
+   ========================================================================== */
+
+.osp-flex {
+  display: flex;
+}
+
+.osp-flex-column {
+  flex-direction: column;
+}
+
+.osp-flex-row {
+  flex-direction: row;
+}
+
+.osp-flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.osp-flex-between {
+  justify-content: space-between;
+}
+
+.osp-flex-around {
+  justify-content: space-around;
+}
+
+.osp-flex-start {
+  justify-content: flex-start;
+}
+
+.osp-flex-end {
+  justify-content: flex-end;
+}
+
+.osp-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.osp-flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+.osp-flex-1 {
+  flex: 1;
+}
+
+.osp-flex-auto {
+  flex: auto;
+}
+
+.osp-flex-none {
+  flex: none;
+}
+
+/* Align items */
+.osp-items-start {
+  align-items: flex-start;
+}
+
+.osp-items-center {
+  align-items: center;
+}
+
+.osp-items-end {
+  align-items: flex-end;
+}
+
+.osp-items-stretch {
+  align-items: stretch;
+}
+
+/* ==========================================================================
+   GRID LAYOUT SYSTEM
+   ========================================================================== */
+
+.osp-grid {
+  display: grid;
+}
+
+.ospcc-grid {
+  display: grid;
+  gap: var(--md-space-4);
+}
+
+.ospcc-grid--2-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.ospcc-grid--3-col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.ospcc-grid--4-col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.ospcc-grid--auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.ospcc-grid--auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+/* Grid gaps */
+.osp-gap-1 {
+  gap: var(--md-space-1);
+}
+
+.osp-gap-2 {
+  gap: var(--md-space-2);
+}
+
+.osp-gap-3 {
+  gap: var(--md-space-3);
+}
+
+.osp-gap-4 {
+  gap: var(--md-space-4);
+}
+
+.osp-gap-6 {
+  gap: var(--md-space-6);
+}
+
+.osp-gap-8 {
+  gap: var(--md-space-8);
+}
+
+/* Column spans */
+.osp-col-span-1 {
+  grid-column: span 1;
+}
+
+.osp-col-span-2 {
+  grid-column: span 2;
+}
+
+.osp-col-span-3 {
+  grid-column: span 3;
+}
+
+.osp-col-span-4 {
+  grid-column: span 4;
+}
+
+.osp-col-span-full {
+  grid-column: 1 / -1;
+}
+
+/* ==========================================================================
+   SPACING UTILITIES
+   ========================================================================== */
+
+/* Margin utilities */
+.osp-m-0 {
+  margin: 0;
+}
+
+.osp-m-1 {
+  margin: var(--md-space-1);
+}
+
+.osp-m-2 {
+  margin: var(--md-space-2);
+}
+
+.osp-m-3 {
+  margin: var(--md-space-3);
+}
+
+.osp-m-4 {
+  margin: var(--md-space-4);
+}
+
+.osp-m-6 {
+  margin: var(--md-space-6);
+}
+
+.osp-m-8 {
+  margin: var(--md-space-8);
+}
+
+/* Margin directional */
+.osp-mt-0 {
+  margin-top: 0;
+}
+
+.osp-mt-1 {
+  margin-top: var(--md-space-1);
+}
+
+.osp-mt-2 {
+  margin-top: var(--md-space-2);
+}
+
+.osp-mt-3 {
+  margin-top: var(--md-space-3);
+}
+
+.osp-mt-4 {
+  margin-top: var(--md-space-4);
+}
+
+.osp-mt-6 {
+  margin-top: var(--md-space-6);
+}
+
+.osp-mt-8 {
+  margin-top: var(--md-space-8);
+}
+
+.osp-mb-0 {
+  margin-bottom: 0;
+}
+
+.osp-mb-1 {
+  margin-bottom: var(--md-space-1);
+}
+
+.osp-mb-2 {
+  margin-bottom: var(--md-space-2);
+}
+
+.osp-mb-3 {
+  margin-bottom: var(--md-space-3);
+}
+
+.osp-mb-4 {
+  margin-bottom: var(--md-space-4);
+}
+
+.osp-mb-6 {
+  margin-bottom: var(--md-space-6);
+}
+
+.osp-mb-8 {
+  margin-bottom: var(--md-space-8);
+}
+
+.osp-ml-0 {
+  margin-left: 0;
+}
+
+.osp-ml-1 {
+  margin-left: var(--md-space-1);
+}
+
+.osp-ml-2 {
+  margin-left: var(--md-space-2);
+}
+
+.osp-ml-3 {
+  margin-left: var(--md-space-3);
+}
+
+.osp-ml-4 {
+  margin-left: var(--md-space-4);
+}
+
+.osp-ml-6 {
+  margin-left: var(--md-space-6);
+}
+
+.osp-ml-8 {
+  margin-left: var(--md-space-8);
+}
+
+.osp-mr-0 {
+  margin-right: 0;
+}
+
+.osp-mr-1 {
+  margin-right: var(--md-space-1);
+}
+
+.osp-mr-2 {
+  margin-right: var(--md-space-2);
+}
+
+.osp-mr-3 {
+  margin-right: var(--md-space-3);
+}
+
+.osp-mr-4 {
+  margin-right: var(--md-space-4);
+}
+
+.osp-mr-6 {
+  margin-right: var(--md-space-6);
+}
+
+.osp-mr-8 {
+  margin-right: var(--md-space-8);
+}
+
+/* Padding utilities */
+.osp-p-0 {
+  padding: 0;
+}
+
+.osp-p-1 {
+  padding: var(--md-space-1);
+}
+
+.osp-p-2 {
+  padding: var(--md-space-2);
+}
+
+.osp-p-3 {
+  padding: var(--md-space-3);
+}
+
+.osp-p-4 {
+  padding: var(--md-space-4);
+}
+
+.osp-p-6 {
+  padding: var(--md-space-6);
+}
+
+.osp-p-8 {
+  padding: var(--md-space-8);
+}
+
+/* Padding directional */
+.osp-pt-0 {
+  padding-top: 0;
+}
+
+.osp-pt-1 {
+  padding-top: var(--md-space-1);
+}
+
+.osp-pt-2 {
+  padding-top: var(--md-space-2);
+}
+
+.osp-pt-3 {
+  padding-top: var(--md-space-3);
+}
+
+.osp-pt-4 {
+  padding-top: var(--md-space-4);
+}
+
+.osp-pt-6 {
+  padding-top: var(--md-space-6);
+}
+
+.osp-pt-8 {
+  padding-top: var(--md-space-8);
+}
+
+.osp-pb-0 {
+  padding-bottom: 0;
+}
+
+.osp-pb-1 {
+  padding-bottom: var(--md-space-1);
+}
+
+.osp-pb-2 {
+  padding-bottom: var(--md-space-2);
+}
+
+.osp-pb-3 {
+  padding-bottom: var(--md-space-3);
+}
+
+.osp-pb-4 {
+  padding-bottom: var(--md-space-4);
+}
+
+.osp-pb-6 {
+  padding-bottom: var(--md-space-6);
+}
+
+.osp-pb-8 {
+  padding-bottom: var(--md-space-8);
+}
+
+.osp-pl-0 {
+  padding-left: 0;
+}
+
+.osp-pl-1 {
+  padding-left: var(--md-space-1);
+}
+
+.osp-pl-2 {
+  padding-left: var(--md-space-2);
+}
+
+.osp-pl-3 {
+  padding-left: var(--md-space-3);
+}
+
+.osp-pl-4 {
+  padding-left: var(--md-space-4);
+}
+
+.osp-pl-6 {
+  padding-left: var(--md-space-6);
+}
+
+.osp-pl-8 {
+  padding-left: var(--md-space-8);
+}
+
+.osp-pr-0 {
+  padding-right: 0;
+}
+
+.osp-pr-1 {
+  padding-right: var(--md-space-1);
+}
+
+.osp-pr-2 {
+  padding-right: var(--md-space-2);
+}
+
+.osp-pr-3 {
+  padding-right: var(--md-space-3);
+}
+
+.osp-pr-4 {
+  padding-right: var(--md-space-4);
+}
+
+.osp-pr-6 {
+  padding-right: var(--md-space-6);
+}
+
+.osp-pr-8 {
+  padding-right: var(--md-space-8);
+}
+
+/* ==========================================================================
+   STRUCTURAL COMPONENTS
+   ========================================================================== */
+
+/* Section containers */
+.osp-section {
+  margin-bottom: var(--md-space-8);
+}
+
+.osp-section--compact {
+  margin-bottom: var(--md-space-4);
+}
+
+.osp-section--spacious {
+  margin-bottom: var(--md-space-12);
+}
+
+/* Header layouts */
+.osp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--md-space-4);
+}
+
+.osp-header--center {
+  justify-content: center;
+}
+
+.osp-header--start {
+  justify-content: flex-start;
+}
+
+/* Content wrappers */
+.osp-content-wrapper {
+  padding: var(--md-space-6);
+  background: var(--background-primary);
+  border-radius: var(--md-corner-md);
+}
+
+.osp-content-wrapper--bordered {
+  border: 1px solid var(--background-modifier-border);
+}
+
+.osp-content-wrapper--elevated {
+  box-shadow: var(--md-elevation-1);
+}
+
+/* Panel layouts */
+.osp-panel {
+  background: var(--background-secondary);
+  border-radius: var(--md-corner-md);
+  padding: var(--md-space-4);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.osp-panel--primary {
+  background: var(--background-primary);
+}
+
+.osp-panel--secondary {
+  background: var(--background-secondary);
+}
+
+/* Stack layouts */
+.osp-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.osp-stack--1 > * + * {
+  margin-top: var(--md-space-1);
+}
+
+.osp-stack--2 > * + * {
+  margin-top: var(--md-space-2);
+}
+
+.osp-stack--3 > * + * {
+  margin-top: var(--md-space-3);
+}
+
+.osp-stack--4 > * + * {
+  margin-top: var(--md-space-4);
+}
+
+.osp-stack--6 > * + * {
+  margin-top: var(--md-space-6);
+}
+
+/* Inline layouts */
+.osp-inline {
+  display: flex;
+  align-items: center;
+}
+
+.osp-inline--1 > * + * {
+  margin-left: var(--md-space-1);
+}
+
+.osp-inline--2 > * + * {
+  margin-left: var(--md-space-2);
+}
+
+.osp-inline--3 > * + * {
+  margin-left: var(--md-space-3);
+}
+
+.osp-inline--4 > * + * {
+  margin-left: var(--md-space-4);
+}
+
+.osp-inline--6 > * + * {
+  margin-left: var(--md-space-6);
+}
+
+/* ==========================================================================
+   SIZE AND DIMENSION UTILITIES
+   ========================================================================== */
+
+/* Width utilities */
+.osp-w-full {
+  width: 100%;
+}
+
+.osp-w-auto {
+  width: auto;
+}
+
+.osp-w-fit {
+  width: fit-content;
+}
+
+.osp-w-screen {
+  width: 100vw;
+}
+
+/* Height utilities */
+.osp-h-full {
+  height: 100%;
+}
+
+.osp-h-auto {
+  height: auto;
+}
+
+.osp-h-fit {
+  height: fit-content;
+}
+
+.osp-h-screen {
+  height: 100vh;
+}
+
+/* Min/Max width */
+.osp-min-w-0 {
+  min-width: 0;
+}
+
+.osp-min-w-full {
+  min-width: 100%;
+}
+
+.osp-max-w-none {
+  max-width: none;
+}
+
+.osp-max-w-full {
+  max-width: 100%;
+}
+
+.osp-max-w-screen {
+  max-width: 100vw;
+}
+
+/* Min/Max height */
+.osp-min-h-0 {
+  min-height: 0;
+}
+
+.osp-min-h-full {
+  min-height: 100%;
+}
+
+.osp-max-h-none {
+  max-height: none;
+}
+
+.osp-max-h-full {
+  max-height: 100%;
+}
+
+.osp-max-h-screen {
+  max-height: 100vh;
+}
+
+/* ==========================================================================
+   POSITION UTILITIES
+   ========================================================================== */
+
+.osp-relative {
+  position: relative;
+}
+
+.osp-absolute {
+  position: absolute;
+}
+
+.osp-fixed {
+  position: fixed;
+}
+
+.osp-sticky {
+  position: sticky;
+}
+
+.osp-static {
+  position: static;
+}
+
+/* Z-index utilities */
+.osp-z-0 {
+  z-index: 0;
+}
+
+.osp-z-10 {
+  z-index: 10;
+}
+
+.osp-z-20 {
+  z-index: 20;
+}
+
+.osp-z-30 {
+  z-index: 30;
+}
+
+.osp-z-40 {
+  z-index: 40;
+}
+
+.osp-z-50 {
+  z-index: 50;
+}
+
+.osp-z-auto {
+  z-index: auto;
+}
+
+/* ==========================================================================
+   OVERFLOW UTILITIES
+   ========================================================================== */
+
+.osp-overflow-auto {
+  overflow: auto;
+}
+
+.osp-overflow-hidden {
+  overflow: hidden;
+}
+
+.osp-overflow-visible {
+  overflow: visible;
+}
+
+.osp-overflow-scroll {
+  overflow: scroll;
+}
+
+.osp-overflow-x-auto {
+  overflow-x: auto;
+}
+
+.osp-overflow-y-auto {
+  overflow-y: auto;
+}
+
+.osp-overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+.osp-overflow-y-hidden {
+  overflow-y: hidden;
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT UTILITIES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .content-area {
+    padding: var(--md-space-4);
+  }
+
+  .ospcc-grid--auto-fit {
+    grid-template-columns: 1fr;
+  }
+
+  .ospcc-grid--auto-fill {
+    grid-template-columns: 1fr;
+  }
+
+  .osp-md-stack {
+    flex-direction: column;
+  }
+
+  .osp-md-full {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .osp-sm-stack {
+    flex-direction: column;
+  }
+
+  .osp-sm-full {
+    width: 100%;
+  }
+
+  .osp-sm-hidden {
+    display: none;
+  }
+
+  .osp-content-wrapper {
+    padding: var(--md-space-4);
+  }
+}
+
+/* ==========================================================================
+   SPECIALIZED LAYOUT COMPONENTS
+   ========================================================================== */
+
+/* Settings group layouts */
+.sonigraph-settings-group {
+  margin-bottom: 32px;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+
+.sonigraph-group-title {
+  margin: 0 0 6px;
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+.sonigraph-group-desc {
+  margin: 0 0 16px;
+  line-height: 1.3;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* Instrument section layouts */
+.sonigraph-instrument-section {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--background-modifier-border-focus);
+}
+
+.sonigraph-instrument-section:last-child {
+  border-bottom: none;
+}
+
+.sonigraph-instrument-title {
+  margin: 0 0 6px;
+  font-size: 0.95em;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.sonigraph-instrument-section p {
+  margin: 0;
+  line-height: 1.3;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+/* Voice activity layouts */
+.sonigraph-voice-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.sonigraph-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-activity-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.sonigraph-activity-voices {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+
+/* Grid layouts for status and effects */
+.sonigraph-status-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.sonigraph-effects-list {
+  display: grid;
+  gap: 16px;
+}
+
+/* Dividers and separators */
+.ospcc-divider {
+  height: 1px;
+  background: var(--md-outline-variant);
+  margin: var(--md-space-4) 0;
+  border: none;
+}
+
+.sonigraph-section-separator {
+  border: none;
+  height: 1px;
+  background: var(--background-modifier-border);
+  margin: 25px 0;
+}

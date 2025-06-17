@@ -1,0 +1,197 @@
+/* ==========================================================================
+   SONIGRAPH SETTINGS & CONFIGURATION UI
+   ========================================================================== */
+
+/* Settings groups, configuration interface, info boxes, and onboarding */
+
+/* ==========================================================================
+   SETTINGS INTERFACE
+   ========================================================================== */
+
+details.osp-advanced-settings {
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.osp-advanced-settings .setting-item:first-of-type {
+  border-top: 0;
+}
+
+/* ==========================================================================
+   SETTINGS INTEGRATION
+   ========================================================================== */
+
+/* Ensure settings toggles have proper spacing */
+.sonigraph-settings .setting-item {
+  margin-bottom: var(--size-4-2);
+}
+
+.sonigraph-settings .setting-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   TAB SECTIONS
+   ========================================================================== */
+
+.sonigraph-tab-section {
+  max-width: 700px;
+}
+
+.sonigraph-section-title {
+  margin: 0 0 8px;
+  font-size: 1.3em;
+  font-weight: 600;
+
+  /* color: var(--text-normal); */
+}
+
+.sonigraph-section-desc {
+  margin: 0 0 24px;
+  font-size: 0.9em;
+  line-height: 1.4;
+
+  /* color: var(--text-muted); */
+}
+
+/* ==========================================================================
+   SETTINGS GROUPS
+   ========================================================================== */
+
+.sonigraph-settings-group {
+  margin-bottom: 32px;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+
+.sonigraph-group-title {
+  margin: 0 0 6px;
+  font-size: 1.1em;
+  font-weight: 500;
+
+  /* color: var(--text-normal); */
+}
+
+.sonigraph-group-desc {
+  margin: 0 0 16px;
+  line-height: 1.3;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   INFO BOXES & CONTENT
+   ========================================================================== */
+
+.sonigraph-info-box {
+  margin: 12px 0;
+  padding: 16px;
+  border-radius: 6px;
+  border-left: 3px solid var(--interactive-accent);
+  background: var(--background-primary-alt);
+}
+
+.sonigraph-info-box h4 {
+  margin: 0 0 8px;
+  font-size: 0.9em;
+  font-weight: 500;
+
+  /* color: var(--text-normal); */
+}
+
+.sonigraph-info-box p {
+  margin: 4px 0;
+  font-size: 0.8em;
+  line-height: 1.3;
+
+  /* color: var(--text-muted); */
+}
+
+.sonigraph-instrument-section {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--background-modifier-border-focus);
+}
+
+.sonigraph-instrument-section:last-child {
+  border-bottom: none;
+}
+
+.sonigraph-instrument-title {
+  margin: 0 0 6px;
+  font-size: 0.95em;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.sonigraph-instrument-section p {
+  margin: 0;
+  line-height: 1.3;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+.sonigraph-primary-button:focus,
+.sonigraph-secondary-button:focus {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   OBSIDIAN SETTING INTEGRATION
+   ========================================================================== */
+
+.sonigraph-settings-group .setting-item {
+  border: none;
+  padding: 8px 0;
+}
+
+.sonigraph-settings-group .setting-item-info {
+  padding-right: 0;
+}
+
+.sonigraph-settings-group .setting-item-control {
+  min-width: 150px;
+}
+
+/* ==========================================================================
+   ONBOARDING SECTION
+   ========================================================================== */
+
+.sonigraph-onboarding-bordered {
+  border: 2px solid var(--interactive-accent);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  background: var(--background-secondary);
+  position: relative;
+}
+
+.sonigraph-onboarding-bordered::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.1;
+}
+
+.sonigraph-onboarding-content h3 {
+  margin-top: 0;
+}
+
+.sonigraph-onboarding-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}

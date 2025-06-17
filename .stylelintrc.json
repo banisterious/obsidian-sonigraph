@@ -1,0 +1,79 @@
+{
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-prettier"
+  ],
+  "rules": {
+    "custom-property-pattern": "^(md|osp|sonigraph)-[a-z0-9-]+$",
+    "selector-class-pattern": "^(ospcc|sonigraph|osp)-[a-z0-9-]+(__[a-z0-9-]+)?(--[a-z0-9-]+)?$",
+    "declaration-empty-line-before": [
+      "always",
+      {
+        "except": ["after-declaration", "first-nested"],
+        "ignore": ["after-comment", "inside-single-line-block"]
+      }
+    ],
+    "comment-empty-line-before": [
+      "always",
+      {
+        "except": ["first-nested"],
+        "ignore": ["stylelint-commands"]
+      }
+    ],
+    "rule-empty-line-before": [
+      "always-multi-line",
+      {
+        "except": ["first-nested"],
+        "ignore": ["after-comment"]
+      }
+    ],
+    "at-rule-empty-line-before": [
+      "always",
+      {
+        "except": ["blockless-after-same-name-blockless", "first-nested"],
+        "ignore": ["after-comment"]
+      }
+    ],
+    "max-nesting-depth": 3,
+    "no-descending-specificity": null,
+    "font-family-no-missing-generic-family-keyword": null,
+    "property-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null,
+    "selector-no-vendor-prefix": null,
+    "media-feature-name-no-vendor-prefix": null,
+    "at-rule-no-vendor-prefix": null,
+    "length-zero-no-unit": true,
+    "color-hex-length": "short",
+    "color-hex-case": "lower",
+    "string-quotes": "double",
+    "unit-case": "lower",
+    "value-keyword-case": "lower",
+    "function-name-case": "lower",
+    "property-case": "lower",
+    "selector-pseudo-class-case": "lower",
+    "selector-pseudo-element-case": "lower",
+    "selector-type-case": "lower",
+    "at-rule-name-case": "lower",
+    "media-feature-name-case": "lower"
+  },
+  "overrides": [
+    {
+      "files": ["styles/variables.css"],
+      "rules": {
+        "custom-property-pattern": null
+      }
+    },
+    {
+      "files": ["styles/controlcenter.css"],
+      "rules": {
+        "max-line-length": null,
+        "comment-word-disallowed-list": null
+      }
+    }
+  ],
+  "ignoreFiles": [
+    "styles.css",
+    "**/*.min.css",
+    "**/node_modules/**"
+  ]
+}
