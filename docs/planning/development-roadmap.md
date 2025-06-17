@@ -359,6 +359,12 @@ Based on comprehensive research of Obsidian's plugin API:
   - Real-time duration preview showing estimated playback time
   - Advanced timing controls: note density, overlap factor, tempo-independent duration
   - Per-session duration override without changing global settings
+- **Artistic Note Distribution Patterns**: Creative control over temporal note scheduling for different musical styles
+  - Distribution presets: Linear (even spacing), Crescendo (building density), Diminuendo (fading density), Random (organic feel)
+  - Cluster patterns: Burst mode (groups of notes), Wave mode (rhythmic pulses), Scatter mode (sparse distribution)
+  - Temporal curves: Front-loaded (most notes early), Back-loaded (building to climax), Bell curve (peak in middle)
+  - User-defined custom distribution curves with visual editor
+  - Preview mode to hear different distribution patterns on same content
 
 ---
 
