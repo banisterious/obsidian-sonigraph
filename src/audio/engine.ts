@@ -5,6 +5,7 @@ import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, Effe
 import { PercussionEngine } from './percussion-engine';
 import { ElectronicEngine } from './electronic-engine';
 import { VoiceManager } from './voice-management';
+import { EffectBusManager } from './effects';
 import { getLogger } from '../logging';
 
 const logger = getLogger('audio-engine');
@@ -437,6 +438,7 @@ export class AudioEngine {
 	private lastTriggerTime: number = 0;
 	private volume: Volume | null = null;
 	private voiceManager: VoiceManager;
+	private effectBusManager: EffectBusManager;
 
 	// Real-time feedback properties
 	private previewTimeouts: Map<string, number> = new Map();
@@ -447,27 +449,18 @@ export class AudioEngine {
 	private previewNote: any = null;
 
 	// Performance optimization properties - moved to VoiceManager
-
-	// Phase 3.5: Enhanced Effect Routing properties
-	private enhancedRouting: boolean = false;
-	private effectChains: Map<string, EffectNode[]> = new Map(); // instrument -> effect nodes
-	private sendBuses: Map<string, SendBus> = new Map(); // bus id -> send bus
-	private returnBuses: Map<string, ReturnBus> = new Map(); // bus id -> return bus
-	private masterEffectsNodes: Map<string, any> = new Map(); // master effect instances
-	private effectNodeInstances: Map<string, any> = new Map(); // effect id -> tone.js instance
+	// Effect routing properties - moved to EffectBusManager
 
 	// Phase 8: Advanced Synthesis Engines
 	private percussionEngine: PercussionEngine | null = null;
 	private electronicEngine: ElectronicEngine | null = null;
 	
-	// Master Effects Processing
-	private masterReverb: Reverb | null = null;
-	private masterEQ: EQ3 | null = null;
-	private masterCompressor: Compressor | null = null;
+	// Master Effects Processing - moved to EffectBusManager
 
 	constructor(private settings: SonigraphSettings) {
 		logger.debug('initialization', 'AudioEngine created');
 		this.voiceManager = new VoiceManager(true); // Enable adaptive quality by default
+		this.effectBusManager = new EffectBusManager();
 	}
 
 	private getSamplerConfigs(): typeof SAMPLER_CONFIGS {
