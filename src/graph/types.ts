@@ -28,6 +28,7 @@ export interface MusicalMapping {
 	velocity: number;
 	timing: number;
 	instrument?: string;
+	hasBeenTriggered?: boolean;
 }
 
 export interface GraphStats {
