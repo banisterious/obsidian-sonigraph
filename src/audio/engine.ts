@@ -435,6 +435,8 @@ export class AudioEngine {
 	private isPlaying = false;
 	private currentSequence: MusicalMapping[] = [];
 	private scheduledEvents: number[] = [];
+	private realtimeTimer: ReturnType<typeof setInterval> | null = null;
+	private realtimeStartTime: number = 0;
 	private volume: Volume | null = null;
 	private voiceAssignments: Map<string, VoiceAssignment> = new Map();
 	private maxVoicesPerInstrument = 8;
@@ -785,6 +787,46 @@ export class AudioEngine {
 		}
 	}
 
+	private connectSynthesisInstruments(): void {
+		logger.debug('synthesis', 'Connecting synthesis instruments through effects to master output');
+
+		for (const [instrumentName, instrument] of this.instruments) {
+			const volume = this.instrumentVolumes.get(instrumentName);
+			const effects = this.instrumentEffects.get(instrumentName);
+			
+			if (!volume || !effects) {
+				logger.warn('synthesis', `Missing volume or effects for instrument: ${instrumentName}`);
+				continue;
+			}
+
+			// Start with volume output
+			let output = volume;
+
+			// Connect through enabled effects in order: reverb → chorus → filter
+			const reverb = effects.get('reverb');
+			const chorus = effects.get('chorus');
+			const filter = effects.get('filter');
+
+			if (reverb) {
+				output = output.connect(reverb);
+			}
+			
+			if (chorus) {
+				output = output.connect(chorus);
+			}
+			
+			if (filter) {
+				output = output.connect(filter);
+			}
+
+			// Finally connect to master volume
+			if (this.volume) {
+				output.connect(this.volume);
+				logger.debug('synthesis', `Connected ${instrumentName} through effects to master output`);
+			}
+		}
+	}
+
 	private async initializeInstruments(): Promise<void> {
 		const configs = this.getSamplerConfigs();
 		
@@ -817,8 +859,8 @@ export class AudioEngine {
 				logger.debug('instruments', `Created synthesis instrument: ${instrumentName}`);
 			});
 			
-			// Continue with effects and remaining initialization
-			this.initializeEffects();
+			// Connect synthesis instruments through effects (effects already initialized)
+			this.connectSynthesisInstruments();
 			this.applyEffectSettings();
 			this.initializeMissingInstruments();
 			this.applyInstrumentSettings();
@@ -1661,103 +1703,20 @@ export class AudioEngine {
 				currentTime: getContext().currentTime.toFixed(3)
 			});
 
-			// Schedule all notes in the sequence
-			for (const mapping of processedSequence) {
-				const playTime = mapping.timing;
-				
-				logger.debug('schedule', `Scheduling note: freq=${mapping.pitch.toFixed(1)}Hz, dur=${mapping.duration.toFixed(2)}s, vel=${mapping.velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
+			// Real-time scheduling - start playback timer
+			this.startRealtimePlayback(processedSequence);
 
-				// Schedule note using Transport time - capture mapping values in closure
-				const eventId = getTransport().schedule((time: number) => {
-					const frequency = mapping.pitch;  // Capture in closure
-					const duration = mapping.duration; // Capture in closure
-					const velocity = mapping.velocity;  // Capture in closure
-					
-					// Ensure audio context is running
-					if (getContext().state === 'suspended') {
-						getContext().resume();
-						logger.debug('context', 'Resumed suspended audio context for note');
-					}
-					
-					if (this.instruments.size > 0 && this.isPlaying) {
-						logger.debug('trigger', `Triggering note at ${time.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
-						
-						// Determine which instrument to use
-						const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
-						
-						// Check if instrument is enabled in settings - this covers all synthesis paths
-						const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
-						const instrumentSettings = this.settings.instruments[instrumentKey];
-						if (!instrumentSettings?.enabled) {
-							logger.debug('playback', 'Skipping disabled instrument', { 
-								instrumentName, 
-								enabled: instrumentSettings?.enabled 
-							});
-							return;
-						}
-						
-						// Use specialized synthesis engines if available
-						if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
-							this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time);
-						} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
-							this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time);
-						} else if (this.isEnvironmentalInstrument(instrumentName)) {
-							this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, time);
-						} else {
-							const synth = this.instruments.get(instrumentName);
-							if (synth) {
-								synth.triggerAttackRelease(frequency, duration, time, velocity);
-							}
-						}
-						
-						// Log successful triggering for all instrument types
-						if (this.instruments.get(instrumentName) || this.isEnvironmentalInstrument(instrumentName) || this.isElectronicInstrument(instrumentName) || this.isPercussionInstrument(instrumentName)) {
-							logger.debug('playback', 'Note triggered', {
-								nodeId: mapping.nodeId,
-								instrument: instrumentName,
-								frequency: frequency.toFixed(2),
-								duration: duration.toFixed(2),
-								velocity: velocity.toFixed(2),
-								scheduledTime: playTime.toFixed(3),
-								actualTime: time.toFixed(3)
-							});
-						} else {
-							logger.warn('trigger', `Instrument ${instrumentName} not found - skipping note (no fallback)`);
-							// No fallback - just skip the note silently
-						}
-					} else {
-						logger.warn('trigger', 'Skipping note - instruments unavailable or stopped');
-					}
-				}, playTime);
-
-				this.scheduledEvents.push(eventId);
-			}
-
-			// Schedule sequence end cleanup
-			getTransport().schedule(() => {
-				logger.info('playback', 'Sequence completed via scheduler');
-				this.handleSequenceComplete();
-			}, sequenceDuration + 1); // Add 1 second buffer
-
-			// Start transport
-			logger.info('transport', 'Starting Tone.js Transport from time 0');
-			getTransport().start('+0.1'); // Start with small delay to ensure all events are scheduled
-
-			logger.info('playback', 'Sequence scheduled and playing', {
-				eventsScheduled: this.scheduledEvents.length,
+			logger.info('playback', 'Real-time playback system started', {
+				noteCount: processedSequence.length,
 				sequenceDuration: sequenceDuration.toFixed(2),
-				transportState: getTransport().state,
 				audioContextState: getContext().state
 			});
 
-			// Play immediate test note to verify audio is working
-			logger.info('test', 'Playing immediate test note to verify audio');
-			if (this.instruments.size > 0) {
-				this.instruments.forEach((synth, instrumentName) => {
-					if (instrumentName === 'piano') {
-						synth.triggerAttackRelease(440, '8n', '+0.05');
-					}
-				});
+			// Test audio connection with immediate tone
+			const testSynth = this.instruments.get('piano');
+			if (testSynth) {
+				logger.info('test', 'Playing immediate test tone to verify audio connection');
+				testSynth.triggerAttackRelease(440, '8n', '+0.1');
 			}
 		} catch (error) {
 			logger.error('playback', 'Error processing sequence', {
@@ -1775,6 +1734,104 @@ export class AudioEngine {
 		}
 	}
 
+	private startRealtimePlayback(sequence: MusicalMapping[]): void {
+		logger.info('playback', 'Starting real-time playback system', {
+			noteCount: sequence.length,
+			maxDuration: Math.max(...sequence.map(n => n.timing + n.duration))
+		});
+
+		// Clear any existing timer
+		if (this.realtimeTimer !== null) {
+			clearInterval(this.realtimeTimer);
+		}
+
+		// Record start time
+		this.realtimeStartTime = getContext().currentTime;
+		
+		// Start the audio context if suspended
+		if (getContext().state === 'suspended') {
+			getContext().resume();
+			logger.debug('context', 'Resumed suspended audio context for real-time playback');
+		}
+
+		// Use a 50ms interval for smooth playback timing
+		this.realtimeTimer = setInterval(() => {
+			if (!this.isPlaying) {
+				if (this.realtimeTimer !== null) {
+					clearInterval(this.realtimeTimer);
+					this.realtimeTimer = null;
+				}
+				return;
+			}
+
+			const currentTime = getContext().currentTime;
+			const elapsedTime = currentTime - this.realtimeStartTime;
+
+			// Find notes that should play now (within the next 100ms)
+			const notesToPlay = sequence.filter(note => 
+				note.timing <= elapsedTime + 0.1 && 
+				note.timing > elapsedTime - 0.05 && 
+				!note.hasBeenTriggered
+			);
+
+			for (const mapping of notesToPlay) {
+				// Mark as triggered to prevent re-triggering
+				mapping.hasBeenTriggered = true;
+
+				const frequency = mapping.pitch;
+				const duration = mapping.duration;
+				const velocity = mapping.velocity;
+
+				logger.debug('trigger', `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
+
+				// Determine which instrument to use
+				const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+
+				// Check if instrument is enabled in settings
+				const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
+				const instrumentSettings = this.settings.instruments[instrumentKey];
+				if (!instrumentSettings?.enabled) {
+					logger.debug('playback', 'Skipping disabled instrument', { 
+						instrumentName, 
+						enabled: instrumentSettings?.enabled 
+					});
+					continue;
+				}
+
+				// Log the note trigger for debugging
+				logger.debug('playback', 'Note triggered in real-time', {
+					nodeId: mapping.nodeId,
+					instrument: instrumentName,
+					frequency: frequency.toFixed(2),
+					duration: duration.toFixed(2),
+					velocity: velocity.toFixed(2),
+					elapsedTime: elapsedTime.toFixed(3)
+				});
+
+				// Use specialized synthesis engines if available
+				if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
+					this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
+				} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
+					this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
+				} else if (this.isEnvironmentalInstrument(instrumentName)) {
+					this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
+				} else {
+					const synth = this.instruments.get(instrumentName);
+					if (synth) {
+						synth.triggerAttackRelease(frequency, duration, currentTime, velocity);
+					}
+				}
+			}
+
+			// Check if sequence is complete
+			const maxEndTime = Math.max(...sequence.map(n => n.timing + n.duration));
+			if (elapsedTime > maxEndTime + 1.0) { // Add 1 second buffer
+				logger.info('playback', 'Real-time sequence completed');
+				this.stop();
+			}
+		}, 50); // Check every 50ms for smooth timing
+	}
+
 	stop(): void {
 		if (!this.isPlaying) {
 			logger.debug('playback', 'Stop called but no sequence is playing');
@@ -1784,6 +1841,12 @@ export class AudioEngine {
 		logger.info('playback', 'Stopping sequence playback');
 
 		this.isPlaying = false;
+
+		// Clear real-time timer
+		if (this.realtimeTimer !== null) {
+			clearInterval(this.realtimeTimer);
+			this.realtimeTimer = null;
+		}
 
 		// Stop and reset transport
 		if (getTransport().state === 'started') {
