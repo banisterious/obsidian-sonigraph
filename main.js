@@ -1550,9 +1550,9 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     );
     new import_obsidian.Setting(advancedSection).setName("Export logs").setDesc("Download all plugin logs as a JSON file for support or debugging.").addButton(
       (button) => button.setButtonText("Export Logs").onClick(async () => {
-        const now3 = new Date();
+        const now2 = new Date();
         const pad = (n) => n.toString().padStart(2, "0");
-        const filename = `osp-logs-${now3.getFullYear()}${pad(now3.getMonth() + 1)}${pad(now3.getDate())}-${pad(now3.getHours())}${pad(now3.getMinutes())}${pad(now3.getSeconds())}.json`;
+        const filename = `osp-logs-${now2.getFullYear()}${pad(now2.getMonth() + 1)}${pad(now2.getDate())}-${pad(now2.getHours())}${pad(now2.getMinutes())}${pad(now2.getSeconds())}.json`;
         const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
         const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -3497,9 +3497,9 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
   handleExportLogs(selected) {
     if (selected) {
       logger3.info("ui", "Exporting logs from Control Center");
-      const now3 = new Date();
+      const now2 = new Date();
       const pad = (n) => n.toString().padStart(2, "0");
-      const filename = `osp-logs-${now3.getFullYear()}${pad(now3.getMonth() + 1)}${pad(now3.getDate())}-${pad(now3.getHours())}${pad(now3.getMinutes())}${pad(now3.getSeconds())}.json`;
+      const filename = `osp-logs-${now2.getFullYear()}${pad(now2.getMonth() + 1)}${pad(now2.getDate())}-${pad(now2.getHours())}${pad(now2.getMinutes())}${pad(now2.getSeconds())}.json`;
       const logs = LoggerFactory.getLogs();
       const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -12273,9 +12273,9 @@ var Context = class extends BaseContext {
    * Is invoked from the clock source
    */
   _timeoutLoop() {
-    const now3 = this.now();
+    const now2 = this.now();
     let firstEvent = this._timeouts.peek();
-    while (this._timeouts.length && firstEvent && firstEvent.time <= now3) {
+    while (this._timeouts.length && firstEvent && firstEvent.time <= now2) {
       firstEvent.callback();
       this._timeouts.shift();
       firstEvent = this._timeouts.peek();
@@ -12290,11 +12290,11 @@ var Context = class extends BaseContext {
    */
   setTimeout(fn, timeout) {
     this._timeoutIds++;
-    const now3 = this.now();
+    const now2 = this.now();
     this._timeouts.add({
       callback: fn,
       id: this._timeoutIds,
-      time: now3 + timeout
+      time: now2 + timeout
     });
     return this._timeoutIds;
   }
@@ -12322,14 +12322,14 @@ var Context = class extends BaseContext {
   setInterval(fn, interval) {
     const id = ++this._timeoutIds;
     const intervalFn = () => {
-      const now3 = this.now();
+      const now2 = this.now();
       this._timeouts.add({
         callback: () => {
           fn();
           intervalFn();
         },
         id,
-        time: now3 + interval
+        time: now2 + interval
       });
     };
     intervalFn();
@@ -13810,8 +13810,8 @@ var Param = class extends ToneWithContext {
     });
   }
   get value() {
-    const now3 = this.now();
-    return this.getValueAtTime(now3);
+    const now2 = this.now();
+    return this.getValueAtTime(now2);
   }
   set value(value) {
     this.cancelScheduledValues(this.now());
@@ -14091,14 +14091,14 @@ var Param = class extends ToneWithContext {
    * all of the events which are scheduled on this Param onto the passed in param.
    */
   apply(param) {
-    const now3 = this.context.currentTime;
-    param.setValueAtTime(this.getValueAtTime(now3), now3);
-    const previousEvent = this._events.get(now3);
+    const now2 = this.context.currentTime;
+    param.setValueAtTime(this.getValueAtTime(now2), now2);
+    const previousEvent = this._events.get(now2);
     if (previousEvent && previousEvent.type === "setTargetAtTime") {
       const nextEvent = this._events.getAfter(previousEvent.time);
-      const endTime = nextEvent ? nextEvent.time : now3 + 2;
-      const subdivisions = (endTime - now3) / 10;
-      for (let i = now3; i < endTime; i += subdivisions) {
+      const endTime = nextEvent ? nextEvent.time : now2 + 2;
+      const subdivisions = (endTime - now2) / 10;
+      for (let i = now2; i < endTime; i += subdivisions) {
         param.linearRampToValueAtTime(this.getValueAtTime(i), i);
       }
     }
@@ -15190,9 +15190,9 @@ var TickSource = class extends ToneWithContext {
     return this.getSecondsAtTime(this.now());
   }
   set seconds(s) {
-    const now3 = this.now();
-    const ticks = this.frequency.timeToTicks(s, now3);
-    this.setTicksAtTime(ticks, now3);
+    const now2 = this.now();
+    const ticks = this.frequency.timeToTicks(s, now2);
+    this.setTicksAtTime(ticks, now2);
   }
   /**
    * Return the elapsed seconds at the given time.
@@ -15803,10 +15803,10 @@ var DrawClass = class extends ToneWithContext {
    * The draw loop
    */
   _drawLoop() {
-    const now3 = this.context.currentTime;
-    while (this._events.length && this._events.peek().time - this.anticipation <= now3) {
+    const now2 = this.context.currentTime;
+    while (this._events.length && this._events.peek().time - this.anticipation <= now2) {
       const event = this._events.shift();
-      if (event && now3 - event.time <= this.expiration) {
+      if (event && now2 - event.time <= this.expiration) {
         event.callback();
       }
     }
@@ -17047,8 +17047,8 @@ var TransportClass = class extends ToneWithContext {
    * Setting the value will jump to that position right away.
    */
   get position() {
-    const now3 = this.now();
-    const ticks = this._clock.getTicksAtTime(now3);
+    const now2 = this.now();
+    const ticks = this._clock.getTicksAtTime(now2);
     return new TicksClass(this.context, ticks).toBarsBeatsSixteenths();
   }
   set position(progress) {
@@ -17063,8 +17063,8 @@ var TransportClass = class extends ToneWithContext {
     return this._clock.seconds;
   }
   set seconds(s) {
-    const now3 = this.now();
-    const ticks = this._clock.frequency.timeToTicks(s, now3);
+    const now2 = this.now();
+    const ticks = this._clock.frequency.timeToTicks(s, now2);
     this.ticks = ticks;
   }
   /**
@@ -17073,8 +17073,8 @@ var TransportClass = class extends ToneWithContext {
    */
   get progress() {
     if (this.loop) {
-      const now3 = this.now();
-      const ticks = this._clock.getTicksAtTime(now3);
+      const now2 = this.now();
+      const ticks = this._clock.getTicksAtTime(now2);
       return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
     } else {
       return 0;
@@ -17088,17 +17088,17 @@ var TransportClass = class extends ToneWithContext {
   }
   set ticks(t) {
     if (this._clock.ticks !== t) {
-      const now3 = this.now();
+      const now2 = this.now();
       if (this.state === "started") {
-        const ticks = this._clock.getTicksAtTime(now3);
-        const remainingTick = this._clock.frequency.getDurationOfTicks(Math.ceil(ticks) - ticks, now3);
-        const time = now3 + remainingTick;
+        const ticks = this._clock.getTicksAtTime(now2);
+        const remainingTick = this._clock.frequency.getDurationOfTicks(Math.ceil(ticks) - ticks, now2);
+        const time = now2 + remainingTick;
         this.emit("stop", time);
         this._clock.setTicksAtTime(t, time);
         this.emit("start", time, this._clock.getSecondsAtTime(time));
       } else {
-        this.emit("ticks", now3);
-        this._clock.setTicksAtTime(t, now3);
+        this.emit("ticks", now2);
+        this._clock.setTicksAtTime(t, now2);
       }
     }
   }
@@ -17150,10 +17150,10 @@ var TransportClass = class extends ToneWithContext {
     if (this.state !== "started") {
       return 0;
     } else {
-      const now3 = this.now();
-      const transportPos = this.getTicksAtTime(now3);
+      const now2 = this.now();
+      const transportPos = this.getTicksAtTime(now2);
       const remainingTicks = subdivision - transportPos % subdivision;
-      return this._clock.nextTickTime(remainingTicks, now3);
+      return this._clock.nextTickTime(remainingTicks, now2);
     }
   }
   /**
@@ -17166,9 +17166,9 @@ var TransportClass = class extends ToneWithContext {
    * 			Otherwise it will be computed based on their current values.
    */
   syncSignal(signal, ratio) {
-    const now3 = this.now();
+    const now2 = this.now();
     let source = this.bpm;
-    let sourceValue = 1 / (60 / source.getValueAtTime(now3) / this.PPQ);
+    let sourceValue = 1 / (60 / source.getValueAtTime(now2) / this.PPQ);
     let nodes = [];
     if (signal.units === "time") {
       const scaleFactor = 1 / 64 / sourceValue;
@@ -17181,8 +17181,8 @@ var TransportClass = class extends ToneWithContext {
       nodes = [scaleBefore, reciprocal, scaleAfter];
     }
     if (!ratio) {
-      if (signal.getValueAtTime(now3) !== 0) {
-        ratio = signal.getValueAtTime(now3) / sourceValue;
+      if (signal.getValueAtTime(now2) !== 0) {
+        ratio = signal.getValueAtTime(now2) / sourceValue;
       } else {
         ratio = 0;
       }
@@ -17654,9 +17654,9 @@ var Noise = class extends Source {
     if (this._type !== type) {
       this._type = type;
       if (this.state === "started") {
-        const now3 = this.now();
-        this._stop(now3);
-        this._start(now3);
+        const now2 = this.now();
+        this._stop(now2);
+        this._start(now2);
       }
     }
   }
@@ -19069,10 +19069,10 @@ var OmniOscillator = class extends Source {
     if (oscType !== this._sourceType) {
       this._sourceType = oscType;
       const OscConstructor = OmniOscillatorSourceMap[oscType];
-      const now3 = this.now();
+      const now2 = this.now();
       if (this._oscillator) {
         const oldOsc = this._oscillator;
-        oldOsc.stop(now3);
+        oldOsc.stop(now2);
         this.context.setTimeout(() => oldOsc.dispose(), this.blockTime);
       }
       this._oscillator = new OscConstructor({
@@ -19083,7 +19083,7 @@ var OmniOscillator = class extends Source {
       this._oscillator.connect(this.output);
       this._oscillator.onstop = () => this.onstop(this);
       if (this.state === "started") {
-        this._oscillator.start(now3);
+        this._oscillator.start(now2);
       }
     }
   }
@@ -19848,14 +19848,14 @@ var Player = class extends Source {
   }
   set playbackRate(rate) {
     this._playbackRate = rate;
-    const now3 = this.now();
-    const stopEvent = this._state.getNextState("stopped", now3);
+    const now2 = this.now();
+    const stopEvent = this._state.getNextState("stopped", now2);
     if (stopEvent && stopEvent.implicitEnd) {
       this._state.cancel(stopEvent.time);
       this._activeSources.forEach((source) => source.cancelStop());
     }
     this._activeSources.forEach((source) => {
-      source.playbackRate.setValueAtTime(rate, now3);
+      source.playbackRate.setValueAtTime(rate, now2);
     });
   }
   /**
@@ -22237,10 +22237,10 @@ var PitchShift = class extends FeedbackEffect {
     this._frequency.fan(this._lfoA.frequency, this._lfoB.frequency, this._crossFadeLFO.frequency);
     this.effectSend.fan(this._delayA, this._delayB);
     this._crossFade.chain(this._feedbackDelay, this.effectReturn);
-    const now3 = this.now();
-    this._lfoA.start(now3);
-    this._lfoB.start(now3);
-    this._crossFadeLFO.start(now3);
+    const now2 = this.now();
+    this._lfoA.start(now2);
+    this._lfoB.start(now2);
+    this._crossFadeLFO.start(now2);
     this.windowSize = this._windowSize;
   }
   static getDefaults() {
@@ -22944,6 +22944,9 @@ function now() {
   return getContext().now();
 }
 var Transport = getContext().transport;
+function getTransport() {
+  return getContext().transport;
+}
 var Destination = getContext().destination;
 var Master = getContext().destination;
 var Listener = getContext().listener;
@@ -24529,6 +24532,29 @@ var AudioEngine = class {
   }
   async initializeInstruments() {
     const configs = this.getSamplerConfigs();
+    if (this.settings.audioFormat === "synthesis") {
+      logger6.info("instruments", "Synthesis mode - creating synthesizers for all instruments");
+      const manualInstruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone"];
+      manualInstruments.forEach((instrumentName) => {
+        const synth = new PolySynth(FMSynth, {
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
+        });
+        const volume = new Volume(-6);
+        this.instrumentVolumes.set(instrumentName, volume);
+        synth.connect(volume);
+        if (this.volume) {
+          volume.connect(this.volume);
+        }
+        this.instruments.set(instrumentName, synth);
+        logger6.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
+      });
+      this.initializeEffects();
+      this.applyEffectSettings();
+      this.initializeMissingInstruments();
+      this.applyInstrumentSettings();
+      return;
+    }
     const pianoSampler = new Sampler({
       ...configs.piano,
       onload: () => {
@@ -25127,10 +25153,6 @@ var AudioEngine = class {
    * Initialize any instruments that exist in SAMPLER_CONFIGS but weren't manually created above
    */
   initializeMissingInstruments() {
-    if (this.settings.audioFormat === "synthesis") {
-      logger6.info("instruments", "Synthesis-only mode enabled - skipping all sample loading");
-      return;
-    }
     const configs = this.getSamplerConfigs();
     const configKeys = Object.keys(configs);
     const initializedKeys = Array.from(this.instruments.keys());
@@ -25140,8 +25162,27 @@ var AudioEngine = class {
       alreadyInitialized: initializedKeys.length,
       missing: missingKeys.length,
       missingInstruments: missingKeys,
-      audioFormat: this.settings.audioFormat
+      audioFormat: this.settings.audioFormat,
+      synthesisMode: this.settings.audioFormat === "synthesis"
     });
+    if (this.settings.audioFormat === "synthesis") {
+      logger6.info("instruments", "Synthesis-only mode - creating basic synthesizers");
+      missingKeys.forEach((instrumentName) => {
+        const synth = new PolySynth(FMSynth, {
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
+        });
+        const volume = new Volume(-6);
+        this.instrumentVolumes.set(instrumentName, volume);
+        synth.connect(volume);
+        if (this.volume) {
+          volume.connect(this.volume);
+        }
+        this.instruments.set(instrumentName, synth);
+        logger6.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
+      });
+      return;
+    }
     missingKeys.forEach((instrumentName) => {
       var _a, _b, _c;
       try {
@@ -25232,24 +25273,28 @@ var AudioEngine = class {
       this.currentSequence = processedSequence;
       this.isPlaying = true;
       this.scheduledEvents = [];
-      if (Transport.state === "started") {
-        Transport.stop();
-        Transport.cancel();
+      if (getTransport().state === "started") {
+        getTransport().stop();
+        getTransport().cancel();
       }
       const sequenceDuration = this.getSequenceDuration(processedSequence);
-      Transport.loopEnd = sequenceDuration + 2;
+      getTransport().loopEnd = sequenceDuration + 2;
       logger6.info("debug", "Starting sequence playback", {
         sequenceDuration: sequenceDuration.toFixed(2),
-        transportState: Transport.state,
-        currentTime: context.currentTime.toFixed(3)
+        transportState: getTransport().state,
+        currentTime: getContext().currentTime.toFixed(3)
       });
       for (const mapping of processedSequence) {
         const playTime = mapping.timing;
-        const frequency = mapping.pitch;
-        const duration = mapping.duration;
-        const velocity = mapping.velocity;
-        logger6.debug("schedule", `Scheduling note: freq=${frequency.toFixed(1)}Hz, dur=${duration.toFixed(2)}s, vel=${velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
-        const eventId = Transport.schedule((time) => {
+        logger6.debug("schedule", `Scheduling note: freq=${mapping.pitch.toFixed(1)}Hz, dur=${mapping.duration.toFixed(2)}s, vel=${mapping.velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
+        const eventId = getTransport().schedule((time) => {
+          const frequency = mapping.pitch;
+          const duration = mapping.duration;
+          const velocity = mapping.velocity;
+          if (getContext().state === "suspended") {
+            getContext().resume();
+            logger6.debug("context", "Resumed suspended audio context for note");
+          }
           if (this.instruments.size > 0 && this.isPlaying) {
             logger6.debug("trigger", `Triggering note at ${time.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
             const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
@@ -25293,17 +25338,17 @@ var AudioEngine = class {
         }, playTime);
         this.scheduledEvents.push(eventId);
       }
-      Transport.schedule(() => {
+      getTransport().schedule(() => {
         logger6.info("playback", "Sequence completed via scheduler");
         this.handleSequenceComplete();
       }, sequenceDuration + 1);
       logger6.info("transport", "Starting Tone.js Transport from time 0");
-      Transport.start("+0.1");
+      getTransport().start("+0.1");
       logger6.info("playback", "Sequence scheduled and playing", {
         eventsScheduled: this.scheduledEvents.length,
         sequenceDuration: sequenceDuration.toFixed(2),
-        transportState: Transport.state,
-        audioContextState: context.state
+        transportState: getTransport().state,
+        audioContextState: getContext().state
       });
       logger6.info("test", "Playing immediate test note to verify audio");
       if (this.instruments.size > 0) {
@@ -25314,7 +25359,17 @@ var AudioEngine = class {
         });
       }
     } catch (error) {
-      logger6.error("playback", "Error processing sequence", error);
+      logger6.error("playback", "Error processing sequence", {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : error,
+        sequenceLength: (sequence == null ? void 0 : sequence.length) || 0,
+        isInitialized: this.isInitialized,
+        instrumentCount: this.instruments.size,
+        audioContextState: getContext().state
+      });
       throw error;
     }
   }
@@ -25325,12 +25380,12 @@ var AudioEngine = class {
     }
     logger6.info("playback", "Stopping sequence playback");
     this.isPlaying = false;
-    if (Transport.state === "started") {
-      Transport.stop();
+    if (getTransport().state === "started") {
+      getTransport().stop();
     }
-    Transport.cancel();
+    getTransport().cancel();
     this.scheduledEvents.forEach((eventId) => {
-      Transport.clear(eventId);
+      getTransport().clear(eventId);
     });
     this.scheduledEvents = [];
     this.instruments.forEach((synth, instrumentName) => {
@@ -25737,7 +25792,7 @@ var AudioEngine = class {
       isInitialized: this.isInitialized,
       isPlaying: this.isPlaying,
       currentNotes: this.currentSequence.length,
-      audioContext: context.state,
+      audioContext: getContext().state,
       volume: this.settings.volume
     };
   }
@@ -26132,7 +26187,7 @@ var AudioEngine = class {
     if (!this.isInitialized)
       return;
     try {
-      const audioContext = context;
+      const audioContext = getContext();
       const baseLatency = audioContext.baseLatency || 0;
       const outputLatency = audioContext.outputLatency || 0;
       const currentLatency = baseLatency + outputLatency;
@@ -26709,16 +26764,16 @@ var AudioEngine = class {
   checkPerformanceAndAdapt() {
     if (!this.adaptiveQuality)
       return;
-    const now3 = performance.now();
+    const now2 = performance.now();
     const cpuUsage = this.estimateCPUUsage();
-    const latency = context.baseLatency ? context.baseLatency * 1e3 : 5;
+    const latency = getContext().baseLatency ? getContext().baseLatency * 1e3 : 5;
     this.performanceMetrics.set("system", { cpuUsage, latency });
     if (cpuUsage > 80 && this.currentQualityLevel !== "low") {
       this.reduceQuality();
     } else if (cpuUsage < 40 && this.currentQualityLevel !== "high") {
       this.increaseQuality();
     }
-    this.lastCPUCheck = now3;
+    this.lastCPUCheck = now2;
     logger6.debug("performance", `CPU: ${cpuUsage.toFixed(1)}%, Latency: ${latency.toFixed(1)}ms, Quality: ${this.currentQualityLevel}`);
   }
   estimateCPUUsage() {
@@ -26811,9 +26866,9 @@ var AudioEngine = class {
    */
   optimizeMemoryUsage() {
     this.voicePool.forEach((pool, instrumentName) => {
-      const now3 = Date.now();
+      const now2 = Date.now();
       pool.forEach((voice) => {
-        if (voice.lastUsed && now3 - voice.lastUsed > 3e4) {
+        if (voice.lastUsed && now2 - voice.lastUsed > 3e4) {
           voice.available = true;
         }
       });
@@ -27099,7 +27154,7 @@ var MusicalMapper = class {
     const pitch = this.mapConnectionsToPitch(node.connectionCount, stats.maxConnections);
     const duration = this.mapWordCountToDuration(node.wordCount);
     const velocity = this.mapPositionToVelocity(index, totalNodes);
-    const timing = this.mapTimestampToTiming(node.created, node.modified);
+    const timing = Math.min(this.mapTimestampToTiming(node.created, node.modified), 5);
     logger8.debug("node-mapping", `Mapped node: ${node.name}`, {
       connections: node.connectionCount,
       wordCount: node.wordCount,
@@ -27129,10 +27184,11 @@ var MusicalMapper = class {
     return frequency;
   }
   mapWordCountToDuration(wordCount) {
-    const baseDuration = 0.5;
-    const maxDuration = 3;
-    const minDuration = 0.1;
-    const scaledDuration = baseDuration + Math.log10(Math.max(wordCount, 1)) * 0.3;
+    const baseDuration = 1;
+    const maxDuration = 6;
+    const minDuration = 0.5;
+    const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.8;
+    const scaledDuration = baseDuration + scaleFactor + (wordCount > 100 ? 0.5 : 0);
     return Math.max(minDuration, Math.min(maxDuration, scaledDuration));
   }
   mapPositionToVelocity(position, totalNodes) {
@@ -27142,9 +27198,9 @@ var MusicalMapper = class {
     return minVelocity + normalizedPosition * (maxVelocity - minVelocity);
   }
   mapTimestampToTiming(created, modified) {
-    const now3 = Date.now();
-    const daysSinceModified = (now3 - modified) / (1e3 * 60 * 60 * 24);
-    const maxOffset = 30;
+    const now2 = Date.now();
+    const daysSinceModified = (now2 - modified) / (1e3 * 60 * 60 * 24);
+    const maxOffset = 3;
     const normalizedAge = Math.min(daysSinceModified / 365, 1);
     return normalizedAge * maxOffset;
   }
@@ -27175,16 +27231,16 @@ var MusicalMapper = class {
     });
     const sequence = [...mappings];
     sequence.sort((a, b) => a.timing - b.timing);
-    const totalDuration = Math.max(20, sequence.length * 0.1);
+    const totalDuration = Math.max(30, Math.min(60, sequence.length * 0.08));
     sequence.forEach((mapping, index) => {
       const baseTime = index / sequence.length * totalDuration;
-      const randomOffset = (Math.random() - 0.5) * 2;
+      const randomOffset = (Math.random() - 0.5) * 0.5;
       mapping.timing = Math.max(0, baseTime + randomOffset);
     });
     const beatDuration = 60 / this.settings.tempo;
-    const tempoMultiplier = beatDuration / 0.5;
+    const tempoMultiplier = Math.sqrt(beatDuration / 0.5);
     sequence.forEach((mapping) => {
-      mapping.timing = mapping.timing * tempoMultiplier;
+      mapping.timing = mapping.timing * Math.min(tempoMultiplier, 1.5);
     });
     sequence.sort((a, b) => a.timing - b.timing);
     const finalDuration = Math.max(...sequence.map((m) => m.timing + m.duration));

@@ -342,6 +342,24 @@ Based on comprehensive research of Obsidian's plugin API:
   - Graph topology filtering (exclude isolated nodes, require minimum connections)
   - Performance impact assessment and optimization for filtered processing
 
+### **🔄 Phase 14: User Experience Enhancements**
+- **Export Logs Folder Memory**: Remember last used folder for log exports to improve workflow efficiency
+  - Store last export directory in plugin settings
+  - Auto-populate folder picker with previous location
+  - Fallback to default Obsidian vault directory if previous location unavailable
+  - Cross-session persistence for user convenience
+- **Advanced Export Options**: Enhanced export functionality with user-friendly features
+  - Multiple export formats (JSON, CSV, TXT)
+  - Export filtering by log level, component, or date range
+  - Batch export capabilities for multiple sessions
+  - Custom file naming templates with dynamic variables
+- **Customizable Sequence Duration**: User control over musical sequence length and pacing
+  - Duration settings in Control Center (30s, 1min, 2min, 5min, 10min, Custom)
+  - Adaptive duration scaling based on vault size and complexity
+  - Real-time duration preview showing estimated playback time
+  - Advanced timing controls: note density, overlap factor, tempo-independent duration
+  - Per-session duration override without changing global settings
+
 ---
 
 ### 🎼 **Frequency Range Distribution (34 Instruments)**

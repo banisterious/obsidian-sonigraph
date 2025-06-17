@@ -1,7 +1,7 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, Synth, FMSynth, AMSynth, Sampler, context, now, Transport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
+import { start, Volume, PolySynth, FMSynth, Sampler, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
 import { MusicalMapping } from '../graph/types';
-import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectChain, EffectNode, RoutingMatrix, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
+import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
 import { ElectronicEngine } from './electronic-engine';
 import { getLogger } from '../logging';
@@ -788,6 +788,44 @@ export class AudioEngine {
 	private async initializeInstruments(): Promise<void> {
 		const configs = this.getSamplerConfigs();
 		
+		// In synthesis mode, use synthesizers for all instruments instead of trying to load samples
+		if (this.settings.audioFormat === 'synthesis') {
+			logger.info('instruments', 'Synthesis mode - creating synthesizers for all instruments');
+			
+			// Create synthesizers for the manually configured instruments
+			const manualInstruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone'];
+			manualInstruments.forEach(instrumentName => {
+				// Create basic polyphonic synthesizer
+				const synth = new PolySynth(FMSynth, {
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+				});
+				
+				// Create volume control
+				const volume = new Volume(-6);
+				this.instrumentVolumes.set(instrumentName, volume);
+				
+				// Connect synth → volume → master
+				synth.connect(volume);
+				if (this.volume) {
+					volume.connect(this.volume);
+				}
+				
+				// Add to instruments map
+				this.instruments.set(instrumentName, synth);
+				
+				logger.debug('instruments', `Created synthesis instrument: ${instrumentName}`);
+			});
+			
+			// Continue with effects and remaining initialization
+			this.initializeEffects();
+			this.applyEffectSettings();
+			this.initializeMissingInstruments();
+			this.applyInstrumentSettings();
+			return;
+		}
+		
+		// Sample-based initialization for non-synthesis mode
 		// Piano - using Sampler with high-quality samples, fallback to basic synthesis
 		const pianoSampler = new Sampler({
 			...configs.piano,
@@ -1448,12 +1486,6 @@ export class AudioEngine {
 	 * Initialize any instruments that exist in SAMPLER_CONFIGS but weren't manually created above
 	 */
 	private initializeMissingInstruments(): void {
-		// Skip all sampling if synthesis-only mode is enabled
-		if (this.settings.audioFormat === 'synthesis') {
-			logger.info('instruments', 'Synthesis-only mode enabled - skipping all sample loading');
-			return;
-		}
-
 		const configs = this.getSamplerConfigs();
 		const configKeys = Object.keys(configs);
 		const initializedKeys = Array.from(this.instruments.keys());
@@ -1464,8 +1496,39 @@ export class AudioEngine {
 			alreadyInitialized: initializedKeys.length,
 			missing: missingKeys.length,
 			missingInstruments: missingKeys,
-			audioFormat: this.settings.audioFormat
+			audioFormat: this.settings.audioFormat,
+			synthesisMode: this.settings.audioFormat === 'synthesis'
 		});
+
+		// In synthesis mode, create basic synthesizers instead of loading samples
+		if (this.settings.audioFormat === 'synthesis') {
+			logger.info('instruments', 'Synthesis-only mode - creating basic synthesizers');
+			missingKeys.forEach(instrumentName => {
+				// Create basic polyphonic synthesizer
+				const synth = new PolySynth(FMSynth, {
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+				});
+				
+				// Create volume control
+				const volume = new Volume(-6);
+				this.instrumentVolumes.set(instrumentName, volume);
+				
+				// Connect synth → volume → master
+				synth.connect(volume);
+				if (this.volume) {
+					volume.connect(this.volume);
+				}
+				
+				// Add to instruments map
+				this.instruments.set(instrumentName, synth);
+				
+				logger.debug('instruments', `Created synthesis instrument: ${instrumentName}`);
+			});
+			return;
+		}
+
+		// Continue with sample-based initialization for non-synthesis mode
 
 		missingKeys.forEach(instrumentName => {
 			try {
@@ -1583,32 +1646,39 @@ export class AudioEngine {
 			this.scheduledEvents = [];
 
 			// Ensure Transport is stopped and reset
-			if (Transport.state === 'started') {
-				Transport.stop();
-				Transport.cancel(); // Clear all scheduled events
+			if (getTransport().state === 'started') {
+				getTransport().stop();
+				getTransport().cancel(); // Clear all scheduled events
 			}
 
 			// Set a reasonable loop length for the transport
 			const sequenceDuration = this.getSequenceDuration(processedSequence);
-			Transport.loopEnd = sequenceDuration + 2; // Add buffer
+			getTransport().loopEnd = sequenceDuration + 2; // Add buffer
 
 			logger.info('debug', 'Starting sequence playback', { 
 				sequenceDuration: sequenceDuration.toFixed(2),
-				transportState: Transport.state,
-				currentTime: context.currentTime.toFixed(3)
+				transportState: getTransport().state,
+				currentTime: getContext().currentTime.toFixed(3)
 			});
 
 			// Schedule all notes in the sequence
 			for (const mapping of processedSequence) {
 				const playTime = mapping.timing;
-				const frequency = mapping.pitch;
-				const duration = mapping.duration;
-				const velocity = mapping.velocity;
+				
+				logger.debug('schedule', `Scheduling note: freq=${mapping.pitch.toFixed(1)}Hz, dur=${mapping.duration.toFixed(2)}s, vel=${mapping.velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
 
-				logger.debug('schedule', `Scheduling note: freq=${frequency.toFixed(1)}Hz, dur=${duration.toFixed(2)}s, vel=${velocity.toFixed(2)}, time=${playTime.toFixed(2)}s`);
-
-				// Schedule note using Transport time
-				const eventId = Transport.schedule((time: number) => {
+				// Schedule note using Transport time - capture mapping values in closure
+				const eventId = getTransport().schedule((time: number) => {
+					const frequency = mapping.pitch;  // Capture in closure
+					const duration = mapping.duration; // Capture in closure
+					const velocity = mapping.velocity;  // Capture in closure
+					
+					// Ensure audio context is running
+					if (getContext().state === 'suspended') {
+						getContext().resume();
+						logger.debug('context', 'Resumed suspended audio context for note');
+					}
+					
 					if (this.instruments.size > 0 && this.isPlaying) {
 						logger.debug('trigger', `Triggering note at ${time.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
 						
@@ -1664,20 +1734,20 @@ export class AudioEngine {
 			}
 
 			// Schedule sequence end cleanup
-			Transport.schedule(() => {
+			getTransport().schedule(() => {
 				logger.info('playback', 'Sequence completed via scheduler');
 				this.handleSequenceComplete();
 			}, sequenceDuration + 1); // Add 1 second buffer
 
 			// Start transport
 			logger.info('transport', 'Starting Tone.js Transport from time 0');
-			Transport.start('+0.1'); // Start with small delay to ensure all events are scheduled
+			getTransport().start('+0.1'); // Start with small delay to ensure all events are scheduled
 
 			logger.info('playback', 'Sequence scheduled and playing', {
 				eventsScheduled: this.scheduledEvents.length,
 				sequenceDuration: sequenceDuration.toFixed(2),
-				transportState: Transport.state,
-				audioContextState: context.state
+				transportState: getTransport().state,
+				audioContextState: getContext().state
 			});
 
 			// Play immediate test note to verify audio is working
@@ -1690,7 +1760,17 @@ export class AudioEngine {
 				});
 			}
 		} catch (error) {
-			logger.error('playback', 'Error processing sequence', error);
+			logger.error('playback', 'Error processing sequence', {
+				error: error instanceof Error ? {
+					name: error.name,
+					message: error.message,
+					stack: error.stack
+				} : error,
+				sequenceLength: sequence?.length || 0,
+				isInitialized: this.isInitialized,
+				instrumentCount: this.instruments.size,
+				audioContextState: getContext().state
+			});
 			throw error;
 		}
 	}
@@ -1706,14 +1786,14 @@ export class AudioEngine {
 		this.isPlaying = false;
 
 		// Stop and reset transport
-		if (Transport.state === 'started') {
-			Transport.stop();
+		if (getTransport().state === 'started') {
+			getTransport().stop();
 		}
-		Transport.cancel(); // Clear all scheduled events
+		getTransport().cancel(); // Clear all scheduled events
 
 		// Clear our tracked scheduled events
 		this.scheduledEvents.forEach(eventId => {
-			Transport.clear(eventId);
+			getTransport().clear(eventId);
 		});
 		this.scheduledEvents = [];
 
@@ -2152,7 +2232,7 @@ export class AudioEngine {
 			isInitialized: this.isInitialized,
 			isPlaying: this.isPlaying,
 			currentNotes: this.currentSequence.length,
-			audioContext: context.state,
+			audioContext: getContext().state,
 			volume: this.settings.volume
 		};
 	}
@@ -2625,7 +2705,7 @@ export class AudioEngine {
 
 		try {
 			// Get current audio context state - handle missing properties safely
-			const audioContext = context as any;
+			const audioContext = getContext() as any;
 			const baseLatency = audioContext.baseLatency || 0;
 			const outputLatency = audioContext.outputLatency || 0;
 			const currentLatency = baseLatency + outputLatency;
@@ -3377,7 +3457,7 @@ export class AudioEngine {
 
 		const now = performance.now();
 		const cpuUsage = this.estimateCPUUsage();
-		const latency = (context as any).baseLatency ? (context as any).baseLatency * 1000 : 5; // Convert to ms or use 5ms default
+		const latency = (getContext() as any).baseLatency ? (getContext() as any).baseLatency * 1000 : 5; // Convert to ms or use 5ms default
 
 		// Update metrics
 		this.performanceMetrics.set('system', { cpuUsage, latency });

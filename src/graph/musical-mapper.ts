@@ -85,7 +85,7 @@ export class MusicalMapper {
 		const velocity = this.mapPositionToVelocity(index, totalNodes);
 		
 		// Map creation time to timing offset
-		const timing = this.mapTimestampToTiming(node.created, node.modified);
+		const timing = Math.min(this.mapTimestampToTiming(node.created, node.modified), 5.0); // Cap at 5 seconds
 
 		logger.debug('node-mapping', `Mapped node: ${node.name}`, {
 			connections: node.connectionCount,
@@ -127,12 +127,13 @@ export class MusicalMapper {
 
 	private mapWordCountToDuration(wordCount: number): number {
 		// Base duration in seconds, scaled by word count
-		const baseDuration = 0.5;
-		const maxDuration = 3.0;
-		const minDuration = 0.1;
+		const baseDuration = 1.0;
+		const maxDuration = 6.0;
+		const minDuration = 0.5;
 
-		// Logarithmic scaling for word count (diminishing returns)
-		const scaledDuration = baseDuration + (Math.log10(Math.max(wordCount, 1)) * 0.3);
+		// Enhanced logarithmic scaling for word count with better progression
+		const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.8;
+		const scaledDuration = baseDuration + scaleFactor + (wordCount > 100 ? 0.5 : 0);
 		
 		return Math.max(minDuration, Math.min(maxDuration, scaledDuration));
 	}
@@ -153,9 +154,9 @@ export class MusicalMapper {
 		const now = Date.now();
 		const daysSinceModified = (now - modified) / (1000 * 60 * 60 * 24);
 		
-		// More recently modified notes play sooner, but spread over longer time
-		// Map to 0-30 second range for better distribution
-		const maxOffset = 30.0;
+		// More recently modified notes play sooner, but with minimal delay
+		// Map to 0-3 second range for subtle timing variation
+		const maxOffset = 3.0;
 		const normalizedAge = Math.min(daysSinceModified / 365, 1); // 1 year = max age
 		
 		return normalizedAge * maxOffset;
@@ -196,20 +197,20 @@ export class MusicalMapper {
 		sequence.sort((a, b) => a.timing - b.timing);
 
 		// Redistribute timing to avoid clustering
-		const totalDuration = Math.max(20, sequence.length * 0.1); // Minimum 20 seconds
+		const totalDuration = Math.max(30, Math.min(60, sequence.length * 0.08)); // 30-60 seconds with denser notes
 		sequence.forEach((mapping, index) => {
 			// Spread notes more evenly across time
 			const baseTime = (index / sequence.length) * totalDuration;
-			const randomOffset = (Math.random() - 0.5) * 2; // ±1 second variation
+			const randomOffset = (Math.random() - 0.5) * 0.5; // ±0.25 second variation
 			mapping.timing = Math.max(0, baseTime + randomOffset);
 		});
 
 		// Apply tempo scaling (convert to musical time)
 		const beatDuration = 60 / this.settings.tempo; // seconds per beat
-		const tempoMultiplier = beatDuration / 0.5; // Normalize to 120 BPM baseline
+		const tempoMultiplier = Math.sqrt(beatDuration / 0.5); // Gentler scaling using square root
 		
 		sequence.forEach(mapping => {
-			mapping.timing = mapping.timing * tempoMultiplier;
+			mapping.timing = mapping.timing * Math.min(tempoMultiplier, 1.5); // Cap at 1.5x scaling
 		});
 
 		// Final sort by timing
