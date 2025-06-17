@@ -80,54 +80,132 @@ Result: No overlap → clean but sparse
 
 ### Proposed Solutions
 
-#### Solution 1: Performance Mode Settings
+#### Solution 1: CPU Optimization Strategies
+
+**Voice Management:**
+- **Polyphony Limit**: Implement strict voice limits (8-32 voices) with voice stealing algorithms
+- **Pre-allocated Voice Pool**: Create reusable Voice objects to avoid garbage collection overhead
+- **Lazy Effect Connection**: Only connect active effects to audio graph
+
+**Scheduling Optimization:**
+- **AudioWorklet**: Move heavy DSP to audio thread for complex synthesis
+- **AudioParam Automation**: Use `setValueAtTime()` instead of direct value setting
+- **Shared Effect Buses**: Route multiple instruments through shared reverb/chorus
+
+**Instrument Optimization:**
+- **Sampled Instruments**: Use AudioBufferSourceNodes for better performance
+- **Simplified Synthesis**: Reduce complex FM/AM algorithms where possible
+- **WebAssembly**: Consider WASM for extreme performance needs
+
+#### Solution 2: Phase Conflict Resolution
+
+**Subtle Detuning (Recommended):**
+```javascript
+// For same-frequency notes, apply 0.1-1.0% detuning
+const baseFreq = 261.6; // C4
+const detunedFreq = baseFreq * (1 + (Math.random() - 0.5) * 0.02);
+```
+
+**Phase Offset Management:**
+- Set different starting phases for simultaneous same-frequency oscillators
+- Creates "chorus" effect while eliminating phase cancellation
+
+#### Solution 3: Performance Mode Settings
 ```typescript
 audioPerformance: 'smooth' | 'balanced' | 'dense'
 ```
 - **Smooth**: Current sparse approach (1.5s gaps, 0.8s max duration)
-- **Balanced**: Medium density (0.8s gaps, 1.5s max duration)  
-- **Dense**: Original approach (0.5s gaps, 3s+ duration)
+- **Balanced**: Medium density (0.8s gaps, 1.5s max duration) + detuning
+- **Dense**: Original approach (0.5s gaps, 3s+ duration) + full optimization
 
-#### Solution 2: Native WebAudio Synthesis
-Replace Tone.js PolySynth with native oscillators:
-```javascript
-// Simple, efficient synthesis
-const osc = context.createOscillator();
-const gain = context.createGain();
-// Direct connection: osc → gain → destination
-```
-
-#### Solution 3: Frequency Distribution
-Instead of many 261.6Hz notes, spread across musical scale:
-- Reduce same-frequency conflicts
-- Maintain musical density
-- Preserve harmonic relationships
+#### Solution 4: Hybrid Architecture
+Combine multiple approaches:
+- Native WebAudio for simple oscillators
+- Tone.js for complex synthesis when needed
+- Shared effect buses for efficiency
+- Automatic detuning for same-frequency conflicts
 
 ### Impact Assessment
 
 | Approach | Audio Quality | Musical Density | CPU Usage | User Complexity |
 |----------|---------------|-----------------|-----------|-----------------|
 | Current (Sparse) | Excellent | Poor | Low | Low |
+| CPU Optimization | Excellent | Good | Medium | Low |
+| Phase Conflict Resolution | Good | Excellent | Low | Low |
 | Performance Modes | Variable | Variable | Variable | Medium |
-| Native WebAudio | Good | Excellent | Low | Low |
-| Frequency Distribution | Good | Good | Medium | Low |
+| Hybrid Architecture | Excellent | Excellent | Medium | Medium |
+
+### Recommended Architectural Path
+
+Based on comprehensive analysis, the following phased approach is recommended:
+
+**Phase 1: Core Optimization (Immediate)**
+1. **Implement Voice Management System**
+   - Create `SynthVoice` class encapsulating Tone.Oscillator + Tone.Gain + effects
+   - Establish polyphony pool (32-64 voices, device-tested)
+   - Implement voice stealing algorithm (longest-playing or lowest-gain priority)
+
+2. **Centralized Effect Buses**
+   - Master reverb and chorus buses
+   - Auxiliary buses for instrument groups ("pads reverb", "leads chorus")
+   - Replace per-instrument effects with Tone.Send to shared buses
+
+3. **Frequency Distribution/Detuning**
+   - Apply ±0.1% randomized detuning to same-frequency voices
+   - Implement as core feature with optional "Spread" parameter
+   - Prevents phase cancellation while creating richer "unison" sound
+
+**Phase 2: Performance Modes (Short-term)**
+1. User-configurable performance modes as feature layer
+2. Maintain current sparse approach as "Smooth" mode baseline
+3. Implement "Balanced" and "Dense" modes using Phase 1 optimizations
+
+**Phase 3: Advanced Optimization (Future)**
+1. **Tone.Sampler Integration**: Use for sampled instruments with voice management
+2. **AudioWorklet Enhancement**: Move CPU-intensive synthesis to audio thread
+3. **Performance Profiling**: Chrome DevTools Web Audio analysis for bottlenecks
+
+### Initial Action Plan
+
+**Priority 1: Voice Management Implementation**
+- Create pool of Tone.Synth instances (or Tone.Oscillator + Tone.Envelope + Tone.Gain)
+- Implement voice stealing algorithm for allocation management
+- **Expected Impact**: Eliminate CPU spikes from constant object creation/destruction
+
+**Priority 2: Centralized Effect Architecture** 
+- Refactor to shared Tone.Reverb and Tone.Chorus instances
+- Route instrument signals to shared effects using Tone.Send
+- **Expected Impact**: Massive reduction in active effect nodes
+
+**Priority 3: Frequency Conflict Resolution**
+- Add small, randomized detune to Tone.Oscillator for same-note overlaps
+- Implement as core feature with optional intensity control
+- **Expected Impact**: Eliminate phase cancellation while enriching sound
+
+**Priority 4: Performance Profiling**
+- Use Chrome DevTools Performance tab (Web Audio section)
+- Identify specific CPU spike sources for targeted optimization
+- **Expected Impact**: Data-driven optimization focus
+
+**Implementation Philosophy**: Work within Tone.js framework first - only consider native Web Audio replacement if these optimizations prove insufficient, as the development cost is substantial.
 
 ### Next Steps
 
 **Immediate:**
-1. Test current sparse approach with users
-2. Gather feedback on musical density requirements
-3. Decide on user experience priority
+1. Implement voice management pool system
+2. Add subtle detuning for same-frequency conflicts  
+3. Create centralized effect bus architecture
+4. Profile current performance bottlenecks
 
 **Short-term:**
-1. Implement chosen approach based on feedback
-2. Add configuration options if needed
-3. Update documentation
+1. Test optimized approach with dense musical content
+2. Implement performance mode settings based on results
+3. Gather user feedback on musical density vs quality balance
 
 **Long-term:**
-1. Consider alternative synthesis libraries
-2. Evaluate pre-rendered sample approach
-3. Optimize for different hardware capabilities
+1. Advanced AudioWorklet integration if needed
+2. Evaluate Tone.Sampler for sampled instruments
+3. Consider native Web Audio only if Tone.js optimization insufficient
 
 ### Related Issues
 
