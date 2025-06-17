@@ -1,0 +1,145 @@
+/* ==========================================================================
+   SONIGRAPH STATUS & DISPLAY COMPONENTS
+   ========================================================================== */
+
+/* Status displays, indicators, monitoring components, and real-time feedback */
+
+/* ==========================================================================
+   STATUS DISPLAY
+   ========================================================================== */
+
+.sonigraph-status {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-1);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   STATUS INDICATORS
+   ========================================================================== */
+
+.sonigraph-status-indicator {
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.sonigraph-status-indicator.is-active {
+  animation: pulse 2s infinite;
+  background: var(--color-accent);
+}
+
+.sonigraph-status-indicator.is-error {
+  background: var(--color-red);
+}
+
+/* ==========================================================================
+   REAL-TIME DISPLAY
+   ========================================================================== */
+
+.sonigraph-realtime-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-1);
+  padding: var(--size-4-1);
+  border-radius: var(--radius-s);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  background: var(--background-primary-alt);
+}
+
+.sonigraph-realtime-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sonigraph-realtime-label {
+  color: var(--text-muted);
+}
+
+.sonigraph-realtime-value {
+  font-weight: var(--font-medium);
+}
+
+/* ==========================================================================
+   STATUS DISPLAYS
+   ========================================================================== */
+
+.sonigraph-status-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.sonigraph-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border-focus);
+  background: var(--background-primary-alt);
+}
+
+.sonigraph-status-label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sonigraph-status-value {
+  font-size: 0.85em;
+  color: var(--text-normal);
+  font-weight: 500;
+  font-family: var(--font-monospace);
+}
+
+/* ==========================================================================
+   ERROR HANDLING
+   ========================================================================== */
+
+.sonigraph-error-message {
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-error-border);
+  margin: 16px 0;
+  font-size: 0.85em;
+  line-height: 1.4;
+  animation: slideIn 0.3s ease;
+}
+
+/* Error states */
+.sonigraph-error {
+  margin-top: var(--size-2-1);
+  font-size: var(--font-ui-small);
+  color: var(--color-red);
+}
+
+.sonigraph-warning {
+  margin-top: var(--size-2-1);
+  font-size: var(--font-ui-small);
+  color: var(--color-orange);
+}
+
+/* Note: Pulse animation is defined in animations.css */
+
+/* ==========================================================================
+   SLIDE IN ANIMATION
+   ========================================================================== */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,299 @@
+/* ==========================================================================
+   SONIGRAPH BUTTONS STYLESHEET
+   ========================================================================== */
+
+/* Sonigraph: Your Notes, Orchestrated.
+ * Button components and interactive elements
+ * 
+ * Author: John Banister
+ * GitHub: https://github.com/banisterious
+ *
+ * This file contains all button variants, interactive controls, and FAB elements
+ * from the main Sonigraph plugin stylesheet.
+ */
+
+/* ==========================================================================
+   QUICK CONTROL BUTTONS
+   ========================================================================== */
+
+.sonigraph-modal-header-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sonigraph-quick-control-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.sonigraph-quick-control-button:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+.sonigraph-quick-control-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sonigraph-quick-control-button.is-loading {
+  animation: pulse 1.5s infinite;
+}
+
+.sonigraph-quick-control-button.is-playing {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+/* ==========================================================================
+   PRIMARY AND SECONDARY BUTTONS
+   ========================================================================== */
+
+.sonigraph-button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.sonigraph-primary-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--text-on-accent);
+  background: var(--interactive-accent);
+}
+
+.sonigraph-primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--interactive-accent-hover);
+}
+
+.sonigraph-primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sonigraph-secondary-button {
+  padding: 8px 16px;
+  font-size: 0.85em;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* background: var(--background-primary); */
+
+  /* color: var(--text-normal); */
+}
+
+.sonigraph-secondary-button:hover {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+
+/* ==========================================================================
+   PLAYBACK CONTROL BUTTONS
+   ========================================================================== */
+
+.sonigraph-playback-controls {
+  display: flex;
+  gap: var(--size-2-3);
+  align-items: center;
+}
+
+.sonigraph-play-button,
+.sonigraph-stop-button {
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-2-1);
+}
+
+.sonigraph-play-button:disabled,
+.sonigraph-stop-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   TEMPLATE ACTION BUTTONS
+   ========================================================================== */
+
+.template-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--oom-spacing-sm);
+  padding: var(--oom-spacing-sm) var(--oom-spacing-md);
+  margin-right: var(--oom-spacing-sm);
+  margin-bottom: var(--oom-spacing-sm);
+  border: none;
+  border-radius: var(--oom-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--oom-transition-fast);
+  color: var(--text-on-accent);
+  background: var(--interactive-normal);
+}
+
+.template-action-button:hover {
+  background: var(--interactive-hover);
+}
+
+.template-tool-button {
+  display: block;
+  width: 100%;
+  padding: var(--oom-spacing-sm) var(--oom-spacing-md);
+  margin-bottom: var(--oom-spacing-xs);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--oom-radius-sm);
+  cursor: pointer;
+  transition: all var(--oom-transition-fast);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+}
+
+.template-tool-button:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
+}
+
+.template-add-button {
+  margin-top: var(--oom-spacing-md);
+}
+
+/* ==========================================================================
+   OSP ACTION BUTTONS
+   ========================================================================== */
+
+.osp-action-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.osp-action-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.osp-action-btn--primary {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.osp-action-btn--primary:hover {
+  background: var(--interactive-accent-hover);
+}
+
+/* ==========================================================================
+   CONTROL CENTER CLOSE BUTTON
+   ========================================================================== */
+
+.osp-control-center-modal .modal-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.osp-control-center-modal .modal-close-button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* ==========================================================================
+   BUTTON ACCESSIBILITY
+   ========================================================================== */
+
+.sonigraph-primary-button:focus,
+.sonigraph-secondary-button:focus {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   BUTTON RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sonigraph-button-group {
+    flex-direction: column;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .sonigraph-playback-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ==========================================================================
+   BUTTON ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sonigraph-quick-control-button.is-loading {
+    animation: none;
+  }
+
+  .sonigraph-primary-button,
+  .sonigraph-secondary-button,
+  .template-action-button,
+  .template-tool-button,
+  .osp-action-btn {
+    transition: none !important;
+  }
+}

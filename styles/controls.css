@@ -1,0 +1,603 @@
+/* ==========================================================================
+   SONIGRAPH CONTROLS STYLESHEET
+   ========================================================================== */
+
+/* Sonigraph: Your Notes, Orchestrated.
+ * Form controls, toggles, sliders, and instrument controls
+ * 
+ * Author: John Banister
+ * GitHub: https://github.com/banisterious
+ */
+
+/* ==========================================================================
+   CHECKBOX COMPONENTS
+   ========================================================================== */
+
+/* Ensure our standardized toggles integrate perfectly with existing themes */
+.checkbox-container {
+  /* Fallback styling in case Obsidian's native styles aren't available */
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+  /* Ensure checkbox is properly styled */
+  cursor: pointer;
+}
+
+/* This file contains all control elements including toggles, sliders, form inputs,
+ * instrument controls, and interactive control components.
+ */
+
+/* ==========================================================================
+   TOGGLE COMPONENTS
+   ========================================================================== */
+
+/* Ensure our standardized toggles integrate perfectly with existing themes */
+.checkbox-container {
+  /* Fallback styling in case Obsidian's native styles aren't available */
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+  /* Ensure checkbox is properly styled */
+  cursor: pointer;
+}
+
+/* Ensure settings toggles have proper spacing */
+.sonigraph-settings .setting-item {
+  margin-bottom: var(--size-4-2);
+}
+
+.sonigraph-settings .setting-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   CONTROL PANEL COMPONENTS
+   ========================================================================== */
+
+/* Sonigraph Control Panel Styling */
+.sonigraph-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-3);
+  min-width: 400px;
+  max-width: 500px;
+  padding: var(--size-4-3);
+}
+
+.sonigraph-control-panel .modal-title {
+  margin-bottom: var(--size-4-3);
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+}
+
+/* Control Panel Sections */
+.sonigraph-controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+  padding: var(--size-4-1);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+}
+
+.sonigraph-controls-section h3 {
+  margin: 0 0 var(--size-2-3) 0;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+}
+
+/* ==========================================================================
+   FORM CONTROLS
+   ========================================================================== */
+
+.osp-control-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  gap: 6px;
+}
+
+/* Toggle controls use grid layout */
+.control-group--toggle {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+/* Slider controls use column layout */
+.control-group--slider {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  gap: 6px;
+}
+
+/* Fallback for generic control-group */
+.control-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  gap: 6px;
+}
+
+.osp-control-label,
+.control-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.control-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.osp-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+}
+
+.osp-toggle {
+  margin-left: 8px;
+}
+
+/* ==========================================================================
+   INSTRUMENT CONTROLS
+   ========================================================================== */
+
+.sonigraph-instrument-control {
+  margin-bottom: var(--size-4-3);
+  padding: var(--size-4-2);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-instrument-header {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-1);
+  margin-bottom: var(--size-2-3);
+}
+
+.sonigraph-instrument-icon {
+  font-size: var(--font-ui-large);
+}
+
+.sonigraph-instrument-name {
+  font-weight: var(--font-medium);
+  font-size: var(--font-ui-medium);
+}
+
+.sonigraph-instrument-controls {
+  overflow: hidden;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.sonigraph-instrument-controls[style*="display: none"] {
+  opacity: 0;
+}
+
+.sonigraph-frequency-info {
+  margin-top: var(--size-2-3);
+  padding-top: var(--size-2-3);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-frequency-range {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   EFFECT SETTINGS CONTROLS
+   ========================================================================== */
+
+.sonigraph-effect-settings-container {
+  margin-top: var(--size-4-2);
+  padding-top: var(--size-4-2);
+  border-top: 1px solid var(--background-modifier-border-focus);
+}
+
+.sonigraph-effect-settings-container .setting-item-control {
+  min-width: 200px;
+}
+
+.sonigraph-effect-settings-container .slider {
+  width: 100%;
+}
+
+.sonigraph-effect-settings-container .slider::after {
+  content: "";
+}
+
+.sonigraph-effect-settings-container .slider {
+  width: 100%;
+}
+
+.sonigraph-effect-settings-container .slider:active {
+  cursor: grabbing;
+}
+
+.sonigraph-effect-settings-container .slider-thumb {
+  cursor: grab;
+}
+
+.sonigraph-effect-settings-container .slider:active .slider-thumb {
+  cursor: grabbing;
+}
+
+.sonigraph-settings-group .setting-item-control {
+  min-width: 150px;
+}
+
+/* ==========================================================================
+   SWITCH/TOGGLE CONTROLS
+   ========================================================================== */
+
+.ospcc-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+}
+
+.ospcc-switch__input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.ospcc-switch__track {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--md-surface-container-highest);
+  border: 2px solid var(--md-outline);
+  border-radius: var(--md-corner-full);
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.ospcc-switch__thumb {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background: var(--md-outline);
+  border-radius: 50%;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  box-shadow: var(--md-elevation-1);
+}
+
+.ospcc-switch__input:checked + .ospcc-switch__track {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+}
+
+.ospcc-switch__input:checked + .ospcc-switch__track .ospcc-switch__thumb {
+  transform: translateX(20px);
+  background: var(--md-on-primary);
+}
+
+.ospcc-switch__input:focus + .ospcc-switch__track {
+  box-shadow: 0 0 0 2px rgb(var(--interactive-accent-rgb, 25, 118, 210) 0.2);
+}
+
+/* Instrument toggle enhancements */
+.control-group .ospcc-switch {
+  position: relative;
+  cursor: pointer;
+}
+
+.control-group .ospcc-switch::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-tooltip);
+  color: var(--text-on-tooltip);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  z-index: 1000;
+}
+
+.control-group .ospcc-switch:hover::before {
+  opacity: 1;
+}
+
+/* Make the entire switch clickable */
+.ospcc-switch {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ospcc-switch__input {
+  cursor: pointer;
+}
+
+/* Improved switch styling for better visibility */
+.ospcc-switch__track {
+  opacity: 1;
+  background: var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border-hover);
+}
+
+.ospcc-switch__thumb {
+  background: var(--text-muted);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
+}
+
+.ospcc-switch__input:checked + .ospcc-switch__track .ospcc-switch__thumb {
+  background: var(--background-primary);
+}
+
+/* ==========================================================================
+   SLIDER CONTROLS
+   ========================================================================== */
+
+.ospcc-slider-container {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-3);
+}
+
+.ospcc-slider {
+  flex: 1;
+  height: 20px;
+  background: transparent;
+  position: relative;
+  cursor: pointer;
+}
+
+.ospcc-slider__track-container {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transform: translateY(-50%);
+}
+
+.ospcc-slider__track {
+  height: 100%;
+  background: var(--background-modifier-border);
+  border-radius: var(--md-corner-xs);
+  position: relative;
+  overflow: hidden;
+}
+
+.ospcc-slider__track-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: var(--md-corner-xs);
+  width: 60%;
+  transition: width var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.ospcc-slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  background: var(--interactive-accent);
+  border: 2px solid var(--background-primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  left: 60%;
+  cursor: grab;
+}
+
+.ospcc-slider__thumb:active {
+  cursor: grabbing;
+}
+
+.ospcc-slider:hover .ospcc-slider__thumb {
+  box-shadow: 0 4px 8px rgb(0 0 0 / 30%);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Slider tooltip */
+.ospcc-slider__thumb::after {
+  content: attr(data-value);
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-tooltip);
+  color: var(--text-on-tooltip);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  z-index: 1000;
+}
+
+.ospcc-slider:hover .ospcc-slider__thumb::after,
+.ospcc-slider__thumb:active::after {
+  opacity: 1;
+}
+
+.slider-value {
+  font-size: var(--md-font-body-small);
+  color: var(--md-on-surface-variant);
+  min-width: 40px;
+  text-align: right;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+}
+
+/* Header volume control */
+.osp-header-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.osp-header-slider .ospcc-slider-container {
+  width: 100px;
+}
+
+.osp-header-slider .slider-value {
+  min-width: 30px;
+  font-size: 11px;
+}
+
+.osp-param-slider {
+  flex: 1;
+}
+
+/* ==========================================================================
+   EFFECT CONTROLS
+   ========================================================================== */
+
+/* Effect toggles for instruments */
+.osp-effects-toggles {
+  min-width: 200px;
+}
+
+.osp-effects-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.osp-effect-toggle-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.osp-effect-toggle-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.osp-effect-toggle {
+  /* transform: scale(0.8); */
+
+  /* transform-origin: center; */
+}
+
+/* Horizontal effect sections (Master Effects) */
+.osp-effect-section-horizontal {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.osp-effect-header-horizontal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.osp-effect-title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-normal);
+}
+
+.osp-effect-params-horizontal {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.osp-param-group-horizontal {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  flex: 1;
+}
+
+.osp-param-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   CONTROL RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media screen and (max-width: 480px) {
+  .sonigraph-control-panel {
+    min-width: 300px;
+    max-width: 90vw;
+  }
+}
+
+/* Dark theme adjustments */
+.theme-dark .sonigraph-controls-section {
+  border: 1px solid var(--background-modifier-border);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .sonigraph-controls-section {
+    border: 2px solid var(--background-modifier-border);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .ospcc-switch__track,
+  .ospcc-switch__thumb,
+  .ospcc-slider__track-active,
+  .ospcc-slider__thumb {
+    transition: none !important;
+  }
+}
