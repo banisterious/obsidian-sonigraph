@@ -117,10 +117,19 @@
 | | Bass Synth | ✅ | 8 Complete | Square + sub-oscillator | Low (100-200Hz) | Electronic foundation |
 | | Arp Synth | ✅ | 8 Complete | Various waves + envelope + sequencer | Variable (Pattern-dependent) | Sequenced patterns, graph-synced |
 | **🌊 Environmental** | Whale Song | ✅ | 8B Complete | Scientific recordings + oceanic effects | Low-Mid (20-1000Hz) | Humpback whale calls, underwater acoustics |
+| | Birds | 📋 | Future | Natural recordings + environmental processing | High-Mid (800-3000Hz) | Dawn chorus, songbirds, birds of prey |
+| | Cats | 📋 | Future | Natural recordings + domestic processing | Mid-High (400-2000Hz) | Purring, meowing, various vocalizations |
+| | Dogs | 📋 | Future | Natural recordings + domestic processing | Mid-Low (200-1500Hz) | Barking, howling, different breeds |
+| | Wolves | 📋 | Future | Natural recordings + wild processing | Low-Mid (100-800Hz) | Pack howling, wild calls |
+| | Ocean Waves | 📋 | Future | Natural recordings + rhythmic processing | Very Low-High (20-4000Hz) | Rhythmic, meditative wave patterns |
+| | Rain | 📋 | Future | Natural recordings + atmospheric processing | Full Spectrum (20-8000Hz) | Light drizzle to thunderstorms |
+| | Wind | 📋 | Future | Natural recordings + spatial processing | Mid-High (200-6000Hz) | Through trees, mountain gusts |
+| | Thunder | 📋 | Future | Natural recordings + dramatic processing | Ultra-Low (10-200Hz) | Distant rumbles to close strikes |
 
 #### **Implementation Summary by Phase**
 - **✅ Complete (34/34)**: Piano, Organ, Strings, Choir, Vocal Pads, Pad, Flute, Clarinet, Saxophone, Soprano, Alto, Tenor, Bass, Electric Piano, Harpsichord, Accordion, Celesta, Violin, Cello, Guitar, Harp, Trumpet, French Horn, Trombone, Tuba, Oboe, Timpani, Xylophone, Vibraphone, Gongs, Lead Synth, Bass Synth, Arp Synth, Whale Song (Humpback)
 - **✅ Phase 8B Complete**: Environmental & Natural Sounds expansion with authentic whale song implementation
+- **📋 Phase 9B Future**: Natural Soundscapes expansion (Birds, Cats, Dogs, Wolves, Ocean Waves, Rain, Wind, Thunder) targeting 42+ total instruments
 
 #### **Key Implementation Approaches by Family**
 
@@ -210,6 +219,14 @@
 - Master conductor interface for ensemble control
 - Professional orchestral templates and presets
 
+#### **🔄 Phase 9B: Natural Soundscapes Expansion**
+- **Animal Sounds Collection**: Birds, Cats, Dogs, Wolves with authentic natural recordings
+- **Environmental Atmospheres**: Ocean Waves, Rain, Wind, Thunder for ambient soundscaping
+- **Specialized Processing**: Species-specific audio processing and environmental acoustics
+- **Graph Integration**: Natural sound assignment based on vault themes and content patterns
+- **Soundscape Mixing**: Intelligent layering of multiple environmental sounds
+- **Real-time Adaptation**: Dynamic environmental sounds responding to graph complexity
+
 ### **🔄 Phase 10: Sample Manager & Audio Infrastructure**
 - **Sample Manager UI**: Comprehensive sample management system
   - View cached samples by instrument family
@@ -255,6 +272,7 @@
 **Low (100-200Hz)**: Strings, Harp, Timpani, Bass synth
 **Very Low (<100Hz)**: Tuba, Bass vocal, Gongs, Lead synth fundamentals
 **Environmental (20-1000Hz)**: Whale Song (Humpback) - Wide spectrum natural sounds
+**Future Natural Soundscapes**: Birds (800-3000Hz), Ocean Waves (20-4000Hz), Rain (20-8000Hz), Wind (200-6000Hz), Thunder (10-200Hz), Cats (400-2000Hz), Dogs (200-1500Hz), Wolves (100-800Hz)
 
 *This distribution ensures optimal frequency separation and prevents masking between instruments while maintaining musical authenticity. Environmental sounds provide natural textures across the full spectrum.*
 
