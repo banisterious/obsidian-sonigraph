@@ -126,10 +126,10 @@ export class MusicalMapper {
 	}
 
 	private mapWordCountToDuration(wordCount: number): number {
-		// Base duration in seconds, scaled by word count
-		const baseDuration = 1.0;
-		const maxDuration = 6.0;
-		const minDuration = 0.5;
+		// Short durations to eliminate overlap entirely
+		const baseDuration = 0.4;
+		const maxDuration = 0.8;
+		const minDuration = 0.2;
 
 		// Enhanced logarithmic scaling for word count with better progression
 		const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.8;
