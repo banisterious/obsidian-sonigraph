@@ -437,6 +437,7 @@ export class AudioEngine {
 	private scheduledEvents: number[] = [];
 	private realtimeTimer: ReturnType<typeof setInterval> | null = null;
 	private realtimeStartTime: number = 0;
+	private lastTriggerTime: number = 0;
 	private volume: Volume | null = null;
 	private voiceAssignments: Map<string, VoiceAssignment> = new Map();
 	private maxVoicesPerInstrument = 8;
@@ -802,22 +803,22 @@ export class AudioEngine {
 			// Start with volume output
 			let output = volume;
 
-			// Connect through enabled effects in order: reverb → chorus → filter
-			const reverb = effects.get('reverb');
-			const chorus = effects.get('chorus');
-			const filter = effects.get('filter');
+			// Temporarily bypass effects to test for crackling source
+			// const reverb = effects.get('reverb');
+			// const chorus = effects.get('chorus'); 
+			// const filter = effects.get('filter');
 
-			if (reverb) {
-				output = output.connect(reverb);
-			}
+			// if (reverb) {
+			// 	output = output.connect(reverb);
+			// }
 			
-			if (chorus) {
-				output = output.connect(chorus);
-			}
+			// if (chorus) {
+			// 	output = output.connect(chorus);
+			// }
 			
-			if (filter) {
-				output = output.connect(filter);
-			}
+			// if (filter) {
+			// 	output = output.connect(filter);
+			// }
 
 			// Finally connect to master volume
 			if (this.volume) {
@@ -1747,14 +1748,24 @@ export class AudioEngine {
 
 		// Record start time
 		this.realtimeStartTime = getContext().currentTime;
+		this.lastTriggerTime = 0;
 		
-		// Start the audio context if suspended
+		// Start the audio context if suspended and optimize for latency
 		if (getContext().state === 'suspended') {
 			getContext().resume();
 			logger.debug('context', 'Resumed suspended audio context for real-time playback');
 		}
+		
+		// Set audio context to reduce latency and improve stability
+		try {
+			if (getContext().latencyHint !== 'playback') {
+				logger.debug('context', 'Optimizing audio context for playback latency');
+			}
+		} catch (e) {
+			// Ignore if latencyHint is not supported
+		}
 
-		// Use a 50ms interval for smooth playback timing
+		// Use a 400ms interval to minimize timing conflicts
 		this.realtimeTimer = setInterval(() => {
 			if (!this.isPlaying) {
 				if (this.realtimeTimer !== null) {
@@ -1767,59 +1778,69 @@ export class AudioEngine {
 			const currentTime = getContext().currentTime;
 			const elapsedTime = currentTime - this.realtimeStartTime;
 
-			// Find notes that should play now (within the next 100ms)
+			// Find notes that should play now (within the next 600ms for 400ms timer)
 			const notesToPlay = sequence.filter(note => 
-				note.timing <= elapsedTime + 0.1 && 
-				note.timing > elapsedTime - 0.05 && 
+				note.timing <= elapsedTime + 0.6 && 
+				note.timing > elapsedTime - 0.4 && 
 				!note.hasBeenTriggered
 			);
 
-			for (const mapping of notesToPlay) {
-				// Mark as triggered to prevent re-triggering
-				mapping.hasBeenTriggered = true;
+			// Aggressive spacing: minimum 1.5s between notes to eliminate overlap
+			const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
+			if (timeSinceLastTrigger < 1.5 && notesToPlay.length > 0) {
+				return; // Skip this timer tick if too soon after last trigger
+			}
 
-				const frequency = mapping.pitch;
-				const duration = mapping.duration;
-				const velocity = mapping.velocity;
+			// Take only the first note to prevent overload
+			if (notesToPlay.length === 0) return;
+			
+			const mapping = notesToPlay[0];
+			this.lastTriggerTime = elapsedTime;
+			
+			// Mark as triggered to prevent re-triggering
+			mapping.hasBeenTriggered = true;
 
-				logger.debug('trigger', `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
+			const frequency = mapping.pitch;
+			const duration = mapping.duration;
+			const velocity = mapping.velocity;
 
-				// Determine which instrument to use
-				const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+			logger.debug('trigger', `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
 
-				// Check if instrument is enabled in settings
-				const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
-				const instrumentSettings = this.settings.instruments[instrumentKey];
-				if (!instrumentSettings?.enabled) {
-					logger.debug('playback', 'Skipping disabled instrument', { 
-						instrumentName, 
-						enabled: instrumentSettings?.enabled 
-					});
-					continue;
-				}
+			// Determine which instrument to use
+			const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
 
-				// Log the note trigger for debugging
-				logger.debug('playback', 'Note triggered in real-time', {
-					nodeId: mapping.nodeId,
-					instrument: instrumentName,
-					frequency: frequency.toFixed(2),
-					duration: duration.toFixed(2),
-					velocity: velocity.toFixed(2),
-					elapsedTime: elapsedTime.toFixed(3)
+			// Check if instrument is enabled in settings
+			const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
+			const instrumentSettings = this.settings.instruments[instrumentKey];
+			if (!instrumentSettings?.enabled) {
+				logger.debug('playback', 'Skipping disabled instrument', { 
+					instrumentName, 
+					enabled: instrumentSettings?.enabled 
 				});
+				return;
+			}
 
-				// Use specialized synthesis engines if available
-				if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
-					this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
-				} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
-					this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
-				} else if (this.isEnvironmentalInstrument(instrumentName)) {
-					this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
-				} else {
-					const synth = this.instruments.get(instrumentName);
-					if (synth) {
-						synth.triggerAttackRelease(frequency, duration, currentTime, velocity);
-					}
+			// Log the note trigger for debugging
+			logger.debug('playback', 'Note triggered in real-time', {
+				nodeId: mapping.nodeId,
+				instrument: instrumentName,
+				frequency: frequency.toFixed(2),
+				duration: duration.toFixed(2),
+				velocity: velocity.toFixed(2),
+				elapsedTime: elapsedTime.toFixed(3)
+			});
+
+			// Use specialized synthesis engines if available
+			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
+				this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
+			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
+				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
+			} else if (this.isEnvironmentalInstrument(instrumentName)) {
+				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
+			} else {
+				const synth = this.instruments.get(instrumentName);
+				if (synth) {
+					synth.triggerAttackRelease(frequency, duration, currentTime, velocity);
 				}
 			}
 
@@ -1829,7 +1850,7 @@ export class AudioEngine {
 				logger.info('playback', 'Real-time sequence completed');
 				this.stop();
 			}
-		}, 50); // Check every 50ms for smooth timing
+		}, 400); // Check every 400ms to minimize CPU load and timing conflicts
 	}
 
 	stop(): void {
