@@ -223,6 +223,23 @@
 - **Cross-Origin Solutions**: Client-side sample caching and management
 - **Performance Optimization**: Intelligent sample preloading and memory management
 
+### **🔄 Phase 11: Content Filtering & Selection**
+- **Folder Exclusion System**: Option to exclude specific folders from graph processing
+  - Settings UI with folder picker/browser
+  - Pattern-based exclusion (e.g., exclude all folders starting with "_")
+  - Real-time preview of included/excluded content
+  - Vault-wide statistics showing filtered vs. total content
+- **File Exclusion System**: Option to exclude specific files from sonification
+  - File type filtering (exclude images, PDFs, etc.)
+  - Tag-based exclusion (exclude files with specific tags)
+  - File size filtering (exclude very large or very small files)
+  - Custom pattern matching for file names
+- **Advanced Filtering Options**: 
+  - Date range filtering (only include files modified within date range)
+  - Content-based filtering (exclude files with specific keywords)
+  - Graph topology filtering (exclude isolated nodes, require minimum connections)
+  - Performance impact assessment and optimization for filtered processing
+
 ---
 
 ### 🎼 **Frequency Range Distribution (34 Instruments)**
