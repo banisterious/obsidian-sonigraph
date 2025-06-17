@@ -6,422 +6,12 @@ import { PercussionEngine } from './percussion-engine';
 import { ElectronicEngine } from './electronic-engine';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
+import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
 import { getLogger } from '../logging';
 
 const logger = getLogger('audio-engine');
 
-// Sampled instrument configurations using high-quality samples
-const SAMPLER_CONFIGS = {
-	piano: {
-		urls: {
-			"A0": "A0.[format]", "C1": "C1.[format]", "D#1": "Ds1.[format]",
-			"F#1": "Fs1.[format]", "A1": "A1.[format]", "C2": "C2.[format]",
-			"D#2": "Ds2.[format]", "F#2": "Fs2.[format]", "A2": "A2.[format]",
-			"C3": "C3.[format]", "D#3": "Ds3.[format]", "F#3": "Fs3.[format]",
-			"A3": "A3.[format]", "C4": "C4.[format]", "D#4": "Ds4.[format]",
-			"F#4": "Fs4.[format]", "A4": "A4.[format]", "C5": "C5.[format]",
-			"D#5": "Ds5.[format]", "F#5": "Fs5.[format]", "A5": "A5.[format]",
-			"C6": "C6.[format]", "D#6": "Ds6.[format]", "F#6": "Fs6.[format]",
-			"A6": "A6.[format]", "C7": "C7.[format]", "D#7": "Ds7.[format]",
-			"F#7": "Fs7.[format]", "A7": "A7.[format]", "C8": "C8.[format]"
-		},
-		release: 1,
-		baseUrl: "https://tonejs.github.io/audio/salamander/",
-		effects: ['reverb']
-	},
-	organ: {
-		urls: {
-			"C2": "C2.[format]", "C3": "C3.[format]", "C4": "C4.[format]",
-			"C5": "C5.[format]", "C6": "C6.[format]", "F2": "F2.[format]",
-			"F3": "F3.[format]", "F4": "F4.[format]", "F5": "F5.[format]",
-			"F6": "F6.[format]", "F#2": "Fs2.[format]", "F#3": "Fs3.[format]",
-			"F#4": "Fs4.[format]", "F#5": "Fs5.[format]", "F#6": "Fs6.[format]",
-			"G2": "G2.[format]", "G3": "G3.[format]", "G4": "G4.[format]",
-			"G5": "G5.[format]", "G6": "G6.[format]"
-		},
-		release: 0.8,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
-		effects: ['chorus', 'reverb']
-	},
-	strings: {
-		urls: {
-			"C3": "C3.[format]", "D#3": "Ds3.[format]", "F#3": "Fs3.[format]",
-			"A3": "A3.[format]", "C4": "C4.[format]", "D#4": "Ds4.[format]",
-			"F#4": "Fs4.[format]", "A4": "A4.[format]", "C5": "C5.[format]",
-			"D#5": "Ds5.[format]", "F#5": "Fs5.[format]", "A5": "A5.[format]",
-			"C6": "C6.[format]", "D#6": "Ds6.[format]", "F#6": "Fs6.[format]",
-			"A6": "A6.[format]"
-		},
-		release: 2.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
-		effects: ['reverb', 'filter']
-	},
-	choir: {
-		urls: {
-			"C3": "C3.[format]", "D#3": "Ds3.[format]", "F#3": "Fs3.[format]",
-			"A3": "A3.[format]", "C4": "C4.[format]", "D#4": "Ds4.[format]",
-			"F#4": "Fs4.[format]", "A4": "A4.[format]", "C5": "C5.[format]",
-			"D#5": "Ds5.[format]", "F#5": "Fs5.[format]", "A5": "A5.[format]",
-			"C6": "C6.[format]", "D#6": "Ds6.[format]"
-		},
-		release: 3.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/choir/",
-		effects: ['reverb', 'chorus']
-	},
-	vocalPads: {
-		urls: {
-			"C2": "C2.[format]", "F2": "F2.[format]", "A2": "A2.[format]",
-			"C3": "C3.[format]", "F3": "F3.[format]", "A3": "A3.[format]",
-			"C4": "C4.[format]", "F4": "F4.[format]", "A4": "A4.[format]",
-			"C5": "C5.[format]", "F5": "F5.[format]", "A5": "A5.[format]"
-		},
-		release: 4.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/",
-		effects: ['reverb', 'filter']
-	},
-	pad: {
-		urls: {
-			"C1": "C1.[format]", "G1": "G1.[format]", "C2": "C2.[format]",
-			"G2": "G2.[format]", "C3": "C3.[format]", "G3": "G3.[format]",
-			"C4": "C4.[format]", "G4": "G4.[format]", "C5": "C5.[format]",
-			"G5": "G5.[format]", "C6": "C6.[format]"
-		},
-		release: 5.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/",
-		effects: ['reverb', 'filter']
-	},
-	flute: {
-		urls: {
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
-			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
-			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
-			"D6": "D6.[format]", "E6": "E6.[format]"
-		},
-		release: 1.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/flute/",
-		effects: ['reverb', 'filter']
-	},
-	clarinet: {
-		urls: {
-			"D3": "D3.[format]", "F3": "F3.[format]", "A3": "A3.[format]",
-			"C4": "C4.[format]", "E4": "E4.[format]", "G4": "G4.[format]",
-			"B4": "B4.[format]", "D5": "D5.[format]", "F5": "F5.[format]",
-			"A5": "A5.[format]", "C6": "C6.[format]", "E6": "E6.[format]"
-		},
-		release: 2.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/",
-		effects: ['reverb', 'filter']
-	},
-	saxophone: {
-		urls: {
-			"D3": "D3.[format]", "F#3": "Fs3.[format]", "A3": "A3.[format]",
-			"C4": "C4.[format]", "D#4": "Ds4.[format]", "F#4": "Fs4.[format]",
-			"A4": "A4.[format]", "C5": "C5.[format]", "D#5": "Ds5.[format]",
-			"F#5": "Fs5.[format]", "A5": "A5.[format]", "C6": "C6.[format]"
-		},
-		release: 2.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/",
-		effects: ['reverb', 'chorus']
-	},
-	// Phase 6A: Individual Vocal Sections with formant synthesis
-	soprano: {
-		urls: {
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
-			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
-			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
-			"D6": "D6.[format]", "E6": "E6.[format]", "F6": "F6.[format]"
-		},
-		release: 2.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/",
-		effects: ['reverb', 'chorus', 'filter'] // Full vocal effects suite
-	},
-	alto: {
-		urls: {
-			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
-			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]"
-		},
-		release: 2.8,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/",
-		effects: ['reverb', 'chorus', 'filter'] // Full vocal effects suite
-	},
-	tenor: {
-		urls: {
-			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
-			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
-			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
-			"E4": "E4.[format]", "F4": "F4.[format]", "G4": "G4.[format]",
-			"A4": "A4.[format]", "B4": "B4.[format]", "C5": "C5.[format]"
-		},
-		release: 2.3,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/",
-		effects: ['reverb', 'filter'] // Less chorus for male voice clarity
-	},
-	bass: {
-		urls: {
-			"E2": "E2.[format]", "F2": "F2.[format]", "G2": "G2.[format]",
-			"A2": "A2.[format]", "B2": "B2.[format]", "C3": "C3.[format]",
-			"D3": "D3.[format]", "E3": "E3.[format]", "F3": "F3.[format]",
-			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]"
-		},
-		release: 3.2,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/",
-		effects: ['reverb'] // Minimal effects for deep bass clarity
-	},
-	// Phase 6B: Extended Keyboard Family
-	electricPiano: {
-		urls: {
-			"A1": "A1.[format]", "C2": "C2.[format]", "E2": "E2.[format]",
-			"G2": "G2.[format]", "C3": "C3.[format]", "E3": "E3.[format]",
-			"G3": "G3.[format]", "C4": "C4.[format]", "E4": "E4.[format]",
-			"G4": "G4.[format]", "C5": "C5.[format]", "E5": "E5.[format]",
-			"G5": "G5.[format]", "C6": "C6.[format]", "E6": "E6.[format]"
-		},
-		release: 2.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/electric-piano/",
-		effects: ['reverb', 'chorus'] // Classic electric piano effects
-	},
-	harpsichord: {
-		urls: {
-			"C2": "C2.[format]", "D2": "D2.[format]", "F2": "F2.[format]",
-			"G2": "G2.[format]", "A2": "A2.[format]", "C3": "C3.[format]",
-			"D3": "D3.[format]", "F3": "F3.[format]", "G3": "G3.[format]",
-			"A3": "A3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"C5": "C5.[format]", "D5": "D5.[format]", "F5": "F5.[format]"
-		},
-		release: 1.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harpsichord/",
-		effects: ['reverb', 'filter'] // Baroque clarity with filtering
-	},
-	accordion: {
-		urls: {
-			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
-			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
-			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
-			"E4": "E4.[format]", "F4": "F4.[format]", "G4": "G4.[format]",
-			"A4": "A4.[format]", "B4": "B4.[format]", "C5": "C5.[format]",
-			"D5": "D5.[format]", "E5": "E5.[format]", "F5": "F5.[format]"
-		},
-		release: 2.8,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/accordion/",
-		effects: ['reverb', 'chorus'] // Bellows character with chorus
-	},
-	celesta: {
-		urls: {
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
-			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
-			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
-			"D6": "D6.[format]", "E6": "E6.[format]", "F6": "F6.[format]"
-		},
-		release: 3.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/celesta/",
-		effects: ['reverb', 'filter'] // Bell-like with ethereal reverb
-	},
-	// Phase 7: Strings & Brass Completion
-	violin: {
-		urls: {
-			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
-			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
-			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]"
-		},
-		release: 2.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
-		effects: ['reverb', 'filter'] // Expressive bowing with vibrato
-	},
-	cello: {
-		urls: {
-			"C2": "C2.[format]", "D2": "D2.[format]", "E2": "E2.[format]",
-			"F2": "F2.[format]", "G2": "G2.[format]", "A2": "A2.[format]",
-			"B2": "B2.[format]", "C3": "C3.[format]", "D3": "D3.[format]",
-			"E3": "E3.[format]", "F3": "F3.[format]", "G3": "G3.[format]",
-			"A3": "A3.[format]", "B3": "B3.[format]", "C4": "C4.[format]",
-			"D4": "D4.[format]", "E4": "E4.[format]", "F4": "F4.[format]"
-		},
-		release: 3.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/cello/",
-		effects: ['reverb', 'filter'] // Rich low harmonics with bow noise
-	},
-	guitar: {
-		urls: {
-			"E2": "E2.[format]", "F2": "F2.[format]", "G2": "G2.[format]",
-			"A2": "A2.[format]", "B2": "B2.[format]", "C3": "C3.[format]",
-			"D3": "D3.[format]", "E3": "E3.[format]", "F3": "F3.[format]",
-			"G3": "G3.[format]", "A3": "A3.[format]", "B3": "B3.[format]",
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]"
-		},
-		release: 1.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/guitar-acoustic/",
-		effects: ['reverb', 'chorus'] // Plucked string with natural resonance
-	},
-	harp: {
-		urls: {
-			"C1": "C1.[format]", "D1": "D1.[format]", "F1": "F1.[format]",
-			"G1": "G1.[format]", "A1": "A1.[format]", "C2": "C2.[format]",
-			"D2": "D2.[format]", "F2": "F2.[format]", "G2": "G2.[format]",
-			"A2": "A2.[format]", "C3": "C3.[format]", "D3": "D3.[format]",
-			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
-			"C4": "C4.[format]", "D4": "D4.[format]", "F4": "F4.[format]"
-		},
-		release: 4.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harp/",
-		effects: ['reverb', 'filter'] // Cascading arpeggios with long decay
-	},
-	trumpet: {
-		urls: {
-			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
-			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
-			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]",
-			"E4": "E4.[format]", "F4": "F4.[format]", "G4": "G4.[format]",
-			"A4": "A4.[format]", "B4": "B4.[format]", "C5": "C5.[format]",
-			"D5": "D5.[format]", "E5": "E5.[format]", "F5": "F5.[format]"
-		},
-		release: 1.8,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/",
-		effects: ['reverb', 'filter'] // Bright brass with metallic formants
-	},
-	frenchHorn: {
-		urls: {
-			"B2": "B2.[format]", "C3": "C3.[format]", "D3": "D3.[format]",
-			"E3": "E3.[format]", "F3": "F3.[format]", "G3": "G3.[format]",
-			"A3": "A3.[format]", "B3": "B3.[format]", "C4": "C4.[format]",
-			"D4": "D4.[format]", "E4": "E4.[format]", "F4": "F4.[format]",
-			"G4": "G4.[format]", "A4": "A4.[format]", "B4": "B4.[format]",
-			"C5": "C5.[format]", "D5": "D5.[format]", "E5": "E5.[format]"
-		},
-		release: 2.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/french-horn/",
-		effects: ['reverb', 'chorus', 'filter'] // Warm middle register with slight distortion
-	},
-	trombone: {
-		urls: {
-			"A1": "A1.[format]", "B1": "B1.[format]", "C2": "C2.[format]",
-			"D2": "D2.[format]", "E2": "E2.[format]", "F2": "F2.[format]",
-			"G2": "G2.[format]", "A2": "A2.[format]", "B2": "B2.[format]",
-			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]",
-			"F3": "F3.[format]", "G3": "G3.[format]", "A3": "A3.[format]",
-			"B3": "B3.[format]", "C4": "C4.[format]", "D4": "D4.[format]"
-		},
-		release: 2.2,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
-		effects: ['reverb', 'filter'] // Sliding pitch with sawtooth character
-	},
-	tuba: {
-		urls: {
-			"E1": "E1.[format]", "F1": "F1.[format]", "G1": "G1.[format]",
-			"A1": "A1.[format]", "B1": "B1.[format]", "C2": "C2.[format]",
-			"D2": "D2.[format]", "E2": "E2.[format]", "F2": "F2.[format]",
-			"G2": "G2.[format]", "A2": "A2.[format]", "B2": "B2.[format]",
-			"C3": "C3.[format]", "D3": "D3.[format]", "E3": "E3.[format]"
-		},
-		release: 3.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
-		effects: ['reverb'] // Deep foundation with breath noise
-	},
-	// Phase 8: Percussion & Electronic Finale (8 instruments)
-	oboe: {
-		urls: {
-			"Bb3": "Bb3.[format]", "D4": "D4.[format]", "F4": "F4.[format]",
-			"A4": "A4.[format]", "C5": "C5.[format]", "E5": "E5.[format]",
-			"G5": "G5.[format]", "Bb5": "Bb5.[format]", "D6": "D6.[format]"
-		},
-		release: 2.2,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/",
-		effects: ['reverb', 'filter', 'chorus'] // Nasal formants + expression
-	},
-	timpani: {
-		urls: {
-			"C2": "C2.[format]", "F2": "F2.[format]", "Bb2": "Bb2.[format]", "D3": "D3.[format]"
-		},
-		release: 4.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/",
-		effects: ['reverb', 'filter'] // Hall acoustics + rumble control
-	},
-	xylophone: {
-		urls: {
-			"C4": "C4.[format]", "D4": "D4.[format]", "E4": "E4.[format]",
-			"F4": "F4.[format]", "G4": "G4.[format]", "A4": "A4.[format]",
-			"B4": "B4.[format]", "C5": "C5.[format]", "D5": "D5.[format]",
-			"E5": "E5.[format]", "F5": "F5.[format]", "G5": "G5.[format]",
-			"A5": "A5.[format]", "B5": "B5.[format]", "C6": "C6.[format]",
-			"D6": "D6.[format]", "E6": "E6.[format]", "F6": "F6.[format]"
-		},
-		release: 2.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/",
-		effects: ['reverb', 'filter'] // Bright attack + resonance
-	},
-	vibraphone: {
-		urls: {
-			"F3": "F3.[format]", "A3": "A3.[format]", "C4": "C4.[format]",
-			"E4": "E4.[format]", "G4": "G4.[format]", "B4": "B4.[format]",
-			"D5": "D5.[format]", "F5": "F5.[format]", "A5": "A5.[format]"
-		},
-		release: 6.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/",
-		effects: ['reverb', 'chorus', 'filter'] // Metallic + vibrato motor
-	},
-	gongs: {
-		urls: {
-			"C2": "C2.[format]", "F2": "F2.[format]", "C3": "C3.[format]"
-		},
-		release: 12.0,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/gong/",
-		effects: ['reverb', 'filter', 'distortion'] // Massive hall + metallic
-	},
-	leadSynth: {
-		urls: {
-			"C2": "C2.[format]", "C3": "C3.[format]", "C4": "C4.[format]",
-			"C5": "C5.[format]", "C6": "C6.[format]"
-		},
-		release: 0.2,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-lead/",
-		effects: ['filter', 'distortion', 'delay'] // Cutting + modulation
-	},
-	bassSynth: {
-		urls: {
-			"C1": "C1.[format]", "F1": "F1.[format]", "C2": "C2.[format]",
-			"F2": "F2.[format]", "C3": "C3.[format]"
-		},
-		release: 0.5,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-bass/",
-		effects: ['filter', 'compressor'] // Foundation + punch
-	},
-	arpSynth: {
-		urls: {
-			"C3": "C3.[format]", "C4": "C4.[format]", "C5": "C5.[format]", "C6": "C6.[format]"
-		},
-		release: 0.1,
-		baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/",
-		effects: ['filter', 'delay', 'reverb'] // Sequenced + space
-	},
-	// Phase 8B: Environmental & Natural Sounds
-	whaleHumpback: {
-		urls: {
-			// Public domain NOAA humpback whale recordings from Internet Archive
-			// Single whale recording mapped to multiple pitches for musical use
-			// Available for download when sample downloading feature is implemented
-			"C1": "whale_song.mp3", "F1": "whale_song.mp3", "Bb1": "whale_song.mp3",
-			"C2": "whale_song.mp3", "F2": "whale_song.mp3", "Bb2": "whale_song.mp3",
-			"C3": "whale_song.mp3", "F3": "whale_song.mp3"
-		},
-		release: 12.0, // Long whale song sustains
-		baseUrl: "https://archive.org/download/WhaleSong_928/", // Public domain NOAA scientific recordings
-		effects: ['reverb', 'chorus', 'filter'] // Deep oceanic processing
-	}
-};
+// Instrument configurations now managed by modular system in ./configs/
 
 // VoiceAssignment interface moved to voice-management/types.ts
 
@@ -439,6 +29,7 @@ export class AudioEngine {
 	private volume: Volume | null = null;
 	private voiceManager: VoiceManager;
 	private effectBusManager: EffectBusManager;
+	private instrumentConfigLoader: InstrumentConfigLoader;
 
 	// Real-time feedback properties
 	private previewTimeouts: Map<string, number> = new Map();
@@ -461,6 +52,10 @@ export class AudioEngine {
 		logger.debug('initialization', 'AudioEngine created');
 		this.voiceManager = new VoiceManager(true); // Enable adaptive quality by default
 		this.effectBusManager = new EffectBusManager();
+		this.instrumentConfigLoader = new InstrumentConfigLoader({
+			audioFormat: 'mp3',
+			preloadFamilies: true
+		});
 	}
 
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
@@ -618,22 +213,19 @@ export class AudioEngine {
 		// Legacy setter - no-op since we don't track this anymore
 	}
 
-	private getSamplerConfigs(): typeof SAMPLER_CONFIGS {
-		// Replace [format] placeholder with actual format (unless synthesis-only mode)
-		const format = this.settings.audioFormat;
-		const configs = JSON.parse(JSON.stringify(SAMPLER_CONFIGS)) as typeof SAMPLER_CONFIGS;
-		
-		// Skip format replacement in synthesis-only mode
-		if (format !== 'synthesis') {
-			Object.values(configs).forEach(config => {
-				Object.keys(config.urls).forEach(note => {
-					const noteKey = note as string;
-					(config.urls as any)[noteKey] = (config.urls as any)[noteKey].replace('[format]', format);
-				});
-			});
+	private getSamplerConfigs() {
+		// Use the new modular InstrumentConfigLoader instead of the monolithic SAMPLER_CONFIGS
+		// Skip format replacement in synthesis-only mode - the loader handles format processing
+		if (this.settings.audioFormat === 'synthesis') {
+			// In synthesis mode, return empty configs since we use synthesizers
+			return {};
 		}
 		
-		return configs;
+		// Load all instruments using the modular config system
+		const loadedInstruments = this.instrumentConfigLoader.loadAllInstruments();
+		
+		// Return the loaded instruments for compatibility
+		return loadedInstruments;
 	}
 
 	async initialize(): Promise<void> {
