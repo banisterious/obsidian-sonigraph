@@ -382,16 +382,32 @@ class MaterialControlPanelModal extends Modal {
   private contentContainer: HTMLElement;
   private appBar: HTMLElement;
   private drawer: HTMLElement;
+  private playButton: HTMLElement;
+  private instrumentToggles: Map<string, HTMLElement> = new Map();
 }
 ```
 
-**Six-Tab Interface System:**
+**Family-Based Tab Architecture:**
+- **Navigation Drawer**: Left sidebar with 10-tab navigation organized by family
+- **Content Area**: Dynamic content switching based on active tab
+- **Sticky Header**: Fixed header with title and global action buttons
+- **Material Design**: Monochrome styling using Obsidian's native color scheme
+
+**Ten-Tab Interface System:**
+
+**Core Tabs (3 tabs):**
 1. **Status Tab**: Real-time system diagnostics and performance metrics
 2. **Musical Tab**: Scale selection, root note, tempo, traversal methods
-3. **Instruments Tab**: 34-instrument management with enable/disable controls
-4. **Harmony Tab**: Harmonic engine configuration and consonance settings
-5. **Effects Tab**: Per-instrument effects routing and master bus controls
-6. **Settings Tab**: Plugin configuration and preferences
+3. **Master Tab**: Global controls, master effects, and bulk operations
+
+**Instrument Family Tabs (7 tabs):**
+4. **Strings Tab**: String family instruments (violin, cello, guitar, harp, piano, strings)
+5. **Woodwinds Tab**: Woodwind family (flute, clarinet, saxophone, oboe)
+6. **Brass Tab**: Brass family (trumpet, french horn, trombone, tuba)
+7. **Vocals Tab**: Vocal family (choir, vocal pads, soprano, alto, tenor, bass)
+8. **Percussion Tab**: Percussion family (timpani, xylophone, vibraphone, gongs)
+9. **Electronic Tab**: Electronic family (pad, lead synth, bass synth, arp synth)
+10. **Experimental Tab**: Experimental/environmental sounds (whale song)
 
 **Material Components:**
 - **MaterialCard**: Standardized card components with elevation
