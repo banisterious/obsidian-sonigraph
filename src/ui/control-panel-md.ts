@@ -1,6 +1,6 @@
 import { App, Modal, Setting } from 'obsidian';
 import SonigraphPlugin from '../main';
-import { getLogger } from '../logging';
+import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
 import { HarmonicSettings } from '../audio/harmonic-engine';
 import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmartRanges, getParameterRange, INSTRUMENT_INFO } from '../utils/constants';
@@ -278,6 +278,9 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Global Settings Card (moved from Master tab)
 		this.createGlobalSettingsCard();
+		
+		// Logging Card
+		this.createLoggingCard();
 	}
 
 	private createActiveInstrumentsCard(): void {
@@ -517,12 +520,12 @@ export class MaterialControlPanelModal extends Modal {
 		microtuningLabel.textContent = 'Enable Microtuning';
 		
 		const controlWrapper = microtuningGroup.createDiv({ cls: 'control-wrapper' });
-		const switchContainer = controlWrapper.createDiv({ cls: 'mdc-switch' });
+		const switchContainer = controlWrapper.createDiv({ cls: 'ospcc-switch' });
 		switchContainer.setAttribute('title', 'Toggle microtuning precision on/off');
 		
 		const microtuningToggle = switchContainer.createEl('input', { 
 			type: 'checkbox', 
-			cls: 'mdc-switch__input' 
+			cls: 'ospcc-switch__input' 
 		}) as HTMLInputElement;
 		microtuningToggle.checked = this.plugin.settings.microtuning ?? false;
 		microtuningToggle.addEventListener('change', () => {
@@ -530,8 +533,8 @@ export class MaterialControlPanelModal extends Modal {
 			this.handleMicrotuningChange(microtuningToggle.checked);
 		});
 		
-		const track = switchContainer.createDiv({ cls: 'mdc-switch__track' });
-		const thumb = track.createDiv({ cls: 'mdc-switch__thumb' });
+		const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		switchContainer.addEventListener('click', (e) => {
@@ -596,7 +599,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private handleAudioFormatChange(format: string): void {
 		logger.info('settings', `Audio format changed to ${format}`);
-		this.plugin.settings.audioFormat = format as 'mp3' | 'wav';
+		this.plugin.settings.audioFormat = format as 'synthesis' | 'mp3' | 'wav';
 		this.plugin.saveSettings();
 	}
 
@@ -614,16 +617,20 @@ export class MaterialControlPanelModal extends Modal {
 		const audioFormatGroup = globalContent.createDiv({ cls: 'osp-control-group' });
 		audioFormatGroup.createEl('label', { text: 'Audio Format', cls: 'osp-control-label' });
 		const formatSelect = audioFormatGroup.createEl('select', { cls: 'osp-select' });
-		['mp3', 'wav'].forEach(format => {
-			const option = formatSelect.createEl('option', { value: format, text: format.toUpperCase() });
-			if (format === this.plugin.settings.audioFormat) option.selected = true;
+		[
+			{ value: 'synthesis', text: 'Synthesis Only' },
+			{ value: 'mp3', text: 'MP3' },
+			{ value: 'wav', text: 'WAV' }
+		].forEach(format => {
+			const option = formatSelect.createEl('option', { value: format.value, text: format.text });
+			if (format.value === this.plugin.settings.audioFormat) option.selected = true;
 		});
 		formatSelect.addEventListener('change', () => {
 			this.handleAudioFormatChange(formatSelect.value);
 		});
 
 		// Bulk Action Chips
-		const globalChipSet = globalContent.createDiv({ cls: 'mdc-chip-set' });
+		const globalChipSet = globalContent.createDiv({ cls: 'ospcc-chip-set' });
 		globalChipSet.style.marginTop = 'var(--md-space-4)';
 		
 		const enableAllChip = new ActionChip({
@@ -649,6 +656,55 @@ export class MaterialControlPanelModal extends Modal {
 		globalChipSet.appendChild(optimizeChip.getElement());
 		
 		this.contentContainer.appendChild(globalCard.getElement());
+	}
+
+	private createLoggingCard(): void {
+		const loggingCard = new MaterialCard({
+			title: 'Logging',
+			iconName: 'file-text',
+			subtitle: 'Debug logging level and log export',
+			elevation: 1
+		});
+		
+		const loggingContent = loggingCard.getContent();
+		
+		// Logging Level Setting
+		const logLevelGroup = loggingContent.createDiv({ cls: 'osp-control-group' });
+		logLevelGroup.createEl('label', { text: 'Logging Level', cls: 'osp-control-label' });
+		const logLevelSelect = logLevelGroup.createEl('select', { cls: 'osp-select' });
+		
+		const logLevelOptions = [
+			{ value: 'off', text: 'Off' },
+			{ value: 'error', text: 'Errors Only' },
+			{ value: 'warn', text: 'Warnings' },
+			{ value: 'info', text: 'Info' },
+			{ value: 'debug', text: 'Debug' }
+		];
+		
+		logLevelOptions.forEach(option => {
+			const optionEl = logLevelSelect.createEl('option', { value: option.value, text: option.text });
+			if (option.value === LoggerFactory.getLogLevel()) optionEl.selected = true;
+		});
+		
+		logLevelSelect.addEventListener('change', () => {
+			const newLevel = logLevelSelect.value as LogLevel;
+			LoggerFactory.setLogLevel(newLevel);
+			logger.info('settings-change', 'Log level changed from Control Center', { level: newLevel });
+		});
+		
+		// Export Logs Action Chip
+		const logChipSet = loggingContent.createDiv({ cls: 'ospcc-chip-set' });
+		logChipSet.style.marginTop = 'var(--md-space-4)';
+		
+		const exportLogsChip = new ActionChip({
+			text: 'Export Logs',
+			iconName: 'download',
+			onToggle: (selected) => this.handleExportLogs(selected)
+		});
+		
+		logChipSet.appendChild(exportLogsChip.getElement());
+		
+		this.contentContainer.appendChild(loggingCard.getElement());
 	}
 
 	/**
@@ -737,12 +793,12 @@ export class MaterialControlPanelModal extends Modal {
 		titleArea.appendText(effectName);
 		
 		// Toggle switch
-		const toggleContainer = header.createDiv({ cls: 'mdc-switch' });
+		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
 		toggleContainer.setAttribute('title', `Toggle ${effectName} on/off`);
 		
 		const toggleInput = toggleContainer.createEl('input', { 
 			type: 'checkbox', 
-			cls: 'mdc-switch__input' 
+			cls: 'ospcc-switch__input' 
 		}) as HTMLInputElement;
 		toggleInput.checked = enabled;
 		toggleInput.addEventListener('change', () => {
@@ -750,8 +806,8 @@ export class MaterialControlPanelModal extends Modal {
 			this.handleMasterEffectEnabledChange(effectName.toLowerCase().replace(/\s+/g, ''), toggleInput.checked);
 		});
 		
-		const track = toggleContainer.createDiv({ cls: 'mdc-switch__track' });
-		const thumb = track.createDiv({ cls: 'mdc-switch__thumb' });
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -1003,7 +1059,7 @@ export class MaterialControlPanelModal extends Modal {
 			'This tab is under development'
 		);
 		
-		const content = card.querySelector('.mdc-card__content') as HTMLElement;
+		const content = card.querySelector('.ospcc-card__content') as HTMLElement;
 		content.textContent = `${tabConfig?.name || 'This'} tab functionality will be implemented soon...`;
 		
 		this.contentContainer.appendChild(card);
@@ -1466,13 +1522,13 @@ export class MaterialControlPanelModal extends Modal {
 		title.appendText(this.capitalizeWords(instrumentName));
 		
 		// Enable toggle
-		const toggleContainer = header.createDiv({ cls: 'mdc-switch' });
+		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
 		toggleContainer.setAttribute('data-tooltip', `Toggle ${this.capitalizeWords(instrumentName)} on/off`);
 		toggleContainer.setAttribute('title', `Toggle ${this.capitalizeWords(instrumentName)} on/off`);
 		
 		const toggleInput = toggleContainer.createEl('input', { 
 			type: 'checkbox', 
-			cls: 'mdc-switch__input' 
+			cls: 'ospcc-switch__input' 
 		}) as HTMLInputElement;
 		toggleInput.checked = options.enabled;
 		toggleInput.addEventListener('change', () => {
@@ -1480,8 +1536,8 @@ export class MaterialControlPanelModal extends Modal {
 			this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
 		});
 		
-		const track = toggleContainer.createDiv({ cls: 'mdc-switch__track' });
-		const thumb = track.createDiv({ cls: 'mdc-switch__thumb' });
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -1556,21 +1612,21 @@ export class MaterialControlPanelModal extends Modal {
 		const label = toggleGroup.createDiv({ cls: 'osp-effect-toggle-label' });
 		label.textContent = effectName;
 		
-		const toggleContainer = toggleGroup.createDiv({ cls: 'mdc-switch osp-effect-toggle' });
+		const toggleContainer = toggleGroup.createDiv({ cls: 'ospcc-switch osp-effect-toggle' });
 		toggleContainer.setAttribute('data-tooltip', `Toggle ${effectName} for ${this.capitalizeWords(instrumentName)}`);
 		toggleContainer.setAttribute('title', `Toggle ${effectName} for ${this.capitalizeWords(instrumentName)}`);
 		
 		const toggleInput = toggleContainer.createEl('input', { 
 			type: 'checkbox', 
-			cls: 'mdc-switch__input' 
+			cls: 'ospcc-switch__input' 
 		}) as HTMLInputElement;
 		toggleInput.checked = enabled;
 		toggleInput.addEventListener('change', (e) => {
 			this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
 		});
 		
-		const track = toggleContainer.createDiv({ cls: 'mdc-switch__track' });
-		const thumb = track.createDiv({ cls: 'mdc-switch__thumb' });
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -1681,6 +1737,27 @@ export class MaterialControlPanelModal extends Modal {
 			this.plugin.saveSettings();
 			// Refresh current tab to show updated state
 			this.showTab(this.activeTab);
+		}
+	}
+
+	private handleExportLogs(selected: boolean): void {
+		if (selected) {
+			logger.info('ui', 'Exporting logs from Control Center');
+			
+			const now = new Date();
+			const pad = (n: number) => n.toString().padStart(2, '0');
+			const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+			const logs = LoggerFactory.getLogs();
+			const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			logger.info('export', 'Logs exported from Control Center', { filename });
 		}
 	}
 }

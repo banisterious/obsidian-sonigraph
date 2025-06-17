@@ -37,7 +37,7 @@ var DEFAULT_SETTINGS = {
   rootNote: "C",
   traversalMethod: "breadth-first",
   isEnabled: true,
-  audioFormat: "mp3",
+  audioFormat: "synthesis",
   microtuning: false,
   effects: {
     orchestralreverbhall: { enabled: true },
@@ -1855,7 +1855,7 @@ var MaterialCard = class {
   }
   createCardContainer(options) {
     const card = document.createElement("div");
-    card.className = `mdc-card ${options.elevation ? `mdc-elevation-${options.elevation}` : ""} ${options.className || ""}`;
+    card.className = `ospcc-card ${options.elevation ? `ospcc-elevation-${options.elevation}` : ""} ${options.className || ""}`;
     if (options.onClick) {
       card.style.cursor = "pointer";
       card.addEventListener("click", options.onClick);
@@ -1864,21 +1864,21 @@ var MaterialCard = class {
   }
   createHeader(options) {
     const header = document.createElement("div");
-    header.className = "mdc-card__header";
-    const titleContainer = header.createDiv({ cls: "mdc-card__title" });
+    header.className = "ospcc-card__header";
+    const titleContainer = header.createDiv({ cls: "ospcc-card__title" });
     if (options.iconName) {
       const icon = createLucideIcon(options.iconName, 24);
       titleContainer.appendChild(icon);
     }
     titleContainer.appendText(options.title);
     if (options.subtitle) {
-      const subtitle = header.createDiv({ cls: "mdc-card__subtitle" });
+      const subtitle = header.createDiv({ cls: "ospcc-card__subtitle" });
       subtitle.textContent = options.subtitle;
     }
     return header;
   }
   createContent() {
-    return this.container.createDiv({ cls: "mdc-card__content" });
+    return this.container.createDiv({ cls: "ospcc-card__content" });
   }
   /**
    * Get the content container for adding content
@@ -1897,7 +1897,7 @@ var MaterialCard = class {
    */
   addActions() {
     if (!this.actions) {
-      this.actions = this.container.createDiv({ cls: "mdc-card__actions" });
+      this.actions = this.container.createDiv({ cls: "ospcc-card__actions" });
     }
     return this.actions;
   }
@@ -1905,7 +1905,7 @@ var MaterialCard = class {
    * Update the card title
    */
   setTitle(title) {
-    const titleEl = this.header.querySelector(".mdc-card__title");
+    const titleEl = this.header.querySelector(".ospcc-card__title");
     if (titleEl) {
       const textNode = Array.from(titleEl.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
       if (textNode) {
@@ -1917,9 +1917,9 @@ var MaterialCard = class {
    * Update the card subtitle
    */
   setSubtitle(subtitle) {
-    let subtitleEl = this.header.querySelector(".mdc-card__subtitle");
+    let subtitleEl = this.header.querySelector(".ospcc-card__subtitle");
     if (!subtitleEl) {
-      subtitleEl = this.header.createDiv({ cls: "mdc-card__subtitle" });
+      subtitleEl = this.header.createDiv({ cls: "ospcc-card__subtitle" });
     }
     subtitleEl.textContent = subtitle;
   }
@@ -1945,19 +1945,19 @@ var EffectSection = class {
     const icon = createLucideIcon(this.options.iconName, 20);
     title.appendChild(icon);
     title.appendText(this.options.effectName);
-    const toggleContainer = container.createDiv({ cls: "mdc-switch" });
+    const toggleContainer = container.createDiv({ cls: "ospcc-switch" });
     toggleContainer.style.marginLeft = "auto";
     toggleContainer.style.transform = "scale(0.8)";
     this.enableSwitch = toggleContainer.createEl("input", {
       type: "checkbox",
-      cls: "mdc-switch__input"
+      cls: "ospcc-switch__input"
     });
     this.enableSwitch.checked = this.options.enabled;
     this.enableSwitch.addEventListener("change", () => {
       this.updateEnabledState(this.enableSwitch.checked);
     });
-    const track = toggleContainer.createDiv({ cls: "mdc-switch__track" });
-    const thumb = track.createDiv({ cls: "mdc-switch__thumb" });
+    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
     toggleContainer.addEventListener("click", (e) => {
       if (e.target !== this.enableSwitch) {
         e.preventDefault();
@@ -2010,7 +2010,7 @@ var ActionChip = class {
   }
   createActionChip() {
     const chip = document.createElement("div");
-    chip.className = `mdc-chip ${this.options.selected ? "mdc-chip--selected" : ""} ${this.options.className || ""}`;
+    chip.className = `ospcc-chip ${this.options.selected ? "ospcc-chip--selected" : ""} ${this.options.className || ""}`;
     if (this.options.iconName) {
       const icon = createLucideIcon(this.options.iconName, 16);
       chip.appendChild(icon);
@@ -2030,7 +2030,7 @@ var ActionChip = class {
   toggle() {
     const newSelected = !this.options.selected;
     this.options.selected = newSelected;
-    this.container.classList.toggle("mdc-chip--selected", newSelected);
+    this.container.classList.toggle("ospcc-chip--selected", newSelected);
     if (this.options.onToggle) {
       this.options.onToggle(newSelected);
     }
@@ -2040,7 +2040,7 @@ var ActionChip = class {
   }
   setSelected(selected) {
     this.options.selected = selected;
-    this.container.classList.toggle("mdc-chip--selected", selected);
+    this.container.classList.toggle("ospcc-chip--selected", selected);
   }
   setText(text) {
     const textNode = Array.from(this.container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
@@ -2057,12 +2057,12 @@ var MaterialSlider = class {
   }
   createSlider() {
     const sliderContainer = document.createElement("div");
-    sliderContainer.className = `mdc-slider-container ${this.options.className || ""}`;
-    this.slider = sliderContainer.createDiv({ cls: "mdc-slider" });
-    const trackContainer = this.slider.createDiv({ cls: "mdc-slider__track-container" });
-    this.track = trackContainer.createDiv({ cls: "mdc-slider__track" });
-    const activeTrack = this.track.createDiv({ cls: "mdc-slider__track-active" });
-    this.thumb = this.slider.createDiv({ cls: "mdc-slider__thumb" });
+    sliderContainer.className = `ospcc-slider-container ${this.options.className || ""}`;
+    this.slider = sliderContainer.createDiv({ cls: "ospcc-slider" });
+    const trackContainer = this.slider.createDiv({ cls: "ospcc-slider__track-container" });
+    this.track = trackContainer.createDiv({ cls: "ospcc-slider__track" });
+    const activeTrack = this.track.createDiv({ cls: "ospcc-slider__track-active" });
+    this.thumb = this.slider.createDiv({ cls: "ospcc-slider__thumb" });
     this.valueDisplay = sliderContainer.createDiv({ cls: "slider-value" });
     this.setupInteraction();
     return sliderContainer;
@@ -2111,7 +2111,7 @@ var MaterialSlider = class {
     const max = this.options.max || 1;
     const percentage = (this.options.value - min) / (max - min) * 100;
     this.thumb.style.left = `${percentage}%`;
-    const activeTrack = this.track.querySelector(".mdc-slider__track-active");
+    const activeTrack = this.track.querySelector(".ospcc-slider__track-active");
     if (activeTrack) {
       activeTrack.style.width = `${percentage}%`;
     }
@@ -2136,7 +2136,7 @@ var MaterialSlider = class {
 };
 function createGrid(columns) {
   const grid = document.createElement("div");
-  grid.className = `mdc-grid ${columns ? `mdc-grid--${columns}` : ""}`;
+  grid.className = `ospcc-grid ${columns ? `ospcc-grid--${columns}` : ""}`;
   return grid;
 }
 
@@ -2326,6 +2326,7 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     this.createPerformanceMetricsCard();
     this.createAudioSystemCard();
     this.createGlobalSettingsCard();
+    this.createLoggingCard();
   }
   createActiveInstrumentsCard() {
     const card = new MaterialCard({
@@ -2509,19 +2510,19 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const microtuningLabel = microtuningGroup.createEl("label", { cls: "control-label" });
     microtuningLabel.textContent = "Enable Microtuning";
     const controlWrapper = microtuningGroup.createDiv({ cls: "control-wrapper" });
-    const switchContainer = controlWrapper.createDiv({ cls: "mdc-switch" });
+    const switchContainer = controlWrapper.createDiv({ cls: "ospcc-switch" });
     switchContainer.setAttribute("title", "Toggle microtuning precision on/off");
     const microtuningToggle = switchContainer.createEl("input", {
       type: "checkbox",
-      cls: "mdc-switch__input"
+      cls: "ospcc-switch__input"
     });
     microtuningToggle.checked = (_a = this.plugin.settings.microtuning) != null ? _a : false;
     microtuningToggle.addEventListener("change", () => {
       logger3.debug("ui", "Microtuning toggle changed", { enabled: microtuningToggle.checked });
       this.handleMicrotuningChange(microtuningToggle.checked);
     });
-    const track = switchContainer.createDiv({ cls: "mdc-switch__track" });
-    const thumb = track.createDiv({ cls: "mdc-switch__thumb" });
+    const track = switchContainer.createDiv({ cls: "ospcc-switch__track" });
+    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
     switchContainer.addEventListener("click", (e) => {
       if (e.target !== microtuningToggle) {
         e.preventDefault();
@@ -2584,15 +2585,19 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const audioFormatGroup = globalContent.createDiv({ cls: "osp-control-group" });
     audioFormatGroup.createEl("label", { text: "Audio Format", cls: "osp-control-label" });
     const formatSelect = audioFormatGroup.createEl("select", { cls: "osp-select" });
-    ["mp3", "wav"].forEach((format) => {
-      const option = formatSelect.createEl("option", { value: format, text: format.toUpperCase() });
-      if (format === this.plugin.settings.audioFormat)
+    [
+      { value: "synthesis", text: "Synthesis Only" },
+      { value: "mp3", text: "MP3" },
+      { value: "wav", text: "WAV" }
+    ].forEach((format) => {
+      const option = formatSelect.createEl("option", { value: format.value, text: format.text });
+      if (format.value === this.plugin.settings.audioFormat)
         option.selected = true;
     });
     formatSelect.addEventListener("change", () => {
       this.handleAudioFormatChange(formatSelect.value);
     });
-    const globalChipSet = globalContent.createDiv({ cls: "mdc-chip-set" });
+    const globalChipSet = globalContent.createDiv({ cls: "ospcc-chip-set" });
     globalChipSet.style.marginTop = "var(--md-space-4)";
     const enableAllChip = new ActionChip({
       text: "Enable All Instruments",
@@ -2613,6 +2618,44 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     globalChipSet.appendChild(resetAllChip.getElement());
     globalChipSet.appendChild(optimizeChip.getElement());
     this.contentContainer.appendChild(globalCard.getElement());
+  }
+  createLoggingCard() {
+    const loggingCard = new MaterialCard({
+      title: "Logging",
+      iconName: "file-text",
+      subtitle: "Debug logging level and log export",
+      elevation: 1
+    });
+    const loggingContent = loggingCard.getContent();
+    const logLevelGroup = loggingContent.createDiv({ cls: "osp-control-group" });
+    logLevelGroup.createEl("label", { text: "Logging Level", cls: "osp-control-label" });
+    const logLevelSelect = logLevelGroup.createEl("select", { cls: "osp-select" });
+    const logLevelOptions = [
+      { value: "off", text: "Off" },
+      { value: "error", text: "Errors Only" },
+      { value: "warn", text: "Warnings" },
+      { value: "info", text: "Info" },
+      { value: "debug", text: "Debug" }
+    ];
+    logLevelOptions.forEach((option) => {
+      const optionEl = logLevelSelect.createEl("option", { value: option.value, text: option.text });
+      if (option.value === LoggerFactory.getLogLevel())
+        optionEl.selected = true;
+    });
+    logLevelSelect.addEventListener("change", () => {
+      const newLevel = logLevelSelect.value;
+      LoggerFactory.setLogLevel(newLevel);
+      logger3.info("settings-change", "Log level changed from Control Center", { level: newLevel });
+    });
+    const logChipSet = loggingContent.createDiv({ cls: "ospcc-chip-set" });
+    logChipSet.style.marginTop = "var(--md-space-4)";
+    const exportLogsChip = new ActionChip({
+      text: "Export Logs",
+      iconName: "download",
+      onToggle: (selected) => this.handleExportLogs(selected)
+    });
+    logChipSet.appendChild(exportLogsChip.getElement());
+    this.contentContainer.appendChild(loggingCard.getElement());
   }
   /**
    * Create Master tab content
@@ -2693,19 +2736,19 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const icon = createLucideIcon(iconName, 16);
     titleArea.appendChild(icon);
     titleArea.appendText(effectName);
-    const toggleContainer = header.createDiv({ cls: "mdc-switch" });
+    const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
     toggleContainer.setAttribute("title", `Toggle ${effectName} on/off`);
     const toggleInput = toggleContainer.createEl("input", {
       type: "checkbox",
-      cls: "mdc-switch__input"
+      cls: "ospcc-switch__input"
     });
     toggleInput.checked = enabled;
     toggleInput.addEventListener("change", () => {
       logger3.debug("ui", "Master effect toggle changed", { effectName, enabled: toggleInput.checked });
       this.handleMasterEffectEnabledChange(effectName.toLowerCase().replace(/\s+/g, ""), toggleInput.checked);
     });
-    const track = toggleContainer.createDiv({ cls: "mdc-switch__track" });
-    const thumb = track.createDiv({ cls: "mdc-switch__thumb" });
+    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
     toggleContainer.addEventListener("click", (e) => {
       if (e.target !== toggleInput) {
         e.preventDefault();
@@ -2915,7 +2958,7 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
       (tabConfig == null ? void 0 : tabConfig.icon) || "settings",
       "This tab is under development"
     );
-    const content = card.querySelector(".mdc-card__content");
+    const content = card.querySelector(".ospcc-card__content");
     content.textContent = `${(tabConfig == null ? void 0 : tabConfig.name) || "This"} tab functionality will be implemented soon...`;
     this.contentContainer.appendChild(card);
   }
@@ -3286,20 +3329,20 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
     title.appendChild(icon);
     title.appendText(this.capitalizeWords(instrumentName));
-    const toggleContainer = header.createDiv({ cls: "mdc-switch" });
+    const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
     toggleContainer.setAttribute("data-tooltip", `Toggle ${this.capitalizeWords(instrumentName)} on/off`);
     toggleContainer.setAttribute("title", `Toggle ${this.capitalizeWords(instrumentName)} on/off`);
     const toggleInput = toggleContainer.createEl("input", {
       type: "checkbox",
-      cls: "mdc-switch__input"
+      cls: "ospcc-switch__input"
     });
     toggleInput.checked = options.enabled;
     toggleInput.addEventListener("change", () => {
       logger3.debug("ui", "Instrument toggle changed", { instrumentName, enabled: toggleInput.checked });
       this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
     });
-    const track = toggleContainer.createDiv({ cls: "mdc-switch__track" });
-    const thumb = track.createDiv({ cls: "mdc-switch__thumb" });
+    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
     toggleContainer.addEventListener("click", (e) => {
       if (e.target !== toggleInput) {
         e.preventDefault();
@@ -3350,19 +3393,19 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const toggleGroup = container.createDiv({ cls: "osp-effect-toggle-group" });
     const label = toggleGroup.createDiv({ cls: "osp-effect-toggle-label" });
     label.textContent = effectName;
-    const toggleContainer = toggleGroup.createDiv({ cls: "mdc-switch osp-effect-toggle" });
+    const toggleContainer = toggleGroup.createDiv({ cls: "ospcc-switch osp-effect-toggle" });
     toggleContainer.setAttribute("data-tooltip", `Toggle ${effectName} for ${this.capitalizeWords(instrumentName)}`);
     toggleContainer.setAttribute("title", `Toggle ${effectName} for ${this.capitalizeWords(instrumentName)}`);
     const toggleInput = toggleContainer.createEl("input", {
       type: "checkbox",
-      cls: "mdc-switch__input"
+      cls: "ospcc-switch__input"
     });
     toggleInput.checked = enabled;
     toggleInput.addEventListener("change", (e) => {
       this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
     });
-    const track = toggleContainer.createDiv({ cls: "mdc-switch__track" });
-    const thumb = track.createDiv({ cls: "mdc-switch__thumb" });
+    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
     toggleContainer.addEventListener("click", (e) => {
       if (e.target !== toggleInput) {
         e.preventDefault();
@@ -3449,6 +3492,25 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     if (selected) {
       this.plugin.saveSettings();
       this.showTab(this.activeTab);
+    }
+  }
+  handleExportLogs(selected) {
+    if (selected) {
+      logger3.info("ui", "Exporting logs from Control Center");
+      const now3 = new Date();
+      const pad = (n) => n.toString().padStart(2, "0");
+      const filename = `osp-logs-${now3.getFullYear()}${pad(now3.getMonth() + 1)}${pad(now3.getDate())}-${pad(now3.getHours())}${pad(now3.getMinutes())}${pad(now3.getSeconds())}.json`;
+      const logs = LoggerFactory.getLogs();
+      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      logger3.info("export", "Logs exported from Control Center", { filename });
     }
   }
 };
@@ -20526,6 +20588,111 @@ var Synth = class extends Monophonic {
   }
 };
 
+// node_modules/tone/build/esm/instrument/ModulationSynth.js
+var ModulationSynth = class extends Monophonic {
+  constructor() {
+    super(optionsFromArguments(ModulationSynth.getDefaults(), arguments));
+    this.name = "ModulationSynth";
+    const options = optionsFromArguments(ModulationSynth.getDefaults(), arguments);
+    this._carrier = new Synth({
+      context: this.context,
+      oscillator: options.oscillator,
+      envelope: options.envelope,
+      onsilence: () => this.onsilence(this),
+      volume: -10
+    });
+    this._modulator = new Synth({
+      context: this.context,
+      oscillator: options.modulation,
+      envelope: options.modulationEnvelope,
+      volume: -10
+    });
+    this.oscillator = this._carrier.oscillator;
+    this.envelope = this._carrier.envelope;
+    this.modulation = this._modulator.oscillator;
+    this.modulationEnvelope = this._modulator.envelope;
+    this.frequency = new Signal({
+      context: this.context,
+      units: "frequency"
+    });
+    this.detune = new Signal({
+      context: this.context,
+      value: options.detune,
+      units: "cents"
+    });
+    this.harmonicity = new Multiply({
+      context: this.context,
+      value: options.harmonicity,
+      minValue: 0
+    });
+    this._modulationNode = new Gain({
+      context: this.context,
+      gain: 0
+    });
+    readOnly(this, ["frequency", "harmonicity", "oscillator", "envelope", "modulation", "modulationEnvelope", "detune"]);
+  }
+  static getDefaults() {
+    return Object.assign(Monophonic.getDefaults(), {
+      harmonicity: 3,
+      oscillator: Object.assign(omitFromObject(OmniOscillator.getDefaults(), [
+        ...Object.keys(Source.getDefaults()),
+        "frequency",
+        "detune"
+      ]), {
+        type: "sine"
+      }),
+      envelope: Object.assign(omitFromObject(Envelope.getDefaults(), Object.keys(ToneAudioNode.getDefaults())), {
+        attack: 0.01,
+        decay: 0.01,
+        sustain: 1,
+        release: 0.5
+      }),
+      modulation: Object.assign(omitFromObject(OmniOscillator.getDefaults(), [
+        ...Object.keys(Source.getDefaults()),
+        "frequency",
+        "detune"
+      ]), {
+        type: "square"
+      }),
+      modulationEnvelope: Object.assign(omitFromObject(Envelope.getDefaults(), Object.keys(ToneAudioNode.getDefaults())), {
+        attack: 0.5,
+        decay: 0,
+        sustain: 1,
+        release: 0.5
+      })
+    });
+  }
+  /**
+   * Trigger the attack portion of the note
+   */
+  _triggerEnvelopeAttack(time, velocity) {
+    this._carrier._triggerEnvelopeAttack(time, velocity);
+    this._modulator._triggerEnvelopeAttack(time, velocity);
+  }
+  /**
+   * Trigger the release portion of the note
+   */
+  _triggerEnvelopeRelease(time) {
+    this._carrier._triggerEnvelopeRelease(time);
+    this._modulator._triggerEnvelopeRelease(time);
+    return this;
+  }
+  getLevelAtTime(time) {
+    time = this.toSeconds(time);
+    return this.envelope.getValueAtTime(time);
+  }
+  dispose() {
+    super.dispose();
+    this._carrier.dispose();
+    this._modulator.dispose();
+    this.frequency.dispose();
+    this.detune.dispose();
+    this.harmonicity.dispose();
+    this._modulationNode.dispose();
+    return this;
+  }
+};
+
 // node_modules/tone/build/esm/component/filter/BiquadFilter.js
 var BiquadFilter = class extends ToneAudioNode {
   constructor() {
@@ -20759,6 +20926,36 @@ var Filter = class extends ToneAudioNode {
     this.Q.dispose();
     this.detune.dispose();
     this.gain.dispose();
+    return this;
+  }
+};
+
+// node_modules/tone/build/esm/instrument/FMSynth.js
+var FMSynth = class extends ModulationSynth {
+  constructor() {
+    super(optionsFromArguments(FMSynth.getDefaults(), arguments));
+    this.name = "FMSynth";
+    const options = optionsFromArguments(FMSynth.getDefaults(), arguments);
+    this.modulationIndex = new Multiply({
+      context: this.context,
+      value: options.modulationIndex
+    });
+    this.frequency.connect(this._carrier.frequency);
+    this.frequency.chain(this.harmonicity, this._modulator.frequency);
+    this.frequency.chain(this.modulationIndex, this._modulationNode);
+    this.detune.fan(this._carrier.detune, this._modulator.detune);
+    this._modulator.connect(this._modulationNode.gain);
+    this._modulationNode.connect(this._carrier.frequency);
+    this._carrier.connect(this.output);
+  }
+  static getDefaults() {
+    return Object.assign(ModulationSynth.getDefaults(), {
+      modulationIndex: 10
+    });
+  }
+  dispose() {
+    super.dispose();
+    this.modulationIndex.dispose();
     return this;
   }
 };
@@ -24038,19 +24235,22 @@ var SAMPLER_CONFIGS = {
   // Phase 8B: Environmental & Natural Sounds
   whaleHumpback: {
     urls: {
-      "C1": "C1.[format]",
-      "F1": "F1.[format]",
-      "Bb1": "Bb1.[format]",
-      "C2": "C2.[format]",
-      "F2": "F2.[format]",
-      "Bb2": "Bb2.[format]",
-      "C3": "C3.[format]",
-      "F3": "F3.[format]"
+      // Public domain NOAA humpback whale recordings from Internet Archive
+      // Single whale recording mapped to multiple pitches for musical use
+      // Available for download when sample downloading feature is implemented
+      "C1": "whale_song.mp3",
+      "F1": "whale_song.mp3",
+      "Bb1": "whale_song.mp3",
+      "C2": "whale_song.mp3",
+      "F2": "whale_song.mp3",
+      "Bb2": "whale_song.mp3",
+      "C3": "whale_song.mp3",
+      "F3": "whale_song.mp3"
     },
     release: 12,
     // Long whale song sustains
-    baseUrl: "https://freesound.org/data/previews/316/316847_5245022-hq.mp3",
-    // Scientific whale recordings
+    baseUrl: "https://archive.org/download/WhaleSong_928/",
+    // Public domain NOAA scientific recordings
     effects: ["reverb", "chorus", "filter"]
     // Deep oceanic processing
   }
@@ -24107,12 +24307,14 @@ var AudioEngine = class {
   getSamplerConfigs() {
     const format = this.settings.audioFormat;
     const configs = JSON.parse(JSON.stringify(SAMPLER_CONFIGS));
-    Object.values(configs).forEach((config) => {
-      Object.keys(config.urls).forEach((note) => {
-        const noteKey = note;
-        config.urls[noteKey] = config.urls[noteKey].replace("[format]", format);
+    if (format !== "synthesis") {
+      Object.values(configs).forEach((config) => {
+        Object.keys(config.urls).forEach((note) => {
+          const noteKey = note;
+          config.urls[noteKey] = config.urls[noteKey].replace("[format]", format);
+        });
       });
-    });
+    }
     return configs;
   }
   async initialize() {
@@ -24855,11 +25057,139 @@ var AudioEngine = class {
     }
     tubaOutput.connect(this.volume);
     this.instruments.set("tuba", tubaSampler);
+    this.initializeWhaleSynthesizer();
+    this.initializeMissingInstruments();
     this.applyInstrumentSettings();
     logger6.debug("instruments", "All sampled instruments initialized", {
       instrumentCount: this.instruments.size,
       instruments: Array.from(this.instruments.keys()),
       volumeControls: Array.from(this.instrumentVolumes.keys())
+    });
+  }
+  /**
+   * Initialize persistent whale synthesizer for environmental sounds
+   */
+  initializeWhaleSynthesizer() {
+    logger6.debug("environmental", "Initializing persistent whale synthesizer");
+    const whaleSynth = new PolySynth(FMSynth, {
+      harmonicity: 0.5,
+      modulationIndex: 12,
+      oscillator: { type: "sine" },
+      modulation: { type: "sine" },
+      envelope: {
+        attack: 0.3 + Math.random() * 0.4,
+        // 0.3-0.7 second attack
+        decay: 0.5,
+        sustain: 0.9,
+        release: 2 + Math.random() * 3
+        // 2-5 second release
+      },
+      modulationEnvelope: {
+        attack: 1,
+        decay: 0.5,
+        sustain: 0.6,
+        release: 4
+      }
+    });
+    const whaleVolume = new Volume(-6);
+    this.instrumentVolumes.set("whaleHumpback", whaleVolume);
+    const whaleReverb = new Reverb({
+      decay: 8,
+      // Very long reverb for oceanic effect
+      wet: 0.4
+    });
+    const whaleChorus = new Chorus({
+      frequency: 0.3,
+      // Very slow chorus for underwater movement
+      depth: 0.8,
+      delayTime: 8,
+      feedback: 0.1
+    });
+    whaleReverb.generate().then(() => {
+      whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+      logger6.debug("environmental", "Whale synthesizer effects chain connected");
+    }).catch((error) => {
+      logger6.warn("environmental", "Failed to generate whale reverb, using fallback", error);
+      whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+    });
+    this.instruments.set("whaleHumpback", whaleSynth);
+    if (!this.instrumentEffects.has("whaleHumpback")) {
+      this.instrumentEffects.set("whaleHumpback", /* @__PURE__ */ new Map());
+    }
+    const whaleEffects = this.instrumentEffects.get("whaleHumpback");
+    if (whaleEffects) {
+      whaleEffects.set("reverb", whaleReverb);
+      whaleEffects.set("chorus", whaleChorus);
+    }
+    logger6.info("environmental", "Persistent whale synthesizer initialized successfully");
+  }
+  /**
+   * Initialize any instruments that exist in SAMPLER_CONFIGS but weren't manually created above
+   */
+  initializeMissingInstruments() {
+    if (this.settings.audioFormat === "synthesis") {
+      logger6.info("instruments", "Synthesis-only mode enabled - skipping all sample loading");
+      return;
+    }
+    const configs = this.getSamplerConfigs();
+    const configKeys = Object.keys(configs);
+    const initializedKeys = Array.from(this.instruments.keys());
+    const missingKeys = configKeys.filter((key) => !initializedKeys.includes(key));
+    logger6.debug("instruments", "Initializing missing instruments", {
+      totalConfigs: configKeys.length,
+      alreadyInitialized: initializedKeys.length,
+      missing: missingKeys.length,
+      missingInstruments: missingKeys,
+      audioFormat: this.settings.audioFormat
+    });
+    missingKeys.forEach((instrumentName) => {
+      var _a, _b, _c;
+      try {
+        if (this.isEnvironmentalInstrument(instrumentName)) {
+          logger6.debug("instruments", `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
+          const volume2 = new Volume(-6);
+          this.instrumentVolumes.set(instrumentName, volume2);
+          logger6.debug("instruments", `Created volume control for environmental instrument: ${instrumentName}`);
+          return;
+        }
+        const config = configs[instrumentName];
+        const sampler = new Sampler({
+          ...config,
+          onload: () => {
+            logger6.debug("samples", `${instrumentName} samples loaded successfully`);
+          },
+          onerror: (error) => {
+            logger6.warn("samples", `${instrumentName} samples failed to load, using basic synthesis`, { error });
+          }
+        });
+        const volume = new Volume(-6);
+        this.instrumentVolumes.set(instrumentName, volume);
+        let output = sampler.connect(volume);
+        const effects = this.instrumentEffects.get(instrumentName);
+        const instrumentSettings = this.settings.instruments[instrumentName];
+        if (effects && (instrumentSettings == null ? void 0 : instrumentSettings.effects)) {
+          if ((_a = instrumentSettings.effects.reverb) == null ? void 0 : _a.enabled) {
+            const reverb = effects.get("reverb");
+            if (reverb)
+              output = output.connect(reverb);
+          }
+          if ((_b = instrumentSettings.effects.chorus) == null ? void 0 : _b.enabled) {
+            const chorus = effects.get("chorus");
+            if (chorus)
+              output = output.connect(chorus);
+          }
+          if ((_c = instrumentSettings.effects.filter) == null ? void 0 : _c.enabled) {
+            const filter = effects.get("filter");
+            if (filter)
+              output = output.connect(filter);
+          }
+        }
+        output.connect(this.volume);
+        this.instruments.set(instrumentName, sampler);
+        logger6.debug("instruments", `Dynamically initialized ${instrumentName}`);
+      } catch (error) {
+        logger6.error("instruments", `Failed to initialize ${instrumentName}`, { error });
+      }
     });
   }
   async playSequence(sequence) {
@@ -24936,13 +25266,15 @@ var AudioEngine = class {
               this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time);
             } else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
               this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time);
+            } else if (this.isEnvironmentalInstrument(instrumentName)) {
+              this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, time);
             } else {
               const synth = this.instruments.get(instrumentName);
               if (synth) {
                 synth.triggerAttackRelease(frequency, duration, time, velocity);
               }
             }
-            if (this.instruments.get(instrumentName)) {
+            if (this.instruments.get(instrumentName) || this.isEnvironmentalInstrument(instrumentName) || this.isElectronicInstrument(instrumentName) || this.isPercussionInstrument(instrumentName)) {
               logger6.debug("playback", "Note triggered", {
                 nodeId: mapping.nodeId,
                 instrument: instrumentName,
@@ -24953,11 +25285,7 @@ var AudioEngine = class {
                 actualTime: time.toFixed(3)
               });
             } else {
-              logger6.warn("trigger", `Instrument ${instrumentName} not found, using piano`);
-              const pianoSynth = this.instruments.get("piano");
-              if (pianoSynth) {
-                pianoSynth.triggerAttackRelease(frequency, duration, time, velocity);
-              }
+              logger6.warn("trigger", `Instrument ${instrumentName} not found - skipping note (no fallback)`);
             }
           } else {
             logger6.warn("trigger", "Skipping note - instruments unavailable or stopped");
@@ -26140,6 +26468,9 @@ var AudioEngine = class {
   isElectronicInstrument(instrumentName) {
     return ["leadSynth", "bassSynth", "arpSynth"].includes(instrumentName);
   }
+  isEnvironmentalInstrument(instrumentName) {
+    return ["whaleHumpback"].includes(instrumentName);
+  }
   /**
    * Trigger advanced percussion with specialized synthesis
    */
@@ -26208,6 +26539,28 @@ var AudioEngine = class {
       if (synth) {
         synth.triggerAttackRelease(frequency, duration, time, velocity);
       }
+    }
+  }
+  /**
+   * Trigger environmental sounds with specialized synthesis
+   */
+  triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, time) {
+    try {
+      switch (instrumentName) {
+        case "whaleHumpback":
+          const whaleSynth = this.instruments.get("whaleHumpback");
+          if (!whaleSynth) {
+            logger6.warn("environmental-sound", "Persistent whale synthesizer not found");
+            return;
+          }
+          const whaleFreq = Math.max(frequency * 0.5, 40);
+          whaleSynth.triggerAttackRelease(whaleFreq, duration, time, velocity * 0.8);
+          logger6.debug("environmental-sound", `Whale sound triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
+          break;
+      }
+      logger6.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
+    } catch (error) {
+      logger6.error("environmental-sound", `Failed to trigger ${instrumentName}`, error);
     }
   }
   /**

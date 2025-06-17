@@ -1,9 +1,27 @@
 # Sonigraph Instrument Sources Reference
 
-**Document Version**: 1.0  
-**Last Updated**: June 16, 2025  
+**Document Version**: 2.0  
+**Last Updated**: June 17, 2025  
 **Total Instruments**: 34  
 **Coverage**: Complete Orchestral Vision + Environmental Sounds
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Default Enabled Instruments](#default-enabled-instruments)
+3. [🎤 Vocal Family (6 Instruments)](#-vocal-family-6-instruments)
+4. [🎹 Keyboard Family (6 Instruments)](#-keyboard-family-6-instruments)
+5. [🎻 Strings Family (5 Instruments)](#-strings-family-5-instruments)
+6. [🎺 Brass Family (4 Instruments)](#-brass-family-4-instruments)
+7. [🎷 Woodwinds Family (4 Instruments)](#-woodwinds-family-4-instruments)
+8. [🥁 Percussion Family (4 Instruments)](#-percussion-family-4-instruments)
+9. [🌟 Electronic Family (4 Instruments)](#-electronic-family-4-instruments)
+10. [🌊 Environmental Family (1 Instrument)](#-environmental-family-1-instrument)
+11. [Technical Implementation Details](#technical-implementation-details)
+12. [External Dependencies](#external-dependencies)
+13. [Future Expansion Considerations](#future-expansion-considerations)
 
 ---
 
@@ -15,11 +33,13 @@ This document provides a comprehensive catalog of all sample sources, synthesis 
 
 For optimal user experience, **5 core instruments** are enabled by default:
 
-✅ **Piano** - Essential keyboard instrument with professional grand piano samples  
-✅ **Strings** - Orchestral foundation with rich string ensemble sounds  
-✅ **Flute** - Clean, crystalline woodwind representative  
-✅ **Clarinet** - Warm, expressive woodwind with hollow timbre  
-✅ **Saxophone** - Distinctive reedy character for musical variety  
+| Instrument | Family | Reason |
+|------------|--------|--------|
+| ✅ **Piano** | Keyboard | Essential keyboard instrument with professional grand piano samples |
+| ✅ **Strings** | Strings | Orchestral foundation with rich string ensemble sounds |
+| ✅ **Flute** | Woodwinds | Clean, crystalline woodwind representative |
+| ✅ **Clarinet** | Woodwinds | Warm, expressive woodwind with hollow timbre |
+| ✅ **Saxophone** | Woodwinds | Distinctive reedy character for musical variety |
 
 All other instruments are **disabled by default** to avoid overwhelming new users while maintaining excellent performance. Users can easily enable additional instruments through the Control Center interface.
 
@@ -27,416 +47,260 @@ All other instruments are **disabled by default** to avoid overwhelming new user
 
 ## 🎤 Vocal Family (6 Instruments)
 
-### Choir
-- **Synthesis**: Sample-based + reverb processing
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/choir/
-- **Sample Range**: C3-D#6 (15 samples)
-- **Release Time**: 3.0s
-- **Effects**: Reverb (enabled), Chorus (enabled)
-- **Frequency Range**: High (1000-1400Hz)
-- **Notes**: Layered SATB voices for full choir texture
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Choir** | Sample-based + reverb | [ToneJS Choir](https://nbrosowsky.github.io/tonejs-instruments/samples/choir/) | C3-D#6 (15 samples) | 3.0s | Reverb, Chorus | High (1000-1400Hz) | Default |
+| **Vocal Pads** | Sample-based + formant filtering | [ToneJS Vocal Pads](https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/) | C2-A5 (12 samples) | 4.0s | Reverb, Filter | Mid-High (600-1000Hz) | Default |
+| **Soprano** | Sample-based + formant filtering | ToneJS library (high female voice) | High female range | 2.5s | Reverb, Formant | High-Mid (800-1200Hz) | Disabled |
+| **Alto** | Sample-based + breath noise | ToneJS library (lower female voice) | Mid female range | 2.5s | Breath noise, Reverb | High (1000-1400Hz) | Disabled |
+| **Tenor** | Sample-based + vocal expression | ToneJS library (high male voice) | Male vocal range | 2.5s | Vocal expression | Mid-High (600-1000Hz) | Disabled |
+| **Bass (Vocal)** | Sample-based + chest resonance | ToneJS library (deep male voice) | Low male range | 3.0s | Chest resonance | Very Low (<100Hz) | Disabled |
 
-### Vocal Pads
-- **Synthesis**: Sample-based + formant filtering
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/
-- **Sample Range**: C2-A5 (12 samples, major thirds)
-- **Release Time**: 4.0s
-- **Effects**: Reverb (enabled), Filter (enabled)
-- **Frequency Range**: Mid-High (600-1000Hz)
-- **Notes**: Ethereal sustained voice textures
-
-### Soprano
-- **Synthesis**: Sample-based + formant filtering
-- **Source**: High-quality female voice samples (ToneJS library)
-- **Sample Range**: Optimized for high female vocal range
-- **Release Time**: 2.5s
-- **Effects**: Reverb, formant processing
-- **Frequency Range**: High-Mid (800-1200Hz)
-- **Status**: Disabled by default
-
-### Alto
-- **Synthesis**: Sample-based + breath noise
-- **Source**: Lower female voice samples with harmonic richness
-- **Sample Range**: Mid-range female vocal samples
-- **Release Time**: 2.5s
-- **Effects**: Breath noise mixing, reverb
-- **Frequency Range**: High (1000-1400Hz)
-- **Status**: Disabled by default
-
-### Tenor
-- **Synthesis**: Sample-based + vocal expression
-- **Source**: High male voice samples with vocal character
-- **Sample Range**: Male vocal range optimization
-- **Release Time**: 2.5s
-- **Effects**: Vocal expression processing
-- **Frequency Range**: Mid-High (600-1000Hz)
-- **Status**: Disabled by default
-
-### Bass (Vocal)
-- **Synthesis**: Sample-based + chest resonance
-- **Source**: Deep male voice samples with low-end emphasis
-- **Sample Range**: Low male vocal range
-- **Release Time**: 3.0s
-- **Effects**: Chest resonance modeling
-- **Frequency Range**: Very Low (<100Hz)
-- **Status**: Disabled by default
+**Notes**: 
+- Layered SATB voices for full choir texture
+- Ethereal sustained voice textures for pads
+- Individual vocal sections provide precise voice control
 
 ---
 
 ## 🎹 Keyboard Family (6 Instruments)
 
-### Piano
-- **Synthesis**: Sample-based (high-quality acoustic piano)
-- **Source**: https://tonejs.github.io/audio/salamander/
-- **Sample Range**: A0-C8 (88 keys, full piano range)
-- **Release Time**: 1.0s
-- **Effects**: Reverb (enabled by default)
-- **Frequency Range**: Very High (1400-1600Hz)
-- **Default Status**: ✅ **ENABLED** (core instrument)
-- **Notes**: Salamander Grand Piano samples, industry standard
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Piano** | Sample-based | [Salamander Grand](https://tonejs.github.io/audio/salamander/) | A0-C8 (88 keys) | 1.0s | Reverb | Very High (1400-1600Hz) | ✅ **ENABLED** |
+| **Organ** | Additive synthesis | [ToneJS Harmonium](https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/) | C2-G6 (21 samples) | 0.8s | Chorus, Reverb | Mid (400-800Hz) | Disabled |
+| **Electric Piano** | AM synthesis + tremolo | Rhodes/Wurlitzer samples | Electric piano range | 1.2s | Tremolo, AM | Mid-Low (200-400Hz) | Disabled |
+| **Harpsichord** | Sharp envelope + filtering | Baroque harpsichord samples | Historical range | 0.3s | Sharp attack, Filter | Low-Mid (300-600Hz) | Disabled |
+| **Accordion** | AM synthesis + vibrato | Bellows accordion samples | Traditional range | 1.5s | Bellows, Vibrato | Mid (400-800Hz) | Disabled |
+| **Celesta** | Triangle waves + decay | Bell-like percussion samples | Mallet range | 2.0s | Triangle synthesis | Very High (1400-1600Hz) | Disabled |
 
-### Organ
-- **Synthesis**: Additive synthesis (Hammond-style)
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/
-- **Sample Range**: C2-G6 (21 samples)
-- **Release Time**: 0.8s
-- **Effects**: Chorus (enabled by default), Reverb (enabled by default)
-- **Frequency Range**: Mid (400-800Hz)
-- **Default Status**: ❌ **DISABLED** (specialized instrument)
-- **Notes**: Hammond organ character with drawbar simulation
-
-### Electric Piano
-- **Synthesis**: AM synthesis + tremolo
-- **Source**: Rhodes/Wurlitzer-style samples
-- **Sample Range**: Electric piano sample library
-- **Release Time**: 1.2s
-- **Effects**: Tremolo, AM modulation
-- **Frequency Range**: Mid-Low (200-400Hz)
-- **Status**: Disabled by default
-
-### Harpsichord
-- **Synthesis**: Sharp envelope + filtering
-- **Source**: Baroque harpsichord samples
-- **Sample Range**: Historical harpsichord recordings
-- **Release Time**: 0.3s (quick decay)
-- **Effects**: Sharp attack envelope, filtering
-- **Frequency Range**: Low-Mid (300-600Hz)
-- **Status**: Disabled by default
-
-### Accordion
-- **Synthesis**: AM synthesis + vibrato
-- **Source**: Bellows accordion samples
-- **Sample Range**: Traditional accordion sample set
-- **Release Time**: 1.5s
-- **Effects**: Bellows breath simulation, vibrato
-- **Frequency Range**: Mid (400-800Hz)
-- **Status**: Disabled by default
-
-### Celesta
-- **Synthesis**: Triangle waves + decay
-- **Source**: Bell-like percussion samples
-- **Sample Range**: Celesta mallet samples
-- **Release Time**: 2.0s
-- **Effects**: Triangle wave synthesis, long decay
-- **Frequency Range**: Very High (1400-1600Hz)
-- **Status**: Disabled by default
+**Notes**: 
+- Salamander Grand Piano samples are industry standard
+- Hammond organ character with drawbar simulation
+- Keyboard instruments span the complete frequency spectrum
 
 ---
 
 ## 🎻 Strings Family (5 Instruments)
 
-### Strings (Ensemble)
-- **Synthesis**: Sample-based orchestral strings
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/violin/
-- **Sample Range**: C3-A6 (16 samples)
-- **Release Time**: 2.0s
-- **Effects**: Reverb (enabled by default)
-- **Frequency Range**: Low (100-200Hz)
-- **Default Status**: ✅ **ENABLED** (orchestral foundation)
-- **Notes**: Orchestral string ensemble samples
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Strings (Ensemble)** | Sample-based | [ToneJS Violin](https://nbrosowsky.github.io/tonejs-instruments/samples/violin/) | C3-A6 (16 samples) | 2.0s | Reverb | Low (100-200Hz) | ✅ **ENABLED** |
+| **Violin** | Sawtooth + filter sweeps | Solo violin samples | Violin range | 2.2s | Filter sweeps, Vibrato | High-Mid (800-1200Hz) | Disabled |
+| **Cello** | Complex harmonics + bow noise | Solo cello samples | Cello range | 2.8s | Bow noise, Harmonics | Mid-Low (200-400Hz) | Disabled |
+| **Guitar** | Karplus-Strong synthesis | Acoustic guitar samples | Guitar fretboard | 1.8s | Pluck modeling | Mid-High (600-1000Hz) | Disabled |
+| **Harp** | Pluck + long decay | Concert harp samples | Full harp range | 3.5s | Pluck, Arpeggios | Low (100-200Hz) | Disabled |
 
-### Violin
-- **Synthesis**: Sawtooth + filter sweeps
-- **Source**: Solo violin samples with bowing articulation
-- **Sample Range**: Violin-specific range samples
-- **Release Time**: 2.2s
-- **Effects**: Filter sweeps, vibrato, bowing simulation
-- **Frequency Range**: High-Mid (800-1200Hz)
-- **Status**: Disabled by default
-
-### Cello
-- **Synthesis**: Complex harmonics + bow noise
-- **Source**: Solo cello samples with rich harmonics
-- **Sample Range**: Cello range with low-end emphasis
-- **Release Time**: 2.8s
-- **Effects**: Bow noise, complex harmonic modeling
-- **Frequency Range**: Mid-Low (200-400Hz)
-- **Status**: Disabled by default
-
-### Guitar
-- **Synthesis**: Karplus-Strong synthesis
-- **Source**: Acoustic guitar plucking samples
-- **Sample Range**: Guitar fretboard samples
-- **Release Time**: 1.8s
-- **Effects**: Plucked string modeling, strumming articulation
-- **Frequency Range**: Mid-High (600-1000Hz)
-- **Status**: Disabled by default
-
-### Harp
-- **Synthesis**: Pluck + long decay
-- **Source**: Concert harp samples
-- **Sample Range**: Full harp range samples
-- **Release Time**: 3.5s
-- **Effects**: Pluck modeling, cascading arpeggios
-- **Frequency Range**: Low (100-200Hz)
-- **Status**: Disabled by default
+**Notes**: 
+- Orchestral string ensemble forms the foundation
+- Bowing and plucking articulations simulated
+- Individual string instruments provide solo capabilities
 
 ---
 
 ## 🎺 Brass Family (4 Instruments)
 
-### Trumpet
-- **Synthesis**: Square waves + brass formants
-- **Source**: Orchestral trumpet samples
-- **Sample Range**: Trumpet range with bright attack
-- **Release Time**: 1.0s
-- **Effects**: Brass formant filtering, bright attack
-- **Frequency Range**: Low-Mid (300-600Hz)
-- **Status**: Disabled by default
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Trumpet** | Square waves + brass formants | Orchestral trumpet samples | Trumpet range | 1.0s | Brass formants, Bright attack | Low-Mid (300-600Hz) | Disabled |
+| **French Horn** | Sine waves + slight distortion | French horn samples | Horn range | 1.5s | Warm processing | Mid (400-800Hz) | Disabled |
+| **Trombone** | Sawtooth + portamento | Trombone samples | Trombone range | 1.2s | Portamento, Slide | Mid-Low (200-400Hz) | Disabled |
+| **Tuba** | Sub-bass + breath noise | Orchestral tuba samples | Deep tuba range | 2.0s | Sub-bass, Breath | Very Low (<100Hz) | Disabled |
 
-### French Horn
-- **Synthesis**: Sine waves + slight distortion
-- **Source**: French horn samples with warm character
-- **Sample Range**: Horn range samples
-- **Release Time**: 1.5s
-- **Effects**: Warm middle register processing
-- **Frequency Range**: Mid (400-800Hz)
-- **Status**: Disabled by default
-
-### Trombone
-- **Synthesis**: Sawtooth + portamento
-- **Source**: Trombone samples with slide capability
-- **Sample Range**: Trombone range with slide articulation
-- **Release Time**: 1.2s
-- **Effects**: Portamento, sliding pitch capability
-- **Frequency Range**: Mid-Low (200-400Hz)
-- **Status**: Disabled by default
-
-### Tuba
-- **Synthesis**: Sub-bass + breath noise
-- **Source**: Orchestral tuba samples
-- **Sample Range**: Deep tuba range samples
-- **Release Time**: 2.0s
-- **Effects**: Sub-bass emphasis, breath noise
-- **Frequency Range**: Very Low (<100Hz)
-- **Status**: Disabled by default
+**Notes**: 
+- Brass formant filtering creates metallic timbre
+- Portamento capabilities for realistic slide effects
+- Complete brass section from high trumpet to low tuba
 
 ---
 
 ## 🎷 Woodwinds Family (4 Instruments)
 
-### Flute
-- **Synthesis**: Sample-based + noise
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/flute/
-- **Sample Range**: C4-E6 (17 samples)
-- **Release Time**: 1.5s
-- **Effects**: Reverb (enabled by default)
-- **Frequency Range**: Ultra-High (>1600Hz)
-- **Default Status**: ✅ **ENABLED** (clean woodwind representative)
-- **Notes**: Breathy pure tone with noise texture
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Flute** | Sample-based + noise | [ToneJS Flute](https://nbrosowsky.github.io/tonejs-instruments/samples/flute/) | C4-E6 (17 samples) | 1.5s | Reverb | Ultra-High (>1600Hz) | ✅ **ENABLED** |
+| **Clarinet** | Sample-based + odd harmonics | [ToneJS Clarinet](https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/) | Clarinet range | 1.8s | Reverb | High-Mid (800-1200Hz) | ✅ **ENABLED** |
+| **Saxophone** | Sample-based + distortion | [ToneJS Saxophone](https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/) | Saxophone range | 1.5s | Reverb | Low-Mid (300-600Hz) | ✅ **ENABLED** |
+| **Oboe** | Complex formants + reed simulation | [ToneJS Oboe](https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/) | Bb3-F5 (oboe range) | 2.2s | Reed simulation, Formants | High-Mid (800-1200Hz) | Disabled |
 
-### Clarinet
-- **Synthesis**: Sample-based + odd harmonics
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/
-- **Sample Range**: Clarinet range samples
-- **Release Time**: 1.8s
-- **Effects**: Reverb (enabled by default)
-- **Frequency Range**: High-Mid (800-1200Hz)
-- **Default Status**: ✅ **ENABLED** (warm woodwind with character)
-- **Notes**: Characteristic clarinet hollow sound
-
-### Saxophone
-- **Synthesis**: Sample-based + distortion
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/
-- **Sample Range**: Saxophone samples with reedy character
-- **Release Time**: 1.5s
-- **Effects**: Reverb (enabled by default)
-- **Frequency Range**: Low-Mid (300-600Hz)
-- **Default Status**: ✅ **ENABLED** (distinctive reedy character)
-- **Notes**: Rich saxophone timbre with reed character
-
-### Oboe
-- **Synthesis**: Complex formants + reed simulation
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/
-- **Sample Range**: Bb3-F5 (oboe range samples)
-- **Release Time**: 2.2s
-- **Effects**: Reed simulation, nasal quality formants
-- **Frequency Range**: High-Mid (800-1200Hz)
-- **Notes**: Double reed character with nasal quality
+**Notes**: 
+- Breathy pure tone with noise texture for flute
+- Characteristic hollow clarinet sound
+- Rich saxophone timbre with reed character
+- Double reed character with nasal quality for oboe
 
 ---
 
 ## 🥁 Percussion Family (4 Instruments)
 
-### Timpani
-- **Synthesis**: Sine burst + pitch bending
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/
-- **Sample Range**: Timpani pitch range
-- **Release Time**: 3.5s
-- **Effects**: Pitch bending, hall acoustics
-- **Frequency Range**: Low (100-200Hz)
-- **Notes**: Tuned drums with dynamic pitch control
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Timpani** | Sine burst + pitch bending | [ToneJS Timpani](https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/) | Timpani range | 3.5s | Pitch bending, Hall acoustics | Low (100-200Hz) | Disabled |
+| **Xylophone** | Triangle waves + sharp attack | [ToneJS Xylophone](https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/) | Mallet range | 0.8s | Sharp attack, Wooden resonance | Very High (1400-1600Hz) | Disabled |
+| **Vibraphone** | Sine waves + tremolo | [ToneJS Vibraphone](https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/) | Vibraphone range | 4.0s | Tremolo motor, Metallic shimmer | High (1000-1400Hz) | Disabled |
+| **Gongs** | Noise burst + long decay | [ToneJS Gongs](https://nbrosowsky.github.io/tonejs-instruments/samples/gongs/) | Various gong sizes | 8.0s | Sustained crash, Metallic resonance | Very Low (<100Hz) | Disabled |
 
-### Xylophone
-- **Synthesis**: Triangle waves + sharp attack
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/
-- **Sample Range**: Xylophone mallet range
-- **Release Time**: 0.8s
-- **Effects**: Sharp attack, wooden resonance
-- **Frequency Range**: Very High (1400-1600Hz)
-- **Notes**: Bright mallet percussion
-
-### Vibraphone
-- **Synthesis**: Sine waves + tremolo
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/
-- **Sample Range**: Vibraphone range with tremolo
-- **Release Time**: 4.0s
-- **Effects**: Tremolo motor simulation, metallic shimmer
-- **Frequency Range**: High (1000-1400Hz)
-- **Notes**: Characteristic vibraphone tremolo effect
-
-### Gongs
-- **Synthesis**: Noise burst + long decay
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/gongs/
-- **Sample Range**: Various gong sizes
-- **Release Time**: 8.0s
-- **Effects**: Sustained crash, metallic resonance, massive reverb
-- **Frequency Range**: Very Low (<100Hz)
-- **Notes**: Long-sustaining metallic crashes
+**Notes**: 
+- Tuned drums with dynamic pitch control for timpani
+- Bright mallet percussion for xylophone
+- Characteristic vibraphone tremolo effect
+- Long-sustaining metallic crashes for gongs
 
 ---
 
 ## 🌟 Electronic Family (4 Instruments)
 
-### Pad
-- **Synthesis**: Sample-based synthetic textures
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/
-- **Sample Range**: C1-C6 (11 samples)
-- **Release Time**: 5.0s
-- **Effects**: Reverb (enabled), Filter (enabled)
-- **Frequency Range**: Mid-Low (200-400Hz)
-- **Notes**: Ambient synthetic sustained textures
+| Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
+|------------|-----------|--------|--------------|---------|---------|-----------|--------|
+| **Pad** | Sample-based synthetic textures | [ToneJS Synth Pad](https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/) | C1-C6 (11 samples) | 5.0s | Reverb, Filter | Mid-Low (200-400Hz) | Default |
+| **Lead Synth** | Sawtooth + filter + resonance | [ToneJS Synth Lead](https://nbrosowsky.github.io/tonejs-instruments/samples/synth-lead/) | C2-C6 (5 samples) | 0.2s | Filter modulation, Distortion, Delay | Variable (200-8000Hz) | Disabled |
+| **Bass Synth** | Square waves + sub-oscillator | [ToneJS Synth Bass](https://nbrosowsky.github.io/tonejs-instruments/samples/synth-bass/) | C1-C3 (5 samples) | 0.5s | Filter, Compressor | Low (100-200Hz) | Disabled |
+| **Arp Synth** | Various waves + envelope + sequencer | [ToneJS Synth Arp](https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/) | C3-C6 (4 samples) | 0.1s | Filter, Delay, Reverb | Variable (Pattern-dependent) | Disabled |
 
-### Lead Synth
-- **Synthesis**: Sawtooth + filter + resonance
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/synth-lead/
-- **Sample Range**: C2-C6 (5 samples)
-- **Release Time**: 0.2s
-- **Effects**: Filter modulation, distortion, delay
-- **Frequency Range**: Variable (200-8000Hz)
-- **Notes**: Cutting synthesizer lead with filter sweeps
-
-### Bass Synth
-- **Synthesis**: Square waves + sub-oscillator
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/synth-bass/
-- **Sample Range**: C1-C3 (5 samples)
-- **Release Time**: 0.5s
-- **Effects**: Filter, compressor for punch
-- **Frequency Range**: Low (100-200Hz)
-- **Notes**: Electronic bass foundation with sub-bass
-
-### Arp Synth
-- **Synthesis**: Various waves + envelope + sequencer
-- **Source**: https://nbrosowsky.github.io/tonejs-instruments/samples/synth-arp/
-- **Sample Range**: C3-C6 (4 samples)
-- **Release Time**: 0.1s
-- **Effects**: Filter, delay, reverb for space
-- **Frequency Range**: Variable (Pattern-dependent)
-- **Notes**: Sequenced patterns with graph synchronization
+**Notes**: 
+- Ambient synthetic sustained textures for pad
+- Cutting synthesizer lead with filter sweeps
+- Electronic bass foundation with sub-bass
+- Sequenced patterns with graph synchronization for arp
 
 ---
 
 ## 🌊 Environmental Family (1 Instrument)
 
 ### Whale Song (Humpback)
-- **Synthesis**: Scientific recordings + oceanic effects
-- **Source**: https://freesound.org/data/previews/316/316847_5245022-hq.mp3
-- **Sample Range**: C1-F3 (8 samples across whale vocal range)
-- **Release Time**: 12.0s (ultra-long sustains)
-- **Effects**: Deep reverb (8.0s decay, 0.85 wet), ultra-slow chorus (0.1Hz), low-pass filter (800Hz)
-- **Frequency Range**: Low-Mid (20-1000Hz)
-- **Notes**: Authentic humpback whale calls with specialized underwater acoustics processing
-- **Status**: Disabled by default
+
+| Property | Details |
+|----------|---------|
+| **Synthesis** | Public domain scientific recordings + oceanic effects processing |
+| **Primary Source** | [NOAA Whale Song (Internet Archive)](https://archive.org/download/WhaleSong_928/whale_song.mp3) |
+| **Secondary Source** | [National Park Service Humpback Recordings](https://archive.org/details/HumpbackWhalesSongsSoundsVocalizations) |
+| **Sample Configuration** | C1-F3 (8 samples across whale vocal range) |
+| **Release Time** | 12.0s (ultra-long sustains) |
+| **Effects** | Deep reverb (8.0s decay), ultra-slow chorus (0.3Hz), oceanic filtering |
+| **Frequency Range** | Low-Mid (20-1000Hz) - Wide spectrum natural sounds |
+| **Status** | Disabled by default |
+
+**Sample Sources**:
+
+| Source | Type | License | Quality | URL |
+|--------|------|---------|---------|-----|
+| **NOAA Whale Song** | Scientific recording | Public Domain (U.S. Federal Government) | 9.0M MP3, High quality | https://archive.org/download/WhaleSong_928/ |
+| **NPS Humpback Songs** | Hydrophone recordings | Public Domain (U.S. Federal Government) | Multiple recordings, Glacier Bay, Alaska | https://archive.org/details/HumpbackWhalesSongsSoundsVocalizations |
+| **Ocean Alliance Library** | Marine mammal sounds | Scientific archive | 2,400+ recordings (1950s-1990s) | https://whale.org/whale-acoustic-library/ |
+| **Watkins Collection** | Historical recordings | Scientific research | 7 decades of recordings | https://cis.whoi.edu/science/B/whalesounds/ |
+
+**Current Implementation**:
+- **Synthesis Mode**: Environmental sounds use FM synthesis when samples are not available
+- **Sample Mode**: When sample downloading feature is implemented, authentic NOAA recordings will be used
+- **Effects Processing**: Specialized oceanic effects (8.0s reverb, ultra-slow chorus, underwater filtering)
+- **Musical Integration**: Single whale recording mapped to multiple pitches for musical use
+
+**Technical Notes**:
+- Authentic humpback whale calls with specialized underwater acoustics processing
+- Bass calls with squeals from NOAA scientific recordings
+- Hydrophone recordings from Glacier Bay National Park monitoring
+- All sources are explicitly public domain (U.S. federal government works)
 
 ---
 
 ## Technical Implementation Details
 
 ### Sample Format Support
-- **Primary Format**: MP3 (optimized for web delivery)
-- **Fallback Format**: WAV (when specified)
-- **Format Selection**: Configurable via `audioFormat` setting
+
+| Format | Usage | Notes |
+|--------|-------|-------|
+| **MP3** | Primary | Optimized for web delivery |
+| **WAV** | Fallback | When specified for higher quality |
+| **OGG** | Alternative | Browser compatibility |
+| **Format Selection** | Configurable | Via `audioFormat` setting |
 
 ### Effects Processing
-All instruments support three core effect types:
-- **Reverb**: Decay, pre-delay, wet/dry mix
-- **Chorus**: Frequency, depth, delay time, feedback
-- **Filter**: Frequency, Q factor, type (lowpass/highpass/bandpass)
+
+| Effect Type | Parameters | Application |
+|-------------|------------|-------------|
+| **Reverb** | Decay, pre-delay, wet/dry mix | All acoustic instruments |
+| **Chorus** | Frequency, depth, delay time, feedback | Sustained instruments |
+| **Filter** | Frequency, Q factor, type (lowpass/highpass/bandpass) | Synthesizers and tonal shaping |
 
 ### Performance Optimization
-- **Voice Limiting**: Configurable max voices per instrument (4-8 voices)
-- **Lazy Loading**: Samples loaded on-demand when instruments are enabled
-- **Memory Management**: Automatic cleanup of unused sample buffers
+
+| Feature | Implementation | Benefit |
+|---------|----------------|---------|
+| **Voice Limiting** | Configurable max voices per instrument (4-8) | Prevents CPU overload |
+| **Lazy Loading** | Samples loaded on-demand | Faster initial load |
+| **Memory Management** | Automatic cleanup of unused buffers | Optimal RAM usage |
 
 ### Quality Assurance
-- **Source Verification**: All sample URLs verified and tested
-- **Latency Testing**: Sub-50ms response time for all instruments
-- **Cross-Platform**: Tested on Windows, macOS, and Linux
-- **Browser Compatibility**: Chrome, Firefox, Safari, Edge support
+
+| Aspect | Standard | Verification |
+|--------|----------|-------------|
+| **Source Verification** | All URLs tested | Regular validation |
+| **Latency Testing** | Sub-50ms response | Real-time performance |
+| **Cross-Platform** | Windows, macOS, Linux | Multi-OS testing |
+| **Browser Compatibility** | Chrome, Firefox, Safari, Edge | Universal support |
 
 ---
 
 ## External Dependencies
 
 ### Primary Sample Libraries
-1. **ToneJS Instruments**: https://nbrosowsky.github.io/tonejs-instruments/
-   - Comprehensive orchestral sample library
-   - High-quality recordings with consistent formatting
-   - Maintained and regularly updated
 
-2. **Tone.js Salamander Piano**: https://tonejs.github.io/audio/salamander/
-   - Professional grand piano samples
-   - Full 88-key range coverage
-   - Industry-standard quality
+| Library | Purpose | Coverage | Quality |
+|---------|---------|----------|---------|
+| **[ToneJS Instruments](https://nbrosowsky.github.io/tonejs-instruments/)** | Comprehensive orchestral samples | 25+ instruments | High-quality, consistent formatting |
+| **[Tone.js Salamander Piano](https://tonejs.github.io/audio/salamander/)** | Professional grand piano | Full 88-key range | Industry-standard quality |
+| **[Internet Archive - NOAA](https://archive.org/details/WhaleSong_928)** | Scientific whale recordings | Environmental sounds | Research-grade, public domain |
+| **[National Park Service](https://archive.org/details/HumpbackWhalesSongsSoundsVocalizations)** | Natural sound monitoring | Hydrophone recordings | Scientific accuracy |
 
-3. **Freesound.org**: Environmental sound sources
-   - Scientific whale recording collections
-   - Creative Commons and open-source audio
-   - High-quality natural sound recordings
+### Scientific Audio Archives
+
+| Archive | Institution | Content | Access |
+|---------|-------------|---------|---------|
+| **Ocean Alliance** | Marine research | 2,400+ whale recordings | Scientific community |
+| **Watkins Collection** | Woods Hole Oceanographic | 7 decades of recordings | Research archive |
+| **Discovery of Sound in the Sea** | University partnerships | Marine acoustics gallery | Educational access |
 
 ### Synthesis Engine
-- **Tone.js**: Web Audio API synthesis framework
-- **Version**: Compatible with Tone.js 14.x+
-- **Features**: Real-time synthesis, effects processing, sample playback
+
+| Component | Version | Features |
+|-----------|---------|----------|
+| **Tone.js** | 14.x+ compatible | Real-time synthesis, effects, sample playback |
+| **Web Audio API** | Browser native | Low-latency audio processing |
+| **ESM Modules** | Modern standards | Optimized loading and tree-shaking |
 
 ---
 
 ## Future Expansion Considerations
 
 ### Phase 9+ Instrument Sources
-- **AI-Generated Samples**: Potential integration of AI-synthesized instruments
-- **User Sample Upload**: Custom sample library support
-- **Regional Instruments**: World music instrument expansion
-- **Extended Environmental**: Ocean ambience, forest sounds, urban environments
+
+| Category | Potential Sources | Implementation |
+|----------|------------------|----------------|
+| **AI-Generated Samples** | Machine learning synthesis | Custom neural models |
+| **User Sample Upload** | Custom library support | Local storage integration |
+| **Regional Instruments** | World music expansion | Ethnomusicology archives |
+| **Extended Environmental** | Natural soundscapes | Field recording libraries |
 
 ### Source Quality Improvements
-- **Higher Sample Rates**: 48kHz/96kHz support for audiophile quality
-- **Extended Range**: More sample points for smoother interpolation
-- **Dynamic Samples**: Velocity-sensitive multi-layer sampling
-- **Articulation Variants**: Multiple playing techniques per instrument
+
+| Enhancement | Target | Benefit |
+|-------------|--------|---------|
+| **Higher Sample Rates** | 48kHz/96kHz support | Audiophile quality |
+| **Extended Range** | More sample points | Smoother interpolation |
+| **Dynamic Samples** | Velocity-sensitive layers | Expressive performance |
+| **Articulation Variants** | Multiple techniques | Realistic playing styles |
+
+### Sample Management System
+
+| Feature | Purpose | Timeline |
+|---------|---------|----------|
+| **Download Manager** | Optional sample downloading | Phase 10 |
+| **Quality Selection** | MP3/WAV/OGG choice | Phase 10 |
+| **Cache Management** | Storage optimization | Phase 10 |
+| **Offline Support** | Local sample storage | Phase 10 |
 
 ---
 
 **Document Maintained By**: Sonigraph Development Team  
-**Source Verification Date**: June 16, 2025  
+**Source Verification Date**: June 17, 2025  
 **Next Review**: Phase 9 Implementation

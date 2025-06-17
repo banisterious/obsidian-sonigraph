@@ -117,7 +117,7 @@ export class MaterialCard {
 
 	private createCardContainer(options: CardOptions): HTMLElement {
 		const card = document.createElement('div');
-		card.className = `mdc-card ${options.elevation ? `mdc-elevation-${options.elevation}` : ''} ${options.className || ''}`;
+		card.className = `ospcc-card ${options.elevation ? `ospcc-elevation-${options.elevation}` : ''} ${options.className || ''}`;
 		
 		if (options.onClick) {
 			card.style.cursor = 'pointer';
@@ -129,9 +129,9 @@ export class MaterialCard {
 
 	private createHeader(options: CardOptions): HTMLElement {
 		const header = document.createElement('div');
-		header.className = 'mdc-card__header';
+		header.className = 'ospcc-card__header';
 
-		const titleContainer = header.createDiv({ cls: 'mdc-card__title' });
+		const titleContainer = header.createDiv({ cls: 'ospcc-card__title' });
 
 		if (options.iconName) {
 			const icon = createLucideIcon(options.iconName, 24);
@@ -141,7 +141,7 @@ export class MaterialCard {
 		titleContainer.appendText(options.title);
 
 		if (options.subtitle) {
-			const subtitle = header.createDiv({ cls: 'mdc-card__subtitle' });
+			const subtitle = header.createDiv({ cls: 'ospcc-card__subtitle' });
 			subtitle.textContent = options.subtitle;
 		}
 
@@ -149,7 +149,7 @@ export class MaterialCard {
 	}
 
 	private createContent(): HTMLElement {
-		return this.container.createDiv({ cls: 'mdc-card__content' });
+		return this.container.createDiv({ cls: 'ospcc-card__content' });
 	}
 
 	/**
@@ -171,7 +171,7 @@ export class MaterialCard {
 	 */
 	addActions(): HTMLElement {
 		if (!this.actions) {
-			this.actions = this.container.createDiv({ cls: 'mdc-card__actions' });
+			this.actions = this.container.createDiv({ cls: 'ospcc-card__actions' });
 		}
 		return this.actions;
 	}
@@ -180,7 +180,7 @@ export class MaterialCard {
 	 * Update the card title
 	 */
 	setTitle(title: string): void {
-		const titleEl = this.header.querySelector('.mdc-card__title');
+		const titleEl = this.header.querySelector('.ospcc-card__title');
 		if (titleEl) {
 			const textNode = Array.from(titleEl.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
 			if (textNode) {
@@ -193,9 +193,9 @@ export class MaterialCard {
 	 * Update the card subtitle
 	 */
 	setSubtitle(subtitle: string): void {
-		let subtitleEl = this.header.querySelector('.mdc-card__subtitle') as HTMLElement;
+		let subtitleEl = this.header.querySelector('.ospcc-card__subtitle') as HTMLElement;
 		if (!subtitleEl) {
-			subtitleEl = this.header.createDiv({ cls: 'mdc-card__subtitle' });
+			subtitleEl = this.header.createDiv({ cls: 'ospcc-card__subtitle' });
 		}
 		subtitleEl.textContent = subtitle;
 	}
@@ -214,7 +214,7 @@ export class StatCard {
 
 	private createStatCard(options: StatCardOptions): HTMLElement {
 		const statCard = document.createElement('div');
-		statCard.className = `mdc-surface-container ${options.className || ''}`;
+		statCard.className = `ospcc-surface-container ${options.className || ''}`;
 		statCard.style.padding = 'var(--md-space-4)';
 		statCard.style.borderRadius = 'var(--md-corner-sm)';
 		statCard.style.textAlign = 'center';
@@ -336,13 +336,13 @@ export class InstrumentCard {
 		// Enable toggle
 		this.createControlGroup(container, 'Enable Instrument', () => {
 			const switchContainer = document.createElement('div');
-			switchContainer.className = 'mdc-switch';
+			switchContainer.className = 'ospcc-switch';
 			switchContainer.setAttribute('data-tooltip', `Toggle ${this.options.displayName || this.capitalizeWords(this.options.instrumentName)} on/off`);
 			switchContainer.setAttribute('title', `Toggle ${this.options.displayName || this.capitalizeWords(this.options.instrumentName)} on/off`);
 
 			this.enableSwitch = switchContainer.createEl('input', { 
 				type: 'checkbox', 
-				cls: 'mdc-switch__input' 
+				cls: 'ospcc-switch__input' 
 			}) as HTMLInputElement;
 			this.enableSwitch.checked = this.options.enabled;
 			
@@ -352,8 +352,8 @@ export class InstrumentCard {
 				this.updateEnabledState(this.enableSwitch.checked);
 			});
 
-			const track = switchContainer.createDiv({ cls: 'mdc-switch__track' });
-			const thumb = track.createDiv({ cls: 'mdc-switch__thumb' });
+			const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
+			const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
 			
 			// Make the entire switch container clickable
 			switchContainer.addEventListener('click', (e) => {
@@ -532,21 +532,21 @@ export class EffectSection {
 		title.appendText(this.options.effectName);
 
 		// Enable toggle
-		const toggleContainer = container.createDiv({ cls: 'mdc-switch' });
+		const toggleContainer = container.createDiv({ cls: 'ospcc-switch' });
 		toggleContainer.style.marginLeft = 'auto';
 		toggleContainer.style.transform = 'scale(0.8)';
 
 		this.enableSwitch = toggleContainer.createEl('input', {
 			type: 'checkbox',
-			cls: 'mdc-switch__input'
+			cls: 'ospcc-switch__input'
 		}) as HTMLInputElement;
 		this.enableSwitch.checked = this.options.enabled;
 		this.enableSwitch.addEventListener('change', () => {
 			this.updateEnabledState(this.enableSwitch.checked);
 		});
 
-		const track = toggleContainer.createDiv({ cls: 'mdc-switch__track' });
-		const thumb = track.createDiv({ cls: 'mdc-switch__thumb' });
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -620,7 +620,7 @@ export class ActionChip {
 
 	private createActionChip(): HTMLElement {
 		const chip = document.createElement('div');
-		chip.className = `mdc-chip ${this.options.selected ? 'mdc-chip--selected' : ''} ${this.options.className || ''}`;
+		chip.className = `ospcc-chip ${this.options.selected ? 'ospcc-chip--selected' : ''} ${this.options.className || ''}`;
 
 		if (this.options.iconName) {
 			const icon = createLucideIcon(this.options.iconName, 16);
@@ -646,7 +646,7 @@ export class ActionChip {
 	private toggle(): void {
 		const newSelected = !this.options.selected;
 		this.options.selected = newSelected;
-		this.container.classList.toggle('mdc-chip--selected', newSelected);
+		this.container.classList.toggle('ospcc-chip--selected', newSelected);
 
 		if (this.options.onToggle) {
 			this.options.onToggle(newSelected);
@@ -659,7 +659,7 @@ export class ActionChip {
 
 	setSelected(selected: boolean): void {
 		this.options.selected = selected;
-		this.container.classList.toggle('mdc-chip--selected', selected);
+		this.container.classList.toggle('ospcc-chip--selected', selected);
 	}
 
 	setText(text: string): void {
@@ -689,14 +689,14 @@ export class MaterialSlider {
 
 	private createSlider(): HTMLElement {
 		const sliderContainer = document.createElement('div');
-		sliderContainer.className = `mdc-slider-container ${this.options.className || ''}`;
+		sliderContainer.className = `ospcc-slider-container ${this.options.className || ''}`;
 
 		// Slider track container
-		this.slider = sliderContainer.createDiv({ cls: 'mdc-slider' });
-		const trackContainer = this.slider.createDiv({ cls: 'mdc-slider__track-container' });
-		this.track = trackContainer.createDiv({ cls: 'mdc-slider__track' });
-		const activeTrack = this.track.createDiv({ cls: 'mdc-slider__track-active' });
-		this.thumb = this.slider.createDiv({ cls: 'mdc-slider__thumb' });
+		this.slider = sliderContainer.createDiv({ cls: 'ospcc-slider' });
+		const trackContainer = this.slider.createDiv({ cls: 'ospcc-slider__track-container' });
+		this.track = trackContainer.createDiv({ cls: 'ospcc-slider__track' });
+		const activeTrack = this.track.createDiv({ cls: 'ospcc-slider__track-active' });
+		this.thumb = this.slider.createDiv({ cls: 'ospcc-slider__thumb' });
 
 		// Value display
 		this.valueDisplay = sliderContainer.createDiv({ cls: 'slider-value' });
@@ -766,7 +766,7 @@ export class MaterialSlider {
 		// Update thumb and track position
 		this.thumb.style.left = `${percentage}%`;
 		
-		const activeTrack = this.track.querySelector('.mdc-slider__track-active') as HTMLElement;
+		const activeTrack = this.track.querySelector('.ospcc-slider__track-active') as HTMLElement;
 		if (activeTrack) {
 			activeTrack.style.width = `${percentage}%`;
 		}
@@ -818,7 +818,7 @@ export class MaterialButton {
 
 	private createButton(options: any): HTMLElement {
 		const button = document.createElement('button');
-		button.className = `mdc-button mdc-button--${options.variant || 'filled'} ${options.className || ''}`;
+		button.className = `ospcc-button ospcc-button--${options.variant || 'filled'} ${options.className || ''}`;
 		button.disabled = options.disabled || false;
 
 		if (options.iconName) {
@@ -863,6 +863,6 @@ export function createDivider(): HTMLElement {
  */
 export function createGrid(columns?: 'auto-fit' | 'auto-fill' | '2-col' | '3-col'): HTMLElement {
 	const grid = document.createElement('div');
-	grid.className = `mdc-grid ${columns ? `mdc-grid--${columns}` : ''}`;
+	grid.className = `ospcc-grid ${columns ? `ospcc-grid--${columns}` : ''}`;
 	return grid;
 }
