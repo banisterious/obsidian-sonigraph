@@ -4,6 +4,7 @@ import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
 import { ElectronicEngine } from './electronic-engine';
+import { VoiceManager } from './voice-management';
 import { getLogger } from '../logging';
 
 const logger = getLogger('audio-engine');
@@ -421,11 +422,7 @@ const SAMPLER_CONFIGS = {
 	}
 };
 
-export interface VoiceAssignment {
-	nodeId: string;
-	instrument: keyof typeof SAMPLER_CONFIGS;
-	voiceIndex: number;
-}
+// VoiceAssignment interface moved to voice-management/types.ts
 
 export class AudioEngine {
 	private instruments: Map<string, PolySynth | Sampler> = new Map();
@@ -439,8 +436,7 @@ export class AudioEngine {
 	private realtimeStartTime: number = 0;
 	private lastTriggerTime: number = 0;
 	private volume: Volume | null = null;
-	private voiceAssignments: Map<string, VoiceAssignment> = new Map();
-	private maxVoicesPerInstrument = 8;
+	private voiceManager: VoiceManager;
 
 	// Real-time feedback properties
 	private previewTimeouts: Map<string, number> = new Map();
@@ -450,11 +446,7 @@ export class AudioEngine {
 	private previewInstrument: string | null = null;
 	private previewNote: any = null;
 
-	// Performance optimization properties
-	private voicePool: Map<string, any[]> = new Map(); // Pre-allocated voice pools
-	private lastCPUCheck: number = 0;
-	private adaptiveQuality: boolean = true;
-	private currentQualityLevel: 'high' | 'medium' | 'low' = 'high';
+	// Performance optimization properties - moved to VoiceManager
 
 	// Phase 3.5: Enhanced Effect Routing properties
 	private enhancedRouting: boolean = false;
@@ -475,6 +467,7 @@ export class AudioEngine {
 
 	constructor(private settings: SonigraphSettings) {
 		logger.debug('initialization', 'AudioEngine created');
+		this.voiceManager = new VoiceManager(true); // Enable adaptive quality by default
 	}
 
 	private getSamplerConfigs(): typeof SAMPLER_CONFIGS {
@@ -2279,9 +2272,8 @@ export class AudioEngine {
 	}
 
 	private assignByRoundRobin(mapping: MusicalMapping, enabledInstruments: string[]): string {
-		// Cycle through enabled instruments
-		const instrumentIndex = this.voiceAssignments.size % enabledInstruments.length;
-		return enabledInstruments[instrumentIndex];
+		// Delegate to VoiceManager
+		return this.voiceManager.assignInstrument(mapping, enabledInstruments);
 	}
 
 	private assignByConnections(mapping: MusicalMapping, enabledInstruments: string[]): string {
