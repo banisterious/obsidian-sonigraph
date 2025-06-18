@@ -29,10 +29,12 @@
   - [6.1. Performance Considerations](#61-performance-considerations)
   - [6.2. Monitoring Systems](#62-monitoring-systems)
   - [6.3. Optimization Strategies](#63-optimization-strategies)
-- [7. API Reference](#7-api-reference)
-  - [7.1. AudioEngine API](#71-audioengine-api)
-  - [7.2. Logging API](#72-logging-api)
-  - [7.3. UI Components API](#73-ui-components-api)
+- [7. External Integrations](#7-external-integrations)
+  - [7.1. Freesound.org Integration](#71-freesoundorg-integration)
+- [8. API Reference](#8-api-reference)
+  - [8.1. AudioEngine API](#81-audioengine-api)
+  - [8.2. Logging API](#82-logging-api)
+  - [8.3. UI Components API](#83-ui-components-api)
 
 ---
 
@@ -615,9 +617,19 @@ class PerformanceOptimizer {
 
 ---
 
-## 7. API Reference
+## 7. External Integrations
 
-### 7.1. AudioEngine API
+### 7.1. Freesound.org Integration
+
+Sonigraph incorporates Freesound.org's API v2 to expand audio sample diversity and provide robust fallback mechanisms for instrument families. This integration enables access to over 500,000 Creative Commons licensed audio samples, significantly enhancing the plugin's sound palette particularly for percussion, experimental, and vocal instruments. The system implements OAuth2 authentication, intelligent caching, and automatic license compliance to seamlessly integrate community-sourced samples while maintaining Sonigraph's high-quality audio standards.
+
+**For detailed implementation guidelines:** [Freesound Integration Guide](integrations/freesound-integration-guide.md)
+
+---
+
+## 8. API Reference
+
+### 8.1. AudioEngine API
 
 ```typescript
 class AudioEngine {
@@ -685,7 +697,7 @@ interface SonigraphSettings {
 }
 ```
 
-### 7.2. Logging API
+### 8.2. Logging API
 
 ```typescript
 // Logger Factory
@@ -714,7 +726,7 @@ interface LoggingConfig {
 }
 ```
 
-### 7.3. UI Components API
+### 8.3. UI Components API
 
 ```typescript
 // Toggle Components
