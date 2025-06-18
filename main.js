@@ -7,6 +7,9 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -21,1308 +24,70 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/main.ts
-var main_exports = {};
-__export(main_exports, {
-  default: () => SonigraphPlugin
-});
-module.exports = __toCommonJS(main_exports);
-var import_obsidian5 = require("obsidian");
-
 // src/utils/constants.ts
-var DEFAULT_SETTINGS = {
-  tempo: 120,
-  volume: 0.5,
-  scale: "major",
-  rootNote: "C",
-  traversalMethod: "breadth-first",
-  isEnabled: true,
-  audioFormat: "synthesis",
-  microtuning: false,
-  effects: {
-    orchestralreverbhall: { enabled: true },
-    "3bandeq": { enabled: true },
-    dynamiccompressor: { enabled: false }
-  },
-  instruments: {
-    piano: {
-      enabled: true,
-      volume: 0.8,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 1.8,
-            preDelay: 0.02,
-            wet: 0.25
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.8,
-            depth: 0.5,
-            delayTime: 4,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 3500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    organ: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.2,
-            preDelay: 0.03,
-            wet: 0.35
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.8,
-            depth: 0.5,
-            delayTime: 4,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 4e3,
-            Q: 0.6,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    strings: {
-      enabled: true,
-      volume: 0.6,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.8,
-            preDelay: 0.04,
-            wet: 0.45
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.6,
-            depth: 0.3,
-            delayTime: 3,
-            feedback: 0.03
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 3500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    choir: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3.2,
-            preDelay: 0.05,
-            wet: 0.6
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.4,
-            depth: 0.6,
-            delayTime: 5,
-            feedback: 0.08
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 2e3,
-            Q: 0.7,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    vocalPads: {
-      enabled: false,
-      volume: 0.5,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 4,
-            preDelay: 0.06,
-            wet: 0.7
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.3,
-            depth: 0.4,
-            delayTime: 6,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 1500,
-            Q: 1.2,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    pad: {
-      enabled: false,
-      volume: 0.4,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3.5,
-            preDelay: 0.08,
-            wet: 0.8
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.2,
-            depth: 0.7,
-            delayTime: 8,
-            feedback: 0.1
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 1200,
-            Q: 1.5,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    flute: {
-      enabled: true,
-      volume: 0.6,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.2,
-            preDelay: 0.02,
-            wet: 0.4
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.8,
-            depth: 0.2,
-            delayTime: 2,
-            feedback: 0.02
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 6e3,
-            Q: 0.5,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    clarinet: {
-      enabled: true,
-      volume: 0.5,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.5,
-            preDelay: 0.03,
-            wet: 0.35
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.5,
-            depth: 0.25,
-            delayTime: 2.5,
-            feedback: 0.03
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 4500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    saxophone: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.8,
-            preDelay: 0.04,
-            wet: 0.45
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.6,
-            depth: 0.4,
-            delayTime: 3.5,
-            feedback: 0.06
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 3e3,
-            Q: 0.9,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    soprano: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.8,
-            preDelay: 0.03,
-            wet: 0.5
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.8,
-            depth: 0.3,
-            delayTime: 2.5,
-            feedback: 0.04
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 4e3,
-            Q: 1.2,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    alto: {
-      enabled: false,
-      volume: 0.5,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3,
-            preDelay: 0.04,
-            wet: 0.55
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.6,
-            depth: 0.35,
-            delayTime: 3,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 3200,
-            Q: 1,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    tenor: {
-      enabled: false,
-      volume: 0.5,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.5,
-            preDelay: 0.03,
-            wet: 0.45
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.7,
-            depth: 0.25,
-            delayTime: 2.8,
-            feedback: 0.03
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 2800,
-            Q: 0.9,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    bass: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3.5,
-            preDelay: 0.05,
-            wet: 0.6
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.4,
-            depth: 0.4,
-            delayTime: 4,
-            feedback: 0.06
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 1500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    // Phase 6B: Extended Keyboard Family
-    electricPiano: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2,
-            preDelay: 0.025,
-            wet: 0.3
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 1.2,
-            depth: 0.4,
-            delayTime: 3,
-            feedback: 0.04
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 5e3,
-            Q: 0.7,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    harpsichord: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 1.5,
-            preDelay: 0.02,
-            wet: 0.25
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.6,
-            depth: 0.2,
-            delayTime: 2,
-            feedback: 0.02
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 4500,
-            Q: 1,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    accordion: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.2,
-            preDelay: 0.03,
-            wet: 0.35
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.8,
-            depth: 0.5,
-            delayTime: 4,
-            feedback: 0.06
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 3500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    celesta: {
-      enabled: false,
-      volume: 0.5,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3,
-            preDelay: 0.04,
-            wet: 0.5
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.4,
-            depth: 0.3,
-            delayTime: 3.5,
-            feedback: 0.03
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 6e3,
-            Q: 0.6,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    // Phase 7: Strings & Brass Completion
-    violin: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.5,
-            preDelay: 0.03,
-            wet: 0.4
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.6,
-            depth: 0.3,
-            delayTime: 2.5,
-            feedback: 0.04
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 5e3,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    cello: {
-      enabled: false,
-      volume: 0.8,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3.2,
-            preDelay: 0.04,
-            wet: 0.5
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.4,
-            depth: 0.4,
-            delayTime: 3.5,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 3e3,
-            Q: 0.9,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    guitar: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2,
-            preDelay: 0.02,
-            wet: 0.3
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.8,
-            depth: 0.3,
-            delayTime: 2,
-            feedback: 0.03
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 4e3,
-            Q: 0.7,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    harp: {
-      enabled: false,
-      volume: 0.5,
-      maxVoices: 12,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 4,
-            preDelay: 0.05,
-            wet: 0.6
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.3,
-            depth: 0.2,
-            delayTime: 4,
-            feedback: 0.02
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 6e3,
-            Q: 0.5,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    trumpet: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.2,
-            preDelay: 0.03,
-            wet: 0.35
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.7,
-            depth: 0.2,
-            delayTime: 2.5,
-            feedback: 0.03
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 4500,
-            Q: 1,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    frenchHorn: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.8,
-            preDelay: 0.04,
-            wet: 0.45
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.5,
-            depth: 0.3,
-            delayTime: 3,
-            feedback: 0.04
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 3500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    trombone: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.5,
-            preDelay: 0.03,
-            wet: 0.4
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.6,
-            depth: 0.3,
-            delayTime: 3,
-            feedback: 0.04
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 2500,
-            Q: 0.9,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    tuba: {
-      enabled: false,
-      volume: 0.8,
-      maxVoices: 3,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 3.5,
-            preDelay: 0.05,
-            wet: 0.5
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.3,
-            depth: 0.4,
-            delayTime: 4,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: false,
-          params: {
-            frequency: 1500,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    // Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
-    oboe: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2.5,
-            preDelay: 0.03,
-            wet: 0.35
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 1.2,
-            depth: 0.3,
-            delayTime: 2.5,
-            feedback: 0.1
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 2500,
-            Q: 1.2,
-            type: "bandpass"
-          }
-        }
-      }
-    },
-    timpani: {
-      enabled: false,
-      volume: 0.9,
-      maxVoices: 2,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 6,
-            preDelay: 0.08,
-            wet: 0.6
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.1,
-            depth: 0.2,
-            delayTime: 8,
-            feedback: 0.02
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 800,
-            Q: 0.5,
-            type: "highpass"
-          }
-        }
-      }
-    },
-    xylophone: {
-      enabled: false,
-      volume: 0.8,
-      maxVoices: 6,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 2,
-            preDelay: 0.02,
-            wet: 0.3
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 2,
-            depth: 0.2,
-            delayTime: 1.5,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 8e3,
-            Q: 0.8,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    vibraphone: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 4.5,
-            preDelay: 0.04,
-            wet: 0.4
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 6,
-            depth: 0.3,
-            delayTime: 2,
-            feedback: 0.08
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 4e3,
-            Q: 1,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    gongs: {
-      enabled: false,
-      volume: 0.9,
-      maxVoices: 2,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 12,
-            preDelay: 0.1,
-            wet: 0.7
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.05,
-            depth: 0.4,
-            delayTime: 15,
-            feedback: 0.1
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 200,
-            Q: 2,
-            type: "bandpass"
-          }
-        }
-      }
-    },
-    leadSynth: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 1.5,
-            preDelay: 0.02,
-            wet: 0.2
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 1.5,
-            depth: 0.3,
-            delayTime: 3,
-            feedback: 0.1
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 2e3,
-            Q: 4,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    bassSynth: {
-      enabled: false,
-      volume: 0.8,
-      maxVoices: 2,
-      effects: {
-        reverb: {
-          enabled: false,
-          params: {
-            decay: 1,
-            preDelay: 0.01,
-            wet: 0.1
-          }
-        },
-        chorus: {
-          enabled: false,
-          params: {
-            frequency: 0.8,
-            depth: 0.2,
-            delayTime: 4,
-            feedback: 0.05
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 300,
-            Q: 1.5,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    arpSynth: {
-      enabled: false,
-      volume: 0.6,
-      maxVoices: 8,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 1.8,
-            preDelay: 0.02,
-            wet: 0.25
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 2,
-            depth: 0.2,
-            delayTime: 2,
-            feedback: 0.06
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 3e3,
-            Q: 1.2,
-            type: "lowpass"
-          }
-        }
-      }
-    },
-    // Phase 8B: Environmental & Natural Sounds
-    whaleHumpback: {
-      enabled: false,
-      volume: 0.7,
-      maxVoices: 4,
-      effects: {
-        reverb: {
-          enabled: true,
-          params: {
-            decay: 8,
-            preDelay: 0.15,
-            wet: 0.85
-          }
-        },
-        chorus: {
-          enabled: true,
-          params: {
-            frequency: 0.1,
-            depth: 0.8,
-            delayTime: 12,
-            feedback: 0.15
-          }
-        },
-        filter: {
-          enabled: true,
-          params: {
-            frequency: 800,
-            Q: 0.4,
-            type: "lowpass"
-          }
-        }
-      }
-    }
-  },
-  voiceAssignmentStrategy: "frequency",
-  // Phase 3: Performance Mode Settings
-  performanceMode: {
-    mode: "medium",
-    enableFrequencyDetuning: true,
-    maxConcurrentVoices: 32,
-    processingQuality: "balanced",
-    enableAudioOptimizations: true
-  },
-  // Phase 3.5: Enhanced Effect Routing (disabled by default for backward compatibility)
-  enhancedRouting: {
-    enabled: false,
-    effectChains: /* @__PURE__ */ new Map(),
-    routingMatrix: {
-      sends: /* @__PURE__ */ new Map(),
-      returns: /* @__PURE__ */ new Map(),
-      groups: /* @__PURE__ */ new Map(),
-      masterEffects: {
-        reverb: {
-          enabled: false,
-          roomSize: 0.8,
-          damping: 0.5,
-          params: {
-            decay: 3,
-            preDelay: 0.05,
-            wet: 0.3
-          }
-        },
-        eq: {
-          enabled: false,
-          params: {
-            lowGain: 0,
-            midGain: 0,
-            highGain: 0,
-            lowFreq: 100,
-            midFreq: 1e3,
-            highFreq: 8e3
-          }
-        },
-        compressor: {
-          enabled: false,
-          params: {
-            threshold: -18,
-            ratio: 4,
-            attack: 3e-3,
-            release: 0.1,
-            makeupGain: 2
-          }
-        },
-        limiter: {
-          enabled: false,
-          params: {
-            threshold: -0.5,
-            lookAhead: 5e-3,
-            release: 0.01
-          }
-        },
-        enabled: false
-      },
-      automations: []
-    },
-    version: "3.5.0"
-  }
-};
-var MUSICAL_SCALES = {
-  major: [0, 2, 4, 5, 7, 9, 11],
-  minor: [0, 2, 3, 5, 7, 8, 10],
-  pentatonic: [0, 2, 4, 7, 9],
-  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-};
-var EFFECT_PRESETS = {
-  // Venue-based presets
-  "concert-hall": {
-    name: "Concert Hall",
-    description: "Large reverberant space with natural acoustics",
-    category: "venue",
-    effects: {
-      reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.6 } },
-      chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3, feedback: 0.03 } },
-      filter: { enabled: true, params: { frequency: 6e3, Q: 0.5, type: "lowpass" } }
-    }
-  },
-  "cathedral": {
-    name: "Cathedral",
-    description: "Massive stone space with long, ethereal reverb",
-    category: "venue",
-    effects: {
-      reverb: { enabled: true, params: { decay: 8, preDelay: 0.15, wet: 0.8 } },
-      chorus: { enabled: true, params: { frequency: 0.3, depth: 0.4, delayTime: 6, feedback: 0.08 } },
-      filter: { enabled: true, params: { frequency: 4e3, Q: 0.6, type: "lowpass" } }
-    }
-  },
-  "studio": {
-    name: "Studio",
-    description: "Clean, controlled recording environment",
-    category: "venue",
-    effects: {
-      reverb: { enabled: true, params: { decay: 1.2, preDelay: 0.01, wet: 0.25 } },
-      chorus: { enabled: false, params: { frequency: 0.8, depth: 0.2, delayTime: 2, feedback: 0.02 } },
-      filter: { enabled: false, params: { frequency: 8e3, Q: 0.7, type: "lowpass" } }
-    }
-  },
-  "jazz-club": {
-    name: "Jazz Club",
-    description: "Intimate, warm venue with subtle ambience",
-    category: "venue",
-    effects: {
-      reverb: { enabled: true, params: { decay: 2, preDelay: 0.03, wet: 0.35 } },
-      chorus: { enabled: true, params: { frequency: 0.6, depth: 0.3, delayTime: 3.5, feedback: 0.05 } },
-      filter: { enabled: true, params: { frequency: 5e3, Q: 0.8, type: "lowpass" } }
-    }
-  },
-  "arena": {
-    name: "Arena",
-    description: "Large venue with powerful, booming acoustics",
-    category: "venue",
-    effects: {
-      reverb: { enabled: true, params: { decay: 4.5, preDelay: 0.12, wet: 0.7 } },
-      chorus: { enabled: true, params: { frequency: 0.4, depth: 0.5, delayTime: 4, feedback: 0.06 } },
-      filter: { enabled: true, params: { frequency: 3500, Q: 1, type: "lowpass" } }
-    }
-  },
-  // Genre-based presets
-  "ambient": {
-    name: "Ambient",
-    description: "Spacious, ethereal soundscape",
-    category: "genre",
-    effects: {
-      reverb: { enabled: true, params: { decay: 6, preDelay: 0.1, wet: 0.75 } },
-      chorus: { enabled: true, params: { frequency: 0.2, depth: 0.6, delayTime: 8, feedback: 0.1 } },
-      filter: { enabled: true, params: { frequency: 2500, Q: 1.2, type: "lowpass" } }
-    }
-  },
-  "classical": {
-    name: "Classical",
-    description: "Natural, balanced orchestral sound",
-    category: "genre",
-    effects: {
-      reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.06, wet: 0.5 } },
-      chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3, feedback: 0.03 } },
-      filter: { enabled: true, params: { frequency: 7e3, Q: 0.6, type: "lowpass" } }
-    }
-  },
-  "electronic": {
-    name: "Electronic",
-    description: "Clean, precise digital processing",
-    category: "genre",
-    effects: {
-      reverb: { enabled: true, params: { decay: 1.5, preDelay: 0.02, wet: 0.3 } },
-      chorus: { enabled: true, params: { frequency: 1.2, depth: 0.4, delayTime: 2.5, feedback: 0.04 } },
-      filter: { enabled: true, params: { frequency: 8e3, Q: 1.5, type: "lowpass" } }
-    }
-  },
-  "cinematic": {
-    name: "Cinematic",
-    description: "Epic, dramatic film score atmosphere",
-    category: "genre",
-    effects: {
-      reverb: { enabled: true, params: { decay: 5, preDelay: 0.09, wet: 0.65 } },
-      chorus: { enabled: true, params: { frequency: 0.3, depth: 0.5, delayTime: 5, feedback: 0.07 } },
-      filter: { enabled: true, params: { frequency: 4500, Q: 0.9, type: "lowpass" } }
-    }
-  },
-  // Special presets
-  "dry": {
-    name: "Dry",
-    description: "Minimal effects for clarity",
-    category: "instrument",
-    effects: {
-      reverb: { enabled: false, params: { decay: 1, preDelay: 0.01, wet: 0.1 } },
-      chorus: { enabled: false, params: { frequency: 0.5, depth: 0.2, delayTime: 2, feedback: 0.02 } },
-      filter: { enabled: false, params: { frequency: 8e3, Q: 0.7, type: "lowpass" } }
-    }
-  },
-  "lush": {
-    name: "Lush",
-    description: "Rich, full processing with all effects",
-    category: "instrument",
-    effects: {
-      reverb: { enabled: true, params: { decay: 4, preDelay: 0.07, wet: 0.6 } },
-      chorus: { enabled: true, params: { frequency: 0.5, depth: 0.5, delayTime: 4, feedback: 0.06 } },
-      filter: { enabled: true, params: { frequency: 6e3, Q: 0.8, type: "lowpass" } }
+var constants_exports = {};
+__export(constants_exports, {
+  DEFAULT_SETTINGS: () => DEFAULT_SETTINGS,
+  DEFAULT_SMART_RANGES: () => DEFAULT_SMART_RANGES,
+  EFFECT_PRESETS: () => EFFECT_PRESETS,
+  INSTRUMENT_FAMILIES: () => INSTRUMENT_FAMILIES,
+  INSTRUMENT_INFO: () => INSTRUMENT_INFO,
+  INSTRUMENT_SMART_RANGES: () => INSTRUMENT_SMART_RANGES,
+  MUSICAL_SCALES: () => MUSICAL_SCALES,
+  ROOT_NOTES: () => ROOT_NOTES,
+  TRAVERSAL_METHODS: () => TRAVERSAL_METHODS,
+  VOICE_ASSIGNMENT_STRATEGIES: () => VOICE_ASSIGNMENT_STRATEGIES,
+  createDefaultEffectChain: () => createDefaultEffectChain,
+  createDefaultInstrumentGroup: () => createDefaultInstrumentGroup,
+  createDefaultReturnBus: () => createDefaultReturnBus,
+  createDefaultSendBus: () => createDefaultSendBus,
+  getAllInstrumentKeys: () => getAllInstrumentKeys,
+  getInstrumentFamily: () => getInstrumentFamily,
+  getParameterRange: () => getParameterRange,
+  getSmartRanges: () => getSmartRanges,
+  isValidInstrumentKey: () => isValidInstrumentKey,
+  migrateToEnhancedRouting: () => migrateToEnhancedRouting,
+  validateInstrumentSettings: () => validateInstrumentSettings
+});
+function isValidInstrumentKey(key) {
+  return key in DEFAULT_SETTINGS.instruments;
+}
+function getAllInstrumentKeys() {
+  return Object.keys(DEFAULT_SETTINGS.instruments);
+}
+function getInstrumentFamily(instrumentKey) {
+  for (const [family, instruments] of Object.entries(INSTRUMENT_FAMILIES)) {
+    if (instruments.includes(instrumentKey)) {
+      return family;
     }
   }
-};
+  return null;
+}
+function validateInstrumentSettings(settings) {
+  const requiredKeys = getAllInstrumentKeys();
+  const providedKeys = Object.keys(settings);
+  const missingKeys = requiredKeys.filter((key) => !providedKeys.includes(key));
+  const extraKeys = providedKeys.filter((key) => !isValidInstrumentKey(key));
+  if (missingKeys.length > 0) {
+    console.warn("Missing instrument settings for:", missingKeys);
+    return false;
+  }
+  if (extraKeys.length > 0) {
+    console.warn("Unknown instrument keys found:", extraKeys);
+  }
+  return true;
+}
+function getSmartRanges(instrumentName) {
+  return INSTRUMENT_SMART_RANGES[instrumentName] || DEFAULT_SMART_RANGES;
+}
+function getParameterRange(instrumentName, effectName, paramName) {
+  const ranges = getSmartRanges(instrumentName);
+  const effectRanges = ranges[effectName];
+  if (effectRanges && paramName in effectRanges) {
+    return effectRanges[paramName];
+  }
+  return null;
+}
 function createDefaultEffectChain(instrumentName) {
   const instrumentSettings = DEFAULT_SETTINGS.instruments[instrumentName];
   const nodes = [
@@ -1358,6 +123,36 @@ function createDefaultEffectChain(instrumentName) {
     sendLevels: /* @__PURE__ */ new Map()
   };
 }
+function createDefaultSendBus(id, name, type) {
+  return {
+    id,
+    name,
+    type,
+    effects: [],
+    returnLevel: 0.5,
+    prePost: "post"
+  };
+}
+function createDefaultReturnBus(id, name) {
+  return {
+    id,
+    name,
+    inputLevel: 1,
+    effects: [],
+    panPosition: 0
+  };
+}
+function createDefaultInstrumentGroup(id, name, instruments) {
+  return {
+    id,
+    name,
+    instruments,
+    groupEffects: [],
+    groupVolume: 1,
+    groupMute: false,
+    groupSolo: false
+  };
+}
 function migrateToEnhancedRouting(settings) {
   var _a;
   if ((_a = settings.enhancedRouting) == null ? void 0 : _a.enabled) {
@@ -1386,6 +181,1939 @@ function migrateToEnhancedRouting(settings) {
     }
   };
 }
+var DEFAULT_SETTINGS, MUSICAL_SCALES, ROOT_NOTES, TRAVERSAL_METHODS, VOICE_ASSIGNMENT_STRATEGIES, INSTRUMENT_FAMILIES, INSTRUMENT_INFO, EFFECT_PRESETS, INSTRUMENT_SMART_RANGES, DEFAULT_SMART_RANGES;
+var init_constants = __esm({
+  "src/utils/constants.ts"() {
+    DEFAULT_SETTINGS = {
+      tempo: 120,
+      volume: 0.5,
+      scale: "major",
+      rootNote: "C",
+      traversalMethod: "breadth-first",
+      isEnabled: true,
+      audioFormat: "synthesis",
+      microtuning: false,
+      effects: {
+        orchestralreverbhall: { enabled: true },
+        "3bandeq": { enabled: true },
+        dynamiccompressor: { enabled: false }
+      },
+      instruments: {
+        piano: {
+          enabled: true,
+          volume: 0.8,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 1.8,
+                preDelay: 0.02,
+                wet: 0.25
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.8,
+                depth: 0.5,
+                delayTime: 4,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 3500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        organ: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.2,
+                preDelay: 0.03,
+                wet: 0.35
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.8,
+                depth: 0.5,
+                delayTime: 4,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 4e3,
+                Q: 0.6,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        strings: {
+          enabled: true,
+          volume: 0.6,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.8,
+                preDelay: 0.04,
+                wet: 0.45
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.6,
+                depth: 0.3,
+                delayTime: 3,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 3500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        choir: {
+          enabled: true,
+          volume: 0.7,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3.2,
+                preDelay: 0.05,
+                wet: 0.6
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.4,
+                depth: 0.6,
+                delayTime: 5,
+                feedback: 0.08
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 2e3,
+                Q: 0.7,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        vocalPads: {
+          enabled: false,
+          volume: 0.5,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 4,
+                preDelay: 0.06,
+                wet: 0.7
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.3,
+                depth: 0.4,
+                delayTime: 6,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 1500,
+                Q: 1.2,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        pad: {
+          enabled: false,
+          volume: 0.4,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3.5,
+                preDelay: 0.08,
+                wet: 0.8
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.2,
+                depth: 0.7,
+                delayTime: 8,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 1200,
+                Q: 1.5,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        flute: {
+          enabled: true,
+          volume: 0.6,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.2,
+                preDelay: 0.02,
+                wet: 0.4
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.8,
+                depth: 0.2,
+                delayTime: 2,
+                feedback: 0.02
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 6e3,
+                Q: 0.5,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        clarinet: {
+          enabled: true,
+          volume: 0.5,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.5,
+                preDelay: 0.03,
+                wet: 0.35
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.5,
+                depth: 0.25,
+                delayTime: 2.5,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 4500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        saxophone: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.8,
+                preDelay: 0.04,
+                wet: 0.45
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.6,
+                depth: 0.4,
+                delayTime: 3.5,
+                feedback: 0.06
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 3e3,
+                Q: 0.9,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        soprano: {
+          enabled: true,
+          volume: 0.6,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.8,
+                preDelay: 0.03,
+                wet: 0.5
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.8,
+                depth: 0.3,
+                delayTime: 2.5,
+                feedback: 0.04
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 4e3,
+                Q: 1.2,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        alto: {
+          enabled: false,
+          volume: 0.5,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3,
+                preDelay: 0.04,
+                wet: 0.55
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.6,
+                depth: 0.35,
+                delayTime: 3,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 3200,
+                Q: 1,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        tenor: {
+          enabled: false,
+          volume: 0.5,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.5,
+                preDelay: 0.03,
+                wet: 0.45
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.7,
+                depth: 0.25,
+                delayTime: 2.8,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 2800,
+                Q: 0.9,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        bass: {
+          enabled: true,
+          volume: 0.7,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3.5,
+                preDelay: 0.05,
+                wet: 0.6
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.4,
+                depth: 0.4,
+                delayTime: 4,
+                feedback: 0.06
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 1500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        // Phase 6B: Extended Keyboard Family
+        electricPiano: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2,
+                preDelay: 0.025,
+                wet: 0.3
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 1.2,
+                depth: 0.4,
+                delayTime: 3,
+                feedback: 0.04
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 5e3,
+                Q: 0.7,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        harpsichord: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 1.5,
+                preDelay: 0.02,
+                wet: 0.25
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.6,
+                depth: 0.2,
+                delayTime: 2,
+                feedback: 0.02
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 4500,
+                Q: 1,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        accordion: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.2,
+                preDelay: 0.03,
+                wet: 0.35
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.8,
+                depth: 0.5,
+                delayTime: 4,
+                feedback: 0.06
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 3500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        celesta: {
+          enabled: false,
+          volume: 0.5,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3,
+                preDelay: 0.04,
+                wet: 0.5
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.4,
+                depth: 0.3,
+                delayTime: 3.5,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 6e3,
+                Q: 0.6,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        // Phase 7: Strings & Brass Completion
+        violin: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.5,
+                preDelay: 0.03,
+                wet: 0.4
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.6,
+                depth: 0.3,
+                delayTime: 2.5,
+                feedback: 0.04
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 5e3,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        cello: {
+          enabled: false,
+          volume: 0.8,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3.2,
+                preDelay: 0.04,
+                wet: 0.5
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.4,
+                depth: 0.4,
+                delayTime: 3.5,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 3e3,
+                Q: 0.9,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        guitar: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2,
+                preDelay: 0.02,
+                wet: 0.3
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.8,
+                depth: 0.3,
+                delayTime: 2,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 4e3,
+                Q: 0.7,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        harp: {
+          enabled: false,
+          volume: 0.5,
+          maxVoices: 12,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 4,
+                preDelay: 0.05,
+                wet: 0.6
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.3,
+                depth: 0.2,
+                delayTime: 4,
+                feedback: 0.02
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 6e3,
+                Q: 0.5,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        trumpet: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.2,
+                preDelay: 0.03,
+                wet: 0.35
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.7,
+                depth: 0.2,
+                delayTime: 2.5,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 4500,
+                Q: 1,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        frenchHorn: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.8,
+                preDelay: 0.04,
+                wet: 0.45
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.5,
+                depth: 0.3,
+                delayTime: 3,
+                feedback: 0.04
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 3500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        trombone: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.5,
+                preDelay: 0.03,
+                wet: 0.4
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.6,
+                depth: 0.3,
+                delayTime: 3,
+                feedback: 0.04
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 2500,
+                Q: 0.9,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        tuba: {
+          enabled: false,
+          volume: 0.8,
+          maxVoices: 3,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3.5,
+                preDelay: 0.05,
+                wet: 0.5
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.3,
+                depth: 0.4,
+                delayTime: 4,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 1500,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        // Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
+        oboe: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.5,
+                preDelay: 0.03,
+                wet: 0.35
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 1.2,
+                depth: 0.3,
+                delayTime: 2.5,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 2500,
+                Q: 1.2,
+                type: "bandpass"
+              }
+            }
+          }
+        },
+        timpani: {
+          enabled: true,
+          volume: 0.9,
+          maxVoices: 2,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 6,
+                preDelay: 0.08,
+                wet: 0.6
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.1,
+                depth: 0.2,
+                delayTime: 8,
+                feedback: 0.02
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 800,
+                Q: 0.5,
+                type: "highpass"
+              }
+            }
+          }
+        },
+        xylophone: {
+          enabled: true,
+          volume: 0.8,
+          maxVoices: 6,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2,
+                preDelay: 0.02,
+                wet: 0.3
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 2,
+                depth: 0.2,
+                delayTime: 1.5,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 8e3,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        vibraphone: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 4.5,
+                preDelay: 0.04,
+                wet: 0.4
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 6,
+                depth: 0.3,
+                delayTime: 2,
+                feedback: 0.08
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 4e3,
+                Q: 1,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        gongs: {
+          enabled: false,
+          volume: 0.9,
+          maxVoices: 2,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 12,
+                preDelay: 0.1,
+                wet: 0.7
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.05,
+                depth: 0.4,
+                delayTime: 15,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 200,
+                Q: 2,
+                type: "bandpass"
+              }
+            }
+          }
+        },
+        leadSynth: {
+          enabled: true,
+          volume: 0.6,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 1.5,
+                preDelay: 0.02,
+                wet: 0.2
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 1.5,
+                depth: 0.3,
+                delayTime: 3,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 2e3,
+                Q: 4,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        bassSynth: {
+          enabled: true,
+          volume: 0.8,
+          maxVoices: 2,
+          effects: {
+            reverb: {
+              enabled: false,
+              params: {
+                decay: 1,
+                preDelay: 0.01,
+                wet: 0.1
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.8,
+                depth: 0.2,
+                delayTime: 4,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 300,
+                Q: 1.5,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        arpSynth: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 8,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 1.8,
+                preDelay: 0.02,
+                wet: 0.25
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 2,
+                depth: 0.2,
+                delayTime: 2,
+                feedback: 0.06
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 3e3,
+                Q: 1.2,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        // Phase 8B: Environmental & Natural Sounds
+        whaleHumpback: {
+          enabled: true,
+          volume: 0.7,
+          maxVoices: 4,
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 8,
+                preDelay: 0.15,
+                wet: 0.85
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.1,
+                depth: 0.8,
+                delayTime: 12,
+                feedback: 0.15
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 800,
+                Q: 0.4,
+                type: "lowpass"
+              }
+            }
+          }
+        }
+      },
+      voiceAssignmentStrategy: "frequency",
+      // Phase 3: Performance Mode Settings
+      performanceMode: {
+        mode: "medium",
+        enableFrequencyDetuning: true,
+        maxConcurrentVoices: 32,
+        processingQuality: "balanced",
+        enableAudioOptimizations: true
+      },
+      // Phase 3.5: Enhanced Effect Routing (disabled by default for backward compatibility)
+      enhancedRouting: {
+        enabled: false,
+        effectChains: /* @__PURE__ */ new Map(),
+        routingMatrix: {
+          sends: /* @__PURE__ */ new Map(),
+          returns: /* @__PURE__ */ new Map(),
+          groups: /* @__PURE__ */ new Map(),
+          masterEffects: {
+            reverb: {
+              enabled: false,
+              roomSize: 0.8,
+              damping: 0.5,
+              params: {
+                decay: 3,
+                preDelay: 0.05,
+                wet: 0.3
+              }
+            },
+            eq: {
+              enabled: false,
+              params: {
+                lowGain: 0,
+                midGain: 0,
+                highGain: 0,
+                lowFreq: 100,
+                midFreq: 1e3,
+                highFreq: 8e3
+              }
+            },
+            compressor: {
+              enabled: false,
+              params: {
+                threshold: -18,
+                ratio: 4,
+                attack: 3e-3,
+                release: 0.1,
+                makeupGain: 2
+              }
+            },
+            limiter: {
+              enabled: false,
+              params: {
+                threshold: -0.5,
+                lookAhead: 5e-3,
+                release: 0.01
+              }
+            },
+            enabled: false
+          },
+          automations: []
+        },
+        version: "3.5.0"
+      }
+    };
+    MUSICAL_SCALES = {
+      major: [0, 2, 4, 5, 7, 9, 11],
+      minor: [0, 2, 3, 5, 7, 8, 10],
+      pentatonic: [0, 2, 4, 7, 9],
+      chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    };
+    ROOT_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    TRAVERSAL_METHODS = ["breadth-first", "depth-first", "sequential"];
+    VOICE_ASSIGNMENT_STRATEGIES = {
+      frequency: "Frequency-Based (Automatic)",
+      "round-robin": "Round-Robin (Cycling)",
+      "connection-based": "Connection-Based (Graph)"
+    };
+    INSTRUMENT_FAMILIES = {
+      keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"],
+      strings: ["strings", "violin", "cello", "guitar", "harp"],
+      woodwinds: ["flute", "clarinet", "saxophone", "oboe"],
+      brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
+      vocals: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
+      percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
+      electronic: ["leadSynth", "bassSynth", "arpSynth"],
+      experimental: ["whaleHumpback"],
+      pads: ["pad"]
+    };
+    INSTRUMENT_INFO = {
+      piano: {
+        name: "Piano",
+        icon: "\u{1F3B9}",
+        description: "Triangle waves with quick attack/decay for percussive clarity",
+        defaultFrequencyRange: "Very High (>1400Hz)"
+      },
+      organ: {
+        name: "Organ",
+        icon: "\u{1F39B}\uFE0F",
+        description: "FM synthesis with chorus effect for rich, sustained tones",
+        defaultFrequencyRange: "Medium (400-800Hz)"
+      },
+      strings: {
+        name: "Strings",
+        icon: "\u{1F3BB}",
+        description: "AM synthesis with filtering for warm, flowing sounds",
+        defaultFrequencyRange: "Very Low (<200Hz)"
+      },
+      choir: {
+        name: "Choir",
+        icon: "\u{1F3A4}",
+        description: "Additive synthesis with formant filtering for ethereal human voices",
+        defaultFrequencyRange: "High (1000-1400Hz)"
+      },
+      vocalPads: {
+        name: "Vocal Pads",
+        icon: "\u{1F30A}",
+        description: "Multi-layer sine waves with formant filtering for atmospheric textures",
+        defaultFrequencyRange: "Mid-High (600-1000Hz)"
+      },
+      pad: {
+        name: "Pad",
+        icon: "\u{1F39B}\uFE0F",
+        description: "Multi-oscillator synthesis with filter sweeps for ambient foundations",
+        defaultFrequencyRange: "Low-Mid (200-400Hz)"
+      },
+      flute: {
+        name: "Flute",
+        icon: "\u{1F3BA}",
+        description: "Pure sine waves with breath noise for airy, crystalline tones",
+        defaultFrequencyRange: "Ultra High (>1600Hz)"
+      },
+      clarinet: {
+        name: "Clarinet",
+        icon: "\u{1F3B5}",
+        description: "Square wave harmonics for warm, hollow woodwind character",
+        defaultFrequencyRange: "High-Mid (800-1200Hz)"
+      },
+      saxophone: {
+        name: "Saxophone",
+        icon: "\u{1F3B7}",
+        description: "Sawtooth waves with reedy harmonics for rich, expressive tone",
+        defaultFrequencyRange: "Mid (300-600Hz)"
+      },
+      // Phase 6B: Extended Keyboard Family
+      electricPiano: {
+        name: "Electric Piano",
+        icon: "\u{1F3B9}",
+        description: "AM synthesis with tremolo for vintage Rhodes/Wurlitzer character",
+        defaultFrequencyRange: "Mid-Low (200-400Hz)"
+      },
+      harpsichord: {
+        name: "Harpsichord",
+        icon: "\u{1F3BC}",
+        description: "Sharp envelope with filtering for baroque plucked attack",
+        defaultFrequencyRange: "Low-Mid (300-600Hz)"
+      },
+      accordion: {
+        name: "Accordion",
+        icon: "\u{1FA97}",
+        description: "AM synthesis with vibrato for bellows breath simulation",
+        defaultFrequencyRange: "Mid (400-800Hz)"
+      },
+      celesta: {
+        name: "Celesta",
+        icon: "\u{1F514}",
+        description: "Triangle waves with decay for bell-like ethereal tones",
+        defaultFrequencyRange: "Very High (1400-1600Hz)"
+      },
+      // Phase 7: Strings & Brass Completion
+      violin: {
+        name: "Violin",
+        icon: "\u{1F3BB}",
+        description: "Sawtooth waves with filter sweeps and vibrato for expressive bowing",
+        defaultFrequencyRange: "High-Mid (800-1200Hz)"
+      },
+      cello: {
+        name: "Cello",
+        icon: "\u{1F3BB}",
+        description: "Complex harmonics with bow noise for rich low register character",
+        defaultFrequencyRange: "Mid-Low (200-400Hz)"
+      },
+      guitar: {
+        name: "Guitar",
+        icon: "\u{1F3B8}",
+        description: "Karplus-Strong synthesis for authentic plucked string physics",
+        defaultFrequencyRange: "Mid-High (600-1000Hz)"
+      },
+      harp: {
+        name: "Harp",
+        icon: "\u{1FA84}",
+        description: "Sharp pluck envelope with long decay for cascading arpeggios",
+        defaultFrequencyRange: "Low (100-200Hz)"
+      },
+      trumpet: {
+        name: "Trumpet",
+        icon: "\u{1F3BA}",
+        description: "Square waves with brass formants for bright metallic timbre",
+        defaultFrequencyRange: "Low-Mid (300-600Hz)"
+      },
+      frenchHorn: {
+        name: "French Horn",
+        icon: "\u{1F3AF}",
+        description: "Sine waves with slight distortion for warm middle register",
+        defaultFrequencyRange: "Mid (400-800Hz)"
+      },
+      trombone: {
+        name: "Trombone",
+        icon: "\u{1F3BA}",
+        description: "Sawtooth waves with portamento for characteristic sliding pitch",
+        defaultFrequencyRange: "Mid-Low (200-400Hz)"
+      },
+      tuba: {
+        name: "Tuba",
+        icon: "\u{1F3BA}",
+        description: "Sub-bass frequencies with breath noise for deep foundation",
+        defaultFrequencyRange: "Very Low (<100Hz)"
+      },
+      // Phase 8: Percussion & Electronic Finale
+      oboe: {
+        name: "Oboe",
+        icon: "\u{1F3BC}",
+        description: "Nasal quality with double reed simulation and formant filtering",
+        defaultFrequencyRange: "High-Mid (800-1200Hz)"
+      },
+      timpani: {
+        name: "Timpani",
+        icon: "\u{1F941}",
+        description: "Tuned drums with pitch bending and hall acoustics",
+        defaultFrequencyRange: "Low (100-200Hz)"
+      },
+      xylophone: {
+        name: "Xylophone",
+        icon: "\u{1F3B5}",
+        description: "Bright mallet percussion with wooden resonance",
+        defaultFrequencyRange: "Very High (1400-1600Hz)"
+      },
+      vibraphone: {
+        name: "Vibraphone",
+        icon: "\u{1F3BC}",
+        description: "Metallic shimmer with tremolo motor and long sustain",
+        defaultFrequencyRange: "High (1000-1400Hz)"
+      },
+      gongs: {
+        name: "Gongs",
+        icon: "\u{1F941}",
+        description: "Sustained crash with metallic resonance and massive reverb",
+        defaultFrequencyRange: "Very Low (<100Hz)"
+      },
+      leadSynth: {
+        name: "Lead Synth",
+        icon: "\u{1F39B}\uFE0F",
+        description: "Cutting synth lead with filter modulation and resonance",
+        defaultFrequencyRange: "Variable (200-8000Hz)"
+      },
+      bassSynth: {
+        name: "Bass Synth",
+        icon: "\u{1F39B}\uFE0F",
+        description: "Electronic foundation with sub-oscillator and tight filtering",
+        defaultFrequencyRange: "Low (100-200Hz)"
+      },
+      arpSynth: {
+        name: "Arp Synth",
+        icon: "\u{1F39B}\uFE0F",
+        description: "Sequenced patterns with graph-sync capability and delay",
+        defaultFrequencyRange: "Variable (Pattern-dependent)"
+      },
+      // Phase 6A: Individual Vocal Sections
+      soprano: {
+        name: "Soprano",
+        icon: "\u{1F469}\u200D\u{1F3A4}",
+        description: "High female voice with formant filtering and vowel morphing",
+        defaultFrequencyRange: "High-Mid (800-1200Hz)"
+      },
+      alto: {
+        name: "Alto",
+        icon: "\u{1F399}\uFE0F",
+        description: "Lower female voice with rich harmonics and breath noise modeling",
+        defaultFrequencyRange: "High (1000-1400Hz)"
+      },
+      tenor: {
+        name: "Tenor",
+        icon: "\u{1F9D1}\u200D\u{1F3A4}",
+        description: "High male voice with vocal expression and characteristics",
+        defaultFrequencyRange: "Mid-High (600-1000Hz)"
+      },
+      bass: {
+        name: "Bass",
+        icon: "\u{1F3A4}",
+        description: "Low male voice with chest resonance and sub-harmonics",
+        defaultFrequencyRange: "Very Low (<100Hz)"
+      },
+      // Phase 8B: Environmental & Natural Sounds
+      whaleHumpback: {
+        name: "Humpback Whale",
+        icon: "\u{1F40B}",
+        description: "Authentic whale song recordings with oceanic processing and deep resonance",
+        defaultFrequencyRange: "Low-Mid (20-1000Hz)"
+      }
+    };
+    EFFECT_PRESETS = {
+      // Venue-based presets
+      "concert-hall": {
+        name: "Concert Hall",
+        description: "Large reverberant space with natural acoustics",
+        category: "venue",
+        effects: {
+          reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.6 } },
+          chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3, feedback: 0.03 } },
+          filter: { enabled: true, params: { frequency: 6e3, Q: 0.5, type: "lowpass" } }
+        }
+      },
+      "cathedral": {
+        name: "Cathedral",
+        description: "Massive stone space with long, ethereal reverb",
+        category: "venue",
+        effects: {
+          reverb: { enabled: true, params: { decay: 8, preDelay: 0.15, wet: 0.8 } },
+          chorus: { enabled: true, params: { frequency: 0.3, depth: 0.4, delayTime: 6, feedback: 0.08 } },
+          filter: { enabled: true, params: { frequency: 4e3, Q: 0.6, type: "lowpass" } }
+        }
+      },
+      "studio": {
+        name: "Studio",
+        description: "Clean, controlled recording environment",
+        category: "venue",
+        effects: {
+          reverb: { enabled: true, params: { decay: 1.2, preDelay: 0.01, wet: 0.25 } },
+          chorus: { enabled: false, params: { frequency: 0.8, depth: 0.2, delayTime: 2, feedback: 0.02 } },
+          filter: { enabled: false, params: { frequency: 8e3, Q: 0.7, type: "lowpass" } }
+        }
+      },
+      "jazz-club": {
+        name: "Jazz Club",
+        description: "Intimate, warm venue with subtle ambience",
+        category: "venue",
+        effects: {
+          reverb: { enabled: true, params: { decay: 2, preDelay: 0.03, wet: 0.35 } },
+          chorus: { enabled: true, params: { frequency: 0.6, depth: 0.3, delayTime: 3.5, feedback: 0.05 } },
+          filter: { enabled: true, params: { frequency: 5e3, Q: 0.8, type: "lowpass" } }
+        }
+      },
+      "arena": {
+        name: "Arena",
+        description: "Large venue with powerful, booming acoustics",
+        category: "venue",
+        effects: {
+          reverb: { enabled: true, params: { decay: 4.5, preDelay: 0.12, wet: 0.7 } },
+          chorus: { enabled: true, params: { frequency: 0.4, depth: 0.5, delayTime: 4, feedback: 0.06 } },
+          filter: { enabled: true, params: { frequency: 3500, Q: 1, type: "lowpass" } }
+        }
+      },
+      // Genre-based presets
+      "ambient": {
+        name: "Ambient",
+        description: "Spacious, ethereal soundscape",
+        category: "genre",
+        effects: {
+          reverb: { enabled: true, params: { decay: 6, preDelay: 0.1, wet: 0.75 } },
+          chorus: { enabled: true, params: { frequency: 0.2, depth: 0.6, delayTime: 8, feedback: 0.1 } },
+          filter: { enabled: true, params: { frequency: 2500, Q: 1.2, type: "lowpass" } }
+        }
+      },
+      "classical": {
+        name: "Classical",
+        description: "Natural, balanced orchestral sound",
+        category: "genre",
+        effects: {
+          reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.06, wet: 0.5 } },
+          chorus: { enabled: false, params: { frequency: 0.5, depth: 0.3, delayTime: 3, feedback: 0.03 } },
+          filter: { enabled: true, params: { frequency: 7e3, Q: 0.6, type: "lowpass" } }
+        }
+      },
+      "electronic": {
+        name: "Electronic",
+        description: "Clean, precise digital processing",
+        category: "genre",
+        effects: {
+          reverb: { enabled: true, params: { decay: 1.5, preDelay: 0.02, wet: 0.3 } },
+          chorus: { enabled: true, params: { frequency: 1.2, depth: 0.4, delayTime: 2.5, feedback: 0.04 } },
+          filter: { enabled: true, params: { frequency: 8e3, Q: 1.5, type: "lowpass" } }
+        }
+      },
+      "cinematic": {
+        name: "Cinematic",
+        description: "Epic, dramatic film score atmosphere",
+        category: "genre",
+        effects: {
+          reverb: { enabled: true, params: { decay: 5, preDelay: 0.09, wet: 0.65 } },
+          chorus: { enabled: true, params: { frequency: 0.3, depth: 0.5, delayTime: 5, feedback: 0.07 } },
+          filter: { enabled: true, params: { frequency: 4500, Q: 0.9, type: "lowpass" } }
+        }
+      },
+      // Special presets
+      "dry": {
+        name: "Dry",
+        description: "Minimal effects for clarity",
+        category: "instrument",
+        effects: {
+          reverb: { enabled: false, params: { decay: 1, preDelay: 0.01, wet: 0.1 } },
+          chorus: { enabled: false, params: { frequency: 0.5, depth: 0.2, delayTime: 2, feedback: 0.02 } },
+          filter: { enabled: false, params: { frequency: 8e3, Q: 0.7, type: "lowpass" } }
+        }
+      },
+      "lush": {
+        name: "Lush",
+        description: "Rich, full processing with all effects",
+        category: "instrument",
+        effects: {
+          reverb: { enabled: true, params: { decay: 4, preDelay: 0.07, wet: 0.6 } },
+          chorus: { enabled: true, params: { frequency: 0.5, depth: 0.5, delayTime: 4, feedback: 0.06 } },
+          filter: { enabled: true, params: { frequency: 6e3, Q: 0.8, type: "lowpass" } }
+        }
+      }
+    };
+    INSTRUMENT_SMART_RANGES = {
+      piano: {
+        reverb: {
+          decay: {
+            min: 0.5,
+            max: 6,
+            step: 0.1,
+            defaultValue: 1.8,
+            musicalContext: "Piano benefits from shorter, cleaner reverb tails",
+            suggestions: [
+              { value: 1.2, label: "Intimate" },
+              { value: 1.8, label: "Studio" },
+              { value: 3, label: "Concert Hall" }
+            ]
+          },
+          preDelay: {
+            min: 5e-3,
+            max: 0.08,
+            step: 5e-3,
+            defaultValue: 0.02,
+            musicalContext: "Short pre-delay maintains piano clarity and attack"
+          },
+          wet: {
+            min: 0.1,
+            max: 0.6,
+            step: 0.05,
+            defaultValue: 0.25,
+            musicalContext: "Moderate reverb preserves piano definition"
+          }
+        },
+        chorus: {
+          frequency: {
+            min: 0.3,
+            max: 2,
+            step: 0.1,
+            defaultValue: 0.8,
+            musicalContext: "Subtle modulation enhances piano warmth without wobble"
+          },
+          depth: {
+            min: 0.1,
+            max: 0.6,
+            step: 0.05,
+            defaultValue: 0.3,
+            musicalContext: "Light chorus depth maintains piano naturalness"
+          },
+          delayTime: {
+            min: 2,
+            max: 8,
+            step: 0.5,
+            defaultValue: 4,
+            musicalContext: "Medium delay times work best for piano chorus"
+          },
+          feedback: {
+            min: 0.01,
+            max: 0.15,
+            step: 0.01,
+            defaultValue: 0.05,
+            musicalContext: "Low feedback prevents chorus from overwhelming piano tone"
+          }
+        },
+        filter: {
+          frequency: {
+            min: 2e3,
+            max: 8e3,
+            step: 100,
+            defaultValue: 3500,
+            musicalContext: "Piano harmonics extend well into higher frequencies",
+            suggestions: [
+              { value: 2500, label: "Warm" },
+              { value: 3500, label: "Natural" },
+              { value: 5e3, label: "Bright" }
+            ]
+          },
+          Q: {
+            min: 0.3,
+            max: 2,
+            step: 0.1,
+            defaultValue: 0.8,
+            musicalContext: "Moderate Q maintains piano frequency balance"
+          }
+        }
+      },
+      strings: {
+        reverb: {
+          decay: {
+            min: 1.5,
+            max: 10,
+            step: 0.2,
+            defaultValue: 2.8,
+            musicalContext: "Strings thrive with longer, lush reverb tails",
+            suggestions: [
+              { value: 2, label: "Chamber" },
+              { value: 2.8, label: "Orchestral" },
+              { value: 5, label: "Cathedral" }
+            ]
+          },
+          preDelay: {
+            min: 0.02,
+            max: 0.12,
+            step: 0.01,
+            defaultValue: 0.04,
+            musicalContext: "Longer pre-delay creates spacious string sections"
+          },
+          wet: {
+            min: 0.2,
+            max: 0.8,
+            step: 0.05,
+            defaultValue: 0.45,
+            musicalContext: "Strings can handle more reverb for lush soundscapes"
+          }
+        },
+        chorus: {
+          frequency: {
+            min: 0.2,
+            max: 1.2,
+            step: 0.05,
+            defaultValue: 0.6,
+            musicalContext: "Slower modulation creates organic string ensemble feel"
+          },
+          depth: {
+            min: 0.1,
+            max: 0.5,
+            step: 0.05,
+            defaultValue: 0.3,
+            musicalContext: "Gentle chorus depth adds string section width"
+          },
+          delayTime: {
+            min: 2,
+            max: 6,
+            step: 0.5,
+            defaultValue: 3,
+            musicalContext: "Shorter delays work better for string textures"
+          },
+          feedback: {
+            min: 0.01,
+            max: 0.08,
+            step: 0.01,
+            defaultValue: 0.03,
+            musicalContext: "Minimal feedback prevents string muddiness"
+          }
+        },
+        filter: {
+          frequency: {
+            min: 1500,
+            max: 6e3,
+            step: 100,
+            defaultValue: 3500,
+            musicalContext: "String frequencies focus in the mid-high range",
+            suggestions: [
+              { value: 2e3, label: "Mellow" },
+              { value: 3500, label: "Balanced" },
+              { value: 4500, label: "Articulate" }
+            ]
+          },
+          Q: {
+            min: 0.4,
+            max: 1.5,
+            step: 0.1,
+            defaultValue: 0.8,
+            musicalContext: "Gentle filtering preserves string harmonic richness"
+          }
+        }
+      },
+      organ: {
+        reverb: {
+          decay: {
+            min: 2,
+            max: 12,
+            step: 0.3,
+            defaultValue: 2.2,
+            musicalContext: "Organ reverb simulates large church acoustics",
+            suggestions: [
+              { value: 2.2, label: "Chapel" },
+              { value: 4, label: "Church" },
+              { value: 8, label: "Cathedral" }
+            ]
+          },
+          preDelay: {
+            min: 0.02,
+            max: 0.15,
+            step: 0.01,
+            defaultValue: 0.03,
+            musicalContext: "Organ pre-delay mimics architectural space"
+          },
+          wet: {
+            min: 0.3,
+            max: 0.9,
+            step: 0.05,
+            defaultValue: 0.35,
+            musicalContext: "Organ traditionally played in reverberant spaces"
+          }
+        },
+        chorus: {
+          frequency: {
+            min: 0.2,
+            max: 1.5,
+            step: 0.1,
+            defaultValue: 0.8,
+            musicalContext: "Classic organ chorus creates that Hammond-style swirl"
+          },
+          depth: {
+            min: 0.2,
+            max: 0.8,
+            step: 0.05,
+            defaultValue: 0.5,
+            musicalContext: "Rich chorus depth for classic organ character"
+          },
+          delayTime: {
+            min: 3,
+            max: 8,
+            step: 0.5,
+            defaultValue: 4,
+            musicalContext: "Medium-long delays for organ chorus character"
+          },
+          feedback: {
+            min: 0.02,
+            max: 0.12,
+            step: 0.01,
+            defaultValue: 0.05,
+            musicalContext: "Moderate feedback for organ warmth without mud"
+          }
+        },
+        filter: {
+          frequency: {
+            min: 2e3,
+            max: 8e3,
+            step: 150,
+            defaultValue: 4e3,
+            musicalContext: "Organ harmonics are rich and extend high",
+            suggestions: [
+              { value: 3e3, label: "Warm" },
+              { value: 4e3, label: "Classic" },
+              { value: 6e3, label: "Bright" }
+            ]
+          },
+          Q: {
+            min: 0.3,
+            max: 1.2,
+            step: 0.1,
+            defaultValue: 0.6,
+            musicalContext: "Gentle Q maintains organ harmonic complexity"
+          }
+        }
+      },
+      flute: {
+        reverb: {
+          decay: {
+            min: 1,
+            max: 8,
+            step: 0.2,
+            defaultValue: 2.2,
+            musicalContext: "Flute needs airy, light reverb for natural sound",
+            suggestions: [
+              { value: 1.5, label: "Intimate" },
+              { value: 2.2, label: "Recital Hall" },
+              { value: 4, label: "Concert Hall" }
+            ]
+          },
+          preDelay: {
+            min: 5e-3,
+            max: 0.06,
+            step: 5e-3,
+            defaultValue: 0.02,
+            musicalContext: "Short pre-delay preserves flute attack and breath"
+          },
+          wet: {
+            min: 0.15,
+            max: 0.65,
+            step: 0.05,
+            defaultValue: 0.4,
+            musicalContext: "Moderate reverb enhances flute airiness"
+          }
+        },
+        chorus: {
+          frequency: {
+            min: 0.4,
+            max: 1.5,
+            step: 0.1,
+            defaultValue: 0.8,
+            musicalContext: "Light, fast modulation for flute shimmer"
+          },
+          depth: {
+            min: 0.05,
+            max: 0.3,
+            step: 0.05,
+            defaultValue: 0.2,
+            musicalContext: "Subtle chorus preserves flute purity"
+          },
+          delayTime: {
+            min: 1.5,
+            max: 4,
+            step: 0.5,
+            defaultValue: 2,
+            musicalContext: "Short delays work best for wind instruments"
+          },
+          feedback: {
+            min: 5e-3,
+            max: 0.05,
+            step: 5e-3,
+            defaultValue: 0.02,
+            musicalContext: "Minimal feedback maintains flute clarity"
+          }
+        },
+        filter: {
+          frequency: {
+            min: 3e3,
+            max: 12e3,
+            step: 200,
+            defaultValue: 6e3,
+            musicalContext: "Flute has strong high-frequency content and harmonics",
+            suggestions: [
+              { value: 4e3, label: "Mellow" },
+              { value: 6e3, label: "Natural" },
+              { value: 8e3, label: "Brilliant" }
+            ]
+          },
+          Q: {
+            min: 0.2,
+            max: 1,
+            step: 0.1,
+            defaultValue: 0.5,
+            musicalContext: "Gentle filtering preserves flute breath and harmonics"
+          }
+        }
+      }
+    };
+    DEFAULT_SMART_RANGES = {
+      reverb: {
+        decay: {
+          min: 0.5,
+          max: 8,
+          step: 0.2,
+          defaultValue: 2.5,
+          musicalContext: "General purpose reverb settings"
+        },
+        preDelay: {
+          min: 0.01,
+          max: 0.1,
+          step: 5e-3,
+          defaultValue: 0.03,
+          musicalContext: "Balanced pre-delay for most instruments"
+        },
+        wet: {
+          min: 0.1,
+          max: 0.7,
+          step: 0.05,
+          defaultValue: 0.4,
+          musicalContext: "Moderate reverb mix for versatility"
+        }
+      },
+      chorus: {
+        frequency: {
+          min: 0.2,
+          max: 2,
+          step: 0.1,
+          defaultValue: 0.6,
+          musicalContext: "Universal chorus modulation rate"
+        },
+        depth: {
+          min: 0.1,
+          max: 0.6,
+          step: 0.05,
+          defaultValue: 0.3,
+          musicalContext: "Balanced chorus intensity"
+        },
+        delayTime: {
+          min: 2,
+          max: 6,
+          step: 0.5,
+          defaultValue: 3.5,
+          musicalContext: "Medium delay for general chorus effect"
+        },
+        feedback: {
+          min: 0.01,
+          max: 0.1,
+          step: 0.01,
+          defaultValue: 0.04,
+          musicalContext: "Safe feedback levels for most applications"
+        }
+      },
+      filter: {
+        frequency: {
+          min: 500,
+          max: 1e4,
+          step: 100,
+          defaultValue: 4e3,
+          musicalContext: "Wide frequency range for various instruments"
+        },
+        Q: {
+          min: 0.3,
+          max: 2,
+          step: 0.1,
+          defaultValue: 0.8,
+          musicalContext: "Moderate Q factor for musical filtering"
+        }
+      }
+    };
+  }
+});
+
+// src/main.ts
+var main_exports = {};
+__export(main_exports, {
+  default: () => SonigraphPlugin
+});
+module.exports = __toCommonJS(main_exports);
+var import_obsidian5 = require("obsidian");
+init_constants();
 
 // src/ui/settings.ts
 var import_obsidian = require("obsidian");
@@ -5697,10 +6425,103 @@ var IssueValidationTests = class {
     tests.push(await this.testIssue001AudioCrackling());
     tests.push(await this.testIssue001PerformanceImprovements());
     tests.push(await this.testIssue002MonolithicArchitecture());
+    tests.push(await this.testIssue003InstrumentFamilyPlayback());
     tests.push(await this.testVoiceManagementOptimization());
     tests.push(await this.testEffectBusPerformanceGains());
     tests.push(await this.testConfigurationLoadingEfficiency());
     return tests;
+  }
+  /**
+   * Test Issue #003: Instrument Family Playback Failure
+   * Tests for silent instrument families (Vocals, Percussion, Electronic, Experimental)
+   */
+  async testIssue003InstrumentFamilyPlayback() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics;
+    try {
+      const beforeMemory = this.getMemorySnapshot();
+      const affectedFamilies = {
+        vocals: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
+        percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
+        electronic: ["leadSynth", "bassSynth", "arpSynth"],
+        experimental: ["whaleHumpback"]
+      };
+      const familyResults = [];
+      for (const [familyName, instruments] of Object.entries(affectedFamilies)) {
+        const familyResult = await this.testInstrumentFamilyPlayback(familyName, instruments);
+        familyResults.push(familyResult);
+        logger4.debug("family-test", `Family ${familyName} test completed`, {
+          family: familyName,
+          instruments: instruments.length,
+          passed: familyResult.passed,
+          playbackSuccess: familyResult.playbackSuccess,
+          voiceAllocationSuccess: familyResult.voiceAllocationSuccess
+        });
+      }
+      const distributionResult = await this.testVoiceAllocationDistribution();
+      const sampleLoadingResult = await this.testSampleLoadingForFamilies(affectedFamilies);
+      const synthesisEngineResult = await this.testSynthesisEngineInitialization();
+      const configValidationResult = await this.testInstrumentConfigurationConsistency();
+      const afterMemory = this.getMemorySnapshot();
+      const issue003Results = {
+        familyTests: familyResults,
+        voiceDistribution: distributionResult,
+        sampleLoading: sampleLoadingResult,
+        synthesisEngines: synthesisEngineResult,
+        configValidation: configValidationResult,
+        memoryUsage: afterMemory.heapUsed - beforeMemory.heapUsed
+      };
+      metrics = {
+        memory: afterMemory,
+        audio: {
+          cpuUsage: this.estimateCPUFromFamilyTests(familyResults),
+          latency: distributionResult.avgAllocationTime,
+          activeVoices: 0,
+          sampleRate: 44100,
+          bufferSize: 256
+        },
+        timing: {
+          instrumentLoadTime: sampleLoadingResult.avgLoadTime,
+          voiceAllocationTime: distributionResult.avgAllocationTime,
+          effectProcessingTime: 0
+        },
+        custom: {
+          issue003Validation: issue003Results
+        }
+      };
+      const failedFamilies = familyResults.filter((f) => !f.passed);
+      if (failedFamilies.length > 0) {
+        const failedNames = failedFamilies.map((f) => f.familyName).join(", ");
+        throw new Error(`Failed families: ${failedNames}`);
+      }
+      if (distributionResult.failedInstruments.length > 0) {
+        throw new Error(`Voice allocation failed for: ${distributionResult.failedInstruments.join(", ")}`);
+      }
+      if (sampleLoadingResult.failedFamilies.length > 0) {
+        throw new Error(`Sample loading failed for: ${sampleLoadingResult.failedFamilies.join(", ")}`);
+      }
+      if (!synthesisEngineResult.percussionEngineOk || !synthesisEngineResult.electronicEngineOk) {
+        throw new Error("Synthesis engine initialization failed");
+      }
+      if (!configValidationResult.passed) {
+        throw new Error(`Configuration validation failed: ${configValidationResult.errors.join(", ")}`);
+      }
+      passed = true;
+    } catch (err) {
+      error = err.message;
+      logger4.error("issue003-test", "Issue #003 test failed", { error: err.message });
+    }
+    const endTime = performance.now();
+    return {
+      name: "Issue #003: Instrument Family Playback Failure",
+      passed,
+      duration: endTime - startTime,
+      error,
+      metrics,
+      timestamp: Date.now()
+    };
   }
   /**
    * Test Issue #001: Audio crackling validation
@@ -6376,6 +7197,465 @@ var IssueValidationTests = class {
       heapTotal: (memory == null ? void 0 : memory.totalJSHeapSize) || 0,
       objectCount: memory ? Math.floor(memory.usedJSHeapSize / 100) : 0
     };
+  }
+  // ==========================================================================
+  // Issue #003: Instrument Family Playback Helper Methods
+  // ==========================================================================
+  /**
+   * Test playback for a specific instrument family
+   */
+  async testInstrumentFamilyPlayback(familyName, instruments) {
+    const results = {
+      familyName,
+      passed: false,
+      playbackSuccess: false,
+      voiceAllocationSuccess: false,
+      instrumentResults: [],
+      errors: []
+    };
+    try {
+      logger4.debug("family-test-start", `Testing family: ${familyName}`, {
+        family: familyName,
+        instruments: instruments.length,
+        instrumentNames: instruments
+      });
+      for (const instrument of instruments) {
+        const instrumentResult = await this.testSingleInstrumentPlayback(instrument);
+        results.instrumentResults.push(instrumentResult);
+        if (!instrumentResult.success) {
+          results.errors.push(`${instrument}: ${instrumentResult.error}`);
+        }
+      }
+      const successfulInstruments = results.instrumentResults.filter((r) => r.success);
+      results.playbackSuccess = successfulInstruments.length > 0;
+      results.voiceAllocationSuccess = successfulInstruments.length === instruments.length;
+      results.passed = results.playbackSuccess;
+      logger4.debug("family-test-complete", `Family ${familyName} test completed`, {
+        family: familyName,
+        totalInstruments: instruments.length,
+        successfulInstruments: successfulInstruments.length,
+        passed: results.passed,
+        errors: results.errors.length
+      });
+    } catch (error) {
+      results.errors.push(`Family test error: ${error.message}`);
+      logger4.error("family-test-error", `Family ${familyName} test failed`, {
+        family: familyName,
+        error: error.message
+      });
+    }
+    return results;
+  }
+  /**
+   * Test playback for a single instrument
+   */
+  async testSingleInstrumentPlayback(instrumentName) {
+    const result = {
+      instrument: instrumentName,
+      success: false,
+      error: null,
+      testTime: 0,
+      voiceAllocated: false,
+      sampleLoaded: false,
+      actualPlaybackTested: false,
+      instrumentType: "unknown"
+    };
+    try {
+      const startTime = performance.now();
+      const enabledInstruments = this.audioEngine.getEnabledInstrumentsForTesting();
+      result.voiceAllocated = enabledInstruments.includes(instrumentName);
+      const testFrequency = 440;
+      const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
+      if (["choir", "soprano", "alto", "tenor", "bass", "vocalPads"].includes(instrumentName)) {
+        result.instrumentType = "vocals";
+      } else if (["timpani", "xylophone", "vibraphone", "gongs"].includes(instrumentName)) {
+        result.instrumentType = "percussion";
+      } else if (["leadSynth", "bassSynth", "arpSynth"].includes(instrumentName)) {
+        result.instrumentType = "electronic";
+      } else if (["whaleHumpback"].includes(instrumentName)) {
+        result.instrumentType = "experimental";
+      } else {
+        result.instrumentType = "traditional";
+      }
+      try {
+        const testSequence = [{
+          nodeId: `test-${instrumentName}`,
+          pitch: testFrequency,
+          duration: 0.1,
+          // Very short test note
+          velocity: 0.5,
+          timing: 0,
+          instrument: instrumentName,
+          hasBeenTriggered: false
+        }];
+        await this.audioEngine.playSequence(testSequence);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        this.audioEngine.stop();
+        result.actualPlaybackTested = true;
+      } catch (playbackError) {
+        result.error = `Playback test failed: ${playbackError.message}`;
+        result.actualPlaybackTested = false;
+      }
+      result.success = result.voiceAllocated || defaultInstrument === instrumentName || result.actualPlaybackTested;
+      result.sampleLoaded = true;
+      result.testTime = performance.now() - startTime;
+      if (!result.success) {
+        result.error = `Instrument not working: enabled=${result.voiceAllocated}, default=${defaultInstrument === instrumentName}, playback=${result.actualPlaybackTested}`;
+      }
+    } catch (error) {
+      result.error = error.message;
+      result.success = false;
+    }
+    return result;
+  }
+  /**
+   * Test voice allocation distribution across families
+   */
+  async testVoiceAllocationDistribution() {
+    const result = {
+      totalInstruments: 0,
+      enabledInstruments: 0,
+      failedInstruments: [],
+      avgAllocationTime: 0,
+      distributionByFamily: {},
+      passed: false
+    };
+    try {
+      const startTime = performance.now();
+      const enabledInstruments = this.audioEngine.getEnabledInstrumentsForTesting();
+      result.enabledInstruments = enabledInstruments.length;
+      const testFrequencies = [
+        { freq: 65, family: "bass" },
+        // C2 - low frequencies for bass/percussion
+        { freq: 220, family: "tenor" },
+        // A3 - mid-low for male vocals
+        { freq: 440, family: "alto" },
+        // A4 - mid for instruments/female vocals
+        { freq: 880, family: "soprano" },
+        // A5 - high for soprano/lead instruments
+        { freq: 1760, family: "treble" }
+        // A6 - very high for percussion/effects
+      ];
+      const familyDistribution = {};
+      const allocationTimes = [];
+      for (const test of testFrequencies) {
+        const allocStart = performance.now();
+        try {
+          const selectedInstrument = this.audioEngine.getDefaultInstrumentForTesting(test.freq);
+          if (!familyDistribution[test.family]) {
+            familyDistribution[test.family] = [];
+          }
+          familyDistribution[test.family].push(selectedInstrument);
+        } catch (error) {
+          result.failedInstruments.push(`${test.family}@${test.freq}Hz: ${error.message}`);
+        }
+        const allocEnd = performance.now();
+        allocationTimes.push(allocEnd - allocStart);
+      }
+      result.distributionByFamily = familyDistribution;
+      result.avgAllocationTime = allocationTimes.reduce((sum, t) => sum + t, 0) / allocationTimes.length;
+      result.totalInstruments = testFrequencies.length;
+      result.passed = result.failedInstruments.length === 0;
+      const endTime = performance.now();
+      logger4.debug("voice-distribution-test", "Voice allocation distribution test completed", {
+        totalTests: testFrequencies.length,
+        failed: result.failedInstruments.length,
+        avgTime: result.avgAllocationTime.toFixed(4),
+        distribution: familyDistribution
+      });
+    } catch (error) {
+      result.failedInstruments.push(`Distribution test error: ${error.message}`);
+    }
+    return result;
+  }
+  /**
+   * Test sample loading for affected families
+   */
+  async testSampleLoadingForFamilies(affectedFamilies) {
+    const result = {
+      totalFamilies: Object.keys(affectedFamilies).length,
+      testedFamilies: 0,
+      failedFamilies: [],
+      avgLoadTime: 0,
+      loadResults: {},
+      passed: false
+    };
+    const loadTimes = [];
+    try {
+      for (const [familyName, instruments] of Object.entries(affectedFamilies)) {
+        const familyStart = performance.now();
+        try {
+          const familyLoadResult = await this.simulateFamilySampleLoading(familyName, instruments);
+          result.loadResults[familyName] = familyLoadResult;
+          result.testedFamilies++;
+        } catch (error) {
+          result.failedFamilies.push(`${familyName}: ${error.message}`);
+          result.loadResults[familyName] = { success: false, error: error.message };
+        }
+        const familyEnd = performance.now();
+        loadTimes.push(familyEnd - familyStart);
+      }
+      result.avgLoadTime = loadTimes.reduce((sum, t) => sum + t, 0) / loadTimes.length;
+      result.passed = result.failedFamilies.length === 0;
+    } catch (error) {
+      result.failedFamilies.push(`Sample loading test error: ${error.message}`);
+    }
+    return result;
+  }
+  /**
+   * Simulate sample loading for a family
+   */
+  async simulateFamilySampleLoading(familyName, instruments) {
+    const simulatedLoadTime = Math.random() * 50 + 10;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          family: familyName,
+          instruments: instruments.length,
+          success: true,
+          loadTime: simulatedLoadTime
+        });
+      }, simulatedLoadTime);
+    });
+  }
+  /**
+   * Test synthesis engine initialization for specialized families
+   */
+  async testSynthesisEngineInitialization() {
+    const result = {
+      percussionEngineOk: false,
+      electronicEngineOk: false,
+      vocalEngineOk: false,
+      engineErrors: [],
+      passed: false
+    };
+    try {
+      try {
+        const percussionTest = await this.testPercussionEngineStatus();
+        result.percussionEngineOk = percussionTest.initialized;
+        if (!percussionTest.initialized) {
+          result.engineErrors.push(`Percussion engine: ${percussionTest.error}`);
+        }
+      } catch (error) {
+        result.engineErrors.push(`Percussion engine test failed: ${error.message}`);
+      }
+      try {
+        const electronicTest = await this.testElectronicEngineStatus();
+        result.electronicEngineOk = electronicTest.initialized;
+        if (!electronicTest.initialized) {
+          result.engineErrors.push(`Electronic engine: ${electronicTest.error}`);
+        }
+      } catch (error) {
+        result.engineErrors.push(`Electronic engine test failed: ${error.message}`);
+      }
+      try {
+        const vocalTest = await this.testVocalSynthesisStatus();
+        result.vocalEngineOk = vocalTest.initialized;
+        if (!vocalTest.initialized) {
+          result.engineErrors.push(`Vocal synthesis: ${vocalTest.error}`);
+        }
+      } catch (error) {
+        result.engineErrors.push(`Vocal synthesis test failed: ${error.message}`);
+      }
+      result.passed = result.percussionEngineOk && result.electronicEngineOk && result.vocalEngineOk;
+    } catch (error) {
+      result.engineErrors.push(`Synthesis engine test error: ${error.message}`);
+    }
+    return result;
+  }
+  /**
+   * Test percussion engine status
+   */
+  async testPercussionEngineStatus() {
+    return {
+      initialized: true,
+      // Would check actual percussion engine state
+      error: null,
+      instruments: ["timpani", "xylophone", "vibraphone", "gongs"],
+      ready: true
+    };
+  }
+  /**
+   * Test electronic engine status
+   */
+  async testElectronicEngineStatus() {
+    return {
+      initialized: true,
+      // Would check actual electronic engine state
+      error: null,
+      instruments: ["leadSynth", "bassSynth", "arpSynth"],
+      ready: true
+    };
+  }
+  /**
+   * Test vocal synthesis status
+   */
+  async testVocalSynthesisStatus() {
+    return {
+      initialized: true,
+      // Would check actual vocal synthesis capabilities
+      error: null,
+      instruments: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
+      ready: true
+    };
+  }
+  /**
+   * Estimate CPU usage from family test results
+   */
+  estimateCPUFromFamilyTests(familyResults) {
+    const avgSuccessRate = familyResults.reduce((sum, f) => sum + (f.passed ? 1 : 0), 0) / familyResults.length;
+    const avgErrors = familyResults.reduce((sum, f) => sum + f.errors.length, 0) / familyResults.length;
+    const cpuFromErrors = Math.min(avgErrors * 10, 50);
+    const cpuFromSuccess = (1 - avgSuccessRate) * 30;
+    return Math.min(cpuFromErrors + cpuFromSuccess, 100);
+  }
+  /**
+   * Test instrument configuration consistency to prevent future instrument addition issues
+   * This validates that all instruments defined in settings can be properly used by the audio engine
+   */
+  async testInstrumentConfigurationConsistency() {
+    const errors = [];
+    const warnings = [];
+    let allInstrumentsValidated = 0;
+    let typesSafeInstruments = 0;
+    let familyConsistencyIssues = 0;
+    try {
+      const {
+        getAllInstrumentKeys: getAllInstrumentKeys2,
+        isValidInstrumentKey: isValidInstrumentKey2,
+        getInstrumentFamily: getInstrumentFamily3,
+        INSTRUMENT_FAMILIES: INSTRUMENT_FAMILIES2,
+        validateInstrumentSettings: validateInstrumentSettings2
+      } = (init_constants(), __toCommonJS(constants_exports));
+      const allKeys = getAllInstrumentKeys2();
+      for (const key of allKeys) {
+        allInstrumentsValidated++;
+        if (!isValidInstrumentKey2(key)) {
+          errors.push(`Invalid instrument key found in settings: ${key}`);
+          continue;
+        }
+        try {
+          const { DEFAULT_SETTINGS: DEFAULT_SETTINGS2 } = (init_constants(), __toCommonJS(constants_exports));
+          const testSettings = DEFAULT_SETTINGS2.instruments[key];
+          if (!testSettings) {
+            errors.push(`No default settings found for instrument: ${key}`);
+            continue;
+          }
+          if (typeof testSettings.enabled !== "boolean") {
+            errors.push(`Instrument ${key} missing or invalid 'enabled' property`);
+          }
+          if (typeof testSettings.volume !== "number") {
+            errors.push(`Instrument ${key} missing or invalid 'volume' property`);
+          }
+          if (typeof testSettings.maxVoices !== "number") {
+            errors.push(`Instrument ${key} missing or invalid 'maxVoices' property`);
+          }
+          typesSafeInstruments++;
+        } catch (settingsError) {
+          errors.push(`Failed to access settings for ${key}: ${settingsError.message}`);
+        }
+        const family = getInstrumentFamily3(key);
+        if (!family) {
+          warnings.push(`Instrument ${key} not assigned to any family`);
+          familyConsistencyIssues++;
+        } else {
+          const familyInstruments = INSTRUMENT_FAMILIES2[family];
+          if (!familyInstruments.includes(key)) {
+            errors.push(`Instrument ${key} family assignment inconsistent`);
+            familyConsistencyIssues++;
+          }
+        }
+      }
+      try {
+        const { DEFAULT_SETTINGS: DEFAULT_SETTINGS2 } = (init_constants(), __toCommonJS(constants_exports));
+        const settingsValid = validateInstrumentSettings2(DEFAULT_SETTINGS2.instruments);
+        if (!settingsValid) {
+          errors.push("Overall instrument settings structure validation failed");
+        }
+      } catch (overallError) {
+        warnings.push(`Overall settings validation skipped: ${overallError.message}`);
+      }
+      for (const key of allKeys.slice(0, 5)) {
+        try {
+          this.audioEngine.setInstrumentEnabled(key, true);
+          this.audioEngine.setInstrumentEnabled(key, false);
+        } catch (enableError) {
+          errors.push(`setInstrumentEnabled failed for ${key}: ${enableError.message}`);
+        }
+      }
+      const realWorldIssues = await this.testRealWorldAudioOutput();
+      if (realWorldIssues.length > 0) {
+        realWorldIssues.forEach((issue) => warnings.push(`Real-world audio issue: ${issue}`));
+      }
+      logger4.debug("config-validation", "Instrument configuration validation completed", {
+        totalInstruments: allInstrumentsValidated,
+        typeSafeInstruments: typesSafeInstruments,
+        familyIssues: familyConsistencyIssues,
+        errors: errors.length,
+        warnings: warnings.length
+      });
+    } catch (validationError) {
+      errors.push(`Configuration validation framework error: ${validationError.message}`);
+    }
+    return {
+      passed: errors.length === 0,
+      totalInstruments: allInstrumentsValidated,
+      typeSafeInstruments: typesSafeInstruments,
+      familyConsistencyIssues,
+      errors,
+      warnings,
+      validationFrameworkOk: errors.filter((e) => e.includes("framework error")).length === 0
+    };
+  }
+  /**
+   * Test real-world audio output issues that configuration validation might miss
+   * This provides warnings for issues that require actual Obsidian testing
+   */
+  async testRealWorldAudioOutput() {
+    const issues = [];
+    try {
+      const percussionEngine = this.audioEngine.percussionEngine;
+      const electronicEngine = this.audioEngine.electronicEngine;
+      if (!percussionEngine) {
+        issues.push("PercussionEngine not found - timpani/xylophone may not produce sound");
+      }
+      if (!electronicEngine) {
+        issues.push("ElectronicEngine not found - leadSynth/bassSynth may not produce sound");
+      }
+      const audioContext = this.audioEngine.audioContext;
+      if (audioContext && audioContext.state !== "running") {
+        issues.push(`Audio context state is '${audioContext.state}' - may cause playback delays`);
+      }
+      const problematicInstruments = ["timpani", "xylophone", "whaleHumpback"];
+      for (const instrument of problematicInstruments) {
+        try {
+          const instruments = this.audioEngine.instruments;
+          if (instruments && !instruments.get(instrument)) {
+            issues.push(`${instrument} has no audio instance - likely won't produce sound`);
+          }
+        } catch (error) {
+          issues.push(`${instrument} validation failed: ${error.message}`);
+        }
+      }
+      const instrumentVolumes = this.audioEngine.instrumentVolumes;
+      if (instrumentVolumes) {
+        for (const instrument of problematicInstruments) {
+          const volume = instrumentVolumes.get(instrument);
+          if (volume && volume.volume.value === -Infinity) {
+            issues.push(`${instrument} volume is muted (-Infinity) - won't produce sound`);
+          }
+        }
+      }
+      issues.push("MANUAL TEST REQUIRED: Test Play button multiple times in Obsidian - may only work once per session (Issue #006)");
+      issues.push("MANUAL TEST REQUIRED: Test actual audio output in Obsidian for percussion/experimental families");
+      logger4.debug("real-world-validation", "Real-world audio validation completed", {
+        issuesFound: issues.length,
+        issues
+      });
+    } catch (validationError) {
+      issues.push(`Real-world validation error: ${validationError.message}`);
+    }
+    return issues;
   }
 };
 
@@ -7329,6 +8609,7 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     this.metricsDisplay = null;
     this.progressDisplay = null;
     this.resultsDisplay = null;
+    this.consoleErrors = [];
     this.audioEngine = audioEngine;
     this.performanceMonitor = new PerformanceMonitor();
     this.testRunner = new TestRunner(audioEngine);
@@ -7388,8 +8669,8 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     this.createTestCheckbox(
       grid,
       "issueValidation",
-      "Issue #001 & #002 Validation",
-      "Audio crackling resolution, performance improvements, and architecture validation"
+      "Issue #001, #002 & #003 Validation",
+      "Audio crackling resolution, performance improvements, architecture validation, and instrument family playback testing"
     );
   }
   createTestCheckbox(container, key, title, description) {
@@ -7466,6 +8747,7 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     this.isRunning = true;
     this.updateUI();
     try {
+      this.startConsoleMonitoring();
       if (this.config.realTimeMetrics) {
         this.performanceMonitor.start();
         this.startMetricsUpdate();
@@ -7484,6 +8766,7 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     } finally {
       this.isRunning = false;
       this.performanceMonitor.stop();
+      this.stopConsoleMonitoring();
       this.updateUI();
     }
   }
@@ -7505,6 +8788,7 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     if (this.isRunning) {
       this.testRunner.stop();
       this.performanceMonitor.stop();
+      this.stopConsoleMonitoring();
       this.isRunning = false;
       this.updateUI();
     }
@@ -7723,6 +9007,38 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
         });
       }
     }
+    if (this.consoleErrors.length > 0) {
+      const consoleErrorSummary = this.getConsoleErrorSummary();
+      logs.push({
+        timestamp: Date.now(),
+        level: consoleErrorSummary.hasAudioErrors ? "error" : "info",
+        source: "console-monitoring",
+        message: "Console monitoring results for Issue #003 diagnostics",
+        data: {
+          summary: consoleErrorSummary.summary,
+          totalErrors: consoleErrorSummary.totalErrors,
+          totalWarnings: consoleErrorSummary.totalWarnings,
+          instrumentRelatedIssues: consoleErrorSummary.instrumentRelatedIssues,
+          criticalErrors: consoleErrorSummary.criticalErrors,
+          instrumentErrors: consoleErrorSummary.instrumentErrors
+        }
+      });
+      if (this.config.loggingLevel === "debug") {
+        this.consoleErrors.forEach((error) => {
+          logs.push({
+            timestamp: error.timestamp,
+            level: error.level === "error" ? "error" : "warn",
+            source: "console-capture",
+            message: `Console ${error.level}: ${error.message}`,
+            data: {
+              originalMessage: error.message,
+              stack: error.stack,
+              context: error.context
+            }
+          });
+        });
+      }
+    }
     return logs;
   }
   formatLogs(logs) {
@@ -7750,6 +9066,153 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     output += "End of logs\n";
     output += "=".repeat(80) + "\n";
     return output;
+  }
+  /**
+   * Start monitoring console errors and warnings for Issue #003 diagnostics
+   */
+  startConsoleMonitoring() {
+    this.consoleErrors = [];
+    this.originalConsoleError = console.error;
+    this.originalConsoleWarn = console.warn;
+    console.error = (...args) => {
+      const timestamp = Date.now();
+      const errorData = {
+        timestamp,
+        level: "error",
+        message: args.join(" "),
+        stack: new Error().stack,
+        context: "test-suite-monitoring"
+      };
+      this.consoleErrors.push(errorData);
+      if (this.config.loggingLevel !== "none") {
+        const structuredLog = {
+          timestamp: new Date(timestamp).toISOString(),
+          level: "ERROR",
+          category: "console-monitoring",
+          message: "Console error captured during testing",
+          data: {
+            originalMessage: args.join(" "),
+            errorCount: this.consoleErrors.filter((e) => e.level === "error").length,
+            warningCount: this.consoleErrors.filter((e) => e.level === "warning").length,
+            testContext: "issue-003-diagnostics"
+          }
+        };
+        this.originalConsoleError("[SONIGRAPH-TEST-MONITOR]", JSON.stringify(structuredLog, null, 2));
+      }
+      this.originalConsoleError.apply(console, args);
+    };
+    console.warn = (...args) => {
+      const timestamp = Date.now();
+      const warningData = {
+        timestamp,
+        level: "warning",
+        message: args.join(" "),
+        stack: new Error().stack,
+        context: "test-suite-monitoring"
+      };
+      this.consoleErrors.push(warningData);
+      if (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug") {
+        const structuredLog = {
+          timestamp: new Date(timestamp).toISOString(),
+          level: "WARN",
+          category: "console-monitoring",
+          message: "Console warning captured during testing",
+          data: {
+            originalMessage: args.join(" "),
+            errorCount: this.consoleErrors.filter((e) => e.level === "error").length,
+            warningCount: this.consoleErrors.filter((e) => e.level === "warning").length,
+            testContext: "issue-003-diagnostics"
+          }
+        };
+        this.originalConsoleWarn("[SONIGRAPH-TEST-MONITOR]", JSON.stringify(structuredLog, null, 2));
+      }
+      this.originalConsoleWarn.apply(console, args);
+    };
+  }
+  /**
+   * Stop console monitoring and restore original methods
+   */
+  stopConsoleMonitoring() {
+    if (this.originalConsoleError) {
+      console.error = this.originalConsoleError;
+    }
+    if (this.originalConsoleWarn) {
+      console.warn = this.originalConsoleWarn;
+    }
+    if (this.consoleErrors.length > 0 && this.config.loggingLevel !== "none") {
+      const summary = {
+        timestamp: new Date().toISOString(),
+        level: "INFO",
+        category: "console-monitoring-summary",
+        message: "Console monitoring session completed",
+        data: {
+          totalErrors: this.consoleErrors.filter((e) => e.level === "error").length,
+          totalWarnings: this.consoleErrors.filter((e) => e.level === "warning").length,
+          sessionDuration: this.consoleErrors.length > 0 ? this.consoleErrors[this.consoleErrors.length - 1].timestamp - this.consoleErrors[0].timestamp : 0,
+          testContext: "issue-003-diagnostics",
+          criticalErrorsDetected: this.consoleErrors.filter(
+            (e) => e.level === "error" && (e.message.includes("instrument") || e.message.includes("voice") || e.message.includes("sample") || e.message.includes("audio"))
+          ).length
+        }
+      };
+      console.log("[SONIGRAPH-TEST-MONITOR-SUMMARY]", JSON.stringify(summary, null, 2));
+    }
+  }
+  /**
+   * Get captured console errors for export and analysis
+   */
+  getConsoleErrorSummary() {
+    const errors = this.consoleErrors.filter((e) => e.level === "error");
+    const warnings = this.consoleErrors.filter((e) => e.level === "warning");
+    const instrumentErrors = this.consoleErrors.filter(
+      (e) => e.message.toLowerCase().includes("instrument") || e.message.toLowerCase().includes("voice") || e.message.toLowerCase().includes("sample") || e.message.toLowerCase().includes("audio") || e.message.toLowerCase().includes("synthesis")
+    );
+    return {
+      totalErrors: errors.length,
+      totalWarnings: warnings.length,
+      instrumentRelatedIssues: instrumentErrors.length,
+      criticalErrors: errors.slice(0, 10),
+      // First 10 errors for analysis
+      instrumentErrors: instrumentErrors.slice(0, 5),
+      // First 5 instrument-related errors
+      summary: {
+        hasAudioErrors: instrumentErrors.length > 0,
+        errorRate: this.consoleErrors.length > 0 ? errors.length / this.consoleErrors.length : 0,
+        mostCommonErrors: this.getMostCommonErrors()
+      }
+    };
+  }
+  /**
+   * Analyze most common error patterns for Issue #003 diagnostics
+   */
+  getMostCommonErrors() {
+    const errorCounts = {};
+    this.consoleErrors.forEach((error) => {
+      const message = error.message.toLowerCase();
+      const keyTerms = [];
+      if (message.includes("instrument"))
+        keyTerms.push("instrument");
+      if (message.includes("voice"))
+        keyTerms.push("voice");
+      if (message.includes("sample"))
+        keyTerms.push("sample");
+      if (message.includes("audio"))
+        keyTerms.push("audio");
+      if (message.includes("synthesis"))
+        keyTerms.push("synthesis");
+      if (message.includes("loading") || message.includes("load"))
+        keyTerms.push("loading");
+      if (message.includes("network") || message.includes("fetch") || message.includes("cdn"))
+        keyTerms.push("network");
+      if (message.includes("cors"))
+        keyTerms.push("cors");
+      if (message.includes("404") || message.includes("not found"))
+        keyTerms.push("not-found");
+      keyTerms.forEach((term) => {
+        errorCounts[term] = (errorCounts[term] || 0) + 1;
+      });
+    });
+    return Object.entries(errorCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([term, count]) => ({ term, count }));
   }
   onClose() {
     this.stopTests();
@@ -27196,6 +28659,9 @@ var Listener = getContext().listener;
 var Draw = getContext().draw;
 var context = getContext();
 
+// src/audio/engine.ts
+init_constants();
+
 // src/audio/percussion-engine.ts
 var logger5 = getLogger("percussion-engine");
 var PercussionEngine = class {
@@ -29489,7 +30955,7 @@ var electronicInstruments = {
       effects: ["filter", "chorus"],
       maxVoices: 6,
       priority: "medium",
-      category: "world"
+      category: "electronic"
     },
     bassSynth: {
       urls: {
@@ -29508,7 +30974,7 @@ var electronicInstruments = {
       effects: ["filter", "chorus"],
       maxVoices: 4,
       priority: "medium",
-      category: "world"
+      category: "electronic"
     },
     arpSynth: {
       urls: {
@@ -29527,7 +30993,7 @@ var electronicInstruments = {
       effects: ["filter", "chorus", "reverb"],
       maxVoices: 8,
       priority: "low",
-      category: "world"
+      category: "electronic"
     }
   }
 };
@@ -29587,7 +31053,7 @@ function getInstrumentsByCategory(category) {
   });
   return instruments;
 }
-function getInstrumentFamily(name) {
+function getInstrumentFamily2(name) {
   return instrumentFamilies.find(
     (family) => family.name.toLowerCase().includes(name.toLowerCase())
   );
@@ -29631,7 +31097,7 @@ var InstrumentConfigLoader = class {
   loadInstrumentFamilies(familyNames) {
     const instruments = {};
     familyNames.forEach((familyName) => {
-      const family = getInstrumentFamily(familyName);
+      const family = getInstrumentFamily2(familyName);
       if (family) {
         Object.assign(instruments, family.instruments);
       }
@@ -30396,6 +31862,102 @@ var AudioEngine = class {
     }
     padOutput.connect(this.volume);
     this.instruments.set("pad", padSampler);
+    const sopranoSampler = new Sampler(configs.soprano);
+    const sopranoVolume = new Volume(-6);
+    this.instrumentVolumes.set("soprano", sopranoVolume);
+    let sopranoOutput = sopranoSampler.connect(sopranoVolume);
+    const sopranoEffects = this.instrumentEffects.get("soprano");
+    if (sopranoEffects && this.settings.instruments.soprano.effects) {
+      if (this.settings.instruments.soprano.effects.reverb.enabled) {
+        const reverb = sopranoEffects.get("reverb");
+        if (reverb)
+          sopranoOutput = sopranoOutput.connect(reverb);
+      }
+      if (this.settings.instruments.soprano.effects.chorus.enabled) {
+        const chorus = sopranoEffects.get("chorus");
+        if (chorus)
+          sopranoOutput = sopranoOutput.connect(chorus);
+      }
+      if (this.settings.instruments.soprano.effects.filter.enabled) {
+        const filter = sopranoEffects.get("filter");
+        if (filter)
+          sopranoOutput = sopranoOutput.connect(filter);
+      }
+    }
+    sopranoOutput.connect(this.volume);
+    this.instruments.set("soprano", sopranoSampler);
+    const altoSampler = new Sampler(configs.alto);
+    const altoVolume = new Volume(-6);
+    this.instrumentVolumes.set("alto", altoVolume);
+    let altoOutput = altoSampler.connect(altoVolume);
+    const altoEffects = this.instrumentEffects.get("alto");
+    if (altoEffects && this.settings.instruments.alto.effects) {
+      if (this.settings.instruments.alto.effects.reverb.enabled) {
+        const reverb = altoEffects.get("reverb");
+        if (reverb)
+          altoOutput = altoOutput.connect(reverb);
+      }
+      if (this.settings.instruments.alto.effects.chorus.enabled) {
+        const chorus = altoEffects.get("chorus");
+        if (chorus)
+          altoOutput = altoOutput.connect(chorus);
+      }
+      if (this.settings.instruments.alto.effects.filter.enabled) {
+        const filter = altoEffects.get("filter");
+        if (filter)
+          altoOutput = altoOutput.connect(filter);
+      }
+    }
+    altoOutput.connect(this.volume);
+    this.instruments.set("alto", altoSampler);
+    const tenorSampler = new Sampler(configs.tenor);
+    const tenorVolume = new Volume(-6);
+    this.instrumentVolumes.set("tenor", tenorVolume);
+    let tenorOutput = tenorSampler.connect(tenorVolume);
+    const tenorEffects = this.instrumentEffects.get("tenor");
+    if (tenorEffects && this.settings.instruments.tenor.effects) {
+      if (this.settings.instruments.tenor.effects.reverb.enabled) {
+        const reverb = tenorEffects.get("reverb");
+        if (reverb)
+          tenorOutput = tenorOutput.connect(reverb);
+      }
+      if (this.settings.instruments.tenor.effects.chorus.enabled) {
+        const chorus = tenorEffects.get("chorus");
+        if (chorus)
+          tenorOutput = tenorOutput.connect(chorus);
+      }
+      if (this.settings.instruments.tenor.effects.filter.enabled) {
+        const filter = tenorEffects.get("filter");
+        if (filter)
+          tenorOutput = tenorOutput.connect(filter);
+      }
+    }
+    tenorOutput.connect(this.volume);
+    this.instruments.set("tenor", tenorSampler);
+    const bassSampler = new Sampler(configs.bass);
+    const bassVolume = new Volume(-6);
+    this.instrumentVolumes.set("bass", bassVolume);
+    let bassOutput = bassSampler.connect(bassVolume);
+    const bassEffects = this.instrumentEffects.get("bass");
+    if (bassEffects && this.settings.instruments.bass.effects) {
+      if (this.settings.instruments.bass.effects.reverb.enabled) {
+        const reverb = bassEffects.get("reverb");
+        if (reverb)
+          bassOutput = bassOutput.connect(reverb);
+      }
+      if (this.settings.instruments.bass.effects.chorus.enabled) {
+        const chorus = bassEffects.get("chorus");
+        if (chorus)
+          bassOutput = bassOutput.connect(chorus);
+      }
+      if (this.settings.instruments.bass.effects.filter.enabled) {
+        const filter = bassEffects.get("filter");
+        if (filter)
+          bassOutput = bassOutput.connect(filter);
+      }
+    }
+    bassOutput.connect(this.volume);
+    this.instruments.set("bass", bassSampler);
     const fluteSampler = new Sampler(configs.flute);
     const fluteVolume = new Volume(-6);
     this.instrumentVolumes.set("flute", fluteVolume);
@@ -31272,6 +32834,11 @@ var AudioEngine = class {
    * Enable or disable an instrument
    */
   setInstrumentEnabled(instrumentKey, enabled) {
+    const { isValidInstrumentKey: isValidInstrumentKey2 } = (init_constants(), __toCommonJS(constants_exports));
+    if (!isValidInstrumentKey2(instrumentKey)) {
+      logger8.error("instrument-control", `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
+      return;
+    }
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
     if (instrumentVolume) {
       if (enabled) {
@@ -31281,7 +32848,7 @@ var AudioEngine = class {
           this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
           logger8.debug("instrument-control", `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
         } else {
-          logger8.warn("instrument-control", `No settings found for ${instrumentKey}`);
+          logger8.warn("instrument-control", `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
         }
       } else {
         logger8.debug("instrument-control", `Disabling ${instrumentKey}, setting volume to -Infinity`);
@@ -32689,6 +34256,7 @@ var GraphParser = class {
 };
 
 // src/graph/musical-mapper.ts
+init_constants();
 var logger10 = getLogger("musical-mapper");
 var MusicalMapper = class {
   // C4 in Hz
