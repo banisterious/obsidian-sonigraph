@@ -27617,6 +27617,7 @@ var ElectronicEngine = class {
 
 // src/audio/voice-management/VoiceManager.ts
 var VoiceManager = class {
+  // Prevent unbounded growth
   constructor(adaptiveQuality = true) {
     this.voiceAssignments = /* @__PURE__ */ new Map();
     this.voicePool = /* @__PURE__ */ new Map();
@@ -27634,6 +27635,8 @@ var VoiceManager = class {
     this.preAllocatedInstruments = /* @__PURE__ */ new Set();
     this.availableVoiceIndices = /* @__PURE__ */ new Map();
     this.nextAvailableIndex = /* @__PURE__ */ new Map();
+    // Memory leak prevention
+    this.maxAvailableIndicesSize = 1e3;
     this.adaptiveQuality = adaptiveQuality;
     this.initializeDefaultConfigs();
     this.preAllocateCommonInstruments();
@@ -27675,7 +27678,7 @@ var VoiceManager = class {
     const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get("default");
     const size = poolSize || config.maxVoices;
     const pool = new Array(size);
-    const availableIndices = new Array(size);
+    const availableIndices = /* @__PURE__ */ new Set();
     for (let i = 0; i < size; i++) {
       pool[i] = {
         available: true,
@@ -27683,7 +27686,7 @@ var VoiceManager = class {
         instrumentName,
         voiceIndex: i
       };
-      availableIndices[i] = i;
+      availableIndices.add(i);
     }
     this.voicePool.set(instrumentName, pool);
     this.availableVoiceIndices.set(instrumentName, availableIndices);
@@ -27757,14 +27760,14 @@ var VoiceManager = class {
     }
     const availableIndices = this.availableVoiceIndices.get(instrumentName);
     const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
-    if (!availableIndices || availableIndices.length === 0) {
+    if (!availableIndices || availableIndices.size === 0) {
       return this.stealVoiceOptimized(instrumentName, nodeId);
     }
-    const voiceIndex = availableIndices[0];
+    const voiceIndex = availableIndices.values().next().value;
     const voice = pool[voiceIndex];
     voice.available = false;
     voice.lastUsed = Date.now();
-    availableIndices.shift();
+    availableIndices.delete(voiceIndex);
     const assignment = {
       nodeId,
       instrument: instrumentName,
@@ -27831,7 +27834,10 @@ var VoiceManager = class {
       if (voice && !voice.available) {
         voice.available = true;
         voice.lastUsed = Date.now();
-        availableIndices.push(assignment.voiceIndex);
+        availableIndices.add(assignment.voiceIndex);
+        if (availableIndices.size > this.maxAvailableIndicesSize) {
+          this.compactAvailableIndices(assignment.instrument);
+        }
       }
     }
     this.voiceAssignments.delete(nodeId);
@@ -27918,15 +27924,12 @@ var VoiceManager = class {
           instrumentName,
           voiceIndex: i
         });
-        availableIndices.push(i);
+        availableIndices.add(i);
       }
     } else if (newSize < pool.length) {
-      const removedIndices = /* @__PURE__ */ new Set();
       for (let i = newSize; i < pool.length; i++) {
-        removedIndices.add(i);
+        availableIndices.delete(i);
       }
-      const filteredIndices = availableIndices.filter((index) => !removedIndices.has(index));
-      this.availableVoiceIndices.set(instrumentName, filteredIndices);
       pool.splice(newSize);
       const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
       if (nextIndex >= newSize) {
@@ -27960,17 +27963,73 @@ var VoiceManager = class {
     for (const [instrumentName, pool] of this.voicePool.entries()) {
       const availableIndices = this.availableVoiceIndices.get(instrumentName);
       if (availableIndices) {
-        availableIndices.length = 0;
+        availableIndices.clear();
       }
       for (let i = 0; i < pool.length; i++) {
         const voice = pool[i];
         voice.available = true;
         voice.lastUsed = 0;
         if (availableIndices) {
-          availableIndices.push(i);
+          availableIndices.add(i);
         }
       }
       this.nextAvailableIndex.set(instrumentName, 0);
+    }
+  }
+  /**
+   * Compact available indices to prevent memory leak
+   * Removes invalid indices and maintains only valid ones
+   */
+  compactAvailableIndices(instrumentName) {
+    const pool = this.voicePool.get(instrumentName);
+    const availableIndices = this.availableVoiceIndices.get(instrumentName);
+    if (!pool || !availableIndices)
+      return;
+    const validIndices = /* @__PURE__ */ new Set();
+    for (let i = 0; i < pool.length; i++) {
+      if (pool[i].available) {
+        validIndices.add(i);
+      }
+    }
+    this.availableVoiceIndices.set(instrumentName, validIndices);
+    if (true) {
+      console.debug(`VoiceManager: Compacted ${instrumentName} indices from ${availableIndices.size} to ${validIndices.size}`);
+    }
+  }
+  /**
+   * Get memory usage statistics for debugging memory leaks
+   */
+  getMemoryStats() {
+    const stats = {};
+    for (const [instrumentName, pool] of this.voicePool.entries()) {
+      const availableIndices = this.availableVoiceIndices.get(instrumentName);
+      const assignmentsForInstrument = Array.from(this.voiceAssignments.values()).filter((assignment) => assignment.instrument === instrumentName).length;
+      stats[instrumentName] = {
+        poolSize: pool.length,
+        availableIndicesSize: (availableIndices == null ? void 0 : availableIndices.size) || 0,
+        assignmentsCount: assignmentsForInstrument
+      };
+    }
+    return stats;
+  }
+  /**
+   * Periodic cleanup to prevent memory leaks
+   * Should be called periodically to compact data structures
+   */
+  performPeriodicCleanup() {
+    for (const instrumentName of this.voicePool.keys()) {
+      this.compactAvailableIndices(instrumentName);
+    }
+    const now2 = Date.now();
+    const cleanupThreshold = 3e5;
+    for (const [nodeId, assignment] of this.voiceAssignments.entries()) {
+      const pool = this.voicePool.get(assignment.instrument);
+      if (pool) {
+        const voice = pool[assignment.voiceIndex];
+        if (voice && voice.lastUsed && now2 - voice.lastUsed > cleanupThreshold) {
+          this.releaseVoice(nodeId);
+        }
+      }
     }
   }
   /**
@@ -32185,7 +32244,8 @@ var AudioEngine = class {
    * Memory management for 34-instrument load
    */
   optimizeMemoryUsage() {
-    this.voicePool.forEach((pool, instrumentName) => {
+    this.voiceManager.performPeriodicCleanup();
+    this.voicePool.forEach((pool) => {
       const now2 = Date.now();
       pool.forEach((voice) => {
         if (voice.lastUsed && now2 - voice.lastUsed > 3e4) {
@@ -32196,7 +32256,8 @@ var AudioEngine = class {
     if ("gc" in window && typeof window.gc === "function") {
       window.gc();
     }
-    logger7.debug("performance", "Memory optimization completed");
+    const memoryStats = this.voiceManager.getMemoryStats();
+    logger7.debug("performance", "Memory optimization completed", { voiceManagerStats: memoryStats });
   }
   /**
    * Public performance monitoring API

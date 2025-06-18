@@ -28,8 +28,11 @@ export class VoiceManager {
     
     // Pre-allocation optimization
     private preAllocatedInstruments: Set<string> = new Set();
-    private availableVoiceIndices: Map<string, number[]> = new Map();
+    private availableVoiceIndices: Map<string, Set<number>> = new Map();
     private nextAvailableIndex: Map<string, number> = new Map();
+    
+    // Memory leak prevention
+    private maxAvailableIndicesSize = 1000; // Prevent unbounded growth
     
     constructor(adaptiveQuality: boolean = true) {
         this.adaptiveQuality = adaptiveQuality;
@@ -83,7 +86,7 @@ export class VoiceManager {
         
         // Pre-allocate pool array with known size
         const pool: VoicePool[] = new Array(size);
-        const availableIndices: number[] = new Array(size);
+        const availableIndices: Set<number> = new Set();
         
         // Initialize pool and available indices in single loop
         for (let i = 0; i < size; i++) {
@@ -93,7 +96,7 @@ export class VoiceManager {
                 instrumentName,
                 voiceIndex: i
             };
-            availableIndices[i] = i;
+            availableIndices.add(i);
         }
         
         this.voicePool.set(instrumentName, pool);
@@ -178,21 +181,21 @@ export class VoiceManager {
         const availableIndices = this.availableVoiceIndices.get(instrumentName);
         const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
         
-        if (!availableIndices || availableIndices.length === 0) {
+        if (!availableIndices || availableIndices.size === 0) {
             // No available voices - try voice stealing
             return this.stealVoiceOptimized(instrumentName, nodeId);
         }
 
         // O(1) voice allocation - get first available voice index
-        const voiceIndex = availableIndices[0];
+        const voiceIndex = availableIndices.values().next().value;
         const voice = pool[voiceIndex];
         
         // Mark voice as used
         voice.available = false;
         voice.lastUsed = Date.now();
         
-        // Remove from available indices (O(1) - remove first element)
-        availableIndices.shift();
+        // Remove from available indices (O(1) - Set.delete)
+        availableIndices.delete(voiceIndex);
         
         const assignment: VoiceAssignment = {
             nodeId,
@@ -277,8 +280,13 @@ export class VoiceManager {
                 voice.available = true;
                 voice.lastUsed = Date.now();
                 
-                // Add voice index back to available indices for O(1) future allocation
-                availableIndices.push(assignment.voiceIndex);
+                // Add voice index back to available indices (Set prevents duplicates)
+                availableIndices.add(assignment.voiceIndex);
+                
+                // Prevent memory leak: cleanup if availableIndices grows too large
+                if (availableIndices.size > this.maxAvailableIndicesSize) {
+                    this.compactAvailableIndices(assignment.instrument);
+                }
             }
         }
 
@@ -383,19 +391,14 @@ export class VoiceManager {
                     instrumentName,
                     voiceIndex: i
                 });
-                // Add new indices to available list
-                availableIndices.push(i);
+                // Add new indices to available set (prevents duplicates)
+                availableIndices.add(i);
             }
         } else if (newSize < pool.length) {
             // Shrink pool - remove excess voices and their indices
-            const removedIndices = new Set();
             for (let i = newSize; i < pool.length; i++) {
-                removedIndices.add(i);
+                availableIndices.delete(i);
             }
-            
-            // Remove indices from available list
-            const filteredIndices = availableIndices.filter(index => !removedIndices.has(index));
-            this.availableVoiceIndices.set(instrumentName, filteredIndices);
             
             // Shrink the pool
             pool.splice(newSize);
@@ -438,7 +441,7 @@ export class VoiceManager {
         for (const [instrumentName, pool] of this.voicePool.entries()) {
             const availableIndices = this.availableVoiceIndices.get(instrumentName);
             if (availableIndices) {
-                availableIndices.length = 0; // Clear array efficiently
+                availableIndices.clear(); // Clear Set efficiently
             }
             
             for (let i = 0; i < pool.length; i++) {
@@ -446,13 +449,86 @@ export class VoiceManager {
                 voice.available = true;
                 voice.lastUsed = 0;
                 
-                // Rebuild available indices
+                // Rebuild available indices (Set prevents duplicates)
                 if (availableIndices) {
-                    availableIndices.push(i);
+                    availableIndices.add(i);
                 }
             }
             
             this.nextAvailableIndex.set(instrumentName, 0);
+        }
+    }
+
+    /**
+     * Compact available indices to prevent memory leak
+     * Removes invalid indices and maintains only valid ones
+     */
+    private compactAvailableIndices(instrumentName: string): void {
+        const pool = this.voicePool.get(instrumentName);
+        const availableIndices = this.availableVoiceIndices.get(instrumentName);
+        
+        if (!pool || !availableIndices) return;
+        
+        // Create new Set with only valid available indices
+        const validIndices = new Set<number>();
+        
+        for (let i = 0; i < pool.length; i++) {
+            if (pool[i].available) {
+                validIndices.add(i);
+            }
+        }
+        
+        // Replace the available indices with the compacted set
+        this.availableVoiceIndices.set(instrumentName, validIndices);
+        
+        // Log memory cleanup for debugging
+        if (process.env.NODE_ENV === 'development') {
+            console.debug(`VoiceManager: Compacted ${instrumentName} indices from ${availableIndices.size} to ${validIndices.size}`);
+        }
+    }
+
+    /**
+     * Get memory usage statistics for debugging memory leaks
+     */
+    getMemoryStats(): { [instrumentName: string]: { poolSize: number, availableIndicesSize: number, assignmentsCount: number } } {
+        const stats: { [instrumentName: string]: { poolSize: number, availableIndicesSize: number, assignmentsCount: number } } = {};
+        
+        for (const [instrumentName, pool] of this.voicePool.entries()) {
+            const availableIndices = this.availableVoiceIndices.get(instrumentName);
+            const assignmentsForInstrument = Array.from(this.voiceAssignments.values())
+                .filter(assignment => assignment.instrument === instrumentName).length;
+            
+            stats[instrumentName] = {
+                poolSize: pool.length,
+                availableIndicesSize: availableIndices?.size || 0,
+                assignmentsCount: assignmentsForInstrument
+            };
+        }
+        
+        return stats;
+    }
+
+    /**
+     * Periodic cleanup to prevent memory leaks
+     * Should be called periodically to compact data structures
+     */
+    performPeriodicCleanup(): void {
+        for (const instrumentName of this.voicePool.keys()) {
+            this.compactAvailableIndices(instrumentName);
+        }
+        
+        // Clean up old voice assignments
+        const now = Date.now();
+        const cleanupThreshold = 300000; // 5 minutes
+        
+        for (const [nodeId, assignment] of this.voiceAssignments.entries()) {
+            const pool = this.voicePool.get(assignment.instrument);
+            if (pool) {
+                const voice = pool[assignment.voiceIndex];
+                if (voice && voice.lastUsed && (now - voice.lastUsed) > cleanupThreshold) {
+                    this.releaseVoice(nodeId);
+                }
+            }
         }
     }
 
