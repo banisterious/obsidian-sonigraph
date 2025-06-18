@@ -2,6 +2,7 @@ import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, SonigraphSettings } from './utils/constants';
 import { SonigraphSettingTab } from './ui/settings';
 import { MaterialControlPanelModal } from './ui/control-panel-md';
+import { TestSuiteModal } from './testing/TestSuiteModal';
 import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';
 import { MusicalMapper } from './graph/musical-mapper';
@@ -30,12 +31,26 @@ export default class SonigraphPlugin extends Plugin {
 			this.openControlPanel();
 		});
 
+		// Add test suite ribbon icon
+		this.addRibbonIcon('test-tube-2', 'Sonigraph: Open Test Suite', () => {
+			this.openTestSuite();
+		});
+
 		// Add command
 		this.addCommand({
 			id: 'open-control-panel',
 			name: 'Open Control Panel',
 			callback: () => {
 				this.openControlPanel();
+			}
+		});
+
+		// Add test suite command
+		this.addCommand({
+			id: 'open-test-suite',
+			name: 'Open Audio Engine Test Suite',
+			callback: () => {
+				this.openTestSuite();
 			}
 		});
 
@@ -84,6 +99,18 @@ export default class SonigraphPlugin extends Plugin {
 		logger.info('ui', 'Opening Sonigraph Control Center');
 
 		const modal = new MaterialControlPanelModal(this.app, this);
+		modal.open();
+	}
+
+	public openTestSuite(): void {
+		logger.info('ui', 'Opening Audio Engine Test Suite');
+
+		if (!this.audioEngine) {
+			logger.error('ui', 'Cannot open test suite: Audio engine not initialized');
+			return;
+		}
+
+		const modal = new TestSuiteModal(this.app, this.audioEngine);
 		modal.open();
 	}
 
