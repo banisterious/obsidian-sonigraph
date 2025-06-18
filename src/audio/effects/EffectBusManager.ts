@@ -1,4 +1,4 @@
-import { Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, Send, getDestination } from 'tone';
+import { Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, getDestination } from 'tone';
 import { 
     EffectNode, 
     SendBus, 
@@ -112,10 +112,7 @@ export class EffectBusManager {
      */
     private async initializeMasterEffects(): Promise<void> {
         // Master Reverb
-        this.masterReverb = new Reverb({
-            roomSize: 0.7,
-            dampening: 3000
-        }).toDestination();
+        this.masterReverb = new Reverb(2.0).toDestination();
         this.masterEffectsNodes.set('master-reverb', this.masterReverb);
         
         // Master EQ
@@ -193,10 +190,7 @@ export class EffectBusManager {
     private createEffectInstance(type: EffectType, parameters: EffectParameters): any {
         switch (type) {
             case 'reverb':
-                return new Reverb({
-                    roomSize: parameters.roomSize || 0.4,
-                    dampening: parameters.dampening || 3000
-                });
+                return new Reverb(parameters.decay || 1.5);
                 
             case 'chorus':
                 return new Chorus({
@@ -215,17 +209,10 @@ export class EffectBusManager {
                 });
                 
             case 'delay':
-                return new Delay({
-                    delayTime: parameters.delayTime || 0.25,
-                    feedback: parameters.feedback || 0.3,
-                    wet: parameters.wet || 0.3
-                });
+                return new Delay(parameters.delayTime || 0.25);
                 
             case 'distortion':
-                return new Distortion({
-                    distortion: parameters.distortion || 0.4,
-                    oversample: parameters.oversample || '4x'
-                });
+                return new Distortion(parameters.distortion || 0.4);
                 
             case 'compressor':
                 return new Compressor({
@@ -421,8 +408,8 @@ export class EffectBusManager {
     private applyParametersToInstance(instance: any, type: EffectType, parameters: EffectParameters): void {
         switch (type) {
             case 'reverb':
-                if (parameters.roomSize !== undefined) instance.roomSize = parameters.roomSize;
-                if (parameters.dampening !== undefined) instance.dampening = parameters.dampening;
+                if (parameters.decay !== undefined) instance.decay = parameters.decay;
+                if (parameters.preDelay !== undefined) instance.preDelay = parameters.preDelay;
                 if (parameters.wet !== undefined) instance.wet.value = parameters.wet;
                 break;
                 
@@ -430,12 +417,26 @@ export class EffectBusManager {
                 if (parameters.frequency !== undefined) instance.frequency.value = parameters.frequency;
                 if (parameters.delayTime !== undefined) instance.delayTime = parameters.delayTime;
                 if (parameters.depth !== undefined) instance.depth = parameters.depth;
-                if (parameters.feedback !== undefined) instance.feedback.value = parameters.feedback;
                 break;
                 
             case 'filter':
                 if (parameters.frequency !== undefined) instance.frequency.value = parameters.frequency;
                 if (parameters.Q !== undefined) instance.Q.value = parameters.Q;
+                break;
+                
+            case 'delay':
+                if (parameters.delayTime !== undefined) instance.delayTime.value = parameters.delayTime;
+                if (parameters.wet !== undefined) instance.wet.value = parameters.wet;
+                break;
+                
+            case 'distortion':
+                if (parameters.distortion !== undefined) instance.distortion = parameters.distortion;
+                break;
+                
+            case 'eq3':
+                if (parameters.low !== undefined) instance.low.value = parameters.low;
+                if (parameters.mid !== undefined) instance.mid.value = parameters.mid;
+                if (parameters.high !== undefined) instance.high.value = parameters.high;
                 break;
                 
             // Add other effect types as needed
@@ -447,11 +448,11 @@ export class EffectBusManager {
      */
     private getDefaultParametersForEffect(type: EffectType): EffectParameters {
         const defaults: Record<EffectType, EffectParameters> = {
-            reverb: { roomSize: 0.4, dampening: 3000, wet: 0.3 },
-            chorus: { frequency: 1.5, delayTime: 3.5, depth: 0.7, feedback: 0.1 },
+            reverb: { decay: 1.5, preDelay: 0.01, wet: 0.3 },
+            chorus: { frequency: 1.5, delayTime: 3.5, depth: 0.7 },
             filter: { frequency: 1000, type: 'lowpass', rolloff: -12, Q: 1 },
-            delay: { delayTime: 0.25, feedback: 0.3, wet: 0.3 },
-            distortion: { distortion: 0.4, oversample: '4x' },
+            delay: { delayTime: 0.25, wet: 0.3 },
+            distortion: { distortion: 0.4 },
             compressor: { threshold: -24, ratio: 12, attack: 0.003, release: 0.25, knee: 30 },
             eq3: { low: 0, mid: 0, high: 0 }
         };
