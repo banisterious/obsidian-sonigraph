@@ -4,6 +4,11 @@ node_modules
 ui-mockups
 logs/
 
+# Documentation images - generated content
+docs/images/sonigraph-control-center/
+docs/images/sonigraph-control-center/800pxw/
+docs/images/sonigraph-control-center/2880pxw/
+
 # Build artifacts
 main.js
 styles.css
