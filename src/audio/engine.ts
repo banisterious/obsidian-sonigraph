@@ -3151,8 +3151,11 @@ export class AudioEngine {
 	 * Memory management for 34-instrument load
 	 */
 	private optimizeMemoryUsage(): void {
-		// Clean up unused voice allocations
-		this.voicePool.forEach((pool, instrumentName) => {
+		// Phase 2.3: Delegate to VoiceManager for comprehensive memory cleanup
+		this.voiceManager.performPeriodicCleanup();
+		
+		// Clean up unused voice allocations (legacy cleanup for compatibility)
+		this.voicePool.forEach((pool) => {
 			const now = Date.now();
 			pool.forEach(voice => {
 				if (voice.lastUsed && (now - voice.lastUsed) > 30000) { // 30 seconds
@@ -3166,7 +3169,9 @@ export class AudioEngine {
 			(window as any).gc();
 		}
 
-		logger.debug('performance', 'Memory optimization completed');
+		// Get memory stats for monitoring
+		const memoryStats = this.voiceManager.getMemoryStats();
+		logger.debug('performance', 'Memory optimization completed', { voiceManagerStats: memoryStats });
 	}
 
 	/**
