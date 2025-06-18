@@ -29733,7 +29733,7 @@ var AudioEngine = class {
       audioFormat: "mp3",
       preloadFamilies: true
     });
-    this.invalidateInstrumentCache();
+    this.instrumentCacheValid = false;
   }
   // === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
   /**
@@ -31222,6 +31222,7 @@ var AudioEngine = class {
     if (this.instrumentCacheValid) {
       return this.cachedEnabledInstruments;
     }
+    logger7.debug("optimization", "Building enabled instruments cache - should be rare after first call");
     const enabled = [];
     Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
       if (settings.enabled) {
@@ -31230,6 +31231,7 @@ var AudioEngine = class {
     });
     this.cachedEnabledInstruments = enabled;
     this.instrumentCacheValid = true;
+    logger7.debug("optimization", `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
     return enabled;
   }
   /**
