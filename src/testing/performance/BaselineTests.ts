@@ -349,7 +349,7 @@ export class BaselineTests {
             const initStartTime = performance.now();
             
             // Test if audio engine is already initialized
-            const wasInitialized = this.audioEngine.isInitialized;
+            const wasInitialized = this.audioEngine.testIsInitialized;
             
             if (!wasInitialized) {
                 // Initialize if not already done
@@ -363,7 +363,7 @@ export class BaselineTests {
                 wasAlreadyInitialized: wasInitialized,
                 initializationTime: wasInitialized ? 0 : initEndTime - initStartTime,
                 memoryUsage: afterInit.heapUsed - beforeInit.heapUsed,
-                instrumentCount: Object.keys(this.audioEngine.getSamplerConfigs()).length
+                instrumentCount: Object.keys(this.audioEngine.getTestSamplerConfigs()).length
             };
 
             metrics = {

@@ -257,7 +257,8 @@ export class TestSuiteModal extends Modal {
         section.createEl('h2', { text: 'Real-time Metrics' });
         
         this.metricsDisplay = section.createDiv('metrics-display');
-        this.metricsDisplay.createDiv('metrics-placeholder', { text: 'Metrics will appear here during testing' });
+        const placeholder = this.metricsDisplay.createDiv('metrics-placeholder');
+        placeholder.textContent = 'Metrics will appear here during testing';
     }
 
     private createProgressDisplay(container: HTMLElement) {
@@ -265,7 +266,8 @@ export class TestSuiteModal extends Modal {
         section.createEl('h2', { text: 'Test Progress' });
         
         this.progressDisplay = section.createDiv('progress-display');
-        this.progressDisplay.createDiv('progress-placeholder', { text: 'Test progress will appear here' });
+        const progressPlaceholder = this.progressDisplay.createDiv('progress-placeholder');
+        progressPlaceholder.textContent = 'Test progress will appear here';
     }
 
     private createResultsDisplay(container: HTMLElement) {
@@ -273,7 +275,8 @@ export class TestSuiteModal extends Modal {
         section.createEl('h2', { text: 'Test Results' });
         
         this.resultsDisplay = section.createDiv('results-display');
-        this.resultsDisplay.createDiv('results-placeholder', { text: 'Test results will appear here' });
+        const resultsPlaceholder = this.resultsDisplay.createDiv('results-placeholder');
+        resultsPlaceholder.textContent = 'Test results will appear here';
     }
 
     private async runTests() {
@@ -387,9 +390,8 @@ export class TestSuiteModal extends Modal {
         const progressFill = progressBar.createDiv('progress-fill');
         progressFill.style.width = `${(progress.current / progress.total) * 100}%`;
         
-        this.progressDisplay.createDiv('progress-text', { 
-            text: `${progress.current}/${progress.total} - ${progress.currentTest}` 
-        });
+        const progressText = this.progressDisplay.createDiv('progress-text');
+        progressText.textContent = `${progress.current}/${progress.total} - ${progress.currentTest}`;
     }
 
     private handleResults(results: TestResults) {
