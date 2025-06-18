@@ -68,15 +68,8 @@ export class AudioEngine {
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
 	
 	/**
-	 * Enhanced routing delegates
+	 * Enhanced routing delegates - methods implemented later in file
 	 */
-	async enableEnhancedRouting(): Promise<void> {
-		return this.effectBusManager.enableEnhancedRouting();
-	}
-
-	disableEnhancedRouting(): void {
-		return this.effectBusManager.disableEnhancedRouting();
-	}
 
 	isEnhancedRoutingEnabled(): boolean {
 		return this.effectBusManager.isEnhancedRoutingEnabled();
