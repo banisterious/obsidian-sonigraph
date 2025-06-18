@@ -196,7 +196,7 @@ export class VoiceManager {
         
         const assignment: VoiceAssignment = {
             nodeId,
-            instrument: instrumentName as keyof any,
+            instrument: instrumentName,
             voiceIndex: voice.voiceIndex
         };
         
@@ -241,7 +241,7 @@ export class VoiceManager {
 
         const assignment: VoiceAssignment = {
             nodeId,
-            instrument: instrumentName as keyof any,
+            instrument: instrumentName,
             voiceIndex: voiceToSteal.voiceIndex
         };
 
