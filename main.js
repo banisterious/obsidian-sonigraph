@@ -5806,7 +5806,7 @@ var IssueValidationTests = class {
           performanceImprovements
         }
       };
-      if (voicePerformanceResults.avgAllocationTime > 2) {
+      if (voicePerformanceResults.avgAllocationTime > 1) {
         throw new Error(`Voice allocation still too slow: ${voicePerformanceResults.avgAllocationTime.toFixed(2)}ms`);
       }
       if (effectPerformanceResults.avgProcessingTime > 5) {
@@ -6042,6 +6042,7 @@ var IssueValidationTests = class {
   }
   /**
    * Test voice management performance
+   * Phase 2.2: Tests integration layer optimizations for cached enabled instruments
    */
   async testVoiceManagementPerformance() {
     const times = [];
@@ -6051,10 +6052,12 @@ var IssueValidationTests = class {
       const end = performance.now();
       times.push(end - start2);
     }
+    const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
     return {
-      avgAllocationTime: times.reduce((sum, t) => sum + t, 0) / times.length,
+      avgAllocationTime: avgTime,
       maxAllocationTime: Math.max(...times),
-      efficiency: times.filter((t) => t < 2).length / times.length
+      efficiency: avgTime < 1 ? 1 : 0
+      // Excellent if < 1ms after Phase 2.2, poor otherwise
     };
   }
   /**
@@ -7185,7 +7188,8 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
         effectBus: true,
         configLoader: true,
         integration: false,
-        issueValidation: false
+        issueValidation: true
+        // Enable by default to test Phase 2.2 optimization
       },
       exportFormat: "markdown",
       realTimeMetrics: true,
@@ -7257,8 +7261,8 @@ var TestSuiteModal = class extends import_obsidian4.Modal {
     this.createTestCheckbox(
       grid,
       "issueValidation",
-      "Issue #001 Validation",
-      "Audio crackling reproduction and resolution validation"
+      "Issue #001 & #002 Validation",
+      "Audio crackling resolution, performance improvements, and architecture validation"
     );
   }
   createTestCheckbox(container, key, title, description) {
@@ -27624,8 +27628,15 @@ var VoiceManager = class {
     this.lastCleanup = Date.now();
     // Voice assignment strategy
     this.assignmentStrategy = "roundRobin";
+    // O(1) round-robin counter optimization
+    this.roundRobinCounter = 0;
+    // Pre-allocation optimization
+    this.preAllocatedInstruments = /* @__PURE__ */ new Set();
+    this.availableVoiceIndices = /* @__PURE__ */ new Map();
+    this.nextAvailableIndex = /* @__PURE__ */ new Map();
     this.adaptiveQuality = adaptiveQuality;
     this.initializeDefaultConfigs();
+    this.preAllocateCommonInstruments();
   }
   /**
    * Initialize default voice configurations for instruments
@@ -27642,21 +27653,41 @@ var VoiceManager = class {
     this.voiceConfigs.set("harp", { maxVoices: 12, defaultVoices: 6, priority: "low" });
   }
   /**
+   * Pre-allocate voice pools for commonly used instruments
+   */
+  preAllocateCommonInstruments() {
+    const commonInstruments = ["piano", "strings", "timpani", "harp", "tuba"];
+    for (const instrument of commonInstruments) {
+      this.createVoicePoolOptimized(instrument);
+      this.preAllocatedInstruments.add(instrument);
+    }
+  }
+  /**
    * Create voice pool for an instrument
    */
   createVoicePool(instrumentName, poolSize) {
+    this.createVoicePoolOptimized(instrumentName, poolSize);
+  }
+  /**
+   * Create optimized voice pool with pre-allocated indices tracking
+   */
+  createVoicePoolOptimized(instrumentName, poolSize) {
     const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get("default");
     const size = poolSize || config.maxVoices;
-    const pool = [];
+    const pool = new Array(size);
+    const availableIndices = new Array(size);
     for (let i = 0; i < size; i++) {
-      pool.push({
+      pool[i] = {
         available: true,
         lastUsed: 0,
         instrumentName,
         voiceIndex: i
-      });
+      };
+      availableIndices[i] = i;
     }
     this.voicePool.set(instrumentName, pool);
+    this.availableVoiceIndices.set(instrumentName, availableIndices);
+    this.nextAvailableIndex.set(instrumentName, 0);
   }
   /**
    * Assign instrument using the current strategy
@@ -27689,9 +27720,11 @@ var VoiceManager = class {
   }
   /**
    * Assign instrument using round-robin strategy
+   * Optimized: O(1) counter instead of O(n) Map.size operation
    */
   assignByRoundRobin(mapping, enabledInstruments) {
-    const instrumentIndex = this.voiceAssignments.size % enabledInstruments.length;
+    const instrumentIndex = this.roundRobinCounter % enabledInstruments.length;
+    this.roundRobinCounter++;
     return enabledInstruments[instrumentIndex];
   }
   /**
@@ -27714,66 +27747,91 @@ var VoiceManager = class {
     return available[0] || "piano";
   }
   /**
-   * Allocate a voice from the pool
+   * Allocate a voice from the pool - optimized O(1) allocation
    */
   allocateVoice(instrumentName, nodeId) {
-    const pool = this.voicePool.get(instrumentName);
+    let pool = this.voicePool.get(instrumentName);
     if (!pool) {
-      this.createVoicePool(instrumentName);
-      return this.allocateVoice(instrumentName, nodeId);
+      this.createVoicePoolOptimized(instrumentName);
+      pool = this.voicePool.get(instrumentName);
     }
-    const availableVoice = pool.find((voice) => voice.available);
-    if (availableVoice) {
-      availableVoice.available = false;
-      availableVoice.lastUsed = Date.now();
-      const assignment = {
-        nodeId,
-        instrument: instrumentName,
-        voiceIndex: availableVoice.voiceIndex
-      };
-      this.voiceAssignments.set(nodeId, assignment);
-      return assignment;
+    const availableIndices = this.availableVoiceIndices.get(instrumentName);
+    const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
+    if (!availableIndices || availableIndices.length === 0) {
+      return this.stealVoiceOptimized(instrumentName, nodeId);
     }
-    return this.stealVoice(instrumentName, nodeId);
-  }
-  /**
-   * Voice stealing algorithm - steals longest-playing voice
-   */
-  stealVoice(instrumentName, nodeId) {
-    const pool = this.voicePool.get(instrumentName);
-    if (!pool)
-      return null;
-    let oldestVoice = pool[0];
-    let oldestTime = oldestVoice.lastUsed;
-    for (const voice of pool) {
-      if (voice.lastUsed < oldestTime) {
-        oldestTime = voice.lastUsed;
-        oldestVoice = voice;
-      }
-    }
-    oldestVoice.available = false;
-    oldestVoice.lastUsed = Date.now();
+    const voiceIndex = availableIndices[0];
+    const voice = pool[voiceIndex];
+    voice.available = false;
+    voice.lastUsed = Date.now();
+    availableIndices.shift();
     const assignment = {
       nodeId,
       instrument: instrumentName,
-      voiceIndex: oldestVoice.voiceIndex
+      voiceIndex: voice.voiceIndex
     };
     this.voiceAssignments.set(nodeId, assignment);
     return assignment;
   }
   /**
-   * Release a voice back to the pool
+   * Voice stealing algorithm - steals longest-playing voice
+   */
+  stealVoice(instrumentName, nodeId) {
+    return this.stealVoiceOptimized(instrumentName, nodeId);
+  }
+  /**
+   * Optimized voice stealing algorithm using round-robin for O(1) performance
+   */
+  stealVoiceOptimized(instrumentName, nodeId) {
+    const pool = this.voicePool.get(instrumentName);
+    if (!pool || pool.length === 0)
+      return null;
+    let nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
+    if (nextIndex >= pool.length) {
+      nextIndex = 0;
+    }
+    const voiceToSteal = pool[nextIndex];
+    const existingNodeId = this.findNodeIdByVoice(instrumentName, nextIndex);
+    if (existingNodeId) {
+      this.voiceAssignments.delete(existingNodeId);
+    }
+    voiceToSteal.available = false;
+    voiceToSteal.lastUsed = Date.now();
+    this.nextAvailableIndex.set(instrumentName, (nextIndex + 1) % pool.length);
+    const assignment = {
+      nodeId,
+      instrument: instrumentName,
+      voiceIndex: voiceToSteal.voiceIndex
+    };
+    this.voiceAssignments.set(nodeId, assignment);
+    return assignment;
+  }
+  /**
+   * Helper to find nodeId that owns a specific voice (for stealing)
+   */
+  findNodeIdByVoice(instrumentName, voiceIndex) {
+    for (const [nodeId, assignment] of this.voiceAssignments.entries()) {
+      if (assignment.instrument === instrumentName && assignment.voiceIndex === voiceIndex) {
+        return nodeId;
+      }
+    }
+    return null;
+  }
+  /**
+   * Release a voice back to the pool - optimized to maintain available indices
    */
   releaseVoice(nodeId) {
     const assignment = this.voiceAssignments.get(nodeId);
     if (!assignment)
       return;
     const pool = this.voicePool.get(assignment.instrument);
-    if (pool) {
+    const availableIndices = this.availableVoiceIndices.get(assignment.instrument);
+    if (pool && availableIndices) {
       const voice = pool[assignment.voiceIndex];
-      if (voice) {
+      if (voice && !voice.available) {
         voice.available = true;
         voice.lastUsed = Date.now();
+        availableIndices.push(assignment.voiceIndex);
       }
     }
     this.voiceAssignments.delete(nodeId);
@@ -27844,23 +27902,36 @@ var VoiceManager = class {
     }
   }
   /**
-   * Resize voice pool for an instrument
+   * Resize voice pool for an instrument - optimized to maintain indices
    */
   resizeVoicePool(instrumentName, newSize) {
     const pool = this.voicePool.get(instrumentName);
-    if (!pool)
+    const availableIndices = this.availableVoiceIndices.get(instrumentName);
+    if (!pool || !availableIndices)
       return;
     if (newSize > pool.length) {
-      for (let i = pool.length; i < newSize; i++) {
+      const oldSize = pool.length;
+      for (let i = oldSize; i < newSize; i++) {
         pool.push({
           available: true,
           lastUsed: 0,
           instrumentName,
           voiceIndex: i
         });
+        availableIndices.push(i);
       }
     } else if (newSize < pool.length) {
+      const removedIndices = /* @__PURE__ */ new Set();
+      for (let i = newSize; i < pool.length; i++) {
+        removedIndices.add(i);
+      }
+      const filteredIndices = availableIndices.filter((index) => !removedIndices.has(index));
+      this.availableVoiceIndices.set(instrumentName, filteredIndices);
       pool.splice(newSize);
+      const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
+      if (nextIndex >= newSize) {
+        this.nextAvailableIndex.set(instrumentName, 0);
+      }
     }
   }
   /**
@@ -27887,10 +27958,19 @@ var VoiceManager = class {
   clear() {
     this.voiceAssignments.clear();
     for (const [instrumentName, pool] of this.voicePool.entries()) {
-      for (const voice of pool) {
+      const availableIndices = this.availableVoiceIndices.get(instrumentName);
+      if (availableIndices) {
+        availableIndices.length = 0;
+      }
+      for (let i = 0; i < pool.length; i++) {
+        const voice = pool[i];
         voice.available = true;
         voice.lastUsed = 0;
+        if (availableIndices) {
+          availableIndices.push(i);
+        }
       }
+      this.nextAvailableIndex.set(instrumentName, 0);
     }
   }
   /**
@@ -27900,6 +27980,9 @@ var VoiceManager = class {
     this.voiceAssignments.clear();
     this.voicePool.clear();
     this.voiceConfigs.clear();
+    this.preAllocatedInstruments.clear();
+    this.availableVoiceIndices.clear();
+    this.nextAvailableIndex.clear();
   }
 };
 
@@ -27982,10 +28065,7 @@ var EffectBusManager = class {
    * Initialize master effects chain
    */
   async initializeMasterEffects() {
-    this.masterReverb = new Reverb({
-      roomSize: 0.7,
-      dampening: 3e3
-    }).toDestination();
+    this.masterReverb = new Reverb(2).toDestination();
     this.masterEffectsNodes.set("master-reverb", this.masterReverb);
     this.masterEQ = new EQ3({
       low: 0,
@@ -28047,10 +28127,7 @@ var EffectBusManager = class {
   createEffectInstance(type, parameters) {
     switch (type) {
       case "reverb":
-        return new Reverb({
-          roomSize: parameters.roomSize || 0.4,
-          dampening: parameters.dampening || 3e3
-        });
+        return new Reverb(parameters.decay || 1.5);
       case "chorus":
         return new Chorus({
           frequency: parameters.frequency || 1.5,
@@ -28066,16 +28143,9 @@ var EffectBusManager = class {
           Q: parameters.Q || 1
         });
       case "delay":
-        return new Delay({
-          delayTime: parameters.delayTime || 0.25,
-          feedback: parameters.feedback || 0.3,
-          wet: parameters.wet || 0.3
-        });
+        return new Delay(parameters.delayTime || 0.25);
       case "distortion":
-        return new Distortion({
-          distortion: parameters.distortion || 0.4,
-          oversample: parameters.oversample || "4x"
-        });
+        return new Distortion(parameters.distortion || 0.4);
       case "compressor":
         return new Compressor({
           threshold: parameters.threshold || -24,
@@ -28235,10 +28305,10 @@ var EffectBusManager = class {
   applyParametersToInstance(instance, type, parameters) {
     switch (type) {
       case "reverb":
-        if (parameters.roomSize !== void 0)
-          instance.roomSize = parameters.roomSize;
-        if (parameters.dampening !== void 0)
-          instance.dampening = parameters.dampening;
+        if (parameters.decay !== void 0)
+          instance.decay = parameters.decay;
+        if (parameters.preDelay !== void 0)
+          instance.preDelay = parameters.preDelay;
         if (parameters.wet !== void 0)
           instance.wet.value = parameters.wet;
         break;
@@ -28249,14 +28319,30 @@ var EffectBusManager = class {
           instance.delayTime = parameters.delayTime;
         if (parameters.depth !== void 0)
           instance.depth = parameters.depth;
-        if (parameters.feedback !== void 0)
-          instance.feedback.value = parameters.feedback;
         break;
       case "filter":
         if (parameters.frequency !== void 0)
           instance.frequency.value = parameters.frequency;
         if (parameters.Q !== void 0)
           instance.Q.value = parameters.Q;
+        break;
+      case "delay":
+        if (parameters.delayTime !== void 0)
+          instance.delayTime.value = parameters.delayTime;
+        if (parameters.wet !== void 0)
+          instance.wet.value = parameters.wet;
+        break;
+      case "distortion":
+        if (parameters.distortion !== void 0)
+          instance.distortion = parameters.distortion;
+        break;
+      case "eq3":
+        if (parameters.low !== void 0)
+          instance.low.value = parameters.low;
+        if (parameters.mid !== void 0)
+          instance.mid.value = parameters.mid;
+        if (parameters.high !== void 0)
+          instance.high.value = parameters.high;
         break;
     }
   }
@@ -28265,11 +28351,11 @@ var EffectBusManager = class {
    */
   getDefaultParametersForEffect(type) {
     const defaults = {
-      reverb: { roomSize: 0.4, dampening: 3e3, wet: 0.3 },
-      chorus: { frequency: 1.5, delayTime: 3.5, depth: 0.7, feedback: 0.1 },
+      reverb: { decay: 1.5, preDelay: 0.01, wet: 0.3 },
+      chorus: { frequency: 1.5, delayTime: 3.5, depth: 0.7 },
       filter: { frequency: 1e3, type: "lowpass", rolloff: -12, Q: 1 },
-      delay: { delayTime: 0.25, feedback: 0.3, wet: 0.3 },
-      distortion: { distortion: 0.4, oversample: "4x" },
+      delay: { delayTime: 0.25, wet: 0.3 },
+      distortion: { distortion: 0.4 },
       compressor: { threshold: -24, ratio: 12, attack: 3e-3, release: 0.25, knee: 30 },
       eq3: { low: 0, mid: 0, high: 0 }
     };
@@ -29575,6 +29661,9 @@ var AudioEngine = class {
     this.previewNote = null;
     // Performance optimization properties - moved to VoiceManager
     // Effect routing properties - moved to EffectBusManager
+    // Phase 2.2: Integration layer optimization - cached enabled instruments
+    this.cachedEnabledInstruments = [];
+    this.instrumentCacheValid = false;
     // Phase 8: Advanced Synthesis Engines
     this.percussionEngine = null;
     this.electronicEngine = null;
@@ -29585,17 +29674,12 @@ var AudioEngine = class {
       audioFormat: "mp3",
       preloadFamilies: true
     });
+    this.invalidateInstrumentCache();
   }
   // === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
   /**
-   * Enhanced routing delegates
+   * Enhanced routing delegates - methods implemented later in file
    */
-  async enableEnhancedRouting() {
-    return this.effectBusManager.enableEnhancedRouting();
-  }
-  disableEnhancedRouting() {
-    return this.effectBusManager.disableEnhancedRouting();
-  }
   isEnhancedRoutingEnabled() {
     return this.effectBusManager.isEnhancedRoutingEnabled();
   }
@@ -31076,13 +31160,33 @@ var AudioEngine = class {
     }
   }
   getEnabledInstruments() {
+    if (this.instrumentCacheValid) {
+      return this.cachedEnabledInstruments;
+    }
     const enabled = [];
     Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
       if (settings.enabled) {
         enabled.push(instrumentKey);
       }
     });
+    this.cachedEnabledInstruments = enabled;
+    this.instrumentCacheValid = true;
     return enabled;
+  }
+  /**
+   * Invalidate enabled instruments cache when settings change
+   * Phase 2.2: Performance optimization to prevent O(n) operations per note
+   */
+  invalidateInstrumentCache() {
+    this.instrumentCacheValid = false;
+  }
+  /**
+   * Public method to invalidate instrument cache when settings are updated externally
+   * Phase 2.2: Call this whenever instrument enabled/disabled state changes
+   */
+  onInstrumentSettingsChanged() {
+    this.invalidateInstrumentCache();
+    logger7.debug("optimization", "Instrument cache invalidated due to settings change");
   }
   assignByFrequency(mapping, enabledInstruments) {
     const sortedInstruments = enabledInstruments.sort();
