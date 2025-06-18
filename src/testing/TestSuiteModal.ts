@@ -46,7 +46,7 @@ export class TestSuiteModal extends Modal {
             effectBus: true,
             configLoader: true,
             integration: false,
-            issueValidation: false
+            issueValidation: true  // Enable by default to test Phase 2.2 optimization
         },
         exportFormat: 'markdown',
         realTimeMetrics: true,
@@ -128,8 +128,8 @@ export class TestSuiteModal extends Modal {
             'Full audio engine stress testing and complex scenarios');
 
         // Issue Validation
-        this.createTestCheckbox(grid, 'issueValidation', 'Issue #001 Validation', 
-            'Audio crackling reproduction and resolution validation');
+        this.createTestCheckbox(grid, 'issueValidation', 'Issue #001 & #002 Validation', 
+            'Audio crackling resolution, performance improvements, and architecture validation');
     }
 
     private createTestCheckbox(container: HTMLElement, key: keyof TestSuiteConfig['selectedTests'], 
