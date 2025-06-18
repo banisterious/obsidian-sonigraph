@@ -8,6 +8,9 @@
 
 import { AudioEngine } from '../../audio/engine';
 import { TestDetail, PerformanceMetrics } from '../utils/MetricsCollector';
+import { getLogger } from '../../logging';
+
+const logger = getLogger('issue-validation-tests');
 
 export class IssueValidationTests {
     private audioEngine: AudioEngine;
@@ -509,21 +512,77 @@ export class IssueValidationTests {
     private async testVoiceManagementPerformance(): Promise<any> {
         const times = [];
         
+        logger.debug('test-start', 'Starting testVoiceManagementPerformance', {
+            hasAudioEngine: !!this.audioEngine,
+            iterations: 50
+        });
+        
         // Test voice allocation performance (should benefit from Phase 2.2 cached instruments optimization)
         for (let i = 0; i < 50; i++) {
             const start = performance.now();
-            // Simulate voice allocation that goes through getDefaultInstrument -> getEnabledInstruments
-            // This is where our Phase 2.2 cached instruments optimization should show improvement
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 2));
+            
+            // REAL TEST: Call actual AudioEngine methods that trigger getEnabledInstruments() 
+            // This exercises the Phase 2.2 cached instruments optimization path
+            try {
+                // Test both methods to exercise the cached optimization path
+                const enabledInstruments = this.audioEngine.getEnabledInstrumentsForTesting();
+                
+                // Also test the full getDefaultInstrument path that calls getEnabledInstruments
+                const testFrequency = 440 + (i * 50); // Vary frequency for different instruments
+                const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
+                
+                // Log every 10th iteration to avoid spam
+                if (i % 10 === 0) {
+                    logger.debug('test-iteration', `Iteration ${i} completed`, {
+                        iteration: i,
+                        enabledInstruments: enabledInstruments.length,
+                        defaultInstrument,
+                        frequency: testFrequency
+                    });
+                }
+                
+                // NO TIMEOUT - only measure the actual AudioEngine method performance
+                // This should show the true optimization benefit of Phase 2.2 caching
+                
+            } catch (error) {
+                logger.error('test-error', `Iteration ${i} failed`, {
+                    iteration: i,
+                    error: error.message
+                });
+                // Don't add any artificial delay for errors - just measure the error handling time
+            }
+            
             const end = performance.now();
-            times.push(end - start);
+            const duration = end - start;
+            times.push(duration);
+            
+            // Log first few iterations and any that are unusually slow/fast
+            if (i < 5 || duration > 10 || duration < 0.001) {
+                logger.debug('test-timing', `Iteration ${i} timing`, {
+                    iteration: i,
+                    duration: duration.toFixed(4),
+                    isFirstFive: i < 5,
+                    isSlow: duration > 10,
+                    isFast: duration < 0.001
+                });
+            }
         }
         
         const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
+        const minTime = Math.min(...times);
+        const maxTime = Math.max(...times);
+        
+        logger.info('test-complete', 'testVoiceManagementPerformance completed', {
+            averageTime: avgTime.toFixed(4),
+            minTime: minTime.toFixed(4),
+            maxTime: maxTime.toFixed(4),
+            totalIterations: times.length,
+            optimizationWorking: avgTime < 1.0
+        });
         
         return {
             avgAllocationTime: avgTime,
-            maxAllocationTime: Math.max(...times),
+            maxAllocationTime: maxTime,
             efficiency: avgTime < 1.0 ? 1 : 0 // Excellent if < 1ms after Phase 2.2, poor otherwise
         };
     }
@@ -662,14 +721,59 @@ export class IssueValidationTests {
 
     private async testOptimizedVoiceAllocation(): Promise<any> {
         const times = [];
+        
+        logger.debug('test-start', 'Starting testOptimizedVoiceAllocation', {
+            hasAudioEngine: !!this.audioEngine,
+            iterations: 20
+        });
+        
         for (let i = 0; i < 20; i++) {
             const start = performance.now();
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 1.5));
-            times.push(performance.now() - start);
+            
+            // REAL TEST: Call actual AudioEngine methods that trigger getEnabledInstruments() 
+            // This exercises the Phase 2.2 cached instruments optimization path
+            try {
+                // Test the cached optimization path
+                const enabledInstruments = this.audioEngine.getEnabledInstrumentsForTesting();
+                
+                // Also test the full getDefaultInstrument path
+                const testFrequency = 440 + (i * 100); // Vary frequency
+                const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
+                
+                // Log every 5th iteration
+                if (i % 5 === 0) {
+                    logger.debug('test-iteration', `Iteration ${i} completed`, {
+                        iteration: i,
+                        enabledInstruments: enabledInstruments.length,
+                        defaultInstrument,
+                        frequency: testFrequency
+                    });
+                }
+                
+            } catch (error) {
+                logger.error('test-error', `Iteration ${i} failed`, {
+                    iteration: i,
+                    error: error.message
+                });
+            }
+            
+            const duration = performance.now() - start;
+            times.push(duration);
         }
+        
+        const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
+        const maxTime = Math.max(...times);
+        
+        logger.info('test-complete', 'testOptimizedVoiceAllocation completed', {
+            averageTime: avgTime.toFixed(4),
+            maxTime: maxTime.toFixed(4),
+            totalIterations: times.length,
+            optimizationWorking: avgTime < 1.0
+        });
+        
         return {
-            avgTime: times.reduce((sum, t) => sum + t, 0) / times.length,
-            maxTime: Math.max(...times)
+            avgTime: avgTime,
+            maxTime: maxTime
         };
     }
 
