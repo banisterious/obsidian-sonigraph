@@ -41,6 +41,10 @@ export class AudioEngine {
 
 	// Performance optimization properties - moved to VoiceManager
 	// Effect routing properties - moved to EffectBusManager
+	
+	// Phase 2.2: Integration layer optimization - cached enabled instruments
+	private cachedEnabledInstruments: string[] = [];
+	private instrumentCacheValid: boolean = false;
 
 	// Phase 8: Advanced Synthesis Engines
 	private percussionEngine: PercussionEngine | null = null;
@@ -56,6 +60,9 @@ export class AudioEngine {
 			audioFormat: 'mp3',
 			preloadFamilies: true
 		});
+		
+		// Phase 2.2: Initialize enabled instruments cache
+		this.invalidateInstrumentCache();
 	}
 
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
@@ -1922,13 +1929,39 @@ export class AudioEngine {
 	}
 
 	private getEnabledInstruments(): string[] {
+		// Phase 2.2: Optimized with caching to eliminate O(n) operation on every note trigger
+		if (this.instrumentCacheValid) {
+			return this.cachedEnabledInstruments;
+		}
+		
+		// Rebuild cache when invalid
 		const enabled: string[] = [];
 		Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
 			if (settings.enabled) {
 				enabled.push(instrumentKey);
 			}
 		});
+		
+		this.cachedEnabledInstruments = enabled;
+		this.instrumentCacheValid = true;
 		return enabled;
+	}
+	
+	/**
+	 * Invalidate enabled instruments cache when settings change
+	 * Phase 2.2: Performance optimization to prevent O(n) operations per note
+	 */
+	private invalidateInstrumentCache(): void {
+		this.instrumentCacheValid = false;
+	}
+	
+	/**
+	 * Public method to invalidate instrument cache when settings are updated externally
+	 * Phase 2.2: Call this whenever instrument enabled/disabled state changes
+	 */
+	public onInstrumentSettingsChanged(): void {
+		this.invalidateInstrumentCache();
+		logger.debug('optimization', 'Instrument cache invalidated due to settings change');
 	}
 
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
