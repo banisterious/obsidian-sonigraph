@@ -1,25 +1,25 @@
 # Issue #003: Instrument Family Playback Failure
 
-**Status:** 🔍 ACTIVE  
+**Status:** 🟡 PARTIALLY RESOLVED  
 **Priority:** High  
 **Component:** Audio Engine  
 **Last Updated:** 2025-06-18
 
+**Configuration Fix:** ✅ **COMPLETED** - Type assertion bug resolved  
+**Real Audio Output:** ❌ **ONGOING** - Manual testing shows continued playback issues
+
 ## Table of Contents
 
 - [Overview](#overview)
+- [Resolution Progress](#resolution-progress)
+  - [Configuration Fix Completed](#configuration-fix-completed)
+  - [Remaining Real-World Issues](#remaining-real-world-issues)
 - [Problem Analysis](#problem-analysis)
   - [Affected Families](#affected-families)
   - [Current Behavior](#current-behavior)
   - [Expected Behavior](#expected-behavior)
-- [Investigation Plan](#investigation-plan)
-  - [Root Cause Analysis](#root-cause-analysis)
-  - [Diagnostic Steps](#diagnostic-steps)
+- [Manual Testing Required](#manual-testing-required)
 - [Technical Details](#technical-details)
-  - [Voice Allocation](#voice-allocation)
-  - [Sample Loading](#sample-loading)
-  - [Synthesis Engine](#synthesis-engine)
-- [Test Cases](#test-cases)
 - [Next Steps](#next-steps)
 
 ---
@@ -29,6 +29,202 @@
 Multiple instrument families within the 34-instrument orchestral system are completely silent during playback despite being properly enabled and configured in the Control Center. This affects approximately 50% of the available instruments across major orchestral families.
 
 **Key Challenge:** Core functionality is broken for major instrument categories, severely limiting the musical richness and orchestral capabilities of Sonigraph.
+
+---
+
+## Resolution Progress
+
+### Configuration Fix Completed
+
+**✅ Root Cause Identified:** Type assertion bug in `AudioEngine.setInstrumentEnabled()`
+
+**Problem:** Hardcoded type assertion only allowed `'piano' | 'organ' | 'strings'`
+```typescript
+// BEFORE (broken)
+const instrumentSettings = this.settings.instruments[instrumentKey as 'piano' | 'organ' | 'strings'];
+
+// AFTER (fixed) 
+const instrumentSettings = this.settings.instruments[instrumentKey as keyof SonigraphSettings['instruments']];
+```
+
+**Solution Implemented:**
+- ✅ Fixed type assertion to support all instruments dynamically
+- ✅ Added validation functions for future-proof instrument addition
+- ✅ Enhanced test suite with configuration validation
+- ✅ Created prevention system to catch this issue in future
+
+### Remaining Real-World Issues
+
+**❌ Manual Testing Results (2025-06-18):**
+- **Vocals**: Super long delay before playback, only two notes heard
+- **Percussion**: No sound at all (timpani, xylophone silent)
+- **Electronic**: ✅ Working properly  
+- **Experimental**: No sound at all (whaleHumpback silent)
+
+**❌ Additional Issue Discovered:**
+- **Play Button**: Only works once per session - requires plugin reload (Issue #006)
+
+**Gap Analysis:** Automated tests pass (configuration validation) but real audio output fails in Obsidian environment.
+
+---
+
+## Manual Testing Required
+
+### Testing Objective
+
+Validate that all instrument families (Vocals, Percussion, Electronic, Experimental) produce audible sound in the actual Obsidian environment, not just pass configuration validation.
+
+### Known Testing Gap
+
+**Automated Test Limitation**: The current Issue #003 test validates:
+- ✅ Instrument settings accessibility
+- ✅ Enable/disable functionality  
+- ✅ Configuration consistency
+- ❌ **Actual audio output** (requires real environment)
+
+**Manual Testing Required** for:
+- Real audio output verification
+- Timing and delay issues
+- Specialized engine functionality (PercussionEngine, etc.)
+- Play button reliability (Issue #006)
+
+### Manual Test Protocol
+
+#### Pre-Test Setup
+1. **Fresh Plugin Load**: Reload Sonigraph plugin in Obsidian
+2. **Open Control Center**: Access instrument controls
+3. **Clear Audio State**: Ensure no previous audio sessions are running
+
+#### Test Sequence
+
+**Test A: Electronic Family (Baseline - Should Work)**
+1. Enable `leadSynth` and `bassSynth` 
+2. Click Play button
+3. **Expected**: Clear electronic sounds, no delays
+4. **Record**: ✅/❌ + notes
+
+**Test B: Vocals Family**
+**Enabled Instruments**: `choir`, `soprano`, `bass`
+
+1. **Enable instruments** via Control Center
+2. **Click Play** button  
+3. **Listen for**:
+   - Choir harmonies
+   - Soprano high notes
+   - Bass low notes
+4. **Record**:
+   - ✅/❌ Sound produced
+   - Delay duration: ___ seconds
+   - Number of notes heard: ___
+   - Quality: Clear/Distorted/Barely audible
+
+**Test C: Percussion Family** 
+**Enabled Instruments**: `timpani`, `xylophone`
+
+1. **Enable instruments** via Control Center
+2. **Click Play** button
+3. **Listen for**:
+   - Timpani deep drum sounds
+   - Xylophone bright metallic tones
+4. **Record**:
+   - ✅/❌ Sound produced
+   - Timing: On-beat/Delayed/Missing
+   - Clarity: Sharp/Muffled/Silent
+
+**Test D: Experimental Family**
+**Enabled Instruments**: `whaleHumpback`
+
+1. **Enable instrument** via Control Center  
+2. **Click Play** button
+3. **Listen for**:
+   - Whale song ambient sounds
+   - Low-frequency atmospheric tones
+4. **Record**:
+   - ✅/❌ Sound produced
+   - Character: Ambient/Melodic/Silent
+
+**Issue #006 Validation (Play Button)**
+**Critical Test**: After each family test above:
+1. **Click Play button again** (without reload)
+2. **Record**: ✅ Works / ❌ No effect
+3. **If fails**: Note which attempt failed (1st repeat, 2nd repeat, etc.)
+
+### Debugging Information to Collect
+
+**Console Logs**
+1. Open Obsidian Developer Tools (Ctrl+Shift+I)
+2. Monitor Console tab during testing
+3. **Record any errors** related to:
+   - PercussionEngine
+   - ElectronicEngine  
+   - Audio context
+   - Instrument loading
+
+**Audio Context State**
+Run this in Console during testing:
+```javascript
+// Check audio context state
+console.log("Audio Context State:", Tone.context.state);
+console.log("Sample Rate:", Tone.context.sampleRate);
+```
+
+**Instrument Volume Check**
+```javascript
+// Check for muted instruments
+Object.keys(this.plugin.audioEngine.instrumentVolumes).forEach(key => {
+    const vol = this.plugin.audioEngine.instrumentVolumes.get(key);
+    if (vol && vol.volume.value === -Infinity) {
+        console.log(`${key} is muted!`);
+    }
+});
+```
+
+### Test Results Template
+
+```
+ISSUE #003 MANUAL TEST RESULTS
+Date: ___________
+Obsidian Version: ___________
+Plugin Version: ___________
+
+ELECTRONIC FAMILY (Baseline):
+- leadSynth: ✅/❌ _________________
+- bassSynth: ✅/❌ _________________
+- Notes: ________________________
+
+VOCALS FAMILY:
+- choir: ✅/❌ ___________________
+- soprano: ✅/❌ _________________  
+- bass: ✅/❌ ___________________
+- Delay: _______ seconds
+- Notes heard: _______ / expected
+- Quality: ______________________
+
+PERCUSSION FAMILY:
+- timpani: ✅/❌ _________________
+- xylophone: ✅/❌ _______________
+- Timing: _______________________
+- Notes: ________________________
+
+EXPERIMENTAL FAMILY:
+- whaleHumpback: ✅/❌ ___________
+- Character: ____________________
+- Notes: ________________________
+
+PLAY BUTTON RELIABILITY (Issue #006):
+- 1st use: ✅/❌
+- 2nd use: ✅/❌  
+- 3rd use: ✅/❌
+- Reload required after: _________ attempts
+
+CONSOLE ERRORS:
+_________________________________
+_________________________________
+
+ADDITIONAL OBSERVATIONS:
+_________________________________
+_________________________________
+```
 
 ---
 
@@ -196,42 +392,54 @@ Multiple instrument families within the 34-instrument orchestral system are comp
 
 ## Next Steps
 
+### Current Status Summary
+
+**✅ Configuration Layer**: Fixed type assertion bug, instruments can be enabled/disabled properly  
+**❌ Audio Output Layer**: Real sound generation still failing despite configuration fixes  
+**📋 Manual Testing**: Required for real-world validation in Obsidian environment
+
 ### Investigation Priority
 
-**Phase 1: Console Error Analysis** (IMMEDIATE)
-- Monitor browser console during affected family playback
-- Document all error messages and failed network requests
-- Identify primary failure mode (samples vs synthesis vs routing)
+**Phase 1: Manual Testing in Obsidian** (IMMEDIATE)
+- Use the manual test protocol above to validate real audio output
+- Collect console logs and debugging information
+- Document specific failure patterns per family
 
-**Phase 2: Voice Allocation Testing** (HIGH)
-- Test voice assignment logic for affected families
-- Verify enabled instruments lists include all families
-- Check round-robin distribution and frequency assignment
+**Phase 2: Audio Engine Deep Dive** (HIGH)
+- Investigate why electronic instruments work but percussion/experimental don't
+- Check PercussionEngine vs standard synthesis routing differences
+- Verify specialized engine initialization and connection to output
 
-**Phase 3: Synthesis Engine Debugging** (HIGH)
-- Test specialized engines (percussion, electronic) independently
-- Verify audio context initialization for each family
-- Check Web Audio API node creation and routing
+**Phase 3: Play Button Issue Resolution** (HIGH)
+- Fix Issue #006: Play button only working once per session
+- Investigate event handler lifecycle and AudioEngine state management
+- Ensure reliable testing environment for audio validation
 
-**Phase 4: Sample CDN Investigation** (MEDIUM)
-- Verify CDN availability for affected family samples
-- Test direct sample URL access and audio decoding
-- Document any missing or inaccessible sample files
+**Phase 4: Synthesis Architecture Review** (MEDIUM)
+- Compare working families (electronic, keyboard) vs failing families
+- Investigate sample loading vs synthesis differences
+- Review audio routing for specialized instruments
 
 ### Success Criteria
 
-**Resolution Validation:**
-- ✅ All enabled instruments produce audible output
-- ✅ Family-specific synthesis characteristics clearly audible
-- ✅ Voice allocation distributes across all enabled families
-- ✅ No console errors during multi-family playback
-- ✅ Audio quality matches synthesis approach specifications
+**Configuration Layer (COMPLETED):**
+- ✅ All instruments can be enabled/disabled via AudioEngine
+- ✅ Type safety prevents future hardcoded instrument issues
+- ✅ Prevention system catches configuration problems
+
+**Audio Output Layer (IN PROGRESS):**
+- ❌ All enabled instruments produce audible output
+- ❌ Family-specific synthesis characteristics clearly audible  
+- ❌ No excessive delays (vocals issue)
+- ❌ Percussion instruments produce sound
+- ❌ Experimental instruments produce sound
+- ❌ Play button works reliably multiple times
 
 ### Related Issues
 
+- **Issue #006**: Play button single-use problem (blocking reliable testing)
 - **Issue #005**: MP3 sample loading may be related to family-specific sample issues
-- **Phase 3 Optimization**: Voice allocation improvements may have affected family distribution
-- **CDN Configuration**: Sample loading architecture may need family-specific fixes
+- **Prevention System**: Enhanced test suite now catches configuration issues early
 
 ---
 

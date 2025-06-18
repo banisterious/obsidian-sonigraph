@@ -13,7 +13,7 @@ export interface InstrumentConfig {
     effects: string[];
     maxVoices?: number;
     priority?: 'low' | 'medium' | 'high';
-    category?: 'keyboard' | 'strings' | 'brass' | 'woodwind' | 'vocals' | 'world' | 'percussion';
+    category?: 'keyboard' | 'strings' | 'brass' | 'woodwind' | 'vocals' | 'world' | 'percussion' | 'electronic';
 }
 
 export interface InstrumentCollection {
@@ -37,7 +37,8 @@ export const DEFAULT_EFFECTS = {
     woodwind: ['reverb', 'filter'],
     vocals: ['reverb', 'chorus'],
     world: ['reverb', 'chorus', 'filter'],
-    percussion: ['reverb']
+    percussion: ['reverb'],
+    electronic: ['filter', 'chorus']
 };
 
 // Default voice limits by instrument type

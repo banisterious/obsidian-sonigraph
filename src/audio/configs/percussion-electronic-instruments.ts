@@ -80,7 +80,7 @@ export const electronicInstruments: InstrumentFamily = {
             effects: ['filter', 'chorus'],
             maxVoices: 6,
             priority: 'medium',
-            category: 'world'
+            category: 'electronic'
         },
 
         bassSynth: {
@@ -94,7 +94,7 @@ export const electronicInstruments: InstrumentFamily = {
             effects: ['filter', 'chorus'],
             maxVoices: 4,
             priority: 'medium',
-            category: 'world'
+            category: 'electronic'
         },
 
         arpSynth: {
@@ -108,7 +108,7 @@ export const electronicInstruments: InstrumentFamily = {
             effects: ['filter', 'chorus', 'reverb'],
             maxVoices: 8,
             priority: 'low',
-            category: 'world'
+            category: 'electronic'
         }
     }
 };
