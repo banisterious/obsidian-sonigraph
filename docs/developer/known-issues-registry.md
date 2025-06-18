@@ -13,6 +13,9 @@
 |---------|--------|----------|-----------|---------|---------|
 | 001 | ✅ RESOLVED | High | Audio Engine | Audio crackling vs musical density trade-off | [Technical Analysis](./issue-001-audio-crackling-solution.md) |
 | 002 | ✅ RESOLVED | High | Audio Engine | Monolithic audio engine architecture | [Refactoring Plan](./issue-002-monolithic-architecture-refactoring.md) |
+| 003 | 🔍 ACTIVE | High | Audio Engine | Instrument family playback failure | [Investigation](./issue-003-instrument-playback-failure.md) |
+| 004 | 🔍 ACTIVE | Medium | UI Components | Confusing tab counter display format | [Analysis](./issue-004-tab-counter-display.md) |
+| 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
 
 ---
 
@@ -100,10 +103,69 @@ The main audio engine file has grown to 3,765 lines handling instrument configs,
 *Issue #001: ✅ RESOLVED and CLOSED - All phases complete, production ready*  
 *Issue #002: ✅ RESOLVED and CLOSED*  
 
-## 🎉 All High Priority Issues Resolved
+## Issue #003: Instrument Family Playback Failure
 
-**Status Summary:**
+**Status:** 🔍 ACTIVE  
+**Priority:** High  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, `src/audio/*-engine.ts`, sample CDN configurations
+
+### Summary
+
+Multiple instrument families (Vocals, Percussion, Electronic, Experimental) are completely silent during playback despite being enabled and configured. This affects major portions of the 34-instrument orchestral system.
+
+### Affected Families
+- **Vocals**: Soprano, Alto, Tenor, Bass, Choir, Vocal Pads
+- **Percussion**: Timpani, Xylophone, Vibraphone, Gongs  
+- **Electronic**: Lead Synth, Bass Synth, Arp Synth, Pad
+- **Experimental**: Whale Song, environmental sounds
+
+### Detailed Analysis
+👉 **[Complete Investigation & Solution Plan](./issue-003-instrument-playback-failure.md)**
+
+---
+
+## Issue #004: Confusing Tab Counter Display Format
+
+**Status:** 🔍 ACTIVE  
+**Priority:** Medium  
+**Component:** UI Components  
+**Affected Files:** `src/ui/control-panel-md.ts`, Material Design tab components
+
+### Summary
+
+Family tabs display confusing counter formats like "4/3" that don't clearly communicate instrument status to users. Format needs clarification and consistency improvements.
+
+### Detailed Analysis
+👉 **[UI Analysis & Design Solution](./issue-004-tab-counter-display.md)**
+
+---
+
+## Issue #005: MP3 Sample Format Loading Failures
+
+**Status:** 🔍 ACTIVE  
+**Priority:** Medium  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, sample loading logic, CDN configuration
+
+### Summary
+
+Audio Format dropdown includes MP3 option that fails to load samples, causing console errors and fallback to synthesis. WAV and "Synthesis Only" options work correctly.
+
+### Detailed Analysis
+👉 **[Sample Loading Debug & CDN Analysis](./issue-005-mp3-sample-loading.md)**
+
+---
+
+## 🔧 Current Issue Status
+
+**Active Issues:**
+- 🔍 **Issue #003**: HIGH - Core instrument families not playing (critical functionality)
+- 🔍 **Issue #004**: MEDIUM - UX confusion from unclear tab counters  
+- 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
+
+**Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
 - ✅ **Issue #002**: Monolithic architecture successfully refactored
 
-**System Status:** **PRODUCTION READY** 🚀
+**System Status:** **CORE FUNCTIONAL** with known family-specific issues 🔧
