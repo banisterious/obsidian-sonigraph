@@ -1,6 +1,6 @@
 export interface VoiceAssignment {
     nodeId: string;
-    instrument: keyof any; // Will be properly typed when instrument configs are extracted
+    instrument: string; // Fixed type - should be string instrument name
     voiceIndex: number;
 }
 
