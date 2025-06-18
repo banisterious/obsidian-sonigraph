@@ -1,7 +1,7 @@
 // Import required types from constants
 export interface EffectNode {
     id: string;
-    type: 'reverb' | 'chorus' | 'filter' | 'delay' | 'distortion' | 'compressor';
+    type: 'reverb' | 'chorus' | 'filter' | 'delay' | 'distortion' | 'compressor' | 'eq3';
     enabled: boolean;
     bypassed: boolean;
     parameters: Record<string, any>;
@@ -52,31 +52,27 @@ export interface MasterEffectsConfig {
 }
 
 export interface EffectParameters {
-    // Reverb parameters
-    roomSize?: number;
-    dampening?: number;
+    // Common parameters
     wet?: number;
+    frequency?: number;
+    delayTime?: number;
+    feedback?: number;
+    
+    // Reverb parameters
+    decay?: number;
+    preDelay?: number;
     
     // Chorus parameters
-    frequency?: number;
-    delayTime?: number;
     depth?: number;
-    feedback?: number;
     
     // Filter parameters
-    frequency?: number;
     type?: 'lowpass' | 'highpass' | 'bandpass' | 'notch';
-    rolloff?: number;
+    rolloff?: -12 | -24 | -48 | -96;
     Q?: number;
-    
-    // Delay parameters
-    delayTime?: number;
-    feedback?: number;
-    wet?: number;
     
     // Distortion parameters
     distortion?: number;
-    oversample?: string;
+    oversample?: '2x' | '4x' | 'none';
     
     // Compressor parameters
     threshold?: number;
@@ -84,6 +80,11 @@ export interface EffectParameters {
     attack?: number;
     release?: number;
     knee?: number;
+    
+    // EQ3 parameters
+    low?: number;
+    mid?: number;
+    high?: number;
 }
 
 export interface EffectInstance {
