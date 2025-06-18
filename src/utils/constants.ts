@@ -240,6 +240,16 @@ export interface SonigraphSettings {
 		whaleHumpback: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
+	
+	// Phase 3: Performance Mode Settings
+	performanceMode?: {
+		mode: 'low' | 'medium' | 'high' | 'ultra';
+		enableFrequencyDetuning: boolean;
+		maxConcurrentVoices: number;
+		processingQuality: 'fast' | 'balanced' | 'high-quality';
+		enableAudioOptimizations: boolean;
+	};
+	
 	// Phase 3.5: Enhanced Effect Routing
 	enhancedRouting?: {
 		enabled: boolean;
@@ -1358,6 +1368,16 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		}
 	},
 	voiceAssignmentStrategy: 'frequency',
+	
+	// Phase 3: Performance Mode Settings
+	performanceMode: {
+		mode: 'medium',
+		enableFrequencyDetuning: true,
+		maxConcurrentVoices: 32,
+		processingQuality: 'balanced',
+		enableAudioOptimizations: true
+	},
+	
 	// Phase 3.5: Enhanced Effect Routing (disabled by default for backward compatibility)
 	enhancedRouting: {
 		enabled: false,
