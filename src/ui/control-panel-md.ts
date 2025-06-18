@@ -179,9 +179,12 @@ export class MaterialControlPanelModal extends Modal {
 			text.textContent = tabConfig.name;
 			
 			// Meta (instrument count for family tabs)
-			if ('instrumentCount' in tabConfig) {
+			// Only show counts for family tabs (exclude status, musical, master)
+			if (!['status', 'musical', 'master'].includes(tabConfig.id)) {
 				const meta = listItem.createDiv({ cls: 'osp-nav-item__meta' });
-				meta.textContent = `${this.getEnabledCount(tabConfig.id)}/${tabConfig.instrumentCount}`;
+				const enabledCount = this.getEnabledCount(tabConfig.id);
+				const totalCount = this.getTotalCount(tabConfig.id);
+				meta.textContent = `${enabledCount}/${totalCount}`;
 			}
 			
 			// Add divider after master tab
@@ -204,10 +207,13 @@ export class MaterialControlPanelModal extends Modal {
 			const tabId = item.getAttribute('data-tab');
 			if (tabId) {
 				const tabConfig = TAB_CONFIGS.find(config => config.id === tabId);
-				if (tabConfig && 'instrumentCount' in tabConfig) {
+				// Only update counts for family tabs (exclude status, musical, master)
+				if (tabConfig && !['status', 'musical', 'master'].includes(tabId)) {
 					const metaElement = item.querySelector('.osp-nav-item__meta');
 					if (metaElement) {
-						metaElement.textContent = `${this.getEnabledCount(tabId)}/${tabConfig.instrumentCount}`;
+						const enabledCount = this.getEnabledCount(tabId);
+						const totalCount = this.getTotalCount(tabId);
+						metaElement.textContent = `${enabledCount}/${totalCount}`;
 					}
 				}
 			}
@@ -864,7 +870,7 @@ export class MaterialControlPanelModal extends Modal {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} Family Overview`,
 			iconName: tabConfig.icon,
-			subtitle: `${this.getEnabledCount(familyId)} of ${tabConfig.instrumentCount} instruments enabled`,
+			subtitle: `${this.getEnabledCount(familyId)} of ${this.getTotalCount(familyId)} instruments enabled`,
 			elevation: 1
 		});
 		
@@ -875,7 +881,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const enabledStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
 		enabledStat.innerHTML = `
-			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${tabConfig.instrumentCount}</span>
+			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}</span>
 			<span class="osp-stat-label">Enabled</span>
 		`;
 		
@@ -1115,6 +1121,16 @@ export class MaterialControlPanelModal extends Modal {
 		return enabledInstruments.length;
 	}
 
+	/**
+	 * Get total count of instruments available in a family
+	 * @param familyId - The family identifier
+	 * @returns Total number of instruments in the family
+	 */
+	private getTotalCount(familyId: string): number {
+		const instruments = this.getInstrumentsForFamily(familyId);
+		return instruments.length;
+	}
+
 	private getActiveVoices(familyId: string): number {
 		// Calculate total max voices for enabled instruments in this family
 		const instruments = this.getInstrumentsForFamily(familyId);
@@ -1144,9 +1160,9 @@ export class MaterialControlPanelModal extends Modal {
 			strings: ['strings', 'violin', 'cello', 'harp', 'piano', 'guitar'], 
 			woodwinds: ['flute', 'clarinet', 'saxophone', 'oboe'],
 			brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
-			vocals: ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'], // Added 'choir' and 'vocalPads'
+			vocals: ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'], // All vocal instruments including choir and pads
 			percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
-			electronic: ['leadSynth', 'bassSynth', 'arpSynth', 'pad'], // Added 'pad'
+			electronic: ['leadSynth', 'bassSynth', 'arpSynth', 'pad'], // All electronic instruments including pad
 			experimental: ['whaleHumpback'],
 			// Additional families for other instruments
 			keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta']

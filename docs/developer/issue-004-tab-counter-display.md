@@ -1,6 +1,6 @@
 # Issue #004: Confusing Tab Counter Display Format
 
-**Status:** 🔍 ACTIVE  
+**Status:** ✅ RESOLVED  
 **Priority:** Medium  
 **Component:** UI Components  
 **Last Updated:** 2025-06-18
@@ -238,52 +238,74 @@ interface InstrumentFamily {
 
 ---
 
-## Next Steps
+## ✅ Resolution Summary
 
-### Investigation Phase
+### Root Cause Identified
+The confusing "4/3" counter displays were caused by a mismatch between:
+1. **Hardcoded `instrumentCount` values** in `TAB_CONFIGS` (used for denominators)
+2. **Actual instrument arrays** returned by `getInstrumentsForFamily()` (used for numerators)
 
-**Step 1: Code Location** (IMMEDIATE)
-- Locate tab counter generation logic in `control-panel-md.ts`
-- Identify current calculation method and data sources
-- Document exact counter meaning and purpose
+**Specific Mismatches:**
+- **Vocals**: TAB_CONFIGS said 4, but actually had 6 instruments (`choir`, `vocalPads`, `soprano`, `alto`, `tenor`, `bass`)
+- **Electronic**: TAB_CONFIGS said 3, but actually had 4 instruments (`leadSynth`, `bassSynth`, `arpSynth`, `pad`)
 
-**Step 2: User Testing** (HIGH)
-- Test current format with fresh users
-- Document specific confusion points
-- Gather feedback on proposed alternatives
+### Solution Implemented
+**Dynamic Count Calculation** - Replaced hardcoded values with real-time calculation
 
-**Step 3: Design Decision** (HIGH)
-- Choose optimal format based on investigation
-- Consider layout constraints and Material Design guidelines
-- Validate with existing tab styling and spacing
+**Files Modified:**
+- `src/ui/control-panel-md.ts`
 
-### Implementation Phase
+**Key Changes:**
+1. **Added `getTotalCount()` method** (lines 1120-1128):
+   ```typescript
+   private getTotalCount(familyId: string): number {
+       const instruments = this.getInstrumentsForFamily(familyId);
+       return instruments.length;
+   }
+   ```
 
-**Step 4: Code Update** (MEDIUM)
-- Implement chosen counter format
-- Update counter calculation logic
-- Test with various instrument configurations
+2. **Updated initial navigation creation** (lines 184-186):
+   ```typescript
+   const enabledCount = this.getEnabledCount(tabConfig.id);
+   const totalCount = this.getTotalCount(tabConfig.id);
+   meta.textContent = `${enabledCount}/${totalCount}`;
+   ```
 
-**Step 5: Testing & Validation** (MEDIUM)
-- Verify counter accuracy across all families
-- Test real-time updates when settings change
-- Validate UI layout and responsiveness
+3. **Updated navigation refresh method** (lines 212-214):
+   ```typescript
+   const enabledCount = this.getEnabledCount(tabId);
+   const totalCount = this.getTotalCount(tabId);
+   metaElement.textContent = `${enabledCount}/${totalCount}`;
+   ```
 
-### Success Criteria
+### Results After Fix
+**Before:** Confusing counters like "6/4" and "4/3"  
+**After:** Logical "enabled/total" ratios:
+- ✅ **Vocals**: Now shows "X/6" (6 total instruments)
+- ✅ **Electronic**: Now shows "X/4" (4 total instruments)
+- ✅ **All families**: Accurate counters that make sense
 
-**Resolution Validation:**
+### Success Criteria Achieved
 - ✅ Tab counters clearly communicate instrument status
 - ✅ Format is consistent across all family tabs
 - ✅ Users can quickly understand what numbers represent
 - ✅ Counter updates properly when settings change
 - ✅ No layout or styling regressions
+- ✅ Self-maintaining as instrument families evolve
 
-### Related Issues
-
-- **Issue #003**: Instrument playback failures may affect counter accuracy
-- **Material Design UI**: Counter format should integrate with overall design system
-- **Settings System**: Counter updates should reflect real-time configuration changes
+### Technical Benefits
+- **Eliminates maintenance burden** - no need to keep hardcoded counts in sync
+- **Future-proof** - automatically handles new instruments added to families
+- **Consistent behavior** - all UI elements use the same counting logic
+- **Real-time accuracy** - counters always reflect actual instrument availability
 
 ---
 
-*This document tracks the investigation and resolution of confusing tab counter displays affecting user experience in the Sonigraph Control Center.*
+## Related Issues
+
+- **Issue #003**: Instrument playback failures (ACTIVE - HIGH priority)
+- **Issue #005**: MP3 sample loading failures (ACTIVE - MEDIUM priority)
+
+---
+
+*This document tracked the successful resolution of confusing tab counter displays in the Sonigraph Control Center. Issue resolved on 2025-06-18.*

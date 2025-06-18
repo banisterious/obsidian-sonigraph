@@ -4,6 +4,9 @@
 
 1. [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off)
 2. [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture)
+3. [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure)
+4. [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format)
+5. [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures)
 
 ---
 
@@ -14,7 +17,7 @@
 | 001 | ✅ RESOLVED | High | Audio Engine | Audio crackling vs musical density trade-off | [Technical Analysis](./issue-001-audio-crackling-solution.md) |
 | 002 | ✅ RESOLVED | High | Audio Engine | Monolithic audio engine architecture | [Refactoring Plan](./issue-002-monolithic-architecture-refactoring.md) |
 | 003 | 🔍 ACTIVE | High | Audio Engine | Instrument family playback failure | [Investigation](./issue-003-instrument-playback-failure.md) |
-| 004 | 🔍 ACTIVE | Medium | UI Components | Confusing tab counter display format | [Analysis](./issue-004-tab-counter-display.md) |
+| 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](./issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
 
 ---
@@ -127,17 +130,23 @@ Multiple instrument families (Vocals, Percussion, Electronic, Experimental) are 
 
 ## Issue #004: Confusing Tab Counter Display Format
 
-**Status:** 🔍 ACTIVE  
+**Status:** ✅ RESOLVED  
 **Priority:** Medium  
 **Component:** UI Components  
 **Affected Files:** `src/ui/control-panel-md.ts`, Material Design tab components
 
 ### Summary
 
-Family tabs display confusing counter formats like "4/3" that don't clearly communicate instrument status to users. Format needs clarification and consistency improvements.
+Family tabs displayed confusing counter formats like "4/3" that didn't clearly communicate instrument status to users. **RESOLVED** by implementing dynamic count calculation instead of hardcoded values.
 
-### Detailed Analysis
-👉 **[UI Analysis & Design Solution](./issue-004-tab-counter-display.md)**
+### ✅ Resolution Summary
+- **Root Cause**: Mismatch between hardcoded `instrumentCount` values and actual instrument arrays
+- **Solution**: Dynamic count calculation using `getTotalCount()` method
+- **Result**: Logical "enabled/total" ratios that make sense to users
+- **Files Modified**: `src/ui/control-panel-md.ts`
+
+### Detailed Analysis & Resolution
+👉 **[Complete UI Analysis & Solution Implementation](./issue-004-tab-counter-display.md)**
 
 ---
 
@@ -161,11 +170,11 @@ Audio Format dropdown includes MP3 option that fails to load samples, causing co
 
 **Active Issues:**
 - 🔍 **Issue #003**: HIGH - Core instrument families not playing (critical functionality)
-- 🔍 **Issue #004**: MEDIUM - UX confusion from unclear tab counters  
 - 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
 - ✅ **Issue #002**: Monolithic architecture successfully refactored
+- ✅ **Issue #004**: Tab counter display format fixed with dynamic calculation
 
 **System Status:** **CORE FUNCTIONAL** with known family-specific issues 🔧
