@@ -23,9 +23,18 @@ export class VoiceManager {
     // Voice assignment strategy
     private assignmentStrategy: VoiceAssignmentStrategy = 'roundRobin';
     
+    // O(1) round-robin counter optimization
+    private roundRobinCounter: number = 0;
+    
+    // Pre-allocation optimization
+    private preAllocatedInstruments: Set<string> = new Set();
+    private availableVoiceIndices: Map<string, number[]> = new Map();
+    private nextAvailableIndex: Map<string, number> = new Map();
+    
     constructor(adaptiveQuality: boolean = true) {
         this.adaptiveQuality = adaptiveQuality;
         this.initializeDefaultConfigs();
+        this.preAllocateCommonInstruments();
     }
 
     /**
@@ -47,23 +56,49 @@ export class VoiceManager {
     }
 
     /**
+     * Pre-allocate voice pools for commonly used instruments
+     */
+    private preAllocateCommonInstruments(): void {
+        const commonInstruments = ['piano', 'strings', 'timpani', 'harp', 'tuba'];
+        
+        for (const instrument of commonInstruments) {
+            this.createVoicePoolOptimized(instrument);
+            this.preAllocatedInstruments.add(instrument);
+        }
+    }
+
+    /**
      * Create voice pool for an instrument
      */
     createVoicePool(instrumentName: string, poolSize?: number): void {
+        this.createVoicePoolOptimized(instrumentName, poolSize);
+    }
+
+    /**
+     * Create optimized voice pool with pre-allocated indices tracking
+     */
+    private createVoicePoolOptimized(instrumentName: string, poolSize?: number): void {
         const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get('default')!;
         const size = poolSize || config.maxVoices;
         
-        const pool: VoicePool[] = [];
+        // Pre-allocate pool array with known size
+        const pool: VoicePool[] = new Array(size);
+        const availableIndices: number[] = new Array(size);
+        
+        // Initialize pool and available indices in single loop
         for (let i = 0; i < size; i++) {
-            pool.push({
+            pool[i] = {
                 available: true,
                 lastUsed: 0,
                 instrumentName,
                 voiceIndex: i
-            });
+            };
+            availableIndices[i] = i;
         }
         
         this.voicePool.set(instrumentName, pool);
+        this.availableVoiceIndices.set(instrumentName, availableIndices);
+        this.nextAvailableIndex.set(instrumentName, 0);
     }
 
     /**
@@ -99,9 +134,11 @@ export class VoiceManager {
 
     /**
      * Assign instrument using round-robin strategy
+     * Optimized: O(1) counter instead of O(n) Map.size operation
      */
     private assignByRoundRobin(mapping: MusicalMapping, enabledInstruments: string[]): string {
-        const instrumentIndex = this.voiceAssignments.size % enabledInstruments.length;
+        const instrumentIndex = this.roundRobinCounter % enabledInstruments.length;
+        this.roundRobinCounter++;
         return enabledInstruments[instrumentIndex];
     }
 
@@ -129,61 +166,83 @@ export class VoiceManager {
     }
 
     /**
-     * Allocate a voice from the pool
+     * Allocate a voice from the pool - optimized O(1) allocation
      */
     allocateVoice(instrumentName: string, nodeId: string): VoiceAssignment | null {
-        const pool = this.voicePool.get(instrumentName);
+        let pool = this.voicePool.get(instrumentName);
         if (!pool) {
-            this.createVoicePool(instrumentName);
-            return this.allocateVoice(instrumentName, nodeId);
+            this.createVoicePoolOptimized(instrumentName);
+            pool = this.voicePool.get(instrumentName)!;
         }
 
-        // Find available voice
-        const availableVoice = pool.find(voice => voice.available);
-        if (availableVoice) {
-            availableVoice.available = false;
-            availableVoice.lastUsed = Date.now();
-            
-            const assignment: VoiceAssignment = {
-                nodeId,
-                instrument: instrumentName as keyof any,
-                voiceIndex: availableVoice.voiceIndex
-            };
-            
-            this.voiceAssignments.set(nodeId, assignment);
-            return assignment;
+        const availableIndices = this.availableVoiceIndices.get(instrumentName);
+        const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
+        
+        if (!availableIndices || availableIndices.length === 0) {
+            // No available voices - try voice stealing
+            return this.stealVoiceOptimized(instrumentName, nodeId);
         }
 
-        // No available voices - try voice stealing
-        return this.stealVoice(instrumentName, nodeId);
+        // O(1) voice allocation - get first available voice index
+        const voiceIndex = availableIndices[0];
+        const voice = pool[voiceIndex];
+        
+        // Mark voice as used
+        voice.available = false;
+        voice.lastUsed = Date.now();
+        
+        // Remove from available indices (O(1) - remove first element)
+        availableIndices.shift();
+        
+        const assignment: VoiceAssignment = {
+            nodeId,
+            instrument: instrumentName as keyof any,
+            voiceIndex: voice.voiceIndex
+        };
+        
+        this.voiceAssignments.set(nodeId, assignment);
+        return assignment;
     }
 
     /**
      * Voice stealing algorithm - steals longest-playing voice
      */
     private stealVoice(instrumentName: string, nodeId: string): VoiceAssignment | null {
+        return this.stealVoiceOptimized(instrumentName, nodeId);
+    }
+
+    /**
+     * Optimized voice stealing algorithm using round-robin for O(1) performance
+     */
+    private stealVoiceOptimized(instrumentName: string, nodeId: string): VoiceAssignment | null {
         const pool = this.voicePool.get(instrumentName);
-        if (!pool) return null;
+        if (!pool || pool.length === 0) return null;
 
-        // Find voice with oldest lastUsed time
-        let oldestVoice = pool[0];
-        let oldestTime = oldestVoice.lastUsed;
-
-        for (const voice of pool) {
-            if (voice.lastUsed < oldestTime) {
-                oldestTime = voice.lastUsed;
-                oldestVoice = voice;
-            }
+        // Use round-robin stealing for O(1) performance instead of searching for oldest
+        let nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
+        if (nextIndex >= pool.length) {
+            nextIndex = 0;
         }
 
-        // Steal the oldest voice
-        oldestVoice.available = false;
-        oldestVoice.lastUsed = Date.now();
+        const voiceToSteal = pool[nextIndex];
+        
+        // Release the previous assignment if it exists
+        const existingNodeId = this.findNodeIdByVoice(instrumentName, nextIndex);
+        if (existingNodeId) {
+            this.voiceAssignments.delete(existingNodeId);
+        }
+
+        // Steal the voice
+        voiceToSteal.available = false;
+        voiceToSteal.lastUsed = Date.now();
+
+        // Update next index for round-robin
+        this.nextAvailableIndex.set(instrumentName, (nextIndex + 1) % pool.length);
 
         const assignment: VoiceAssignment = {
             nodeId,
             instrument: instrumentName as keyof any,
-            voiceIndex: oldestVoice.voiceIndex
+            voiceIndex: voiceToSteal.voiceIndex
         };
 
         this.voiceAssignments.set(nodeId, assignment);
@@ -191,18 +250,35 @@ export class VoiceManager {
     }
 
     /**
-     * Release a voice back to the pool
+     * Helper to find nodeId that owns a specific voice (for stealing)
+     */
+    private findNodeIdByVoice(instrumentName: string, voiceIndex: number): string | null {
+        for (const [nodeId, assignment] of this.voiceAssignments.entries()) {
+            if (assignment.instrument === instrumentName && assignment.voiceIndex === voiceIndex) {
+                return nodeId;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Release a voice back to the pool - optimized to maintain available indices
      */
     releaseVoice(nodeId: string): void {
         const assignment = this.voiceAssignments.get(nodeId);
         if (!assignment) return;
 
         const pool = this.voicePool.get(assignment.instrument);
-        if (pool) {
+        const availableIndices = this.availableVoiceIndices.get(assignment.instrument);
+        
+        if (pool && availableIndices) {
             const voice = pool[assignment.voiceIndex];
-            if (voice) {
+            if (voice && !voice.available) {
                 voice.available = true;
                 voice.lastUsed = Date.now();
+                
+                // Add voice index back to available indices for O(1) future allocation
+                availableIndices.push(assignment.voiceIndex);
             }
         }
 
@@ -289,25 +365,46 @@ export class VoiceManager {
     }
 
     /**
-     * Resize voice pool for an instrument
+     * Resize voice pool for an instrument - optimized to maintain indices
      */
     private resizeVoicePool(instrumentName: string, newSize: number): void {
         const pool = this.voicePool.get(instrumentName);
-        if (!pool) return;
+        const availableIndices = this.availableVoiceIndices.get(instrumentName);
+        
+        if (!pool || !availableIndices) return;
 
         if (newSize > pool.length) {
             // Expand pool
-            for (let i = pool.length; i < newSize; i++) {
+            const oldSize = pool.length;
+            for (let i = oldSize; i < newSize; i++) {
                 pool.push({
                     available: true,
                     lastUsed: 0,
                     instrumentName,
                     voiceIndex: i
                 });
+                // Add new indices to available list
+                availableIndices.push(i);
             }
         } else if (newSize < pool.length) {
-            // Shrink pool - remove excess voices
+            // Shrink pool - remove excess voices and their indices
+            const removedIndices = new Set();
+            for (let i = newSize; i < pool.length; i++) {
+                removedIndices.add(i);
+            }
+            
+            // Remove indices from available list
+            const filteredIndices = availableIndices.filter(index => !removedIndices.has(index));
+            this.availableVoiceIndices.set(instrumentName, filteredIndices);
+            
+            // Shrink the pool
             pool.splice(newSize);
+            
+            // Update next available index if it's out of bounds
+            const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
+            if (nextIndex >= newSize) {
+                this.nextAvailableIndex.set(instrumentName, 0);
+            }
         }
     }
 
@@ -339,10 +436,23 @@ export class VoiceManager {
         this.voiceAssignments.clear();
         
         for (const [instrumentName, pool] of this.voicePool.entries()) {
-            for (const voice of pool) {
+            const availableIndices = this.availableVoiceIndices.get(instrumentName);
+            if (availableIndices) {
+                availableIndices.length = 0; // Clear array efficiently
+            }
+            
+            for (let i = 0; i < pool.length; i++) {
+                const voice = pool[i];
                 voice.available = true;
                 voice.lastUsed = 0;
+                
+                // Rebuild available indices
+                if (availableIndices) {
+                    availableIndices.push(i);
+                }
             }
+            
+            this.nextAvailableIndex.set(instrumentName, 0);
         }
     }
 
@@ -353,5 +463,8 @@ export class VoiceManager {
         this.voiceAssignments.clear();
         this.voicePool.clear();
         this.voiceConfigs.clear();
+        this.preAllocatedInstruments.clear();
+        this.availableVoiceIndices.clear();
+        this.nextAvailableIndex.clear();
     }
 }
