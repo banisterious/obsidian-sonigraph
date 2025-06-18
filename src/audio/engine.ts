@@ -48,6 +48,9 @@ export class AudioEngine {
 
 	// Phase 8: Advanced Synthesis Engines
 	private percussionEngine: PercussionEngine | null = null;
+	
+	// Phase 3: Frequency detuning for phase conflict resolution
+	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
 	private electronicEngine: ElectronicEngine | null = null;
 	
 	// Master Effects Processing - moved to EffectBusManager
@@ -1573,7 +1576,9 @@ export class AudioEngine {
 			} else {
 				const synth = this.instruments.get(instrumentName);
 				if (synth) {
-					synth.triggerAttackRelease(frequency, duration, currentTime, velocity);
+					// Phase 3: Apply frequency detuning for phase conflict resolution
+					const detunedFrequency = this.applyFrequencyDetuning(frequency);
+					synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 				}
 			}
 
@@ -2785,8 +2790,11 @@ export class AudioEngine {
 	private triggerAdvancedPercussion(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
 		if (!this.percussionEngine) return;
 
+		// Phase 3: Apply frequency detuning for phase conflict resolution
+		const detunedFrequency = this.applyFrequencyDetuning(frequency);
+		
 		// Convert frequency to note name for percussion engines
-		const note = this.frequencyToNoteName(frequency);
+		const note = this.frequencyToNoteName(detunedFrequency);
 		
 		try {
 			switch (instrumentName) {
@@ -2835,8 +2843,11 @@ export class AudioEngine {
 	private triggerAdvancedElectronic(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
 		if (!this.electronicEngine) return;
 
+		// Phase 3: Apply frequency detuning for phase conflict resolution
+		const detunedFrequency = this.applyFrequencyDetuning(frequency);
+		
 		// Convert frequency to note name for electronic engines
-		const note = this.frequencyToNoteName(frequency);
+		const note = this.frequencyToNoteName(detunedFrequency);
 		
 		try {
 			switch (instrumentName) {
@@ -2917,6 +2928,55 @@ export class AudioEngine {
 		const noteIndex = ((semitones + 9) % 12 + 12) % 12;
 		
 		return `${noteNames[noteIndex]}${octave}`;
+	}
+
+	/**
+	 * Phase 3: Apply frequency detuning for phase conflict resolution
+	 * Prevents phase cancellation by adding slight frequency variations (±0.1%)
+	 */
+	private applyFrequencyDetuning(frequency: number): number {
+		// Check if frequency detuning is enabled in performance settings
+		if (!this.settings.performanceMode?.enableFrequencyDetuning) {
+			return frequency;
+		}
+		
+		const currentTime = performance.now();
+		const conflictWindowMs = 50; // Reduced to 50ms for faster processing
+		
+		// Check for recent frequency conflicts
+		const baseFrequency = Math.round(frequency * 10) / 10; // Round to 0.1 Hz precision
+		const lastUsedTime = this.frequencyHistory.get(baseFrequency);
+		
+		if (lastUsedTime && (currentTime - lastUsedTime) < conflictWindowMs) {
+			// Phase conflict detected - apply detuning
+			const detuneAmount = (Math.random() - 0.5) * 0.002; // ±0.1% detuning
+			const detunedFrequency = frequency * (1 + detuneAmount);
+			
+			// Only log in non-test environments to avoid performance impact
+			if (typeof window !== 'undefined' && !window.location?.href?.includes('test')) {
+				logger.debug('detuning', `Phase conflict resolved: ${frequency.toFixed(2)}Hz → ${detunedFrequency.toFixed(2)}Hz`);
+			}
+			
+			// Update history with detuned frequency
+			this.frequencyHistory.set(Math.round(detunedFrequency * 10) / 10, currentTime);
+			return detunedFrequency;
+		}
+		
+		// No conflict - update history and return original frequency
+		this.frequencyHistory.set(baseFrequency, currentTime);
+		
+		// Optimized cleanup: only clean up every 10th call to reduce processing overhead
+		if (this.frequencyHistory.size % 10 === 0) {
+			const staleEntries: number[] = [];
+			for (const [freq, time] of this.frequencyHistory.entries()) {
+				if (currentTime - time > 200) { // Reduced cleanup threshold to 200ms
+					staleEntries.push(freq);
+				}
+			}
+			staleEntries.forEach(freq => this.frequencyHistory.delete(freq));
+		}
+		
+		return frequency;
 	}
 
 	/**
