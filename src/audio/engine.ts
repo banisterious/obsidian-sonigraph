@@ -1961,6 +1961,35 @@ export class AudioEngine {
 		logger.debug('optimization', 'Instrument cache invalidated due to settings change');
 	}
 
+	/**
+	 * Public method for testing Phase 2.2 cached enabled instruments optimization
+	 * This allows tests to exercise the getEnabledInstruments() optimization path
+	 */
+	public getEnabledInstrumentsForTesting(): string[] {
+		logger.debug('test', 'getEnabledInstrumentsForTesting() called');
+		const result = this.getEnabledInstruments();
+		logger.debug('test', `getEnabledInstrumentsForTesting() returning ${result.length} instruments`, result);
+		return result;
+	}
+
+	/**
+	 * Public method for testing Phase 2.2 optimization - exercises the full path
+	 * This simulates the actual code path that calls getDefaultInstrument -> getEnabledInstruments
+	 */
+	public getDefaultInstrumentForTesting(frequency: number): string {
+		logger.debug('test', `getDefaultInstrumentForTesting() called with frequency ${frequency}`);
+		const mockMapping: MusicalMapping = {
+			nodeId: 'test-node',
+			pitch: frequency,
+			duration: 1.0,
+			velocity: 0.8,
+			timing: 0
+		};
+		const result = this.getDefaultInstrument(mockMapping);
+		logger.debug('test', `getDefaultInstrumentForTesting() returning instrument: ${result}`);
+		return result;
+	}
+
 	private assignByFrequency(mapping: MusicalMapping, enabledInstruments: string[]): string {
 		// Distribute based on pitch ranges, but only among enabled instruments
 		// Updated for 34 total instruments (Phase 8B: Complete Orchestral Vision + Environmental Sounds)
