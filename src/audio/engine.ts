@@ -785,6 +785,110 @@ export class AudioEngine {
 		padOutput.connect(this.volume);
 		this.instruments.set('pad', padSampler);
 
+		// Soprano - using Sampler with soprano samples
+		const sopranoSampler = new Sampler(configs.soprano);
+		const sopranoVolume = new Volume(-6);
+		this.instrumentVolumes.set('soprano', sopranoVolume);
+		
+		let sopranoOutput = sopranoSampler.connect(sopranoVolume);
+		
+		// Connect soprano to its specific effects based on settings
+		const sopranoEffects = this.instrumentEffects.get('soprano');
+		if (sopranoEffects && this.settings.instruments.soprano.effects) {
+			if (this.settings.instruments.soprano.effects.reverb.enabled) {
+				const reverb = sopranoEffects.get('reverb');
+				if (reverb) sopranoOutput = sopranoOutput.connect(reverb);
+			}
+			if (this.settings.instruments.soprano.effects.chorus.enabled) {
+				const chorus = sopranoEffects.get('chorus');
+				if (chorus) sopranoOutput = sopranoOutput.connect(chorus);
+			}
+			if (this.settings.instruments.soprano.effects.filter.enabled) {
+				const filter = sopranoEffects.get('filter');
+				if (filter) sopranoOutput = sopranoOutput.connect(filter);
+			}
+		}
+		sopranoOutput.connect(this.volume);
+		this.instruments.set('soprano', sopranoSampler);
+
+		// Alto - using Sampler with alto samples
+		const altoSampler = new Sampler(configs.alto);
+		const altoVolume = new Volume(-6);
+		this.instrumentVolumes.set('alto', altoVolume);
+		
+		let altoOutput = altoSampler.connect(altoVolume);
+		
+		// Connect alto to its specific effects based on settings
+		const altoEffects = this.instrumentEffects.get('alto');
+		if (altoEffects && this.settings.instruments.alto.effects) {
+			if (this.settings.instruments.alto.effects.reverb.enabled) {
+				const reverb = altoEffects.get('reverb');
+				if (reverb) altoOutput = altoOutput.connect(reverb);
+			}
+			if (this.settings.instruments.alto.effects.chorus.enabled) {
+				const chorus = altoEffects.get('chorus');
+				if (chorus) altoOutput = altoOutput.connect(chorus);
+			}
+			if (this.settings.instruments.alto.effects.filter.enabled) {
+				const filter = altoEffects.get('filter');
+				if (filter) altoOutput = altoOutput.connect(filter);
+			}
+		}
+		altoOutput.connect(this.volume);
+		this.instruments.set('alto', altoSampler);
+
+		// Tenor - using Sampler with tenor samples
+		const tenorSampler = new Sampler(configs.tenor);
+		const tenorVolume = new Volume(-6);
+		this.instrumentVolumes.set('tenor', tenorVolume);
+		
+		let tenorOutput = tenorSampler.connect(tenorVolume);
+		
+		// Connect tenor to its specific effects based on settings
+		const tenorEffects = this.instrumentEffects.get('tenor');
+		if (tenorEffects && this.settings.instruments.tenor.effects) {
+			if (this.settings.instruments.tenor.effects.reverb.enabled) {
+				const reverb = tenorEffects.get('reverb');
+				if (reverb) tenorOutput = tenorOutput.connect(reverb);
+			}
+			if (this.settings.instruments.tenor.effects.chorus.enabled) {
+				const chorus = tenorEffects.get('chorus');
+				if (chorus) tenorOutput = tenorOutput.connect(chorus);
+			}
+			if (this.settings.instruments.tenor.effects.filter.enabled) {
+				const filter = tenorEffects.get('filter');
+				if (filter) tenorOutput = tenorOutput.connect(filter);
+			}
+		}
+		tenorOutput.connect(this.volume);
+		this.instruments.set('tenor', tenorSampler);
+
+		// Bass - using Sampler with bass voice samples  
+		const bassSampler = new Sampler(configs.bass);
+		const bassVolume = new Volume(-6);
+		this.instrumentVolumes.set('bass', bassVolume);
+		
+		let bassOutput = bassSampler.connect(bassVolume);
+		
+		// Connect bass to its specific effects based on settings
+		const bassEffects = this.instrumentEffects.get('bass');
+		if (bassEffects && this.settings.instruments.bass.effects) {
+			if (this.settings.instruments.bass.effects.reverb.enabled) {
+				const reverb = bassEffects.get('reverb');
+				if (reverb) bassOutput = bassOutput.connect(reverb);
+			}
+			if (this.settings.instruments.bass.effects.chorus.enabled) {
+				const chorus = bassEffects.get('chorus');
+				if (chorus) bassOutput = bassOutput.connect(chorus);
+			}
+			if (this.settings.instruments.bass.effects.filter.enabled) {
+				const filter = bassEffects.get('filter');
+				if (filter) bassOutput = bassOutput.connect(filter);
+			}
+		}
+		bassOutput.connect(this.volume);
+		this.instruments.set('bass', bassSampler);
+
 		// Flute - using Sampler with flute samples
 		const fluteSampler = new Sampler(configs.flute);
 		const fluteVolume = new Volume(-6);
@@ -1825,17 +1929,25 @@ export class AudioEngine {
 	 * Enable or disable an instrument
 	 */
 	setInstrumentEnabled(instrumentKey: string, enabled: boolean): void {
+		// Import validation function at runtime to avoid circular dependency
+		const { isValidInstrumentKey } = require('../utils/constants');
+		
+		if (!isValidInstrumentKey(instrumentKey)) {
+			logger.error('instrument-control', `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
+			return;
+		}
+
 		const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
 		if (instrumentVolume) {
 			if (enabled) {
 				// Re-enable instrument by setting volume to stored settings
-				const instrumentSettings = this.settings.instruments[instrumentKey as 'piano' | 'organ' | 'strings'];
+				const instrumentSettings = this.settings.instruments[instrumentKey as keyof SonigraphSettings['instruments']];
 				if (instrumentSettings) {
 					logger.debug('instrument-control', `Re-enabling ${instrumentKey} with volume ${instrumentSettings.volume}`);
 					this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
 					logger.debug('instrument-control', `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
 				} else {
-					logger.warn('instrument-control', `No settings found for ${instrumentKey}`);
+					logger.warn('instrument-control', `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
 				}
 			} else {
 				// Disable by setting volume to -Infinity (mute)

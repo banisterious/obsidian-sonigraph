@@ -9,6 +9,16 @@ export interface InstrumentSettings {
 	};
 }
 
+export type InstrumentKey = keyof typeof DEFAULT_SETTINGS.instruments;
+
+export type InstrumentName = 
+	| 'piano' | 'organ' | 'strings' | 'choir' | 'vocalPads' | 'pad' 
+	| 'flute' | 'clarinet' | 'saxophone' | 'soprano' | 'alto' | 'tenor' | 'bass'
+	| 'electricPiano' | 'harpsichord' | 'accordion' | 'celesta'
+	| 'violin' | 'cello' | 'guitar' | 'harp' | 'trumpet' | 'frenchHorn' | 'trombone' | 'tuba'
+	| 'oboe' | 'timpani' | 'xylophone' | 'vibraphone' | 'gongs'
+	| 'leadSynth' | 'bassSynth' | 'arpSynth' | 'whaleHumpback';
+
 export interface ReverbSettings {
 	enabled: boolean;
 	params: {
@@ -371,7 +381,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		choir: { 
-			enabled: false, 
+			enabled: true, 
 			volume: 0.7, 
 			maxVoices: 8,
 			effects: {
@@ -563,7 +573,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		soprano: { 
-			enabled: false,
+			enabled: true,
 			volume: 0.6, 
 			maxVoices: 4,
 			effects: {
@@ -659,7 +669,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		bass: { 
-			enabled: false,
+			enabled: true,
 			volume: 0.7, 
 			maxVoices: 4,
 			effects: {
@@ -1110,7 +1120,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		timpani: {
-			enabled: false,
+			enabled: true,
 			volume: 0.9,
 			maxVoices: 2,
 			effects: {
@@ -1142,7 +1152,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		xylophone: {
-			enabled: false,
+			enabled: true,
 			volume: 0.8,
 			maxVoices: 6,
 			effects: {
@@ -1238,7 +1248,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		leadSynth: {
-			enabled: false,
+			enabled: true,
 			volume: 0.6,
 			maxVoices: 4,
 			effects: {
@@ -1270,7 +1280,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		bassSynth: {
-			enabled: false,
+			enabled: true,
 			volume: 0.8,
 			maxVoices: 2,
 			effects: {
@@ -1335,7 +1345,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		},
 		// Phase 8B: Environmental & Natural Sounds
 		whaleHumpback: {
-			enabled: false,
+			enabled: true,
 			volume: 0.7,
 			maxVoices: 4,
 			effects: {
@@ -1450,6 +1460,54 @@ export const VOICE_ASSIGNMENT_STRATEGIES = {
 	'round-robin': 'Round-Robin (Cycling)',
 	'connection-based': 'Connection-Based (Graph)'
 };
+
+export const INSTRUMENT_FAMILIES = {
+	keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta'],
+	strings: ['strings', 'violin', 'cello', 'guitar', 'harp'],
+	woodwinds: ['flute', 'clarinet', 'saxophone', 'oboe'],
+	brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
+	vocals: ['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'],
+	percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
+	electronic: ['leadSynth', 'bassSynth', 'arpSynth'],
+	experimental: ['whaleHumpback'],
+	pads: ['pad']
+} as const;
+
+export function isValidInstrumentKey(key: string): key is InstrumentKey {
+	return key in DEFAULT_SETTINGS.instruments;
+}
+
+export function getAllInstrumentKeys(): InstrumentKey[] {
+	return Object.keys(DEFAULT_SETTINGS.instruments) as InstrumentKey[];
+}
+
+export function getInstrumentFamily(instrumentKey: InstrumentKey): keyof typeof INSTRUMENT_FAMILIES | null {
+	for (const [family, instruments] of Object.entries(INSTRUMENT_FAMILIES)) {
+		if ((instruments as readonly string[]).includes(instrumentKey)) {
+			return family as keyof typeof INSTRUMENT_FAMILIES;
+		}
+	}
+	return null;
+}
+
+export function validateInstrumentSettings(settings: any): settings is Record<InstrumentKey, InstrumentSettings> {
+	const requiredKeys = getAllInstrumentKeys();
+	const providedKeys = Object.keys(settings);
+	
+	const missingKeys = requiredKeys.filter(key => !providedKeys.includes(key));
+	const extraKeys = providedKeys.filter(key => !isValidInstrumentKey(key));
+	
+	if (missingKeys.length > 0) {
+		console.warn('Missing instrument settings for:', missingKeys);
+		return false;
+	}
+	
+	if (extraKeys.length > 0) {
+		console.warn('Unknown instrument keys found:', extraKeys);
+	}
+	
+	return true;
+}
 
 export const INSTRUMENT_INFO = {
 	piano: {

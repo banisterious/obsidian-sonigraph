@@ -60,6 +60,9 @@ export class TestSuiteModal extends Modal {
     private metricsDisplay: HTMLElement | null = null;
     private progressDisplay: HTMLElement | null = null;
     private resultsDisplay: HTMLElement | null = null;
+    private consoleErrors: any[] = [];
+    private originalConsoleError: any;
+    private originalConsoleWarn: any;
 
     constructor(app: App, audioEngine: AudioEngine) {
         super(app);
@@ -128,8 +131,8 @@ export class TestSuiteModal extends Modal {
             'Full audio engine stress testing and complex scenarios');
 
         // Issue Validation
-        this.createTestCheckbox(grid, 'issueValidation', 'Issue #001 & #002 Validation', 
-            'Audio crackling resolution, performance improvements, and architecture validation');
+        this.createTestCheckbox(grid, 'issueValidation', 'Issue #001, #002 & #003 Validation', 
+            'Audio crackling resolution, performance improvements, architecture validation, and instrument family playback testing');
     }
 
     private createTestCheckbox(container: HTMLElement, key: keyof TestSuiteConfig['selectedTests'], 
@@ -286,6 +289,9 @@ export class TestSuiteModal extends Modal {
         this.updateUI();
         
         try {
+            // Start console error monitoring
+            this.startConsoleMonitoring();
+            
             // Start performance monitoring if enabled
             if (this.config.realTimeMetrics) {
                 this.performanceMonitor.start();
@@ -310,6 +316,7 @@ export class TestSuiteModal extends Modal {
         } finally {
             this.isRunning = false;
             this.performanceMonitor.stop();
+            this.stopConsoleMonitoring();
             this.updateUI();
         }
     }
@@ -337,6 +344,7 @@ export class TestSuiteModal extends Modal {
         if (this.isRunning) {
             this.testRunner.stop();
             this.performanceMonitor.stop();
+            this.stopConsoleMonitoring();
             this.isRunning = false;
             this.updateUI();
         }
@@ -611,6 +619,42 @@ export class TestSuiteModal extends Modal {
             }
         }
 
+        // Add console error monitoring results for Issue #003 diagnostics
+        if (this.consoleErrors.length > 0) {
+            const consoleErrorSummary = this.getConsoleErrorSummary();
+            logs.push({
+                timestamp: Date.now(),
+                level: consoleErrorSummary.hasAudioErrors ? 'error' : 'info',
+                source: 'console-monitoring',
+                message: 'Console monitoring results for Issue #003 diagnostics',
+                data: {
+                    summary: consoleErrorSummary.summary,
+                    totalErrors: consoleErrorSummary.totalErrors,
+                    totalWarnings: consoleErrorSummary.totalWarnings,
+                    instrumentRelatedIssues: consoleErrorSummary.instrumentRelatedIssues,
+                    criticalErrors: consoleErrorSummary.criticalErrors,
+                    instrumentErrors: consoleErrorSummary.instrumentErrors
+                }
+            });
+
+            // Add individual console errors for detailed analysis if debug level
+            if (this.config.loggingLevel === 'debug') {
+                this.consoleErrors.forEach(error => {
+                    logs.push({
+                        timestamp: error.timestamp,
+                        level: error.level === 'error' ? 'error' : 'warn',
+                        source: 'console-capture',
+                        message: `Console ${error.level}: ${error.message}`,
+                        data: {
+                            originalMessage: error.message,
+                            stack: error.stack,
+                            context: error.context
+                        }
+                    });
+                });
+            }
+        }
+
         return logs;
     }
 
@@ -643,6 +687,192 @@ export class TestSuiteModal extends Modal {
         output += '='.repeat(80) + '\n';
 
         return output;
+    }
+
+    /**
+     * Start monitoring console errors and warnings for Issue #003 diagnostics
+     */
+    private startConsoleMonitoring() {
+        // Clear previous errors
+        this.consoleErrors = [];
+        
+        // Store original console methods
+        this.originalConsoleError = console.error;
+        this.originalConsoleWarn = console.warn;
+        
+        // Override console.error to capture errors
+        console.error = (...args: any[]) => {
+            const timestamp = Date.now();
+            const errorData = {
+                timestamp,
+                level: 'error',
+                message: args.join(' '),
+                stack: new Error().stack,
+                context: 'test-suite-monitoring'
+            };
+            
+            this.consoleErrors.push(errorData);
+            
+            // Log with structured logging for Issue #003 diagnostics
+            if (this.config.loggingLevel !== 'none') {
+                // Use structured logging format for better analysis
+                const structuredLog = {
+                    timestamp: new Date(timestamp).toISOString(),
+                    level: 'ERROR',
+                    category: 'console-monitoring',
+                    message: 'Console error captured during testing',
+                    data: {
+                        originalMessage: args.join(' '),
+                        errorCount: this.consoleErrors.filter(e => e.level === 'error').length,
+                        warningCount: this.consoleErrors.filter(e => e.level === 'warning').length,
+                        testContext: 'issue-003-diagnostics'
+                    }
+                };
+                
+                // Output structured log
+                this.originalConsoleError('[SONIGRAPH-TEST-MONITOR]', JSON.stringify(structuredLog, null, 2));
+            }
+            
+            // Call original console.error
+            this.originalConsoleError.apply(console, args);
+        };
+        
+        // Override console.warn to capture warnings  
+        console.warn = (...args: any[]) => {
+            const timestamp = Date.now();
+            const warningData = {
+                timestamp,
+                level: 'warning',
+                message: args.join(' '),
+                stack: new Error().stack,
+                context: 'test-suite-monitoring'
+            };
+            
+            this.consoleErrors.push(warningData);
+            
+            // Log with structured logging for Issue #003 diagnostics
+            if (this.config.loggingLevel === 'detailed' || this.config.loggingLevel === 'debug') {
+                const structuredLog = {
+                    timestamp: new Date(timestamp).toISOString(),
+                    level: 'WARN',
+                    category: 'console-monitoring',
+                    message: 'Console warning captured during testing',
+                    data: {
+                        originalMessage: args.join(' '),
+                        errorCount: this.consoleErrors.filter(e => e.level === 'error').length,
+                        warningCount: this.consoleErrors.filter(e => e.level === 'warning').length,
+                        testContext: 'issue-003-diagnostics'
+                    }
+                };
+                
+                // Output structured log
+                this.originalConsoleWarn('[SONIGRAPH-TEST-MONITOR]', JSON.stringify(structuredLog, null, 2));
+            }
+            
+            // Call original console.warn
+            this.originalConsoleWarn.apply(console, args);
+        };
+    }
+
+    /**
+     * Stop console monitoring and restore original methods
+     */
+    private stopConsoleMonitoring() {
+        // Restore original console methods
+        if (this.originalConsoleError) {
+            console.error = this.originalConsoleError;
+        }
+        if (this.originalConsoleWarn) {
+            console.warn = this.originalConsoleWarn;
+        }
+        
+        // Log final structured summary for Issue #003 analysis
+        if (this.consoleErrors.length > 0 && this.config.loggingLevel !== 'none') {
+            const summary = {
+                timestamp: new Date().toISOString(),
+                level: 'INFO',
+                category: 'console-monitoring-summary',
+                message: 'Console monitoring session completed',
+                data: {
+                    totalErrors: this.consoleErrors.filter(e => e.level === 'error').length,
+                    totalWarnings: this.consoleErrors.filter(e => e.level === 'warning').length,
+                    sessionDuration: this.consoleErrors.length > 0 ? 
+                        this.consoleErrors[this.consoleErrors.length - 1].timestamp - this.consoleErrors[0].timestamp : 0,
+                    testContext: 'issue-003-diagnostics',
+                    criticalErrorsDetected: this.consoleErrors.filter(e => 
+                        e.level === 'error' && 
+                        (e.message.includes('instrument') || 
+                         e.message.includes('voice') || 
+                         e.message.includes('sample') ||
+                         e.message.includes('audio'))
+                    ).length
+                }
+            };
+            
+            console.log('[SONIGRAPH-TEST-MONITOR-SUMMARY]', JSON.stringify(summary, null, 2));
+        }
+    }
+
+    /**
+     * Get captured console errors for export and analysis
+     */
+    private getConsoleErrorSummary(): any {
+        const errors = this.consoleErrors.filter(e => e.level === 'error');
+        const warnings = this.consoleErrors.filter(e => e.level === 'warning');
+        
+        // Categorize errors by likely Issue #003 relevance
+        const instrumentErrors = this.consoleErrors.filter(e => 
+            e.message.toLowerCase().includes('instrument') ||
+            e.message.toLowerCase().includes('voice') ||
+            e.message.toLowerCase().includes('sample') ||
+            e.message.toLowerCase().includes('audio') ||
+            e.message.toLowerCase().includes('synthesis')
+        );
+        
+        return {
+            totalErrors: errors.length,
+            totalWarnings: warnings.length,
+            instrumentRelatedIssues: instrumentErrors.length,
+            criticalErrors: errors.slice(0, 10), // First 10 errors for analysis
+            instrumentErrors: instrumentErrors.slice(0, 5), // First 5 instrument-related errors
+            summary: {
+                hasAudioErrors: instrumentErrors.length > 0,
+                errorRate: this.consoleErrors.length > 0 ? (errors.length / this.consoleErrors.length) : 0,
+                mostCommonErrors: this.getMostCommonErrors()
+            }
+        };
+    }
+
+    /**
+     * Analyze most common error patterns for Issue #003 diagnostics
+     */
+    private getMostCommonErrors(): any[] {
+        const errorCounts: { [key: string]: number } = {};
+        
+        this.consoleErrors.forEach(error => {
+            // Extract key terms from error messages for pattern analysis
+            const message = error.message.toLowerCase();
+            const keyTerms: string[] = [];
+            
+            if (message.includes('instrument')) keyTerms.push('instrument');
+            if (message.includes('voice')) keyTerms.push('voice');
+            if (message.includes('sample')) keyTerms.push('sample');
+            if (message.includes('audio')) keyTerms.push('audio');
+            if (message.includes('synthesis')) keyTerms.push('synthesis');
+            if (message.includes('loading') || message.includes('load')) keyTerms.push('loading');
+            if (message.includes('network') || message.includes('fetch') || message.includes('cdn')) keyTerms.push('network');
+            if (message.includes('cors')) keyTerms.push('cors');
+            if (message.includes('404') || message.includes('not found')) keyTerms.push('not-found');
+            
+            keyTerms.forEach(term => {
+                errorCounts[term] = (errorCounts[term] || 0) + 1;
+            });
+        });
+        
+        return Object.entries(errorCounts)
+            .sort(([,a], [,b]) => (b as number) - (a as number))
+            .slice(0, 5)
+            .map(([term, count]) => ({ term, count }));
     }
 
     onClose() {
