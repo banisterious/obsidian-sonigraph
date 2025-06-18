@@ -104,14 +104,14 @@ export class ComponentTests {
                     startTime: Date.now()
                 };
 
-                const voice = voiceManager.allocateVoice(mockMapping);
+                const voice = voiceManager.allocateVoice('piano', `test-voice-${i}`);
                 const allocEnd = performance.now();
                 
                 allocationTimes.push(allocEnd - allocStart);
 
                 // Clean up voice immediately
                 if (voice) {
-                    voiceManager.releaseVoice(voice.id);
+                    voiceManager.releaseVoice(voice.nodeId);
                 }
             }
 
@@ -206,7 +206,7 @@ export class ComponentTests {
                     startTime: Date.now() - (i * 10) // Stagger start times
                 };
                 
-                const voice = voiceManager.allocateVoice(mapping);
+                const voice = voiceManager.allocateVoice('piano', mapping.id);
                 if (voice) voices.push(voice);
             }
 
@@ -228,18 +228,18 @@ export class ComponentTests {
                 };
 
                 // This should trigger voice stealing
-                const voice = voiceManager.allocateVoice(mapping);
+                const voice = voiceManager.allocateVoice('piano', mapping.id);
                 const stealEnd = performance.now();
                 
                 stealingTimes.push(stealEnd - stealStart);
                 
                 if (voice) {
-                    voiceManager.releaseVoice(voice.id);
+                    voiceManager.releaseVoice(voice.nodeId);
                 }
             }
 
             // Clean up all test voices
-            voices.forEach(voice => voiceManager.releaseVoice(voice.id));
+            voices.forEach(voice => voiceManager.releaseVoice(voice.nodeId));
 
             const afterMemory = this.getMemorySnapshot();
             const avgStealingTime = stealingTimes.reduce((sum, time) => sum + time, 0) / stealingTimes.length;
@@ -328,12 +328,12 @@ export class ComponentTests {
                         startTime: Date.now()
                     };
                     
-                    const voice = voiceManager.allocateVoice(mapping);
+                    const voice = voiceManager.allocateVoice('piano', mapping.id);
                     if (voice) voices.push(voice);
                 }
 
                 // Release all voices
-                voices.forEach(voice => voiceManager.releaseVoice(voice.id));
+                voices.forEach(voice => voiceManager.releaseVoice(voice.nodeId));
 
                 const cycleEnd = performance.now();
                 cycleTimes.push(cycleEnd - cycleStart);
@@ -419,7 +419,7 @@ export class ComponentTests {
                 const switchStart = performance.now();
                 
                 // Simulate quality level change
-                voiceManager.setQualityLevel(level);
+                voiceManager.setQualityLevel(level as 'low' | 'medium' | 'high');
                 
                 const switchEnd = performance.now();
                 switchTimes.push(switchEnd - switchStart);
@@ -437,12 +437,12 @@ export class ComponentTests {
                         startTime: Date.now()
                     };
                     
-                    const voice = voiceManager.allocateVoice(mapping);
+                    const voice = voiceManager.allocateVoice('piano', mapping.id);
                     if (voice) testVoices.push(voice);
                 }
 
                 // Clean up
-                testVoices.forEach(voice => voiceManager.releaseVoice(voice.id));
+                testVoices.forEach(voice => voiceManager.releaseVoice(voice.nodeId));
             }
 
             const afterMemory = this.getMemorySnapshot();
@@ -529,7 +529,7 @@ export class ComponentTests {
                     startTime: Date.now()
                 };
                 
-                const voice = voiceManager.allocateVoice(mapping);
+                const voice = voiceManager.allocateVoice('piano', mapping.id);
                 if (voice) voices.push(voice);
 
                 // Take memory snapshot every 10 voices
@@ -542,7 +542,7 @@ export class ComponentTests {
             }
 
             // Clean up all voices
-            voices.forEach(voice => voiceManager.releaseVoice(voice.id));
+            voices.forEach(voice => voiceManager.releaseVoice(voice.nodeId));
 
             // Wait for cleanup
             await new Promise(resolve => setTimeout(resolve, 100));

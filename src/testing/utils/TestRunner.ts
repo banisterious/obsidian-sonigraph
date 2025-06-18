@@ -419,22 +419,53 @@ export class TestRunner {
      * Get system information
      */
     private getSystemInfo(): any {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        
-        return {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            audioContext: {
-                sampleRate: audioContext.sampleRate,
-                state: audioContext.state,
-                baseLatency: audioContext.baseLatency,
-                outputLatency: audioContext.outputLatency
-            },
-            memory: (performance as any).memory || {},
-            timestamp: Date.now(),
-            obsidianVersion: (window as any).require?.('obsidian')?.version,
-            pluginVersion: '1.0.0' // Should be read from manifest
-        };
+        try {
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            
+            // Safely get Obsidian version without causing import errors
+            let obsidianVersion = 'unknown';
+            try {
+                // Try to access Obsidian version through app instance if available
+                const app = (window as any).app;
+                if (app?.vault?.adapter?.fs) {
+                    obsidianVersion = app.version || 'unknown';
+                }
+            } catch (e) {
+                // Fallback to unknown version if not available
+                obsidianVersion = 'test-environment';
+            }
+            
+            return {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                audioContext: {
+                    sampleRate: audioContext.sampleRate,
+                    state: audioContext.state,
+                    baseLatency: audioContext.baseLatency || 0,
+                    outputLatency: (audioContext as any).outputLatency || 0
+                },
+                memory: (performance as any).memory || {},
+                timestamp: Date.now(),
+                obsidianVersion,
+                pluginVersion: '1.0.0' // Should be read from manifest
+            };
+        } catch (error) {
+            // Return minimal system info if anything fails
+            return {
+                userAgent: navigator.userAgent || 'unknown',
+                platform: navigator.platform || 'unknown',
+                audioContext: {
+                    sampleRate: 44100,
+                    state: 'unknown',
+                    baseLatency: 0,
+                    outputLatency: 0
+                },
+                memory: {},
+                timestamp: Date.now(),
+                obsidianVersion: 'test-environment',
+                pluginVersion: '1.0.0'
+            };
+        }
     }
 
     /**

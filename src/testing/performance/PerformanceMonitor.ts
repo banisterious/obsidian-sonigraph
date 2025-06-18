@@ -214,7 +214,7 @@ export class PerformanceMonitor {
      */
     private calculateLatency(audioContext: AudioContext): number {
         const baseLatency = audioContext.baseLatency || 0;
-        const outputLatency = audioContext.outputLatency || 0;
+        const outputLatency = (audioContext as any).outputLatency || 0;
         return (baseLatency + outputLatency) * 1000; // Convert to milliseconds
     }
 

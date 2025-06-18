@@ -288,7 +288,7 @@ export class AudioEngine {
 			}
 			
 			// Initialize master effects
-			this.initializeMasterEffects();
+			await this.initializeMasterEffects();
 			
 			// Initialize performance optimization
 			this.initializePerformanceOptimization();
@@ -1795,7 +1795,8 @@ export class AudioEngine {
 			instrumentVolume.volume.value = dbVolume;
 			logger.debug('instrument-control', `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume.toFixed(1)}dB`);
 		} else {
-			logger.error('instrument-control', `No volume control found for ${instrumentKey} in updateInstrumentVolume`);
+			// Only warn if this is not during initialization - some instruments may not be loaded yet
+			logger.warn('instrument-control', `No volume control found for ${instrumentKey} - instrument may not be initialized yet`);
 		}
 	}
 
@@ -1839,7 +1840,7 @@ export class AudioEngine {
 			}
 			logger.debug('instrument-control', `${enabled ? 'Enabled' : 'Disabled'} ${instrumentKey}`);
 		} else {
-			logger.error('instrument-control', `No volume control found for ${instrumentKey}`);
+			logger.warn('instrument-control', `No volume control found for ${instrumentKey} - instrument may not be initialized yet`);
 		}
 	}
 
@@ -2912,46 +2913,15 @@ export class AudioEngine {
 		}
 	}
 
-	private initializeMasterEffects(): void {
-		logger.debug('master-effects', 'Initializing master effects chain');
+	private async initializeMasterEffects(): Promise<void> {
+		logger.debug('master-effects', 'Initializing master effects chain via EffectBusManager');
 		
 		try {
-			// Master reverb for orchestral hall simulation
-			this.masterReverb = new Reverb({
-				decay: 5.0,
-				preDelay: 0.1,
-				wet: 0.2 // Subtle by default
-			});
-
-			// Master 3-band EQ for tonal shaping
-			this.masterEQ = new EQ3({
-				low: 0,
-				mid: 0, 
-				high: 0,
-				lowFrequency: 200,
-				highFrequency: 3000
-			});
-
-			// Master compressor for dynamic control
-			this.masterCompressor = new Compressor({
-				threshold: -12,
-				ratio: 3,
-				attack: 0.003,
-				release: 0.1
-			});
-
-			// Chain master effects to output
-			if (this.volume) {
-				// Create the master effects chain: EQ -> Compressor -> Reverb -> Output
-				this.masterEQ.chain(this.masterCompressor, this.masterReverb, this.volume);
-				
-				// Reroute all instruments through master effects
-				this.routeInstrumentsThroughMasterEffects();
-			}
-
-			logger.info('master-effects', 'Master effects chain initialized');
+			// Initialize master effects through enhanced routing
+			await this.effectBusManager.enableEnhancedRouting();
+			logger.info('master-effects', 'Master effects chain initialized via EffectBusManager');
 		} catch (error) {
-			logger.error('master-effects', 'Failed to initialize master effects', error);
+			logger.error('master-effects', 'Failed to initialize master effects', { error });
 		}
 	}
 
@@ -3253,5 +3223,18 @@ export class AudioEngine {
 		this.currentQualityLevel = 'high';
 		this.applyHighQuality();
 		logger.info('performance', 'Emergency performance mode deactivated');
+	}
+
+	// Public getters for test suite
+	get testIsInitialized(): boolean {
+		return this.isInitialized;
+	}
+
+	getTestSamplerConfigs() {
+		return this.getSamplerConfigs();
+	}
+
+	getTestAudioContext() {
+		return getContext();
 	}
 } 
