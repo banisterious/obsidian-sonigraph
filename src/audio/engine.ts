@@ -61,8 +61,8 @@ export class AudioEngine {
 			preloadFamilies: true
 		});
 		
-		// Phase 2.2: Initialize enabled instruments cache
-		this.invalidateInstrumentCache();
+		// Phase 2.2: Initialize enabled instruments cache - start valid for immediate use
+		this.instrumentCacheValid = false; // Will be built on first access
 	}
 
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
@@ -1924,10 +1924,12 @@ export class AudioEngine {
 	private getEnabledInstruments(): string[] {
 		// Phase 2.2: Optimized with caching to eliminate O(n) operation on every note trigger
 		if (this.instrumentCacheValid) {
+			// O(1) cache hit - this should be the common path after Phase 2.2 optimization
 			return this.cachedEnabledInstruments;
 		}
 		
-		// Rebuild cache when invalid
+		// O(n) cache miss - rebuild cache
+		logger.debug('optimization', 'Building enabled instruments cache - should be rare after first call');
 		const enabled: string[] = [];
 		Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
 			if (settings.enabled) {
@@ -1937,6 +1939,8 @@ export class AudioEngine {
 		
 		this.cachedEnabledInstruments = enabled;
 		this.instrumentCacheValid = true;
+		
+		logger.debug('optimization', `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
 		return enabled;
 	}
 	
