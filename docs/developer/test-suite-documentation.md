@@ -257,8 +257,8 @@ src/testing/
 
 ## Related Documentation
 
-- [Issue #001: Audio Crackling Solution](./issue-001-audio-crackling-solution.md)
-- [Issue #002: Monolithic Architecture Refactoring](./issue-002-architecture-refactoring.md)
+- [Issue #001: Audio Crackling Solution](../archive/issues/issue-001-audio-crackling-solution.md)
+- [Issue #002: Monolithic Architecture Refactoring](../archive/issues/issue-002-monolithic-architecture-refactoring.md)
 - VoiceManager API Documentation
 - EffectBusManager API Documentation
 
