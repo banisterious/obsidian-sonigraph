@@ -3107,6 +3107,8 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     this.progressElement = null;
     this.progressText = null;
     this.progressBar = null;
+    // Issue #006 Fix: Store bound event handlers for proper cleanup
+    this.boundEventHandlers = null;
     this.plugin = plugin;
     this.playButtonManager = new PlayButtonManager();
   }
@@ -3115,6 +3117,10 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     contentEl.empty();
     logger4.debug("ui", "Opening Sonigraph Control Center");
     this.modalEl.addClass("osp-control-center-modal");
+    if (this.playButtonManager) {
+      this.playButtonManager.forceReset();
+      logger4.debug("ui", "Play button manager state reset on modal open");
+    }
     this.createModalContainer();
     this.startStatusUpdates();
   }
@@ -4104,23 +4110,35 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
       logger4.warn("ui", "Cannot setup audio event listeners: AudioEngine not available");
       return;
     }
-    this.plugin.audioEngine.on("playback-started", this.handlePlaybackStarted.bind(this));
-    this.plugin.audioEngine.on("playback-ended", this.handlePlaybackEnded.bind(this));
-    this.plugin.audioEngine.on("playback-stopped", this.handlePlaybackStopped.bind(this));
-    this.plugin.audioEngine.on("playback-error", this.handlePlaybackError.bind(this));
-    this.plugin.audioEngine.on("sequence-progress", this.handleSequenceProgress.bind(this));
-    logger4.debug("ui", "Audio engine event listeners configured");
-  }
-  cleanupAudioEngineEventListeners() {
-    if (!this.plugin.audioEngine) {
+    if (this.boundEventHandlers) {
+      logger4.debug("ui", "Audio engine event listeners already configured, skipping setup");
       return;
     }
-    this.plugin.audioEngine.removeAllListeners("playback-started");
-    this.plugin.audioEngine.removeAllListeners("playback-ended");
-    this.plugin.audioEngine.removeAllListeners("playback-stopped");
-    this.plugin.audioEngine.removeAllListeners("playback-error");
-    this.plugin.audioEngine.removeAllListeners("sequence-progress");
-    logger4.debug("ui", "Audio engine event listeners cleaned up");
+    this.boundEventHandlers = {
+      handlePlaybackStarted: this.handlePlaybackStarted.bind(this),
+      handlePlaybackEnded: this.handlePlaybackEnded.bind(this),
+      handlePlaybackStopped: this.handlePlaybackStopped.bind(this),
+      handlePlaybackError: this.handlePlaybackError.bind(this),
+      handleSequenceProgress: this.handleSequenceProgress.bind(this)
+    };
+    this.plugin.audioEngine.on("playback-started", this.boundEventHandlers.handlePlaybackStarted);
+    this.plugin.audioEngine.on("playback-ended", this.boundEventHandlers.handlePlaybackEnded);
+    this.plugin.audioEngine.on("playback-stopped", this.boundEventHandlers.handlePlaybackStopped);
+    this.plugin.audioEngine.on("playback-error", this.boundEventHandlers.handlePlaybackError);
+    this.plugin.audioEngine.on("sequence-progress", this.boundEventHandlers.handleSequenceProgress);
+    logger4.debug("ui", "Audio engine event listeners configured with bound handlers");
+  }
+  cleanupAudioEngineEventListeners() {
+    if (!this.plugin.audioEngine || !this.boundEventHandlers) {
+      return;
+    }
+    this.plugin.audioEngine.off("playback-started", this.boundEventHandlers.handlePlaybackStarted);
+    this.plugin.audioEngine.off("playback-ended", this.boundEventHandlers.handlePlaybackEnded);
+    this.plugin.audioEngine.off("playback-stopped", this.boundEventHandlers.handlePlaybackStopped);
+    this.plugin.audioEngine.off("playback-error", this.boundEventHandlers.handlePlaybackError);
+    this.plugin.audioEngine.off("sequence-progress", this.boundEventHandlers.handleSequenceProgress);
+    this.boundEventHandlers = null;
+    logger4.debug("ui", "Audio engine event listeners cleaned up (specific handlers only)");
   }
   handlePlaybackStarted() {
     logger4.debug("ui", "Audio engine playback started - switching to playing state");
@@ -33032,15 +33050,39 @@ var AudioEngine = class {
     try {
       logger10.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
       const processedSequence = sequence;
+      processedSequence.forEach((note) => {
+        if (note.hasBeenTriggered) {
+          delete note.hasBeenTriggered;
+        }
+      });
+      logger10.debug("playback", "Reset note trigger flags for replay", {
+        noteCount: processedSequence.length
+      });
       this.currentSequence = processedSequence;
       this.isPlaying = true;
       this.scheduledEvents = [];
       this.sequenceStartTime = Date.now();
       this.eventEmitter.emit("playback-started", null);
+      logger10.info("issue-006-debug", "Transport state before reset", {
+        state: getTransport().state,
+        position: getTransport().position,
+        seconds: getTransport().seconds,
+        bpm: getTransport().bpm.value,
+        action: "transport-state-before-reset"
+      });
       if (getTransport().state === "started") {
         getTransport().stop();
         getTransport().cancel();
+        logger10.info("issue-006-debug", "Transport stopped and cancelled", {
+          action: "transport-stop-cancel"
+        });
       }
+      logger10.info("issue-006-debug", "Transport state after reset", {
+        state: getTransport().state,
+        position: getTransport().position,
+        seconds: getTransport().seconds,
+        action: "transport-state-after-reset"
+      });
       const sequenceDuration = this.getSequenceDuration(processedSequence);
       getTransport().loopEnd = sequenceDuration + 2;
       logger10.info("debug", "Starting sequence playback", {
@@ -33100,6 +33142,7 @@ var AudioEngine = class {
     } catch (e) {
     }
     this.realtimeTimer = setInterval(() => {
+      var _a;
       if (!this.isPlaying) {
         if (this.realtimeTimer !== null) {
           clearInterval(this.realtimeTimer);
@@ -33109,11 +33152,36 @@ var AudioEngine = class {
       }
       const currentTime = getContext().currentTime;
       const elapsedTime = currentTime - this.realtimeStartTime;
+      logger10.debug("issue-006-debug", "Realtime timer tick", {
+        elapsedTime: elapsedTime.toFixed(3),
+        contextTime: currentTime.toFixed(3),
+        contextState: getContext().state,
+        isPlaying: this.isPlaying,
+        instrumentCount: this.instruments.size,
+        action: "timer-tick"
+      });
       const notesToPlay = sequence.filter(
         (note) => note.timing <= elapsedTime + 0.6 && note.timing > elapsedTime - 0.4 && !note.hasBeenTriggered
       );
+      if (notesToPlay.length > 0 || elapsedTime < 5) {
+        const totalNotes = sequence.length;
+        const triggeredNotes = sequence.filter((n) => n.hasBeenTriggered).length;
+        logger10.debug("issue-006-debug", "Note filtering completed", {
+          totalNotes,
+          triggeredNotes,
+          notesToPlay: notesToPlay.length,
+          sampleTiming: notesToPlay.length > 0 ? notesToPlay[0].timing : "none",
+          elapsedTime: elapsedTime.toFixed(3),
+          action: "note-filtering"
+        });
+      }
       const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
       if (timeSinceLastTrigger < 1.5 && notesToPlay.length > 0) {
+        logger10.debug("issue-006-debug", "Note skipped due to spacing constraint", {
+          timeSinceLastTrigger: timeSinceLastTrigger.toFixed(3),
+          notesToPlay: notesToPlay.length,
+          action: "skip-spacing"
+        });
         return;
       }
       if (notesToPlay.length === 0)
@@ -33128,32 +33196,96 @@ var AudioEngine = class {
       const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
       const instrumentKey = instrumentName;
       const instrumentSettings = this.settings.instruments[instrumentKey];
+      logger10.info("issue-006-debug", "Instrument settings check", {
+        action: "instrument-enabled-check",
+        instrumentName,
+        instrumentKey,
+        instrumentSettingsExists: !!instrumentSettings,
+        instrumentEnabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled,
+        allInstrumentKeys: Object.keys(this.settings.instruments),
+        enabledInstruments: Object.entries(this.settings.instruments).filter(([_, settings]) => settings.enabled).map(([name, _]) => name)
+      });
       if (!(instrumentSettings == null ? void 0 : instrumentSettings.enabled)) {
-        logger10.debug("playback", "Skipping disabled instrument", {
+        logger10.warn("issue-006-debug", "Instrument disabled - blocking note trigger", {
+          action: "instrument-disabled-block",
           instrumentName,
-          enabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled
+          instrumentKey,
+          enabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled,
+          instrumentSettingsExists: !!instrumentSettings
         });
         return;
       }
-      logger10.debug("playback", "Note triggered in real-time", {
+      logger10.info("issue-006-debug", "Note trigger attempt initiated", {
         nodeId: mapping.nodeId,
         instrument: instrumentName,
         frequency: frequency.toFixed(2),
         duration: duration.toFixed(2),
         velocity: velocity.toFixed(2),
-        elapsedTime: elapsedTime.toFixed(3)
+        elapsedTime: elapsedTime.toFixed(3),
+        currentTime: currentTime.toFixed(3),
+        instrumentEnabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled,
+        hasInstrument: this.instruments.has(instrumentName),
+        contextState: getContext().state,
+        action: "attempt-note-trigger"
       });
       if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
+        logger10.info("issue-006-debug", "Percussion engine trigger initiated", {
+          instrumentName,
+          action: "percussion-trigger"
+        });
         this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
       } else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
+        logger10.info("issue-006-debug", "Electronic engine trigger initiated", {
+          instrumentName,
+          action: "electronic-trigger"
+        });
         this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
       } else if (this.isEnvironmentalInstrument(instrumentName)) {
+        logger10.info("issue-006-debug", "Environmental sound trigger initiated", {
+          instrumentName,
+          action: "environmental-trigger"
+        });
         this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
       } else {
         const synth = this.instruments.get(instrumentName);
+        logger10.info("issue-006-debug", "Standard instrument trigger initiated", {
+          instrumentName,
+          synthExists: !!synth,
+          synthType: ((_a = synth == null ? void 0 : synth.constructor) == null ? void 0 : _a.name) || "unknown",
+          action: "standard-trigger"
+        });
         if (synth) {
-          const detunedFrequency = this.applyFrequencyDetuning(frequency);
-          synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+          try {
+            const detunedFrequency = this.applyFrequencyDetuning(frequency);
+            logger10.info("issue-006-debug", "Calling triggerAttackRelease on instrument", {
+              instrumentName,
+              originalFreq: frequency.toFixed(2),
+              detunedFreq: detunedFrequency.toFixed(2),
+              duration: duration.toFixed(2),
+              velocity: velocity.toFixed(2),
+              triggerTime: currentTime.toFixed(3),
+              action: "trigger-attack-release-call"
+            });
+            synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+            logger10.info("issue-006-debug", "triggerAttackRelease completed successfully", {
+              instrumentName,
+              action: "trigger-attack-release-success"
+            });
+          } catch (error) {
+            logger10.error("issue-006-debug", "triggerAttackRelease failed with error", {
+              instrumentName,
+              error: error.message,
+              stack: error.stack,
+              action: "trigger-attack-release-error"
+            });
+          }
+        } else {
+          logger10.warn("issue-006-debug", "Instrument not found in instruments map", {
+            instrumentName,
+            availableInstruments: Array.from(this.instruments.keys()),
+            mapSize: this.instruments.size,
+            action: "instrument-not-found"
+          });
         }
       }
       const maxEndTime = Math.max(...sequence.map((n) => n.timing + n.duration));
@@ -35162,9 +35294,45 @@ var SonigraphPlugin = class extends import_obsidian5.Plugin {
   }
   async loadSettings() {
     const data = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+    this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
     this.migrateSettings();
     logger13.debug("settings", "Settings loaded", { settings: this.settings });
+  }
+  /**
+   * Deep merge settings to preserve user configurations while adding new defaults
+   * Issue #006: Prevents corruption of user-enabled instrument states
+   */
+  deepMergeSettings(defaults, saved) {
+    const merged = JSON.parse(JSON.stringify(defaults));
+    if (!saved)
+      return merged;
+    Object.keys(saved).forEach((key) => {
+      if (key === "instruments" && saved.instruments) {
+        Object.keys(saved.instruments).forEach((instrumentKey) => {
+          if (merged.instruments[instrumentKey]) {
+            const userInstrument = saved.instruments[instrumentKey];
+            const defaultInstrument = merged.instruments[instrumentKey];
+            merged.instruments[instrumentKey] = {
+              ...defaultInstrument,
+              ...userInstrument,
+              // Ensure effects structure is preserved
+              effects: {
+                ...defaultInstrument.effects,
+                ...userInstrument.effects || {}
+              }
+            };
+            logger13.debug("settings-merge", `Merged instrument ${instrumentKey}`, {
+              defaultEnabled: defaultInstrument.enabled,
+              userEnabled: userInstrument.enabled,
+              finalEnabled: merged.instruments[instrumentKey].enabled
+            });
+          }
+        });
+      } else if (key !== "instruments") {
+        merged[key] = saved[key];
+      }
+    });
+    return merged;
   }
   /**
    * Migrate settings from old structure to new per-instrument effects structure
