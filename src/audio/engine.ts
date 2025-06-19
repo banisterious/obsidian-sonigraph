@@ -1574,6 +1574,23 @@ export class AudioEngine {
 			await this.initialize();
 		}
 
+		// Issue #006 Fix: Ensure enabled instruments are properly initialized with volume nodes
+		// Check if any enabled instruments are missing volume nodes and re-initialize if needed
+		const missingVolumeInstruments = enabledInstrumentsList.filter(instrumentName => {
+			const hasInstrument = this.instruments.has(instrumentName);
+			const hasVolume = this.instrumentVolumes.has(instrumentName);
+			return hasInstrument && !hasVolume;
+		});
+
+		if (missingVolumeInstruments.length > 0) {
+			logger.warn('issue-006-debug', 'Found enabled instruments missing volume nodes - re-initializing', {
+				missingVolumeInstruments,
+				action: 'missing-volume-nodes-detected'
+			});
+			// Re-initialize to ensure all instruments have proper volume nodes
+			await this.initialize();
+		}
+
 		if (this.isPlaying) {
 			logger.info('playback', 'Stopping current sequence before starting new one');
 			this.stop();
@@ -1926,8 +1943,10 @@ export class AudioEngine {
 						const effectsMap = this.instrumentEffects.get(instrumentName);
 						logger.info('issue-006-debug', 'Audio pipeline verification', {
 							instrumentName,
-							volumeValue: volumeNode?.volume?.value || 'no-volume-node',
-							volumeMuted: volumeNode?.mute || false,
+							volumeNodeExists: !!volumeNode,
+							volumeValue: volumeNode?.volume?.value ?? 'no-volume-value',
+							volumeMuted: volumeNode?.mute ?? 'no-mute-property',
+							volumeConstructor: volumeNode?.constructor?.name || 'no-constructor',
 							effectsCount: effectsMap?.size || 0,
 							instrumentOutputs: synth.numberOfOutputs,
 							masterVolumeValue: this.volume?.volume?.value || 'no-master-volume',
