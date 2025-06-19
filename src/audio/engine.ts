@@ -571,14 +571,43 @@ export class AudioEngine {
 		if (this.settings.audioFormat === 'synthesis') {
 			logger.info('instruments', 'Synthesis mode - creating synthesizers for all instruments');
 			
-			// Create synthesizers for the manually configured instruments
-			const manualInstruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone'];
+			// Create synthesizers for all 34 instruments in the orchestral system
+			const manualInstruments = [
+				'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 
+				'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 
+				'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 
+				'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
+			];
 			manualInstruments.forEach(instrumentName => {
-				// Create basic polyphonic synthesizer
-				const synth = new PolySynth(FMSynth, {
-					oscillator: { type: 'sine' },
-					envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
-				});
+				// Create specialized synthesizers based on instrument family
+				let synthConfig;
+				if (this.isEnvironmentalInstrument(instrumentName)) {
+					// Environmental instruments: slower, ambient sounds
+					synthConfig = {
+						oscillator: { type: 'sine' as const },
+						envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 }
+					};
+				} else if (this.isPercussionInstrument(instrumentName)) {
+					// Percussion instruments: fast attack, shorter sustain
+					synthConfig = {
+						oscillator: { type: 'triangle' as const },
+						envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.8 }
+					};
+				} else if (this.isElectronicInstrument(instrumentName)) {
+					// Electronic instruments: sharper, more modern sound
+					synthConfig = {
+						oscillator: { type: 'sawtooth' as const },
+						envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 }
+					};
+				} else {
+					// Default for acoustic instruments
+					synthConfig = {
+						oscillator: { type: 'sine' as const },
+						envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+					};
+				}
+				
+				const synth = new PolySynth(FMSynth, synthConfig);
 				
 				// Create volume control
 				const volume = new Volume(-6);
@@ -1419,10 +1448,26 @@ export class AudioEngine {
 				if (this.isEnvironmentalInstrument(instrumentName)) {
 					logger.debug('instruments', `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
 					
+					// Create synthesizer for environmental instruments
+					const synth = new PolySynth(FMSynth, {
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 } // Longer envelope for ambient sounds
+					});
+					
 					// Create volume control for environmental instruments
 					const volume = new Volume(-6);
 					this.instrumentVolumes.set(instrumentName, volume);
-					logger.debug('instruments', `Created volume control for environmental instrument: ${instrumentName}`);
+					
+					// Connect synth → volume → master
+					synth.connect(volume);
+					if (this.volume) {
+						volume.connect(this.volume);
+					}
+					
+					// Add to instruments map
+					this.instruments.set(instrumentName, synth);
+					
+					logger.debug('instruments', `Created synthesis instrument for environmental: ${instrumentName}`);
 					return;
 				}
 				

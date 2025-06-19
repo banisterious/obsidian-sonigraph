@@ -7,6 +7,32 @@
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [API Overview & Authentication](#api-overview--authentication)
+  - [Authentication Requirements](#authentication-requirements)
+  - [Rate Limiting](#rate-limiting)
+- [Sound Discovery Strategy](#sound-discovery-strategy)
+  - [Search Capabilities](#search-capabilities)
+  - [Instrument Family Mapping](#instrument-family-mapping)
+- [Integration Architecture](#integration-architecture)
+  - [System Integration Points](#system-integration-points)
+  - [File Format Preferences](#file-format-preferences)
+- [Technical Implementation](#technical-implementation)
+  - [API Endpoints](#api-endpoints)
+  - [Sample Processing Pipeline](#sample-processing-pipeline)
+- [Legal & Licensing Considerations](#legal--licensing-considerations)
+  - [Creative Commons Compliance](#creative-commons-compliance)
+  - [Attribution Management](#attribution-management)
+  - [Legal Safeguards](#legal-safeguards)
+- [Implementation Phases](#implementation-phases)
+- [Performance Considerations](#performance-considerations)
+- [Monitoring & Analytics](#monitoring--analytics)
+- [Security Considerations](#security-considerations)
+
+---
+
 ## Overview
 
 This document outlines the integration strategy for leveraging Freesound.org's API v2 to expand Sonigraph's audio sample library. The Freesound platform provides access to over 500,000 Creative Commons licensed audio samples, offering significant opportunities to enhance our instrument families with high-quality, diverse sounds.
