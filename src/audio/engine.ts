@@ -8,6 +8,7 @@ import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
 import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
 import { getLogger } from '../logging';
+import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from './playback-events';
 
 const logger = getLogger('audio-engine');
 
@@ -52,6 +53,11 @@ export class AudioEngine {
 	// Phase 3: Frequency detuning for phase conflict resolution
 	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
 	private electronicEngine: ElectronicEngine | null = null;
+
+	// Enhanced Play Button: Playback event system
+	private eventEmitter: PlaybackEventEmitter = new PlaybackEventEmitter();
+	private sequenceStartTime: number = 0;
+	private sequenceProgressTimer: number | null = null;
 	
 	// Master Effects Processing - moved to EffectBusManager
 
@@ -214,6 +220,31 @@ export class AudioEngine {
 
 	set lastCPUCheck(value: number) {
 		// Legacy setter - no-op since we don't track this anymore
+	}
+
+	/**
+	 * Enhanced Play Button: Event emitter access methods
+	 */
+	
+	/**
+	 * Add listener for playback events
+	 */
+	on(event: PlaybackEventType, listener: (data?: PlaybackEventData) => void): void {
+		this.eventEmitter.on(event, listener);
+	}
+
+	/**
+	 * Remove listener for playback events
+	 */
+	off(event: PlaybackEventType, listener: (data?: PlaybackEventData) => void): void {
+		this.eventEmitter.off(event, listener);
+	}
+
+	/**
+	 * Remove all listeners for an event or all events
+	 */
+	removeAllListeners(event?: PlaybackEventType): void {
+		this.eventEmitter.removeAllListeners(event);
 	}
 
 	private getSamplerConfigs() {
@@ -1572,6 +1603,10 @@ export class AudioEngine {
 			this.currentSequence = processedSequence;
 			this.isPlaying = true;
 			this.scheduledEvents = [];
+			
+			// Enhanced Play Button: Emit playback started event
+			this.sequenceStartTime = Date.now();
+			this.eventEmitter.emit('playback-started', null);
 
 			// Ensure Transport is stopped and reset
 			if (getTransport().state === 'started') {
@@ -1616,6 +1651,14 @@ export class AudioEngine {
 				instrumentCount: this.instruments.size,
 				audioContextState: getContext().state
 			});
+			
+			// Enhanced Play Button: Emit error event
+			const errorData: PlaybackErrorData = {
+				error: error instanceof Error ? error : new Error(String(error)),
+				context: 'sequence-processing'
+			};
+			this.eventEmitter.emit('playback-error', errorData);
+			
 			throw error;
 		}
 	}
@@ -1731,10 +1774,23 @@ export class AudioEngine {
 				}
 			}
 
-			// Check if sequence is complete
+			// Enhanced Play Button: Emit progress update
 			const maxEndTime = Math.max(...sequence.map(n => n.timing + n.duration));
+			const progressData: PlaybackProgressData = {
+				currentIndex: sequence.filter(n => n.timing <= elapsedTime).length,
+				totalNotes: sequence.length,
+				elapsedTime: elapsedTime,
+				estimatedTotalTime: maxEndTime,
+				percentComplete: Math.min((elapsedTime / maxEndTime) * 100, 100)
+			};
+			this.eventEmitter.emit('sequence-progress', progressData);
+
+			// Check if sequence is complete
 			if (elapsedTime > maxEndTime + 1.0) { // Add 1 second buffer
 				logger.info('playback', 'Real-time sequence completed');
+				
+				// Enhanced Play Button: Emit completion before stopping
+				this.eventEmitter.emit('playback-ended', null);
 				this.stop();
 			}
 		}, 400); // Check every 400ms to minimize CPU load and timing conflicts
@@ -1749,6 +1805,9 @@ export class AudioEngine {
 		logger.info('playback', 'Stopping sequence playback');
 
 		this.isPlaying = false;
+		
+		// Enhanced Play Button: Emit stopped event
+		this.eventEmitter.emit('playback-stopped', null);
 
 		// Clear real-time timer
 		if (this.realtimeTimer !== null) {
@@ -2322,6 +2381,9 @@ export class AudioEngine {
 			});
 		});
 		this.instrumentEffects.clear();
+
+		// Enhanced Play Button: Cleanup event emitter
+		this.eventEmitter.dispose();
 
 		this.isInitialized = false;
 

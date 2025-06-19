@@ -44,7 +44,7 @@ const STATE_CONFIGS: Record<PlayButtonState, StateConfig> = {
 		text: 'Loading...',
 		disabled: true,
 		cssClass: 'osp-header-btn--loading',
-		animation: 'spin 1s linear infinite'
+		animation: 'perimeter-pulse 1.5s ease-in-out infinite'
 	},
 	playing: {
 		icon: 'pause',
@@ -82,7 +82,7 @@ const LOADING_MESSAGES: Record<LoadingSubstate, string> = {
  * Valid state transitions for validation
  */
 const VALID_TRANSITIONS: Record<PlayButtonState, PlayButtonState[]> = {
-	idle: ['loading'],
+	idle: ['loading', 'idle'], // Allow idle -> idle for reinitialization
 	loading: ['playing', 'idle'], // idle on error
 	playing: ['paused', 'stopping', 'idle'], // idle on completion
 	paused: ['playing', 'stopping', 'idle'],
@@ -238,6 +238,31 @@ export class PlayButtonManager {
 				logger.error('manager', 'Error in state change listener', error);
 			}
 		});
+	}
+
+	/**
+	 * Update loading progress (Phase 3: Enhanced feedback)
+	 * Updates button text with progress percentage during loading
+	 */
+	updateLoadingProgress(percent: number, context?: string): void {
+		if (this.currentState !== 'loading') return;
+		
+		if (!this.button) return;
+		
+		const progressText = context ? 
+			`${context} ${Math.round(percent)}%` : 
+			`Loading ${Math.round(percent)}%`;
+		
+		// Find and update button text
+		const textNode = this.button.childNodes[1]; // Text is usually the second child after icon
+		if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+			textNode.textContent = progressText;
+		}
+		
+		// Update aria-label for accessibility
+		this.button.setAttribute('aria-label', progressText);
+		
+		logger.debug('manager', `Updated loading progress: ${progressText}`);
 	}
 
 	/**
