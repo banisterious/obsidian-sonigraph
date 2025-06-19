@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-19 00:31:03 UTC
+ * - Generated: 2025-06-19 02:48:43 UTC
  * - Components: 18 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -1432,7 +1432,7 @@
    COMPONENT: BUTTONS.CSS
    ========================================================================== */
 
-/* Component Size: 300 lines, 7.3 KB */
+/* Component Size: 441 lines, 10.78 KB */
 
 /* ==========================================================================
    SONIGRAPH BUTTONS STYLESHEET
@@ -1645,6 +1645,147 @@
 
 .osp-action-btn--primary:hover {
   background: var(--interactive-accent-hover);
+}
+
+/* ==========================================================================
+   ENHANCED HEADER BUTTONS (Control Center)
+   ========================================================================== */
+
+/* Base header button with smooth transitions */
+.osp-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.osp-header-btn:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.osp-header-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Phase 3: Progress indication container */
+.osp-play-progress {
+  position: absolute;
+  bottom: -50px;
+  left: 0;
+  right: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  min-width: 200px;
+  pointer-events: none;
+}
+
+.osp-play-progress--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.osp-play-progress--finishing {
+  border-color: var(--interactive-accent);
+  animation: finishing-pulse 2s ease-in-out infinite;
+}
+
+/* Progress bar styles */
+.osp-progress-bar {
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.osp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
+  border-radius: 2px;
+  transition: width 0.2s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.osp-progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: progress-shimmer 1.5s infinite;
+}
+
+/* Progress text */
+.osp-progress-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Enhanced play button states */
+.osp-header-btn--idle {
+  /* Uses default styling */
+}
+
+.osp-header-btn--playing {
+  background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+  color: var(--text-on-accent);
+  box-shadow: 0 2px 8px var(--interactive-accent);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.osp-header-btn--playing:hover {
+  background: linear-gradient(135deg, var(--interactive-accent-hover), var(--interactive-accent));
+  box-shadow: 0 4px 12px var(--interactive-accent);
+}
+
+/* Enhanced loading state animation */
+.osp-header-btn--loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  animation: perimeter-pulse 1.5s ease-in-out infinite;
+}
+
+/* Enhanced stopping state animation */
+.osp-header-btn--stopping {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--background-modifier-error);
+  animation: spin 1s linear infinite;
+}
+
+.osp-header-btn--paused {
+  background: var(--background-modifier-border-focus);
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
 }
 
 /* ==========================================================================
@@ -6642,7 +6783,7 @@ details.osp-advanced-settings {
    COMPONENT: ANIMATIONS.CSS
    ========================================================================== */
 
-/* Component Size: 115 lines, 2.07 KB */
+/* Component Size: 237 lines, 4.81 KB */
 
 /* ==========================================================================
    SONIGRAPH ANIMATIONS & TRANSITIONS
@@ -6702,6 +6843,84 @@ details.osp-advanced-settings {
 }
 
 /* ==========================================================================
+   PLAY BUTTON ANIMATIONS
+   ========================================================================== */
+
+/* Spinning animation for stopping state only */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Subtle perimeter animation for loading state */
+@keyframes perimeter-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 var(--interactive-accent),
+      inset 0 0 0 1px var(--background-modifier-border);
+    border-color: var(--background-modifier-border);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--interactive-accent),
+      inset 0 0 0 1px var(--interactive-accent);
+    border-color: var(--interactive-accent);
+  }
+}
+
+/* Pulsing glow animation for playing state */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px var(--interactive-accent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 20px var(--interactive-accent);
+    transform: scale(1.02);
+  }
+}
+
+/* Progress pulse animation for enhanced feedback */
+@keyframes progress-pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Progress shimmer animation for play button progress bar */
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Finishing pulse animation for progress indication */
+@keyframes finishing-pulse {
+  0%,
+  100% {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 0 var(--interactive-accent);
+  }
+  50% {
+    border-color: var(--interactive-accent-hover);
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.3);
+  }
+}
+
+/* ==========================================================================
    FUTURE-PROOFING ANIMATIONS
    ========================================================================== */
 
@@ -6756,6 +6975,50 @@ details.osp-advanced-settings {
   100% {
     transform: translateX(100%);
     opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY - REDUCED MOTION SUPPORT
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all play button animations for users who prefer reduced motion */
+  .osp-header-btn--playing {
+    animation: none !important;
+    box-shadow: 0 2px 8px var(--interactive-accent) !important;
+    transform: none !important;
+  }
+
+  .osp-header-btn--loading {
+    animation: none !important;
+    border: 1px solid var(--interactive-accent) !important;
+  }
+
+  .osp-header-btn--stopping {
+    animation: none !important;
+  }
+
+  .osp-header-btn {
+    transition: none !important;
+  }
+
+  /* Disable progress indication animations */
+  .osp-play-progress {
+    transition: opacity 0.1s ease !important;
+  }
+
+  .osp-play-progress--finishing {
+    animation: none !important;
+  }
+
+  .osp-progress-fill::after {
+    animation: none !important;
+  }
+
+  /* Disable other motion-sensitive animations */
+  .ospcc-pulse {
+    animation: none !important;
   }
 }
 
@@ -7085,10 +7348,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-19 00:31:03 UTC
+ * Build completed: 2025-06-19 02:48:43 UTC
  * Components processed: 18
- * Total lines: 6897
- * Total size: 143.28 KB
+ * Total lines: 7160
+ * Total size: 149.49 KB
  * Build duration: 0.02 seconds
  * 
  * Component breakdown:
@@ -7096,7 +7359,7 @@ details.osp-advanced-settings {
  * - base.css: 78 lines, 1.2 KB
  * - layout.css: 933 lines, 13.56 KB
  * - utilities.css: 283 lines, 3.57 KB
- * - buttons.css: 300 lines, 7.3 KB
+ * - buttons.css: 441 lines, 10.78 KB
  * - controls.css: 604 lines, 13.3 KB
  * - cards.css: 611 lines, 13.86 KB
  * - lists.css: 136 lines, 3.11 KB
@@ -7107,7 +7370,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 576 lines, 14.45 KB
- * - animations.css: 115 lines, 2.07 KB
+ * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB
  */

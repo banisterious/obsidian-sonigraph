@@ -7,6 +7,7 @@ import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmar
 import { TAB_CONFIGS, setLucideIcon, createLucideIcon, getFamilyIcon, getInstrumentIcon, getEffectIcon, LucideIconName } from './lucide-icons';
 import { MaterialCard, StatCard, InstrumentCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
+import { PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
 
 const logger = getLogger('control-panel-md');
 
@@ -25,6 +26,11 @@ export class MaterialControlPanelModal extends Modal {
 	private playButton: HTMLElement;
 	private playButtonManager: PlayButtonManager;
 	private instrumentToggles: Map<string, HTMLElement> = new Map();
+	
+	// Phase 3: Progress indication elements
+	private progressElement: HTMLElement | null = null;
+	private progressText: HTMLElement | null = null;
+	private progressBar: HTMLElement | null = null;
 
 	constructor(app: App, plugin: SonigraphPlugin) {
 		super(app);
@@ -53,6 +59,9 @@ export class MaterialControlPanelModal extends Modal {
 	onClose() {
 		logger.debug('ui', 'Closing Sonigraph Control Center');
 		this.stopStatusUpdates();
+		
+		// Enhanced Play Button: Cleanup audio engine event listeners
+		this.cleanupAudioEngineEventListeners();
 		
 		// Cleanup play button manager
 		if (this.playButtonManager) {
@@ -138,6 +147,9 @@ export class MaterialControlPanelModal extends Modal {
 		this.playButtonManager.onStateChange((state: PlayButtonState) => {
 			logger.debug('ui', `Play button state changed: ${state}`);
 		});
+		
+		// Enhanced Play Button: Connect to audio engine events
+		this.setupAudioEngineEventListeners();
 		
 		playBtn.addEventListener('click', () => this.handlePlay());
 
@@ -1231,10 +1243,11 @@ export class MaterialControlPanelModal extends Modal {
 		this.playButtonManager.setState('loading', 'starting');
 		
 		try {
+			// Audio engine will emit 'playback-started' event on success
 			await this.plugin.playSequence();
-			this.playButtonManager.setState('playing');
 		} catch (error) {
 			logger.error('ui', 'Failed to resume sequence', error);
+			// Audio engine should emit 'playback-error' event, but fallback to idle if not
 			this.playButtonManager.setState('idle');
 		}
 	}
@@ -1242,12 +1255,9 @@ export class MaterialControlPanelModal extends Modal {
 	private handleStop(): void {
 		logger.info('ui', 'Stop clicked');
 		this.playButtonManager.setState('stopping');
-		this.plugin.stopPlayback();
 		
-		// Reset to idle after a brief delay
-		setTimeout(() => {
-			this.playButtonManager.setState('idle');
-		}, 500);
+		// Audio engine will emit 'playback-stopped' event which will transition to idle
+		this.plugin.stopPlayback();
 	}
 
 	private async handlePlay(): Promise<void> {
@@ -1273,7 +1283,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.playButtonManager.setState('loading', 'analyzing');
 		
 		try {
-			// Show detailed loading stages
+			// Show detailed loading stages for better UX
 			this.playButtonManager.setLoadingSubstate('analyzing');
 			await new Promise(resolve => setTimeout(resolve, 200)); // Brief delay for UX
 			
@@ -1284,14 +1294,14 @@ export class MaterialControlPanelModal extends Modal {
 			await new Promise(resolve => setTimeout(resolve, 200)); // Brief delay for UX
 			
 			this.playButtonManager.setLoadingSubstate('starting');
-			await this.plugin.playSequence();
 			
-			// Switch to playing state
-			this.playButtonManager.setState('playing');
+			// Start playback - audio engine will emit 'playback-started' event
+			// which will automatically transition button to 'playing' state
+			await this.plugin.playSequence();
 			
 		} catch (error) {
 			logger.error('ui', 'Failed to play sequence', error);
-			// Reset to idle state on error
+			// Reset to idle state on error (if audio engine doesn't emit error event)
 			this.playButtonManager.setState('idle');
 			// TODO: Show user notification about the error
 		}
@@ -1304,6 +1314,96 @@ export class MaterialControlPanelModal extends Modal {
 		this.plugin.saveSettings();
 	}
 
+	/**
+	 * Enhanced Play Button: Audio Engine Event Integration
+	 */
+	
+	private setupAudioEngineEventListeners(): void {
+		if (!this.plugin.audioEngine) {
+			logger.warn('ui', 'Cannot setup audio event listeners: AudioEngine not available');
+			return;
+		}
+
+		// Listen for playback events from audio engine
+		this.plugin.audioEngine.on('playback-started', this.handlePlaybackStarted.bind(this));
+		this.plugin.audioEngine.on('playback-ended', this.handlePlaybackEnded.bind(this));
+		this.plugin.audioEngine.on('playback-stopped', this.handlePlaybackStopped.bind(this));
+		this.plugin.audioEngine.on('playback-error', this.handlePlaybackError.bind(this));
+		this.plugin.audioEngine.on('sequence-progress', this.handleSequenceProgress.bind(this));
+
+		logger.debug('ui', 'Audio engine event listeners configured');
+	}
+
+	private cleanupAudioEngineEventListeners(): void {
+		if (!this.plugin.audioEngine) {
+			return;
+		}
+
+		// Remove all listeners for clean shutdown
+		this.plugin.audioEngine.removeAllListeners('playback-started');
+		this.plugin.audioEngine.removeAllListeners('playback-ended');
+		this.plugin.audioEngine.removeAllListeners('playback-stopped');
+		this.plugin.audioEngine.removeAllListeners('playback-error');
+		this.plugin.audioEngine.removeAllListeners('sequence-progress');
+
+		logger.debug('ui', 'Audio engine event listeners cleaned up');
+	}
+
+	private handlePlaybackStarted(): void {
+		logger.debug('ui', 'Audio engine playback started - switching to playing state');
+		this.playButtonManager.setState('playing');
+		
+		// Phase 3: Show progress indication
+		this.showProgressIndication();
+	}
+
+	private handlePlaybackEnded(): void {
+		logger.debug('ui', 'Audio engine playback ended - switching to idle state');
+		this.playButtonManager.setState('idle');
+		
+		// Phase 3: Hide progress indication
+		this.hideProgressIndication();
+	}
+
+	private handlePlaybackStopped(): void {
+		logger.debug('ui', 'Audio engine playback stopped - switching to idle state');
+		this.playButtonManager.setState('idle');
+		
+		// Phase 3: Hide progress indication
+		this.hideProgressIndication();
+	}
+
+	private handlePlaybackError(data?: PlaybackEventData): void {
+		const errorData = data as PlaybackErrorData;
+		logger.error('ui', 'Audio engine playback error', {
+			error: errorData?.error?.message,
+			context: errorData?.context
+		});
+		
+		// Reset to idle state on error
+		this.playButtonManager.setState('idle');
+		
+		// Phase 3: Hide progress indication on error
+		this.hideProgressIndication();
+		
+		// TODO: Show user notification about the error
+		// Could use Obsidian's Notice API or a custom error display
+	}
+
+	private handleSequenceProgress(data?: PlaybackEventData): void {
+		const progressData = data as PlaybackProgressData;
+		if (progressData) {
+			logger.debug('ui', 'Sequence progress update', {
+				percent: progressData.percentComplete.toFixed(1),
+				currentNote: progressData.currentIndex,
+				totalNotes: progressData.totalNotes
+			});
+			
+			// Phase 3: Update progress indication in UI
+			this.updateProgressIndication(progressData);
+		}
+	}
+
 	private startStatusUpdates(): void {
 		// Implement status updates
 	}
@@ -1312,6 +1412,77 @@ export class MaterialControlPanelModal extends Modal {
 		if (this.statusInterval) {
 			clearInterval(this.statusInterval);
 			this.statusInterval = null;
+		}
+	}
+
+	/**
+	 * Phase 3: Progress indication methods
+	 */
+	private showProgressIndication(): void {
+		if (!this.playButton) return;
+
+		// Create progress container if it doesn't exist
+		if (!this.progressElement) {
+			this.progressElement = this.playButton.createDiv({ cls: 'osp-play-progress' });
+			
+			// Progress bar
+			this.progressBar = this.progressElement.createDiv({ cls: 'osp-progress-bar' });
+			this.progressBar.createDiv({ cls: 'osp-progress-fill' });
+			
+			// Progress text
+			this.progressText = this.progressElement.createDiv({ 
+				cls: 'osp-progress-text',
+				text: 'Starting...'
+			});
+		}
+
+		// Show with smooth transition
+		this.progressElement.addClass('osp-progress--visible');
+		logger.debug('ui', 'Progress indication shown');
+	}
+
+	private hideProgressIndication(): void {
+		if (this.progressElement) {
+			// Hide with smooth transition
+			this.progressElement.removeClass('osp-progress--visible');
+			
+			// Remove after transition
+			setTimeout(() => {
+				if (this.progressElement && this.progressElement.parentNode) {
+					this.progressElement.remove();
+					this.progressElement = null;
+					this.progressBar = null;
+					this.progressText = null;
+				}
+			}, 300); // Match CSS transition duration
+		}
+		logger.debug('ui', 'Progress indication hidden');
+	}
+
+	private updateProgressIndication(progressData: PlaybackProgressData): void {
+		if (!this.progressElement || !this.progressBar || !this.progressText) return;
+
+		// Update progress bar
+		const progressFill = this.progressBar.querySelector('.osp-progress-fill') as HTMLElement;
+		if (progressFill) {
+			progressFill.style.width = `${Math.min(progressData.percentComplete, 100)}%`;
+		}
+
+		// Update progress text
+		const currentMinutes = Math.floor(progressData.elapsedTime / 60000);
+		const currentSeconds = Math.floor((progressData.elapsedTime % 60000) / 1000);
+		const totalMinutes = Math.floor(progressData.estimatedTotalTime / 60000);
+		const totalSeconds = Math.floor((progressData.estimatedTotalTime % 60000) / 1000);
+		
+		const timeString = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+		
+		this.progressText.textContent = `Playing: ${progressData.currentIndex}/${progressData.totalNotes} notes (${timeString})`;
+
+		// Add subtle pulse animation when nearing completion
+		if (progressData.percentComplete > 90) {
+			this.progressElement.addClass('osp-progress--finishing');
+		} else {
+			this.progressElement.removeClass('osp-progress--finishing');
 		}
 	}
 
