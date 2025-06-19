@@ -1767,9 +1767,9 @@ export class AudioEngine {
 				});
 			}
 
-			// Issue #006 Fix: Reasonable spacing to prevent overlap without blocking sequence flow
+			// Issue #006 Fix: Minimal spacing to prevent overlap while allowing sequence flow
 			const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
-			if (timeSinceLastTrigger < 0.3 && notesToPlay.length > 0) {
+			if (timeSinceLastTrigger < 0.05 && notesToPlay.length > 0) {
 				logger.debug('issue-006-debug', 'Note skipped due to spacing constraint', {
 					timeSinceLastTrigger: timeSinceLastTrigger.toFixed(3),
 					notesToPlay: notesToPlay.length,

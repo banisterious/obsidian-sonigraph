@@ -379,7 +379,23 @@ updateSettings(settings: SonigraphSettings): void {
 3. ✅ **hasBeenTriggered Reset**: Allows note replay after sequences complete
 4. ✅ **Settings Deep Merge**: Prevents user settings corruption during plugin loading
 
-**Status**: ✅ **COMPLETELY RESOLVED** - Multiple play/stop cycles with instrument changes now work perfectly.
+**Status**: ✅ **COMPLETELY RESOLVED** - Multiple play/stop cycles with full note sequences now work perfectly.
+
+### Final Root Cause: Overly Restrictive Spacing Constraint
+
+**Real Issue**: Spacing constraint was blocking note sequence flow after the first note.
+
+**Technical Details - First Fix Attempt**:
+- Initial 1.5 second spacing constraint blocked all subsequent notes
+- Reduced to 0.3s, but still too restrictive for natural sequence flow
+- Real-time timer runs ~100ms intervals, but 0.3s spacing meant most notes skipped
+
+**Final Issue Analysis (2025-06-19)**:
+- Log analysis revealed 16 "Note skipped due to spacing constraint" messages
+- Timer ticks at 0.181s, 0.264s, 0.285s, 0.296s all blocked by 0.3s minimum
+- Only 1-2 notes per sequence actually triggered due to overly restrictive timing
+
+**Final Fix**: Reduced spacing constraint from 0.3s to 0.05s (`engine.ts:1772`) - minimal overlap prevention while allowing proper sequence flow.
 
 ---
 
