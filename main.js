@@ -33013,10 +33013,236 @@ var AudioEngine = class {
       }
     });
   }
+  /**
+   * Re-initialize specific instruments that have corrupted volume nodes
+   * Issue #006 Fix: Targeted re-initialization to avoid affecting healthy instruments
+   */
+  async reinitializeSpecificInstruments(instrumentNames) {
+    logger10.info("issue-006-debug", "Starting targeted instrument re-initialization", {
+      instrumentCount: instrumentNames.length,
+      instruments: instrumentNames,
+      action: "targeted-reinit-start"
+    });
+    const configs = this.getSamplerConfigs();
+    for (const instrumentName of instrumentNames) {
+      try {
+        logger10.info("issue-006-debug", `Re-initializing ${instrumentName}`, {
+          instrumentName,
+          configExists: !!configs[instrumentName],
+          action: "individual-reinit-start"
+        });
+        if (this.instruments.has(instrumentName)) {
+          const existingInstrument = this.instruments.get(instrumentName);
+          existingInstrument == null ? void 0 : existingInstrument.dispose();
+          this.instruments.delete(instrumentName);
+        }
+        if (this.instrumentVolumes.has(instrumentName)) {
+          this.instrumentVolumes.delete(instrumentName);
+        }
+        if (this.settings.audioFormat === "synthesis") {
+          logger10.info("issue-006-debug", `Re-creating synthesizer for ${instrumentName}`, {
+            instrumentName,
+            mode: "synthesis",
+            action: "synth-reinit-start"
+          });
+          let synthConfig;
+          if (this.isEnvironmentalInstrument(instrumentName)) {
+            synthConfig = {
+              oscillator: { type: "sine" },
+              envelope: { attack: 0.5, decay: 1, sustain: 0.8, release: 2 }
+            };
+          } else if (this.isPercussionInstrument(instrumentName)) {
+            synthConfig = {
+              oscillator: { type: "triangle" },
+              envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.8 }
+            };
+          } else if (this.isElectronicInstrument(instrumentName)) {
+            synthConfig = {
+              oscillator: { type: "sawtooth" },
+              envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 }
+            };
+          } else {
+            synthConfig = {
+              oscillator: { type: "sine" },
+              envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
+            };
+          }
+          const synth = new PolySynth(FMSynth, synthConfig);
+          const volume = new Volume(-6);
+          synth.connect(volume);
+          volume.connect(this.volume);
+          this.instruments.set(instrumentName, synth);
+          this.instrumentVolumes.set(instrumentName, volume);
+          logger10.info("issue-006-debug", `Successfully re-initialized synthesizer for ${instrumentName}`, {
+            instrumentName,
+            synthType: "PolySynth",
+            finalVolumeValue: volume.volume.value,
+            finalVolumeMuted: volume.mute,
+            instrumentExists: this.instruments.has(instrumentName),
+            volumeNodeExists: this.instrumentVolumes.has(instrumentName),
+            action: "synth-reinit-success"
+          });
+        } else if (configs[instrumentName]) {
+          logger10.info("issue-006-debug", `Re-creating sampler for ${instrumentName}`, {
+            instrumentName,
+            mode: "samples",
+            action: "sampler-reinit-start"
+          });
+          const sampler = new Sampler(configs[instrumentName]);
+          const volume = new Volume(-6);
+          sampler.connect(volume);
+          volume.connect(this.volume);
+          this.instruments.set(instrumentName, sampler);
+          this.instrumentVolumes.set(instrumentName, volume);
+          logger10.info("issue-006-debug", `Successfully re-initialized sampler for ${instrumentName}`, {
+            instrumentName,
+            finalVolumeValue: volume.volume.value,
+            finalVolumeMuted: volume.mute,
+            instrumentExists: this.instruments.has(instrumentName),
+            volumeNodeExists: this.instrumentVolumes.has(instrumentName),
+            action: "sampler-reinit-success"
+          });
+        } else {
+          logger10.error("issue-006-debug", `No valid initialization method for ${instrumentName}`, {
+            instrumentName,
+            hasSamplerConfig: !!configs[instrumentName],
+            audioFormat: this.settings.audioFormat,
+            action: "no-valid-init-method"
+          });
+        }
+      } catch (error) {
+        logger10.error("issue-006-debug", `Failed to re-initialize ${instrumentName}`, {
+          instrumentName,
+          error: error.message,
+          action: "individual-reinit-error"
+        });
+      }
+    }
+    instrumentNames.forEach((instrumentName) => {
+      const instrumentSettings = this.settings.instruments[instrumentName];
+      if (instrumentSettings) {
+        this.updateInstrumentVolume(instrumentName, instrumentSettings.volume);
+        this.setInstrumentEnabled(instrumentName, instrumentSettings.enabled);
+      }
+    });
+    logger10.info("issue-006-debug", "Targeted instrument re-initialization completed", {
+      instrumentCount: instrumentNames.length,
+      instruments: instrumentNames,
+      action: "targeted-reinit-complete"
+    });
+  }
   async playSequence(sequence) {
+    const enabledInstrumentsList = this.getEnabledInstruments();
+    logger10.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
+      sequenceLength: sequence.length,
+      isInitialized: this.isInitialized,
+      isPlaying: this.isPlaying,
+      instrumentMapSize: this.instruments.size,
+      enabledInstrumentsCount: enabledInstrumentsList.length,
+      enabledInstruments: enabledInstrumentsList,
+      audioContextState: getContext().state,
+      transportState: getTransport().state,
+      currentTime: getContext().currentTime.toFixed(3),
+      hasBeenTriggeredCount: sequence.filter((n) => n.hasBeenTriggered).length,
+      action: "play-sequence-init"
+    });
     if (!this.isInitialized || !this.instruments.size) {
       logger10.warn("playback", "AudioEngine not initialized, initializing now");
       await this.initialize();
+    }
+    const corruptedVolumeInstruments = enabledInstrumentsList.filter((instrumentName) => {
+      var _a, _b, _c, _d;
+      const hasInstrument = this.instruments.has(instrumentName);
+      const volumeNode = this.instrumentVolumes.get(instrumentName);
+      logger10.info("issue-006-debug", "Volume node inspection for enabled instrument", {
+        instrumentName,
+        hasInstrument,
+        volumeNodeExists: !!volumeNode,
+        volumeValue: (_b = (_a = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-property",
+        volumeMuted: (_c = volumeNode == null ? void 0 : volumeNode.mute) != null ? _c : "no-mute-property",
+        volumeConstructor: ((_d = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _d.name) || "no-constructor",
+        action: "volume-node-inspection"
+      });
+      if (hasInstrument && !volumeNode) {
+        logger10.warn("issue-006-debug", "Missing volume node detected", {
+          instrumentName,
+          action: "missing-volume-node"
+        });
+        return true;
+      }
+      if (volumeNode && volumeNode.volume.value === null) {
+        logger10.error("issue-006-debug", "Corrupted volume node detected (null value)", {
+          instrumentName,
+          volumeValue: volumeNode.volume.value,
+          volumeMuted: volumeNode.mute,
+          action: "corrupted-volume-node"
+        });
+        return true;
+      }
+      const instrumentSettings = this.settings.instruments[instrumentName];
+      if (hasInstrument && volumeNode && (instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
+        logger10.warn("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
+          instrumentName,
+          instrumentEnabled: instrumentSettings.enabled,
+          volumeMuted: volumeNode.mute,
+          action: "enabled-but-muted"
+        });
+        return true;
+      }
+      return false;
+    });
+    if (corruptedVolumeInstruments.length > 0) {
+      logger10.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
+        corruptedVolumeInstruments,
+        corruptedCount: corruptedVolumeInstruments.length,
+        totalEnabledCount: enabledInstrumentsList.length,
+        action: "corrupted-volume-nodes-detected"
+      });
+      corruptedVolumeInstruments.forEach((instrumentName) => {
+        logger10.info("issue-006-debug", "Clearing corrupted volume node", {
+          instrumentName,
+          action: "clear-corrupted-volume"
+        });
+        this.instrumentVolumes.delete(instrumentName);
+      });
+      logger10.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
+        corruptedInstruments: corruptedVolumeInstruments,
+        action: "start-targeted-reinitialization"
+      });
+      await this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
+      const stillCorrupted = corruptedVolumeInstruments.filter((instrumentName) => {
+        const volumeNode = this.instrumentVolumes.get(instrumentName);
+        const instrumentSettings = this.settings.instruments[instrumentName];
+        if (!volumeNode || volumeNode.volume.value === null) {
+          return true;
+        }
+        if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
+          logger10.warn("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+            instrumentName,
+            shouldBeEnabled: instrumentSettings.enabled,
+            actuallyMuted: volumeNode.mute,
+            action: "unexpected-mute-on-enabled-instrument"
+          });
+          return true;
+        }
+        return false;
+      });
+      if (stillCorrupted.length > 0) {
+        logger10.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
+          stillCorrupted,
+          action: "reinitialization-failed"
+        });
+      } else {
+        logger10.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
+          fixedInstruments: corruptedVolumeInstruments,
+          action: "reinitialization-success"
+        });
+      }
+    } else {
+      logger10.info("issue-006-debug", "All enabled instruments have healthy volume nodes", {
+        enabledCount: enabledInstrumentsList.length,
+        action: "volume-nodes-healthy"
+      });
     }
     if (this.isPlaying) {
       logger10.info("playback", "Stopping current sequence before starting new one");
@@ -33142,7 +33368,7 @@ var AudioEngine = class {
     } catch (e) {
     }
     this.realtimeTimer = setInterval(() => {
-      var _a;
+      var _a, _b, _c, _d, _e, _f, _g, _h;
       if (!this.isPlaying) {
         if (this.realtimeTimer !== null) {
           clearInterval(this.realtimeTimer);
@@ -33266,10 +33492,46 @@ var AudioEngine = class {
               triggerTime: currentTime.toFixed(3),
               action: "trigger-attack-release-call"
             });
-            synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
-            logger10.info("issue-006-debug", "triggerAttackRelease completed successfully", {
+            const audioContext = getContext();
+            logger10.info("issue-006-debug", "Pre-trigger audio state check", {
               instrumentName,
+              audioContextState: audioContext.state,
+              audioContextSampleRate: audioContext.sampleRate,
+              audioContextCurrentTime: audioContext.currentTime.toFixed(3),
+              transportState: getTransport().state,
+              transportTime: getTransport().seconds.toFixed(3),
+              action: "pre-trigger-audio-state"
+            });
+            synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+            logger10.info("issue-006-debug", "triggerAttackRelease completed - verifying audio output", {
+              instrumentName,
+              synthConnected: synth.disposed === false,
+              synthLoaded: synth instanceof Sampler ? synth.loaded || false : "not-sampler",
+              volumeNodeExists: !!this.instrumentVolumes.get(instrumentName),
+              effectsMapExists: !!this.instrumentEffects.get(instrumentName),
               action: "trigger-attack-release-success"
+            });
+            const volumeNode = this.instrumentVolumes.get(instrumentName);
+            const effectsMap = this.instrumentEffects.get(instrumentName);
+            logger10.info("issue-006-debug", "Audio pipeline verification", {
+              instrumentName,
+              volumeNodeExists: !!volumeNode,
+              volumeValue: (_c = (_b = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _b.value) != null ? _c : "no-volume-value",
+              volumeMuted: (_d = volumeNode == null ? void 0 : volumeNode.mute) != null ? _d : "no-mute-property",
+              volumeConstructor: ((_e = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _e.name) || "no-constructor",
+              effectsCount: (effectsMap == null ? void 0 : effectsMap.size) || 0,
+              instrumentOutputs: synth.numberOfOutputs,
+              masterVolumeValue: ((_g = (_f = this.volume) == null ? void 0 : _f.volume) == null ? void 0 : _g.value) || "no-master-volume",
+              masterVolumeMuted: ((_h = this.volume) == null ? void 0 : _h.mute) || false,
+              masterVolumeExists: !!this.volume,
+              action: "audio-pipeline-verification"
+            });
+            logger10.info("issue-006-debug", "Audio routing verification", {
+              instrumentName,
+              synthToVolumeConnected: volumeNode ? "unknown" : "no-volume-node",
+              volumeToDestination: this.volume ? "unknown" : "no-master-volume",
+              contextDestination: audioContext.destination ? "exists" : "missing",
+              action: "audio-routing-verification"
             });
           } catch (error) {
             logger10.error("issue-006-debug", "triggerAttackRelease failed with error", {
@@ -33483,14 +33745,44 @@ var AudioEngine = class {
    * Update individual instrument volume
    */
   updateInstrumentVolume(instrumentKey, volume) {
+    var _a, _b, _c, _d;
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
+    logger10.info("issue-006-debug", "updateInstrumentVolume called", {
+      instrumentKey,
+      volume,
+      volumeNodeExists: !!instrumentVolume,
+      previousVolumeValue: (_b = (_a = instrumentVolume == null ? void 0 : instrumentVolume.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-node",
+      volumeMuted: (_c = instrumentVolume == null ? void 0 : instrumentVolume.mute) != null ? _c : "no-volume-node",
+      action: "update-volume-start"
+    });
     if (instrumentVolume) {
       const previousVolume = instrumentVolume.volume.value;
       const dbVolume = Math.log10(Math.max(0.01, volume)) * 20;
+      logger10.info("issue-006-debug", "About to set volume value", {
+        instrumentKey,
+        inputVolume: volume,
+        calculatedDbVolume: dbVolume,
+        previousVolumeValue: previousVolume,
+        action: "before-volume-assignment"
+      });
       instrumentVolume.volume.value = dbVolume;
-      logger10.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume.toFixed(1)}dB`);
+      logger10.info("issue-006-debug", "Volume value set", {
+        instrumentKey,
+        newVolumeValue: instrumentVolume.volume.value,
+        dbVolume,
+        volumeNodeMuted: instrumentVolume.mute,
+        volumeNodeConstructor: (_d = instrumentVolume.constructor) == null ? void 0 : _d.name,
+        action: "after-volume-assignment"
+      });
+      logger10.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume == null ? void 0 : previousVolume.toFixed(1)}dB`);
     } else {
-      logger10.warn("instrument-control", `No volume control found for ${instrumentKey} - instrument may not be initialized yet`);
+      logger10.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} in updateInstrumentVolume`, {
+        instrumentKey,
+        volume,
+        volumeMapSize: this.instrumentVolumes.size,
+        allVolumeKeys: Array.from(this.instrumentVolumes.keys()),
+        action: "missing-volume-node-error"
+      });
     }
   }
   /**
@@ -33511,31 +33803,66 @@ var AudioEngine = class {
    * Enable or disable an instrument
    */
   setInstrumentEnabled(instrumentKey, enabled) {
+    var _a, _b, _c;
     const { isValidInstrumentKey: isValidInstrumentKey2 } = (init_constants(), __toCommonJS(constants_exports));
     if (!isValidInstrumentKey2(instrumentKey)) {
       logger10.error("instrument-control", `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
       return;
     }
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
+    logger10.info("issue-006-debug", "setInstrumentEnabled called", {
+      instrumentKey,
+      enabled,
+      volumeNodeExists: !!instrumentVolume,
+      volumeValue: (_b = (_a = instrumentVolume == null ? void 0 : instrumentVolume.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-node",
+      volumeMuted: (_c = instrumentVolume == null ? void 0 : instrumentVolume.mute) != null ? _c : "no-volume-node",
+      action: "set-instrument-enabled-start"
+    });
     if (instrumentVolume) {
       if (enabled) {
+        logger10.info("issue-006-debug", `Re-enabling ${instrumentKey}`, {
+          previousMute: instrumentVolume.mute,
+          previousVolume: instrumentVolume.volume.value,
+          action: "before-re-enable"
+        });
+        instrumentVolume.mute = false;
         const instrumentSettings = this.settings.instruments[instrumentKey];
         if (instrumentSettings) {
-          logger10.debug("instrument-control", `Re-enabling ${instrumentKey} with volume ${instrumentSettings.volume}`);
           this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
-          logger10.debug("instrument-control", `${instrumentKey} volume after re-enable: ${instrumentVolume.volume.value}`);
+          logger10.info("issue-006-debug", `${instrumentKey} re-enabled successfully`, {
+            newMute: instrumentVolume.mute,
+            newVolume: instrumentVolume.volume.value,
+            targetVolume: instrumentSettings.volume,
+            action: "after-re-enable"
+          });
         } else {
           logger10.warn("instrument-control", `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
         }
       } else {
-        logger10.debug("instrument-control", `Disabling ${instrumentKey}, setting volume to -Infinity`);
-        instrumentVolume.volume.value = -Infinity;
-        logger10.debug("instrument-control", `${instrumentKey} volume after disable: ${instrumentVolume.volume.value}`);
+        logger10.info("issue-006-debug", `Disabling ${instrumentKey} using mute`, {
+          previousMute: instrumentVolume.mute,
+          previousVolume: instrumentVolume.volume.value,
+          action: "before-disable"
+        });
+        instrumentVolume.mute = true;
+        logger10.info("issue-006-debug", `${instrumentKey} disabled successfully`, {
+          newMute: instrumentVolume.mute,
+          newVolume: instrumentVolume.volume.value,
+          action: "after-disable"
+        });
       }
       logger10.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
     } else {
-      logger10.warn("instrument-control", `No volume control found for ${instrumentKey} - instrument may not be initialized yet`);
+      logger10.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} during enable/disable`, {
+        instrumentKey,
+        enabled,
+        instrumentExists: this.instruments.has(instrumentKey),
+        volumeMapSize: this.instrumentVolumes.size,
+        allVolumeKeys: Array.from(this.instrumentVolumes.keys()),
+        action: "missing-volume-node-error"
+      });
     }
+    this.onInstrumentSettingsChanged();
   }
   /**
    * Apply initial instrument settings from plugin configuration
