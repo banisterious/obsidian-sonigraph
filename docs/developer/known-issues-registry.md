@@ -14,10 +14,10 @@
 
 | Issue # | Status | Priority | Component | Summary | Details |
 |---------|--------|----------|-----------|---------|---------|
-| 001 | ✅ RESOLVED | High | Audio Engine | Audio crackling vs musical density trade-off | [Technical Analysis](./issue-001-audio-crackling-solution.md) |
-| 002 | ✅ RESOLVED | High | Audio Engine | Monolithic audio engine architecture | [Refactoring Plan](./issue-002-monolithic-architecture-refactoring.md) |
-| 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](./issue-003-instrument-playback-failure.md) |
-| 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](./issue-004-tab-counter-display.md) |
+| 001 | ✅ RESOLVED | High | Audio Engine | Audio crackling vs musical density trade-off | [Technical Analysis](../archive/issues/issue-001-audio-crackling-solution.md) |
+| 002 | ✅ RESOLVED | High | Audio Engine | Monolithic audio engine architecture | [Refactoring Plan](../archive/issues/issue-002-monolithic-architecture-refactoring.md) |
+| 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](../archive/issues/issue-003-instrument-playback-failure.md) |
+| 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](../archive/issues/issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
 | 006 | 🔍 ACTIVE | High | UI Components | Play button single-use problem | [Investigation](./issue-006-play-button-single-use.md) |
 
@@ -47,7 +47,7 @@ Audio crackling occurs during real-time synthesis playback when multiple notes t
 - **Production**: ✅ READY - All tests passing, crackling eliminated under all tested conditions
 
 ### Detailed Analysis
-👉 **[Complete Technical Analysis & Implementation Plan](./issue-001-audio-crackling-solution.md)**
+👉 **[Complete Technical Analysis & Implementation Plan](../archive/issues/issue-001-audio-crackling-solution.md)**
 
 ### Related Issues
 
@@ -133,7 +133,7 @@ Multiple instrument families (Vocals, Percussion, Electronic, Experimental) were
 - ✅ **Experimental**: Whale Song, environmental sounds
 
 ### Detailed Analysis & Resolution
-👉 **[Complete Investigation & Solution Implementation](./issue-003-instrument-playback-failure.md)**
+👉 **[Complete Investigation & Solution Implementation](../archive/issues/issue-003-instrument-playback-failure.md)**
 
 ---
 
@@ -155,7 +155,7 @@ Family tabs displayed confusing counter formats like "4/3" that didn't clearly c
 - **Files Modified**: `src/ui/control-panel-md.ts`
 
 ### Detailed Analysis & Resolution
-👉 **[Complete UI Analysis & Solution Implementation](./issue-004-tab-counter-display.md)**
+👉 **[Complete UI Analysis & Solution Implementation](../archive/issues/issue-004-tab-counter-display.md)**
 
 ---
 
