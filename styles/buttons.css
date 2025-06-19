@@ -360,7 +360,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 24px;
+  /*width: 24px;
   height: 24px;
   background: none;
   border: none;
@@ -371,7 +371,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease;*/
 }
 
 .osp-control-center-modal .modal-close-button:hover {
