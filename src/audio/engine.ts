@@ -1618,11 +1618,31 @@ export class AudioEngine {
 			this.sequenceStartTime = Date.now();
 			this.eventEmitter.emit('playback-started', null);
 
+			// Issue #006 Debug: Log Transport state before reset
+			logger.info('issue-006-debug', 'Transport state before reset', {
+				state: getTransport().state,
+				position: getTransport().position,
+				seconds: getTransport().seconds,
+				bpm: getTransport().bpm.value,
+				action: 'transport-state-before-reset'
+			});
+
 			// Ensure Transport is stopped and reset
 			if (getTransport().state === 'started') {
 				getTransport().stop();
 				getTransport().cancel(); // Clear all scheduled events
+				logger.info('issue-006-debug', 'Transport stopped and cancelled', {
+					action: 'transport-stop-cancel'
+				});
 			}
+
+			// Issue #006 Debug: Log Transport state after reset
+			logger.info('issue-006-debug', 'Transport state after reset', {
+				state: getTransport().state,
+				position: getTransport().position,
+				seconds: getTransport().seconds,
+				action: 'transport-state-after-reset'
+			});
 
 			// Set a reasonable loop length for the transport
 			const sequenceDuration = this.getSequenceDuration(processedSequence);
@@ -1716,6 +1736,16 @@ export class AudioEngine {
 			const currentTime = getContext().currentTime;
 			const elapsedTime = currentTime - this.realtimeStartTime;
 
+			// Issue #006 Debug: Log timing information
+			logger.debug('issue-006-debug', 'Realtime timer tick', {
+				elapsedTime: elapsedTime.toFixed(3),
+				contextTime: currentTime.toFixed(3),
+				contextState: getContext().state,
+				isPlaying: this.isPlaying,
+				instrumentCount: this.instruments.size,
+				action: 'timer-tick'
+			});
+
 			// Find notes that should play now (within the next 600ms for 400ms timer)
 			const notesToPlay = sequence.filter(note => 
 				note.timing <= elapsedTime + 0.6 && 
@@ -1723,9 +1753,28 @@ export class AudioEngine {
 				!note.hasBeenTriggered
 			);
 
+			// Issue #006 Debug: Log note filtering results
+			if (notesToPlay.length > 0 || elapsedTime < 5) { // Log for first 5 seconds or when notes found
+				const totalNotes = sequence.length;
+				const triggeredNotes = sequence.filter(n => n.hasBeenTriggered).length;
+				logger.debug('issue-006-debug', 'Note filtering completed', {
+					totalNotes,
+					triggeredNotes,
+					notesToPlay: notesToPlay.length,
+					sampleTiming: notesToPlay.length > 0 ? notesToPlay[0].timing : 'none',
+					elapsedTime: elapsedTime.toFixed(3),
+					action: 'note-filtering'
+				});
+			}
+
 			// Aggressive spacing: minimum 1.5s between notes to eliminate overlap
 			const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
 			if (timeSinceLastTrigger < 1.5 && notesToPlay.length > 0) {
+				logger.debug('issue-006-debug', 'Note skipped due to spacing constraint', {
+					timeSinceLastTrigger: timeSinceLastTrigger.toFixed(3),
+					notesToPlay: notesToPlay.length,
+					action: 'skip-spacing'
+				});
 				return; // Skip this timer tick if too soon after last trigger
 			}
 
@@ -1747,40 +1796,112 @@ export class AudioEngine {
 			// Determine which instrument to use
 			const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
 
-			// Check if instrument is enabled in settings
+			// Issue #006 Debug: Log instrument settings check before potential early return
 			const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
 			const instrumentSettings = this.settings.instruments[instrumentKey];
+			
+			logger.info('issue-006-debug', 'Instrument settings check', {
+				action: 'instrument-enabled-check',
+				instrumentName,
+				instrumentKey,
+				instrumentSettingsExists: !!instrumentSettings,
+				instrumentEnabled: instrumentSettings?.enabled,
+				allInstrumentKeys: Object.keys(this.settings.instruments),
+				enabledInstruments: Object.entries(this.settings.instruments)
+					.filter(([_, settings]) => settings.enabled)
+					.map(([name, _]) => name)
+			});
+			
+			// Check if instrument is enabled in settings
 			if (!instrumentSettings?.enabled) {
-				logger.debug('playback', 'Skipping disabled instrument', { 
-					instrumentName, 
-					enabled: instrumentSettings?.enabled 
+				logger.warn('issue-006-debug', 'Instrument disabled - blocking note trigger', { 
+					action: 'instrument-disabled-block',
+					instrumentName,
+					instrumentKey,
+					enabled: instrumentSettings?.enabled,
+					instrumentSettingsExists: !!instrumentSettings
 				});
 				return;
 			}
 
-			// Log the note trigger for debugging
-			logger.debug('playback', 'Note triggered in real-time', {
+			// Issue #006 Debug: Log the note trigger attempt with full context
+			logger.info('issue-006-debug', 'Note trigger attempt initiated', {
 				nodeId: mapping.nodeId,
 				instrument: instrumentName,
 				frequency: frequency.toFixed(2),
 				duration: duration.toFixed(2),
 				velocity: velocity.toFixed(2),
-				elapsedTime: elapsedTime.toFixed(3)
+				elapsedTime: elapsedTime.toFixed(3),
+				currentTime: currentTime.toFixed(3),
+				instrumentEnabled: instrumentSettings?.enabled,
+				hasInstrument: this.instruments.has(instrumentName),
+				contextState: getContext().state,
+				action: 'attempt-note-trigger'
 			});
 
 			// Use specialized synthesis engines if available
 			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
+				logger.info('issue-006-debug', 'Percussion engine trigger initiated', { 
+					instrumentName,
+					action: 'percussion-trigger'
+				});
 				this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
 			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
+				logger.info('issue-006-debug', 'Electronic engine trigger initiated', { 
+					instrumentName,
+					action: 'electronic-trigger'
+				});
 				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
 			} else if (this.isEnvironmentalInstrument(instrumentName)) {
+				logger.info('issue-006-debug', 'Environmental sound trigger initiated', { 
+					instrumentName,
+					action: 'environmental-trigger'
+				});
 				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
 			} else {
 				const synth = this.instruments.get(instrumentName);
+				logger.info('issue-006-debug', 'Standard instrument trigger initiated', {
+					instrumentName,
+					synthExists: !!synth,
+					synthType: synth?.constructor?.name || 'unknown',
+					action: 'standard-trigger'
+				});
+				
 				if (synth) {
-					// Phase 3: Apply frequency detuning for phase conflict resolution
-					const detunedFrequency = this.applyFrequencyDetuning(frequency);
-					synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+					try {
+						// Phase 3: Apply frequency detuning for phase conflict resolution
+						const detunedFrequency = this.applyFrequencyDetuning(frequency);
+						logger.info('issue-006-debug', 'Calling triggerAttackRelease on instrument', {
+							instrumentName,
+							originalFreq: frequency.toFixed(2),
+							detunedFreq: detunedFrequency.toFixed(2),
+							duration: duration.toFixed(2),
+							velocity: velocity.toFixed(2),
+							triggerTime: currentTime.toFixed(3),
+							action: 'trigger-attack-release-call'
+						});
+						
+						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+						
+						logger.info('issue-006-debug', 'triggerAttackRelease completed successfully', {
+							instrumentName,
+							action: 'trigger-attack-release-success'
+						});
+					} catch (error) {
+						logger.error('issue-006-debug', 'triggerAttackRelease failed with error', {
+							instrumentName,
+							error: error.message,
+							stack: error.stack,
+							action: 'trigger-attack-release-error'
+						});
+					}
+				} else {
+					logger.warn('issue-006-debug', 'Instrument not found in instruments map', {
+						instrumentName,
+						availableInstruments: Array.from(this.instruments.keys()),
+						mapSize: this.instruments.size,
+						action: 'instrument-not-found'
+					});
 				}
 			}
 
