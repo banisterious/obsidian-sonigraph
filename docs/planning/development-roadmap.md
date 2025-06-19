@@ -2,7 +2,7 @@
 
 **Project**: Obsidian Sonigraph Plugin  
 **Version**: 0.3.0  
-**Last Updated**: 2025-01-19
+**Last Updated**: 2025-06-18
 
 ---
 
