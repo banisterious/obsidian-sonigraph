@@ -176,36 +176,93 @@ private handlePlayClick(): void {
 
 ---
 
+## Investigation Progress
+
+### Phase 1: Event Handler Analysis ✅ **COMPLETED**
+- [x] **FIXED**: Event listener management issues identified and resolved
+- [x] **FIXED**: Stored bound event handler references for proper cleanup
+- [x] **FIXED**: Replaced `removeAllListeners()` with targeted handler removal
+- [x] **VERIFIED**: Play button click events registering correctly on all attempts
+
+**Key Findings:**
+- Event listeners were being removed too aggressively with `removeAllListeners()`
+- Bound function references weren't stored, making proper cleanup impossible
+- Fixed with targeted cleanup using stored handler references
+
+### Phase 2: AudioEngine State Debugging ✅ **PARTIALLY COMPLETED**
+- [x] **FIXED**: `hasBeenTriggered` property not being reset between plays
+- [x] **VERIFIED**: AudioEngine initializing and starting playback correctly
+- [x] **VERIFIED**: `playback-started` events emitting for all play attempts
+- [ ] **IN PROGRESS**: Tone.js Transport state investigation needed
+- [ ] **IN PROGRESS**: Audio context state between plays needs analysis
+
+**Key Findings:**
+- **ROOT CAUSE IDENTIFIED**: Musical notes retain `hasBeenTriggered = true` after first play
+- **FIXED**: Added reset logic in `AudioEngine.playSequence()` to clear flags
+- **LOGS CONFIRM**: Reset logic executing correctly (verified in latest logs)
+- **ISSUE PERSISTS**: Despite fixes, no audio output after first play
+
+### Phase 3: UI Component Lifecycle ✅ **COMPLETED**
+- [x] **FIXED**: PlayButtonManager state reset on modal open
+- [x] **VERIFIED**: Button state transitions working correctly
+- [x] **VERIFIED**: No CSS class conflicts or UI corruption
+
+### Current Status: **AUDIO ENGINE INVESTIGATION REQUIRED**
+
+**What's Working:**
+- ✅ Play button responds to clicks reliably
+- ✅ Event listeners properly managed
+- ✅ UI state management functional
+- ✅ AudioEngine initializes and starts playback
+- ✅ hasBeenTriggered reset logic executes
+- ✅ All playback events emit correctly
+
+**What's Still Broken:**
+- ❌ **No actual audio output after first play**
+- ❌ Notes not triggering despite proper initialization
+
+### Next Investigation Phase
+
+**Phase 4: Deep Audio Engine Analysis** (CRITICAL)
+- [ ] **Tone.js Transport State**: Verify Transport properly resets between plays
+- [ ] **Audio Context State**: Check if audio context enters invalid state
+- [ ] **Instrument Connections**: Verify audio routing remains connected
+- [ ] **Sample Loading**: Ensure instruments maintain sample access
+- [ ] **Note Triggering Path**: Add granular logging to trace actual note execution
+
+**Evidence from Logs (2025-06-18 21:55:41):**
+- 2 play button clicks registered
+- Reset logic executed both times: "Reset note trigger flags for replay"
+- AudioEngine shows normal initialization sequence
+- No audio output on second play despite proper setup
+
+---
+
 ## Next Steps
 
-### Investigation Priority
+### Immediate Actions for Tomorrow
 
-**Phase 1: Event Handler Analysis** (IMMEDIATE)
-- [ ] Verify click event listeners remain attached after first use
-- [ ] Check for event handler removal or rebinding issues
-- [ ] Test DOM element state and accessibility
+**Priority 1: Tone.js State Investigation**
+- Add logging to verify Transport.state between plays
+- Check if Transport.cancel() is properly clearing scheduled events
+- Verify Transport timing and position reset
 
-**Phase 2: AudioEngine State Debugging** (HIGH)
-- [ ] Monitor AudioEngine state transitions during play/stop cycles
-- [ ] Verify proper cleanup of audio resources
-- [ ] Check Tone.js Transport state management
+**Priority 2: Audio Context Debugging**
+- Monitor audio context state throughout play cycles
+- Check for suspended/closed context issues
+- Verify audio routing integrity
 
-**Phase 3: UI Component Lifecycle** (HIGH)
-- [ ] Investigate component re-rendering and state management
-- [ ] Check for CSS class conflicts or UI state corruption
-- [ ] Verify button disabled/enabled state transitions
-
-**Phase 4: Resource Management Audit** (MEDIUM)
-- [ ] Review memory management and cleanup patterns
-- [ ] Check for resource leaks preventing reuse
-- [ ] Verify proper disposal of audio contexts and handlers
+**Priority 3: Granular Note Triggering Trace**
+- Add debug logging to actual `triggerAttackRelease` calls
+- Trace instrument availability during second play
+- Monitor voice allocation and instrument connections
 
 ### Success Criteria
 
 **Resolution Validation:**
-- ✅ Play button responds reliably to multiple uses per session
-- ✅ No Obsidian restart required between audio sessions
-- ✅ AudioEngine state management works consistently
+- ❌ Play button responds reliably to multiple uses per session *(UI works, audio doesn't)*
+- ❌ No Obsidian restart required between audio sessions *(Still requires restart)*
+- ❌ AudioEngine state management works consistently *(Partially - events work, audio doesn't)*
 - ✅ UI state synchronization remains stable across uses
 - ✅ No memory leaks or resource accumulation
 
