@@ -1600,6 +1600,16 @@ export class AudioEngine {
 			// Process sequence directly without harmonic engine for now
 			const processedSequence = sequence;
 
+			// Issue #006 Fix: Reset hasBeenTriggered flags for all notes to allow replay
+			processedSequence.forEach(note => {
+				if (note.hasBeenTriggered) {
+					delete note.hasBeenTriggered;
+				}
+			});
+			logger.debug('playback', 'Reset note trigger flags for replay', {
+				noteCount: processedSequence.length
+			});
+
 			this.currentSequence = processedSequence;
 			this.isPlaying = true;
 			this.scheduledEvents = [];
