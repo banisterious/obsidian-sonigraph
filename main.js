@@ -33176,7 +33176,7 @@ var AudioEngine = class {
         });
       }
       const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
-      if (timeSinceLastTrigger < 1.5 && notesToPlay.length > 0) {
+      if (timeSinceLastTrigger < 0.05 && notesToPlay.length > 0) {
         logger10.debug("issue-006-debug", "Note skipped due to spacing constraint", {
           timeSinceLastTrigger: timeSinceLastTrigger.toFixed(3),
           notesToPlay: notesToPlay.length,
