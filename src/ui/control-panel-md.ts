@@ -32,6 +32,15 @@ export class MaterialControlPanelModal extends Modal {
 	private progressText: HTMLElement | null = null;
 	private progressBar: HTMLElement | null = null;
 
+	// Issue #006 Fix: Store bound event handlers for proper cleanup
+	private boundEventHandlers: {
+		handlePlaybackStarted: () => void;
+		handlePlaybackEnded: () => void;
+		handlePlaybackStopped: () => void;
+		handlePlaybackError: (data?: PlaybackEventData) => void;
+		handleSequenceProgress: (data?: PlaybackEventData) => void;
+	} | null = null;
+
 	constructor(app: App, plugin: SonigraphPlugin) {
 		super(app);
 		this.plugin = plugin;
@@ -46,6 +55,12 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Add OSP-prefixed class to the modal
 		this.modalEl.addClass('osp-control-center-modal');
+
+		// Issue #006 Fix: Reset play button manager state on open
+		if (this.playButtonManager) {
+			this.playButtonManager.forceReset();
+			logger.debug('ui', 'Play button manager state reset on modal open');
+		}
 
 		// Material Design CSS is loaded via styles.css
 
@@ -1324,29 +1339,47 @@ export class MaterialControlPanelModal extends Modal {
 			return;
 		}
 
-		// Listen for playback events from audio engine
-		this.plugin.audioEngine.on('playback-started', this.handlePlaybackStarted.bind(this));
-		this.plugin.audioEngine.on('playback-ended', this.handlePlaybackEnded.bind(this));
-		this.plugin.audioEngine.on('playback-stopped', this.handlePlaybackStopped.bind(this));
-		this.plugin.audioEngine.on('playback-error', this.handlePlaybackError.bind(this));
-		this.plugin.audioEngine.on('sequence-progress', this.handleSequenceProgress.bind(this));
-
-		logger.debug('ui', 'Audio engine event listeners configured');
-	}
-
-	private cleanupAudioEngineEventListeners(): void {
-		if (!this.plugin.audioEngine) {
+		// Issue #006 Fix: Prevent double-setup of event listeners
+		if (this.boundEventHandlers) {
+			logger.debug('ui', 'Audio engine event listeners already configured, skipping setup');
 			return;
 		}
 
-		// Remove all listeners for clean shutdown
-		this.plugin.audioEngine.removeAllListeners('playback-started');
-		this.plugin.audioEngine.removeAllListeners('playback-ended');
-		this.plugin.audioEngine.removeAllListeners('playback-stopped');
-		this.plugin.audioEngine.removeAllListeners('playback-error');
-		this.plugin.audioEngine.removeAllListeners('sequence-progress');
+		// Issue #006 Fix: Store bound event handlers for proper cleanup
+		this.boundEventHandlers = {
+			handlePlaybackStarted: this.handlePlaybackStarted.bind(this),
+			handlePlaybackEnded: this.handlePlaybackEnded.bind(this),
+			handlePlaybackStopped: this.handlePlaybackStopped.bind(this),
+			handlePlaybackError: this.handlePlaybackError.bind(this),
+			handleSequenceProgress: this.handleSequenceProgress.bind(this)
+		};
 
-		logger.debug('ui', 'Audio engine event listeners cleaned up');
+		// Listen for playback events from audio engine using stored bound handlers
+		this.plugin.audioEngine.on('playback-started', this.boundEventHandlers.handlePlaybackStarted);
+		this.plugin.audioEngine.on('playback-ended', this.boundEventHandlers.handlePlaybackEnded);
+		this.plugin.audioEngine.on('playback-stopped', this.boundEventHandlers.handlePlaybackStopped);
+		this.plugin.audioEngine.on('playback-error', this.boundEventHandlers.handlePlaybackError);
+		this.plugin.audioEngine.on('sequence-progress', this.boundEventHandlers.handleSequenceProgress);
+
+		logger.debug('ui', 'Audio engine event listeners configured with bound handlers');
+	}
+
+	private cleanupAudioEngineEventListeners(): void {
+		if (!this.plugin.audioEngine || !this.boundEventHandlers) {
+			return;
+		}
+
+		// Issue #006 Fix: Remove only this modal's specific bound handlers
+		this.plugin.audioEngine.off('playback-started', this.boundEventHandlers.handlePlaybackStarted);
+		this.plugin.audioEngine.off('playback-ended', this.boundEventHandlers.handlePlaybackEnded);
+		this.plugin.audioEngine.off('playback-stopped', this.boundEventHandlers.handlePlaybackStopped);
+		this.plugin.audioEngine.off('playback-error', this.boundEventHandlers.handlePlaybackError);
+		this.plugin.audioEngine.off('sequence-progress', this.boundEventHandlers.handleSequenceProgress);
+
+		// Clear the stored handlers
+		this.boundEventHandlers = null;
+
+		logger.debug('ui', 'Audio engine event listeners cleaned up (specific handlers only)');
 	}
 
 	private handlePlaybackStarted(): void {
