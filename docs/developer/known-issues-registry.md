@@ -19,6 +19,7 @@
 | 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](./issue-003-instrument-playback-failure.md) |
 | 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](./issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
+| 006 | 🔍 ACTIVE | High | UI Components | Play button single-use problem | [Investigation](./issue-006-play-button-single-use.md) |
 
 ---
 
@@ -174,10 +175,38 @@ Audio Format dropdown includes MP3 option that fails to load samples, causing co
 
 ---
 
+## Issue #006: Play Button Single-Use Problem
+
+**Status:** 🔍 ACTIVE  
+**Priority:** High  
+**Component:** UI Components / Audio Engine  
+**Affected Files:** `src/ui/control-panel-md.ts`, `src/audio/engine.ts`, event handling system
+
+### Summary
+
+The Play button becomes completely non-functional after the first use within an Obsidian session. Users must reload the entire Obsidian application to regain Play button functionality, severely impacting workflow and iterative testing.
+
+### Technical Details
+- **First Use**: Play button works correctly, audio processes normally
+- **Subsequent Uses**: Button becomes unresponsive, no audio processing
+- **Recovery**: Requires full Obsidian restart to restore functionality
+- **Consistency**: 100% reproduction rate across all testing scenarios
+
+### Impact
+- **Workflow Disruption**: Users cannot iterate on audio settings without restart
+- **Development Hindrance**: Testing and debugging processes severely impacted  
+- **User Experience**: Core functionality effectively single-use per session
+
+### Detailed Analysis
+👉 **[Complete Investigation & Debugging Strategy](./issue-006-play-button-single-use.md)**
+
+---
+
 ## 🔧 Current Issue Status
 
 **Active Issues:**
 - 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
+- 🔍 **Issue #006**: HIGH - Play button single-use problem (requires Obsidian reload)
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
@@ -185,4 +214,4 @@ Audio Format dropdown includes MP3 option that fails to load samples, causing co
 - ✅ **Issue #003**: Instrument family playback failure completely resolved (all 34 instruments working)
 - ✅ **Issue #004**: Tab counter display format fixed with dynamic calculation
 
-**System Status:** **FULLY FUNCTIONAL** - All core audio features working 🎵
+**System Status:** **CORE FUNCTIONAL** - Audio working, UI workflow impacted 🔧
