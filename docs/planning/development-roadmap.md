@@ -30,7 +30,7 @@
 **Status**: 🔍 ACTIVE | **Priority**: HIGH | **Effort**: 2-3 weeks  
 **Impact**: Core functionality effectively single-use per session  
 **Details**: Button becomes non-functional after first use, requires Obsidian restart  
-👉 [Complete Investigation](../developer/issue-006-play-button-single-use.md)
+👉 [Complete Investigation](../archive/issues/issue-006-play-button-single-use.md)
 
 **Issue #005: MP3 Sample Format Loading Failures**  
 **Status**: 🔍 ACTIVE | **Priority**: MEDIUM | **Effort**: 1-2 weeks  

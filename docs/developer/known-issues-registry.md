@@ -22,7 +22,7 @@
 | 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](../archive/issues/issue-003-instrument-playback-failure.md) |
 | 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](../archive/issues/issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
-| 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](./issue-006-play-button-single-use.md) |
+| 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](../archive/issues/issue-006-play-button-single-use.md) |
 | 007 | 🔍 ACTIVE | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Analysis](./issue-007-audio-engine-logging-noise.md) |
 | 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
 
@@ -203,7 +203,7 @@ The Play button becomes completely non-functional after the first use within an 
 - ✅ **State Management**: No Obsidian restart required between uses
 
 ### Detailed Analysis & Resolution
-👉 **[Complete Investigation & Solution Implementation](./issue-006-play-button-single-use.md)**
+👉 **[Complete Investigation & Solution Implementation](../archive/issues/issue-006-play-button-single-use.md)**
 
 ---
 
