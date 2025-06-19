@@ -10,9 +10,10 @@
   - [1.1. Complete Orchestral System](#11-complete-orchestral-system)
   - [1.2. Frequency Range Distribution](#12-frequency-range-distribution)
   - [1.3. Implementation Approaches by Family](#13-implementation-approaches-by-family)
-- [2. Future Expansion Plans (55+ Instruments)](#2-future-expansion-plans-55-instruments)
-  - [2.1. Natural Soundscapes](#21-natural-soundscapes)
-  - [2.2. Advanced Features](#22-advanced-features)
+- [2. Future Expansion Plans (90+ Instruments)](#2-future-expansion-plans-90-instruments)
+  - [2.1. Expansion Summary](#21-expansion-summary)
+  - [2.2. Natural Soundscapes](#22-natural-soundscapes)
+  - [2.3. Advanced Features](#23-advanced-features)
 
 ---
 
@@ -124,9 +125,16 @@
 
 ---
 
-## 2. Future Expansion Plans (55+ Instruments)
+## 2. Future Expansion Plans (90+ Instruments)
 
-### 2.1. Natural Soundscapes
+### 2.1. Expansion Summary
+
+**Total Planned Instruments**: 90+ additional instruments across 8 major categories  
+**New Categories Added**: Extended/Prepared, Foley, Bio-Sonification, Experimental Electronic, Microsounds, Acoustic Resonators  
+**Frequency Coverage**: Complete spectrum from 0.1Hz (biological processes) to 20kHz (granular synthesis)  
+**Focus Areas**: Experimental sounds, everyday objects as instruments, scientific data sonification, hyper-realistic natural microsounds
+
+### 2.2. Natural Soundscapes
 
 **Animal Sounds Collection**:
 - **Birds** (800-3000Hz): Dawn chorus, songbirds, birds of prey
@@ -144,7 +152,43 @@
 - **Acoustic**: Glass Harmonics (400-4000Hz), Singing Bowls (200-3000Hz)
 - **Cultural**: Didgeridoo (30-300Hz), Hang Drum (200-1000Hz), Kalimba (400-2000Hz)
 
-### 2.2. Advanced Features
+**Extended & Prepared Instruments**:
+- **Prepared Piano** (20-4000Hz): Extended piano techniques with objects placed on/between strings
+- **Prepared Guitar** (80-3000Hz): Guitar with altered timbre using preparative objects
+- **Waterphone** (100-8000Hz): Unique resonating metal instrument with ethereal tones
+- **Bowed Percussion** (50-6000Hz): Crotales, cymbals, gongs played with bow for sustained tones
+- **Aeolian Harp** (200-4000Hz): Wind-activated string instrument with natural harmonics
+
+**Foley & Everyday Objects**:
+- **Kitchen Percussion** (100-8000Hz): Pots, pans, silverware, glass bottles, bubbling water
+- **Toolbox Percussion** (200-6000Hz): Wrenches, hammers, saws, drills for industrial textures
+- **Material Sounds** (500-8000Hz): Silk rustling, paper crinkling, cloth tearing, rubber stretching
+- **Household Appliances** (50-2000Hz): Refrigerator hum, washing machine whir, printer clatter
+
+**Bio-Sonification & Data-Driven**:
+- **Geological Sounds** (5-500Hz): Seismic activity, glaciers cracking, volcanic eruptions
+- **Astronomical Data** (10-8000Hz): Light curves, planetary motions, star field sonification
+- **Biological Processes** (0.1-1000Hz): Heartbeats, brainwave activity, plant growth, insect communication
+
+**Experimental Electronic**:
+- **Circuit Bending** (50-8000Hz): Modified electronic devices with unpredictable glitch textures
+- **Optical Synthesis** (100-8000Hz): Light-controlled theremin and photocell-based instruments
+- **Lo-fi Digital** (200-8000Hz): Chiptune, early digital synth sounds, 8-bit textures
+- **Granular Synthesis** (20-20000Hz): Environmental noises, speech fragments, instrument attacks
+
+**Hyper-Realistic Natural Microsounds**:
+- **Insect Wing Beats** (1000-8000Hz): Ultra close-up chirps and wing flutter details
+- **Plant Sounds** (0.1-200Hz): Plant respiration, growth sounds, cellular activity
+- **Deep Earth** (1-100Hz): Tremors, hydrothermal vent sounds, underground rumbles
+- **Ice Sounds** (100-8000Hz): Close-mic'd ice melts, cracks, and glacial movements
+
+**Unique Acoustic Resonators**:
+- **Glass Harmonica** (200-4000Hz): Friction-based glass bowl instrument with ethereal sustains
+- **Verrophone** (300-3000Hz): Glass percussion with crystalline attack and resonance
+- **Stalactite Organ** (50-2000Hz): Conceptual cave-based acoustic resonance system
+- **Long String Instruments** (20-1000Hz): Earth Harp style ultra-long string resonators
+
+### 2.3. Advanced Features
 
 - **Sample Manager**: Comprehensive sample management with storage control
 - **Audio Export**: Multi-format export (MP3, WAV, OGG, MIDI)
