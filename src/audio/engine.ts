@@ -1574,18 +1574,29 @@ export class AudioEngine {
 			await this.initialize();
 		}
 
-		// Issue #006 Fix: Ensure enabled instruments are properly initialized with volume nodes
-		// Check if any enabled instruments are missing volume nodes and re-initialize if needed
-		const missingVolumeInstruments = enabledInstrumentsList.filter(instrumentName => {
+		// Issue #006 Fix: Ensure enabled instruments have properly functioning volume nodes
+		// Check for both missing volume nodes and corrupted volume nodes (null value, muted)
+		const corruptedVolumeInstruments = enabledInstrumentsList.filter(instrumentName => {
 			const hasInstrument = this.instruments.has(instrumentName);
-			const hasVolume = this.instrumentVolumes.has(instrumentName);
-			return hasInstrument && !hasVolume;
+			const volumeNode = this.instrumentVolumes.get(instrumentName);
+			
+			// Missing volume node entirely
+			if (hasInstrument && !volumeNode) {
+				return true;
+			}
+			
+			// Corrupted volume node (null value or muted when it shouldn't be)
+			if (volumeNode && (volumeNode.volume.value === null || volumeNode.mute === true)) {
+				return true;
+			}
+			
+			return false;
 		});
 
-		if (missingVolumeInstruments.length > 0) {
-			logger.warn('issue-006-debug', 'Found enabled instruments missing volume nodes - re-initializing', {
-				missingVolumeInstruments,
-				action: 'missing-volume-nodes-detected'
+		if (corruptedVolumeInstruments.length > 0) {
+			logger.warn('issue-006-debug', 'Found enabled instruments with corrupted volume nodes - re-initializing', {
+				corruptedVolumeInstruments,
+				action: 'corrupted-volume-nodes-detected'
 			});
 			// Re-initialize to ensure all instruments have proper volume nodes
 			await this.initialize();
