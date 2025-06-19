@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-19 18:15:00 UTC
+ * - Generated: 2025-06-19 20:58:47 UTC
  * - Components: 18 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -1796,7 +1796,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 24px;
+  /*width: 24px;
   height: 24px;
   background: none;
   border: none;
@@ -1807,7 +1807,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease;*/
 }
 
 .osp-control-center-modal .modal-close-button:hover {
@@ -7348,11 +7348,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-19 18:15:00 UTC
+ * Build completed: 2025-06-19 20:58:47 UTC
  * Components processed: 18
  * Total lines: 7160
- * Total size: 149.49 KB
- * Build duration: 0.03 seconds
+ * Total size: 149.5 KB
+ * Build duration: 0.04 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
