@@ -2,14 +2,14 @@
 
 ## Table of Contents
 
-1. [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off)
-2. [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture)
-3. [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure)
-4. [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format)
-5. [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures)
-6. [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem)
-7. [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues)
-8. [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure)
+1. ✅ [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
+2. ✅ [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture) - **RESOLVED**
+3. ✅ [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure) - **RESOLVED**
+4. ✅ [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
+5. 🔍 [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **ACTIVE**
+6. ✅ [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
+7. 🔍 [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **ACTIVE**
+8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
 
 ---
 
