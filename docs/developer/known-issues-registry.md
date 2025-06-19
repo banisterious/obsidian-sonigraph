@@ -7,6 +7,8 @@
 3. [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure)
 4. [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format)
 5. [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures)
+6. [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem)
+7. [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues)
 
 ---
 
@@ -19,7 +21,8 @@
 | 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](../archive/issues/issue-003-instrument-playback-failure.md) |
 | 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](../archive/issues/issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
-| 006 | 🔍 ACTIVE | High | UI Components | Play button single-use problem | [Investigation](./issue-006-play-button-single-use.md) |
+| 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](../archive/issues/issue-006-play-button-single-use.md) |
+| 007 | 🔍 ACTIVE | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Analysis](./issue-007-audio-engine-logging-noise.md) |
 
 ---
 
@@ -198,7 +201,35 @@ The Play button becomes completely non-functional after the first use within an 
 - **User Experience**: Core functionality effectively single-use per session
 
 ### Detailed Analysis
-👉 **[Complete Investigation & Debugging Strategy](./issue-006-play-button-single-use.md)**
+👉 **[Complete Investigation & Debugging Strategy](../archive/issues/issue-006-play-button-single-use.md)**
+
+---
+
+## Issue #007: Audio Engine Logging Noise and Configuration Issues
+
+**Status:** 🔍 ACTIVE  
+**Priority:** Medium  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, `src/audio/percussion-engine.ts`, `src/audio/configs/`, instrument configuration system
+
+### Summary
+
+The audio engine generates excessive warning and error messages during normal operation, including 35 warnings about missing instrument volume/effects configuration and 9 errors related to advanced percussion failures (timpani, gongs). This creates noise in logs and may indicate underlying configuration or reliability issues.
+
+### Technical Details
+- **Configuration Warnings**: 35 instances of "Missing volume or effects for instrument: [name]"
+- **Percussion Errors**: 9 failures to trigger timpani (7) and gongs (2) via advanced percussion engine
+- **Affected Systems**: Instrument initialization, effects routing, advanced percussion synthesis
+- **Impact**: Log noise obscures actual issues, potential audio quality degradation
+
+### Log Analysis Summary
+From `logs/osp-logs-20250618-194957.json`:
+- Missing configuration warnings affect nearly all 34 orchestral instruments
+- Percussion engine consistently fails during advanced synthesis attempts
+- Fallback mechanisms appear to work (audio still plays) but generate error noise
+
+### Detailed Analysis
+👉 **[Complete Log Analysis & Configuration Investigation](./issue-007-audio-engine-logging-noise.md)**
 
 ---
 
@@ -206,12 +237,13 @@ The Play button becomes completely non-functional after the first use within an 
 
 **Active Issues:**
 - 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
-- 🔍 **Issue #006**: HIGH - Play button single-use problem (requires Obsidian reload)
+- 🔍 **Issue #007**: MEDIUM - Audio engine logging noise and configuration issues
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
 - ✅ **Issue #002**: Monolithic architecture successfully refactored
 - ✅ **Issue #003**: Instrument family playback failure completely resolved (all 34 instruments working)
 - ✅ **Issue #004**: Tab counter display format fixed with dynamic calculation
+- ✅ **Issue #006**: Play button single-use problem resolved with enhanced animation system
 
-**System Status:** **CORE FUNCTIONAL** - Audio working, UI workflow impacted 🔧
+**System Status:** **CORE FUNCTIONAL** - Audio working, enhanced UI implemented, minor logging noise 🔧

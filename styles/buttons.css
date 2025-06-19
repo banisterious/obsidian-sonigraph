@@ -217,9 +217,99 @@
 
 /* Base header button with smooth transitions */
 .osp-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.osp-header-btn:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.osp-header-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Phase 3: Progress indication container */
+.osp-play-progress {
+  position: absolute;
+  bottom: -50px;
+  left: 0;
+  right: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  min-width: 200px;
+  pointer-events: none;
+}
+
+.osp-play-progress--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.osp-play-progress--finishing {
+  border-color: var(--interactive-accent);
+  animation: finishing-pulse 2s ease-in-out infinite;
+}
+
+/* Progress bar styles */
+.osp-progress-bar {
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.osp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
+  border-radius: 2px;
+  transition: width 0.2s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.osp-progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: progress-shimmer 1.5s infinite;
+}
+
+/* Progress text */
+.osp-progress-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.2;
 }
 
 /* Enhanced play button states */
@@ -227,16 +317,11 @@
   /* Uses default styling */
 }
 
-.osp-header-btn--loading {
-  opacity: 0.7;
-  cursor: not-allowed;
-  background: var(--background-modifier-border);
-}
-
 .osp-header-btn--playing {
   background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
   color: var(--text-on-accent);
   box-shadow: 0 2px 8px var(--interactive-accent);
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
 .osp-header-btn--playing:hover {
@@ -244,16 +329,27 @@
   box-shadow: 0 4px 12px var(--interactive-accent);
 }
 
-.osp-header-btn--paused {
-  background: var(--background-modifier-border-focus);
-  border-color: var(--interactive-accent);
-  color: var(--interactive-accent);
+/* Enhanced loading state animation */
+.osp-header-btn--loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  animation: perimeter-pulse 1.5s ease-in-out infinite;
 }
 
+/* Enhanced stopping state animation */
 .osp-header-btn--stopping {
   opacity: 0.6;
   cursor: not-allowed;
   background: var(--background-modifier-error);
+  animation: spin 1s linear infinite;
+}
+
+.osp-header-btn--paused {
+  background: var(--background-modifier-border-focus);
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
 }
 
 /* ==========================================================================

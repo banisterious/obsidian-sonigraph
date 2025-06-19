@@ -59,7 +59,7 @@
    PLAY BUTTON ANIMATIONS
    ========================================================================== */
 
-/* Spinning animation for loading and stopping states */
+/* Spinning animation for stopping state only */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -69,9 +69,27 @@
   }
 }
 
+/* Subtle perimeter animation for loading state */
+@keyframes perimeter-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 var(--interactive-accent),
+      inset 0 0 0 1px var(--background-modifier-border);
+    border-color: var(--background-modifier-border);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--interactive-accent),
+      inset 0 0 0 1px var(--interactive-accent);
+    border-color: var(--interactive-accent);
+  }
+}
+
 /* Pulsing glow animation for playing state */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 2px 8px var(--interactive-accent);
     transform: scale(1);
   }
@@ -83,11 +101,35 @@
 
 /* Progress pulse animation for enhanced feedback */
 @keyframes progress-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.8;
   }
   50% {
     opacity: 1;
+  }
+}
+
+/* Progress shimmer animation for play button progress bar */
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Finishing pulse animation for progress indication */
+@keyframes finishing-pulse {
+  0%,
+  100% {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 0 var(--interactive-accent);
+  }
+  50% {
+    border-color: var(--interactive-accent-hover);
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.3);
   }
 }
 
@@ -160,16 +202,33 @@
     box-shadow: 0 2px 8px var(--interactive-accent) !important;
     transform: none !important;
   }
-  
-  .osp-header-btn--loading,
+
+  .osp-header-btn--loading {
+    animation: none !important;
+    border: 1px solid var(--interactive-accent) !important;
+  }
+
   .osp-header-btn--stopping {
     animation: none !important;
   }
-  
+
   .osp-header-btn {
     transition: none !important;
   }
-  
+
+  /* Disable progress indication animations */
+  .osp-play-progress {
+    transition: opacity 0.1s ease !important;
+  }
+
+  .osp-play-progress--finishing {
+    animation: none !important;
+  }
+
+  .osp-progress-fill::after {
+    animation: none !important;
+  }
+
   /* Disable other motion-sensitive animations */
   .ospcc-pulse {
     animation: none !important;
