@@ -9,6 +9,7 @@
 5. [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures)
 6. [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem)
 7. [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues)
+8. [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure)
 
 ---
 
@@ -21,8 +22,9 @@
 | 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](../archive/issues/issue-003-instrument-playback-failure.md) |
 | 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](../archive/issues/issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
-| 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](../archive/issues/issue-006-play-button-single-use.md) |
+| 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](./issue-006-play-button-single-use.md) |
 | 007 | 🔍 ACTIVE | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Analysis](./issue-007-audio-engine-logging-noise.md) |
+| 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
 
 ---
 
@@ -180,28 +182,28 @@ Audio Format dropdown includes MP3 option that fails to load samples, causing co
 
 ## Issue #006: Play Button Single-Use Problem
 
-**Status:** 🔍 ACTIVE  
+**Status:** ✅ RESOLVED and CLOSED  
 **Priority:** High  
 **Component:** UI Components / Audio Engine  
 **Affected Files:** `src/ui/control-panel-md.ts`, `src/audio/engine.ts`, event handling system
 
 ### Summary
 
-The Play button becomes completely non-functional after the first use within an Obsidian session. Users must reload the entire Obsidian application to regain Play button functionality, severely impacting workflow and iterative testing.
+The Play button becomes completely non-functional after the first use within an Obsidian session. **RESOLVED** through comprehensive volume node corruption detection and synthesis-mode re-initialization.
 
-### Technical Details
-- **First Use**: Play button works correctly, audio processes normally
-- **Subsequent Uses**: Button becomes unresponsive, no audio processing
-- **Recovery**: Requires full Obsidian restart to restore functionality
-- **Consistency**: 100% reproduction rate across all testing scenarios
+### ✅ RESOLUTION STATUS (2025-06-19)
+- **Root Cause 1**: Verification logic incorrectly flagged properly muted disabled instruments as corrupted
+- **Root Cause 2**: Re-initialization only supported sample-based instruments, not synthesis mode
+- **Solution**: Enhanced corruption detection with synthesis-aware re-initialization
+- **Validation**: User testing confirms multiple play/stop cycles work reliably
 
-### Impact
-- **Workflow Disruption**: Users cannot iterate on audio settings without restart
-- **Development Hindrance**: Testing and debugging processes severely impacted  
-- **User Experience**: Core functionality effectively single-use per session
+### Previously Affected Workflow (Now Working)
+- ✅ **Multiple Sessions**: Play button works consistently across sessions
+- ✅ **Instrument Switching**: Reliable operation when changing instrument families
+- ✅ **State Management**: No Obsidian restart required between uses
 
-### Detailed Analysis
-👉 **[Complete Investigation & Debugging Strategy](../archive/issues/issue-006-play-button-single-use.md)**
+### Detailed Analysis & Resolution
+👉 **[Complete Investigation & Solution Implementation](./issue-006-play-button-single-use.md)**
 
 ---
 
@@ -233,17 +235,52 @@ From `logs/osp-logs-20250618-194957.json`:
 
 ---
 
+## Issue #008: Progressive Audio Generation Failure
+
+**Status:** 🔍 ACTIVE  
+**Priority:** High  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, real-time playback system, audio resource management
+
+### Summary
+
+After multiple play sessions within a single Obsidian session, audio generation progressively degrades despite successful note processing. Later instrument families experience complete audio failure while note filtering and instrument determination continue to work correctly.
+
+### Technical Details
+- **Sessions 1-3**: Normal audio playback operation
+- **Sessions 4-5**: Audio plays but with interruptions (halts for seconds, then resumes)
+- **Sessions 6-7**: Complete audio failure (no sound generation)
+- **Note Processing**: ✅ Works throughout (filtering, instrument determination, settings access)
+- **Audio Generation**: ❌ Progressive failure (zero "triggerAttackRelease" calls)
+
+### Impact
+- **Progressive Degradation**: Audio quality deteriorates with each play session
+- **Complete Failure**: Later sessions produce no audio despite appearing to work
+- **Resource Exhaustion**: Suggests cumulative resource issues or state corruption
+
+### Evidence Analysis
+- ✅ **Note Filtering**: Consistently finds notes ready to trigger (14, 13, etc. notes)
+- ✅ **Instrument Determination**: Successfully determines instruments
+- ✅ **Settings Access**: Proper instrument settings access throughout
+- ❌ **Audio Triggering**: Zero actual audio generation calls in failed sessions
+
+### Detailed Analysis & Investigation
+👉 **[Complete Progressive Failure Analysis](./issue-008-progressive-audio-generation-failure.md)**
+
+---
+
 ## 🔧 Current Issue Status
 
 **Active Issues:**
 - 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
 - 🔍 **Issue #007**: MEDIUM - Audio engine logging noise and configuration issues
+- 🔍 **Issue #008**: HIGH - Progressive audio generation failure
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
 - ✅ **Issue #002**: Monolithic architecture successfully refactored
 - ✅ **Issue #003**: Instrument family playback failure completely resolved (all 34 instruments working)
 - ✅ **Issue #004**: Tab counter display format fixed with dynamic calculation
-- ✅ **Issue #006**: Play button single-use problem resolved with enhanced animation system
+- ✅ **Issue #006**: Play button single-use problem completely resolved with volume node corruption detection
 
-**System Status:** **CORE FUNCTIONAL** - Audio working, enhanced UI implemented, minor logging noise 🔧
+**System Status:** **FUNCTIONAL WITH DEGRADATION** - Play button works reliably, but audio generation fails progressively in extended sessions 🔧
