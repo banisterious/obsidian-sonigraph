@@ -30,7 +30,7 @@
   - [6.2. Monitoring Systems](#62-monitoring-systems)
   - [6.3. Optimization Strategies](#63-optimization-strategies)
 - [7. External Integrations](#7-external-integrations)
-  - [7.1. Freesound.org Integration](#71-freesoundorg-integration)
+  - [7.1. External Sample Sources Integration](#71-external-sample-sources-integration)
 - [8. API Reference](#8-api-reference)
   - [8.1. AudioEngine API](#81-audioengine-api)
   - [8.2. Logging API](#82-logging-api)
@@ -619,11 +619,21 @@ class PerformanceOptimizer {
 
 ## 7. External Integrations
 
-### 7.1. Freesound.org Integration
+### 7.1. External Sample Sources Integration
 
-Sonigraph incorporates Freesound.org's API v2 to expand audio sample diversity and provide robust fallback mechanisms for instrument families. This integration enables access to over 500,000 Creative Commons licensed audio samples, significantly enhancing the plugin's sound palette particularly for percussion, experimental, and vocal instruments. The system implements OAuth2 authentication, intelligent caching, and automatic license compliance to seamlessly integrate community-sourced samples while maintaining Sonigraph's high-quality audio standards.
+Sonigraph integrates with multiple external sample sources to dramatically expand audio sample diversity across all 34 instrument families. The unified sample management system provides redundant fallback mechanisms, real-time API access, and comprehensive licensing compliance while maintaining high-quality audio standards.
 
-**For detailed implementation guidelines:** [Freesound Integration Guide](integrations/freesound-integration-guide.md)
+**Integrated Sources:**
+- **Freesound.org:** 500,000+ Creative Commons samples for percussion, experimental, and vocal content
+- **Soundstripe:** Professional royalty-free orchestral samples and sound effects
+- **Storyblocks:** Diverse content library with unlimited downloads for subscribers
+- **ElevenLabs AI:** On-demand sound generation for unique textures and experimental sounds
+- **BBC Sound Effects Archive:** 33,000+ professional historical recordings
+- **Archive.org:** Millions of public domain and Creative Commons audio recordings
+- **Commercial Libraries:** Curated high-quality sample packs from specialized producers
+- **Field Recording Communities:** Authentic environmental and location-specific recordings
+
+**For detailed implementation guidelines:** [External Sample Sources Integration Guide](integrations/external-sample-sources-guide.md)
 
 ---
 
