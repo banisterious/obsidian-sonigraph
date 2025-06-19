@@ -212,6 +212,51 @@
 }
 
 /* ==========================================================================
+   ENHANCED HEADER BUTTONS (Control Center)
+   ========================================================================== */
+
+/* Base header button with smooth transitions */
+.osp-header-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced play button states */
+.osp-header-btn--idle {
+  /* Uses default styling */
+}
+
+.osp-header-btn--loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: var(--background-modifier-border);
+}
+
+.osp-header-btn--playing {
+  background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+  color: var(--text-on-accent);
+  box-shadow: 0 2px 8px var(--interactive-accent);
+}
+
+.osp-header-btn--playing:hover {
+  background: linear-gradient(135deg, var(--interactive-accent-hover), var(--interactive-accent));
+  box-shadow: 0 4px 12px var(--interactive-accent);
+}
+
+.osp-header-btn--paused {
+  background: var(--background-modifier-border-focus);
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+.osp-header-btn--stopping {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--background-modifier-error);
+}
+
+/* ==========================================================================
    CONTROL CENTER CLOSE BUTTON
    ========================================================================== */
 
