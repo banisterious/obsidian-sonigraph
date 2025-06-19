@@ -1970,6 +1970,11 @@ export class AudioEngine {
 
 	updateSettings(settings: SonigraphSettings): void {
 		this.settings = settings;
+		
+		// Issue #006 Fix: Invalidate instruments cache when settings change
+		// This ensures that instrument enable/disable changes are reflected in playback
+		this.onInstrumentSettingsChanged();
+		
 		this.updateVolume();
 		
 		// Apply effect settings if engine is initialized

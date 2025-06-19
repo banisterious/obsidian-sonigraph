@@ -331,4 +331,56 @@ this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
 
 ---
 
+## Final Resolution Summary
+
+**Issue #006 COMPLETELY RESOLVED** - 2025-06-19
+
+### Root Cause: Stale Instrument Cache
+
+**Actual Problem**: The AudioEngine's enabled instruments cache was not being invalidated when settings changed, causing the system to attempt playback with old instrument assignments.
+
+**User Workflow**: 
+1. Turn on Debug in Logging  
+2. Click Play (works - cache built with enabled instruments)
+3. Listen  
+4. Click Stop  
+5. Click Disable All for current instrument family  
+6. Click Enable All for different instrument family  
+7. Click Play (fails - cache still contains old disabled instruments)
+
+### Complete Fix Applied
+
+**File**: `src/audio/engine.ts` - Line 1976  
+**Change**: Added cache invalidation to `updateSettings()` method:
+
+```typescript
+updateSettings(settings: SonigraphSettings): void {
+    this.settings = settings;
+    
+    // Issue #006 Fix: Invalidate instruments cache when settings change
+    this.onInstrumentSettingsChanged();
+    
+    // ... rest of method
+}
+```
+
+### Architecture Insights
+
+**Musical Mapping System**: Already implements dynamic instrument assignment correctly
+- Musical sequences are generated WITHOUT static instrument assignments
+- Instrument assignment happens at playback time using `getDefaultInstrument()`
+- System correctly queries enabled instruments via `getEnabledInstruments()`
+- The cache optimization in `getEnabledInstruments()` was the only missing piece
+
+### All Fixes Applied
+
+1. ✅ **Cache Invalidation**: Main fix - ensures enabled instruments list stays current
+2. ✅ **Event Listener Management**: Proper cleanup prevents handler accumulation
+3. ✅ **hasBeenTriggered Reset**: Allows note replay after sequences complete
+4. ✅ **Settings Deep Merge**: Prevents user settings corruption during plugin loading
+
+**Status**: ✅ **COMPLETELY RESOLVED** - Multiple play/stop cycles with instrument changes now work perfectly.
+
+---
+
 *This document tracks the investigation and resolution of the critical Play button single-use limitation affecting core Sonigraph usability.*
