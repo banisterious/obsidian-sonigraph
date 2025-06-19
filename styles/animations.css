@@ -56,6 +56,42 @@
 }
 
 /* ==========================================================================
+   PLAY BUTTON ANIMATIONS
+   ========================================================================== */
+
+/* Spinning animation for loading and stopping states */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulsing glow animation for playing state */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 2px 8px var(--interactive-accent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 20px var(--interactive-accent);
+    transform: scale(1.02);
+  }
+}
+
+/* Progress pulse animation for enhanced feedback */
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
    FUTURE-PROOFING ANIMATIONS
    ========================================================================== */
 
@@ -110,5 +146,32 @@
   100% {
     transform: translateX(100%);
     opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY - REDUCED MOTION SUPPORT
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all play button animations for users who prefer reduced motion */
+  .osp-header-btn--playing {
+    animation: none !important;
+    box-shadow: 0 2px 8px var(--interactive-accent) !important;
+    transform: none !important;
+  }
+  
+  .osp-header-btn--loading,
+  .osp-header-btn--stopping {
+    animation: none !important;
+  }
+  
+  .osp-header-btn {
+    transition: none !important;
+  }
+  
+  /* Disable other motion-sensitive animations */
+  .ospcc-pulse {
+    animation: none !important;
   }
 }

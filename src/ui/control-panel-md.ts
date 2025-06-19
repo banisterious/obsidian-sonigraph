@@ -6,6 +6,7 @@ import { HarmonicSettings } from '../audio/harmonic-engine';
 import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmartRanges, getParameterRange, INSTRUMENT_INFO } from '../utils/constants';
 import { TAB_CONFIGS, setLucideIcon, createLucideIcon, getFamilyIcon, getInstrumentIcon, getEffectIcon, LucideIconName } from './lucide-icons';
 import { MaterialCard, StatCard, InstrumentCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
+import { PlayButtonManager, PlayButtonState } from './play-button-manager';
 
 const logger = getLogger('control-panel-md');
 
@@ -22,11 +23,13 @@ export class MaterialControlPanelModal extends Modal {
 	private appBar: HTMLElement;
 	private drawer: HTMLElement;
 	private playButton: HTMLElement;
+	private playButtonManager: PlayButtonManager;
 	private instrumentToggles: Map<string, HTMLElement> = new Map();
 
 	constructor(app: App, plugin: SonigraphPlugin) {
 		super(app);
 		this.plugin = plugin;
+		this.playButtonManager = new PlayButtonManager();
 	}
 
 	onOpen() {
@@ -50,6 +53,11 @@ export class MaterialControlPanelModal extends Modal {
 	onClose() {
 		logger.debug('ui', 'Closing Sonigraph Control Center');
 		this.stopStatusUpdates();
+		
+		// Cleanup play button manager
+		if (this.playButtonManager) {
+			this.playButtonManager.dispose();
+		}
 	}
 
 
@@ -121,10 +129,16 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Play button (first)
 		const playBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--primary' });
-		this.playButton = playBtn; // Store reference for loading state
-		const playIcon = createLucideIcon('play', 16);
-		playBtn.appendChild(playIcon);
-		playBtn.appendText('Play');
+		this.playButton = playBtn; // Store reference for compatibility
+		
+		// Initialize enhanced play button manager
+		this.playButtonManager.initialize(playBtn);
+		
+		// Set up state change listener for logging
+		this.playButtonManager.onStateChange((state: PlayButtonState) => {
+			logger.debug('ui', `Play button state changed: ${state}`);
+		});
+		
 		playBtn.addEventListener('click', () => this.handlePlay());
 
 		// Stop button (second)
@@ -1205,53 +1219,84 @@ export class MaterialControlPanelModal extends Modal {
 	// Event handlers
 	private handlePause(): void {
 		logger.info('ui', 'Pause clicked');
+		this.playButtonManager.setState('paused');
 		this.plugin.stopPlayback();
+	}
+
+	private async handleResume(): Promise<void> {
+		logger.info('ui', 'Resume clicked');
+		
+		// TODO: Implement actual resume functionality in audio engine
+		// For now, just restart playback from the beginning
+		this.playButtonManager.setState('loading', 'starting');
+		
+		try {
+			await this.plugin.playSequence();
+			this.playButtonManager.setState('playing');
+		} catch (error) {
+			logger.error('ui', 'Failed to resume sequence', error);
+			this.playButtonManager.setState('idle');
+		}
 	}
 
 	private handleStop(): void {
 		logger.info('ui', 'Stop clicked');
+		this.playButtonManager.setState('stopping');
 		this.plugin.stopPlayback();
+		
+		// Reset to idle after a brief delay
+		setTimeout(() => {
+			this.playButtonManager.setState('idle');
+		}, 500);
 	}
 
 	private async handlePlay(): Promise<void> {
 		logger.info('ui', 'Play clicked');
 		
-		// Show loading state
-		this.setPlayButtonLoading(true);
+		const currentState = this.playButtonManager.getCurrentState();
+		
+		// Handle different states
+		if (currentState === 'playing') {
+			// If playing, pause the playback
+			this.handlePause();
+			return;
+		} else if (currentState === 'paused') {
+			// If paused, resume playback
+			this.handleResume();
+			return;
+		} else if (currentState === 'loading' || currentState === 'stopping') {
+			// Ignore clicks during loading or stopping
+			return;
+		}
+		
+		// Start playback from idle state
+		this.playButtonManager.setState('loading', 'analyzing');
 		
 		try {
+			// Show detailed loading stages
+			this.playButtonManager.setLoadingSubstate('analyzing');
+			await new Promise(resolve => setTimeout(resolve, 200)); // Brief delay for UX
+			
+			this.playButtonManager.setLoadingSubstate('generating');
+			await new Promise(resolve => setTimeout(resolve, 300)); // Brief delay for UX
+			
+			this.playButtonManager.setLoadingSubstate('initializing');
+			await new Promise(resolve => setTimeout(resolve, 200)); // Brief delay for UX
+			
+			this.playButtonManager.setLoadingSubstate('starting');
 			await this.plugin.playSequence();
+			
+			// Switch to playing state
+			this.playButtonManager.setState('playing');
+			
 		} catch (error) {
 			logger.error('ui', 'Failed to play sequence', error);
-			// Could show a notification to the user about the error
-		} finally {
-			// Reset button state
-			this.setPlayButtonLoading(false);
+			// Reset to idle state on error
+			this.playButtonManager.setState('idle');
+			// TODO: Show user notification about the error
 		}
 	}
 
-	private setPlayButtonLoading(loading: boolean): void {
-		if (!this.playButton) return;
-		
-		const button = this.playButton as HTMLButtonElement;
-		
-		if (loading) {
-			button.disabled = true;
-			button.textContent = '';
-			const loadingIcon = createLucideIcon('loader-2', 16);
-			loadingIcon.style.animation = 'spin 1s linear infinite';
-			button.appendChild(loadingIcon);
-			button.appendText('Loading...');
-			button.classList.add('osp-header-btn--loading');
-		} else {
-			button.disabled = false;
-			button.textContent = '';
-			const playIcon = createLucideIcon('play', 16);
-			button.appendChild(playIcon);
-			button.appendText('Play');
-			button.classList.remove('osp-header-btn--loading');
-		}
-	}
 
 	private handleMasterVolumeChange(volume: number): void {
 		logger.info('ui', `Master volume changed to ${volume}`);
