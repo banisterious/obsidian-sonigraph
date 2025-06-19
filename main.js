@@ -33332,6 +33332,7 @@ var AudioEngine = class {
   }
   updateSettings(settings) {
     this.settings = settings;
+    this.onInstrumentSettingsChanged();
     this.updateVolume();
     if (this.isInitialized) {
       this.applyEffectSettings();
