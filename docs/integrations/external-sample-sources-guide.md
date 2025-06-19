@@ -40,7 +40,7 @@
 
 ## Overview
 
-This document outlines the comprehensive strategy for integrating external sample sources into Sonigraph's audio engine. By leveraging multiple sample libraries, APIs, and CDN services, we aim to dramatically expand the plugin's audio palette while maintaining performance, legal compliance, and user experience standards.
+This document outlines the comprehensive strategy for integrating external sample sources into Sonigraph's audio engine. By leveraging multiple sample libraries, APIs, and CDN services, my aim is to dramatically expand the plugin's audio palette while maintaining performance, legal compliance, and user experience standards.
 
 **Integration Goals:**
 - Expand sample diversity across all 34 instrument families
