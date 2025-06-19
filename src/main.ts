@@ -281,12 +281,61 @@ export default class SonigraphPlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		const data = await this.loadData();
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		
+		// Issue #006 Fix: Deep merge to preserve user-enabled instrument states
+		this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
 		
 		// Migrate old settings structure if needed
 		this.migrateSettings();
 		
 		logger.debug('settings', 'Settings loaded', { settings: this.settings });
+	}
+
+	/**
+	 * Deep merge settings to preserve user configurations while adding new defaults
+	 * Issue #006: Prevents corruption of user-enabled instrument states
+	 */
+	private deepMergeSettings(defaults: SonigraphSettings, saved: any): SonigraphSettings {
+		// Start with a copy of defaults
+		const merged = JSON.parse(JSON.stringify(defaults)) as SonigraphSettings;
+		
+		if (!saved) return merged;
+		
+		// Merge top-level properties
+		Object.keys(saved).forEach(key => {
+			if (key === 'instruments' && saved.instruments) {
+				// Special handling for instruments to preserve enabled states
+				Object.keys(saved.instruments).forEach(instrumentKey => {
+					if (merged.instruments[instrumentKey as keyof typeof merged.instruments]) {
+						// Preserve user's enabled state and other user settings
+						const userInstrument = saved.instruments[instrumentKey];
+						const defaultInstrument = merged.instruments[instrumentKey as keyof typeof merged.instruments];
+						
+						// Merge instrument settings, giving priority to saved enabled state
+						merged.instruments[instrumentKey as keyof typeof merged.instruments] = {
+							...defaultInstrument,
+							...userInstrument,
+							// Ensure effects structure is preserved
+							effects: {
+								...defaultInstrument.effects,
+								...(userInstrument.effects || {})
+							}
+						};
+						
+						logger.debug('settings-merge', `Merged instrument ${instrumentKey}`, {
+							defaultEnabled: defaultInstrument.enabled,
+							userEnabled: userInstrument.enabled,
+							finalEnabled: merged.instruments[instrumentKey as keyof typeof merged.instruments].enabled
+						});
+					}
+				});
+			} else if (key !== 'instruments') {
+				// For non-instrument settings, use saved value
+				(merged as any)[key] = saved[key];
+			}
+		});
+		
+		return merged;
 	}
 
 	/**
