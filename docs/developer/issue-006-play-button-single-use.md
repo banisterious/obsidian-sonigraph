@@ -308,7 +308,19 @@ this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
 - ✅ **VERIFIED**: UI state synchronization remains stable across uses
 - ✅ **VERIFIED**: No memory leaks or resource accumulation
 
-**Status: ✅ RESOLVED** - Issue #006 has been successfully fixed through settings corruption resolution.
+**Status: ✅ COMPLETELY RESOLVED** - Issue #006 has been successfully fixed through comprehensive volume node corruption detection and synthesis-mode re-initialization.
+
+### Final Resolution Status (2025-06-19)
+
+**✅ CONFIRMED WORKING**: Multiple play/stop cycles work reliably across all instrument families and modes.
+
+**Comprehensive Fix Applied**:
+1. **Volume Node Corruption Detection**: Accurate detection of corrupted instruments without false positives
+2. **Synthesis-Mode Re-initialization**: Full support for both sample-based and synthesis-mode instrument recovery
+3. **Verification Logic**: Correct distinction between disabled instruments (properly muted) and corrupted enabled instruments
+4. **Deep Settings Merge**: Prevention of settings corruption during plugin loading
+
+**Test Results**: User testing confirms play button works consistently across multiple sessions and instrument family changes. Original single-use limitation completely eliminated.
 
 ### Related Issues
 
