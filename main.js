@@ -33368,7 +33368,7 @@ var AudioEngine = class {
     } catch (e) {
     }
     this.realtimeTimer = setInterval(() => {
-      var _a, _b, _c, _d, _e, _f, _g, _h;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i;
       if (!this.isPlaying) {
         if (this.realtimeTimer !== null) {
           clearInterval(this.realtimeTimer);
@@ -33418,10 +33418,46 @@ var AudioEngine = class {
       const frequency = mapping.pitch;
       const duration = mapping.duration;
       const velocity = mapping.velocity;
+      logger10.debug("issue-006-debug", "About to trigger note - extracting instrument", {
+        elapsedTime: elapsedTime.toFixed(3),
+        frequency: frequency.toFixed(1),
+        duration: duration.toFixed(2),
+        mappingInstrument: mapping.instrument || "none",
+        action: "before-instrument-extraction"
+      });
       logger10.debug("trigger", `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
-      const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+      let instrumentName;
+      try {
+        instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+        logger10.debug("issue-006-debug", "Instrument determined successfully", {
+          instrumentName,
+          action: "instrument-determined"
+        });
+      } catch (error) {
+        logger10.error("issue-006-debug", "Failed to determine instrument", {
+          error: error.message,
+          mapping,
+          action: "instrument-determination-failed"
+        });
+        return;
+      }
+      logger10.debug("issue-006-debug", "Starting instrument settings access", {
+        instrumentName,
+        instrumentNameType: typeof instrumentName,
+        settingsExists: !!this.settings,
+        instrumentsExists: !!((_a = this.settings) == null ? void 0 : _a.instruments),
+        action: "before-settings-access"
+      });
       const instrumentKey = instrumentName;
+      logger10.debug("issue-006-debug", "InstrumentKey created, accessing settings", {
+        instrumentKey,
+        action: "before-instrument-settings-access"
+      });
       const instrumentSettings = this.settings.instruments[instrumentKey];
+      logger10.debug("issue-006-debug", "InstrumentSettings retrieved", {
+        instrumentSettings: !!instrumentSettings,
+        action: "after-instrument-settings-access"
+      });
       logger10.info("issue-006-debug", "Instrument settings check", {
         action: "instrument-enabled-check",
         instrumentName,
@@ -33477,7 +33513,7 @@ var AudioEngine = class {
         logger10.info("issue-006-debug", "Standard instrument trigger initiated", {
           instrumentName,
           synthExists: !!synth,
-          synthType: ((_a = synth == null ? void 0 : synth.constructor) == null ? void 0 : _a.name) || "unknown",
+          synthType: ((_b = synth == null ? void 0 : synth.constructor) == null ? void 0 : _b.name) || "unknown",
           action: "standard-trigger"
         });
         if (synth) {
@@ -33516,13 +33552,13 @@ var AudioEngine = class {
             logger10.info("issue-006-debug", "Audio pipeline verification", {
               instrumentName,
               volumeNodeExists: !!volumeNode,
-              volumeValue: (_c = (_b = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _b.value) != null ? _c : "no-volume-value",
-              volumeMuted: (_d = volumeNode == null ? void 0 : volumeNode.mute) != null ? _d : "no-mute-property",
-              volumeConstructor: ((_e = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _e.name) || "no-constructor",
+              volumeValue: (_d = (_c = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _c.value) != null ? _d : "no-volume-value",
+              volumeMuted: (_e = volumeNode == null ? void 0 : volumeNode.mute) != null ? _e : "no-mute-property",
+              volumeConstructor: ((_f = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _f.name) || "no-constructor",
               effectsCount: (effectsMap == null ? void 0 : effectsMap.size) || 0,
               instrumentOutputs: synth.numberOfOutputs,
-              masterVolumeValue: ((_g = (_f = this.volume) == null ? void 0 : _f.volume) == null ? void 0 : _g.value) || "no-master-volume",
-              masterVolumeMuted: ((_h = this.volume) == null ? void 0 : _h.mute) || false,
+              masterVolumeValue: ((_h = (_g = this.volume) == null ? void 0 : _g.volume) == null ? void 0 : _h.value) || "no-master-volume",
+              masterVolumeMuted: ((_i = this.volume) == null ? void 0 : _i.mute) || false,
               masterVolumeExists: !!this.volume,
               action: "audio-pipeline-verification"
             });

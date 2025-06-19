@@ -2073,14 +2073,55 @@ export class AudioEngine {
 			const duration = mapping.duration;
 			const velocity = mapping.velocity;
 
+			logger.debug('issue-006-debug', 'About to trigger note - extracting instrument', {
+				elapsedTime: elapsedTime.toFixed(3),
+				frequency: frequency.toFixed(1),
+				duration: duration.toFixed(2),
+				mappingInstrument: mapping.instrument || 'none',
+				action: 'before-instrument-extraction'
+			});
+
 			logger.debug('trigger', `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
 
 			// Determine which instrument to use
-			const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+			let instrumentName;
+			try {
+				instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+				logger.debug('issue-006-debug', 'Instrument determined successfully', {
+					instrumentName,
+					action: 'instrument-determined'
+				});
+			} catch (error) {
+				logger.error('issue-006-debug', 'Failed to determine instrument', {
+					error: error.message,
+					mapping,
+					action: 'instrument-determination-failed'
+				});
+				return;
+			}
 
 			// Issue #006 Debug: Log instrument settings check before potential early return
+			logger.debug('issue-006-debug', 'Starting instrument settings access', {
+				instrumentName,
+				instrumentNameType: typeof instrumentName,
+				settingsExists: !!this.settings,
+				instrumentsExists: !!this.settings?.instruments,
+				action: 'before-settings-access'
+			});
+			
 			const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
+			
+			logger.debug('issue-006-debug', 'InstrumentKey created, accessing settings', {
+				instrumentKey,
+				action: 'before-instrument-settings-access'
+			});
+			
 			const instrumentSettings = this.settings.instruments[instrumentKey];
+			
+			logger.debug('issue-006-debug', 'InstrumentSettings retrieved', {
+				instrumentSettings: !!instrumentSettings,
+				action: 'after-instrument-settings-access'
+			});
 			
 			logger.info('issue-006-debug', 'Instrument settings check', {
 				action: 'instrument-enabled-check',
