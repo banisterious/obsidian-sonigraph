@@ -1553,6 +1553,22 @@ export class AudioEngine {
 	}
 
 	async playSequence(sequence: MusicalMapping[]): Promise<void> {
+		// Issue #006 Comprehensive Debug: Log initial state for this play attempt
+		const enabledInstrumentsList = this.getEnabledInstruments();
+		logger.info('issue-006-debug', 'PlaySequence initiated - complete state snapshot', {
+			sequenceLength: sequence.length,
+			isInitialized: this.isInitialized,
+			isPlaying: this.isPlaying,
+			instrumentMapSize: this.instruments.size,
+			enabledInstrumentsCount: enabledInstrumentsList.length,
+			enabledInstruments: enabledInstrumentsList,
+			audioContextState: getContext().state,
+			transportState: getTransport().state,
+			currentTime: getContext().currentTime.toFixed(3),
+			hasBeenTriggeredCount: sequence.filter(n => n.hasBeenTriggered).length,
+			action: 'play-sequence-init'
+		});
+		
 		if (!this.isInitialized || !this.instruments.size) {
 			logger.warn('playback', 'AudioEngine not initialized, initializing now');
 			await this.initialize();
@@ -1881,11 +1897,52 @@ export class AudioEngine {
 							action: 'trigger-attack-release-call'
 						});
 						
+						// Add pre-trigger audio context state logging
+						const audioContext = getContext();
+						logger.info('issue-006-debug', 'Pre-trigger audio state check', {
+							instrumentName,
+							audioContextState: audioContext.state,
+							audioContextSampleRate: audioContext.sampleRate,
+							audioContextCurrentTime: audioContext.currentTime.toFixed(3),
+							transportState: getTransport().state,
+							transportTime: getTransport().seconds.toFixed(3),
+							action: 'pre-trigger-audio-state'
+						});
+						
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 						
-						logger.info('issue-006-debug', 'triggerAttackRelease completed successfully', {
+						// Add post-trigger verification logging
+						logger.info('issue-006-debug', 'triggerAttackRelease completed - verifying audio output', {
 							instrumentName,
+							synthConnected: synth.disposed === false,
+							synthLoaded: synth instanceof Sampler ? (synth.loaded || false) : 'not-sampler',
+							volumeNodeExists: !!this.instrumentVolumes.get(instrumentName),
+							effectsMapExists: !!this.instrumentEffects.get(instrumentName),
 							action: 'trigger-attack-release-success'
+						});
+						
+						// Add instrument volume and effects verification
+						const volumeNode = this.instrumentVolumes.get(instrumentName);
+						const effectsMap = this.instrumentEffects.get(instrumentName);
+						logger.info('issue-006-debug', 'Audio pipeline verification', {
+							instrumentName,
+							volumeValue: volumeNode?.volume?.value || 'no-volume-node',
+							volumeMuted: volumeNode?.mute || false,
+							effectsCount: effectsMap?.size || 0,
+							instrumentOutputs: synth.numberOfOutputs,
+							masterVolumeValue: this.volume?.volume?.value || 'no-master-volume',
+							masterVolumeMuted: this.volume?.mute || false,
+							masterVolumeExists: !!this.volume,
+							action: 'audio-pipeline-verification'
+						});
+						
+						// Add audio routing verification
+						logger.info('issue-006-debug', 'Audio routing verification', {
+							instrumentName,
+							synthToVolumeConnected: volumeNode ? 'unknown' : 'no-volume-node',
+							volumeToDestination: this.volume ? 'unknown' : 'no-master-volume',
+							contextDestination: audioContext.destination ? 'exists' : 'missing',
+							action: 'audio-routing-verification'
 						});
 					} catch (error) {
 						logger.error('issue-006-debug', 'triggerAttackRelease failed with error', {
