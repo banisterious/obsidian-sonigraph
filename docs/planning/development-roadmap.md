@@ -105,6 +105,26 @@
 - Adaptive duration scaling based on vault complexity
 - Per-session overrides without changing global settings
 
+**Control Center Instrument Search**  
+**Priority**: Medium | **Effort**: 1-2 weeks | **User Impact**: High  
+**Features**:
+- Fuzzy search field for quick instrument location across all 34 instruments
+- Integration with Obsidian's `prepareFuzzySearch()` API for consistent UX
+- Real-time filtering of instrument families and individual instruments
+- Keyboard navigation support (arrow keys, Enter to enable/configure)
+- Search highlighting with match indicators using `SearchResult.matches`
+- Quick access to instrument settings from search results
+
+**Technical Implementation**:
+- **Search Engine**: Use `prepareFuzzySearch(query)` returning `(text: string) => SearchResult | null`
+- **UI Integration**: Add search input field to existing Control Center modal header
+- **Real-time Filtering**: Filter visible instrument tabs and cards based on search results
+- **Highlight Rendering**: Use `SearchResult.matches` to highlight matching text in instrument names
+- **Tab Filtering**: Hide/show family tabs based on whether they contain matching instruments
+- **Card Filtering**: Hide/show individual instrument cards within visible tabs
+- **Performance**: Optimized for 34 instruments (well below API performance threshold)
+- **Search Scope**: Include instrument names, family names, and aliases for comprehensive matching
+
 **Advanced Export Options**  
 **Priority**: Low | **Effort**: 1-2 weeks | **User Impact**: Medium  
 **Features**:
@@ -203,6 +223,7 @@
 - **Sample Manager** (3-4 weeks)
 - **Content Filtering** (3-4 weeks)
 - **Customizable Sequence Controls** (2-3 weeks)
+- **Control Center Instrument Search** (1-2 weeks)
 
 ### Medium Impact, Low Effort
 - **Enhanced Play Button Animation** (1 week)
