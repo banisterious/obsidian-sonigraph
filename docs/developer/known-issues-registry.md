@@ -8,8 +8,9 @@
 4. ✅ [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
 5. 🔍 [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **ACTIVE**
 6. ✅ [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
-7. 🔍 [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **ACTIVE**
+7. ✅ [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
 8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
+9. 🔍 [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **ACTIVE**
 
 ---
 
@@ -23,8 +24,9 @@
 | 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](../archive/issues/issue-004-tab-counter-display.md) |
 | 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
 | 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](../archive/issues/issue-006-play-button-single-use.md) |
-| 007 | 🔍 ACTIVE | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Analysis](./issue-007-audio-engine-logging-noise.md) |
+| 007 | ✅ RESOLVED | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Resolution](../archive/issues/issue-007-audio-engine-logging-noise-resolution.md) |
 | 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
+| 009 | 🔍 ACTIVE | Medium | Audio Engine | Instrument volume node muting and corruption detection | [Analysis](./issue-009-instrument-volume-node-muting.md) |
 
 ---
 
@@ -209,29 +211,36 @@ The Play button becomes completely non-functional after the first use within an 
 
 ## Issue #007: Audio Engine Logging Noise and Configuration Issues
 
-**Status:** 🔍 ACTIVE  
+**Status:** ✅ RESOLVED and CLOSED  
 **Priority:** Medium  
 **Component:** Audio Engine  
 **Affected Files:** `src/audio/engine.ts`, `src/audio/percussion-engine.ts`, `src/audio/configs/`, instrument configuration system
 
 ### Summary
 
-The audio engine generates excessive warning and error messages during normal operation, including 35 warnings about missing instrument volume/effects configuration and 9 errors related to advanced percussion failures (timpani, gongs). This creates noise in logs and may indicate underlying configuration or reliability issues.
+The audio engine generates excessive warning and error messages during normal operation, including 35 warnings about missing instrument volume/effects configuration and 9 errors related to advanced percussion failures (timpani, gongs). **RESOLVED** through configuration system stabilization and improved error handling.
 
-### Technical Details
-- **Configuration Warnings**: 35 instances of "Missing volume or effects for instrument: [name]"
-- **Percussion Errors**: 9 failures to trigger timpani (7) and gongs (2) via advanced percussion engine
-- **Affected Systems**: Instrument initialization, effects routing, advanced percussion synthesis
-- **Impact**: Log noise obscures actual issues, potential audio quality degradation
+### ✅ RESOLUTION STATUS (2025-06-20)
+- **Phase 1**: ✅ COMPLETE - Configuration system stabilization (initialization order fixed)
+- **Phase 2**: ✅ COMPLETE - Percussion engine reliability improvements
+- **Phase 3**: ✅ COMPLETE - Logging system optimization with structured reporting
+- **Validation**: ✅ COMPLETE - 44 noise entries → 0 noise entries
 
-### Log Analysis Summary
-From `logs/osp-logs-20250618-194957.json`:
-- Missing configuration warnings affect nearly all 34 orchestral instruments
-- Percussion engine consistently fails during advanced synthesis attempts
-- Fallback mechanisms appear to work (audio still plays) but generate error noise
+### Resolution Results
+- **Configuration Warnings**: 35 → 0 ✅ (Fixed initialization order and default fallbacks)
+- **Percussion Errors**: 9 → 0 ✅ (Enhanced error handling with proper fallbacks)
+- **Log Noise**: 44 total entries → 0 entries ✅ (Replaced with structured initialization reporting)
+- **Audio Quality**: Maintained without functional regression ✅
 
-### Detailed Analysis
-👉 **[Complete Log Analysis & Configuration Investigation](./issue-007-audio-engine-logging-noise.md)**
+### Technical Implementation
+- Fixed initialization order to create volume/effects before instruments
+- Added comprehensive default configuration for all 34 instruments  
+- Enhanced percussion error handling with parameter validation
+- Converted error-level messages to debug-level for expected fallbacks
+- Implemented comprehensive initialization reporting system
+
+### Detailed Analysis & Resolution
+👉 **[Complete Implementation & Validation Results](../archive/issues/issue-007-audio-engine-logging-noise-resolution.md)**
 
 ---
 
@@ -269,12 +278,46 @@ After multiple play sessions within a single Obsidian session, audio generation 
 
 ---
 
+## Issue #009: Instrument Volume Node Muting and Corruption Detection
+
+**Status:** 🔍 ACTIVE  
+**Priority:** Medium  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, Issue #006 debug logging, volume node management
+
+### Summary
+
+Enabled instruments are being automatically muted, triggering extensive volume node corruption detection from Issue #006 debug logging. This generates 33 warnings about "Enabled instrument is muted - potential state inconsistency" and 1 error about "CRITICAL: Found enabled instruments with corrupted volume nodes" per session.
+
+### Technical Details
+- **Muting Warnings**: 33 instances for all enabled instruments (piano, organ, strings, choir, etc.)
+- **Corruption Error**: 1 critical error triggering re-initialization attempts
+- **Root Cause**: Issue #006 corruption detection logic may be too aggressive or detecting normal behavior
+- **Impact**: Excessive log noise obscuring legitimate issues, unnecessary re-initialization overhead
+
+### Log Analysis Summary
+From `logs/osp-logs-20250619-165817.json`:
+- All enabled instruments are detected as muted during volume node verification
+- Issue #006 debug logging interprets this as potential corruption
+- Re-initialization attempts are triggered to "fix" the perceived corruption
+- Functional audio behavior appears normal despite the warnings
+
+### Relationship to Other Issues
+- **Issue #006**: Side effect of aggressive corruption detection added for play button fix
+- **Issue #007**: Different category of log noise (configuration vs volume corruption)
+- Both issues create excessive logging during normal operation
+
+### Detailed Analysis
+👉 **[Complete Volume Corruption Investigation](./issue-009-instrument-volume-node-muting.md)**
+
+---
+
 ## 🔧 Current Issue Status
 
 **Active Issues:**
 - 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
-- 🔍 **Issue #007**: MEDIUM - Audio engine logging noise and configuration issues
 - 🔍 **Issue #008**: HIGH - Progressive audio generation failure
+- 🔍 **Issue #009**: MEDIUM - Instrument volume node muting and corruption detection
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
@@ -282,5 +325,6 @@ After multiple play sessions within a single Obsidian session, audio generation 
 - ✅ **Issue #003**: Instrument family playback failure completely resolved (all 34 instruments working)
 - ✅ **Issue #004**: Tab counter display format fixed with dynamic calculation
 - ✅ **Issue #006**: Play button single-use problem completely resolved with volume node corruption detection
+- ✅ **Issue #007**: Audio engine logging noise completely resolved (44 → 0 noise entries)
 
 **System Status:** **FUNCTIONAL WITH DEGRADATION** - Play button works reliably, but audio generation fails progressively in extended sessions 🔧
