@@ -35,6 +35,16 @@ Sonigraph is an advanced Obsidian plugin that maps the visual structure of your 
 - **Real-time Audio Feedback**: Visual and auditory feedback during graph playback
 - **Comprehensive Settings**: Detailed control over all 34 instruments and their parameters
 
+---
+
+## Support My Work
+
+If you find this plugin useful, please consider supporting its development!
+
+<a href="https://www.buymeacoffee.com/banisterious" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+---
+
 ## 🎯 Current Status
 
 **Current Version**: 0.3.0 (Production Ready)
