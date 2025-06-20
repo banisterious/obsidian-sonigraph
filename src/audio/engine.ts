@@ -700,42 +700,23 @@ export class AudioEngine {
 	}
 
 	private connectSynthesisInstruments(): void {
-		logger.debug('synthesis', 'Connecting synthesis instruments through effects to master output');
+		logger.debug('synthesis', 'Connecting synthesis instruments to master output');
 
 		for (const [instrumentName, instrument] of this.instruments) {
 			const volume = this.instrumentVolumes.get(instrumentName);
-			const effects = this.instrumentEffects.get(instrumentName);
 			
-			if (!volume || !effects) {
-				// Issue #007 Fix: This should no longer occur due to proper initialization order
-				logger.error('synthesis', `Missing volume or effects for instrument: ${instrumentName} - this indicates an initialization order problem`);
+			if (!volume) {
+				logger.error('synthesis', `Missing volume for instrument: ${instrumentName} - this indicates an initialization order problem`);
 				continue;
 			}
 
-			// Start with volume output
-			let output = volume;
-
-			// Temporarily bypass effects to test for crackling source
-			// const reverb = effects.get('reverb');
-			// const chorus = effects.get('chorus'); 
-			// const filter = effects.get('filter');
-
-			// if (reverb) {
-			// 	output = output.connect(reverb);
-			// }
-			
-			// if (chorus) {
-			// 	output = output.connect(chorus);
-			// }
-			
-			// if (filter) {
-			// 	output = output.connect(filter);
-			// }
-
-			// Finally connect to master volume
+			// In synthesis mode, connect directly to master for clean audio path
+			// Effects processing can be added later as needed
 			if (this.volume) {
-				output.connect(this.volume);
-				logger.debug('synthesis', `Connected ${instrumentName} through effects to master output`);
+				volume.connect(this.volume);
+				logger.debug('synthesis', `Connected ${instrumentName} directly to master output (synthesis mode)`);
+			} else {
+				logger.error('synthesis', `Master volume not available when connecting ${instrumentName}`);
 			}
 		}
 	}
@@ -928,10 +909,13 @@ export class AudioEngine {
 				const volume = new Volume(-6);
 				this.instrumentVolumes.set(instrumentName, volume);
 				
-				// Connect synth → volume → master
+				// Connect synth → volume → master (direct routing for synthesis mode)
 				synth.connect(volume);
 				if (this.volume) {
 					volume.connect(this.volume);
+					logger.debug('instruments', `Connected ${instrumentName}: synth → volume → master`);
+				} else {
+					logger.warn('instruments', `Master volume not available for ${instrumentName} connection`);
 				}
 				
 				// Add to instruments map
@@ -940,10 +924,8 @@ export class AudioEngine {
 				logger.debug('instruments', `Created specialized synthesis instrument: ${instrumentName}`);
 			});
 			
-			// Connect synthesis instruments through effects (effects already initialized)
-			this.connectSynthesisInstruments();
-			this.applyEffectSettings();
-			this.initializeMissingInstruments();
+			// Synthesis instruments are now fully connected: synth → volume → master
+			logger.debug('instruments', 'All synthesis instruments connected directly to master output');
 			this.applyInstrumentSettings();
 			return;
 		}
@@ -2062,6 +2044,12 @@ export class AudioEngine {
 			if (isSynthesisMode) {
 				logger.warn('playbook', '🚀 ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments');
 				
+				// Ensure master volume exists before synthesis initialization
+				if (!this.volume) {
+					logger.debug('playbook', 'Creating master volume for synthesis mode');
+					this.volume = new Volume(this.settings.volume).toDestination();
+				}
+				
 				// Clear existing minimal instruments to prevent conflicts
 				logger.debug('playbook', 'Clearing minimal mode instruments before full initialization', {
 					instrumentsToDispose: Array.from(this.instruments.keys())
@@ -2070,8 +2058,12 @@ export class AudioEngine {
 				this.instruments.clear();
 				
 				// Initialize full synthesis for all 34 instruments (skip CDN loading)
-				await this.initializeInstruments(); // This method handles synthesis mode properly
+				await this.initializeInstruments(); // This method handles synthesis mode and routing
 				await this.initializeEffects();
+				
+				// NOTE: Synthesis instruments are already connected during initializeInstruments()
+				// No additional routing needed - direct synthesis: synth → volume → master
+				
 				await this.initializeAdvancedSynthesis();
 				
 				// Mark as fully initialized

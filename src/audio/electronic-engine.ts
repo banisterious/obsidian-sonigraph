@@ -84,15 +84,20 @@ export class ElectronicEngine {
 
 	private async initializeLeadSynth(): Promise<void> {
 		// Create lead synth with advanced filter modulation
-		const leadSynth = new PolySynth(Synth, {
-			oscillator: {
-				type: 'sawtooth'
-			},
-			envelope: {
-				attack: 0.01,
-				decay: 0.3,
-				sustain: 0.6,
-				release: 0.8
+		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+		const leadSynth = new PolySynth({
+			voice: Synth,
+			maxPolyphony: 6, // Lead synths typically need medium polyphony
+			options: {
+				oscillator: {
+					type: 'sawtooth'
+				},
+				envelope: {
+					attack: 0.01,
+					decay: 0.3,
+					sustain: 0.6,
+					release: 0.8
+				}
 			}
 		}).set({ volume: -12 });
 
@@ -129,28 +134,38 @@ export class ElectronicEngine {
 
 	private async initializeBassSynth(): Promise<void> {
 		// Create bass synth with sub-oscillator and compression
-		const bassSynth = new PolySynth(Synth, {
-			oscillator: {
-				type: 'square'
-			},
-			envelope: {
-				attack: 0.01,
-				decay: 0.2,
-				sustain: 0.8,
-				release: 0.4
+		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+		const bassSynth = new PolySynth({
+			voice: Synth,
+			maxPolyphony: 4, // Bass synths need lower polyphony
+			options: {
+				oscillator: {
+					type: 'square'
+				},
+				envelope: {
+					attack: 0.01,
+					decay: 0.2,
+					sustain: 0.8,
+					release: 0.4
+				}
 			}
 		}).set({ volume: -8 });
 
 		// Sub-bass oscillator
-		const subOsc = new PolySynth(Synth, {
-			oscillator: {
-				type: 'sine'
-			},
-			envelope: {
-				attack: 0.01,
-				decay: 0.15,
-				sustain: 0.9,
-				release: 0.3
+		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+		const subOsc = new PolySynth({
+			voice: Synth,
+			maxPolyphony: 2, // Sub-bass needs very low polyphony
+			options: {
+				oscillator: {
+					type: 'sine'
+				},
+				envelope: {
+					attack: 0.01,
+					decay: 0.15,
+					sustain: 0.9,
+					release: 0.3
+				}
 			}
 		}).set({ volume: -15 });
 
@@ -177,15 +192,20 @@ export class ElectronicEngine {
 
 	private async initializeArpSynth(): Promise<void> {
 		// Create arp synth with sequencing capabilities
-		const arpSynth = new PolySynth(Synth, {
-			oscillator: {
-				type: 'triangle'
-			},
-			envelope: {
-				attack: 0.001,
-				decay: 0.1,
-				sustain: 0.3,
-				release: 0.2
+		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+		const arpSynth = new PolySynth({
+			voice: Synth,
+			maxPolyphony: 8, // Arpeggiators need higher polyphony for complex patterns
+			options: {
+				oscillator: {
+					type: 'triangle'
+				},
+				envelope: {
+					attack: 0.001,
+					decay: 0.1,
+					sustain: 0.3,
+					release: 0.2
+				}
 			}
 		}).set({ volume: -10 });
 
