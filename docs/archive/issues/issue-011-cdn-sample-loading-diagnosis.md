@@ -59,6 +59,7 @@ The README.md and architecture documentation claim "Sample-Based Synthesis: High
 - [ ] **Root Cause Identification**: Clear understanding of why samples aren't loading
 - [ ] **Browser DevTools Evidence**: Screenshots/logs of network failures
 - [ ] **CDN Status Assessment**: Verification of external CDN availability and configuration
+- [ ] **Next Phase Planning**: Create Issue #012 based on investigation findings
 
 ### Code Changes Required
 - [ ] **Debug Logging**: Add detailed logging to sample loading process
@@ -140,9 +141,24 @@ This issue is part of the larger [External Sample Integration Project](../../pla
 - **Documented Evidence**: Browser DevTools screenshots and network logs
 - **Reproducible Test Cases**: Steps to reproduce sample loading failures
 - **Technical Foundation**: Debug logging and error detection in place for future fixes
+- **Project Continuity**: Issue #012 and #013 created with specific requirements based on findings
+
+## Post-Investigation Tasks
+
+Upon completion of this investigation, create the following issues based on findings:
+
+- [ ] **Issue #012**: Implement sample loading indicators and error handling
+  - Scope based on identified user experience gaps
+  - Requirements informed by actual error conditions discovered
+  
+- [ ] **Issue #013**: Add multiple CDN fallback system  
+  - Design based on specific CDN failures identified
+  - Fallback strategy informed by root cause analysis
+  
+- [ ] **Additional Issues**: Create any other issues identified during investigation (e.g., caching, performance, user preferences)
 
 ---
 
-**Created**: 2025-01-21  
+**Created**: 2025-06-20  
 **Assigned**: TBD  
 **Timeline**: 1-2 weeks (Phase 1 of External Sample Integration Project)
