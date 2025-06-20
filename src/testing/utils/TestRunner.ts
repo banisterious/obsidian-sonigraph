@@ -299,7 +299,7 @@ export class TestRunner {
     private calculateOverallMetrics(testDetails: TestDetail[]): any {
         const metricsArray = testDetails
             .map(test => test.metrics)
-            .filter(metrics => metrics !== undefined) as PerformanceMetrics[];
+            .filter(metrics => metrics !== undefined && metrics !== null) as PerformanceMetrics[];
 
         if (metricsArray.length === 0) {
             return {
