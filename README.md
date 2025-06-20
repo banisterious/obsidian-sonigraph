@@ -172,7 +172,7 @@ Sonigraph has reached production status with comprehensive orchestral capabiliti
 - Performance optimizations for large vaults
 - UI/UX improvements and accessibility features
 
-1. Review the [master plan](docs/planning/sonigraph-master-plan.md) for development roadmap
+1. Review the [Development Roadmap](docs/planning/development-roadmap.md) for development roadmap
 2. Check the [implementation documentation](docs/planning/implementation-plan.md)  
 3. Open an issue or submit a pull request
 
