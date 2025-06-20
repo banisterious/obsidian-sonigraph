@@ -31936,19 +31936,76 @@ var AudioEngine = class {
       logger10.debug("audio", "Tone.js started successfully");
       this.volume = new Volume(this.settings.volume).toDestination();
       logger10.debug("audio", "Master volume created");
-      this.initializeInstruments();
+      await this.initializeEffects();
+      await this.initializeInstruments();
       await this.initializeAdvancedSynthesis();
       if ((_a = this.settings.enhancedRouting) == null ? void 0 : _a.enabled) {
-        this.initializeEnhancedRouting();
+        await this.initializeEnhancedRouting();
       } else {
-        this.initializeEffects();
         this.applyEffectSettings();
       }
       this.isInitialized = true;
+      this.generateInitializationReport();
       logger10.info("audio", "AudioEngine initialized successfully");
     } catch (error) {
       logger10.error("audio", "Failed to initialize AudioEngine", error);
       throw error;
+    }
+  }
+  /**
+   * Issue #007 Fix: Generate comprehensive initialization report
+   */
+  generateInitializationReport() {
+    var _a, _b, _c, _d;
+    const report = {
+      totalInstruments: this.instruments.size,
+      configuredVolumes: this.instrumentVolumes.size,
+      configuredEffects: this.instrumentEffects.size,
+      enabledInstruments: this.getEnabledInstrumentsForTesting().length,
+      percussionEngine: !!this.percussionEngine,
+      electronicEngine: !!this.electronicEngine,
+      voiceManager: !!this.voiceManager,
+      effectBusManager: !!this.effectBusManager,
+      enhancedRouting: (_b = (_a = this.settings.enhancedRouting) == null ? void 0 : _a.enabled) != null ? _b : false,
+      audioFormat: this.settings.audioFormat,
+      performanceMode: (_d = (_c = this.settings.performanceMode) == null ? void 0 : _c.mode) != null ? _d : "medium"
+    };
+    const configurationGaps = [];
+    if (report.totalInstruments !== report.configuredVolumes) {
+      configurationGaps.push(`Volume controls: ${report.configuredVolumes}/${report.totalInstruments}`);
+    }
+    if (report.totalInstruments !== report.configuredEffects) {
+      configurationGaps.push(`Effects configurations: ${report.configuredEffects}/${report.totalInstruments}`);
+    }
+    const status = configurationGaps.length === 0 ? "Optimal" : "Minor Issues";
+    const quality = report.percussionEngine && report.electronicEngine ? "Full Advanced Synthesis" : "Standard Synthesis";
+    logger10.info("initialization-report", "Audio Engine Initialization Summary", {
+      status,
+      quality,
+      instruments: {
+        total: report.totalInstruments,
+        enabled: report.enabledInstruments,
+        volumeControls: report.configuredVolumes,
+        effectsChains: report.configuredEffects
+      },
+      engines: {
+        percussion: report.percussionEngine ? "Ready" : "Disabled",
+        electronic: report.electronicEngine ? "Ready" : "Disabled",
+        voiceManager: report.voiceManager ? "Ready" : "Missing",
+        effectBus: report.effectBusManager ? "Ready" : "Missing"
+      },
+      configuration: {
+        audioFormat: report.audioFormat,
+        performanceMode: report.performanceMode,
+        enhancedRouting: report.enhancedRouting ? "Enabled" : "Disabled",
+        gaps: configurationGaps.length > 0 ? configurationGaps : "None"
+      }
+    });
+    if (configurationGaps.length > 0) {
+      logger10.warn("initialization-report", "Configuration gaps detected", {
+        issues: configurationGaps,
+        impact: "Some instruments may not have proper volume/effects control"
+      });
     }
   }
   async initializeAdvancedSynthesis() {
@@ -31972,37 +32029,85 @@ var AudioEngine = class {
     }
   }
   async initializeEffects() {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
     const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback"];
     for (const instrumentName of instruments) {
+      const instrumentSettings = this.settings.instruments[instrumentName];
+      const volumeLevel = (_c = (_b = instrumentSettings == null ? void 0 : instrumentSettings.volume) != null ? _b : (_a = DEFAULT_SETTINGS.instruments[instrumentName]) == null ? void 0 : _a.volume) != null ? _c : 0.7;
+      const volume = new Volume(volumeLevel);
+      this.instrumentVolumes.set(instrumentName, volume);
       const effectMap = /* @__PURE__ */ new Map();
+      const effectSettings = (_e = instrumentSettings == null ? void 0 : instrumentSettings.effects) != null ? _e : (_d = DEFAULT_SETTINGS.instruments[instrumentName]) == null ? void 0 : _d.effects;
+      const reverbSettings = (_g = (_f = effectSettings == null ? void 0 : effectSettings.reverb) == null ? void 0 : _f.params) != null ? _g : { decay: 1.8, preDelay: 0.02, wet: 0.25 };
       const reverb = new Reverb({
-        decay: 1.8,
-        preDelay: 0.02,
-        wet: 0.25
+        decay: reverbSettings.decay,
+        preDelay: reverbSettings.preDelay,
+        wet: reverbSettings.wet
       });
       await reverb.generate();
       effectMap.set("reverb", reverb);
+      const chorusSettings = (_i = (_h = effectSettings == null ? void 0 : effectSettings.chorus) == null ? void 0 : _h.params) != null ? _i : { frequency: 0.8, delayTime: 4, depth: 0.5, feedback: 0.05 };
       const chorus = new Chorus({
-        frequency: 0.8,
-        delayTime: 4,
-        depth: 0.5,
-        feedback: 0.05,
+        frequency: chorusSettings.frequency,
+        delayTime: chorusSettings.delayTime,
+        depth: chorusSettings.depth,
+        feedback: chorusSettings.feedback,
         spread: 120
       });
       chorus.start();
       effectMap.set("chorus", chorus);
+      const filterSettings = (_k = (_j = effectSettings == null ? void 0 : effectSettings.filter) == null ? void 0 : _j.params) != null ? _k : { frequency: 3500, type: "lowpass", Q: 0.8 };
       const filter = new Filter({
-        frequency: 3500,
-        type: "lowpass",
+        frequency: filterSettings.frequency,
+        type: filterSettings.type,
         rolloff: -24,
-        Q: 0.8
+        Q: filterSettings.Q
       });
       effectMap.set("filter", filter);
       this.instrumentEffects.set(instrumentName, effectMap);
     }
-    logger10.debug("effects", "Per-instrument audio effects initialized", {
+    this.validateInstrumentConfigurations(instruments);
+    logger10.info("initialization", "Per-instrument volume controls and effects initialized", {
       instrumentCount: instruments.length,
-      effectsPerInstrument: 3
+      effectsPerInstrument: 3,
+      volumeControlsCreated: instruments.length
+    });
+  }
+  /**
+   * Issue #007 Fix: Validate that all instruments have complete configuration
+   */
+  validateInstrumentConfigurations(instruments) {
+    const missingConfigurations = [];
+    const defaultsApplied = [];
+    for (const instrumentName of instruments) {
+      const hasVolume = this.instrumentVolumes.has(instrumentName);
+      const hasEffects = this.instrumentEffects.has(instrumentName);
+      const hasSettings = this.settings.instruments[instrumentName];
+      const hasDefaults = DEFAULT_SETTINGS.instruments[instrumentName];
+      if (!hasVolume || !hasEffects) {
+        missingConfigurations.push(instrumentName);
+      }
+      if (!hasSettings && hasDefaults) {
+        defaultsApplied.push(instrumentName);
+      }
+    }
+    if (missingConfigurations.length > 0) {
+      logger10.error("configuration", "Instruments missing volume or effects configuration", {
+        instruments: missingConfigurations,
+        count: missingConfigurations.length
+      });
+    }
+    if (defaultsApplied.length > 0) {
+      logger10.debug("configuration", "Applied default configuration for instruments", {
+        instruments: defaultsApplied,
+        count: defaultsApplied.length
+      });
+    }
+    logger10.info("configuration", "Configuration validation completed", {
+      totalInstruments: instruments.length,
+      fullyConfigured: instruments.length - missingConfigurations.length,
+      missingConfiguration: missingConfigurations.length,
+      defaultsApplied: defaultsApplied.length
     });
   }
   // Phase 3.5: Enhanced Effect Routing initialization
@@ -32140,7 +32245,7 @@ var AudioEngine = class {
       const volume = this.instrumentVolumes.get(instrumentName);
       const effects = this.instrumentEffects.get(instrumentName);
       if (!volume || !effects) {
-        logger10.warn("synthesis", `Missing volume or effects for instrument: ${instrumentName}`);
+        logger10.error("synthesis", `Missing volume or effects for instrument: ${instrumentName} - this indicates an initialization order problem`);
         continue;
       }
       let output = volume;
@@ -34699,8 +34804,20 @@ var AudioEngine = class {
    * Trigger advanced percussion with specialized synthesis
    */
   triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time) {
-    if (!this.percussionEngine)
+    if (!this.percussionEngine) {
+      logger10.debug("advanced-percussion", `Percussion engine not initialized, falling back to standard synthesis for ${instrumentName}`);
+      this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
       return;
+    }
+    if (!this.isValidPercussionParams(frequency, duration, velocity)) {
+      logger10.debug("advanced-percussion", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
+        frequency,
+        duration,
+        velocity
+      });
+      this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+      return;
+    }
     const detunedFrequency = this.applyFrequencyDetuning(frequency);
     const note = this.frequencyToNoteName(detunedFrequency);
     try {
@@ -34727,19 +34844,55 @@ var AudioEngine = class {
       }
       logger10.debug("advanced-percussion", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger10.error("advanced-percussion", `Failed to trigger ${instrumentName}`, error);
-      const synth = this.instruments.get(instrumentName);
-      if (synth) {
+      logger10.debug("advanced-percussion", `Falling back to standard synthesis for ${instrumentName}`, {
+        error: error instanceof Error ? error.message : String(error),
+        frequency: detunedFrequency,
+        note
+      });
+      this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+    }
+  }
+  /**
+   * Issue #007 Fix: Validate percussion parameters
+   */
+  isValidPercussionParams(frequency, duration, velocity) {
+    return frequency > 0 && frequency < 2e4 && duration > 0 && duration < 60 && velocity >= 0 && velocity <= 1;
+  }
+  /**
+   * Issue #007 Fix: Standardized fallback for failed advanced synthesis
+   */
+  triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time) {
+    const synth = this.instruments.get(instrumentName);
+    if (synth) {
+      try {
         synth.triggerAttackRelease(frequency, duration, time, velocity);
+      } catch (fallbackError) {
+        logger10.warn("synthesis-fallback", `Even standard synthesis failed for ${instrumentName}`, {
+          error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+        });
       }
+    } else {
+      logger10.warn("synthesis-fallback", `No synthesizer found for ${instrumentName}`);
     }
   }
   /**
    * Trigger advanced electronic synthesis with specialized modulation
    */
   triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time) {
-    if (!this.electronicEngine)
+    if (!this.electronicEngine) {
+      logger10.debug("advanced-electronic", `Electronic engine not initialized, falling back to standard synthesis for ${instrumentName}`);
+      this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
       return;
+    }
+    if (!this.isValidPercussionParams(frequency, duration, velocity)) {
+      logger10.debug("advanced-electronic", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
+        frequency,
+        duration,
+        velocity
+      });
+      this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+      return;
+    }
     const detunedFrequency = this.applyFrequencyDetuning(frequency);
     const note = this.frequencyToNoteName(detunedFrequency);
     try {
@@ -34760,11 +34913,12 @@ var AudioEngine = class {
       }
       logger10.debug("advanced-electronic", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger10.error("advanced-electronic", `Failed to trigger ${instrumentName}`, error);
-      const synth = this.instruments.get(instrumentName);
-      if (synth) {
-        synth.triggerAttackRelease(frequency, duration, time, velocity);
-      }
+      logger10.debug("advanced-electronic", `Falling back to standard synthesis for ${instrumentName}`, {
+        error: error instanceof Error ? error.message : String(error),
+        frequency: detunedFrequency,
+        note
+      });
+      this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
     }
   }
   /**
@@ -34786,7 +34940,10 @@ var AudioEngine = class {
       }
       logger10.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger10.error("environmental-sound", `Failed to trigger ${instrumentName}`, error);
+      logger10.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, {
+        error: error instanceof Error ? error.message : String(error),
+        frequency
+      });
     }
   }
   /**

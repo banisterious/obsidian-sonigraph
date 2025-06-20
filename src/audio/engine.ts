@@ -2227,120 +2227,37 @@ export class AudioEngine {
 			}
 
 			// Issue #006 Debug: Log instrument settings check before potential early return
-			logger.debug('issue-006-debug', 'Starting instrument settings access', {
-				instrumentName,
-				instrumentNameType: typeof instrumentName,
-				settingsExists: !!this.settings,
-				instrumentsExists: !!this.settings?.instruments,
-				action: 'before-settings-access'
-			});
 			
 			const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
 			
-			logger.debug('issue-006-debug', 'InstrumentKey created, accessing settings', {
-				instrumentKey,
-				action: 'before-instrument-settings-access'
-			});
 			
 			const instrumentSettings = this.settings.instruments[instrumentKey];
 			
-			logger.debug('issue-006-debug', 'InstrumentSettings retrieved', {
-				instrumentSettings: !!instrumentSettings,
-				action: 'after-instrument-settings-access'
-			});
 			
-			logger.info('issue-006-debug', 'Instrument settings check', {
-				action: 'instrument-enabled-check',
-				instrumentName,
-				instrumentKey,
-				instrumentSettingsExists: !!instrumentSettings,
-				instrumentEnabled: instrumentSettings?.enabled,
-				allInstrumentKeys: Object.keys(this.settings.instruments),
-				enabledInstruments: Object.entries(this.settings.instruments)
-					.filter(([_, settings]) => settings.enabled)
-					.map(([name, _]) => name)
-			});
 			
 			// Check if instrument is enabled in settings
 			if (!instrumentSettings?.enabled) {
-				logger.warn('issue-006-debug', 'Instrument disabled - blocking note trigger', { 
-					action: 'instrument-disabled-block',
-					instrumentName,
-					instrumentKey,
-					enabled: instrumentSettings?.enabled,
-					instrumentSettingsExists: !!instrumentSettings
-				});
 				return;
 			}
 
-			// Issue #006 Debug: Log the note trigger attempt with full context
-			logger.info('issue-006-debug', 'Note trigger attempt initiated', {
-				nodeId: mapping.nodeId,
-				instrument: instrumentName,
-				frequency: frequency.toFixed(2),
-				duration: duration.toFixed(2),
-				velocity: velocity.toFixed(2),
-				elapsedTime: elapsedTime.toFixed(3),
-				currentTime: currentTime.toFixed(3),
-				instrumentEnabled: instrumentSettings?.enabled,
-				hasInstrument: this.instruments.has(instrumentName),
-				contextState: getContext().state,
-				action: 'attempt-note-trigger'
-			});
 
 			// Use specialized synthesis engines if available
 			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
-				logger.info('issue-006-debug', 'Percussion engine trigger initiated', { 
-					instrumentName,
-					action: 'percussion-trigger'
-				});
 				this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
 			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
-				logger.info('issue-006-debug', 'Electronic engine trigger initiated', { 
-					instrumentName,
-					action: 'electronic-trigger'
-				});
 				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
 			} else if (this.isEnvironmentalInstrument(instrumentName)) {
-				logger.info('issue-006-debug', 'Environmental sound trigger initiated', { 
-					instrumentName,
-					action: 'environmental-trigger'
-				});
 				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
 			} else {
 				const synth = this.instruments.get(instrumentName);
-				logger.info('issue-006-debug', 'Standard instrument trigger initiated', {
-					instrumentName,
-					synthExists: !!synth,
-					synthType: synth?.constructor?.name || 'unknown',
-					action: 'standard-trigger'
-				});
 				
 				if (synth) {
 					try {
 						// Phase 3: Apply frequency detuning for phase conflict resolution
 						const detunedFrequency = this.applyFrequencyDetuning(frequency);
-						logger.info('issue-006-debug', 'Calling triggerAttackRelease on instrument', {
-							instrumentName,
-							originalFreq: frequency.toFixed(2),
-							detunedFreq: detunedFrequency.toFixed(2),
-							duration: duration.toFixed(2),
-							velocity: velocity.toFixed(2),
-							triggerTime: currentTime.toFixed(3),
-							action: 'trigger-attack-release-call'
-						});
 						
 						// Add pre-trigger audio context state logging
 						const audioContext = getContext();
-						logger.info('issue-006-debug', 'Pre-trigger audio state check', {
-							instrumentName,
-							audioContextState: audioContext.state,
-							audioContextSampleRate: audioContext.sampleRate,
-							audioContextCurrentTime: audioContext.currentTime.toFixed(3),
-							transportState: getTransport().state,
-							transportTime: getTransport().seconds.toFixed(3),
-							action: 'pre-trigger-audio-state'
-						});
 						
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 						
