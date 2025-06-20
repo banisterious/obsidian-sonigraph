@@ -7,6 +7,7 @@
 
 import { AudioEngine } from '../../audio/engine';
 import { TestDetail, PerformanceMetrics } from '../utils/MetricsCollector';
+import * as Tone from 'tone';
 
 export class AudioCracklingTests {
     private audioEngine: AudioEngine;
@@ -71,20 +72,15 @@ export class AudioCracklingTests {
         let metrics: any = {};
 
         try {
-            // Get Tone.js context (requires dynamic import to access Tone)
-            const Tone = (window as any).Tone;
-            if (!Tone) {
-                throw new Error('Tone.js not available');
-            }
-
+            // Get Tone.js context and destination
             const context = Tone.getContext();
             const destination = Tone.getDestination();
 
             metrics = {
                 contextState: context.state,
                 sampleRate: context.sampleRate,
-                baseLatency: context.baseLatency,
-                outputLatency: context.outputLatency,
+                baseLatency: (context as any).baseLatency || 0,
+                outputLatency: (context as any).outputLatency || 0,
                 maxChannelCount: destination.channelCount,
                 contextCurrentTime: context.currentTime
             };
