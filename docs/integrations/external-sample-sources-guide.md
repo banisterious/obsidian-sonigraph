@@ -394,11 +394,92 @@ const DEFAULT_AUDIO_FORMAT = 'ogg'; // Change from 'mp3'
 - ❌ **Static Library:** No dynamic sample discovery or search capabilities
 - ❌ **Coverage Gaps:** Missing some Sonigraph instrument categories
 
+**Performance Optimization Features:**
+```typescript
+// Intelligent Sample Minification Algorithm (from nbrosowsky library)
+interface MinificationStrategy {
+  samples_17_32: 'load_every_2nd';    // 50% reduction
+  samples_33_48: 'load_every_4th';    // 75% reduction  
+  samples_49_plus: 'load_every_6th';  // ~83% reduction
+}
+
+// Implementation for Sonigraph adaptation
+class PerformanceOptimizer {
+  minifySampleSet(sampleUrls: string[], enable: boolean = false): string[] {
+    if (!enable) return sampleUrls;
+    
+    const sampleCount = sampleUrls.length;
+    let reductionFactor = 1;
+    
+    if (sampleCount >= 17) reductionFactor = 2;
+    if (sampleCount >= 33) reductionFactor = 4;
+    if (sampleCount >= 49) reductionFactor = 6;
+    
+    return sampleUrls.filter((_, index) => index % reductionFactor === 0);
+  }
+}
+```
+
+**Legal Compliance Requirements:**
+```typescript
+interface LicenseCompliance {
+  code: {
+    license: 'MIT';
+    copyright: '2018 Nicholaus P. Brosowsky';
+    allowsCommercialUse: true;
+    requiresAttribution: false;
+  };
+  samples: {
+    license: 'CC-BY-3.0';
+    requiresAttribution: true;
+    allowsCommercialUse: true;
+    allowsDerivativeWorks: true;
+    attribution: {
+      VSO2: 'Versilian Studios Community Orchestra - bassoon, contrabass, flute, french horn, harp, organ, piano, trombone, trumpet, tuba, violin, xylophone';
+      Karoryfer: 'Karoryfer.com - bass-electric, guitar-electric, saxophone';
+      Freesound: 'Freesound.org - cello (12408), guitar-nylon (11573), harmonium (330410)';
+      Iowa: 'University of Iowa - guitar-acoustic samples';
+    };
+  };
+}
+```
+
+**Sample Processing Standards:**
+- **Professional Editing:** All samples trimmed, volume-matched, normalized, noise-removed, pitch-corrected
+- **Consistent Quality:** Uniform levels and characteristics across all instruments
+- **Format Optimization:** OGG compression for web delivery with quality preservation
+
+**Advanced Configuration Options:**
+```typescript
+interface NbrosowskyAdvancedConfig {
+  // Global minification for performance
+  enableMinification: boolean;
+  
+  // Custom extension management  
+  formatPreference: string[]; // ['ogg', 'wav', 'mp3']
+  
+  // Dynamic base URL switching
+  cdnEndpoints: {
+    primary: 'https://nbrosowsky.github.io/tonejs-instruments/samples/';
+    fallback: 'https://alternative-cdn.com/samples/';
+  };
+  
+  // Selective instrument loading
+  instrumentSubset: string[]; // Load only specified instruments
+  
+  // Callback-based loading
+  onLoadComplete: (instrument: string, sampler: Tone.Sampler) => void;
+  onLoadError: (instrument: string, error: Error) => void;
+}
+```
+
 **Recommended Enhancements:**
 1. **Format Alignment:** Update Sonigraph to use OGG as primary format
-2. **Percussion Supplementation:** Add Freesound.org integration for missing percussion
-3. **Experimental Expansion:** Integrate ElevenLabs for whale song and atmospheric sounds
-4. **Fallback Strategy:** Implement proper synthesis fallback for missing instruments
+2. **Performance Integration:** Implement nbrosowsky's minification algorithm for optimization
+3. **Attribution System:** Add automatic CC-BY-3.0 compliance with proper source attribution
+4. **Percussion Supplementation:** Add Freesound.org integration for missing percussion
+5. **Experimental Expansion:** Integrate ElevenLabs for whale song and atmospheric sounds
+6. **Fallback Strategy:** Implement proper synthesis fallback for missing instruments
 
 ### BBC Sound Effects Archive
 
