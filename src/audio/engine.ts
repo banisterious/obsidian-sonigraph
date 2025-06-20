@@ -7,7 +7,7 @@ import { ElectronicEngine } from './electronic-engine';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
 import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
-import { getLogger } from '../logging';
+import { getLogger, LoggerFactory } from '../logging';
 import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from './playback-events';
 
 const logger = getLogger('audio-engine');
@@ -1887,7 +1887,8 @@ export class AudioEngine {
 			// Check if instrument should be enabled but is muted (potential inconsistency)
 			const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 			if (hasInstrument && volumeNode && instrumentSettings?.enabled && volumeNode.mute === true) {
-				logger.warn('issue-006-debug', 'Enabled instrument is muted - potential state inconsistency', {
+				// Issue #009 Fix: Convert to debug level to reduce log noise
+				logger.debug('issue-006-debug', 'Enabled instrument is muted - potential state inconsistency', {
 					instrumentName,
 					instrumentEnabled: instrumentSettings.enabled,
 					volumeMuted: volumeNode.mute,
@@ -1900,12 +1901,23 @@ export class AudioEngine {
 		});
 
 		if (corruptedVolumeInstruments.length > 0) {
-			logger.error('issue-006-debug', 'CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization', {
-				corruptedVolumeInstruments,
-				corruptedCount: corruptedVolumeInstruments.length,
-				totalEnabledCount: enabledInstrumentsList.length,
-				action: 'corrupted-volume-nodes-detected'
-			});
+			// Issue #009 Fix: Only log as error in debug mode, otherwise use debug level to reduce noise
+			const currentLogLevel = LoggerFactory.getLogLevel();
+			if (currentLogLevel === 'debug') {
+				logger.error('issue-006-debug', 'CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization', {
+					corruptedVolumeInstruments,
+					corruptedCount: corruptedVolumeInstruments.length,
+					totalEnabledCount: enabledInstrumentsList.length,
+					action: 'corrupted-volume-nodes-detected'
+				});
+			} else {
+				logger.debug('issue-006-debug', 'Found enabled instruments with muted volume nodes - attempting re-initialization', {
+					corruptedVolumeInstruments,
+					corruptedCount: corruptedVolumeInstruments.length,
+					totalEnabledCount: enabledInstrumentsList.length,
+					action: 'muted-volume-nodes-detected'
+				});
+			}
 			
 			// Clear corrupted volume nodes before re-initialization
 			corruptedVolumeInstruments.forEach(instrumentName => {
@@ -1936,7 +1948,8 @@ export class AudioEngine {
 				
 				// If the instrument should be enabled but is muted, that indicates corruption
 				if (instrumentSettings?.enabled && volumeNode.mute === true) {
-					logger.warn('issue-006-debug', `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+					// Issue #009 Fix: Convert to debug level to reduce log noise
+					logger.debug('issue-006-debug', `Enabled instrument ${instrumentName} is unexpectedly muted`, {
 						instrumentName,
 						shouldBeEnabled: instrumentSettings.enabled,
 						actuallyMuted: volumeNode.mute,
@@ -1949,10 +1962,18 @@ export class AudioEngine {
 			});
 			
 			if (stillCorrupted.length > 0) {
-				logger.error('issue-006-debug', 'CRITICAL: Re-initialization failed to fix corrupted volume nodes', {
-					stillCorrupted,
-					action: 'reinitialization-failed'
-				});
+				// Issue #009 Fix: Only log as error in debug mode, otherwise use debug level to reduce noise
+				if (currentLogLevel === 'debug') {
+					logger.error('issue-006-debug', 'CRITICAL: Re-initialization failed to fix corrupted volume nodes', {
+						stillCorrupted,
+						action: 'reinitialization-failed'
+					});
+				} else {
+					logger.debug('issue-006-debug', 'Re-initialization could not unmute some volume nodes', {
+						stillCorrupted,
+						action: 'reinitialization-incomplete'
+					});
+				}
 			} else {
 				logger.info('issue-006-debug', 'Re-initialization successfully fixed all corrupted volume nodes', {
 					fixedInstruments: corruptedVolumeInstruments,
