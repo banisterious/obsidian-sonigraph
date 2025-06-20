@@ -65,9 +65,9 @@ The sample loading system follows a cascading priority model for reliability and
 
 ```typescript
 interface SampleSourcePriority {
-  primary: 'cdn-samples';           // Current CDN system
-  secondary: 'freesound-api';       // Real-time API access
-  tertiary: 'cached-external';     // Pre-downloaded external samples
+  primary: 'nbrosowsky-cdn';        // nbrosowsky-tonejs-instruments GitHub CDN  
+  secondary: 'freesound-api';       // Real-time API access for missing instruments
+  tertiary: 'cached-external';     // Pre-downloaded external samples (BBC, Archive.org)
   fallback: 'synthesis-engine';    // Built-in synthesis
 }
 ```
@@ -249,6 +249,156 @@ class ElevenLabsGenerator implements SampleSourceAdapter {
 ---
 
 ## Manual Integration Sources
+
+### nbrosowsky-tonejs-instruments (Primary CDN)
+
+**Overview:** Open-source Tone.js instrument sample library serving as Sonigraph's primary sample CDN
+**Repository:** https://github.com/nbrosowsky/tonejs-instruments  
+**Access Method:** Direct HTTPS CDN access to GitHub Pages  
+**Primary Use Cases:** Core instrumental samples across all orchestral families
+
+**Current Integration Status:**
+```typescript
+interface NbrosowskyConfig {
+  baseUrl: 'https://nbrosowsky.github.io/tonejs-instruments/samples/';
+  primaryFormat: 'ogg';        // 899 OGG files available
+  fallbackFormat: 'wav';       // 44 WAV files available  
+  unsupportedFormat: 'mp3';    // Only 16 MP3 references (mostly documentation)
+  totalInstruments: 19;        // Piano, strings, brass, woodwinds, etc.
+  licenseType: 'MIT/CC-by-3.0'; // Code: MIT, Samples: CC-by-3.0
+}
+```
+
+**Sample Repository Structure:**
+```
+samples/
+├── bass-electric/     # 17 OGG samples (As1-G4)
+├── bassoon/          # 10 OGG samples (A2-G4)  
+├── cello/            # 33 OGG samples (A2-Gs4)
+├── clarinet/         # 11 OGG samples (As3-Fs6)
+├── contrabass/       # 12 OGG samples (A2-G1)
+├── flute/            # 16 OGG samples (A5-C4)
+├── french-horn/      # 18 OGG samples (A2-F5)
+├── guitar-acoustic/  # 48 OGG samples (A3-F5)
+├── guitar-electric/  # 15 OGG samples (As2-Fs4)
+├── guitar-nylon/     # 40 OGG samples (A3-C6)
+├── harmonium/        # 16 OGG samples (C3-B4)
+├── harp/             # 47 OGG samples (C1-G7)
+├── organ/            # 16 OGG samples (C3-B4)
+├── piano/            # 88 OGG samples (A0-C8)
+├── saxophone/        # 26 OGG samples (As3-A5)
+├── trombone/         # 12 OGG samples (As1-Gs4)
+├── trumpet/          # 16 OGG samples (C4-As5)
+├── tuba/             # 8 OGG samples (As1-Fs3)
+└── violin/           # 45 OGG samples (A4-C7)
+```
+
+**Format Reality vs. Documentation:**
+- **Library Claims:** Supports `.[mp3|ogg]` with MP3 as primary, OGG as fallback
+- **Actual Repository:** 899 OGG files, 44 WAV files, only 16 MP3 references
+- **Sonigraph Usage:** Currently requests MP3 files that don't exist, causing 404 errors
+- **Recommended Format:** OGG (primary) with WAV fallback for maximum compatibility
+
+**Integration Patterns:**
+```typescript
+class NbrosowskyAdapter implements SampleSourceAdapter {
+  sourceId = 'nbrosowsky-cdn';
+  priority = 1; // Primary source
+  
+  private readonly BASE_URL = 'https://nbrosowsky.github.io/tonejs-instruments/samples/';
+  private readonly FORMAT_PREFERENCE = ['ogg', 'wav']; // Avoid MP3
+  
+  async loadSample(instrumentKey: string, note: string): Promise<AudioBuffer> {
+    // Use actual available formats instead of documented ones
+    for (const format of this.FORMAT_PREFERENCE) {
+      try {
+        const url = `${this.BASE_URL}${instrumentKey}/${note}.${format}`;
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          return await this.audioContext.decodeAudioData(arrayBuffer);
+        }
+      } catch (error) {
+        console.warn(`Failed to load ${instrumentKey}/${note}.${format}:`, error);
+        continue; // Try next format
+      }
+    }
+    
+    throw new Error(`No available format found for ${instrumentKey}/${note}`);
+  }
+  
+  // Map Sonigraph instruments to nbrosowsky repository structure
+  private mapSonigraphToNbrosowsky(sonigraphInstrument: string): string {
+    const mapping = {
+      'piano': 'piano',
+      'organ': 'organ', 
+      'strings': 'violin',     // Default string sound
+      'violin': 'violin',
+      'cello': 'cello',
+      'guitar': 'guitar-acoustic',
+      'harp': 'harp',
+      'trumpet': 'trumpet',
+      'frenchHorn': 'french-horn',
+      'trombone': 'trombone',
+      'tuba': 'tuba',
+      'flute': 'flute',
+      'clarinet': 'clarinet',
+      'saxophone': 'saxophone',
+      'bassoon': 'bassoon',
+      'electricGuitar': 'guitar-electric',
+      'electricBass': 'bass-electric',
+      'contrabass': 'contrabass',
+      'harmonium': 'harmonium',
+      'nylonGuitar': 'guitar-nylon'
+    };
+    
+    return mapping[sonigraphInstrument] || sonigraphInstrument;
+  }
+}
+```
+
+**Current Issues (Issue #005):**
+- **Configuration Sync Bug:** AudioEngine.updateSettings() doesn't update InstrumentConfigLoader format
+- **Hard-coded MP3:** PercussionEngine uses hard-coded `.mp3` extensions
+- **404 Errors:** Requesting MP3 files that don't exist (e.g., `timpani/Bb2.mp3`)
+- **Format Mismatch:** Library expects MP3 but repository contains OGG
+
+**Resolution Strategy:**
+```typescript
+// Fix 1: Proper format synchronization in AudioEngine.updateSettings()
+if (settings.audioFormat !== this.settings.audioFormat) {
+    this.instrumentConfigLoader.updateAudioFormat(settings.audioFormat);
+    await this.reinitializeSampleBasedInstruments();
+}
+
+// Fix 2: Use OGG as default format instead of MP3
+const DEFAULT_AUDIO_FORMAT = 'ogg'; // Change from 'mp3'
+
+// Fix 3: Remove hard-coded MP3 extensions in PercussionEngine
+// Use InstrumentConfigLoader for all sample URL generation
+```
+
+**Advantages:**
+- ✅ **Currently Integrated:** Already serving as primary sample source
+- ✅ **Comprehensive Coverage:** 19 instruments across orchestral families  
+- ✅ **High Quality:** Professional samples with consistent levels
+- ✅ **Open License:** MIT code license, CC-by-3.0 sample license
+- ✅ **CDN Performance:** GitHub Pages provides reliable global CDN
+- ✅ **No API Limits:** Direct file access without rate limiting
+
+**Limitations:**
+- ❌ **Limited Percussion:** Missing timpani, xylophone, vibraphone, gongs
+- ❌ **No Experimental Sounds:** No whale song, atmospheric, or electronic synthesis
+- ❌ **Format Documentation Gap:** Claims MP3 support but provides OGG
+- ❌ **Static Library:** No dynamic sample discovery or search capabilities
+- ❌ **Coverage Gaps:** Missing some Sonigraph instrument categories
+
+**Recommended Enhancements:**
+1. **Format Alignment:** Update Sonigraph to use OGG as primary format
+2. **Percussion Supplementation:** Add Freesound.org integration for missing percussion
+3. **Experimental Expansion:** Integrate ElevenLabs for whale song and atmospheric sounds
+4. **Fallback Strategy:** Implement proper synthesis fallback for missing instruments
 
 ### BBC Sound Effects Archive
 
