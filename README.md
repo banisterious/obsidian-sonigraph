@@ -35,6 +35,15 @@ Sonigraph is an advanced Obsidian plugin that maps the visual structure of your 
 - **Real-time Audio Feedback**: Visual and auditory feedback during graph playback
 - **Comprehensive Settings**: Detailed control over all 34 instruments and their parameters
 
+## 📦 Installation
+
+**Recommended:** Install via [BRAT Plugin](https://github.com/TfTHacker/obsidian42-brat)
+1. Install the BRAT plugin in Obsidian
+2. Use BRAT to install from GitHub: `banisterious/obsidian-sonigraph`
+3. Enable Sonigraph in Community Plugins settings
+
+**Manual Installation:** Download the latest release and extract to your vault's plugins folder
+
 ---
 
 ## Support My Work
