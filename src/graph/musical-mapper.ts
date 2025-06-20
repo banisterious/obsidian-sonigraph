@@ -96,12 +96,17 @@ export class MusicalMapper {
 			timing
 		});
 
+		// Issue #010 Fix: Assign instruments to notes to prevent all notes defaulting to same instrument
+		// This prevents crackling from overlapping notes on the same instrument
+		const instrument = this.assignInstrumentToNode(node, index, totalNodes);
+
 		return {
 			nodeId: node.id,
 			pitch,
 			duration,
 			velocity,
-			timing
+			timing,
+			instrument
 		};
 	}
 
@@ -113,27 +118,37 @@ export class MusicalMapper {
 		// Normalize connection count to scale position
 		const normalizedPosition = Math.min(connections / maxConnections, 1);
 		
-		// Map to scale notes across 3 octaves
-		const scalePosition = Math.floor(normalizedPosition * (this.scale.length * 3));
+		// Issue #010 Fix: Add frequency diversification to reduce clustering at same pitch
+		// Use a power curve to spread low connection counts across more frequencies
+		const diversifiedPosition = Math.pow(normalizedPosition, 0.7); // Power curve for better distribution
+		
+		// Map to scale notes across 4 octaves instead of 3 for more range
+		const scalePosition = Math.floor(diversifiedPosition * (this.scale.length * 4));
 		const octave = Math.floor(scalePosition / this.scale.length);
 		const noteInScale = scalePosition % this.scale.length;
 		
-		// Calculate frequency: root * 2^(semitones/12)
-		const semitones = this.scale[noteInScale] + (octave * 12);
-		const frequency = this.rootNoteFreq * Math.pow(2, semitones / 12);
+		// Calculate base frequency
+		const baseFrequency = this.rootNoteFreq * Math.pow(2, (this.scale[noteInScale] + (octave * 12)) / 12);
+		
+		// Issue #010 Future-Proof Fix: Deterministic micro-detuning to prevent phase interference
+		// Use node characteristics for consistent but varied detuning
+		const nodeHash = this.hashString(`${connections}-${maxConnections}-freq`);
+		const detuningAmount = this.settings.antiCracklingDetuning || 2.0; // Default ±2 cents, configurable
+		const detuningCents = ((nodeHash % 100) / 100 - 0.5) * detuningAmount; // Deterministic ±cents
+		const detunedFrequency = baseFrequency * Math.pow(2, detuningCents / 1200);
 
-		return frequency;
+		return detunedFrequency;
 	}
 
 	private mapWordCountToDuration(wordCount: number): number {
-		// Short durations to eliminate overlap entirely
-		const baseDuration = 0.4;
-		const maxDuration = 0.8;
-		const minDuration = 0.2;
+		// Shorter durations to reduce overlap and crackling
+		const baseDuration = 0.3;
+		const maxDuration = 0.6;  // Reduced from 0.8
+		const minDuration = 0.15; // Reduced from 0.2
 
 		// Enhanced logarithmic scaling for word count with better progression
-		const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.8;
-		const scaledDuration = baseDuration + scaleFactor + (wordCount > 100 ? 0.5 : 0);
+		const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.6; // Reduced scaling
+		const scaledDuration = baseDuration + scaleFactor + (wordCount > 100 ? 0.3 : 0); // Reduced bonus
 		
 		return Math.max(minDuration, Math.min(maxDuration, scaledDuration));
 	}
@@ -205,6 +220,21 @@ export class MusicalMapper {
 			mapping.timing = Math.max(0, baseTime + randomOffset);
 		});
 
+		// Issue #010 Additional Fix: Add micro-jittering to prevent simultaneous note triggers
+		// Sort by timing to identify clusters
+		sequence.sort((a, b) => a.timing - b.timing);
+		const jitterAmount = 0.02; // 20ms jitter window
+		
+		for (let i = 1; i < sequence.length; i++) {
+			const timeDiff = sequence[i].timing - sequence[i-1].timing;
+			// If notes are too close (within 50ms), add small jitter
+			if (timeDiff < 0.05) {
+				const jitter = Math.random() * jitterAmount;
+				sequence[i].timing += jitter;
+				logger.debug('sequence', `Applied anti-crackling jitter: ${jitter.toFixed(3)}s to note ${i}`);
+			}
+		}
+
 		// Apply tempo scaling (convert to musical time)
 		const beatDuration = 60 / this.settings.tempo; // seconds per beat
 		const tempoMultiplier = Math.sqrt(beatDuration / 0.5); // Gentler scaling using square root
@@ -244,5 +274,86 @@ export class MusicalMapper {
 			tempo: this.settings.tempo,
 			scaleNotes: this.scale
 		};
+	}
+
+	/**
+	 * Issue #010 Fix: Assign instruments to notes based on characteristics
+	 * This prevents all notes from defaulting to the same instrument and causing crackling
+	 * Only suggests enabled instruments to prevent fallback to default
+	 */
+	private assignInstrumentToNode(node: GraphNode, index: number, totalNodes: number): string {
+		// Get enabled instruments from settings
+		const enabledInstruments = Object.keys(this.settings.instruments).filter(instrumentName => 
+			this.settings.instruments[instrumentName as keyof typeof this.settings.instruments]?.enabled
+		);
+
+		if (enabledInstruments.length === 0) {
+			return 'piano'; // Fallback if no instruments enabled
+		}
+
+		if (enabledInstruments.length === 1) {
+			return enabledInstruments[0]; // Only one option
+		}
+
+		// Define instrument families by frequency range and characteristics (corrected names)
+		const instrumentsByRange = {
+			low: ['bass', 'tuba', 'cello', 'bassSynth', 'timpani'],
+			mid: ['piano', 'strings', 'guitar', 'organ', 'pad', 'saxophone', 'trombone', 'frenchHorn'],
+			high: ['violin', 'flute', 'clarinet', 'trumpet', 'soprano', 'xylophone', 'vibraphone', 'oboe'],
+			very_high: ['alto', 'tenor', 'leadSynth', 'arpSynth', 'gongs', 'harp']
+		};
+
+		// Determine frequency range based on connections (matches our pitch mapping)
+		const connectionRatio = node.connectionCount / Math.max(totalNodes, 1);
+		let rangeKey: keyof typeof instrumentsByRange;
+		
+		if (connectionRatio < 0.25) {
+			rangeKey = 'low';
+		} else if (connectionRatio < 0.5) {
+			rangeKey = 'mid';
+		} else if (connectionRatio < 0.75) {
+			rangeKey = 'high';
+		} else {
+			rangeKey = 'very_high';
+		}
+
+		// Filter candidate instruments to only enabled ones
+		const candidateInstruments = instrumentsByRange[rangeKey].filter(instrument => 
+			enabledInstruments.includes(instrument)
+		);
+
+		// If no enabled instruments in this range, fall back to any enabled instrument
+		const finalCandidates = candidateInstruments.length > 0 ? candidateInstruments : enabledInstruments;
+
+		// Use node characteristics to pick a specific instrument
+		const nodeHash = this.hashString(node.id + node.name);
+		const instrumentIndex = nodeHash % finalCandidates.length;
+		const selectedInstrument = finalCandidates[instrumentIndex];
+
+		logger.debug('instrument-assignment', `Assigned ${selectedInstrument} to node ${node.name}`, {
+			nodeId: node.id,
+			connections: node.connectionCount,
+			connectionRatio: connectionRatio.toFixed(3),
+			range: rangeKey,
+			instrument: selectedInstrument,
+			candidateInstruments,
+			enabledInstruments: enabledInstruments.length,
+			finalCandidates
+		});
+
+		return selectedInstrument;
+	}
+
+	/**
+	 * Simple string hash function for consistent instrument assignment
+	 */
+	private hashString(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i);
+			hash = ((hash << 5) - hash) + char;
+			hash = hash & hash; // Convert to 32-bit integer
+		}
+		return Math.abs(hash);
 	}
 } 
