@@ -60,17 +60,16 @@ If you find this plugin useful, please consider supporting its development!
 
 ## 🎼 Orchestral Instrument Families
 
-### Strings (7 instruments)
-- **Violin**, **Viola**, **Cello**, **Double Bass** - Traditional bowed strings
+### Strings (5 instruments)
+- **Violin**, **Cello** - Traditional bowed strings
 - **Harp** - Plucked strings with glissando effects
-- **Piano** - Percussive strings with full keyboard range
 - **Guitar** - Steel-string acoustic with fingerpicking and strumming
+- **Strings** - Full orchestral string section
 
-### Woodwinds (5 instruments) 
+### Woodwinds (4 instruments) 
 - **Flute** - Pure tone with breath control
 - **Clarinet** - Rich, woody timbre across registers
 - **Saxophone** - Jazz-influenced with vibrato and growl
-- **Bassoon** - Deep, reedy bass register
 - **Oboe** - Piercing, nasal tone with expressiveness
 
 ### Brass (4 instruments)
@@ -79,11 +78,14 @@ If you find this plugin useful, please consider supporting its development!
 - **Trombone** - Smooth glissando and powerful projection
 - **Tuba** - Foundation bass with deep resonance
 
-### Vocals (4 instruments)
+### Vocals (7 instruments)
 - **Soprano** - High female voice with lyrical purity
 - **Alto** - Rich contralto with warm chest tones
 - **Tenor** - Male lead voice with heroic quality
 - **Bass** - Deep male voice with authoritative presence
+- **Choir** - Mixed vocal ensemble
+- **Vocal Pads** - Sustained vocal textures
+- **Pad** - Ambient vocal synthesis
 
 ### Percussion (4 instruments)
 - **Timpani** - Tuned kettle drums with pitch bending
@@ -135,16 +137,21 @@ If you find this plugin useful, please consider supporting its development!
 ### Quick Start
 1. Install and enable the plugin in Obsidian
 2. Open the Audio Control Center from the ribbon or command palette
-3. Configure your desired instruments in the **Instruments** tab
-4. Adjust effects and presets in the **Effects** tab  
+3. Configure your desired instruments in the family tabs (Strings, Brass, etc.)
+4. Adjust effects and presets in the **Master** tab  
 5. Play your knowledge graph with the **Play** button
 
 ### Audio Control Center Tabs
 - **Status**: Real-time system diagnostics and performance monitoring
-- **Instruments**: Enable/disable and configure all 34 orchestral instruments
 - **Musical**: Set scales, tempo, and musical parameters
-- **Harmony**: Advanced harmonic processing and chord settings
-- **Effects**: Professional audio effects with family organization
+- **Master**: Global controls, master effects, and bulk operations
+- **Strings**: String family instruments (violin, cello, guitar, harp, strings)
+- **Woodwinds**: Woodwind family (flute, clarinet, saxophone, oboe)
+- **Brass**: Brass family (trumpet, french horn, trombone, tuba)
+- **Vocals**: Vocal family (choir, soprano, alto, tenor, bass, vocal pads, pad)
+- **Percussion**: Percussion family (timpani, xylophone, vibraphone, gongs)
+- **Electronic**: Electronic family (lead synth, bass synth, arp synth)
+- **Experimental**: Experimental/environmental sounds (whale song)
 
 ## 🤝 Contributing
 
