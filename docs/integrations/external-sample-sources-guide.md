@@ -50,10 +50,51 @@ This document outlines the comprehensive strategy for integrating external sampl
 - Provide seamless user experience regardless of sample origin
 
 **Source Categories:**
-1. **API-Enabled Sources:** Real-time programmatic access with search capabilities
-2. **Manual Integration Sources:** High-quality curated collections requiring pre-processing
-3. **AI-Generated Sources:** On-demand synthesis for unique sounds
-4. **Community Sources:** User-contributed and field recording collections
+1. **Primary CDN Sources:** Current nbrosowsky-tonejs-instruments GitHub CDN
+2. **API-Enabled Sources:** Real-time programmatic access with search capabilities
+3. **Manual Integration Sources:** High-quality curated collections requiring pre-processing
+4. **AI-Generated Sources:** On-demand synthesis for unique sounds
+5. **Community Sources:** User-contributed and field recording collections
+
+### Current CDN Analysis (nbrosowsky-tonejs-instruments)
+
+**Status:** Currently integrated as primary sample source  
+**Format:** OGG Vorbis (899 files total)  
+**Coverage:** 23 orchestral instruments with varying note coverage
+
+**Available Instruments & Sample Counts:**
+- **piano**: 86 samples (A1-G7, comprehensive coverage)
+- **organ**: 20 samples (A1-Fs5, selective coverage)  
+- **harp**: 20 samples (E1-G5, harp-specific note selection)
+- **violin**: 15 samples (A3-G6, violin range)
+- **cello**: 40 samples (C2-Gs4, comprehensive cello range)
+- **guitar-acoustic**: 38 samples (D2-Gs4, guitar tuning)
+- **guitar-electric**: 16 samples (A2-Fs5, electric-specific)
+- **guitar-nylon**: 26 samples (B1-Gs5, classical guitar)
+- **bass-electric**: 17 samples (As1-G4, bass range)
+- **contrabass**: 13 samples (G1-Gs3, double bass)
+- **harmonium**: 33 samples (A2-Gs4, harmonium range)
+- **trumpet**: 11 samples (F3-C6, trumpet range)
+- **trombone**: 17 samples (As1-Gs3, trombone range)
+- **tuba**: 9 samples (F1-F3, tuba range)
+- **french-horn**: 10 samples (A1-F5, horn range)
+- **flute**: 10 samples (A4-E6, flute range)
+- **clarinet**: 11 samples (As3-Fs6, clarinet range)
+- **saxophone**: 33 samples (A4-Gs5, saxophone range)
+- **bassoon**: 10 samples (A2-G4, bassoon range)
+- **xylophone**: **8 samples only** (G4, C5-C8, G5-G7)
+
+**Notable Gaps & Issues:**
+- **Missing Percussion**: No timpani, vibraphone, or gongs directories
+- **Missing Vocal**: No choir, soprano, alto, tenor, or bass samples
+- **Missing Electronic**: No synthesizer or electronic instrument samples
+- **Limited Xylophone**: Only 8 notes available (C and G notes)
+- **Format Limitation**: Only OGG format available (no MP3 or WAV)
+
+**Licensing:**
+- **Source**: Creative Commons and MIT licensed samples
+- **Attribution Required**: Full attribution metadata included
+- **Commercial Use**: Permitted under license terms
 
 ---
 

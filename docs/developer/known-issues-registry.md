@@ -6,7 +6,7 @@
 2. ✅ [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture) - **RESOLVED**
 3. ✅ [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure) - **RESOLVED**
 4. ✅ [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
-5. 🔍 [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **ACTIVE**
+5. ✅ [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **RESOLVED**
 6. ✅ [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
 7. ✅ [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
 8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
@@ -22,7 +22,7 @@
 | 002 | ✅ RESOLVED | High | Audio Engine | Monolithic audio engine architecture | [Refactoring Plan](../archive/issues/issue-002-monolithic-architecture-refactoring.md) |
 | 003 | ✅ RESOLVED | High | Audio Engine | Instrument family playback failure | [Resolution](../archive/issues/issue-003-instrument-playback-failure.md) |
 | 004 | ✅ RESOLVED | Medium | UI Components | Confusing tab counter display format | [Analysis](../archive/issues/issue-004-tab-counter-display.md) |
-| 005 | 🔍 ACTIVE | Medium | Audio Engine | MP3 sample format loading failures | [Debug](./issue-005-mp3-sample-loading.md) |
+| 005 | ✅ RESOLVED | Medium | Audio Engine | MP3 sample format loading failures | [Resolution](../archive/issues/issue-005-mp3-sample-loading.md) |
 | 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](../archive/issues/issue-006-play-button-single-use.md) |
 | 007 | ✅ RESOLVED | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Resolution](../archive/issues/issue-007-audio-engine-logging-noise-resolution.md) |
 | 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
@@ -168,17 +168,34 @@ Family tabs displayed confusing counter formats like "4/3" that didn't clearly c
 
 ## Issue #005: MP3 Sample Format Loading Failures
 
-**Status:** 🔍 ACTIVE  
+**Status:** ✅ RESOLVED and CLOSED  
 **Priority:** Medium  
 **Component:** Audio Engine  
-**Affected Files:** `src/audio/engine.ts`, sample loading logic, CDN configuration
+**Resolved:** 2025-06-20  
+**Affected Files:** `src/audio/engine.ts`, `src/audio/percussion-engine.ts`, InstrumentConfigLoader synchronization
 
 ### Summary
 
-Audio Format dropdown includes MP3 option that fails to load samples, causing console errors and fallback to synthesis. WAV and "Synthesis Only" options work correctly.
+Audio Format dropdown MP3 option failed to load samples due to configuration synchronization bug between AudioEngine and InstrumentConfigLoader. **RESOLVED** through comprehensive format synchronization with OGG format correction and synthesis fallbacks.
 
-### Detailed Analysis
-👉 **[Sample Loading Debug & CDN Analysis](./issue-005-mp3-sample-loading.md)**
+### ✅ RESOLUTION STATUS (2025-06-20)
+
+**Root Cause Identified:** Multiple interconnected issues:
+1. Configuration sync bug - AudioEngine didn't update sample loaders when format changed
+2. Wrong format assumption - Only OGG files exist on nbrosowsky CDN (not MP3 or WAV)
+3. Missing instruments - Timpani, vibraphone, gongs directories don't exist on CDN
+4. Hard-coded extensions - PercussionEngine bypassed config system
+
+**Complete Solution Implemented:**
+- **Format Synchronization**: AudioEngine now properly updates both InstrumentConfigLoader and PercussionEngine
+- **OGG Format Correction**: All sample loading now uses OGG (the only format available on CDN)
+- **Synthesis Fallbacks**: Missing percussion instruments use synthesis instead of failing
+- **Future-Proof Architecture**: Dynamic format update capability for new sample sources
+
+**Result:** All 36 MP3/WAV 404 errors eliminated, comprehensive fix validates successfully
+
+### Detailed Analysis & Resolution
+👉 **[Complete Investigation & Solution Implementation](../archive/issues/issue-005-mp3-sample-loading.md)**
 
 ---
 
@@ -336,7 +353,6 @@ if (currentLogLevel === 'debug') {
 ## 🔧 Current Issue Status
 
 **Active Issues:**
-- 🔍 **Issue #005**: MEDIUM - MP3 sample format loading failures
 - 🔍 **Issue #008**: HIGH - Progressive audio generation failure
 
 **Resolved Issues:**
@@ -344,8 +360,9 @@ if (currentLogLevel === 'debug') {
 - ✅ **Issue #002**: Monolithic architecture successfully refactored
 - ✅ **Issue #003**: Instrument family playback failure completely resolved (all 34 instruments working)
 - ✅ **Issue #004**: Tab counter display format fixed with dynamic calculation
+- ✅ **Issue #005**: MP3 sample format loading failures completely resolved with format synchronization
 - ✅ **Issue #006**: Play button single-use problem completely resolved with volume node corruption detection
 - ✅ **Issue #007**: Audio engine logging noise completely resolved (44 → 0 noise entries)
 - ✅ **Issue #009**: Volume node muting detection noise completely resolved (34 → 0 log entries)
 
-**System Status:** **FUNCTIONAL WITH DEGRADATION** - Play button works reliably, but audio generation fails progressively in extended sessions 🔧
+**System Status:** **HIGHLY FUNCTIONAL** - Only Issue #008 remains active; all sample loading and core functionality working reliably 🎵
