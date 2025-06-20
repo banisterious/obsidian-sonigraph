@@ -28126,7 +28126,7 @@ var TestRunner = class {
    * Calculate overall performance metrics from test details
    */
   calculateOverallMetrics(testDetails) {
-    const metricsArray = testDetails.map((test) => test.metrics).filter((metrics) => metrics !== void 0);
+    const metricsArray = testDetails.map((test) => test.metrics).filter((metrics) => metrics !== void 0 && metrics !== null);
     if (metricsArray.length === 0) {
       return {
         averageMetrics: this.getEmptyMetrics(),
