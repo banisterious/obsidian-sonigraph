@@ -11,6 +11,7 @@
 7. ✅ [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
 8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
 9. ✅ [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
+10. 🔍 [Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **ACTIVE**
 
 ---
 
@@ -27,6 +28,7 @@
 | 007 | ✅ RESOLVED | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Resolution](../archive/issues/issue-007-audio-engine-logging-noise-resolution.md) |
 | 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
 | 009 | ✅ RESOLVED | Medium | Audio Engine | Instrument volume node muting and corruption detection | [Resolution](../archive/issues/issue-009-instrument-volume-node-muting.md) |
+| 010 | 🔍 ACTIVE | High | Audio Engine | Audio crackling during playback | [Analysis](./issue-010-audio-crackling-during-playback.md) |
 
 ---
 
@@ -350,10 +352,45 @@ if (currentLogLevel === 'debug') {
 
 ---
 
+## Issue #010: Audio Crackling During Playback
+
+**Status:** 🔍 ACTIVE  
+**Priority:** High  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, audio quality and performance systems
+
+### Summary
+
+Audio crackling sounds are audible during playback despite successful resolution of Issue #001. This indicates potential new audio quality issues related to resource management, performance, or audio context state.
+
+### Technical Details
+- **Audio Output**: ✅ Functional but with quality degradation
+- **Crackling Pattern**: Under investigation - timing, intensity, correlation factors
+- **System Impact**: Affects user experience and professional usability
+- **Relationship to Issue #001**: Different root cause suspected (resource vs timing/density)
+
+### Impact
+- **Audio Quality**: Crackling artifacts degrade listening experience
+- **User Experience**: Compromises musical content appreciation
+- **System Health**: May indicate progressive audio system issues
+- **Professional Use**: Impacts plugin's professional audio standards
+
+### Investigation Status
+- **Phase 1**: 🔍 ACTIVE - Initial assessment and characterization
+- **Resource Analysis**: Monitoring CPU, memory, and audio context state
+- **Environment Testing**: Cross-browser and device compatibility
+- **Performance Correlation**: Checking relationship with Issue #008
+
+### Detailed Analysis & Investigation
+👉 **[Complete Audio Crackling Investigation](./issue-010-audio-crackling-during-playback.md)**
+
+---
+
 ## 🔧 Current Issue Status
 
 **Active Issues:**
 - 🔍 **Issue #008**: HIGH - Progressive audio generation failure
+- 🔍 **Issue #010**: HIGH - Audio crackling during playback
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
@@ -365,4 +402,4 @@ if (currentLogLevel === 'debug') {
 - ✅ **Issue #007**: Audio engine logging noise completely resolved (44 → 0 noise entries)
 - ✅ **Issue #009**: Volume node muting detection noise completely resolved (34 → 0 log entries)
 
-**System Status:** **HIGHLY FUNCTIONAL** - Only Issue #008 remains active; all sample loading and core functionality working reliably 🎵
+**System Status:** **FUNCTIONAL WITH QUALITY CONCERNS** - Issues #008 and #010 active; core functionality working but audio quality affected 🎵
