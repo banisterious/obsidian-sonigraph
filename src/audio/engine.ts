@@ -66,7 +66,7 @@ export class AudioEngine {
 		this.voiceManager = new VoiceManager(true); // Enable adaptive quality by default
 		this.effectBusManager = new EffectBusManager();
 		this.instrumentConfigLoader = new InstrumentConfigLoader({
-			audioFormat: 'mp3',
+			audioFormat: 'ogg', // Use OGG since it's the only format available on nbrosowsky CDN
 			preloadFamilies: true
 		});
 		
@@ -373,9 +373,9 @@ export class AudioEngine {
 		logger.info('advanced-synthesis', 'Initializing Phase 8 advanced synthesis engines');
 		
 		try {
-			// Initialize percussion engine
+			// Initialize percussion engine with OGG format (only format available on CDN)
 			if (this.volume) {
-				this.percussionEngine = new PercussionEngine(this.volume);
+				this.percussionEngine = new PercussionEngine(this.volume, 'ogg');
 				await this.percussionEngine.initializePercussion();
 				logger.debug('percussion', 'Advanced percussion synthesis initialized');
 			}
@@ -2405,6 +2405,20 @@ export class AudioEngine {
 		// This ensures that instrument enable/disable changes are reflected in playback
 		this.onInstrumentSettingsChanged();
 		
+		// Issue #005 Fix: Update InstrumentConfigLoader with new audio format
+		// This ensures that format changes are propagated to the sample loading system
+		// Only update if format is sample-based (not synthesis-only)
+		if (settings.audioFormat !== 'synthesis') {
+			// Convert to ogg since that's the only format that actually exists on nbrosowsky CDN
+			const effectiveFormat = 'ogg';
+			this.instrumentConfigLoader.updateAudioFormat(effectiveFormat as 'mp3' | 'wav' | 'ogg');
+			
+			// Also update PercussionEngine format if it exists
+			if (this.percussionEngine) {
+				this.percussionEngine.updateAudioFormat(effectiveFormat as 'wav' | 'ogg' | 'mp3');
+			}
+		}
+		
 		this.updateVolume();
 		
 		// Apply effect settings if engine is initialized
@@ -2415,6 +2429,7 @@ export class AudioEngine {
 		logger.debug('settings', 'Audio settings updated', {
 			volume: settings.volume,
 			tempo: settings.tempo,
+			audioFormat: settings.audioFormat,
 			effectsApplied: this.isInitialized
 		});
 	}

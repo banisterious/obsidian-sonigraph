@@ -26767,6 +26767,27 @@ var ModulationSynth = class extends Monophonic {
   }
 };
 
+// node_modules/tone/build/esm/instrument/AMSynth.js
+var AMSynth = class extends ModulationSynth {
+  constructor() {
+    super(optionsFromArguments(AMSynth.getDefaults(), arguments));
+    this.name = "AMSynth";
+    this._modulationScale = new AudioToGain({
+      context: this.context
+    });
+    this.frequency.connect(this._carrier.frequency);
+    this.frequency.chain(this.harmonicity, this._modulator.frequency);
+    this.detune.fan(this._carrier.detune, this._modulator.detune);
+    this._modulator.chain(this._modulationScale, this._modulationNode.gain);
+    this._carrier.chain(this._modulationNode, this.output);
+  }
+  dispose() {
+    super.dispose();
+    this._modulationScale.dispose();
+    return this;
+  }
+};
+
 // node_modules/tone/build/esm/component/filter/BiquadFilter.js
 var BiquadFilter = class extends ToneAudioNode {
   constructor() {
@@ -29033,7 +29054,7 @@ init_constants();
 // src/audio/percussion-engine.ts
 var logger6 = getLogger("percussion-engine");
 var PercussionEngine = class {
-  constructor(masterVolume) {
+  constructor(masterVolume, audioFormat = "wav") {
     this.timpaniSamplers = /* @__PURE__ */ new Map();
     this.xylophoneSamplers = /* @__PURE__ */ new Map();
     this.vibraphoneSamplers = /* @__PURE__ */ new Map();
@@ -29044,6 +29065,7 @@ var PercussionEngine = class {
     this.malletEnvelopes = /* @__PURE__ */ new Map();
     this.gongResonators = /* @__PURE__ */ new Map();
     this.masterVolume = masterVolume;
+    this.audioFormat = audioFormat;
     logger6.debug("initialization", "PercussionEngine created");
   }
   async initializePercussion() {
@@ -29060,18 +29082,19 @@ var PercussionEngine = class {
     }
   }
   async initializeTimpani() {
+    logger6.warn("timpani", "Timpani samples not available on CDN, using synthesis fallback");
     const timpaniSizes = ["small", "medium", "large"];
     for (const size of timpaniSizes) {
-      const sampler = new Sampler({
-        urls: {
-          "C2": "C2.mp3",
-          "F2": "F2.mp3",
-          "Bb2": "Bb2.mp3",
-          "D3": "D3.mp3"
-        },
-        baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/",
-        release: 4
+      const synth = new PolySynth({
+        voice: AMSynth,
+        options: {
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2 },
+          volume: -12
+          // Lower volume for timpani character
+        }
       });
+      this.timpaniSamplers.set(size, synth);
       const pitchShifter = new PitchShift({
         pitch: 0,
         // Will be modulated in real-time
@@ -29082,8 +29105,8 @@ var PercussionEngine = class {
         preDelay: 0.08,
         wet: 0.6
       });
-      sampler.chain(pitchShifter, hallReverb, this.masterVolume);
-      this.timpaniSamplers.set(size, sampler);
+      synth.chain(pitchShifter, hallReverb, this.masterVolume);
+      this.timpaniSamplers.set(size, synth);
       this.timpaniPitchShifters.set(size, pitchShifter);
     }
     logger6.debug("timpani", "Timpani initialization complete");
@@ -29091,22 +29114,14 @@ var PercussionEngine = class {
   async initializeXylophone() {
     const sampler = new Sampler({
       urls: {
-        "C4": "C4.mp3",
-        "D4": "D4.mp3",
-        "E4": "E4.mp3",
-        "F4": "F4.mp3",
-        "G4": "G4.mp3",
-        "A4": "A4.mp3",
-        "B4": "B4.mp3",
-        "C5": "C5.mp3",
-        "D5": "D5.mp3",
-        "E5": "E5.mp3",
-        "F5": "F5.mp3",
-        "G5": "G5.mp3",
-        "A5": "A5.mp3",
-        "B5": "B5.mp3",
-        "C6": "C6.mp3",
-        "D6": "D6.mp3"
+        "G4": `G4.${this.audioFormat}`,
+        "C5": `C5.${this.audioFormat}`,
+        "G5": `G5.${this.audioFormat}`,
+        "C6": `C6.${this.audioFormat}`,
+        "G6": `G6.${this.audioFormat}`,
+        "C7": `C7.${this.audioFormat}`,
+        "G7": `G7.${this.audioFormat}`,
+        "C8": `C8.${this.audioFormat}`
       },
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/",
       release: 2.5
@@ -29135,21 +29150,17 @@ var PercussionEngine = class {
     logger6.debug("xylophone", "Xylophone initialization complete");
   }
   async initializeVibraphone() {
-    const sampler = new Sampler({
-      urls: {
-        "F3": "F3.mp3",
-        "A3": "A3.mp3",
-        "C4": "C4.mp3",
-        "E4": "E4.mp3",
-        "G4": "G4.mp3",
-        "B4": "B4.mp3",
-        "D5": "D5.mp3",
-        "F5": "F5.mp3",
-        "A5": "A5.mp3"
-      },
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/",
-      release: 6
+    logger6.warn("vibraphone", "Vibraphone samples not available on CDN, using synthesis fallback");
+    const synth = new PolySynth({
+      voice: AMSynth,
+      options: {
+        oscillator: { type: "triangle" },
+        envelope: { attack: 1e-3, decay: 0.2, sustain: 0.8, release: 3 },
+        volume: -8
+        // Moderate volume for vibraphone character
+      }
     });
+    this.vibraphoneSamplers.set("main", synth);
     const motorLFO = new LFO({
       frequency: 6,
       // 6 Hz motor speed
@@ -29169,21 +29180,22 @@ var PercussionEngine = class {
       preDelay: 0.05,
       wet: 0.5
     });
-    sampler.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
-    this.vibraphoneSamplers.set("main", sampler);
+    synth.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
     this.vibraphoneMotors.set("main", motorLFO);
     logger6.debug("vibraphone", "Vibraphone initialization complete");
   }
   async initializeGongs() {
-    const sampler = new Sampler({
-      urls: {
-        "C2": "C2.mp3",
-        "F2": "F2.mp3",
-        "C3": "C3.mp3"
-      },
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/gong/",
-      release: 12
+    logger6.warn("gongs", "Gong samples not available on CDN, using synthesis fallback");
+    const synth = new PolySynth({
+      voice: AMSynth,
+      options: {
+        oscillator: { type: "square" },
+        envelope: { attack: 0.01, decay: 1, sustain: 0.3, release: 8 },
+        volume: -6
+        // Higher volume for gong character
+      }
     });
+    this.gongSamplers.set("main", synth);
     const resonator = new Filter({
       frequency: 200,
       type: "peaking",
@@ -29197,8 +29209,7 @@ var PercussionEngine = class {
       wet: 0.8
     });
     const shimmerDelay = new Delay(0.3);
-    sampler.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
-    this.gongSamplers.set("main", sampler);
+    synth.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
     this.gongResonators.set("main", resonator);
     logger6.debug("gongs", "Gongs initialization complete");
   }
@@ -29281,6 +29292,40 @@ var PercussionEngine = class {
       }
     }
     logger6.debug("dynamics", `Adjusted percussion dynamics: ${dynamics}`);
+  }
+  /**
+   * Update audio format and re-initialize all percussion instruments
+   * Issue #005 Fix: Ensures percussion engines use correct sample format
+   */
+  async updateAudioFormat(format) {
+    if (this.audioFormat === format) {
+      return;
+    }
+    logger6.debug("format-update", `Updating percussion audio format from ${this.audioFormat} to ${format}`);
+    this.audioFormat = format;
+    [this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers].forEach((map) => {
+      for (const [key, sampler] of map) {
+        sampler.dispose();
+      }
+      map.clear();
+    });
+    [this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators].forEach((map) => {
+      for (const [key, processor] of map) {
+        if (processor.dispose)
+          processor.dispose();
+      }
+      map.clear();
+    });
+    try {
+      await this.initializeTimpani();
+      await this.initializeXylophone();
+      await this.initializeVibraphone();
+      await this.initializeGongs();
+      logger6.info("format-update", `Successfully updated percussion engine to ${format} format`);
+    } catch (error) {
+      logger6.error("format-update", `Failed to re-initialize percussion with ${format} format`, error);
+      throw error;
+    }
   }
   dispose() {
     [this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers].forEach((map) => {
@@ -31786,7 +31831,8 @@ var AudioEngine = class {
     this.voiceManager = new VoiceManager(true);
     this.effectBusManager = new EffectBusManager();
     this.instrumentConfigLoader = new InstrumentConfigLoader({
-      audioFormat: "mp3",
+      audioFormat: "ogg",
+      // Use OGG since it's the only format available on nbrosowsky CDN
       preloadFamilies: true
     });
     this.instrumentCacheValid = false;
@@ -32012,7 +32058,7 @@ var AudioEngine = class {
     logger10.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
     try {
       if (this.volume) {
-        this.percussionEngine = new PercussionEngine(this.volume);
+        this.percussionEngine = new PercussionEngine(this.volume, "ogg");
         await this.percussionEngine.initializePercussion();
         logger10.debug("percussion", "Advanced percussion synthesis initialized");
       }
@@ -33286,7 +33332,7 @@ var AudioEngine = class {
       }
       const instrumentSettings = this.settings.instruments[instrumentName];
       if (hasInstrument && volumeNode && (instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-        logger10.warn("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
+        logger10.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
           instrumentName,
           instrumentEnabled: instrumentSettings.enabled,
           volumeMuted: volumeNode.mute,
@@ -33297,12 +33343,22 @@ var AudioEngine = class {
       return false;
     });
     if (corruptedVolumeInstruments.length > 0) {
-      logger10.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
-        corruptedVolumeInstruments,
-        corruptedCount: corruptedVolumeInstruments.length,
-        totalEnabledCount: enabledInstrumentsList.length,
-        action: "corrupted-volume-nodes-detected"
-      });
+      const currentLogLevel = LoggerFactory.getLogLevel();
+      if (currentLogLevel === "debug") {
+        logger10.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
+          corruptedVolumeInstruments,
+          corruptedCount: corruptedVolumeInstruments.length,
+          totalEnabledCount: enabledInstrumentsList.length,
+          action: "corrupted-volume-nodes-detected"
+        });
+      } else {
+        logger10.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
+          corruptedVolumeInstruments,
+          corruptedCount: corruptedVolumeInstruments.length,
+          totalEnabledCount: enabledInstrumentsList.length,
+          action: "muted-volume-nodes-detected"
+        });
+      }
       corruptedVolumeInstruments.forEach((instrumentName) => {
         logger10.info("issue-006-debug", "Clearing corrupted volume node", {
           instrumentName,
@@ -33322,7 +33378,7 @@ var AudioEngine = class {
           return true;
         }
         if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-          logger10.warn("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+          logger10.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
             instrumentName,
             shouldBeEnabled: instrumentSettings.enabled,
             actuallyMuted: volumeNode.mute,
@@ -33333,10 +33389,17 @@ var AudioEngine = class {
         return false;
       });
       if (stillCorrupted.length > 0) {
-        logger10.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
-          stillCorrupted,
-          action: "reinitialization-failed"
-        });
+        if (currentLogLevel === "debug") {
+          logger10.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
+            stillCorrupted,
+            action: "reinitialization-failed"
+          });
+        } else {
+          logger10.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
+            stillCorrupted,
+            action: "reinitialization-incomplete"
+          });
+        }
       } else {
         logger10.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
           fixedInstruments: corruptedVolumeInstruments,
@@ -33473,7 +33536,7 @@ var AudioEngine = class {
     } catch (e) {
     }
     this.realtimeTimer = setInterval(() => {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+      var _a, _b, _c, _d, _e, _f, _g;
       if (!this.isPlaying) {
         if (this.realtimeTimer !== null) {
           clearInterval(this.realtimeTimer);
@@ -33546,103 +33609,23 @@ var AudioEngine = class {
         });
         return;
       }
-      logger10.debug("issue-006-debug", "Starting instrument settings access", {
-        instrumentName,
-        instrumentNameType: typeof instrumentName,
-        settingsExists: !!this.settings,
-        instrumentsExists: !!((_a = this.settings) == null ? void 0 : _a.instruments),
-        action: "before-settings-access"
-      });
       const instrumentKey = instrumentName;
-      logger10.debug("issue-006-debug", "InstrumentKey created, accessing settings", {
-        instrumentKey,
-        action: "before-instrument-settings-access"
-      });
       const instrumentSettings = this.settings.instruments[instrumentKey];
-      logger10.debug("issue-006-debug", "InstrumentSettings retrieved", {
-        instrumentSettings: !!instrumentSettings,
-        action: "after-instrument-settings-access"
-      });
-      logger10.info("issue-006-debug", "Instrument settings check", {
-        action: "instrument-enabled-check",
-        instrumentName,
-        instrumentKey,
-        instrumentSettingsExists: !!instrumentSettings,
-        instrumentEnabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled,
-        allInstrumentKeys: Object.keys(this.settings.instruments),
-        enabledInstruments: Object.entries(this.settings.instruments).filter(([_, settings]) => settings.enabled).map(([name, _]) => name)
-      });
       if (!(instrumentSettings == null ? void 0 : instrumentSettings.enabled)) {
-        logger10.warn("issue-006-debug", "Instrument disabled - blocking note trigger", {
-          action: "instrument-disabled-block",
-          instrumentName,
-          instrumentKey,
-          enabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled,
-          instrumentSettingsExists: !!instrumentSettings
-        });
         return;
       }
-      logger10.info("issue-006-debug", "Note trigger attempt initiated", {
-        nodeId: mapping.nodeId,
-        instrument: instrumentName,
-        frequency: frequency.toFixed(2),
-        duration: duration.toFixed(2),
-        velocity: velocity.toFixed(2),
-        elapsedTime: elapsedTime.toFixed(3),
-        currentTime: currentTime.toFixed(3),
-        instrumentEnabled: instrumentSettings == null ? void 0 : instrumentSettings.enabled,
-        hasInstrument: this.instruments.has(instrumentName),
-        contextState: getContext().state,
-        action: "attempt-note-trigger"
-      });
       if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
-        logger10.info("issue-006-debug", "Percussion engine trigger initiated", {
-          instrumentName,
-          action: "percussion-trigger"
-        });
         this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
       } else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
-        logger10.info("issue-006-debug", "Electronic engine trigger initiated", {
-          instrumentName,
-          action: "electronic-trigger"
-        });
         this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
       } else if (this.isEnvironmentalInstrument(instrumentName)) {
-        logger10.info("issue-006-debug", "Environmental sound trigger initiated", {
-          instrumentName,
-          action: "environmental-trigger"
-        });
         this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
       } else {
         const synth = this.instruments.get(instrumentName);
-        logger10.info("issue-006-debug", "Standard instrument trigger initiated", {
-          instrumentName,
-          synthExists: !!synth,
-          synthType: ((_b = synth == null ? void 0 : synth.constructor) == null ? void 0 : _b.name) || "unknown",
-          action: "standard-trigger"
-        });
         if (synth) {
           try {
             const detunedFrequency = this.applyFrequencyDetuning(frequency);
-            logger10.info("issue-006-debug", "Calling triggerAttackRelease on instrument", {
-              instrumentName,
-              originalFreq: frequency.toFixed(2),
-              detunedFreq: detunedFrequency.toFixed(2),
-              duration: duration.toFixed(2),
-              velocity: velocity.toFixed(2),
-              triggerTime: currentTime.toFixed(3),
-              action: "trigger-attack-release-call"
-            });
             const audioContext = getContext();
-            logger10.info("issue-006-debug", "Pre-trigger audio state check", {
-              instrumentName,
-              audioContextState: audioContext.state,
-              audioContextSampleRate: audioContext.sampleRate,
-              audioContextCurrentTime: audioContext.currentTime.toFixed(3),
-              transportState: getTransport().state,
-              transportTime: getTransport().seconds.toFixed(3),
-              action: "pre-trigger-audio-state"
-            });
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
             logger10.info("issue-006-debug", "triggerAttackRelease completed - verifying audio output", {
               instrumentName,
@@ -33657,13 +33640,13 @@ var AudioEngine = class {
             logger10.info("issue-006-debug", "Audio pipeline verification", {
               instrumentName,
               volumeNodeExists: !!volumeNode,
-              volumeValue: (_d = (_c = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _c.value) != null ? _d : "no-volume-value",
-              volumeMuted: (_e = volumeNode == null ? void 0 : volumeNode.mute) != null ? _e : "no-mute-property",
-              volumeConstructor: ((_f = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _f.name) || "no-constructor",
+              volumeValue: (_b = (_a = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-value",
+              volumeMuted: (_c = volumeNode == null ? void 0 : volumeNode.mute) != null ? _c : "no-mute-property",
+              volumeConstructor: ((_d = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _d.name) || "no-constructor",
               effectsCount: (effectsMap == null ? void 0 : effectsMap.size) || 0,
               instrumentOutputs: synth.numberOfOutputs,
-              masterVolumeValue: ((_h = (_g = this.volume) == null ? void 0 : _g.volume) == null ? void 0 : _h.value) || "no-master-volume",
-              masterVolumeMuted: ((_i = this.volume) == null ? void 0 : _i.mute) || false,
+              masterVolumeValue: ((_f = (_e = this.volume) == null ? void 0 : _e.volume) == null ? void 0 : _f.value) || "no-master-volume",
+              masterVolumeMuted: ((_g = this.volume) == null ? void 0 : _g.mute) || false,
               masterVolumeExists: !!this.volume,
               action: "audio-pipeline-verification"
             });
@@ -33736,6 +33719,13 @@ var AudioEngine = class {
   updateSettings(settings) {
     this.settings = settings;
     this.onInstrumentSettingsChanged();
+    if (settings.audioFormat !== "synthesis") {
+      const effectiveFormat = "ogg";
+      this.instrumentConfigLoader.updateAudioFormat(effectiveFormat);
+      if (this.percussionEngine) {
+        this.percussionEngine.updateAudioFormat(effectiveFormat);
+      }
+    }
     this.updateVolume();
     if (this.isInitialized) {
       this.applyEffectSettings();
@@ -33743,6 +33733,7 @@ var AudioEngine = class {
     logger10.debug("settings", "Audio settings updated", {
       volume: settings.volume,
       tempo: settings.tempo,
+      audioFormat: settings.audioFormat,
       effectsApplied: this.isInitialized
     });
   }
