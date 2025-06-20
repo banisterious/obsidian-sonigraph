@@ -3549,6 +3549,13 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     logger4.info("settings", `Audio format changed to ${format}`);
     this.plugin.settings.audioFormat = format;
     this.plugin.saveSettings();
+    if (this.plugin.audioEngine) {
+      this.plugin.audioEngine.updateSettings(this.plugin.settings);
+      logger4.debug("ui", "Audio engine settings updated after audio format change", {
+        audioFormat: format,
+        action: "audio-format-change"
+      });
+    }
   }
   createGlobalSettingsCard() {
     const globalCard = new MaterialCard({
