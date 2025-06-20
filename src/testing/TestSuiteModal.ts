@@ -24,6 +24,7 @@ export interface TestSuiteConfig {
         configLoader: boolean;
         integration: boolean;
         issueValidation: boolean;
+        audioCrackling: boolean;
     };
     exportFormat: 'markdown' | 'json' | 'csv';
     realTimeMetrics: boolean;
@@ -46,7 +47,8 @@ export class TestSuiteModal extends Modal {
             effectBus: true,
             configLoader: true,
             integration: false,
-            issueValidation: true  // Enable by default to test Phase 2.2 optimization
+            issueValidation: true,  // Enable by default to test Phase 2.2 optimization
+            audioCrackling: false   // Enable manually for Issue #010 audio quality testing
         },
         exportFormat: 'markdown',
         realTimeMetrics: true,
@@ -133,6 +135,10 @@ export class TestSuiteModal extends Modal {
         // Issue Validation
         this.createTestCheckbox(grid, 'issueValidation', 'Issue #001, #002 & #003 Validation', 
             'Audio crackling resolution, performance improvements, architecture validation, and instrument family playback testing');
+
+        // Audio Quality Testing
+        this.createTestCheckbox(grid, 'audioCrackling', 'Issue #010: Audio Crackling Analysis', 
+            'Comprehensive audio quality testing with crackling detection, performance correlation, and detailed audio metrics');
     }
 
     private createTestCheckbox(container: HTMLElement, key: keyof TestSuiteConfig['selectedTests'], 
@@ -329,7 +335,8 @@ export class TestSuiteModal extends Modal {
             effectBus: false,
             configLoader: true,
             integration: false,
-            issueValidation: false
+            issueValidation: false,
+            audioCrackling: false
         };
 
         const originalConfig = { ...this.config.selectedTests };
