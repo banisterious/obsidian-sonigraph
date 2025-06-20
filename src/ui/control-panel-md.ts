@@ -648,6 +648,15 @@ export class MaterialControlPanelModal extends Modal {
 		logger.info('settings', `Audio format changed to ${format}`);
 		this.plugin.settings.audioFormat = format as 'synthesis' | 'mp3' | 'wav';
 		this.plugin.saveSettings();
+		
+		// Update audio engine with new audio format setting
+		if (this.plugin.audioEngine) {
+			this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			logger.debug('ui', 'Audio engine settings updated after audio format change', { 
+				audioFormat: format,
+				action: 'audio-format-change'
+			});
+		}
 	}
 
 	private createGlobalSettingsCard(): void {
