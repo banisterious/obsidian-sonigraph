@@ -173,7 +173,7 @@ Sonigraph has reached production status with comprehensive orchestral capabiliti
 - UI/UX improvements and accessibility features
 
 1. Review the [Development Roadmap](docs/planning/development-roadmap.md) for development roadmap
-2. Check the [implementation documentation](docs/planning/implementation-plan.md)  
+2. Check the [implementation documentation](docs/architecture.md)  
 3. Open an issue or submit a pull request
 
 ## 📄 License
