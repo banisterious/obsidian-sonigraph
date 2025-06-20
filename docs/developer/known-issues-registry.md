@@ -12,6 +12,7 @@
 8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
 9. ✅ [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
 10. ✅ [Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **RESOLVED**
+11. 🚀 [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
 
 ---
 
@@ -29,6 +30,7 @@
 | 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
 | 009 | ✅ RESOLVED | Medium | Audio Engine | Instrument volume node muting and corruption detection | [Resolution](../archive/issues/issue-009-instrument-volume-node-muting.md) |
 | 010 | ✅ RESOLVED | High | Audio Engine | Audio crackling during playback | [Resolution](../archive/issues/issue-010-audio-crackling-during-playback.md) |
+| 011 | 🚀 IN DEVELOPMENT | High | Audio Engine | CDN sample loading diagnosis and investigation | [Issue #011](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) |
 
 ---
 
@@ -394,6 +396,7 @@ Solved complex audio routing architecture issue while maintaining all previous p
 
 **Active Issues:**
 - 🔍 **Issue #008**: HIGH - Progressive audio generation failure
+- 🚀 **Issue #011**: HIGH - CDN sample loading diagnosis (IN DEVELOPMENT)
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
@@ -420,7 +423,7 @@ Solved complex audio routing architecture issue while maintaining all previous p
 **Overview**: Implement robust external CDN sample loading to deliver high-quality orchestral audio for all 34 instruments. Currently, sample-based synthesis claims are not fully implemented due to CDN loading failures.
 
 **Related Issues**:
-- **Issue #011**: [CDN Sample Loading Diagnosis](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) - Investigate current sample loading failures
+- **Issue #011**: [CDN Sample Loading Diagnosis](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) - Investigate current sample loading failures (**IN DEVELOPMENT**)
 - **Future Issues**: Sample loading indicators, CDN fallbacks, caching, user preferences
 
 **Project Documentation**: [External Sample Integration Project](../planning/projects/external-sample-integration.md)
