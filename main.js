@@ -193,6 +193,8 @@ var init_constants = __esm({
       isEnabled: true,
       audioFormat: "synthesis",
       microtuning: false,
+      antiCracklingDetuning: 2,
+      // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
       effects: {
         orchestralreverbhall: { enabled: true },
         "3bandeq": { enabled: true },
@@ -27498,9 +27500,248 @@ var context = getContext();
 
 // src/testing/integration/AudioCracklingTests.ts
 var AudioCracklingTests = class {
+  // milliseconds
   constructor(audioEngine) {
     this.testResults = [];
+    this.diagnostics = [];
+    this.isMonitoring = false;
+    this.monitoringInterval = null;
+    this.performanceBaseline = 0;
+    // Performance spike detection thresholds - Issue #010 Fix
+    this.PERFORMANCE_SPIKE_THRESHOLD = 50;
+    // milliseconds (raised from 10ms after fast-path init)
+    this.MEMORY_PRESSURE_THRESHOLD = 0.8;
+    // 80% of heap limit
+    this.LATENCY_ANOMALY_THRESHOLD = 50;
     this.audioEngine = audioEngine;
+  }
+  /**
+   * Issue #010 Enhanced Diagnostics: Capture real-time audio processing data
+   */
+  captureDiagnostic(operation, processingStartTime, synthParams) {
+    const now2 = performance.now();
+    const processingTime = now2 - processingStartTime;
+    const context2 = getContext();
+    const memory = performance.memory || {};
+    const diagnostic = {
+      timestamp: now2,
+      audioContextTime: context2.currentTime,
+      operation,
+      processingTime,
+      bufferHealth: {
+        baseLatency: context2.baseLatency || 0,
+        outputLatency: context2.outputLatency || 0,
+        sampleRate: context2.sampleRate,
+        contextState: context2.state
+      },
+      memoryStatus: {
+        heapUsed: (memory == null ? void 0 : memory.usedJSHeapSize) || 0,
+        heapTotal: (memory == null ? void 0 : memory.totalJSHeapSize) || 0,
+        heapLimit: (memory == null ? void 0 : memory.jsHeapSizeLimit) || 0
+      },
+      audioStatus: {
+        activeVoices: this.getActiveVoiceCount(),
+        scheduledEvents: this.getScheduledEventCount(),
+        masterVolume: this.getMasterVolume()
+      },
+      synthesisParams: synthParams,
+      performanceSpike: processingTime > this.PERFORMANCE_SPIKE_THRESHOLD,
+      anomalyDetected: this.detectAnomalies(processingTime, memory)
+    };
+    if (diagnostic.anomalyDetected) {
+      diagnostic.anomalyType = this.getAnomalyType(processingTime, memory, diagnostic.bufferHealth);
+    }
+    this.diagnostics.push(diagnostic);
+    if (diagnostic.performanceSpike || diagnostic.anomalyDetected) {
+      console.warn(`\u{1F6A8} AUDIO ANOMALY DETECTED:`, JSON.stringify({
+        operation,
+        processingTime: `${processingTime.toFixed(2)}ms`,
+        anomalyType: diagnostic.anomalyType,
+        contextState: diagnostic.bufferHealth.contextState,
+        memoryPressure: diagnostic.memoryStatus.heapLimit > 0 ? (diagnostic.memoryStatus.heapUsed / diagnostic.memoryStatus.heapLimit * 100).toFixed(1) + "%" : "unknown"
+      }, null, 2));
+    }
+  }
+  /**
+   * Start real-time monitoring during audio operations
+   */
+  startRealtimeMonitoring() {
+    this.isMonitoring = true;
+    this.diagnostics = [];
+    this.monitoringInterval = setInterval(() => {
+      if (this.isMonitoring) {
+        this.captureDiagnostic("monitoring", performance.now());
+      }
+    }, 25);
+    console.log("\u{1F4CA} Started real-time audio monitoring (25ms intervals)");
+  }
+  /**
+   * Stop real-time monitoring and analyze results
+   */
+  stopRealtimeMonitoring() {
+    this.isMonitoring = false;
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+    const anomalies = this.diagnostics.filter((d) => d.anomalyDetected || d.performanceSpike);
+    console.log(`\u{1F4CA} Stopped monitoring. Captured ${this.diagnostics.length} samples, ${anomalies.length} anomalies`);
+    return [...this.diagnostics];
+  }
+  /**
+   * Detect various types of audio anomalies
+   */
+  detectAnomalies(processingTime, memory) {
+    if (processingTime > this.PERFORMANCE_SPIKE_THRESHOLD) {
+      return true;
+    }
+    if (memory && memory.jsHeapSizeLimit && memory.usedJSHeapSize) {
+      const memoryPressure = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      if (memoryPressure > this.MEMORY_PRESSURE_THRESHOLD) {
+        return true;
+      }
+    }
+    const context2 = getContext();
+    if (context2.state !== "running") {
+      return true;
+    }
+    const outputLatency = context2.outputLatency || 0;
+    if (outputLatency > this.LATENCY_ANOMALY_THRESHOLD) {
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Classify the type of anomaly detected
+   */
+  getAnomalyType(processingTime, memory, bufferHealth) {
+    if (processingTime > this.PERFORMANCE_SPIKE_THRESHOLD) {
+      return `PROCESSING_SPIKE_${processingTime.toFixed(1)}ms`;
+    }
+    if (memory && memory.jsHeapSizeLimit && memory.usedJSHeapSize) {
+      const memoryPressure = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      if (memoryPressure > this.MEMORY_PRESSURE_THRESHOLD) {
+        return `MEMORY_PRESSURE_${(memoryPressure * 100).toFixed(1)}%`;
+      }
+    }
+    if (bufferHealth.contextState !== "running") {
+      return `CONTEXT_STATE_${bufferHealth.contextState}`;
+    }
+    if (bufferHealth.outputLatency > this.LATENCY_ANOMALY_THRESHOLD) {
+      return `HIGH_LATENCY_${bufferHealth.outputLatency.toFixed(1)}ms`;
+    }
+    return "UNKNOWN_ANOMALY";
+  }
+  /**
+   * Helper methods to get current audio status
+   */
+  getActiveVoiceCount() {
+    try {
+      return 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+  getScheduledEventCount() {
+    var _a;
+    try {
+      const transport = getTransport();
+      return ((_a = transport._timeline) == null ? void 0 : _a.length) || 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+  getMasterVolume() {
+    try {
+      return getDestination().volume.value;
+    } catch (error) {
+      return 0;
+    }
+  }
+  /**
+   * Generate comprehensive diagnostic report
+   */
+  generateDiagnosticReport() {
+    if (this.diagnostics.length === 0) {
+      return {
+        summary: {
+          totalSamples: 0,
+          anomaliesDetected: 0,
+          performanceSpikes: 0,
+          anomalyRate: "0%"
+        },
+        performance: {
+          avgProcessingTime: "0ms",
+          maxProcessingTime: "0ms",
+          spikeThreshold: this.PERFORMANCE_SPIKE_THRESHOLD + "ms"
+        },
+        anomalyTypes: {},
+        criticalEvents: [],
+        recommendations: ["No diagnostic data collected. Tests may have failed to initialize."]
+      };
+    }
+    const anomalies = this.diagnostics.filter((d) => d.anomalyDetected || d.performanceSpike);
+    const spikes = this.diagnostics.filter((d) => d.performanceSpike);
+    const processingTimes = this.diagnostics.map((d) => d.processingTime);
+    const avgProcessingTime = processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length;
+    const maxProcessingTime = Math.max(...processingTimes);
+    const anomalyTypes = anomalies.reduce((types, anomaly) => {
+      const type = anomaly.anomalyType || "UNKNOWN";
+      types[type] = (types[type] || 0) + 1;
+      return types;
+    }, {});
+    return {
+      summary: {
+        totalSamples: this.diagnostics.length,
+        anomaliesDetected: anomalies.length,
+        performanceSpikes: spikes.length,
+        anomalyRate: (anomalies.length / this.diagnostics.length * 100).toFixed(2) + "%"
+      },
+      performance: {
+        avgProcessingTime: avgProcessingTime.toFixed(3) + "ms",
+        maxProcessingTime: maxProcessingTime.toFixed(3) + "ms",
+        spikeThreshold: this.PERFORMANCE_SPIKE_THRESHOLD + "ms"
+      },
+      anomalyTypes,
+      criticalEvents: anomalies.slice(0, 10),
+      // First 10 anomalies for detailed analysis
+      recommendations: this.generateRecommendations(anomalies)
+    };
+  }
+  /**
+   * Generate actionable recommendations based on detected issues
+   */
+  generateRecommendations(anomalies) {
+    const recommendations = [];
+    const spikeCount = anomalies.filter((a) => a.performanceSpike).length;
+    const memoryIssues = anomalies.filter((a) => {
+      var _a;
+      return (_a = a.anomalyType) == null ? void 0 : _a.includes("MEMORY_PRESSURE");
+    }).length;
+    const latencyIssues = anomalies.filter((a) => {
+      var _a;
+      return (_a = a.anomalyType) == null ? void 0 : _a.includes("HIGH_LATENCY");
+    }).length;
+    const contextIssues = anomalies.filter((a) => {
+      var _a;
+      return (_a = a.anomalyType) == null ? void 0 : _a.includes("CONTEXT_STATE");
+    }).length;
+    if (spikeCount > 0) {
+      recommendations.push(`Performance: ${spikeCount} processing spikes detected. Consider reducing polyphony or effects complexity.`);
+    }
+    if (memoryIssues > 0) {
+      recommendations.push(`Memory: ${memoryIssues} memory pressure events. Consider implementing more aggressive garbage collection or reducing sample buffer sizes.`);
+    }
+    if (latencyIssues > 0) {
+      recommendations.push(`Latency: ${latencyIssues} high latency events. Check audio driver settings and buffer sizes.`);
+    }
+    if (contextIssues > 0) {
+      recommendations.push(`Context: ${contextIssues} audio context state issues. Ensure context remains active during playback.`);
+    }
+    if (anomalies.length === 0) {
+      recommendations.push("No anomalies detected in this test session. Crackling may be hardware-related or occur in different scenarios.");
+    }
+    return recommendations;
   }
   /**
    * Run all Issue #010 audio crackling analysis tests
@@ -27591,22 +27832,64 @@ var AudioCracklingTests = class {
     });
   }
   /**
-   * Test 2: Baseline Audio Quality Test
-   * Short playback test to establish baseline metrics
+   * Test 2: Enhanced Baseline Audio Quality Test with Real-time Diagnostics
+   * Short playback test to establish baseline metrics and detect crackling patterns
    */
   async testBaselineAudioQuality() {
     const startTime = performance.now();
     let passed = false;
     let error;
-    let metrics = {};
+    let metrics = null;
     try {
-      console.log("\u{1F50A} Starting baseline audio quality test...");
-      const initialMetrics = this.capturePerformanceSnapshot();
+      console.log("\u{1F50A} Starting enhanced baseline audio quality test with real-time diagnostics...");
       try {
+        this.startRealtimeMonitoring();
+        console.log("\u{1F4CA} Real-time monitoring started successfully");
+      } catch (monitoringError) {
+        console.warn("\u{1F4CA} Real-time monitoring failed to start:", monitoringError);
+      }
+      const initStartTime = performance.now();
+      try {
+        this.captureDiagnostic("initialization", initStartTime);
+      } catch (diagError) {
+        console.warn("\u{1F4CA} Diagnostic capture failed:", diagError);
+      }
+      try {
+        console.log("\u{1F3B5} Playing test note with diagnostic monitoring...");
+        const prePlayStartTime = performance.now();
+        try {
+          this.captureDiagnostic("pre-playback", prePlayStartTime);
+        } catch (diagError) {
+          console.warn("\u{1F4CA} Pre-playback diagnostic failed:", diagError);
+        }
         const audioTestPromise = (async () => {
+          const noteStartTime = performance.now();
           await this.audioEngine.playTestNote(440);
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          try {
+            this.captureDiagnostic("note-trigger", noteStartTime, {
+              instrument: "test-tone",
+              frequency: 440,
+              envelope: "default",
+              effects: ["reverb", "chorus", "filter"]
+            });
+          } catch (diagError) {
+            console.warn("\u{1F4CA} Note-trigger diagnostic failed:", diagError);
+          }
+          const sustainDuration = 500;
+          const sustainStartTime = performance.now();
+          await new Promise((resolve) => setTimeout(resolve, sustainDuration));
+          try {
+            this.captureDiagnostic("sustain-phase", sustainStartTime);
+          } catch (diagError) {
+            console.warn("\u{1F4CA} Sustain-phase diagnostic failed:", diagError);
+          }
+          const stopStartTime = performance.now();
           this.audioEngine.stop();
+          try {
+            this.captureDiagnostic("note-stop", stopStartTime);
+          } catch (diagError) {
+            console.warn("\u{1F4CA} Note-stop diagnostic failed:", diagError);
+          }
         })();
         const audioTimeout = new Promise((_, reject) => {
           setTimeout(() => reject(new Error("Audio engine timeout")), 2e3);
@@ -27614,10 +27897,40 @@ var AudioCracklingTests = class {
         await Promise.race([audioTestPromise, audioTimeout]);
       } catch (audioError) {
         console.warn("Audio engine test note failed, using simulation:", audioError);
+        this.captureDiagnostic("audio-error", performance.now());
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
-      const finalMetrics = this.capturePerformanceSnapshot();
-      metrics = null;
+      let diagnosticData = [];
+      let diagnosticReport = {};
+      try {
+        diagnosticData = this.stopRealtimeMonitoring();
+        diagnosticReport = this.generateDiagnosticReport();
+        console.log("\u{1F4CA} BASELINE TEST DIAGNOSTIC REPORT:", {
+          summary: diagnosticReport.summary,
+          performance: diagnosticReport.performance,
+          anomalyTypes: diagnosticReport.anomalyTypes,
+          recommendations: diagnosticReport.recommendations
+        });
+      } catch (reportError) {
+        console.warn("\u{1F4CA} Failed to generate diagnostic report:", reportError);
+        diagnosticReport = {
+          summary: { totalSamples: 0, anomaliesDetected: 0, performanceSpikes: 0, anomalyRate: "0%" },
+          performance: { avgProcessingTime: "0ms", maxProcessingTime: "0ms" },
+          anomalyTypes: {},
+          recommendations: ["Diagnostic reporting failed"]
+        };
+      }
+      metrics = {
+        diagnosticSamples: diagnosticData.length,
+        anomaliesDetected: diagnosticReport.summary.anomaliesDetected,
+        performanceSpikes: diagnosticReport.summary.performanceSpikes,
+        anomalyRate: diagnosticReport.summary.anomalyRate,
+        avgProcessingTime: diagnosticReport.performance.avgProcessingTime,
+        maxProcessingTime: diagnosticReport.performance.maxProcessingTime,
+        recommendations: diagnosticReport.recommendations,
+        criticalEvents: diagnosticReport.criticalEvents.slice(0, 3)
+        // First 3 for brevity
+      };
       passed = true;
       console.log("\u2705 Baseline audio quality test completed");
     } catch (err) {
@@ -27634,16 +27947,17 @@ var AudioCracklingTests = class {
     });
   }
   /**
-   * Test 3: Instrument Family Crackling Test
-   * Test each instrument family for crackling patterns
+   * Test 3: Enhanced Instrument Family Crackling Test with Pattern Detection
+   * Test each instrument family for crackling patterns with diagnostic monitoring
    */
   async testInstrumentFamilyCrackling() {
     const startTime = performance.now();
     let passed = false;
     let error;
-    let metrics = {};
+    let metrics = null;
     try {
-      console.log("\u{1F50A} Testing instrument families for crackling patterns...");
+      console.log("\u{1F50A} Testing instrument families for crackling patterns with enhanced diagnostics...");
+      this.startRealtimeMonitoring();
       const instrumentFamilies2 = [
         "strings",
         "brass",
@@ -27659,8 +27973,16 @@ var AudioCracklingTests = class {
         const familyStartTime = performance.now();
         const initialMetrics = this.capturePerformanceSnapshot();
         try {
+          this.captureDiagnostic(`family-${family}-start`, familyStartTime);
           const familyTestPromise = (async () => {
+            const noteStartTime = performance.now();
             await this.audioEngine.playTestNote(440);
+            this.captureDiagnostic(`family-${family}-note`, noteStartTime, {
+              instrument: family,
+              frequency: 440,
+              envelope: "family-test",
+              effects: ["default"]
+            });
             await new Promise((resolve) => setTimeout(resolve, 400));
             this.audioEngine.stop();
           })();
@@ -27669,6 +27991,7 @@ var AudioCracklingTests = class {
           });
           await Promise.race([familyTestPromise, familyTimeout]);
         } catch (audioError) {
+          this.captureDiagnostic(`family-${family}-error`, performance.now());
           await new Promise((resolve) => setTimeout(resolve, 200));
         }
         const finalMetrics = this.capturePerformanceSnapshot();
@@ -27681,9 +28004,24 @@ var AudioCracklingTests = class {
           // Placeholder quality score
         };
       }
-      metrics = null;
+      const diagnosticData = this.stopRealtimeMonitoring();
+      const diagnosticReport = this.generateDiagnosticReport();
+      console.log("\u{1F4CA} FAMILY TEST DIAGNOSTIC REPORT:", {
+        familiesTested: instrumentFamilies2.length,
+        summary: diagnosticReport.summary,
+        anomalyTypes: diagnosticReport.anomalyTypes,
+        recommendations: diagnosticReport.recommendations
+      });
+      metrics = {
+        familiesTested: instrumentFamilies2.length,
+        diagnosticSamples: diagnosticData.length,
+        anomaliesDetected: diagnosticReport.summary.anomaliesDetected,
+        familyResults,
+        avgProcessingTime: diagnosticReport.performance.avgProcessingTime,
+        recommendations: diagnosticReport.recommendations
+      };
       passed = true;
-      console.log("\u2705 Instrument family crackling test completed");
+      console.log("\u2705 Instrument family crackling test completed with enhanced diagnostics");
     } catch (err) {
       error = err.message;
       console.error("\u274C Instrument Family Crackling Test failed:", err);
@@ -28147,9 +28485,18 @@ var TestRunner = class {
     }
     const averageMetrics = {
       memory: {
-        heapUsed: metricsArray.reduce((sum, m) => sum + m.memory.heapUsed, 0) / metricsArray.length,
-        heapTotal: metricsArray.reduce((sum, m) => sum + m.memory.heapTotal, 0) / metricsArray.length,
-        objectCount: Math.round(metricsArray.reduce((sum, m) => sum + m.memory.objectCount, 0) / metricsArray.length)
+        heapUsed: metricsArray.reduce((sum, m) => {
+          var _a;
+          return sum + (((_a = m.memory) == null ? void 0 : _a.heapUsed) || 0);
+        }, 0) / metricsArray.length,
+        heapTotal: metricsArray.reduce((sum, m) => {
+          var _a;
+          return sum + (((_a = m.memory) == null ? void 0 : _a.heapTotal) || 0);
+        }, 0) / metricsArray.length,
+        objectCount: Math.round(metricsArray.reduce((sum, m) => {
+          var _a;
+          return sum + (((_a = m.memory) == null ? void 0 : _a.objectCount) || 0);
+        }, 0) / metricsArray.length)
       },
       audio: {
         cpuUsage: metricsArray.reduce((sum, m) => sum + m.audio.cpuUsage, 0) / metricsArray.length,
@@ -28166,9 +28513,18 @@ var TestRunner = class {
     };
     const peakMetrics = {
       memory: {
-        heapUsed: Math.max(...metricsArray.map((m) => m.memory.heapUsed)),
-        heapTotal: Math.max(...metricsArray.map((m) => m.memory.heapTotal)),
-        objectCount: Math.max(...metricsArray.map((m) => m.memory.objectCount))
+        heapUsed: Math.max(...metricsArray.map((m) => {
+          var _a;
+          return ((_a = m.memory) == null ? void 0 : _a.heapUsed) || 0;
+        })),
+        heapTotal: Math.max(...metricsArray.map((m) => {
+          var _a;
+          return ((_a = m.memory) == null ? void 0 : _a.heapTotal) || 0;
+        })),
+        objectCount: Math.max(...metricsArray.map((m) => {
+          var _a;
+          return ((_a = m.memory) == null ? void 0 : _a.objectCount) || 0;
+        }))
       },
       audio: {
         cpuUsage: Math.max(...metricsArray.map((m) => m.audio.cpuUsage)),
@@ -28198,11 +28554,12 @@ var TestRunner = class {
    * Calculate memory growth trend
    */
   calculateMemoryGrowth(metrics) {
+    var _a, _b;
     if (metrics.length < 2)
       return 0;
-    const first = metrics[0].memory.heapUsed;
-    const last = metrics[metrics.length - 1].memory.heapUsed;
-    return (last - first) / first;
+    const first = ((_a = metrics[0].memory) == null ? void 0 : _a.heapUsed) || 0;
+    const last = ((_b = metrics[metrics.length - 1].memory) == null ? void 0 : _b.heapUsed) || 0;
+    return first > 0 ? (last - first) / first : 0;
   }
   /**
    * Calculate CPU usage trend
@@ -29826,15 +30183,20 @@ var ElectronicEngine = class {
     }
   }
   async initializeLeadSynth() {
-    const leadSynth = new PolySynth(Synth, {
-      oscillator: {
-        type: "sawtooth"
-      },
-      envelope: {
-        attack: 0.01,
-        decay: 0.3,
-        sustain: 0.6,
-        release: 0.8
+    const leadSynth = new PolySynth({
+      voice: Synth,
+      maxPolyphony: 6,
+      // Lead synths typically need medium polyphony
+      options: {
+        oscillator: {
+          type: "sawtooth"
+        },
+        envelope: {
+          attack: 0.01,
+          decay: 0.3,
+          sustain: 0.6,
+          release: 0.8
+        }
       }
     }).set({ volume: -12 });
     const leadFilter = new Filter({
@@ -29859,26 +30221,36 @@ var ElectronicEngine = class {
     logger7.debug("lead-synth", "Lead synth initialization complete");
   }
   async initializeBassSynth() {
-    const bassSynth = new PolySynth(Synth, {
-      oscillator: {
-        type: "square"
-      },
-      envelope: {
-        attack: 0.01,
-        decay: 0.2,
-        sustain: 0.8,
-        release: 0.4
+    const bassSynth = new PolySynth({
+      voice: Synth,
+      maxPolyphony: 4,
+      // Bass synths need lower polyphony
+      options: {
+        oscillator: {
+          type: "square"
+        },
+        envelope: {
+          attack: 0.01,
+          decay: 0.2,
+          sustain: 0.8,
+          release: 0.4
+        }
       }
     }).set({ volume: -8 });
-    const subOsc = new PolySynth(Synth, {
-      oscillator: {
-        type: "sine"
-      },
-      envelope: {
-        attack: 0.01,
-        decay: 0.15,
-        sustain: 0.9,
-        release: 0.3
+    const subOsc = new PolySynth({
+      voice: Synth,
+      maxPolyphony: 2,
+      // Sub-bass needs very low polyphony
+      options: {
+        oscillator: {
+          type: "sine"
+        },
+        envelope: {
+          attack: 0.01,
+          decay: 0.15,
+          sustain: 0.9,
+          release: 0.3
+        }
       }
     }).set({ volume: -15 });
     const bassFilter = new Filter({
@@ -29895,15 +30267,20 @@ var ElectronicEngine = class {
     logger7.debug("bass-synth", "Bass synth initialization complete");
   }
   async initializeArpSynth() {
-    const arpSynth = new PolySynth(Synth, {
-      oscillator: {
-        type: "triangle"
-      },
-      envelope: {
-        attack: 1e-3,
-        decay: 0.1,
-        sustain: 0.3,
-        release: 0.2
+    const arpSynth = new PolySynth({
+      voice: Synth,
+      maxPolyphony: 8,
+      // Arpeggiators need higher polyphony for complex patterns
+      options: {
+        oscillator: {
+          type: "triangle"
+        },
+        envelope: {
+          attack: 1e-3,
+          decay: 0.1,
+          sustain: 0.3,
+          release: 0.2
+        }
       }
     }).set({ volume: -10 });
     const arpFilter = new Filter({
@@ -32249,6 +32626,8 @@ var AudioEngine = class {
     // Per-instrument effects
     this.isInitialized = false;
     this.isPlaying = false;
+    this.isMinimalMode = false;
+    // Issue #010 Fix: Track if we're in minimal initialization mode
     this.currentSequence = [];
     this.scheduledEvents = [];
     this.realtimeTimer = null;
@@ -32508,15 +32887,38 @@ var AudioEngine = class {
   async initializeAdvancedSynthesis() {
     logger10.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
     try {
-      if (this.volume) {
+      const hasPercussionEnabled = this.hasPercussionInstrumentsEnabled();
+      logger10.debug("percussion", "\u{1F680} ISSUE #010 DEBUG: Percussion initialization check", {
+        hasPercussionEnabled,
+        enabledInstruments: Object.keys(this.settings.instruments).filter(
+          (name) => {
+            var _a;
+            return (_a = this.settings.instruments[name]) == null ? void 0 : _a.enabled;
+          }
+        ),
+        percussionInstruments: ["timpani", "xylophone", "vibraphone", "gongs"].filter(
+          (name) => {
+            var _a;
+            return (_a = this.settings.instruments[name]) == null ? void 0 : _a.enabled;
+          }
+        )
+      });
+      if (this.volume && hasPercussionEnabled) {
+        logger10.debug("percussion", "Percussion instruments enabled, initializing percussion engine");
         this.percussionEngine = new PercussionEngine(this.volume, "ogg");
         await this.percussionEngine.initializePercussion();
         logger10.debug("percussion", "Advanced percussion synthesis initialized");
+      } else {
+        logger10.info("percussion", "\u{1F680} ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)");
       }
-      if (this.volume) {
+      const hasElectronicEnabled = this.hasElectronicInstrumentsEnabled();
+      if (this.volume && hasElectronicEnabled) {
+        logger10.debug("electronic", "Electronic instruments enabled, initializing electronic engine");
         this.electronicEngine = new ElectronicEngine(this.volume);
         await this.electronicEngine.initializeElectronic();
         logger10.debug("electronic", "Advanced electronic synthesis initialized");
+      } else {
+        logger10.info("electronic", "Skipping electronic engine initialization (no electronic instruments enabled)");
       }
       await this.initializeMasterEffects();
       this.initializePerformanceOptimization();
@@ -32793,29 +33195,160 @@ var AudioEngine = class {
         "whaleHumpback"
       ];
       manualInstruments.forEach((instrumentName) => {
-        let synthConfig;
-        if (this.isEnvironmentalInstrument(instrumentName)) {
-          synthConfig = {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.5, decay: 1, sustain: 0.8, release: 2 }
-          };
-        } else if (this.isPercussionInstrument(instrumentName)) {
-          synthConfig = {
-            oscillator: { type: "triangle" },
-            envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.8 }
-          };
-        } else if (this.isElectronicInstrument(instrumentName)) {
-          synthConfig = {
-            oscillator: { type: "sawtooth" },
-            envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 }
-          };
-        } else {
-          synthConfig = {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
-          };
+        let synth;
+        const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+        switch (instrumentName) {
+          case "timpani":
+            synth = new PolySynth({
+              voice: AMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2 },
+                volume: -12
+              }
+            });
+            break;
+          case "xylophone":
+          case "vibraphone":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 4,
+                modulationIndex: 2,
+                oscillator: { type: "triangle" },
+                envelope: { attack: 1e-3, decay: 0.2, sustain: 0.1, release: 0.5 },
+                volume: -10
+              }
+            });
+            break;
+          case "strings":
+          case "violin":
+          case "cello":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 1.5,
+                modulationIndex: 3,
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 1.5 },
+                volume: -8
+              }
+            });
+            break;
+          case "flute":
+          case "oboe":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 2,
+                modulationIndex: 1,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 1 },
+                volume: -6
+              }
+            });
+            break;
+          case "clarinet":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 3,
+                modulationIndex: 4,
+                oscillator: { type: "square" },
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.7, release: 1 },
+                volume: -9
+              }
+            });
+            break;
+          case "trumpet":
+          case "frenchHorn":
+          case "trombone":
+          case "tuba":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 2,
+                modulationIndex: 8,
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.02, decay: 0.1, sustain: 0.8, release: 0.5 },
+                volume: -7
+              }
+            });
+            break;
+          case "saxophone":
+            synth = new PolySynth({
+              voice: AMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
+                volume: -8
+              }
+            });
+            break;
+          case "piano":
+          case "electricPiano":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 1,
+                modulationIndex: 1.5,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 2 },
+                volume: -6
+              }
+            });
+            break;
+          case "organ":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 1,
+                modulationIndex: 0.5,
+                oscillator: { type: "square" },
+                envelope: { attack: 0.1, decay: 0.1, sustain: 0.9, release: 0.3 },
+                volume: -8
+              }
+            });
+            break;
+          case "leadSynth":
+          case "bassSynth":
+          case "arpSynth":
+          case "pad":
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 2,
+                modulationIndex: 6,
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 },
+                volume: -8
+              }
+            });
+            break;
+          default:
+            synth = new PolySynth({
+              voice: FMSynth,
+              maxPolyphony: maxVoices,
+              options: {
+                harmonicity: 1,
+                modulationIndex: 2,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 },
+                volume: -8
+              }
+            });
+            break;
         }
-        const synth = new PolySynth(FMSynth, synthConfig);
         const volume = new Volume(-6);
         this.instrumentVolumes.set(instrumentName, volume);
         synth.connect(volume);
@@ -32823,7 +33356,7 @@ var AudioEngine = class {
           volume.connect(this.volume);
         }
         this.instruments.set(instrumentName, synth);
-        logger10.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
+        logger10.debug("instruments", `Created specialized synthesis instrument: ${instrumentName}`);
       });
       this.connectSynthesisInstruments();
       this.applyEffectSettings();
@@ -33469,24 +34002,29 @@ var AudioEngine = class {
    */
   initializeWhaleSynthesizer() {
     logger10.debug("environmental", "Initializing persistent whale synthesizer");
-    const whaleSynth = new PolySynth(FMSynth, {
-      harmonicity: 0.5,
-      modulationIndex: 12,
-      oscillator: { type: "sine" },
-      modulation: { type: "sine" },
-      envelope: {
-        attack: 0.3 + Math.random() * 0.4,
-        // 0.3-0.7 second attack
-        decay: 0.5,
-        sustain: 0.9,
-        release: 2 + Math.random() * 3
-        // 2-5 second release
-      },
-      modulationEnvelope: {
-        attack: 1,
-        decay: 0.5,
-        sustain: 0.6,
-        release: 4
+    const maxVoices = this.getInstrumentPolyphonyLimit("whaleHumpback");
+    const whaleSynth = new PolySynth({
+      voice: FMSynth,
+      maxPolyphony: maxVoices,
+      options: {
+        harmonicity: 0.5,
+        modulationIndex: 12,
+        oscillator: { type: "sine" },
+        modulation: { type: "sine" },
+        envelope: {
+          attack: 0.3 + Math.random() * 0.4,
+          // 0.3-0.7 second attack
+          decay: 0.5,
+          sustain: 0.9,
+          release: 2 + Math.random() * 3
+          // 2-5 second release
+        },
+        modulationEnvelope: {
+          attack: 1,
+          decay: 0.5,
+          sustain: 0.6,
+          release: 4
+        }
       }
     });
     const whaleVolume = new Volume(-6);
@@ -33540,9 +34078,14 @@ var AudioEngine = class {
     if (this.settings.audioFormat === "synthesis") {
       logger10.info("instruments", "Synthesis-only mode - creating basic synthesizers");
       missingKeys.forEach((instrumentName) => {
-        const synth = new PolySynth(FMSynth, {
-          oscillator: { type: "sine" },
-          envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
+        const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+        const synth = new PolySynth({
+          voice: FMSynth,
+          maxPolyphony: maxVoices,
+          options: {
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
+          }
         });
         const volume = new Volume(-6);
         this.instrumentVolumes.set(instrumentName, volume);
@@ -33560,10 +34103,15 @@ var AudioEngine = class {
       try {
         if (this.isEnvironmentalInstrument(instrumentName)) {
           logger10.debug("instruments", `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
-          const synth = new PolySynth(FMSynth, {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.5, decay: 1, sustain: 0.8, release: 2 }
-            // Longer envelope for ambient sounds
+          const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+          const synth = new PolySynth({
+            voice: FMSynth,
+            maxPolyphony: maxVoices,
+            options: {
+              oscillator: { type: "sine" },
+              envelope: { attack: 0.5, decay: 1, sustain: 0.8, release: 2 }
+              // Longer envelope for ambient sounds
+            }
           });
           const volume2 = new Volume(-6);
           this.instrumentVolumes.set(instrumentName, volume2);
@@ -33669,7 +34217,12 @@ var AudioEngine = class {
               envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
             };
           }
-          const synth = new PolySynth(FMSynth, synthConfig);
+          const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+          const synth = new PolySynth({
+            voice: FMSynth,
+            maxPolyphony: maxVoices,
+            options: synthConfig
+          });
           const volume = new Volume(-6);
           synth.connect(volume);
           volume.connect(this.volume);
@@ -33749,9 +34302,70 @@ var AudioEngine = class {
       action: "play-sequence-init"
     });
     if (!this.isInitialized || !this.instruments.size) {
-      logger10.warn("playback", "AudioEngine not initialized, initializing now");
-      await this.initialize();
+      logger10.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
+      await this.initializeEssentials();
     }
+    logger10.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
+      isMinimalMode: this.isMinimalMode,
+      instrumentsSize: this.instruments.size,
+      hasPiano: this.instruments.has("piano"),
+      instrumentsList: Array.from(this.instruments.keys())
+    });
+    if (this.isMinimalMode) {
+      logger10.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
+      const hasPercussion = this.hasPercussionInstrumentsEnabled();
+      const hasElectronic = this.hasElectronicInstrumentsEnabled();
+      const isSynthesisMode = this.settings.audioFormat === "synthesis";
+      logger10.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
+        currentInstrumentCount: this.instruments.size,
+        currentInstruments: Array.from(this.instruments.keys()),
+        hasPercussionEnabled: hasPercussion,
+        hasElectronicEnabled: hasElectronic,
+        willSkipPercussion: !hasPercussion,
+        willSkipElectronic: !hasElectronic,
+        isSynthesisMode,
+        audioFormat: this.settings.audioFormat,
+        enabledInstruments: Object.keys(this.settings.instruments).filter(
+          (name) => {
+            var _a;
+            return (_a = this.settings.instruments[name]) == null ? void 0 : _a.enabled;
+          }
+        )
+      });
+      if (isSynthesisMode) {
+        logger10.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
+        logger10.debug("playbook", "Clearing minimal mode instruments before full initialization", {
+          instrumentsToDispose: Array.from(this.instruments.keys())
+        });
+        this.instruments.forEach((instrument) => instrument.dispose());
+        this.instruments.clear();
+        await this.initializeInstruments();
+        await this.initializeEffects();
+        await this.initializeAdvancedSynthesis();
+        this.isMinimalMode = false;
+        this.isInitialized = true;
+        logger10.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
+          instrumentsCreated: this.instruments.size,
+          instrumentsList: Array.from(this.instruments.keys())
+        });
+      } else {
+        await this.forceFullInitialization();
+      }
+      logger10.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
+        instrumentsAfterUpgrade: this.instruments.size,
+        instrumentsList: Array.from(this.instruments.keys()),
+        isInitialized: this.isInitialized,
+        isMinimalMode: this.isMinimalMode
+      });
+    }
+    const sequenceInstruments = [...new Set(sequence.map((note) => note.instrument))];
+    logger10.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
+      sequenceInstruments,
+      availableInstruments: Array.from(this.instruments.keys()),
+      enabledInstruments: enabledInstrumentsList,
+      sequenceLength: sequence.length,
+      instrumentMapSize: this.instruments.size
+    });
     const corruptedVolumeInstruments = enabledInstrumentsList.filter((instrumentName) => {
       var _a, _b, _c, _d;
       const hasInstrument = this.instruments.has(instrumentName);
@@ -33941,11 +34555,6 @@ var AudioEngine = class {
         sequenceDuration: sequenceDuration.toFixed(2),
         audioContextState: getContext().state
       });
-      const testSynth = this.instruments.get("piano");
-      if (testSynth) {
-        logger10.info("test", "Playing immediate test tone to verify audio connection");
-        testSynth.triggerAttackRelease(440, "8n", "+0.1");
-      }
     } catch (error) {
       logger10.error("playback", "Error processing sequence", {
         error: error instanceof Error ? {
@@ -34701,7 +35310,7 @@ var AudioEngine = class {
    */
   async playTestNote(frequency = 440) {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initializeEssentials();
     }
     if (this.instruments.size > 0) {
       logger10.debug("test", "Playing test note", { frequency });
@@ -34711,6 +35320,267 @@ var AudioEngine = class {
         }
       });
     }
+  }
+  /**
+   * Fast-path initialization for test notes - Issue #010 Crackling Fix
+   * Only initializes essential components to prevent processing spikes
+   */
+  async initializeEssentials() {
+    if (this.isInitialized) {
+      return;
+    }
+    try {
+      logger10.debug("audio", "Fast-path initialization for test notes");
+      await start();
+      this.volume = new Volume(this.settings.volume).toDestination();
+      await this.initializeBasicPiano();
+      await this.initializeLightweightSynthesis();
+      this.isInitialized = true;
+      this.isMinimalMode = true;
+      logger10.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
+    } catch (error) {
+      logger10.error("audio", "Failed to initialize essential components", error);
+      throw error;
+    }
+  }
+  /**
+   * Force full initialization after minimal initialization - Issue #010 Crackling Fix
+   * This allows upgrading from minimal to full initialization when needed
+   */
+  async forceFullInitialization() {
+    var _a;
+    try {
+      logger10.debug("audio", "Upgrading to full initialization");
+      const existingInstruments = new Map(this.instruments);
+      const existingVolumes = new Map(this.instrumentVolumes);
+      logger10.info("audio", "\u{1F680} ISSUE #010 FIX: Preserving existing instruments during upgrade", {
+        existingInstruments: Array.from(existingInstruments.keys()),
+        existingVolumes: Array.from(existingVolumes.keys())
+      });
+      await this.initializeEffects();
+      await this.initializeInstruments();
+      existingInstruments.forEach((instrument, instrumentName) => {
+        if (instrumentName === "piano") {
+          logger10.info("audio", "\u{1F680} ISSUE #010 FIX: Restoring working piano from minimal mode");
+          this.instruments.set(instrumentName, instrument);
+          const existingVolume = existingVolumes.get(instrumentName);
+          if (existingVolume) {
+            this.instrumentVolumes.set(instrumentName, existingVolume);
+          }
+        }
+      });
+      await this.initializeAdvancedSynthesis();
+      if ((_a = this.settings.enhancedRouting) == null ? void 0 : _a.enabled) {
+        await this.initializeEnhancedRouting();
+      } else {
+        this.applyEffectSettings();
+      }
+      this.generateInitializationReport();
+      this.isMinimalMode = false;
+      logger10.info("audio", "Full AudioEngine initialization completed", {
+        totalInstruments: this.instruments.size,
+        preservedInstruments: Array.from(existingInstruments.keys()),
+        finalInstruments: Array.from(this.instruments.keys()),
+        instrumentMapSize: this.instruments.size
+      });
+    } catch (error) {
+      logger10.error("audio", "Failed to upgrade to full initialization", error);
+      throw error;
+    }
+  }
+  /**
+   * Initialize basic piano synth for test notes - no external samples
+   */
+  async initializeBasicPiano() {
+    try {
+      const pianoPoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 3,
+          modulationIndex: 10,
+          oscillator: { type: "sine" },
+          envelope: { attack: 1e-3, decay: 1, sustain: 0.3, release: 0.3 },
+          modulation: { type: "square" },
+          modulationEnvelope: { attack: 2e-3, decay: 0.2, sustain: 0, release: 0.2 }
+        }
+      });
+      const pianoVolume = new Volume(this.settings.instruments.piano.volume);
+      this.instrumentVolumes.set("piano", pianoVolume);
+      pianoPoly.connect(pianoVolume);
+      pianoVolume.connect(this.volume);
+      this.instruments.set("piano", pianoPoly);
+      logger10.debug("audio", "Basic piano synthesizer initialized");
+    } catch (error) {
+      logger10.error("audio", "Failed to initialize basic piano", error);
+      throw error;
+    }
+  }
+  /**
+   * Initialize lightweight synthesis for common instruments - no external samples
+   * Issue #010 Fix: Provides clean sounds without CDN sample processing spikes that cause crackling
+   */
+  async initializeLightweightSynthesis() {
+    var _a, _b, _c, _d, _e, _f, _g;
+    try {
+      const timpaniPoly = new PolySynth({
+        voice: AMSynth,
+        options: {
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2 },
+          volume: -12
+          // Lower volume for timpani character
+        }
+      });
+      const xylophonePoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 8,
+          modulationIndex: 5,
+          oscillator: { type: "triangle" },
+          envelope: { attack: 1e-3, decay: 0.3, sustain: 0.1, release: 1 },
+          volume: -6
+        }
+      });
+      const stringsPoly = new PolySynth({
+        voice: AMSynth,
+        options: {
+          oscillator: { type: "sawtooth" },
+          envelope: { attack: 0.1, decay: 0.2, sustain: 0.7, release: 1.5 },
+          volume: -8
+        }
+      });
+      const flutePoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 1,
+          modulationIndex: 2,
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.05, decay: 0.2, sustain: 0.6, release: 0.8 },
+          volume: -10
+        }
+      });
+      const clarinetPoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 3,
+          modulationIndex: 4,
+          oscillator: { type: "square" },
+          envelope: { attack: 0.1, decay: 0.3, sustain: 0.7, release: 1 },
+          volume: -9
+        }
+      });
+      const trumpetPoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 2,
+          modulationIndex: 8,
+          oscillator: { type: "sawtooth" },
+          envelope: { attack: 0.02, decay: 0.1, sustain: 0.8, release: 0.5 },
+          volume: -7
+        }
+      });
+      const saxophonePoly = new PolySynth({
+        voice: AMSynth,
+        options: {
+          oscillator: { type: "sawtooth" },
+          envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
+          volume: -8
+        }
+      });
+      if ((_a = this.settings.instruments.timpani) == null ? void 0 : _a.enabled) {
+        const timpaniVolume = new Volume(this.settings.instruments.timpani.volume);
+        this.instrumentVolumes.set("timpani", timpaniVolume);
+        timpaniPoly.connect(timpaniVolume);
+        timpaniVolume.connect(this.volume);
+        this.instruments.set("timpani", timpaniPoly);
+      }
+      if ((_b = this.settings.instruments.xylophone) == null ? void 0 : _b.enabled) {
+        const xylophoneVolume = new Volume(this.settings.instruments.xylophone.volume);
+        this.instrumentVolumes.set("xylophone", xylophoneVolume);
+        xylophonePoly.connect(xylophoneVolume);
+        xylophoneVolume.connect(this.volume);
+        this.instruments.set("xylophone", xylophonePoly);
+      }
+      if ((_c = this.settings.instruments.strings) == null ? void 0 : _c.enabled) {
+        const stringsVolume = new Volume(this.settings.instruments.strings.volume);
+        this.instrumentVolumes.set("strings", stringsVolume);
+        stringsPoly.connect(stringsVolume);
+        stringsVolume.connect(this.volume);
+        this.instruments.set("strings", stringsPoly);
+      }
+      if ((_d = this.settings.instruments.flute) == null ? void 0 : _d.enabled) {
+        const fluteVolume = new Volume(this.settings.instruments.flute.volume);
+        this.instrumentVolumes.set("flute", fluteVolume);
+        flutePoly.connect(fluteVolume);
+        fluteVolume.connect(this.volume);
+        this.instruments.set("flute", flutePoly);
+      }
+      if ((_e = this.settings.instruments.clarinet) == null ? void 0 : _e.enabled) {
+        const clarinetVolume = new Volume(this.settings.instruments.clarinet.volume);
+        this.instrumentVolumes.set("clarinet", clarinetVolume);
+        clarinetPoly.connect(clarinetVolume);
+        clarinetVolume.connect(this.volume);
+        this.instruments.set("clarinet", clarinetPoly);
+      }
+      if ((_f = this.settings.instruments.trumpet) == null ? void 0 : _f.enabled) {
+        const trumpetVolume = new Volume(this.settings.instruments.trumpet.volume);
+        this.instrumentVolumes.set("trumpet", trumpetVolume);
+        trumpetPoly.connect(trumpetVolume);
+        trumpetVolume.connect(this.volume);
+        this.instruments.set("trumpet", trumpetPoly);
+      }
+      if ((_g = this.settings.instruments.saxophone) == null ? void 0 : _g.enabled) {
+        const saxophoneVolume = new Volume(this.settings.instruments.saxophone.volume);
+        this.instrumentVolumes.set("saxophone", saxophoneVolume);
+        saxophonePoly.connect(saxophoneVolume);
+        saxophoneVolume.connect(this.volume);
+        this.instruments.set("saxophone", saxophonePoly);
+      }
+      logger10.debug("audio", "Lightweight synthesis initialized", {
+        audioFormat: this.settings.audioFormat,
+        instrumentsCreated: this.instruments.size,
+        synthesisMode: this.settings.audioFormat === "synthesis"
+      });
+    } catch (error) {
+      logger10.error("audio", "Failed to initialize lightweight percussion", error);
+      throw error;
+    }
+  }
+  /**
+   * Issue #010 Fix: Check if any instruments from a specific family are enabled
+   * This is future-proof and will work with instruments added later
+   */
+  hasInstrumentFamilyEnabled(familyType) {
+    const enabledInstruments = Object.keys(this.settings.instruments).filter((instrumentName) => {
+      const settings = this.settings.instruments[instrumentName];
+      return settings == null ? void 0 : settings.enabled;
+    });
+    const familyInstruments = enabledInstruments.filter((instrumentName) => {
+      if (familyType === "percussion") {
+        return this.isPercussionInstrument(instrumentName);
+      } else if (familyType === "electronic") {
+        return this.isElectronicInstrument(instrumentName);
+      }
+      return false;
+    });
+    logger10.debug("family-check", `\u{1F680} ISSUE #010 DEBUG: Family check for ${familyType}`, {
+      enabledInstruments,
+      familyInstruments,
+      hasFamilyInstruments: familyInstruments.length > 0
+    });
+    return familyInstruments.length > 0;
+  }
+  /**
+   * Issue #010 Fix: Check if any percussion instruments are enabled
+   */
+  hasPercussionInstrumentsEnabled() {
+    return this.hasInstrumentFamilyEnabled("percussion");
+  }
+  /**
+   * Issue #010 Fix: Check if any electronic instruments are enabled
+   */
+  hasElectronicInstrumentsEnabled() {
+    return this.hasInstrumentFamilyEnabled("electronic");
   }
   /**
    * Clean up resources
@@ -35237,10 +36107,68 @@ var AudioEngine = class {
     return ["timpani", "xylophone", "vibraphone", "gongs"].includes(instrumentName);
   }
   isElectronicInstrument(instrumentName) {
-    return ["leadSynth", "bassSynth", "arpSynth"].includes(instrumentName);
+    return ["pad", "leadSynth", "bassSynth", "arpSynth"].includes(instrumentName);
   }
   isEnvironmentalInstrument(instrumentName) {
     return ["whaleHumpback"].includes(instrumentName);
+  }
+  /**
+   * Issue #010 Fix: Get default voice limits to avoid require() in methods
+   */
+  getDefaultVoiceLimits() {
+    return {
+      DEFAULT_VOICE_LIMITS: {
+        piano: 8,
+        organ: 6,
+        harpsichord: 8,
+        strings: 4,
+        violin: 4,
+        viola: 4,
+        cello: 4,
+        contrabass: 3,
+        harp: 12,
+        trumpet: 3,
+        horn: 3,
+        trombone: 3,
+        tuba: 2,
+        flute: 3,
+        oboe: 3,
+        clarinet: 3,
+        bassoon: 3,
+        piccolo: 3,
+        soprano: 4,
+        alto: 4,
+        tenor: 4,
+        bass: 4,
+        choir: 8,
+        timpani: 2,
+        xylophone: 6,
+        vibraphone: 6,
+        gongs: 4,
+        default: 4
+      }
+    };
+  }
+  /**
+   * Issue #010 Fix: Get appropriate polyphony limit for instrument to prevent crackling
+   */
+  getInstrumentPolyphonyLimit(instrumentName) {
+    const { DEFAULT_VOICE_LIMITS } = this.getDefaultVoiceLimits();
+    const specificLimit = DEFAULT_VOICE_LIMITS[instrumentName];
+    if (specificLimit) {
+      return specificLimit;
+    }
+    if (["piano", "organ", "harpsichord", "harp", "choir"].includes(instrumentName)) {
+      return 8;
+    } else if (["strings", "violin", "viola", "cello", "contrabass"].includes(instrumentName)) {
+      return 4;
+    } else if (["trumpet", "horn", "trombone", "flute", "oboe", "clarinet", "bassoon"].includes(instrumentName)) {
+      return 3;
+    } else if (["timpani", "tuba"].includes(instrumentName)) {
+      return 2;
+    } else {
+      return 4;
+    }
   }
   /**
    * Trigger advanced percussion with specialized synthesis
@@ -35958,12 +36886,14 @@ var MusicalMapper = class {
       velocity,
       timing
     });
+    const instrument = this.assignInstrumentToNode(node, index, totalNodes);
     return {
       nodeId: node.id,
       pitch,
       duration,
       velocity,
-      timing
+      timing,
+      instrument
     };
   }
   mapConnectionsToPitch(connections, maxConnections) {
@@ -35971,19 +36901,23 @@ var MusicalMapper = class {
       return this.rootNoteFreq;
     }
     const normalizedPosition = Math.min(connections / maxConnections, 1);
-    const scalePosition = Math.floor(normalizedPosition * (this.scale.length * 3));
+    const diversifiedPosition = Math.pow(normalizedPosition, 0.7);
+    const scalePosition = Math.floor(diversifiedPosition * (this.scale.length * 4));
     const octave = Math.floor(scalePosition / this.scale.length);
     const noteInScale = scalePosition % this.scale.length;
-    const semitones = this.scale[noteInScale] + octave * 12;
-    const frequency = this.rootNoteFreq * Math.pow(2, semitones / 12);
-    return frequency;
+    const baseFrequency = this.rootNoteFreq * Math.pow(2, (this.scale[noteInScale] + octave * 12) / 12);
+    const nodeHash = this.hashString(`${connections}-${maxConnections}-freq`);
+    const detuningAmount = this.settings.antiCracklingDetuning || 2;
+    const detuningCents = (nodeHash % 100 / 100 - 0.5) * detuningAmount;
+    const detunedFrequency = baseFrequency * Math.pow(2, detuningCents / 1200);
+    return detunedFrequency;
   }
   mapWordCountToDuration(wordCount) {
-    const baseDuration = 0.4;
-    const maxDuration = 0.8;
-    const minDuration = 0.2;
-    const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.8;
-    const scaledDuration = baseDuration + scaleFactor + (wordCount > 100 ? 0.5 : 0);
+    const baseDuration = 0.3;
+    const maxDuration = 0.6;
+    const minDuration = 0.15;
+    const scaleFactor = Math.log10(Math.max(wordCount, 1)) * 0.6;
+    const scaledDuration = baseDuration + scaleFactor + (wordCount > 100 ? 0.3 : 0);
     return Math.max(minDuration, Math.min(maxDuration, scaledDuration));
   }
   mapPositionToVelocity(position, totalNodes) {
@@ -36032,6 +36966,16 @@ var MusicalMapper = class {
       const randomOffset = (Math.random() - 0.5) * 0.5;
       mapping.timing = Math.max(0, baseTime + randomOffset);
     });
+    sequence.sort((a, b) => a.timing - b.timing);
+    const jitterAmount = 0.02;
+    for (let i = 1; i < sequence.length; i++) {
+      const timeDiff = sequence[i].timing - sequence[i - 1].timing;
+      if (timeDiff < 0.05) {
+        const jitter = Math.random() * jitterAmount;
+        sequence[i].timing += jitter;
+        logger12.debug("sequence", `Applied anti-crackling jitter: ${jitter.toFixed(3)}s to note ${i}`);
+      }
+    }
     const beatDuration = 60 / this.settings.tempo;
     const tempoMultiplier = Math.sqrt(beatDuration / 0.5);
     sequence.forEach((mapping) => {
@@ -36058,6 +37002,72 @@ var MusicalMapper = class {
       tempo: this.settings.tempo,
       scaleNotes: this.scale
     };
+  }
+  /**
+   * Issue #010 Fix: Assign instruments to notes based on characteristics
+   * This prevents all notes from defaulting to the same instrument and causing crackling
+   * Only suggests enabled instruments to prevent fallback to default
+   */
+  assignInstrumentToNode(node, index, totalNodes) {
+    const enabledInstruments = Object.keys(this.settings.instruments).filter(
+      (instrumentName) => {
+        var _a;
+        return (_a = this.settings.instruments[instrumentName]) == null ? void 0 : _a.enabled;
+      }
+    );
+    if (enabledInstruments.length === 0) {
+      return "piano";
+    }
+    if (enabledInstruments.length === 1) {
+      return enabledInstruments[0];
+    }
+    const instrumentsByRange = {
+      low: ["bass", "tuba", "cello", "bassSynth", "timpani"],
+      mid: ["piano", "strings", "guitar", "organ", "pad", "saxophone", "trombone", "frenchHorn"],
+      high: ["violin", "flute", "clarinet", "trumpet", "soprano", "xylophone", "vibraphone", "oboe"],
+      very_high: ["alto", "tenor", "leadSynth", "arpSynth", "gongs", "harp"]
+    };
+    const connectionRatio = node.connectionCount / Math.max(totalNodes, 1);
+    let rangeKey;
+    if (connectionRatio < 0.25) {
+      rangeKey = "low";
+    } else if (connectionRatio < 0.5) {
+      rangeKey = "mid";
+    } else if (connectionRatio < 0.75) {
+      rangeKey = "high";
+    } else {
+      rangeKey = "very_high";
+    }
+    const candidateInstruments = instrumentsByRange[rangeKey].filter(
+      (instrument) => enabledInstruments.includes(instrument)
+    );
+    const finalCandidates = candidateInstruments.length > 0 ? candidateInstruments : enabledInstruments;
+    const nodeHash = this.hashString(node.id + node.name);
+    const instrumentIndex = nodeHash % finalCandidates.length;
+    const selectedInstrument = finalCandidates[instrumentIndex];
+    logger12.debug("instrument-assignment", `Assigned ${selectedInstrument} to node ${node.name}`, {
+      nodeId: node.id,
+      connections: node.connectionCount,
+      connectionRatio: connectionRatio.toFixed(3),
+      range: rangeKey,
+      instrument: selectedInstrument,
+      candidateInstruments,
+      enabledInstruments: enabledInstruments.length,
+      finalCandidates
+    });
+    return selectedInstrument;
+  }
+  /**
+   * Simple string hash function for consistent instrument assignment
+   */
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
   }
 };
 

@@ -203,6 +203,7 @@ export interface SonigraphSettings {
 	isEnabled: boolean;
 	audioFormat: 'synthesis' | 'mp3' | 'wav';
 	microtuning?: boolean;
+	antiCracklingDetuning?: number; // Issue #010 Future-Proof Fix: Configurable micro-detuning amount in cents (±)
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
@@ -278,6 +279,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	isEnabled: true,
 	audioFormat: 'synthesis',
 	microtuning: false,
+	antiCracklingDetuning: 2.0, // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
 	effects: {
 		orchestralreverbhall: { enabled: true },
 		'3bandeq': { enabled: true },

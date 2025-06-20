@@ -313,12 +313,12 @@ export class TestRunner {
             };
         }
 
-        // Calculate averages
+        // Calculate averages with safe memory access
         const averageMetrics: PerformanceMetrics = {
             memory: {
-                heapUsed: metricsArray.reduce((sum, m) => sum + m.memory.heapUsed, 0) / metricsArray.length,
-                heapTotal: metricsArray.reduce((sum, m) => sum + m.memory.heapTotal, 0) / metricsArray.length,
-                objectCount: Math.round(metricsArray.reduce((sum, m) => sum + m.memory.objectCount, 0) / metricsArray.length)
+                heapUsed: metricsArray.reduce((sum, m) => sum + (m.memory?.heapUsed || 0), 0) / metricsArray.length,
+                heapTotal: metricsArray.reduce((sum, m) => sum + (m.memory?.heapTotal || 0), 0) / metricsArray.length,
+                objectCount: Math.round(metricsArray.reduce((sum, m) => sum + (m.memory?.objectCount || 0), 0) / metricsArray.length)
             },
             audio: {
                 cpuUsage: metricsArray.reduce((sum, m) => sum + m.audio.cpuUsage, 0) / metricsArray.length,
@@ -334,12 +334,12 @@ export class TestRunner {
             }
         };
 
-        // Calculate peaks
+        // Calculate peaks with safe memory access
         const peakMetrics: PerformanceMetrics = {
             memory: {
-                heapUsed: Math.max(...metricsArray.map(m => m.memory.heapUsed)),
-                heapTotal: Math.max(...metricsArray.map(m => m.memory.heapTotal)),
-                objectCount: Math.max(...metricsArray.map(m => m.memory.objectCount))
+                heapUsed: Math.max(...metricsArray.map(m => m.memory?.heapUsed || 0)),
+                heapTotal: Math.max(...metricsArray.map(m => m.memory?.heapTotal || 0)),
+                objectCount: Math.max(...metricsArray.map(m => m.memory?.objectCount || 0))
             },
             audio: {
                 cpuUsage: Math.max(...metricsArray.map(m => m.audio.cpuUsage)),
@@ -375,9 +375,9 @@ export class TestRunner {
     private calculateMemoryGrowth(metrics: PerformanceMetrics[]): number {
         if (metrics.length < 2) return 0;
         
-        const first = metrics[0].memory.heapUsed;
-        const last = metrics[metrics.length - 1].memory.heapUsed;
-        return (last - first) / first;
+        const first = metrics[0].memory?.heapUsed || 0;
+        const last = metrics[metrics.length - 1].memory?.heapUsed || 0;
+        return first > 0 ? (last - first) / first : 0;
     }
 
     /**
