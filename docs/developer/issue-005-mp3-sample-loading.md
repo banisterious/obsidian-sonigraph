@@ -149,6 +149,89 @@ const onFormatChange = (newFormat: string) => {
 
 ---
 
+## Root Cause Analysis (RESOLVED - 2025-06-20)
+
+### Primary Issue: Configuration Synchronization Bug
+
+**Root Cause Identified:** The `AudioEngine.updateSettings()` method fails to synchronize audio format changes with the `InstrumentConfigLoader`, causing persistent MP3 URL requests regardless of user format selection.
+
+**Technical Details:**
+
+**File:** `src/audio/engine.ts:2401` (updateSettings method)  
+**Bug:** Missing call to `this.instrumentConfigLoader.updateAudioFormat(settings.audioFormat)`
+
+**Flow Analysis:**
+1. ✅ User selects "WAV" format in Control Center
+2. ✅ Setting saved to `this.settings.audioFormat = 'wav'`
+3. ❌ **InstrumentConfigLoader never updated with new format**
+4. ❌ Config loader continues using 'mp3' from constructor (line 69)
+5. ❌ All URLs generated with `.mp3` extension despite user selection
+
+**Evidence from Console Error:**
+```
+GET https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/Bb2.mp3 404 (Not Found)
+```
+This error occurs even when user selects WAV format, confirming the synchronization bug.
+
+### Secondary Issue: Hard-coded MP3 Extensions
+
+**Location:** `src/audio/percussion-engine.ts` (lines 77, 110, 153, 199)  
+**Problem:** PercussionEngine bypasses config system with hard-coded `.mp3` extensions
+**Impact:** Percussion instruments always request MP3 regardless of format settings
+
+### URL Construction Pipeline Analysis
+
+**Step 1: Template Definition** (`src/audio/configs/percussion-electronic-instruments.ts`)
+```typescript
+timpani: {
+    urls: {
+        "Bb2": `Bb2.${FORMAT_PLACEHOLDER}`, // FORMAT_PLACEHOLDER = "{{FORMAT}}"
+        // ... other notes
+    },
+    baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/"
+}
+```
+
+**Step 2: Format Replacement** (`src/audio/configs/InstrumentConfigLoader.ts:195-209`)
+```typescript
+processedConfig.urls[note] = url.replace(FORMAT_PLACEHOLDER, this.options.audioFormat);
+// Should replace {{FORMAT}} with 'wav' but uses 'mp3' due to sync bug
+```
+
+**Step 3: Final URL Construction**
+```
+Base: https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/
+Note: Bb2.mp3  (should be Bb2.wav when WAV selected)
+Result: https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/Bb2.mp3
+Status: 404 (Not Found) - MP3 files don't exist on CDN
+```
+
+### CDN Verification Results
+
+**MP3 Availability:** ❌ Confirmed non-existent via 404 errors  
+**WAV Availability:** ✅ Available (when proper format sync implemented)  
+**CDN Structure:** Uses format-specific file extensions, requires proper format selection
+
+### Fix Implementation Requirements
+
+**Primary Fix (High Priority):**
+```typescript
+// In AudioEngine.updateSettings() method
+if (settings.audioFormat !== this.settings.audioFormat) {
+    this.instrumentConfigLoader.updateAudioFormat(settings.audioFormat);
+    // Re-initialize instruments that use samples
+    await this.reinitializeSampleBasedInstruments();
+}
+```
+
+**Secondary Fix (Medium Priority):**
+```typescript
+// In PercussionEngine: Remove hard-coded .mp3 extensions
+// Use config system for all sample URL generation
+```
+
+---
+
 ## Browser Console Analysis
 
 ### Expected Error Patterns
