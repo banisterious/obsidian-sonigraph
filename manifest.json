@@ -1,10 +1,10 @@
 {
-  "id": "sonigraph",
-  "name": "Sonigraph",
-  "version": "0.5.0",
-  "minAppVersion": "0.15.0",
-  "description": "Transform your knowledge graph into music. Maps nodes and connections to musical parameters, allowing you to hear the relationships and complexity of your ideas.",
-  "author": "banisterious",
-  "authorUrl": "https://github.com/banisterious",
-  "isDesktopOnly": false
-} 
+	"id": "sonigraph",
+	"name": "Sonigraph",
+	"version": "0.6.0",
+	"minAppVersion": "0.15.0",
+	"description": "Transform your knowledge graph into music. Maps nodes and connections to musical parameters, allowing you to hear the relationships and complexity of your ideas.",
+	"author": "banisterious",
+	"authorUrl": "https://github.com/banisterious",
+	"isDesktopOnly": false
+}
