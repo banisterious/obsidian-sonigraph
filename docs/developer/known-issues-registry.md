@@ -26,7 +26,7 @@
 | 006 | ✅ RESOLVED | High | UI Components | Play button single-use problem | [Resolution](../archive/issues/issue-006-play-button-single-use.md) |
 | 007 | ✅ RESOLVED | Medium | Audio Engine | Audio engine logging noise and configuration issues | [Resolution](../archive/issues/issue-007-audio-engine-logging-noise-resolution.md) |
 | 008 | 🔍 ACTIVE | High | Audio Engine | Progressive audio generation failure | [Analysis](./issue-008-progressive-audio-generation-failure.md) |
-| 009 | ✅ RESOLVED | Medium | Audio Engine | Instrument volume node muting and corruption detection | [Resolution](./issue-009-instrument-volume-node-muting.md) |
+| 009 | ✅ RESOLVED | Medium | Audio Engine | Instrument volume node muting and corruption detection | [Resolution](../archive/issues/issue-009-instrument-volume-node-muting.md) |
 
 ---
 
@@ -329,7 +329,7 @@ if (currentLogLevel === 'debug') {
 - ✅ **User Experience**: Cleaner log output without functional impact
 
 ### Detailed Analysis
-👉 **[Complete Volume Corruption Investigation](./issue-009-instrument-volume-node-muting.md)**
+👉 **[Complete Volume Corruption Investigation](../archive/issues/issue-009-instrument-volume-node-muting.md)**
 
 ---
 
