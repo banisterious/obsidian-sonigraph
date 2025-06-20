@@ -6,6 +6,7 @@ logs/
 
 # Project-specific files
 CLAUDE.md
+obsidian-developer-docs/
 
 # Documentation images - generated content
 docs/images/sonigraph-control-center/
