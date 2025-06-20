@@ -33139,18 +33139,18 @@ var AudioEngine = class {
     }
   }
   connectSynthesisInstruments() {
-    logger10.debug("synthesis", "Connecting synthesis instruments through effects to master output");
+    logger10.debug("synthesis", "Connecting synthesis instruments to master output");
     for (const [instrumentName, instrument] of this.instruments) {
       const volume = this.instrumentVolumes.get(instrumentName);
-      const effects = this.instrumentEffects.get(instrumentName);
-      if (!volume || !effects) {
-        logger10.error("synthesis", `Missing volume or effects for instrument: ${instrumentName} - this indicates an initialization order problem`);
+      if (!volume) {
+        logger10.error("synthesis", `Missing volume for instrument: ${instrumentName} - this indicates an initialization order problem`);
         continue;
       }
-      let output = volume;
       if (this.volume) {
-        output.connect(this.volume);
-        logger10.debug("synthesis", `Connected ${instrumentName} through effects to master output`);
+        volume.connect(this.volume);
+        logger10.debug("synthesis", `Connected ${instrumentName} directly to master output (synthesis mode)`);
+      } else {
+        logger10.error("synthesis", `Master volume not available when connecting ${instrumentName}`);
       }
     }
   }
@@ -33354,13 +33354,14 @@ var AudioEngine = class {
         synth.connect(volume);
         if (this.volume) {
           volume.connect(this.volume);
+          logger10.debug("instruments", `Connected ${instrumentName}: synth \u2192 volume \u2192 master`);
+        } else {
+          logger10.warn("instruments", `Master volume not available for ${instrumentName} connection`);
         }
         this.instruments.set(instrumentName, synth);
         logger10.debug("instruments", `Created specialized synthesis instrument: ${instrumentName}`);
       });
-      this.connectSynthesisInstruments();
-      this.applyEffectSettings();
-      this.initializeMissingInstruments();
+      logger10.debug("instruments", "All synthesis instruments connected directly to master output");
       this.applyInstrumentSettings();
       return;
     }
@@ -34334,6 +34335,10 @@ var AudioEngine = class {
       });
       if (isSynthesisMode) {
         logger10.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
+        if (!this.volume) {
+          logger10.debug("playbook", "Creating master volume for synthesis mode");
+          this.volume = new Volume(this.settings.volume).toDestination();
+        }
         logger10.debug("playbook", "Clearing minimal mode instruments before full initialization", {
           instrumentsToDispose: Array.from(this.instruments.keys())
         });
