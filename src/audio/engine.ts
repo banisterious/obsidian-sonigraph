@@ -1,5 +1,5 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, FMSynth, Sampler, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
+import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
@@ -22,6 +22,7 @@ export class AudioEngine {
 	private instrumentEffects: Map<string, Map<string, any>> = new Map(); // Per-instrument effects
 	private isInitialized = false;
 	private isPlaying = false;
+	private isMinimalMode = false; // Issue #010 Fix: Track if we're in minimal initialization mode
 	private currentSequence: MusicalMapping[] = [];
 	private scheduledEvents: number[] = [];
 	private realtimeTimer: ReturnType<typeof setInterval> | null = null;
@@ -373,18 +374,36 @@ export class AudioEngine {
 		logger.info('advanced-synthesis', 'Initializing Phase 8 advanced synthesis engines');
 		
 		try {
-			// Initialize percussion engine with OGG format (only format available on CDN)
-			if (this.volume) {
+			// Issue #010 Fix: Only initialize percussion engine if percussion instruments are enabled
+			const hasPercussionEnabled = this.hasPercussionInstrumentsEnabled();
+			logger.debug('percussion', '🚀 ISSUE #010 DEBUG: Percussion initialization check', {
+				hasPercussionEnabled,
+				enabledInstruments: Object.keys(this.settings.instruments).filter(name => 
+					this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
+				),
+				percussionInstruments: ['timpani', 'xylophone', 'vibraphone', 'gongs'].filter(name =>
+					this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
+				)
+			});
+			
+			if (this.volume && hasPercussionEnabled) {
+				logger.debug('percussion', 'Percussion instruments enabled, initializing percussion engine');
 				this.percussionEngine = new PercussionEngine(this.volume, 'ogg');
 				await this.percussionEngine.initializePercussion();
 				logger.debug('percussion', 'Advanced percussion synthesis initialized');
+			} else {
+				logger.info('percussion', '🚀 ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)');
 			}
 			
-			// Initialize electronic synthesis engine
-			if (this.volume) {
+			// Initialize electronic synthesis engine only if electronic instruments are enabled
+			const hasElectronicEnabled = this.hasElectronicInstrumentsEnabled();
+			if (this.volume && hasElectronicEnabled) {
+				logger.debug('electronic', 'Electronic instruments enabled, initializing electronic engine');
 				this.electronicEngine = new ElectronicEngine(this.volume);
 				await this.electronicEngine.initializeElectronic();
 				logger.debug('electronic', 'Advanced electronic synthesis initialized');
+			} else {
+				logger.info('electronic', 'Skipping electronic engine initialization (no electronic instruments enabled)');
 			}
 			
 			// Initialize master effects
@@ -736,35 +755,174 @@ export class AudioEngine {
 				'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
 			];
 			manualInstruments.forEach(instrumentName => {
-				// Create specialized synthesizers based on instrument family
-				let synthConfig;
-				if (this.isEnvironmentalInstrument(instrumentName)) {
-					// Environmental instruments: slower, ambient sounds
-					synthConfig = {
-						oscillator: { type: 'sine' as const },
-						envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 }
-					};
-				} else if (this.isPercussionInstrument(instrumentName)) {
-					// Percussion instruments: fast attack, shorter sustain
-					synthConfig = {
-						oscillator: { type: 'triangle' as const },
-						envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.8 }
-					};
-				} else if (this.isElectronicInstrument(instrumentName)) {
-					// Electronic instruments: sharper, more modern sound
-					synthConfig = {
-						oscillator: { type: 'sawtooth' as const },
-						envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 }
-					};
-				} else {
-					// Default for acoustic instruments
-					synthConfig = {
-						oscillator: { type: 'sine' as const },
-						envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
-					};
-				}
+				// Create specialized synthesizers using proven synthesis from initializeLightweightSynthesis
+				let synth: PolySynth;
+				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
 				
-				const synth = new PolySynth(FMSynth, synthConfig);
+				// Use specialized synthesis based on instrument type for better sound quality
+				switch (instrumentName) {
+					case 'timpani':
+						synth = new PolySynth({
+							voice: AMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								oscillator: { type: 'sine' },
+								envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2.0 },
+								volume: -12
+							}
+						});
+						break;
+					
+					case 'xylophone':
+					case 'vibraphone':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 4,
+								modulationIndex: 2,
+								oscillator: { type: 'triangle' },
+								envelope: { attack: 0.001, decay: 0.2, sustain: 0.1, release: 0.5 },
+								volume: -10
+							}
+						});
+						break;
+					
+					case 'strings':
+					case 'violin':
+					case 'cello':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 1.5,
+								modulationIndex: 3,
+								oscillator: { type: 'sawtooth' },
+								envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 1.5 },
+								volume: -8
+							}
+						});
+						break;
+					
+					case 'flute':
+					case 'oboe':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 2,
+								modulationIndex: 1,
+								oscillator: { type: 'sine' },
+								envelope: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 1.0 },
+								volume: -6
+							}
+						});
+						break;
+					
+					case 'clarinet':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 3,
+								modulationIndex: 4,
+								oscillator: { type: 'square' },
+								envelope: { attack: 0.1, decay: 0.3, sustain: 0.7, release: 1.0 },
+								volume: -9
+							}
+						});
+						break;
+					
+					case 'trumpet':
+					case 'frenchHorn':
+					case 'trombone':
+					case 'tuba':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 2,
+								modulationIndex: 8,
+								oscillator: { type: 'sawtooth' },
+								envelope: { attack: 0.02, decay: 0.1, sustain: 0.8, release: 0.5 },
+								volume: -7
+							}
+						});
+						break;
+					
+					case 'saxophone':
+						synth = new PolySynth({
+							voice: AMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								oscillator: { type: 'sawtooth' },
+								envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
+								volume: -8
+							}
+						});
+						break;
+					
+					case 'piano':
+					case 'electricPiano':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 1,
+								modulationIndex: 1.5,
+								oscillator: { type: 'sine' },
+								envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 2.0 },
+								volume: -6
+							}
+						});
+						break;
+					
+					case 'organ':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 1,
+								modulationIndex: 0.5,
+								oscillator: { type: 'square' },
+								envelope: { attack: 0.1, decay: 0.1, sustain: 0.9, release: 0.3 },
+								volume: -8
+							}
+						});
+						break;
+					
+					case 'leadSynth':
+					case 'bassSynth':
+					case 'arpSynth':
+					case 'pad':
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 2,
+								modulationIndex: 6,
+								oscillator: { type: 'sawtooth' },
+								envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 },
+								volume: -8
+							}
+						});
+						break;
+					
+					default:
+						// Default for any remaining instruments
+						synth = new PolySynth({
+							voice: FMSynth,
+							maxPolyphony: maxVoices,
+							options: {
+								harmonicity: 1,
+								modulationIndex: 2,
+								oscillator: { type: 'sine' },
+								envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 },
+								volume: -8
+							}
+						});
+						break;
+				}
 				
 				// Create volume control
 				const volume = new Volume(-6);
@@ -779,7 +937,7 @@ export class AudioEngine {
 				// Add to instruments map
 				this.instruments.set(instrumentName, synth);
 				
-				logger.debug('instruments', `Created synthesis instrument: ${instrumentName}`);
+				logger.debug('instruments', `Created specialized synthesis instrument: ${instrumentName}`);
 			});
 			
 			// Connect synthesis instruments through effects (effects already initialized)
@@ -1488,22 +1646,28 @@ export class AudioEngine {
 		logger.debug('environmental', 'Initializing persistent whale synthesizer');
 
 		// Create persistent whale synthesizer with FM synthesis
-		const whaleSynth = new PolySynth(FMSynth, {
-			harmonicity: 0.5,
-			modulationIndex: 12,
-			oscillator: { type: 'sine' },
-			modulation: { type: 'sine' },
-			envelope: {
-				attack: 0.3 + (Math.random() * 0.4), // 0.3-0.7 second attack
-				decay: 0.5,
-				sustain: 0.9,
-				release: 2.0 + (Math.random() * 3.0) // 2-5 second release
-			},
-			modulationEnvelope: {
-				attack: 1.0,
-				decay: 0.5,
-				sustain: 0.6,
-				release: 4.0
+		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+		const maxVoices = this.getInstrumentPolyphonyLimit('whaleHumpback');
+		const whaleSynth = new PolySynth({
+			voice: FMSynth,
+			maxPolyphony: maxVoices,
+			options: {
+				harmonicity: 0.5,
+				modulationIndex: 12,
+				oscillator: { type: 'sine' },
+				modulation: { type: 'sine' },
+				envelope: {
+					attack: 0.3 + (Math.random() * 0.4), // 0.3-0.7 second attack
+					decay: 0.5,
+					sustain: 0.9,
+					release: 2.0 + (Math.random() * 3.0) // 2-5 second release
+				},
+				modulationEnvelope: {
+					attack: 1.0,
+					decay: 0.5,
+					sustain: 0.6,
+					release: 4.0
+				}
 			}
 		});
 
@@ -1574,9 +1738,15 @@ export class AudioEngine {
 			logger.info('instruments', 'Synthesis-only mode - creating basic synthesizers');
 			missingKeys.forEach(instrumentName => {
 				// Create basic polyphonic synthesizer
-				const synth = new PolySynth(FMSynth, {
-					oscillator: { type: 'sine' },
-					envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+				// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+				const synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+					}
 				});
 				
 				// Create volume control
@@ -1606,9 +1776,15 @@ export class AudioEngine {
 					logger.debug('instruments', `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
 					
 					// Create synthesizer for environmental instruments
-					const synth = new PolySynth(FMSynth, {
-						oscillator: { type: 'sine' },
-						envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 } // Longer envelope for ambient sounds
+					// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+					const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+					const synth = new PolySynth({
+						voice: FMSynth,
+						maxPolyphony: maxVoices,
+						options: {
+							oscillator: { type: 'sine' },
+							envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 } // Longer envelope for ambient sounds
+						}
 					});
 					
 					// Create volume control for environmental instruments
@@ -1742,7 +1918,13 @@ export class AudioEngine {
 						};
 					}
 					
-					const synth = new PolySynth(FMSynth, synthConfig);
+					// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+					const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+					const synth = new PolySynth({
+						voice: FMSynth,
+						maxPolyphony: maxVoices,
+						options: synthConfig
+					});
 					const volume = new Volume(-6);
 					
 					// Connect synth → volume → master
@@ -1842,9 +2024,87 @@ export class AudioEngine {
 		});
 		
 		if (!this.isInitialized || !this.instruments.size) {
-			logger.warn('playback', 'AudioEngine not initialized, initializing now');
-			await this.initialize();
+			logger.warn('playback', '🚀 ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!');
+			await this.initializeEssentials();
 		}
+
+		// Issue #010 Fix: For sequence playback, upgrade to full initialization if needed
+		logger.debug('playback', '🚀 ISSUE #010 DEBUG: Checking upgrade conditions', {
+			isMinimalMode: this.isMinimalMode,
+			instrumentsSize: this.instruments.size,
+			hasPiano: this.instruments.has('piano'),
+			instrumentsList: Array.from(this.instruments.keys())
+		});
+		
+		// Future-proof upgrade logic: Any time we're in minimal mode during playback, upgrade to full mode
+		// This is independent of the number of instruments currently loaded and will work with any minimal initialization strategy
+		if (this.isMinimalMode) {
+			logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
+			const hasPercussion = this.hasPercussionInstrumentsEnabled();
+			const hasElectronic = this.hasElectronicInstrumentsEnabled();
+			const isSynthesisMode = this.settings.audioFormat === 'synthesis';
+			
+			logger.debug('playback', '🚀 ISSUE #010 DEBUG: Upgrade analysis', {
+				currentInstrumentCount: this.instruments.size,
+				currentInstruments: Array.from(this.instruments.keys()),
+				hasPercussionEnabled: hasPercussion,
+				hasElectronicEnabled: hasElectronic,
+				willSkipPercussion: !hasPercussion,
+				willSkipElectronic: !hasElectronic,
+				isSynthesisMode,
+				audioFormat: this.settings.audioFormat,
+				enabledInstruments: Object.keys(this.settings.instruments).filter(name => 
+					this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
+				)
+			});
+
+			// Issue #010 Critical Fix: In synthesis mode, skip CDN sample loading entirely
+			if (isSynthesisMode) {
+				logger.warn('playbook', '🚀 ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments');
+				
+				// Clear existing minimal instruments to prevent conflicts
+				logger.debug('playbook', 'Clearing minimal mode instruments before full initialization', {
+					instrumentsToDispose: Array.from(this.instruments.keys())
+				});
+				this.instruments.forEach(instrument => instrument.dispose());
+				this.instruments.clear();
+				
+				// Initialize full synthesis for all 34 instruments (skip CDN loading)
+				await this.initializeInstruments(); // This method handles synthesis mode properly
+				await this.initializeEffects();
+				await this.initializeAdvancedSynthesis();
+				
+				// Mark as fully initialized
+				this.isMinimalMode = false;
+				this.isInitialized = true;
+				
+				logger.info('playbook', '🚀 ISSUE #010 FIX: Full synthesis initialization completed', {
+					instrumentsCreated: this.instruments.size,
+					instrumentsList: Array.from(this.instruments.keys())
+				});
+			} else {
+				// Sample-based mode: use CDN samples
+				await this.forceFullInitialization();
+			}
+			
+			// Issue #010 Fix: Log state after upgrade to confirm instruments are loaded
+			logger.info('playback', '🚀 ISSUE #010 FIX: Upgrade completed - verifying instruments', {
+				instrumentsAfterUpgrade: this.instruments.size,
+				instrumentsList: Array.from(this.instruments.keys()),
+				isInitialized: this.isInitialized,
+				isMinimalMode: this.isMinimalMode
+			});
+		}
+
+		// Issue #010 Fix: Debug sequence instrument requirements vs available instruments
+		const sequenceInstruments = [...new Set(sequence.map(note => note.instrument))];
+		logger.info('playback', '🚀 ISSUE #010 DEBUG: Sequence instrument analysis', {
+			sequenceInstruments,
+			availableInstruments: Array.from(this.instruments.keys()),
+			enabledInstruments: enabledInstrumentsList,
+			sequenceLength: sequence.length,
+			instrumentMapSize: this.instruments.size
+		});
 
 		// Issue #006 Fix: Ensure enabled instruments have properly functioning volume nodes
 		// Check for both missing volume nodes and corrupted volume nodes (null value, muted)
@@ -2092,12 +2352,8 @@ export class AudioEngine {
 				audioContextState: getContext().state
 			});
 
-			// Test audio connection with immediate tone
-			const testSynth = this.instruments.get('piano');
-			if (testSynth) {
-				logger.info('test', 'Playing immediate test tone to verify audio connection');
-				testSynth.triggerAttackRelease(440, '8n', '+0.1');
-			}
+			// Issue #010 Fix: Removed test tone - this was causing the "brief note" the user heard
+			// The real sequence should play via the real-time scheduling system
 		} catch (error) {
 			logger.error('playback', 'Error processing sequence', {
 				error: error instanceof Error ? {
@@ -2993,8 +3249,9 @@ export class AudioEngine {
 	 * Play a single test note
 	 */
 	async playTestNote(frequency: number = 440): Promise<void> {
+		// Fast-path initialization - only essential components for test notes
 		if (!this.isInitialized) {
-			await this.initialize();
+			await this.initializeEssentials();
 		}
 
 		if (this.instruments.size > 0) {
@@ -3005,6 +3262,340 @@ export class AudioEngine {
 				}
 			});
 		}
+	}
+
+	/**
+	 * Fast-path initialization for test notes - Issue #010 Crackling Fix
+	 * Only initializes essential components to prevent processing spikes
+	 */
+	private async initializeEssentials(): Promise<void> {
+		if (this.isInitialized) {
+			return;
+		}
+
+		try {
+			logger.debug('audio', 'Fast-path initialization for test notes');
+			
+			// Start Tone.js
+			await start();
+			
+			// Create master volume control
+			this.volume = new Volume(this.settings.volume).toDestination();
+			
+			// Initialize only basic piano for test notes (no CDN samples)
+			await this.initializeBasicPiano();
+			
+			// Initialize lightweight synthesis for common instruments (no CDN samples)
+			await this.initializeLightweightSynthesis();
+			
+			// Mark as initialized but keep it minimal
+			this.isInitialized = true;
+			this.isMinimalMode = true;
+			logger.warn('audio', '🚀 ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion');
+			
+		} catch (error) {
+			logger.error('audio', 'Failed to initialize essential components', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Force full initialization after minimal initialization - Issue #010 Crackling Fix
+	 * This allows upgrading from minimal to full initialization when needed
+	 */
+	async forceFullInitialization(): Promise<void> {
+		try {
+			logger.debug('audio', 'Upgrading to full initialization');
+			
+			// Issue #010 Fix: Store existing working instruments to preserve them
+			const existingInstruments = new Map(this.instruments);
+			const existingVolumes = new Map(this.instrumentVolumes);
+			
+			logger.info('audio', '🚀 ISSUE #010 FIX: Preserving existing instruments during upgrade', {
+				existingInstruments: Array.from(existingInstruments.keys()),
+				existingVolumes: Array.from(existingVolumes.keys())
+			});
+			
+			// Initialize effects first to ensure volume/effects maps are populated
+			await this.initializeEffects();
+			
+			// Initialize instruments (this will create all instruments, but we'll preserve working ones)
+			await this.initializeInstruments();
+			
+			// Issue #010 Fix: Restore working instruments that were overwritten
+			existingInstruments.forEach((instrument, instrumentName) => {
+				if (instrumentName === 'piano') {
+					// Keep the working piano from minimal mode
+					logger.info('audio', '🚀 ISSUE #010 FIX: Restoring working piano from minimal mode');
+					this.instruments.set(instrumentName, instrument);
+					
+					// Also restore its volume if it was working
+					const existingVolume = existingVolumes.get(instrumentName);
+					if (existingVolume) {
+						this.instrumentVolumes.set(instrumentName, existingVolume);
+					}
+				}
+			});
+			
+			// Initialize advanced synthesis engines
+			await this.initializeAdvancedSynthesis();
+			
+			// Check if enhanced routing is enabled
+			if (this.settings.enhancedRouting?.enabled) {
+				await this.initializeEnhancedRouting();
+			} else {
+				this.applyEffectSettings();
+			}
+			
+			// Issue #007 Fix: Generate comprehensive initialization report
+			this.generateInitializationReport();
+			
+			// Issue #010 Fix: Clear minimal mode flag after full initialization
+			this.isMinimalMode = false;
+			
+			logger.info('audio', 'Full AudioEngine initialization completed', {
+				totalInstruments: this.instruments.size,
+				preservedInstruments: Array.from(existingInstruments.keys()),
+				finalInstruments: Array.from(this.instruments.keys()),
+				instrumentMapSize: this.instruments.size
+			});
+		} catch (error) {
+			logger.error('audio', 'Failed to upgrade to full initialization', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Initialize basic piano synth for test notes - no external samples
+	 */
+	private async initializeBasicPiano(): Promise<void> {
+		try {
+			// Create a simple polyphonic synthesizer for piano test notes
+			const pianoPoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 3,
+					modulationIndex: 10,
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.001, decay: 1, sustain: 0.3, release: 0.3 },
+					modulation: { type: 'square' },
+					modulationEnvelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.2 }
+				}
+			});
+
+			// Create volume control
+			const pianoVolume = new Volume(this.settings.instruments.piano.volume);
+			this.instrumentVolumes.set('piano', pianoVolume);
+
+			// Connect piano directly to master volume (no effects for test notes)
+			pianoPoly.connect(pianoVolume);
+			pianoVolume.connect(this.volume);
+			
+			this.instruments.set('piano', pianoPoly);
+			
+			logger.debug('audio', 'Basic piano synthesizer initialized');
+			
+		} catch (error) {
+			logger.error('audio', 'Failed to initialize basic piano', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Initialize lightweight synthesis for common instruments - no external samples
+	 * Issue #010 Fix: Provides clean sounds without CDN sample processing spikes that cause crackling
+	 */
+	private async initializeLightweightSynthesis(): Promise<void> {
+		try {
+			// Timpani - Deep, resonant synthetic drums
+			const timpaniPoly = new PolySynth({
+				voice: AMSynth,
+				options: {
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2.0 },
+					volume: -12 // Lower volume for timpani character
+				}
+			});
+
+			// Xylophone - Bright, percussive synthesis
+			const xylophonePoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 8,
+					modulationIndex: 5,
+					oscillator: { type: 'triangle' },
+					envelope: { attack: 0.001, decay: 0.3, sustain: 0.1, release: 1.0 },
+					volume: -6
+				}
+			});
+
+			// Strings - Warm, flowing synthesis (Issue #010 Fix: Replaces CDN samples)
+			const stringsPoly = new PolySynth({
+				voice: AMSynth,
+				options: {
+					oscillator: { type: 'sawtooth' },
+					envelope: { attack: 0.1, decay: 0.2, sustain: 0.7, release: 1.5 },
+					volume: -8
+				}
+			});
+
+			// Flute - Airy, crystalline synthesis (Issue #010 Fix: Replaces CDN samples)
+			const flutePoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 1,
+					modulationIndex: 2,
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.05, decay: 0.2, sustain: 0.6, release: 0.8 },
+					volume: -10
+				}
+			});
+
+			// Clarinet - Warm woodwind synthesis (Issue #010 Fix: Replaces CDN samples)
+			const clarinetPoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 3,
+					modulationIndex: 4,
+					oscillator: { type: 'square' },
+					envelope: { attack: 0.1, decay: 0.3, sustain: 0.7, release: 1.0 },
+					volume: -9
+				}
+			});
+
+			// Trumpet - Bright brass synthesis (Issue #010 Fix: Replaces CDN samples)
+			const trumpetPoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 2,
+					modulationIndex: 8,
+					oscillator: { type: 'sawtooth' },
+					envelope: { attack: 0.02, decay: 0.1, sustain: 0.8, release: 0.5 },
+					volume: -7
+				}
+			});
+
+			// Saxophone - Rich reed synthesis (Issue #010 Fix: Replaces CDN samples)
+			const saxophonePoly = new PolySynth({
+				voice: AMSynth,
+				options: {
+					oscillator: { type: 'sawtooth' },
+					envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
+					volume: -8
+				}
+			});
+
+			// Connect instruments directly to master volume (minimal processing for performance)
+			if (this.settings.instruments.timpani?.enabled) {
+				const timpaniVolume = new Volume(this.settings.instruments.timpani.volume);
+				this.instrumentVolumes.set('timpani', timpaniVolume);
+				timpaniPoly.connect(timpaniVolume);
+				timpaniVolume.connect(this.volume);
+				this.instruments.set('timpani', timpaniPoly);
+			}
+
+			if (this.settings.instruments.xylophone?.enabled) {
+				const xylophoneVolume = new Volume(this.settings.instruments.xylophone.volume);
+				this.instrumentVolumes.set('xylophone', xylophoneVolume);
+				xylophonePoly.connect(xylophoneVolume);
+				xylophoneVolume.connect(this.volume);
+				this.instruments.set('xylophone', xylophonePoly);
+			}
+
+			if (this.settings.instruments.strings?.enabled) {
+				const stringsVolume = new Volume(this.settings.instruments.strings.volume);
+				this.instrumentVolumes.set('strings', stringsVolume);
+				stringsPoly.connect(stringsVolume);
+				stringsVolume.connect(this.volume);
+				this.instruments.set('strings', stringsPoly);
+			}
+
+			if (this.settings.instruments.flute?.enabled) {
+				const fluteVolume = new Volume(this.settings.instruments.flute.volume);
+				this.instrumentVolumes.set('flute', fluteVolume);
+				flutePoly.connect(fluteVolume);
+				fluteVolume.connect(this.volume);
+				this.instruments.set('flute', flutePoly);
+			}
+
+			if (this.settings.instruments.clarinet?.enabled) {
+				const clarinetVolume = new Volume(this.settings.instruments.clarinet.volume);
+				this.instrumentVolumes.set('clarinet', clarinetVolume);
+				clarinetPoly.connect(clarinetVolume);
+				clarinetVolume.connect(this.volume);
+				this.instruments.set('clarinet', clarinetPoly);
+			}
+
+			if (this.settings.instruments.trumpet?.enabled) {
+				const trumpetVolume = new Volume(this.settings.instruments.trumpet.volume);
+				this.instrumentVolumes.set('trumpet', trumpetVolume);
+				trumpetPoly.connect(trumpetVolume);
+				trumpetVolume.connect(this.volume);
+				this.instruments.set('trumpet', trumpetPoly);
+			}
+
+			if (this.settings.instruments.saxophone?.enabled) {
+				const saxophoneVolume = new Volume(this.settings.instruments.saxophone.volume);
+				this.instrumentVolumes.set('saxophone', saxophoneVolume);
+				saxophonePoly.connect(saxophoneVolume);
+				saxophoneVolume.connect(this.volume);
+				this.instruments.set('saxophone', saxophonePoly);
+			}
+			
+			logger.debug('audio', 'Lightweight synthesis initialized', {
+				audioFormat: this.settings.audioFormat,
+				instrumentsCreated: this.instruments.size,
+				synthesisMode: this.settings.audioFormat === 'synthesis'
+			});
+			
+		} catch (error) {
+			logger.error('audio', 'Failed to initialize lightweight percussion', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Issue #010 Fix: Check if any instruments from a specific family are enabled
+	 * This is future-proof and will work with instruments added later
+	 */
+	private hasInstrumentFamilyEnabled(familyType: 'percussion' | 'electronic'): boolean {
+		// Get all enabled instruments from settings
+		const enabledInstruments = Object.keys(this.settings.instruments).filter(instrumentName => {
+			const settings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			return settings?.enabled;
+		});
+
+		// Check if any enabled instruments belong to the specified family
+		const familyInstruments = enabledInstruments.filter(instrumentName => {
+			if (familyType === 'percussion') {
+				return this.isPercussionInstrument(instrumentName);
+			} else if (familyType === 'electronic') {
+				return this.isElectronicInstrument(instrumentName);
+			}
+			return false;
+		});
+
+		logger.debug('family-check', `🚀 ISSUE #010 DEBUG: Family check for ${familyType}`, {
+			enabledInstruments,
+			familyInstruments,
+			hasFamilyInstruments: familyInstruments.length > 0
+		});
+
+		return familyInstruments.length > 0;
+	}
+
+	/**
+	 * Issue #010 Fix: Check if any percussion instruments are enabled
+	 */
+	private hasPercussionInstrumentsEnabled(): boolean {
+		return this.hasInstrumentFamilyEnabled('percussion');
+	}
+
+	/**
+	 * Issue #010 Fix: Check if any electronic instruments are enabled
+	 */
+	private hasElectronicInstrumentsEnabled(): boolean {
+		return this.hasInstrumentFamilyEnabled('electronic');
 	}
 
 	/**
@@ -3651,11 +4242,76 @@ export class AudioEngine {
 	}
 
 	private isElectronicInstrument(instrumentName: string): boolean {
-		return ['leadSynth', 'bassSynth', 'arpSynth'].includes(instrumentName);
+		return ['pad', 'leadSynth', 'bassSynth', 'arpSynth'].includes(instrumentName);
 	}
 
 	private isEnvironmentalInstrument(instrumentName: string): boolean {
 		return ['whaleHumpback'].includes(instrumentName);
+	}
+
+	/**
+	 * Issue #010 Fix: Get default voice limits to avoid require() in methods
+	 */
+	private getDefaultVoiceLimits() {
+		return {
+			DEFAULT_VOICE_LIMITS: {
+				piano: 8,
+				organ: 6,
+				harpsichord: 8,
+				strings: 4,
+				violin: 4,
+				viola: 4,
+				cello: 4,
+				contrabass: 3,
+				harp: 12,
+				trumpet: 3,
+				horn: 3,
+				trombone: 3,
+				tuba: 2,
+				flute: 3,
+				oboe: 3,
+				clarinet: 3,
+				bassoon: 3,
+				piccolo: 3,
+				soprano: 4,
+				alto: 4,
+				tenor: 4,
+				bass: 4,
+				choir: 8,
+				timpani: 2,
+				xylophone: 6,
+				vibraphone: 6,
+				gongs: 4,
+				default: 4
+			}
+		};
+	}
+
+	/**
+	 * Issue #010 Fix: Get appropriate polyphony limit for instrument to prevent crackling
+	 */
+	private getInstrumentPolyphonyLimit(instrumentName: string): number {
+		// Use the DEFAULT_VOICE_LIMITS from types
+		const { DEFAULT_VOICE_LIMITS } = this.getDefaultVoiceLimits();
+		
+		// Check if this instrument has a specific voice limit
+		const specificLimit = DEFAULT_VOICE_LIMITS[instrumentName as keyof typeof DEFAULT_VOICE_LIMITS];
+		if (specificLimit) {
+			return specificLimit;
+		}
+		
+		// Use default based on instrument category
+		if (['piano', 'organ', 'harpsichord', 'harp', 'choir'].includes(instrumentName)) {
+			return 8; // High polyphony for keyboard and choral instruments
+		} else if (['strings', 'violin', 'viola', 'cello', 'contrabass'].includes(instrumentName)) {
+			return 4; // Medium polyphony for strings
+		} else if (['trumpet', 'horn', 'trombone', 'flute', 'oboe', 'clarinet', 'bassoon'].includes(instrumentName)) {
+			return 3; // Lower polyphony for wind instruments
+		} else if (['timpani', 'tuba'].includes(instrumentName)) {
+			return 2; // Very low polyphony for bass instruments
+		} else {
+			return 4; // Default safe limit
+		}
 	}
 
 	/**

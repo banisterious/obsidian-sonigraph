@@ -1,20 +1,324 @@
 /**
  * AudioCracklingTests - Issue #010 Audio Quality Analysis
  * 
- * Comprehensive audio quality testing focused on detecting and analyzing
- * crackling artifacts during playback to help diagnose Issue #010.
+ * Enhanced comprehensive audio quality testing with microsecond-level diagnostics
+ * to detect and analyze crackling artifacts during playback for Issue #010.
  */
 
 import { AudioEngine } from '../../audio/engine';
 import { TestDetail, PerformanceMetrics } from '../utils/MetricsCollector';
 import * as Tone from 'tone';
 
+interface CracklingDiagnostic {
+    timestamp: number;
+    audioContextTime: number;
+    operation: string;
+    processingTime: number;
+    bufferHealth: {
+        baseLatency: number;
+        outputLatency: number;
+        sampleRate: number;
+        contextState: string;
+    };
+    memoryStatus: {
+        heapUsed: number;
+        heapTotal: number;
+        heapLimit: number;
+    };
+    audioStatus: {
+        activeVoices: number;
+        scheduledEvents: number;
+        masterVolume: number;
+    };
+    synthesisParams?: {
+        instrument: string;
+        frequency: number;
+        envelope: any;
+        effects: string[];
+    };
+    performanceSpike?: boolean;
+    anomalyDetected?: boolean;
+    anomalyType?: string;
+}
+
 export class AudioCracklingTests {
     private audioEngine: AudioEngine;
     private testResults: TestDetail[] = [];
+    private diagnostics: CracklingDiagnostic[] = [];
+    private isMonitoring: boolean = false;
+    private monitoringInterval: number | null = null;
+    private performanceBaseline: number = 0;
+    
+    // Performance spike detection thresholds - Issue #010 Fix
+    private readonly PERFORMANCE_SPIKE_THRESHOLD = 50; // milliseconds (raised from 10ms after fast-path init)
+    private readonly MEMORY_PRESSURE_THRESHOLD = 0.8; // 80% of heap limit
+    private readonly LATENCY_ANOMALY_THRESHOLD = 50; // milliseconds
 
     constructor(audioEngine: AudioEngine) {
         this.audioEngine = audioEngine;
+    }
+
+    /**
+     * Issue #010 Enhanced Diagnostics: Capture real-time audio processing data
+     */
+    private captureDiagnostic(operation: string, processingStartTime: number, synthParams?: any): void {
+        const now = performance.now();
+        const processingTime = now - processingStartTime;
+        const context = Tone.getContext();
+        const memory = (performance as any).memory || {};
+
+        const diagnostic: CracklingDiagnostic = {
+            timestamp: now,
+            audioContextTime: context.currentTime,
+            operation,
+            processingTime,
+            bufferHealth: {
+                baseLatency: (context as any).baseLatency || 0,
+                outputLatency: (context as any).outputLatency || 0,
+                sampleRate: context.sampleRate,
+                contextState: context.state
+            },
+            memoryStatus: {
+                heapUsed: memory?.usedJSHeapSize || 0,
+                heapTotal: memory?.totalJSHeapSize || 0,
+                heapLimit: memory?.jsHeapSizeLimit || 0
+            },
+            audioStatus: {
+                activeVoices: this.getActiveVoiceCount(),
+                scheduledEvents: this.getScheduledEventCount(),
+                masterVolume: this.getMasterVolume()
+            },
+            synthesisParams: synthParams,
+            performanceSpike: processingTime > this.PERFORMANCE_SPIKE_THRESHOLD,
+            anomalyDetected: this.detectAnomalies(processingTime, memory)
+        };
+
+        // Add anomaly type if detected
+        if (diagnostic.anomalyDetected) {
+            diagnostic.anomalyType = this.getAnomalyType(processingTime, memory, diagnostic.bufferHealth);
+        }
+
+        this.diagnostics.push(diagnostic);
+
+        // Log critical issues immediately
+        if (diagnostic.performanceSpike || diagnostic.anomalyDetected) {
+            console.warn(`🚨 AUDIO ANOMALY DETECTED:`, JSON.stringify({
+                operation,
+                processingTime: `${processingTime.toFixed(2)}ms`,
+                anomalyType: diagnostic.anomalyType,
+                contextState: diagnostic.bufferHealth.contextState,
+                memoryPressure: diagnostic.memoryStatus.heapLimit > 0 ? 
+                    (diagnostic.memoryStatus.heapUsed / diagnostic.memoryStatus.heapLimit * 100).toFixed(1) + '%' : 'unknown'
+            }, null, 2));
+        }
+    }
+
+    /**
+     * Start real-time monitoring during audio operations
+     */
+    private startRealtimeMonitoring(): void {
+        this.isMonitoring = true;
+        this.diagnostics = []; // Clear previous diagnostics
+        
+        // Monitor every 25ms for high-resolution capture
+        this.monitoringInterval = setInterval(() => {
+            if (this.isMonitoring) {
+                this.captureDiagnostic('monitoring', performance.now());
+            }
+        }, 25) as any;
+        
+        console.log('📊 Started real-time audio monitoring (25ms intervals)');
+    }
+
+    /**
+     * Stop real-time monitoring and analyze results
+     */
+    private stopRealtimeMonitoring(): CracklingDiagnostic[] {
+        this.isMonitoring = false;
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+            this.monitoringInterval = null;
+        }
+        
+        const anomalies = this.diagnostics.filter(d => d.anomalyDetected || d.performanceSpike);
+        console.log(`📊 Stopped monitoring. Captured ${this.diagnostics.length} samples, ${anomalies.length} anomalies`);
+        
+        return [...this.diagnostics]; // Return copy
+    }
+
+    /**
+     * Detect various types of audio anomalies
+     */
+    private detectAnomalies(processingTime: number, memory: any): boolean {
+        // Performance spike detection
+        if (processingTime > this.PERFORMANCE_SPIKE_THRESHOLD) {
+            return true;
+        }
+
+        // Memory pressure detection
+        if (memory && memory.jsHeapSizeLimit && memory.usedJSHeapSize) {
+            const memoryPressure = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+            if (memoryPressure > this.MEMORY_PRESSURE_THRESHOLD) {
+                return true;
+            }
+        }
+
+        // Audio context state anomalies
+        const context = Tone.getContext();
+        if (context.state !== 'running') {
+            return true;
+        }
+
+        // Latency anomalies
+        const outputLatency = (context as any).outputLatency || 0;
+        if (outputLatency > this.LATENCY_ANOMALY_THRESHOLD) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Classify the type of anomaly detected
+     */
+    private getAnomalyType(processingTime: number, memory: any, bufferHealth: any): string {
+        if (processingTime > this.PERFORMANCE_SPIKE_THRESHOLD) {
+            return `PROCESSING_SPIKE_${processingTime.toFixed(1)}ms`;
+        }
+
+        if (memory && memory.jsHeapSizeLimit && memory.usedJSHeapSize) {
+            const memoryPressure = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+            if (memoryPressure > this.MEMORY_PRESSURE_THRESHOLD) {
+                return `MEMORY_PRESSURE_${(memoryPressure * 100).toFixed(1)}%`;
+            }
+        }
+
+        if (bufferHealth.contextState !== 'running') {
+            return `CONTEXT_STATE_${bufferHealth.contextState}`;
+        }
+
+        if (bufferHealth.outputLatency > this.LATENCY_ANOMALY_THRESHOLD) {
+            return `HIGH_LATENCY_${bufferHealth.outputLatency.toFixed(1)}ms`;
+        }
+
+        return 'UNKNOWN_ANOMALY';
+    }
+
+    /**
+     * Helper methods to get current audio status
+     */
+    private getActiveVoiceCount(): number {
+        // Try to get voice count from audio engine if available
+        try {
+            return 0; // Placeholder - would need to access actual voice manager
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    private getScheduledEventCount(): number {
+        try {
+            const transport = Tone.getTransport();
+            return (transport as any)._timeline?.length || 0;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    private getMasterVolume(): number {
+        try {
+            return Tone.getDestination().volume.value;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    /**
+     * Generate comprehensive diagnostic report
+     */
+    private generateDiagnosticReport(): any {
+        if (this.diagnostics.length === 0) {
+            return {
+                summary: {
+                    totalSamples: 0,
+                    anomaliesDetected: 0,
+                    performanceSpikes: 0,
+                    anomalyRate: '0%'
+                },
+                performance: {
+                    avgProcessingTime: '0ms',
+                    maxProcessingTime: '0ms',
+                    spikeThreshold: this.PERFORMANCE_SPIKE_THRESHOLD + 'ms'
+                },
+                anomalyTypes: {},
+                criticalEvents: [],
+                recommendations: ['No diagnostic data collected. Tests may have failed to initialize.']
+            };
+        }
+
+        const anomalies = this.diagnostics.filter(d => d.anomalyDetected || d.performanceSpike);
+        const spikes = this.diagnostics.filter(d => d.performanceSpike);
+        
+        const processingTimes = this.diagnostics.map(d => d.processingTime);
+        const avgProcessingTime = processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length;
+        const maxProcessingTime = Math.max(...processingTimes);
+        
+        const anomalyTypes = anomalies.reduce((types, anomaly) => {
+            const type = anomaly.anomalyType || 'UNKNOWN';
+            types[type] = (types[type] || 0) + 1;
+            return types;
+        }, {} as Record<string, number>);
+
+        return {
+            summary: {
+                totalSamples: this.diagnostics.length,
+                anomaliesDetected: anomalies.length,
+                performanceSpikes: spikes.length,
+                anomalyRate: (anomalies.length / this.diagnostics.length * 100).toFixed(2) + '%'
+            },
+            performance: {
+                avgProcessingTime: avgProcessingTime.toFixed(3) + 'ms',
+                maxProcessingTime: maxProcessingTime.toFixed(3) + 'ms',
+                spikeThreshold: this.PERFORMANCE_SPIKE_THRESHOLD + 'ms'
+            },
+            anomalyTypes,
+            criticalEvents: anomalies.slice(0, 10), // First 10 anomalies for detailed analysis
+            recommendations: this.generateRecommendations(anomalies)
+        };
+    }
+
+    /**
+     * Generate actionable recommendations based on detected issues
+     */
+    private generateRecommendations(anomalies: CracklingDiagnostic[]): string[] {
+        const recommendations: string[] = [];
+        
+        const spikeCount = anomalies.filter(a => a.performanceSpike).length;
+        const memoryIssues = anomalies.filter(a => a.anomalyType?.includes('MEMORY_PRESSURE')).length;
+        const latencyIssues = anomalies.filter(a => a.anomalyType?.includes('HIGH_LATENCY')).length;
+        const contextIssues = anomalies.filter(a => a.anomalyType?.includes('CONTEXT_STATE')).length;
+
+        if (spikeCount > 0) {
+            recommendations.push(`Performance: ${spikeCount} processing spikes detected. Consider reducing polyphony or effects complexity.`);
+        }
+
+        if (memoryIssues > 0) {
+            recommendations.push(`Memory: ${memoryIssues} memory pressure events. Consider implementing more aggressive garbage collection or reducing sample buffer sizes.`);
+        }
+
+        if (latencyIssues > 0) {
+            recommendations.push(`Latency: ${latencyIssues} high latency events. Check audio driver settings and buffer sizes.`);
+        }
+
+        if (contextIssues > 0) {
+            recommendations.push(`Context: ${contextIssues} audio context state issues. Ensure context remains active during playback.`);
+        }
+
+        if (anomalies.length === 0) {
+            recommendations.push('No anomalies detected in this test session. Crackling may be hardware-related or occur in different scenarios.');
+        }
+
+        return recommendations;
     }
 
     /**
@@ -129,28 +433,84 @@ export class AudioCracklingTests {
     }
 
     /**
-     * Test 2: Baseline Audio Quality Test
-     * Short playback test to establish baseline metrics
+     * Test 2: Enhanced Baseline Audio Quality Test with Real-time Diagnostics
+     * Short playback test to establish baseline metrics and detect crackling patterns
      */
     private async testBaselineAudioQuality(): Promise<void> {
         const startTime = performance.now();
         let passed = false;
         let error: string | undefined;
-        let metrics: any = {};
+        let metrics: any = null;
 
         try {
-            console.log('🔊 Starting baseline audio quality test...');
+            console.log('🔊 Starting enhanced baseline audio quality test with real-time diagnostics...');
 
-            // Record initial performance metrics
-            const initialMetrics = this.capturePerformanceSnapshot();
-            
-            // Test actual audio engine playback with timeout protection
+            // Start real-time monitoring with error handling
             try {
+                this.startRealtimeMonitoring();
+                console.log('📊 Real-time monitoring started successfully');
+            } catch (monitoringError) {
+                console.warn('📊 Real-time monitoring failed to start:', monitoringError);
+                // Continue with test without monitoring
+            }
+
+            // Record initial performance metrics with diagnostic capture
+            const initStartTime = performance.now();
+            try {
+                this.captureDiagnostic('initialization', initStartTime);
+            } catch (diagError) {
+                console.warn('📊 Diagnostic capture failed:', diagError);
+            }
+            
+            // Test actual audio engine playback with comprehensive diagnostics
+            try {
+                console.log('🎵 Playing test note with diagnostic monitoring...');
+                
+                // Capture pre-playback state
+                const prePlayStartTime = performance.now();
+                try {
+                    this.captureDiagnostic('pre-playback', prePlayStartTime);
+                } catch (diagError) {
+                    console.warn('📊 Pre-playback diagnostic failed:', diagError);
+                }
+                
                 // Add timeout protection for audio engine calls
                 const audioTestPromise = (async () => {
+                    const noteStartTime = performance.now();
                     await this.audioEngine.playTestNote(440); // Play A4 for baseline test
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    try {
+                        this.captureDiagnostic('note-trigger', noteStartTime, {
+                            instrument: 'test-tone',
+                            frequency: 440,
+                            envelope: 'default',
+                            effects: ['reverb', 'chorus', 'filter']
+                        });
+                    } catch (diagError) {
+                        console.warn('📊 Note-trigger diagnostic failed:', diagError);
+                    }
+                    
+                    // Monitor during sustained playback
+                    const sustainDuration = 500;
+                    const sustainStartTime = performance.now();
+                    
+                    await new Promise(resolve => setTimeout(resolve, sustainDuration));
+                    
+                    try {
+                        this.captureDiagnostic('sustain-phase', sustainStartTime);
+                    } catch (diagError) {
+                        console.warn('📊 Sustain-phase diagnostic failed:', diagError);
+                    }
+                    
+                    // Capture stop event
+                    const stopStartTime = performance.now();
                     this.audioEngine.stop();
+                    
+                    try {
+                        this.captureDiagnostic('note-stop', stopStartTime);
+                    } catch (diagError) {
+                        console.warn('📊 Note-stop diagnostic failed:', diagError);
+                    }
                 })();
                 
                 const audioTimeout = new Promise((_, reject) => {
@@ -161,16 +521,49 @@ export class AudioCracklingTests {
                 
             } catch (audioError) {
                 console.warn('Audio engine test note failed, using simulation:', audioError);
+                // Capture error state
+                this.captureDiagnostic('audio-error', performance.now());
+                
                 // Fallback to brief wait if audio engine isn't available
                 await new Promise(resolve => setTimeout(resolve, 300));
             }
 
-            // Record final performance metrics
-            const finalMetrics = this.capturePerformanceSnapshot();
-
-            // For now, return null metrics to avoid interface mismatch with TestRunner
-            // TODO: Convert to proper PerformanceMetrics interface in future iteration
-            metrics = null;
+            // Stop monitoring and generate report with error handling
+            let diagnosticData: any[] = [];
+            let diagnosticReport: any = {};
+            
+            try {
+                diagnosticData = this.stopRealtimeMonitoring();
+                diagnosticReport = this.generateDiagnosticReport();
+                
+                // Log comprehensive diagnostic report
+                console.log('📊 BASELINE TEST DIAGNOSTIC REPORT:', {
+                    summary: diagnosticReport.summary,
+                    performance: diagnosticReport.performance,
+                    anomalyTypes: diagnosticReport.anomalyTypes,
+                    recommendations: diagnosticReport.recommendations
+                });
+            } catch (reportError) {
+                console.warn('📊 Failed to generate diagnostic report:', reportError);
+                diagnosticReport = {
+                    summary: { totalSamples: 0, anomaliesDetected: 0, performanceSpikes: 0, anomalyRate: '0%' },
+                    performance: { avgProcessingTime: '0ms', maxProcessingTime: '0ms' },
+                    anomalyTypes: {},
+                    recommendations: ['Diagnostic reporting failed']
+                };
+            }
+            
+            // Store diagnostic data for export
+            metrics = {
+                diagnosticSamples: diagnosticData.length,
+                anomaliesDetected: diagnosticReport.summary.anomaliesDetected,
+                performanceSpikes: diagnosticReport.summary.performanceSpikes,
+                anomalyRate: diagnosticReport.summary.anomalyRate,
+                avgProcessingTime: diagnosticReport.performance.avgProcessingTime,
+                maxProcessingTime: diagnosticReport.performance.maxProcessingTime,
+                recommendations: diagnosticReport.recommendations,
+                criticalEvents: diagnosticReport.criticalEvents.slice(0, 3) // First 3 for brevity
+            };
 
             passed = true;
             console.log('✅ Baseline audio quality test completed');
@@ -191,17 +584,20 @@ export class AudioCracklingTests {
     }
 
     /**
-     * Test 3: Instrument Family Crackling Test
-     * Test each instrument family for crackling patterns
+     * Test 3: Enhanced Instrument Family Crackling Test with Pattern Detection
+     * Test each instrument family for crackling patterns with diagnostic monitoring
      */
     private async testInstrumentFamilyCrackling(): Promise<void> {
         const startTime = performance.now();
         let passed = false;
         let error: string | undefined;
-        let metrics: any = {};
+        let metrics: any = null;
 
         try {
-            console.log('🔊 Testing instrument families for crackling patterns...');
+            console.log('🔊 Testing instrument families for crackling patterns with enhanced diagnostics...');
+            
+            // Start diagnostic monitoring for family tests
+            this.startRealtimeMonitoring();
 
             const instrumentFamilies = [
                 'strings', 'brass', 'woodwinds', 'keyboard', 
@@ -216,10 +612,20 @@ export class AudioCracklingTests {
                 const familyStartTime = performance.now();
                 const initialMetrics = this.capturePerformanceSnapshot();
                 
-                // Short test sequence for this family with timeout protection
+                // Short test sequence for this family with diagnostic capture
                 try {
+                    this.captureDiagnostic(`family-${family}-start`, familyStartTime);
+                    
                     const familyTestPromise = (async () => {
+                        const noteStartTime = performance.now();
                         await this.audioEngine.playTestNote(440); // Quick test note
+                        this.captureDiagnostic(`family-${family}-note`, noteStartTime, {
+                            instrument: family,
+                            frequency: 440,
+                            envelope: 'family-test',
+                            effects: ['default']
+                        });
+                        
                         await new Promise(resolve => setTimeout(resolve, 400));
                         this.audioEngine.stop();
                     })();
@@ -230,6 +636,7 @@ export class AudioCracklingTests {
                     
                     await Promise.race([familyTestPromise, familyTimeout]);
                 } catch (audioError) {
+                    this.captureDiagnostic(`family-${family}-error`, performance.now());
                     // Fallback to simulation
                     await new Promise(resolve => setTimeout(resolve, 200));
                 }
@@ -244,12 +651,30 @@ export class AudioCracklingTests {
                 };
             }
 
-            // For now, return null metrics to avoid interface mismatch with TestRunner
-            // TODO: Convert to proper PerformanceMetrics interface in future iteration
-            metrics = null;
+            // Stop monitoring and generate comprehensive family diagnostic report
+            const diagnosticData = this.stopRealtimeMonitoring();
+            const diagnosticReport = this.generateDiagnosticReport();
+            
+            // Log family-specific diagnostic report
+            console.log('📊 FAMILY TEST DIAGNOSTIC REPORT:', {
+                familiesTested: instrumentFamilies.length,
+                summary: diagnosticReport.summary,
+                anomalyTypes: diagnosticReport.anomalyTypes,
+                recommendations: diagnosticReport.recommendations
+            });
+
+            // Store diagnostic data for family tests
+            metrics = {
+                familiesTested: instrumentFamilies.length,
+                diagnosticSamples: diagnosticData.length,
+                anomaliesDetected: diagnosticReport.summary.anomaliesDetected,
+                familyResults,
+                avgProcessingTime: diagnosticReport.performance.avgProcessingTime,
+                recommendations: diagnosticReport.recommendations
+            };
 
             passed = true;
-            console.log('✅ Instrument family crackling test completed');
+            console.log('✅ Instrument family crackling test completed with enhanced diagnostics');
 
         } catch (err) {
             error = err.message;
