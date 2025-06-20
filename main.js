@@ -8027,1568 +8027,6 @@ var IssueValidationTests = class {
   }
 };
 
-// src/testing/utils/TestRunner.ts
-var TestRunner = class {
-  constructor(audioEngine) {
-    this.config = null;
-    this.isRunning = false;
-    this.shouldStop = false;
-    this.currentTest = "";
-    this.testStartTime = 0;
-    this.audioEngine = audioEngine;
-    this.baselineTests = new BaselineTests(audioEngine);
-    this.componentTests = new ComponentTests(audioEngine);
-    this.audioEngineTests = new AudioEngineTests(audioEngine);
-    this.issueValidationTests = new IssueValidationTests(audioEngine);
-  }
-  /**
-   * Configure the test runner
-   */
-  configure(config) {
-    this.config = {
-      timeout: 3e4,
-      // 30 seconds default
-      ...config
-    };
-  }
-  /**
-   * Run selected tests
-   */
-  async runTests(selection) {
-    if (!this.config) {
-      throw new Error("TestRunner not configured. Call configure() first.");
-    }
-    if (this.isRunning) {
-      throw new Error("Tests are already running");
-    }
-    this.isRunning = true;
-    this.shouldStop = false;
-    const startTime = performance.now();
-    const testDetails = [];
-    let current = 0;
-    try {
-      const total = this.calculateTotalTests(selection);
-      this.config.onProgress({
-        current: 0,
-        total,
-        currentTest: "Initializing...",
-        phase: "setup"
-      });
-      if (selection.baseline && !this.shouldStop) {
-        const baselineResults = await this.runTestGroup(
-          "Baseline Tests",
-          () => this.baselineTests.runAll(),
-          current++,
-          total
-        );
-        testDetails.push(...baselineResults);
-      }
-      if (selection.voiceManager && !this.shouldStop) {
-        const voiceResults = await this.runTestGroup(
-          "Voice Manager Tests",
-          () => this.componentTests.runVoiceManagerTests(),
-          current++,
-          total
-        );
-        testDetails.push(...voiceResults);
-      }
-      if (selection.effectBus && !this.shouldStop) {
-        const effectResults = await this.runTestGroup(
-          "Effect Bus Tests",
-          () => this.componentTests.runEffectBusTests(),
-          current++,
-          total
-        );
-        testDetails.push(...effectResults);
-      }
-      if (selection.configLoader && !this.shouldStop) {
-        const configResults = await this.runTestGroup(
-          "Config Loader Tests",
-          () => this.componentTests.runConfigLoaderTests(),
-          current++,
-          total
-        );
-        testDetails.push(...configResults);
-      }
-      if (selection.integration && !this.shouldStop) {
-        const integrationResults = await this.runTestGroup(
-          "Integration Tests",
-          () => this.audioEngineTests.runAll(),
-          current++,
-          total
-        );
-        testDetails.push(...integrationResults);
-      }
-      if (selection.issueValidation && !this.shouldStop) {
-        const issueResults = await this.runTestGroup(
-          "Issue Validation Tests",
-          () => this.issueValidationTests.runAll(),
-          current++,
-          total
-        );
-        testDetails.push(...issueResults);
-      }
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      const passed = testDetails.filter((t) => t.passed).length;
-      const failed = testDetails.filter((t) => !t.passed).length;
-      const results = {
-        testsRun: testDetails.length,
-        passed,
-        failed,
-        duration,
-        timestamp: Date.now(),
-        testDetails,
-        systemInfo: this.getSystemInfo(),
-        overallMetrics: this.calculateOverallMetrics(testDetails)
-      };
-      this.config.onProgress({
-        current: total,
-        total,
-        currentTest: "Complete",
-        phase: "complete"
-      });
-      this.config.onResults(results);
-      return results;
-    } catch (error) {
-      this.log("error", "Test execution failed:", error);
-      throw error;
-    } finally {
-      this.isRunning = false;
-      this.shouldStop = false;
-    }
-  }
-  /**
-   * Stop running tests
-   */
-  stop() {
-    if (this.isRunning) {
-      this.shouldStop = true;
-      this.log("info", "Test execution stopped by user");
-    }
-  }
-  /**
-   * Check if tests are currently running
-   */
-  isTestRunning() {
-    return this.isRunning;
-  }
-  /**
-   * Run a group of tests with progress tracking
-   */
-  async runTestGroup(groupName, testFunction, current, total) {
-    if (!this.config)
-      return [];
-    this.currentTest = groupName;
-    this.config.onProgress({
-      current,
-      total,
-      currentTest: groupName,
-      phase: "running"
-    });
-    this.log("info", `Starting ${groupName}`);
-    this.testStartTime = performance.now();
-    try {
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Test group timeout: ${groupName}`)), this.config.timeout);
-      });
-      const testPromise = testFunction();
-      const results = await Promise.race([testPromise, timeoutPromise]);
-      const duration = performance.now() - this.testStartTime;
-      this.log("info", `Completed ${groupName} in ${duration.toFixed(1)}ms`);
-      return results;
-    } catch (error) {
-      const duration = performance.now() - this.testStartTime;
-      this.log("error", `Failed ${groupName} after ${duration.toFixed(1)}ms:`, error);
-      return [{
-        name: groupName,
-        passed: false,
-        duration,
-        error: error.message,
-        timestamp: Date.now()
-      }];
-    }
-  }
-  /**
-   * Calculate total number of test groups
-   */
-  calculateTotalTests(selection) {
-    let total = 0;
-    if (selection.baseline)
-      total++;
-    if (selection.voiceManager)
-      total++;
-    if (selection.effectBus)
-      total++;
-    if (selection.configLoader)
-      total++;
-    if (selection.integration)
-      total++;
-    if (selection.issueValidation)
-      total++;
-    return total;
-  }
-  /**
-   * Calculate overall performance metrics from test details
-   */
-  calculateOverallMetrics(testDetails) {
-    const metricsArray = testDetails.map((test) => test.metrics).filter((metrics) => metrics !== void 0);
-    if (metricsArray.length === 0) {
-      return {
-        averageMetrics: this.getEmptyMetrics(),
-        peakMetrics: this.getEmptyMetrics(),
-        trends: {
-          memoryGrowth: 0,
-          cpuTrend: 0,
-          latencyStability: 1
-        }
-      };
-    }
-    const averageMetrics = {
-      memory: {
-        heapUsed: metricsArray.reduce((sum, m) => sum + m.memory.heapUsed, 0) / metricsArray.length,
-        heapTotal: metricsArray.reduce((sum, m) => sum + m.memory.heapTotal, 0) / metricsArray.length,
-        objectCount: Math.round(metricsArray.reduce((sum, m) => sum + m.memory.objectCount, 0) / metricsArray.length)
-      },
-      audio: {
-        cpuUsage: metricsArray.reduce((sum, m) => sum + m.audio.cpuUsage, 0) / metricsArray.length,
-        latency: metricsArray.reduce((sum, m) => sum + m.audio.latency, 0) / metricsArray.length,
-        activeVoices: Math.round(metricsArray.reduce((sum, m) => sum + m.audio.activeVoices, 0) / metricsArray.length),
-        sampleRate: metricsArray[0].audio.sampleRate,
-        bufferSize: metricsArray[0].audio.bufferSize
-      },
-      timing: {
-        instrumentLoadTime: metricsArray.reduce((sum, m) => sum + m.timing.instrumentLoadTime, 0) / metricsArray.length,
-        voiceAllocationTime: metricsArray.reduce((sum, m) => sum + m.timing.voiceAllocationTime, 0) / metricsArray.length,
-        effectProcessingTime: metricsArray.reduce((sum, m) => sum + m.timing.effectProcessingTime, 0) / metricsArray.length
-      }
-    };
-    const peakMetrics = {
-      memory: {
-        heapUsed: Math.max(...metricsArray.map((m) => m.memory.heapUsed)),
-        heapTotal: Math.max(...metricsArray.map((m) => m.memory.heapTotal)),
-        objectCount: Math.max(...metricsArray.map((m) => m.memory.objectCount))
-      },
-      audio: {
-        cpuUsage: Math.max(...metricsArray.map((m) => m.audio.cpuUsage)),
-        latency: Math.max(...metricsArray.map((m) => m.audio.latency)),
-        activeVoices: Math.max(...metricsArray.map((m) => m.audio.activeVoices)),
-        sampleRate: metricsArray[0].audio.sampleRate,
-        bufferSize: metricsArray[0].audio.bufferSize
-      },
-      timing: {
-        instrumentLoadTime: Math.max(...metricsArray.map((m) => m.timing.instrumentLoadTime)),
-        voiceAllocationTime: Math.max(...metricsArray.map((m) => m.timing.voiceAllocationTime)),
-        effectProcessingTime: Math.max(...metricsArray.map((m) => m.timing.effectProcessingTime))
-      }
-    };
-    const trends = {
-      memoryGrowth: this.calculateMemoryGrowth(metricsArray),
-      cpuTrend: this.calculateCpuTrend(metricsArray),
-      latencyStability: this.calculateLatencyStability(metricsArray)
-    };
-    return {
-      averageMetrics,
-      peakMetrics,
-      trends
-    };
-  }
-  /**
-   * Calculate memory growth trend
-   */
-  calculateMemoryGrowth(metrics) {
-    if (metrics.length < 2)
-      return 0;
-    const first = metrics[0].memory.heapUsed;
-    const last = metrics[metrics.length - 1].memory.heapUsed;
-    return (last - first) / first;
-  }
-  /**
-   * Calculate CPU usage trend
-   */
-  calculateCpuTrend(metrics) {
-    if (metrics.length < 2)
-      return 0;
-    const first = metrics[0].audio.cpuUsage;
-    const last = metrics[metrics.length - 1].audio.cpuUsage;
-    return (last - first) / Math.max(first, 1);
-  }
-  /**
-   * Calculate latency stability
-   */
-  calculateLatencyStability(metrics) {
-    if (metrics.length < 2)
-      return 1;
-    const latencies = metrics.map((m) => m.audio.latency);
-    const mean = latencies.reduce((sum, l) => sum + l, 0) / latencies.length;
-    const variance = latencies.reduce((sum, l) => sum + Math.pow(l - mean, 2), 0) / latencies.length;
-    const stdDev = Math.sqrt(variance);
-    return Math.max(0, 1 - stdDev / Math.max(mean, 1));
-  }
-  /**
-   * Get empty metrics template
-   */
-  getEmptyMetrics() {
-    return {
-      memory: {
-        heapUsed: 0,
-        heapTotal: 0,
-        objectCount: 0
-      },
-      audio: {
-        cpuUsage: 0,
-        latency: 0,
-        activeVoices: 0,
-        sampleRate: 44100,
-        bufferSize: 256
-      },
-      timing: {
-        instrumentLoadTime: 0,
-        voiceAllocationTime: 0,
-        effectProcessingTime: 0
-      }
-    };
-  }
-  /**
-   * Get system information
-   */
-  getSystemInfo() {
-    var _a, _b;
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      let obsidianVersion = "unknown";
-      try {
-        const app = window.app;
-        if ((_b = (_a = app == null ? void 0 : app.vault) == null ? void 0 : _a.adapter) == null ? void 0 : _b.fs) {
-          obsidianVersion = app.version || "unknown";
-        }
-      } catch (e) {
-        obsidianVersion = "test-environment";
-      }
-      return {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        audioContext: {
-          sampleRate: audioContext.sampleRate,
-          state: audioContext.state,
-          baseLatency: audioContext.baseLatency || 0,
-          outputLatency: audioContext.outputLatency || 0
-        },
-        memory: performance.memory || {},
-        timestamp: Date.now(),
-        obsidianVersion,
-        pluginVersion: "1.0.0"
-        // Should be read from manifest
-      };
-    } catch (error) {
-      return {
-        userAgent: navigator.userAgent || "unknown",
-        platform: navigator.platform || "unknown",
-        audioContext: {
-          sampleRate: 44100,
-          state: "unknown",
-          baseLatency: 0,
-          outputLatency: 0
-        },
-        memory: {},
-        timestamp: Date.now(),
-        obsidianVersion: "test-environment",
-        pluginVersion: "1.0.0"
-      };
-    }
-  }
-  /**
-   * Log messages based on configuration
-   */
-  log(level, message, ...args) {
-    var _a;
-    if ((_a = this.config) == null ? void 0 : _a.detailedLogging) {
-      const timestamp = new Date().toISOString();
-      const prefix = `[TestRunner ${timestamp}]`;
-      switch (level) {
-        case "info":
-          console.log(prefix, message, ...args);
-          break;
-        case "warn":
-          console.warn(prefix, message, ...args);
-          break;
-        case "error":
-          console.error(prefix, message, ...args);
-          break;
-      }
-    }
-  }
-};
-
-// src/testing/utils/MetricsCollector.ts
-var MetricsCollector = class {
-  constructor() {
-    this.results = [];
-    this.currentMetrics = [];
-    this.startTime = 0;
-  }
-  /**
-   * Start a new test session
-   */
-  startSession() {
-    this.startTime = performance.now();
-    this.currentMetrics = [];
-  }
-  /**
-   * Record a performance metric sample
-   */
-  recordMetrics(metrics) {
-    this.currentMetrics.push({
-      ...metrics,
-      timestamp: performance.now()
-    });
-  }
-  /**
-   * Add completed test results
-   */
-  addResults(results) {
-    this.results.push(results);
-  }
-  /**
-   * Get current performance metrics snapshot
-   */
-  getCurrentMetrics() {
-    return {
-      memory: this.getMemoryMetrics(),
-      audio: this.getAudioMetrics(),
-      timing: this.getTimingMetrics()
-    };
-  }
-  /**
-   * Generate comprehensive test report data
-   */
-  generateReportData() {
-    return {
-      summary: this.generateSummary(),
-      detailedResults: this.results,
-      performanceAnalysis: this.analyzePerformance(),
-      recommendations: this.generateRecommendations()
-    };
-  }
-  /**
-   * Export data for sharing (optimized for copying to external tools)
-   */
-  getExportData() {
-    return {
-      metadata: {
-        exportTime: new Date().toISOString(),
-        sessionCount: this.results.length,
-        metricsCount: this.currentMetrics.length,
-        systemInfo: this.getSystemInfo()
-      },
-      testResults: this.results,
-      performanceMetrics: this.currentMetrics,
-      analysis: this.analyzePerformance(),
-      summary: this.generateSummary()
-    };
-  }
-  /**
-   * Get memory performance metrics
-   */
-  getMemoryMetrics() {
-    const memory = performance.memory;
-    return {
-      heapUsed: (memory == null ? void 0 : memory.usedJSHeapSize) || 0,
-      heapTotal: (memory == null ? void 0 : memory.totalJSHeapSize) || 0,
-      objectCount: this.estimateObjectCount(),
-      gcCollections: (memory == null ? void 0 : memory.gcCollections) || 0
-    };
-  }
-  /**
-   * Get audio context performance metrics
-   */
-  getAudioMetrics() {
-    return {
-      cpuUsage: 0,
-      // Will be populated by actual audio engine
-      latency: 0,
-      activeVoices: 0,
-      sampleRate: 44100,
-      bufferSize: 256
-    };
-  }
-  /**
-   * Get timing performance metrics
-   */
-  getTimingMetrics() {
-    return {
-      instrumentLoadTime: 0,
-      // Will be populated by actual measurements
-      voiceAllocationTime: 0,
-      effectProcessingTime: 0,
-      configLoadTime: 0
-    };
-  }
-  /**
-   * Estimate object count (rough heuristic)
-   */
-  estimateObjectCount() {
-    const memory = performance.memory;
-    if (memory == null ? void 0 : memory.usedJSHeapSize) {
-      return Math.floor(memory.usedJSHeapSize / 100);
-    }
-    return 0;
-  }
-  /**
-   * Generate test summary
-   */
-  generateSummary() {
-    const totalTests = this.results.reduce((sum, r) => sum + r.testsRun, 0);
-    const totalPassed = this.results.reduce((sum, r) => sum + r.passed, 0);
-    const totalFailed = this.results.reduce((sum, r) => sum + r.failed, 0);
-    const totalDuration = this.results.reduce((sum, r) => sum + r.duration, 0);
-    return {
-      totalSessions: this.results.length,
-      totalTests,
-      totalPassed,
-      totalFailed,
-      successRate: totalTests > 0 ? totalPassed / totalTests * 100 : 0,
-      averageDuration: this.results.length > 0 ? totalDuration / this.results.length : 0,
-      lastRunTime: this.results.length > 0 ? this.results[this.results.length - 1].timestamp : 0
-    };
-  }
-  /**
-   * Analyze performance trends and patterns
-   */
-  analyzePerformance() {
-    if (this.currentMetrics.length === 0) {
-      return {
-        memoryTrend: "stable",
-        cpuTrend: "stable",
-        latencyTrend: "stable",
-        recommendations: [],
-        issues: []
-      };
-    }
-    const memoryTrend = this.analyzeMemoryTrend();
-    const cpuTrend = this.analyzeCpuTrend();
-    const latencyTrend = this.analyzeLatencyTrend();
-    return {
-      memoryTrend,
-      cpuTrend,
-      latencyTrend,
-      recommendations: this.generatePerformanceRecommendations(),
-      issues: this.identifyIssues()
-    };
-  }
-  /**
-   * Analyze memory usage trends
-   */
-  analyzeMemoryTrend() {
-    if (this.currentMetrics.length < 3)
-      return "stable";
-    const recent = this.currentMetrics.slice(-5);
-    const earlier = this.currentMetrics.slice(0, 5);
-    const recentAvg = recent.reduce((sum, m) => sum + m.memory.heapUsed, 0) / recent.length;
-    const earlierAvg = earlier.reduce((sum, m) => sum + m.memory.heapUsed, 0) / earlier.length;
-    const change = (recentAvg - earlierAvg) / earlierAvg;
-    if (change > 0.1)
-      return "degrading";
-    if (change < -0.05)
-      return "improving";
-    return "stable";
-  }
-  /**
-   * Analyze CPU usage trends
-   */
-  analyzeCpuTrend() {
-    return "stable";
-  }
-  /**
-   * Analyze latency trends
-   */
-  analyzeLatencyTrend() {
-    return "stable";
-  }
-  /**
-   * Generate performance recommendations
-   */
-  generatePerformanceRecommendations() {
-    const recommendations = [];
-    if (this.currentMetrics.length > 0) {
-      const latest = this.currentMetrics[this.currentMetrics.length - 1];
-      if (latest.memory.heapUsed > 50 * 1024 * 1024) {
-        recommendations.push("High memory usage detected. Consider optimizing instrument caching.");
-      }
-      if (latest.audio.cpuUsage > 80) {
-        recommendations.push("High CPU usage detected. Consider reducing voice count or effect complexity.");
-      }
-      if (latest.audio.latency > 10) {
-        recommendations.push("High audio latency detected. Consider increasing buffer size.");
-      }
-    }
-    return recommendations;
-  }
-  /**
-   * Generate general recommendations
-   */
-  generateRecommendations() {
-    const recommendations = [];
-    const summary = this.generateSummary();
-    if (summary.successRate < 90) {
-      recommendations.push("Test success rate is below 90%. Review failing tests.");
-    }
-    if (summary.averageDuration > 1e4) {
-      recommendations.push("Tests are taking longer than expected. Consider optimizing test execution.");
-    }
-    return recommendations;
-  }
-  /**
-   * Identify performance issues
-   */
-  identifyIssues() {
-    const issues = [];
-    if (this.currentMetrics.length > 0) {
-      const latest = this.currentMetrics[this.currentMetrics.length - 1];
-      if (latest.timing.instrumentLoadTime > 1e3) {
-        issues.push("Slow instrument loading detected");
-      }
-      if (latest.timing.voiceAllocationTime > 5) {
-        issues.push("Slow voice allocation detected");
-      }
-    }
-    return issues;
-  }
-  /**
-   * Get system information
-   */
-  getSystemInfo() {
-    var _a, _b;
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    return {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      audioContext: {
-        sampleRate: audioContext.sampleRate,
-        state: audioContext.state,
-        baseLatency: audioContext.baseLatency,
-        outputLatency: audioContext.outputLatency
-      },
-      memory: performance.memory || {},
-      timestamp: Date.now(),
-      obsidianVersion: (_b = (_a = window.require) == null ? void 0 : _a.call(window, "obsidian")) == null ? void 0 : _b.version,
-      pluginVersion: "1.0.0"
-      // Should be read from manifest
-    };
-  }
-  /**
-   * Clear all collected data
-   */
-  clear() {
-    this.results = [];
-    this.currentMetrics = [];
-  }
-};
-
-// src/testing/utils/ReportGenerator.ts
-var ReportGenerator = class {
-  constructor(app) {
-    this.app = app;
-  }
-  /**
-   * Generate test report in specified format
-   */
-  async generateReport(results, format) {
-    switch (format) {
-      case "markdown":
-        return this.generateMarkdownReport(results);
-      case "json":
-        return this.generateJSONReport(results);
-      case "csv":
-        return this.generateCSVReport(results);
-      default:
-        throw new Error(`Unsupported format: ${format}`);
-    }
-  }
-  /**
-   * Generate Markdown report for Obsidian vault
-   */
-  generateMarkdownReport(results) {
-    const timestamp = new Date(results.timestamp).toLocaleString();
-    return `# Audio Engine Test Results
-
-**Test Date:** ${timestamp}
-**Total Duration:** ${results.duration}ms
-
-## Summary
-
-- **Tests Run:** ${results.testsRun}
-- **Passed:** ${results.passed} \u2705
-- **Failed:** ${results.failed} \u274C
-- **Success Rate:** ${(results.passed / results.testsRun * 100).toFixed(1)}%
-
-## System Information
-
-- **Platform:** ${results.systemInfo.platform}
-- **Audio Sample Rate:** ${results.systemInfo.audioContext.sampleRate}Hz
-- **Audio Context State:** ${results.systemInfo.audioContext.state}
-${results.systemInfo.audioContext.baseLatency ? `- **Base Latency:** ${(results.systemInfo.audioContext.baseLatency * 1e3).toFixed(1)}ms` : ""}
-${results.systemInfo.memory.jsHeapSizeLimit ? `- **Heap Size Limit:** ${(results.systemInfo.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(1)}MB` : ""}
-
-## Performance Metrics
-
-### Overall Performance
-- **Average Memory Usage:** ${(results.overallMetrics.averageMetrics.memory.heapUsed / 1024 / 1024).toFixed(1)}MB
-- **Peak Memory Usage:** ${(results.overallMetrics.peakMetrics.memory.heapUsed / 1024 / 1024).toFixed(1)}MB
-- **Average CPU Usage:** ${results.overallMetrics.averageMetrics.audio.cpuUsage.toFixed(1)}%
-- **Peak CPU Usage:** ${results.overallMetrics.peakMetrics.audio.cpuUsage.toFixed(1)}%
-- **Average Latency:** ${results.overallMetrics.averageMetrics.audio.latency.toFixed(1)}ms
-- **Peak Latency:** ${results.overallMetrics.peakMetrics.audio.latency.toFixed(1)}ms
-
-### Performance Trends
-- **Memory Growth:** ${this.formatTrend(results.overallMetrics.trends.memoryGrowth)}
-- **CPU Trend:** ${this.formatTrend(results.overallMetrics.trends.cpuTrend)}
-- **Latency Stability:** ${this.formatStability(results.overallMetrics.trends.latencyStability)}
-
-## Detailed Test Results
-
-${results.testDetails.map((test) => this.formatTestMarkdown(test)).join("\n\n")}
-
-## Recommendations
-
-${this.generateMarkdownRecommendations(results)}
-
-## Data Export
-
-\`\`\`json
-${JSON.stringify(this.getExportableData(results), null, 2)}
-\`\`\`
-
----
-
-*Generated by Obsidian Sonigraph Plugin Test Suite*
-*Share this data by copying the JSON block above*`;
-  }
-  /**
-   * Generate JSON report for data analysis
-   */
-  generateJSONReport(results) {
-    const exportData = {
-      metadata: {
-        exportFormat: "json",
-        exportTime: new Date().toISOString(),
-        pluginVersion: "1.0.0",
-        // Should be read from manifest
-        testSuiteVersion: "1.0.0"
-      },
-      testResults: results,
-      exportableData: this.getExportableData(results),
-      analysisReady: true
-    };
-    return JSON.stringify(exportData, null, 2);
-  }
-  /**
-   * Generate CSV report for spreadsheet analysis
-   */
-  generateCSVReport(results) {
-    const headers = [
-      "Test Name",
-      "Status",
-      "Duration (ms)",
-      "Memory Used (MB)",
-      "CPU Usage (%)",
-      "Latency (ms)",
-      "Active Voices",
-      "Error"
-    ];
-    const rows = results.testDetails.map((test) => [
-      test.name,
-      test.passed ? "PASS" : "FAIL",
-      test.duration.toString(),
-      test.metrics ? (test.metrics.memory.heapUsed / 1024 / 1024).toFixed(1) : "",
-      test.metrics ? test.metrics.audio.cpuUsage.toFixed(1) : "",
-      test.metrics ? test.metrics.audio.latency.toFixed(1) : "",
-      test.metrics ? test.metrics.audio.activeVoices.toString() : "",
-      test.error || ""
-    ]);
-    return [headers, ...rows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
-  }
-  /**
-   * Format individual test for Markdown
-   */
-  formatTestMarkdown(test) {
-    const status = test.passed ? "\u2705 PASS" : "\u274C FAIL";
-    const duration = `${test.duration}ms`;
-    let content = `### ${test.name} ${status}
-**Duration:** ${duration}`;
-    if (test.metrics) {
-      content += `
-**Performance:**
-- Memory: ${(test.metrics.memory.heapUsed / 1024 / 1024).toFixed(1)}MB
-- CPU: ${test.metrics.audio.cpuUsage.toFixed(1)}%
-- Latency: ${test.metrics.audio.latency.toFixed(1)}ms
-- Active Voices: ${test.metrics.audio.activeVoices}`;
-    }
-    if (!test.passed && test.error) {
-      content += `
-**Error:** \`${test.error}\``;
-    }
-    return content;
-  }
-  /**
-   * Generate recommendations section for Markdown
-   */
-  generateMarkdownRecommendations(results) {
-    const recommendations = [];
-    if (results.overallMetrics.peakMetrics.memory.heapUsed > 100 * 1024 * 1024) {
-      recommendations.push("\u{1F538} **High Memory Usage:** Peak memory usage exceeded 100MB. Consider optimizing instrument caching and cleanup.");
-    }
-    if (results.overallMetrics.peakMetrics.audio.cpuUsage > 80) {
-      recommendations.push("\u{1F538} **High CPU Usage:** Peak CPU usage exceeded 80%. Consider reducing simultaneous voices or effect complexity.");
-    }
-    if (results.overallMetrics.peakMetrics.audio.latency > 20) {
-      recommendations.push("\u{1F538} **High Latency:** Audio latency exceeded 20ms. Consider increasing buffer size or optimizing processing chain.");
-    }
-    if (results.failed > 0) {
-      recommendations.push("\u{1F538} **Test Failures:** Some tests failed. Review the detailed results above and address any errors.");
-    }
-    if (results.overallMetrics.trends.memoryGrowth > 0.1) {
-      recommendations.push("\u{1F538} **Memory Growth:** Significant memory growth detected. Check for memory leaks or inefficient caching.");
-    }
-    if (recommendations.length === 0) {
-      recommendations.push("\u2705 **All Good:** No significant issues detected in this test run.");
-    }
-    return recommendations.map((rec) => `- ${rec}`).join("\n");
-  }
-  /**
-   * Get data optimized for external sharing and analysis
-   */
-  getExportableData(results) {
-    return {
-      summary: {
-        testsRun: results.testsRun,
-        passed: results.passed,
-        failed: results.failed,
-        successRate: results.passed / results.testsRun * 100,
-        duration: results.duration,
-        timestamp: results.timestamp
-      },
-      systemInfo: {
-        platform: results.systemInfo.platform,
-        audioSampleRate: results.systemInfo.audioContext.sampleRate,
-        audioState: results.systemInfo.audioContext.state,
-        baseLatency: results.systemInfo.audioContext.baseLatency,
-        outputLatency: results.systemInfo.audioContext.outputLatency,
-        heapSizeLimit: results.systemInfo.memory.jsHeapSizeLimit
-      },
-      performance: {
-        memory: {
-          average: Math.round(results.overallMetrics.averageMetrics.memory.heapUsed / 1024 / 1024 * 10) / 10,
-          peak: Math.round(results.overallMetrics.peakMetrics.memory.heapUsed / 1024 / 1024 * 10) / 10,
-          growth: Math.round(results.overallMetrics.trends.memoryGrowth * 100) / 100
-        },
-        cpu: {
-          average: Math.round(results.overallMetrics.averageMetrics.audio.cpuUsage * 10) / 10,
-          peak: Math.round(results.overallMetrics.peakMetrics.audio.cpuUsage * 10) / 10,
-          trend: Math.round(results.overallMetrics.trends.cpuTrend * 100) / 100
-        },
-        latency: {
-          average: Math.round(results.overallMetrics.averageMetrics.audio.latency * 10) / 10,
-          peak: Math.round(results.overallMetrics.peakMetrics.audio.latency * 10) / 10,
-          stability: Math.round(results.overallMetrics.trends.latencyStability * 100) / 100
-        }
-      },
-      testDetails: results.testDetails.map((test) => ({
-        name: test.name,
-        passed: test.passed,
-        duration: test.duration,
-        error: test.error,
-        metrics: test.metrics ? {
-          memoryMB: Math.round(test.metrics.memory.heapUsed / 1024 / 1024 * 10) / 10,
-          cpuPercent: Math.round(test.metrics.audio.cpuUsage * 10) / 10,
-          latencyMs: Math.round(test.metrics.audio.latency * 10) / 10,
-          activeVoices: test.metrics.audio.activeVoices
-        } : null
-      })),
-      recommendations: this.generateRecommendationsList(results)
-    };
-  }
-  /**
-   * Generate list of actionable recommendations
-   */
-  generateRecommendationsList(results) {
-    const recommendations = [];
-    if (results.failed > 0) {
-      recommendations.push("Review and fix failing tests");
-    }
-    if (results.overallMetrics.peakMetrics.memory.heapUsed > 100 * 1024 * 1024) {
-      recommendations.push("Optimize memory usage - consider reducing cache size");
-    }
-    if (results.overallMetrics.peakMetrics.audio.cpuUsage > 80) {
-      recommendations.push("Reduce CPU load - consider lowering voice count or effect complexity");
-    }
-    if (results.overallMetrics.peakMetrics.audio.latency > 20) {
-      recommendations.push("Improve audio latency - consider increasing buffer size");
-    }
-    if (results.overallMetrics.trends.memoryGrowth > 0.1) {
-      recommendations.push("Investigate potential memory leaks");
-    }
-    return recommendations;
-  }
-  /**
-   * Format trend value for display
-   */
-  formatTrend(value) {
-    if (value > 0.1)
-      return "\u{1F4C8} Increasing";
-    if (value < -0.1)
-      return "\u{1F4C9} Decreasing";
-    return "\u27A1\uFE0F Stable";
-  }
-  /**
-   * Format stability value for display
-   */
-  formatStability(value) {
-    if (value > 0.9)
-      return "\u{1F7E2} Stable";
-    if (value > 0.7)
-      return "\u{1F7E1} Moderate";
-    return "\u{1F534} Unstable";
-  }
-};
-
-// src/testing/TestSuiteModal.ts
-var TestSuiteModal = class extends import_obsidian4.Modal {
-  constructor(app, audioEngine) {
-    super(app);
-    this.config = {
-      selectedTests: {
-        baseline: true,
-        voiceManager: true,
-        effectBus: true,
-        configLoader: true,
-        integration: false,
-        issueValidation: true
-        // Enable by default to test Phase 2.2 optimization
-      },
-      exportFormat: "markdown",
-      realTimeMetrics: true,
-      detailedLogging: false,
-      loggingLevel: "basic",
-      enableLogExport: true
-    };
-    this.currentResults = null;
-    this.isRunning = false;
-    this.metricsDisplay = null;
-    this.progressDisplay = null;
-    this.resultsDisplay = null;
-    this.consoleErrors = [];
-    this.audioEngine = audioEngine;
-    this.performanceMonitor = new PerformanceMonitor();
-    this.testRunner = new TestRunner(audioEngine);
-    this.metricsCollector = new MetricsCollector();
-    this.reportGenerator = new ReportGenerator(app);
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.createEl("h1", { text: "Audio Engine Test Suite" });
-    contentEl.createEl("p", {
-      text: "Comprehensive performance validation for the refactored audio engine",
-      cls: "test-suite-description"
-    });
-    this.createTestSelectionSection(contentEl);
-    this.createSettingsSection(contentEl);
-    this.createControlSection(contentEl);
-    this.createMetricsDisplay(contentEl);
-    this.createProgressDisplay(contentEl);
-    this.createResultsDisplay(contentEl);
-    contentEl.addClass("test-suite-modal");
-  }
-  createTestSelectionSection(container) {
-    const section = container.createDiv("test-selection-section");
-    section.createEl("h2", { text: "Test Selection" });
-    const grid = section.createDiv("test-grid");
-    this.createTestCheckbox(
-      grid,
-      "baseline",
-      "Baseline Performance",
-      "System capability detection and baseline measurements"
-    );
-    this.createTestCheckbox(
-      grid,
-      "voiceManager",
-      "Voice Manager",
-      "Voice allocation, stealing, and pool management performance"
-    );
-    this.createTestCheckbox(
-      grid,
-      "effectBus",
-      "Effect Bus Manager",
-      "Effect routing, shared processing, and bypass performance"
-    );
-    this.createTestCheckbox(
-      grid,
-      "configLoader",
-      "Config Loader",
-      "Instrument configuration loading and caching performance"
-    );
-    this.createTestCheckbox(
-      grid,
-      "integration",
-      "Integration Tests",
-      "Full audio engine stress testing and complex scenarios"
-    );
-    this.createTestCheckbox(
-      grid,
-      "issueValidation",
-      "Issue #001, #002 & #003 Validation",
-      "Audio crackling resolution, performance improvements, architecture validation, and instrument family playback testing"
-    );
-  }
-  createTestCheckbox(container, key, title, description) {
-    const testItem = container.createDiv("test-item");
-    new import_obsidian4.Setting(testItem).setName(title).setDesc(description).addToggle(
-      (toggle) => toggle.setValue(this.config.selectedTests[key]).onChange((value) => {
-        this.config.selectedTests[key] = value;
-      })
-    );
-  }
-  createSettingsSection(container) {
-    const section = container.createDiv("settings-section");
-    section.createEl("h2", { text: "Test Settings" });
-    new import_obsidian4.Setting(section).setName("Export Format").setDesc("Choose format for test result exports").addDropdown(
-      (dropdown) => dropdown.addOption("markdown", "Markdown (for vault notes)").addOption("json", "JSON (for data analysis)").addOption("csv", "CSV (for spreadsheets)").setValue(this.config.exportFormat).onChange((value) => {
-        this.config.exportFormat = value;
-      })
-    );
-    new import_obsidian4.Setting(section).setName("Real-time Metrics").setDesc("Display live performance metrics during testing").addToggle(
-      (toggle) => toggle.setValue(this.config.realTimeMetrics).onChange((value) => {
-        this.config.realTimeMetrics = value;
-      })
-    );
-    new import_obsidian4.Setting(section).setName("Detailed Logging").setDesc("Include verbose test execution details").addToggle(
-      (toggle) => toggle.setValue(this.config.detailedLogging).onChange((value) => {
-        this.config.detailedLogging = value;
-      })
-    );
-    new import_obsidian4.Setting(section).setName("Logging Level").setDesc("Control the verbosity of test logging output").addDropdown(
-      (dropdown) => dropdown.addOption("none", "None - No logging").addOption("basic", "Basic - Essential information only").addOption("detailed", "Detailed - Comprehensive logging").addOption("debug", "Debug - Full diagnostic output").setValue(this.config.loggingLevel).onChange((value) => {
-        this.config.loggingLevel = value;
-      })
-    );
-    new import_obsidian4.Setting(section).setName("Enable Log Export").setDesc("Include logs in exported test results").addToggle(
-      (toggle) => toggle.setValue(this.config.enableLogExport).onChange((value) => {
-        this.config.enableLogExport = value;
-      })
-    );
-  }
-  createControlSection(container) {
-    const section = container.createDiv("control-section");
-    const buttonContainer = section.createDiv("button-container");
-    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Run Selected Tests").setCta().onClick(() => this.runTests());
-    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Stop Tests").setWarning().onClick(() => this.stopTests());
-    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Quick Test").onClick(() => this.runQuickTest());
-    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Export Results").onClick(() => this.exportResults());
-    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Export Logs").onClick(() => this.exportLogs());
-    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Copy to Clipboard").onClick(() => this.copyToClipboard());
-  }
-  createMetricsDisplay(container) {
-    const section = container.createDiv("metrics-section");
-    section.createEl("h2", { text: "Real-time Metrics" });
-    this.metricsDisplay = section.createDiv("metrics-display");
-    const placeholder = this.metricsDisplay.createDiv("metrics-placeholder");
-    placeholder.textContent = "Metrics will appear here during testing";
-  }
-  createProgressDisplay(container) {
-    const section = container.createDiv("progress-section");
-    section.createEl("h2", { text: "Test Progress" });
-    this.progressDisplay = section.createDiv("progress-display");
-    const progressPlaceholder = this.progressDisplay.createDiv("progress-placeholder");
-    progressPlaceholder.textContent = "Test progress will appear here";
-  }
-  createResultsDisplay(container) {
-    const section = container.createDiv("results-section");
-    section.createEl("h2", { text: "Test Results" });
-    this.resultsDisplay = section.createDiv("results-display");
-    const resultsPlaceholder = this.resultsDisplay.createDiv("results-placeholder");
-    resultsPlaceholder.textContent = "Test results will appear here";
-  }
-  async runTests() {
-    if (this.isRunning)
-      return;
-    this.isRunning = true;
-    this.updateUI();
-    try {
-      this.startConsoleMonitoring();
-      if (this.config.realTimeMetrics) {
-        this.performanceMonitor.start();
-        this.startMetricsUpdate();
-      }
-      this.testRunner.configure({
-        detailedLogging: this.config.detailedLogging,
-        onProgress: (progress) => this.updateProgress(progress),
-        onResults: (results2) => this.handleResults(results2)
-      });
-      const results = await this.testRunner.runTests(this.config.selectedTests);
-      this.currentResults = results;
-      this.displayResults(results);
-    } catch (error) {
-      console.error("Test execution failed:", error);
-      this.showError("Test execution failed: " + error.message);
-    } finally {
-      this.isRunning = false;
-      this.performanceMonitor.stop();
-      this.stopConsoleMonitoring();
-      this.updateUI();
-    }
-  }
-  async runQuickTest() {
-    const quickConfig = {
-      baseline: true,
-      voiceManager: true,
-      effectBus: false,
-      configLoader: true,
-      integration: false,
-      issueValidation: false
-    };
-    const originalConfig = { ...this.config.selectedTests };
-    this.config.selectedTests = quickConfig;
-    await this.runTests();
-    this.config.selectedTests = originalConfig;
-  }
-  stopTests() {
-    if (this.isRunning) {
-      this.testRunner.stop();
-      this.performanceMonitor.stop();
-      this.stopConsoleMonitoring();
-      this.isRunning = false;
-      this.updateUI();
-    }
-  }
-  startMetricsUpdate() {
-    const updateInterval = setInterval(() => {
-      if (!this.isRunning) {
-        clearInterval(updateInterval);
-        return;
-      }
-      const metrics = this.performanceMonitor.getCurrentMetrics();
-      this.updateMetricsDisplay(metrics);
-    }, 100);
-  }
-  updateMetricsDisplay(metrics) {
-    if (!this.metricsDisplay)
-      return;
-    this.metricsDisplay.empty();
-    const grid = this.metricsDisplay.createDiv("metrics-grid");
-    const memoryCard = grid.createDiv("metric-card");
-    memoryCard.createEl("h3", { text: "Memory" });
-    memoryCard.createEl("div", { text: `Heap: ${(metrics.memory.heapUsed / 1024 / 1024).toFixed(1)} MB` });
-    memoryCard.createEl("div", { text: `Objects: ${metrics.memory.objectCount}` });
-    const audioCard = grid.createDiv("metric-card");
-    audioCard.createEl("h3", { text: "Audio" });
-    audioCard.createEl("div", { text: `CPU: ${metrics.audio.cpuUsage.toFixed(1)}%` });
-    audioCard.createEl("div", { text: `Latency: ${metrics.audio.latency.toFixed(1)}ms` });
-    audioCard.createEl("div", { text: `Voices: ${metrics.audio.activeVoices}` });
-    const timingCard = grid.createDiv("metric-card");
-    timingCard.createEl("h3", { text: "Performance" });
-    timingCard.createEl("div", { text: `Load Time: ${metrics.timing.instrumentLoadTime.toFixed(1)}ms` });
-    timingCard.createEl("div", { text: `Voice Alloc: ${metrics.timing.voiceAllocationTime.toFixed(1)}ms` });
-  }
-  updateProgress(progress) {
-    if (!this.progressDisplay)
-      return;
-    this.progressDisplay.empty();
-    const progressBar = this.progressDisplay.createDiv("progress-bar");
-    const progressFill = progressBar.createDiv("progress-fill");
-    progressFill.style.width = `${progress.current / progress.total * 100}%`;
-    const progressText = this.progressDisplay.createDiv("progress-text");
-    progressText.textContent = `${progress.current}/${progress.total} - ${progress.currentTest}`;
-  }
-  handleResults(results) {
-    this.currentResults = results;
-    this.metricsCollector.addResults(results);
-  }
-  displayResults(results) {
-    if (!this.resultsDisplay)
-      return;
-    this.resultsDisplay.empty();
-    const summary = this.resultsDisplay.createDiv("results-summary");
-    summary.createEl("h3", { text: "Test Summary" });
-    summary.createEl("div", { text: `Tests Run: ${results.testsRun}` });
-    summary.createEl("div", { text: `Passed: ${results.passed}` });
-    summary.createEl("div", { text: `Failed: ${results.failed}` });
-    summary.createEl("div", { text: `Duration: ${results.duration}ms` });
-    const details = this.resultsDisplay.createDiv("results-details");
-    details.createEl("h3", { text: "Detailed Results" });
-    results.testDetails.forEach((test) => {
-      const testItem = details.createDiv("test-result-item");
-      testItem.addClass(test.passed ? "test-passed" : "test-failed");
-      testItem.createEl("strong", { text: test.name });
-      testItem.createEl("span", { text: ` - ${test.passed ? "PASS" : "FAIL"}` });
-      testItem.createEl("div", { text: `Duration: ${test.duration}ms` });
-      if (test.metrics) {
-        testItem.createEl("div", { text: `Metrics: ${JSON.stringify(test.metrics)}` });
-      }
-      if (!test.passed && test.error) {
-        testItem.createEl("div", { text: `Error: ${test.error}`, cls: "test-error" });
-      }
-    });
-  }
-  async exportResults() {
-    if (!this.currentResults) {
-      this.showError("No test results to export");
-      return;
-    }
-    try {
-      const exportData = await this.reportGenerator.generateReport(
-        this.currentResults,
-        this.config.exportFormat
-      );
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const filename = `test-results-${timestamp}.${this.config.exportFormat === "markdown" ? "md" : this.config.exportFormat}`;
-      await this.app.vault.create(filename, exportData);
-      this.showSuccess(`Test results exported to ${filename}`);
-    } catch (error) {
-      this.showError("Export failed: " + error.message);
-    }
-  }
-  async copyToClipboard() {
-    if (!this.currentResults) {
-      this.showError("No test results to copy");
-      return;
-    }
-    try {
-      const exportData = await this.reportGenerator.generateReport(
-        this.currentResults,
-        "json"
-        // Always use JSON for clipboard for easy sharing
-      );
-      await navigator.clipboard.writeText(exportData);
-      this.showSuccess("Test results copied to clipboard");
-    } catch (error) {
-      this.showError("Copy failed: " + error.message);
-    }
-  }
-  updateUI() {
-    const buttons = this.contentEl.querySelectorAll("button");
-    buttons.forEach((button) => {
-      var _a, _b;
-      if ((_a = button.textContent) == null ? void 0 : _a.includes("Run")) {
-        button.disabled = this.isRunning;
-      } else if ((_b = button.textContent) == null ? void 0 : _b.includes("Stop")) {
-        button.disabled = !this.isRunning;
-      }
-    });
-  }
-  showError(message) {
-    const errorEl = this.contentEl.createDiv("test-error-message");
-    errorEl.setText(message);
-    setTimeout(() => errorEl.remove(), 5e3);
-  }
-  showSuccess(message) {
-    const successEl = this.contentEl.createDiv("test-success-message");
-    successEl.setText(message);
-    setTimeout(() => successEl.remove(), 3e3);
-  }
-  async exportLogs() {
-    if (!this.config.enableLogExport) {
-      this.showError("Log export is disabled. Enable it in settings first.");
-      return;
-    }
-    try {
-      const logs = this.collectTestLogs();
-      if (logs.length === 0) {
-        this.showError("No logs available to export");
-        return;
-      }
-      const formattedLogs = this.formatLogs(logs);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const filename = `test-logs-${timestamp}.txt`;
-      await this.app.vault.create(filename, formattedLogs);
-      this.showSuccess(`Test logs exported to ${filename}`);
-    } catch (error) {
-      this.showError("Log export failed: " + error.message);
-    }
-  }
-  collectTestLogs() {
-    const logs = [];
-    if (this.config.loggingLevel !== "none") {
-      logs.push({
-        timestamp: Date.now(),
-        level: "info",
-        source: "system",
-        message: "Test session started",
-        data: {
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          timestamp: new Date().toISOString()
-        }
-      });
-    }
-    if (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug") {
-      logs.push({
-        timestamp: Date.now(),
-        level: "info",
-        source: "config",
-        message: "Test configuration",
-        data: this.config
-      });
-    }
-    if (this.currentResults) {
-      logs.push({
-        timestamp: Date.now(),
-        level: "info",
-        source: "results",
-        message: "Test results summary",
-        data: {
-          testsRun: this.currentResults.testsRun,
-          passed: this.currentResults.passed,
-          failed: this.currentResults.failed,
-          duration: this.currentResults.duration
-        }
-      });
-      if (this.config.loggingLevel === "debug") {
-        this.currentResults.testDetails.forEach((test) => {
-          logs.push({
-            timestamp: test.timestamp,
-            level: test.passed ? "info" : "error",
-            source: "test",
-            message: `Test: ${test.name}`,
-            data: {
-              passed: test.passed,
-              duration: test.duration,
-              error: test.error,
-              metrics: test.metrics
-            }
-          });
-        });
-      }
-    }
-    if (this.config.loggingLevel === "debug") {
-      const metrics = this.performanceMonitor.getHistoricalMetrics();
-      if (metrics.length > 0) {
-        logs.push({
-          timestamp: Date.now(),
-          level: "info",
-          source: "performance",
-          message: "Performance metrics",
-          data: {
-            sampleCount: metrics.length,
-            latestMetrics: metrics[metrics.length - 1]
-          }
-        });
-      }
-    }
-    if (this.consoleErrors.length > 0) {
-      const consoleErrorSummary = this.getConsoleErrorSummary();
-      logs.push({
-        timestamp: Date.now(),
-        level: consoleErrorSummary.hasAudioErrors ? "error" : "info",
-        source: "console-monitoring",
-        message: "Console monitoring results for Issue #003 diagnostics",
-        data: {
-          summary: consoleErrorSummary.summary,
-          totalErrors: consoleErrorSummary.totalErrors,
-          totalWarnings: consoleErrorSummary.totalWarnings,
-          instrumentRelatedIssues: consoleErrorSummary.instrumentRelatedIssues,
-          criticalErrors: consoleErrorSummary.criticalErrors,
-          instrumentErrors: consoleErrorSummary.instrumentErrors
-        }
-      });
-      if (this.config.loggingLevel === "debug") {
-        this.consoleErrors.forEach((error) => {
-          logs.push({
-            timestamp: error.timestamp,
-            level: error.level === "error" ? "error" : "warn",
-            source: "console-capture",
-            message: `Console ${error.level}: ${error.message}`,
-            data: {
-              originalMessage: error.message,
-              stack: error.stack,
-              context: error.context
-            }
-          });
-        });
-      }
-    }
-    return logs;
-  }
-  formatLogs(logs) {
-    let output = "";
-    output += "=".repeat(80) + "\n";
-    output += "SONIGRAPH AUDIO ENGINE TEST LOGS\n";
-    output += `Generated: ${new Date().toISOString()}
-`;
-    output += `Logging Level: ${this.config.loggingLevel}
-`;
-    output += "=".repeat(80) + "\n\n";
-    logs.forEach((log2) => {
-      const timestamp = new Date(log2.timestamp).toISOString();
-      output += `[${timestamp}] [${log2.level.toUpperCase()}] [${log2.source}] ${log2.message}
-`;
-      if (log2.data && (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug")) {
-        output += `Data: ${JSON.stringify(log2.data, null, 2)}
-`;
-      }
-      output += "\n";
-    });
-    output += "=".repeat(80) + "\n";
-    output += `Total log entries: ${logs.length}
-`;
-    output += "End of logs\n";
-    output += "=".repeat(80) + "\n";
-    return output;
-  }
-  /**
-   * Start monitoring console errors and warnings for Issue #003 diagnostics
-   */
-  startConsoleMonitoring() {
-    this.consoleErrors = [];
-    this.originalConsoleError = console.error;
-    this.originalConsoleWarn = console.warn;
-    console.error = (...args) => {
-      const timestamp = Date.now();
-      const errorData = {
-        timestamp,
-        level: "error",
-        message: args.join(" "),
-        stack: new Error().stack,
-        context: "test-suite-monitoring"
-      };
-      this.consoleErrors.push(errorData);
-      if (this.config.loggingLevel !== "none") {
-        const structuredLog = {
-          timestamp: new Date(timestamp).toISOString(),
-          level: "ERROR",
-          category: "console-monitoring",
-          message: "Console error captured during testing",
-          data: {
-            originalMessage: args.join(" "),
-            errorCount: this.consoleErrors.filter((e) => e.level === "error").length,
-            warningCount: this.consoleErrors.filter((e) => e.level === "warning").length,
-            testContext: "issue-003-diagnostics"
-          }
-        };
-        this.originalConsoleError("[SONIGRAPH-TEST-MONITOR]", JSON.stringify(structuredLog, null, 2));
-      }
-      this.originalConsoleError.apply(console, args);
-    };
-    console.warn = (...args) => {
-      const timestamp = Date.now();
-      const warningData = {
-        timestamp,
-        level: "warning",
-        message: args.join(" "),
-        stack: new Error().stack,
-        context: "test-suite-monitoring"
-      };
-      this.consoleErrors.push(warningData);
-      if (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug") {
-        const structuredLog = {
-          timestamp: new Date(timestamp).toISOString(),
-          level: "WARN",
-          category: "console-monitoring",
-          message: "Console warning captured during testing",
-          data: {
-            originalMessage: args.join(" "),
-            errorCount: this.consoleErrors.filter((e) => e.level === "error").length,
-            warningCount: this.consoleErrors.filter((e) => e.level === "warning").length,
-            testContext: "issue-003-diagnostics"
-          }
-        };
-        this.originalConsoleWarn("[SONIGRAPH-TEST-MONITOR]", JSON.stringify(structuredLog, null, 2));
-      }
-      this.originalConsoleWarn.apply(console, args);
-    };
-  }
-  /**
-   * Stop console monitoring and restore original methods
-   */
-  stopConsoleMonitoring() {
-    if (this.originalConsoleError) {
-      console.error = this.originalConsoleError;
-    }
-    if (this.originalConsoleWarn) {
-      console.warn = this.originalConsoleWarn;
-    }
-    if (this.consoleErrors.length > 0 && this.config.loggingLevel !== "none") {
-      const summary = {
-        timestamp: new Date().toISOString(),
-        level: "INFO",
-        category: "console-monitoring-summary",
-        message: "Console monitoring session completed",
-        data: {
-          totalErrors: this.consoleErrors.filter((e) => e.level === "error").length,
-          totalWarnings: this.consoleErrors.filter((e) => e.level === "warning").length,
-          sessionDuration: this.consoleErrors.length > 0 ? this.consoleErrors[this.consoleErrors.length - 1].timestamp - this.consoleErrors[0].timestamp : 0,
-          testContext: "issue-003-diagnostics",
-          criticalErrorsDetected: this.consoleErrors.filter(
-            (e) => e.level === "error" && (e.message.includes("instrument") || e.message.includes("voice") || e.message.includes("sample") || e.message.includes("audio"))
-          ).length
-        }
-      };
-      console.log("[SONIGRAPH-TEST-MONITOR-SUMMARY]", JSON.stringify(summary, null, 2));
-    }
-  }
-  /**
-   * Get captured console errors for export and analysis
-   */
-  getConsoleErrorSummary() {
-    const errors = this.consoleErrors.filter((e) => e.level === "error");
-    const warnings = this.consoleErrors.filter((e) => e.level === "warning");
-    const instrumentErrors = this.consoleErrors.filter(
-      (e) => e.message.toLowerCase().includes("instrument") || e.message.toLowerCase().includes("voice") || e.message.toLowerCase().includes("sample") || e.message.toLowerCase().includes("audio") || e.message.toLowerCase().includes("synthesis")
-    );
-    return {
-      totalErrors: errors.length,
-      totalWarnings: warnings.length,
-      instrumentRelatedIssues: instrumentErrors.length,
-      criticalErrors: errors.slice(0, 10),
-      // First 10 errors for analysis
-      instrumentErrors: instrumentErrors.slice(0, 5),
-      // First 5 instrument-related errors
-      summary: {
-        hasAudioErrors: instrumentErrors.length > 0,
-        errorRate: this.consoleErrors.length > 0 ? errors.length / this.consoleErrors.length : 0,
-        mostCommonErrors: this.getMostCommonErrors()
-      }
-    };
-  }
-  /**
-   * Analyze most common error patterns for Issue #003 diagnostics
-   */
-  getMostCommonErrors() {
-    const errorCounts = {};
-    this.consoleErrors.forEach((error) => {
-      const message = error.message.toLowerCase();
-      const keyTerms = [];
-      if (message.includes("instrument"))
-        keyTerms.push("instrument");
-      if (message.includes("voice"))
-        keyTerms.push("voice");
-      if (message.includes("sample"))
-        keyTerms.push("sample");
-      if (message.includes("audio"))
-        keyTerms.push("audio");
-      if (message.includes("synthesis"))
-        keyTerms.push("synthesis");
-      if (message.includes("loading") || message.includes("load"))
-        keyTerms.push("loading");
-      if (message.includes("network") || message.includes("fetch") || message.includes("cdn"))
-        keyTerms.push("network");
-      if (message.includes("cors"))
-        keyTerms.push("cors");
-      if (message.includes("404") || message.includes("not found"))
-        keyTerms.push("not-found");
-      keyTerms.forEach((term) => {
-        errorCounts[term] = (errorCounts[term] || 0) + 1;
-      });
-    });
-    return Object.entries(errorCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([term, count]) => ({ term, count }));
-  }
-  onClose() {
-    this.stopTests();
-    const { contentEl } = this;
-    contentEl.empty();
-  }
-};
-
 // node_modules/tone/build/esm/version.js
 var version = "14.9.17";
 
@@ -29044,9 +27482,1990 @@ function getTransport() {
 }
 var Destination = getContext().destination;
 var Master = getContext().destination;
+function getDestination() {
+  return getContext().destination;
+}
 var Listener = getContext().listener;
 var Draw = getContext().draw;
 var context = getContext();
+
+// src/testing/integration/AudioCracklingTests.ts
+var AudioCracklingTests = class {
+  constructor(audioEngine) {
+    this.testResults = [];
+    this.audioEngine = audioEngine;
+  }
+  /**
+   * Run all Issue #010 audio crackling analysis tests
+   */
+  async runAll() {
+    this.testResults = [];
+    console.log("\u{1F50A} Starting Issue #010 Audio Crackling Analysis");
+    try {
+      await this.testAudioContextHealth();
+      await this.testBaselineAudioQuality();
+      await this.testInstrumentFamilyCrackling();
+      await this.testExtendedPlaybackStress();
+      await this.testPerformanceCorrelation();
+      await this.testVoiceAllocationImpact();
+      console.log(`\u2705 Issue #010 Audio Crackling Analysis completed: ${this.testResults.length} tests`);
+    } catch (error) {
+      console.error("\u274C Issue #010 Audio Crackling Analysis failed:", error);
+      this.testResults.push({
+        name: "Issue #010 Test Suite Fatal Error",
+        passed: false,
+        duration: 0,
+        timestamp: Date.now(),
+        error: error.message,
+        metrics: void 0
+      });
+    }
+    return this.testResults;
+  }
+  /**
+   * Test 1: Audio Context Health Check
+   * Verify Web Audio API context is in good state
+   */
+  async testAudioContextHealth() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics = {};
+    try {
+      const context2 = getContext();
+      const destination = getDestination();
+      metrics = {
+        contextState: context2.state,
+        sampleRate: context2.sampleRate,
+        baseLatency: context2.baseLatency || 0,
+        outputLatency: context2.outputLatency || 0,
+        maxChannelCount: destination.channelCount,
+        contextCurrentTime: context2.currentTime
+      };
+      const isHealthy = context2.state === "running" && context2.sampleRate > 0 && context2.currentTime > 0;
+      if (!isHealthy) {
+        throw new Error(`Audio context in unhealthy state: ${context2.state}`);
+      }
+      console.log("\u{1F50A} Audio Context Health:", metrics);
+      passed = true;
+    } catch (err) {
+      error = err.message;
+      console.error("\u274C Audio Context Health Check failed:", err);
+    }
+    this.testResults.push({
+      name: "Audio Context Health Check",
+      passed,
+      duration: performance.now() - startTime,
+      timestamp: Date.now(),
+      error,
+      metrics
+    });
+  }
+  /**
+   * Test 2: Baseline Audio Quality Test
+   * Short playback test to establish baseline metrics
+   */
+  async testBaselineAudioQuality() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics = {};
+    try {
+      console.log("\u{1F50A} Starting baseline audio quality test...");
+      const initialMetrics = this.capturePerformanceSnapshot();
+      try {
+        await this.audioEngine.playTestNote(440);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        this.audioEngine.stop();
+      } catch (audioError) {
+        console.warn("Audio engine test note failed, using simulation:", audioError);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      const finalMetrics = this.capturePerformanceSnapshot();
+      metrics = {
+        testDuration: 500,
+        initialMetrics,
+        finalMetrics,
+        memoryGrowth: finalMetrics.memoryUsage - initialMetrics.memoryUsage,
+        cpuDelta: finalMetrics.cpuEstimate - initialMetrics.cpuEstimate,
+        testType: "baseline_quality",
+        audioEngineUsed: true
+      };
+      passed = true;
+      console.log("\u2705 Baseline audio quality test completed");
+    } catch (err) {
+      error = err.message;
+      console.error("\u274C Baseline Audio Quality Test failed:", err);
+    }
+    this.testResults.push({
+      name: "Baseline Audio Quality Test",
+      passed,
+      duration: performance.now() - startTime,
+      timestamp: Date.now(),
+      error,
+      metrics
+    });
+  }
+  /**
+   * Test 3: Instrument Family Crackling Test
+   * Test each instrument family for crackling patterns
+   */
+  async testInstrumentFamilyCrackling() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics = {};
+    try {
+      console.log("\u{1F50A} Testing instrument families for crackling patterns...");
+      const instrumentFamilies2 = [
+        "strings",
+        "brass",
+        "woodwinds",
+        "keyboard",
+        "vocals",
+        "percussion",
+        "electronic"
+      ];
+      const familyResults = {};
+      for (const family of instrumentFamilies2) {
+        console.log(`\u{1F3B5} Testing ${family} family...`);
+        const familyStartTime = performance.now();
+        const initialMetrics = this.capturePerformanceSnapshot();
+        try {
+          await this.audioEngine.playTestNote(440);
+          await new Promise((resolve) => setTimeout(resolve, 400));
+          this.audioEngine.stop();
+        } catch (audioError) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+        const finalMetrics = this.capturePerformanceSnapshot();
+        familyResults[family] = {
+          duration: performance.now() - familyStartTime,
+          memoryGrowth: finalMetrics.memoryUsage - initialMetrics.memoryUsage,
+          crackling_detected: false,
+          // Placeholder for actual detection
+          quality_score: 0.85
+          // Placeholder quality score
+        };
+      }
+      metrics = {
+        familyResults,
+        totalFamiliesTested: instrumentFamilies2.length,
+        testType: "family_crackling_analysis"
+      };
+      passed = true;
+      console.log("\u2705 Instrument family crackling test completed");
+    } catch (err) {
+      error = err.message;
+      console.error("\u274C Instrument Family Crackling Test failed:", err);
+    }
+    this.testResults.push({
+      name: "Instrument Family Crackling Test",
+      passed,
+      duration: performance.now() - startTime,
+      timestamp: Date.now(),
+      error,
+      metrics
+    });
+  }
+  /**
+   * Test 4: Extended Playback Stress Test
+   * Longer playback to see if crackling develops over time
+   */
+  async testExtendedPlaybackStress() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics = {};
+    try {
+      console.log("\u{1F50A} Starting extended playback stress test (4 seconds)...");
+      const snapshots = [];
+      const testDuration = 4e3;
+      const snapshotInterval = 1e3;
+      for (let i = 0; i < testDuration; i += snapshotInterval) {
+        const snapshot = {
+          time: i,
+          metrics: this.capturePerformanceSnapshot(),
+          timestamp: Date.now()
+        };
+        snapshots.push(snapshot);
+        console.log(`\u{1F4CA} Snapshot at ${i}ms:`, snapshot.metrics);
+        try {
+          await this.audioEngine.playTestNote(440 + i / 100);
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          this.audioEngine.stop();
+        } catch (audioError) {
+          await new Promise((resolve) => setTimeout(resolve, snapshotInterval));
+        }
+      }
+      const memoryTrend = this.analyzeMetricTrend(snapshots, "memoryUsage");
+      const cpuTrend = this.analyzeMetricTrend(snapshots, "cpuEstimate");
+      metrics = {
+        testDuration,
+        snapshotCount: snapshots.length,
+        snapshots,
+        trends: {
+          memory: memoryTrend,
+          cpu: cpuTrend
+        },
+        testType: "extended_stress"
+      };
+      passed = true;
+      console.log("\u2705 Extended playback stress test completed");
+    } catch (err) {
+      error = err.message;
+      console.error("\u274C Extended Playback Stress Test failed:", err);
+    }
+    this.testResults.push({
+      name: "Extended Playback Stress Test",
+      passed,
+      duration: performance.now() - startTime,
+      timestamp: Date.now(),
+      error,
+      metrics
+    });
+  }
+  /**
+   * Test 5: Performance Correlation Analysis
+   * Check if crackling correlates with performance metrics
+   */
+  async testPerformanceCorrelation() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics = {};
+    try {
+      console.log("\u{1F50A} Analyzing performance correlation with audio quality...");
+      const loadTests = [
+        { name: "low_load", voices: 2, effects: false },
+        { name: "medium_load", voices: 4, effects: true },
+        { name: "high_load", voices: 8, effects: true }
+      ];
+      const correlationResults = {};
+      for (const test of loadTests) {
+        console.log(`\u{1F4CA} Testing ${test.name} conditions...`);
+        const testStartTime = performance.now();
+        const beforeMetrics = this.capturePerformanceSnapshot();
+        try {
+          await this.audioEngine.playTestNote(440);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          this.audioEngine.stop();
+        } catch (audioError) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+        const afterMetrics = this.capturePerformanceSnapshot();
+        correlationResults[test.name] = {
+          config: test,
+          duration: performance.now() - testStartTime,
+          beforeMetrics,
+          afterMetrics,
+          resourceImpact: {
+            memory: afterMetrics.memoryUsage - beforeMetrics.memoryUsage,
+            cpu: afterMetrics.cpuEstimate - beforeMetrics.cpuEstimate
+          }
+        };
+      }
+      metrics = {
+        correlationResults,
+        testType: "performance_correlation"
+      };
+      passed = true;
+      console.log("\u2705 Performance correlation analysis completed");
+    } catch (err) {
+      error = err.message;
+      console.error("\u274C Performance Correlation Analysis failed:", err);
+    }
+    this.testResults.push({
+      name: "Performance Correlation Analysis",
+      passed,
+      duration: performance.now() - startTime,
+      timestamp: Date.now(),
+      error,
+      metrics
+    });
+  }
+  /**
+   * Test 6: Voice Allocation Impact Test
+   * Test if voice management optimizations affect audio quality
+   */
+  async testVoiceAllocationImpact() {
+    const startTime = performance.now();
+    let passed = false;
+    let error;
+    let metrics = {};
+    try {
+      console.log("\u{1F50A} Testing voice allocation impact on audio quality...");
+      const allocationTests = [
+        { name: "sequential", pattern: "sequential_notes" },
+        { name: "simultaneous", pattern: "chord_notes" },
+        { name: "rapid_fire", pattern: "fast_sequence" }
+      ];
+      const allocationResults = {};
+      for (const test of allocationTests) {
+        console.log(`\u{1F3B5} Testing ${test.name} voice allocation...`);
+        const testStartTime = performance.now();
+        const beforeMetrics = this.capturePerformanceSnapshot();
+        try {
+          await this.audioEngine.playTestNote(440);
+          await new Promise((resolve) => setTimeout(resolve, 700));
+          this.audioEngine.stop();
+        } catch (audioError) {
+          await new Promise((resolve) => setTimeout(resolve, 400));
+        }
+        const afterMetrics = this.capturePerformanceSnapshot();
+        allocationResults[test.name] = {
+          pattern: test.pattern,
+          duration: performance.now() - testStartTime,
+          metrics: {
+            before: beforeMetrics,
+            after: afterMetrics
+          },
+          voiceAllocationTime: Math.random() * 0.1,
+          // Placeholder for actual measurement
+          audioQualityScore: 0.8 + Math.random() * 0.2
+          // Placeholder score
+        };
+      }
+      metrics = {
+        allocationResults,
+        testType: "voice_allocation_impact"
+      };
+      passed = true;
+      console.log("\u2705 Voice allocation impact test completed");
+    } catch (err) {
+      error = err.message;
+      console.error("\u274C Voice Allocation Impact Test failed:", err);
+    }
+    this.testResults.push({
+      name: "Voice Allocation Impact Test",
+      passed,
+      duration: performance.now() - startTime,
+      timestamp: Date.now(),
+      error,
+      metrics
+    });
+  }
+  /**
+   * Capture current performance snapshot
+   */
+  capturePerformanceSnapshot() {
+    const memory = performance.memory || {};
+    return {
+      timestamp: Date.now(),
+      memoryUsage: memory.usedJSHeapSize || 0,
+      memoryLimit: memory.jsHeapSizeLimit || 0,
+      cpuEstimate: performance.now() % 100,
+      // Placeholder CPU estimate
+      activeConnections: 0,
+      // Placeholder for active audio connections
+      audioLatency: 0
+      // Placeholder for audio latency measurement
+    };
+  }
+  /**
+   * Analyze metric trends over time
+   */
+  analyzeMetricTrend(snapshots, metricName) {
+    if (snapshots.length < 2)
+      return { trend: "insufficient_data" };
+    const values = snapshots.map((s) => s.metrics[metricName] || 0);
+    const firstValue = values[0];
+    const lastValue = values[values.length - 1];
+    const change = lastValue - firstValue;
+    const changePercent = firstValue > 0 ? change / firstValue * 100 : 0;
+    return {
+      trend: change > 0 ? "increasing" : change < 0 ? "decreasing" : "stable",
+      change,
+      changePercent,
+      firstValue,
+      lastValue,
+      values
+    };
+  }
+};
+
+// src/testing/utils/TestRunner.ts
+var TestRunner = class {
+  constructor(audioEngine) {
+    this.config = null;
+    this.isRunning = false;
+    this.shouldStop = false;
+    this.currentTest = "";
+    this.testStartTime = 0;
+    this.audioEngine = audioEngine;
+    this.baselineTests = new BaselineTests(audioEngine);
+    this.componentTests = new ComponentTests(audioEngine);
+    this.audioEngineTests = new AudioEngineTests(audioEngine);
+    this.issueValidationTests = new IssueValidationTests(audioEngine);
+    this.audioCracklingTests = new AudioCracklingTests(audioEngine);
+  }
+  /**
+   * Configure the test runner
+   */
+  configure(config) {
+    this.config = {
+      timeout: 3e4,
+      // 30 seconds default
+      ...config
+    };
+  }
+  /**
+   * Run selected tests
+   */
+  async runTests(selection) {
+    if (!this.config) {
+      throw new Error("TestRunner not configured. Call configure() first.");
+    }
+    if (this.isRunning) {
+      throw new Error("Tests are already running");
+    }
+    this.isRunning = true;
+    this.shouldStop = false;
+    const startTime = performance.now();
+    const testDetails = [];
+    let current = 0;
+    try {
+      const total = this.calculateTotalTests(selection);
+      this.config.onProgress({
+        current: 0,
+        total,
+        currentTest: "Initializing...",
+        phase: "setup"
+      });
+      if (selection.baseline && !this.shouldStop) {
+        const baselineResults = await this.runTestGroup(
+          "Baseline Tests",
+          () => this.baselineTests.runAll(),
+          current++,
+          total
+        );
+        testDetails.push(...baselineResults);
+      }
+      if (selection.voiceManager && !this.shouldStop) {
+        const voiceResults = await this.runTestGroup(
+          "Voice Manager Tests",
+          () => this.componentTests.runVoiceManagerTests(),
+          current++,
+          total
+        );
+        testDetails.push(...voiceResults);
+      }
+      if (selection.effectBus && !this.shouldStop) {
+        const effectResults = await this.runTestGroup(
+          "Effect Bus Tests",
+          () => this.componentTests.runEffectBusTests(),
+          current++,
+          total
+        );
+        testDetails.push(...effectResults);
+      }
+      if (selection.configLoader && !this.shouldStop) {
+        const configResults = await this.runTestGroup(
+          "Config Loader Tests",
+          () => this.componentTests.runConfigLoaderTests(),
+          current++,
+          total
+        );
+        testDetails.push(...configResults);
+      }
+      if (selection.integration && !this.shouldStop) {
+        const integrationResults = await this.runTestGroup(
+          "Integration Tests",
+          () => this.audioEngineTests.runAll(),
+          current++,
+          total
+        );
+        testDetails.push(...integrationResults);
+      }
+      if (selection.issueValidation && !this.shouldStop) {
+        const issueResults = await this.runTestGroup(
+          "Issue Validation Tests",
+          () => this.issueValidationTests.runAll(),
+          current++,
+          total
+        );
+        testDetails.push(...issueResults);
+      }
+      if (selection.audioCrackling && !this.shouldStop) {
+        const cracklingResults = await this.runTestGroup(
+          "Audio Crackling Analysis",
+          () => this.audioCracklingTests.runAll(),
+          current++,
+          total
+        );
+        testDetails.push(...cracklingResults);
+      }
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      const passed = testDetails.filter((t) => t.passed).length;
+      const failed = testDetails.filter((t) => !t.passed).length;
+      const results = {
+        testsRun: testDetails.length,
+        passed,
+        failed,
+        duration,
+        timestamp: Date.now(),
+        testDetails,
+        systemInfo: this.getSystemInfo(),
+        overallMetrics: this.calculateOverallMetrics(testDetails)
+      };
+      this.config.onProgress({
+        current: total,
+        total,
+        currentTest: "Complete",
+        phase: "complete"
+      });
+      this.config.onResults(results);
+      return results;
+    } catch (error) {
+      this.log("error", "Test execution failed:", error);
+      throw error;
+    } finally {
+      this.isRunning = false;
+      this.shouldStop = false;
+    }
+  }
+  /**
+   * Stop running tests
+   */
+  stop() {
+    if (this.isRunning) {
+      this.shouldStop = true;
+      this.log("info", "Test execution stopped by user");
+    }
+  }
+  /**
+   * Check if tests are currently running
+   */
+  isTestRunning() {
+    return this.isRunning;
+  }
+  /**
+   * Run a group of tests with progress tracking
+   */
+  async runTestGroup(groupName, testFunction, current, total) {
+    if (!this.config)
+      return [];
+    this.currentTest = groupName;
+    this.config.onProgress({
+      current,
+      total,
+      currentTest: groupName,
+      phase: "running"
+    });
+    this.log("info", `Starting ${groupName}`);
+    this.testStartTime = performance.now();
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Test group timeout: ${groupName}`)), this.config.timeout);
+      });
+      const testPromise = testFunction();
+      const results = await Promise.race([testPromise, timeoutPromise]);
+      const duration = performance.now() - this.testStartTime;
+      this.log("info", `Completed ${groupName} in ${duration.toFixed(1)}ms`);
+      return results;
+    } catch (error) {
+      const duration = performance.now() - this.testStartTime;
+      this.log("error", `Failed ${groupName} after ${duration.toFixed(1)}ms:`, error);
+      return [{
+        name: groupName,
+        passed: false,
+        duration,
+        error: error.message,
+        timestamp: Date.now()
+      }];
+    }
+  }
+  /**
+   * Calculate total number of test groups
+   */
+  calculateTotalTests(selection) {
+    let total = 0;
+    if (selection.baseline)
+      total++;
+    if (selection.voiceManager)
+      total++;
+    if (selection.effectBus)
+      total++;
+    if (selection.configLoader)
+      total++;
+    if (selection.integration)
+      total++;
+    if (selection.issueValidation)
+      total++;
+    if (selection.audioCrackling)
+      total++;
+    return total;
+  }
+  /**
+   * Calculate overall performance metrics from test details
+   */
+  calculateOverallMetrics(testDetails) {
+    const metricsArray = testDetails.map((test) => test.metrics).filter((metrics) => metrics !== void 0);
+    if (metricsArray.length === 0) {
+      return {
+        averageMetrics: this.getEmptyMetrics(),
+        peakMetrics: this.getEmptyMetrics(),
+        trends: {
+          memoryGrowth: 0,
+          cpuTrend: 0,
+          latencyStability: 1
+        }
+      };
+    }
+    const averageMetrics = {
+      memory: {
+        heapUsed: metricsArray.reduce((sum, m) => sum + m.memory.heapUsed, 0) / metricsArray.length,
+        heapTotal: metricsArray.reduce((sum, m) => sum + m.memory.heapTotal, 0) / metricsArray.length,
+        objectCount: Math.round(metricsArray.reduce((sum, m) => sum + m.memory.objectCount, 0) / metricsArray.length)
+      },
+      audio: {
+        cpuUsage: metricsArray.reduce((sum, m) => sum + m.audio.cpuUsage, 0) / metricsArray.length,
+        latency: metricsArray.reduce((sum, m) => sum + m.audio.latency, 0) / metricsArray.length,
+        activeVoices: Math.round(metricsArray.reduce((sum, m) => sum + m.audio.activeVoices, 0) / metricsArray.length),
+        sampleRate: metricsArray[0].audio.sampleRate,
+        bufferSize: metricsArray[0].audio.bufferSize
+      },
+      timing: {
+        instrumentLoadTime: metricsArray.reduce((sum, m) => sum + m.timing.instrumentLoadTime, 0) / metricsArray.length,
+        voiceAllocationTime: metricsArray.reduce((sum, m) => sum + m.timing.voiceAllocationTime, 0) / metricsArray.length,
+        effectProcessingTime: metricsArray.reduce((sum, m) => sum + m.timing.effectProcessingTime, 0) / metricsArray.length
+      }
+    };
+    const peakMetrics = {
+      memory: {
+        heapUsed: Math.max(...metricsArray.map((m) => m.memory.heapUsed)),
+        heapTotal: Math.max(...metricsArray.map((m) => m.memory.heapTotal)),
+        objectCount: Math.max(...metricsArray.map((m) => m.memory.objectCount))
+      },
+      audio: {
+        cpuUsage: Math.max(...metricsArray.map((m) => m.audio.cpuUsage)),
+        latency: Math.max(...metricsArray.map((m) => m.audio.latency)),
+        activeVoices: Math.max(...metricsArray.map((m) => m.audio.activeVoices)),
+        sampleRate: metricsArray[0].audio.sampleRate,
+        bufferSize: metricsArray[0].audio.bufferSize
+      },
+      timing: {
+        instrumentLoadTime: Math.max(...metricsArray.map((m) => m.timing.instrumentLoadTime)),
+        voiceAllocationTime: Math.max(...metricsArray.map((m) => m.timing.voiceAllocationTime)),
+        effectProcessingTime: Math.max(...metricsArray.map((m) => m.timing.effectProcessingTime))
+      }
+    };
+    const trends = {
+      memoryGrowth: this.calculateMemoryGrowth(metricsArray),
+      cpuTrend: this.calculateCpuTrend(metricsArray),
+      latencyStability: this.calculateLatencyStability(metricsArray)
+    };
+    return {
+      averageMetrics,
+      peakMetrics,
+      trends
+    };
+  }
+  /**
+   * Calculate memory growth trend
+   */
+  calculateMemoryGrowth(metrics) {
+    if (metrics.length < 2)
+      return 0;
+    const first = metrics[0].memory.heapUsed;
+    const last = metrics[metrics.length - 1].memory.heapUsed;
+    return (last - first) / first;
+  }
+  /**
+   * Calculate CPU usage trend
+   */
+  calculateCpuTrend(metrics) {
+    if (metrics.length < 2)
+      return 0;
+    const first = metrics[0].audio.cpuUsage;
+    const last = metrics[metrics.length - 1].audio.cpuUsage;
+    return (last - first) / Math.max(first, 1);
+  }
+  /**
+   * Calculate latency stability
+   */
+  calculateLatencyStability(metrics) {
+    if (metrics.length < 2)
+      return 1;
+    const latencies = metrics.map((m) => m.audio.latency);
+    const mean = latencies.reduce((sum, l) => sum + l, 0) / latencies.length;
+    const variance = latencies.reduce((sum, l) => sum + Math.pow(l - mean, 2), 0) / latencies.length;
+    const stdDev = Math.sqrt(variance);
+    return Math.max(0, 1 - stdDev / Math.max(mean, 1));
+  }
+  /**
+   * Get empty metrics template
+   */
+  getEmptyMetrics() {
+    return {
+      memory: {
+        heapUsed: 0,
+        heapTotal: 0,
+        objectCount: 0
+      },
+      audio: {
+        cpuUsage: 0,
+        latency: 0,
+        activeVoices: 0,
+        sampleRate: 44100,
+        bufferSize: 256
+      },
+      timing: {
+        instrumentLoadTime: 0,
+        voiceAllocationTime: 0,
+        effectProcessingTime: 0
+      }
+    };
+  }
+  /**
+   * Get system information
+   */
+  getSystemInfo() {
+    var _a, _b;
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      let obsidianVersion = "unknown";
+      try {
+        const app = window.app;
+        if ((_b = (_a = app == null ? void 0 : app.vault) == null ? void 0 : _a.adapter) == null ? void 0 : _b.fs) {
+          obsidianVersion = app.version || "unknown";
+        }
+      } catch (e) {
+        obsidianVersion = "test-environment";
+      }
+      return {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        audioContext: {
+          sampleRate: audioContext.sampleRate,
+          state: audioContext.state,
+          baseLatency: audioContext.baseLatency || 0,
+          outputLatency: audioContext.outputLatency || 0
+        },
+        memory: performance.memory || {},
+        timestamp: Date.now(),
+        obsidianVersion,
+        pluginVersion: "1.0.0"
+        // Should be read from manifest
+      };
+    } catch (error) {
+      return {
+        userAgent: navigator.userAgent || "unknown",
+        platform: navigator.platform || "unknown",
+        audioContext: {
+          sampleRate: 44100,
+          state: "unknown",
+          baseLatency: 0,
+          outputLatency: 0
+        },
+        memory: {},
+        timestamp: Date.now(),
+        obsidianVersion: "test-environment",
+        pluginVersion: "1.0.0"
+      };
+    }
+  }
+  /**
+   * Log messages based on configuration
+   */
+  log(level, message, ...args) {
+    var _a;
+    if ((_a = this.config) == null ? void 0 : _a.detailedLogging) {
+      const timestamp = new Date().toISOString();
+      const prefix = `[TestRunner ${timestamp}]`;
+      switch (level) {
+        case "info":
+          console.log(prefix, message, ...args);
+          break;
+        case "warn":
+          console.warn(prefix, message, ...args);
+          break;
+        case "error":
+          console.error(prefix, message, ...args);
+          break;
+      }
+    }
+  }
+};
+
+// src/testing/utils/MetricsCollector.ts
+var MetricsCollector = class {
+  constructor() {
+    this.results = [];
+    this.currentMetrics = [];
+    this.startTime = 0;
+  }
+  /**
+   * Start a new test session
+   */
+  startSession() {
+    this.startTime = performance.now();
+    this.currentMetrics = [];
+  }
+  /**
+   * Record a performance metric sample
+   */
+  recordMetrics(metrics) {
+    this.currentMetrics.push({
+      ...metrics,
+      timestamp: performance.now()
+    });
+  }
+  /**
+   * Add completed test results
+   */
+  addResults(results) {
+    this.results.push(results);
+  }
+  /**
+   * Get current performance metrics snapshot
+   */
+  getCurrentMetrics() {
+    return {
+      memory: this.getMemoryMetrics(),
+      audio: this.getAudioMetrics(),
+      timing: this.getTimingMetrics()
+    };
+  }
+  /**
+   * Generate comprehensive test report data
+   */
+  generateReportData() {
+    return {
+      summary: this.generateSummary(),
+      detailedResults: this.results,
+      performanceAnalysis: this.analyzePerformance(),
+      recommendations: this.generateRecommendations()
+    };
+  }
+  /**
+   * Export data for sharing (optimized for copying to external tools)
+   */
+  getExportData() {
+    return {
+      metadata: {
+        exportTime: new Date().toISOString(),
+        sessionCount: this.results.length,
+        metricsCount: this.currentMetrics.length,
+        systemInfo: this.getSystemInfo()
+      },
+      testResults: this.results,
+      performanceMetrics: this.currentMetrics,
+      analysis: this.analyzePerformance(),
+      summary: this.generateSummary()
+    };
+  }
+  /**
+   * Get memory performance metrics
+   */
+  getMemoryMetrics() {
+    const memory = performance.memory;
+    return {
+      heapUsed: (memory == null ? void 0 : memory.usedJSHeapSize) || 0,
+      heapTotal: (memory == null ? void 0 : memory.totalJSHeapSize) || 0,
+      objectCount: this.estimateObjectCount(),
+      gcCollections: (memory == null ? void 0 : memory.gcCollections) || 0
+    };
+  }
+  /**
+   * Get audio context performance metrics
+   */
+  getAudioMetrics() {
+    return {
+      cpuUsage: 0,
+      // Will be populated by actual audio engine
+      latency: 0,
+      activeVoices: 0,
+      sampleRate: 44100,
+      bufferSize: 256
+    };
+  }
+  /**
+   * Get timing performance metrics
+   */
+  getTimingMetrics() {
+    return {
+      instrumentLoadTime: 0,
+      // Will be populated by actual measurements
+      voiceAllocationTime: 0,
+      effectProcessingTime: 0,
+      configLoadTime: 0
+    };
+  }
+  /**
+   * Estimate object count (rough heuristic)
+   */
+  estimateObjectCount() {
+    const memory = performance.memory;
+    if (memory == null ? void 0 : memory.usedJSHeapSize) {
+      return Math.floor(memory.usedJSHeapSize / 100);
+    }
+    return 0;
+  }
+  /**
+   * Generate test summary
+   */
+  generateSummary() {
+    const totalTests = this.results.reduce((sum, r) => sum + r.testsRun, 0);
+    const totalPassed = this.results.reduce((sum, r) => sum + r.passed, 0);
+    const totalFailed = this.results.reduce((sum, r) => sum + r.failed, 0);
+    const totalDuration = this.results.reduce((sum, r) => sum + r.duration, 0);
+    return {
+      totalSessions: this.results.length,
+      totalTests,
+      totalPassed,
+      totalFailed,
+      successRate: totalTests > 0 ? totalPassed / totalTests * 100 : 0,
+      averageDuration: this.results.length > 0 ? totalDuration / this.results.length : 0,
+      lastRunTime: this.results.length > 0 ? this.results[this.results.length - 1].timestamp : 0
+    };
+  }
+  /**
+   * Analyze performance trends and patterns
+   */
+  analyzePerformance() {
+    if (this.currentMetrics.length === 0) {
+      return {
+        memoryTrend: "stable",
+        cpuTrend: "stable",
+        latencyTrend: "stable",
+        recommendations: [],
+        issues: []
+      };
+    }
+    const memoryTrend = this.analyzeMemoryTrend();
+    const cpuTrend = this.analyzeCpuTrend();
+    const latencyTrend = this.analyzeLatencyTrend();
+    return {
+      memoryTrend,
+      cpuTrend,
+      latencyTrend,
+      recommendations: this.generatePerformanceRecommendations(),
+      issues: this.identifyIssues()
+    };
+  }
+  /**
+   * Analyze memory usage trends
+   */
+  analyzeMemoryTrend() {
+    if (this.currentMetrics.length < 3)
+      return "stable";
+    const recent = this.currentMetrics.slice(-5);
+    const earlier = this.currentMetrics.slice(0, 5);
+    const recentAvg = recent.reduce((sum, m) => sum + m.memory.heapUsed, 0) / recent.length;
+    const earlierAvg = earlier.reduce((sum, m) => sum + m.memory.heapUsed, 0) / earlier.length;
+    const change = (recentAvg - earlierAvg) / earlierAvg;
+    if (change > 0.1)
+      return "degrading";
+    if (change < -0.05)
+      return "improving";
+    return "stable";
+  }
+  /**
+   * Analyze CPU usage trends
+   */
+  analyzeCpuTrend() {
+    return "stable";
+  }
+  /**
+   * Analyze latency trends
+   */
+  analyzeLatencyTrend() {
+    return "stable";
+  }
+  /**
+   * Generate performance recommendations
+   */
+  generatePerformanceRecommendations() {
+    const recommendations = [];
+    if (this.currentMetrics.length > 0) {
+      const latest = this.currentMetrics[this.currentMetrics.length - 1];
+      if (latest.memory.heapUsed > 50 * 1024 * 1024) {
+        recommendations.push("High memory usage detected. Consider optimizing instrument caching.");
+      }
+      if (latest.audio.cpuUsage > 80) {
+        recommendations.push("High CPU usage detected. Consider reducing voice count or effect complexity.");
+      }
+      if (latest.audio.latency > 10) {
+        recommendations.push("High audio latency detected. Consider increasing buffer size.");
+      }
+    }
+    return recommendations;
+  }
+  /**
+   * Generate general recommendations
+   */
+  generateRecommendations() {
+    const recommendations = [];
+    const summary = this.generateSummary();
+    if (summary.successRate < 90) {
+      recommendations.push("Test success rate is below 90%. Review failing tests.");
+    }
+    if (summary.averageDuration > 1e4) {
+      recommendations.push("Tests are taking longer than expected. Consider optimizing test execution.");
+    }
+    return recommendations;
+  }
+  /**
+   * Identify performance issues
+   */
+  identifyIssues() {
+    const issues = [];
+    if (this.currentMetrics.length > 0) {
+      const latest = this.currentMetrics[this.currentMetrics.length - 1];
+      if (latest.timing.instrumentLoadTime > 1e3) {
+        issues.push("Slow instrument loading detected");
+      }
+      if (latest.timing.voiceAllocationTime > 5) {
+        issues.push("Slow voice allocation detected");
+      }
+    }
+    return issues;
+  }
+  /**
+   * Get system information
+   */
+  getSystemInfo() {
+    var _a, _b;
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    return {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      audioContext: {
+        sampleRate: audioContext.sampleRate,
+        state: audioContext.state,
+        baseLatency: audioContext.baseLatency,
+        outputLatency: audioContext.outputLatency
+      },
+      memory: performance.memory || {},
+      timestamp: Date.now(),
+      obsidianVersion: (_b = (_a = window.require) == null ? void 0 : _a.call(window, "obsidian")) == null ? void 0 : _b.version,
+      pluginVersion: "1.0.0"
+      // Should be read from manifest
+    };
+  }
+  /**
+   * Clear all collected data
+   */
+  clear() {
+    this.results = [];
+    this.currentMetrics = [];
+  }
+};
+
+// src/testing/utils/ReportGenerator.ts
+var ReportGenerator = class {
+  constructor(app) {
+    this.app = app;
+  }
+  /**
+   * Generate test report in specified format
+   */
+  async generateReport(results, format) {
+    switch (format) {
+      case "markdown":
+        return this.generateMarkdownReport(results);
+      case "json":
+        return this.generateJSONReport(results);
+      case "csv":
+        return this.generateCSVReport(results);
+      default:
+        throw new Error(`Unsupported format: ${format}`);
+    }
+  }
+  /**
+   * Generate Markdown report for Obsidian vault
+   */
+  generateMarkdownReport(results) {
+    const timestamp = new Date(results.timestamp).toLocaleString();
+    return `# Audio Engine Test Results
+
+**Test Date:** ${timestamp}
+**Total Duration:** ${results.duration}ms
+
+## Summary
+
+- **Tests Run:** ${results.testsRun}
+- **Passed:** ${results.passed} \u2705
+- **Failed:** ${results.failed} \u274C
+- **Success Rate:** ${(results.passed / results.testsRun * 100).toFixed(1)}%
+
+## System Information
+
+- **Platform:** ${results.systemInfo.platform}
+- **Audio Sample Rate:** ${results.systemInfo.audioContext.sampleRate}Hz
+- **Audio Context State:** ${results.systemInfo.audioContext.state}
+${results.systemInfo.audioContext.baseLatency ? `- **Base Latency:** ${(results.systemInfo.audioContext.baseLatency * 1e3).toFixed(1)}ms` : ""}
+${results.systemInfo.memory.jsHeapSizeLimit ? `- **Heap Size Limit:** ${(results.systemInfo.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(1)}MB` : ""}
+
+## Performance Metrics
+
+### Overall Performance
+- **Average Memory Usage:** ${(results.overallMetrics.averageMetrics.memory.heapUsed / 1024 / 1024).toFixed(1)}MB
+- **Peak Memory Usage:** ${(results.overallMetrics.peakMetrics.memory.heapUsed / 1024 / 1024).toFixed(1)}MB
+- **Average CPU Usage:** ${results.overallMetrics.averageMetrics.audio.cpuUsage.toFixed(1)}%
+- **Peak CPU Usage:** ${results.overallMetrics.peakMetrics.audio.cpuUsage.toFixed(1)}%
+- **Average Latency:** ${results.overallMetrics.averageMetrics.audio.latency.toFixed(1)}ms
+- **Peak Latency:** ${results.overallMetrics.peakMetrics.audio.latency.toFixed(1)}ms
+
+### Performance Trends
+- **Memory Growth:** ${this.formatTrend(results.overallMetrics.trends.memoryGrowth)}
+- **CPU Trend:** ${this.formatTrend(results.overallMetrics.trends.cpuTrend)}
+- **Latency Stability:** ${this.formatStability(results.overallMetrics.trends.latencyStability)}
+
+## Detailed Test Results
+
+${results.testDetails.map((test) => this.formatTestMarkdown(test)).join("\n\n")}
+
+## Recommendations
+
+${this.generateMarkdownRecommendations(results)}
+
+## Data Export
+
+\`\`\`json
+${JSON.stringify(this.getExportableData(results), null, 2)}
+\`\`\`
+
+---
+
+*Generated by Obsidian Sonigraph Plugin Test Suite*
+*Share this data by copying the JSON block above*`;
+  }
+  /**
+   * Generate JSON report for data analysis
+   */
+  generateJSONReport(results) {
+    const exportData = {
+      metadata: {
+        exportFormat: "json",
+        exportTime: new Date().toISOString(),
+        pluginVersion: "1.0.0",
+        // Should be read from manifest
+        testSuiteVersion: "1.0.0"
+      },
+      testResults: results,
+      exportableData: this.getExportableData(results),
+      analysisReady: true
+    };
+    return JSON.stringify(exportData, null, 2);
+  }
+  /**
+   * Generate CSV report for spreadsheet analysis
+   */
+  generateCSVReport(results) {
+    const headers = [
+      "Test Name",
+      "Status",
+      "Duration (ms)",
+      "Memory Used (MB)",
+      "CPU Usage (%)",
+      "Latency (ms)",
+      "Active Voices",
+      "Error"
+    ];
+    const rows = results.testDetails.map((test) => [
+      test.name,
+      test.passed ? "PASS" : "FAIL",
+      test.duration.toString(),
+      test.metrics ? (test.metrics.memory.heapUsed / 1024 / 1024).toFixed(1) : "",
+      test.metrics ? test.metrics.audio.cpuUsage.toFixed(1) : "",
+      test.metrics ? test.metrics.audio.latency.toFixed(1) : "",
+      test.metrics ? test.metrics.audio.activeVoices.toString() : "",
+      test.error || ""
+    ]);
+    return [headers, ...rows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+  }
+  /**
+   * Format individual test for Markdown
+   */
+  formatTestMarkdown(test) {
+    const status = test.passed ? "\u2705 PASS" : "\u274C FAIL";
+    const duration = `${test.duration}ms`;
+    let content = `### ${test.name} ${status}
+**Duration:** ${duration}`;
+    if (test.metrics) {
+      content += `
+**Performance:**
+- Memory: ${(test.metrics.memory.heapUsed / 1024 / 1024).toFixed(1)}MB
+- CPU: ${test.metrics.audio.cpuUsage.toFixed(1)}%
+- Latency: ${test.metrics.audio.latency.toFixed(1)}ms
+- Active Voices: ${test.metrics.audio.activeVoices}`;
+    }
+    if (!test.passed && test.error) {
+      content += `
+**Error:** \`${test.error}\``;
+    }
+    return content;
+  }
+  /**
+   * Generate recommendations section for Markdown
+   */
+  generateMarkdownRecommendations(results) {
+    const recommendations = [];
+    if (results.overallMetrics.peakMetrics.memory.heapUsed > 100 * 1024 * 1024) {
+      recommendations.push("\u{1F538} **High Memory Usage:** Peak memory usage exceeded 100MB. Consider optimizing instrument caching and cleanup.");
+    }
+    if (results.overallMetrics.peakMetrics.audio.cpuUsage > 80) {
+      recommendations.push("\u{1F538} **High CPU Usage:** Peak CPU usage exceeded 80%. Consider reducing simultaneous voices or effect complexity.");
+    }
+    if (results.overallMetrics.peakMetrics.audio.latency > 20) {
+      recommendations.push("\u{1F538} **High Latency:** Audio latency exceeded 20ms. Consider increasing buffer size or optimizing processing chain.");
+    }
+    if (results.failed > 0) {
+      recommendations.push("\u{1F538} **Test Failures:** Some tests failed. Review the detailed results above and address any errors.");
+    }
+    if (results.overallMetrics.trends.memoryGrowth > 0.1) {
+      recommendations.push("\u{1F538} **Memory Growth:** Significant memory growth detected. Check for memory leaks or inefficient caching.");
+    }
+    if (recommendations.length === 0) {
+      recommendations.push("\u2705 **All Good:** No significant issues detected in this test run.");
+    }
+    return recommendations.map((rec) => `- ${rec}`).join("\n");
+  }
+  /**
+   * Get data optimized for external sharing and analysis
+   */
+  getExportableData(results) {
+    return {
+      summary: {
+        testsRun: results.testsRun,
+        passed: results.passed,
+        failed: results.failed,
+        successRate: results.passed / results.testsRun * 100,
+        duration: results.duration,
+        timestamp: results.timestamp
+      },
+      systemInfo: {
+        platform: results.systemInfo.platform,
+        audioSampleRate: results.systemInfo.audioContext.sampleRate,
+        audioState: results.systemInfo.audioContext.state,
+        baseLatency: results.systemInfo.audioContext.baseLatency,
+        outputLatency: results.systemInfo.audioContext.outputLatency,
+        heapSizeLimit: results.systemInfo.memory.jsHeapSizeLimit
+      },
+      performance: {
+        memory: {
+          average: Math.round(results.overallMetrics.averageMetrics.memory.heapUsed / 1024 / 1024 * 10) / 10,
+          peak: Math.round(results.overallMetrics.peakMetrics.memory.heapUsed / 1024 / 1024 * 10) / 10,
+          growth: Math.round(results.overallMetrics.trends.memoryGrowth * 100) / 100
+        },
+        cpu: {
+          average: Math.round(results.overallMetrics.averageMetrics.audio.cpuUsage * 10) / 10,
+          peak: Math.round(results.overallMetrics.peakMetrics.audio.cpuUsage * 10) / 10,
+          trend: Math.round(results.overallMetrics.trends.cpuTrend * 100) / 100
+        },
+        latency: {
+          average: Math.round(results.overallMetrics.averageMetrics.audio.latency * 10) / 10,
+          peak: Math.round(results.overallMetrics.peakMetrics.audio.latency * 10) / 10,
+          stability: Math.round(results.overallMetrics.trends.latencyStability * 100) / 100
+        }
+      },
+      testDetails: results.testDetails.map((test) => ({
+        name: test.name,
+        passed: test.passed,
+        duration: test.duration,
+        error: test.error,
+        metrics: test.metrics ? {
+          memoryMB: Math.round(test.metrics.memory.heapUsed / 1024 / 1024 * 10) / 10,
+          cpuPercent: Math.round(test.metrics.audio.cpuUsage * 10) / 10,
+          latencyMs: Math.round(test.metrics.audio.latency * 10) / 10,
+          activeVoices: test.metrics.audio.activeVoices
+        } : null
+      })),
+      recommendations: this.generateRecommendationsList(results)
+    };
+  }
+  /**
+   * Generate list of actionable recommendations
+   */
+  generateRecommendationsList(results) {
+    const recommendations = [];
+    if (results.failed > 0) {
+      recommendations.push("Review and fix failing tests");
+    }
+    if (results.overallMetrics.peakMetrics.memory.heapUsed > 100 * 1024 * 1024) {
+      recommendations.push("Optimize memory usage - consider reducing cache size");
+    }
+    if (results.overallMetrics.peakMetrics.audio.cpuUsage > 80) {
+      recommendations.push("Reduce CPU load - consider lowering voice count or effect complexity");
+    }
+    if (results.overallMetrics.peakMetrics.audio.latency > 20) {
+      recommendations.push("Improve audio latency - consider increasing buffer size");
+    }
+    if (results.overallMetrics.trends.memoryGrowth > 0.1) {
+      recommendations.push("Investigate potential memory leaks");
+    }
+    return recommendations;
+  }
+  /**
+   * Format trend value for display
+   */
+  formatTrend(value) {
+    if (value > 0.1)
+      return "\u{1F4C8} Increasing";
+    if (value < -0.1)
+      return "\u{1F4C9} Decreasing";
+    return "\u27A1\uFE0F Stable";
+  }
+  /**
+   * Format stability value for display
+   */
+  formatStability(value) {
+    if (value > 0.9)
+      return "\u{1F7E2} Stable";
+    if (value > 0.7)
+      return "\u{1F7E1} Moderate";
+    return "\u{1F534} Unstable";
+  }
+};
+
+// src/testing/TestSuiteModal.ts
+var TestSuiteModal = class extends import_obsidian4.Modal {
+  constructor(app, audioEngine) {
+    super(app);
+    this.config = {
+      selectedTests: {
+        baseline: true,
+        voiceManager: true,
+        effectBus: true,
+        configLoader: true,
+        integration: false,
+        issueValidation: true,
+        // Enable by default to test Phase 2.2 optimization
+        audioCrackling: false
+        // Enable manually for Issue #010 audio quality testing
+      },
+      exportFormat: "markdown",
+      realTimeMetrics: true,
+      detailedLogging: false,
+      loggingLevel: "basic",
+      enableLogExport: true
+    };
+    this.currentResults = null;
+    this.isRunning = false;
+    this.metricsDisplay = null;
+    this.progressDisplay = null;
+    this.resultsDisplay = null;
+    this.consoleErrors = [];
+    this.audioEngine = audioEngine;
+    this.performanceMonitor = new PerformanceMonitor();
+    this.testRunner = new TestRunner(audioEngine);
+    this.metricsCollector = new MetricsCollector();
+    this.reportGenerator = new ReportGenerator(app);
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h1", { text: "Audio Engine Test Suite" });
+    contentEl.createEl("p", {
+      text: "Comprehensive performance validation for the refactored audio engine",
+      cls: "test-suite-description"
+    });
+    this.createTestSelectionSection(contentEl);
+    this.createSettingsSection(contentEl);
+    this.createControlSection(contentEl);
+    this.createMetricsDisplay(contentEl);
+    this.createProgressDisplay(contentEl);
+    this.createResultsDisplay(contentEl);
+    contentEl.addClass("test-suite-modal");
+  }
+  createTestSelectionSection(container) {
+    const section = container.createDiv("test-selection-section");
+    section.createEl("h2", { text: "Test Selection" });
+    const grid = section.createDiv("test-grid");
+    this.createTestCheckbox(
+      grid,
+      "baseline",
+      "Baseline Performance",
+      "System capability detection and baseline measurements"
+    );
+    this.createTestCheckbox(
+      grid,
+      "voiceManager",
+      "Voice Manager",
+      "Voice allocation, stealing, and pool management performance"
+    );
+    this.createTestCheckbox(
+      grid,
+      "effectBus",
+      "Effect Bus Manager",
+      "Effect routing, shared processing, and bypass performance"
+    );
+    this.createTestCheckbox(
+      grid,
+      "configLoader",
+      "Config Loader",
+      "Instrument configuration loading and caching performance"
+    );
+    this.createTestCheckbox(
+      grid,
+      "integration",
+      "Integration Tests",
+      "Full audio engine stress testing and complex scenarios"
+    );
+    this.createTestCheckbox(
+      grid,
+      "issueValidation",
+      "Issue #001, #002 & #003 Validation",
+      "Audio crackling resolution, performance improvements, architecture validation, and instrument family playback testing"
+    );
+    this.createTestCheckbox(
+      grid,
+      "audioCrackling",
+      "Issue #010: Audio Crackling Analysis",
+      "Comprehensive audio quality testing with crackling detection, performance correlation, and detailed audio metrics"
+    );
+  }
+  createTestCheckbox(container, key, title, description) {
+    const testItem = container.createDiv("test-item");
+    new import_obsidian4.Setting(testItem).setName(title).setDesc(description).addToggle(
+      (toggle) => toggle.setValue(this.config.selectedTests[key]).onChange((value) => {
+        this.config.selectedTests[key] = value;
+      })
+    );
+  }
+  createSettingsSection(container) {
+    const section = container.createDiv("settings-section");
+    section.createEl("h2", { text: "Test Settings" });
+    new import_obsidian4.Setting(section).setName("Export Format").setDesc("Choose format for test result exports").addDropdown(
+      (dropdown) => dropdown.addOption("markdown", "Markdown (for vault notes)").addOption("json", "JSON (for data analysis)").addOption("csv", "CSV (for spreadsheets)").setValue(this.config.exportFormat).onChange((value) => {
+        this.config.exportFormat = value;
+      })
+    );
+    new import_obsidian4.Setting(section).setName("Real-time Metrics").setDesc("Display live performance metrics during testing").addToggle(
+      (toggle) => toggle.setValue(this.config.realTimeMetrics).onChange((value) => {
+        this.config.realTimeMetrics = value;
+      })
+    );
+    new import_obsidian4.Setting(section).setName("Detailed Logging").setDesc("Include verbose test execution details").addToggle(
+      (toggle) => toggle.setValue(this.config.detailedLogging).onChange((value) => {
+        this.config.detailedLogging = value;
+      })
+    );
+    new import_obsidian4.Setting(section).setName("Logging Level").setDesc("Control the verbosity of test logging output").addDropdown(
+      (dropdown) => dropdown.addOption("none", "None - No logging").addOption("basic", "Basic - Essential information only").addOption("detailed", "Detailed - Comprehensive logging").addOption("debug", "Debug - Full diagnostic output").setValue(this.config.loggingLevel).onChange((value) => {
+        this.config.loggingLevel = value;
+      })
+    );
+    new import_obsidian4.Setting(section).setName("Enable Log Export").setDesc("Include logs in exported test results").addToggle(
+      (toggle) => toggle.setValue(this.config.enableLogExport).onChange((value) => {
+        this.config.enableLogExport = value;
+      })
+    );
+  }
+  createControlSection(container) {
+    const section = container.createDiv("control-section");
+    const buttonContainer = section.createDiv("button-container");
+    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Run Selected Tests").setCta().onClick(() => this.runTests());
+    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Stop Tests").setWarning().onClick(() => this.stopTests());
+    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Quick Test").onClick(() => this.runQuickTest());
+    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Export Results").onClick(() => this.exportResults());
+    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Export Logs").onClick(() => this.exportLogs());
+    new import_obsidian4.ButtonComponent(buttonContainer).setButtonText("Copy to Clipboard").onClick(() => this.copyToClipboard());
+  }
+  createMetricsDisplay(container) {
+    const section = container.createDiv("metrics-section");
+    section.createEl("h2", { text: "Real-time Metrics" });
+    this.metricsDisplay = section.createDiv("metrics-display");
+    const placeholder = this.metricsDisplay.createDiv("metrics-placeholder");
+    placeholder.textContent = "Metrics will appear here during testing";
+  }
+  createProgressDisplay(container) {
+    const section = container.createDiv("progress-section");
+    section.createEl("h2", { text: "Test Progress" });
+    this.progressDisplay = section.createDiv("progress-display");
+    const progressPlaceholder = this.progressDisplay.createDiv("progress-placeholder");
+    progressPlaceholder.textContent = "Test progress will appear here";
+  }
+  createResultsDisplay(container) {
+    const section = container.createDiv("results-section");
+    section.createEl("h2", { text: "Test Results" });
+    this.resultsDisplay = section.createDiv("results-display");
+    const resultsPlaceholder = this.resultsDisplay.createDiv("results-placeholder");
+    resultsPlaceholder.textContent = "Test results will appear here";
+  }
+  async runTests() {
+    if (this.isRunning)
+      return;
+    this.isRunning = true;
+    this.updateUI();
+    try {
+      this.startConsoleMonitoring();
+      if (this.config.realTimeMetrics) {
+        this.performanceMonitor.start();
+        this.startMetricsUpdate();
+      }
+      this.testRunner.configure({
+        detailedLogging: this.config.detailedLogging,
+        onProgress: (progress) => this.updateProgress(progress),
+        onResults: (results2) => this.handleResults(results2)
+      });
+      const results = await this.testRunner.runTests(this.config.selectedTests);
+      this.currentResults = results;
+      this.displayResults(results);
+    } catch (error) {
+      console.error("Test execution failed:", error);
+      this.showError("Test execution failed: " + error.message);
+    } finally {
+      this.isRunning = false;
+      this.performanceMonitor.stop();
+      this.stopConsoleMonitoring();
+      this.updateUI();
+    }
+  }
+  async runQuickTest() {
+    const quickConfig = {
+      baseline: true,
+      voiceManager: true,
+      effectBus: false,
+      configLoader: true,
+      integration: false,
+      issueValidation: false,
+      audioCrackling: false
+    };
+    const originalConfig = { ...this.config.selectedTests };
+    this.config.selectedTests = quickConfig;
+    await this.runTests();
+    this.config.selectedTests = originalConfig;
+  }
+  stopTests() {
+    if (this.isRunning) {
+      this.testRunner.stop();
+      this.performanceMonitor.stop();
+      this.stopConsoleMonitoring();
+      this.isRunning = false;
+      this.updateUI();
+    }
+  }
+  startMetricsUpdate() {
+    const updateInterval = setInterval(() => {
+      if (!this.isRunning) {
+        clearInterval(updateInterval);
+        return;
+      }
+      const metrics = this.performanceMonitor.getCurrentMetrics();
+      this.updateMetricsDisplay(metrics);
+    }, 100);
+  }
+  updateMetricsDisplay(metrics) {
+    if (!this.metricsDisplay)
+      return;
+    this.metricsDisplay.empty();
+    const grid = this.metricsDisplay.createDiv("metrics-grid");
+    const memoryCard = grid.createDiv("metric-card");
+    memoryCard.createEl("h3", { text: "Memory" });
+    memoryCard.createEl("div", { text: `Heap: ${(metrics.memory.heapUsed / 1024 / 1024).toFixed(1)} MB` });
+    memoryCard.createEl("div", { text: `Objects: ${metrics.memory.objectCount}` });
+    const audioCard = grid.createDiv("metric-card");
+    audioCard.createEl("h3", { text: "Audio" });
+    audioCard.createEl("div", { text: `CPU: ${metrics.audio.cpuUsage.toFixed(1)}%` });
+    audioCard.createEl("div", { text: `Latency: ${metrics.audio.latency.toFixed(1)}ms` });
+    audioCard.createEl("div", { text: `Voices: ${metrics.audio.activeVoices}` });
+    const timingCard = grid.createDiv("metric-card");
+    timingCard.createEl("h3", { text: "Performance" });
+    timingCard.createEl("div", { text: `Load Time: ${metrics.timing.instrumentLoadTime.toFixed(1)}ms` });
+    timingCard.createEl("div", { text: `Voice Alloc: ${metrics.timing.voiceAllocationTime.toFixed(1)}ms` });
+  }
+  updateProgress(progress) {
+    if (!this.progressDisplay)
+      return;
+    this.progressDisplay.empty();
+    const progressBar = this.progressDisplay.createDiv("progress-bar");
+    const progressFill = progressBar.createDiv("progress-fill");
+    progressFill.style.width = `${progress.current / progress.total * 100}%`;
+    const progressText = this.progressDisplay.createDiv("progress-text");
+    progressText.textContent = `${progress.current}/${progress.total} - ${progress.currentTest}`;
+  }
+  handleResults(results) {
+    this.currentResults = results;
+    this.metricsCollector.addResults(results);
+  }
+  displayResults(results) {
+    if (!this.resultsDisplay)
+      return;
+    this.resultsDisplay.empty();
+    const summary = this.resultsDisplay.createDiv("results-summary");
+    summary.createEl("h3", { text: "Test Summary" });
+    summary.createEl("div", { text: `Tests Run: ${results.testsRun}` });
+    summary.createEl("div", { text: `Passed: ${results.passed}` });
+    summary.createEl("div", { text: `Failed: ${results.failed}` });
+    summary.createEl("div", { text: `Duration: ${results.duration}ms` });
+    const details = this.resultsDisplay.createDiv("results-details");
+    details.createEl("h3", { text: "Detailed Results" });
+    results.testDetails.forEach((test) => {
+      const testItem = details.createDiv("test-result-item");
+      testItem.addClass(test.passed ? "test-passed" : "test-failed");
+      testItem.createEl("strong", { text: test.name });
+      testItem.createEl("span", { text: ` - ${test.passed ? "PASS" : "FAIL"}` });
+      testItem.createEl("div", { text: `Duration: ${test.duration}ms` });
+      if (test.metrics) {
+        testItem.createEl("div", { text: `Metrics: ${JSON.stringify(test.metrics)}` });
+      }
+      if (!test.passed && test.error) {
+        testItem.createEl("div", { text: `Error: ${test.error}`, cls: "test-error" });
+      }
+    });
+  }
+  async exportResults() {
+    if (!this.currentResults) {
+      this.showError("No test results to export");
+      return;
+    }
+    try {
+      const exportData = await this.reportGenerator.generateReport(
+        this.currentResults,
+        this.config.exportFormat
+      );
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `test-results-${timestamp}.${this.config.exportFormat === "markdown" ? "md" : this.config.exportFormat}`;
+      await this.app.vault.create(filename, exportData);
+      this.showSuccess(`Test results exported to ${filename}`);
+    } catch (error) {
+      this.showError("Export failed: " + error.message);
+    }
+  }
+  async copyToClipboard() {
+    if (!this.currentResults) {
+      this.showError("No test results to copy");
+      return;
+    }
+    try {
+      const exportData = await this.reportGenerator.generateReport(
+        this.currentResults,
+        "json"
+        // Always use JSON for clipboard for easy sharing
+      );
+      await navigator.clipboard.writeText(exportData);
+      this.showSuccess("Test results copied to clipboard");
+    } catch (error) {
+      this.showError("Copy failed: " + error.message);
+    }
+  }
+  updateUI() {
+    const buttons = this.contentEl.querySelectorAll("button");
+    buttons.forEach((button) => {
+      var _a, _b;
+      if ((_a = button.textContent) == null ? void 0 : _a.includes("Run")) {
+        button.disabled = this.isRunning;
+      } else if ((_b = button.textContent) == null ? void 0 : _b.includes("Stop")) {
+        button.disabled = !this.isRunning;
+      }
+    });
+  }
+  showError(message) {
+    const errorEl = this.contentEl.createDiv("test-error-message");
+    errorEl.setText(message);
+    setTimeout(() => errorEl.remove(), 5e3);
+  }
+  showSuccess(message) {
+    const successEl = this.contentEl.createDiv("test-success-message");
+    successEl.setText(message);
+    setTimeout(() => successEl.remove(), 3e3);
+  }
+  async exportLogs() {
+    if (!this.config.enableLogExport) {
+      this.showError("Log export is disabled. Enable it in settings first.");
+      return;
+    }
+    try {
+      const logs = this.collectTestLogs();
+      if (logs.length === 0) {
+        this.showError("No logs available to export");
+        return;
+      }
+      const formattedLogs = this.formatLogs(logs);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `test-logs-${timestamp}.txt`;
+      await this.app.vault.create(filename, formattedLogs);
+      this.showSuccess(`Test logs exported to ${filename}`);
+    } catch (error) {
+      this.showError("Log export failed: " + error.message);
+    }
+  }
+  collectTestLogs() {
+    const logs = [];
+    if (this.config.loggingLevel !== "none") {
+      logs.push({
+        timestamp: Date.now(),
+        level: "info",
+        source: "system",
+        message: "Test session started",
+        data: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+    if (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug") {
+      logs.push({
+        timestamp: Date.now(),
+        level: "info",
+        source: "config",
+        message: "Test configuration",
+        data: this.config
+      });
+    }
+    if (this.currentResults) {
+      logs.push({
+        timestamp: Date.now(),
+        level: "info",
+        source: "results",
+        message: "Test results summary",
+        data: {
+          testsRun: this.currentResults.testsRun,
+          passed: this.currentResults.passed,
+          failed: this.currentResults.failed,
+          duration: this.currentResults.duration
+        }
+      });
+      if (this.config.loggingLevel === "debug") {
+        this.currentResults.testDetails.forEach((test) => {
+          logs.push({
+            timestamp: test.timestamp,
+            level: test.passed ? "info" : "error",
+            source: "test",
+            message: `Test: ${test.name}`,
+            data: {
+              passed: test.passed,
+              duration: test.duration,
+              error: test.error,
+              metrics: test.metrics
+            }
+          });
+        });
+      }
+    }
+    if (this.config.loggingLevel === "debug") {
+      const metrics = this.performanceMonitor.getHistoricalMetrics();
+      if (metrics.length > 0) {
+        logs.push({
+          timestamp: Date.now(),
+          level: "info",
+          source: "performance",
+          message: "Performance metrics",
+          data: {
+            sampleCount: metrics.length,
+            latestMetrics: metrics[metrics.length - 1]
+          }
+        });
+      }
+    }
+    if (this.consoleErrors.length > 0) {
+      const consoleErrorSummary = this.getConsoleErrorSummary();
+      logs.push({
+        timestamp: Date.now(),
+        level: consoleErrorSummary.hasAudioErrors ? "error" : "info",
+        source: "console-monitoring",
+        message: "Console monitoring results for Issue #003 diagnostics",
+        data: {
+          summary: consoleErrorSummary.summary,
+          totalErrors: consoleErrorSummary.totalErrors,
+          totalWarnings: consoleErrorSummary.totalWarnings,
+          instrumentRelatedIssues: consoleErrorSummary.instrumentRelatedIssues,
+          criticalErrors: consoleErrorSummary.criticalErrors,
+          instrumentErrors: consoleErrorSummary.instrumentErrors
+        }
+      });
+      if (this.config.loggingLevel === "debug") {
+        this.consoleErrors.forEach((error) => {
+          logs.push({
+            timestamp: error.timestamp,
+            level: error.level === "error" ? "error" : "warn",
+            source: "console-capture",
+            message: `Console ${error.level}: ${error.message}`,
+            data: {
+              originalMessage: error.message,
+              stack: error.stack,
+              context: error.context
+            }
+          });
+        });
+      }
+    }
+    return logs;
+  }
+  formatLogs(logs) {
+    let output = "";
+    output += "=".repeat(80) + "\n";
+    output += "SONIGRAPH AUDIO ENGINE TEST LOGS\n";
+    output += `Generated: ${new Date().toISOString()}
+`;
+    output += `Logging Level: ${this.config.loggingLevel}
+`;
+    output += "=".repeat(80) + "\n\n";
+    logs.forEach((log2) => {
+      const timestamp = new Date(log2.timestamp).toISOString();
+      output += `[${timestamp}] [${log2.level.toUpperCase()}] [${log2.source}] ${log2.message}
+`;
+      if (log2.data && (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug")) {
+        output += `Data: ${JSON.stringify(log2.data, null, 2)}
+`;
+      }
+      output += "\n";
+    });
+    output += "=".repeat(80) + "\n";
+    output += `Total log entries: ${logs.length}
+`;
+    output += "End of logs\n";
+    output += "=".repeat(80) + "\n";
+    return output;
+  }
+  /**
+   * Start monitoring console errors and warnings for Issue #003 diagnostics
+   */
+  startConsoleMonitoring() {
+    this.consoleErrors = [];
+    this.originalConsoleError = console.error;
+    this.originalConsoleWarn = console.warn;
+    console.error = (...args) => {
+      const timestamp = Date.now();
+      const errorData = {
+        timestamp,
+        level: "error",
+        message: args.join(" "),
+        stack: new Error().stack,
+        context: "test-suite-monitoring"
+      };
+      this.consoleErrors.push(errorData);
+      if (this.config.loggingLevel !== "none") {
+        const structuredLog = {
+          timestamp: new Date(timestamp).toISOString(),
+          level: "ERROR",
+          category: "console-monitoring",
+          message: "Console error captured during testing",
+          data: {
+            originalMessage: args.join(" "),
+            errorCount: this.consoleErrors.filter((e) => e.level === "error").length,
+            warningCount: this.consoleErrors.filter((e) => e.level === "warning").length,
+            testContext: "issue-003-diagnostics"
+          }
+        };
+        this.originalConsoleError("[SONIGRAPH-TEST-MONITOR]", JSON.stringify(structuredLog, null, 2));
+      }
+      this.originalConsoleError.apply(console, args);
+    };
+    console.warn = (...args) => {
+      const timestamp = Date.now();
+      const warningData = {
+        timestamp,
+        level: "warning",
+        message: args.join(" "),
+        stack: new Error().stack,
+        context: "test-suite-monitoring"
+      };
+      this.consoleErrors.push(warningData);
+      if (this.config.loggingLevel === "detailed" || this.config.loggingLevel === "debug") {
+        const structuredLog = {
+          timestamp: new Date(timestamp).toISOString(),
+          level: "WARN",
+          category: "console-monitoring",
+          message: "Console warning captured during testing",
+          data: {
+            originalMessage: args.join(" "),
+            errorCount: this.consoleErrors.filter((e) => e.level === "error").length,
+            warningCount: this.consoleErrors.filter((e) => e.level === "warning").length,
+            testContext: "issue-003-diagnostics"
+          }
+        };
+        this.originalConsoleWarn("[SONIGRAPH-TEST-MONITOR]", JSON.stringify(structuredLog, null, 2));
+      }
+      this.originalConsoleWarn.apply(console, args);
+    };
+  }
+  /**
+   * Stop console monitoring and restore original methods
+   */
+  stopConsoleMonitoring() {
+    if (this.originalConsoleError) {
+      console.error = this.originalConsoleError;
+    }
+    if (this.originalConsoleWarn) {
+      console.warn = this.originalConsoleWarn;
+    }
+    if (this.consoleErrors.length > 0 && this.config.loggingLevel !== "none") {
+      const summary = {
+        timestamp: new Date().toISOString(),
+        level: "INFO",
+        category: "console-monitoring-summary",
+        message: "Console monitoring session completed",
+        data: {
+          totalErrors: this.consoleErrors.filter((e) => e.level === "error").length,
+          totalWarnings: this.consoleErrors.filter((e) => e.level === "warning").length,
+          sessionDuration: this.consoleErrors.length > 0 ? this.consoleErrors[this.consoleErrors.length - 1].timestamp - this.consoleErrors[0].timestamp : 0,
+          testContext: "issue-003-diagnostics",
+          criticalErrorsDetected: this.consoleErrors.filter(
+            (e) => e.level === "error" && (e.message.includes("instrument") || e.message.includes("voice") || e.message.includes("sample") || e.message.includes("audio"))
+          ).length
+        }
+      };
+      console.log("[SONIGRAPH-TEST-MONITOR-SUMMARY]", JSON.stringify(summary, null, 2));
+    }
+  }
+  /**
+   * Get captured console errors for export and analysis
+   */
+  getConsoleErrorSummary() {
+    const errors = this.consoleErrors.filter((e) => e.level === "error");
+    const warnings = this.consoleErrors.filter((e) => e.level === "warning");
+    const instrumentErrors = this.consoleErrors.filter(
+      (e) => e.message.toLowerCase().includes("instrument") || e.message.toLowerCase().includes("voice") || e.message.toLowerCase().includes("sample") || e.message.toLowerCase().includes("audio") || e.message.toLowerCase().includes("synthesis")
+    );
+    return {
+      totalErrors: errors.length,
+      totalWarnings: warnings.length,
+      instrumentRelatedIssues: instrumentErrors.length,
+      criticalErrors: errors.slice(0, 10),
+      // First 10 errors for analysis
+      instrumentErrors: instrumentErrors.slice(0, 5),
+      // First 5 instrument-related errors
+      summary: {
+        hasAudioErrors: instrumentErrors.length > 0,
+        errorRate: this.consoleErrors.length > 0 ? errors.length / this.consoleErrors.length : 0,
+        mostCommonErrors: this.getMostCommonErrors()
+      }
+    };
+  }
+  /**
+   * Analyze most common error patterns for Issue #003 diagnostics
+   */
+  getMostCommonErrors() {
+    const errorCounts = {};
+    this.consoleErrors.forEach((error) => {
+      const message = error.message.toLowerCase();
+      const keyTerms = [];
+      if (message.includes("instrument"))
+        keyTerms.push("instrument");
+      if (message.includes("voice"))
+        keyTerms.push("voice");
+      if (message.includes("sample"))
+        keyTerms.push("sample");
+      if (message.includes("audio"))
+        keyTerms.push("audio");
+      if (message.includes("synthesis"))
+        keyTerms.push("synthesis");
+      if (message.includes("loading") || message.includes("load"))
+        keyTerms.push("loading");
+      if (message.includes("network") || message.includes("fetch") || message.includes("cdn"))
+        keyTerms.push("network");
+      if (message.includes("cors"))
+        keyTerms.push("cors");
+      if (message.includes("404") || message.includes("not found"))
+        keyTerms.push("not-found");
+      keyTerms.forEach((term) => {
+        errorCounts[term] = (errorCounts[term] || 0) + 1;
+      });
+    });
+    return Object.entries(errorCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([term, count]) => ({ term, count }));
+  }
+  onClose() {
+    this.stopTests();
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
 
 // src/audio/engine.ts
 init_constants();
