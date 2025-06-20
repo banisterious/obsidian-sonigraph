@@ -303,36 +303,78 @@ class ElevenLabsGenerator implements SampleSourceAdapter {
 interface NbrosowskyConfig {
   baseUrl: 'https://nbrosowsky.github.io/tonejs-instruments/samples/';
   primaryFormat: 'ogg';        // 899 OGG files available
-  fallbackFormat: 'wav';       // 44 WAV files available  
+  fallbackFormat: 'wav';       // Not available (documentation discrepancy)
   unsupportedFormat: 'mp3';    // Only 16 MP3 references (mostly documentation)
-  totalInstruments: 19;        // Piano, strings, brass, woodwinds, etc.
+  totalInstruments: 23;        // Piano, strings, brass, woodwinds, etc.
   licenseType: 'MIT/CC-by-3.0'; // Code: MIT, Samples: CC-by-3.0
 }
 ```
 
-**Sample Repository Structure:**
+**Complete Sample Repository Structure (899 OGG files):**
 ```
 samples/
 ├── bass-electric/     # 17 OGG samples (As1-G4)
 ├── bassoon/          # 10 OGG samples (A2-G4)  
-├── cello/            # 33 OGG samples (A2-Gs4)
+├── cello/            # 40 OGG samples (A2-Gs4)
 ├── clarinet/         # 11 OGG samples (As3-Fs6)
-├── contrabass/       # 12 OGG samples (A2-G1)
-├── flute/            # 16 OGG samples (A5-C4)
-├── french-horn/      # 18 OGG samples (A2-F5)
-├── guitar-acoustic/  # 48 OGG samples (A3-F5)
-├── guitar-electric/  # 15 OGG samples (As2-Fs4)
-├── guitar-nylon/     # 40 OGG samples (A3-C6)
-├── harmonium/        # 16 OGG samples (C3-B4)
-├── harp/             # 47 OGG samples (C1-G7)
-├── organ/            # 16 OGG samples (C3-B4)
-├── piano/            # 88 OGG samples (A0-C8)
-├── saxophone/        # 26 OGG samples (As3-A5)
-├── trombone/         # 12 OGG samples (As1-Gs4)
-├── trumpet/          # 16 OGG samples (C4-As5)
-├── tuba/             # 8 OGG samples (As1-Fs3)
-└── violin/           # 45 OGG samples (A4-C7)
+├── contrabass/       # 13 OGG samples (As1-Gs3)
+├── flute/            # 10 OGG samples (A4-E6)
+├── french-horn/      # 10 OGG samples (A1-F5)
+├── guitar-acoustic/  # 38 OGG samples (D2-Gs4)
+├── guitar-electric/  # 16 OGG samples (A2-Fs5)
+├── guitar-nylon/     # 26 OGG samples (B1-Gs5)
+├── harmonium/        # 33 OGG samples (A2-Gs4)
+├── harp/             # 20 OGG samples (E1-G5)
+├── organ/            # 20 OGG samples (A1-Fs5)
+├── piano/            # 86 OGG samples (A1-Gs7)
+├── saxophone/        # 33 OGG samples (A4-Gs5)
+├── trombone/         # 17 OGG samples (As1-Gs3)
+├── trumpet/          # 11 OGG samples (F3-C6)
+├── tuba/             # 9 OGG samples (F1-F3)
+├── violin/           # 15 OGG samples (A3-G6)
+└── xylophone/        # 8 OGG samples (G4, C5-C8, G5-G7)
 ```
+
+**Detailed File Inventory by Instrument:**
+
+**Strings Family:**
+- **violin/**: 15 samples (A3.ogg, A4.ogg, A5.ogg, A6.ogg, C4.ogg, C5.ogg, C6.ogg, C7.ogg, E4.ogg, E5.ogg, E6.ogg, G3.ogg, G4.ogg, G5.ogg, G6.ogg)
+- **cello/**: 40 samples (A2.ogg-Gs4.ogg range with comprehensive chromatic coverage plus variants)
+- **contrabass/**: 13 samples (As1.ogg, A2.ogg, B3.ogg, C2.ogg, Cs3.ogg, D2.ogg, E2.ogg, E3.ogg, Fs1.ogg, Fs2.ogg, G1.ogg, Gs2.ogg, Gs3.ogg)
+- **harp/**: 20 samples (A2.ogg, A4.ogg, A6.ogg, B1.ogg, B3.ogg, B5.ogg, B6.ogg, C3.ogg, C5.ogg, D2.ogg, D4.ogg, D6.ogg, D7.ogg, E1.ogg, E3.ogg, E5.ogg, F2.ogg, F4.ogg, F6.ogg, F7.ogg, G1.ogg, G3.ogg, G5.ogg)
+
+**Guitar Family:**
+- **guitar-acoustic/**: 38 samples (A2.ogg-Gs4.ogg comprehensive coverage)
+- **guitar-electric/**: 16 samples (A2.ogg-Fs5.ogg selective coverage)  
+- **guitar-nylon/**: 26 samples (B1.ogg-Gs5.ogg classical guitar range)
+- **bass-electric/**: 17 samples (As1.ogg-G4.ogg electric bass range)
+
+**Keyboard Family:**
+- **piano/**: 86 samples (A1.ogg-Gs7.ogg near-complete piano range)
+- **organ/**: 20 samples (A1.ogg-Fs5.ogg church organ range)
+- **harmonium/**: 33 samples (A2.ogg-Gs4.ogg complete harmonium range)
+
+**Brass Family:**
+- **trumpet/**: 11 samples (A3.ogg, A5.ogg, As4.ogg, C4.ogg, C6.ogg, D5.ogg, Ds4.ogg, F3.ogg, F4.ogg, F5.ogg, G4.ogg)
+- **french-horn/**: 10 samples (A1.ogg, A3.ogg, C2.ogg, C4.ogg, D3.ogg, D5.ogg, Ds2.ogg, F3.ogg, F5.ogg, G2.ogg)
+- **trombone/**: 17 samples (As1.ogg-Gs3.ogg comprehensive trombone range)
+- **tuba/**: 9 samples (As1.ogg, As2.ogg, As3.ogg, D3.ogg, D4.ogg, Ds2.ogg, F1.ogg, F2.ogg, F3.ogg)
+
+**Woodwind Family:**
+- **flute/**: 10 samples (A4.ogg-E6.ogg flute range)
+- **clarinet/**: 11 samples (As3.ogg-Fs6.ogg clarinet range)
+- **saxophone/**: 33 samples (A4.ogg-Gs5.ogg complete saxophone range)
+- **bassoon/**: 10 samples (A2.ogg-G4.ogg bassoon range)
+
+**Percussion Family:**
+- **xylophone/**: 8 samples only (C5.ogg, C6.ogg, C7.ogg, C8.ogg, G4.ogg, G5.ogg, G6.ogg, G7.ogg)
+
+**Missing Instruments (Gap Analysis):**
+- **Timpani**: No directory exists (requires synthesis fallback)
+- **Vibraphone**: No directory exists (requires synthesis fallback)  
+- **Gongs**: No directory exists (requires synthesis fallback)
+- **Choir/Vocals**: No vocal samples available
+- **Electronic Synths**: No electronic/synthesizer samples
 
 **Format Reality vs. Documentation:**
 - **Library Claims:** Supports `.[mp3|ogg]` with MP3 as primary, OGG as fallback
