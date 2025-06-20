@@ -27502,12 +27502,33 @@ var AudioCracklingTests = class {
     this.testResults = [];
     console.log("\u{1F50A} Starting Issue #010 Audio Crackling Analysis");
     try {
-      await this.testAudioContextHealth();
-      await this.testBaselineAudioQuality();
-      await this.testInstrumentFamilyCrackling();
-      await this.testExtendedPlaybackStress();
-      await this.testPerformanceCorrelation();
-      await this.testVoiceAllocationImpact();
+      const testSequence = [
+        { name: "Audio Context Health Check", fn: () => this.testAudioContextHealth(), timeout: 3e3 },
+        { name: "Baseline Audio Quality Test", fn: () => this.testBaselineAudioQuality(), timeout: 5e3 },
+        { name: "Instrument Family Crackling Test", fn: () => this.testInstrumentFamilyCrackling(), timeout: 8e3 },
+        { name: "Extended Playback Stress Test", fn: () => this.testExtendedPlaybackStress(), timeout: 6e3 },
+        { name: "Performance Correlation Analysis", fn: () => this.testPerformanceCorrelation(), timeout: 5e3 },
+        { name: "Voice Allocation Impact Test", fn: () => this.testVoiceAllocationImpact(), timeout: 4e3 }
+      ];
+      for (const test of testSequence) {
+        try {
+          console.log(`\u{1F50A} Running ${test.name}...`);
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(`Individual test timeout: ${test.name}`)), test.timeout);
+          });
+          await Promise.race([test.fn(), timeoutPromise]);
+        } catch (testError) {
+          console.error(`\u274C ${test.name} failed:`, testError);
+          this.testResults.push({
+            name: test.name,
+            passed: false,
+            duration: 0,
+            timestamp: Date.now(),
+            error: testError.message,
+            metrics: void 0
+          });
+        }
+      }
       console.log(`\u2705 Issue #010 Audio Crackling Analysis completed: ${this.testResults.length} tests`);
     } catch (error) {
       console.error("\u274C Issue #010 Audio Crackling Analysis failed:", error);
@@ -27574,9 +27595,15 @@ var AudioCracklingTests = class {
       console.log("\u{1F50A} Starting baseline audio quality test...");
       const initialMetrics = this.capturePerformanceSnapshot();
       try {
-        await this.audioEngine.playTestNote(440);
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        this.audioEngine.stop();
+        const audioTestPromise = (async () => {
+          await this.audioEngine.playTestNote(440);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          this.audioEngine.stop();
+        })();
+        const audioTimeout = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Audio engine timeout")), 2e3);
+        });
+        await Promise.race([audioTestPromise, audioTimeout]);
       } catch (audioError) {
         console.warn("Audio engine test note failed, using simulation:", audioError);
         await new Promise((resolve) => setTimeout(resolve, 300));
@@ -27632,9 +27659,15 @@ var AudioCracklingTests = class {
         const familyStartTime = performance.now();
         const initialMetrics = this.capturePerformanceSnapshot();
         try {
-          await this.audioEngine.playTestNote(440);
-          await new Promise((resolve) => setTimeout(resolve, 400));
-          this.audioEngine.stop();
+          const familyTestPromise = (async () => {
+            await this.audioEngine.playTestNote(440);
+            await new Promise((resolve) => setTimeout(resolve, 400));
+            this.audioEngine.stop();
+          })();
+          const familyTimeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Family test timeout")), 1e3);
+          });
+          await Promise.race([familyTestPromise, familyTimeout]);
         } catch (audioError) {
           await new Promise((resolve) => setTimeout(resolve, 200));
         }
@@ -27691,11 +27724,17 @@ var AudioCracklingTests = class {
         snapshots.push(snapshot);
         console.log(`\u{1F4CA} Snapshot at ${i}ms:`, snapshot.metrics);
         try {
-          await this.audioEngine.playTestNote(440 + i / 100);
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          this.audioEngine.stop();
+          const stressTestPromise = (async () => {
+            await this.audioEngine.playTestNote(440 + i / 100);
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            this.audioEngine.stop();
+          })();
+          const stressTimeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Stress test timeout")), 1200);
+          });
+          await Promise.race([stressTestPromise, stressTimeout]);
         } catch (audioError) {
-          await new Promise((resolve) => setTimeout(resolve, snapshotInterval));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
       const memoryTrend = this.analyzeMetricTrend(snapshots, "memoryUsage");
@@ -27747,9 +27786,15 @@ var AudioCracklingTests = class {
         const testStartTime = performance.now();
         const beforeMetrics = this.capturePerformanceSnapshot();
         try {
-          await this.audioEngine.playTestNote(440);
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          this.audioEngine.stop();
+          const loadTestPromise = (async () => {
+            await this.audioEngine.playTestNote(440);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            this.audioEngine.stop();
+          })();
+          const loadTimeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Load test timeout")), 1e3);
+          });
+          await Promise.race([loadTestPromise, loadTimeout]);
         } catch (audioError) {
           await new Promise((resolve) => setTimeout(resolve, 300));
         }
@@ -27806,9 +27851,15 @@ var AudioCracklingTests = class {
         const testStartTime = performance.now();
         const beforeMetrics = this.capturePerformanceSnapshot();
         try {
-          await this.audioEngine.playTestNote(440);
-          await new Promise((resolve) => setTimeout(resolve, 700));
-          this.audioEngine.stop();
+          const voiceTestPromise = (async () => {
+            await this.audioEngine.playTestNote(440);
+            await new Promise((resolve) => setTimeout(resolve, 700));
+            this.audioEngine.stop();
+          })();
+          const voiceTimeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Voice allocation test timeout")), 1200);
+          });
+          await Promise.race([voiceTestPromise, voiceTimeout]);
         } catch (audioError) {
           await new Promise((resolve) => setTimeout(resolve, 400));
         }
