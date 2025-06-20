@@ -10,6 +10,7 @@ import { BaselineTests } from '../performance/BaselineTests';
 import { ComponentTests } from '../performance/ComponentTests';
 import { AudioEngineTests } from '../integration/AudioEngineTests';
 import { IssueValidationTests } from '../integration/IssueValidationTests';
+import { AudioCracklingTests } from '../integration/AudioCracklingTests';
 import { TestResults, TestDetail, PerformanceMetrics } from './MetricsCollector';
 
 export interface TestRunnerConfig {
@@ -33,6 +34,7 @@ export interface TestSelection {
     configLoader: boolean;
     integration: boolean;
     issueValidation: boolean;
+    audioCrackling: boolean;
 }
 
 export class TestRunner {
@@ -48,6 +50,7 @@ export class TestRunner {
     private componentTests: ComponentTests;
     private audioEngineTests: AudioEngineTests;
     private issueValidationTests: IssueValidationTests;
+    private audioCracklingTests: AudioCracklingTests;
 
     constructor(audioEngine: AudioEngine) {
         this.audioEngine = audioEngine;
@@ -55,6 +58,7 @@ export class TestRunner {
         this.componentTests = new ComponentTests(audioEngine);
         this.audioEngineTests = new AudioEngineTests(audioEngine);
         this.issueValidationTests = new IssueValidationTests(audioEngine);
+        this.audioCracklingTests = new AudioCracklingTests(audioEngine);
     }
 
     /**
@@ -158,6 +162,17 @@ export class TestRunner {
                     total
                 );
                 testDetails.push(...issueResults);
+            }
+
+            // Run audio crackling tests
+            if (selection.audioCrackling && !this.shouldStop) {
+                const cracklingResults = await this.runTestGroup(
+                    'Audio Crackling Analysis',
+                    () => this.audioCracklingTests.runAll(),
+                    current++,
+                    total
+                );
+                testDetails.push(...cracklingResults);
             }
 
             // Calculate results
@@ -274,6 +289,7 @@ export class TestRunner {
         if (selection.configLoader) total++;
         if (selection.integration) total++;
         if (selection.issueValidation) total++;
+        if (selection.audioCrackling) total++;
         return total;
     }
 
