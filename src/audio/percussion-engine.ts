@@ -1,4 +1,4 @@
-import { Sampler, Filter, Volume, LFO, Envelope, PitchShift, Reverb, Delay, Oscillator, now } from 'tone';
+import { Sampler, Filter, Volume, LFO, Envelope, PitchShift, Reverb, Delay, Oscillator, now, PolySynth, AMSynth } from 'tone';
 import { getLogger } from '../logging';
 
 const logger = getLogger('percussion-engine');
@@ -45,9 +45,11 @@ export class PercussionEngine {
 	private gongResonators: Map<string, Filter> = new Map();
 	
 	private masterVolume: Volume;
+	private audioFormat: 'wav' | 'ogg' | 'mp3';
 	
-	constructor(masterVolume: Volume) {
+	constructor(masterVolume: Volume, audioFormat: 'wav' | 'ogg' | 'mp3' = 'wav') {
 		this.masterVolume = masterVolume;
+		this.audioFormat = audioFormat;
 		logger.debug('initialization', 'PercussionEngine created');
 	}
 
@@ -68,17 +70,25 @@ export class PercussionEngine {
 	}
 
 	private async initializeTimpani(): Promise<void> {
-		// Create timpani with advanced pitch bending capabilities
+		// NOTE: Timpani samples don't exist on nbrosowsky CDN - using synthesis fallback
+		logger.warn('timpani', 'Timpani samples not available on CDN, using synthesis fallback');
+		
+		// Create synthetic timpani using FMSynth for deep, resonant tones
 		const timpaniSizes = ['small', 'medium', 'large'];
 		
 		for (const size of timpaniSizes) {
-			const sampler = new Sampler({
-				urls: {
-					"C2": "C2.mp3", "F2": "F2.mp3", "Bb2": "Bb2.mp3", "D3": "D3.mp3"
-				},
-				baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/",
-				release: 4.0
+			// Use synthesis instead of samples since timpani directory doesn't exist on CDN
+			const synth = new PolySynth({
+				voice: AMSynth,
+				options: {
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2.0 },
+					volume: -12 // Lower volume for timpani character
+				}
 			});
+			
+			// Store as sampler for compatibility (PolySynth has same interface)
+			this.timpaniSamplers.set(size, synth as any);
 
 			// Advanced pitch shifting for timpani tuning
 			const pitchShifter = new PitchShift({
@@ -93,10 +103,10 @@ export class PercussionEngine {
 				wet: 0.6
 			});
 
-			// Chain: Sampler -> PitchShift -> Reverb -> Master
-			sampler.chain(pitchShifter, hallReverb, this.masterVolume);
+			// Chain: Synth -> PitchShift -> Reverb -> Master
+			synth.chain(pitchShifter, hallReverb, this.masterVolume);
 			
-			this.timpaniSamplers.set(size, sampler);
+			this.timpaniSamplers.set(size, synth as any);
 			this.timpaniPitchShifters.set(size, pitchShifter);
 		}
 
@@ -105,12 +115,11 @@ export class PercussionEngine {
 
 	private async initializeXylophone(): Promise<void> {
 		// Xylophone with advanced mallet articulation
+		// Note: Only using notes that actually exist on nbrosowsky CDN
 		const sampler = new Sampler({
 			urls: {
-				"C4": "C4.mp3", "D4": "D4.mp3", "E4": "E4.mp3", "F4": "F4.mp3",
-				"G4": "G4.mp3", "A4": "A4.mp3", "B4": "B4.mp3", "C5": "C5.mp3",
-				"D5": "D5.mp3", "E5": "E5.mp3", "F5": "F5.mp3", "G5": "G5.mp3",
-				"A5": "A5.mp3", "B5": "B5.mp3", "C6": "C6.mp3", "D6": "D6.mp3"
+				"G4": `G4.${this.audioFormat}`, "C5": `C5.${this.audioFormat}`, "G5": `G5.${this.audioFormat}`, 
+				"C6": `C6.${this.audioFormat}`, "G6": `G6.${this.audioFormat}`, "C7": `C7.${this.audioFormat}`, "G7": `G7.${this.audioFormat}`, "C8": `C8.${this.audioFormat}`
 			},
 			baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/",
 			release: 2.5
@@ -147,16 +156,21 @@ export class PercussionEngine {
 	}
 
 	private async initializeVibraphone(): Promise<void> {
-		// Vibraphone with motor tremolo simulation
-		const sampler = new Sampler({
-			urls: {
-				"F3": "F3.mp3", "A3": "A3.mp3", "C4": "C4.mp3",
-				"E4": "E4.mp3", "G4": "G4.mp3", "B4": "B4.mp3",
-				"D5": "D5.mp3", "F5": "F5.mp3", "A5": "A5.mp3"
-			},
-			baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vibraphone/",
-			release: 6.0
+		// NOTE: Vibraphone samples don't exist on nbrosowsky CDN - using synthesis fallback
+		logger.warn('vibraphone', 'Vibraphone samples not available on CDN, using synthesis fallback');
+		
+		// Create synthetic vibraphone using metallic synthesis
+		const synth = new PolySynth({
+			voice: AMSynth,
+			options: {
+				oscillator: { type: 'triangle' },
+				envelope: { attack: 0.001, decay: 0.2, sustain: 0.8, release: 3.0 },
+				volume: -8 // Moderate volume for vibraphone character
+			}
 		});
+		
+		// Store as sampler for compatibility
+		this.vibraphoneSamplers.set('main', synth as any);
 
 		// Motor tremolo LFO
 		const motorLFO = new LFO({
@@ -184,23 +198,28 @@ export class PercussionEngine {
 			wet: 0.5
 		});
 
-		sampler.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
-		
-		this.vibraphoneSamplers.set('main', sampler);
+		synth.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
 		this.vibraphoneMotors.set('main', motorLFO);
 
 		logger.debug('vibraphone', 'Vibraphone initialization complete');
 	}
 
 	private async initializeGongs(): Promise<void> {
-		// Gongs with massive resonance and shimmer
-		const sampler = new Sampler({
-			urls: {
-				"C2": "C2.mp3", "F2": "F2.mp3", "C3": "C3.mp3"
-			},
-			baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/gong/",
-			release: 12.0
+		// NOTE: Gong samples don't exist on nbrosowsky CDN - using synthesis fallback  
+		logger.warn('gongs', 'Gong samples not available on CDN, using synthesis fallback');
+		
+		// Create synthetic gongs using complex metallic synthesis
+		const synth = new PolySynth({
+			voice: AMSynth,
+			options: {
+				oscillator: { type: 'square' },
+				envelope: { attack: 0.01, decay: 1.0, sustain: 0.3, release: 8.0 },
+				volume: -6 // Higher volume for gong character
+			}
 		});
+		
+		// Store as sampler for compatibility
+		this.gongSamplers.set('main', synth as any);
 
 		// Complex resonance filter for metallic shimmer
 		const resonator = new Filter({
@@ -220,9 +239,7 @@ export class PercussionEngine {
 		// Shimmer delay for metallic texture
 		const shimmerDelay = new Delay(0.3);
 
-		sampler.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
-		
-		this.gongSamplers.set('main', sampler);
+		synth.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
 		this.gongResonators.set('main', resonator);
 
 		logger.debug('gongs', 'Gongs initialization complete');
@@ -333,6 +350,52 @@ export class PercussionEngine {
 		}
 
 		logger.debug('dynamics', `Adjusted percussion dynamics: ${dynamics}`);
+	}
+
+	/**
+	 * Update audio format and re-initialize all percussion instruments
+	 * Issue #005 Fix: Ensures percussion engines use correct sample format
+	 */
+	async updateAudioFormat(format: 'wav' | 'ogg' | 'mp3'): Promise<void> {
+		if (this.audioFormat === format) {
+			return; // No change needed
+		}
+
+		logger.debug('format-update', `Updating percussion audio format from ${this.audioFormat} to ${format}`);
+		
+		// Store the new format
+		this.audioFormat = format;
+		
+		// Dispose existing samplers
+		[this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers]
+			.forEach(map => {
+				for (const [key, sampler] of map) {
+					sampler.dispose();
+				}
+				map.clear();
+			});
+
+		// Clear processors that depend on samplers
+		[this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators]
+			.forEach(map => {
+				for (const [key, processor] of map) {
+					if (processor.dispose) processor.dispose();
+				}
+				map.clear();
+			});
+
+		// Re-initialize all instruments with new format
+		try {
+			await this.initializeTimpani();
+			await this.initializeXylophone();
+			await this.initializeVibraphone();
+			await this.initializeGongs();
+			
+			logger.info('format-update', `Successfully updated percussion engine to ${format} format`);
+		} catch (error) {
+			logger.error('format-update', `Failed to re-initialize percussion with ${format} format`, error);
+			throw error;
+		}
 	}
 
 	dispose(): void {
