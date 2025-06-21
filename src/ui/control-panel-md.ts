@@ -403,6 +403,8 @@ export class MaterialControlPanelModal extends Modal {
 		this.contentContainer.appendChild(card.getElement());
 	}
 
+	private audioModeValueElement: HTMLElement | null = null;
+
 	private createAudioSystemCard(): void {
 		const card = new MaterialCard({
 			title: 'Audio System',
@@ -412,12 +414,28 @@ export class MaterialControlPanelModal extends Modal {
 		});
 
 		const content = card.getContent();
+		
+		// High Quality Samples Setting (moved from Global Settings)
+		createObsidianToggle(
+			content,
+			this.plugin.settings.useHighQualitySamples,
+			(enabled) => this.handleHighQualitySamplesChange(enabled),
+			{
+				name: 'Use High Quality Samples',
+				description: 'Load professional audio recordings when available (19/34 instruments). Uses built-in synthesis for remaining instruments. Audio format chosen automatically.'
+			}
+		);
+		
 		const systemInfo = content.createDiv({ cls: 'osp-system-info' });
+		systemInfo.style.marginTop = 'var(--md-space-4)';
 
-		// Audio format
+		// Audio format status
 		const formatRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		formatRow.createSpan({ text: 'Audio Format:', cls: 'osp-info-label' });
-		formatRow.createSpan({ text: this.plugin.settings.audioFormat || 'Default', cls: 'osp-info-value' });
+		formatRow.createSpan({ text: 'Audio Mode:', cls: 'osp-info-label' });
+		this.audioModeValueElement = formatRow.createSpan({ 
+			text: this.plugin.settings.useHighQualitySamples ? 'High Quality Samples' : 'Synthesis Only', 
+			cls: 'osp-info-value' 
+		});
 
 		// Sample rate (mock for now)
 		const sampleRateRow = systemInfo.createDiv({ cls: 'osp-info-row' });
@@ -644,18 +662,23 @@ export class MaterialControlPanelModal extends Modal {
 		this.plugin.saveSettings();
 	}
 
-	private handleAudioFormatChange(format: string): void {
-		logger.info('settings', `Audio format changed to ${format}`);
-		this.plugin.settings.audioFormat = format as 'synthesis' | 'mp3' | 'wav';
+	private handleHighQualitySamplesChange(enabled: boolean): void {
+		logger.info('settings', `High quality samples setting changed to ${enabled}`);
+		this.plugin.settings.useHighQualitySamples = enabled;
 		this.plugin.saveSettings();
 		
-		// Update audio engine with new audio format setting
+		// Update audio engine with new sample setting
 		if (this.plugin.audioEngine) {
 			this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			logger.debug('ui', 'Audio engine settings updated after audio format change', { 
-				audioFormat: format,
-				action: 'audio-format-change'
+			logger.debug('ui', 'Audio engine settings updated after high quality samples change', { 
+				useHighQualitySamples: enabled,
+				action: 'high-quality-samples-change'
 			});
+		}
+		
+		// Immediately update the audio mode display text
+		if (this.audioModeValueElement) {
+			this.audioModeValueElement.textContent = enabled ? 'High Quality Samples' : 'Synthesis Only';
 		}
 	}
 
@@ -668,26 +691,9 @@ export class MaterialControlPanelModal extends Modal {
 		});
 		
 		const globalContent = globalCard.getContent();
-		
-		// Audio Format Setting
-		const audioFormatGroup = globalContent.createDiv({ cls: 'osp-control-group' });
-		audioFormatGroup.createEl('label', { text: 'Audio Format', cls: 'osp-control-label' });
-		const formatSelect = audioFormatGroup.createEl('select', { cls: 'osp-select' });
-		[
-			{ value: 'synthesis', text: 'Synthesis Only' },
-			{ value: 'mp3', text: 'MP3' },
-			{ value: 'wav', text: 'WAV' }
-		].forEach(format => {
-			const option = formatSelect.createEl('option', { value: format.value, text: format.text });
-			if (format.value === this.plugin.settings.audioFormat) option.selected = true;
-		});
-		formatSelect.addEventListener('change', () => {
-			this.handleAudioFormatChange(formatSelect.value);
-		});
 
 		// Bulk Action Chips
 		const globalChipSet = globalContent.createDiv({ cls: 'ospcc-chip-set' });
-		globalChipSet.style.marginTop = 'var(--md-space-4)';
 		
 		const enableAllChip = new ActionChip({
 			text: 'Enable All Instruments',

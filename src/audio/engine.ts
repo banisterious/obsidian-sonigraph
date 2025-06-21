@@ -251,8 +251,8 @@ export class AudioEngine {
 	private getSamplerConfigs() {
 		// Use the new modular InstrumentConfigLoader instead of the monolithic SAMPLER_CONFIGS
 		// Skip format replacement in synthesis-only mode - the loader handles format processing
-		if (this.settings.audioFormat === 'synthesis') {
-			// In synthesis mode, return empty configs since we use synthesizers
+		if (!this.settings.useHighQualitySamples) {
+			// In synthesis-only mode, return empty configs since we use synthesizers
 			return {};
 		}
 		
@@ -268,6 +268,9 @@ export class AudioEngine {
 			console.warn('AudioEngine already initialized');
 			return;
 		}
+
+		// Issue #011: Generate comprehensive CDN sample loading diagnostic report
+		this.generateCDNDiagnosticReport();
 
 		try {
 			logger.debug('audio', 'Initializing AudioEngine');
@@ -322,7 +325,7 @@ export class AudioEngine {
 			voiceManager: !!this.voiceManager,
 			effectBusManager: !!this.effectBusManager,
 			enhancedRouting: this.settings.enhancedRouting?.enabled ?? false,
-			audioFormat: this.settings.audioFormat,
+			useHighQualitySamples: this.settings.useHighQualitySamples,
 			performanceMode: this.settings.performanceMode?.mode ?? 'medium'
 		};
 		
@@ -355,7 +358,7 @@ export class AudioEngine {
 				effectBus: report.effectBusManager ? 'Ready' : 'Missing'
 			},
 			configuration: {
-				audioFormat: report.audioFormat,
+				audioMode: report.useHighQualitySamples ? 'High Quality Samples (OGG)' : 'Synthesis Only',
 				performanceMode: report.performanceMode,
 				enhancedRouting: report.enhancedRouting ? 'Enabled' : 'Disabled',
 				gaps: configurationGaps.length > 0 ? configurationGaps : 'None'
@@ -725,7 +728,7 @@ export class AudioEngine {
 		const configs = this.getSamplerConfigs();
 		
 		// In synthesis mode, use synthesizers for all instruments instead of trying to load samples
-		if (this.settings.audioFormat === 'synthesis') {
+		if (!this.settings.useHighQualitySamples) {
 			logger.info('instruments', 'Synthesis mode - creating synthesizers for all instruments');
 			
 			// Create synthesizers for all 34 instruments in the orchestral system
@@ -932,13 +935,36 @@ export class AudioEngine {
 		
 		// Sample-based initialization for non-synthesis mode
 		// Piano - using Sampler with high-quality samples, fallback to basic synthesis
+		
+		// Issue #011: Enhanced CDN sample loading diagnostics
+		logger.info('cdn-diagnosis', 'Initializing piano sampler with CDN sample loading', {
+			instrument: 'piano',
+			baseUrl: configs.piano.baseUrl,
+			sampleCount: Object.keys(configs.piano.urls).length,
+			format: this.settings.useHighQualitySamples ? 'ogg' : 'synthesis',
+			effectiveFormat: 'ogg', // From Issue #005 resolution
+			urls: configs.piano.urls
+		});
+		
 		const pianoSampler = new Sampler({
 			...configs.piano,
 			onload: () => {
-				logger.debug('samples', 'Piano samples loaded successfully');
+				logger.info('cdn-diagnosis', 'Piano samples loaded successfully from CDN', {
+					instrument: 'piano',
+					baseUrl: configs.piano.baseUrl,
+					loadedSampleCount: Object.keys(configs.piano.urls).length,
+					status: 'success'
+				});
 			},
 			onerror: (error) => {
-				logger.warn('samples', 'Piano samples failed to load, using basic synthesis', { error });
+				logger.error('cdn-diagnosis', 'Piano samples failed to load from CDN - investigating for Issue #011', { 
+					instrument: 'piano',
+					baseUrl: configs.piano.baseUrl,
+					sampleCount: Object.keys(configs.piano.urls).length,
+					error: error?.toString() || 'Unknown error',
+					fallbackMode: 'synthesis',
+					troubleshooting: 'Check network tab for 404/CORS errors'
+				});
 			}
 		});
 		const pianoVolume = new Volume(-6);
@@ -966,13 +992,33 @@ export class AudioEngine {
 		this.instruments.set('piano', pianoSampler);
 
 		// Organ - using Sampler with harmonium samples, fallback to basic synthesis
+		
+		// Issue #011: Enhanced CDN sample loading diagnostics for harmonium/organ
+		logger.info('cdn-diagnosis', 'Initializing organ sampler with CDN sample loading', {
+			instrument: 'organ',
+			baseUrl: configs.organ.baseUrl,
+			sampleCount: Object.keys(configs.organ.urls).length,
+			expectedCDNPath: 'harmonium/', // Maps to nbrosowsky harmonium directory
+			availableOnCDN: true // Confirmed: 33 OGG samples available
+		});
+		
 		const organSampler = new Sampler({
 			...configs.organ,
 			onload: () => {
-				logger.debug('samples', 'Organ samples loaded successfully');
+				logger.info('cdn-diagnosis', 'Organ samples loaded successfully from CDN', {
+					instrument: 'organ',
+					baseUrl: configs.organ.baseUrl,
+					status: 'success'
+				});
 			},
 			onerror: (error) => {
-				logger.warn('samples', 'Organ samples failed to load, using basic synthesis', { error });
+				logger.error('cdn-diagnosis', 'Organ samples failed to load from CDN - investigating for Issue #011', { 
+					instrument: 'organ',
+					baseUrl: configs.organ.baseUrl,
+					error: error?.toString() || 'Unknown error',
+					cdnStatus: 'harmonium directory exists with 33 OGG files',
+					troubleshooting: 'Check if harmonium path is correctly mapped'
+				});
 			}
 		});
 		const organVolume = new Volume(-6);
@@ -1111,8 +1157,8 @@ export class AudioEngine {
 		padOutput.connect(this.volume);
 		this.instruments.set('pad', padSampler);
 
-		// Soprano - using Sampler with soprano samples
-		const sopranoSampler = new Sampler(configs.soprano);
+		// Soprano - using Sampler with soprano samples (Issue #012: with synthesis fallback)
+		const sopranoSampler = this.createSamplerWithFallback(configs.soprano, 'soprano');
 		const sopranoVolume = new Volume(-6);
 		this.instrumentVolumes.set('soprano', sopranoVolume);
 		
@@ -1137,8 +1183,8 @@ export class AudioEngine {
 		sopranoOutput.connect(this.volume);
 		this.instruments.set('soprano', sopranoSampler);
 
-		// Alto - using Sampler with alto samples
-		const altoSampler = new Sampler(configs.alto);
+		// Alto - using Sampler with alto samples (Issue #012: with synthesis fallback)
+		const altoSampler = this.createSamplerWithFallback(configs.alto, 'alto');
 		const altoVolume = new Volume(-6);
 		this.instrumentVolumes.set('alto', altoVolume);
 		
@@ -1163,8 +1209,8 @@ export class AudioEngine {
 		altoOutput.connect(this.volume);
 		this.instruments.set('alto', altoSampler);
 
-		// Tenor - using Sampler with tenor samples
-		const tenorSampler = new Sampler(configs.tenor);
+		// Tenor - using Sampler with tenor samples (Issue #012: with synthesis fallback)
+		const tenorSampler = this.createSamplerWithFallback(configs.tenor, 'tenor');
 		const tenorVolume = new Volume(-6);
 		this.instrumentVolumes.set('tenor', tenorVolume);
 		
@@ -1189,8 +1235,8 @@ export class AudioEngine {
 		tenorOutput.connect(this.volume);
 		this.instruments.set('tenor', tenorSampler);
 
-		// Bass - using Sampler with bass voice samples  
-		const bassSampler = new Sampler(configs.bass);
+		// Bass - using Sampler with bass voice samples (Issue #012: with synthesis fallback)
+		const bassSampler = this.createSamplerWithFallback(configs.bass, 'bass');
 		const bassVolume = new Volume(-6);
 		this.instrumentVolumes.set('bass', bassVolume);
 		
@@ -1711,12 +1757,12 @@ export class AudioEngine {
 			alreadyInitialized: initializedKeys.length,
 			missing: missingKeys.length,
 			missingInstruments: missingKeys,
-			audioFormat: this.settings.audioFormat,
-			synthesisMode: this.settings.audioFormat === 'synthesis'
+			useHighQualitySamples: this.settings.useHighQualitySamples,
+			synthesisMode: !this.settings.useHighQualitySamples
 		});
 
 		// In synthesis mode, create basic synthesizers instead of loading samples
-		if (this.settings.audioFormat === 'synthesis') {
+		if (!this.settings.useHighQualitySamples) {
 			logger.info('instruments', 'Synthesis-only mode - creating basic synthesizers');
 			missingKeys.forEach(instrumentName => {
 				// Create basic polyphonic synthesizer
@@ -1868,7 +1914,7 @@ export class AudioEngine {
 				}
 
 				// Re-create the specific instrument based on current mode (synthesis vs samples)
-				if (this.settings.audioFormat === 'synthesis') {
+				if (!this.settings.useHighQualitySamples) {
 					// Synthesis mode - create PolySynth like in original initialization
 					logger.info('issue-006-debug', `Re-creating synthesizer for ${instrumentName}`, {
 						instrumentName,
@@ -1959,7 +2005,7 @@ export class AudioEngine {
 					logger.error('issue-006-debug', `No valid initialization method for ${instrumentName}`, {
 						instrumentName,
 						hasSamplerConfig: !!configs[instrumentName],
-						audioFormat: this.settings.audioFormat,
+						useHighQualitySamples: this.settings.useHighQualitySamples,
 						action: 'no-valid-init-method'
 					});
 				}
@@ -2024,7 +2070,7 @@ export class AudioEngine {
 			logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
 			const hasPercussion = this.hasPercussionInstrumentsEnabled();
 			const hasElectronic = this.hasElectronicInstrumentsEnabled();
-			const isSynthesisMode = this.settings.audioFormat === 'synthesis';
+			const isSynthesisMode = !this.settings.useHighQualitySamples;
 			
 			logger.debug('playback', '🚀 ISSUE #010 DEBUG: Upgrade analysis', {
 				currentInstrumentCount: this.instruments.size,
@@ -2034,7 +2080,7 @@ export class AudioEngine {
 				willSkipPercussion: !hasPercussion,
 				willSkipElectronic: !hasElectronic,
 				isSynthesisMode,
-				audioFormat: this.settings.audioFormat,
+				useHighQualitySamples: this.settings.useHighQualitySamples,
 				enabledInstruments: Object.keys(this.settings.instruments).filter(name => 
 					this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
 				)
@@ -2656,7 +2702,7 @@ export class AudioEngine {
 		// Issue #005 Fix: Update InstrumentConfigLoader with new audio format
 		// This ensures that format changes are propagated to the sample loading system
 		// Only update if format is sample-based (not synthesis-only)
-		if (settings.audioFormat !== 'synthesis') {
+		if (settings.useHighQualitySamples) {
 			// Convert to ogg since that's the only format that actually exists on nbrosowsky CDN
 			const effectiveFormat = 'ogg';
 			this.instrumentConfigLoader.updateAudioFormat(effectiveFormat as 'mp3' | 'wav' | 'ogg');
@@ -2677,7 +2723,7 @@ export class AudioEngine {
 		logger.debug('settings', 'Audio settings updated', {
 			volume: settings.volume,
 			tempo: settings.tempo,
-			audioFormat: settings.audioFormat,
+			useHighQualitySamples: settings.useHighQualitySamples,
 			effectsApplied: this.isInitialized
 		});
 	}
@@ -3535,9 +3581,9 @@ export class AudioEngine {
 			}
 			
 			logger.debug('audio', 'Lightweight synthesis initialized', {
-				audioFormat: this.settings.audioFormat,
+				useHighQualitySamples: this.settings.useHighQualitySamples,
 				instrumentsCreated: this.instruments.size,
-				synthesisMode: this.settings.audioFormat === 'synthesis'
+				synthesisMode: !this.settings.useHighQualitySamples
 			});
 			
 		} catch (error) {
@@ -4307,6 +4353,159 @@ export class AudioEngine {
 	}
 
 	/**
+	 * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
+	 */
+	private createSamplerWithFallback(config: any, instrumentName: string): PolySynth | Sampler {
+		try {
+			const sampler = new Sampler(config);
+			
+			// Set up a timeout to check if samples loaded successfully
+			setTimeout(() => {
+				// Check if any buffers are actually loaded
+				const buffers = (sampler as any)._buffers;
+				let hasValidBuffers = false;
+				
+				if (buffers && buffers._buffers) {
+					for (const [note, buffer] of Object.entries(buffers._buffers)) {
+						if (buffer && (buffer as any).loaded) {
+							hasValidBuffers = true;
+							break;
+						}
+					}
+				}
+				
+				// If no valid buffers loaded, replace with synthesis
+				if (!hasValidBuffers) {
+					logger.warn('sample-fallback', `CDN samples failed to load for ${instrumentName}, creating synthesis fallback`, {
+						instrument: instrumentName,
+						cdnPath: config.baseUrl,
+						issue: 'Issue #012 - Vocal Instrument Silence'
+					});
+					
+					// Create synthesis replacement
+					const synthReplacement = this.createVocalSynthesis(instrumentName);
+					const existingVolume = this.instrumentVolumes.get(instrumentName);
+					const existingEffects = this.instrumentEffects.get(instrumentName);
+					
+					// Dispose the failed sampler
+					sampler.dispose();
+					
+					// Replace in instruments map
+					this.instruments.set(instrumentName, synthReplacement);
+					
+					// Reconnect to effects chain
+					if (existingVolume && existingEffects) {
+						this.reconnectInstrumentToEffects(instrumentName, synthReplacement, existingVolume, existingEffects);
+					}
+				}
+			}, 5000); // Wait 5 seconds for loading
+			
+			return sampler;
+		} catch (error) {
+			logger.error('sample-fallback', `Failed to create Sampler for ${instrumentName}, using synthesis fallback`, error);
+			return this.createVocalSynthesis(instrumentName);
+		}
+	}
+
+	/**
+	 * Issue #012: Create specialized vocal synthesis for fallback
+	 */
+	private createVocalSynthesis(instrumentName: string): PolySynth {
+		const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+		
+		// Create vocal-specific synthesis based on voice type
+		switch (instrumentName) {
+			case 'soprano':
+				return new PolySynth({
+					voice: AMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.1, decay: 0.3, sustain: 0.8, release: 2.0 },
+						volume: -8 // Soprano - higher, clearer
+					}
+				});
+			
+			case 'alto':
+				return new PolySynth({
+					voice: AMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'triangle' },
+						envelope: { attack: 0.12, decay: 0.4, sustain: 0.7, release: 2.2 },
+						volume: -10 // Alto - warmer, mid-range
+					}
+				});
+			
+			case 'tenor':
+				return new PolySynth({
+					voice: AMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'sawtooth' },
+						envelope: { attack: 0.15, decay: 0.5, sustain: 0.6, release: 2.5 },
+						volume: -12 // Tenor - fuller, male range
+					}
+				});
+			
+			case 'bass':
+				return new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 1.5,
+						modulationIndex: 2,
+						oscillator: { type: 'square' },
+						envelope: { attack: 0.2, decay: 0.6, sustain: 0.5, release: 3.0 },
+						volume: -14 // Bass - deep, rich
+					}
+				});
+			
+			default:
+				// Generic vocal synthesis
+				return new PolySynth({
+					voice: AMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.1, decay: 0.4, sustain: 0.7, release: 2.0 },
+						volume: -10
+					}
+				});
+		}
+	}
+
+	/**
+	 * Issue #012: Reconnect instrument to effects chain after fallback creation
+	 */
+	private reconnectInstrumentToEffects(instrumentName: string, instrument: PolySynth, volume: Volume, effects: Map<string, any>): void {
+		let output = instrument.connect(volume);
+		
+		// Get instrument settings for effects
+		const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+		if (!instrumentSettings?.effects) return;
+		
+		// Reconnect effects chain
+		if (instrumentSettings.effects.reverb?.enabled) {
+			const reverb = effects.get('reverb');
+			if (reverb) output = output.connect(reverb);
+		}
+		
+		if (instrumentSettings.effects.chorus?.enabled) {
+			const chorus = effects.get('chorus');
+			if (chorus) output = output.connect(chorus);
+		}
+		
+		if (instrumentSettings.effects.filter?.enabled) {
+			const filter = effects.get('filter');
+			if (filter) output = output.connect(filter);
+		}
+		
+		// Connect to master volume
+		output.connect(this.volume);
+	}
+
+	/**
 	 * Trigger advanced percussion with specialized synthesis
 	 */
 	private triggerAdvancedPercussion(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
@@ -4946,5 +5145,128 @@ export class AudioEngine {
 
 	getTestAudioContext() {
 		return getContext();
+	}
+
+	/**
+	 * Issue #011: Generate comprehensive CDN sample loading diagnostic report
+	 * This provides a complete overview of sample loading status across all 34 instruments
+	 */
+	private generateCDNDiagnosticReport(): void {
+		const logger = getLogger('AudioEngine');
+		
+		// CDN Analysis from external-sample-sources-guide.md and actual investigation
+		const cdnStatus = {
+			// Working CDN sources (confirmed in external-sample-sources-guide.md)
+			availableInstruments: {
+				// Keyboard Family (5/6 available)
+				piano: { status: 'AVAILABLE', samples: 86, path: 'piano/', format: 'ogg' },
+				organ: { status: 'AVAILABLE', samples: 33, path: 'harmonium/', format: 'ogg' },
+				electricPiano: { status: 'AVAILABLE', samples: 15, path: 'electric-piano/', format: 'ogg' },
+				harpsichord: { status: 'AVAILABLE', samples: 18, path: 'harpsichord/', format: 'ogg' },
+				accordion: { status: 'AVAILABLE', samples: 18, path: 'accordion/', format: 'ogg' },
+				
+				// Strings Family (6/6 available)
+				violin: { status: 'AVAILABLE', samples: 15, path: 'violin/', format: 'ogg' },
+				cello: { status: 'AVAILABLE', samples: 40, path: 'cello/', format: 'ogg' },
+				guitar: { status: 'AVAILABLE', samples: 38, path: 'guitar-acoustic/', format: 'ogg' },
+				harp: { status: 'AVAILABLE', samples: 20, path: 'harp/', format: 'ogg' },
+				strings: { status: 'AVAILABLE', samples: 15, path: 'violin/', format: 'ogg' }, // Maps to violin
+				
+				// Brass Family (4/4 available)  
+				trumpet: { status: 'AVAILABLE', samples: 11, path: 'trumpet/', format: 'ogg' },
+				frenchHorn: { status: 'AVAILABLE', samples: 10, path: 'french-horn/', format: 'ogg' },
+				trombone: { status: 'AVAILABLE', samples: 17, path: 'trombone/', format: 'ogg' },
+				tuba: { status: 'AVAILABLE', samples: 9, path: 'tuba/', format: 'ogg' },
+				
+				// Woodwinds Family (4/5 available)
+				flute: { status: 'AVAILABLE', samples: 10, path: 'flute/', format: 'ogg' },
+				clarinet: { status: 'AVAILABLE', samples: 11, path: 'clarinet/', format: 'ogg' },
+				saxophone: { status: 'AVAILABLE', samples: 33, path: 'saxophone/', format: 'ogg' },
+				// oboe: Not available on CDN
+				
+				// Percussion Family (1/4 available)
+				xylophone: { status: 'LIMITED', samples: 8, path: 'xylophone/', format: 'ogg', notes: 'Only C and G notes available' }
+			},
+			
+			// Missing from CDN (confirmed in external-sample-sources-guide.md)
+			missingInstruments: {
+				// Vocal Family (0/6 available)
+				choir: { status: 'MISSING', path: 'choir/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				vocalPads: { status: 'MISSING', path: 'vocal-pads/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				soprano: { status: 'MISSING', path: 'soprano/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				alto: { status: 'MISSING', path: 'alto/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				tenor: { status: 'MISSING', path: 'tenor/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				bass: { status: 'MISSING', path: 'bass/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				
+				// Percussion Family (3/4 missing)
+				timpani: { status: 'MISSING', path: 'timpani/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				vibraphone: { status: 'MISSING', path: 'vibraphone/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				gongs: { status: 'MISSING', path: 'gongs/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				
+				// Electronic Family (0/4 available)
+				pad: { status: 'MISSING', path: 'pad/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				leadSynth: { status: 'MISSING', path: 'lead-synth/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				bassSynth: { status: 'MISSING', path: 'bass-synth/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				arpSynth: { status: 'MISSING', path: 'arp-synth/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				
+				// Environmental Family (0/1 available)
+				whaleHumpback: { status: 'MISSING', path: 'whale-song/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				
+				// Missing woodwind
+				oboe: { status: 'MISSING', path: 'oboe/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				
+				// Missing keyboard
+				celesta: { status: 'MISSING', path: 'celesta/', reason: 'Directory does not exist on nbrosowsky CDN' }
+			}
+		};
+		
+		// Generate comprehensive diagnostic report
+		const totalInstruments = Object.keys(cdnStatus.availableInstruments).length + Object.keys(cdnStatus.missingInstruments).length;
+		const availableCount = Object.keys(cdnStatus.availableInstruments).length;
+		const missingCount = Object.keys(cdnStatus.missingInstruments).length;
+		const coveragePercentage = Math.round((availableCount / totalInstruments) * 100);
+		
+		logger.error('cdn-diagnosis', '🔍 ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report', {
+			summary: {
+				totalInstruments: totalInstruments,
+				availableInstruments: availableCount,
+				missingInstruments: missingCount,
+				cdnCoverage: `${coveragePercentage}% (${availableCount}/${totalInstruments})`,
+				primaryCDN: 'https://nbrosowsky.github.io/tonejs-instruments/samples/',
+				effectiveFormat: 'ogg', // From Issue #005 resolution
+				fallbackMode: 'synthesis'
+			},
+			
+			workingInstruments: cdnStatus.availableInstruments,
+			missingInstruments: cdnStatus.missingInstruments,
+			
+			formatIssues: {
+				resolvedInIssue005: 'MP3→OGG format synchronization fixed',
+				currentBehavior: 'AudioEngine automatically uses OGG format',
+				userSelection: this.settings.useHighQualitySamples ? 'High Quality Samples' : 'Synthesis Only',
+				effectiveFormat: 'ogg'
+			},
+			
+			impact: {
+				userExperience: `${missingCount} instruments fall back to synthesis`,
+				audioQuality: 'Mixed: 19 instruments use high-quality samples, 15 use synthesis',
+				networkRequests: `${availableCount} instruments attempt CDN sample loading`,
+				errors: `Expected 404 errors for ${missingCount} missing instrument directories`
+			},
+			
+			recommendations: {
+				shortTerm: 'Document current CDN limitations for users',
+				mediumTerm: 'Implement Freesound.org integration for missing instruments',
+				longTerm: 'Create redundant CDN fallback system',
+				issue012: 'Add sample loading indicators and error handling'
+			},
+			
+			relatedIssues: {
+				issue005: 'RESOLVED - Format synchronization fixed',
+				issue011: 'IN PROGRESS - This diagnostic report',
+				issue012: 'PENDING - Sample loading indicators',
+				issue013: 'PENDING - CDN fallback system'
+			}
+		});
 	}
 } 

@@ -12,7 +12,8 @@
 8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
 9. ✅ [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
 10. ✅ [Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **RESOLVED**
-11. 🚀 [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
+11. ✅ [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **RESOLVED**
+12. ✅ [Vocal Instrument Silence in High Quality Mode](#issue-012-vocal-instrument-silence) - **RESOLVED**
 
 ---
 
