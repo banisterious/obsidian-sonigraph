@@ -39,29 +39,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 1700+ lines of organized CSS styling
 - Clean build system with resolved compilation errors
 
-## [Unreleased]
+## [0.6.1] - 2025-06-21
 
-### Added
-- **Structured Logging System**: Global log level filtering with options: Off, Errors Only, Warnings, Info, Debug (default: Warnings)
-- **Log Export Feature**: Export all plugin logs as timestamped JSON files (`osp-logs-YYYYMMDD-HHMMSS.json`)
-- **Audio Format Selection**: Choose between MP3 (smaller size, recommended) and WAV (higher quality) for sampled instruments
-- **Onboarding Section**: Dismissible welcome message in Settings with quick access to Control Center
-- **Volume Control in Control Center**: Moved volume slider from Settings to Control Center header for better accessibility
+### Added - CDN Sample Integration & UI Improvements
+- **"Use High Quality Samples" Toggle**: User-friendly control for CDN sample loading with 19/34 instruments supported
+- **Real-time Audio Mode Display**: Immediate feedback showing "High Quality Samples" vs "Synthesis Only" without navigation
+- **Comprehensive CDN Diagnostic System**: Real-time loading status reporting with detailed error analysis
+- **Automatic Synthesis Fallback**: Vocal instruments (soprano, alto, tenor, bass) now automatically fall back to synthesis when CDN samples fail
+- **Issue #012 Resolution**: Created specialized vocal synthesis with distinct timbres for each voice type
 
 ### Changed
-- **Settings UI Streamlined**: Removed duplicate controls (tempo, volume, musical scale, root note) that are available in Control Center
-- **Consistent Naming**: Renamed "Control Panel" to "Control Center" throughout the interface
-- **Sentence Case Labels**: All settings labels now use sentence case for better readability
-- **Cleaner Settings Layout**: Removed redundant "Sonigraph Settings" header and improved visual hierarchy
+- **Audio System Controls Location**: Moved "Use High Quality Samples" toggle from Master tab to Audio System section in Status tab
+- **Immediate UI Updates**: Audio mode display updates instantly when toggling sample quality without requiring navigation
+- **Settings Architecture**: Replaced `audioFormat` enum with `useHighQualitySamples` boolean for clearer user control
+- **Hybrid Sample/Synthesis System**: 56% CDN sample coverage with graceful synthesis fallback for remaining instruments
 
-### Improved
-- **User Experience**: Better separation of concerns between Settings (configuration) and Control Center (real-time controls)
-- **Visual Design**: Added bordered styling to onboarding section for better visual distinction
-- **Code Architecture**: Made audio engine methods public where needed for UI integration
-- **Developer Experience**: Enhanced logging system with structured output and export capabilities
+### Fixed
+- **Issue #011**: CDN Sample Loading Diagnosis - Comprehensive analysis and resolution of sample availability
+- **Issue #012**: Vocal Instrument Silence - Eliminated silent playback for vocal instruments in high quality mode
+- **CDN Loading Failures**: Automatic detection and fallback for failed sample loading within 5 seconds
+- **User Experience**: Removed confusing audio format selection in favor of simple on/off toggle
 
 ### Technical
-- Exported `LoggerFactory` class for direct access to static log level methods
-- Made `AudioEngine.updateVolume()` method public for UI integration
-- Added log collection functionality to support export feature
-- Enhanced audio format handling with dynamic placeholder replacement 
+- Enhanced audio engine with `createSamplerWithFallback()` method for robust CDN loading
+- Added specialized vocal synthesis creation with distinct parameters per voice type
+- Implemented real-time fallback detection and instrument replacement
+- Updated architecture documentation with hybrid sample/synthesis system details
+- Comprehensive logging and diagnostic capabilities for troubleshooting sample loading issues
+
+## [Unreleased]
+
+### Planned
+- Multiple CDN fallback system (Issue #013)
+- Browser caching for samples (Issue #014)
+- User preferences for sample management (Issue #015) 
