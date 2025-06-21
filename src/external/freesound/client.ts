@@ -48,11 +48,11 @@ export class FreesoundAPIClient {
                 await this.respectRateLimit();
             }
 
-            logger.info(`Found ${allResults.length} potential whale samples`);
+            logger.info('search', `Found ${allResults.length} potential whale samples`);
             return this.processSamples(allResults, query);
 
         } catch (error) {
-            logger.error('Whale sample search failed:', error);
+            logger.error('search', 'Whale sample search failed:', error);
             throw new Error(`Freesound search failed: ${error}`);
         }
     }
@@ -197,6 +197,22 @@ export class FreesoundAPIClient {
                 'balaenoptera physalus',
                 'pulse sequences'
             ],
+            right: [
+                'right whale',
+                'eubalaena glacialis',
+                'upcall',
+                'north atlantic right whale'
+            ],
+            sei: [
+                'sei whale',
+                'balaenoptera borealis',
+                'downsweep'
+            ],
+            pilot: [
+                'pilot whale',
+                'globicephala',
+                'toothed whale'
+            ],
             mixed: [
                 'whale',
                 'cetacean',
@@ -290,7 +306,7 @@ export class FreesoundAPIClient {
             }
         }
 
-        logger.info(`Validation results: ${validated.length} valid, ${rejected.length} rejected`);
+        logger.info('validation', `Validation results: ${validated.length} valid, ${rejected.length} rejected`);
 
         return {
             samples: uniqueSamples,
@@ -440,7 +456,7 @@ export class FreesoundAPIClient {
     private async respectRateLimit(): Promise<void> {
         if (this.rateLimitRemaining < 5) {
             const waitTime = Math.max(1000, (this.rateLimitReset - Date.now()) / 1000);
-            logger.info(`Rate limit low, waiting ${waitTime}ms`);
+            logger.info('rate-limit', `Rate limit low, waiting ${waitTime}ms`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
         }
     }
@@ -472,7 +488,7 @@ export class FreesoundAPIClient {
         const auth: FreesoundAuthResponse = await response.json();
         this.accessToken = auth.access_token;
         
-        logger.info('Freesound authentication successful');
+        logger.info('auth', 'Freesound authentication successful');
     }
 
     /**
