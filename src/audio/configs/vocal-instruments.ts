@@ -20,6 +20,9 @@ export const vocalInstruments: InstrumentFamily = {
             category: 'vocals'
         },
 
+        // Vocal instruments with invalid URLs disabled until valid samples are found
+        // The nbrosowsky-tonejs-instruments collection does not contain vocal samples
+        /*
         soprano: {
             urls: {
                 "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`,
@@ -30,7 +33,7 @@ export const vocalInstruments: InstrumentFamily = {
                 "D6": `D6.${FORMAT_PLACEHOLDER}`, "E6": `E6.${FORMAT_PLACEHOLDER}`, "F6": `F6.${FORMAT_PLACEHOLDER}`
             },
             release: 2.5,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/",
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/", // INVALID URL
             effects: ['reverb', 'chorus', 'filter'],
             maxVoices: 4,
             priority: 'high',
@@ -46,7 +49,7 @@ export const vocalInstruments: InstrumentFamily = {
                 "E5": `E5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "G5": `G5.${FORMAT_PLACEHOLDER}`
             },
             release: 2.8,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/",
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/", // INVALID URL
             effects: ['reverb', 'chorus', 'filter'],
             maxVoices: 4,
             priority: 'high',
@@ -62,7 +65,7 @@ export const vocalInstruments: InstrumentFamily = {
                 "A4": `A4.${FORMAT_PLACEHOLDER}`, "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`
             },
             release: 2.3,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/",
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/", // INVALID URL
             effects: ['reverb', 'filter'],
             maxVoices: 4,
             priority: 'high',
@@ -78,7 +81,7 @@ export const vocalInstruments: InstrumentFamily = {
                 "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`
             },
             release: 3.2,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/",
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/", // INVALID URL
             effects: ['reverb'],
             maxVoices: 4,
             priority: 'high',
@@ -93,7 +96,7 @@ export const vocalInstruments: InstrumentFamily = {
                 "C5": `C5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "A5": `A5.${FORMAT_PLACEHOLDER}`
             },
             release: 4.0,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/",
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/", // INVALID URL
             effects: ['reverb', 'filter'],
             maxVoices: 6,
             priority: 'medium',
@@ -108,11 +111,12 @@ export const vocalInstruments: InstrumentFamily = {
                 "G5": `G5.${FORMAT_PLACEHOLDER}`, "C6": `C6.${FORMAT_PLACEHOLDER}`
             },
             release: 5.0,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/",
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/", // INVALID URL
             effects: ['reverb', 'filter'],
             maxVoices: 8,
             priority: 'low',
             category: 'vocals'
         }
+        */
     }
 };
