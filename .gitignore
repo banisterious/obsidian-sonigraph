@@ -16,6 +16,7 @@ docs/images/sonigraph-control-center/2880pxw/
 # Build artifacts
 main.js
 styles.css
+*.zip
 
 # CSS build system temporary files
 styles.css.backup
