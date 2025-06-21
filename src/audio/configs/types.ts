@@ -14,6 +14,8 @@ export interface InstrumentConfig {
     maxVoices?: number;
     priority?: 'low' | 'medium' | 'high';
     category?: 'keyboard' | 'strings' | 'brass' | 'woodwind' | 'vocals' | 'world' | 'percussion' | 'electronic';
+    frequencyRange?: [number, number]; // For whale species frequency mapping
+    description?: string; // For whale sample attribution and context
 }
 
 export interface InstrumentCollection {
