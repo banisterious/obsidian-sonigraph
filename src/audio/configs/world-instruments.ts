@@ -19,7 +19,9 @@ export const worldInstruments: InstrumentFamily = {
             category: 'world'
         },
         
-        // External whale samples (Freesound integration)
+        // External whale samples (Freesound integration) - DISABLED until UI integration
+        // TODO: Re-enable these when whale integration UI is complete
+        /*
         whaleBlue: {
             urls: {
                 "C1": "external", "F1": "external", "Bb1": "external",
@@ -34,96 +36,118 @@ export const worldInstruments: InstrumentFamily = {
             frequencyRange: [10, 40], // Infrasonic calls
             description: 'Authentic blue whale infrasonic calls from MBARI hydrophone recordings'
         },
-        
         whaleOrca: {
-            urls: {
-                "C3": "external", "F3": "external", "Bb3": "external",
-                "C4": "external", "F4": "external", "Bb4": "external",
-                "C5": "external", "F5": "external"
-            },
-            release: 4.0,
-            baseUrl: "external://whale/orca",
-            effects: ['reverb', 'filter'],
-            maxVoices: 3,
-            priority: 'medium',
-            category: 'world',
-            frequencyRange: [500, 25000], // Clicks and calls
-            description: 'Authentic orca vocalizations and pod communications from deep-sea observatory'
-        },
-        
-        whaleGray: {
             urls: {
                 "C2": "external", "F2": "external", "Bb2": "external",
                 "C3": "external", "F3": "external", "Bb3": "external"
             },
             release: 5.0,
-            baseUrl: "external://whale/gray",
+            baseUrl: "external://whale/orca",
             effects: ['reverb', 'filter'],
             maxVoices: 2,
+            priority: 'low',
+            category: 'world',
+            frequencyRange: [500, 25000], // Clicks and calls
+            description: 'Authentic orca pod communications from MBARI deep-sea observatory'
+        },
+        whaleGray: {
+            urls: {
+                "C1": "external", "F1": "external", "Bb1": "external",
+                "C2": "external", "F2": "external", "Bb2": "external"
+            },
+            release: 7.0,
+            baseUrl: "external://whale/gray",
+            effects: ['reverb', 'filter'],
+            maxVoices: 1,
             priority: 'low',
             category: 'world',
             frequencyRange: [100, 2000], // Migration calls
-            description: 'Gray whale migration calls from MBARI oceanic soundscape project'
+            description: 'Authentic gray whale migration calls from oceanic soundscape recordings'
         },
-        
         whaleSperm: {
             urls: {
-                "C4": "external", "F4": "external", "Bb4": "external",
-                "C5": "external", "F5": "external", "Bb5": "external"
+                "C2": "external", "F2": "external", "Bb2": "external",
+                "C3": "external", "F3": "external", "Bb3": "external"
             },
-            release: 3.0,
+            release: 4.0,
             baseUrl: "external://whale/sperm",
             effects: ['reverb', 'filter'],
-            maxVoices: 2,
-            priority: 'medium',
+            maxVoices: 1,
+            priority: 'low',
             category: 'world',
             frequencyRange: [100, 30000], // Echolocation
-            description: 'Sperm whale echolocation clicks from hydrophone recordings'
+            description: 'Authentic sperm whale echolocation clicks from Newfoundland recordings'
         },
-        
         whaleMinke: {
             urls: {
+                "C1": "external", "F1": "external", "Bb1": "external",
                 "C2": "external", "F2": "external", "Bb2": "external"
             },
-            release: 0.5,
+            release: 6.0,
             baseUrl: "external://whale/minke",
-            effects: ['reverb'],
-            maxVoices: 2,
+            effects: ['reverb', 'filter'],
+            maxVoices: 1,
             priority: 'low',
             category: 'world',
             frequencyRange: [35, 50], // Downsweeps
-            description: 'Atlantic minke whale thump trains from NOAA PMEL recordings'
+            description: 'Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings'
         },
-        
         whaleFin: {
             urls: {
-                "C1": "external", "F1": "external", "Bb1": "external"
+                "C1": "external", "F1": "external", "Bb1": "external",
+                "C2": "external", "F2": "external", "Bb2": "external"
             },
-            release: 0.8,
+            release: 8.0,
             baseUrl: "external://whale/fin",
-            effects: ['reverb'],
-            maxVoices: 2,
+            effects: ['reverb', 'filter'],
+            maxVoices: 1,
             priority: 'low',
             category: 'world',
             frequencyRange: [15, 30], // Pulse sequences
-            description: 'Atlantic fin whale pulse sequences from NOAA research'
+            description: 'Authentic fin whale pulse sequences from NOAA Pennsylvania Group'
         },
-        
-        // Enhanced humpback with external samples
-        whaleHumpbackExternal: {
+        whaleRight: {
+            urls: {
+                "C1": "external", "F1": "external", "Bb1": "external",
+                "C2": "external", "F2": "external", "Bb2": "external"
+            },
+            release: 5.0,
+            baseUrl: "external://whale/right",
+            effects: ['reverb', 'filter'],
+            maxVoices: 1,
+            priority: 'low',
+            category: 'world',
+            frequencyRange: [50, 500], // Upcalls
+            description: 'Authentic North Atlantic right whale upcalls from NOAA Fisheries'
+        },
+        whaleSei: {
+            urls: {
+                "C1": "external", "F1": "external", "Bb1": "external",
+                "C2": "external", "F2": "external", "Bb2": "external"
+            },
+            release: 7.0,
+            baseUrl: "external://whale/sei",
+            effects: ['reverb', 'filter'],
+            maxVoices: 1,
+            priority: 'low',
+            category: 'world',
+            frequencyRange: [200, 600], // Downsweeps
+            description: 'Authentic sei whale downsweeps from NOAA Pennsylvania Group'
+        },
+        whalePilot: {
             urls: {
                 "C2": "external", "F2": "external", "Bb2": "external",
-                "C3": "external", "F3": "external", "Bb3": "external",
-                "C4": "external", "F4": "external"
+                "C3": "external", "F3": "external", "Bb3": "external"
             },
-            release: 6.0,
-            baseUrl: "external://whale/humpback",
-            effects: ['reverb', 'filter', 'chorus'],
-            maxVoices: 3,
-            priority: 'medium',
+            release: 5.0,
+            baseUrl: "external://whale/pilot",
+            effects: ['reverb', 'filter'],
+            maxVoices: 2,
+            priority: 'low',
             category: 'world',
-            frequencyRange: [20, 4000], // Complex songs
-            description: 'Authentic humpback whale songs from Caribbean and Alaska recordings'
+            frequencyRange: [300, 8000], // Toothed whale vocalizations
+            description: 'Authentic pilot whale multi-sound communications from NOAA Fisheries'
         }
+        */
     }
 };
