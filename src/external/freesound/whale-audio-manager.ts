@@ -99,7 +99,7 @@ export class WhaleAudioManager {
             this.sampleUrls.set(species as WhaleSpecies, urls);
         });
         
-        logger.info('Initialized whale audio manager with seed collection');
+        logger.info('init', 'Initialized whale audio manager with seed collection');
     }
 
     /**
@@ -114,7 +114,7 @@ export class WhaleAudioManager {
             // Get sample URL for species
             const urls = this.sampleUrls.get(targetSpecies) || [];
             if (urls.length === 0) {
-                logger.warn(`No sample URLs available for ${targetSpecies}`);
+                logger.warn('loading', `No sample URLs available for ${targetSpecies}`);
                 return null;
             }
 
@@ -125,7 +125,7 @@ export class WhaleAudioManager {
             return await this.loadAudioFromUrl(selectedUrl);
             
         } catch (error) {
-            logger.error(`Failed to load whale sample: ${error}`);
+            logger.error('loading', `Failed to load whale sample:`, error);
             return null;
         }
     }
@@ -226,7 +226,7 @@ export class WhaleAudioManager {
 
         // Check discovery frequency limits
         if (!manual && !this.shouldRunDiscovery()) {
-            logger.info('Skipping discovery due to frequency limits');
+            logger.info('discovery', 'Skipping discovery due to frequency limits');
             return {
                 samples: [],
                 validated: [],
@@ -244,7 +244,7 @@ export class WhaleAudioManager {
             trustedSources: true
         };
 
-        logger.info(`Starting ${manual ? 'manual' : 'automatic'} discovery for ${species}`);
+        logger.info('discovery', `Starting ${manual ? 'manual' : 'automatic'} discovery for ${species}`);
         
         const result = await this.freesoundClient.searchWhaleContent(query);
         this.lastDiscoveryTime = Date.now();
@@ -288,7 +288,7 @@ export class WhaleAudioManager {
         
         this.sampleUrls.set(species, limitedUrls);
         
-        logger.info(`Added ${newUrls.length} new samples for ${species}, total: ${limitedUrls.length}`);
+        logger.info('samples', `Added ${newUrls.length} new samples for ${species}, total: ${limitedUrls.length}`);
     }
 
     /**
@@ -297,7 +297,7 @@ export class WhaleAudioManager {
     getCollectionStats(): Record<WhaleSpecies, number> {
         const stats: Record<WhaleSpecies, number> = {} as any;
         
-        Object.values(['humpback', 'blue', 'orca', 'gray', 'sperm', 'minke', 'fin', 'mixed'] as WhaleSpecies[]).forEach(species => {
+        Object.values(['humpback', 'blue', 'orca', 'gray', 'sperm', 'minke', 'fin', 'right', 'sei', 'pilot', 'mixed'] as WhaleSpecies[]).forEach(species => {
             stats[species] = this.sampleUrls.get(species)?.length || 0;
         });
         
@@ -309,7 +309,7 @@ export class WhaleAudioManager {
      */
     clearSpeciesSamples(species: WhaleSpecies): void {
         this.sampleUrls.delete(species);
-        logger.info(`Cleared samples for ${species}`);
+        logger.info('samples', `Cleared samples for ${species}`);
     }
 
     /**
@@ -318,7 +318,7 @@ export class WhaleAudioManager {
     resetToSeedCollection(): void {
         this.sampleUrls.clear();
         this.initializeSeedCollection();
-        logger.info('Reset to seed collection');
+        logger.info('samples', 'Reset to seed collection');
     }
 
     /**
@@ -344,7 +344,7 @@ export class WhaleAudioManager {
             this.sampleUrls.set(species as WhaleSpecies, urls);
         });
         
-        logger.info('Imported sample URLs from settings');
+        logger.info('settings', 'Imported sample URLs from settings');
     }
 
     /**

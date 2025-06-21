@@ -38,7 +38,7 @@ export class WhaleIntegration {
      */
     async initialize(): Promise<void> {
         if (!this.settings.useWhaleExternal) {
-            logger.info('Whale external samples disabled in settings');
+            logger.info('init', 'Whale external samples disabled in settings');
             return;
         }
 
@@ -47,9 +47,9 @@ export class WhaleIntegration {
             this.whaleManager = new WhaleAudioManager(this.settings);
             this.isEnabled = true;
             
-            logger.info('Whale integration initialized with seed collection');
+            logger.info('init', 'Whale integration initialized with seed collection');
         } catch (error) {
-            logger.error('Failed to initialize whale integration:', error);
+            logger.error('init', 'Failed to initialize whale integration:', error);
             this.isEnabled = false;
         }
     }
@@ -69,11 +69,11 @@ export class WhaleIntegration {
             try {
                 const audioBuffer = await this.whaleManager.loadWhaleSample(frequency, species);
                 if (audioBuffer) {
-                    logger.debug(`Loaded external whale sample for ${instrumentName}`);
+                    logger.debug('loading', `Loaded external whale sample for ${instrumentName}`);
                     return audioBuffer;
                 }
             } catch (error) {
-                logger.warn(`Failed to load external whale sample for ${instrumentName}:`, error);
+                logger.warn('loading', `Failed to load external whale sample for ${instrumentName}:`, error);
             }
         }
 
@@ -187,7 +187,10 @@ export class WhaleIntegration {
                 sperm: settings.sampleUrls.filter(url => url.includes('sperm') || url.includes('cachalot')),
                 minke: settings.sampleUrls.filter(url => url.includes('minke')),
                 fin: settings.sampleUrls.filter(url => url.includes('fin')),
-                mixed: []
+                right: settings.sampleUrls.filter(url => url.includes('right') || url.includes('eubalaena')),
+                sei: settings.sampleUrls.filter(url => url.includes('sei') || url.includes('borealis')),
+                pilot: settings.sampleUrls.filter(url => url.includes('pilot') || url.includes('globicephala')),
+                mixed: [] as string[]
             };
             
             this.whaleManager.importSampleUrls(speciesUrls);
@@ -200,7 +203,7 @@ export class WhaleIntegration {
     cleanup(): void {
         this.isEnabled = false;
         this.whaleManager = null;
-        logger.info('Whale integration cleaned up');
+        logger.info('cleanup', 'Whale integration cleaned up');
     }
 
     /**
