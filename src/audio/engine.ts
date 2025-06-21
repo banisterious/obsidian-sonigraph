@@ -731,14 +731,23 @@ export class AudioEngine {
 		if (!this.settings.useHighQualitySamples) {
 			logger.info('instruments', 'Synthesis mode - creating synthesizers for all instruments');
 			
-			// Create synthesizers for all 34 instruments in the orchestral system
-			const manualInstruments = [
+			// Create synthesizers only for enabled instruments based on user settings
+			const allInstruments = [
 				'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 
 				'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 
 				'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 
 				'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
 			];
-			manualInstruments.forEach(instrumentName => {
+			
+			// Filter to only include instruments that are enabled in settings
+			const enabledInstruments = allInstruments.filter(instrumentName => {
+				const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+				return instrumentSettings?.enabled === true;
+			});
+			
+			logger.info('instruments', `Creating synthesizers for ${enabledInstruments.length} enabled instruments: ${enabledInstruments.join(', ')}`);
+			
+			enabledInstruments.forEach(instrumentName => {
 				// Create specialized synthesizers using proven synthesis from initializeLightweightSynthesis
 				let synth: PolySynth;
 				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
