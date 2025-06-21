@@ -31,11 +31,6 @@ export default class SonigraphPlugin extends Plugin {
 			this.openControlPanel();
 		});
 
-		// Add test suite ribbon icon
-		this.addRibbonIcon('test-tube-2', 'Sonigraph: Open Test Suite', () => {
-			this.openTestSuite();
-		});
-
 		// Add command
 		this.addCommand({
 			id: 'open-control-panel',
