@@ -72,10 +72,10 @@ interface WhaleIntegrationSettings {
   useWhaleExternal: boolean;           // Enable external whale samples
   autoDiscovery: boolean;              // User opt-in for automated discovery
   discoveryFrequency: 'never' | 'weekly' | 'monthly';
-  maxSampleStorage: number;            // MB limit for cached samples (10-100MB)
   qualityThreshold: 'strict' | 'medium' | 'permissive';
   allowBackgroundFetch: boolean;       // Fetch during idle time
   speciesPreference: 'humpback' | 'blue' | 'orca' | 'mixed';
+  sampleUrls: string[];                // URLs of approved samples
 }
 ```
 
@@ -85,17 +85,16 @@ interface WhaleIntegrationSettings {
 ```
 ┌─ Whale Sound Configuration ─────────────────────┐
 │ ☑ Use External Whale Samples                    │
-│   └─ Status: 12 high-quality samples cached     │
+│   └─ Status: 12 high-quality sample URLs stored │
 │   └─ Mode: Seed Collection (15 verified samples)│
 │                                                  │
 │ ☐ Enable Automatic Sample Discovery             │
 │   ├─ Search Frequency: [Weekly ▼]               │
 │   ├─ Quality Level: [Strict ▼]                  │
 │   ├─ Species Focus: [Mixed ▼]                   │
-│   ├─ Storage Limit: [50MB ▼]                    │
 │   └─ ☑ Allow background downloads               │
 │                                                  │
-│ [Find New Samples Now] [Manage Cache]           │
+│ [Find New Samples Now] [Manage URLs]            │
 │ [Preview Random Sample] [Attribution Info]      │
 └─────────────────────────────────────────────────┘
 ```
@@ -236,10 +235,10 @@ interface SampleValidation {
 **Status**: Ready for Implementation
 
 **Deliverables:**
-- 15-20 manually curated, verified whale samples
+- 15-20 manually curated, verified whale sample URLs
 - Species categorization (humpback, blue whale, orca)
 - Quality validation and acoustic analysis
-- Integration with existing CDN fallback system
+- Integration with existing CDN streaming system
 - Basic whale species selection in Control Center
 
 **Technical Implementation:**
@@ -249,10 +248,10 @@ interface SampleValidation {
 - Create whale sample cache management
 
 **Acceptance Criteria:**
-- ✅ 15+ verified authentic whale samples cached locally
+- ✅ 15+ verified authentic whale sample URLs stored in plugin settings
 - ✅ Dramatic quality improvement over synthesis
 - ✅ Species selection working in Experimental Tab
-- ✅ Graceful fallback to synthesis when needed
+- ✅ Graceful fallback to synthesis when URLs fail
 - ✅ Clear attribution for all samples
 
 ### Phase 2: Manual Discovery System (Weeks 3-4)
@@ -264,20 +263,20 @@ interface SampleValidation {
 - Manual "Find New Samples Now" functionality
 - User review and approval interface
 - Sample quality preview system
-- Enhanced cache management
+- Enhanced URL management
 
 **Technical Implementation:**
 - Freesound.org API integration
 - Search query optimization
 - Sample download and validation pipeline
 - User approval workflow UI
-- Cache storage management
+- URL storage management
 
 **Acceptance Criteria:**
 - ✅ Manual sample discovery working reliably
 - ✅ Quality filtering removing non-whale samples
 - ✅ User can preview samples before approval
-- ✅ Cache management within storage limits
+- ✅ URL management within plugin data limits
 - ✅ Attribution and source tracking
 
 ### Phase 3: Automated Discovery (Opt-in) (Weeks 5-6)
@@ -322,15 +321,15 @@ interface SampleValidation {
 
 ```typescript
 class WhaleAudioManager {
-  private sampleCache: Map<string, WhaleAudioSample>;
+  private sampleUrls: Map<string, string[]>;      // Species -> URL array
   private freesoundClient: FreesoundAPIClient;
   private curationPipeline: SampleCurationPipeline;
   private userSettings: WhaleIntegrationSettings;
 
   async loadWhaleSample(species?: WhaleSpecies): Promise<AudioBuffer> {
-    // 1. Check cache for appropriate species sample
-    // 2. Select based on musical context (frequency, duration)
-    // 3. Fallback to synthesis if no samples available
+    // 1. Select URL from approved species sample list
+    // 2. Stream sample directly from CDN (existing pattern)
+    // 3. Fallback to synthesis if URL fails to load
     // 4. Return AudioBuffer for Tone.js integration
   }
 
@@ -339,7 +338,7 @@ class WhaleAudioManager {
     // 2. Execute Freesound.org search queries
     // 3. Apply curation pipeline filtering
     // 4. Present results for user approval (if manual)
-    // 5. Cache approved samples locally
+    // 5. Save approved URLs to plugin settings
   }
 
   async validateSampleQuality(sample: FreesoundSample): Promise<ValidationResult> {
@@ -381,18 +380,17 @@ interface WhaleSearchQuery {
 4. **User Review**: Preview interface with play/approve/reject controls
 5. **Cache Update**: "Added 6 new whale samples to your library"
 
-**Cache Management:**
+**Sample Management:**
 ```
 ┌─ Whale Sample Library ──────────────────────────┐
 │                                                  │
-│ 📊 Storage: 23MB / 50MB                         │
-│ 🐋 Total Samples: 28                            │
+│ 🐋 Total Sample URLs: 28                        │
 │                                                  │
-│ Humpback Whale    [12 samples] [Preview] [Info] │
-│ Blue Whale        [8 samples]  [Preview] [Info] │
-│ Orca              [8 samples]  [Preview] [Info] │
+│ Humpback Whale    [12 URLs] [Preview] [Info]    │
+│ Blue Whale        [8 URLs]  [Preview] [Info]    │
+│ Orca              [8 URLs]  [Preview] [Info]    │
 │                                                  │
-│ [Clear Cache] [Export List] [Manage Storage]    │
+│ [Clear URLs] [Export List] [Manage Library]     │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -446,26 +444,26 @@ function selectWhaleAudio(graphNode: GraphNode): WhaleAudioSelection {
 **Technical Performance:**
 - **Cache Hit Rate**: >80% for repeated playback
 - **Discovery Success**: >70% search queries return usable samples
-- **Memory Usage**: <100MB total whale sample cache
+- **Plugin Data Size**: <1MB total whale sample URL storage
 - **CPU Impact**: <1% additional load during background discovery
 
 ---
 
 ## Performance Considerations
 
-### Memory Management
+### Obsidian Plugin Storage Architecture
 
-**Cache Strategy:**
-- **Intelligent Preloading**: Popular samples loaded at startup
-- **LRU Eviction**: Least recently used samples removed when cache full
-- **Compression**: OGG format with quality vs size optimization
-- **Streaming**: Large samples streamed rather than fully cached
+**Storage Strategy:**
+- **URL-Based Management**: Store sample URLs in plugin `data.json` via `saveData()`
+- **Stream-on-Demand**: Load samples directly from CDN using existing audio engine pattern
+- **No Local Caching**: Rely on browser's Web Audio API buffer management
+- **Lightweight Settings**: Minimal plugin data footprint
 
 **Resource Optimization:**
-- **Lazy Loading**: Samples loaded on first use
+- **Lazy Loading**: Samples loaded on first use (existing pattern)
 - **Background Processing**: Discovery during idle time only
 - **Network Awareness**: Adjust discovery frequency based on connection speed
-- **Storage Limits**: User-configurable cache size (10-100MB)
+- **Plugin Data Limits**: Use Obsidian's `saveData()` for URL storage only
 
 ### Network Efficiency
 
@@ -488,7 +486,7 @@ function selectWhaleAudio(graphNode: GraphNode): WhaleAudioSelection {
 ### Technical Performance
 - **Sample Quality**: User ratings and expert validation scores
 - **System Stability**: No audio dropouts or performance degradation
-- **Cache Efficiency**: Hit rates and storage utilization
+- **URL Management**: Successful sample URL resolution rates
 - **Discovery Accuracy**: Curation pipeline success rates
 
 ### Strategic Validation
@@ -512,8 +510,8 @@ function selectWhaleAudio(graphNode: GraphNode): WhaleAudioSelection {
 - *Mitigation*: Multi-layer validation, user feedback, continuous learning
 
 **Performance Impact:**
-- *Risk*: Large audio files affecting plugin performance
-- *Mitigation*: Memory limits, background processing, user controls
+- *Risk*: Network latency affecting sample loading
+- *Mitigation*: CDN streaming, synthesis fallback, connection retry logic
 
 ### User Experience Risks
 
