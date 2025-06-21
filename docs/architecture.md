@@ -129,11 +129,13 @@ src/audio/
 | **Electronic** | Pad, Lead Synth, Bass Synth, Arp Synth | Classic analog synthesis | Filter modulation, LFO control |
 | **Environmental** | Whale Song | Scientific recordings + oceanic effects | Ultra-long sustains, wide spectrum |
 
-**Sample Loading Strategy:**
-- External CDN samples for high-quality realistic sounds
-- Browser caching for performance optimization
-- Graceful fallback to synthesis when samples unavailable
-- One-time download (~30-40MB total) with persistent caching
+**Sample Loading Strategy (Issue #011 Resolution):**
+- **Hybrid Sample/Synthesis System**: 19/34 instruments use external CDN samples, 15 use synthesis fallback
+- **User Control**: "Use High Quality Samples" toggle (OFF by default for safe, synthesis-only operation)
+- **Automatic Format Selection**: OGG format chosen automatically (resolved format confusion from Issue #005)
+- **CDN Coverage**: 56% sample coverage with graceful synthesis fallback for missing instruments
+- **Comprehensive Diagnostics**: Real-time CDN loading status with detailed error reporting
+- **Browser Caching**: Performance optimization with persistent sample caching (~20-30MB)
 
 **Voice Assignment Strategies:**
 1. **Frequency-based**: Assigns instruments based on pitch ranges
@@ -254,6 +256,20 @@ interface PerformanceMode {
 - One-time sample downloads with persistent browser caching
 - CDN-based sample delivery for global performance
 - Compression and efficient sample formats
+
+**Issue #011: CDN Diagnostic System:**
+- Comprehensive 34-instrument sample availability analysis
+- Real-time loading status reporting with structured logging
+- Missing instrument detection and fallback mode activation
+- Performance impact assessment for hybrid sample/synthesis operation
+- Developer-friendly diagnostic reports for troubleshooting sample loading issues
+
+**Issue #012: CDN Loading Fallback System:**
+- Automatic synthesis fallback for failed CDN sample loading
+- Vocal instrument silence prevention with specialized vocal synthesis
+- Graceful degradation maintaining audio output for all instruments
+- Real-time fallback detection and replacement within 5 seconds
+- Specialized synthesis voices for soprano, alto, tenor, bass with distinct timbres
 
 ---
 
@@ -437,9 +453,14 @@ class MaterialControlPanelModal extends Modal {
 **Ten-Tab Interface System:**
 
 **Core Tabs (3 tabs):**
-1. **Status Tab**: Real-time system diagnostics and performance metrics
+1. **Status Tab**: Real-time system diagnostics, performance metrics, and Audio System controls
 2. **Musical Tab**: Scale selection, root note, tempo, traversal methods
 3. **Master Tab**: Global controls, master effects, and bulk operations
+
+**Audio System Controls (Status Tab):**
+- **"Use High Quality Samples" Toggle**: Primary control for CDN sample loading (Issue #011 resolution)
+- **Real-time Audio Mode Display**: Immediate feedback showing "High Quality Samples" vs "Synthesis Only"
+- **System Information**: Sample rate, buffer size, and audio context status
 
 **Instrument Family Tabs (7 tabs):**
 1. **Strings Tab**: String family instruments (violin, cello, guitar, harp, piano, strings)
@@ -458,6 +479,7 @@ class MaterialControlPanelModal extends Modal {
 - **ActionChip**: Interactive action buttons
 - **MaterialSlider**: Consistent slider controls
 - **MaterialButton**: Standardized button components
+- **High Quality Samples Toggle**: User-friendly control for CDN sample loading (Issue #011 resolution)
 
 **CSS Integration:**
 ```css
@@ -621,9 +643,22 @@ class PerformanceOptimizer {
 
 ### 7.1. External Sample Sources Integration
 
-Sonigraph integrates with multiple external sample sources to dramatically expand audio sample diversity across all 34 instrument families. The unified sample management system provides redundant fallback mechanisms, real-time API access, and comprehensive licensing compliance while maintaining high-quality audio standards.
+**Primary CDN Integration (Issue #011 Resolution):**
+Sonigraph uses the nbrosowsky.github.io CDN as its primary sample source, providing 19/34 instruments with high-quality OGG samples. The system includes comprehensive diagnostic reporting and graceful synthesis fallback for missing samples.
 
-**Integrated Sources:**
+**CDN Sample Coverage:**
+- **Available (19 instruments)**: Piano, organ, strings, choir, vocal pads, flute, clarinet, saxophone, electric piano, harpsichord, accordion, celesta, violin, cello, guitar, harp, trumpet, french horn, trombone, tuba, oboe, xylophone, lead synth, bass synth, arp synth
+- **Synthesis Fallback (15 instruments)**: Soprano, alto, tenor, bass, timpani, vibraphone, gongs, pad, whale song (environmental)
+
+**User Control System:**
+- **"Use High Quality Samples" Toggle**: User-friendly control (OFF by default for safe operation)
+- **Automatic Format Selection**: OGG format chosen automatically (resolved Issue #005 format confusion)
+- **Real-time Diagnostics**: Comprehensive CDN loading status with detailed error reporting
+- **Graceful Degradation**: Seamless fallback to synthesis when samples unavailable
+
+**Future Sample Sources Integration:**
+The architecture supports expansion to additional sample sources while maintaining the current hybrid system:
+
 - **Freesound.org:** 500,000+ Creative Commons samples for percussion, experimental, and vocal content
 - **Soundstripe:** Professional royalty-free orchestral samples and sound effects
 - **Storyblocks:** Diverse content library with unlimited downloads for subscribers
@@ -655,6 +690,9 @@ class AudioEngine {
   updateSettings(settings: SonigraphSettings): void
   updateInstrumentVolume(instrument: string, volume: number): void
   setInstrumentEnabled(instrument: string, enabled: boolean): void
+  
+  // Issue #011: CDN sample management
+  generateCDNDiagnosticReport(): void  // Comprehensive sample loading analysis
   
   // Phase 3: Performance optimization methods
   getEnabledInstrumentsForTesting(): string[]
@@ -695,8 +733,10 @@ interface InstrumentSettings {
 }
 
 // Phase 3: Performance mode configuration
+// Issue #011: Updated settings interface
 interface SonigraphSettings {
   // ... existing settings
+  useHighQualitySamples: boolean; // Replaces audioFormat enum
   performanceMode?: {
     mode: 'low' | 'medium' | 'high' | 'ultra';
     enableFrequencyDetuning: boolean;
