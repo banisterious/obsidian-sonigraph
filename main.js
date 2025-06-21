@@ -31887,153 +31887,105 @@ var vocalInstruments = {
       maxVoices: 8,
       priority: "high",
       category: "vocals"
-    },
-    soprano: {
-      urls: {
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D6": `D6.${FORMAT_PLACEHOLDER}`,
-        "E6": `E6.${FORMAT_PLACEHOLDER}`,
-        "F6": `F6.${FORMAT_PLACEHOLDER}`
-      },
-      release: 2.5,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/",
-      effects: ["reverb", "chorus", "filter"],
-      maxVoices: 4,
-      priority: "high",
-      category: "vocals"
-    },
-    alto: {
-      urls: {
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`
-      },
-      release: 2.8,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/",
-      effects: ["reverb", "chorus", "filter"],
-      maxVoices: 4,
-      priority: "high",
-      category: "vocals"
-    },
-    tenor: {
-      urls: {
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`
-      },
-      release: 2.3,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/",
-      effects: ["reverb", "filter"],
-      maxVoices: 4,
-      priority: "high",
-      category: "vocals"
-    },
-    bass: {
-      urls: {
-        "E2": `E2.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "A2": `A2.${FORMAT_PLACEHOLDER}`,
-        "B2": `B2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`
-      },
-      release: 3.2,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/",
-      effects: ["reverb"],
-      maxVoices: 4,
-      priority: "high",
-      category: "vocals"
-    },
-    vocalPads: {
-      urls: {
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "A2": `A2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`
-      },
-      release: 4,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/",
-      effects: ["reverb", "filter"],
-      maxVoices: 6,
-      priority: "medium",
-      category: "vocals"
-    },
-    pad: {
-      urls: {
-        "C1": `C1.${FORMAT_PLACEHOLDER}`,
-        "G1": `G1.${FORMAT_PLACEHOLDER}`,
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`
-      },
-      release: 5,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/",
-      effects: ["reverb", "filter"],
-      maxVoices: 8,
-      priority: "low",
-      category: "vocals"
     }
+    // Vocal instruments with invalid URLs disabled until valid samples are found
+    // The nbrosowsky-tonejs-instruments collection does not contain vocal samples
+    /*
+            soprano: {
+                urls: {
+                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`,
+                    "F4": `F4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
+                    "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`, "D5": `D5.${FORMAT_PLACEHOLDER}`,
+                    "E5": `E5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "G5": `G5.${FORMAT_PLACEHOLDER}`,
+                    "A5": `A5.${FORMAT_PLACEHOLDER}`, "B5": `B5.${FORMAT_PLACEHOLDER}`, "C6": `C6.${FORMAT_PLACEHOLDER}`,
+                    "D6": `D6.${FORMAT_PLACEHOLDER}`, "E6": `E6.${FORMAT_PLACEHOLDER}`, "F6": `F6.${FORMAT_PLACEHOLDER}`
+                },
+                release: 2.5,
+                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/", // INVALID URL
+                effects: ['reverb', 'chorus', 'filter'],
+                maxVoices: 4,
+                priority: 'high',
+                category: 'vocals'
+            },
+    
+            alto: {
+                urls: {
+                    "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`, "B3": `B3.${FORMAT_PLACEHOLDER}`,
+                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`,
+                    "F4": `F4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
+                    "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`, "D5": `D5.${FORMAT_PLACEHOLDER}`,
+                    "E5": `E5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "G5": `G5.${FORMAT_PLACEHOLDER}`
+                },
+                release: 2.8,
+                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/", // INVALID URL
+                effects: ['reverb', 'chorus', 'filter'],
+                maxVoices: 4,
+                priority: 'high',
+                category: 'vocals'
+            },
+    
+            tenor: {
+                urls: {
+                    "C3": `C3.${FORMAT_PLACEHOLDER}`, "D3": `D3.${FORMAT_PLACEHOLDER}`, "E3": `E3.${FORMAT_PLACEHOLDER}`,
+                    "F3": `F3.${FORMAT_PLACEHOLDER}`, "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`,
+                    "B3": `B3.${FORMAT_PLACEHOLDER}`, "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`,
+                    "E4": `E4.${FORMAT_PLACEHOLDER}`, "F4": `F4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`,
+                    "A4": `A4.${FORMAT_PLACEHOLDER}`, "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`
+                },
+                release: 2.3,
+                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/", // INVALID URL
+                effects: ['reverb', 'filter'],
+                maxVoices: 4,
+                priority: 'high',
+                category: 'vocals'
+            },
+    
+            bass: {
+                urls: {
+                    "E2": `E2.${FORMAT_PLACEHOLDER}`, "F2": `F2.${FORMAT_PLACEHOLDER}`, "G2": `G2.${FORMAT_PLACEHOLDER}`,
+                    "A2": `A2.${FORMAT_PLACEHOLDER}`, "B2": `B2.${FORMAT_PLACEHOLDER}`, "C3": `C3.${FORMAT_PLACEHOLDER}`,
+                    "D3": `D3.${FORMAT_PLACEHOLDER}`, "E3": `E3.${FORMAT_PLACEHOLDER}`, "F3": `F3.${FORMAT_PLACEHOLDER}`,
+                    "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`, "B3": `B3.${FORMAT_PLACEHOLDER}`,
+                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`
+                },
+                release: 3.2,
+                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/", // INVALID URL
+                effects: ['reverb'],
+                maxVoices: 4,
+                priority: 'high',
+                category: 'vocals'
+            },
+    
+            vocalPads: {
+                urls: {
+                    "C2": `C2.${FORMAT_PLACEHOLDER}`, "F2": `F2.${FORMAT_PLACEHOLDER}`, "A2": `A2.${FORMAT_PLACEHOLDER}`,
+                    "C3": `C3.${FORMAT_PLACEHOLDER}`, "F3": `F3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`,
+                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "F4": `F4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
+                    "C5": `C5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "A5": `A5.${FORMAT_PLACEHOLDER}`
+                },
+                release: 4.0,
+                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/", // INVALID URL
+                effects: ['reverb', 'filter'],
+                maxVoices: 6,
+                priority: 'medium',
+                category: 'vocals'
+            },
+    
+            pad: {
+                urls: {
+                    "C1": `C1.${FORMAT_PLACEHOLDER}`, "G1": `G1.${FORMAT_PLACEHOLDER}`, "C2": `C2.${FORMAT_PLACEHOLDER}`,
+                    "G2": `G2.${FORMAT_PLACEHOLDER}`, "C3": `C3.${FORMAT_PLACEHOLDER}`, "G3": `G3.${FORMAT_PLACEHOLDER}`,
+                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`,
+                    "G5": `G5.${FORMAT_PLACEHOLDER}`, "C6": `C6.${FORMAT_PLACEHOLDER}`
+                },
+                release: 5.0,
+                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/", // INVALID URL
+                effects: ['reverb', 'filter'],
+                maxVoices: 8,
+                priority: 'low',
+                category: 'vocals'
+            }
+            */
   }
 };
 
@@ -32339,140 +32291,137 @@ var worldInstruments = {
       maxVoices: 2,
       priority: "low",
       category: "world"
-    },
-    // External whale samples (Freesound integration)
+    }
+    // External whale samples (Freesound integration) - DISABLED until UI integration
+    // TODO: Re-enable these when whale integration UI is complete
+    /*
     whaleBlue: {
-      urls: {
-        "C1": "external",
-        "F1": "external",
-        "Bb1": "external",
-        "C2": "external",
-        "F2": "external",
-        "Bb2": "external"
-      },
-      release: 8,
-      baseUrl: "external://whale/blue",
-      effects: ["reverb", "filter"],
-      maxVoices: 1,
-      priority: "low",
-      category: "world",
-      frequencyRange: [10, 40],
-      // Infrasonic calls
-      description: "Authentic blue whale infrasonic calls from MBARI hydrophone recordings"
+        urls: {
+            "C1": "external", "F1": "external", "Bb1": "external",
+            "C2": "external", "F2": "external", "Bb2": "external"
+        },
+        release: 8.0,
+        baseUrl: "external://whale/blue",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [10, 40], // Infrasonic calls
+        description: 'Authentic blue whale infrasonic calls from MBARI hydrophone recordings'
     },
     whaleOrca: {
-      urls: {
-        "C3": "external",
-        "F3": "external",
-        "Bb3": "external",
-        "C4": "external",
-        "F4": "external",
-        "Bb4": "external",
-        "C5": "external",
-        "F5": "external"
-      },
-      release: 4,
-      baseUrl: "external://whale/orca",
-      effects: ["reverb", "filter"],
-      maxVoices: 3,
-      priority: "medium",
-      category: "world",
-      frequencyRange: [500, 25e3],
-      // Clicks and calls
-      description: "Authentic orca vocalizations and pod communications from deep-sea observatory"
+        urls: {
+            "C2": "external", "F2": "external", "Bb2": "external",
+            "C3": "external", "F3": "external", "Bb3": "external"
+        },
+        release: 5.0,
+        baseUrl: "external://whale/orca",
+        effects: ['reverb', 'filter'],
+        maxVoices: 2,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [500, 25000], // Clicks and calls
+        description: 'Authentic orca pod communications from MBARI deep-sea observatory'
     },
     whaleGray: {
-      urls: {
-        "C2": "external",
-        "F2": "external",
-        "Bb2": "external",
-        "C3": "external",
-        "F3": "external",
-        "Bb3": "external"
-      },
-      release: 5,
-      baseUrl: "external://whale/gray",
-      effects: ["reverb", "filter"],
-      maxVoices: 2,
-      priority: "low",
-      category: "world",
-      frequencyRange: [100, 2e3],
-      // Migration calls
-      description: "Gray whale migration calls from MBARI oceanic soundscape project"
+        urls: {
+            "C1": "external", "F1": "external", "Bb1": "external",
+            "C2": "external", "F2": "external", "Bb2": "external"
+        },
+        release: 7.0,
+        baseUrl: "external://whale/gray",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [100, 2000], // Migration calls
+        description: 'Authentic gray whale migration calls from oceanic soundscape recordings'
     },
     whaleSperm: {
-      urls: {
-        "C4": "external",
-        "F4": "external",
-        "Bb4": "external",
-        "C5": "external",
-        "F5": "external",
-        "Bb5": "external"
-      },
-      release: 3,
-      baseUrl: "external://whale/sperm",
-      effects: ["reverb", "filter"],
-      maxVoices: 2,
-      priority: "medium",
-      category: "world",
-      frequencyRange: [100, 3e4],
-      // Echolocation
-      description: "Sperm whale echolocation clicks from hydrophone recordings"
+        urls: {
+            "C2": "external", "F2": "external", "Bb2": "external",
+            "C3": "external", "F3": "external", "Bb3": "external"
+        },
+        release: 4.0,
+        baseUrl: "external://whale/sperm",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [100, 30000], // Echolocation
+        description: 'Authentic sperm whale echolocation clicks from Newfoundland recordings'
     },
     whaleMinke: {
-      urls: {
-        "C2": "external",
-        "F2": "external",
-        "Bb2": "external"
-      },
-      release: 0.5,
-      baseUrl: "external://whale/minke",
-      effects: ["reverb"],
-      maxVoices: 2,
-      priority: "low",
-      category: "world",
-      frequencyRange: [35, 50],
-      // Downsweeps
-      description: "Atlantic minke whale thump trains from NOAA PMEL recordings"
+        urls: {
+            "C1": "external", "F1": "external", "Bb1": "external",
+            "C2": "external", "F2": "external", "Bb2": "external"
+        },
+        release: 6.0,
+        baseUrl: "external://whale/minke",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [35, 50], // Downsweeps
+        description: 'Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings'
     },
     whaleFin: {
-      urls: {
-        "C1": "external",
-        "F1": "external",
-        "Bb1": "external"
-      },
-      release: 0.8,
-      baseUrl: "external://whale/fin",
-      effects: ["reverb"],
-      maxVoices: 2,
-      priority: "low",
-      category: "world",
-      frequencyRange: [15, 30],
-      // Pulse sequences
-      description: "Atlantic fin whale pulse sequences from NOAA research"
+        urls: {
+            "C1": "external", "F1": "external", "Bb1": "external",
+            "C2": "external", "F2": "external", "Bb2": "external"
+        },
+        release: 8.0,
+        baseUrl: "external://whale/fin",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [15, 30], // Pulse sequences
+        description: 'Authentic fin whale pulse sequences from NOAA Pennsylvania Group'
     },
-    // Enhanced humpback with external samples
-    whaleHumpbackExternal: {
-      urls: {
-        "C2": "external",
-        "F2": "external",
-        "Bb2": "external",
-        "C3": "external",
-        "F3": "external",
-        "Bb3": "external",
-        "C4": "external",
-        "F4": "external"
-      },
-      release: 6,
-      baseUrl: "external://whale/humpback",
-      effects: ["reverb", "filter", "chorus"],
-      maxVoices: 3,
-      priority: "medium",
-      category: "world",
-      frequencyRange: [20, 4e3],
-      // Complex songs
-      description: "Authentic humpback whale songs from Caribbean and Alaska recordings"
+    whaleRight: {
+        urls: {
+            "C1": "external", "F1": "external", "Bb1": "external",
+            "C2": "external", "F2": "external", "Bb2": "external"
+        },
+        release: 5.0,
+        baseUrl: "external://whale/right",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [50, 500], // Upcalls
+        description: 'Authentic North Atlantic right whale upcalls from NOAA Fisheries'
+    },
+    whaleSei: {
+        urls: {
+            "C1": "external", "F1": "external", "Bb1": "external",
+            "C2": "external", "F2": "external", "Bb2": "external"
+        },
+        release: 7.0,
+        baseUrl: "external://whale/sei",
+        effects: ['reverb', 'filter'],
+        maxVoices: 1,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [200, 600], // Downsweeps
+        description: 'Authentic sei whale downsweeps from NOAA Pennsylvania Group'
+    },
+    whalePilot: {
+        urls: {
+            "C2": "external", "F2": "external", "Bb2": "external",
+            "C3": "external", "F3": "external", "Bb3": "external"
+        },
+        release: 5.0,
+        baseUrl: "external://whale/pilot",
+        effects: ['reverb', 'filter'],
+        maxVoices: 2,
+        priority: 'low',
+        category: 'world',
+        frequencyRange: [300, 8000], // Toothed whale vocalizations
+        description: 'Authentic pilot whale multi-sound communications from NOAA Fisheries'
     }
+    */
   }
 };
 
@@ -33370,7 +33319,7 @@ var AudioEngine = class {
     const configs = this.getSamplerConfigs();
     if (!this.settings.useHighQualitySamples) {
       logger11.info("instruments", "Synthesis mode - creating synthesizers for all instruments");
-      const manualInstruments = [
+      const allInstruments = [
         "piano",
         "organ",
         "strings",
@@ -33406,7 +33355,12 @@ var AudioEngine = class {
         "arpSynth",
         "whaleHumpback"
       ];
-      manualInstruments.forEach((instrumentName) => {
+      const enabledInstruments = allInstruments.filter((instrumentName) => {
+        const instrumentSettings = this.settings.instruments[instrumentName];
+        return (instrumentSettings == null ? void 0 : instrumentSettings.enabled) === true;
+      });
+      logger11.info("instruments", `Creating synthesizers for ${enabledInstruments.length} enabled instruments: ${enabledInstruments.join(", ")}`);
+      enabledInstruments.forEach((instrumentName) => {
         let synth;
         const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
         switch (instrumentName) {

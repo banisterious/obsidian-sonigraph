@@ -2,18 +2,22 @@
 
 ## Table of Contents
 
-1. ✅ [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
-2. ✅ [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture) - **RESOLVED**
-3. ✅ [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure) - **RESOLVED**
-4. ✅ [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
-5. ✅ [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **RESOLVED**
-6. ✅ [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
-7. ✅ [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
-8. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
-9. ✅ [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
-10. ✅ [Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **RESOLVED**
-11. ✅ [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **RESOLVED**
-12. ✅ [Vocal Instrument Silence in High Quality Mode](#issue-012-vocal-instrument-silence) - **RESOLVED**
+### Active Issues
+1. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
+2. 🚀 [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
+3. 🔧 [Family-Based Instrument Loading Ignores UI Toggles](#issue-013-family-based-instrument-loading) - **WORKAROUND**
+
+### Resolved Issues
+4. ✅ [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
+5. ✅ [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture) - **RESOLVED**
+6. ✅ [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure) - **RESOLVED**
+7. ✅ [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
+8. ✅ [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **RESOLVED**
+9. ✅ [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
+10. ✅ [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
+11. ✅ [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
+12. ✅ [Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **RESOLVED**
+13. ✅ [Vocal Instrument Silence in High Quality Mode](#issue-012-vocal-instrument-silence) - **RESOLVED**
 
 ---
 
@@ -32,6 +36,7 @@
 | 009 | ✅ RESOLVED | Medium | Audio Engine | Instrument volume node muting and corruption detection | [Resolution](../archive/issues/issue-009-instrument-volume-node-muting.md) |
 | 010 | ✅ RESOLVED | High | Audio Engine | Audio crackling during playback | [Resolution](../archive/issues/issue-010-audio-crackling-during-playback.md) |
 | 011 | 🚀 IN DEVELOPMENT | High | Audio Engine | CDN sample loading diagnosis and investigation | [Issue #011](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) |
+| 013 | 🔧 WORKAROUND | High | Audio Engine | Family-based instrument loading ignores UI toggles | [Analysis](#issue-013-family-based-instrument-loading) |
 
 ---
 
@@ -410,7 +415,98 @@ Solved complex audio routing architecture issue while maintaining all previous p
 - ✅ **Issue #009**: Volume node muting detection noise completely resolved (34 → 0 log entries)
 - ✅ **Issue #010**: Audio crackling during playback completely resolved with synthesis routing fix
 
-**System Status:** **FUNCTIONAL WITH MINOR CONCERNS** - Issue #008 remains active; core audio functionality working with clean output 🎵✨
+---
+
+## Issue #013: Family-Based Instrument Loading Ignores UI Toggles
+
+**Status:** 🔧 WORKAROUND IMPLEMENTED  
+**Priority:** High  
+**Component:** Audio Engine  
+**Affected Files:** `src/audio/engine.ts`, `src/ui/control-panel-md.ts`, family toggle system
+
+### Summary
+
+Family-level Enable/Disable toggles in the Control Center UI don't actually control which instruments are loaded by the audio engine. When users disable families (e.g., keep only "Experimental" enabled), instruments from disabled families still attempt to load, causing console errors and unexpected behavior.
+
+### Root Cause Analysis
+
+**Architectural Issue:** Family toggles operate on individual instrument `enabled` settings, but instrument loading logic doesn't respect these settings:
+
+1. **Sample Mode**: Loads ALL instruments regardless of `enabled: true/false` settings
+2. **Synthesis Mode**: ✅ FIXED - Now respects individual `enabled` settings  
+3. **UI Disconnect**: Family "Enable All"/"Disable All" buttons work, but audio engine ignores the results
+
+### Current Status: Partial Workaround
+
+**✅ FIXED - Synthesis Mode:**
+```typescript
+// Now filters by enabled settings before creating synthesizers
+const enabledInstruments = allInstruments.filter(instrumentName => {
+    const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+    return instrumentSettings?.enabled === true;
+});
+```
+
+**❌ UNFIXED - Sample Mode:**
+- Still loads all instruments individually without checking `enabled` status
+- Results in console errors for disabled instruments
+- Users experience unexpected behavior when using family toggles
+
+### Evidence
+
+**User Test Case:**
+1. Enable only "Experimental" family in Control Center
+2. Disable all other families (Percussion, Electronic, etc.)
+3. **Expected**: Only whale sounds should load/attempt to load
+4. **Actual**: Console shows errors for timpani, xylophone, leadSynth, bassSynth, etc.
+
+### Impact
+
+- **User Confusion**: Family toggles appear broken
+- **Console Noise**: Error messages for disabled instruments  
+- **Performance**: Unnecessary loading attempts for disabled instruments
+- **UX Inconsistency**: UI suggests family-level control but engine ignores it
+
+### Required Solution
+
+**Complete architectural fix needed:**
+1. **Sample Mode Fix**: Modify sample-based initialization to respect `enabled` settings
+2. **Family Override Logic**: Family toggles should override individual instrument defaults
+3. **Unified Behavior**: Both synthesis and sample modes should behave identically
+4. **UI Synchronization**: Family state should reliably control loading behavior
+
+### Technical Implementation Needed
+
+```typescript
+// Needed: Sample mode initialization filtering
+if (!enabledInstruments.includes('organ')) {
+    logger.debug('instruments', 'Organ disabled - skipping sample loading');
+} else {
+    // Current organ loading logic
+}
+
+// Needed: Family-level override system  
+interface FamilySettings {
+    enabled: boolean;
+    instruments: string[];
+}
+
+// Needed: Unified instrument loading check
+function shouldLoadInstrument(instrumentName: string): boolean {
+    const family = getInstrumentFamily(instrumentName);
+    const familyEnabled = this.settings.families[family]?.enabled ?? true;
+    const instrumentEnabled = this.settings.instruments[instrumentName]?.enabled ?? false;
+    return familyEnabled && instrumentEnabled;
+}
+```
+
+### Workaround Status
+
+**Current Workaround:** Synthesis mode respects individual settings  
+**User Workaround:** Use synthesis mode when only specific families needed  
+**Limitation:** Sample mode users still experience the issue
+
+**System Status:** **FUNCTIONAL WITH WORKAROUND** - Family toggles work in synthesis mode; sample mode architectural fix needed 🔧
 
 ---
 
