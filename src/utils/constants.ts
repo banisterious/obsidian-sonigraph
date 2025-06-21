@@ -201,7 +201,7 @@ export interface SonigraphSettings {
 	rootNote: string;
 	traversalMethod: string;
 	isEnabled: boolean;
-	audioFormat: 'synthesis' | 'mp3' | 'wav';
+	useHighQualitySamples: boolean;
 	microtuning?: boolean;
 	antiCracklingDetuning?: number; // Issue #010 Future-Proof Fix: Configurable micro-detuning amount in cents (±)
 	effects?: {
@@ -277,7 +277,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	rootNote: 'C',
 	traversalMethod: 'breadth-first',
 	isEnabled: true,
-	audioFormat: 'synthesis',
+	useHighQualitySamples: false,
 	microtuning: false,
 	antiCracklingDetuning: 2.0, // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
 	effects: {
