@@ -493,7 +493,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Scale selection
 		const scaleGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
-		scaleGroup.createEl('label', { text: 'Musical Scale', cls: 'osp-control-label' });
+		scaleGroup.createEl('label', { text: 'Musical scale', cls: 'osp-control-label' });
 		const scaleSelect = scaleGroup.createEl('select', { cls: 'osp-select' });
 		['Major', 'Minor', 'Dorian', 'Mixolydian', 'Pentatonic'].forEach(scale => {
 			const option = scaleSelect.createEl('option', { value: scale.toLowerCase(), text: scale });
@@ -502,7 +502,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Key selection
 		const keyGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
-		keyGroup.createEl('label', { text: 'Key Signature', cls: 'osp-control-label' });
+		keyGroup.createEl('label', { text: 'Key signature', cls: 'osp-control-label' });
 		const keySelect = keyGroup.createEl('select', { cls: 'osp-select' });
 		['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(key => {
 			const option = keySelect.createEl('option', { value: key, text: key });

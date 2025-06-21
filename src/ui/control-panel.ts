@@ -223,13 +223,13 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private createMusicalTab(): void {
-		const section = this.createTabSection('Musical Parameters', 'Configure scales, tempo, and musical characteristics');
+		const section = this.createTabSection('Musical parameters', 'Configure scales, tempo, and musical characteristics');
 
 		// Scale and key settings
-		const scaleGroup = this.createSettingsGroup(section, 'Scale & Key', 'Define the musical foundation');
+		const scaleGroup = this.createSettingsGroup(section, 'Scale & key', 'Define the musical foundation');
 
 		new Setting(scaleGroup)
-			.setName('Musical Scale')
+			.setName('Musical scale')
 			.setDesc('The scale pattern used for pitch mapping')
 			.addDropdown(dropdown => dropdown
 				.addOption('major', 'Major (Happy, bright)')
@@ -244,7 +244,7 @@ export class ControlPanelModal extends Modal {
 				}));
 
 		new Setting(scaleGroup)
-			.setName('Root Note')
+			.setName('Root note')
 			.setDesc('The fundamental note that defines the key')
 			.addDropdown(dropdown => {
 				const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -259,7 +259,7 @@ export class ControlPanelModal extends Modal {
 			});
 
 		// Timing and dynamics
-		const timingGroup = this.createSettingsGroup(section, 'Timing & Dynamics', 'Control rhythm and energy');
+		const timingGroup = this.createSettingsGroup(section, 'Timing & dynamics', 'Control rhythm and energy');
 
 		new Setting(timingGroup)
 			.setName('Tempo')
@@ -275,7 +275,7 @@ export class ControlPanelModal extends Modal {
 				}));
 
 		new Setting(timingGroup)
-			.setName('Master Volume')
+			.setName('Master volume')
 			.setDesc('Overall audio output level')
 			.addSlider(slider => slider
 				.setLimits(0, 100, 1)
@@ -291,13 +291,13 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private createInstrumentsTab(): void {
-		const section = this.createTabSection('Instrument Configuration', 'Manage voices and instrument assignments');
+		const section = this.createTabSection('Instrument configuration', 'Manage voices and instrument assignments');
 
 		// Voice assignment strategy
-		const assignmentGroup = this.createSettingsGroup(section, 'Voice Assignment Strategy', 'How instruments are chosen for notes');
+		const assignmentGroup = this.createSettingsGroup(section, 'Voice assignment strategy', 'How instruments are chosen for notes');
 
 		new Setting(assignmentGroup)
-			.setName('Assignment Strategy')
+			.setName('Assignment strategy')
 			.setDesc('Method for assigning notes to instruments')
 			.addDropdown(dropdown => {
 				dropdown
@@ -320,7 +320,7 @@ export class ControlPanelModal extends Modal {
 		this.updateAssignmentStrategyInfo();
 
 		// Real-time voice activity monitor
-		const activityGroup = this.createSettingsGroup(section, 'Live Voice Activity', 'Real-time instrument usage monitoring');
+		const activityGroup = this.createSettingsGroup(section, 'Live voice activity', 'Real-time instrument usage monitoring');
 		const activityDisplay = activityGroup.createDiv({ cls: 'sonigraph-voice-activity' });
 
 		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
@@ -357,7 +357,7 @@ export class ControlPanelModal extends Modal {
 		});
 
 		// Individual instrument controls
-		const instrumentsGroup = this.createSettingsGroup(section, 'Individual Instrument Controls', 'Configure each instrument separately');
+		const instrumentsGroup = this.createSettingsGroup(section, 'Individual instrument controls', 'Configure each instrument separately');
 
 		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
 		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
@@ -445,7 +445,7 @@ export class ControlPanelModal extends Modal {
 
 			// Max voices control
 			new Setting(controlsContainer)
-				.setName('Maximum Voices')
+				.setName('Maximum voices')
 				.setDesc(`Voice limit for ${info.name.toLowerCase()} (1-16)`)
 				.addSlider(slider => slider
 					.setLimits(1, 16, 1)
@@ -530,7 +530,7 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private createHarmonyTab(): void {
-		const section = this.createTabSection('Harmonic Control', 'Advanced harmony features coming soon');
+		const section = this.createTabSection('Harmonic control', 'Advanced harmony features coming soon');
 
 		// Placeholder for future harmony features
 		const placeholderGroup = this.createSettingsGroup(section, '🚧 Coming Soon', 'Advanced harmonic features are planned for future releases');
@@ -548,7 +548,7 @@ export class ControlPanelModal extends Modal {
 	}
 
 	private createEffectsTab(): void {
-		const section = this.createTabSection('Audio Effects', 'Configure reverb, chorus, and filter effects for 34 instruments');
+		const section = this.createTabSection('Audio effects', 'Configure reverb, chorus, and filter effects for 34 instruments');
 
 		// Enhanced Effects UI with grouping and filtering
 		this.createEnhancedEffectsInterface(section);
@@ -556,19 +556,19 @@ export class ControlPanelModal extends Modal {
 
 	private createEnhancedEffectsInterface(parent: HTMLElement): void {
 		// Master Effects Controls
-		const masterSection = this.createSettingsGroup(parent, '🎛️ Master Effects', 'Global orchestral processing controls');
+		const masterSection = this.createSettingsGroup(parent, '🎛️ Master effects', 'Global orchestral processing controls');
 		this.createMasterEffectsControls(masterSection);
 
 		// Instrument Family Organization
-		const familySection = this.createSettingsGroup(parent, '🎼 Instrument Families', 'Organized effects for all 34 instruments');
+		const familySection = this.createSettingsGroup(parent, '🎼 Instrument families', 'Organized effects for all 34 instruments');
 		this.createInstrumentFamiliesInterface(familySection);
 
 		// Effect Presets Section  
-		const presetsSection = this.createSettingsGroup(parent, '🎭 Effect Presets', 'Instantly apply professional effect combinations to all instruments');
+		const presetsSection = this.createSettingsGroup(parent, '🎭 Effect presets', 'Instantly apply professional effect combinations to all instruments');
 		
 		// Venue Presets
 		const venueGroup = presetsSection.createDiv({ cls: 'sonigraph-preset-group' });
-		venueGroup.createEl('h4', { text: 'Venue Presets', cls: 'sonigraph-preset-category' });
+		venueGroup.createEl('h4', { text: 'Venue presets', cls: 'sonigraph-preset-category' });
 		
 		const venueButtons = venueGroup.createDiv({ cls: 'sonigraph-preset-buttons' });
 		Object.entries(EFFECT_PRESETS).forEach(([key, preset]) => {
@@ -601,7 +601,7 @@ export class ControlPanelModal extends Modal {
 
 		// Genre Presets
 		const genreGroup = presetsSection.createDiv({ cls: 'sonigraph-preset-group' });
-		genreGroup.createEl('h4', { text: 'Genre Presets', cls: 'sonigraph-preset-category' });
+		genreGroup.createEl('h4', { text: 'Genre presets', cls: 'sonigraph-preset-category' });
 		
 		const genreButtons = genreGroup.createDiv({ cls: 'sonigraph-preset-buttons' });
 		Object.entries(EFFECT_PRESETS).forEach(([key, preset]) => {
@@ -1259,7 +1259,7 @@ export class ControlPanelModal extends Modal {
 	private createMasterEffectsControls(parent: HTMLElement): void {
 		// Master Reverb
 		const masterReverbGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
-		masterReverbGroup.createEl('h4', { text: '🏛️ Master Reverb Hall', cls: 'sonigraph-master-effect-title' });
+		masterReverbGroup.createEl('h4', { text: '🏛️ Master reverb hall', cls: 'sonigraph-master-effect-title' });
 		
 		new Setting(masterReverbGroup)
 			.setName('Hall Size')
@@ -1280,7 +1280,7 @@ export class ControlPanelModal extends Modal {
 		masterEQGroup.createEl('h4', { text: '🎚️ Master EQ', cls: 'sonigraph-master-effect-title' });
 		
 		new Setting(masterEQGroup)
-			.setName('Bass Boost')
+			.setName('Bass boost')
 			.setDesc('Enhance low-end frequencies for orchestral warmth')
 			.addSlider(slider => slider
 				.setLimits(-12, 12, 1)
@@ -1293,7 +1293,7 @@ export class ControlPanelModal extends Modal {
 				}));
 
 		new Setting(masterEQGroup)
-			.setName('Treble Clarity')
+			.setName('Treble clarity')
 			.setDesc('Adjust high frequencies for instrumental clarity')
 			.addSlider(slider => slider
 				.setLimits(-12, 12, 1)
@@ -1310,7 +1310,7 @@ export class ControlPanelModal extends Modal {
 		masterCompGroup.createEl('h4', { text: '🎛️ Master Dynamics', cls: 'sonigraph-master-effect-title' });
 		
 		new Setting(masterCompGroup)
-			.setName('Orchestral Compression')
+			.setName('Orchestral compression')
 			.setDesc('Balance dynamics across all 34 instruments')
 			.addSlider(slider => slider
 				.setLimits(0, 1, 0.05)
