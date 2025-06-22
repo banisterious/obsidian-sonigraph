@@ -3,22 +3,22 @@
 ## Table of Contents
 
 ### Active Issues
-1. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
-2. 🚀 [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
-3. 🔧 [Family-Based Instrument Loading Ignores UI Toggles](#issue-013-family-based-instrument-loading) - **WORKAROUND**
-4. 🆕 [Disabled Instruments Still Load When Using Family Toggles with High Quality Samples](#issue-014-experimental-family-disabled-instrument-loading) - **OPEN**
+1. 🔍 [Issue #008: Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
+2. 🚀 [Issue #011: CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
+3. 🔧 [Issue #013: Family-Based Instrument Loading Ignores UI Toggles](#issue-013-family-based-instrument-loading) - **WORKAROUND**
 
 ### Resolved Issues
-4. ✅ [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
-5. ✅ [Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture) - **RESOLVED**
-6. ✅ [Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure) - **RESOLVED**
-7. ✅ [Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
-8. ✅ [MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **RESOLVED**
-9. ✅ [Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
-10. ✅ [Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
-11. ✅ [Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
-12. ✅ [Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **RESOLVED**
-13. ✅ [Vocal Instrument Silence in High Quality Mode](#issue-012-vocal-instrument-silence) - **RESOLVED**
+1. ✅ [Issue #001: Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
+2. ✅ [Issue #002: Monolithic Audio Engine Architecture](#issue-002-monolithic-audio-engine-architecture) - **RESOLVED**
+3. ✅ [Issue #003: Instrument Family Playback Failure](#issue-003-instrument-family-playback-failure) - **RESOLVED**
+4. ✅ [Issue #004: Confusing Tab Counter Display Format](#issue-004-confusing-tab-counter-display-format) - **RESOLVED**
+5. ✅ [Issue #005: MP3 Sample Format Loading Failures](#issue-005-mp3-sample-format-loading-failures) - **RESOLVED**
+6. ✅ [Issue #006: Play Button Single-Use Problem](#issue-006-play-button-single-use-problem) - **RESOLVED**
+7. ✅ [Issue #007: Audio Engine Logging Noise and Configuration Issues](#issue-007-audio-engine-logging-noise-and-configuration-issues) - **RESOLVED**
+8. ✅ [Issue #009: Instrument Volume Node Muting and Corruption Detection](#issue-009-instrument-volume-node-muting) - **RESOLVED**
+9. ✅ [Issue #010: Audio Crackling During Playback](#issue-010-audio-crackling-during-playback) - **RESOLVED**
+10. ✅ [Issue #012: Vocal Instrument Silence in High Quality Mode](#issue-012-vocal-instrument-silence) - **RESOLVED**
+11. ✅ [Issue #014: Disabled Instruments Still Load When Using Family Toggles with High Quality Samples](#issue-014-experimental-family-disabled-instrument-loading) - **RESOLVED**
 
 ---
 
