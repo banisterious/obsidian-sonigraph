@@ -80,7 +80,7 @@ src/
 │   ├── percussion-engine.ts # Advanced percussion synthesis
 │   └── electronic-engine.ts # Electronic synthesis suite
 ├── ui/
-│   ├── control-panel-md.ts # Material Design control center
+│   ├── control-panel.ts # Control Center
 │   ├── settings.ts        # Settings management
 │   ├── components.ts      # Reusable UI components
 │   ├── lucide-icons.ts    # Icon system integration

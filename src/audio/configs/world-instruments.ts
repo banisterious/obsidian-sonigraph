@@ -4,7 +4,7 @@ export const worldInstruments: InstrumentFamily = {
     name: 'World & Environmental Instruments',
     description: 'Unique, environmental and world music instruments with authentic whale sounds',
     instruments: {
-        // Original humpback whale (fallback synthesis)
+        // Synthesized humpback whale (fallback)
         whaleHumpback: {
             urls: {
                 "C1": `C1.${FORMAT_PLACEHOLDER}`, "F1": `F1.${FORMAT_PLACEHOLDER}`, "Bb1": `Bb1.${FORMAT_PLACEHOLDER}`,
@@ -19,9 +19,7 @@ export const worldInstruments: InstrumentFamily = {
             category: 'world'
         },
         
-        // External whale samples (Freesound integration) - DISABLED until UI integration
-        // TODO: Re-enable these when whale integration UI is complete
-        /*
+        // High-quality whale species (real NOAA recordings) - Only available in high-quality mode
         whaleBlue: {
             urls: {
                 "C1": "external", "F1": "external", "Bb1": "external",
@@ -34,7 +32,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [10, 40], // Infrasonic calls
-            description: 'Authentic blue whale infrasonic calls from MBARI hydrophone recordings'
+            description: 'Authentic blue whale infrasonic calls from NOAA hydrophone recordings',
+            requiresHighQuality: true
         },
         whaleOrca: {
             urls: {
@@ -48,7 +47,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [500, 25000], // Clicks and calls
-            description: 'Authentic orca pod communications from MBARI deep-sea observatory'
+            description: 'Authentic orca pod communications from MBARI deep-sea observatory',
+            requiresHighQuality: true
         },
         whaleGray: {
             urls: {
@@ -62,7 +62,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [100, 2000], // Migration calls
-            description: 'Authentic gray whale migration calls from oceanic soundscape recordings'
+            description: 'Authentic gray whale migration calls from oceanic soundscape recordings',
+            requiresHighQuality: true
         },
         whaleSperm: {
             urls: {
@@ -76,7 +77,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [100, 30000], // Echolocation
-            description: 'Authentic sperm whale echolocation clicks from Newfoundland recordings'
+            description: 'Authentic sperm whale echolocation clicks from Newfoundland recordings',
+            requiresHighQuality: true
         },
         whaleMinke: {
             urls: {
@@ -90,7 +92,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [35, 50], // Downsweeps
-            description: 'Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings'
+            description: 'Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings',
+            requiresHighQuality: true
         },
         whaleFin: {
             urls: {
@@ -104,7 +107,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [15, 30], // Pulse sequences
-            description: 'Authentic fin whale pulse sequences from NOAA Pennsylvania Group'
+            description: 'Authentic fin whale pulse sequences from NOAA Pennsylvania Group',
+            requiresHighQuality: true
         },
         whaleRight: {
             urls: {
@@ -118,7 +122,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [50, 500], // Upcalls
-            description: 'Authentic North Atlantic right whale upcalls from NOAA Fisheries'
+            description: 'Authentic North Atlantic right whale upcalls from NOAA Fisheries',
+            requiresHighQuality: true
         },
         whaleSei: {
             urls: {
@@ -132,7 +137,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [200, 600], // Downsweeps
-            description: 'Authentic sei whale downsweeps from NOAA Pennsylvania Group'
+            description: 'Authentic sei whale downsweeps from NOAA Pennsylvania Group',
+            requiresHighQuality: true
         },
         whalePilot: {
             urls: {
@@ -146,8 +152,8 @@ export const worldInstruments: InstrumentFamily = {
             priority: 'low',
             category: 'world',
             frequencyRange: [300, 8000], // Toothed whale vocalizations
-            description: 'Authentic pilot whale multi-sound communications from NOAA Fisheries'
+            description: 'Authentic pilot whale multi-sound communications from NOAA Fisheries',
+            requiresHighQuality: true
         }
-        */
     }
 };
