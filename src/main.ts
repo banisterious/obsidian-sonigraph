@@ -7,6 +7,7 @@ import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';
 import { MusicalMapper } from './graph/musical-mapper';
 import { getLogger, LoggerFactory } from './logging';
+import { initializeWhaleIntegration, getWhaleIntegration } from './external/whale-integration';
 
 const logger = getLogger('main');
 
@@ -23,8 +24,14 @@ export default class SonigraphPlugin extends Plugin {
 		// Load settings
 		await this.loadSettings();
 
+		// Initialize logging level from settings
+		this.initializeLoggingLevel();
+
 		// Initialize components
 		this.initializeComponents();
+
+		// Initialize whale integration for high-quality samples
+		await this.initializeWhaleIntegration();
 
 		// Add ribbon icon
 		this.addRibbonIcon('music', 'Sonigraph: Open Control Panel', () => {
@@ -54,12 +61,19 @@ export default class SonigraphPlugin extends Plugin {
 
 		logger.info('lifecycle', 'Sonigraph plugin loaded successfully', {
 			settingsLoaded: true,
-			componentsInitialized: true
+			componentsInitialized: true,
+			whaleIntegrationEnabled: !!getWhaleIntegration()
 		});
 	}
 
 	async onunload() {
 		logger.info('lifecycle', 'Sonigraph plugin unloading...');
+
+		// Clean up whale integration
+		const whaleIntegration = getWhaleIntegration();
+		if (whaleIntegration) {
+			whaleIntegration.cleanup();
+		}
 
 		// Clean up audio engine
 		if (this.audioEngine) {
@@ -75,6 +89,25 @@ export default class SonigraphPlugin extends Plugin {
 		logger.info('lifecycle', 'Sonigraph plugin unloaded');
 	}
 
+	/**
+	 * Initialize logging level from saved settings
+	 */
+	private initializeLoggingLevel(): void {
+		if (this.settings.logLevel) {
+			LoggerFactory.setLogLevel(this.settings.logLevel);
+			logger.info('initialization', 'Logging level initialized from settings', {
+				level: this.settings.logLevel
+			});
+		} else {
+			// Use default level if not set
+			const defaultLevel = 'warn';
+			LoggerFactory.setLogLevel(defaultLevel);
+			logger.info('initialization', 'Using default logging level', {
+				level: defaultLevel
+			});
+		}
+	}
+
 	private initializeComponents(): void {
 		logger.debug('initialization', 'Initializing plugin components');
 
@@ -88,6 +121,36 @@ export default class SonigraphPlugin extends Plugin {
 		this.musicalMapper = new MusicalMapper(this.settings);
 
 		logger.debug('initialization', 'All components initialized');
+	}
+
+	/**
+	 * Initialize whale integration for high-quality external samples
+	 */
+	private async initializeWhaleIntegration(): Promise<void> {
+		try {
+			// Initialize whale integration with current settings
+			const whaleSettings = {
+				useWhaleExternal: this.settings.useHighQualitySamples && this.settings.instruments.whaleHumpback?.enabled,
+				autoDiscovery: false, // Phase 1: Seed collection only
+				discoveryFrequency: 'never' as const,
+				qualityThreshold: 'strict' as const,
+				allowBackgroundFetch: false,
+				speciesPreference: 'humpback' as const,
+				sampleUrls: [] as string[], // Will be populated from seed collection
+				trustedInstitutions: ['MBARI_MARS', 'NOAA_fisheries', 'listeningtowhales'],
+				maxSamples: 50
+			};
+
+			await initializeWhaleIntegration(whaleSettings);
+			
+			logger.info('whale-integration', 'Whale integration initialized for high-quality samples', {
+				enabled: whaleSettings.useWhaleExternal,
+				highQualitySamples: this.settings.useHighQualitySamples,
+				whaleEnabled: this.settings.instruments.whaleHumpback?.enabled
+			});
+		} catch (error) {
+			logger.warn('whale-integration', 'Failed to initialize whale integration', error);
+		}
 	}
 
 	public openControlPanel(): void {
@@ -268,10 +331,52 @@ export default class SonigraphPlugin extends Plugin {
 			this.musicalMapper.updateSettings(this.settings);
 		}
 
+		// Update whale integration if high-quality settings or whale instrument settings changed
+		if ('useHighQualitySamples' in newSettings || 
+			(newSettings.instruments && 'whaleHumpback' in newSettings.instruments)) {
+			await this.updateWhaleIntegration();
+		}
+
 		// Save settings
 		await this.saveSettings();
 
-		logger.info('settings', 'Settings updated successfully');
+		logger.info('settings', 'Settings updated successfully', {
+			whaleIntegrationUpdated: 'useHighQualitySamples' in newSettings || 
+				(newSettings.instruments && 'whaleHumpback' in newSettings.instruments)
+		});
+	}
+
+	/**
+	 * Update whale integration when settings change
+	 */
+	private async updateWhaleIntegration(): Promise<void> {
+		try {
+			const whaleIntegration = getWhaleIntegration();
+			if (whaleIntegration) {
+				// Update whale integration settings
+				const whaleSettings = {
+					useWhaleExternal: this.settings.useHighQualitySamples && this.settings.instruments.whaleHumpback?.enabled,
+					autoDiscovery: false,
+					discoveryFrequency: 'never' as const,
+					qualityThreshold: 'strict' as const,
+					allowBackgroundFetch: false,
+					speciesPreference: 'humpback' as const,
+					sampleUrls: [] as string[],
+					trustedInstitutions: ['MBARI_MARS', 'NOAA_fisheries', 'listeningtowhales'],
+					maxSamples: 50
+				};
+				
+				whaleIntegration.updateSettings(whaleSettings);
+				
+				logger.info('whale-integration', 'Whale integration settings updated', {
+					enabled: whaleSettings.useWhaleExternal,
+					highQualitySamples: this.settings.useHighQualitySamples,
+					whaleEnabled: this.settings.instruments.whaleHumpback?.enabled
+				});
+			}
+		} catch (error) {
+			logger.warn('whale-integration', 'Failed to update whale integration settings', error);
+		}
 	}
 
 	async loadSettings(): Promise<void> {

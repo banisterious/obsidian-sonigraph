@@ -1,5 +1,5 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
+import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
@@ -2648,7 +2648,7 @@ export class AudioEngine {
 			logger.debug('trigger', `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
 
 			// Determine which instrument to use
-			let instrumentName;
+			let instrumentName: string;
 			try {
 				instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
 				logger.debug('issue-006-debug', 'Instrument determined successfully', {
@@ -2685,7 +2685,10 @@ export class AudioEngine {
 			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
 				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
 			} else if (this.isEnvironmentalInstrument(instrumentName)) {
-				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime);
+				// Fire and forget - don't block the sequence for external sample loading
+				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch(error => {
+					logger.debug('environmental-sound', `Environmental sound failed for ${instrumentName}`, error);
+				});
 			} else {
 				const synth = this.instruments.get(instrumentName);
 				
@@ -4787,13 +4790,22 @@ export class AudioEngine {
 	}
 
 	/**
-	 * Trigger environmental sounds with specialized synthesis
+	 * Trigger environmental sounds with specialized synthesis or external samples
 	 */
-	private triggerEnvironmentalSound(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): void {
+	private async triggerEnvironmentalSound(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): Promise<void> {
 		try {
 			switch (instrumentName) {
 				case 'whaleHumpback':
-					// Use persistent whale synthesizer
+					// Try external whale samples first if high-quality mode is enabled
+					if (this.settings.useHighQualitySamples) {
+						const externalSample = await this.tryLoadExternalWhaleSample(instrumentName, frequency, duration, velocity, time);
+						if (externalSample) {
+							logger.debug('environmental-sound', `External whale sample triggered: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration.toFixed(3)}`);
+							return; // Successfully used external sample
+						}
+					}
+
+					// Fallback to persistent whale synthesizer
 					const whaleSynth = this.instruments.get('whaleHumpback') as PolySynth;
 					if (!whaleSynth) {
 						logger.warn('environmental-sound', 'Persistent whale synthesizer not found');
@@ -4804,7 +4816,7 @@ export class AudioEngine {
 					const whaleFreq = Math.max(frequency * 0.5, 40); // Lower the frequency, minimum 40Hz
 					whaleSynth.triggerAttackRelease(whaleFreq, duration, time, velocity * 0.8); // Match sequence duration, slightly quieter
 					
-					logger.debug('environmental-sound', `Whale sound triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
+					logger.debug('environmental-sound', `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
 					
 					break;
 			}
@@ -4817,6 +4829,48 @@ export class AudioEngine {
 				frequency
 			});
 			// No fallback - environmental sounds should be silent if they fail
+		}
+	}
+
+	/**
+	 * Try to load and play external whale sample
+	 */
+	private async tryLoadExternalWhaleSample(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): Promise<boolean> {
+		try {
+			const { tryLoadExternalWhaleSample } = await import('../external/whale-integration');
+			
+			// Map frequency to note for whale sample loading
+			const note = this.frequencyToNoteName(frequency);
+			
+			// Try to load external whale sample
+			const audioBuffer = await tryLoadExternalWhaleSample(instrumentName, note, frequency);
+			
+			if (audioBuffer) {
+				// Create a one-shot player for the external sample
+				const player = new Player(audioBuffer).toDestination();
+				
+				// Apply volume scaling similar to synthesis
+				const volume = new Volume(-6);
+				player.connect(volume);
+				volume.connect(this.volume);
+				
+				// Trigger the sample
+				player.start(time);
+				
+				// Clean up after playback
+				setTimeout(() => {
+					player.dispose();
+					volume.dispose();
+				}, (duration + 1) * 1000); // Add 1 second buffer for cleanup
+				
+				logger.debug('whale-external', `External whale sample played: ${instrumentName}, freq: ${frequency.toFixed(1)}Hz`);
+				return true;
+			}
+			
+			return false;
+		} catch (error) {
+			logger.debug('whale-external', `Failed to load external whale sample for ${instrumentName}`, error);
+			return false;
 		}
 	}
 

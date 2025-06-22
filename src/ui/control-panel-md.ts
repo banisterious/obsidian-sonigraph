@@ -1,4 +1,4 @@
-import { App, Modal, Setting } from 'obsidian';
+import { App, Modal, Setting, Notice } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
@@ -749,10 +749,17 @@ export class MaterialControlPanelModal extends Modal {
 			if (option.value === LoggerFactory.getLogLevel()) optionEl.selected = true;
 		});
 		
-		logLevelSelect.addEventListener('change', () => {
+		logLevelSelect.addEventListener('change', async () => {
 			const newLevel = logLevelSelect.value as LogLevel;
 			LoggerFactory.setLogLevel(newLevel);
-			logger.info('settings-change', 'Log level changed from Control Center', { level: newLevel });
+			
+			// Save to plugin settings for persistence
+			await this.plugin.updateSettings({ logLevel: newLevel });
+			
+			logger.info('settings-change', 'Log level changed from Control Center', { 
+				level: newLevel,
+				persisted: true 
+			});
 		});
 		
 		// Export Logs Action Chip
@@ -916,6 +923,11 @@ export class MaterialControlPanelModal extends Modal {
 		// Individual Instruments Card
 		this.createInstrumentsCard(familyId, tabConfig);
 		
+		// Special whale integration controls for experimental family
+		if (familyId === 'experimental') {
+			this.createWhaleIntegrationCard();
+		}
+		
 		// Family Effects Card
 		this.createFamilyEffectsCard(familyId, tabConfig);
 	}
@@ -1003,6 +1015,90 @@ export class MaterialControlPanelModal extends Modal {
 				activeVoices: this.getInstrumentActiveVoices(instrument)
 			});
 		});
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create whale integration card for experimental family
+	 */
+	private createWhaleIntegrationCard(): void {
+		const card = new MaterialCard({
+			title: 'Whale sound integration',
+			iconName: 'waves',
+			subtitle: 'High-quality external whale samples from marine research institutions',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Get whale integration status
+		const whaleIntegration = this.getWhaleIntegrationStatus();
+		
+		// Enable external whale samples toggle
+		createObsidianToggle(
+			content,
+			whaleIntegration.enabled,
+			(enabled) => this.handleWhaleIntegrationToggle(enabled),
+			{
+				name: 'Use external whale samples',
+				description: 'Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions'
+			}
+		);
+
+		// Status information section
+		const statusSection = content.createDiv({ cls: 'osp-whale-status' });
+		statusSection.style.marginTop = 'var(--md-space-4)';
+
+		// Sample collection status
+		const collectionRow = statusSection.createDiv({ cls: 'osp-info-row' });
+		collectionRow.createSpan({ text: 'Sample collection:', cls: 'osp-info-label' });
+		const collectionStatus = collectionRow.createSpan({ 
+			text: whaleIntegration.collectionStatus,
+			cls: 'osp-info-value' 
+		});
+
+		// Available species
+		const speciesRow = statusSection.createDiv({ cls: 'osp-info-row' });
+		speciesRow.createSpan({ text: 'Available species:', cls: 'osp-info-label' });
+		speciesRow.createSpan({ 
+			text: whaleIntegration.availableSpecies.join(', '),
+			cls: 'osp-info-value' 
+		});
+
+		// Sample sources
+		const sourcesRow = statusSection.createDiv({ cls: 'osp-info-row' });
+		sourcesRow.createSpan({ text: 'Sources:', cls: 'osp-info-label' });
+		sourcesRow.createSpan({ 
+			text: whaleIntegration.sources.join(', '),
+			cls: 'osp-info-value' 
+		});
+
+		// Action buttons section
+		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
+		actionsRow.style.marginTop = 'var(--md-space-4)';
+
+		// Preview random sample button
+		const previewBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--primary',
+			text: 'Preview sample'
+		});
+		previewBtn.addEventListener('click', () => this.handleWhalePreview());
+		
+		// View attribution info button
+		const attributionBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--secondary',
+			text: 'Attribution info'
+		});
+		attributionBtn.addEventListener('click', () => this.handleWhaleAttribution());
+
+		// Future: Manual discovery button (Phase 2)
+		const discoveryBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--secondary',
+			text: 'Find new samples'
+		});
+		discoveryBtn.disabled = true; // Disabled in Phase 1
+		discoveryBtn.title = 'Manual sample discovery coming in Phase 2';
+
 		this.contentContainer.appendChild(card.getElement());
 	}
 
@@ -2041,5 +2137,133 @@ export class MaterialControlPanelModal extends Modal {
 			URL.revokeObjectURL(url);
 			logger.info('export', 'Logs exported from Control Center', { filename });
 		}
+	}
+
+	/**
+	 * Get whale integration status for UI display
+	 */
+	private getWhaleIntegrationStatus(): {
+		enabled: boolean;
+		collectionStatus: string;
+		availableSpecies: string[];
+		sources: string[];
+	} {
+		const isHighQuality = this.plugin.settings.useHighQualitySamples;
+		const isWhaleEnabled = this.plugin.settings.instruments.whaleHumpback?.enabled;
+		const whaleIntegrationEnabled = isHighQuality && isWhaleEnabled;
+
+		return {
+			enabled: whaleIntegrationEnabled || false,
+			collectionStatus: whaleIntegrationEnabled ? 'Seed collection (10 samples)' : 'Disabled',
+			availableSpecies: whaleIntegrationEnabled ? 
+				['Humpback', 'Blue', 'Orca', 'Gray', 'Sperm', 'Minke', 'Fin'] : 
+				['None'],
+			sources: whaleIntegrationEnabled ? 
+				['NOAA Fisheries', 'MBARI MARS', 'NOAA PMEL'] : 
+				['None']
+		};
+	}
+
+	/**
+	 * Handle whale integration toggle
+	 */
+	private async handleWhaleIntegrationToggle(enabled: boolean): Promise<void> {
+		if (enabled) {
+			// Enable both high quality samples and whale instrument
+			await this.plugin.updateSettings({
+				useHighQualitySamples: true,
+				instruments: {
+					...this.plugin.settings.instruments,
+					whaleHumpback: {
+						...this.plugin.settings.instruments.whaleHumpback,
+						enabled: true
+					}
+				}
+			});
+			
+			logger.info('whale-ui', 'Whale integration enabled via UI', {
+				highQualitySamples: true,
+				whaleEnabled: true
+			});
+		} else {
+			// Just disable whale instrument, keep high quality samples setting
+			await this.plugin.updateSettings({
+				instruments: {
+					...this.plugin.settings.instruments,
+					whaleHumpback: {
+						...this.plugin.settings.instruments.whaleHumpback,
+						enabled: false
+					}
+				}
+			});
+			
+			logger.info('whale-ui', 'Whale integration disabled via UI', {
+				whaleEnabled: false
+			});
+		}
+
+		// Refresh the current tab to update status
+		this.showTab('experimental');
+	}
+
+	/**
+	 * Handle whale sample preview
+	 */
+	private handleWhalePreview(): void {
+		// Play a test whale sound using the audio engine
+		if (this.plugin.audioEngine) {
+			// Trigger a low frequency note to test whale sound
+			this.plugin.audioEngine.playTestNote(80); // Low frequency for whale
+			
+			logger.info('whale-ui', 'Whale sample preview triggered', {
+				frequency: 80
+			});
+		} else {
+			logger.warn('whale-ui', 'Cannot preview whale sample: audio engine not available');
+		}
+	}
+
+	/**
+	 * Handle whale attribution info display
+	 */
+	private handleWhaleAttribution(): void {
+		// Create attribution modal or display info
+		const attributionInfo = `
+# Whale Sample Attribution
+
+## NOAA Fisheries
+- Right whale upcalls and multi-sound patterns
+- Sei whale downsweeps  
+- Pilot whale multi-sound recordings
+- Source: https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals
+
+## MBARI MARS Observatory
+- Blue whale D-calls from Monterey Bay (36.71°N, 122.187°W)
+- Orca vocalizations from California deep-sea observatory
+- Gray whale migration recordings
+- Sperm whale echolocation clicks
+- Source: Deep-sea cabled observatory hydrophone recordings
+
+## NOAA PMEL Acoustics Program
+- Alaska humpback whale songs (Winter 1999)
+- Atlantic minke whale downsweeps
+- Source: https://www.pmel.noaa.gov/acoustics/whales/
+
+## Freesound.org Contributors
+- Caribbean humpback whale field recordings by listeningtowhales
+- Newfoundland sperm whale echolocation by smithereens
+- All samples used under Creative Commons licensing
+
+All whale samples are authentic recordings from marine research institutions and field recordings, ensuring scientific accuracy and educational value.
+		`.trim();
+
+		// For now, just log the attribution info
+		// In a full implementation, this could open a modal with formatted attribution
+		console.log(attributionInfo);
+		
+		logger.info('whale-ui', 'Whale attribution info displayed');
+		
+		// Show a simple notice for now
+		new Notice('Whale sample attribution information logged to console. Check developer tools for details.');
 	}
 }

@@ -204,6 +204,7 @@ export interface SonigraphSettings {
 	useHighQualitySamples: boolean;
 	microtuning?: boolean;
 	antiCracklingDetuning?: number; // Issue #010 Future-Proof Fix: Configurable micro-detuning amount in cents (±)
+	logLevel?: 'off' | 'error' | 'warn' | 'info' | 'debug'; // Persistent logging level
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
@@ -280,6 +281,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	useHighQualitySamples: false,
 	microtuning: false,
 	antiCracklingDetuning: 2.0, // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
+	logLevel: 'warn', // Default to warn level to capture important initialization issues
 	effects: {
 		orchestralreverbhall: { enabled: true },
 		'3bandeq': { enabled: true },
