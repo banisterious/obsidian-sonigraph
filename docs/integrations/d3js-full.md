@@ -1,3 +1,4 @@
+<pre>
 Directory structure:
 └── d3-d3/
     ├── README.md
@@ -190,6 +191,7 @@ Directory structure:
         └── workflows/
             ├── deploy.yml
             └── test.yml
+</pre>
 
 ================================================
 FILE: README.md
