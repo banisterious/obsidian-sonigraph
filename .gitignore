@@ -4,6 +4,9 @@ node_modules
 ui-mockups
 logs/
 
+# Sample cache directories (user-specific)
+.sonigraph-cache/
+
 # Project-specific files
 CLAUDE.md
 obsidian-developer-docs/

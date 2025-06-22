@@ -141,7 +141,7 @@ export default class SonigraphPlugin extends Plugin {
 				maxSamples: 50
 			};
 
-			await initializeWhaleIntegration(whaleSettings);
+			await initializeWhaleIntegration(whaleSettings, this.app.vault);
 			
 			logger.info('whale-integration', 'Whale integration initialized for high-quality samples', {
 				enabled: whaleSettings.useWhaleExternal,
