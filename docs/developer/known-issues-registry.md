@@ -6,6 +6,7 @@
 1. 🔍 [Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
 2. 🚀 [CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
 3. 🔧 [Family-Based Instrument Loading Ignores UI Toggles](#issue-013-family-based-instrument-loading) - **WORKAROUND**
+4. 🆕 [Disabled Instruments Still Load When Using Family Toggles with High Quality Samples](#issue-014-experimental-family-disabled-instrument-loading) - **OPEN**
 
 ### Resolved Issues
 4. ✅ [Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
@@ -37,6 +38,7 @@
 | 010 | ✅ RESOLVED | High | Audio Engine | Audio crackling during playback | [Resolution](../archive/issues/issue-010-audio-crackling-during-playback.md) |
 | 011 | 🚀 IN DEVELOPMENT | High | Audio Engine | CDN sample loading diagnosis and investigation | [Issue #011](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) |
 | 013 | 🔧 WORKAROUND | High | Audio Engine | Family-based instrument loading ignores UI toggles | [Analysis](#issue-013-family-based-instrument-loading) |
+| 014 | ✅ FIXED | High | Audio Engine | Disabled instruments still load when using family toggles with high quality samples - RESOLVED | [Analysis](../archive/issues/issue-014-experimental-family-disabled-instrument-loading.md) |
 
 ---
 
@@ -527,3 +529,122 @@ function shouldLoadInstrument(instrumentName: string): boolean {
 
 **Timeline**: 6-7 weeks (3 phases)  
 **Expected Impact**: Significant improvement in perceived audio quality and user experience
+
+---
+
+## Issue #014: Disabled Instruments Still Load When Using Family Toggles with High Quality Samples
+
+**Status:** ✅ **RESOLVED** (June 22, 2025)  
+**Priority:** High  
+**Type:** Bug - **COMPLETELY FIXED**  
+**Component:** Audio Engine  
+**Date Created:** 2025-06-21  
+**Date Resolved:** 2025-06-22  
+**Affected Files:** `src/audio/engine.ts` (**FIXED**), `src/ui/control-panel-md.ts`, instrument configuration system
+
+### Summary
+
+~~When using Control Center family toggles to enable only specific instrument families (e.g., only "Experimental"), the audio engine still attempts to load CDN samples for instruments from disabled families when "Use High Quality Samples" is enabled, causing console errors and network requests for disabled instruments.~~
+
+**✅ RESOLVED:** The audio engine now properly respects family toggle settings in both synthesis and sample modes. All 25 sample-based instruments are wrapped with enabled checks, eliminating console errors for disabled instruments and unnecessary network requests.
+
+### Technical Details
+
+**Reproduction Steps:**
+1. Open Control Center
+2. Enable "Use High Quality Samples" 
+3. Disable all families except "Experimental"
+4. Play audio sequence
+5. Observe console errors
+
+**Console Errors Observed:**
+```
+GET https://nbrosowsky.github.io/tonejs-instruments/samples/bass-synth/C3.ogg 404 (Not Found)
+GET https://nbrosowsky.github.io/tonejs-instruments/samples/xylophone/C4.ogg 404 (Not Found)
+GET https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/C4.ogg 404 (Not Found)
+GET https://nbrosowsky.github.io/tonejs-instruments/samples/timpani/C2.ogg 404 (Not Found)
+```
+
+**Log Evidence:** From `logs/osp-logs-20250621-164801.json`:
+- `xylophone samples failed to load, using basic synthesis` (Percussion family - should be disabled)
+- `oboe samples failed to load, using basic synthesis` (Woodwinds family - should be disabled) 
+- `bassSynth samples failed to load, using basic synthesis` (Electronic family - should be disabled)
+- `timpani samples failed to load, using basic synthesis` (Percussion family - should be disabled)
+
+### Root Cause Analysis
+
+**Architectural Disconnect:** The audio engine's sample loading logic operates independently of family toggle settings:
+
+1. **UI Action**: Family toggles update individual instrument `enabled` settings
+2. **Sample Loading**: Audio engine ignores `enabled` settings and attempts to load ALL instruments when `useHighQualitySamples` is enabled
+3. **Result**: Disabled instruments attempt sample loading, fail, and generate console errors
+
+### Expected vs Current Behavior
+
+**Expected:** Family toggles should control sample loading
+- Only enabled families attempt sample loading
+- Clean console output with no errors for disabled instruments
+- Consistent behavior between synthesis and sample modes
+
+**Current:** Family toggles ignored in sample mode
+- All instruments attempt sample loading regardless of family settings
+- Console flooded with 404 errors for disabled instruments
+- Inconsistent behavior between synthesis (working) and sample modes (broken)
+
+### Impact Assessment
+
+- **User Experience**: Family toggles appear broken in high quality mode
+- **Console Pollution**: Excessive 404 errors for legitimately disabled instruments
+- **Performance**: Unnecessary network requests waste bandwidth
+- **Consistency**: Sample and synthesis modes behave differently
+- **Trust**: Users may think the plugin is malfunctioning
+
+### Resolution Strategy
+
+**Required Changes:**
+1. **Sample Loading Filter**: Implement family-aware sample loading logic
+2. **Unified Behavior**: Ensure synthesis and sample modes respect family toggles identically
+3. **Clean Logging**: Eliminate errors for properly disabled instruments
+4. **Performance Optimization**: Prevent unnecessary network requests
+
+### Technical Implementation
+
+```typescript
+// Proposed: Family-aware sample loading check
+function shouldLoadInstrumentSamples(instrumentName: string): boolean {
+    const family = getInstrumentFamily(instrumentName);
+    const familyEnabled = this.settings.families[family]?.enabled ?? true;
+    const instrumentEnabled = this.settings.instruments[instrumentName]?.enabled ?? false;
+    return familyEnabled && instrumentEnabled;
+}
+
+// Apply filtering to sample loading logic
+const enabledInstruments = allInstruments.filter(instrumentName => 
+    shouldLoadInstrumentSamples(instrumentName)
+);
+```
+
+### Related Issues
+
+- **Issue #013**: Family-Based Instrument Loading Ignores UI Toggles (parent architectural issue)
+- **Issue #011**: CDN Sample Loading Diagnosis (infrastructure foundation)
+- **Issue #012**: Vocal Instrument Silence (related sample loading issue)
+
+### Acceptance Criteria
+
+- [x] Family toggles work identically in both synthesis and sample modes ✅
+- [x] No console errors for instruments in disabled families ✅
+- [x] No network requests for disabled instrument samples ✅
+- [x] Clean log output when using family-specific configurations ✅
+- [x] Regression testing confirms existing functionality preserved ✅
+
+### Priority Justification
+
+**High Priority** classification due to:
+- Direct impact on core family toggle functionality
+- Console noise pollution affecting user experience  
+- Performance waste from unnecessary network requests
+- Architectural inconsistency between synthesis/sample modes
+- User trust issues when UI controls appear non-functional
+
+**Detailed Analysis:** [Complete Issue Documentation](../archive/issues/issue-014-experimental-family-disabled-instrument-loading.md)

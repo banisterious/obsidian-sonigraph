@@ -943,39 +943,41 @@ export class AudioEngine {
 		}
 		
 		// Sample-based initialization for non-synthesis mode
+		// Issue #014 Fix: Only initialize instruments that are enabled in family settings
+		
 		// Piano - using Sampler with high-quality samples, fallback to basic synthesis
-		
-		// Issue #011: Enhanced CDN sample loading diagnostics
-		logger.info('cdn-diagnosis', 'Initializing piano sampler with CDN sample loading', {
-			instrument: 'piano',
-			baseUrl: configs.piano.baseUrl,
-			sampleCount: Object.keys(configs.piano.urls).length,
-			format: this.settings.useHighQualitySamples ? 'ogg' : 'synthesis',
-			effectiveFormat: 'ogg', // From Issue #005 resolution
-			urls: configs.piano.urls
-		});
-		
-		const pianoSampler = new Sampler({
-			...configs.piano,
-			onload: () => {
-				logger.info('cdn-diagnosis', 'Piano samples loaded successfully from CDN', {
-					instrument: 'piano',
-					baseUrl: configs.piano.baseUrl,
-					loadedSampleCount: Object.keys(configs.piano.urls).length,
-					status: 'success'
-				});
-			},
-			onerror: (error) => {
-				logger.error('cdn-diagnosis', 'Piano samples failed to load from CDN - investigating for Issue #011', { 
-					instrument: 'piano',
-					baseUrl: configs.piano.baseUrl,
-					sampleCount: Object.keys(configs.piano.urls).length,
-					error: error?.toString() || 'Unknown error',
-					fallbackMode: 'synthesis',
-					troubleshooting: 'Check network tab for 404/CORS errors'
-				});
-			}
-		});
+		if (this.settings.instruments.piano?.enabled === true) {
+			// Issue #011: Enhanced CDN sample loading diagnostics
+			logger.info('cdn-diagnosis', 'Initializing piano sampler with CDN sample loading', {
+				instrument: 'piano',
+				baseUrl: configs.piano.baseUrl,
+				sampleCount: Object.keys(configs.piano.urls).length,
+				format: this.settings.useHighQualitySamples ? 'ogg' : 'synthesis',
+				effectiveFormat: 'ogg', // From Issue #005 resolution
+				urls: configs.piano.urls
+			});
+			
+			const pianoSampler = new Sampler({
+				...configs.piano,
+				onload: () => {
+					logger.info('cdn-diagnosis', 'Piano samples loaded successfully from CDN', {
+						instrument: 'piano',
+						baseUrl: configs.piano.baseUrl,
+						loadedSampleCount: Object.keys(configs.piano.urls).length,
+						status: 'success'
+					});
+				},
+				onerror: (error) => {
+					logger.error('cdn-diagnosis', 'Piano samples failed to load from CDN - investigating for Issue #011', { 
+						instrument: 'piano',
+						baseUrl: configs.piano.baseUrl,
+						sampleCount: Object.keys(configs.piano.urls).length,
+						error: error?.toString() || 'Unknown error',
+						fallbackMode: 'synthesis',
+						troubleshooting: 'Check network tab for 404/CORS errors'
+					});
+				}
+			});
 		const pianoVolume = new Volume(-6);
 		this.instrumentVolumes.set('piano', pianoVolume);
 		
@@ -999,8 +1001,10 @@ export class AudioEngine {
 		}
 		pianoOutput.connect(this.volume);
 		this.instruments.set('piano', pianoSampler);
+		}
 
 		// Organ - using Sampler with harmonium samples, fallback to basic synthesis
+		if (this.settings.instruments.organ?.enabled === true) {
 		
 		// Issue #011: Enhanced CDN sample loading diagnostics for harmonium/organ
 		logger.info('cdn-diagnosis', 'Initializing organ sampler with CDN sample loading', {
@@ -1053,8 +1057,10 @@ export class AudioEngine {
 		}
 		organOutput.connect(this.volume);
 		this.instruments.set('organ', organSampler);
+		}
 
 		// Strings - using Sampler with violin samples, fallback to basic synthesis
+		if (this.settings.instruments.strings?.enabled === true) {
 		const stringsSampler = new Sampler({
 			...configs.strings,
 			onload: () => {
@@ -1087,8 +1093,10 @@ export class AudioEngine {
 		}
 		stringsOutput.connect(this.volume);
 		this.instruments.set('strings', stringsSampler);
+		}
 
 		// Choir - using Sampler with choir samples
+		if (this.settings.instruments.choir?.enabled === true) {
 		const choirSampler = new Sampler(configs.choir);
 		const choirVolume = new Volume(-6);
 		this.instrumentVolumes.set('choir', choirVolume);
@@ -1113,8 +1121,10 @@ export class AudioEngine {
 		}
 		choirOutput.connect(this.volume);
 		this.instruments.set('choir', choirSampler);
+		}
 
 		// Vocal Pads - using Sampler with vocal pad samples
+		if (this.settings.instruments.vocalPads?.enabled === true) {
 		const vocalPadsSampler = new Sampler(configs.vocalPads);
 		const vocalPadsVolume = new Volume(-6);
 		this.instrumentVolumes.set('vocalPads', vocalPadsVolume);
@@ -1139,8 +1149,10 @@ export class AudioEngine {
 		}
 		vocalPadsOutput.connect(this.volume);
 		this.instruments.set('vocalPads', vocalPadsSampler);
+		}
 
 		// Pad - using Sampler with synthetic pad samples
+		if (this.settings.instruments.pad?.enabled === true) {
 		const padSampler = new Sampler(configs.pad);
 		const padVolume = new Volume(-6);
 		this.instrumentVolumes.set('pad', padVolume);
@@ -1165,8 +1177,10 @@ export class AudioEngine {
 		}
 		padOutput.connect(this.volume);
 		this.instruments.set('pad', padSampler);
+		}
 
 		// Soprano - using Sampler with soprano samples (Issue #012: with synthesis fallback)
+		if (this.settings.instruments.soprano?.enabled === true) {
 		const sopranoSampler = this.createSamplerWithFallback(configs.soprano, 'soprano');
 		const sopranoVolume = new Volume(-6);
 		this.instrumentVolumes.set('soprano', sopranoVolume);
@@ -1191,8 +1205,10 @@ export class AudioEngine {
 		}
 		sopranoOutput.connect(this.volume);
 		this.instruments.set('soprano', sopranoSampler);
+		}
 
 		// Alto - using Sampler with alto samples (Issue #012: with synthesis fallback)
+		if (this.settings.instruments.alto?.enabled === true) {
 		const altoSampler = this.createSamplerWithFallback(configs.alto, 'alto');
 		const altoVolume = new Volume(-6);
 		this.instrumentVolumes.set('alto', altoVolume);
@@ -1217,8 +1233,10 @@ export class AudioEngine {
 		}
 		altoOutput.connect(this.volume);
 		this.instruments.set('alto', altoSampler);
+		}
 
 		// Tenor - using Sampler with tenor samples (Issue #012: with synthesis fallback)
+		if (this.settings.instruments.tenor?.enabled === true) {
 		const tenorSampler = this.createSamplerWithFallback(configs.tenor, 'tenor');
 		const tenorVolume = new Volume(-6);
 		this.instrumentVolumes.set('tenor', tenorVolume);
@@ -1243,8 +1261,10 @@ export class AudioEngine {
 		}
 		tenorOutput.connect(this.volume);
 		this.instruments.set('tenor', tenorSampler);
+		}
 
 		// Bass - using Sampler with bass voice samples (Issue #012: with synthesis fallback)
+		if (this.settings.instruments.bass?.enabled === true) {
 		const bassSampler = this.createSamplerWithFallback(configs.bass, 'bass');
 		const bassVolume = new Volume(-6);
 		this.instrumentVolumes.set('bass', bassVolume);
@@ -1269,8 +1289,10 @@ export class AudioEngine {
 		}
 		bassOutput.connect(this.volume);
 		this.instruments.set('bass', bassSampler);
+		}
 
 		// Flute - using Sampler with flute samples
+		if (this.settings.instruments.flute?.enabled === true) {
 		const fluteSampler = new Sampler(configs.flute);
 		const fluteVolume = new Volume(-6);
 		this.instrumentVolumes.set('flute', fluteVolume);
@@ -1295,8 +1317,10 @@ export class AudioEngine {
 		}
 		fluteOutput.connect(this.volume);
 		this.instruments.set('flute', fluteSampler);
+		}
 
 		// Clarinet - using Sampler with clarinet samples
+		if (this.settings.instruments.clarinet?.enabled === true) {
 		const clarinetSampler = new Sampler(configs.clarinet);
 		const clarinetVolume = new Volume(-6);
 		this.instrumentVolumes.set('clarinet', clarinetVolume);
@@ -1321,8 +1345,10 @@ export class AudioEngine {
 		}
 		clarinetOutput.connect(this.volume);
 		this.instruments.set('clarinet', clarinetSampler);
+		}
 
 		// Saxophone - using Sampler with saxophone samples
+		if (this.settings.instruments.saxophone?.enabled === true) {
 		const saxophoneSampler = new Sampler(configs.saxophone);
 		const saxophoneVolume = new Volume(-6);
 		this.instrumentVolumes.set('saxophone', saxophoneVolume);
@@ -1347,8 +1373,10 @@ export class AudioEngine {
 		}
 		saxophoneOutput.connect(this.volume);
 		this.instruments.set('saxophone', saxophoneSampler);
+		}
 
 		// Phase 6B: Extended Keyboard Family - Electric Piano
+		if (this.settings.instruments.electricPiano?.enabled === true) {
 		const electricPianoSampler = new Sampler(configs.electricPiano);
 		const electricPianoVolume = new Volume(-6);
 		this.instrumentVolumes.set('electricPiano', electricPianoVolume);
@@ -1373,8 +1401,10 @@ export class AudioEngine {
 		}
 		electricPianoOutput.connect(this.volume);
 		this.instruments.set('electricPiano', electricPianoSampler);
+		}
 
 		// Harpsichord - using Sampler with harpsichord samples
+		if (this.settings.instruments.harpsichord?.enabled === true) {
 		const harpsichordSampler = new Sampler(configs.harpsichord);
 		const harpsichordVolume = new Volume(-6);
 		this.instrumentVolumes.set('harpsichord', harpsichordVolume);
@@ -1399,8 +1429,10 @@ export class AudioEngine {
 		}
 		harpsichordOutput.connect(this.volume);
 		this.instruments.set('harpsichord', harpsichordSampler);
+		}
 
 		// Accordion - using Sampler with accordion samples
+		if (this.settings.instruments.accordion?.enabled === true) {
 		const accordionSampler = new Sampler(configs.accordion);
 		const accordionVolume = new Volume(-6);
 		this.instrumentVolumes.set('accordion', accordionVolume);
@@ -1425,8 +1457,10 @@ export class AudioEngine {
 		}
 		accordionOutput.connect(this.volume);
 		this.instruments.set('accordion', accordionSampler);
+		}
 
 		// Celesta - using Sampler with celesta samples
+		if (this.settings.instruments.celesta?.enabled === true) {
 		const celestaSampler = new Sampler(configs.celesta);
 		const celestaVolume = new Volume(-6);
 		this.instrumentVolumes.set('celesta', celestaVolume);
@@ -1451,8 +1485,10 @@ export class AudioEngine {
 		}
 		celestaOutput.connect(this.volume);
 		this.instruments.set('celesta', celestaSampler);
+		}
 
 		// Phase 7: Strings & Brass Completion - Violin
+		if (this.settings.instruments.violin?.enabled === true) {
 		const violinSampler = new Sampler(configs.violin);
 		const violinVolume = new Volume(-6);
 		this.instrumentVolumes.set('violin', violinVolume);
@@ -1477,8 +1513,10 @@ export class AudioEngine {
 		}
 		violinOutput.connect(this.volume);
 		this.instruments.set('violin', violinSampler);
+		}
 
 		// Cello - using Sampler with cello samples
+		if (this.settings.instruments.cello?.enabled === true) {
 		const celloSampler = new Sampler(configs.cello);
 		const celloVolume = new Volume(-6);
 		this.instrumentVolumes.set('cello', celloVolume);
@@ -1503,8 +1541,10 @@ export class AudioEngine {
 		}
 		celloOutput.connect(this.volume);
 		this.instruments.set('cello', celloSampler);
+		}
 
 		// Guitar - using Sampler with guitar samples
+		if (this.settings.instruments.guitar?.enabled === true) {
 		const guitarSampler = new Sampler(configs.guitar);
 		const guitarVolume = new Volume(-6);
 		this.instrumentVolumes.set('guitar', guitarVolume);
@@ -1529,8 +1569,10 @@ export class AudioEngine {
 		}
 		guitarOutput.connect(this.volume);
 		this.instruments.set('guitar', guitarSampler);
+		}
 
 		// Harp - using Sampler with harp samples
+		if (this.settings.instruments.harp?.enabled === true) {
 		const harpSampler = new Sampler(configs.harp);
 		const harpVolume = new Volume(-6);
 		this.instrumentVolumes.set('harp', harpVolume);
@@ -1555,8 +1597,10 @@ export class AudioEngine {
 		}
 		harpOutput.connect(this.volume);
 		this.instruments.set('harp', harpSampler);
+		}
 
 		// Trumpet - using Sampler with trumpet samples
+		if (this.settings.instruments.trumpet?.enabled === true) {
 		const trumpetSampler = new Sampler(configs.trumpet);
 		const trumpetVolume = new Volume(-6);
 		this.instrumentVolumes.set('trumpet', trumpetVolume);
@@ -1581,8 +1625,10 @@ export class AudioEngine {
 		}
 		trumpetOutput.connect(this.volume);
 		this.instruments.set('trumpet', trumpetSampler);
+		}
 
 		// French Horn - using Sampler with french horn samples
+		if (this.settings.instruments.frenchHorn?.enabled === true) {
 		const frenchHornSampler = new Sampler(configs.frenchHorn);
 		const frenchHornVolume = new Volume(-6);
 		this.instrumentVolumes.set('frenchHorn', frenchHornVolume);
@@ -1607,8 +1653,10 @@ export class AudioEngine {
 		}
 		frenchHornOutput.connect(this.volume);
 		this.instruments.set('frenchHorn', frenchHornSampler);
+		}
 
 		// Trombone - using Sampler with trombone samples
+		if (this.settings.instruments.trombone?.enabled === true) {
 		const tromboneSampler = new Sampler(configs.trombone);
 		const tromboneVolume = new Volume(-6);
 		this.instrumentVolumes.set('trombone', tromboneVolume);
@@ -1633,8 +1681,10 @@ export class AudioEngine {
 		}
 		tromboneOutput.connect(this.volume);
 		this.instruments.set('trombone', tromboneSampler);
+		}
 
 		// Tuba - using Sampler with tuba samples
+		if (this.settings.instruments.tuba?.enabled === true) {
 		const tubaSampler = new Sampler(configs.tuba);
 		const tubaVolume = new Volume(-6);
 		this.instrumentVolumes.set('tuba', tubaVolume);
@@ -1659,6 +1709,26 @@ export class AudioEngine {
 		}
 		tubaOutput.connect(this.volume);
 		this.instruments.set('tuba', tubaSampler);
+		}
+
+		// Issue #014 Fix: Log enabled vs total instrument counts for sample mode
+		const totalSampleInstruments = [
+			'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'soprano', 'alto', 'tenor', 'bass',
+			'flute', 'clarinet', 'saxophone', 'electricPiano', 'harpsichord', 'accordion', 'celesta',
+			'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba'
+		];
+		const settings = this.settings; // Capture settings reference for arrow function
+		const enabledSampleInstruments = totalSampleInstruments.filter(instrumentName => 
+			settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled === true
+		);
+		
+		logger.info('instruments', `Issue #014 Fix: Sample mode initialization completed`, {
+			totalAvailable: totalSampleInstruments.length,
+			enabledCount: enabledSampleInstruments.length,
+			enabledInstruments: enabledSampleInstruments,
+			skippedCount: totalSampleInstruments.length - enabledSampleInstruments.length,
+			fix: 'Family toggle settings now properly respected in sample loading mode'
+		});
 
 		// Initialize persistent whale synthesizer for environmental sounds
 		this.initializeWhaleSynthesizer();
@@ -1773,7 +1843,29 @@ export class AudioEngine {
 		// In synthesis mode, create basic synthesizers instead of loading samples
 		if (!this.settings.useHighQualitySamples) {
 			logger.info('instruments', 'Synthesis-only mode - creating basic synthesizers');
+			// Issue #014 Fix: Only initialize instruments that are enabled in family settings
+			const settings = this.settings; // Capture for arrow function
+			
+			logger.info('issue-014-fix', '🔧 FAST-PATH SYNTHESIS: Applying enabled instrument filter', {
+				totalMissingInstruments: missingKeys.length,
+				missingInstruments: missingKeys
+			});
+			
 			missingKeys.forEach(instrumentName => {
+				// Issue #014 Fix: Check if instrument is enabled before initializing
+				if (settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled !== true) {
+					logger.info('issue-014-fix', `🔧 FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
+						instrumentName,
+						enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled,
+						reason: 'disabled-in-family-settings'
+					});
+					return;
+				}
+				
+				logger.info('issue-014-fix', `🔧 FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
+					instrumentName,
+					enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled
+				});
 				// Create basic polyphonic synthesizer
 				// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
@@ -1805,8 +1897,30 @@ export class AudioEngine {
 		}
 
 		// Continue with sample-based initialization for non-synthesis mode
+		// Issue #014 Fix: Only initialize instruments that are enabled in family settings
+		const settings = this.settings; // Capture for arrow function
+		
+		logger.info('issue-014-fix', '🔧 FAST-PATH: Applying enabled instrument filter', {
+			totalMissingInstruments: missingKeys.length,
+			missingInstruments: missingKeys
+		});
 
 		missingKeys.forEach(instrumentName => {
+			// Issue #014 Fix: Check if instrument is enabled before initializing
+			if (settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled !== true) {
+				logger.info('issue-014-fix', `🔧 FAST-PATH: Skipping disabled instrument: ${instrumentName}`, {
+					instrumentName,
+					enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled,
+					reason: 'disabled-in-family-settings'
+				});
+				return;
+			}
+			
+			logger.info('issue-014-fix', `🔧 FAST-PATH: Initializing enabled instrument: ${instrumentName}`, {
+				instrumentName,
+				enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled
+			});
+			
 			try {
 				// Environmental instruments prefer synthesis over samples until sample downloading is implemented
 				if (this.isEnvironmentalInstrument(instrumentName)) {
