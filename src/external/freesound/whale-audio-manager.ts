@@ -18,66 +18,101 @@ const logger = getLogger('whale-audio-manager');
 export class WhaleAudioManager {
     private freesoundClient: FreesoundAPIClient;
     private sampleUrls: Map<WhaleSpecies, string[]> = new Map();
+    private cachedSamples: Map<WhaleSpecies, AudioBuffer[]> = new Map();
     private settings: WhaleIntegrationSettings;
     private lastDiscoveryTime: number = 0;
+    private initializationPromise: Promise<void> | null = null;
     
     // Seed collection from our research - Enhanced with NOAA Fisheries MP3s
     private readonly SEED_COLLECTION: Record<WhaleSpecies, string[]> = {
         humpback: [
-            // Caribbean field recording by listeningtowhales
-            'https://freesound.org/people/listeningtowhales/sounds/[ID]/download/',
-            // Alaska NOAA PMEL recording  
-            'https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/akhumphi1x.wav',
-            // NOAA Pennsylvania Group humpback song
-            'https://www.fisheries.noaa.gov/s3/2023-04/Meno-song-NOAA-PAGroup-13-humpback-clip.mp3'
+            // Alaska NOAA PMEL recording (Archive.org mirror)
+            'https://web.archive.org/web/20250507121520/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/akhumphi1x.wav',
+            // Alaska humpback whale - NOAA Ocean Explorer Sea Sounds (Archive.org mirror)
+            'https://web.archive.org/web/20250316052243/https://oceanexplorer.noaa.gov/explorations/sound01/background/seasounds/media/akhumphi1x.mp3',
+            // American Samoa humpback with snapping shrimp (Archive.org mirror)
+            'https://web.archive.org/web/20250501011939/https://pmel.noaa.gov/acoustics/multimedia/HB-ship-AMSNP.wav',
+            // NOAA Pennsylvania Group humpback song (Archive.org mirror)
+            'https://web.archive.org/web/20250421195559/https://www.fisheries.noaa.gov/s3/2023-04/Meno-song-NOAA-PAGroup-13-humpback-clip.mp3',
+            // Historic "Songs of the Humpback Whale" 1970 - Side 1 (Roger S. Payne, Bermuda)
+            'https://archive.org/download/songsofhumpbackw00payn/Side%201.mp3',
+            // Historic "Songs of the Humpback Whale" 1970 - Side 2 (Roger S. Payne, Bermuda)
+            'https://archive.org/download/songsofhumpbackw00payn/Side%202.mp3'
         ],
         blue: [
-            // MBARI_MARS Monterey Bay hydrophone
-            'https://freesound.org/people/MBARI_MARS/sounds/[ID]/download/',
-            // Cornell/NOAA Long Island blue whale
-            'https://www.fisheries.noaa.gov/s3/2023-04/Cornell-NY-LongIsland-20090123-000000-LPfilter20-amplified-x8speed-blue-clip.mp3'
+            // Cornell/NOAA Long Island blue whale (Archive.org mirror)
+            'https://web.archive.org/web/20250420204702/https://www.fisheries.noaa.gov/s3/2023-04/Cornell-NY-LongIsland-20090123-000000-LPfilter20-amplified-x8speed-blue-clip.mp3',
+            // Northeast Pacific blue whale (Archive.org mirror)
+            'https://web.archive.org/web/20250507125154/https://oceanexplorer.noaa.gov/explorations/sound01/background/seasounds/media/nepblue.mp3',
+            // Northeast Pacific blue whale - PMEL recording (Archive.org mirror)
+            'https://web.archive.org/web/20250526025156/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/nepblue24s10x.wav',
+            // West Pacific blue whale - PMEL recording (Archive.org mirror)
+            'https://web.archive.org/web/20250313112719/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/wblue26s10x.wav',
+            // South Pacific blue whale - PMEL recording (Archive.org mirror)
+            'https://web.archive.org/web/20250313112756/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/etpb3_10xc-BlueWhaleSouthPacific-10x.wav',
+            // Atlantic blue whale - PMEL recording (Archive.org mirror)
+            'https://web.archive.org/web/20250430204620/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/atlblue_512_64_0-50_10x.wav',
+            // 52 Hz whale call - "World's loneliest whale" (Archive.org mirror)
+            'https://web.archive.org/web/20250309152144/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/ak52_10x.wav',
+            // NOAA Ocean Explorer blue whale - Lewis & Clark expedition (Archive.org mirror)
+            'https://web.archive.org/web/20250507052906/https://oceanexplorer.noaa.gov/explorations/lewis_clark01/background/hydroacoustics/media/bluewhale24s10x.mp3',
+            // Channel Islands blue whale - SanctSound project (Archive.org mirror)
+            'https://web.archive.org/web/20250413110747/https://sanctsound.ioos.us/files/SanctSound_MB01_01_bluewhale_20181123T203257Z_6xSpeed.wav.mp3',
+            // Channel Islands blue whale - SanctSound CI05 station (Archive.org mirror)
+            'https://web.archive.org/web/20250413110745/https://sanctsound.ioos.us/files/SanctSound_CI05_03_bluewhale_20190926T230959Z_41dBgain_4xSpeed.wav',
+            // Olympic Coast blue whale - SanctSound OC02 station (Archive.org mirror)
+            'https://web.archive.org/web/20250413110747/https://sanctsound.ioos.us/files/SanctSound_OC02_02_bluewhale_20191028T005013Z_45dBgain_6xSpeed.wav',
+            // Santa Barbara blue and fin whales - SanctSound SB02 station (Archive.org mirror)
+            'https://web.archive.org/web/20250413110747/https://sanctsound.ioos.us/files/SanctSound_SB02_06_blueandfinwhales_20191025T050452Z_10xSpeed.wav'
         ],
         orca: [
-            // MBARI_MARS deep-sea observatory
-            'https://freesound.org/people/MBARI_MARS/sounds/[ID]/download/'
+            // No suitable recordings found - placeholder for future API integration
         ],
         gray: [
-            // MBARI_MARS oceanic soundscape project
-            'https://freesound.org/people/MBARI_MARS/sounds/[ID]/download/'
+            // MBARI_MARS oceanic soundscape project - Gray whale (Eschrichtius robustus) from deep-sea cabled observatory
+            'https://freesound.org/people/MBARI_MARS/sounds/413377/download/'
         ],
         sperm: [
-            // MBARI_MARS cachalot echolocation
-            'https://freesound.org/people/MBARI_MARS/sounds/[ID]/download/',
-            // Newfoundland field recording by smithereens
-            'https://freesound.org/people/smithereens/sounds/[ID]/download/'
+            // No suitable recordings found - placeholder for future API integration
         ],
         minke: [
-            // NOAA PMEL Atlantic minke
-            'https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/atlmin_512_64_0-50_10x.wav',
-            // NOAA Pennsylvania Group minke pulse trains
-            'https://www.fisheries.noaa.gov/s3/2023-04/Baac-pulsetrains-NOAA-PAGroup-25-minke-clip.mp3'
+            // NOAA PMEL Atlantic minke (Archive.org mirror)
+            'https://web.archive.org/web/20250430135640/https://www.pmel.noaa.gov/acoustics/whales/sounds/whalewav/atlmin_512_64_0-50_10x.wav',
+            // NOAA Ocean Explorer Atlantic minke - Sea Sounds collection (Archive.org mirror)
+            'https://web.archive.org/web/20250507045438/https://oceanexplorer.noaa.gov/explorations/sound01/background/seasounds/media/atlminke10x.mp3',
+            // NOAA Pennsylvania Group minke pulse trains (Archive.org mirror)
+            'https://web.archive.org/web/20250420205440/https://www.fisheries.noaa.gov/s3/2023-04/Baac-pulsetrains-NOAA-PAGroup-25-minke-clip.mp3'
         ],
         fin: [
-            // NOAA Pennsylvania Group fin whale song
-            'https://www.fisheries.noaa.gov/s3/2023-04/Baph-song-NOAA-PAGroup-05-x5speed-fin-clip.mp3'
+            // NOAA Pennsylvania Group fin whale song (Archive.org mirror)
+            'https://web.archive.org/web/20250501031730/https://www.fisheries.noaa.gov/s3/2023-04/Baph-song-NOAA-PAGroup-05-x5speed-fin-clip.mp3',
+            // NOAA Ocean Explorer Atlantic fin whale - Sea Sounds collection (Archive.org mirror)
+            'https://web.archive.org/web/20250507061824/https://oceanexplorer.noaa.gov/explorations/sound01/background/seasounds/media/atlfin.mp3',
+            // NOAA Ocean Explorer fin whale - Lewis & Clark expedition (Archive.org mirror)
+            'https://web.archive.org/web/20250507062125/https://oceanexplorer.noaa.gov/explorations/lewis_clark01/background/hydroacoustics/media/finwhale15s10x.mp3',
+            // Channel Islands fin whale - SanctSound CI05 station (Archive.org mirror)
+            'https://web.archive.org/web/20250413110750/https://sanctsound.ioos.us/files/SanctSound_CI05_04_finwhale_20191228T134133Z_6xSpeed.wav',
+            // Monterey Bay fin whale - SanctSound MB01 station (Archive.org mirror)
+            'https://web.archive.org/web/20250413110752/https://sanctsound.ioos.us/files/SanctSound_MB01_05_finwhale_20200417T214135Z_53dBgain_8xSpeed.wav',
+            // Olympic Coast fin whale - SanctSound OC02 station (Archive.org mirror)
+            'https://web.archive.org/web/20250413110752/https://sanctsound.ioos.us/files/SanctSound_OC02_02_finwhale_20190905T020206Z_48dBGain_6xSpeed.wav'
         ],
         right: [
-            // Right whale upcalls (critically endangered)
-            'https://www.fisheries.noaa.gov/s3/2023-04/Eugl-upcall-NOAA-PAGroup-01-right-clip-1.mp3',
-            // Right whale multi-sound patterns
-            'https://www.fisheries.noaa.gov/s3/2023-04/Eugl-multisound-NOAA-PAGroup-01-right-whale-clip.mp3'
+            // Right whale upcalls (critically endangered) (Archive.org mirror)
+            'https://web.archive.org/web/20250430145142/https://www.fisheries.noaa.gov/s3/2023-04/Eugl-upcall-NOAA-PAGroup-01-right-clip-1.mp3',
+            // Right whale multi-sound patterns (Archive.org mirror)
+            'https://web.archive.org/web/20250421074258/https://www.fisheries.noaa.gov/s3/2023-04/Eugl-multisound-NOAA-PAGroup-01-right-whale-clip.mp3'
         ],
         sei: [
-            // Sei whale downsweeps
-            'https://www.fisheries.noaa.gov/s3/2023-04/Babo-downsweep-NOAA-PAGroup-06-x2speed-sei-whale-clip.mp3'
+            // Sei whale downsweeps (Archive.org mirror)
+            'https://web.archive.org/web/20250420230007/https://www.fisheries.noaa.gov/s3/2023-04/Babo-downsweep-NOAA-PAGroup-06-x2speed-sei-whale-clip.mp3'
         ],
         pilot: [
-            // Pilot whale multi-sound (toothed whale)
-            'https://www.fisheries.noaa.gov/s3/2023-04/Glsp-Multisound-NOAA-PAGroup-01-pilot-whale-clip.mp3'
+            // Pilot whale multi-sound (toothed whale) (Archive.org mirror)
+            'https://web.archive.org/web/20250617094506/https://www.fisheries.noaa.gov/s3/2023-04/Glsp-Multisound-NOAA-PAGroup-01-pilot-whale-clip.mp3'
         ],
         mixed: [
-            // Fallback to humpback for mixed requests
-            'https://freesound.org/people/listeningtowhales/sounds/[ID]/download/'
+            // No suitable recordings found - placeholder for future API integration
         ]
     };
 
@@ -89,6 +124,9 @@ export class WhaleAudioManager {
         this.settings = settings;
         this.freesoundClient = new FreesoundAPIClient(clientId, clientSecret);
         this.initializeSeedCollection();
+        
+        // Start downloading and caching samples asynchronously
+        this.initializationPromise = this.downloadAndCacheSamples();
     }
 
     /**
@@ -103,29 +141,202 @@ export class WhaleAudioManager {
     }
 
     /**
-     * Load whale sample for playback
+     * Download and cache whale samples locally for better performance
+     */
+    private async downloadAndCacheSamples(): Promise<void> {
+        logger.info('cache-init', 'Starting whale sample caching process', {
+            totalSpecies: this.sampleUrls.size,
+            totalUrls: Array.from(this.sampleUrls.values()).reduce((sum, urls) => sum + urls.length, 0)
+        });
+
+        const downloadPromises: Promise<void>[] = [];
+
+        for (const [species, urls] of this.sampleUrls.entries()) {
+            // Filter to only direct audio file URLs that we can cache
+            const directUrls = urls.filter(url => 
+                url.includes('.wav') || url.includes('.mp3') || url.includes('.ogg')
+            );
+
+            if (directUrls.length === 0) {
+                logger.debug('cache-init', 'No direct audio URLs found for species', {
+                    species,
+                    totalUrls: urls.length
+                });
+                continue;
+            }
+
+            // Download samples for this species
+            const speciesPromise = this.downloadSpeciesSamples(species, directUrls);
+            downloadPromises.push(speciesPromise);
+        }
+
+        try {
+            await Promise.allSettled(downloadPromises);
+            
+            const totalCached = Array.from(this.cachedSamples.values())
+                .reduce((sum, buffers) => sum + buffers.length, 0);
+                
+            logger.info('cache-init', 'Whale sample caching completed', {
+                totalCached,
+                speciesCached: this.cachedSamples.size,
+                cacheStatus: Object.fromEntries(
+                    Array.from(this.cachedSamples.entries())
+                        .map(([species, buffers]) => [species, buffers.length])
+                )
+            });
+        } catch (error) {
+            logger.error('cache-init', 'Error during sample caching', {
+                error: error instanceof Error ? error.message : String(error)
+            });
+        }
+    }
+
+    /**
+     * Download samples for a specific species
+     */
+    private async downloadSpeciesSamples(species: WhaleSpecies, urls: string[]): Promise<void> {
+        const buffers: AudioBuffer[] = [];
+        
+        logger.debug('cache-download', 'Downloading samples for species', {
+            species,
+            urlCount: urls.length
+        });
+
+        for (const url of urls) {
+            try {
+                logger.debug('cache-download', 'Downloading sample', {
+                    species,
+                    url: url.substring(0, 60) + '...'
+                });
+
+                const audioBuffer = await this.downloadAndDecodeAudio(url);
+                if (audioBuffer) {
+                    buffers.push(audioBuffer);
+                    
+                    logger.debug('cache-download', 'Successfully cached sample', {
+                        species,
+                        bufferLength: audioBuffer.length,
+                        sampleRate: audioBuffer.sampleRate,
+                        duration: audioBuffer.length / audioBuffer.sampleRate
+                    });
+                }
+            } catch (error) {
+                logger.warn('cache-download', 'Failed to download sample', {
+                    species,
+                    url: url.substring(0, 60) + '...',
+                    error: error instanceof Error ? error.message : String(error)
+                });
+                // Continue with other samples
+            }
+        }
+
+        if (buffers.length > 0) {
+            this.cachedSamples.set(species, buffers);
+            logger.info('cache-download', 'Cached samples for species', {
+                species,
+                sampleCount: buffers.length,
+                requestedCount: urls.length
+            });
+        } else {
+            logger.warn('cache-download', 'No samples successfully cached for species', {
+                species,
+                attemptedUrls: urls.length
+            });
+        }
+    }
+
+    /**
+     * Download and decode audio from URL with proper error handling
+     */
+    private async downloadAndDecodeAudio(url: string): Promise<AudioBuffer | null> {
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'audio/*',
+                    'User-Agent': 'Sonigraph-Obsidian-Plugin/1.0'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+            
+            // Use Web Audio API to decode
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            return audioBuffer;
+        } catch (error) {
+            logger.debug('download', 'Failed to download/decode audio', {
+                url: url.substring(0, 60) + '...',
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Load whale sample for playback from local cache
      * Implements the frequency-based species selection from the plan
      */
     async loadWhaleSample(frequency?: number, species?: WhaleSpecies): Promise<AudioBuffer | null> {
+        const targetSpecies = species || this.mapFrequencyToSpecies(frequency);
+        
+        logger.info('whale-manager', 'Loading whale sample from cache', {
+            requestedSpecies: species,
+            frequency,
+            targetSpecies,
+            hasFrequency: !!frequency
+        });
+
+        // Wait for initialization to complete if still in progress
+        if (this.initializationPromise) {
+            try {
+                await this.initializationPromise;
+            } catch (error) {
+                logger.warn('whale-manager', 'Initialization not complete, proceeding with available cache', {
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        }
+
         try {
-            // Determine species based on frequency mapping if not specified
-            const targetSpecies = species || this.mapFrequencyToSpecies(frequency);
-            
-            // Get sample URL for species
-            const urls = this.sampleUrls.get(targetSpecies) || [];
-            if (urls.length === 0) {
-                logger.warn('loading', `No sample URLs available for ${targetSpecies}`);
+            // Get cached samples for species
+            const cachedBuffers = this.cachedSamples.get(targetSpecies) || [];
+            if (cachedBuffers.length === 0) {
+                logger.warn('whale-manager', 'No cached samples available for species', {
+                    species: targetSpecies,
+                    availableSpecies: Array.from(this.cachedSamples.keys()),
+                    totalCached: Array.from(this.cachedSamples.values()).reduce((sum, arr) => sum + arr.length, 0)
+                });
                 return null;
             }
 
-            // Select random sample from available URLs
-            const selectedUrl = urls[Math.floor(Math.random() * urls.length)];
+            // Select random sample from cached buffers
+            const selectedIndex = Math.floor(Math.random() * cachedBuffers.length);
+            const selectedBuffer = cachedBuffers[selectedIndex];
             
-            // Load and decode audio
-            return await this.loadAudioFromUrl(selectedUrl);
+            logger.info('whale-manager', 'Successfully loaded whale sample from cache', {
+                species: targetSpecies,
+                selectedIndex,
+                totalCached: cachedBuffers.length,
+                bufferLength: selectedBuffer.length,
+                sampleRate: selectedBuffer.sampleRate,
+                channels: selectedBuffer.numberOfChannels,
+                duration: selectedBuffer.length / selectedBuffer.sampleRate
+            });
+            
+            return selectedBuffer;
             
         } catch (error) {
-            logger.error('loading', `Failed to load whale sample:`, error);
+            logger.error('whale-manager', 'Failed to load whale sample from cache', {
+                species: targetSpecies,
+                frequency,
+                error: error instanceof Error ? error.message : String(error)
+            });
             return null;
         }
     }
@@ -292,16 +503,41 @@ export class WhaleAudioManager {
     }
 
     /**
-     * Get current sample collection statistics
+     * Get current sample collection statistics (cached samples)
      */
     getCollectionStats(): Record<WhaleSpecies, number> {
         const stats: Record<WhaleSpecies, number> = {} as any;
         
         Object.values(['humpback', 'blue', 'orca', 'gray', 'sperm', 'minke', 'fin', 'right', 'sei', 'pilot', 'mixed'] as WhaleSpecies[]).forEach(species => {
-            stats[species] = this.sampleUrls.get(species)?.length || 0;
+            stats[species] = this.cachedSamples.get(species)?.length || 0;
         });
         
         return stats;
+    }
+
+    /**
+     * Get cache status information for UI display
+     */
+    getCacheStatus(): {
+        isInitialized: boolean;
+        totalCached: number;
+        speciesCached: number;
+        cacheBySpecies: Record<string, number>;
+    } {
+        const totalCached = Array.from(this.cachedSamples.values())
+            .reduce((sum, buffers) => sum + buffers.length, 0);
+            
+        const cacheBySpecies: Record<string, number> = {};
+        this.cachedSamples.forEach((buffers, species) => {
+            cacheBySpecies[species] = buffers.length;
+        });
+
+        return {
+            isInitialized: this.initializationPromise === null,
+            totalCached,
+            speciesCached: this.cachedSamples.size,
+            cacheBySpecies
+        };
     }
 
     /**
