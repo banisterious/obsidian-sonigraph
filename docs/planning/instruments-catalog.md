@@ -2,7 +2,7 @@
 
 **Purpose**: Comprehensive specifications for all Sonigraph instruments  
 **Audience**: Developers, contributors, and detailed planning  
-**Last Updated**: 2025-06-19
+**Last Updated**: 2025-06-21
 
 ## Table of Contents
 
@@ -17,9 +17,13 @@
 
 ---
 
-## 1. Current Instruments (34 Instruments)
+## 1. Current Instruments (39 Instruments)
 
 ### 1.1. Complete Orchestral System
+
+**Status Legend:**
+- ✅ **Complete**: Fully implemented and integrated
+- 🔄 **Available**: Sample sources available in nbrosowsky CDN, ready for implementation
 
 | Family | Instrument | Status | Synthesis Approach | Frequency Range | Key Features | Default |
 |--------|------------|--------|-------------------|----------------|-------------|---------|
@@ -36,18 +40,23 @@
 | | Accordion | ✅ Complete | AM + vibrato | Mid (400-800Hz) | Bellows breath simulation | Disabled |
 | | Celesta | ✅ Complete | Triangle + decay | Very High (1400-1600Hz) | Bell-like ethereal tones | Disabled |
 | **🎻 Strings** | Strings | ✅ Complete | Sample-based | Low (100-200Hz) | Orchestral string ensemble | ✅ Enabled |
-| | Violin | ✅ Complete | Sawtooth + filter sweeps | High-Mid (800-1200Hz) | Bowed texture, vibrato | Disabled |
-| | Cello | ✅ Complete | Complex harmonics + bow noise | Mid-Low (200-400Hz) | Rich low harmonics | Disabled |
-| | Guitar | ✅ Complete | Karplus-Strong synthesis | Mid-High (600-1000Hz) | Plucked/strummed articulation | Disabled |
-| | Harp | ✅ Complete | Pluck + long decay | Low (100-200Hz) | Cascading arpeggios | Disabled |
+| | Violin | ✅ Complete | Sample-based + bow noise | High-Mid (800-1200Hz) | Bowed texture, vibrato | Disabled |
+| | Cello | ✅ Complete | Sample-based + bow resonance | Mid-Low (200-400Hz) | Rich low harmonics | Disabled |
+| | Contrabass | 🔄 Available | Sample-based + deep resonance | Very Low (<100Hz) | Double bass foundation, deep strings | Disabled |
+| | Guitar (Acoustic) | ✅ Complete | Sample-based + pluck modeling | Mid-High (600-1000Hz) | Steel string acoustic guitar | Disabled |
+| | Guitar (Electric) | 🔄 Available | Sample-based + pickup simulation | Mid-High (600-1000Hz) | Electric guitar with sustain | Disabled |
+| | Guitar (Nylon) | 🔄 Available | Sample-based + nylon string timbre | Mid-High (600-1000Hz) | Classical guitar, warm tone | Disabled |
+| | Bass (Electric) | 🔄 Available | Sample-based + electric pickup | Low (100-200Hz) | Electric bass guitar | Disabled |
+| | Harp | ✅ Complete | Sample-based + long decay | Low (100-200Hz) | Cascading arpeggios | Disabled |
 | **🎺 Brass** | Trumpet | ✅ Complete | Square + brass formants | Low-Mid (300-600Hz) | Bright attack, brass timbre | Disabled |
 | | French Horn | ✅ Complete | Sine + slight distortion | Mid (400-800Hz) | Warm middle register | Disabled |
 | | Trombone | ✅ Complete | Sawtooth + portamento | Mid-Low (200-400Hz) | Sliding pitch capability | Disabled |
 | | Tuba | ✅ Complete | Sub-bass + breath | Very Low (<100Hz) | Deep foundation, breath noise | Disabled |
-| **🎷 Woodwinds** | Flute | ✅ Complete | Sample-based + noise | Ultra-High (>1600Hz) | Breathy pure tone | Disabled |
-| | Clarinet | ✅ Complete | Sample-based + odd harmonics | High-Mid (800-1200Hz) | Hollow timbre | Disabled |
-| | Saxophone | ✅ Complete | Sample-based + distortion | Low-Mid (300-600Hz) | Reedy richness | Disabled |
-| | Oboe | ✅ Complete | Complex formants + reed simulation | High-Mid (800-1200Hz) | Nasal quality, double reed | Disabled |
+| **🎷 Woodwinds** | Flute | ✅ Complete | Sample-based + breath noise | Ultra-High (>1600Hz) | Breathy pure tone | Disabled |
+| | Clarinet | ✅ Complete | Sample-based + reed simulation | High-Mid (800-1200Hz) | Hollow timbre | Disabled |
+| | Saxophone | ✅ Complete | Sample-based + reed distortion | Low-Mid (300-600Hz) | Reedy richness | Disabled |
+| | Bassoon | 🔄 Available | Sample-based + double reed | Low-Mid (300-600Hz) | Deep woodwind, rich harmonics | Disabled |
+| | Oboe | ✅ Complete | Sample-based + reed simulation | High-Mid (800-1200Hz) | Nasal quality, double reed | Disabled |
 | **🥁 Percussion** | Timpani | ✅ Complete | Sine burst + pitch bend | Low (100-200Hz) | Tuned drums, pitch bending | Disabled |
 | | Xylophone | ✅ Complete | Triangle + sharp attack | Very High (1400-1600Hz) | Mallet percussion, bright attack | Disabled |
 | | Vibraphone | ✅ Complete | Sine + tremolo | High (1000-1400Hz) | Metallic shimmer, tremolo | Disabled |
@@ -60,17 +69,17 @@
 
 ### 1.2. Frequency Range Distribution
 
-**Current Implementation (34 Instruments):**
+**Current Implementation (39 Instruments):**
 - **Ultra-High (>1600Hz)**: Flute, Piccolo effects
 - **Very High (1400-1600Hz)**: Piano treble, Celesta, Xylophone
 - **High-Mid (800-1200Hz)**: Clarinet, Violin, Soprano, Oboe  
 - **High (1000-1400Hz)**: Choir blend, Alto, Vibraphone
-- **Mid-High (600-1000Hz)**: Vocal Pads, Guitar, Tenor
+- **Mid-High (600-1000Hz)**: Vocal Pads, Guitar variants, Tenor
 - **Mid (400-800Hz)**: Organ, French Horn, Accordion
-- **Low-Mid (300-600Hz)**: Saxophone, Trumpet, Harpsichord
+- **Low-Mid (300-600Hz)**: Saxophone, Bassoon, Trumpet, Harpsichord
 - **Mid-Low (200-400Hz)**: Pad, Cello, Trombone, Electric Piano
-- **Low (100-200Hz)**: Strings, Harp, Timpani, Bass synth
-- **Very Low (<100Hz)**: Tuba, Bass vocal, Gongs, Lead synth fundamentals
+- **Low (100-200Hz)**: Strings, Harp, Timpani, Bass synth, Electric Bass
+- **Very Low (<100Hz)**: Tuba, Bass vocal, Gongs, Contrabass, Lead synth fundamentals
 - **Environmental (20-1000Hz)**: Whale Song - Wide spectrum natural sounds
 
 ### 1.3. Implementation Approaches by Family
@@ -88,10 +97,12 @@
 - **Performance Features**: Velocity sensitivity, sustained textures
 
 **🎻 Strings Family**
-- **Modeling Approach**: Advanced string physics, bowing/plucking simulation
-- **Synthesis Methods**: Karplus-Strong synthesis, filter sweeps
-- **Realistic Elements**: Bow noise, resonance, vibrato
+- **Modeling Approach**: Sample-based with string physics simulation
+- **Synthesis Methods**: High-quality samples, bow/pluck modeling, resonance
+- **Realistic Elements**: Bow noise, string resonance, vibrato, pickup simulation
 - **Ensemble Features**: Individual sections with orchestral blend
+- **Guitar Variants**: Acoustic steel-string, electric with pickups, nylon classical
+- **Bass Coverage**: Electric bass guitar and orchestral contrabass
 
 **🎺 Brass Family**
 - **Timbre Generation**: Brass formant filtering for metallic character
@@ -100,10 +111,11 @@
 - **Range Coverage**: Complete brass choir from Tuba to Trumpet
 
 **🎷 Woodwinds Family**
-- **Reed Simulation**: Authentic breath noise integration
+- **Reed Simulation**: Authentic breath noise integration, double reed modeling
 - **Formant Processing**: Woodwind-specific harmonic content
-- **Character Definition**: Hollow (Clarinet), reedy (Saxophone), pure (Flute)
+- **Character Definition**: Hollow (Clarinet), reedy (Saxophone), pure (Flute), rich (Bassoon)
 - **Extended Techniques**: Breathy textures, overtone emphasis
+- **Complete Coverage**: Single reeds (Clarinet, Saxophone), double reeds (Oboe, Bassoon), flutes
 
 **🥁 Percussion Family**
 - **Physics Modeling**: Transient-focused synthesis, pitch bending
