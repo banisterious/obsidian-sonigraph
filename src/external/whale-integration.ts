@@ -37,6 +37,11 @@ export class WhaleIntegration {
      * Initialize whale integration (Phase 1: Seed Collection)
      */
     async initialize(): Promise<void> {
+        logger.info('init', 'Starting whale integration initialization', {
+            useWhaleExternal: this.settings.useWhaleExternal,
+            settings: this.settings
+        });
+
         if (!this.settings.useWhaleExternal) {
             logger.info('init', 'Whale external samples disabled in settings');
             return;
@@ -47,7 +52,10 @@ export class WhaleIntegration {
             this.whaleManager = new WhaleAudioManager(this.settings);
             this.isEnabled = true;
             
-            logger.info('init', 'Whale integration initialized with seed collection');
+            logger.info('init', 'Whale integration initialized with seed collection', {
+                isEnabled: this.isEnabled,
+                hasManager: !!this.whaleManager
+            });
         } catch (error) {
             logger.error('init', 'Failed to initialize whale integration:', error);
             this.isEnabled = false;
@@ -58,25 +66,71 @@ export class WhaleIntegration {
      * Enhanced instrument loader that handles external whale samples
      */
     async loadInstrumentSample(instrumentName: string, note: string, frequency?: number): Promise<AudioBuffer | null> {
+        logger.debug('sample-loading', 'loadInstrumentSample called', {
+            instrumentName,
+            note,
+            frequency,
+            isEnabled: this.isEnabled,
+            hasManager: !!this.whaleManager
+        });
+
         if (!this.isEnabled || !this.whaleManager) {
+            logger.debug('sample-loading', 'Whale integration not available', {
+                isEnabled: this.isEnabled,
+                hasManager: !!this.whaleManager
+            });
             return null;
         }
 
         // Check if this is a whale instrument with external samples
-        if (this.isWhaleInstrument(instrumentName)) {
+        const isWhaleInst = this.isWhaleInstrument(instrumentName);
+        logger.debug('sample-loading', 'Checking if whale instrument', {
+            instrumentName,
+            isWhaleInstrument: isWhaleInst
+        });
+
+        if (isWhaleInst) {
             const species = this.extractWhaleSpecies(instrumentName);
+            
+            logger.info('sample-loading', 'Loading external whale sample', {
+                instrumentName,
+                species,
+                frequency,
+                note
+            });
             
             try {
                 const audioBuffer = await this.whaleManager.loadWhaleSample(frequency, species);
                 if (audioBuffer) {
-                    logger.debug('loading', `Loaded external whale sample for ${instrumentName}`);
+                    logger.info('sample-loading', 'Successfully loaded external whale sample', {
+                        instrumentName,
+                        species,
+                        bufferLength: audioBuffer.length,
+                        sampleRate: audioBuffer.sampleRate,
+                        channels: audioBuffer.numberOfChannels
+                    });
                     return audioBuffer;
+                } else {
+                    logger.warn('sample-loading', 'No whale sample returned from manager', {
+                        instrumentName,
+                        species,
+                        frequency
+                    });
                 }
             } catch (error) {
-                logger.warn('loading', `Failed to load external whale sample for ${instrumentName}:`, error);
+                logger.error('sample-loading', 'Failed to load external whale sample', {
+                    instrumentName,
+                    species,
+                    frequency,
+                    error: error instanceof Error ? error.message : String(error)
+                });
             }
         }
 
+        logger.debug('sample-loading', 'Falling back to regular instrument loading', {
+            instrumentName,
+            reason: isWhaleInst ? 'whale_sample_failed' : 'not_whale_instrument'
+        });
         return null; // Fallback to regular instrument loading
     }
 
@@ -85,13 +139,13 @@ export class WhaleIntegration {
      */
     private isWhaleInstrument(instrumentName: string): boolean {
         const whaleInstruments = [
+            'whaleHumpback',  // Current whale instrument in the system
             'whaleBlue',
             'whaleOrca', 
             'whaleGray',
             'whaleSperm',
             'whaleMinke',
-            'whaleFin',
-            'whaleHumpbackExternal'
+            'whaleFin'
         ];
         
         return whaleInstruments.includes(instrumentName);
@@ -102,13 +156,13 @@ export class WhaleIntegration {
      */
     private extractWhaleSpecies(instrumentName: string): 'humpback' | 'blue' | 'orca' | 'gray' | 'sperm' | 'minke' | 'fin' {
         const mapping = {
+            'whaleHumpback': 'humpback',  // Current whale instrument in the system
             'whaleBlue': 'blue',
             'whaleOrca': 'orca',
             'whaleGray': 'gray', 
             'whaleSperm': 'sperm',
             'whaleMinke': 'minke',
-            'whaleFin': 'fin',
-            'whaleHumpbackExternal': 'humpback'
+            'whaleFin': 'fin'
         } as const;
         
         return mapping[instrumentName as keyof typeof mapping] || 'humpback';
@@ -228,8 +282,18 @@ let whaleIntegration: WhaleIntegration | null = null;
  * Initialize global whale integration
  */
 export async function initializeWhaleIntegration(settings?: Partial<WhaleIntegrationSettings>): Promise<void> {
+    logger.info('global-init', 'Initializing global whale integration', {
+        hasSettings: !!settings,
+        settingsKeys: settings ? Object.keys(settings) : []
+    });
+    
     whaleIntegration = new WhaleIntegration(settings);
     await whaleIntegration.initialize();
+    
+    logger.info('global-init', 'Global whale integration initialization complete', {
+        isAvailable: whaleIntegration.isAvailable(),
+        settings: whaleIntegration.getSettings()
+    });
 }
 
 /**
@@ -247,7 +311,17 @@ export async function tryLoadExternalWhaleSample(
     note: string, 
     frequency?: number
 ): Promise<AudioBuffer | null> {
-    if (!whaleIntegration) return null;
+    logger.debug('external-loading', 'tryLoadExternalWhaleSample called', {
+        instrumentName,
+        note,
+        frequency,
+        hasIntegration: !!whaleIntegration
+    });
+
+    if (!whaleIntegration) {
+        logger.warn('external-loading', 'No whale integration available');
+        return null;
+    }
     
     return await whaleIntegration.loadInstrumentSample(instrumentName, note, frequency);
 }
