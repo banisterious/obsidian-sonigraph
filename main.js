@@ -207,6 +207,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.8,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -236,9 +238,11 @@ var init_constants = __esm({
           }
         },
         organ: {
-          enabled: false,
+          enabled: true,
           volume: 0.7,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -271,6 +275,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.6,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -303,6 +309,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.7,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -335,6 +343,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.5,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -367,6 +377,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.4,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -399,6 +411,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.6,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -431,6 +445,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.5,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -463,6 +479,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -495,6 +513,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.6,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -527,6 +547,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.5,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -559,6 +581,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.5,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -591,6 +615,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -624,6 +650,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -656,6 +684,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.6,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -688,6 +718,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.6,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -720,6 +752,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.5,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -753,6 +787,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -785,6 +821,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.8,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -813,10 +851,46 @@ var init_constants = __esm({
             }
           }
         },
+        contrabass: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 3,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 3.5,
+                preDelay: 0.04,
+                wet: 0.45
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.3,
+                depth: 0.2,
+                delayTime: 4,
+                feedback: 0.02
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 2e3,
+                Q: 0.8,
+                type: "lowpass"
+              }
+            }
+          }
+        },
         guitar: {
           enabled: false,
           volume: 0.6,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -845,10 +919,114 @@ var init_constants = __esm({
             }
           }
         },
+        guitarElectric: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 1.8,
+                preDelay: 0.02,
+                wet: 0.25
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 1.2,
+                depth: 0.4,
+                delayTime: 2.5,
+                feedback: 0.04
+              }
+            },
+            filter: {
+              enabled: false,
+              params: {
+                frequency: 5e3,
+                Q: 0.6,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        guitarNylon: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.5,
+                preDelay: 0.03,
+                wet: 0.4
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.6,
+                depth: 0.2,
+                delayTime: 3,
+                feedback: 0.02
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 4500,
+                Q: 0.5,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        bassElectric: {
+          enabled: false,
+          volume: 0.8,
+          maxVoices: 2,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 1.5,
+                preDelay: 0.01,
+                wet: 0.2
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.5,
+                depth: 0.3,
+                delayTime: 2,
+                feedback: 0.03
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 2500,
+                Q: 0.9,
+                type: "lowpass"
+              }
+            }
+          }
+        },
         harp: {
           enabled: false,
           volume: 0.5,
           maxVoices: 12,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -881,6 +1059,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -913,6 +1093,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.6,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -945,6 +1127,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -977,6 +1161,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.8,
           maxVoices: 3,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1006,10 +1192,46 @@ var init_constants = __esm({
           }
         },
         // Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
+        bassoon: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 2.8,
+                preDelay: 0.04,
+                wet: 0.4
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.9,
+                depth: 0.4,
+                delayTime: 3,
+                feedback: 0.08
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 2e3,
+                Q: 1,
+                type: "lowpass"
+              }
+            }
+          }
+        },
         oboe: {
           enabled: false,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1042,6 +1264,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.9,
           maxVoices: 2,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1074,6 +1298,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.8,
           maxVoices: 6,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1106,6 +1332,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1138,6 +1366,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.9,
           maxVoices: 2,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1170,6 +1400,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.6,
           maxVoices: 4,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1202,6 +1434,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.8,
           maxVoices: 2,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: false,
@@ -1234,6 +1468,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.6,
           maxVoices: 8,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1685,7 +1921,7 @@ var init_constants = __esm({
     INSTRUMENT_FAMILIES = {
       keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"],
       strings: ["strings", "violin", "cello", "guitar", "harp"],
-      woodwinds: ["flute", "clarinet", "saxophone", "oboe"],
+      woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
       brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
       vocals: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
       percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
@@ -1707,7 +1943,7 @@ var init_constants = __esm({
         defaultFrequencyRange: "Medium (400-800Hz)"
       },
       strings: {
-        name: "Strings",
+        name: "String ensemble",
         icon: "\u{1F3BB}",
         description: "AM synthesis with filtering for warm, flowing sounds",
         defaultFrequencyRange: "Very Low (<200Hz)"
@@ -1786,11 +2022,35 @@ var init_constants = __esm({
         description: "Complex harmonics with bow noise for rich low register character",
         defaultFrequencyRange: "Mid-Low (200-400Hz)"
       },
+      contrabass: {
+        name: "Contrabass",
+        icon: "\u{1F3BB}",
+        description: "Deep string foundation with rich low harmonics and bow articulation",
+        defaultFrequencyRange: "Very Low (<100Hz)"
+      },
       guitar: {
         name: "Guitar",
         icon: "\u{1F3B8}",
         description: "Karplus-Strong synthesis for authentic plucked string physics",
         defaultFrequencyRange: "Mid-High (600-1000Hz)"
+      },
+      guitarElectric: {
+        name: "Electric guitar",
+        icon: "\u{1F3B8}",
+        description: "Amplified electric guitar with pickup simulation and effects processing",
+        defaultFrequencyRange: "High (1000-1400Hz)"
+      },
+      guitarNylon: {
+        name: "Nylon guitar",
+        icon: "\u{1F3B8}",
+        description: "Classical nylon-string guitar with warm, mellow fingerpicked tones",
+        defaultFrequencyRange: "Mid-High (600-1000Hz)"
+      },
+      bassElectric: {
+        name: "Electric bass",
+        icon: "\u{1F3B8}",
+        description: "Electric bass guitar with deep fundamentals and punchy attack",
+        defaultFrequencyRange: "Low (100-200Hz)"
       },
       harp: {
         name: "Harp",
@@ -1823,6 +2083,12 @@ var init_constants = __esm({
         defaultFrequencyRange: "Very Low (<100Hz)"
       },
       // Phase 8: Percussion & Electronic Finale
+      bassoon: {
+        name: "Bassoon",
+        icon: "\u{1F3B5}",
+        description: "Deep woodwind with rich double reed harmonics and warm low register",
+        defaultFrequencyRange: "Low-Mid (200-400Hz)"
+      },
       oboe: {
         name: "Oboe",
         icon: "\u{1F3BC}",
@@ -4523,6 +4789,7 @@ var LUCIDE_ICONS = {
   powerOff: "power-off"
 };
 var FAMILY_ICONS = {
+  keyboard: LUCIDE_ICONS.piano,
   strings: LUCIDE_ICONS.strings,
   woodwinds: LUCIDE_ICONS.woodwinds,
   brass: LUCIDE_ICONS.brass,
@@ -4620,11 +4887,18 @@ var TAB_CONFIGS = [
     description: "Global controls and presets"
   },
   {
+    id: "keyboard",
+    name: "Keyboard",
+    icon: "piano",
+    description: "6 keyboard instruments",
+    instrumentCount: 6
+  },
+  {
     id: "strings",
     name: "Strings",
     icon: "music",
-    description: "7 string instruments",
-    instrumentCount: 7
+    description: "9 string instruments",
+    instrumentCount: 9
   },
   {
     id: "woodwinds",
@@ -5375,6 +5649,7 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
       case "master":
         this.createMasterTab();
         break;
+      case "keyboard":
       case "strings":
       case "woodwinds":
       case "brass":
@@ -6180,8 +6455,8 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     });
     const familyMap = {
       // Based on actual instruments defined in DEFAULT_SETTINGS
-      strings: ["strings", "violin", "cello", "harp", "piano", "guitar"],
-      woodwinds: ["flute", "clarinet", "saxophone", "oboe"],
+      strings: ["strings", "violin", "cello", "contrabass", "guitar", "guitarElectric", "guitarNylon", "bassElectric", "harp"],
+      woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
       brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
       vocals: ["choir", "vocalPads", "soprano", "alto", "tenor", "bass"],
       // All vocal instruments including choir and pads
@@ -33778,7 +34053,8 @@ var keyboardInstruments = {
       effects: ["chorus", "reverb"],
       maxVoices: 6,
       priority: "medium",
-      category: "keyboard"
+      category: "keyboard",
+      useHighQuality: false
     },
     electricPiano: {
       urls: {
@@ -33803,7 +34079,8 @@ var keyboardInstruments = {
       effects: ["reverb", "chorus"],
       maxVoices: 8,
       priority: "medium",
-      category: "keyboard"
+      category: "keyboard",
+      useHighQuality: false
     },
     harpsichord: {
       urls: {
@@ -33831,7 +34108,8 @@ var keyboardInstruments = {
       effects: ["reverb", "filter"],
       maxVoices: 8,
       priority: "medium",
-      category: "keyboard"
+      category: "keyboard",
+      useHighQuality: false
     },
     accordion: {
       urls: {
@@ -33859,7 +34137,8 @@ var keyboardInstruments = {
       effects: ["reverb", "chorus"],
       maxVoices: 6,
       priority: "low",
-      category: "keyboard"
+      category: "keyboard",
+      useHighQuality: false
     },
     celesta: {
       urls: {
@@ -33887,7 +34166,8 @@ var keyboardInstruments = {
       effects: ["reverb", "filter"],
       maxVoices: 6,
       priority: "low",
-      category: "keyboard"
+      category: "keyboard",
+      useHighQuality: false
     }
   }
 };
@@ -33921,7 +34201,8 @@ var stringInstruments = {
       effects: ["reverb", "filter"],
       maxVoices: 4,
       priority: "high",
-      category: "strings"
+      category: "strings",
+      useHighQuality: false
     },
     violin: {
       urls: {
@@ -33949,7 +34230,8 @@ var stringInstruments = {
       effects: ["reverb", "filter"],
       maxVoices: 4,
       priority: "high",
-      category: "strings"
+      category: "strings",
+      useHighQuality: false
     },
     cello: {
       urls: {
@@ -33977,7 +34259,32 @@ var stringInstruments = {
       effects: ["reverb", "filter"],
       maxVoices: 4,
       priority: "high",
-      category: "strings"
+      category: "strings",
+      useHighQuality: false
+    },
+    contrabass: {
+      urls: {
+        "G1": `G1.${FORMAT_PLACEHOLDER}`,
+        "A#1": `As1.${FORMAT_PLACEHOLDER}`,
+        "F#1": `Fs1.${FORMAT_PLACEHOLDER}`,
+        "C2": `C2.${FORMAT_PLACEHOLDER}`,
+        "D2": `D2.${FORMAT_PLACEHOLDER}`,
+        "E2": `E2.${FORMAT_PLACEHOLDER}`,
+        "F#2": `Fs2.${FORMAT_PLACEHOLDER}`,
+        "G#2": `Gs2.${FORMAT_PLACEHOLDER}`,
+        "A2": `A2.${FORMAT_PLACEHOLDER}`,
+        "B3": `B3.${FORMAT_PLACEHOLDER}`,
+        "C#3": `Cs3.${FORMAT_PLACEHOLDER}`,
+        "E3": `E3.${FORMAT_PLACEHOLDER}`,
+        "G#3": `Gs3.${FORMAT_PLACEHOLDER}`
+      },
+      release: 3.5,
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/contrabass/",
+      effects: ["reverb", "filter"],
+      maxVoices: 3,
+      priority: "high",
+      category: "strings",
+      useHighQuality: false
     },
     guitar: {
       urls: {
@@ -34005,7 +34312,104 @@ var stringInstruments = {
       effects: ["reverb", "chorus"],
       maxVoices: 6,
       priority: "medium",
-      category: "strings"
+      category: "strings",
+      useHighQuality: false
+    },
+    guitarElectric: {
+      urls: {
+        "C#2": `Cs2.${FORMAT_PLACEHOLDER}`,
+        "E2": `E2.${FORMAT_PLACEHOLDER}`,
+        "F#2": `Fs2.${FORMAT_PLACEHOLDER}`,
+        "A2": `A2.${FORMAT_PLACEHOLDER}`,
+        "C3": `C3.${FORMAT_PLACEHOLDER}`,
+        "D#3": `Ds3.${FORMAT_PLACEHOLDER}`,
+        "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
+        "A3": `A3.${FORMAT_PLACEHOLDER}`,
+        "C4": `C4.${FORMAT_PLACEHOLDER}`,
+        "D#4": `Ds4.${FORMAT_PLACEHOLDER}`,
+        "F#4": `Fs4.${FORMAT_PLACEHOLDER}`,
+        "A4": `A4.${FORMAT_PLACEHOLDER}`,
+        "C5": `C5.${FORMAT_PLACEHOLDER}`,
+        "D#5": `Ds5.${FORMAT_PLACEHOLDER}`,
+        "F#5": `Fs5.${FORMAT_PLACEHOLDER}`,
+        "A5": `A5.${FORMAT_PLACEHOLDER}`,
+        "C6": `C6.${FORMAT_PLACEHOLDER}`
+      },
+      release: 1.2,
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/guitar-electric/",
+      effects: ["reverb", "chorus", "distortion"],
+      maxVoices: 6,
+      priority: "medium",
+      category: "strings",
+      useHighQuality: false
+    },
+    guitarNylon: {
+      urls: {
+        "B1": `B1.${FORMAT_PLACEHOLDER}`,
+        "D2": `D2.${FORMAT_PLACEHOLDER}`,
+        "E2": `E2.${FORMAT_PLACEHOLDER}`,
+        "F#2": `Fs2.${FORMAT_PLACEHOLDER}`,
+        "G#2": `Gs2.${FORMAT_PLACEHOLDER}`,
+        "A2": `A2.${FORMAT_PLACEHOLDER}`,
+        "B2": `B2.${FORMAT_PLACEHOLDER}`,
+        "C#3": `Cs3.${FORMAT_PLACEHOLDER}`,
+        "D3": `D3.${FORMAT_PLACEHOLDER}`,
+        "E3": `E3.${FORMAT_PLACEHOLDER}`,
+        "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
+        "G3": `G3.${FORMAT_PLACEHOLDER}`,
+        "A3": `A3.${FORMAT_PLACEHOLDER}`,
+        "B3": `B3.${FORMAT_PLACEHOLDER}`,
+        "C#4": `Cs4.${FORMAT_PLACEHOLDER}`,
+        "D#4": `Ds4.${FORMAT_PLACEHOLDER}`,
+        "E4": `E4.${FORMAT_PLACEHOLDER}`,
+        "F#4": `Fs4.${FORMAT_PLACEHOLDER}`,
+        "G#4": `Gs4.${FORMAT_PLACEHOLDER}`,
+        "A4": `A4.${FORMAT_PLACEHOLDER}`,
+        "B4": `B4.${FORMAT_PLACEHOLDER}`,
+        "C#5": `Cs5.${FORMAT_PLACEHOLDER}`,
+        "D5": `D5.${FORMAT_PLACEHOLDER}`,
+        "E5": `E5.${FORMAT_PLACEHOLDER}`,
+        "F#5": `Fs5.${FORMAT_PLACEHOLDER}`,
+        "G5": `G5.${FORMAT_PLACEHOLDER}`,
+        "G#5": `Gs5.${FORMAT_PLACEHOLDER}`,
+        "A5": `A5.${FORMAT_PLACEHOLDER}`,
+        "A#5": `As5.${FORMAT_PLACEHOLDER}`
+      },
+      release: 2,
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/guitar-nylon/",
+      effects: ["reverb", "chorus"],
+      maxVoices: 6,
+      priority: "medium",
+      category: "strings",
+      useHighQuality: false
+    },
+    bassElectric: {
+      urls: {
+        "E1": `E1.${FORMAT_PLACEHOLDER}`,
+        "G1": `G1.${FORMAT_PLACEHOLDER}`,
+        "A#1": `As1.${FORMAT_PLACEHOLDER}`,
+        "C#1": `Cs1.${FORMAT_PLACEHOLDER}`,
+        "C#2": `Cs2.${FORMAT_PLACEHOLDER}`,
+        "E2": `E2.${FORMAT_PLACEHOLDER}`,
+        "G2": `G2.${FORMAT_PLACEHOLDER}`,
+        "A#2": `As2.${FORMAT_PLACEHOLDER}`,
+        "C#3": `Cs3.${FORMAT_PLACEHOLDER}`,
+        "E3": `E3.${FORMAT_PLACEHOLDER}`,
+        "G3": `G3.${FORMAT_PLACEHOLDER}`,
+        "A#3": `As3.${FORMAT_PLACEHOLDER}`,
+        "C#4": `Cs4.${FORMAT_PLACEHOLDER}`,
+        "E4": `E4.${FORMAT_PLACEHOLDER}`,
+        "G4": `G4.${FORMAT_PLACEHOLDER}`,
+        "A#4": `As4.${FORMAT_PLACEHOLDER}`,
+        "C#5": `Cs5.${FORMAT_PLACEHOLDER}`
+      },
+      release: 1.8,
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-electric/",
+      effects: ["reverb", "filter", "compression"],
+      maxVoices: 2,
+      priority: "high",
+      category: "strings",
+      useHighQuality: false
     },
     harp: {
       urls: {
@@ -34033,7 +34437,8 @@ var stringInstruments = {
       effects: ["reverb", "filter"],
       maxVoices: 12,
       priority: "medium",
-      category: "strings"
+      category: "strings",
+      useHighQuality: false
     }
   }
 };
@@ -34380,6 +34785,27 @@ var woodwindInstruments = {
       maxVoices: 3,
       priority: "medium",
       category: "woodwind"
+    },
+    bassoon: {
+      urls: {
+        "G2": `G2.${FORMAT_PLACEHOLDER}`,
+        "A2": `A2.${FORMAT_PLACEHOLDER}`,
+        "C3": `C3.${FORMAT_PLACEHOLDER}`,
+        "G3": `G3.${FORMAT_PLACEHOLDER}`,
+        "A3": `A3.${FORMAT_PLACEHOLDER}`,
+        "C4": `C4.${FORMAT_PLACEHOLDER}`,
+        "E4": `E4.${FORMAT_PLACEHOLDER}`,
+        "G4": `G4.${FORMAT_PLACEHOLDER}`,
+        "A4": `A4.${FORMAT_PLACEHOLDER}`,
+        "C5": `C5.${FORMAT_PLACEHOLDER}`
+      },
+      release: 2.2,
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bassoon/",
+      effects: ["reverb", "filter"],
+      maxVoices: 3,
+      priority: "medium",
+      category: "woodwind",
+      useHighQuality: false
     },
     oboe: {
       urls: {
@@ -35441,7 +35867,7 @@ var AudioEngine = class {
   }
   async initializeEffects() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
-    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback"];
+    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "contrabass", "guitarElectric", "guitarNylon", "bassElectric", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback"];
     for (const instrumentName of instruments) {
       const instrumentSettings = this.settings.instruments[instrumentName];
       const volumeLevel = (_c = (_b = instrumentSettings == null ? void 0 : instrumentSettings.volume) != null ? _b : (_a = DEFAULT_SETTINGS.instruments[instrumentName]) == null ? void 0 : _a.volume) != null ? _c : 0.7;
@@ -35667,7 +36093,7 @@ var AudioEngine = class {
     }
   }
   async initializeInstruments() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C;
     const configs = this.getSamplerConfigs();
     if (!this.settings.useHighQualitySamples) {
       logger14.info("instruments", "Synthesis mode - creating synthesizers for all instruments");
@@ -35692,6 +36118,10 @@ var AudioEngine = class {
         "violin",
         "cello",
         "guitar",
+        "contrabass",
+        "guitarElectric",
+        "guitarNylon",
+        "bassElectric",
         "harp",
         "trumpet",
         "frenchHorn",
@@ -35744,6 +36174,11 @@ var AudioEngine = class {
           case "strings":
           case "violin":
           case "cello":
+          case "contrabass":
+          case "guitar":
+          case "guitarElectric":
+          case "guitarNylon":
+          case "bassElectric":
             synth = new PolySynth({
               voice: FMSynth,
               maxPolyphony: maxVoices,
@@ -36467,7 +36902,111 @@ var AudioEngine = class {
       guitarOutput.connect(this.volume);
       this.instruments.set("guitar", guitarSampler);
     }
-    if (((_u = this.settings.instruments.harp) == null ? void 0 : _u.enabled) === true) {
+    if (((_u = this.settings.instruments.contrabass) == null ? void 0 : _u.enabled) === true) {
+      const contrabassSampler = new Sampler(configs.contrabass);
+      const contrabassVolume = new Volume(-6);
+      this.instrumentVolumes.set("contrabass", contrabassVolume);
+      let contrabassOutput = contrabassSampler.connect(contrabassVolume);
+      const contrabassEffects = this.instrumentEffects.get("contrabass");
+      if (contrabassEffects && this.settings.instruments.contrabass.effects) {
+        if (this.settings.instruments.contrabass.effects.reverb.enabled) {
+          const reverb = contrabassEffects.get("reverb");
+          if (reverb)
+            contrabassOutput = contrabassOutput.connect(reverb);
+        }
+        if (this.settings.instruments.contrabass.effects.chorus.enabled) {
+          const chorus = contrabassEffects.get("chorus");
+          if (chorus)
+            contrabassOutput = contrabassOutput.connect(chorus);
+        }
+        if (this.settings.instruments.contrabass.effects.filter.enabled) {
+          const filter = contrabassEffects.get("filter");
+          if (filter)
+            contrabassOutput = contrabassOutput.connect(filter);
+        }
+      }
+      contrabassOutput.connect(this.volume);
+      this.instruments.set("contrabass", contrabassSampler);
+    }
+    if (((_v = this.settings.instruments.guitarElectric) == null ? void 0 : _v.enabled) === true) {
+      const guitarElectricSampler = new Sampler(configs.guitarElectric);
+      const guitarElectricVolume = new Volume(-6);
+      this.instrumentVolumes.set("guitarElectric", guitarElectricVolume);
+      let guitarElectricOutput = guitarElectricSampler.connect(guitarElectricVolume);
+      const guitarElectricEffects = this.instrumentEffects.get("guitarElectric");
+      if (guitarElectricEffects && this.settings.instruments.guitarElectric.effects) {
+        if (this.settings.instruments.guitarElectric.effects.reverb.enabled) {
+          const reverb = guitarElectricEffects.get("reverb");
+          if (reverb)
+            guitarElectricOutput = guitarElectricOutput.connect(reverb);
+        }
+        if (this.settings.instruments.guitarElectric.effects.chorus.enabled) {
+          const chorus = guitarElectricEffects.get("chorus");
+          if (chorus)
+            guitarElectricOutput = guitarElectricOutput.connect(chorus);
+        }
+        if (this.settings.instruments.guitarElectric.effects.filter.enabled) {
+          const filter = guitarElectricEffects.get("filter");
+          if (filter)
+            guitarElectricOutput = guitarElectricOutput.connect(filter);
+        }
+      }
+      guitarElectricOutput.connect(this.volume);
+      this.instruments.set("guitarElectric", guitarElectricSampler);
+    }
+    if (((_w = this.settings.instruments.guitarNylon) == null ? void 0 : _w.enabled) === true) {
+      const guitarNylonSampler = new Sampler(configs.guitarNylon);
+      const guitarNylonVolume = new Volume(-6);
+      this.instrumentVolumes.set("guitarNylon", guitarNylonVolume);
+      let guitarNylonOutput = guitarNylonSampler.connect(guitarNylonVolume);
+      const guitarNylonEffects = this.instrumentEffects.get("guitarNylon");
+      if (guitarNylonEffects && this.settings.instruments.guitarNylon.effects) {
+        if (this.settings.instruments.guitarNylon.effects.reverb.enabled) {
+          const reverb = guitarNylonEffects.get("reverb");
+          if (reverb)
+            guitarNylonOutput = guitarNylonOutput.connect(reverb);
+        }
+        if (this.settings.instruments.guitarNylon.effects.chorus.enabled) {
+          const chorus = guitarNylonEffects.get("chorus");
+          if (chorus)
+            guitarNylonOutput = guitarNylonOutput.connect(chorus);
+        }
+        if (this.settings.instruments.guitarNylon.effects.filter.enabled) {
+          const filter = guitarNylonEffects.get("filter");
+          if (filter)
+            guitarNylonOutput = guitarNylonOutput.connect(filter);
+        }
+      }
+      guitarNylonOutput.connect(this.volume);
+      this.instruments.set("guitarNylon", guitarNylonSampler);
+    }
+    if (((_x = this.settings.instruments.bassElectric) == null ? void 0 : _x.enabled) === true) {
+      const bassElectricSampler = new Sampler(configs.bassElectric);
+      const bassElectricVolume = new Volume(-6);
+      this.instrumentVolumes.set("bassElectric", bassElectricVolume);
+      let bassElectricOutput = bassElectricSampler.connect(bassElectricVolume);
+      const bassElectricEffects = this.instrumentEffects.get("bassElectric");
+      if (bassElectricEffects && this.settings.instruments.bassElectric.effects) {
+        if (this.settings.instruments.bassElectric.effects.reverb.enabled) {
+          const reverb = bassElectricEffects.get("reverb");
+          if (reverb)
+            bassElectricOutput = bassElectricOutput.connect(reverb);
+        }
+        if (this.settings.instruments.bassElectric.effects.chorus.enabled) {
+          const chorus = bassElectricEffects.get("chorus");
+          if (chorus)
+            bassElectricOutput = bassElectricOutput.connect(chorus);
+        }
+        if (this.settings.instruments.bassElectric.effects.filter.enabled) {
+          const filter = bassElectricEffects.get("filter");
+          if (filter)
+            bassElectricOutput = bassElectricOutput.connect(filter);
+        }
+      }
+      bassElectricOutput.connect(this.volume);
+      this.instruments.set("bassElectric", bassElectricSampler);
+    }
+    if (((_y = this.settings.instruments.harp) == null ? void 0 : _y.enabled) === true) {
       const harpSampler = new Sampler(configs.harp);
       const harpVolume = new Volume(-6);
       this.instrumentVolumes.set("harp", harpVolume);
@@ -36493,7 +37032,7 @@ var AudioEngine = class {
       harpOutput.connect(this.volume);
       this.instruments.set("harp", harpSampler);
     }
-    if (((_v = this.settings.instruments.trumpet) == null ? void 0 : _v.enabled) === true) {
+    if (((_z = this.settings.instruments.trumpet) == null ? void 0 : _z.enabled) === true) {
       const trumpetSampler = new Sampler(configs.trumpet);
       const trumpetVolume = new Volume(-6);
       this.instrumentVolumes.set("trumpet", trumpetVolume);
@@ -36519,7 +37058,7 @@ var AudioEngine = class {
       trumpetOutput.connect(this.volume);
       this.instruments.set("trumpet", trumpetSampler);
     }
-    if (((_w = this.settings.instruments.frenchHorn) == null ? void 0 : _w.enabled) === true) {
+    if (((_A = this.settings.instruments.frenchHorn) == null ? void 0 : _A.enabled) === true) {
       const frenchHornSampler = new Sampler(configs.frenchHorn);
       const frenchHornVolume = new Volume(-6);
       this.instrumentVolumes.set("frenchHorn", frenchHornVolume);
@@ -36545,7 +37084,7 @@ var AudioEngine = class {
       frenchHornOutput.connect(this.volume);
       this.instruments.set("frenchHorn", frenchHornSampler);
     }
-    if (((_x = this.settings.instruments.trombone) == null ? void 0 : _x.enabled) === true) {
+    if (((_B = this.settings.instruments.trombone) == null ? void 0 : _B.enabled) === true) {
       const tromboneSampler = new Sampler(configs.trombone);
       const tromboneVolume = new Volume(-6);
       this.instrumentVolumes.set("trombone", tromboneVolume);
@@ -36571,7 +37110,7 @@ var AudioEngine = class {
       tromboneOutput.connect(this.volume);
       this.instruments.set("trombone", tromboneSampler);
     }
-    if (((_y = this.settings.instruments.tuba) == null ? void 0 : _y.enabled) === true) {
+    if (((_C = this.settings.instruments.tuba) == null ? void 0 : _C.enabled) === true) {
       const tubaSampler = new Sampler(configs.tuba);
       const tubaVolume = new Volume(-6);
       this.instrumentVolumes.set("tuba", tubaVolume);
@@ -36618,6 +37157,10 @@ var AudioEngine = class {
       "violin",
       "cello",
       "guitar",
+      "contrabass",
+      "guitarElectric",
+      "guitarNylon",
+      "bassElectric",
       "harp",
       "trumpet",
       "frenchHorn",
@@ -40414,6 +40957,38 @@ var SonigraphPlugin = class extends import_obsidian5.Plugin {
         };
       }
     }
+    if (!this.settings.instruments.piano) {
+      logger17.info("settings", "Adding missing Piano instrument (core keyboard)");
+      migrationNeeded = true;
+      this.settings.instruments.piano = {
+        enabled: true,
+        volume: 0.8,
+        maxVoices: 12,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 1.8, preDelay: 0.02, wet: 0.25 } },
+          chorus: { enabled: false, params: { frequency: 0.8, depth: 0.5, delayTime: 4, feedback: 0.05 } },
+          filter: { enabled: false, params: { frequency: 3500, Q: 0.8, type: "lowpass" } }
+        }
+      };
+    }
+    if (!this.settings.instruments.organ) {
+      logger17.info("settings", "Adding missing Organ instrument (core keyboard)");
+      migrationNeeded = true;
+      this.settings.instruments.organ = {
+        enabled: true,
+        volume: 0.7,
+        maxVoices: 8,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 2.2, preDelay: 0.03, wet: 0.35 } },
+          chorus: { enabled: true, params: { frequency: 0.8, depth: 0.5, delayTime: 4, feedback: 0.05 } },
+          filter: { enabled: false, params: { frequency: 4e3, Q: 0.6, type: "lowpass" } }
+        }
+      };
+    }
     if (!this.settings.instruments.choir) {
       logger17.info("settings", "Adding missing Choir instrument");
       migrationNeeded = true;
@@ -40555,6 +41130,91 @@ var SonigraphPlugin = class extends import_obsidian5.Plugin {
           reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.05, wet: 0.6 } },
           chorus: { enabled: false, params: { frequency: 0.4, depth: 0.4, delayTime: 4, feedback: 0.06 } },
           filter: { enabled: false, params: { frequency: 1500, Q: 0.8, type: "lowpass" } }
+        }
+      };
+    }
+    if (!this.settings.instruments.contrabass) {
+      logger17.info("settings", "Adding missing Contrabass instrument (new string instrument)");
+      migrationNeeded = true;
+      this.settings.instruments.contrabass = {
+        enabled: false,
+        // Disabled by default to avoid overwhelming users
+        volume: 0.8,
+        maxVoices: 4,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 3.2, preDelay: 0.05, wet: 0.5 } },
+          chorus: { enabled: false, params: { frequency: 0.4, depth: 0.3, delayTime: 4, feedback: 0.04 } },
+          filter: { enabled: true, params: { frequency: 1200, Q: 0.8, type: "lowpass" } }
+        }
+      };
+    }
+    if (!this.settings.instruments.guitarElectric) {
+      logger17.info("settings", "Adding missing Electric Guitar instrument (new string instrument)");
+      migrationNeeded = true;
+      this.settings.instruments.guitarElectric = {
+        enabled: false,
+        // Disabled by default
+        volume: 0.7,
+        maxVoices: 6,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 2, preDelay: 0.02, wet: 0.3 } },
+          chorus: { enabled: true, params: { frequency: 1.2, depth: 0.5, delayTime: 2.5, feedback: 0.06 } },
+          filter: { enabled: false, params: { frequency: 4e3, Q: 0.7, type: "lowpass" } }
+        }
+      };
+    }
+    if (!this.settings.instruments.guitarNylon) {
+      logger17.info("settings", "Adding missing Nylon Guitar instrument (new string instrument)");
+      migrationNeeded = true;
+      this.settings.instruments.guitarNylon = {
+        enabled: false,
+        // Disabled by default
+        volume: 0.6,
+        maxVoices: 6,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 2.5, preDelay: 0.03, wet: 0.4 } },
+          chorus: { enabled: false, params: { frequency: 0.8, depth: 0.3, delayTime: 3, feedback: 0.04 } },
+          filter: { enabled: true, params: { frequency: 3500, Q: 0.6, type: "lowpass" } }
+        }
+      };
+    }
+    if (!this.settings.instruments.bassElectric) {
+      logger17.info("settings", "Adding missing Electric Bass instrument (new string instrument)");
+      migrationNeeded = true;
+      this.settings.instruments.bassElectric = {
+        enabled: false,
+        // Disabled by default
+        volume: 0.8,
+        maxVoices: 4,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 2.2, preDelay: 0.02, wet: 0.25 } },
+          chorus: { enabled: false, params: { frequency: 0.6, depth: 0.4, delayTime: 3.5, feedback: 0.05 } },
+          filter: { enabled: true, params: { frequency: 1800, Q: 0.9, type: "lowpass" } }
+        }
+      };
+    }
+    if (!this.settings.instruments.bassoon) {
+      logger17.info("settings", "Adding missing Bassoon instrument (new woodwind instrument)");
+      migrationNeeded = true;
+      this.settings.instruments.bassoon = {
+        enabled: false,
+        // Disabled by default
+        volume: 0.7,
+        maxVoices: 4,
+        useHighQuality: false,
+        // Default to synthesis (user can switch to recordings)
+        effects: {
+          reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.04, wet: 0.4 } },
+          chorus: { enabled: true, params: { frequency: 0.9, depth: 0.4, delayTime: 3, feedback: 0.08 } },
+          filter: { enabled: true, params: { frequency: 2e3, Q: 1, type: "lowpass" } }
         }
       };
     }

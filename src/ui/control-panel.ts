@@ -296,6 +296,7 @@ export class MaterialControlPanelModal extends Modal {
 			case 'master':
 				this.createMasterTab();
 				break;
+			case 'keyboard':
 			case 'strings':
 			case 'woodwinds':
 			case 'brass':
@@ -1311,8 +1312,8 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const familyMap: Record<string, string[]> = {
 			// Based on actual instruments defined in DEFAULT_SETTINGS
-			strings: ['strings', 'violin', 'cello', 'harp', 'piano', 'guitar'], 
-			woodwinds: ['flute', 'clarinet', 'saxophone', 'oboe'],
+			strings: ['strings', 'violin', 'cello', 'contrabass', 'guitar', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp'], 
+			woodwinds: ['flute', 'clarinet', 'saxophone', 'bassoon', 'oboe'],
 			brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
 			vocals: ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'], // All vocal instruments including choir and pads
 			percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],

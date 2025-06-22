@@ -16,8 +16,8 @@ export type InstrumentName =
 	| 'piano' | 'organ' | 'strings' | 'choir' | 'vocalPads' | 'pad' 
 	| 'flute' | 'clarinet' | 'saxophone' | 'soprano' | 'alto' | 'tenor' | 'bass'
 	| 'electricPiano' | 'harpsichord' | 'accordion' | 'celesta'
-	| 'violin' | 'cello' | 'guitar' | 'harp' | 'trumpet' | 'frenchHorn' | 'trombone' | 'tuba'
-	| 'oboe' | 'timpani' | 'xylophone' | 'vibraphone' | 'gongs'
+	| 'violin' | 'cello' | 'contrabass' | 'guitar' | 'guitarElectric' | 'guitarNylon' | 'bassElectric' | 'harp' | 'trumpet' | 'frenchHorn' | 'trombone' | 'tuba'
+	| 'bassoon' | 'oboe' | 'timpani' | 'xylophone' | 'vibraphone' | 'gongs'
 	| 'leadSynth' | 'bassSynth' | 'arpSynth' 
 	| 'whaleHumpback' | 'whaleBlue' | 'whaleOrca' | 'whaleGray' | 'whaleSperm' | 'whaleMinke' | 'whaleFin' | 'whaleRight' | 'whaleSei' | 'whalePilot';
 
@@ -235,13 +235,18 @@ export interface SonigraphSettings {
 		// Phase 7: Strings & Brass Completion
 		violin: InstrumentSettings;
 		cello: InstrumentSettings;
+		contrabass: InstrumentSettings;
 		guitar: InstrumentSettings;
+		guitarElectric: InstrumentSettings;
+		guitarNylon: InstrumentSettings;
+		bassElectric: InstrumentSettings;
 		harp: InstrumentSettings;
 		trumpet: InstrumentSettings;
 		frenchHorn: InstrumentSettings;
 		trombone: InstrumentSettings;
 		tuba: InstrumentSettings;
 		// Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
+		bassoon: InstrumentSettings;
 		oboe: InstrumentSettings;
 		timpani: InstrumentSettings;
 		xylophone: InstrumentSettings;
@@ -304,6 +309,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true, 
 			volume: 0.8, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -333,9 +339,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		organ: { 
-			enabled: false, 
+			enabled: true, 
 			volume: 0.7, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -368,6 +375,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true, 
 			volume: 0.6, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -400,6 +408,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true, 
 			volume: 0.7, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -432,6 +441,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false, 
 			volume: 0.5, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -464,6 +474,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false, 
 			volume: 0.4, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -496,6 +507,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true, 
 			volume: 0.6, 
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -528,6 +540,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true, 
 			volume: 0.5, 
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -560,6 +573,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false, 
 			volume: 0.7, 
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -592,6 +606,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.6, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -624,6 +639,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.5, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -656,6 +672,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.5, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -688,6 +705,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.7, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -721,6 +739,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -753,6 +772,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -785,6 +805,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -817,6 +838,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.5, 
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -850,6 +872,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7, 
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -882,6 +905,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.8, 
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -910,10 +934,44 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
+		contrabass: { 
+			enabled: false,
+			volume: 0.7, 
+			maxVoices: 3,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 3.5, 
+						preDelay: 0.04, 
+						wet: 0.45 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.3, 
+						depth: 0.2, 
+						delayTime: 4.0, 
+						feedback: 0.02 
+					} 
+				},
+				filter: { 
+					enabled: false, 
+					params: { 
+						frequency: 2000,
+						Q: 0.8, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
 		guitar: { 
 			enabled: false,
 			volume: 0.6, 
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -942,10 +1000,110 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
+		guitarElectric: { 
+			enabled: false,
+			volume: 0.7, 
+			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 1.8, 
+						preDelay: 0.02, 
+						wet: 0.25 
+					} 
+				},
+				chorus: { 
+					enabled: true, 
+					params: { 
+						frequency: 1.2, 
+						depth: 0.4, 
+						delayTime: 2.5, 
+						feedback: 0.04 
+					} 
+				},
+				filter: { 
+					enabled: false, 
+					params: { 
+						frequency: 5000,
+						Q: 0.6, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		guitarNylon: { 
+			enabled: false,
+			volume: 0.6, 
+			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 2.5, 
+						preDelay: 0.03, 
+						wet: 0.4 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.6, 
+						depth: 0.2, 
+						delayTime: 3.0, 
+						feedback: 0.02 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 4500,
+						Q: 0.5, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
+		bassElectric: { 
+			enabled: false,
+			volume: 0.8, 
+			maxVoices: 2,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			effects: {
+				reverb: { 
+					enabled: true, 
+					params: { 
+						decay: 1.5, 
+						preDelay: 0.01, 
+						wet: 0.2 
+					} 
+				},
+				chorus: { 
+					enabled: false, 
+					params: { 
+						frequency: 0.5, 
+						depth: 0.3, 
+						delayTime: 2.0, 
+						feedback: 0.03 
+					} 
+				},
+				filter: { 
+					enabled: true, 
+					params: { 
+						frequency: 2500,
+						Q: 0.9, 
+						type: 'lowpass' 
+					} 
+				}
+			}
+		},
 		harp: { 
 			enabled: false,
 			volume: 0.5, 
 			maxVoices: 12,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -978,6 +1136,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1010,6 +1169,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1042,6 +1202,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7, 
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1074,6 +1235,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.8, 
 			maxVoices: 3,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1103,10 +1265,44 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		// Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
+		bassoon: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 2.8,
+						preDelay: 0.04,
+						wet: 0.4
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.9,
+						depth: 0.4,
+						delayTime: 3.0,
+						feedback: 0.08
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 2000,
+						Q: 1.0,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
 		oboe: {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1139,6 +1335,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.9,
 			maxVoices: 2,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1171,6 +1368,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.8,
 			maxVoices: 6,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1203,6 +1401,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1235,6 +1434,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.9,
 			maxVoices: 2,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1267,6 +1467,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.6,
 			maxVoices: 4,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1299,6 +1500,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.8,
 			maxVoices: 2,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: false,
@@ -1331,6 +1533,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6,
 			maxVoices: 8,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1779,7 +1982,7 @@ export const VOICE_ASSIGNMENT_STRATEGIES = {
 export const INSTRUMENT_FAMILIES = {
 	keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta'],
 	strings: ['strings', 'violin', 'cello', 'guitar', 'harp'],
-	woodwinds: ['flute', 'clarinet', 'saxophone', 'oboe'],
+	woodwinds: ['flute', 'clarinet', 'saxophone', 'bassoon', 'oboe'],
 	brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
 	vocals: ['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'],
 	percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
@@ -1838,7 +2041,7 @@ export const INSTRUMENT_INFO = {
 		defaultFrequencyRange: 'Medium (400-800Hz)'
 	},
 	strings: {
-		name: 'Strings',
+		name: 'String ensemble',
 		icon: '🎻',
 		description: 'AM synthesis with filtering for warm, flowing sounds',
 		defaultFrequencyRange: 'Very Low (<200Hz)'
@@ -1917,11 +2120,35 @@ export const INSTRUMENT_INFO = {
 		description: 'Complex harmonics with bow noise for rich low register character',
 		defaultFrequencyRange: 'Mid-Low (200-400Hz)'
 	},
+	contrabass: {
+		name: 'Contrabass',
+		icon: '🎻',
+		description: 'Deep string foundation with rich low harmonics and bow articulation',
+		defaultFrequencyRange: 'Very Low (<100Hz)'
+	},
 	guitar: {
 		name: 'Guitar',
 		icon: '🎸',
 		description: 'Karplus-Strong synthesis for authentic plucked string physics',
 		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
+	},
+	guitarElectric: {
+		name: 'Electric guitar',
+		icon: '🎸',
+		description: 'Amplified electric guitar with pickup simulation and effects processing',
+		defaultFrequencyRange: 'High (1000-1400Hz)'
+	},
+	guitarNylon: {
+		name: 'Nylon guitar',
+		icon: '🎸',
+		description: 'Classical nylon-string guitar with warm, mellow fingerpicked tones',
+		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
+	},
+	bassElectric: {
+		name: 'Electric bass',
+		icon: '🎸',
+		description: 'Electric bass guitar with deep fundamentals and punchy attack',
+		defaultFrequencyRange: 'Low (100-200Hz)'
 	},
 	harp: {
 		name: 'Harp',
@@ -1954,6 +2181,12 @@ export const INSTRUMENT_INFO = {
 		defaultFrequencyRange: 'Very Low (<100Hz)'
 	},
 	// Phase 8: Percussion & Electronic Finale
+	bassoon: {
+		name: 'Bassoon',
+		icon: '🎵',
+		description: 'Deep woodwind with rich double reed harmonics and warm low register',
+		defaultFrequencyRange: 'Low-Mid (200-400Hz)'
+	},
 	oboe: {
 		name: 'Oboe',
 		icon: '🎼',

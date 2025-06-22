@@ -423,8 +423,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects and volume controls - Phase 8B: Now supporting 34 instruments (Complete Orchestral Vision + Environmental Sounds)
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'];
+		// Initialize per-instrument effects and volume controls - Phase 8B: Now supporting 39 instruments (Complete Orchestral Vision + Environmental Sounds + New String Instruments)
+		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'];
 		
 		for (const instrumentName of instruments) {
 			// Create volume control with settings from constants or default
@@ -735,7 +735,7 @@ export class AudioEngine {
 			const allInstruments = [
 				'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 
 				'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 
-				'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 
+				'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 
 				'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
 			];
 			
@@ -784,6 +784,11 @@ export class AudioEngine {
 					case 'strings':
 					case 'violin':
 					case 'cello':
+					case 'contrabass':
+					case 'guitar':
+					case 'guitarElectric':
+					case 'guitarNylon':
+					case 'bassElectric':
 						synth = new PolySynth({
 							voice: FMSynth,
 							maxPolyphony: maxVoices,
@@ -1571,6 +1576,118 @@ export class AudioEngine {
 		this.instruments.set('guitar', guitarSampler);
 		}
 
+		// Contrabass - using Sampler with contrabass samples
+		if (this.settings.instruments.contrabass?.enabled === true) {
+		const contrabassSampler = new Sampler(configs.contrabass);
+		const contrabassVolume = new Volume(-6);
+		this.instrumentVolumes.set('contrabass', contrabassVolume);
+		
+		let contrabassOutput = contrabassSampler.connect(contrabassVolume);
+		
+		// Connect contrabass to its specific effects based on settings
+		const contrabassEffects = this.instrumentEffects.get('contrabass');
+		if (contrabassEffects && this.settings.instruments.contrabass.effects) {
+			if (this.settings.instruments.contrabass.effects.reverb.enabled) {
+				const reverb = contrabassEffects.get('reverb');
+				if (reverb) contrabassOutput = contrabassOutput.connect(reverb);
+			}
+			if (this.settings.instruments.contrabass.effects.chorus.enabled) {
+				const chorus = contrabassEffects.get('chorus');
+				if (chorus) contrabassOutput = contrabassOutput.connect(chorus);
+			}
+			if (this.settings.instruments.contrabass.effects.filter.enabled) {
+				const filter = contrabassEffects.get('filter');
+				if (filter) contrabassOutput = contrabassOutput.connect(filter);
+			}
+		}
+		contrabassOutput.connect(this.volume);
+		this.instruments.set('contrabass', contrabassSampler);
+		}
+
+		// Electric Guitar - using Sampler with electric guitar samples
+		if (this.settings.instruments.guitarElectric?.enabled === true) {
+		const guitarElectricSampler = new Sampler(configs.guitarElectric);
+		const guitarElectricVolume = new Volume(-6);
+		this.instrumentVolumes.set('guitarElectric', guitarElectricVolume);
+		
+		let guitarElectricOutput = guitarElectricSampler.connect(guitarElectricVolume);
+		
+		// Connect electric guitar to its specific effects based on settings
+		const guitarElectricEffects = this.instrumentEffects.get('guitarElectric');
+		if (guitarElectricEffects && this.settings.instruments.guitarElectric.effects) {
+			if (this.settings.instruments.guitarElectric.effects.reverb.enabled) {
+				const reverb = guitarElectricEffects.get('reverb');
+				if (reverb) guitarElectricOutput = guitarElectricOutput.connect(reverb);
+			}
+			if (this.settings.instruments.guitarElectric.effects.chorus.enabled) {
+				const chorus = guitarElectricEffects.get('chorus');
+				if (chorus) guitarElectricOutput = guitarElectricOutput.connect(chorus);
+			}
+			if (this.settings.instruments.guitarElectric.effects.filter.enabled) {
+				const filter = guitarElectricEffects.get('filter');
+				if (filter) guitarElectricOutput = guitarElectricOutput.connect(filter);
+			}
+		}
+		guitarElectricOutput.connect(this.volume);
+		this.instruments.set('guitarElectric', guitarElectricSampler);
+		}
+
+		// Nylon Guitar - using Sampler with nylon guitar samples
+		if (this.settings.instruments.guitarNylon?.enabled === true) {
+		const guitarNylonSampler = new Sampler(configs.guitarNylon);
+		const guitarNylonVolume = new Volume(-6);
+		this.instrumentVolumes.set('guitarNylon', guitarNylonVolume);
+		
+		let guitarNylonOutput = guitarNylonSampler.connect(guitarNylonVolume);
+		
+		// Connect nylon guitar to its specific effects based on settings
+		const guitarNylonEffects = this.instrumentEffects.get('guitarNylon');
+		if (guitarNylonEffects && this.settings.instruments.guitarNylon.effects) {
+			if (this.settings.instruments.guitarNylon.effects.reverb.enabled) {
+				const reverb = guitarNylonEffects.get('reverb');
+				if (reverb) guitarNylonOutput = guitarNylonOutput.connect(reverb);
+			}
+			if (this.settings.instruments.guitarNylon.effects.chorus.enabled) {
+				const chorus = guitarNylonEffects.get('chorus');
+				if (chorus) guitarNylonOutput = guitarNylonOutput.connect(chorus);
+			}
+			if (this.settings.instruments.guitarNylon.effects.filter.enabled) {
+				const filter = guitarNylonEffects.get('filter');
+				if (filter) guitarNylonOutput = guitarNylonOutput.connect(filter);
+			}
+		}
+		guitarNylonOutput.connect(this.volume);
+		this.instruments.set('guitarNylon', guitarNylonSampler);
+		}
+
+		// Electric Bass - using Sampler with electric bass samples
+		if (this.settings.instruments.bassElectric?.enabled === true) {
+		const bassElectricSampler = new Sampler(configs.bassElectric);
+		const bassElectricVolume = new Volume(-6);
+		this.instrumentVolumes.set('bassElectric', bassElectricVolume);
+		
+		let bassElectricOutput = bassElectricSampler.connect(bassElectricVolume);
+		
+		// Connect electric bass to its specific effects based on settings
+		const bassElectricEffects = this.instrumentEffects.get('bassElectric');
+		if (bassElectricEffects && this.settings.instruments.bassElectric.effects) {
+			if (this.settings.instruments.bassElectric.effects.reverb.enabled) {
+				const reverb = bassElectricEffects.get('reverb');
+				if (reverb) bassElectricOutput = bassElectricOutput.connect(reverb);
+			}
+			if (this.settings.instruments.bassElectric.effects.chorus.enabled) {
+				const chorus = bassElectricEffects.get('chorus');
+				if (chorus) bassElectricOutput = bassElectricOutput.connect(chorus);
+			}
+			if (this.settings.instruments.bassElectric.effects.filter.enabled) {
+				const filter = bassElectricEffects.get('filter');
+				if (filter) bassElectricOutput = bassElectricOutput.connect(filter);
+			}
+		}
+		bassElectricOutput.connect(this.volume);
+		this.instruments.set('bassElectric', bassElectricSampler);
+		}
+
 		// Harp - using Sampler with harp samples
 		if (this.settings.instruments.harp?.enabled === true) {
 		const harpSampler = new Sampler(configs.harp);
@@ -1715,7 +1832,7 @@ export class AudioEngine {
 		const totalSampleInstruments = [
 			'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'soprano', 'alto', 'tenor', 'bass',
 			'flute', 'clarinet', 'saxophone', 'electricPiano', 'harpsichord', 'accordion', 'celesta',
-			'violin', 'cello', 'guitar', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba'
+			'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba'
 		];
 		const settings = this.settings; // Capture settings reference for arrow function
 		const enabledSampleInstruments = totalSampleInstruments.filter(instrumentName => 

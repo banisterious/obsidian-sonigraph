@@ -68,7 +68,7 @@ All other instruments are **disabled by default** to avoid overwhelming new user
 | Instrument | Synthesis | Source | Sample Range | Release | Effects | Frequency | Status |
 |------------|-----------|--------|--------------|---------|---------|-----------|--------|
 | **Piano** | Sample-based | [Salamander Grand](https://tonejs.github.io/audio/salamander/) | A0-C8 (88 keys) | 1.0s | Reverb | Very High (1400-1600Hz) | ✅ **ENABLED** |
-| **Organ** | Additive synthesis | [ToneJS Harmonium](https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/) | C2-G6 (21 samples) | 0.8s | Chorus, Reverb | Mid (400-800Hz) | Disabled |
+| **Organ** | Additive synthesis | [ToneJS Harmonium](https://github.com/nbrosowsky/tonejs-instruments/tree/master/samples/harmonium) | C2-G6 (21 samples) | 0.8s | Chorus, Reverb | Mid (400-800Hz) | Disabled |
 | **Electric Piano** | AM synthesis + tremolo | Rhodes/Wurlitzer samples | Electric piano range | 1.2s | Tremolo, AM | Mid-Low (200-400Hz) | Disabled |
 | **Harpsichord** | Sharp envelope + filtering | Baroque harpsichord samples | Historical range | 0.3s | Sharp attack, Filter | Low-Mid (300-600Hz) | Disabled |
 | **Accordion** | AM synthesis + vibrato | Bellows accordion samples | Traditional range | 1.5s | Bellows, Vibrato | Mid (400-800Hz) | Disabled |

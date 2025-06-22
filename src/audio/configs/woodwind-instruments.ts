@@ -58,6 +58,22 @@ export const woodwindInstruments: InstrumentFamily = {
             category: 'woodwind'
         },
 
+        bassoon: {
+            urls: {
+                "G2": `G2.${FORMAT_PLACEHOLDER}`, "A2": `A2.${FORMAT_PLACEHOLDER}`, "C3": `C3.${FORMAT_PLACEHOLDER}`,
+                "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`, "C4": `C4.${FORMAT_PLACEHOLDER}`,
+                "E4": `E4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
+                "C5": `C5.${FORMAT_PLACEHOLDER}`
+            },
+            release: 2.2,
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bassoon/",
+            effects: ['reverb', 'filter'],
+            maxVoices: 3,
+            priority: 'medium',
+            category: 'woodwind',
+            useHighQuality: false
+        },
+
         oboe: {
             urls: {
                 "Bb3": `Bb3.${FORMAT_PLACEHOLDER}`, "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`,

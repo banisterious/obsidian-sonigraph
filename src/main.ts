@@ -508,6 +508,39 @@ export default class SonigraphPlugin extends Plugin {
 		}
 
 		// ALWAYS check for missing instruments (for users upgrading instrument versions)
+		// Ensure core keyboard instruments exist (piano & organ should always be available)
+		if (!this.settings.instruments.piano) {
+			logger.info('settings', 'Adding missing Piano instrument (core keyboard)');
+			migrationNeeded = true;
+			this.settings.instruments.piano = {
+				enabled: true,
+				volume: 0.8,
+				maxVoices: 12,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 1.8, preDelay: 0.02, wet: 0.25 } },
+					chorus: { enabled: false, params: { frequency: 0.8, depth: 0.5, delayTime: 4.0, feedback: 0.05 } },
+					filter: { enabled: false, params: { frequency: 3500, Q: 0.8, type: 'lowpass' } }
+				}
+			};
+		}
+
+		if (!this.settings.instruments.organ) {
+			logger.info('settings', 'Adding missing Organ instrument (core keyboard)');
+			migrationNeeded = true;
+			this.settings.instruments.organ = {
+				enabled: true,
+				volume: 0.7,
+				maxVoices: 8,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 2.2, preDelay: 0.03, wet: 0.35 } },
+					chorus: { enabled: true, params: { frequency: 0.8, depth: 0.5, delayTime: 4.0, feedback: 0.05 } },
+					filter: { enabled: false, params: { frequency: 4000, Q: 0.6, type: 'lowpass' } }
+				}
+			};
+		}
+
 		// Ensure new instruments exist (for users upgrading from 3 to 6 instruments)
 		if (!this.settings.instruments.choir) {
 			logger.info('settings', 'Adding missing Choir instrument');
@@ -657,6 +690,88 @@ export default class SonigraphPlugin extends Plugin {
 					reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.05, wet: 0.6 } },
 					chorus: { enabled: false, params: { frequency: 0.4, depth: 0.4, delayTime: 4.0, feedback: 0.06 } },
 					filter: { enabled: false, params: { frequency: 1500, Q: 0.8, type: 'lowpass' } }
+				}
+			};
+		}
+
+		// Ensure new string instruments exist (for users upgrading to include new nbrosowsky instruments)
+		if (!this.settings.instruments.contrabass) {
+			logger.info('settings', 'Adding missing Contrabass instrument (new string instrument)');
+			migrationNeeded = true;
+			this.settings.instruments.contrabass = {
+				enabled: false, // Disabled by default to avoid overwhelming users
+				volume: 0.8,
+				maxVoices: 4,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 3.2, preDelay: 0.05, wet: 0.5 } },
+					chorus: { enabled: false, params: { frequency: 0.4, depth: 0.3, delayTime: 4.0, feedback: 0.04 } },
+					filter: { enabled: true, params: { frequency: 1200, Q: 0.8, type: 'lowpass' } }
+				}
+			};
+		}
+
+		if (!this.settings.instruments.guitarElectric) {
+			logger.info('settings', 'Adding missing Electric Guitar instrument (new string instrument)');
+			migrationNeeded = true;
+			this.settings.instruments.guitarElectric = {
+				enabled: false, // Disabled by default
+				volume: 0.7,
+				maxVoices: 6,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 2.0, preDelay: 0.02, wet: 0.3 } },
+					chorus: { enabled: true, params: { frequency: 1.2, depth: 0.5, delayTime: 2.5, feedback: 0.06 } },
+					filter: { enabled: false, params: { frequency: 4000, Q: 0.7, type: 'lowpass' } }
+				}
+			};
+		}
+
+		if (!this.settings.instruments.guitarNylon) {
+			logger.info('settings', 'Adding missing Nylon Guitar instrument (new string instrument)');
+			migrationNeeded = true;
+			this.settings.instruments.guitarNylon = {
+				enabled: false, // Disabled by default
+				volume: 0.6,
+				maxVoices: 6,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 2.5, preDelay: 0.03, wet: 0.4 } },
+					chorus: { enabled: false, params: { frequency: 0.8, depth: 0.3, delayTime: 3.0, feedback: 0.04 } },
+					filter: { enabled: true, params: { frequency: 3500, Q: 0.6, type: 'lowpass' } }
+				}
+			};
+		}
+
+		if (!this.settings.instruments.bassElectric) {
+			logger.info('settings', 'Adding missing Electric Bass instrument (new string instrument)');
+			migrationNeeded = true;
+			this.settings.instruments.bassElectric = {
+				enabled: false, // Disabled by default
+				volume: 0.8,
+				maxVoices: 4,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 2.2, preDelay: 0.02, wet: 0.25 } },
+					chorus: { enabled: false, params: { frequency: 0.6, depth: 0.4, delayTime: 3.5, feedback: 0.05 } },
+					filter: { enabled: true, params: { frequency: 1800, Q: 0.9, type: 'lowpass' } }
+				}
+			};
+		}
+
+		// Ensure bassoon exists (new woodwind instrument)
+		if (!this.settings.instruments.bassoon) {
+			logger.info('settings', 'Adding missing Bassoon instrument (new woodwind instrument)');
+			migrationNeeded = true;
+			this.settings.instruments.bassoon = {
+				enabled: false, // Disabled by default
+				volume: 0.7,
+				maxVoices: 4,
+				useHighQuality: false, // Default to synthesis (user can switch to recordings)
+				effects: {
+					reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.04, wet: 0.4 } },
+					chorus: { enabled: true, params: { frequency: 0.9, depth: 0.4, delayTime: 3.0, feedback: 0.08 } },
+					filter: { enabled: true, params: { frequency: 2000, Q: 1.0, type: 'lowpass' } }
 				}
 			};
 		}
