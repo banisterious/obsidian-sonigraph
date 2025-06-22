@@ -33316,6 +33316,7 @@ var AudioEngine = class {
     }
   }
   async initializeInstruments() {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y;
     const configs = this.getSamplerConfigs();
     if (!this.settings.useHighQualitySamples) {
       logger11.info("instruments", "Synthesis mode - creating synthesizers for all instruments");
@@ -33531,670 +33532,761 @@ var AudioEngine = class {
       this.applyInstrumentSettings();
       return;
     }
-    logger11.info("cdn-diagnosis", "Initializing piano sampler with CDN sample loading", {
-      instrument: "piano",
-      baseUrl: configs.piano.baseUrl,
-      sampleCount: Object.keys(configs.piano.urls).length,
-      format: this.settings.useHighQualitySamples ? "ogg" : "synthesis",
-      effectiveFormat: "ogg",
-      // From Issue #005 resolution
-      urls: configs.piano.urls
+    if (((_a = this.settings.instruments.piano) == null ? void 0 : _a.enabled) === true) {
+      logger11.info("cdn-diagnosis", "Initializing piano sampler with CDN sample loading", {
+        instrument: "piano",
+        baseUrl: configs.piano.baseUrl,
+        sampleCount: Object.keys(configs.piano.urls).length,
+        format: this.settings.useHighQualitySamples ? "ogg" : "synthesis",
+        effectiveFormat: "ogg",
+        // From Issue #005 resolution
+        urls: configs.piano.urls
+      });
+      const pianoSampler = new Sampler({
+        ...configs.piano,
+        onload: () => {
+          logger11.info("cdn-diagnosis", "Piano samples loaded successfully from CDN", {
+            instrument: "piano",
+            baseUrl: configs.piano.baseUrl,
+            loadedSampleCount: Object.keys(configs.piano.urls).length,
+            status: "success"
+          });
+        },
+        onerror: (error) => {
+          logger11.error("cdn-diagnosis", "Piano samples failed to load from CDN - investigating for Issue #011", {
+            instrument: "piano",
+            baseUrl: configs.piano.baseUrl,
+            sampleCount: Object.keys(configs.piano.urls).length,
+            error: (error == null ? void 0 : error.toString()) || "Unknown error",
+            fallbackMode: "synthesis",
+            troubleshooting: "Check network tab for 404/CORS errors"
+          });
+        }
+      });
+      const pianoVolume = new Volume(-6);
+      this.instrumentVolumes.set("piano", pianoVolume);
+      let pianoOutput = pianoSampler.connect(pianoVolume);
+      const pianoEffects = this.instrumentEffects.get("piano");
+      if (pianoEffects && this.settings.instruments.piano.effects) {
+        if (this.settings.instruments.piano.effects.reverb.enabled) {
+          const reverb = pianoEffects.get("reverb");
+          if (reverb)
+            pianoOutput = pianoOutput.connect(reverb);
+        }
+        if (this.settings.instruments.piano.effects.chorus.enabled) {
+          const chorus = pianoEffects.get("chorus");
+          if (chorus)
+            pianoOutput = pianoOutput.connect(chorus);
+        }
+        if (this.settings.instruments.piano.effects.filter.enabled) {
+          const filter = pianoEffects.get("filter");
+          if (filter)
+            pianoOutput = pianoOutput.connect(filter);
+        }
+      }
+      pianoOutput.connect(this.volume);
+      this.instruments.set("piano", pianoSampler);
+    }
+    if (((_b = this.settings.instruments.organ) == null ? void 0 : _b.enabled) === true) {
+      logger11.info("cdn-diagnosis", "Initializing organ sampler with CDN sample loading", {
+        instrument: "organ",
+        baseUrl: configs.organ.baseUrl,
+        sampleCount: Object.keys(configs.organ.urls).length,
+        expectedCDNPath: "harmonium/",
+        // Maps to nbrosowsky harmonium directory
+        availableOnCDN: true
+        // Confirmed: 33 OGG samples available
+      });
+      const organSampler = new Sampler({
+        ...configs.organ,
+        onload: () => {
+          logger11.info("cdn-diagnosis", "Organ samples loaded successfully from CDN", {
+            instrument: "organ",
+            baseUrl: configs.organ.baseUrl,
+            status: "success"
+          });
+        },
+        onerror: (error) => {
+          logger11.error("cdn-diagnosis", "Organ samples failed to load from CDN - investigating for Issue #011", {
+            instrument: "organ",
+            baseUrl: configs.organ.baseUrl,
+            error: (error == null ? void 0 : error.toString()) || "Unknown error",
+            cdnStatus: "harmonium directory exists with 33 OGG files",
+            troubleshooting: "Check if harmonium path is correctly mapped"
+          });
+        }
+      });
+      const organVolume = new Volume(-6);
+      this.instrumentVolumes.set("organ", organVolume);
+      let organOutput = organSampler.connect(organVolume);
+      const organEffects = this.instrumentEffects.get("organ");
+      if (organEffects && this.settings.instruments.organ.effects) {
+        if (this.settings.instruments.organ.effects.reverb.enabled) {
+          const reverb = organEffects.get("reverb");
+          if (reverb)
+            organOutput = organOutput.connect(reverb);
+        }
+        if (this.settings.instruments.organ.effects.chorus.enabled) {
+          const chorus = organEffects.get("chorus");
+          if (chorus)
+            organOutput = organOutput.connect(chorus);
+        }
+        if (this.settings.instruments.organ.effects.filter.enabled) {
+          const filter = organEffects.get("filter");
+          if (filter)
+            organOutput = organOutput.connect(filter);
+        }
+      }
+      organOutput.connect(this.volume);
+      this.instruments.set("organ", organSampler);
+    }
+    if (((_c = this.settings.instruments.strings) == null ? void 0 : _c.enabled) === true) {
+      const stringsSampler = new Sampler({
+        ...configs.strings,
+        onload: () => {
+          logger11.debug("samples", "Strings samples loaded successfully");
+        },
+        onerror: (error) => {
+          logger11.warn("samples", "Strings samples failed to load, using basic synthesis", { error });
+        }
+      });
+      const stringsVolume = new Volume(-6);
+      this.instrumentVolumes.set("strings", stringsVolume);
+      let stringsOutput = stringsSampler.connect(stringsVolume);
+      const stringsEffects = this.instrumentEffects.get("strings");
+      if (stringsEffects && this.settings.instruments.strings.effects) {
+        if (this.settings.instruments.strings.effects.reverb.enabled) {
+          const reverb = stringsEffects.get("reverb");
+          if (reverb)
+            stringsOutput = stringsOutput.connect(reverb);
+        }
+        if (this.settings.instruments.strings.effects.chorus.enabled) {
+          const chorus = stringsEffects.get("chorus");
+          if (chorus)
+            stringsOutput = stringsOutput.connect(chorus);
+        }
+        if (this.settings.instruments.strings.effects.filter.enabled) {
+          const filter = stringsEffects.get("filter");
+          if (filter)
+            stringsOutput = stringsOutput.connect(filter);
+        }
+      }
+      stringsOutput.connect(this.volume);
+      this.instruments.set("strings", stringsSampler);
+    }
+    if (((_d = this.settings.instruments.choir) == null ? void 0 : _d.enabled) === true) {
+      const choirSampler = new Sampler(configs.choir);
+      const choirVolume = new Volume(-6);
+      this.instrumentVolumes.set("choir", choirVolume);
+      let choirOutput = choirSampler.connect(choirVolume);
+      const choirEffects = this.instrumentEffects.get("choir");
+      if (choirEffects && this.settings.instruments.choir.effects) {
+        if (this.settings.instruments.choir.effects.reverb.enabled) {
+          const reverb = choirEffects.get("reverb");
+          if (reverb)
+            choirOutput = choirOutput.connect(reverb);
+        }
+        if (this.settings.instruments.choir.effects.chorus.enabled) {
+          const chorus = choirEffects.get("chorus");
+          if (chorus)
+            choirOutput = choirOutput.connect(chorus);
+        }
+        if (this.settings.instruments.choir.effects.filter.enabled) {
+          const filter = choirEffects.get("filter");
+          if (filter)
+            choirOutput = choirOutput.connect(filter);
+        }
+      }
+      choirOutput.connect(this.volume);
+      this.instruments.set("choir", choirSampler);
+    }
+    if (((_e = this.settings.instruments.vocalPads) == null ? void 0 : _e.enabled) === true) {
+      const vocalPadsSampler = new Sampler(configs.vocalPads);
+      const vocalPadsVolume = new Volume(-6);
+      this.instrumentVolumes.set("vocalPads", vocalPadsVolume);
+      let vocalPadsOutput = vocalPadsSampler.connect(vocalPadsVolume);
+      const vocalPadsEffects = this.instrumentEffects.get("vocalPads");
+      if (vocalPadsEffects && this.settings.instruments.vocalPads.effects) {
+        if (this.settings.instruments.vocalPads.effects.reverb.enabled) {
+          const reverb = vocalPadsEffects.get("reverb");
+          if (reverb)
+            vocalPadsOutput = vocalPadsOutput.connect(reverb);
+        }
+        if (this.settings.instruments.vocalPads.effects.chorus.enabled) {
+          const chorus = vocalPadsEffects.get("chorus");
+          if (chorus)
+            vocalPadsOutput = vocalPadsOutput.connect(chorus);
+        }
+        if (this.settings.instruments.vocalPads.effects.filter.enabled) {
+          const filter = vocalPadsEffects.get("filter");
+          if (filter)
+            vocalPadsOutput = vocalPadsOutput.connect(filter);
+        }
+      }
+      vocalPadsOutput.connect(this.volume);
+      this.instruments.set("vocalPads", vocalPadsSampler);
+    }
+    if (((_f = this.settings.instruments.pad) == null ? void 0 : _f.enabled) === true) {
+      const padSampler = new Sampler(configs.pad);
+      const padVolume = new Volume(-6);
+      this.instrumentVolumes.set("pad", padVolume);
+      let padOutput = padSampler.connect(padVolume);
+      const padEffects = this.instrumentEffects.get("pad");
+      if (padEffects && this.settings.instruments.pad.effects) {
+        if (this.settings.instruments.pad.effects.reverb.enabled) {
+          const reverb = padEffects.get("reverb");
+          if (reverb)
+            padOutput = padOutput.connect(reverb);
+        }
+        if (this.settings.instruments.pad.effects.chorus.enabled) {
+          const chorus = padEffects.get("chorus");
+          if (chorus)
+            padOutput = padOutput.connect(chorus);
+        }
+        if (this.settings.instruments.pad.effects.filter.enabled) {
+          const filter = padEffects.get("filter");
+          if (filter)
+            padOutput = padOutput.connect(filter);
+        }
+      }
+      padOutput.connect(this.volume);
+      this.instruments.set("pad", padSampler);
+    }
+    if (((_g = this.settings.instruments.soprano) == null ? void 0 : _g.enabled) === true) {
+      const sopranoSampler = this.createSamplerWithFallback(configs.soprano, "soprano");
+      const sopranoVolume = new Volume(-6);
+      this.instrumentVolumes.set("soprano", sopranoVolume);
+      let sopranoOutput = sopranoSampler.connect(sopranoVolume);
+      const sopranoEffects = this.instrumentEffects.get("soprano");
+      if (sopranoEffects && this.settings.instruments.soprano.effects) {
+        if (this.settings.instruments.soprano.effects.reverb.enabled) {
+          const reverb = sopranoEffects.get("reverb");
+          if (reverb)
+            sopranoOutput = sopranoOutput.connect(reverb);
+        }
+        if (this.settings.instruments.soprano.effects.chorus.enabled) {
+          const chorus = sopranoEffects.get("chorus");
+          if (chorus)
+            sopranoOutput = sopranoOutput.connect(chorus);
+        }
+        if (this.settings.instruments.soprano.effects.filter.enabled) {
+          const filter = sopranoEffects.get("filter");
+          if (filter)
+            sopranoOutput = sopranoOutput.connect(filter);
+        }
+      }
+      sopranoOutput.connect(this.volume);
+      this.instruments.set("soprano", sopranoSampler);
+    }
+    if (((_h = this.settings.instruments.alto) == null ? void 0 : _h.enabled) === true) {
+      const altoSampler = this.createSamplerWithFallback(configs.alto, "alto");
+      const altoVolume = new Volume(-6);
+      this.instrumentVolumes.set("alto", altoVolume);
+      let altoOutput = altoSampler.connect(altoVolume);
+      const altoEffects = this.instrumentEffects.get("alto");
+      if (altoEffects && this.settings.instruments.alto.effects) {
+        if (this.settings.instruments.alto.effects.reverb.enabled) {
+          const reverb = altoEffects.get("reverb");
+          if (reverb)
+            altoOutput = altoOutput.connect(reverb);
+        }
+        if (this.settings.instruments.alto.effects.chorus.enabled) {
+          const chorus = altoEffects.get("chorus");
+          if (chorus)
+            altoOutput = altoOutput.connect(chorus);
+        }
+        if (this.settings.instruments.alto.effects.filter.enabled) {
+          const filter = altoEffects.get("filter");
+          if (filter)
+            altoOutput = altoOutput.connect(filter);
+        }
+      }
+      altoOutput.connect(this.volume);
+      this.instruments.set("alto", altoSampler);
+    }
+    if (((_i = this.settings.instruments.tenor) == null ? void 0 : _i.enabled) === true) {
+      const tenorSampler = this.createSamplerWithFallback(configs.tenor, "tenor");
+      const tenorVolume = new Volume(-6);
+      this.instrumentVolumes.set("tenor", tenorVolume);
+      let tenorOutput = tenorSampler.connect(tenorVolume);
+      const tenorEffects = this.instrumentEffects.get("tenor");
+      if (tenorEffects && this.settings.instruments.tenor.effects) {
+        if (this.settings.instruments.tenor.effects.reverb.enabled) {
+          const reverb = tenorEffects.get("reverb");
+          if (reverb)
+            tenorOutput = tenorOutput.connect(reverb);
+        }
+        if (this.settings.instruments.tenor.effects.chorus.enabled) {
+          const chorus = tenorEffects.get("chorus");
+          if (chorus)
+            tenorOutput = tenorOutput.connect(chorus);
+        }
+        if (this.settings.instruments.tenor.effects.filter.enabled) {
+          const filter = tenorEffects.get("filter");
+          if (filter)
+            tenorOutput = tenorOutput.connect(filter);
+        }
+      }
+      tenorOutput.connect(this.volume);
+      this.instruments.set("tenor", tenorSampler);
+    }
+    if (((_j = this.settings.instruments.bass) == null ? void 0 : _j.enabled) === true) {
+      const bassSampler = this.createSamplerWithFallback(configs.bass, "bass");
+      const bassVolume = new Volume(-6);
+      this.instrumentVolumes.set("bass", bassVolume);
+      let bassOutput = bassSampler.connect(bassVolume);
+      const bassEffects = this.instrumentEffects.get("bass");
+      if (bassEffects && this.settings.instruments.bass.effects) {
+        if (this.settings.instruments.bass.effects.reverb.enabled) {
+          const reverb = bassEffects.get("reverb");
+          if (reverb)
+            bassOutput = bassOutput.connect(reverb);
+        }
+        if (this.settings.instruments.bass.effects.chorus.enabled) {
+          const chorus = bassEffects.get("chorus");
+          if (chorus)
+            bassOutput = bassOutput.connect(chorus);
+        }
+        if (this.settings.instruments.bass.effects.filter.enabled) {
+          const filter = bassEffects.get("filter");
+          if (filter)
+            bassOutput = bassOutput.connect(filter);
+        }
+      }
+      bassOutput.connect(this.volume);
+      this.instruments.set("bass", bassSampler);
+    }
+    if (((_k = this.settings.instruments.flute) == null ? void 0 : _k.enabled) === true) {
+      const fluteSampler = new Sampler(configs.flute);
+      const fluteVolume = new Volume(-6);
+      this.instrumentVolumes.set("flute", fluteVolume);
+      let fluteOutput = fluteSampler.connect(fluteVolume);
+      const fluteEffects = this.instrumentEffects.get("flute");
+      if (fluteEffects && this.settings.instruments.flute.effects) {
+        if (this.settings.instruments.flute.effects.reverb.enabled) {
+          const reverb = fluteEffects.get("reverb");
+          if (reverb)
+            fluteOutput = fluteOutput.connect(reverb);
+        }
+        if (this.settings.instruments.flute.effects.chorus.enabled) {
+          const chorus = fluteEffects.get("chorus");
+          if (chorus)
+            fluteOutput = fluteOutput.connect(chorus);
+        }
+        if (this.settings.instruments.flute.effects.filter.enabled) {
+          const filter = fluteEffects.get("filter");
+          if (filter)
+            fluteOutput = fluteOutput.connect(filter);
+        }
+      }
+      fluteOutput.connect(this.volume);
+      this.instruments.set("flute", fluteSampler);
+    }
+    if (((_l = this.settings.instruments.clarinet) == null ? void 0 : _l.enabled) === true) {
+      const clarinetSampler = new Sampler(configs.clarinet);
+      const clarinetVolume = new Volume(-6);
+      this.instrumentVolumes.set("clarinet", clarinetVolume);
+      let clarinetOutput = clarinetSampler.connect(clarinetVolume);
+      const clarinetEffects = this.instrumentEffects.get("clarinet");
+      if (clarinetEffects && this.settings.instruments.clarinet.effects) {
+        if (this.settings.instruments.clarinet.effects.reverb.enabled) {
+          const reverb = clarinetEffects.get("reverb");
+          if (reverb)
+            clarinetOutput = clarinetOutput.connect(reverb);
+        }
+        if (this.settings.instruments.clarinet.effects.chorus.enabled) {
+          const chorus = clarinetEffects.get("chorus");
+          if (chorus)
+            clarinetOutput = clarinetOutput.connect(chorus);
+        }
+        if (this.settings.instruments.clarinet.effects.filter.enabled) {
+          const filter = clarinetEffects.get("filter");
+          if (filter)
+            clarinetOutput = clarinetOutput.connect(filter);
+        }
+      }
+      clarinetOutput.connect(this.volume);
+      this.instruments.set("clarinet", clarinetSampler);
+    }
+    if (((_m = this.settings.instruments.saxophone) == null ? void 0 : _m.enabled) === true) {
+      const saxophoneSampler = new Sampler(configs.saxophone);
+      const saxophoneVolume = new Volume(-6);
+      this.instrumentVolumes.set("saxophone", saxophoneVolume);
+      let saxophoneOutput = saxophoneSampler.connect(saxophoneVolume);
+      const saxophoneEffects = this.instrumentEffects.get("saxophone");
+      if (saxophoneEffects && this.settings.instruments.saxophone.effects) {
+        if (this.settings.instruments.saxophone.effects.reverb.enabled) {
+          const reverb = saxophoneEffects.get("reverb");
+          if (reverb)
+            saxophoneOutput = saxophoneOutput.connect(reverb);
+        }
+        if (this.settings.instruments.saxophone.effects.chorus.enabled) {
+          const chorus = saxophoneEffects.get("chorus");
+          if (chorus)
+            saxophoneOutput = saxophoneOutput.connect(chorus);
+        }
+        if (this.settings.instruments.saxophone.effects.filter.enabled) {
+          const filter = saxophoneEffects.get("filter");
+          if (filter)
+            saxophoneOutput = saxophoneOutput.connect(filter);
+        }
+      }
+      saxophoneOutput.connect(this.volume);
+      this.instruments.set("saxophone", saxophoneSampler);
+    }
+    if (((_n = this.settings.instruments.electricPiano) == null ? void 0 : _n.enabled) === true) {
+      const electricPianoSampler = new Sampler(configs.electricPiano);
+      const electricPianoVolume = new Volume(-6);
+      this.instrumentVolumes.set("electricPiano", electricPianoVolume);
+      let electricPianoOutput = electricPianoSampler.connect(electricPianoVolume);
+      const electricPianoEffects = this.instrumentEffects.get("electricPiano");
+      if (electricPianoEffects && this.settings.instruments.electricPiano.effects) {
+        if (this.settings.instruments.electricPiano.effects.reverb.enabled) {
+          const reverb = electricPianoEffects.get("reverb");
+          if (reverb)
+            electricPianoOutput = electricPianoOutput.connect(reverb);
+        }
+        if (this.settings.instruments.electricPiano.effects.chorus.enabled) {
+          const chorus = electricPianoEffects.get("chorus");
+          if (chorus)
+            electricPianoOutput = electricPianoOutput.connect(chorus);
+        }
+        if (this.settings.instruments.electricPiano.effects.filter.enabled) {
+          const filter = electricPianoEffects.get("filter");
+          if (filter)
+            electricPianoOutput = electricPianoOutput.connect(filter);
+        }
+      }
+      electricPianoOutput.connect(this.volume);
+      this.instruments.set("electricPiano", electricPianoSampler);
+    }
+    if (((_o = this.settings.instruments.harpsichord) == null ? void 0 : _o.enabled) === true) {
+      const harpsichordSampler = new Sampler(configs.harpsichord);
+      const harpsichordVolume = new Volume(-6);
+      this.instrumentVolumes.set("harpsichord", harpsichordVolume);
+      let harpsichordOutput = harpsichordSampler.connect(harpsichordVolume);
+      const harpsichordEffects = this.instrumentEffects.get("harpsichord");
+      if (harpsichordEffects && this.settings.instruments.harpsichord.effects) {
+        if (this.settings.instruments.harpsichord.effects.reverb.enabled) {
+          const reverb = harpsichordEffects.get("reverb");
+          if (reverb)
+            harpsichordOutput = harpsichordOutput.connect(reverb);
+        }
+        if (this.settings.instruments.harpsichord.effects.chorus.enabled) {
+          const chorus = harpsichordEffects.get("chorus");
+          if (chorus)
+            harpsichordOutput = harpsichordOutput.connect(chorus);
+        }
+        if (this.settings.instruments.harpsichord.effects.filter.enabled) {
+          const filter = harpsichordEffects.get("filter");
+          if (filter)
+            harpsichordOutput = harpsichordOutput.connect(filter);
+        }
+      }
+      harpsichordOutput.connect(this.volume);
+      this.instruments.set("harpsichord", harpsichordSampler);
+    }
+    if (((_p = this.settings.instruments.accordion) == null ? void 0 : _p.enabled) === true) {
+      const accordionSampler = new Sampler(configs.accordion);
+      const accordionVolume = new Volume(-6);
+      this.instrumentVolumes.set("accordion", accordionVolume);
+      let accordionOutput = accordionSampler.connect(accordionVolume);
+      const accordionEffects = this.instrumentEffects.get("accordion");
+      if (accordionEffects && this.settings.instruments.accordion.effects) {
+        if (this.settings.instruments.accordion.effects.reverb.enabled) {
+          const reverb = accordionEffects.get("reverb");
+          if (reverb)
+            accordionOutput = accordionOutput.connect(reverb);
+        }
+        if (this.settings.instruments.accordion.effects.chorus.enabled) {
+          const chorus = accordionEffects.get("chorus");
+          if (chorus)
+            accordionOutput = accordionOutput.connect(chorus);
+        }
+        if (this.settings.instruments.accordion.effects.filter.enabled) {
+          const filter = accordionEffects.get("filter");
+          if (filter)
+            accordionOutput = accordionOutput.connect(filter);
+        }
+      }
+      accordionOutput.connect(this.volume);
+      this.instruments.set("accordion", accordionSampler);
+    }
+    if (((_q = this.settings.instruments.celesta) == null ? void 0 : _q.enabled) === true) {
+      const celestaSampler = new Sampler(configs.celesta);
+      const celestaVolume = new Volume(-6);
+      this.instrumentVolumes.set("celesta", celestaVolume);
+      let celestaOutput = celestaSampler.connect(celestaVolume);
+      const celestaEffects = this.instrumentEffects.get("celesta");
+      if (celestaEffects && this.settings.instruments.celesta.effects) {
+        if (this.settings.instruments.celesta.effects.reverb.enabled) {
+          const reverb = celestaEffects.get("reverb");
+          if (reverb)
+            celestaOutput = celestaOutput.connect(reverb);
+        }
+        if (this.settings.instruments.celesta.effects.chorus.enabled) {
+          const chorus = celestaEffects.get("chorus");
+          if (chorus)
+            celestaOutput = celestaOutput.connect(chorus);
+        }
+        if (this.settings.instruments.celesta.effects.filter.enabled) {
+          const filter = celestaEffects.get("filter");
+          if (filter)
+            celestaOutput = celestaOutput.connect(filter);
+        }
+      }
+      celestaOutput.connect(this.volume);
+      this.instruments.set("celesta", celestaSampler);
+    }
+    if (((_r = this.settings.instruments.violin) == null ? void 0 : _r.enabled) === true) {
+      const violinSampler = new Sampler(configs.violin);
+      const violinVolume = new Volume(-6);
+      this.instrumentVolumes.set("violin", violinVolume);
+      let violinOutput = violinSampler.connect(violinVolume);
+      const violinEffects = this.instrumentEffects.get("violin");
+      if (violinEffects && this.settings.instruments.violin.effects) {
+        if (this.settings.instruments.violin.effects.reverb.enabled) {
+          const reverb = violinEffects.get("reverb");
+          if (reverb)
+            violinOutput = violinOutput.connect(reverb);
+        }
+        if (this.settings.instruments.violin.effects.chorus.enabled) {
+          const chorus = violinEffects.get("chorus");
+          if (chorus)
+            violinOutput = violinOutput.connect(chorus);
+        }
+        if (this.settings.instruments.violin.effects.filter.enabled) {
+          const filter = violinEffects.get("filter");
+          if (filter)
+            violinOutput = violinOutput.connect(filter);
+        }
+      }
+      violinOutput.connect(this.volume);
+      this.instruments.set("violin", violinSampler);
+    }
+    if (((_s = this.settings.instruments.cello) == null ? void 0 : _s.enabled) === true) {
+      const celloSampler = new Sampler(configs.cello);
+      const celloVolume = new Volume(-6);
+      this.instrumentVolumes.set("cello", celloVolume);
+      let celloOutput = celloSampler.connect(celloVolume);
+      const celloEffects = this.instrumentEffects.get("cello");
+      if (celloEffects && this.settings.instruments.cello.effects) {
+        if (this.settings.instruments.cello.effects.reverb.enabled) {
+          const reverb = celloEffects.get("reverb");
+          if (reverb)
+            celloOutput = celloOutput.connect(reverb);
+        }
+        if (this.settings.instruments.cello.effects.chorus.enabled) {
+          const chorus = celloEffects.get("chorus");
+          if (chorus)
+            celloOutput = celloOutput.connect(chorus);
+        }
+        if (this.settings.instruments.cello.effects.filter.enabled) {
+          const filter = celloEffects.get("filter");
+          if (filter)
+            celloOutput = celloOutput.connect(filter);
+        }
+      }
+      celloOutput.connect(this.volume);
+      this.instruments.set("cello", celloSampler);
+    }
+    if (((_t = this.settings.instruments.guitar) == null ? void 0 : _t.enabled) === true) {
+      const guitarSampler = new Sampler(configs.guitar);
+      const guitarVolume = new Volume(-6);
+      this.instrumentVolumes.set("guitar", guitarVolume);
+      let guitarOutput = guitarSampler.connect(guitarVolume);
+      const guitarEffects = this.instrumentEffects.get("guitar");
+      if (guitarEffects && this.settings.instruments.guitar.effects) {
+        if (this.settings.instruments.guitar.effects.reverb.enabled) {
+          const reverb = guitarEffects.get("reverb");
+          if (reverb)
+            guitarOutput = guitarOutput.connect(reverb);
+        }
+        if (this.settings.instruments.guitar.effects.chorus.enabled) {
+          const chorus = guitarEffects.get("chorus");
+          if (chorus)
+            guitarOutput = guitarOutput.connect(chorus);
+        }
+        if (this.settings.instruments.guitar.effects.filter.enabled) {
+          const filter = guitarEffects.get("filter");
+          if (filter)
+            guitarOutput = guitarOutput.connect(filter);
+        }
+      }
+      guitarOutput.connect(this.volume);
+      this.instruments.set("guitar", guitarSampler);
+    }
+    if (((_u = this.settings.instruments.harp) == null ? void 0 : _u.enabled) === true) {
+      const harpSampler = new Sampler(configs.harp);
+      const harpVolume = new Volume(-6);
+      this.instrumentVolumes.set("harp", harpVolume);
+      let harpOutput = harpSampler.connect(harpVolume);
+      const harpEffects = this.instrumentEffects.get("harp");
+      if (harpEffects && this.settings.instruments.harp.effects) {
+        if (this.settings.instruments.harp.effects.reverb.enabled) {
+          const reverb = harpEffects.get("reverb");
+          if (reverb)
+            harpOutput = harpOutput.connect(reverb);
+        }
+        if (this.settings.instruments.harp.effects.chorus.enabled) {
+          const chorus = harpEffects.get("chorus");
+          if (chorus)
+            harpOutput = harpOutput.connect(chorus);
+        }
+        if (this.settings.instruments.harp.effects.filter.enabled) {
+          const filter = harpEffects.get("filter");
+          if (filter)
+            harpOutput = harpOutput.connect(filter);
+        }
+      }
+      harpOutput.connect(this.volume);
+      this.instruments.set("harp", harpSampler);
+    }
+    if (((_v = this.settings.instruments.trumpet) == null ? void 0 : _v.enabled) === true) {
+      const trumpetSampler = new Sampler(configs.trumpet);
+      const trumpetVolume = new Volume(-6);
+      this.instrumentVolumes.set("trumpet", trumpetVolume);
+      let trumpetOutput = trumpetSampler.connect(trumpetVolume);
+      const trumpetEffects = this.instrumentEffects.get("trumpet");
+      if (trumpetEffects && this.settings.instruments.trumpet.effects) {
+        if (this.settings.instruments.trumpet.effects.reverb.enabled) {
+          const reverb = trumpetEffects.get("reverb");
+          if (reverb)
+            trumpetOutput = trumpetOutput.connect(reverb);
+        }
+        if (this.settings.instruments.trumpet.effects.chorus.enabled) {
+          const chorus = trumpetEffects.get("chorus");
+          if (chorus)
+            trumpetOutput = trumpetOutput.connect(chorus);
+        }
+        if (this.settings.instruments.trumpet.effects.filter.enabled) {
+          const filter = trumpetEffects.get("filter");
+          if (filter)
+            trumpetOutput = trumpetOutput.connect(filter);
+        }
+      }
+      trumpetOutput.connect(this.volume);
+      this.instruments.set("trumpet", trumpetSampler);
+    }
+    if (((_w = this.settings.instruments.frenchHorn) == null ? void 0 : _w.enabled) === true) {
+      const frenchHornSampler = new Sampler(configs.frenchHorn);
+      const frenchHornVolume = new Volume(-6);
+      this.instrumentVolumes.set("frenchHorn", frenchHornVolume);
+      let frenchHornOutput = frenchHornSampler.connect(frenchHornVolume);
+      const frenchHornEffects = this.instrumentEffects.get("frenchHorn");
+      if (frenchHornEffects && this.settings.instruments.frenchHorn.effects) {
+        if (this.settings.instruments.frenchHorn.effects.reverb.enabled) {
+          const reverb = frenchHornEffects.get("reverb");
+          if (reverb)
+            frenchHornOutput = frenchHornOutput.connect(reverb);
+        }
+        if (this.settings.instruments.frenchHorn.effects.chorus.enabled) {
+          const chorus = frenchHornEffects.get("chorus");
+          if (chorus)
+            frenchHornOutput = frenchHornOutput.connect(chorus);
+        }
+        if (this.settings.instruments.frenchHorn.effects.filter.enabled) {
+          const filter = frenchHornEffects.get("filter");
+          if (filter)
+            frenchHornOutput = frenchHornOutput.connect(filter);
+        }
+      }
+      frenchHornOutput.connect(this.volume);
+      this.instruments.set("frenchHorn", frenchHornSampler);
+    }
+    if (((_x = this.settings.instruments.trombone) == null ? void 0 : _x.enabled) === true) {
+      const tromboneSampler = new Sampler(configs.trombone);
+      const tromboneVolume = new Volume(-6);
+      this.instrumentVolumes.set("trombone", tromboneVolume);
+      let tromboneOutput = tromboneSampler.connect(tromboneVolume);
+      const tromboneEffects = this.instrumentEffects.get("trombone");
+      if (tromboneEffects && this.settings.instruments.trombone.effects) {
+        if (this.settings.instruments.trombone.effects.reverb.enabled) {
+          const reverb = tromboneEffects.get("reverb");
+          if (reverb)
+            tromboneOutput = tromboneOutput.connect(reverb);
+        }
+        if (this.settings.instruments.trombone.effects.chorus.enabled) {
+          const chorus = tromboneEffects.get("chorus");
+          if (chorus)
+            tromboneOutput = tromboneOutput.connect(chorus);
+        }
+        if (this.settings.instruments.trombone.effects.filter.enabled) {
+          const filter = tromboneEffects.get("filter");
+          if (filter)
+            tromboneOutput = tromboneOutput.connect(filter);
+        }
+      }
+      tromboneOutput.connect(this.volume);
+      this.instruments.set("trombone", tromboneSampler);
+    }
+    if (((_y = this.settings.instruments.tuba) == null ? void 0 : _y.enabled) === true) {
+      const tubaSampler = new Sampler(configs.tuba);
+      const tubaVolume = new Volume(-6);
+      this.instrumentVolumes.set("tuba", tubaVolume);
+      let tubaOutput = tubaSampler.connect(tubaVolume);
+      const tubaEffects = this.instrumentEffects.get("tuba");
+      if (tubaEffects && this.settings.instruments.tuba.effects) {
+        if (this.settings.instruments.tuba.effects.reverb.enabled) {
+          const reverb = tubaEffects.get("reverb");
+          if (reverb)
+            tubaOutput = tubaOutput.connect(reverb);
+        }
+        if (this.settings.instruments.tuba.effects.chorus.enabled) {
+          const chorus = tubaEffects.get("chorus");
+          if (chorus)
+            tubaOutput = tubaOutput.connect(chorus);
+        }
+        if (this.settings.instruments.tuba.effects.filter.enabled) {
+          const filter = tubaEffects.get("filter");
+          if (filter)
+            tubaOutput = tubaOutput.connect(filter);
+        }
+      }
+      tubaOutput.connect(this.volume);
+      this.instruments.set("tuba", tubaSampler);
+    }
+    const totalSampleInstruments = [
+      "piano",
+      "organ",
+      "strings",
+      "choir",
+      "vocalPads",
+      "pad",
+      "soprano",
+      "alto",
+      "tenor",
+      "bass",
+      "flute",
+      "clarinet",
+      "saxophone",
+      "electricPiano",
+      "harpsichord",
+      "accordion",
+      "celesta",
+      "violin",
+      "cello",
+      "guitar",
+      "harp",
+      "trumpet",
+      "frenchHorn",
+      "trombone",
+      "tuba"
+    ];
+    const settings = this.settings;
+    const enabledSampleInstruments = totalSampleInstruments.filter(
+      (instrumentName) => {
+        var _a2;
+        return ((_a2 = settings.instruments[instrumentName]) == null ? void 0 : _a2.enabled) === true;
+      }
+    );
+    logger11.info("instruments", `Issue #014 Fix: Sample mode initialization completed`, {
+      totalAvailable: totalSampleInstruments.length,
+      enabledCount: enabledSampleInstruments.length,
+      enabledInstruments: enabledSampleInstruments,
+      skippedCount: totalSampleInstruments.length - enabledSampleInstruments.length,
+      fix: "Family toggle settings now properly respected in sample loading mode"
     });
-    const pianoSampler = new Sampler({
-      ...configs.piano,
-      onload: () => {
-        logger11.info("cdn-diagnosis", "Piano samples loaded successfully from CDN", {
-          instrument: "piano",
-          baseUrl: configs.piano.baseUrl,
-          loadedSampleCount: Object.keys(configs.piano.urls).length,
-          status: "success"
-        });
-      },
-      onerror: (error) => {
-        logger11.error("cdn-diagnosis", "Piano samples failed to load from CDN - investigating for Issue #011", {
-          instrument: "piano",
-          baseUrl: configs.piano.baseUrl,
-          sampleCount: Object.keys(configs.piano.urls).length,
-          error: (error == null ? void 0 : error.toString()) || "Unknown error",
-          fallbackMode: "synthesis",
-          troubleshooting: "Check network tab for 404/CORS errors"
-        });
-      }
-    });
-    const pianoVolume = new Volume(-6);
-    this.instrumentVolumes.set("piano", pianoVolume);
-    let pianoOutput = pianoSampler.connect(pianoVolume);
-    const pianoEffects = this.instrumentEffects.get("piano");
-    if (pianoEffects && this.settings.instruments.piano.effects) {
-      if (this.settings.instruments.piano.effects.reverb.enabled) {
-        const reverb = pianoEffects.get("reverb");
-        if (reverb)
-          pianoOutput = pianoOutput.connect(reverb);
-      }
-      if (this.settings.instruments.piano.effects.chorus.enabled) {
-        const chorus = pianoEffects.get("chorus");
-        if (chorus)
-          pianoOutput = pianoOutput.connect(chorus);
-      }
-      if (this.settings.instruments.piano.effects.filter.enabled) {
-        const filter = pianoEffects.get("filter");
-        if (filter)
-          pianoOutput = pianoOutput.connect(filter);
-      }
-    }
-    pianoOutput.connect(this.volume);
-    this.instruments.set("piano", pianoSampler);
-    logger11.info("cdn-diagnosis", "Initializing organ sampler with CDN sample loading", {
-      instrument: "organ",
-      baseUrl: configs.organ.baseUrl,
-      sampleCount: Object.keys(configs.organ.urls).length,
-      expectedCDNPath: "harmonium/",
-      // Maps to nbrosowsky harmonium directory
-      availableOnCDN: true
-      // Confirmed: 33 OGG samples available
-    });
-    const organSampler = new Sampler({
-      ...configs.organ,
-      onload: () => {
-        logger11.info("cdn-diagnosis", "Organ samples loaded successfully from CDN", {
-          instrument: "organ",
-          baseUrl: configs.organ.baseUrl,
-          status: "success"
-        });
-      },
-      onerror: (error) => {
-        logger11.error("cdn-diagnosis", "Organ samples failed to load from CDN - investigating for Issue #011", {
-          instrument: "organ",
-          baseUrl: configs.organ.baseUrl,
-          error: (error == null ? void 0 : error.toString()) || "Unknown error",
-          cdnStatus: "harmonium directory exists with 33 OGG files",
-          troubleshooting: "Check if harmonium path is correctly mapped"
-        });
-      }
-    });
-    const organVolume = new Volume(-6);
-    this.instrumentVolumes.set("organ", organVolume);
-    let organOutput = organSampler.connect(organVolume);
-    const organEffects = this.instrumentEffects.get("organ");
-    if (organEffects && this.settings.instruments.organ.effects) {
-      if (this.settings.instruments.organ.effects.reverb.enabled) {
-        const reverb = organEffects.get("reverb");
-        if (reverb)
-          organOutput = organOutput.connect(reverb);
-      }
-      if (this.settings.instruments.organ.effects.chorus.enabled) {
-        const chorus = organEffects.get("chorus");
-        if (chorus)
-          organOutput = organOutput.connect(chorus);
-      }
-      if (this.settings.instruments.organ.effects.filter.enabled) {
-        const filter = organEffects.get("filter");
-        if (filter)
-          organOutput = organOutput.connect(filter);
-      }
-    }
-    organOutput.connect(this.volume);
-    this.instruments.set("organ", organSampler);
-    const stringsSampler = new Sampler({
-      ...configs.strings,
-      onload: () => {
-        logger11.debug("samples", "Strings samples loaded successfully");
-      },
-      onerror: (error) => {
-        logger11.warn("samples", "Strings samples failed to load, using basic synthesis", { error });
-      }
-    });
-    const stringsVolume = new Volume(-6);
-    this.instrumentVolumes.set("strings", stringsVolume);
-    let stringsOutput = stringsSampler.connect(stringsVolume);
-    const stringsEffects = this.instrumentEffects.get("strings");
-    if (stringsEffects && this.settings.instruments.strings.effects) {
-      if (this.settings.instruments.strings.effects.reverb.enabled) {
-        const reverb = stringsEffects.get("reverb");
-        if (reverb)
-          stringsOutput = stringsOutput.connect(reverb);
-      }
-      if (this.settings.instruments.strings.effects.chorus.enabled) {
-        const chorus = stringsEffects.get("chorus");
-        if (chorus)
-          stringsOutput = stringsOutput.connect(chorus);
-      }
-      if (this.settings.instruments.strings.effects.filter.enabled) {
-        const filter = stringsEffects.get("filter");
-        if (filter)
-          stringsOutput = stringsOutput.connect(filter);
-      }
-    }
-    stringsOutput.connect(this.volume);
-    this.instruments.set("strings", stringsSampler);
-    const choirSampler = new Sampler(configs.choir);
-    const choirVolume = new Volume(-6);
-    this.instrumentVolumes.set("choir", choirVolume);
-    let choirOutput = choirSampler.connect(choirVolume);
-    const choirEffects = this.instrumentEffects.get("choir");
-    if (choirEffects && this.settings.instruments.choir.effects) {
-      if (this.settings.instruments.choir.effects.reverb.enabled) {
-        const reverb = choirEffects.get("reverb");
-        if (reverb)
-          choirOutput = choirOutput.connect(reverb);
-      }
-      if (this.settings.instruments.choir.effects.chorus.enabled) {
-        const chorus = choirEffects.get("chorus");
-        if (chorus)
-          choirOutput = choirOutput.connect(chorus);
-      }
-      if (this.settings.instruments.choir.effects.filter.enabled) {
-        const filter = choirEffects.get("filter");
-        if (filter)
-          choirOutput = choirOutput.connect(filter);
-      }
-    }
-    choirOutput.connect(this.volume);
-    this.instruments.set("choir", choirSampler);
-    const vocalPadsSampler = new Sampler(configs.vocalPads);
-    const vocalPadsVolume = new Volume(-6);
-    this.instrumentVolumes.set("vocalPads", vocalPadsVolume);
-    let vocalPadsOutput = vocalPadsSampler.connect(vocalPadsVolume);
-    const vocalPadsEffects = this.instrumentEffects.get("vocalPads");
-    if (vocalPadsEffects && this.settings.instruments.vocalPads.effects) {
-      if (this.settings.instruments.vocalPads.effects.reverb.enabled) {
-        const reverb = vocalPadsEffects.get("reverb");
-        if (reverb)
-          vocalPadsOutput = vocalPadsOutput.connect(reverb);
-      }
-      if (this.settings.instruments.vocalPads.effects.chorus.enabled) {
-        const chorus = vocalPadsEffects.get("chorus");
-        if (chorus)
-          vocalPadsOutput = vocalPadsOutput.connect(chorus);
-      }
-      if (this.settings.instruments.vocalPads.effects.filter.enabled) {
-        const filter = vocalPadsEffects.get("filter");
-        if (filter)
-          vocalPadsOutput = vocalPadsOutput.connect(filter);
-      }
-    }
-    vocalPadsOutput.connect(this.volume);
-    this.instruments.set("vocalPads", vocalPadsSampler);
-    const padSampler = new Sampler(configs.pad);
-    const padVolume = new Volume(-6);
-    this.instrumentVolumes.set("pad", padVolume);
-    let padOutput = padSampler.connect(padVolume);
-    const padEffects = this.instrumentEffects.get("pad");
-    if (padEffects && this.settings.instruments.pad.effects) {
-      if (this.settings.instruments.pad.effects.reverb.enabled) {
-        const reverb = padEffects.get("reverb");
-        if (reverb)
-          padOutput = padOutput.connect(reverb);
-      }
-      if (this.settings.instruments.pad.effects.chorus.enabled) {
-        const chorus = padEffects.get("chorus");
-        if (chorus)
-          padOutput = padOutput.connect(chorus);
-      }
-      if (this.settings.instruments.pad.effects.filter.enabled) {
-        const filter = padEffects.get("filter");
-        if (filter)
-          padOutput = padOutput.connect(filter);
-      }
-    }
-    padOutput.connect(this.volume);
-    this.instruments.set("pad", padSampler);
-    const sopranoSampler = this.createSamplerWithFallback(configs.soprano, "soprano");
-    const sopranoVolume = new Volume(-6);
-    this.instrumentVolumes.set("soprano", sopranoVolume);
-    let sopranoOutput = sopranoSampler.connect(sopranoVolume);
-    const sopranoEffects = this.instrumentEffects.get("soprano");
-    if (sopranoEffects && this.settings.instruments.soprano.effects) {
-      if (this.settings.instruments.soprano.effects.reverb.enabled) {
-        const reverb = sopranoEffects.get("reverb");
-        if (reverb)
-          sopranoOutput = sopranoOutput.connect(reverb);
-      }
-      if (this.settings.instruments.soprano.effects.chorus.enabled) {
-        const chorus = sopranoEffects.get("chorus");
-        if (chorus)
-          sopranoOutput = sopranoOutput.connect(chorus);
-      }
-      if (this.settings.instruments.soprano.effects.filter.enabled) {
-        const filter = sopranoEffects.get("filter");
-        if (filter)
-          sopranoOutput = sopranoOutput.connect(filter);
-      }
-    }
-    sopranoOutput.connect(this.volume);
-    this.instruments.set("soprano", sopranoSampler);
-    const altoSampler = this.createSamplerWithFallback(configs.alto, "alto");
-    const altoVolume = new Volume(-6);
-    this.instrumentVolumes.set("alto", altoVolume);
-    let altoOutput = altoSampler.connect(altoVolume);
-    const altoEffects = this.instrumentEffects.get("alto");
-    if (altoEffects && this.settings.instruments.alto.effects) {
-      if (this.settings.instruments.alto.effects.reverb.enabled) {
-        const reverb = altoEffects.get("reverb");
-        if (reverb)
-          altoOutput = altoOutput.connect(reverb);
-      }
-      if (this.settings.instruments.alto.effects.chorus.enabled) {
-        const chorus = altoEffects.get("chorus");
-        if (chorus)
-          altoOutput = altoOutput.connect(chorus);
-      }
-      if (this.settings.instruments.alto.effects.filter.enabled) {
-        const filter = altoEffects.get("filter");
-        if (filter)
-          altoOutput = altoOutput.connect(filter);
-      }
-    }
-    altoOutput.connect(this.volume);
-    this.instruments.set("alto", altoSampler);
-    const tenorSampler = this.createSamplerWithFallback(configs.tenor, "tenor");
-    const tenorVolume = new Volume(-6);
-    this.instrumentVolumes.set("tenor", tenorVolume);
-    let tenorOutput = tenorSampler.connect(tenorVolume);
-    const tenorEffects = this.instrumentEffects.get("tenor");
-    if (tenorEffects && this.settings.instruments.tenor.effects) {
-      if (this.settings.instruments.tenor.effects.reverb.enabled) {
-        const reverb = tenorEffects.get("reverb");
-        if (reverb)
-          tenorOutput = tenorOutput.connect(reverb);
-      }
-      if (this.settings.instruments.tenor.effects.chorus.enabled) {
-        const chorus = tenorEffects.get("chorus");
-        if (chorus)
-          tenorOutput = tenorOutput.connect(chorus);
-      }
-      if (this.settings.instruments.tenor.effects.filter.enabled) {
-        const filter = tenorEffects.get("filter");
-        if (filter)
-          tenorOutput = tenorOutput.connect(filter);
-      }
-    }
-    tenorOutput.connect(this.volume);
-    this.instruments.set("tenor", tenorSampler);
-    const bassSampler = this.createSamplerWithFallback(configs.bass, "bass");
-    const bassVolume = new Volume(-6);
-    this.instrumentVolumes.set("bass", bassVolume);
-    let bassOutput = bassSampler.connect(bassVolume);
-    const bassEffects = this.instrumentEffects.get("bass");
-    if (bassEffects && this.settings.instruments.bass.effects) {
-      if (this.settings.instruments.bass.effects.reverb.enabled) {
-        const reverb = bassEffects.get("reverb");
-        if (reverb)
-          bassOutput = bassOutput.connect(reverb);
-      }
-      if (this.settings.instruments.bass.effects.chorus.enabled) {
-        const chorus = bassEffects.get("chorus");
-        if (chorus)
-          bassOutput = bassOutput.connect(chorus);
-      }
-      if (this.settings.instruments.bass.effects.filter.enabled) {
-        const filter = bassEffects.get("filter");
-        if (filter)
-          bassOutput = bassOutput.connect(filter);
-      }
-    }
-    bassOutput.connect(this.volume);
-    this.instruments.set("bass", bassSampler);
-    const fluteSampler = new Sampler(configs.flute);
-    const fluteVolume = new Volume(-6);
-    this.instrumentVolumes.set("flute", fluteVolume);
-    let fluteOutput = fluteSampler.connect(fluteVolume);
-    const fluteEffects = this.instrumentEffects.get("flute");
-    if (fluteEffects && this.settings.instruments.flute.effects) {
-      if (this.settings.instruments.flute.effects.reverb.enabled) {
-        const reverb = fluteEffects.get("reverb");
-        if (reverb)
-          fluteOutput = fluteOutput.connect(reverb);
-      }
-      if (this.settings.instruments.flute.effects.chorus.enabled) {
-        const chorus = fluteEffects.get("chorus");
-        if (chorus)
-          fluteOutput = fluteOutput.connect(chorus);
-      }
-      if (this.settings.instruments.flute.effects.filter.enabled) {
-        const filter = fluteEffects.get("filter");
-        if (filter)
-          fluteOutput = fluteOutput.connect(filter);
-      }
-    }
-    fluteOutput.connect(this.volume);
-    this.instruments.set("flute", fluteSampler);
-    const clarinetSampler = new Sampler(configs.clarinet);
-    const clarinetVolume = new Volume(-6);
-    this.instrumentVolumes.set("clarinet", clarinetVolume);
-    let clarinetOutput = clarinetSampler.connect(clarinetVolume);
-    const clarinetEffects = this.instrumentEffects.get("clarinet");
-    if (clarinetEffects && this.settings.instruments.clarinet.effects) {
-      if (this.settings.instruments.clarinet.effects.reverb.enabled) {
-        const reverb = clarinetEffects.get("reverb");
-        if (reverb)
-          clarinetOutput = clarinetOutput.connect(reverb);
-      }
-      if (this.settings.instruments.clarinet.effects.chorus.enabled) {
-        const chorus = clarinetEffects.get("chorus");
-        if (chorus)
-          clarinetOutput = clarinetOutput.connect(chorus);
-      }
-      if (this.settings.instruments.clarinet.effects.filter.enabled) {
-        const filter = clarinetEffects.get("filter");
-        if (filter)
-          clarinetOutput = clarinetOutput.connect(filter);
-      }
-    }
-    clarinetOutput.connect(this.volume);
-    this.instruments.set("clarinet", clarinetSampler);
-    const saxophoneSampler = new Sampler(configs.saxophone);
-    const saxophoneVolume = new Volume(-6);
-    this.instrumentVolumes.set("saxophone", saxophoneVolume);
-    let saxophoneOutput = saxophoneSampler.connect(saxophoneVolume);
-    const saxophoneEffects = this.instrumentEffects.get("saxophone");
-    if (saxophoneEffects && this.settings.instruments.saxophone.effects) {
-      if (this.settings.instruments.saxophone.effects.reverb.enabled) {
-        const reverb = saxophoneEffects.get("reverb");
-        if (reverb)
-          saxophoneOutput = saxophoneOutput.connect(reverb);
-      }
-      if (this.settings.instruments.saxophone.effects.chorus.enabled) {
-        const chorus = saxophoneEffects.get("chorus");
-        if (chorus)
-          saxophoneOutput = saxophoneOutput.connect(chorus);
-      }
-      if (this.settings.instruments.saxophone.effects.filter.enabled) {
-        const filter = saxophoneEffects.get("filter");
-        if (filter)
-          saxophoneOutput = saxophoneOutput.connect(filter);
-      }
-    }
-    saxophoneOutput.connect(this.volume);
-    this.instruments.set("saxophone", saxophoneSampler);
-    const electricPianoSampler = new Sampler(configs.electricPiano);
-    const electricPianoVolume = new Volume(-6);
-    this.instrumentVolumes.set("electricPiano", electricPianoVolume);
-    let electricPianoOutput = electricPianoSampler.connect(electricPianoVolume);
-    const electricPianoEffects = this.instrumentEffects.get("electricPiano");
-    if (electricPianoEffects && this.settings.instruments.electricPiano.effects) {
-      if (this.settings.instruments.electricPiano.effects.reverb.enabled) {
-        const reverb = electricPianoEffects.get("reverb");
-        if (reverb)
-          electricPianoOutput = electricPianoOutput.connect(reverb);
-      }
-      if (this.settings.instruments.electricPiano.effects.chorus.enabled) {
-        const chorus = electricPianoEffects.get("chorus");
-        if (chorus)
-          electricPianoOutput = electricPianoOutput.connect(chorus);
-      }
-      if (this.settings.instruments.electricPiano.effects.filter.enabled) {
-        const filter = electricPianoEffects.get("filter");
-        if (filter)
-          electricPianoOutput = electricPianoOutput.connect(filter);
-      }
-    }
-    electricPianoOutput.connect(this.volume);
-    this.instruments.set("electricPiano", electricPianoSampler);
-    const harpsichordSampler = new Sampler(configs.harpsichord);
-    const harpsichordVolume = new Volume(-6);
-    this.instrumentVolumes.set("harpsichord", harpsichordVolume);
-    let harpsichordOutput = harpsichordSampler.connect(harpsichordVolume);
-    const harpsichordEffects = this.instrumentEffects.get("harpsichord");
-    if (harpsichordEffects && this.settings.instruments.harpsichord.effects) {
-      if (this.settings.instruments.harpsichord.effects.reverb.enabled) {
-        const reverb = harpsichordEffects.get("reverb");
-        if (reverb)
-          harpsichordOutput = harpsichordOutput.connect(reverb);
-      }
-      if (this.settings.instruments.harpsichord.effects.chorus.enabled) {
-        const chorus = harpsichordEffects.get("chorus");
-        if (chorus)
-          harpsichordOutput = harpsichordOutput.connect(chorus);
-      }
-      if (this.settings.instruments.harpsichord.effects.filter.enabled) {
-        const filter = harpsichordEffects.get("filter");
-        if (filter)
-          harpsichordOutput = harpsichordOutput.connect(filter);
-      }
-    }
-    harpsichordOutput.connect(this.volume);
-    this.instruments.set("harpsichord", harpsichordSampler);
-    const accordionSampler = new Sampler(configs.accordion);
-    const accordionVolume = new Volume(-6);
-    this.instrumentVolumes.set("accordion", accordionVolume);
-    let accordionOutput = accordionSampler.connect(accordionVolume);
-    const accordionEffects = this.instrumentEffects.get("accordion");
-    if (accordionEffects && this.settings.instruments.accordion.effects) {
-      if (this.settings.instruments.accordion.effects.reverb.enabled) {
-        const reverb = accordionEffects.get("reverb");
-        if (reverb)
-          accordionOutput = accordionOutput.connect(reverb);
-      }
-      if (this.settings.instruments.accordion.effects.chorus.enabled) {
-        const chorus = accordionEffects.get("chorus");
-        if (chorus)
-          accordionOutput = accordionOutput.connect(chorus);
-      }
-      if (this.settings.instruments.accordion.effects.filter.enabled) {
-        const filter = accordionEffects.get("filter");
-        if (filter)
-          accordionOutput = accordionOutput.connect(filter);
-      }
-    }
-    accordionOutput.connect(this.volume);
-    this.instruments.set("accordion", accordionSampler);
-    const celestaSampler = new Sampler(configs.celesta);
-    const celestaVolume = new Volume(-6);
-    this.instrumentVolumes.set("celesta", celestaVolume);
-    let celestaOutput = celestaSampler.connect(celestaVolume);
-    const celestaEffects = this.instrumentEffects.get("celesta");
-    if (celestaEffects && this.settings.instruments.celesta.effects) {
-      if (this.settings.instruments.celesta.effects.reverb.enabled) {
-        const reverb = celestaEffects.get("reverb");
-        if (reverb)
-          celestaOutput = celestaOutput.connect(reverb);
-      }
-      if (this.settings.instruments.celesta.effects.chorus.enabled) {
-        const chorus = celestaEffects.get("chorus");
-        if (chorus)
-          celestaOutput = celestaOutput.connect(chorus);
-      }
-      if (this.settings.instruments.celesta.effects.filter.enabled) {
-        const filter = celestaEffects.get("filter");
-        if (filter)
-          celestaOutput = celestaOutput.connect(filter);
-      }
-    }
-    celestaOutput.connect(this.volume);
-    this.instruments.set("celesta", celestaSampler);
-    const violinSampler = new Sampler(configs.violin);
-    const violinVolume = new Volume(-6);
-    this.instrumentVolumes.set("violin", violinVolume);
-    let violinOutput = violinSampler.connect(violinVolume);
-    const violinEffects = this.instrumentEffects.get("violin");
-    if (violinEffects && this.settings.instruments.violin.effects) {
-      if (this.settings.instruments.violin.effects.reverb.enabled) {
-        const reverb = violinEffects.get("reverb");
-        if (reverb)
-          violinOutput = violinOutput.connect(reverb);
-      }
-      if (this.settings.instruments.violin.effects.chorus.enabled) {
-        const chorus = violinEffects.get("chorus");
-        if (chorus)
-          violinOutput = violinOutput.connect(chorus);
-      }
-      if (this.settings.instruments.violin.effects.filter.enabled) {
-        const filter = violinEffects.get("filter");
-        if (filter)
-          violinOutput = violinOutput.connect(filter);
-      }
-    }
-    violinOutput.connect(this.volume);
-    this.instruments.set("violin", violinSampler);
-    const celloSampler = new Sampler(configs.cello);
-    const celloVolume = new Volume(-6);
-    this.instrumentVolumes.set("cello", celloVolume);
-    let celloOutput = celloSampler.connect(celloVolume);
-    const celloEffects = this.instrumentEffects.get("cello");
-    if (celloEffects && this.settings.instruments.cello.effects) {
-      if (this.settings.instruments.cello.effects.reverb.enabled) {
-        const reverb = celloEffects.get("reverb");
-        if (reverb)
-          celloOutput = celloOutput.connect(reverb);
-      }
-      if (this.settings.instruments.cello.effects.chorus.enabled) {
-        const chorus = celloEffects.get("chorus");
-        if (chorus)
-          celloOutput = celloOutput.connect(chorus);
-      }
-      if (this.settings.instruments.cello.effects.filter.enabled) {
-        const filter = celloEffects.get("filter");
-        if (filter)
-          celloOutput = celloOutput.connect(filter);
-      }
-    }
-    celloOutput.connect(this.volume);
-    this.instruments.set("cello", celloSampler);
-    const guitarSampler = new Sampler(configs.guitar);
-    const guitarVolume = new Volume(-6);
-    this.instrumentVolumes.set("guitar", guitarVolume);
-    let guitarOutput = guitarSampler.connect(guitarVolume);
-    const guitarEffects = this.instrumentEffects.get("guitar");
-    if (guitarEffects && this.settings.instruments.guitar.effects) {
-      if (this.settings.instruments.guitar.effects.reverb.enabled) {
-        const reverb = guitarEffects.get("reverb");
-        if (reverb)
-          guitarOutput = guitarOutput.connect(reverb);
-      }
-      if (this.settings.instruments.guitar.effects.chorus.enabled) {
-        const chorus = guitarEffects.get("chorus");
-        if (chorus)
-          guitarOutput = guitarOutput.connect(chorus);
-      }
-      if (this.settings.instruments.guitar.effects.filter.enabled) {
-        const filter = guitarEffects.get("filter");
-        if (filter)
-          guitarOutput = guitarOutput.connect(filter);
-      }
-    }
-    guitarOutput.connect(this.volume);
-    this.instruments.set("guitar", guitarSampler);
-    const harpSampler = new Sampler(configs.harp);
-    const harpVolume = new Volume(-6);
-    this.instrumentVolumes.set("harp", harpVolume);
-    let harpOutput = harpSampler.connect(harpVolume);
-    const harpEffects = this.instrumentEffects.get("harp");
-    if (harpEffects && this.settings.instruments.harp.effects) {
-      if (this.settings.instruments.harp.effects.reverb.enabled) {
-        const reverb = harpEffects.get("reverb");
-        if (reverb)
-          harpOutput = harpOutput.connect(reverb);
-      }
-      if (this.settings.instruments.harp.effects.chorus.enabled) {
-        const chorus = harpEffects.get("chorus");
-        if (chorus)
-          harpOutput = harpOutput.connect(chorus);
-      }
-      if (this.settings.instruments.harp.effects.filter.enabled) {
-        const filter = harpEffects.get("filter");
-        if (filter)
-          harpOutput = harpOutput.connect(filter);
-      }
-    }
-    harpOutput.connect(this.volume);
-    this.instruments.set("harp", harpSampler);
-    const trumpetSampler = new Sampler(configs.trumpet);
-    const trumpetVolume = new Volume(-6);
-    this.instrumentVolumes.set("trumpet", trumpetVolume);
-    let trumpetOutput = trumpetSampler.connect(trumpetVolume);
-    const trumpetEffects = this.instrumentEffects.get("trumpet");
-    if (trumpetEffects && this.settings.instruments.trumpet.effects) {
-      if (this.settings.instruments.trumpet.effects.reverb.enabled) {
-        const reverb = trumpetEffects.get("reverb");
-        if (reverb)
-          trumpetOutput = trumpetOutput.connect(reverb);
-      }
-      if (this.settings.instruments.trumpet.effects.chorus.enabled) {
-        const chorus = trumpetEffects.get("chorus");
-        if (chorus)
-          trumpetOutput = trumpetOutput.connect(chorus);
-      }
-      if (this.settings.instruments.trumpet.effects.filter.enabled) {
-        const filter = trumpetEffects.get("filter");
-        if (filter)
-          trumpetOutput = trumpetOutput.connect(filter);
-      }
-    }
-    trumpetOutput.connect(this.volume);
-    this.instruments.set("trumpet", trumpetSampler);
-    const frenchHornSampler = new Sampler(configs.frenchHorn);
-    const frenchHornVolume = new Volume(-6);
-    this.instrumentVolumes.set("frenchHorn", frenchHornVolume);
-    let frenchHornOutput = frenchHornSampler.connect(frenchHornVolume);
-    const frenchHornEffects = this.instrumentEffects.get("frenchHorn");
-    if (frenchHornEffects && this.settings.instruments.frenchHorn.effects) {
-      if (this.settings.instruments.frenchHorn.effects.reverb.enabled) {
-        const reverb = frenchHornEffects.get("reverb");
-        if (reverb)
-          frenchHornOutput = frenchHornOutput.connect(reverb);
-      }
-      if (this.settings.instruments.frenchHorn.effects.chorus.enabled) {
-        const chorus = frenchHornEffects.get("chorus");
-        if (chorus)
-          frenchHornOutput = frenchHornOutput.connect(chorus);
-      }
-      if (this.settings.instruments.frenchHorn.effects.filter.enabled) {
-        const filter = frenchHornEffects.get("filter");
-        if (filter)
-          frenchHornOutput = frenchHornOutput.connect(filter);
-      }
-    }
-    frenchHornOutput.connect(this.volume);
-    this.instruments.set("frenchHorn", frenchHornSampler);
-    const tromboneSampler = new Sampler(configs.trombone);
-    const tromboneVolume = new Volume(-6);
-    this.instrumentVolumes.set("trombone", tromboneVolume);
-    let tromboneOutput = tromboneSampler.connect(tromboneVolume);
-    const tromboneEffects = this.instrumentEffects.get("trombone");
-    if (tromboneEffects && this.settings.instruments.trombone.effects) {
-      if (this.settings.instruments.trombone.effects.reverb.enabled) {
-        const reverb = tromboneEffects.get("reverb");
-        if (reverb)
-          tromboneOutput = tromboneOutput.connect(reverb);
-      }
-      if (this.settings.instruments.trombone.effects.chorus.enabled) {
-        const chorus = tromboneEffects.get("chorus");
-        if (chorus)
-          tromboneOutput = tromboneOutput.connect(chorus);
-      }
-      if (this.settings.instruments.trombone.effects.filter.enabled) {
-        const filter = tromboneEffects.get("filter");
-        if (filter)
-          tromboneOutput = tromboneOutput.connect(filter);
-      }
-    }
-    tromboneOutput.connect(this.volume);
-    this.instruments.set("trombone", tromboneSampler);
-    const tubaSampler = new Sampler(configs.tuba);
-    const tubaVolume = new Volume(-6);
-    this.instrumentVolumes.set("tuba", tubaVolume);
-    let tubaOutput = tubaSampler.connect(tubaVolume);
-    const tubaEffects = this.instrumentEffects.get("tuba");
-    if (tubaEffects && this.settings.instruments.tuba.effects) {
-      if (this.settings.instruments.tuba.effects.reverb.enabled) {
-        const reverb = tubaEffects.get("reverb");
-        if (reverb)
-          tubaOutput = tubaOutput.connect(reverb);
-      }
-      if (this.settings.instruments.tuba.effects.chorus.enabled) {
-        const chorus = tubaEffects.get("chorus");
-        if (chorus)
-          tubaOutput = tubaOutput.connect(chorus);
-      }
-      if (this.settings.instruments.tuba.effects.filter.enabled) {
-        const filter = tubaEffects.get("filter");
-        if (filter)
-          tubaOutput = tubaOutput.connect(filter);
-      }
-    }
-    tubaOutput.connect(this.volume);
-    this.instruments.set("tuba", tubaSampler);
     this.initializeWhaleSynthesizer();
     this.initializeMissingInstruments();
     this.applyInstrumentSettings();
@@ -34284,7 +34376,25 @@ var AudioEngine = class {
     });
     if (!this.settings.useHighQualitySamples) {
       logger11.info("instruments", "Synthesis-only mode - creating basic synthesizers");
+      const settings2 = this.settings;
+      logger11.info("issue-014-fix", "\u{1F527} FAST-PATH SYNTHESIS: Applying enabled instrument filter", {
+        totalMissingInstruments: missingKeys.length,
+        missingInstruments: missingKeys
+      });
       missingKeys.forEach((instrumentName) => {
+        var _a, _b, _c;
+        if (((_a = settings2.instruments[instrumentName]) == null ? void 0 : _a.enabled) !== true) {
+          logger11.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
+            instrumentName,
+            enabled: (_b = settings2.instruments[instrumentName]) == null ? void 0 : _b.enabled,
+            reason: "disabled-in-family-settings"
+          });
+          return;
+        }
+        logger11.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
+          instrumentName,
+          enabled: (_c = settings2.instruments[instrumentName]) == null ? void 0 : _c.enabled
+        });
         const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
         const synth = new PolySynth({
           voice: FMSynth,
@@ -34305,8 +34415,25 @@ var AudioEngine = class {
       });
       return;
     }
+    const settings = this.settings;
+    logger11.info("issue-014-fix", "\u{1F527} FAST-PATH: Applying enabled instrument filter", {
+      totalMissingInstruments: missingKeys.length,
+      missingInstruments: missingKeys
+    });
     missingKeys.forEach((instrumentName) => {
-      var _a, _b, _c;
+      var _a, _b, _c, _d, _e, _f;
+      if (((_a = settings.instruments[instrumentName]) == null ? void 0 : _a.enabled) !== true) {
+        logger11.info("issue-014-fix", `\u{1F527} FAST-PATH: Skipping disabled instrument: ${instrumentName}`, {
+          instrumentName,
+          enabled: (_b = settings.instruments[instrumentName]) == null ? void 0 : _b.enabled,
+          reason: "disabled-in-family-settings"
+        });
+        return;
+      }
+      logger11.info("issue-014-fix", `\u{1F527} FAST-PATH: Initializing enabled instrument: ${instrumentName}`, {
+        instrumentName,
+        enabled: (_c = settings.instruments[instrumentName]) == null ? void 0 : _c.enabled
+      });
       try {
         if (this.isEnvironmentalInstrument(instrumentName)) {
           logger11.debug("instruments", `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
@@ -34346,17 +34473,17 @@ var AudioEngine = class {
         const effects = this.instrumentEffects.get(instrumentName);
         const instrumentSettings = this.settings.instruments[instrumentName];
         if (effects && (instrumentSettings == null ? void 0 : instrumentSettings.effects)) {
-          if ((_a = instrumentSettings.effects.reverb) == null ? void 0 : _a.enabled) {
+          if ((_d = instrumentSettings.effects.reverb) == null ? void 0 : _d.enabled) {
             const reverb = effects.get("reverb");
             if (reverb)
               output = output.connect(reverb);
           }
-          if ((_b = instrumentSettings.effects.chorus) == null ? void 0 : _b.enabled) {
+          if ((_e = instrumentSettings.effects.chorus) == null ? void 0 : _e.enabled) {
             const chorus = effects.get("chorus");
             if (chorus)
               output = output.connect(chorus);
           }
-          if ((_c = instrumentSettings.effects.filter) == null ? void 0 : _c.enabled) {
+          if ((_f = instrumentSettings.effects.filter) == null ? void 0 : _f.enabled) {
             const filter = effects.get("filter");
             if (filter)
               output = output.connect(filter);
