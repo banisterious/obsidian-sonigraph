@@ -17,6 +17,7 @@ export interface InstrumentConfig {
     frequencyRange?: [number, number]; // For whale species frequency mapping
     description?: string; // For whale sample attribution and context
     requiresHighQuality?: boolean; // Only available when high-quality samples are enabled
+    useHighQuality?: boolean; // Whether to use high-quality samples by default (false = synthesis, true = recording)
 }
 
 export interface InstrumentCollection {

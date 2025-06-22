@@ -40,7 +40,8 @@ export const keyboardInstruments: InstrumentFamily = {
             effects: ['chorus', 'reverb'],
             maxVoices: 6,
             priority: 'medium',
-            category: 'keyboard'
+            category: 'keyboard',
+            useHighQuality: false
         },
 
         electricPiano: {
@@ -56,7 +57,8 @@ export const keyboardInstruments: InstrumentFamily = {
             effects: ['reverb', 'chorus'],
             maxVoices: 8,
             priority: 'medium',
-            category: 'keyboard'
+            category: 'keyboard',
+            useHighQuality: false
         },
 
         harpsichord: {
@@ -73,7 +75,8 @@ export const keyboardInstruments: InstrumentFamily = {
             effects: ['reverb', 'filter'],
             maxVoices: 8,
             priority: 'medium',
-            category: 'keyboard'
+            category: 'keyboard',
+            useHighQuality: false
         },
 
         accordion: {
@@ -90,7 +93,8 @@ export const keyboardInstruments: InstrumentFamily = {
             effects: ['reverb', 'chorus'],
             maxVoices: 6,
             priority: 'low',
-            category: 'keyboard'
+            category: 'keyboard',
+            useHighQuality: false
         },
 
         celesta: {
@@ -107,7 +111,8 @@ export const keyboardInstruments: InstrumentFamily = {
             effects: ['reverb', 'filter'],
             maxVoices: 6,
             priority: 'low',
-            category: 'keyboard'
+            category: 'keyboard',
+            useHighQuality: false
         }
     }
 };

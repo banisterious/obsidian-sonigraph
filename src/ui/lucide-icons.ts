@@ -149,6 +149,7 @@ export const LUCIDE_ICONS = {
  * Icon mapping for instrument families with proper categorization
  */
 export const FAMILY_ICONS = {
+  keyboard: LUCIDE_ICONS.piano,
   strings: LUCIDE_ICONS.strings,
   woodwinds: LUCIDE_ICONS.woodwinds,
   brass: LUCIDE_ICONS.brass,
@@ -314,11 +315,18 @@ export const TAB_CONFIGS = [
     description: 'Global controls and presets'
   },
   {
+    id: 'keyboard',
+    name: 'Keyboard',
+    icon: 'piano',
+    description: '6 keyboard instruments',
+    instrumentCount: 6
+  },
+  {
     id: 'strings',
     name: 'Strings',
     icon: 'music',
-    description: '7 string instruments',
-    instrumentCount: 7
+    description: '9 string instruments',
+    instrumentCount: 9
   },
   {
     id: 'woodwinds',
