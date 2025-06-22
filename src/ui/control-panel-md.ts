@@ -332,7 +332,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createActiveInstrumentsCard(): void {
 		const card = new MaterialCard({
-			title: 'Active Instruments',
+			title: 'Active instruments',
 			iconName: 'music',
 			subtitle: 'Currently enabled instruments and their status',
 			elevation: 1
@@ -366,7 +366,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createPerformanceMetricsCard(): void {
 		const card = new MaterialCard({
-			title: 'Performance',
+			title: 'Performance metrics',
 			iconName: 'zap',
 			subtitle: 'Real-time system performance metrics',
 			elevation: 1
@@ -407,7 +407,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createAudioSystemCard(): void {
 		const card = new MaterialCard({
-			title: 'Audio System',
+			title: 'Audio system',
 			iconName: 'settings',
 			subtitle: 'Current audio configuration and settings',
 			elevation: 1
@@ -421,7 +421,7 @@ export class MaterialControlPanelModal extends Modal {
 			this.plugin.settings.useHighQualitySamples,
 			(enabled) => this.handleHighQualitySamplesChange(enabled),
 			{
-				name: 'Use High Quality Samples',
+				name: 'Use high quality samples',
 				description: 'Load professional audio recordings when available (19/34 instruments). Uses built-in synthesis for remaining instruments. Audio format chosen automatically.'
 			}
 		);
@@ -431,20 +431,20 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Audio format status
 		const formatRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		formatRow.createSpan({ text: 'Audio Mode:', cls: 'osp-info-label' });
+		formatRow.createSpan({ text: 'Audio mode:', cls: 'osp-info-label' });
 		this.audioModeValueElement = formatRow.createSpan({ 
-			text: this.plugin.settings.useHighQualitySamples ? 'High Quality Samples' : 'Synthesis Only', 
+			text: this.plugin.settings.useHighQualitySamples ? 'High quality samples' : 'Synthesis only', 
 			cls: 'osp-info-value' 
 		});
 
 		// Sample rate (mock for now)
 		const sampleRateRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		sampleRateRow.createSpan({ text: 'Sample Rate:', cls: 'osp-info-label' });
+		sampleRateRow.createSpan({ text: 'Sample rate:', cls: 'osp-info-label' });
 		sampleRateRow.createSpan({ text: '44.1 kHz', cls: 'osp-info-value' });
 
 		// Buffer size (mock for now)
 		const bufferRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		bufferRow.createSpan({ text: 'Buffer Size:', cls: 'osp-info-label' });
+		bufferRow.createSpan({ text: 'Buffer size:', cls: 'osp-info-label' });
 		bufferRow.createSpan({ text: '256 samples', cls: 'osp-info-value' });
 
 		this.contentContainer.appendChild(card.getElement());
@@ -482,9 +482,9 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createScaleKeyCard(): void {
 		const card = new MaterialCard({
-			title: 'Scale & Key Settings',
+			title: 'Scale & key',
 			iconName: 'music',
-			subtitle: 'Musical scale and key signature configuration',
+			subtitle: 'Musical scale and key signature settings',
 			elevation: 1
 		});
 
@@ -515,7 +515,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createTempoTimingCard(): void {
 		const card = new MaterialCard({
-			title: 'Tempo & Timing',
+			title: 'Tempo & timing',
 			iconName: 'clock',
 			subtitle: 'Playback speed and timing controls',
 			elevation: 1
@@ -539,7 +539,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Note duration slider
 		const durationGroup = content.createDiv({ cls: 'osp-control-group' });
-		durationGroup.createEl('label', { text: 'Note Duration', cls: 'osp-control-label' });
+		durationGroup.createEl('label', { text: 'Note duration', cls: 'osp-control-label' });
 		
 		const durationSlider = new MaterialSlider({
 			value: 0.5,
@@ -556,7 +556,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createMasterTuningCard(): void {
 		const card = new MaterialCard({
-			title: 'Master Tuning',
+			title: 'Master tuning',
 			iconName: 'settings',
 			subtitle: 'Global tuning and harmonic settings',
 			elevation: 1
@@ -566,13 +566,14 @@ export class MaterialControlPanelModal extends Modal {
 
 		// A440 tuning
 		const tuningGroup = content.createDiv({ cls: 'osp-control-group' });
-		tuningGroup.createEl('label', { text: 'Concert Pitch (A4)', cls: 'osp-control-label' });
+		tuningGroup.createEl('label', { text: 'Concert pitch (A4)', cls: 'osp-control-label' });
 		
 		const tuningSlider = new MaterialSlider({
 			value: 440,
 			min: 415,
 			max: 466,
 			step: 1,
+			
 			unit: ' Hz',
 			displayValue: '440 Hz',
 			onChange: (value) => this.handleTuningChange(value)
@@ -582,7 +583,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Microtuning toggle - using grid layout like instrument toggles
 		const microtuningGroup = content.createDiv({ cls: 'control-group control-group--toggle' });
 		const microtuningLabel = microtuningGroup.createEl('label', { cls: 'control-label' });
-		microtuningLabel.textContent = 'Enable Microtuning';
+		microtuningLabel.textContent = 'Enable microtuning';
 		
 		const controlWrapper = microtuningGroup.createDiv({ cls: 'control-wrapper' });
 		const switchContainer = controlWrapper.createDiv({ cls: 'ospcc-switch' });
@@ -678,13 +679,13 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Immediately update the audio mode display text
 		if (this.audioModeValueElement) {
-			this.audioModeValueElement.textContent = enabled ? 'High Quality Samples' : 'Synthesis Only';
+			this.audioModeValueElement.textContent = enabled ? 'High quality samples' : 'Synthesis only';
 		}
 	}
 
 	private createGlobalSettingsCard(): void {
 		const globalCard = new MaterialCard({
-			title: 'Global Settings',
+			title: 'Global settings',
 			iconName: 'settings',
 			subtitle: 'System configuration and bulk operations',
 			elevation: 1
@@ -732,12 +733,12 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Logging Level Setting
 		const logLevelGroup = loggingContent.createDiv({ cls: 'osp-control-group' });
-		logLevelGroup.createEl('label', { text: 'Logging Level', cls: 'osp-control-label' });
+		logLevelGroup.createEl('label', { text: 'Logging level', cls: 'osp-control-label' });
 		const logLevelSelect = logLevelGroup.createEl('select', { cls: 'osp-select' });
 		
 		const logLevelOptions = [
 			{ value: 'off', text: 'Off' },
-			{ value: 'error', text: 'Errors Only' },
+			{ value: 'error', text: 'Errors only' },
 			{ value: 'warn', text: 'Warnings' },
 			{ value: 'info', text: 'Info' },
 			{ value: 'debug', text: 'Debug' }
@@ -759,7 +760,7 @@ export class MaterialControlPanelModal extends Modal {
 		logChipSet.style.marginTop = 'var(--md-space-4)';
 		
 		const exportLogsChip = new ActionChip({
-			text: 'Export Logs',
+			text: 'Export logs',
 			iconName: 'download',
 			onToggle: (selected) => this.handleExportLogs(selected)
 		});
@@ -775,7 +776,7 @@ export class MaterialControlPanelModal extends Modal {
 	private createMasterTab(): void {
 		// Master Effects Card
 		const masterEffectsCard = new MaterialCard({
-			title: 'Master Effects',
+			title: 'Master effects',
 			iconName: 'equalizer',
 			subtitle: 'Global orchestral processing',
 			elevation: 1
@@ -786,19 +787,19 @@ export class MaterialControlPanelModal extends Modal {
 		// Create horizontal effect sections with saved state
 		const effects = this.plugin.settings.effects || {};
 		
-		this.createHorizontalEffectSection(masterContent, 'Orchestral Reverb Hall', 'reverb', 
+		this.createHorizontalEffectSection(masterContent, 'Orchestral reverb hall', 'reverb', 
 			effects.orchestralreverbhall?.enabled ?? true, [
-			{ name: 'Hall Size', value: effects.orchestralreverbhall?.hallsize ?? 0.8, min: 0, max: 1, step: 0.1, unit: '' },
-			{ name: 'Decay Time', value: effects.orchestralreverbhall?.decaytime ?? 3.5, min: 0.5, max: 10, step: 0.1, unit: 's' }
+			{ name: 'Hall size', value: effects.orchestralreverbhall?.hallsize ?? 0.8, min: 0, max: 1, step: 0.1, unit: '' },
+			{ name: 'Decay time', value: effects.orchestralreverbhall?.decaytime ?? 3.5, min: 0.5, max: 10, step: 0.1, unit: 's' }
 		]);
 		
-		this.createHorizontalEffectSection(masterContent, '3-Band EQ', 'equalizer', 
+		this.createHorizontalEffectSection(masterContent, '3-band EQ', 'equalizer', 
 			effects['3bandeq']?.enabled ?? true, [
-			{ name: 'Bass Boost', value: effects['3bandeq']?.bassboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' },
-			{ name: 'Treble Boost', value: effects['3bandeq']?.trebleboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' }
+			{ name: 'Bass boost', value: effects['3bandeq']?.bassboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' },
+			{ name: 'Treble boost', value: effects['3bandeq']?.trebleboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' }
 		]);
 		
-		this.createHorizontalEffectSection(masterContent, 'Dynamic Compressor', 'compressor', 
+		this.createHorizontalEffectSection(masterContent, 'Dynamic compressor', 'compressor', 
 			effects.dynamiccompressor?.enabled ?? false, [
 			{ name: 'Threshold', value: effects.dynamiccompressor?.threshold ?? -20, min: -40, max: 0, step: 1, unit: 'dB' },
 			{ name: 'Ratio', value: effects.dynamiccompressor?.ratio ?? 4, min: 1, max: 20, step: 1, unit: ':1' }
@@ -806,7 +807,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Performance Settings Card
 		const performanceCard = new MaterialCard({
-			title: 'Performance Optimization',
+			title: 'Performance optimization',
 			iconName: 'zap',
 			subtitle: 'CPU monitoring and adaptive quality control',
 			elevation: 1
@@ -820,7 +821,7 @@ export class MaterialControlPanelModal extends Modal {
 		const cpuStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
 		cpuStat.innerHTML = `
 			<span class="osp-stat-value">23%</span>
-			<span class="osp-stat-label">CPU Usage</span>
+			<span class="osp-stat-label">CPU usage</span>
 		`;
 		
 		const voicesStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
@@ -832,7 +833,7 @@ export class MaterialControlPanelModal extends Modal {
 		const qualityStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
 		qualityStat.innerHTML = `
 			<span class="osp-stat-value" style="color: var(--color-green)">High</span>
-			<span class="osp-stat-label">Audio Quality</span>
+			<span class="osp-stat-label">Audio quality</span>
 		`;
 		
 		this.contentContainer.appendChild(masterEffectsCard.getElement());
@@ -924,8 +925,8 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createFamilyOverviewCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
-			title: `${tabConfig.name} Family Overview`,
-			iconName: tabConfig.icon,
+			title: `${tabConfig.name} family overview`,
+			iconName: getFamilyIcon(familyId),
 			subtitle: `${this.getEnabledCount(familyId)} of ${this.getTotalCount(familyId)} instruments enabled`,
 			elevation: 1
 		});
@@ -982,8 +983,9 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createInstrumentsCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
-			title: 'Individual Instruments',
-			iconName: 'music',
+			title: 'Individual instruments',
+			iconName: 'list',
+			subtitle: 'Configure instrument-specific settings',
 			elevation: 1
 		});
 		
@@ -1009,8 +1011,8 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createFamilyEffectsCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
-			title: `${tabConfig.name} Effects`,
-			iconName: 'activity',
+			title: `${tabConfig.name} effects`,
+			iconName: 'sliders-horizontal',
 			subtitle: 'Family-wide effect processing',
 			elevation: 1
 		});
@@ -1850,7 +1852,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Max Voices parameter
 		const voicesGroup = paramsContainer.createDiv({ cls: 'osp-param-group-horizontal' });
 		const voicesLabel = voicesGroup.createDiv({ cls: 'osp-param-label' });
-		voicesLabel.textContent = 'Max Voices';
+		voicesLabel.textContent = 'Max voices';
 		
 		const voicesSliderContainer = voicesGroup.createDiv({ cls: 'osp-param-slider' });
 		const voicesSlider = new MaterialSlider({
