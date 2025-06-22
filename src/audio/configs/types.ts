@@ -16,6 +16,7 @@ export interface InstrumentConfig {
     category?: 'keyboard' | 'strings' | 'brass' | 'woodwind' | 'vocals' | 'world' | 'percussion' | 'electronic';
     frequencyRange?: [number, number]; // For whale species frequency mapping
     description?: string; // For whale sample attribution and context
+    requiresHighQuality?: boolean; // Only available when high-quality samples are enabled
 }
 
 export interface InstrumentCollection {

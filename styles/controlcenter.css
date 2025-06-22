@@ -573,3 +573,58 @@
 .ospcc-text-accent {
   color: var(--md-primary);
 }
+
+/* ==========================================================================
+   QUALITY BADGES - High-Quality Mode Indicators
+   ========================================================================== */
+
+.sonigraph-compact-title-container {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  flex: 1;
+}
+
+.sonigraph-quality-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 16px;
+  padding: 0 var(--md-space-1);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-size: var(--md-font-label-small);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: var(--md-corner-xs);
+  text-transform: uppercase;
+  cursor: help;
+  transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.sonigraph-quality-badge:hover {
+  background: var(--md-primary-container);
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   INSTRUMENT STATUS INDICATORS
+   ========================================================================== */
+
+.sonigraph-enabled-indicator {
+  transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.sonigraph-enabled-indicator.unavailable {
+  color: var(--md-on-surface-variant);
+  opacity: 0.5;
+}
+
+.sonigraph-enabled-indicator.enabled {
+  color: var(--md-success);
+}
+
+.sonigraph-enabled-indicator.disabled {
+  color: var(--md-on-surface-variant);
+}
