@@ -1267,6 +1267,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // This is synthesis, not recordings
           effects: {
             reverb: {
               enabled: true,
@@ -1290,6 +1292,313 @@ var init_constants = __esm({
               params: {
                 frequency: 800,
                 Q: 0.4,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        // High-quality whale species (disabled by default, only available in high-quality mode)
+        whaleBlue: {
+          enabled: false,
+          volume: 0.8,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 12,
+                preDelay: 0.2,
+                wet: 0.9
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.05,
+                depth: 0.3,
+                delayTime: 8,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 100,
+                Q: 0.3,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleOrca: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 2,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 6,
+                preDelay: 0.1,
+                wet: 0.7
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.2,
+                depth: 0.4,
+                delayTime: 6,
+                feedback: 0.08
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 8e3,
+                Q: 0.5,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleGray: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 10,
+                preDelay: 0.18,
+                wet: 0.8
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.08,
+                depth: 0.6,
+                delayTime: 10,
+                feedback: 0.12
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 1200,
+                Q: 0.4,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleSperm: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 5,
+                preDelay: 0.08,
+                wet: 0.6
+              }
+            },
+            chorus: {
+              enabled: false,
+              params: {
+                frequency: 0.3,
+                depth: 0.2,
+                delayTime: 4,
+                feedback: 0.05
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 15e3,
+                Q: 0.6,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleMinke: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 9,
+                preDelay: 0.12,
+                wet: 0.75
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.06,
+                depth: 0.5,
+                delayTime: 8,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 150,
+                Q: 0.3,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleFin: {
+          enabled: false,
+          volume: 0.8,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 11,
+                preDelay: 0.16,
+                wet: 0.85
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.04,
+                depth: 0.7,
+                delayTime: 14,
+                feedback: 0.12
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 80,
+                Q: 0.2,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleRight: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 7,
+                preDelay: 0.14,
+                wet: 0.8
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.12,
+                depth: 0.6,
+                delayTime: 9,
+                feedback: 0.1
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 600,
+                Q: 0.4,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whaleSei: {
+          enabled: false,
+          volume: 0.6,
+          maxVoices: 1,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 8.5,
+                preDelay: 0.13,
+                wet: 0.75
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.1,
+                depth: 0.5,
+                delayTime: 7,
+                feedback: 0.08
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 500,
+                Q: 0.35,
+                type: "lowpass"
+              }
+            }
+          }
+        },
+        whalePilot: {
+          enabled: false,
+          volume: 0.7,
+          maxVoices: 2,
+          useHighQuality: false,
+          // Default to synthesis
+          effects: {
+            reverb: {
+              enabled: true,
+              params: {
+                decay: 6.5,
+                preDelay: 0.1,
+                wet: 0.7
+              }
+            },
+            chorus: {
+              enabled: true,
+              params: {
+                frequency: 0.15,
+                depth: 0.4,
+                delayTime: 5,
+                feedback: 0.07
+              }
+            },
+            filter: {
+              enabled: true,
+              params: {
+                frequency: 6e3,
+                Q: 0.5,
                 type: "lowpass"
               }
             }
@@ -1381,7 +1690,7 @@ var init_constants = __esm({
       vocals: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
       percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
       electronic: ["leadSynth", "bassSynth", "arpSynth"],
-      experimental: ["whaleHumpback"],
+      experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"],
       pads: ["pad"]
     };
     INSTRUMENT_INFO = {
@@ -1589,10 +1898,65 @@ var init_constants = __esm({
       },
       // Phase 8B: Environmental & Natural Sounds
       whaleHumpback: {
-        name: "Humpback Whale",
+        name: "Humpback whale (synthesis)",
         icon: "\u{1F40B}",
-        description: "Authentic whale song recordings with oceanic processing and deep resonance",
+        description: "Synthesized whale-like sounds with oceanic processing and deep resonance",
         defaultFrequencyRange: "Low-Mid (20-1000Hz)"
+      },
+      // High-quality whale species (real NOAA recordings, only available in high-quality mode)
+      whaleBlue: {
+        name: "Blue whale",
+        icon: "\u{1F40B}",
+        description: "Authentic blue whale infrasonic calls from NOAA hydrophone recordings",
+        defaultFrequencyRange: "Infrasonic (10-40Hz)"
+      },
+      whaleOrca: {
+        name: "Orca whale",
+        icon: "\u{1F40B}",
+        description: "Authentic orca pod communications with clicks and calls",
+        defaultFrequencyRange: "Wide Spectrum (500-25000Hz)"
+      },
+      whaleGray: {
+        name: "Gray whale",
+        icon: "\u{1F40B}",
+        description: "Authentic gray whale migration calls from oceanic soundscape recordings",
+        defaultFrequencyRange: "Low-Mid (100-2000Hz)"
+      },
+      whaleSperm: {
+        name: "Sperm whale",
+        icon: "\u{1F40B}",
+        description: "Authentic sperm whale echolocation clicks from deep-sea recordings",
+        defaultFrequencyRange: "Ultra-Wide (100-30000Hz)"
+      },
+      whaleMinke: {
+        name: "Minke whale",
+        icon: "\u{1F40B}",
+        description: "Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings",
+        defaultFrequencyRange: "Infrasonic (35-50Hz)"
+      },
+      whaleFin: {
+        name: "Fin whale",
+        icon: "\u{1F40B}",
+        description: "Authentic fin whale pulse sequences from NOAA Pennsylvania Group",
+        defaultFrequencyRange: "Infrasonic (15-30Hz)"
+      },
+      whaleRight: {
+        name: "Right whale",
+        icon: "\u{1F40B}",
+        description: "Authentic North Atlantic right whale upcalls from NOAA Fisheries",
+        defaultFrequencyRange: "Low-Mid (50-500Hz)"
+      },
+      whaleSei: {
+        name: "Sei whale",
+        icon: "\u{1F40B}",
+        description: "Authentic sei whale downsweeps from NOAA Pennsylvania Group",
+        defaultFrequencyRange: "Mid (200-600Hz)"
+      },
+      whalePilot: {
+        name: "Pilot whale",
+        icon: "\u{1F40B}",
+        description: "Authentic pilot whale multi-sound communications from NOAA Fisheries",
+        defaultFrequencyRange: "Wide (300-8000Hz)"
       }
     };
     EFFECT_PRESETS = {
@@ -3948,7 +4312,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
   }
 };
 
-// src/ui/control-panel-md.ts
+// src/ui/control-panel.ts
 var import_obsidian3 = require("obsidian");
 init_logging();
 
@@ -4028,6 +4392,9 @@ function createObsidianToggle(container, initialValue, onChange, options) {
   });
   return checkbox;
 }
+
+// src/ui/control-panel.ts
+init_constants();
 
 // src/ui/lucide-icons.ts
 var import_obsidian2 = require("obsidian");
@@ -4821,8 +5188,8 @@ var PlayButtonManager = class {
   }
 };
 
-// src/ui/control-panel-md.ts
-var logger5 = getLogger("control-panel-md");
+// src/ui/control-panel.ts
+var logger5 = getLogger("control-panel");
 var MaterialControlPanelModal = class extends import_obsidian3.Modal {
   constructor(app, plugin) {
     super(app);
@@ -5821,7 +6188,7 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
       percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
       electronic: ["leadSynth", "bassSynth", "arpSynth", "pad"],
       // All electronic instruments including pad
-      experimental: ["whaleHumpback"],
+      experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"],
       // Additional families for other instruments
       keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"]
     };
@@ -6248,28 +6615,43 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const title = header.createDiv({ cls: "osp-effect-title-area" });
     const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
     title.appendChild(icon);
-    title.appendText(this.capitalizeWords(instrumentName));
+    const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
+    const titleWithStatus = this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo);
+    title.innerHTML += titleWithStatus;
     const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
-    toggleContainer.setAttribute("data-tooltip", `Toggle ${this.capitalizeWords(instrumentName)} on/off`);
-    toggleContainer.setAttribute("title", `Toggle ${this.capitalizeWords(instrumentName)} on/off`);
+    toggleContainer.setAttribute("data-tooltip", `Toggle ${instrumentInfo.name} on/off`);
+    toggleContainer.setAttribute("title", `Toggle ${instrumentInfo.name} on/off`);
     const toggleInput = toggleContainer.createEl("input", {
       type: "checkbox",
       cls: "ospcc-switch__input"
     });
-    toggleInput.checked = options.enabled;
+    const canToggle = !this.instrumentRequiresHighQuality(instrumentName) || this.checkIfSampleDownloaded(instrumentName);
+    const isEnabled = options.enabled && canToggle;
+    toggleInput.checked = isEnabled;
+    if (!canToggle) {
+      toggleInput.disabled = true;
+      toggleContainer.classList.add("ospcc-switch--unavailable");
+      toggleContainer.style.cursor = "not-allowed";
+      toggleContainer.setAttribute("data-tooltip", `${instrumentInfo.name} samples not yet downloaded`);
+      toggleContainer.setAttribute("title", `${instrumentInfo.name} samples not yet downloaded`);
+    }
     toggleInput.addEventListener("change", () => {
-      logger5.debug("ui", "Instrument toggle changed", { instrumentName, enabled: toggleInput.checked });
-      this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
+      if (canToggle) {
+        logger5.debug("ui", "Instrument toggle changed", { instrumentName, enabled: toggleInput.checked });
+        this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
+      }
     });
     const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
     const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
-    toggleContainer.addEventListener("click", (e) => {
-      if (e.target !== toggleInput) {
-        e.preventDefault();
-        toggleInput.checked = !toggleInput.checked;
-        toggleInput.dispatchEvent(new Event("change"));
-      }
-    });
+    if (canToggle) {
+      toggleContainer.addEventListener("click", (e) => {
+        if (e.target !== toggleInput) {
+          e.preventDefault();
+          toggleInput.checked = !toggleInput.checked;
+          toggleInput.dispatchEvent(new Event("change"));
+        }
+      });
+    }
     const paramsContainer = section.createDiv({ cls: "osp-effect-params-horizontal" });
     const volumeGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
     const volumeLabel = volumeGroup.createDiv({ cls: "osp-param-label" });
@@ -6301,10 +6683,53 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const effectsLabel = effectsGroup.createDiv({ cls: "osp-param-label" });
     effectsLabel.textContent = "Effects";
     const effectsContainer = effectsGroup.createDiv({ cls: "osp-effects-container" });
-    const instrumentSettings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrumentName];
-    this.createEffectToggle(effectsContainer, "Reverb", "reverb", instrumentName, ((_c = (_b = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _b.reverb) == null ? void 0 : _c.enabled) || false);
-    this.createEffectToggle(effectsContainer, "Chorus", "chorus", instrumentName, ((_e = (_d = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _d.chorus) == null ? void 0 : _e.enabled) || false);
-    this.createEffectToggle(effectsContainer, "Filter", "filter", instrumentName, ((_g = (_f = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _f.filter) == null ? void 0 : _g.enabled) || false);
+    const instrumentSettings = this.plugin.settings.instruments[instrumentName];
+    this.createEffectToggle(effectsContainer, "Reverb", "reverb", instrumentName, ((_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.enabled) || false);
+    this.createEffectToggle(effectsContainer, "Chorus", "chorus", instrumentName, ((_d = (_c = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _c.chorus) == null ? void 0 : _d.enabled) || false);
+    this.createEffectToggle(effectsContainer, "Filter", "filter", instrumentName, ((_f = (_e = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _e.filter) == null ? void 0 : _f.enabled) || false);
+    if (this.instrumentSupportsQualityChoice(instrumentName)) {
+      const qualityGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
+      const qualityLabel = qualityGroup.createDiv({ cls: "osp-param-label" });
+      qualityLabel.textContent = "Quality";
+      const qualityContainer = qualityGroup.createDiv({ cls: "setting-item" });
+      const qualitySelect = qualityContainer.createEl("select", { cls: "dropdown" });
+      qualitySelect.createEl("option", {
+        value: "synthesis",
+        text: "Use synthesis"
+      });
+      qualitySelect.createEl("option", {
+        value: "recording",
+        text: "Use recording"
+      });
+      const currentSettings = this.plugin.settings.instruments[instrumentName];
+      const usesHighQuality = (_g = currentSettings.useHighQuality) != null ? _g : false;
+      qualitySelect.value = usesHighQuality ? "recording" : "synthesis";
+      qualitySelect.addEventListener("change", async () => {
+        const useRecording = qualitySelect.value === "recording";
+        if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
+          const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
+          if (!isDownloaded) {
+            new import_obsidian3.Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
+            qualitySelect.value = "synthesis";
+            return;
+          }
+        }
+        this.plugin.settings.instruments[instrumentName].useHighQuality = useRecording;
+        await this.plugin.saveSettings();
+        const modeText = useRecording ? "recording" : "synthesis";
+        new import_obsidian3.Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
+      });
+      if (this.instrumentRequiresHighQuality(instrumentName)) {
+        const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
+        if (!isDownloaded) {
+          const recordingOption = qualitySelect.querySelector('option[value="recording"]');
+          if (recordingOption) {
+            recordingOption.disabled = true;
+            recordingOption.text = "Use recording (not downloaded)";
+          }
+        }
+      }
+    }
   }
   /**
    * Create individual effect toggle for instruments
@@ -6314,8 +6739,9 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
     const label = toggleGroup.createDiv({ cls: "osp-effect-toggle-label" });
     label.textContent = effectName;
     const toggleContainer = toggleGroup.createDiv({ cls: "ospcc-switch osp-effect-toggle" });
-    toggleContainer.setAttribute("data-tooltip", `Toggle ${effectName} for ${this.capitalizeWords(instrumentName)}`);
-    toggleContainer.setAttribute("title", `Toggle ${effectName} for ${this.capitalizeWords(instrumentName)}`);
+    const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
+    toggleContainer.setAttribute("data-tooltip", `Toggle ${effectName} for ${instrumentInfo.name}`);
+    toggleContainer.setAttribute("title", `Toggle ${effectName} for ${instrumentInfo.name}`);
     const toggleInput = toggleContainer.createEl("input", {
       type: "checkbox",
       cls: "ospcc-switch__input"
@@ -6388,6 +6814,56 @@ var MaterialControlPanelModal = class extends import_obsidian3.Modal {
   }
   capitalizeWords(str) {
     return str.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()).trim();
+  }
+  instrumentRequiresHighQuality(instrumentKey) {
+    const highQualityInstruments = ["whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
+    return highQualityInstruments.includes(instrumentKey);
+  }
+  instrumentSupportsQualityChoice(instrumentKey) {
+    if (!this.plugin.settings.useHighQualitySamples) {
+      return false;
+    }
+    const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+    if (!instrumentSettings || !("useHighQuality" in instrumentSettings)) {
+      return false;
+    }
+    const requiresHighQuality = this.instrumentRequiresHighQuality(instrumentKey);
+    return !requiresHighQuality;
+  }
+  createInstrumentTitleWithStatus(instrumentKey, instrumentInfo) {
+    let titleText = `${instrumentInfo.icon} ${instrumentInfo.name}`;
+    if (this.instrumentRequiresHighQuality(instrumentKey)) {
+      const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
+      const statusText = isDownloaded ? "(downloaded)" : "(not downloaded)";
+      titleText += ` <em>${statusText}</em>`;
+    }
+    return titleText;
+  }
+  checkIfSampleDownloaded(instrumentKey) {
+    try {
+      const whaleIntegration2 = this.plugin.whaleIntegration;
+      if (!whaleIntegration2 || !whaleIntegration2.whaleManager) {
+        return false;
+      }
+      const speciesMap = {
+        "whaleBlue": "blue",
+        "whaleOrca": "orca",
+        "whaleGray": "gray",
+        "whaleSperm": "sperm",
+        "whaleMinke": "minke",
+        "whaleFin": "fin",
+        "whaleRight": "right",
+        "whaleSei": "sei",
+        "whalePilot": "pilot"
+      };
+      const species = speciesMap[instrumentKey];
+      if (!species)
+        return false;
+      const cacheStatus = whaleIntegration2.whaleManager.getCacheStatus();
+      return (cacheStatus.cacheBySpecies[species] || 0) > 0;
+    } catch (error) {
+      return false;
+    }
   }
   handleGlobalAction(action, selected) {
     logger5.info("ui", `Global action: ${action}`, { selected });
@@ -34093,7 +34569,7 @@ var worldInstruments = {
   name: "World & Environmental Instruments",
   description: "Unique, environmental and world music instruments with authentic whale sounds",
   instruments: {
-    // Original humpback whale (fallback synthesis)
+    // Synthesized humpback whale (fallback)
     whaleHumpback: {
       urls: {
         "C1": `C1.${FORMAT_PLACEHOLDER}`,
@@ -34111,137 +34587,188 @@ var worldInstruments = {
       maxVoices: 2,
       priority: "low",
       category: "world"
-    }
-    // External whale samples (Freesound integration) - DISABLED until UI integration
-    // TODO: Re-enable these when whale integration UI is complete
-    /*
+    },
+    // High-quality whale species (real NOAA recordings) - Only available in high-quality mode
     whaleBlue: {
-        urls: {
-            "C1": "external", "F1": "external", "Bb1": "external",
-            "C2": "external", "F2": "external", "Bb2": "external"
-        },
-        release: 8.0,
-        baseUrl: "external://whale/blue",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [10, 40], // Infrasonic calls
-        description: 'Authentic blue whale infrasonic calls from MBARI hydrophone recordings'
+      urls: {
+        "C1": "external",
+        "F1": "external",
+        "Bb1": "external",
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external"
+      },
+      release: 8,
+      baseUrl: "external://whale/blue",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [10, 40],
+      // Infrasonic calls
+      description: "Authentic blue whale infrasonic calls from NOAA hydrophone recordings",
+      requiresHighQuality: true
     },
     whaleOrca: {
-        urls: {
-            "C2": "external", "F2": "external", "Bb2": "external",
-            "C3": "external", "F3": "external", "Bb3": "external"
-        },
-        release: 5.0,
-        baseUrl: "external://whale/orca",
-        effects: ['reverb', 'filter'],
-        maxVoices: 2,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [500, 25000], // Clicks and calls
-        description: 'Authentic orca pod communications from MBARI deep-sea observatory'
+      urls: {
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external",
+        "C3": "external",
+        "F3": "external",
+        "Bb3": "external"
+      },
+      release: 5,
+      baseUrl: "external://whale/orca",
+      effects: ["reverb", "filter"],
+      maxVoices: 2,
+      priority: "low",
+      category: "world",
+      frequencyRange: [500, 25e3],
+      // Clicks and calls
+      description: "Authentic orca pod communications from MBARI deep-sea observatory",
+      requiresHighQuality: true
     },
     whaleGray: {
-        urls: {
-            "C1": "external", "F1": "external", "Bb1": "external",
-            "C2": "external", "F2": "external", "Bb2": "external"
-        },
-        release: 7.0,
-        baseUrl: "external://whale/gray",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [100, 2000], // Migration calls
-        description: 'Authentic gray whale migration calls from oceanic soundscape recordings'
+      urls: {
+        "C1": "external",
+        "F1": "external",
+        "Bb1": "external",
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external"
+      },
+      release: 7,
+      baseUrl: "external://whale/gray",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [100, 2e3],
+      // Migration calls
+      description: "Authentic gray whale migration calls from oceanic soundscape recordings",
+      requiresHighQuality: true
     },
     whaleSperm: {
-        urls: {
-            "C2": "external", "F2": "external", "Bb2": "external",
-            "C3": "external", "F3": "external", "Bb3": "external"
-        },
-        release: 4.0,
-        baseUrl: "external://whale/sperm",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [100, 30000], // Echolocation
-        description: 'Authentic sperm whale echolocation clicks from Newfoundland recordings'
+      urls: {
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external",
+        "C3": "external",
+        "F3": "external",
+        "Bb3": "external"
+      },
+      release: 4,
+      baseUrl: "external://whale/sperm",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [100, 3e4],
+      // Echolocation
+      description: "Authentic sperm whale echolocation clicks from Newfoundland recordings",
+      requiresHighQuality: true
     },
     whaleMinke: {
-        urls: {
-            "C1": "external", "F1": "external", "Bb1": "external",
-            "C2": "external", "F2": "external", "Bb2": "external"
-        },
-        release: 6.0,
-        baseUrl: "external://whale/minke",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [35, 50], // Downsweeps
-        description: 'Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings'
+      urls: {
+        "C1": "external",
+        "F1": "external",
+        "Bb1": "external",
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external"
+      },
+      release: 6,
+      baseUrl: "external://whale/minke",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [35, 50],
+      // Downsweeps
+      description: "Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings",
+      requiresHighQuality: true
     },
     whaleFin: {
-        urls: {
-            "C1": "external", "F1": "external", "Bb1": "external",
-            "C2": "external", "F2": "external", "Bb2": "external"
-        },
-        release: 8.0,
-        baseUrl: "external://whale/fin",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [15, 30], // Pulse sequences
-        description: 'Authentic fin whale pulse sequences from NOAA Pennsylvania Group'
+      urls: {
+        "C1": "external",
+        "F1": "external",
+        "Bb1": "external",
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external"
+      },
+      release: 8,
+      baseUrl: "external://whale/fin",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [15, 30],
+      // Pulse sequences
+      description: "Authentic fin whale pulse sequences from NOAA Pennsylvania Group",
+      requiresHighQuality: true
     },
     whaleRight: {
-        urls: {
-            "C1": "external", "F1": "external", "Bb1": "external",
-            "C2": "external", "F2": "external", "Bb2": "external"
-        },
-        release: 5.0,
-        baseUrl: "external://whale/right",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [50, 500], // Upcalls
-        description: 'Authentic North Atlantic right whale upcalls from NOAA Fisheries'
+      urls: {
+        "C1": "external",
+        "F1": "external",
+        "Bb1": "external",
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external"
+      },
+      release: 5,
+      baseUrl: "external://whale/right",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [50, 500],
+      // Upcalls
+      description: "Authentic North Atlantic right whale upcalls from NOAA Fisheries",
+      requiresHighQuality: true
     },
     whaleSei: {
-        urls: {
-            "C1": "external", "F1": "external", "Bb1": "external",
-            "C2": "external", "F2": "external", "Bb2": "external"
-        },
-        release: 7.0,
-        baseUrl: "external://whale/sei",
-        effects: ['reverb', 'filter'],
-        maxVoices: 1,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [200, 600], // Downsweeps
-        description: 'Authentic sei whale downsweeps from NOAA Pennsylvania Group'
+      urls: {
+        "C1": "external",
+        "F1": "external",
+        "Bb1": "external",
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external"
+      },
+      release: 7,
+      baseUrl: "external://whale/sei",
+      effects: ["reverb", "filter"],
+      maxVoices: 1,
+      priority: "low",
+      category: "world",
+      frequencyRange: [200, 600],
+      // Downsweeps
+      description: "Authentic sei whale downsweeps from NOAA Pennsylvania Group",
+      requiresHighQuality: true
     },
     whalePilot: {
-        urls: {
-            "C2": "external", "F2": "external", "Bb2": "external",
-            "C3": "external", "F3": "external", "Bb3": "external"
-        },
-        release: 5.0,
-        baseUrl: "external://whale/pilot",
-        effects: ['reverb', 'filter'],
-        maxVoices: 2,
-        priority: 'low',
-        category: 'world',
-        frequencyRange: [300, 8000], // Toothed whale vocalizations
-        description: 'Authentic pilot whale multi-sound communications from NOAA Fisheries'
+      urls: {
+        "C2": "external",
+        "F2": "external",
+        "Bb2": "external",
+        "C3": "external",
+        "F3": "external",
+        "Bb3": "external"
+      },
+      release: 5,
+      baseUrl: "external://whale/pilot",
+      effects: ["reverb", "filter"],
+      maxVoices: 2,
+      priority: "low",
+      category: "world",
+      frequencyRange: [300, 8e3],
+      // Toothed whale vocalizations
+      description: "Authentic pilot whale multi-sound communications from NOAA Fisheries",
+      requiresHighQuality: true
     }
-    */
   }
 };
 

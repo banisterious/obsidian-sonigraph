@@ -2,6 +2,7 @@ export interface InstrumentSettings {
 	enabled: boolean;
 	volume: number;
 	maxVoices: number;
+	useHighQuality?: boolean; // For instruments that support both synthesis and recordings
 	effects: {
 		reverb: ReverbSettings;
 		chorus: ChorusSettings;
@@ -17,7 +18,8 @@ export type InstrumentName =
 	| 'electricPiano' | 'harpsichord' | 'accordion' | 'celesta'
 	| 'violin' | 'cello' | 'guitar' | 'harp' | 'trumpet' | 'frenchHorn' | 'trombone' | 'tuba'
 	| 'oboe' | 'timpani' | 'xylophone' | 'vibraphone' | 'gongs'
-	| 'leadSynth' | 'bassSynth' | 'arpSynth' | 'whaleHumpback';
+	| 'leadSynth' | 'bassSynth' | 'arpSynth' 
+	| 'whaleHumpback' | 'whaleBlue' | 'whaleOrca' | 'whaleGray' | 'whaleSperm' | 'whaleMinke' | 'whaleFin' | 'whaleRight' | 'whaleSei' | 'whalePilot';
 
 export interface ReverbSettings {
 	enabled: boolean;
@@ -250,6 +252,16 @@ export interface SonigraphSettings {
 		arpSynth: InstrumentSettings;
 		// Phase 8B: Environmental & Natural Sounds
 		whaleHumpback: InstrumentSettings;
+		// High-quality whale species (only available in high-quality mode)
+		whaleBlue: InstrumentSettings;
+		whaleOrca: InstrumentSettings;
+		whaleGray: InstrumentSettings;
+		whaleSperm: InstrumentSettings;
+		whaleMinke: InstrumentSettings;
+		whaleFin: InstrumentSettings;
+		whaleRight: InstrumentSettings;
+		whaleSei: InstrumentSettings;
+		whalePilot: InstrumentSettings;
 	};
 	voiceAssignmentStrategy: 'frequency' | 'round-robin' | 'connection-based';
 	
@@ -1352,6 +1364,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.7,
 			maxVoices: 4,
+			useHighQuality: false, // This is synthesis, not recordings
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1375,6 +1388,304 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					params: {
 						frequency: 800,
 						Q: 0.4,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		// High-quality whale species (disabled by default, only available in high-quality mode)
+		whaleBlue: {
+			enabled: false,
+			volume: 0.8,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 12.0,
+						preDelay: 0.2,
+						wet: 0.9
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 0.05,
+						depth: 0.3,
+						delayTime: 8.0,
+						feedback: 0.1
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 100,
+						Q: 0.3,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleOrca: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 2,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 6.0,
+						preDelay: 0.1,
+						wet: 0.7
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.2,
+						depth: 0.4,
+						delayTime: 6.0,
+						feedback: 0.08
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 8000,
+						Q: 0.5,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleGray: {
+			enabled: false,
+			volume: 0.6,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 10.0,
+						preDelay: 0.18,
+						wet: 0.8
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.08,
+						depth: 0.6,
+						delayTime: 10.0,
+						feedback: 0.12
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 1200,
+						Q: 0.4,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleSperm: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 5.0,
+						preDelay: 0.08,
+						wet: 0.6
+					}
+				},
+				chorus: {
+					enabled: false,
+					params: {
+						frequency: 0.3,
+						depth: 0.2,
+						delayTime: 4.0,
+						feedback: 0.05
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 15000,
+						Q: 0.6,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleMinke: {
+			enabled: false,
+			volume: 0.6,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 9.0,
+						preDelay: 0.12,
+						wet: 0.75
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.06,
+						depth: 0.5,
+						delayTime: 8.0,
+						feedback: 0.1
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 150,
+						Q: 0.3,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleFin: {
+			enabled: false,
+			volume: 0.8,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 11.0,
+						preDelay: 0.16,
+						wet: 0.85
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.04,
+						depth: 0.7,
+						delayTime: 14.0,
+						feedback: 0.12
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 80,
+						Q: 0.2,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleRight: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 7.0,
+						preDelay: 0.14,
+						wet: 0.8
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.12,
+						depth: 0.6,
+						delayTime: 9.0,
+						feedback: 0.1
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 600,
+						Q: 0.4,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whaleSei: {
+			enabled: false,
+			volume: 0.6,
+			maxVoices: 1,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 8.5,
+						preDelay: 0.13,
+						wet: 0.75
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.1,
+						depth: 0.5,
+						delayTime: 7.0,
+						feedback: 0.08
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 500,
+						Q: 0.35,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		whalePilot: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 2,
+			useHighQuality: false, // Default to synthesis
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 6.5,
+						preDelay: 0.1,
+						wet: 0.7
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.15,
+						depth: 0.4,
+						delayTime: 5.0,
+						feedback: 0.07
+					}
+				},
+				filter: {
+					enabled: true,
+					params: {
+						frequency: 6000,
+						Q: 0.5,
 						type: 'lowpass'
 					}
 				}
@@ -1473,7 +1784,7 @@ export const INSTRUMENT_FAMILIES = {
 	vocals: ['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'],
 	percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
 	electronic: ['leadSynth', 'bassSynth', 'arpSynth'],
-	experimental: ['whaleHumpback'],
+	experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
 	pads: ['pad']
 } as const;
 
@@ -1718,10 +2029,65 @@ export const INSTRUMENT_INFO = {
 	},
 	// Phase 8B: Environmental & Natural Sounds
 	whaleHumpback: {
-		name: 'Humpback Whale',
+		name: 'Humpback whale (synthesis)',
 		icon: '🐋',
-		description: 'Authentic whale song recordings with oceanic processing and deep resonance',
+		description: 'Synthesized whale-like sounds with oceanic processing and deep resonance',
 		defaultFrequencyRange: 'Low-Mid (20-1000Hz)'
+	},
+	// High-quality whale species (real NOAA recordings, only available in high-quality mode)
+	whaleBlue: {
+		name: 'Blue whale',
+		icon: '🐋',
+		description: 'Authentic blue whale infrasonic calls from NOAA hydrophone recordings',
+		defaultFrequencyRange: 'Infrasonic (10-40Hz)'
+	},
+	whaleOrca: {
+		name: 'Orca whale',
+		icon: '🐋',
+		description: 'Authentic orca pod communications with clicks and calls',
+		defaultFrequencyRange: 'Wide Spectrum (500-25000Hz)'
+	},
+	whaleGray: {
+		name: 'Gray whale',
+		icon: '🐋',
+		description: 'Authentic gray whale migration calls from oceanic soundscape recordings',
+		defaultFrequencyRange: 'Low-Mid (100-2000Hz)'
+	},
+	whaleSperm: {
+		name: 'Sperm whale',
+		icon: '🐋',
+		description: 'Authentic sperm whale echolocation clicks from deep-sea recordings',
+		defaultFrequencyRange: 'Ultra-Wide (100-30000Hz)'
+	},
+	whaleMinke: {
+		name: 'Minke whale',
+		icon: '🐋',
+		description: 'Authentic Atlantic minke whale downsweeps from NOAA PMEL recordings',
+		defaultFrequencyRange: 'Infrasonic (35-50Hz)'
+	},
+	whaleFin: {
+		name: 'Fin whale',
+		icon: '🐋',
+		description: 'Authentic fin whale pulse sequences from NOAA Pennsylvania Group',
+		defaultFrequencyRange: 'Infrasonic (15-30Hz)'
+	},
+	whaleRight: {
+		name: 'Right whale',
+		icon: '🐋',
+		description: 'Authentic North Atlantic right whale upcalls from NOAA Fisheries',
+		defaultFrequencyRange: 'Low-Mid (50-500Hz)'
+	},
+	whaleSei: {
+		name: 'Sei whale',
+		icon: '🐋',
+		description: 'Authentic sei whale downsweeps from NOAA Pennsylvania Group',
+		defaultFrequencyRange: 'Mid (200-600Hz)'
+	},
+	whalePilot: {
+		name: 'Pilot whale',
+		icon: '🐋',
+		description: 'Authentic pilot whale multi-sound communications from NOAA Fisheries',
+		defaultFrequencyRange: 'Wide (300-8000Hz)'
 	}
 };
 

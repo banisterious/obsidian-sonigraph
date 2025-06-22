@@ -1,1557 +1,2427 @@
-import { App, Modal, Setting } from 'obsidian';
+import { App, Modal, Setting, Notice } from 'obsidian';
 import SonigraphPlugin from '../main';
-import { getLogger } from '../logging';
+import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
 import { HarmonicSettings } from '../audio/harmonic-engine';
 import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmartRanges, getParameterRange, INSTRUMENT_INFO } from '../utils/constants';
+import { TAB_CONFIGS, setLucideIcon, createLucideIcon, getFamilyIcon, getInstrumentIcon, getEffectIcon, LucideIconName } from './lucide-icons';
+import { MaterialCard, StatCard, InstrumentCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
+import { PlayButtonManager, PlayButtonState } from './play-button-manager';
+import { PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
 
 const logger = getLogger('control-panel');
 
-interface TabConfig {
-	id: string;
-	name: string;
-	icon: string;
-	description: string;
-}
-
-const TABS: TabConfig[] = [
-	{ id: 'status', name: 'Status', icon: 'activity', description: 'Real-time system status and diagnostics' },
-	{ id: 'instruments', name: 'Instruments', icon: 'piano', description: 'Manage voices and instrument assignments' },
-	{ id: 'music', name: 'Musical', icon: 'music', description: 'Configure scales, tempo, and musical parameters' },
-	{ id: 'harmony', name: 'Harmony', icon: 'sparkles', description: 'Advanced harmonic processing and chord settings' },
-	{ id: 'effects', name: 'Effects', icon: 'headphones', description: 'Audio effects and spatial processing' }
-];
-
-export class ControlPanelModal extends Modal {
+/**
+ * Sonigraph Control Center Modal
+ * Family-based tab structure with Material Design styling
+ */
+export class MaterialControlPanelModal extends Modal {
 	plugin: SonigraphPlugin;
 	private statusInterval: number | null = null;
 	private activeTab: string = 'status';
 	private tabContainer: HTMLElement;
 	private contentContainer: HTMLElement;
+	private appBar: HTMLElement;
+	private drawer: HTMLElement;
+	private playButton: HTMLElement;
+	private playButtonManager: PlayButtonManager;
 	private instrumentToggles: Map<string, HTMLElement> = new Map();
+	
+	// Phase 3: Progress indication elements
+	private progressElement: HTMLElement | null = null;
+	private progressText: HTMLElement | null = null;
+	private progressBar: HTMLElement | null = null;
+
+	// Issue #006 Fix: Store bound event handlers for proper cleanup
+	private boundEventHandlers: {
+		handlePlaybackStarted: () => void;
+		handlePlaybackEnded: () => void;
+		handlePlaybackStopped: () => void;
+		handlePlaybackError: (data?: PlaybackEventData) => void;
+		handleSequenceProgress: (data?: PlaybackEventData) => void;
+	} | null = null;
 
 	constructor(app: App, plugin: SonigraphPlugin) {
 		super(app);
 		this.plugin = plugin;
+		this.playButtonManager = new PlayButtonManager();
 	}
 
 	onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		logger.debug('ui', 'Opening Audio Control Center');
+		logger.debug('ui', 'Opening Sonigraph Control Center');
 
-		// Main modal container
-		const modalContainer = contentEl.createDiv({ cls: 'sonigraph-modal-container' });
+		// Add OSP-prefixed class to the modal
+		this.modalEl.addClass('osp-control-center-modal');
 
-		// Header
-		const header = modalContainer.createDiv({ cls: 'sonigraph-modal-header' });
+		// Issue #006 Fix: Reset play button manager state on open
+		if (this.playButtonManager) {
+			this.playButtonManager.forceReset();
+			logger.debug('ui', 'Play button manager state reset on modal open');
+		}
+
+		// Material Design CSS is loaded via styles.css
+
+		// Create modal structure
+		this.createModalContainer();
 		
-		// Header text section
-		const headerText = header.createDiv({ cls: 'sonigraph-modal-header-text' });
-		headerText.createEl('h1', { text: 'Sonigraph Audio Control Center', cls: 'sonigraph-modal-title' });
-		headerText.createEl('p', { text: 'Transform your knowledge graph into immersive soundscapes', cls: 'sonigraph-modal-subtitle' });
-		
-		// Quick playback controls in header
-		const headerControls = header.createDiv({ cls: 'sonigraph-modal-header-controls' });
-		this.createQuickPlaybackControls(headerControls);
-
-		// Main content area with sidebar
-		const mainContent = modalContainer.createDiv({ cls: 'sonigraph-modal-main' });
-
-		// Sidebar with vertical tabs
-		const sidebar = mainContent.createDiv({ cls: 'sonigraph-modal-sidebar' });
-		this.tabContainer = sidebar.createDiv({ cls: 'sonigraph-tab-container' });
-
-		// Content area
-		this.contentContainer = mainContent.createDiv({ cls: 'sonigraph-modal-content' });
-
-		// Create tabs
-		this.createTabs();
-
-		// Show initial tab
-		this.showTab(this.activeTab);
-
 		// Start status updates
 		this.startStatusUpdates();
-		
-
 	}
 
 	onClose() {
-		logger.debug('ui', 'Closing Audio Control Center');
+		logger.debug('ui', 'Closing Sonigraph Control Center');
 		this.stopStatusUpdates();
+		
+		// Enhanced Play Button: Cleanup audio engine event listeners
+		this.cleanupAudioEngineEventListeners();
+		
+		// Cleanup play button manager
+		if (this.playButtonManager) {
+			this.playButtonManager.dispose();
+		}
 	}
 
-	private createQuickPlaybackControls(container: HTMLElement): void {
-		// Quick test button (positioned first/leftmost)
-		const quickTestButton = container.createEl('button', {
-			cls: 'sonigraph-quick-control-button',
-			attr: { 'aria-label': 'Test Audio System' }
-		});
-		quickTestButton.innerHTML = this.getIconSvg('headphones');
+
+	/**
+	 * Create contained modal structure with sticky header
+	 */
+	private createModalContainer(): void {
+		const { contentEl } = this;
 		
-		// Quick play button
-		const quickPlayButton = container.createEl('button', {
-			cls: 'sonigraph-quick-control-button',
-			attr: { 'aria-label': 'Play Knowledge Graph' }
-		});
-		quickPlayButton.innerHTML = this.getIconSvg('play');
+		// Close button (positioned above header)
+		const closeButton = contentEl.createDiv({ cls: 'modal-close-button' });
+		closeButton.addEventListener('click', () => this.close());
 		
-		// Quick stop button
-		const quickStopButton = container.createEl('button', {
-			cls: 'sonigraph-quick-control-button',
-			attr: { 'aria-label': 'Stop Playback' }
-		});
-		quickStopButton.innerHTML = this.getIconSvg('stop');
-
-		// Play button event handler
-		quickPlayButton.addEventListener('click', async () => {
-			try {
-				quickPlayButton.disabled = true;
-				quickPlayButton.addClass('is-loading');
-				
-				logger.info('user-action', 'Quick play button clicked');
-				await this.plugin.processVault();
-				await this.plugin.playSequence();
-				
-				quickPlayButton.removeClass('is-loading');
-				quickPlayButton.addClass('is-playing');
-				logger.info('debug', 'Quick playback started successfully');
-				
-			} catch (error) {
-				logger.error('playback', 'Failed to start quick playback', error);
-				quickPlayButton.disabled = false;
-				quickPlayButton.removeClass('is-loading');
-				this.showError(error.message);
-			}
-		});
-
-		// Stop button event handler
-		quickStopButton.addEventListener('click', () => {
-			this.plugin.stopPlayback();
-			quickPlayButton.disabled = false;
-			quickPlayButton.removeClass('is-playing');
-			logger.info('user-action', 'Quick stop button clicked');
-		});
-
-		// Test button event handler
-		quickTestButton.addEventListener('click', async () => {
-			try {
-				logger.info('user-action', 'Quick test button clicked');
-				if (this.plugin.audioEngine) {
-					await this.plugin.audioEngine.playTestNote();
-				}
-			} catch (error) {
-				this.showError('Audio test failed: ' + error.message);
-			}
-		});
-
-		// Volume slider beneath the buttons
-		const volumeContainer = container.createDiv({ cls: 'sonigraph-volume-slider-container' });
-		const volumeLabel = volumeContainer.createEl('label', { text: 'Volume', cls: 'sonigraph-volume-label' });
-		const volumeSlider = volumeContainer.createEl('input', { type: 'range', cls: 'sonigraph-volume-slider' }) as HTMLInputElement;
-		volumeSlider.min = '0';
-		volumeSlider.max = '100';
-		volumeSlider.value = String(this.plugin.settings.volume);
-		volumeSlider.step = '1';
-		volumeSlider.style.width = '120px';
-		volumeSlider.addEventListener('input', async (e) => {
-			const value = Number((e.target as HTMLInputElement).value);
-			this.plugin.settings.volume = value;
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				this.plugin.audioEngine.updateVolume();
-			}
-		});
+		// Main modal container
+		const modalContainer = contentEl.createDiv({ cls: 'osp-modal-container' });
+		
+		// Sticky header
+		this.createStickyHeader(modalContainer);
+		
+		// Main content area with drawer and content
+		const mainContainer = modalContainer.createDiv({ cls: 'osp-main-container' });
+		
+		// Navigation drawer
+		this.createNavigationDrawer(mainContainer);
+		
+		// Content area
+		this.contentContainer = mainContainer.createDiv({ cls: 'osp-content-area' });
+		
+		// Show initial tab
+		this.showTab(this.activeTab);
 	}
 
-	private createTabs(): void {
-		TABS.forEach(tab => {
-			const tabElement = this.tabContainer.createDiv({ 
-				cls: `sonigraph-tab ${tab.id === this.activeTab ? 'active' : ''}`,
-				attr: { 'data-tab': tab.id }
+	/**
+	 * Create sticky header with title and action buttons
+	 */
+	private createStickyHeader(container: HTMLElement): void {
+		this.appBar = container.createDiv({ cls: 'osp-sticky-header' });
+		
+		// Title section
+		const titleSection = this.appBar.createDiv({ cls: 'osp-header-title' });
+		const titleIcon = createLucideIcon('music', 20);
+		titleSection.appendChild(titleIcon);
+		titleSection.appendText('Sonigraph Control Center');
+		
+		// Action buttons section
+		const actionsSection = this.appBar.createDiv({ cls: 'osp-header-actions' });
+		this.createHeaderActions(actionsSection);
+	}
+
+	/**
+	 * Create compact header action buttons
+	 */
+	private createHeaderActions(container: HTMLElement): void {
+		// Volume control
+		const volumeContainer = container.createDiv({ cls: 'osp-header-volume' });
+		const volumeIcon = createLucideIcon('volume-2', 14);
+		volumeContainer.appendChild(volumeIcon);
+		
+		const volumeSlider = new MaterialSlider({
+			value: this.plugin.settings.volume || 0.5,
+			min: 0,
+			max: 1,
+			step: 0.1,
+			unit: '',
+			className: 'osp-header-slider',
+			onChange: (value) => this.handleMasterVolumeChange(value)
+		});
+		volumeContainer.appendChild(volumeSlider.getElement());
+
+		// Play button (first)
+		const playBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--primary' });
+		this.playButton = playBtn; // Store reference for compatibility
+		
+		// Initialize enhanced play button manager
+		this.playButtonManager.initialize(playBtn);
+		
+		// Set up state change listener for logging
+		this.playButtonManager.onStateChange((state: PlayButtonState) => {
+			logger.debug('ui', `Play button state changed: ${state}`);
+		});
+		
+		// Enhanced Play Button: Connect to audio engine events
+		this.setupAudioEngineEventListeners();
+		
+		playBtn.addEventListener('click', () => this.handlePlay());
+
+		// Stop button (second)
+		const stopBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
+		const stopIcon = createLucideIcon('square', 16);
+		stopBtn.appendChild(stopIcon);
+		stopBtn.appendText('Stop');
+		stopBtn.addEventListener('click', () => this.handleStop());
+
+		// Pause button (third)
+		const pauseBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
+		const pauseIcon = createLucideIcon('pause', 16);
+		pauseBtn.appendChild(pauseIcon);
+		pauseBtn.appendText('Pause');
+		pauseBtn.addEventListener('click', () => this.handlePause());
+	}
+
+	/**
+	 * Create navigation drawer
+	 */
+	private createNavigationDrawer(container: HTMLElement): void {
+		this.drawer = container.createDiv({ cls: 'osp-drawer' });
+		
+		// Drawer header
+		const header = this.drawer.createDiv({ cls: 'osp-drawer__header' });
+		const headerTitle = header.createDiv({ cls: 'osp-drawer__title' });
+		headerTitle.textContent = 'Navigation';
+		
+		// Drawer content
+		const content = this.drawer.createDiv({ cls: 'osp-drawer__content' });
+		this.createNavigationList(content);
+	}
+
+	/**
+	 * Create navigation list with family-based tabs
+	 */
+	private createNavigationList(container: HTMLElement): void {
+		const list = container.createEl('ul', { cls: 'osp-nav-list' });
+		
+		TAB_CONFIGS.forEach((tabConfig, index) => {
+			const listItem = list.createEl('li', { 
+				cls: `osp-nav-item ${tabConfig.id === this.activeTab ? 'osp-nav-item--active' : ''}` 
 			});
-
-			// Tab icon
-			const icon = tabElement.createDiv({ cls: 'sonigraph-tab-icon' });
-			icon.innerHTML = this.getIconSvg(tab.icon);
-
-			// Tab content
-			const content = tabElement.createDiv({ cls: 'sonigraph-tab-content' });
-			content.createEl('div', { text: tab.name, cls: 'sonigraph-tab-name' });
-			content.createEl('div', { text: tab.description, cls: 'sonigraph-tab-desc' });
-
+			listItem.setAttribute('data-tab', tabConfig.id);
+			
+			// Icon
+			const graphic = listItem.createDiv({ cls: 'osp-nav-item__icon' });
+			setLucideIcon(graphic, tabConfig.icon as LucideIconName, 20);
+			
+			// Text
+			const text = listItem.createDiv({ cls: 'osp-nav-item__text' });
+			text.textContent = tabConfig.name;
+			
+			// Meta (instrument count for family tabs)
+			// Only show counts for family tabs (exclude status, musical, master)
+			if (!['status', 'musical', 'master'].includes(tabConfig.id)) {
+				const meta = listItem.createDiv({ cls: 'osp-nav-item__meta' });
+				const enabledCount = this.getEnabledCount(tabConfig.id);
+				const totalCount = this.getTotalCount(tabConfig.id);
+				meta.textContent = `${enabledCount}/${totalCount}`;
+			}
+			
+			// Add divider after master tab
+			if (tabConfig.id === 'master') {
+				const divider = container.createDiv({ cls: 'osp-nav-divider' });
+			}
+			
 			// Click handler
-			tabElement.addEventListener('click', () => {
-				this.setActiveTab(tab.id);
+			listItem.addEventListener('click', () => {
+				this.switchTab(tabConfig.id);
 			});
 		});
 	}
 
-	private setActiveTab(tabId: string): void {
-		// Update tab appearance
-		this.tabContainer.querySelectorAll('.sonigraph-tab').forEach(tab => {
-			tab.removeClass('active');
+	/**
+	 * Update navigation counts without rebuilding the entire drawer
+	 */
+	private updateNavigationCounts(): void {
+		this.drawer.querySelectorAll('.osp-nav-item').forEach(item => {
+			const tabId = item.getAttribute('data-tab');
+			if (tabId) {
+				const tabConfig = TAB_CONFIGS.find(config => config.id === tabId);
+				// Only update counts for family tabs (exclude status, musical, master)
+				if (tabConfig && !['status', 'musical', 'master'].includes(tabId)) {
+					const metaElement = item.querySelector('.osp-nav-item__meta');
+					if (metaElement) {
+						const enabledCount = this.getEnabledCount(tabId);
+						const totalCount = this.getTotalCount(tabId);
+						metaElement.textContent = `${enabledCount}/${totalCount}`;
+					}
+				}
+			}
 		});
-		this.tabContainer.querySelector(`[data-tab="${tabId}"]`)?.addClass('active');
+	}
 
+	/**
+	 * Switch to a different tab
+	 */
+	private switchTab(tabId: string): void {
+		// Update active state in navigation
+		this.drawer.querySelectorAll('.osp-nav-item').forEach(item => {
+			item.classList.remove('osp-nav-item--active');
+		});
+		
+		const activeItem = this.drawer.querySelector(`[data-tab="${tabId}"]`);
+		if (activeItem) {
+			activeItem.classList.add('osp-nav-item--active');
+		}
+		
+		// Update active tab and show content
 		this.activeTab = tabId;
 		this.showTab(tabId);
 	}
 
+	/**
+	 * Show content for the specified tab
+	 */
 	private showTab(tabId: string): void {
 		this.contentContainer.empty();
-
+		
 		switch (tabId) {
-			case 'instruments':
-				this.createInstrumentsTab();
-				break;
-			case 'music':
-				this.createMusicalTab();
-				break;
-			case 'harmony':
-				this.createHarmonyTab();
-				break;
-			case 'effects':
-				this.createEffectsTab();
-				break;
 			case 'status':
 				this.createStatusTab();
 				break;
+			case 'musical':
+				this.createMusicalTab();
+				break;
+			case 'master':
+				this.createMasterTab();
+				break;
+			case 'strings':
+			case 'woodwinds':
+			case 'brass':
+			case 'vocals':
+			case 'percussion':
+			case 'electronic':
+			case 'experimental':
+				this.createFamilyTab(tabId);
+				break;
+			default:
+				this.createPlaceholderTab(tabId);
 		}
 	}
 
-	private createMusicalTab(): void {
-		const section = this.createTabSection('Musical parameters', 'Configure scales, tempo, and musical characteristics');
-
-		// Scale and key settings
-		const scaleGroup = this.createSettingsGroup(section, 'Scale & key', 'Define the musical foundation');
-
-		new Setting(scaleGroup)
-			.setName('Musical scale')
-			.setDesc('The scale pattern used for pitch mapping')
-			.addDropdown(dropdown => dropdown
-				.addOption('major', 'Major (Happy, bright)')
-				.addOption('minor', 'Minor (Melancholic, introspective)')
-				.addOption('pentatonic', 'Pentatonic (Asian, simple)')
-				.addOption('chromatic', 'Chromatic (All notes, complex)')
-				.setValue(this.plugin.settings.scale)
-				.onChange(async (value) => {
-					this.plugin.settings.scale = value as any;
-					await this.plugin.saveSettings();
-					this.updateMusicalMapper();
-				}));
-
-		new Setting(scaleGroup)
-			.setName('Root note')
-			.setDesc('The fundamental note that defines the key')
-			.addDropdown(dropdown => {
-				const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-				notes.forEach(note => dropdown.addOption(note, note));
-				return dropdown
-					.setValue(this.plugin.settings.rootNote)
-					.onChange(async (value) => {
-						this.plugin.settings.rootNote = value;
-						await this.plugin.saveSettings();
-						this.updateMusicalMapper();
-					});
-			});
-
-		// Timing and dynamics
-		const timingGroup = this.createSettingsGroup(section, 'Timing & dynamics', 'Control rhythm and energy');
-
-		new Setting(timingGroup)
-			.setName('Tempo')
-			.setDesc('Musical speed in beats per minute')
-			.addSlider(slider => slider
-				.setLimits(40, 200, 5)
-				.setValue(this.plugin.settings.tempo)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.tempo = value;
-					await this.plugin.saveSettings();
-					this.updateMusicalMapper();
-				}));
-
-		new Setting(timingGroup)
-			.setName('Master volume')
-			.setDesc('Overall audio output level')
-			.addSlider(slider => slider
-				.setLimits(0, 100, 1)
-				.setValue(this.plugin.settings.volume)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.volume = value;
-					await this.plugin.saveSettings();
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateSettings(this.plugin.settings);
-					}
-				}));
+	/**
+	 * Create Status tab content
+	 */
+	private createStatusTab(): void {
+		// Active Instruments Card
+		this.createActiveInstrumentsCard();
+		
+		// Performance Metrics Card
+		this.createPerformanceMetricsCard();
+		
+		// Audio System Status Card
+		this.createAudioSystemCard();
+		
+		// Global Settings Card (moved from Master tab)
+		this.createGlobalSettingsCard();
+		
+		// Logging Card
+		this.createLoggingCard();
 	}
 
-	private createInstrumentsTab(): void {
-		const section = this.createTabSection('Instrument configuration', 'Manage voices and instrument assignments');
-
-		// Voice assignment strategy
-		const assignmentGroup = this.createSettingsGroup(section, 'Voice assignment strategy', 'How instruments are chosen for notes');
-
-		new Setting(assignmentGroup)
-			.setName('Assignment strategy')
-			.setDesc('Method for assigning notes to instruments')
-			.addDropdown(dropdown => {
-				dropdown
-					.addOption('frequency', 'Frequency-Based (Automatic)')
-					.addOption('round-robin', 'Round-Robin (Cycling)')
-					.addOption('connection-based', 'Connection-Based (Graph)')
-					.setValue(this.plugin.settings.voiceAssignmentStrategy)
-					.onChange(async (value: 'frequency' | 'round-robin' | 'connection-based') => {
-						this.plugin.settings.voiceAssignmentStrategy = value;
-						await this.plugin.saveSettings();
-						this.updateAssignmentStrategyInfo();
-					});
-			});
-
-		// Strategy description area
-		const strategyInfo = assignmentGroup.createDiv({ 
-			cls: 'sonigraph-strategy-info',
-			attr: { id: 'sonigraph-strategy-info' }
+	private createActiveInstrumentsCard(): void {
+		const card = new MaterialCard({
+			title: 'Active instruments',
+			iconName: 'music',
+			subtitle: 'Currently enabled instruments and their status',
+			elevation: 1
 		});
-		this.updateAssignmentStrategyInfo();
 
-		// Real-time voice activity monitor
-		const activityGroup = this.createSettingsGroup(section, 'Live voice activity', 'Real-time instrument usage monitoring');
-		const activityDisplay = activityGroup.createDiv({ cls: 'sonigraph-voice-activity' });
-
-		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
-		const instrumentKeys = Object.keys(this.plugin.settings.instruments);
-		// Debug: Check for piano duplicates
-		const pianoCount = instrumentKeys.filter(key => key.includes('piano')).length;
-		if (pianoCount > 1) {
-			console.error('DUPLICATE PIANO ISSUE:', instrumentKeys.filter(key => key.includes('piano')));
+		const content = card.getContent();
+		const enabledInstruments = this.getEnabledInstrumentsList();
+		
+		if (enabledInstruments.length === 0) {
+			content.createDiv({ 
+				text: 'No instruments currently enabled', 
+				cls: 'osp-status-empty' 
+			});
+		} else {
+			enabledInstruments.forEach(instrument => {
+				const instrumentRow = content.createDiv({ cls: 'osp-instrument-status-row' });
+				
+				const icon = createLucideIcon('music', 16);
+				instrumentRow.appendChild(icon);
+				
+				const name = instrumentRow.createSpan({ cls: 'osp-instrument-name' });
+				name.textContent = this.capitalizeWords(instrument.name);
+				
+				const status = instrumentRow.createSpan({ cls: 'osp-instrument-voices' });
+				status.textContent = `${instrument.activeVoices}/${instrument.maxVoices} voices`;
+			});
 		}
-		instrumentKeys.forEach(instrumentKey => {
-			const info = this.getInstrumentInfo(instrumentKey);
-			const activityRow = activityDisplay.createDiv({ cls: 'sonigraph-activity-row' });
-			
-			const label = activityRow.createDiv({ cls: 'sonigraph-activity-label' });
-			label.createSpan({ text: info.icon, cls: 'sonigraph-activity-icon' });
-			label.createSpan({ text: info.name, cls: 'sonigraph-activity-name' });
-			
-			const voices = activityRow.createDiv({ cls: 'sonigraph-activity-voices' });
-			// Use maxVoices from instrument settings
-			const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
-			const maxVoices = instrumentSettings?.maxVoices || 8;
-			for (let i = 0; i < maxVoices; i++) {
-				voices.createDiv({ 
-					cls: 'sonigraph-voice-indicator',
-					attr: { id: `voice-${instrumentKey}-${i}` }
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private createPerformanceMetricsCard(): void {
+		const card = new MaterialCard({
+			title: 'Performance metrics',
+			iconName: 'zap',
+			subtitle: 'Real-time system performance metrics',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		
+		// Get current status from plugin
+		const status = this.plugin.getStatus();
+		
+		// Compact stats row
+		const statsRow = content.createDiv({ cls: 'osp-stats-row' });
+		
+		const cpuStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
+		cpuStat.innerHTML = `
+			<span class="osp-stat-value">12%</span>
+			<span class="osp-stat-label">CPU</span>
+		`;
+		
+		const voicesStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
+		voicesStat.innerHTML = `
+			<span class="osp-stat-value">${status.audio.currentNotes || 0}</span>
+			<span class="osp-stat-label">Voices</span>
+		`;
+		
+		const contextStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
+		const contextValue = status.audio.audioContext || 'Suspended';
+		const contextColor = contextValue === 'running' ? 'var(--text-success)' : 'var(--text-warning)';
+		contextStat.innerHTML = `
+			<span class="osp-stat-value" style="color: ${contextColor}">${contextValue}</span>
+			<span class="osp-stat-label">Context</span>
+		`;
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private audioModeValueElement: HTMLElement | null = null;
+
+	private createAudioSystemCard(): void {
+		const card = new MaterialCard({
+			title: 'Audio system',
+			iconName: 'settings',
+			subtitle: 'Current audio configuration and settings',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		
+		// High Quality Samples Setting (moved from Global Settings)
+		createObsidianToggle(
+			content,
+			this.plugin.settings.useHighQualitySamples,
+			(enabled) => this.handleHighQualitySamplesChange(enabled),
+			{
+				name: 'Use high quality samples',
+				description: 'Load professional audio recordings when available (19/34 instruments). Uses built-in synthesis for remaining instruments. Audio format chosen automatically.'
+			}
+		);
+		
+		const systemInfo = content.createDiv({ cls: 'osp-system-info' });
+		systemInfo.style.marginTop = 'var(--md-space-4)';
+
+		// Audio format status
+		const formatRow = systemInfo.createDiv({ cls: 'osp-info-row' });
+		formatRow.createSpan({ text: 'Audio mode:', cls: 'osp-info-label' });
+		this.audioModeValueElement = formatRow.createSpan({ 
+			text: this.plugin.settings.useHighQualitySamples ? 'High quality samples' : 'Synthesis only', 
+			cls: 'osp-info-value' 
+		});
+
+		// Sample rate (mock for now)
+		const sampleRateRow = systemInfo.createDiv({ cls: 'osp-info-row' });
+		sampleRateRow.createSpan({ text: 'Sample rate:', cls: 'osp-info-label' });
+		sampleRateRow.createSpan({ text: '44.1 kHz', cls: 'osp-info-value' });
+
+		// Buffer size (mock for now)
+		const bufferRow = systemInfo.createDiv({ cls: 'osp-info-row' });
+		bufferRow.createSpan({ text: 'Buffer size:', cls: 'osp-info-label' });
+		bufferRow.createSpan({ text: '256 samples', cls: 'osp-info-value' });
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private getEnabledInstrumentsList(): Array<{name: string, activeVoices: number, maxVoices: number}> {
+		const enabled: Array<{name: string, activeVoices: number, maxVoices: number}> = [];
+		
+		Object.entries(this.plugin.settings.instruments).forEach(([key, settings]) => {
+			if (settings.enabled) {
+				enabled.push({
+					name: key,
+					activeVoices: this.getInstrumentActiveVoices(key),
+					maxVoices: settings.maxVoices
 				});
 			}
-			
-			const count = activityRow.createDiv({ 
-				cls: 'sonigraph-activity-count',
-				text: `0/${maxVoices}`,
-				attr: { id: `count-${instrumentKey}` }
-			});
+		});
+		
+		return enabled;
+	}
+
+	/**
+	 * Create Musical tab content
+	 */
+	private createMusicalTab(): void {
+		// Scale & Key Settings Card
+		this.createScaleKeyCard();
+		
+		// Tempo & Timing Card
+		this.createTempoTimingCard();
+		
+		// Master Tuning Card
+		this.createMasterTuningCard();
+	}
+
+	private createScaleKeyCard(): void {
+		const card = new MaterialCard({
+			title: 'Scale & key',
+			iconName: 'music',
+			subtitle: 'Musical scale and key signature settings',
+			elevation: 1
 		});
 
-		// Individual instrument controls
-		const instrumentsGroup = this.createSettingsGroup(section, 'Individual instrument controls', 'Configure each instrument separately');
+		const content = card.getContent();
+		const settingsGrid = createGrid('2-col');
 
-		// Updated for Phase 8B: All 34 instruments including orchestral, electronic, and environmental sounds
-		Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
-			// Check if instrument exists in settings - skip if missing
-			const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
-			if (!instrumentSettings) {
-				console.warn(`Instrument ${instrumentKey} not found in settings - skipping`);
-				return;
+		// Scale selection
+		const scaleGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
+		scaleGroup.createEl('label', { text: 'Musical scale', cls: 'osp-control-label' });
+		const scaleSelect = scaleGroup.createEl('select', { cls: 'osp-select' });
+		['Major', 'Minor', 'Dorian', 'Mixolydian', 'Pentatonic'].forEach(scale => {
+			const option = scaleSelect.createEl('option', { value: scale.toLowerCase(), text: scale });
+			if (scale === 'Major') option.selected = true;
+		});
+
+		// Key selection
+		const keyGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
+		keyGroup.createEl('label', { text: 'Key signature', cls: 'osp-control-label' });
+		const keySelect = keyGroup.createEl('select', { cls: 'osp-select' });
+		['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(key => {
+			const option = keySelect.createEl('option', { value: key, text: key });
+			if (key === 'C') option.selected = true;
+		});
+
+		content.appendChild(settingsGrid);
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private createTempoTimingCard(): void {
+		const card = new MaterialCard({
+			title: 'Tempo & timing',
+			iconName: 'clock',
+			subtitle: 'Playback speed and timing controls',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Tempo slider
+		const tempoGroup = content.createDiv({ cls: 'osp-control-group' });
+		tempoGroup.createEl('label', { text: 'Tempo (BPM)', cls: 'osp-control-label' });
+		
+		const tempoSlider = new MaterialSlider({
+			value: 120,
+			min: 60,
+			max: 200,
+			step: 5,
+			unit: ' BPM',
+			onChange: (value) => this.handleTempoChange(value)
+		});
+		tempoGroup.appendChild(tempoSlider.getElement());
+
+		// Note duration slider
+		const durationGroup = content.createDiv({ cls: 'osp-control-group' });
+		durationGroup.createEl('label', { text: 'Note duration', cls: 'osp-control-label' });
+		
+		const durationSlider = new MaterialSlider({
+			value: 0.5,
+			min: 0.1,
+			max: 2.0,
+			step: 0.1,
+			unit: 's',
+			onChange: (value) => this.handleNoteDurationChange(value)
+		});
+		durationGroup.appendChild(durationSlider.getElement());
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private createMasterTuningCard(): void {
+		const card = new MaterialCard({
+			title: 'Master tuning',
+			iconName: 'settings',
+			subtitle: 'Global tuning and harmonic settings',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// A440 tuning
+		const tuningGroup = content.createDiv({ cls: 'osp-control-group' });
+		tuningGroup.createEl('label', { text: 'Concert pitch (A4)', cls: 'osp-control-label' });
+		
+		const tuningSlider = new MaterialSlider({
+			value: 440,
+			min: 415,
+			max: 466,
+			step: 1,
+			
+			unit: ' Hz',
+			displayValue: '440 Hz',
+			onChange: (value) => this.handleTuningChange(value)
+		});
+		tuningGroup.appendChild(tuningSlider.getElement());
+
+		// Microtuning toggle - using grid layout like instrument toggles
+		const microtuningGroup = content.createDiv({ cls: 'control-group control-group--toggle' });
+		const microtuningLabel = microtuningGroup.createEl('label', { cls: 'control-label' });
+		microtuningLabel.textContent = 'Enable microtuning';
+		
+		const controlWrapper = microtuningGroup.createDiv({ cls: 'control-wrapper' });
+		const switchContainer = controlWrapper.createDiv({ cls: 'ospcc-switch' });
+		switchContainer.setAttribute('title', 'Toggle microtuning precision on/off');
+		
+		const microtuningToggle = switchContainer.createEl('input', { 
+			type: 'checkbox', 
+			cls: 'ospcc-switch__input' 
+		}) as HTMLInputElement;
+		microtuningToggle.checked = this.plugin.settings.microtuning ?? false;
+		microtuningToggle.addEventListener('change', () => {
+			logger.debug('ui', 'Microtuning toggle changed', { enabled: microtuningToggle.checked });
+			this.handleMicrotuningChange(microtuningToggle.checked);
+		});
+		
+		const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		
+		// Make the entire switch container clickable
+		switchContainer.addEventListener('click', (e) => {
+			if (e.target !== microtuningToggle) {
+				e.preventDefault();
+				microtuningToggle.checked = !microtuningToggle.checked;
+				microtuningToggle.dispatchEvent(new Event('change'));
 			}
-			
-			const info = this.getInstrumentInfo(instrumentKey);
-			const instrumentContainer = instrumentsGroup.createDiv({ cls: 'sonigraph-instrument-control' });
-			
-			// Capture this reference for callbacks
-			const self = this;
-			
-			// Header with icon and name
-			const header = instrumentContainer.createDiv({ cls: 'sonigraph-instrument-header' });
-			header.createSpan({ text: info.icon, cls: 'sonigraph-instrument-icon' });
-			header.createSpan({ text: info.name, cls: 'sonigraph-instrument-name' });
-			
+		});
 
-			// Enable/disable toggle - each toggle gets its own updating flag
-			const toggle = createObsidianToggle(
-				instrumentContainer,
-				instrumentSettings.enabled,
-				async (value) => {
-					logger.debug('ui', 'Instrument toggle changed', { 
-						instrumentKey, 
-						instrumentName: info.name, 
-						value, 
-						checked: (toggle as HTMLInputElement).checked,
-						containerClasses: toggle.parentElement?.className 
-					});
-					
-					(self.plugin.settings.instruments as any)[instrumentKey].enabled = value;
-					await self.plugin.saveSettings();
-					await self.updateInstrumentState(instrumentKey, value);
-					
-					// Show/hide instrument controls based on enabled state
-					controlsContainer.style.display = value ? 'block' : 'none';
-					
-					// Verify UI state after update
-					logger.debug('ui', 'Instrument state updated', { 
-						instrumentKey, 
-						checked: (toggle as HTMLInputElement).checked,
-						containerClasses: toggle.parentElement?.className 
-					});
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	// Musical parameter handlers
+	private handleTempoChange(tempo: number): void {
+		logger.info('musical', `Tempo changed to ${tempo} BPM`);
+		// Update plugin settings
+	}
+
+	private handleNoteDurationChange(duration: number): void {
+		logger.info('musical', `Note duration changed to ${duration}s`);
+		// Update plugin settings
+	}
+
+	private handleTuningChange(frequency: number): void {
+		logger.info('musical', `Concert pitch changed to ${frequency} Hz`);
+		// Update plugin settings
+	}
+
+	private handleMicrotuningChange(enabled: boolean): void {
+		logger.info('musical', `Microtuning ${enabled ? 'enabled' : 'disabled'}`);
+		// Update plugin settings
+		this.plugin.settings.microtuning = enabled;
+		this.plugin.saveSettings();
+	}
+	
+	private handleMasterEffectEnabledChange(effectName: string, enabled: boolean): void {
+		logger.info('effects', `Master effect ${effectName} ${enabled ? 'enabled' : 'disabled'}`);
+		// Initialize effects settings if not present
+		if (!this.plugin.settings.effects) {
+			this.plugin.settings.effects = {};
+		}
+		if (!this.plugin.settings.effects[effectName]) {
+			this.plugin.settings.effects[effectName] = { enabled: false };
+		}
+		this.plugin.settings.effects[effectName].enabled = enabled;
+		this.plugin.saveSettings();
+	}
+	
+	private handleMasterEffectChange(effectName: string, paramName: string, value: number): void {
+		logger.debug('effects', `Master effect ${effectName} ${paramName} changed to ${value}`);
+		// Initialize effects settings if not present
+		if (!this.plugin.settings.effects) {
+			this.plugin.settings.effects = {};
+		}
+		if (!this.plugin.settings.effects[effectName]) {
+			this.plugin.settings.effects[effectName] = { enabled: false };
+		}
+		this.plugin.settings.effects[effectName][paramName] = value;
+		this.plugin.saveSettings();
+	}
+
+	private handleHighQualitySamplesChange(enabled: boolean): void {
+		logger.info('settings', `High quality samples setting changed to ${enabled}`);
+		this.plugin.settings.useHighQualitySamples = enabled;
+		this.plugin.saveSettings();
+		
+		// Update audio engine with new sample setting
+		if (this.plugin.audioEngine) {
+			this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			logger.debug('ui', 'Audio engine settings updated after high quality samples change', { 
+				useHighQualitySamples: enabled,
+				action: 'high-quality-samples-change'
+			});
+		}
+		
+		// Immediately update the audio mode display text
+		if (this.audioModeValueElement) {
+			this.audioModeValueElement.textContent = enabled ? 'High quality samples' : 'Synthesis only';
+		}
+	}
+
+	private createGlobalSettingsCard(): void {
+		const globalCard = new MaterialCard({
+			title: 'Global settings',
+			iconName: 'settings',
+			subtitle: 'System configuration and bulk operations',
+			elevation: 1
+		});
+		
+		const globalContent = globalCard.getContent();
+
+		// Bulk Action Chips
+		const globalChipSet = globalContent.createDiv({ cls: 'ospcc-chip-set' });
+		
+		const enableAllChip = new ActionChip({
+			text: 'Enable All Instruments',
+			iconName: 'checkCircle',
+			onToggle: (selected) => this.handleGlobalAction('enableAll', selected)
+		});
+		
+		const resetAllChip = new ActionChip({
+			text: 'Reset All Settings',
+			iconName: 'reset',
+			onToggle: (selected) => this.handleGlobalAction('resetAll', selected)
+		});
+		
+		const optimizeChip = new ActionChip({
+			text: 'Optimize Performance',
+			iconName: 'zap',
+			onToggle: (selected) => this.handleGlobalAction('optimize', selected)
+		});
+		
+		globalChipSet.appendChild(enableAllChip.getElement());
+		globalChipSet.appendChild(resetAllChip.getElement());
+		globalChipSet.appendChild(optimizeChip.getElement());
+		
+		this.contentContainer.appendChild(globalCard.getElement());
+	}
+
+	private createLoggingCard(): void {
+		const loggingCard = new MaterialCard({
+			title: 'Logging',
+			iconName: 'file-text',
+			subtitle: 'Debug logging level and log export',
+			elevation: 1
+		});
+		
+		const loggingContent = loggingCard.getContent();
+		
+		// Logging Level Setting
+		const logLevelGroup = loggingContent.createDiv({ cls: 'osp-control-group' });
+		logLevelGroup.createEl('label', { text: 'Logging level', cls: 'osp-control-label' });
+		const logLevelSelect = logLevelGroup.createEl('select', { cls: 'osp-select' });
+		
+		const logLevelOptions = [
+			{ value: 'off', text: 'Off' },
+			{ value: 'error', text: 'Errors only' },
+			{ value: 'warn', text: 'Warnings' },
+			{ value: 'info', text: 'Info' },
+			{ value: 'debug', text: 'Debug' }
+		];
+		
+		logLevelOptions.forEach(option => {
+			const optionEl = logLevelSelect.createEl('option', { value: option.value, text: option.text });
+			if (option.value === LoggerFactory.getLogLevel()) optionEl.selected = true;
+		});
+		
+		logLevelSelect.addEventListener('change', async () => {
+			const newLevel = logLevelSelect.value as LogLevel;
+			LoggerFactory.setLogLevel(newLevel);
+			
+			// Save to plugin settings for persistence
+			await this.plugin.updateSettings({ logLevel: newLevel });
+			
+			logger.info('settings-change', 'Log level changed from Control Center', { 
+				level: newLevel,
+				persisted: true 
+			});
+		});
+		
+		// Export Logs Action Chip
+		const logChipSet = loggingContent.createDiv({ cls: 'ospcc-chip-set' });
+		logChipSet.style.marginTop = 'var(--md-space-4)';
+		
+		const exportLogsChip = new ActionChip({
+			text: 'Export logs',
+			iconName: 'download',
+			onToggle: (selected) => this.handleExportLogs(selected)
+		});
+		
+		logChipSet.appendChild(exportLogsChip.getElement());
+		
+		this.contentContainer.appendChild(loggingCard.getElement());
+	}
+
+	/**
+	 * Create Master tab content
+	 */
+	private createMasterTab(): void {
+		// Master Effects Card
+		const masterEffectsCard = new MaterialCard({
+			title: 'Master effects',
+			iconName: 'equalizer',
+			subtitle: 'Global orchestral processing',
+			elevation: 1
+		});
+		
+		const masterContent = masterEffectsCard.getContent();
+		
+		// Create horizontal effect sections with saved state
+		const effects = this.plugin.settings.effects || {};
+		
+		this.createHorizontalEffectSection(masterContent, 'Orchestral reverb hall', 'reverb', 
+			effects.orchestralreverbhall?.enabled ?? true, [
+			{ name: 'Hall size', value: effects.orchestralreverbhall?.hallsize ?? 0.8, min: 0, max: 1, step: 0.1, unit: '' },
+			{ name: 'Decay time', value: effects.orchestralreverbhall?.decaytime ?? 3.5, min: 0.5, max: 10, step: 0.1, unit: 's' }
+		]);
+		
+		this.createHorizontalEffectSection(masterContent, '3-band EQ', 'equalizer', 
+			effects['3bandeq']?.enabled ?? true, [
+			{ name: 'Bass boost', value: effects['3bandeq']?.bassboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' },
+			{ name: 'Treble boost', value: effects['3bandeq']?.trebleboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' }
+		]);
+		
+		this.createHorizontalEffectSection(masterContent, 'Dynamic compressor', 'compressor', 
+			effects.dynamiccompressor?.enabled ?? false, [
+			{ name: 'Threshold', value: effects.dynamiccompressor?.threshold ?? -20, min: -40, max: 0, step: 1, unit: 'dB' },
+			{ name: 'Ratio', value: effects.dynamiccompressor?.ratio ?? 4, min: 1, max: 20, step: 1, unit: ':1' }
+		]);
+		
+		// Performance Settings Card
+		const performanceCard = new MaterialCard({
+			title: 'Performance optimization',
+			iconName: 'zap',
+			subtitle: 'CPU monitoring and adaptive quality control',
+			elevation: 1
+		});
+		
+		const perfContent = performanceCard.getContent();
+		
+		// Compact stats row (similar to Status tab Performance card)
+		const perfStatsRow = perfContent.createDiv({ cls: 'osp-stats-row' });
+		
+		const cpuStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
+		cpuStat.innerHTML = `
+			<span class="osp-stat-value">23%</span>
+			<span class="osp-stat-label">CPU usage</span>
+		`;
+		
+		const voicesStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
+		voicesStat.innerHTML = `
+			<span class="osp-stat-value">47/128</span>
+			<span class="osp-stat-label">Voices</span>
+		`;
+		
+		const qualityStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
+		qualityStat.innerHTML = `
+			<span class="osp-stat-value" style="color: var(--color-green)">High</span>
+			<span class="osp-stat-label">Audio quality</span>
+		`;
+		
+		this.contentContainer.appendChild(masterEffectsCard.getElement());
+		this.contentContainer.appendChild(performanceCard.getElement());
+	}
+
+
+	/**
+	 * Create horizontal effect section for Master Effects
+	 */
+	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: any[]): void {
+		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
+		
+		// Header with effect name and toggle
+		const header = section.createDiv({ cls: 'osp-effect-header-horizontal' });
+		
+		const titleArea = header.createDiv({ cls: 'osp-effect-title-area' });
+		const icon = createLucideIcon(iconName, 16);
+		titleArea.appendChild(icon);
+		titleArea.appendText(effectName);
+		
+		// Toggle switch
+		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
+		toggleContainer.setAttribute('title', `Toggle ${effectName} on/off`);
+		
+		const toggleInput = toggleContainer.createEl('input', { 
+			type: 'checkbox', 
+			cls: 'ospcc-switch__input' 
+		}) as HTMLInputElement;
+		toggleInput.checked = enabled;
+		toggleInput.addEventListener('change', () => {
+			logger.debug('ui', 'Master effect toggle changed', { effectName, enabled: toggleInput.checked });
+			this.handleMasterEffectEnabledChange(effectName.toLowerCase().replace(/\s+/g, ''), toggleInput.checked);
+		});
+		
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		
+		// Make the entire switch container clickable
+		toggleContainer.addEventListener('click', (e) => {
+			if (e.target !== toggleInput) {
+				e.preventDefault();
+				toggleInput.checked = !toggleInput.checked;
+				toggleInput.dispatchEvent(new Event('change'));
+			}
+		});
+		
+		// Parameters in horizontal layout
+		const paramsContainer = section.createDiv({ cls: 'osp-effect-params-horizontal' });
+		
+		parameters.forEach(param => {
+			const paramGroup = paramsContainer.createDiv({ cls: 'osp-param-group-horizontal' });
+			
+			const label = paramGroup.createDiv({ cls: 'osp-param-label' });
+			label.textContent = param.name;
+			
+			const sliderContainer = paramGroup.createDiv({ cls: 'osp-param-slider' });
+			const slider = new MaterialSlider({
+				value: param.value,
+				min: param.min,
+				max: param.max,
+				step: param.step,
+				unit: param.unit,
+				onChange: (value) => this.handleMasterEffectChange(effectName.toLowerCase().replace(/\s+/g, ''), param.name.toLowerCase().replace(/\s+/g, ''), value)
+			});
+			sliderContainer.appendChild(slider.getElement());
+		});
+	}
+
+	/**
+	 * Create family tab content (Strings, Woodwinds, etc.)
+	 */
+	private createFamilyTab(familyId: string): void {
+		const tabConfig = TAB_CONFIGS.find(tab => tab.id === familyId);
+		if (!tabConfig) return;
+		
+		// Family Overview Card
+		this.createFamilyOverviewCard(familyId, tabConfig);
+		
+		// Individual Instruments Card
+		this.createInstrumentsCard(familyId, tabConfig);
+		
+		// Special whale integration controls for experimental family
+		if (familyId === 'experimental') {
+			this.createWhaleIntegrationCard();
+		}
+		
+		// Family Effects Card
+		this.createFamilyEffectsCard(familyId, tabConfig);
+	}
+
+	/**
+	 * Create family overview card with stats and bulk actions
+	 */
+	private createFamilyOverviewCard(familyId: string, tabConfig: any): void {
+		const card = new MaterialCard({
+			title: `${tabConfig.name} family overview`,
+			iconName: getFamilyIcon(familyId),
+			subtitle: `${this.getEnabledCount(familyId)} of ${this.getTotalCount(familyId)} instruments enabled`,
+			elevation: 1
+		});
+		
+		const content = card.getContent();
+		
+		// Compact stats row
+		const statsRow = content.createDiv({ cls: 'osp-stats-row' });
+		
+		const enabledStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
+		enabledStat.innerHTML = `
+			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}</span>
+			<span class="osp-stat-label">Enabled</span>
+		`;
+		
+		const voicesStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
+		voicesStat.innerHTML = `
+			<span class="osp-stat-value">${this.getActiveVoices(familyId)}</span>
+			<span class="osp-stat-label">Voices</span>
+		`;
+		
+		const avgVolumeStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
+		avgVolumeStat.innerHTML = `
+			<span class="osp-stat-value">0.7</span>
+			<span class="osp-stat-label">Avg Vol</span>
+		`;
+		
+		// Compact bulk actions
+		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
+		
+		const enableAllBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--primary',
+			text: 'Enable All'
+		});
+		enableAllBtn.addEventListener('click', () => this.handleBulkAction(familyId, 'enableAll', true));
+		
+		const disableAllBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--secondary',
+			text: 'Disable All'
+		});
+		disableAllBtn.addEventListener('click', () => this.handleBulkAction(familyId, 'disableAll', true));
+		
+		const resetBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--secondary',
+			text: 'Reset'
+		});
+		resetBtn.addEventListener('click', () => this.handleBulkAction(familyId, 'resetVolumes', true));
+		
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create instruments card for family
+	 */
+	private createInstrumentsCard(familyId: string, tabConfig: any): void {
+		const card = new MaterialCard({
+			title: 'Individual instruments',
+			iconName: 'list',
+			subtitle: 'Configure instrument-specific settings',
+			elevation: 1
+		});
+		
+		const content = card.getContent();
+		
+		// Get instruments for this family
+		const instruments = this.getInstrumentsForFamily(familyId);
+		
+		instruments.forEach(instrument => {
+			const settings = this.plugin.settings.instruments?.[instrument as keyof typeof this.plugin.settings.instruments];
+			this.createHorizontalInstrumentSection(content, instrument, {
+				enabled: settings?.enabled || false,
+				volume: settings?.volume || 0.7,
+				maxVoices: settings?.maxVoices || 4,
+				activeVoices: this.getInstrumentActiveVoices(instrument)
+			});
+		});
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create whale integration card for experimental family
+	 */
+	private createWhaleIntegrationCard(): void {
+		const card = new MaterialCard({
+			title: 'Whale sound integration',
+			iconName: 'waves',
+			subtitle: 'High-quality external whale samples from marine research institutions',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Get whale integration status
+		const whaleIntegration = this.getWhaleIntegrationStatus();
+		
+		// Enable external whale samples toggle
+		createObsidianToggle(
+			content,
+			whaleIntegration.enabled,
+			(enabled) => this.handleWhaleIntegrationToggle(enabled),
+			{
+				name: 'Use external whale samples',
+				description: 'Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions'
+			}
+		);
+
+		// Status information section
+		const statusSection = content.createDiv({ cls: 'osp-whale-status' });
+		statusSection.style.marginTop = 'var(--md-space-4)';
+
+		// Sample collection status
+		const collectionRow = statusSection.createDiv({ cls: 'osp-info-row' });
+		collectionRow.createSpan({ text: 'Sample collection:', cls: 'osp-info-label' });
+		const collectionStatus = collectionRow.createSpan({ 
+			text: whaleIntegration.collectionStatus,
+			cls: 'osp-info-value' 
+		});
+
+		// Available species
+		const speciesRow = statusSection.createDiv({ cls: 'osp-info-row' });
+		speciesRow.createSpan({ text: 'Available species:', cls: 'osp-info-label' });
+		speciesRow.createSpan({ 
+			text: whaleIntegration.availableSpecies.join(', '),
+			cls: 'osp-info-value' 
+		});
+
+		// Sample sources
+		const sourcesRow = statusSection.createDiv({ cls: 'osp-info-row' });
+		sourcesRow.createSpan({ text: 'Sources:', cls: 'osp-info-label' });
+		sourcesRow.createSpan({ 
+			text: whaleIntegration.sources.join(', '),
+			cls: 'osp-info-value' 
+		});
+
+		// Action buttons section
+		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
+		actionsRow.style.marginTop = 'var(--md-space-4)';
+
+		// Preview random sample button
+		const previewBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--primary',
+			text: 'Preview sample'
+		});
+		previewBtn.addEventListener('click', () => this.handleWhalePreview());
+		
+		// View attribution info button
+		const attributionBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--secondary',
+			text: 'Attribution info'
+		});
+		attributionBtn.addEventListener('click', () => this.handleWhaleAttribution());
+
+		// Future: Manual discovery button (Phase 2)
+		const discoveryBtn = actionsRow.createEl('button', { 
+			cls: 'osp-action-btn osp-action-btn--secondary',
+			text: 'Find new samples'
+		});
+		discoveryBtn.disabled = true; // Disabled in Phase 1
+		discoveryBtn.title = 'Manual sample discovery coming in Phase 2';
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create family effects card
+	 */
+	private createFamilyEffectsCard(familyId: string, tabConfig: any): void {
+		const card = new MaterialCard({
+			title: `${tabConfig.name} effects`,
+			iconName: 'sliders-horizontal',
+			subtitle: 'Family-wide effect processing',
+			elevation: 1
+		});
+		
+		const content = card.getContent();
+		const effectsGrid = createGrid('3-col');
+		
+		// Reverb section
+		const reverbSection = new EffectSection({
+			effectName: 'Reverb',
+			iconName: 'reverb',
+			enabled: this.getFamilyEffectState(familyId, 'reverb'),
+			parameters: [
+				{
+					name: 'Decay Time',
+					value: 2.5,
+					min: 0.1,
+					max: 10,
+					step: 0.1,
+					unit: 's',
+					onChange: (value) => this.handleEffectParameterChange(familyId, 'reverb', 'decay', value)
 				},
 				{
-					name: `Enable ${info.name}`,
-					description: info.description
+					name: 'Wet Level',
+					value: 0.3,
+					min: 0,
+					max: 1,
+					step: 0.1,
+					unit: '',
+					onChange: (value) => this.handleEffectParameterChange(familyId, 'reverb', 'wet', value)
 				}
-			);
-			
-			// Store reference for programmatic updates
-			this.instrumentToggles.set(instrumentKey, toggle);
-			logger.debug('ui', 'Instrument toggle created', { instrumentKey, instrumentName: info.name });
-			
-			// Add click handler to the entire toggle container for debugging
-			instrumentContainer.addEventListener('click', (event) => {
-				logger.debug('ui', 'Instrument container clicked', { instrumentKey, instrumentName: info.name, target: event.target });
-			});
-			
-			// Container for instrument controls (volume, voices, frequency info)
-			const controlsContainer = instrumentContainer.createDiv({ cls: 'sonigraph-instrument-controls' });
-			// Initially show/hide based on current enabled state
-			controlsContainer.style.display = instrumentSettings.enabled ? 'block' : 'none';
-
-			// Volume control
-			new Setting(controlsContainer)
-				.setName('Volume')
-				.setDesc(`Individual volume for ${info.name.toLowerCase()} (0-100%)`)
-				.addSlider(slider => slider
-					.setLimits(0, 100, 5)
-					.setValue(Math.round(instrumentSettings.volume * 100))
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						(self.plugin.settings.instruments as any)[instrumentKey].volume = value / 100;
-						await self.plugin.saveSettings();
-						if (self.plugin.audioEngine) {
-							self.plugin.audioEngine.updateInstrumentVolume(instrumentKey, value / 100);
-						}
-					}));
-
-			// Max voices control
-			new Setting(controlsContainer)
-				.setName('Maximum voices')
-				.setDesc(`Voice limit for ${info.name.toLowerCase()} (1-16)`)
-				.addSlider(slider => slider
-					.setLimits(1, 16, 1)
-					.setValue(instrumentSettings.maxVoices)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						(self.plugin.settings.instruments as any)[instrumentKey].maxVoices = value;
-						await self.plugin.saveSettings();
-						if (self.plugin.audioEngine) {
-							self.plugin.audioEngine.updateInstrumentVoices(instrumentKey, value);
-						}
-					}));
-
-			// Frequency range info (for frequency-based strategy)
-			const rangeInfo = controlsContainer.createDiv({ cls: 'sonigraph-frequency-info' });
-			rangeInfo.createEl('small', { 
-				text: `Default range: ${info.defaultFrequencyRange}`,
-				cls: 'sonigraph-frequency-range'
-			});
+			],
+			onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, 'reverb', enabled)
 		});
+		
+		// Chorus section
+		const chorusSection = new EffectSection({
+			effectName: 'Chorus',
+			iconName: 'chorus',
+			enabled: this.getFamilyEffectState(familyId, 'chorus'),
+			parameters: [
+				{
+					name: 'Rate',
+					value: 1.5,
+					min: 0.1,
+					max: 10,
+					step: 0.1,
+					unit: 'Hz',
+					onChange: (value) => this.handleEffectParameterChange(familyId, 'chorus', 'frequency', value)
+				},
+				{
+					name: 'Depth',
+					value: 0.4,
+					min: 0,
+					max: 1,
+					step: 0.1,
+					unit: '',
+					onChange: (value) => this.handleEffectParameterChange(familyId, 'chorus', 'depth', value)
+				}
+			],
+			onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, 'chorus', enabled)
+		});
+		
+		// Filter section
+		const filterSection = new EffectSection({
+			effectName: 'Filter',
+			iconName: 'filter',
+			enabled: false,
+			parameters: [
+				{
+					name: 'Frequency',
+					value: 800,
+					min: 20,
+					max: 20000,
+					step: 10,
+					unit: 'Hz',
+					onChange: (value) => this.handleEffectParameterChange(familyId, 'filter', 'frequency', value)
+				},
+				{
+					name: 'Resonance',
+					value: 1.0,
+					min: 0.1,
+					max: 30,
+					step: 0.1,
+					unit: '',
+					onChange: (value) => this.handleEffectParameterChange(familyId, 'filter', 'Q', value)
+				}
+			],
+			onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, 'filter', enabled)
+		});
+		
+		effectsGrid.appendChild(reverbSection.getElement());
+		effectsGrid.appendChild(chorusSection.getElement());
+		effectsGrid.appendChild(filterSection.getElement());
+		
+		content.appendChild(effectsGrid);
+		this.contentContainer.appendChild(card.getElement());
 	}
 
-	private updateAssignmentStrategyInfo(): void {
-		const strategyInfo = document.getElementById('sonigraph-strategy-info');
-		if (!strategyInfo) return;
+	/**
+	 * Create placeholder tab for future implementation
+	 */
+	private createPlaceholderTab(tabId: string): void {
+		const tabConfig = TAB_CONFIGS.find(tab => tab.id === tabId);
+		const card = this.createCard(
+			tabConfig?.name || 'Tab', 
+			tabConfig?.icon as LucideIconName || 'settings', 
+			'This tab is under development'
+		);
+		
+		const content = card.querySelector('.ospcc-card__content') as HTMLElement;
+		content.textContent = `${tabConfig?.name || 'This'} tab functionality will be implemented soon...`;
+		
+		this.contentContainer.appendChild(card);
+	}
 
-		strategyInfo.empty();
+	/**
+	 * Utility method to create basic cards for simple tabs
+	 */
+	private createCard(title: string, iconName: LucideIconName, subtitle: string): HTMLElement {
+		const card = new MaterialCard({
+			title,
+			iconName,
+			subtitle,
+			elevation: 1
+		});
 		
-		const strategy = this.plugin.settings.voiceAssignmentStrategy;
-		const infoBox = strategyInfo.createDiv({ cls: 'sonigraph-info-box' });
+		return card.getElement();
+	}
+
+
+	// Utility methods
+	private getEnabledCount(familyId: string): number {
+		const instruments = this.getInstrumentsForFamily(familyId);
+		const enabledInstruments = instruments.filter(inst => {
+			const settings = this.plugin.settings.instruments?.[inst as keyof typeof this.plugin.settings.instruments];
+			const isEnabled = settings?.enabled;
+			
+			// Debug logging for troubleshooting specific families
+			if (familyId === 'strings' || familyId === 'woodwinds') {
+				logger.debug('ui', 'Checking family instrument enabled state', { 
+					familyId,
+					instrument: inst, 
+					hasSettings: !!settings, 
+					isEnabled: isEnabled,
+					action: 'count-enabled-instruments'
+				});
+			}
+			
+			return isEnabled;
+		});
 		
-		const instrumentCount = Object.keys(this.plugin.settings.instruments).length;
-		switch (strategy) {
-			case 'frequency':
-				infoBox.createEl('h4', { text: `Frequency-Based Assignment (${instrumentCount} Instruments)` });
-				infoBox.createEl('p', { text: 'Ultra High (>1600Hz) → 🎺 Flute, 🎵 Xylophone' });
-				infoBox.createEl('p', { text: 'Very High (1400-1600Hz) → 🎹 Piano, 🔔 Celesta' });
-				infoBox.createEl('p', { text: 'High-Mid (800-1200Hz) → 👩‍🎤 Soprano, 🎵 Clarinet, 🎻 Violin, 🎺 Oboe' });
-				infoBox.createEl('p', { text: 'High (1000-1400Hz) → 🎤 Choir, 🎙️ Alto, 🎼 Vibraphone' });
-				infoBox.createEl('p', { text: 'Mid-High (600-1000Hz) → 🌊 Vocal Pads, 🧑‍🎤 Tenor, 🎸 Guitar' });
-				infoBox.createEl('p', { text: 'Medium (400-800Hz) → 🎛️ Organ, 🎺 French Horn, 🪗 Accordion' });
-				infoBox.createEl('p', { text: 'Mid-Low (300-600Hz) → 🎷 Saxophone, 🎺 Trumpet, 🎼 Harpsichord' });
-				infoBox.createEl('p', { text: 'Low-Med (200-400Hz) → 🎛️ Pad, 🎻 Cello, 🎺 Trombone, 🎹 Electric Piano' });
-				infoBox.createEl('p', { text: 'Low (100-200Hz) → 🎻 Strings, 🎵 Harp, 🥁 Timpani, 🎛️ Bass Synth' });
-				infoBox.createEl('p', { text: 'Very Low (<100Hz) → 🎤 Bass, 🎺 Tuba, 🥁 Gongs, 🐋 Whale Song' });
-				infoBox.createEl('p', { text: 'Variable Range → 🎛️ Lead Synth, 🎛️ Arp Synth (pattern-dependent)' });
-				break;
-			case 'round-robin':
-				infoBox.createEl('h4', { text: `Round-Robin Assignment (${instrumentCount} Instruments)` });
-				infoBox.createEl('p', { text: 'Cycles through all enabled instruments in order' });
-				infoBox.createEl('p', { text: 'Ensures equal distribution across all orchestral families: keyboard, vocal, strings, brass, woodwinds, percussion, electronic, and environmental instruments' });
-				break;
-			case 'connection-based':
-				infoBox.createEl('h4', { text: `Connection-Based Assignment (${instrumentCount} Instruments)` });
-				infoBox.createEl('p', { text: 'Highly connected nodes → Piano, Flute, Lead Synth (prominent, percussive)' });
-				infoBox.createEl('p', { text: 'Medium connections → Organ, Choir, Strings, Brass section (harmonic foundation)' });
-				infoBox.createEl('p', { text: 'Low connections → Pads, Environmental sounds, Extended instruments (ambient, atmospheric)' });
-				break;
+		if (familyId === 'strings' || familyId === 'woodwinds') {
+			logger.debug('ui', 'Family enabled count result', { 
+				familyId,
+				totalInstruments: instruments.length,
+				enabledCount: enabledInstruments.length,
+				instruments: instruments,
+				enabledInstruments: enabledInstruments,
+				action: 'family-enabled-count'
+			});
+		}
+		
+		return enabledInstruments.length;
+	}
+
+	/**
+	 * Get total count of instruments available in a family
+	 * @param familyId - The family identifier
+	 * @returns Total number of instruments in the family
+	 */
+	private getTotalCount(familyId: string): number {
+		const instruments = this.getInstrumentsForFamily(familyId);
+		return instruments.length;
+	}
+
+	private getActiveVoices(familyId: string): number {
+		// Calculate total max voices for enabled instruments in this family
+		const instruments = this.getInstrumentsForFamily(familyId);
+		let totalVoices = 0;
+		
+		instruments.forEach(instrument => {
+			const settings = this.plugin.settings.instruments?.[instrument as keyof typeof this.plugin.settings.instruments];
+			if (settings?.enabled) {
+				totalVoices += settings.maxVoices || 0;
+			}
+		});
+		
+		return totalVoices;
+	}
+
+	private getInstrumentsForFamily(familyId: string): string[] {
+		// Let's determine the family mapping dynamically based on what actually exists in settings
+		const allInstruments = Object.keys(this.plugin.settings.instruments);
+		logger.debug('ui', 'All available instruments in settings', { 
+			allInstruments, 
+			totalCount: allInstruments.length,
+			action: 'get-family-instruments'
+		});
+		
+		const familyMap: Record<string, string[]> = {
+			// Based on actual instruments defined in DEFAULT_SETTINGS
+			strings: ['strings', 'violin', 'cello', 'harp', 'piano', 'guitar'], 
+			woodwinds: ['flute', 'clarinet', 'saxophone', 'oboe'],
+			brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
+			vocals: ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'], // All vocal instruments including choir and pads
+			percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
+			electronic: ['leadSynth', 'bassSynth', 'arpSynth', 'pad'], // All electronic instruments including pad
+			experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
+			// Additional families for other instruments
+			keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta']
+		};
+		
+		const familyInstruments = familyMap[familyId] || [];
+		
+		// Filter to only include instruments that actually exist in settings
+		const validInstruments = familyInstruments.filter(inst => 
+			allInstruments.includes(inst)
+		);
+		
+		const invalidInstruments = familyInstruments.filter(inst => 
+			!allInstruments.includes(inst)
+		);
+		
+		if (invalidInstruments.length > 0) {
+			logger.warn('ui', 'Family mapping includes non-existent instruments', { 
+				familyId, 
+				invalidInstruments, 
+				validInstruments,
+				allAvailableInstruments: allInstruments,
+				action: 'validate-family-mapping'
+			});
+		}
+		
+		logger.debug('ui', 'Family instrument mapping', { 
+			familyId, 
+			requestedInstruments: familyInstruments,
+			validInstruments, 
+			invalidInstruments,
+			validCount: validInstruments.length,
+			invalidCount: invalidInstruments.length,
+			action: 'family-mapping-result'
+		});
+		
+		return validInstruments;
+	}
+
+	// Event handlers
+	private handlePause(): void {
+		logger.info('ui', 'Pause clicked');
+		this.playButtonManager.setState('paused');
+		this.plugin.stopPlayback();
+	}
+
+	private async handleResume(): Promise<void> {
+		logger.info('ui', 'Resume clicked');
+		
+		// TODO: Implement actual resume functionality in audio engine
+		// For now, just restart playback from the beginning
+		this.playButtonManager.setState('loading', 'starting');
+		
+		try {
+			// Audio engine will emit 'playback-started' event on success
+			await this.plugin.playSequence();
+		} catch (error) {
+			logger.error('ui', 'Failed to resume sequence', error);
+			// Audio engine should emit 'playback-error' event, but fallback to idle if not
+			this.playButtonManager.setState('idle');
 		}
 	}
 
-	private async updateInstrumentState(instrumentKey: string, enabled: boolean): Promise<void> {
-		if (this.plugin.audioEngine) {
-			const status = this.plugin.audioEngine.getStatus();
+	private handleStop(): void {
+		logger.info('ui', 'Stop clicked');
+		this.playButtonManager.setState('stopping');
+		
+		// Audio engine will emit 'playback-stopped' event which will transition to idle
+		this.plugin.stopPlayback();
+	}
+
+	private async handlePlay(): Promise<void> {
+		logger.info('ui', 'Play clicked');
+		
+		const currentState = this.playButtonManager.getCurrentState();
+		
+		// Handle different states
+		if (currentState === 'playing') {
+			// If playing, pause the playback
+			this.handlePause();
+			return;
+		} else if (currentState === 'paused') {
+			// If paused, resume playback
+			this.handleResume();
+			return;
+		} else if (currentState === 'loading' || currentState === 'stopping') {
+			// Ignore clicks during loading or stopping
+			return;
+		}
+		
+		// Start playback from idle state
+		this.playButtonManager.setState('loading', 'analyzing');
+		
+		try {
+			// Show detailed loading stages for better UX
+			this.playButtonManager.setLoadingSubstate('analyzing');
+			await new Promise(resolve => setTimeout(resolve, 200)); // Brief delay for UX
 			
-			// Initialize audio engine if not already initialized
-			if (!status.isInitialized) {
-				try {
-					await this.plugin.audioEngine.initialize();
-				} catch (error) {
-					console.error('Failed to initialize audio engine:', error);
-					return;
-				}
-			}
+			this.playButtonManager.setLoadingSubstate('generating');
+			await new Promise(resolve => setTimeout(resolve, 300)); // Brief delay for UX
 			
-			this.plugin.audioEngine.setInstrumentEnabled(instrumentKey, enabled);
+			this.playButtonManager.setLoadingSubstate('initializing');
+			await new Promise(resolve => setTimeout(resolve, 200)); // Brief delay for UX
+			
+			this.playButtonManager.setLoadingSubstate('starting');
+			
+			// Start playback - audio engine will emit 'playback-started' event
+			// which will automatically transition button to 'playing' state
+			await this.plugin.playSequence();
+			
+		} catch (error) {
+			logger.error('ui', 'Failed to play sequence', error);
+			// Reset to idle state on error (if audio engine doesn't emit error event)
+			this.playButtonManager.setState('idle');
+			// TODO: Show user notification about the error
 		}
 	}
 
-	private getInstrumentInfo(instrumentKey: string): { name: string; icon: string; description: string; defaultFrequencyRange: string } {
-		return INSTRUMENT_INFO[instrumentKey as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
+
+	private handleMasterVolumeChange(volume: number): void {
+		logger.info('ui', `Master volume changed to ${volume}`);
+		this.plugin.settings.volume = volume;
+		this.plugin.saveSettings();
 	}
 
-	private createHarmonyTab(): void {
-		const section = this.createTabSection('Harmonic control', 'Advanced harmony features coming soon');
-
-		// Placeholder for future harmony features
-		const placeholderGroup = this.createSettingsGroup(section, '🚧 Coming Soon', 'Advanced harmonic features are planned for future releases');
-		
-		const placeholder = placeholderGroup.createDiv({ cls: 'sonigraph-placeholder' });
-		placeholder.createEl('p', { 
-			text: 'Advanced harmonic control features including voice leading, chord progression analysis, and intelligent harmony generation are planned for future development.',
-			cls: 'sonigraph-placeholder-text'
-		});
-		
-		placeholder.createEl('p', { 
-			text: 'Current focus is on perfecting the core audio engine and effect system. Stay tuned for updates!',
-			cls: 'sonigraph-placeholder-text'
-		});
-	}
-
-	private createEffectsTab(): void {
-		const section = this.createTabSection('Audio effects', 'Configure reverb, chorus, and filter effects for 34 instruments');
-
-		// Enhanced Effects UI with grouping and filtering
-		this.createEnhancedEffectsInterface(section);
-	}
-
-	private createEnhancedEffectsInterface(parent: HTMLElement): void {
-		// Master Effects Controls
-		const masterSection = this.createSettingsGroup(parent, '🎛️ Master effects', 'Global orchestral processing controls');
-		this.createMasterEffectsControls(masterSection);
-
-		// Instrument Family Organization
-		const familySection = this.createSettingsGroup(parent, '🎼 Instrument families', 'Organized effects for all 34 instruments');
-		this.createInstrumentFamiliesInterface(familySection);
-
-		// Effect Presets Section  
-		const presetsSection = this.createSettingsGroup(parent, '🎭 Effect presets', 'Instantly apply professional effect combinations to all instruments');
-		
-		// Venue Presets
-		const venueGroup = presetsSection.createDiv({ cls: 'sonigraph-preset-group' });
-		venueGroup.createEl('h4', { text: 'Venue presets', cls: 'sonigraph-preset-category' });
-		
-		const venueButtons = venueGroup.createDiv({ cls: 'sonigraph-preset-buttons' });
-		Object.entries(EFFECT_PRESETS).forEach(([key, preset]) => {
-			if (preset.category === 'venue') {
-				const button = venueButtons.createEl('button', {
-					cls: 'sonigraph-preset-button',
-					text: preset.name,
-					attr: { title: preset.description }
-				});
-				
-				button.addEventListener('click', async () => {
-					if (this.plugin.audioEngine) {
-						// Apply to all enabled instruments
-						this.plugin.audioEngine.applyEffectPresetToAll(key);
-						await this.plugin.saveSettings();
-						
-						// Refresh the effects tab to show updated settings
-						this.showTab('effects');
-						
-						// Show confirmation
-						const notification = this.contentContainer.createEl('div', {
-							cls: 'sonigraph-notification',
-							text: `Applied "${preset.name}" preset to all enabled instruments`
-						});
-						setTimeout(() => notification.remove(), 3000);
-					}
-				});
-			}
-		});
-
-		// Genre Presets
-		const genreGroup = presetsSection.createDiv({ cls: 'sonigraph-preset-group' });
-		genreGroup.createEl('h4', { text: 'Genre presets', cls: 'sonigraph-preset-category' });
-		
-		const genreButtons = genreGroup.createDiv({ cls: 'sonigraph-preset-buttons' });
-		Object.entries(EFFECT_PRESETS).forEach(([key, preset]) => {
-			if (preset.category === 'genre') {
-				const button = genreButtons.createEl('button', {
-					cls: 'sonigraph-preset-button',
-					text: preset.name,
-					attr: { title: preset.description }
-				});
-				
-				button.addEventListener('click', async () => {
-					if (this.plugin.audioEngine) {
-						// Apply to all enabled instruments
-						this.plugin.audioEngine.applyEffectPresetToAll(key);
-						await this.plugin.saveSettings();
-						
-						// Refresh the effects tab to show updated settings
-						this.showTab('effects');
-						
-						// Show confirmation
-						const notification = this.contentContainer.createEl('div', {
-							cls: 'sonigraph-notification',
-							text: `Applied "${preset.name}" preset to all enabled instruments`
-						});
-						setTimeout(() => notification.remove(), 3000);
-					}
-				});
-			}
-		});
-
-		// Quick Reset Button
-		const resetGroup = presetsSection.createDiv({ cls: 'sonigraph-preset-group' });
-		resetGroup.createEl('h4', { text: 'Reset', cls: 'sonigraph-preset-category' });
-		
-		const resetButton = resetGroup.createEl('button', {
-			cls: 'sonigraph-preset-button sonigraph-reset-button',
-			text: 'Reset All to Defaults'
-		});
-		
-		resetButton.addEventListener('click', async () => {
-			if (this.plugin.audioEngine) {
-				// Reset all instruments to defaults
-				Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
-					const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
-					if (instrumentSettings?.enabled) {
-						this.plugin.audioEngine!.resetInstrumentEffects(instrumentKey);
-					}
-				});
-				
-				await this.plugin.saveSettings();
-				
-				// Refresh the effects tab to show updated settings
-				this.showTab('effects');
-				
-				// Show confirmation
-				const notification = this.contentContainer.createEl('div', {
-					cls: 'sonigraph-notification',
-					text: 'Reset all instruments to default effect settings'
-				});
-				setTimeout(() => notification.remove(), 3000);
-			}
-		});
-
-	}
-
-	private createInstrumentEffectControls(
-		parent: HTMLElement, 
-		instrumentKey: string, 
-		title?: string, 
-		description?: string,
-		updateStatusCallback?: () => void
-	): void {
-		// Get smart ranges for this instrument
-		const smartRanges = getSmartRanges(instrumentKey);
-		
-		// Check if instrument exists in settings - skip if missing
-		const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
-		if (!instrumentSettings) {
-			console.warn(`Instrument '${instrumentKey}' not found in settings, skipping effect controls`);
+	/**
+	 * Enhanced Play Button: Audio Engine Event Integration
+	 */
+	
+	private setupAudioEngineEventListeners(): void {
+		if (!this.plugin.audioEngine) {
+			logger.warn('ui', 'Cannot setup audio event listeners: AudioEngine not available');
 			return;
 		}
 
-		// Get instrument info for display
-		const instrumentInfo = this.getInstrumentInfo(instrumentKey);
-		
-		// Create instrument section
-		const instrumentGroup = parent.createDiv({ cls: 'sonigraph-instrument-group' });
-		
-		// Instrument header with real-time controls
-		const instrumentHeader = instrumentGroup.createDiv({ cls: 'sonigraph-instrument-header' });
-		const headerLeft = instrumentHeader.createDiv({ cls: 'sonigraph-instrument-header-left' });
-		const headerRight = instrumentHeader.createDiv({ cls: 'sonigraph-instrument-header-right' });
-		
-		headerLeft.createEl('h3', { text: `${instrumentInfo.icon} ${instrumentInfo.name}`, cls: 'sonigraph-instrument-title' });
-		
-		// Real-time preview controls
-		const previewButton = headerRight.createEl('button', {
-			cls: 'sonigraph-preview-button',
-			text: '🎵 Preview',
-			attr: { title: 'Play sustained note to hear effect changes in real-time' }
-		});
-		
-		const performanceIndicator = headerRight.createDiv({ cls: 'sonigraph-performance-indicator' });
-		
-		// Preview button functionality
-		let isPreviewActive = false;
-		previewButton.addEventListener('click', () => {
-			if (!this.plugin.audioEngine) return;
-			
-			if (isPreviewActive) {
-				this.plugin.audioEngine.disableParameterPreview();
-				previewButton.setText('🎵 Preview');
-				previewButton.removeClass('active');
-				isPreviewActive = false;
-			} else {
-				this.plugin.audioEngine.enableParameterPreview(instrumentKey);
-				previewButton.setText('⏹️ Stop');
-				previewButton.addClass('active');
-				isPreviewActive = true;
-			}
-		});
+		// Issue #006 Fix: Prevent double-setup of event listeners
+		if (this.boundEventHandlers) {
+			logger.debug('ui', 'Audio engine event listeners already configured, skipping setup');
+			return;
+		}
 
-		// Performance monitoring update
-		const updatePerformance = () => {
-			if (this.plugin.audioEngine) {
-				const metrics = this.plugin.audioEngine.getPerformanceMetrics();
-				performanceIndicator.setText(`CPU: ${Math.round(metrics.cpuUsage)}% | ${Math.round(metrics.latency)}ms`);
-				
-				// Color coding for performance
-				performanceIndicator.removeClass('good', 'warning', 'danger');
-				if (metrics.cpuUsage < 50) performanceIndicator.addClass('good');
-				else if (metrics.cpuUsage < 80) performanceIndicator.addClass('warning');
-				else performanceIndicator.addClass('danger');
-			}
-		};
-		
-		// Update performance every 2 seconds
-		setInterval(updatePerformance, 2000);
-		updatePerformance(); // Initial update
-
-		// Status callback including performance
-		const finalUpdateCallback = () => {
-			if (updateStatusCallback) updateStatusCallback();
-			updatePerformance();
+		// Issue #006 Fix: Store bound event handlers for proper cleanup
+		this.boundEventHandlers = {
+			handlePlaybackStarted: this.handlePlaybackStarted.bind(this),
+			handlePlaybackEnded: this.handlePlaybackEnded.bind(this),
+			handlePlaybackStopped: this.handlePlaybackStopped.bind(this),
+			handlePlaybackError: this.handlePlaybackError.bind(this),
+			handleSequenceProgress: this.handleSequenceProgress.bind(this)
 		};
 
-		const effectStates = instrumentSettings.effects;
+		// Listen for playback events from audio engine using stored bound handlers
+		this.plugin.audioEngine.on('playback-started', this.boundEventHandlers.handlePlaybackStarted);
+		this.plugin.audioEngine.on('playback-ended', this.boundEventHandlers.handlePlaybackEnded);
+		this.plugin.audioEngine.on('playback-stopped', this.boundEventHandlers.handlePlaybackStopped);
+		this.plugin.audioEngine.on('playback-error', this.boundEventHandlers.handlePlaybackError);
+		this.plugin.audioEngine.on('sequence-progress', this.boundEventHandlers.handleSequenceProgress);
 
-		// Reverb Controls with Real-time Feedback
-		const reverbGroup = instrumentGroup.createDiv({ cls: 'sonigraph-effect-group' });
+		logger.debug('ui', 'Audio engine event listeners configured with bound handlers');
+	}
+
+	private cleanupAudioEngineEventListeners(): void {
+		if (!this.plugin.audioEngine || !this.boundEventHandlers) {
+			return;
+		}
+
+		// Issue #006 Fix: Remove only this modal's specific bound handlers
+		this.plugin.audioEngine.off('playback-started', this.boundEventHandlers.handlePlaybackStarted);
+		this.plugin.audioEngine.off('playback-ended', this.boundEventHandlers.handlePlaybackEnded);
+		this.plugin.audioEngine.off('playback-stopped', this.boundEventHandlers.handlePlaybackStopped);
+		this.plugin.audioEngine.off('playback-error', this.boundEventHandlers.handlePlaybackError);
+		this.plugin.audioEngine.off('sequence-progress', this.boundEventHandlers.handleSequenceProgress);
+
+		// Clear the stored handlers
+		this.boundEventHandlers = null;
+
+		logger.debug('ui', 'Audio engine event listeners cleaned up (specific handlers only)');
+	}
+
+	private handlePlaybackStarted(): void {
+		logger.debug('ui', 'Audio engine playback started - switching to playing state');
+		this.playButtonManager.setState('playing');
 		
-		// Reverb header with bypass button
-		const reverbHeader = reverbGroup.createDiv({ cls: 'sonigraph-effect-header' });
-		reverbHeader.createEl('h4', { text: '🏛️ Reverb', cls: 'sonigraph-effect-title' });
+		// Phase 3: Show progress indication
+		this.showProgressIndication();
+	}
+
+	private handlePlaybackEnded(): void {
+		logger.debug('ui', 'Audio engine playback ended - switching to idle state');
+		this.playButtonManager.setState('idle');
 		
-		const reverbBypassButton = reverbHeader.createEl('button', {
-			cls: 'sonigraph-bypass-button',
-			text: 'Bypass',
-			attr: { title: 'A/B compare with/without reverb' }
+		// Phase 3: Hide progress indication
+		this.hideProgressIndication();
+	}
+
+	private handlePlaybackStopped(): void {
+		logger.debug('ui', 'Audio engine playback stopped - switching to idle state');
+		this.playButtonManager.setState('idle');
+		
+		// Phase 3: Hide progress indication
+		this.hideProgressIndication();
+	}
+
+	private handlePlaybackError(data?: PlaybackEventData): void {
+		const errorData = data as PlaybackErrorData;
+		logger.error('ui', 'Audio engine playback error', {
+			error: errorData?.error?.message,
+			context: errorData?.context
 		});
 		
-		// Bypass button functionality
-		reverbBypassButton.addEventListener('click', () => {
-			if (!this.plugin.audioEngine) return;
-			
-			const bypassed = this.plugin.audioEngine.toggleEffectBypass(instrumentKey, 'reverb');
-			reverbBypassButton.setText(bypassed ? 'Bypassed' : 'Bypass');
-			reverbBypassButton.toggleClass('bypassed', bypassed);
-		});
+		// Reset to idle state on error
+		this.playButtonManager.setState('idle');
+		
+		// Phase 3: Hide progress indication on error
+		this.hideProgressIndication();
+		
+		// TODO: Show user notification about the error
+		// Could use Obsidian's Notice API or a custom error display
+	}
 
-		// Reverb Enable Toggle
-		createObsidianToggle(
-			reverbGroup,
-			effectStates.reverb.enabled,
-			async (value) => {
-				effectStates.reverb.enabled = value;
-				await this.plugin.saveSettings();
-				if (this.plugin.audioEngine) {
-					this.plugin.audioEngine.setReverbEnabled(value, instrumentKey);
-				}
-				// Show/hide reverb settings
-				reverbSettingsContainer.style.display = value ? 'block' : 'none';
-				finalUpdateCallback();
-			},
-			{
-				name: 'Enable reverb',
-				description: 'Natural spatial ambience'
-			}
-		);
-
-		// Container for reverb settings
-		const reverbSettingsContainer = reverbGroup.createDiv({ cls: 'sonigraph-effect-settings-container' });
-
-		// Smart Decay Slider with Real-time Preview
-		const decayRange = smartRanges.reverb.decay;
-		new Setting(reverbSettingsContainer)
-			.setName('Decay time')
-			.setDesc(`${decayRange.musicalContext} (${decayRange.min} - ${decayRange.max} seconds)`)
-			.addSlider(slider => {
-				slider
-					.setLimits(decayRange.min, decayRange.max, decayRange.step)
-					.setValue(effectStates.reverb.params.decay as number)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						// Real-time preview if enabled
-						if (this.plugin.audioEngine && isPreviewActive) {
-							this.plugin.audioEngine.previewParameterChange(instrumentKey, 'reverb', 'decay', value);
-						}
-						
-						effectStates.reverb.params.decay = value;
-						await this.plugin.saveSettings();
-						if (this.plugin.audioEngine) {
-							this.plugin.audioEngine.updateReverbSettings({ decay: value }, instrumentKey);
-						}
-					});
-				
-				// Add suggestion buttons if available
-				if (decayRange.suggestions) {
-					const suggestionsDiv = reverbSettingsContainer.createDiv({ cls: 'sonigraph-suggestions' });
-					decayRange.suggestions.forEach(suggestion => {
-						const btn = suggestionsDiv.createEl('button', {
-							cls: 'sonigraph-suggestion-button',
-							text: suggestion.label,
-							attr: { title: `Set to ${suggestion.value}s` }
-						});
-						btn.addEventListener('click', async () => {
-							slider.setValue(suggestion.value);
-							effectStates.reverb.params.decay = suggestion.value;
-							await this.plugin.saveSettings();
-							if (this.plugin.audioEngine) {
-								this.plugin.audioEngine.updateReverbSettings({ decay: suggestion.value }, instrumentKey);
-							}
-						});
-					});
-				}
-				
-				return slider;
+	private handleSequenceProgress(data?: PlaybackEventData): void {
+		const progressData = data as PlaybackProgressData;
+		if (progressData) {
+			logger.debug('ui', 'Sequence progress update', {
+				percent: progressData.percentComplete.toFixed(1),
+				currentNote: progressData.currentIndex,
+				totalNotes: progressData.totalNotes
 			});
-
-		// Smart Pre-delay Slider with Real-time Preview
-		const preDelayRange = smartRanges.reverb.preDelay;
-		new Setting(reverbSettingsContainer)
-			.setName('Pre-delay')
-			.setDesc(`${preDelayRange.musicalContext} (${preDelayRange.min} - ${preDelayRange.max} seconds)`)
-			.addSlider(slider => slider
-				.setLimits(preDelayRange.min, preDelayRange.max, preDelayRange.step)
-				.setValue(effectStates.reverb.params.preDelay as number)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					// Real-time preview if enabled
-					if (this.plugin.audioEngine && isPreviewActive) {
-						this.plugin.audioEngine.previewParameterChange(instrumentKey, 'reverb', 'preDelay', value);
-					}
-					
-					effectStates.reverb.params.preDelay = value;
-					await this.plugin.saveSettings();
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateReverbSettings({ preDelay: value }, instrumentKey);
-					}
-				}));
-
-		// Smart Wet Level Slider with Real-time Preview
-		const wetRange = smartRanges.reverb.wet;
-		new Setting(reverbSettingsContainer)
-			.setName('Wet level')
-			.setDesc(`${wetRange.musicalContext} (${Math.round(wetRange.min * 100)} - ${Math.round(wetRange.max * 100)}%)`)
-			.addSlider(slider => slider
-				.setLimits(wetRange.min * 100, wetRange.max * 100, wetRange.step * 100)
-				.setValue((effectStates.reverb.params.wet as number) * 100)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					// Real-time preview if enabled
-					if (this.plugin.audioEngine && isPreviewActive) {
-						this.plugin.audioEngine.previewParameterChange(instrumentKey, 'reverb', 'wet', value / 100);
-					}
-					
-					effectStates.reverb.params.wet = value / 100;
-					await this.plugin.saveSettings();
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateReverbSettings({ wet: value / 100 }, instrumentKey);
-					}
-				}));
-
-		// Initialize visibility states
-		reverbSettingsContainer.style.display = effectStates.reverb.enabled ? 'block' : 'none';
-
-		// Chorus Controls with Real-time Feedback
-		const chorusGroup = instrumentGroup.createDiv({ cls: 'sonigraph-effect-group' });
-		
-		// Chorus header with bypass button
-		const chorusHeader = chorusGroup.createDiv({ cls: 'sonigraph-effect-header' });
-		chorusHeader.createEl('h4', { text: '🌀 Chorus', cls: 'sonigraph-effect-title' });
-		
-		const chorusBypassButton = chorusHeader.createEl('button', {
-			cls: 'sonigraph-bypass-button',
-			text: 'Bypass',
-			attr: { title: 'A/B compare with/without chorus' }
-		});
-		
-		// Bypass button functionality
-		chorusBypassButton.addEventListener('click', () => {
-			if (!this.plugin.audioEngine) return;
 			
-			const bypassed = this.plugin.audioEngine.toggleEffectBypass(instrumentKey, 'chorus');
-			chorusBypassButton.setText(bypassed ? 'Bypassed' : 'Bypass');
-			chorusBypassButton.toggleClass('bypassed', bypassed);
-		});
-
-		// Chorus Enable Toggle
-		createObsidianToggle(
-			chorusGroup,
-			effectStates.chorus.enabled,
-			async (value) => {
-				effectStates.chorus.enabled = value;
-				await this.plugin.saveSettings();
-				if (this.plugin.audioEngine) {
-					this.plugin.audioEngine.setChorusEnabled(value, instrumentKey);
-				}
-				// Show/hide chorus settings
-				chorusSettingsContainer.style.display = value ? 'block' : 'none';
-				finalUpdateCallback();
-			},
-			{
-				name: 'Enable chorus',
-				description: 'Rich modulation and width'
-			}
-		);
-
-		// Container for chorus settings
-		const chorusSettingsContainer = chorusGroup.createDiv({ cls: 'sonigraph-effect-settings-container' });
-
-		// Smart Rate Slider with Real-time Preview
-		const frequencyRange = smartRanges.chorus.frequency;
-		new Setting(chorusSettingsContainer)
-			.setName('Rate')
-			.setDesc(`${frequencyRange.musicalContext} (${frequencyRange.min} - ${frequencyRange.max} Hz)`)
-			.addSlider(slider => slider
-				.setLimits(frequencyRange.min, frequencyRange.max, frequencyRange.step)
-				.setValue(effectStates.chorus.params.frequency as number)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					// Real-time preview if enabled
-					if (this.plugin.audioEngine && isPreviewActive) {
-						this.plugin.audioEngine.previewParameterChange(instrumentKey, 'chorus', 'frequency', value);
-					}
-					
-					effectStates.chorus.params.frequency = value;
-					await this.plugin.saveSettings();
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateChorusSettings({ frequency: value }, instrumentKey);
-					}
-				}));
-
-		// Initialize visibility states
-		chorusSettingsContainer.style.display = effectStates.chorus.enabled ? 'block' : 'none';
-
-		// ... existing code for other effects ...
-	}
-
-	private createStatusTab(): void {
-		const section = this.createTabSection('System Status', 'Real-time monitoring and diagnostics');
-
-		// System status
-		const systemGroup = this.createSettingsGroup(section, 'System Status', 'Core system health');
-		const systemDisplay = systemGroup.createDiv({ cls: 'sonigraph-status-grid' });
-
-		this.createStatusRow(systemDisplay, 'Plugin Status', 'plugin-status', 'Initializing...');
-		this.createStatusRow(systemDisplay, 'Audio Context', 'audio-context', 'Loading...');
-		this.createStatusRow(systemDisplay, 'Playback State', 'playback-status', 'Stopped');
-		this.createStatusRow(systemDisplay, 'Graph Data', 'graph-status', 'Not Loaded');
-
-		// Effects status
-		const effectsGroup = this.createSettingsGroup(section, 'Audio Effects Status', 'Active effects by instrument');
-		const effectsDisplay = effectsGroup.createDiv({ cls: 'sonigraph-effects-status' });
-		
-		// Create effect status display
-		const statusContent = effectsDisplay.createDiv({ cls: 'sonigraph-effects-status-content' });
-		statusContent.createEl('h4', { text: 'Active effects by instrument:', cls: 'sonigraph-effects-status-title' });
-		
-		const statusList = statusContent.createDiv({ cls: 'sonigraph-effects-status-list' });
-		
-		// Piano status
-		const pianoStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		pianoStatus.createSpan({ text: '🎹 Piano: ', cls: 'sonigraph-effect-instrument-label' });
-		pianoStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-piano' }
-		});
-		
-		// Organ status
-		const organStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		organStatus.createSpan({ text: '🎛️ Organ: ', cls: 'sonigraph-effect-instrument-label' });
-		organStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-organ' }
-		});
-		
-		// Strings status
-		const stringsStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		stringsStatus.createSpan({ text: '🎻 Strings: ', cls: 'sonigraph-effect-instrument-label' });
-		stringsStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-strings' }
-		});
-		
-		// Choir status
-		const choirStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		choirStatus.createSpan({ text: '🎤 Choir: ', cls: 'sonigraph-effect-instrument-label' });
-		choirStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-choir' }
-		});
-		
-		// Vocal Pads status
-		const vocalPadsStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		vocalPadsStatus.createSpan({ text: '🌊 Vocal Pads: ', cls: 'sonigraph-effect-instrument-label' });
-		vocalPadsStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-vocalPads' }
-		});
-		
-		// Pad status
-		const padStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		padStatus.createSpan({ text: '🎛️ Pad: ', cls: 'sonigraph-effect-instrument-label' });
-		padStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-pad' }
-		});
-		
-		// Flute status
-		const fluteStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		fluteStatus.createSpan({ text: '🎺 Flute: ', cls: 'sonigraph-effect-instrument-label' });
-		fluteStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-flute' }
-		});
-		
-		// Clarinet status
-		const clarinetStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		clarinetStatus.createSpan({ text: '🎵 Clarinet: ', cls: 'sonigraph-effect-instrument-label' });
-		clarinetStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-clarinet' }
-		});
-		
-		// Saxophone status
-		const saxophoneStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		saxophoneStatus.createSpan({ text: '🎷 Saxophone: ', cls: 'sonigraph-effect-instrument-label' });
-		saxophoneStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-saxophone' }
-		});
-		
-		// Phase 6A: Individual Vocal Sections status displays
-		// Soprano status
-		const sopranoStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		sopranoStatus.createSpan({ text: '👩‍🎤 Soprano: ', cls: 'sonigraph-effect-instrument-label' });
-		sopranoStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-soprano' }
-		});
-		
-		// Alto status
-		const altoStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		altoStatus.createSpan({ text: '🎙️ Alto: ', cls: 'sonigraph-effect-instrument-label' });
-		altoStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-alto' }
-		});
-		
-		// Tenor status
-		const tenorStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		tenorStatus.createSpan({ text: '🧑‍🎤 Tenor: ', cls: 'sonigraph-effect-instrument-label' });
-		tenorStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-tenor' }
-		});
-		
-		// Bass status
-		const bassVoiceStatus = statusList.createDiv({ cls: 'sonigraph-effect-instrument-status' });
-		bassVoiceStatus.createSpan({ text: '🎤 Bass: ', cls: 'sonigraph-effect-instrument-label' });
-		bassVoiceStatus.createSpan({ 
-			text: 'Loading...', 
-			cls: 'sonigraph-effect-instrument-effects',
-			attr: { id: 'sonigraph-effects-status-bass' }
-		});
-		
-		// Add configuration hint
-		const configHint = effectsDisplay.createDiv({ cls: 'sonigraph-effects-config-hint' });
-		configHint.createSpan({ text: '→ Configure effects in the ', cls: 'sonigraph-hint-text' });
-		configHint.createSpan({ text: 'Effects', cls: 'sonigraph-hint-link' });
-		configHint.createSpan({ text: ' tab', cls: 'sonigraph-hint-text' });
-
-		// Graph statistics
-		const graphGroup = this.createSettingsGroup(section, 'Vault Analysis', 'Knowledge graph metrics');
-		const graphDisplay = graphGroup.createDiv({ cls: 'sonigraph-status-grid' });
-
-		this.createStatusRow(graphDisplay, 'Total Notes', 'total-nodes', '0');
-		this.createStatusRow(graphDisplay, 'Connections', 'total-edges', '0');
-		this.createStatusRow(graphDisplay, 'Average Links', 'avg-connections', '0.0');
-		this.createStatusRow(graphDisplay, 'Musical Events', 'musical-events', '0');
-
-		// Performance metrics
-		const perfGroup = this.createSettingsGroup(section, 'Performance', 'Processing and audio metrics');
-		const perfDisplay = perfGroup.createDiv({ cls: 'sonigraph-status-grid' });
-
-		this.createStatusRow(perfDisplay, 'Voices Active', 'active-voices', '0');
-		this.createStatusRow(perfDisplay, 'Sequence Duration', 'sequence-duration', '0s');
-		this.createStatusRow(perfDisplay, 'Processing Time', 'process-time', '0ms');
-		this.createStatusRow(perfDisplay, 'Harmonic Reduction', 'harmonic-reduction', '0%');
-	}
-
-	private createTabSection(title: string, description: string): HTMLElement {
-		const section = this.contentContainer.createDiv({ cls: 'sonigraph-tab-section' });
-		section.createEl('h2', { text: title, cls: 'sonigraph-section-title' });
-		section.createEl('p', { text: description, cls: 'sonigraph-section-desc' });
-		return section;
-	}
-
-	private createSettingsGroup(parent: HTMLElement, title: string, description: string): HTMLElement {
-		const group = parent.createDiv({ cls: 'sonigraph-settings-group' });
-		group.createEl('h3', { text: title, cls: 'sonigraph-group-title' });
-		group.createEl('p', { text: description, cls: 'sonigraph-group-desc' });
-		return group;
-	}
-
-	private createStatusRow(container: HTMLElement, label: string, id: string, initialValue: string): void {
-		const row = container.createDiv({ cls: 'sonigraph-status-row' });
-		row.createSpan({ text: label, cls: 'sonigraph-status-label' });
-		row.createSpan({ 
-			text: initialValue, 
-			cls: 'sonigraph-status-value',
-			attr: { id: `sonigraph-${id}` }
-		});
-	}
-
-	private updateMusicalMapper(): void {
-		if (this.plugin.musicalMapper) {
-			this.plugin.musicalMapper.updateSettings(this.plugin.settings);
+			// Phase 3: Update progress indication in UI
+			this.updateProgressIndication(progressData);
 		}
 	}
 
 	private startStatusUpdates(): void {
-		this.stopStatusUpdates();
-		this.statusInterval = window.setInterval(() => {
-			this.updateStatus();
-		}, 500);
+		// Implement status updates
 	}
 
 	private stopStatusUpdates(): void {
 		if (this.statusInterval) {
-			window.clearInterval(this.statusInterval);
+			clearInterval(this.statusInterval);
 			this.statusInterval = null;
 		}
 	}
 
-	private updateStatus(): void {
-		const status = this.plugin.getStatus();
+	/**
+	 * Phase 3: Progress indication methods
+	 */
+	private showProgressIndication(): void {
+		if (!this.playButton) return;
 
-		// Update status displays
-		this.updateStatusValue('plugin-status', status.plugin.enabled ? 'Active' : 'Disabled');
-		this.updateStatusValue('audio-context', status.audio.audioContext || 'Unknown');
-		this.updateStatusValue('playback-status', status.audio.isPlaying ? 'Playing' : 'Stopped');
-		this.updateStatusValue('graph-status', status.plugin.hasGraphData ? 'Loaded' : 'Not Loaded');
-
-		// Graph statistics
-		if (status.graph) {
-			this.updateStatusValue('total-nodes', status.graph.totalNodes?.toString() || '0');
-			this.updateStatusValue('total-edges', status.graph.totalEdges?.toString() || '0');
-			this.updateStatusValue('avg-connections', status.graph.avgConnections?.toFixed(1) || '0.0');
+		// Create progress container if it doesn't exist
+		if (!this.progressElement) {
+			this.progressElement = this.playButton.createDiv({ cls: 'osp-play-progress' });
+			
+			// Progress bar
+			this.progressBar = this.progressElement.createDiv({ cls: 'osp-progress-bar' });
+			this.progressBar.createDiv({ cls: 'osp-progress-fill' });
+			
+			// Progress text
+			this.progressText = this.progressElement.createDiv({ 
+				cls: 'osp-progress-text',
+				text: 'Starting...'
+			});
 		}
 
-		// Musical information
-		this.updateStatusValue('musical-events', status.audio.currentNotes?.toString() || '0');
-		this.updateStatusValue('active-voices', status.audio.currentNotes?.toString() || '0');
-		
-		// Update effects status
-		this.updateEffectsStatus();
+		// Show with smooth transition
+		this.progressElement.addClass('osp-progress--visible');
+		logger.debug('ui', 'Progress indication shown');
 	}
 
-	private updateStatusValue(id: string, value: string): void {
-		const element = this.contentContainer.querySelector(`#sonigraph-${id}`);
-		if (element) {
-			element.textContent = value;
+	private hideProgressIndication(): void {
+		if (this.progressElement) {
+			// Hide with smooth transition
+			this.progressElement.removeClass('osp-progress--visible');
+			
+			// Remove after transition
+			setTimeout(() => {
+				if (this.progressElement && this.progressElement.parentNode) {
+					this.progressElement.remove();
+					this.progressElement = null;
+					this.progressBar = null;
+					this.progressText = null;
+				}
+			}, 300); // Match CSS transition duration
+		}
+		logger.debug('ui', 'Progress indication hidden');
+	}
+
+	private updateProgressIndication(progressData: PlaybackProgressData): void {
+		if (!this.progressElement || !this.progressBar || !this.progressText) return;
+
+		// Update progress bar
+		const progressFill = this.progressBar.querySelector('.osp-progress-fill') as HTMLElement;
+		if (progressFill) {
+			progressFill.style.width = `${Math.min(progressData.percentComplete, 100)}%`;
+		}
+
+		// Update progress text
+		const currentMinutes = Math.floor(progressData.elapsedTime / 60000);
+		const currentSeconds = Math.floor((progressData.elapsedTime % 60000) / 1000);
+		const totalMinutes = Math.floor(progressData.estimatedTotalTime / 60000);
+		const totalSeconds = Math.floor((progressData.estimatedTotalTime % 60000) / 1000);
+		
+		const timeString = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+		
+		this.progressText.textContent = `Playing: ${progressData.currentIndex}/${progressData.totalNotes} notes (${timeString})`;
+
+		// Add subtle pulse animation when nearing completion
+		if (progressData.percentComplete > 90) {
+			this.progressElement.addClass('osp-progress--finishing');
+		} else {
+			this.progressElement.removeClass('osp-progress--finishing');
 		}
 	}
 
-	private updateEffectsStatus(): void {
-		// Update effects status for each instrument - now includes Phase 6A vocal instruments
-		['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass'].forEach((instrumentKey) => {
-			const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentKey];
-			if (!instrumentSettings?.effects) return;
-			
-			const activeEffects: string[] = [];
-			
-			// Check each effect type
-			if (instrumentSettings.effects.reverb?.enabled) {
-				activeEffects.push('Reverb');
-			}
-			if (instrumentSettings.effects.chorus?.enabled) {
-				activeEffects.push('Chorus');
-			}
-			if (instrumentSettings.effects.filter?.enabled) {
-				activeEffects.push('Filter');
-			}
-			
-			// Create status text
-			const statusText = activeEffects.length > 0 ? activeEffects.join(', ') : 'None';
-			
-			// Update the status display
-			const statusElement = this.contentContainer.querySelector(`#sonigraph-effects-status-${instrumentKey}`);
-			if (statusElement) {
-				statusElement.textContent = statusText;
-			}
-		});
+	// Event handlers for component interactions
+	private handleBulkAction(familyId: string, action: string, selected: boolean): void {
+		logger.info('ui', `Bulk action: ${action} for ${familyId}`, { selected });
+		
+		const instruments = this.getInstrumentsForFamily(familyId);
+		
+		switch (action) {
+			case 'enableAll':
+				if (selected) {
+					logger.debug('ui', 'Enabling all instruments in family', { 
+						familyId, 
+						instruments, 
+						action: 'enable-all-start',
+						instrumentCount: instruments.length 
+					});
+					instruments.forEach(instrument => {
+						const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+						if (this.plugin.settings.instruments[instrumentKey]) {
+							this.plugin.settings.instruments[instrumentKey].enabled = true;
+						}
+					});
+					
+					// Update audio engine with new settings
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						logger.debug('ui', 'Audio engine settings updated after bulk enable', { 
+							familyId, 
+							action: 'bulk-enable-audio-update' 
+						});
+					}
+				}
+				break;
+			case 'disableAll':
+				if (selected) {
+					logger.debug('ui', 'Disabling all instruments in family', { 
+						familyId, 
+						instruments, 
+						action: 'disable-all-start',
+						instrumentCount: instruments.length 
+					});
+					instruments.forEach(instrument => {
+						const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+						const settings = this.plugin.settings.instruments[instrumentKey];
+						
+						if (settings) {
+							logger.debug('ui', 'Disabling instrument', { 
+								instrument, 
+								wasEnabled: settings.enabled,
+								action: 'disable-instrument'
+							});
+							
+							// Disable the instrument
+							const wasEnabled = settings.enabled;
+							settings.enabled = false;
+							
+							// Extra logging for piano specifically
+							if (instrument === 'piano') {
+								logger.info('ui', 'Piano specifically disabled', {
+									instrument: 'piano',
+									wasEnabled: wasEnabled,
+									nowEnabled: settings.enabled,
+									action: 'disable-piano-specifically'
+								});
+							}
+							
+							// Also disable all individual instrument effects
+							if (settings.effects) {
+								settings.effects.reverb.enabled = false;
+								settings.effects.chorus.enabled = false;
+								settings.effects.filter.enabled = false;
+							}
+						} else {
+							logger.warn('ui', 'Instrument not found in settings', { 
+								instrument, 
+								availableInstruments: Object.keys(this.plugin.settings.instruments),
+								action: 'disable-all-missing-instrument',
+								familyId
+							});
+						}
+					});
+					
+					// After disabling, let's check what's actually still enabled
+					logger.debug('ui', 'After disable all, checking remaining enabled instruments', { familyId });
+					const allInstrumentKeys = Object.keys(this.plugin.settings.instruments);
+					const stillEnabled = allInstrumentKeys.filter(key => {
+						const settings = this.plugin.settings.instruments[key as keyof typeof this.plugin.settings.instruments];
+						return settings?.enabled;
+					});
+					
+					logger.debug('ui', 'Instruments still enabled after disable all', { 
+						familyId, 
+						stillEnabledInstruments: stillEnabled,
+						totalEnabledCount: stillEnabled.length,
+						action: 'disable-all-complete'
+					});
+					
+					// Update audio engine with new settings
+					if (this.plugin.audioEngine) {
+						this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						logger.debug('ui', 'Audio engine settings updated after bulk disable', { 
+							familyId, 
+							action: 'bulk-disable-audio-update' 
+						});
+					}
+					
+					// Note: Family effects will automatically appear disabled since no instruments have effects enabled
+				}
+				break;
+			case 'resetVolumes':
+				if (selected) {
+					instruments.forEach(instrument => {
+						const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+						if (this.plugin.settings.instruments[instrumentKey]) {
+							this.plugin.settings.instruments[instrumentKey].volume = 0.7;
+						}
+					});
+				}
+				break;
+			case 'defaultEffects':
+				if (selected) {
+					// Reset effects to default values for this family
+					// Implementation would reset family-wide effects
+				}
+				break;
+		}
+		
+		// Save settings and refresh UI
+		this.plugin.saveSettings();
+		this.updateNavigationCounts(); // Update tab counts in navigation drawer
+		this.showTab(familyId); // Refresh the current tab
 	}
 
-	private showError(message: string): void {
-		// Create temporary error display
-		const errorEl = this.contentContainer.createDiv({ 
-			cls: 'sonigraph-error-message',
-			text: message 
-		});
+	private handleInstrumentEnabledChange(instrument: string, enabled: boolean): void {
+		logger.info('ui', `Instrument ${instrument} enabled changed`, { enabled });
 		
-		setTimeout(() => {
-			errorEl.remove();
-		}, 5000);
+		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+		if (this.plugin.settings.instruments[instrumentKey]) {
+			this.plugin.settings.instruments[instrumentKey].enabled = enabled;
+			this.plugin.saveSettings();
+		}
+		
+		// Update navigation counts immediately
+		this.updateNavigationCounts();
+		
+		// Update audio engine if available
+		if (this.plugin.audioEngine) {
+			this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			logger.debug('ui', 'Audio engine settings updated after instrument enable/disable', { 
+				instrument, 
+				enabled 
+			});
+		}
 	}
 
-	private getIconSvg(iconName: string): string {
-		const icons: Record<string, string> = {
-			play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
-			stop: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>',
-			music: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>',
-			piano: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>',
-			sparkles: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 12L7 7.5 5.5 12 1 13.5l4.5 1.5L7 20l2.5-4.5L14 13.5 9.5 12zM19 3l-1 4h-4l4 1 1 4 1-4 4-1-4-1L19 3z"/></svg>',
-			headphones: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>',
-			activity: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
-		};
-		return icons[iconName] || icons.play;
+	private handleInstrumentVolumeChange(instrument: string, volume: number): void {
+		logger.debug('ui', `Instrument ${instrument} volume changed`, { volume });
+		
+		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+		if (this.plugin.settings.instruments[instrumentKey]) {
+			this.plugin.settings.instruments[instrumentKey].volume = volume;
+			this.plugin.saveSettings();
+		}
+		
+		// Update audio engine if available
+		if (this.plugin.audioEngine) {
+			// Audio engine would handle the volume change
+		}
 	}
 
-	private createMasterEffectsControls(parent: HTMLElement): void {
-		// Master Reverb
-		const masterReverbGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
-		masterReverbGroup.createEl('h4', { text: '🏛️ Master reverb hall', cls: 'sonigraph-master-effect-title' });
+	private handleInstrumentMaxVoicesChange(instrument: string, maxVoices: number): void {
+		logger.debug('ui', `Instrument ${instrument} max voices changed`, { maxVoices });
 		
-		new Setting(masterReverbGroup)
-			.setName('Hall Size')
-			.setDesc('Overall orchestral hall size and decay')
-			.addSlider(slider => slider
-				.setLimits(0, 1, 0.05)
-				.setValue(0.7)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					// Apply to all enabled instruments
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.setMasterReverbDecay(value * 8 + 1); // 1-9 second range
-					}
-				}));
-
-		// Master EQ
-		const masterEQGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
-		masterEQGroup.createEl('h4', { text: '🎚️ Master EQ', cls: 'sonigraph-master-effect-title' });
-		
-		new Setting(masterEQGroup)
-			.setName('Bass boost')
-			.setDesc('Enhance low-end frequencies for orchestral warmth')
-			.addSlider(slider => slider
-				.setLimits(-12, 12, 1)
-				.setValue(0)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.setMasterBassBoost(value);
-					}
-				}));
-
-		new Setting(masterEQGroup)
-			.setName('Treble clarity')
-			.setDesc('Adjust high frequencies for instrumental clarity')
-			.addSlider(slider => slider
-				.setLimits(-12, 12, 1)
-				.setValue(0)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.setMasterTrebleBoost(value);
-					}
-				}));
-
-		// Master Compressor
-		const masterCompGroup = parent.createDiv({ cls: 'sonigraph-master-effect-group' });
-		masterCompGroup.createEl('h4', { text: '🎛️ Master Dynamics', cls: 'sonigraph-master-effect-title' });
-		
-		new Setting(masterCompGroup)
-			.setName('Orchestral compression')
-			.setDesc('Balance dynamics across all 34 instruments')
-			.addSlider(slider => slider
-				.setLimits(0, 1, 0.05)
-				.setValue(0.3)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.setMasterCompression(value);
-					}
-				}));
+		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+		if (this.plugin.settings.instruments[instrumentKey]) {
+			this.plugin.settings.instruments[instrumentKey].maxVoices = maxVoices;
+			this.plugin.saveSettings();
+		}
 	}
 
-	private createInstrumentFamiliesInterface(parent: HTMLElement): void {
-		// Group instruments by family for better organization
-		const instrumentFamilies = {
-			'🎤 Vocal Family': ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'],
-			'🎹 Keyboard Family': ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta'],
-			'🎻 Strings Family': ['strings', 'violin', 'cello', 'guitar', 'harp'],
-			'🎺 Brass Family': ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
-			'🎷 Woodwinds Family': ['flute', 'clarinet', 'saxophone', 'oboe'],
-			'🥁 Percussion Family': ['timpani', 'xylophone', 'vibraphone', 'gongs'],
-			'⚡ Electronic Family': ['pad', 'leadSynth', 'bassSynth', 'arpSynth'],
-			'🌊 Environmental': ['whaleHumpback']
-		};
-
-		// Create family filter controls
-		const filterContainer = parent.createDiv({ cls: 'sonigraph-family-filters' });
-		filterContainer.createEl('h4', { text: 'Filter by Family:', cls: 'sonigraph-filter-title' });
+	private handleEffectEnabledChange(familyId: string, effectType: string, enabled: boolean): void {
+		logger.info('ui', `Effect ${effectType} for ${familyId} enabled changed`, { enabled });
 		
-		const filterButtons = filterContainer.createDiv({ cls: 'sonigraph-filter-buttons' });
-		
-		// Show All button
-		const showAllButton = filterButtons.createEl('button', {
-			cls: 'sonigraph-filter-button active',
-			text: '🎼 Show All'
+		// Implementation would update family-wide effect settings
+		const instruments = this.getInstrumentsForFamily(familyId);
+		instruments.forEach(instrument => {
+			const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+			const settings = this.plugin.settings.instruments[instrumentKey];
+			if (settings && settings.effects) {
+				if (!settings.effects[effectType as keyof typeof settings.effects]) {
+					// Initialize effect if it doesn't exist
+					(settings.effects as any)[effectType] = {
+						enabled: enabled,
+						params: this.getDefaultEffectParams(effectType)
+					};
+				} else {
+					(settings.effects as any)[effectType].enabled = enabled;
+				}
+			}
 		});
 		
-		let activeFilter = 'all';
-		
-		showAllButton.addEventListener('click', () => {
-			activeFilter = 'all';
-			this.updateFamilyFilter(activeFilter);
-			this.updateFilterButtonStates(filterButtons, showAllButton);
-		});
+		this.plugin.saveSettings();
+	}
 
-		// Family filter buttons
-		Object.keys(instrumentFamilies).forEach(familyName => {
-			const button = filterButtons.createEl('button', {
-				cls: 'sonigraph-filter-button',
-				text: familyName
-			});
-			
-			button.addEventListener('click', () => {
-				activeFilter = familyName;
-				this.updateFamilyFilter(activeFilter);
-				this.updateFilterButtonStates(filterButtons, button);
-			});
-		});
-
-		// Enabled/Disabled filter toggle
-		const enabledToggle = filterContainer.createDiv({ cls: 'sonigraph-enabled-filter' });
-		enabledToggle.createEl('span', { text: 'Show: ' });
+	private handleEffectParameterChange(familyId: string, effectType: string, parameter: string, value: number): void {
+		logger.debug('ui', `Effect ${effectType} parameter ${parameter} changed for ${familyId}`, { value });
 		
-		const enabledButton = enabledToggle.createEl('button', {
-			cls: 'sonigraph-enabled-filter-button active',
-			text: '✅ Enabled Only'
+		// Implementation would update family-wide effect parameters
+		const instruments = this.getInstrumentsForFamily(familyId);
+		instruments.forEach(instrument => {
+			const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+			const settings = this.plugin.settings.instruments[instrumentKey];
+			if (settings && settings.effects) {
+				if (!(settings.effects as any)[effectType]) {
+					(settings.effects as any)[effectType] = {
+						enabled: true,
+						params: this.getDefaultEffectParams(effectType)
+					};
+				}
+				
+				(settings.effects as any)[effectType].params[parameter] = value;
+			}
 		});
 		
-		let showOnlyEnabled = true;
+		this.plugin.saveSettings();
+	}
+
+	private getDefaultEffectParams(effectType: string): any {
+		switch (effectType) {
+			case 'reverb':
+				return { decay: 2.0, preDelay: 0.1, wet: 0.3 };
+			case 'chorus':
+				return { frequency: 1.0, depth: 0.3, delayTime: 0.02, feedback: 0.1 };
+			case 'filter':
+				return { frequency: 1000, Q: 1.0, type: 'lowpass' };
+			default:
+				return {};
+		}
+	}
+
+	private getInstrumentActiveVoices(instrument: string): number {
+		// Mock implementation - would get actual voice count from audio engine
+		const settings = this.plugin.settings.instruments?.[instrument as keyof typeof this.plugin.settings.instruments];
+		if (settings?.enabled) {
+			return Math.floor(Math.random() * (settings.maxVoices || 4));
+		}
+		return 0;
+	}
+
+	/**
+	 * Create horizontal instrument section similar to effect sections
+	 */
+	private createHorizontalInstrumentSection(container: HTMLElement, instrumentName: string, options: {
+		enabled: boolean;
+		volume: number;
+		maxVoices: number;
+		activeVoices: number;
+	}): void {
+		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
 		
-		enabledButton.addEventListener('click', () => {
-			showOnlyEnabled = !showOnlyEnabled;
-			enabledButton.setText(showOnlyEnabled ? '✅ Enabled Only' : '📋 All Instruments');
-			enabledButton.toggleClass('active', showOnlyEnabled);
-			this.updateEnabledFilter(showOnlyEnabled);
+		// Header with instrument name and toggle
+		const header = section.createDiv({ cls: 'osp-effect-header-horizontal' });
+		
+		const title = header.createDiv({ cls: 'osp-effect-title-area' });
+		const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
+		title.appendChild(icon);
+		
+		// Use proper instrument name from INSTRUMENT_INFO instead of capitalizeWords
+		const instrumentInfo = INSTRUMENT_INFO[instrumentName as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
+		const titleWithStatus = this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo);
+		title.innerHTML += titleWithStatus;
+		
+		// Enable toggle
+		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
+		toggleContainer.setAttribute('data-tooltip', `Toggle ${instrumentInfo.name} on/off`);
+		toggleContainer.setAttribute('title', `Toggle ${instrumentInfo.name} on/off`);
+		
+		const toggleInput = toggleContainer.createEl('input', { 
+			type: 'checkbox', 
+			cls: 'ospcc-switch__input' 
+		}) as HTMLInputElement;
+		
+		// Check if instrument can be toggled (synthesis instruments always can, HQ instruments only if downloaded)
+		const canToggle = !this.instrumentRequiresHighQuality(instrumentName) || this.checkIfSampleDownloaded(instrumentName);
+		const isEnabled = options.enabled && canToggle;
+		
+		toggleInput.checked = isEnabled;
+		
+		// Disable toggle if samples not available
+		if (!canToggle) {
+			toggleInput.disabled = true;
+			toggleContainer.classList.add('ospcc-switch--unavailable');
+			toggleContainer.style.cursor = 'not-allowed';
+			toggleContainer.setAttribute('data-tooltip', `${instrumentInfo.name} samples not yet downloaded`);
+			toggleContainer.setAttribute('title', `${instrumentInfo.name} samples not yet downloaded`);
+		}
+		
+		toggleInput.addEventListener('change', () => {
+			if (canToggle) {
+				logger.debug('ui', 'Instrument toggle changed', { instrumentName, enabled: toggleInput.checked });
+				this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
+			}
 		});
-
-		// Create collapsible family sections
-		const familiesContainer = parent.createDiv({ cls: 'sonigraph-families-container' });
 		
-		Object.entries(instrumentFamilies).forEach(([familyName, instruments]) => {
-			const familyGroup = familiesContainer.createDiv({ 
-				cls: 'sonigraph-family-group',
-				attr: { 'data-family': familyName }
-			});
-			
-			// Family header with collapse toggle
-			const familyHeader = familyGroup.createDiv({ cls: 'sonigraph-family-header' });
-			const collapseIcon = familyHeader.createSpan({ cls: 'sonigraph-collapse-icon', text: '▼' });
-			familyHeader.createEl('h3', { text: familyName, cls: 'sonigraph-family-title' });
-			
-			const familyContent = familyGroup.createDiv({ cls: 'sonigraph-family-content' });
-			
-			// Collapse toggle functionality
-			let isCollapsed = false;
-			familyHeader.addEventListener('click', () => {
-				isCollapsed = !isCollapsed;
-				collapseIcon.setText(isCollapsed ? '▶' : '▼');
-				familyContent.style.display = isCollapsed ? 'none' : 'block';
-			});
-
-			// Create compact instrument controls for each family member
-			instruments.forEach(instrumentKey => {
-				if (this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments]) {
-					this.createCompactInstrumentEffectControls(familyContent, instrumentKey);
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		
+		// Make the entire switch container clickable (only if can toggle)
+		if (canToggle) {
+			toggleContainer.addEventListener('click', (e) => {
+				if (e.target !== toggleInput) {
+					e.preventDefault();
+					toggleInput.checked = !toggleInput.checked;
+					toggleInput.dispatchEvent(new Event('change'));
 				}
 			});
-		});
-	}
-
-	private createCompactInstrumentEffectControls(parent: HTMLElement, instrumentKey: string): void {
-		const instrumentSettings = this.plugin.settings.instruments[instrumentKey as keyof typeof this.plugin.settings.instruments];
-		if (!instrumentSettings) return;
-
-		const instrumentInfo = this.getInstrumentInfo(instrumentKey);
+		}
 		
-		const compactGroup = parent.createDiv({ 
-			cls: 'sonigraph-compact-instrument',
-			attr: { 
-				'data-instrument': instrumentKey,
-				'data-enabled': instrumentSettings.enabled.toString()
-			}
-		});
+		// Parameters in horizontal layout
+		const paramsContainer = section.createDiv({ cls: 'osp-effect-params-horizontal' });
 		
-		// Compact header
-		const header = compactGroup.createDiv({ cls: 'sonigraph-compact-header' });
-		header.createEl('span', { 
-			text: `${instrumentInfo.icon} ${instrumentInfo.name}`, 
-			cls: 'sonigraph-compact-title' 
-		});
+		// Volume parameter
+		const volumeGroup = paramsContainer.createDiv({ cls: 'osp-param-group-horizontal' });
+		const volumeLabel = volumeGroup.createDiv({ cls: 'osp-param-label' });
+		volumeLabel.textContent = 'Volume';
 		
-		// Enabled indicator
-		const enabledIndicator = header.createEl('span', {
-			cls: `sonigraph-enabled-indicator ${instrumentSettings.enabled ? 'enabled' : 'disabled'}`,
-			text: instrumentSettings.enabled ? '●' : '○'
+		const volumeSliderContainer = volumeGroup.createDiv({ cls: 'osp-param-slider' });
+		const volumeSlider = new MaterialSlider({
+			value: options.volume,
+			min: 0,
+			max: 1,
+			step: 0.1,
+			unit: '',
+			onChange: (value) => this.handleInstrumentVolumeChange(instrumentName, value)
 		});
-
-		// Quick effect toggles
-		const quickToggles = compactGroup.createDiv({ cls: 'sonigraph-quick-toggles' });
+		volumeSliderContainer.appendChild(volumeSlider.getElement());
+		
+		// Max Voices parameter
+		const voicesGroup = paramsContainer.createDiv({ cls: 'osp-param-group-horizontal' });
+		const voicesLabel = voicesGroup.createDiv({ cls: 'osp-param-label' });
+		voicesLabel.textContent = 'Max voices';
+		
+		const voicesSliderContainer = voicesGroup.createDiv({ cls: 'osp-param-slider' });
+		const voicesSlider = new MaterialSlider({
+			value: options.maxVoices,
+			min: 1,
+			max: 8,
+			step: 1,
+			unit: '',
+			onChange: (value) => this.handleInstrumentMaxVoicesChange(instrumentName, Math.round(value))
+		});
+		voicesSliderContainer.appendChild(voicesSlider.getElement());
+		
+		// Effect toggles section
+		const effectsGroup = paramsContainer.createDiv({ cls: 'osp-param-group-horizontal osp-effects-toggles' });
+		const effectsLabel = effectsGroup.createDiv({ cls: 'osp-param-label' });
+		effectsLabel.textContent = 'Effects';
+		
+		const effectsContainer = effectsGroup.createDiv({ cls: 'osp-effects-container' });
+		
+		// Get current instrument settings
+		const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentName];
 		
 		// Reverb toggle
-		const reverbToggle = quickToggles.createEl('button', {
-			cls: `sonigraph-quick-toggle ${instrumentSettings.effects.reverb.enabled ? 'active' : ''}`,
-			text: '🏛️',
-			attr: { title: 'Reverb' }
-		});
+		this.createEffectToggle(effectsContainer, 'Reverb', 'reverb', instrumentName, instrumentSettings?.effects?.reverb?.enabled || false);
 		
-		reverbToggle.addEventListener('click', async () => {
-			instrumentSettings.effects.reverb.enabled = !instrumentSettings.effects.reverb.enabled;
-			reverbToggle.toggleClass('active', instrumentSettings.effects.reverb.enabled);
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				this.plugin.audioEngine.setReverbEnabled(instrumentSettings.effects.reverb.enabled, instrumentKey);
-			}
-		});
-
-		// Chorus toggle
-		const chorusToggle = quickToggles.createEl('button', {
-			cls: `sonigraph-quick-toggle ${instrumentSettings.effects.chorus.enabled ? 'active' : ''}`,
-			text: '🌊',
-			attr: { title: 'Chorus' }
-		});
+		// Chorus toggle  
+		this.createEffectToggle(effectsContainer, 'Chorus', 'chorus', instrumentName, instrumentSettings?.effects?.chorus?.enabled || false);
 		
-		chorusToggle.addEventListener('click', async () => {
-			instrumentSettings.effects.chorus.enabled = !instrumentSettings.effects.chorus.enabled;
-			chorusToggle.toggleClass('active', instrumentSettings.effects.chorus.enabled);
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				this.plugin.audioEngine.setChorusEnabled(instrumentSettings.effects.chorus.enabled, instrumentKey);
-			}
-		});
-
 		// Filter toggle
-		const filterToggle = quickToggles.createEl('button', {
-			cls: `sonigraph-quick-toggle ${instrumentSettings.effects.filter.enabled ? 'active' : ''}`,
-			text: '🎚️',
-			attr: { title: 'Filter' }
+		this.createEffectToggle(effectsContainer, 'Filter', 'filter', instrumentName, instrumentSettings?.effects?.filter?.enabled || false);
+		
+		// Add quality dropdown for instruments that support both synthesis and recordings
+		if (this.instrumentSupportsQualityChoice(instrumentName)) {
+			const qualityGroup = paramsContainer.createDiv({ cls: 'osp-param-group-horizontal' });
+			const qualityLabel = qualityGroup.createDiv({ cls: 'osp-param-label' });
+			qualityLabel.textContent = 'Quality';
+			
+			const qualityContainer = qualityGroup.createDiv({ cls: 'setting-item' });
+			const qualitySelect = qualityContainer.createEl('select', { cls: 'dropdown' });
+			
+			// Add options
+			qualitySelect.createEl('option', { 
+				value: 'synthesis',
+				text: 'Use synthesis'
+			});
+			qualitySelect.createEl('option', { 
+				value: 'recording', 
+				text: 'Use recording'
+			});
+			
+			// Set current value
+			const currentSettings = (this.plugin.settings.instruments as any)[instrumentName];
+			const usesHighQuality = currentSettings.useHighQuality ?? false;
+			qualitySelect.value = usesHighQuality ? 'recording' : 'synthesis';
+			
+			// Handle changes
+			qualitySelect.addEventListener('change', async () => {
+				const useRecording = qualitySelect.value === 'recording';
+				
+				// Check if recording is available when switching to recording mode
+				if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
+					const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
+					if (!isDownloaded) {
+						new Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
+						// Revert selection
+						qualitySelect.value = 'synthesis';
+						return;
+					}
+				}
+				
+				// Update settings
+				(this.plugin.settings.instruments as any)[instrumentName].useHighQuality = useRecording;
+				await this.plugin.saveSettings();
+				
+				// Show feedback
+				const modeText = useRecording ? 'recording' : 'synthesis';
+				new Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
+			});
+			
+			// Disable recording option if not available
+			if (this.instrumentRequiresHighQuality(instrumentName)) {
+				const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
+				if (!isDownloaded) {
+					const recordingOption = qualitySelect.querySelector('option[value="recording"]') as HTMLOptionElement;
+					if (recordingOption) {
+						recordingOption.disabled = true;
+						recordingOption.text = 'Use recording (not downloaded)';
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Create individual effect toggle for instruments
+	 */
+	private createEffectToggle(container: HTMLElement, effectName: string, effectKey: string, instrumentName: string, enabled: boolean): void {
+		const toggleGroup = container.createDiv({ cls: 'osp-effect-toggle-group' });
+		
+		const label = toggleGroup.createDiv({ cls: 'osp-effect-toggle-label' });
+		label.textContent = effectName;
+		
+		const toggleContainer = toggleGroup.createDiv({ cls: 'ospcc-switch osp-effect-toggle' });
+		const instrumentInfo = INSTRUMENT_INFO[instrumentName as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
+		toggleContainer.setAttribute('data-tooltip', `Toggle ${effectName} for ${instrumentInfo.name}`);
+		toggleContainer.setAttribute('title', `Toggle ${effectName} for ${instrumentInfo.name}`);
+		
+		const toggleInput = toggleContainer.createEl('input', { 
+			type: 'checkbox', 
+			cls: 'ospcc-switch__input' 
+		}) as HTMLInputElement;
+		toggleInput.checked = enabled;
+		toggleInput.addEventListener('change', (e) => {
+			this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
 		});
 		
-		filterToggle.addEventListener('click', async () => {
-			instrumentSettings.effects.filter.enabled = !instrumentSettings.effects.filter.enabled;
-			filterToggle.toggleClass('active', instrumentSettings.effects.filter.enabled);
-			await this.plugin.saveSettings();
+		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
+		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		
+		// Make the entire switch container clickable
+		toggleContainer.addEventListener('click', (e) => {
+			if (e.target !== toggleInput) {
+				e.preventDefault();
+				toggleInput.checked = !toggleInput.checked;
+				toggleInput.dispatchEvent(new Event('change'));
+			}
+		});
+	}
+
+	/**
+	 * Handle individual instrument effect toggle changes
+	 */
+	private handleInstrumentEffectChange(instrumentName: string, effectKey: string, enabled: boolean): void {
+		logger.info('ui', `Instrument ${instrumentName} effect ${effectKey} changed`, { enabled });
+		
+		const instrumentKey = instrumentName as keyof typeof this.plugin.settings.instruments;
+		const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+		
+		if (instrumentSettings && instrumentSettings.effects) {
+			// Update the specific effect's enabled state
+			switch (effectKey) {
+				case 'reverb':
+					instrumentSettings.effects.reverb.enabled = enabled;
+					break;
+				case 'chorus':
+					instrumentSettings.effects.chorus.enabled = enabled;
+					break;
+				case 'filter':
+					instrumentSettings.effects.filter.enabled = enabled;
+					break;
+			}
+			
+			// Save settings
+			this.plugin.saveSettings();
+			
+			// Update audio engine if available
 			if (this.plugin.audioEngine) {
-				this.plugin.audioEngine.setFilterEnabled(instrumentSettings.effects.filter.enabled, instrumentKey);
+				// Audio engine would handle the effect enable/disable
+				logger.debug('ui', `Audio engine would update ${effectKey} for ${instrumentName}`, { enabled });
 			}
-		});
-
-		// Expand button for detailed controls
-		const expandButton = quickToggles.createEl('button', {
-			cls: 'sonigraph-expand-button',
-			text: '⚙️',
-			attr: { title: 'Detailed controls' }
-		});
-		
-		expandButton.addEventListener('click', () => {
-			this.showDetailedEffectsModal(instrumentKey);
-		});
+		} else {
+			logger.warn('ui', `Could not find settings for instrument ${instrumentName}`);
+		}
 	}
 
-	private updateFamilyFilter(activeFilter: string): void {
-		const familyGroups = document.querySelectorAll('.sonigraph-family-group');
-		familyGroups.forEach(group => {
-			const familyName = group.getAttribute('data-family');
-			const element = group as HTMLElement;
-			if (activeFilter === 'all' || familyName === activeFilter) {
-				element.style.display = 'block';
-			} else {
-				element.style.display = 'none';
+	/**
+	 * Get the family-wide effect state based on instrument effect states
+	 * Returns true if any instrument in the family has the effect enabled
+	 */
+	private getFamilyEffectState(familyId: string, effectType: string): boolean {
+		const instruments = this.getInstrumentsForFamily(familyId);
+		
+		return instruments.some(instrument => {
+			const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
+			const settings = this.plugin.settings.instruments[instrumentKey];
+			
+			if (settings && settings.effects) {
+				switch (effectType) {
+					case 'reverb':
+						return settings.effects.reverb?.enabled || false;
+					case 'chorus':
+						return settings.effects.chorus?.enabled || false;
+					case 'filter':
+						return settings.effects.filter?.enabled || false;
+					default:
+						return false;
+				}
 			}
+			return false;
 		});
 	}
 
-	private updateEnabledFilter(showOnlyEnabled: boolean): void {
-		const instruments = document.querySelectorAll('.sonigraph-compact-instrument');
-		instruments.forEach(instrument => {
-			const isEnabled = instrument.getAttribute('data-enabled') === 'true';
-			const element = instrument as HTMLElement;
-			if (!showOnlyEnabled || isEnabled) {
-				element.style.display = 'block';
-			} else {
-				element.style.display = 'none';
+	private capitalizeWords(str: string): string {
+		return str.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+	}
+
+	private instrumentRequiresHighQuality(instrumentKey: string): boolean {
+		// High-quality whale species require high-quality mode
+		const highQualityInstruments = ['whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'];
+		return highQualityInstruments.includes(instrumentKey);
+	}
+
+	private instrumentSupportsQualityChoice(instrumentKey: string): boolean {
+		// Only show dropdown when global high-quality mode is enabled
+		if (!this.plugin.settings.useHighQualitySamples) {
+			return false;
+		}
+		
+		// Check if instrument has useHighQuality setting (indicates it supports choice)
+		const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentKey];
+		if (!instrumentSettings || !('useHighQuality' in instrumentSettings)) {
+			return false;
+		}
+		
+		// Check if instrument has both synthesis and recording options
+		// Instruments with only recordings (requiresHighQuality: true) don't need dropdown
+		const requiresHighQuality = this.instrumentRequiresHighQuality(instrumentKey);
+		
+		// If instrument requires high quality, it's recordings-only (no choice)
+		// If instrument doesn't require high quality but has useHighQuality setting, 
+		// it has both synthesis and recording options
+		return !requiresHighQuality;
+	}
+
+	private createInstrumentTitleWithStatus(instrumentKey: string, instrumentInfo: { name: string; icon: string; description: string; defaultFrequencyRange: string }): string {
+		let titleText = `${instrumentInfo.icon} ${instrumentInfo.name}`;
+		
+		// Add download status for high-quality instruments
+		if (this.instrumentRequiresHighQuality(instrumentKey)) {
+			const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
+			const statusText = isDownloaded ? '(downloaded)' : '(not downloaded)';
+			titleText += ` <em>${statusText}</em>`;
+		}
+		
+		return titleText;
+	}
+
+	private checkIfSampleDownloaded(instrumentKey: string): boolean {
+		// Check if whale samples are downloaded for this species
+		try {
+			// Get whale integration instance
+			const whaleIntegration = (this.plugin as any).whaleIntegration;
+			if (!whaleIntegration || !whaleIntegration.whaleManager) {
+				return false;
 			}
-		});
+
+			// Map instrument key to species
+			const speciesMap: Record<string, string> = {
+				'whaleBlue': 'blue',
+				'whaleOrca': 'orca', 
+				'whaleGray': 'gray',
+				'whaleSperm': 'sperm',
+				'whaleMinke': 'minke',
+				'whaleFin': 'fin',
+				'whaleRight': 'right',
+				'whaleSei': 'sei',
+				'whalePilot': 'pilot'
+			};
+
+			const species = speciesMap[instrumentKey];
+			if (!species) return false;
+
+			// Check cache status
+			const cacheStatus = whaleIntegration.whaleManager.getCacheStatus();
+			return (cacheStatus.cacheBySpecies[species] || 0) > 0;
+		} catch (error) {
+			return false;
+		}
 	}
 
-	private updateFilterButtonStates(container: HTMLElement, activeButton: HTMLElement): void {
-		container.querySelectorAll('.sonigraph-filter-button').forEach(button => {
-			button.removeClass('active');
-		});
-		activeButton.addClass('active');
+	private handleGlobalAction(action: string, selected: boolean): void {
+		logger.info('ui', `Global action: ${action}`, { selected });
+		
+		switch (action) {
+			case 'enableAll':
+				if (selected) {
+					// Enable all instruments across all families
+					Object.keys(this.plugin.settings.instruments).forEach(instrumentKey => {
+							const key = instrumentKey as keyof typeof this.plugin.settings.instruments;
+							this.plugin.settings.instruments[key].enabled = true;
+					});
+				}
+				break;
+			case 'resetAll':
+				if (selected) {
+					// Reset all settings to defaults
+					// Implementation would reset to DEFAULT_SETTINGS
+				}
+				break;
+			case 'optimize':
+				if (selected) {
+					// Run performance optimization
+					// Implementation would optimize voice allocation, enable adaptive quality, etc.
+				}
+				break;
+		}
+		
+		if (selected) {
+			this.plugin.saveSettings();
+			// Refresh current tab to show updated state
+			this.showTab(this.activeTab);
+		}
 	}
 
-	private showDetailedEffectsModal(instrumentKey: string): void {
-		// Create a detailed effects modal for the specific instrument
-		const modal = new Modal(this.app);
-		modal.setTitle(`${this.getInstrumentInfo(instrumentKey).name} - Detailed Effects`);
-		
-		const { contentEl } = modal;
-		this.createInstrumentEffectControls(contentEl, instrumentKey);
-		
-		modal.open();
+	private handleExportLogs(selected: boolean): void {
+		if (selected) {
+			logger.info('ui', 'Exporting logs from Control Center');
+			
+			const now = new Date();
+			const pad = (n: number) => n.toString().padStart(2, '0');
+			const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+			const logs = LoggerFactory.getLogs();
+			const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			logger.info('export', 'Logs exported from Control Center', { filename });
+		}
 	}
-} 
+
+	/**
+	 * Get whale integration status for UI display
+	 */
+	private getWhaleIntegrationStatus(): {
+		enabled: boolean;
+		collectionStatus: string;
+		availableSpecies: string[];
+		sources: string[];
+	} {
+		const isHighQuality = this.plugin.settings.useHighQualitySamples;
+		const isWhaleEnabled = this.plugin.settings.instruments.whaleHumpback?.enabled;
+		const whaleIntegrationEnabled = isHighQuality && isWhaleEnabled;
+
+		return {
+			enabled: whaleIntegrationEnabled || false,
+			collectionStatus: whaleIntegrationEnabled ? 'Seed collection (10 samples)' : 'Disabled',
+			availableSpecies: whaleIntegrationEnabled ? 
+				['Humpback', 'Blue', 'Orca', 'Gray', 'Sperm', 'Minke', 'Fin'] : 
+				['None'],
+			sources: whaleIntegrationEnabled ? 
+				['NOAA Fisheries', 'MBARI MARS', 'NOAA PMEL'] : 
+				['None']
+		};
+	}
+
+	/**
+	 * Handle whale integration toggle
+	 */
+	private async handleWhaleIntegrationToggle(enabled: boolean): Promise<void> {
+		if (enabled) {
+			// Enable both high quality samples and whale instrument
+			await this.plugin.updateSettings({
+				useHighQualitySamples: true,
+				instruments: {
+					...this.plugin.settings.instruments,
+					whaleHumpback: {
+						...this.plugin.settings.instruments.whaleHumpback,
+						enabled: true
+					}
+				}
+			});
+			
+			logger.info('whale-ui', 'Whale integration enabled via UI', {
+				highQualitySamples: true,
+				whaleEnabled: true
+			});
+		} else {
+			// Just disable whale instrument, keep high quality samples setting
+			await this.plugin.updateSettings({
+				instruments: {
+					...this.plugin.settings.instruments,
+					whaleHumpback: {
+						...this.plugin.settings.instruments.whaleHumpback,
+						enabled: false
+					}
+				}
+			});
+			
+			logger.info('whale-ui', 'Whale integration disabled via UI', {
+				whaleEnabled: false
+			});
+		}
+
+		// Refresh the current tab to update status
+		this.showTab('experimental');
+	}
+
+	/**
+	 * Handle whale sample preview
+	 */
+	private handleWhalePreview(): void {
+		// Play a test whale sound using the audio engine
+		if (this.plugin.audioEngine) {
+			// Trigger a low frequency note to test whale sound
+			this.plugin.audioEngine.playTestNote(80); // Low frequency for whale
+			
+			logger.info('whale-ui', 'Whale sample preview triggered', {
+				frequency: 80
+			});
+		} else {
+			logger.warn('whale-ui', 'Cannot preview whale sample: audio engine not available');
+		}
+	}
+
+	/**
+	 * Handle whale attribution info display
+	 */
+	private handleWhaleAttribution(): void {
+		// Create attribution modal or display info
+		const attributionInfo = `
+# Whale Sample Attribution
+
+## NOAA Fisheries
+- Right whale upcalls and multi-sound patterns
+- Sei whale downsweeps  
+- Pilot whale multi-sound recordings
+- Source: https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals
+
+## MBARI MARS Observatory
+- Blue whale D-calls from Monterey Bay (36.71°N, 122.187°W)
+- Orca vocalizations from California deep-sea observatory
+- Gray whale migration recordings
+- Sperm whale echolocation clicks
+- Source: Deep-sea cabled observatory hydrophone recordings
+
+## NOAA PMEL Acoustics Program
+- Alaska humpback whale songs (Winter 1999)
+- Atlantic minke whale downsweeps
+- Source: https://www.pmel.noaa.gov/acoustics/whales/
+
+## Freesound.org Contributors
+- Caribbean humpback whale field recordings by listeningtowhales
+- Newfoundland sperm whale echolocation by smithereens
+- All samples used under Creative Commons licensing
+
+All whale samples are authentic recordings from marine research institutions and field recordings, ensuring scientific accuracy and educational value.
+		`.trim();
+
+		// For now, just log the attribution info
+		// In a full implementation, this could open a modal with formatted attribution
+		console.log(attributionInfo);
+		
+		logger.info('whale-ui', 'Whale attribution info displayed');
+		
+		// Show a simple notice for now
+		new Notice('Whale sample attribution information logged to console. Check developer tools for details.');
+	}
+}

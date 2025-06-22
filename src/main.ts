@@ -1,7 +1,7 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, SonigraphSettings } from './utils/constants';
 import { SonigraphSettingTab } from './ui/settings';
-import { MaterialControlPanelModal } from './ui/control-panel-md';
+import { MaterialControlPanelModal } from './ui/control-panel';
 import { TestSuiteModal } from './testing/TestSuiteModal';
 import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';

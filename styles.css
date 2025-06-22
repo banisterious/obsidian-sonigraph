@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-22 19:01:20 UTC
+ * - Generated: 2025-06-22 20:43:02 UTC
  * - Components: 18 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6198,7 +6198,7 @@ details.osp-advanced-settings {
    COMPONENT: CONTROLCENTER.CSS
    ========================================================================== */
 
-/* Component Size: 576 lines, 14.45 KB */
+/* Component Size: 631 lines, 15.9 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROL CENTER FRAMEWORK
@@ -6776,6 +6776,61 @@ details.osp-advanced-settings {
   color: var(--md-primary);
 }
 
+/* ==========================================================================
+   QUALITY BADGES - High-Quality Mode Indicators
+   ========================================================================== */
+
+.sonigraph-compact-title-container {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  flex: 1;
+}
+
+.sonigraph-quality-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 16px;
+  padding: 0 var(--md-space-1);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-size: var(--md-font-label-small);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: var(--md-corner-xs);
+  text-transform: uppercase;
+  cursor: help;
+  transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.sonigraph-quality-badge:hover {
+  background: var(--md-primary-container);
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   INSTRUMENT STATUS INDICATORS
+   ========================================================================== */
+
+.sonigraph-enabled-indicator {
+  transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.sonigraph-enabled-indicator.unavailable {
+  color: var(--md-on-surface-variant);
+  opacity: 0.5;
+}
+
+.sonigraph-enabled-indicator.enabled {
+  color: var(--md-success);
+}
+
+.sonigraph-enabled-indicator.disabled {
+  color: var(--md-on-surface-variant);
+}
+
 
 /* End of controlcenter.css */
 
@@ -7348,10 +7403,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-22 19:01:20 UTC
+ * Build completed: 2025-06-22 20:43:02 UTC
  * Components processed: 18
- * Total lines: 7160
- * Total size: 149.5 KB
+ * Total lines: 7215
+ * Total size: 150.95 KB
  * Build duration: 0.02 seconds
  * 
  * Component breakdown:
@@ -7369,7 +7424,7 @@ details.osp-advanced-settings {
  * - settings.css: 198 lines, 4.57 KB
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
- * - controlcenter.css: 576 lines, 14.45 KB
+ * - controlcenter.css: 631 lines, 15.9 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB
