@@ -5,6 +5,7 @@
 
 import { WhaleAudioManager, WhaleIntegrationSettings } from './freesound';
 import { getLogger } from '../logging';
+import { Vault } from 'obsidian';
 
 const logger = getLogger('whale-integration');
 
@@ -12,6 +13,7 @@ export class WhaleIntegration {
     private whaleManager: WhaleAudioManager | null = null;
     private isEnabled: boolean = false;
     private settings: WhaleIntegrationSettings;
+    private vault: Vault | null = null;
 
     // Default settings based on the integration plan
     private static readonly DEFAULT_SETTINGS: WhaleIntegrationSettings = {
@@ -26,11 +28,12 @@ export class WhaleIntegration {
         maxSamples: 50
     };
 
-    constructor(userSettings?: Partial<WhaleIntegrationSettings>) {
+    constructor(userSettings?: Partial<WhaleIntegrationSettings>, vault?: Vault) {
         this.settings = {
             ...WhaleIntegration.DEFAULT_SETTINGS,
             ...userSettings
         };
+        this.vault = vault;
     }
 
     /**
@@ -49,7 +52,7 @@ export class WhaleIntegration {
 
         try {
             // Initialize with seed collection only (no API credentials needed for Phase 1)
-            this.whaleManager = new WhaleAudioManager(this.settings);
+            this.whaleManager = new WhaleAudioManager(this.settings, undefined, undefined, this.vault);
             this.isEnabled = true;
             
             logger.info('init', 'Whale integration initialized with seed collection', {
@@ -281,13 +284,13 @@ let whaleIntegration: WhaleIntegration | null = null;
 /**
  * Initialize global whale integration
  */
-export async function initializeWhaleIntegration(settings?: Partial<WhaleIntegrationSettings>): Promise<void> {
+export async function initializeWhaleIntegration(settings?: Partial<WhaleIntegrationSettings>, vault?: Vault): Promise<void> {
     logger.info('global-init', 'Initializing global whale integration', {
         hasSettings: !!settings,
         settingsKeys: settings ? Object.keys(settings) : []
     });
     
-    whaleIntegration = new WhaleIntegration(settings);
+    whaleIntegration = new WhaleIntegration(settings, vault);
     await whaleIntegration.initialize();
     
     logger.info('global-init', 'Global whale integration initialization complete', {
