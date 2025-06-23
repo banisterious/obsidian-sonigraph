@@ -51,27 +51,21 @@
 
 **Sample Manager & Audio Infrastructure**  
 **Priority**: High | **Effort**: 3-4 weeks | **User Impact**: High  
-**Features**:
-- Comprehensive sample management UI with family-based organization
-- Smart background downloading when instruments first enabled
-- Cross-origin solutions and client-side caching
-- Storage usage display and cache management controls
-- Sample quality selection (MP3/WAV/OGG support)
+**Status**: 📋 Planned | **Backend**: ⚠️ Partial | **UI**: ❌ Needed  
+**Description**: Comprehensive sample management with smart downloading and storage control
+👉 [Technical Specifications](feature-catalog.md#sample-manager)
 
 **Audio Export & Recording**  
 **Priority**: High | **Effort**: 4-5 weeks | **User Impact**: Very High  
-**Features**:
-- Multi-format export: MP3, WAV, OGG, MIDI
-- Real-time recording of live sonification sessions
-- Cloud platform integration (SoundCloud, YouTube, Google Drive)
-- Custom metadata embedding and batch export capabilities
-- Automatic thumbnail generation from graph visualizations
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Multi-format export with cloud integration and real-time recording capabilities
+👉 [Technical Specifications](feature-catalog.md#audio-export-recording)
 
 **Natural Soundscapes Expansion**  
 **Priority**: Medium | **Effort**: 6-8 weeks | **User Impact**: High  
-**Target**: 55+ total instruments with natural sounds  
-**Categories**: Animal sounds, environmental atmospheres, world instruments  
-👉 [Complete Specifications](feature-catalog.md#6-future-expansion-plans)
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Expand to 55+ instruments with animal sounds, environmental atmospheres, and world instruments
+👉 [Technical Specifications](feature-catalog.md#natural-soundscapes)
 
 #### 🔍 Research Needed
 
@@ -99,48 +93,28 @@
 
 **Effect Presets System**  
 **Priority**: High | **Effort**: 2-3 weeks | **User Impact**: Very High  
-**Features**:
-- 11 professional acoustic environment presets (Concert Hall, Jazz Club, Cathedral, etc.)
-- Family-level and global preset application
-- One-click acoustic transformation for all instruments
-- Custom preset creation and management
-- Venue-based, genre-based, and utility preset categories
-👉 [Complete Implementation Plan](features/effect-presets-implementation-plan.md)
+**Status**: 📋 Planned | **Backend**: ✅ Complete | **UI**: ❌ Needed  
+**Description**: One-click acoustic environment transformation with 11 professional presets
+👉 [Technical Specifications](feature-catalog.md#effect-presets-system)
+👉 [Implementation Plan](features/effect-presets-implementation-plan.md)
 
 **Customizable Sequence Controls**  
 **Priority**: Medium | **Effort**: 2-3 weeks | **User Impact**: High  
-**Features**:
-- Duration settings (30s, 1min, 2min, 5min, 10min, Custom)
-- Artistic note distribution patterns (Linear, Crescendo, Random, etc.)
-- Adaptive duration scaling based on vault complexity
-- Per-session overrides without changing global settings
+**Status**: 📋 Planned | **Backend**: ⚠️ Partial | **UI**: ❌ Needed  
+**Description**: Flexible sequence duration and artistic note distribution controls
+👉 [Technical Specifications](feature-catalog.md#sequence-controls)
 
 **Control Center Instrument Search**  
 **Priority**: Medium | **Effort**: 1-2 weeks | **User Impact**: High  
-**Features**:
-- Fuzzy search field for quick instrument location across all 34 instruments
-- Integration with Obsidian's `prepareFuzzySearch()` API for consistent UX
-- Real-time filtering of instrument families and individual instruments
-- Keyboard navigation support (arrow keys, Enter to enable/configure)
-- Search highlighting with match indicators using `SearchResult.matches`
-- Quick access to instrument settings from search results
-
-**Technical Implementation**:
-- **Search Engine**: Use `prepareFuzzySearch(query)` returning `(text: string) => SearchResult | null`
-- **UI Integration**: Add search input field to existing Control Center modal header
-- **Real-time Filtering**: Filter visible instrument tabs and cards based on search results
-- **Highlight Rendering**: Use `SearchResult.matches` to highlight matching text in instrument names
-- **Tab Filtering**: Hide/show family tabs based on whether they contain matching instruments
-- **Card Filtering**: Hide/show individual instrument cards within visible tabs
-- **Performance**: Optimized for 34 instruments (well below API performance threshold)
-- **Search Scope**: Include instrument names, family names, and aliases for comprehensive matching
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Fuzzy search for quick instrument location with real-time filtering and keyboard navigation
+👉 [Technical Specifications](feature-catalog.md#instrument-search)
 
 **Advanced Export Options**  
 **Priority**: Low | **Effort**: 1-2 weeks | **User Impact**: Medium  
-**Features**:
-- Export logs folder memory (remember last location)
-- Multiple export formats with filtering capabilities
-- Custom file naming templates with dynamic variables
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Enhanced log export with folder memory and custom naming templates
+👉 [Technical Specifications](feature-catalog.md#export-options)
 
 ---
 
@@ -156,11 +130,9 @@
 
 **Advanced Performance Monitoring**  
 **Priority**: Low | **Effort**: 2-3 weeks | **User Impact**: Medium  
-**Features**:
-- Historical performance trend analysis
-- Automated regression testing integration
-- Performance budget enforcement
-- Visual metrics dashboard
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Historical performance analysis with visual metrics dashboard
+👉 [Technical Specifications](feature-catalog.md#performance-monitoring)
 
 ---
 
@@ -170,26 +142,21 @@
 
 **Graph Timeline Integration**  
 **Priority**: High | **Effort**: 5-6 weeks | **User Impact**: Very High  
-**Features**:
-- Visual-audio synchronization with graph timeline animation
-- Temporal sonification: node birth sounds, connection chimes
-- Timeline controls affecting both visual and audio playback
-- Era-based instrument selection for different time periods
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Visual-audio synchronization with temporal sonification and timeline controls
+👉 [Technical Specifications](feature-catalog.md#timeline-integration)
 
 **Content Filtering & Selection**  
 **Priority**: Medium | **Effort**: 3-4 weeks | **User Impact**: High  
-**Features**:
-- Folder exclusion system with pattern matching
-- File filtering by type, size, tags, date ranges
-- Graph topology filtering (exclude isolated nodes)
-- Real-time preview of included/excluded content
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Folder exclusion and file filtering with real-time preview of included content
+👉 [Technical Specifications](feature-catalog.md#content-filtering)
 
 **Enhanced Obsidian Integration**  
 **Priority**: Medium | **Effort**: 2-3 weeks | **User Impact**: Medium  
-**Features**:
-- Plugin compatibility improvements
-- Better metadata integration
-- Performance impact reduction
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Plugin compatibility improvements and better metadata integration
+👉 [Technical Specifications](feature-catalog.md#obsidian-integration)
 
 ---
 
@@ -199,26 +166,21 @@
 
 **AI-Driven Orchestration**  
 **Priority**: High | **Effort**: 6-8 weeks | **User Impact**: Very High  
-**Features**:
-- ML-based instrument assignment suggestions
-- Graph relationship analysis for musical decisions
-- Adaptive harmony detection and chord progression
-- Professional orchestral templates and presets
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: ML-based instrument assignment with adaptive harmony and orchestral templates
+👉 [Technical Specifications](feature-catalog.md#ai-orchestration)
 
 **Graph-Responsive Effects**  
 **Priority**: Medium | **Effort**: 4-5 weeks | **User Impact**: High  
-**Features**:
-- Dynamic effect modulation based on node connections
-- Spatial effects responding to graph position
-- Temporal effects synchronized to graph traversal
-- Real-time adaptation to vault structure changes
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Dynamic effects responding to graph topology and real-time vault changes
+👉 [Technical Specifications](feature-catalog.md#graph-responsive-effects)
 
 **Master Conductor Interface**  
 **Priority**: Medium | **Effort**: 3-4 weeks | **User Impact**: High  
-**Features**:
-- Ensemble control for orchestral management
-- Intelligent orchestration suggestions
-- Real-time musical arrangement adaptation
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Description**: Ensemble control with intelligent orchestration and real-time arrangement
+👉 [Technical Specifications](feature-catalog.md#conductor-interface)
 
 ---
 
