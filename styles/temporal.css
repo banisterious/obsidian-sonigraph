@@ -303,15 +303,24 @@
   overflow: hidden;
 }
 
-.sonic-graph-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+/* Modal close button positioning to avoid overlap with header - following Control Center pattern */
+.sonic-graph-modal .modal-close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1002;
+  /* Let Obsidian handle all styling */
 }
 
-/* Header - Sticky and minimal */
+.sonic-graph-modal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Header - Sticky following Control Center pattern */
 .sonic-graph-header {
   position: sticky;
   top: 0;
@@ -319,9 +328,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--osp-spacing-sm) var(--osp-spacing-md);
+  padding: 12px 20px;
+  padding-right: 56px; /* Make space for close button like Control Center */
   border-bottom: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
+  background: var(--background-primary);
   flex-shrink: 0;
   min-height: 50px;
 }

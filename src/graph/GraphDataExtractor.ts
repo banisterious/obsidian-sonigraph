@@ -48,10 +48,17 @@ export class GraphDataExtractor {
   private cachedData: GraphData | null = null;
   private lastCacheTime: number = 0;
   private readonly CACHE_DURATION = 30000; // 30 seconds
+  private excludeFolders: string[];
+  private excludeFiles: string[];
 
-  constructor(vault: Vault, metadataCache: MetadataCache) {
+  constructor(vault: Vault, metadataCache: MetadataCache, options?: {
+    excludeFolders?: string[];
+    excludeFiles?: string[];
+  }) {
     this.vault = vault;
     this.metadataCache = metadataCache;
+    this.excludeFolders = options?.excludeFolders || [];
+    this.excludeFiles = options?.excludeFiles || [];
   }
 
   /**
@@ -105,6 +112,12 @@ export class GraphDataExtractor {
     const nodes: GraphNode[] = [];
 
     for (const file of files) {
+      // Check if file should be excluded
+      if (this.shouldExcludeFile(file)) {
+        logger.debug('extraction', `Excluding file: ${file.path}`);
+        continue;
+      }
+
       try {
         const node = await this.createNodeFromFile(file);
         if (node) {
@@ -117,6 +130,25 @@ export class GraphDataExtractor {
 
     logger.debug('extraction', `Extracted ${nodes.length} nodes from ${files.length} files`);
     return nodes;
+  }
+
+  /**
+   * Check if a file should be excluded based on exclusion settings
+   */
+  private shouldExcludeFile(file: TFile): boolean {
+    // Check if file is directly excluded
+    if (this.excludeFiles.includes(file.path)) {
+      return true;
+    }
+
+    // Check if file is in an excluded folder
+    for (const excludeFolder of this.excludeFolders) {
+      if (file.path.startsWith(excludeFolder + '/') || file.path === excludeFolder) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

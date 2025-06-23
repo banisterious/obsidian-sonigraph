@@ -34,7 +34,10 @@ export class SonicGraphModal extends Modal {
     constructor(app: App, plugin: SonigraphPlugin) {
         super(app);
         this.plugin = plugin;
-        this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache);
+        this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache, {
+            excludeFolders: plugin.settings.sonicGraphExcludeFolders || [],
+            excludeFiles: plugin.settings.sonicGraphExcludeFiles || []
+        });
         
         // Load settings
         this.showFileNames = this.plugin.settings.sonicGraphShowFileNames || false;
@@ -49,13 +52,19 @@ export class SonicGraphModal extends Modal {
             
             // Add modal-specific classes
             this.modalEl.addClass('sonic-graph-modal');
-            contentEl.addClass('sonic-graph-content');
             
-            // Create modal structure
-            this.createHeader();
-            this.createGraphArea();
-            this.createTimelineArea();
-            this.createControlsArea();
+            // Create close button (positioned outside main container like Control Center)
+            const closeButton = contentEl.createDiv({ cls: 'modal-close-button' });
+            closeButton.addEventListener('click', () => this.close());
+            
+            // Create main modal container
+            const modalContainer = contentEl.createDiv({ cls: 'sonic-graph-modal-container' });
+            
+            // Create modal structure inside container
+            this.createHeader(modalContainer);
+            this.createGraphArea(modalContainer);
+            this.createTimelineArea(modalContainer);
+            this.createControlsArea(modalContainer);
             
             // Initialize graph
             this.initializeGraph();
@@ -85,8 +94,8 @@ export class SonicGraphModal extends Modal {
     /**
      * Create modal header with title only (sticky)
      */
-    private createHeader(): void {
-        this.headerContainer = this.contentEl.createDiv({ cls: 'sonic-graph-header' });
+    private createHeader(container: HTMLElement): void {
+        this.headerContainer = container.createDiv({ cls: 'sonic-graph-header' });
         
         // Simple title only
         const titleContainer = this.headerContainer.createDiv({ cls: 'sonic-graph-title-container' });
@@ -96,8 +105,8 @@ export class SonicGraphModal extends Modal {
     /**
      * Create main graph visualization area
      */
-    private createGraphArea(): void {
-        this.graphContainer = this.contentEl.createDiv({ cls: 'sonic-graph-container' });
+    private createGraphArea(container: HTMLElement): void {
+        this.graphContainer = container.createDiv({ cls: 'sonic-graph-container' });
         
         // Graph canvas
         const graphCanvas = this.graphContainer.createDiv({ cls: 'sonic-graph-canvas' });
@@ -114,8 +123,8 @@ export class SonicGraphModal extends Modal {
     /**
      * Create timeline area (initially hidden)
      */
-    private createTimelineArea(): void {
-        this.timelineContainer = this.contentEl.createDiv({ cls: 'sonic-graph-timeline' });
+    private createTimelineArea(container: HTMLElement): void {
+        this.timelineContainer = container.createDiv({ cls: 'sonic-graph-timeline' });
         this.timelineContainer.style.display = 'none'; // Hidden until animation starts
         
         // Timeline scrubber
@@ -140,8 +149,8 @@ export class SonicGraphModal extends Modal {
     /**
      * Create controls area with play button, stats, and navigation
      */
-    private createControlsArea(): void {
-        this.controlsContainer = this.contentEl.createDiv({ cls: 'sonic-graph-controls' });
+    private createControlsArea(container: HTMLElement): void {
+        this.controlsContainer = container.createDiv({ cls: 'sonic-graph-controls' });
         
         // Left side - Play controls
         const playControls = this.controlsContainer.createDiv({ cls: 'sonic-graph-play-controls' });
