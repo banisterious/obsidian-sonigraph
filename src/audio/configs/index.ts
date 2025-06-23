@@ -9,7 +9,6 @@ export * from './types';
 export { keyboardInstruments } from './keyboard-instruments';
 export { stringInstruments } from './string-instruments';
 export { brassInstruments } from './brass-instruments';
-export { vocalInstruments } from './vocal-instruments';
 export { woodwindInstruments } from './woodwind-instruments';
 export { percussionInstruments, electronicInstruments } from './percussion-electronic-instruments';
 export { worldInstruments } from './world-instruments';
@@ -17,7 +16,6 @@ export { worldInstruments } from './world-instruments';
 import { keyboardInstruments } from './keyboard-instruments';
 import { stringInstruments } from './string-instruments';
 import { brassInstruments } from './brass-instruments';
-import { vocalInstruments } from './vocal-instruments';
 import { woodwindInstruments } from './woodwind-instruments';
 import { percussionInstruments, electronicInstruments } from './percussion-electronic-instruments';
 import { worldInstruments } from './world-instruments';
@@ -30,7 +28,6 @@ export const instrumentFamilies: InstrumentFamily[] = [
     keyboardInstruments,
     stringInstruments,
     brassInstruments,
-    vocalInstruments,
     woodwindInstruments,
     percussionInstruments,
     electronicInstruments,

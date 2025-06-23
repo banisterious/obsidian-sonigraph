@@ -6,6 +6,7 @@
 1. 🔍 [Issue #008: Progressive Audio Generation Failure](#issue-008-progressive-audio-generation-failure) - **ACTIVE**
 2. 🚀 [Issue #011: CDN Sample Loading Diagnosis](#issue-011-cdn-sample-loading-diagnosis) - **IN DEVELOPMENT**
 3. 🔧 [Issue #013: Family-Based Instrument Loading Ignores UI Toggles](#issue-013-family-based-instrument-loading) - **WORKAROUND**
+4. 🎵 [Issue #015: Missing Volume Control Nodes for Whale Instruments](#issue-015-missing-volume-control-nodes-for-whale-instruments) - **NEW**
 
 ### Resolved Issues
 1. ✅ [Issue #001: Audio Crackling and Musical Density Trade-off](#issue-001-audio-crackling-and-musical-density-trade-off) - **RESOLVED**
@@ -39,6 +40,7 @@
 | 011 | 🚀 IN DEVELOPMENT | High | Audio Engine | CDN sample loading diagnosis and investigation | [Issue #011](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) |
 | 013 | 🔧 WORKAROUND | High | Audio Engine | Family-based instrument loading ignores UI toggles | [Analysis](#issue-013-family-based-instrument-loading) |
 | 014 | ✅ FIXED | High | Audio Engine | Disabled instruments still load when using family toggles with high quality samples - RESOLVED | [Analysis](../archive/issues/issue-014-experimental-family-disabled-instrument-loading.md) |
+| 015 | 🎵 NEW | High | Audio Engine | Missing volume control nodes for whale instruments | [Analysis](#issue-015-missing-volume-control-nodes-for-whale-instruments) |
 
 ---
 
@@ -405,6 +407,7 @@ Solved complex audio routing architecture issue while maintaining all previous p
 **Active Issues:**
 - 🔍 **Issue #008**: HIGH - Progressive audio generation failure
 - 🚀 **Issue #011**: HIGH - CDN sample loading diagnosis (IN DEVELOPMENT)
+- 🎵 **Issue #015**: HIGH - Missing volume control nodes for whale instruments (NEW)
 
 **Resolved Issues:**
 - ✅ **Issue #001**: Audio crackling completely resolved (100% test success rate)
@@ -509,6 +512,52 @@ function shouldLoadInstrument(instrumentName: string): boolean {
 **Limitation:** Sample mode users still experience the issue
 
 **System Status:** **FUNCTIONAL WITH WORKAROUND** - Family toggles work in synthesis mode; sample mode architectural fix needed 🔧
+
+---
+
+## Issue #015: Missing Volume Control Nodes for Whale Instruments
+
+**Status:** 🎵 NEW  
+**Priority:** High  
+**Component:** Audio Engine  
+**Date Created:** 2025-06-22  
+**Affected Files:** `src/audio/engine.ts`, whale instrument initialization system
+
+### Summary
+
+Specific whale instruments (`whaleBlue`, `whaleOrca`, `whaleGray`, `whaleSperm`) fail to get proper volume control nodes initialized during audio engine startup, causing critical errors when users enable/disable these instruments in the Control Center. This prevents effects processing and proper audio routing for these environmental instruments.
+
+### Root Cause Analysis
+
+**Missing Initialization Logic:** The audio engine's `initializeWhaleSynthesizer()` method only creates volume control for `whaleHumpback`, but other whale species defined in the configuration don't get proper initialization during the `initializeMissingInstruments()` phase.
+
+### Evidence from Logs
+
+**Console Errors:**
+```
+CRITICAL: No volume control found for whaleBlue in updateInstrumentVolume
+CRITICAL: No volume control found for whaleOrca during enable/disable  
+CRITICAL: No volume control found for whaleGray in updateInstrumentVolume
+CRITICAL: No volume control found for whaleSperm during enable/disable
+```
+
+**Volume Map Analysis:**
+- Volume map size: 39 instruments
+- Missing: `whaleBlue`, `whaleOrca`, `whaleGray`, `whaleSperm` 
+- Present: `whaleHumpback` (works correctly)
+
+### Impact Assessment
+
+- **Control Center Failure**: Enable/disable toggles fail for affected whale instruments
+- **Effects Processing**: No reverb, chorus, or filter effects for missing instruments  
+- **Audio Routing**: Instruments cannot be properly connected to master audio chain
+- **User Experience**: Whale species appear broken when toggled in UI
+
+### Technical Details
+
+**Root Cause:** Gap in initialization sequence where external whale instruments with `requiresHighQuality: true` don't get synthesis fallback volume nodes created when samples are unavailable or instruments are in synthesis mode.
+
+**Detailed Analysis:** 👉 **[Complete Investigation & Solution](../archive/issues/issue-015-missing-volume-control-whale-instruments.md)**
 
 ---
 

@@ -308,7 +308,7 @@ export class MaterialControlPanelModal extends Modal {
 			case 'strings':
 			case 'woodwinds':
 			case 'brass':
-			case 'vocals':
+
 			case 'percussion':
 			case 'electronic':
 			case 'experimental':
@@ -1250,9 +1250,9 @@ export class MaterialControlPanelModal extends Modal {
 			strings: ['strings', 'violin', 'cello', 'contrabass', 'guitar', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp'], 
 			woodwinds: ['flute', 'clarinet', 'saxophone', 'bassoon', 'oboe'],
 			brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
-			vocals: ['choir', 'vocalPads', 'soprano', 'alto', 'tenor', 'bass'], // All vocal instruments including choir and pads
+
 			percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
-			electronic: ['leadSynth', 'bassSynth', 'arpSynth', 'pad'], // All electronic instruments including pad
+			electronic: ['leadSynth', 'bassSynth', 'arpSynth'], // All electronic instruments
 			experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
 			// Additional families for other instruments
 			keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta']
@@ -2116,6 +2116,12 @@ export class MaterialControlPanelModal extends Modal {
 		return highQualityInstruments.includes(instrumentKey);
 	}
 
+	private instrumentIsSynthesisOnly(instrumentKey: string): boolean {
+		// These instruments don't have sample files available and are synthesis-only
+		const synthesisOnlyInstruments = ['strings', 'electricPiano', 'harpsichord', 'accordion', 'celesta'];
+		return synthesisOnlyInstruments.includes(instrumentKey);
+	}
+
 	private instrumentSupportsQualityChoice(instrumentKey: string): boolean {
 		// Show dropdown for all instruments that support quality choice
 		// (No longer dependent on global setting - per-instrument control)
@@ -2123,6 +2129,11 @@ export class MaterialControlPanelModal extends Modal {
 		// Check if instrument has useHighQuality setting (indicates it supports choice)
 		const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentKey];
 		if (!instrumentSettings || !('useHighQuality' in instrumentSettings)) {
+			return false;
+		}
+		
+		// Synthesis-only instruments don't need quality choice dropdown
+		if (this.instrumentIsSynthesisOnly(instrumentKey)) {
 			return false;
 		}
 		

@@ -541,51 +541,7 @@ export default class SonigraphPlugin extends Plugin {
 			};
 		}
 
-		// Ensure new instruments exist (for users upgrading from 3 to 6 instruments)
-		if (!this.settings.instruments.choir) {
-			logger.info('settings', 'Adding missing Choir instrument');
-			migrationNeeded = true;
-			this.settings.instruments.choir = {
-				enabled: true, 
-				volume: 0.7, 
-				maxVoices: 8,
-				effects: {
-					reverb: { enabled: true, params: { decay: 3.2, preDelay: 0.05, wet: 0.6 } },
-					chorus: { enabled: true, params: { frequency: 0.4, depth: 0.6, delayTime: 5.0, feedback: 0.08 } },
-					filter: { enabled: false, params: { frequency: 2000, Q: 0.7, type: 'lowpass' } }
-				}
-			};
-		}
-		
-		if (!this.settings.instruments.vocalPads) {
-			logger.info('settings', 'Adding missing Vocal Pads instrument');
-			migrationNeeded = true;
-			this.settings.instruments.vocalPads = {
-				enabled: true, 
-				volume: 0.5, 
-				maxVoices: 8,
-				effects: {
-					reverb: { enabled: true, params: { decay: 4.0, preDelay: 0.06, wet: 0.7 } },
-					chorus: { enabled: false, params: { frequency: 0.3, depth: 0.4, delayTime: 6.0, feedback: 0.05 } },
-					filter: { enabled: true, params: { frequency: 1500, Q: 1.2, type: 'lowpass' } }
-				}
-			};
-		}
-		
-		if (!this.settings.instruments.pad) {
-			logger.info('settings', 'Adding missing Pad instrument');
-			migrationNeeded = true;
-			this.settings.instruments.pad = {
-				enabled: true, 
-				volume: 0.4, 
-				maxVoices: 8,
-				effects: {
-					reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.8 } },
-					chorus: { enabled: false, params: { frequency: 0.2, depth: 0.7, delayTime: 8.0, feedback: 0.1 } },
-					filter: { enabled: true, params: { frequency: 1200, Q: 1.5, type: 'lowpass' } }
-				}
-			};
-		}
+
 		
 		// Ensure woodwind instruments exist (for users upgrading from 6 to 9 instruments)
 		if (!this.settings.instruments.flute) {
@@ -633,66 +589,7 @@ export default class SonigraphPlugin extends Plugin {
 			};
 		}
 		
-		// Ensure individual vocal instruments exist (for users upgrading from 9 to 13 instruments - Phase 6A)
-		if (!this.settings.instruments.soprano) {
-			logger.info('settings', 'Adding missing Soprano instrument (Phase 6A)');
-			migrationNeeded = true;
-			this.settings.instruments.soprano = {
-				enabled: false, // Disabled by default to avoid overwhelming users
-				volume: 0.6, 
-				maxVoices: 4,
-				effects: {
-					reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.03, wet: 0.5 } },
-					chorus: { enabled: true, params: { frequency: 0.8, depth: 0.3, delayTime: 2.5, feedback: 0.04 } },
-					filter: { enabled: true, params: { frequency: 4000, Q: 1.2, type: 'lowpass' } }
-				}
-			};
-		}
-		
-		if (!this.settings.instruments.alto) {
-			logger.info('settings', 'Adding missing Alto instrument (Phase 6A)');
-			migrationNeeded = true;
-			this.settings.instruments.alto = {
-				enabled: false, // Disabled by default
-				volume: 0.5, 
-				maxVoices: 4,
-				effects: {
-					reverb: { enabled: true, params: { decay: 3.0, preDelay: 0.04, wet: 0.55 } },
-					chorus: { enabled: true, params: { frequency: 0.6, depth: 0.35, delayTime: 3.0, feedback: 0.05 } },
-					filter: { enabled: true, params: { frequency: 3200, Q: 1.0, type: 'lowpass' } }
-				}
-			};
-		}
-		
-		if (!this.settings.instruments.tenor) {
-			logger.info('settings', 'Adding missing Tenor instrument (Phase 6A)');
-			migrationNeeded = true;
-			this.settings.instruments.tenor = {
-				enabled: false, // Disabled by default
-				volume: 0.5, 
-				maxVoices: 4,
-				effects: {
-					reverb: { enabled: true, params: { decay: 2.5, preDelay: 0.03, wet: 0.45 } },
-					chorus: { enabled: false, params: { frequency: 0.7, depth: 0.25, delayTime: 2.8, feedback: 0.03 } },
-					filter: { enabled: true, params: { frequency: 2800, Q: 0.9, type: 'lowpass' } }
-				}
-			};
-		}
-		
-		if (!this.settings.instruments.bass) {
-			logger.info('settings', 'Adding missing Bass instrument (Phase 6A)');
-			migrationNeeded = true;
-			this.settings.instruments.bass = {
-				enabled: false, // Disabled by default
-				volume: 0.7, 
-				maxVoices: 4,
-				effects: {
-					reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.05, wet: 0.6 } },
-					chorus: { enabled: false, params: { frequency: 0.4, depth: 0.4, delayTime: 4.0, feedback: 0.06 } },
-					filter: { enabled: false, params: { frequency: 1500, Q: 0.8, type: 'lowpass' } }
-				}
-			};
-		}
+
 
 		// Ensure new string instruments exist (for users upgrading to include new nbrosowsky instruments)
 		if (!this.settings.instruments.contrabass) {

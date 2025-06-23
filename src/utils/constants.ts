@@ -13,8 +13,8 @@ export interface InstrumentSettings {
 export type InstrumentKey = keyof typeof DEFAULT_SETTINGS.instruments;
 
 export type InstrumentName = 
-	| 'piano' | 'organ' | 'strings' | 'choir' | 'vocalPads' | 'pad' 
-	| 'flute' | 'clarinet' | 'saxophone' | 'soprano' | 'alto' | 'tenor' | 'bass'
+	| 'piano' | 'organ' | 'strings' 
+	| 'flute' | 'clarinet' | 'saxophone'
 	| 'electricPiano' | 'harpsichord' | 'accordion' | 'celesta'
 	| 'violin' | 'cello' | 'contrabass' | 'guitar' | 'guitarElectric' | 'guitarNylon' | 'bassElectric' | 'harp' | 'trumpet' | 'frenchHorn' | 'trombone' | 'tuba'
 	| 'bassoon' | 'oboe' | 'timpani' | 'xylophone' | 'vibraphone' | 'gongs'
@@ -216,16 +216,9 @@ export interface SonigraphSettings {
 		piano: InstrumentSettings;
 		organ: InstrumentSettings;
 		strings: InstrumentSettings;
-		choir: InstrumentSettings;
-		vocalPads: InstrumentSettings;
-		pad: InstrumentSettings;
 		flute: InstrumentSettings;
 		clarinet: InstrumentSettings;
 		saxophone: InstrumentSettings;
-		soprano: InstrumentSettings;
-		alto: InstrumentSettings;
-		tenor: InstrumentSettings;
-		bass: InstrumentSettings;
 		// Phase 6B: Extended Keyboard Family
 		electricPiano: InstrumentSettings;
 		harpsichord: InstrumentSettings;
@@ -373,7 +366,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true, 
 			volume: 0.6, 
 			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -397,105 +389,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 					params: { 
 						frequency: 3500, 
 						Q: 0.8, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
-		choir: { 
-			enabled: true, 
-			volume: 0.7, 
-			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 3.2, 
-						preDelay: 0.05, 
-						wet: 0.6 
-					} 
-				},
-				chorus: { 
-					enabled: true, 
-					params: { 
-						frequency: 0.4, 
-						depth: 0.6, 
-						delayTime: 5.0, 
-						feedback: 0.08 
-					} 
-				},
-				filter: { 
-					enabled: false, 
-					params: { 
-						frequency: 2000, 
-						Q: 0.7, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
-		vocalPads: { 
-			enabled: false, 
-			volume: 0.5, 
-			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 4.0, 
-						preDelay: 0.06, 
-						wet: 0.7 
-					} 
-				},
-				chorus: { 
-					enabled: true, 
-					params: { 
-						frequency: 0.3, 
-						depth: 0.4, 
-						delayTime: 6.0, 
-						feedback: 0.05 
-					} 
-				},
-				filter: { 
-					enabled: true, 
-					params: { 
-						frequency: 1500, 
-						Q: 1.2, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
-		pad: { 
-			enabled: false, 
-			volume: 0.4, 
-			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 3.5, 
-						preDelay: 0.08, 
-						wet: 0.8 
-					} 
-				},
-				chorus: { 
-					enabled: true, 
-					params: { 
-						frequency: 0.2, 
-						depth: 0.7, 
-						delayTime: 8.0, 
-						feedback: 0.1 
-					} 
-				},
-				filter: { 
-					enabled: true, 
-					params: { 
-						frequency: 1200, 
-						Q: 1.5, 
 						type: 'lowpass' 
 					} 
 				}
@@ -600,144 +493,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		soprano: { 
-			enabled: true,
-			volume: 0.6, 
-			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 2.8, 
-						preDelay: 0.03, 
-						wet: 0.5 
-					} 
-				},
-				chorus: { 
-					enabled: true, 
-					params: { 
-						frequency: 0.8, 
-						depth: 0.3, 
-						delayTime: 2.5, 
-						feedback: 0.04 
-					} 
-				},
-				filter: { 
-					enabled: true, 
-					params: { 
-						frequency: 4000,
-						Q: 1.2, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
-		alto: { 
-			enabled: false,
-			volume: 0.5, 
-			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 3.0, 
-						preDelay: 0.04, 
-						wet: 0.55 
-					} 
-				},
-				chorus: { 
-					enabled: true, 
-					params: { 
-						frequency: 0.6, 
-						depth: 0.35, 
-						delayTime: 3.0, 
-						feedback: 0.05 
-					} 
-				},
-				filter: { 
-					enabled: true, 
-					params: { 
-						frequency: 3200,
-						Q: 1.0, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
-		tenor: { 
-			enabled: false,
-			volume: 0.5, 
-			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 2.5, 
-						preDelay: 0.03, 
-						wet: 0.45 
-					} 
-				},
-				chorus: { 
-					enabled: false, 
-					params: { 
-						frequency: 0.7, 
-						depth: 0.25, 
-						delayTime: 2.8, 
-						feedback: 0.03 
-					} 
-				},
-				filter: { 
-					enabled: true, 
-					params: { 
-						frequency: 2800,
-						Q: 0.9, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
-		bass: { 
-			enabled: true,
-			volume: 0.7, 
-			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
-			effects: {
-				reverb: { 
-					enabled: true, 
-					params: { 
-						decay: 3.5, 
-						preDelay: 0.05, 
-						wet: 0.6 
-					} 
-				},
-				chorus: { 
-					enabled: false, 
-					params: { 
-						frequency: 0.4, 
-						depth: 0.4, 
-						delayTime: 4.0, 
-						feedback: 0.06 
-					} 
-				},
-				filter: { 
-					enabled: false, 
-					params: { 
-						frequency: 1500,
-						Q: 0.8, 
-						type: 'lowpass' 
-					} 
-				}
-			}
-		},
 		// Phase 6B: Extended Keyboard Family
 		electricPiano: { 
 			enabled: false,
 			volume: 0.7, 
 			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -770,7 +530,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6, 
 			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -803,7 +562,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6, 
 			maxVoices: 8,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -836,7 +594,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.5, 
 			maxVoices: 6,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1233,7 +990,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.8, 
 			maxVoices: 3,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: false, // Default to synthesis (user can opt-in to samples)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1300,7 +1057,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1979,10 +1735,10 @@ export const VOICE_ASSIGNMENT_STRATEGIES = {
 
 export const INSTRUMENT_FAMILIES = {
 	keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta'],
-	strings: ['strings', 'violin', 'cello', 'guitar', 'harp'],
+	strings: ['strings', 'violin', 'cello', 'contrabass', 'guitar', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp'],
 	woodwinds: ['flute', 'clarinet', 'saxophone', 'bassoon', 'oboe'],
 	brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
-	vocals: ['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'],
+
 	percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
 	electronic: ['leadSynth', 'bassSynth', 'arpSynth'],
 	experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
@@ -2044,24 +1800,7 @@ export const INSTRUMENT_INFO = {
 		description: 'AM synthesis with filtering for warm, flowing sounds',
 		defaultFrequencyRange: 'Very Low (<200Hz)'
 	},
-	choir: {
-		name: 'Choir',
-		icon: '🎤',
-		description: 'Additive synthesis with formant filtering for ethereal human voices',
-		defaultFrequencyRange: 'High (1000-1400Hz)'
-	},
-	vocalPads: {
-		name: 'Vocal Pads',
-		icon: '🌊',
-		description: 'Multi-layer sine waves with formant filtering for atmospheric textures',
-		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
-	},
-	pad: {
-		name: 'Pad',
-		icon: '🎛️',
-		description: 'Multi-oscillator synthesis with filter sweeps for ambient foundations',
-		defaultFrequencyRange: 'Low-Mid (200-400Hz)'
-	},
+
 	flute: {
 		name: 'Flute',
 		icon: '🎺',
@@ -2125,19 +1864,19 @@ export const INSTRUMENT_INFO = {
 		defaultFrequencyRange: 'Very Low (<100Hz)'
 	},
 	guitar: {
-		name: 'Guitar',
+		name: 'Guitar (acoustic)',
 		icon: '🎸',
 		description: 'Karplus-Strong synthesis for authentic plucked string physics',
 		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
 	},
 	guitarElectric: {
-		name: 'Electric guitar',
+		name: 'Guitar (electric)',
 		icon: '🎸',
 		description: 'Amplified electric guitar with pickup simulation and effects processing',
 		defaultFrequencyRange: 'High (1000-1400Hz)'
 	},
 	guitarNylon: {
-		name: 'Nylon guitar',
+		name: 'Guitar (nylon)',
 		icon: '🎸',
 		description: 'Classical nylon-string guitar with warm, mellow fingerpicked tones',
 		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
@@ -2233,31 +1972,7 @@ export const INSTRUMENT_INFO = {
 		description: 'Sequenced patterns with graph-sync capability and delay',
 		defaultFrequencyRange: 'Variable (Pattern-dependent)'
 	},
-	// Phase 6A: Individual Vocal Sections
-	soprano: {
-		name: 'Soprano',
-		icon: '👩‍🎤',
-		description: 'High female voice with formant filtering and vowel morphing',
-		defaultFrequencyRange: 'High-Mid (800-1200Hz)'
-	},
-	alto: {
-		name: 'Alto',
-		icon: '🎙️',
-		description: 'Lower female voice with rich harmonics and breath noise modeling',
-		defaultFrequencyRange: 'High (1000-1400Hz)'
-	},
-	tenor: {
-		name: 'Tenor',
-		icon: '🧑‍🎤',
-		description: 'High male voice with vocal expression and characteristics',
-		defaultFrequencyRange: 'Mid-High (600-1000Hz)'
-	},
-	bass: {
-		name: 'Bass',
-		icon: '🎤',
-		description: 'Low male voice with chest resonance and sub-harmonics',
-		defaultFrequencyRange: 'Very Low (<100Hz)'
-	},
+
 	// Phase 8B: Environmental & Natural Sounds
 	whaleHumpback: {
 		name: 'Humpback whale (synthesis)',

@@ -45,7 +45,7 @@ export const LUCIDE_ICONS = {
   strings: 'music', // Piano/keyboard for strings
   woodwinds: 'circle', // Using circle for woodwinds
   brass: 'volume-2', // Horn-like icon for brass
-  vocals: 'mic', // Microphone for vocals
+
   percussion: 'circle', // Circle for percussion
   electronic: 'zap', // Electronic/synthesizer
   experimental: 'flask', // Science flask for experimental
@@ -73,10 +73,8 @@ export const LUCIDE_ICONS = {
   tuba: 'volume-2',
   
   // Individual Instruments - Vocals
-  soprano: 'mic',
-  alto: 'mic',
-  tenor: 'mic',
-  bass: 'mic',
+  
+  
   
   // Individual Instruments - Percussion
   timpani: 'circle',
@@ -153,7 +151,7 @@ export const FAMILY_ICONS = {
   strings: LUCIDE_ICONS.strings,
   woodwinds: LUCIDE_ICONS.woodwinds,
   brass: LUCIDE_ICONS.brass,
-  vocals: LUCIDE_ICONS.vocals,
+
   percussion: LUCIDE_ICONS.percussion,
   electronic: LUCIDE_ICONS.electronic,
   experimental: LUCIDE_ICONS.experimental,
@@ -186,10 +184,8 @@ export const INSTRUMENT_ICONS = {
   tuba: LUCIDE_ICONS.tuba,
   
   // Vocals
-  soprano: LUCIDE_ICONS.soprano,
-  alto: LUCIDE_ICONS.alto,
-  tenor: LUCIDE_ICONS.tenor,
-  bass: LUCIDE_ICONS.bass,
+  
+  
   
   // Percussion
   timpani: LUCIDE_ICONS.timpani,
@@ -342,13 +338,7 @@ export const TAB_CONFIGS = [
     description: '4 brass instruments',
     instrumentCount: 4
   },
-  {
-    id: 'vocals',
-    name: 'Vocals',
-    icon: 'mic',
-    description: '4 vocal ranges',
-    instrumentCount: 4
-  },
+
   {
     id: 'percussion',
     name: 'Percussion',
