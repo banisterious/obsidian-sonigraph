@@ -24,8 +24,8 @@ export class GraphRenderer {
   private container: HTMLElement;
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private g: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-  private linkGroup: d3.Selection<SVGGElement, GraphLink, SVGGElement, unknown>;
-  private nodeGroup: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>;
+  private linkGroup: any;
+  private nodeGroup: any;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   
   private simulation: d3.Simulation<GraphNode, GraphLink>;
@@ -92,6 +92,11 @@ export class GraphRenderer {
         });
 
       this.svg.call(this.zoom);
+      
+      // Fix touch event warnings by making touch events passive
+      this.svg.on('touchstart.zoom', null);
+      this.svg.on('touchmove.zoom', null);
+      this.svg.on('touchend.zoom', null);
     }
   }
 
@@ -105,17 +110,18 @@ export class GraphRenderer {
         .distance(this.config.linkDistance)
         .strength(this.forceConfig.linkStrength)
       )
-      .force('charge', d3.forceManyBody()
+      .force('charge', d3.forceManyBody<GraphNode>()
         .strength(this.forceConfig.chargeStrength)
       )
-      .force('center', d3.forceCenter(
+      .force('center', d3.forceCenter<GraphNode>(
         this.config.width / 2, 
         this.config.height / 2
       ).strength(this.forceConfig.centerStrength))
-      .force('collision', d3.forceCollide()
+      .force('collision', d3.forceCollide<GraphNode>()
         .radius(this.forceConfig.collisionRadius)
       )
-      .on('tick', () => this.updatePositions());
+      .on('tick', () => this.updatePositions())
+      .on('end', () => this.onSimulationEnd());
   }
 
   /**
@@ -134,6 +140,9 @@ export class GraphRenderer {
     this.updateSimulation();
     this.renderLinks();
     this.renderNodes();
+    
+    // For static preview, set initial zoom to show full graph
+    this.setInitialView();
   }
 
   /**
@@ -167,12 +176,10 @@ export class GraphRenderer {
     );
 
     this.simulation
-      .nodes(visibleNodes)
-      .force('link', d3.forceLink<GraphNode, GraphLink>(visibleLinks)
-        .id(d => d.id)
-        .distance(this.config.linkDistance)
-        .strength(this.forceConfig.linkStrength)
-      );
+      .nodes(visibleNodes);
+    
+    (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
+      .links(visibleLinks);
 
     this.simulation.alpha(1).restart();
   }
@@ -228,10 +235,19 @@ export class GraphRenderer {
       .attr('class', d => `${d.type}-node`);
 
     // Add labels to new nodes
-    nodeEnter.append('text')
+    const textElements = nodeEnter.append('text')
       .attr('dy', this.config.nodeRadius + 15)
       .attr('class', this.config.showLabels ? 'labels-visible' : '')
       .text(d => d.title);
+    
+    // Set initial visibility with inline styles
+    if (this.config.showLabels) {
+      textElements.style('display', 'block').style('opacity', '1');
+    } else {
+      textElements.style('display', 'none').style('opacity', '0');
+    }
+    
+    logger.debug('renderer', `Node labels created with showLabels: ${this.config.showLabels}`);
 
     // Animate new nodes
     nodeEnter.transition()
@@ -330,14 +346,39 @@ export class GraphRenderer {
     
     // Update labels visibility
     if (newConfig.showLabels !== undefined) {
-      this.nodeGroup.selectAll('text')
-        .classed('labels-visible', this.config.showLabels);
+      logger.debug('renderer', `Updating showLabels to: ${this.config.showLabels}`);
+      // Update existing nodes if they exist
+      const nodeSelection = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
+      logger.debug('renderer', `Found ${nodeSelection.size()} nodes to update`);
+      if (!nodeSelection.empty()) {
+        const textSelection = nodeSelection.selectAll('text');
+        logger.debug('renderer', `Found ${textSelection.size()} text elements to update`);
+        
+        // Use both class and inline style for maximum compatibility
+        if (this.config.showLabels) {
+          textSelection
+            .classed('labels-visible', true)
+            .style('display', 'block')
+            .style('opacity', '1');
+        } else {
+          textSelection
+            .classed('labels-visible', false)
+            .style('display', 'none')
+            .style('opacity', '0');
+        }
+        
+        // Log the state for debugging
+        logger.debug('renderer', `Labels ${this.config.showLabels ? 'shown' : 'hidden'} via inline styles`);
+      }
     }
     
     // Update node radius
     if (newConfig.nodeRadius !== undefined) {
-      this.nodeGroup.selectAll('circle')
-        .attr('r', this.config.nodeRadius);
+      const nodeSelection = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
+      if (!nodeSelection.empty()) {
+        nodeSelection.selectAll('circle')
+          .attr('r', this.config.nodeRadius);
+      }
     }
     
     logger.debug('renderer', 'Configuration updated', { config: this.config });
@@ -351,9 +392,9 @@ export class GraphRenderer {
     
     // Update simulation forces
     this.simulation
-      .force('charge', d3.forceManyBody().strength(this.forceConfig.chargeStrength))
-      .force('collision', d3.forceCollide().radius(this.forceConfig.collisionRadius))
-      .force('center', d3.forceCenter(this.config.width / 2, this.config.height / 2)
+      .force('charge', d3.forceManyBody<GraphNode>().strength(this.forceConfig.chargeStrength))
+      .force('collision', d3.forceCollide<GraphNode>().radius(this.forceConfig.collisionRadius))
+      .force('center', d3.forceCenter<GraphNode>(this.config.width / 2, this.config.height / 2)
         .strength(this.forceConfig.centerStrength));
     
     if (this.simulation.force('link')) {
@@ -378,7 +419,7 @@ export class GraphRenderer {
       .attr('height', height);
     
     this.simulation
-      .force('center', d3.forceCenter(width / 2, height / 2)
+      .force('center', d3.forceCenter<GraphNode>(width / 2, height / 2)
         .strength(this.forceConfig.centerStrength));
     
     logger.debug('renderer', `Renderer resized to ${width}x${height}`);
@@ -396,6 +437,36 @@ export class GraphRenderer {
    */
   setZoomTransform(transform: d3.ZoomTransform): void {
     this.svg.call(this.zoom.transform, transform);
+  }
+
+  /**
+   * Set initial view for static preview
+   */
+  private setInitialView(): void {
+    // Set a comfortable zoom level immediately
+    const initialScale = 0.6;
+    const initialTransform = d3.zoomIdentity
+      .translate(this.config.width * 0.2, this.config.height * 0.2)
+      .scale(initialScale);
+    
+    if (this.config.enableZoom && this.zoom) {
+      this.svg.call(this.zoom.transform, initialTransform);
+    }
+    
+    // Stop simulation after a short time for static preview
+    setTimeout(() => {
+      this.simulation.stop();
+      logger.debug('renderer', 'Simulation stopped for static preview');
+    }, 1500); // Let simulation run for 1.5 seconds to settle
+    
+    logger.debug('renderer', 'Initial view set for static preview');
+  }
+
+  /**
+   * Handle simulation end
+   */
+  private onSimulationEnd(): void {
+    logger.debug('renderer', 'Force simulation ended');
   }
 
   /**

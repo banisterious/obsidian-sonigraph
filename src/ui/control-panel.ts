@@ -9,6 +9,8 @@ import { MaterialCard, StatCard, InstrumentCard, EffectSection, ActionChip, Mate
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
 import { PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
 import { GraphDemoModal } from './GraphDemoModal';
+import { GraphDataExtractor } from '../graph/GraphDataExtractor';
+import { GraphRenderer } from '../graph/GraphRenderer';
 
 const logger = getLogger('control-panel');
 
@@ -32,6 +34,10 @@ export class MaterialControlPanelModal extends Modal {
 	private progressElement: HTMLElement | null = null;
 	private progressText: HTMLElement | null = null;
 	private progressBar: HTMLElement | null = null;
+	
+	// Sonic Graph components
+	private graphRenderer: GraphRenderer | null = null;
+	private showFileNames: boolean = false;
 
 	// Issue #006 Fix: Store bound event handlers for proper cleanup
 	private boundEventHandlers: {
@@ -82,6 +88,12 @@ export class MaterialControlPanelModal extends Modal {
 		// Cleanup play button manager
 		if (this.playButtonManager) {
 			this.playButtonManager.dispose();
+		}
+		
+		// Cleanup graph renderer
+		if (this.graphRenderer) {
+			this.graphRenderer.destroy();
+			this.graphRenderer = null;
 		}
 	}
 
@@ -304,6 +316,9 @@ export class MaterialControlPanelModal extends Modal {
 			case 'master':
 				this.createMasterTab();
 				break;
+			case 'sonic-graph':
+				this.createSonicGraphTab();
+				break;
 			case 'keyboard':
 			case 'strings':
 			case 'woodwinds':
@@ -439,6 +454,17 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Master Tuning Card
 		this.createMasterTuningCard();
+	}
+
+	/**
+	 * Create Sonic Graph tab content
+	 */
+	private createSonicGraphTab(): void {
+		// Graph Preview Card
+		this.createGraphPreviewCard();
+		
+		// Launch Controls Card
+		this.createSonicGraphControlsCard();
 	}
 
 	private createScaleKeyCard(): void {
@@ -844,6 +870,183 @@ export class MaterialControlPanelModal extends Modal {
 			});
 			sliderContainer.appendChild(slider.getElement());
 		});
+	}
+
+	/**
+	 * Create Graph Preview Card for Sonic Graph tab
+	 */
+	private createGraphPreviewCard(): void {
+		const card = new MaterialCard({
+			title: 'Knowledge graph preview',
+			iconName: 'globe',
+			subtitle: 'Static view of your vault structure and connections',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		
+		// Graph container with fixed height
+		const graphContainer = content.createDiv({ 
+			cls: 'osp-graph-preview-container',
+			attr: { style: 'height: 300px; border: 1px solid var(--background-modifier-border); border-radius: 4px; background: var(--background-primary-alt);' }
+		});
+		
+		// Loading placeholder initially
+		const loadingDiv = graphContainer.createDiv({ 
+			cls: 'osp-graph-loading',
+			text: 'Loading graph preview...',
+			attr: { style: 'display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);' }
+		});
+
+		// Initialize graph preview asynchronously
+		this.initializeGraphPreview(graphContainer, loadingDiv);
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create Sonic Graph Controls Card
+	 */
+	private createSonicGraphControlsCard(): void {
+		const card = new MaterialCard({
+			title: 'Sonic graph controls',
+			iconName: 'play-circle',
+			subtitle: 'Launch temporal animation with audio',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		
+		// Description
+		const description = content.createDiv({ cls: 'osp-control-description' });
+		description.innerHTML = `
+			<p>Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.</p>
+		`;
+
+		// Settings section
+		const settingsSection = content.createDiv({ cls: 'osp-settings-section' });
+		settingsSection.style.marginBottom = 'var(--md-space-4)';
+		
+		// Show file names toggle
+		logger.debug('ui', `Creating show file names toggle with initial state: ${this.showFileNames}`);
+		createObsidianToggle(
+			settingsSection,
+			this.showFileNames, // Use current state
+			(enabled) => this.handleShowFileNamesToggle(enabled),
+			{
+				name: 'Show file names',
+				description: 'Display file names as labels on graph nodes'
+			}
+		);
+		logger.debug('ui', 'Show file names toggle created');
+
+		// Launch button
+		const launchButton = new MaterialButton({
+			text: 'Launch Sonic Graph',
+			iconName: 'external-link',
+			variant: 'filled',
+			onClick: () => this.launchSonicGraphModal()
+		});
+
+		const buttonContainer = content.createDiv({ cls: 'osp-button-container' });
+		buttonContainer.appendChild(launchButton.getElement());
+
+		// Quick stats
+		const statsContainer = content.createDiv({ cls: 'osp-stats-row' });
+		
+		const filesStat = statsContainer.createDiv({ cls: 'osp-stat-compact' });
+		filesStat.innerHTML = `
+			<span class="osp-stat-value">—</span>
+			<span class="osp-stat-label">Files</span>
+		`;
+		
+		const linksStat = statsContainer.createDiv({ cls: 'osp-stat-compact' });
+		linksStat.innerHTML = `
+			<span class="osp-stat-value">—</span>
+			<span class="osp-stat-label">Links</span>
+		`;
+
+		// Update stats asynchronously
+		this.updateSonicGraphStats(filesStat, linksStat);
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Initialize graph preview visualization
+	 */
+	private async initializeGraphPreview(container: HTMLElement, loadingDiv: HTMLElement): Promise<void> {
+		try {
+			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
+			const graphData = await extractor.extractGraphData();
+			
+			// Remove loading indicator
+			loadingDiv.remove();
+			
+			// Create graph renderer
+			this.graphRenderer = new GraphRenderer(container, {
+				width: container.clientWidth,
+				height: 300,
+				enableZoom: true, // Enable zoom for interactive preview
+				showLabels: this.showFileNames // Use stored toggle state
+			});
+			
+			this.graphRenderer.render(graphData.nodes, graphData.links);
+			logger.debug('ui', `Graph renderer initialized with showLabels: ${this.showFileNames}`);
+			
+		} catch (error) {
+			logger.error('ui', 'Failed to initialize graph preview:', error);
+			loadingDiv.textContent = 'Failed to load graph preview';
+		}
+	}
+
+	/**
+	 * Update stats for Sonic Graph controls
+	 */
+	private async updateSonicGraphStats(filesEl: HTMLElement, linksEl: HTMLElement): Promise<void> {
+		try {
+			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
+			const graphData = await extractor.extractGraphData();
+			
+			const filesValue = filesEl.querySelector('.osp-stat-value') as HTMLElement;
+			const linksValue = linksEl.querySelector('.osp-stat-value') as HTMLElement;
+			
+			if (filesValue) filesValue.textContent = graphData.nodes.length.toString();
+			if (linksValue) linksValue.textContent = graphData.links.length.toString();
+			
+		} catch (error) {
+			logger.error('ui', 'Failed to update Sonic Graph stats:', error);
+		}
+	}
+
+	/**
+	 * Launch the full Sonic Graph modal
+	 */
+	private launchSonicGraphModal(): void {
+		// Close current modal and open Sonic Graph modal
+		this.close();
+		
+		// TODO: Implement SonicGraphModal
+		new Notice('Sonic Graph modal coming soon!');
+		logger.info('ui', 'Sonic Graph modal launched');
+	}
+
+	/**
+	 * Handle show file names toggle
+	 */
+	private handleShowFileNamesToggle(enabled: boolean): void {
+		this.showFileNames = enabled;
+		logger.debug('ui', `Show file names toggled: ${enabled}, renderer exists: ${!!this.graphRenderer}`);
+		
+		// Show a notice for debugging
+		new Notice(`File names ${enabled ? 'shown' : 'hidden'}`);
+		
+		if (this.graphRenderer) {
+			this.graphRenderer.updateConfig({ showLabels: enabled });
+			logger.debug('ui', `Graph file names visibility updated: ${enabled}`);
+		} else {
+			logger.debug('ui', 'Graph renderer not yet initialized, will apply setting when created');
+		}
 	}
 
 	/**

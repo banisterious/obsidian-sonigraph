@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-23 18:11:31 UTC
+ * - Generated: 2025-06-23 21:10:55 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6838,7 +6838,7 @@ details.osp-advanced-settings {
    COMPONENT: TEMPORAL.CSS
    ========================================================================== */
 
-/* Component Size: 260 lines, 5.22 KB */
+/* Component Size: 283 lines, 5.93 KB */
 
 /* ===================================
    TEMPORAL GRAPH ANIMATION STYLES
@@ -6860,6 +6860,22 @@ details.osp-advanced-settings {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Graph Preview Container in Control Center */
+.osp-graph-preview-container {
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.osp-graph-preview-container:active {
+  cursor: grabbing;
+}
+
+.osp-graph-preview-container .sonigraph-temporal-svg {
+  width: 100%;
+  height: 100%;
 }
 
 /* ===================================
@@ -6927,23 +6943,30 @@ details.osp-advanced-settings {
   filter: brightness(1.1);
 }
 
-/* Node Labels */
-.sonigraph-temporal-node text {
+/* Node Labels - Hidden by default with high specificity */
+.sonigraph-temporal-svg .sonigraph-temporal-nodes .sonigraph-temporal-node text {
   font-size: 12px;
   font-family: var(--font-interface);
   fill: var(--text-normal);
   text-anchor: middle;
   pointer-events: none;
-  opacity: 0;
+  display: none !important; /* Hide by default */
+  opacity: 0 !important;
   transition: opacity 0.2s ease;
 }
 
-.sonigraph-temporal-node:hover text {
-  opacity: 1;
+/* Show labels when explicitly enabled - higher specificity */
+.sonigraph-temporal-svg .sonigraph-temporal-nodes .sonigraph-temporal-node text.labels-visible {
+  display: block !important;
+  opacity: 1 !important;
 }
 
-.sonigraph-temporal-node text.labels-visible {
-  opacity: 1;
+/* Show labels on hover only when labels are enabled */
+.sonigraph-temporal-svg
+  .sonigraph-temporal-nodes
+  .sonigraph-temporal-node:hover
+  text.labels-visible {
+  opacity: 1 !important;
 }
 
 /* ===================================
@@ -7672,11 +7695,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-23 18:11:31 UTC
+ * Build completed: 2025-06-23 21:10:55 UTC
  * Components processed: 19
- * Total lines: 7475
- * Total size: 156.16 KB
- * Build duration: 0.02 seconds
+ * Total lines: 7498
+ * Total size: 156.88 KB
+ * Build duration: 0.01 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -7694,7 +7717,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - temporal.css: 260 lines, 5.22 KB
+ * - temporal.css: 283 lines, 5.93 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB

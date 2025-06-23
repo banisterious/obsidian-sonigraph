@@ -359,6 +359,12 @@ export const TAB_CONFIGS = [
     icon: 'flask',
     description: 'Experimental sound sources',
     instrumentCount: 1
+  },
+  {
+    id: 'sonic-graph',
+    name: 'Sonic Graph',
+    icon: 'globe',
+    description: 'Knowledge graph visualization with temporal animation'
   }
 ] as const;
 
