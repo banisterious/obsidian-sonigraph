@@ -1815,7 +1815,7 @@ export const INSTRUMENT_INFO = {
 	},
 	// Phase 6B: Extended Keyboard Family
 	electricPiano: {
-		name: 'Electric Piano',
+		name: 'Electric piano',
 		icon: '🎹',
 		description: 'AM synthesis with tremolo for vintage Rhodes/Wurlitzer character',
 		defaultFrequencyRange: 'Mid-Low (200-400Hz)'
@@ -1894,7 +1894,7 @@ export const INSTRUMENT_INFO = {
 		defaultFrequencyRange: 'Low-Mid (300-600Hz)'
 	},
 	frenchHorn: {
-		name: 'French Horn',
+		name: 'French horn',
 		icon: '🎯',
 		description: 'Sine waves with slight distortion for warm middle register',
 		defaultFrequencyRange: 'Mid (400-800Hz)'
@@ -1949,19 +1949,19 @@ export const INSTRUMENT_INFO = {
 		defaultFrequencyRange: 'Very Low (<100Hz)'
 	},
 	leadSynth: {
-		name: 'Lead Synth',
+		name: 'Lead synth',
 		icon: '🎛️',
 		description: 'Cutting synth lead with filter modulation and resonance',
 		defaultFrequencyRange: 'Variable (200-8000Hz)'
 	},
 	bassSynth: {
-		name: 'Bass Synth',
+		name: 'Bass synth',
 		icon: '🎛️',
 		description: 'Electronic foundation with sub-oscillator and tight filtering',
 		defaultFrequencyRange: 'Low (100-200Hz)'
 	},
 	arpSynth: {
-		name: 'Arp Synth',
+		name: 'Arp synth',
 		icon: '🎛️',
 		description: 'Sequenced patterns with graph-sync capability and delay',
 		defaultFrequencyRange: 'Variable (Pattern-dependent)'

@@ -27,7 +27,12 @@
 ### 1.2. Effects Processing
 - **Per-Instrument Effects**: Individual reverb, chorus, filter chains
 - **Master Effects Bus**: Global reverb, 3-band EQ, compressor, limiter
-- **Effect Presets**: 11 professional venue and genre presets
+- **Effect Presets System**: 11 professional acoustic environment presets
+  - **Venue Presets**: Concert Hall, Cathedral, Studio, Jazz Club, Arena
+  - **Genre Presets**: Ambient, Classical, Electronic, Cinematic
+  - **Utility Presets**: Dry (minimal effects), Lush (maximum richness)
+  - **Application Modes**: Family-level, global, and per-instrument presets
+  - **Custom Presets**: User-created preset saving and management
 - **Real-Time Control**: Parameter preview, A/B bypass, performance monitoring
 
 ### 1.3. Voice Management
@@ -54,7 +59,11 @@
 
 ### 2.3. Advanced Controls
 - **Effect Parameter Control**: Precise adjustment with musical context
-- **Preset System**: Categorized presets with one-click application
+- **Effect Presets UI**: One-click acoustic environment transformation
+  - **Dropdown Integration**: Seamless integration with existing family tabs
+  - **Visual Feedback**: Clear indication of applied presets vs custom settings
+  - **Hierarchical Control**: Global > Family > Instrument preset hierarchy
+  - **Preset Categories**: Organized by venue, genre, and utility types
 - **Performance Monitoring**: Real-time CPU, memory, and latency display
 - **Smart Suggestions**: Context-aware parameter recommendations
 
