@@ -7,8 +7,10 @@
  */
 
 import { App, Modal, ButtonComponent, Notice } from 'obsidian';
-import { GraphDataExtractor } from '../graph/GraphDataExtractor';
+import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
+import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
+import { MusicalMapper } from '../graph/musical-mapper';
 import { createLucideIcon } from './lucide-icons';
 import { getLogger } from '../logging';
 import * as d3 from 'd3';
@@ -20,6 +22,8 @@ export class SonicGraphModal extends Modal {
     private plugin: SonigraphPlugin;
     private graphDataExtractor: GraphDataExtractor;
     private graphRenderer: GraphRenderer | null = null;
+    private temporalAnimator: TemporalGraphAnimator | null = null;
+    private musicalMapper: MusicalMapper | null = null;
     private isAnimating: boolean = false;
     private showFileNames: boolean = false;
     
@@ -30,6 +34,9 @@ export class SonicGraphModal extends Modal {
     private controlsContainer: HTMLElement;
     private playButton: ButtonComponent;
     private statsContainer: HTMLElement;
+    private speedSelect: HTMLSelectElement;
+    private timelineScrubber: HTMLInputElement;
+    private timelineInfo: HTMLElement;
 
     constructor(app: App, plugin: SonigraphPlugin) {
         super(app);
@@ -77,6 +84,12 @@ export class SonicGraphModal extends Modal {
 
     onClose() {
         logger.debug('ui', 'Closing Sonic Graph modal');
+        
+        // Cleanup temporal animator
+        if (this.temporalAnimator) {
+            this.temporalAnimator.destroy();
+            this.temporalAnimator = null;
+        }
         
         // Cleanup graph renderer
         if (this.graphRenderer) {
@@ -131,19 +144,20 @@ export class SonicGraphModal extends Modal {
         const scrubberContainer = this.timelineContainer.createDiv({ cls: 'sonic-graph-scrubber-container' });
         scrubberContainer.createEl('label', { text: 'Timeline', cls: 'sonic-graph-scrubber-label' });
         
-        const scrubber = scrubberContainer.createEl('input', { 
+        this.timelineScrubber = scrubberContainer.createEl('input', { 
             type: 'range',
             cls: 'sonic-graph-scrubber'
         });
-        scrubber.min = '0';
-        scrubber.max = '100';
-        scrubber.value = '0';
+        this.timelineScrubber.min = '0';
+        this.timelineScrubber.max = '100';
+        this.timelineScrubber.value = '0';
+        this.timelineScrubber.addEventListener('input', () => this.handleTimelineScrub());
         
         // Timeline info
-        const timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
-        timelineInfo.createSpan({ text: 'Start', cls: 'sonic-graph-timeline-start' });
-        timelineInfo.createSpan({ text: 'Current: 2024', cls: 'sonic-graph-timeline-current' });
-        timelineInfo.createSpan({ text: 'End', cls: 'sonic-graph-timeline-end' });
+        this.timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
+        this.timelineInfo.createSpan({ text: 'Start', cls: 'sonic-graph-timeline-start' });
+        this.timelineInfo.createSpan({ text: 'Current: 2024', cls: 'sonic-graph-timeline-current' });
+        this.timelineInfo.createSpan({ text: 'End', cls: 'sonic-graph-timeline-end' });
     }
 
     /**
@@ -166,11 +180,12 @@ export class SonicGraphModal extends Modal {
         // Speed control
         const speedContainer = playControls.createDiv({ cls: 'sonic-graph-speed-container' });
         speedContainer.createEl('label', { text: 'Speed:', cls: 'sonic-graph-speed-label' });
-        const speedSelect = speedContainer.createEl('select', { cls: 'sonic-graph-speed-select' });
+        this.speedSelect = speedContainer.createEl('select', { cls: 'sonic-graph-speed-select' });
         ['0.5x', '1x', '2x', '3x', '5x'].forEach(speed => {
-            const option = speedSelect.createEl('option', { text: speed, value: speed });
+            const option = this.speedSelect.createEl('option', { text: speed, value: speed });
             if (speed === '1x') option.selected = true;
         });
+        this.speedSelect.addEventListener('change', () => this.handleSpeedChange());
         
         // Center - Stats
         const statsControls = this.controlsContainer.createDiv({ cls: 'sonic-graph-stats-controls' });
@@ -266,7 +281,7 @@ export class SonicGraphModal extends Modal {
     /**
      * Toggle animation playback
      */
-    private toggleAnimation(): void {
+    private async toggleAnimation(): Promise<void> {
         if (!this.graphRenderer) {
             new Notice('Graph not ready');
             return;
@@ -275,21 +290,58 @@ export class SonicGraphModal extends Modal {
         this.isAnimating = !this.isAnimating;
         
         if (this.isAnimating) {
+            // Initialize temporal animator if not already done
+            if (!this.temporalAnimator) {
+                await this.initializeTemporalAnimator();
+            }
+            
+            if (!this.temporalAnimator) {
+                new Notice('Failed to initialize animation');
+                this.isAnimating = false;
+                return;
+            }
+            
             // Start animation
             this.playButton.setButtonText('Pause Animation');
             this.timelineContainer.style.display = 'block';
             
-            // TODO: Implement actual animation logic
-            logger.debug('ui', 'Starting Sonic Graph animation');
-            new Notice('Animation started (placeholder)');
+            // Initialize audio engine before starting animation
+            try {
+                const status = this.plugin.audioEngine.getStatus();
+                if (!status.isInitialized) {
+                    logger.info('audio', 'Initializing audio engine for animation');
+                    await this.plugin.audioEngine.initialize();
+                    new Notice('Audio engine initialized');
+                }
+                
+                // Enable some basic instruments if none are enabled
+                const audioStatus = this.plugin.audioEngine.getStatus();
+                if (audioStatus.currentNotes === 0) {
+                    logger.info('audio', 'Enabling basic instruments for animation');
+                    // This would typically be done through settings, but for testing:
+                    new Notice('Audio ready for animation');
+                }
+            } catch (audioError) {
+                logger.warn('Failed to initialize audio for animation', (audioError as Error).message);
+                new Notice('Audio initialization failed - animation will be silent');
+            }
+            
+            // Start temporal animation
+            this.temporalAnimator.play();
+            
+            logger.info('ui', 'Starting Sonic Graph temporal animation');
+            new Notice('Sonic Graph animation started');
             
         } else {
-            // Stop animation
+            // Pause animation
             this.playButton.setButtonText('Play Sonic Graph');
             
-            // TODO: Implement pause logic
-            logger.debug('ui', 'Pausing Sonic Graph animation');
-            new Notice('Animation paused (placeholder)');
+            if (this.temporalAnimator) {
+                this.temporalAnimator.pause();
+            }
+            
+            logger.info('ui', 'Pausing Sonic Graph animation');
+            new Notice('Animation paused');
         }
     }
 
@@ -381,5 +433,223 @@ export class SonicGraphModal extends Modal {
             errorContainer.remove();
             this.initializeGraph();
         });
+    }
+
+    /**
+     * Initialize temporal animator for timeline animation
+     */
+    private async initializeTemporalAnimator(): Promise<void> {
+        try {
+            logger.debug('ui', 'Initializing temporal animator');
+            
+            // Extract graph data if not already done
+            const graphData = await this.graphDataExtractor.extractGraphData();
+            
+            // Create temporal animator
+            this.temporalAnimator = new TemporalGraphAnimator(
+                graphData.nodes,
+                graphData.links,
+                {
+                    duration: 30, // 30 second animation
+                    speed: 1.0
+                }
+            );
+            
+            // Set up callbacks
+            this.temporalAnimator.onVisibilityChanged((visibleNodeIds) => {
+                if (this.graphRenderer) {
+                    this.graphRenderer.updateVisibleNodes(visibleNodeIds);
+                }
+            });
+            
+            this.temporalAnimator.onTimeChanged((currentTime, progress) => {
+                this.updateTimelineUI(currentTime, progress);
+            });
+            
+            this.temporalAnimator.onAnimationEnded(() => {
+                this.handleAnimationEnd();
+            });
+            
+            this.temporalAnimator.onNodeAppeared((node) => {
+                this.handleNodeAppearance(node);
+            });
+            
+            // Initialize musical mapper for audio
+            this.musicalMapper = new MusicalMapper(this.plugin.settings);
+            
+            logger.info('ui', 'Temporal animator initialized successfully');
+            
+        } catch (error) {
+            logger.error('Failed to initialize temporal animator', (error as Error).message);
+            throw error;
+        }
+    }
+
+    /**
+     * Handle speed control change
+     */
+    private handleSpeedChange(): void {
+        if (!this.temporalAnimator) return;
+        
+        const speedValue = this.speedSelect.value;
+        const speed = parseFloat(speedValue.replace('x', ''));
+        
+        this.temporalAnimator.setSpeed(speed);
+        logger.debug('ui', 'Animation speed changed', { speed });
+    }
+
+    /**
+     * Handle timeline scrubber input
+     */
+    private handleTimelineScrub(): void {
+        if (!this.temporalAnimator) return;
+        
+        const progress = parseFloat(this.timelineScrubber.value) / 100;
+        const timelineInfo = this.temporalAnimator.getTimelineInfo();
+        const targetTime = progress * timelineInfo.duration;
+        
+        this.temporalAnimator.seekTo(targetTime);
+        logger.debug('ui', 'Timeline scrubbed', { progress, targetTime });
+    }
+
+    /**
+     * Update timeline UI elements
+     */
+    private updateTimelineUI(currentTime: number, progress: number): void {
+        // Update scrubber position
+        if (this.timelineScrubber) {
+            this.timelineScrubber.value = (progress * 100).toString();
+        }
+        
+        // Update timeline info
+        if (this.timelineInfo && this.temporalAnimator) {
+            const timelineInfo = this.temporalAnimator.getTimelineInfo();
+            const currentSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-current');
+            if (currentSpan) {
+                const currentDate = new Date(
+                    timelineInfo.startDate.getTime() + 
+                    (progress * (timelineInfo.endDate.getTime() - timelineInfo.startDate.getTime()))
+                );
+                currentSpan.textContent = `Current: ${currentDate.getFullYear()}`;
+            }
+            
+            // Update start/end dates
+            const startSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-start');
+            const endSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-end');
+            if (startSpan) startSpan.textContent = timelineInfo.startDate.getFullYear().toString();
+            if (endSpan) endSpan.textContent = timelineInfo.endDate.getFullYear().toString();
+        }
+    }
+
+    /**
+     * Handle animation completion
+     */
+    private handleAnimationEnd(): void {
+        this.isAnimating = false;
+        this.playButton.setButtonText('Play Sonic Graph');
+        
+        logger.info('ui', 'Sonic Graph animation completed');
+        new Notice('Animation completed');
+    }
+
+    /**
+     * Handle node appearance for audio synchronization
+     */
+    private async handleNodeAppearance(node: GraphNode): Promise<void> {
+        if (!this.plugin.audioEngine) return;
+        
+        try {
+            // Ensure audio engine is initialized
+            const status = this.plugin.audioEngine.getStatus();
+            if (!status.isInitialized) {
+                logger.debug('audio', 'Initializing audio engine for node appearance');
+                await this.plugin.audioEngine.initialize();
+            }
+            
+            // Create a musical mapping based on node properties
+            const mapping = this.createMusicalMappingForNode(node);
+            
+            logger.debug('audio', 'About to play note for node appearance', { 
+                nodeId: node.id, 
+                nodeTitle: node.title,
+                pitch: mapping.pitch,
+                instrument: mapping.instrument,
+                audioEngineStatus: this.plugin.audioEngine.getStatus()
+            });
+            
+            // Try to play a simple test note first
+            try {
+                await this.plugin.audioEngine.playTestNote(mapping.pitch);
+                logger.debug('audio', 'Test note played successfully');
+            } catch (testError) {
+                logger.warn('Test note failed', (testError as Error).message);
+                
+                // Fallback: try to play through the sequence method
+                await this.plugin.audioEngine.playSequence([mapping]);
+            }
+            
+            logger.info('audio', 'Successfully played note for node appearance', { 
+                nodeId: node.id, 
+                nodeTitle: node.title
+            });
+            
+        } catch (error) {
+            logger.error('Failed to play audio for node appearance', (error as Error).message);
+            // Show user feedback about audio issues
+            console.warn('Audio playback failed:', error);
+        }
+    }
+
+    /**
+     * Create a musical mapping for a graph node
+     */
+    private createMusicalMappingForNode(node: GraphNode): any {
+        // Map file type to instrument
+        const instrumentMap: Record<string, string> = {
+            'note': 'piano',
+            'image': 'violin',
+            'pdf': 'trumpet',
+            'audio': 'flute',
+            'video': 'cello',
+            'other': 'synth'
+        };
+        
+        // Calculate pitch based on node properties
+        const baseFreq = 261.63; // C4
+        const fileNameHash = this.hashString(node.title);
+        const pitchOffset = (fileNameHash % 24) - 12; // ±12 semitones
+        const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
+        
+        // Duration based on file size (logarithmic scale)
+        const baseDuration = 0.3;
+        const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
+        const duration = Math.min(baseDuration + sizeFactor, 1.0);
+        
+        // Velocity based on connections (if available)
+        const baseVelocity = 0.5;
+        const connectionFactor = Math.min(node.connections.length / 10, 0.4);
+        const velocity = baseVelocity + connectionFactor;
+        
+        return {
+            nodeId: node.id,
+            pitch: pitch,
+            duration: duration,
+            velocity: velocity,
+            timing: 0,
+            instrument: instrumentMap[node.type] || 'piano'
+        };
+    }
+
+    /**
+     * Simple hash function for strings
+     */
+    private hashString(str: string): number {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash);
     }
 } 

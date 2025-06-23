@@ -44,17 +44,17 @@ export class GraphRenderer {
       width: 800,
       height: 600,
       nodeRadius: 8,
-      linkDistance: 30, // Reduced from 50 to bring connected nodes closer
+      linkDistance: 25, // Much smaller for tighter clustering
       showLabels: false,
       enableZoom: true,
       ...config
     };
     
     this.forceConfig = {
-      centerStrength: 0.3,
-      linkStrength: 0.5,
-      chargeStrength: -80, // Reduced from -150 to bring nodes closer
-      collisionRadius: 10   // Reduced from 12 to allow tighter packing
+      centerStrength: 0.2, // Slightly stronger to pull nodes together
+      linkStrength: 0.4,   // Stronger links to keep connected nodes close
+      chargeStrength: -60, // Reduced repulsion to allow closer packing
+      collisionRadius: 12   // Smaller collision radius for tighter packing
     };
 
     this.initializeSVG();
@@ -122,6 +122,31 @@ export class GraphRenderer {
       .force('collision', d3.forceCollide<GraphNode>()
         .radius(this.forceConfig.collisionRadius)
       )
+      // Add organic clustering based on file type
+      .force('cluster', (alpha) => {
+        const strength = 0.1 * alpha;
+        this.nodes.forEach(node => {
+          if (node.x !== undefined && node.y !== undefined) {
+            // Create loose clusters by file type
+            const typeOffset = this.getTypeOffset(node.type);
+            const targetX = this.config.width / 2 + typeOffset.x;
+            const targetY = this.config.height / 2 + typeOffset.y;
+            
+            node.vx = (node.vx || 0) + (targetX - node.x) * strength;
+            node.vy = (node.vy || 0) + (targetY - node.y) * strength;
+          }
+        });
+      })
+      // Add random jitter to break symmetry
+      .force('jitter', (alpha) => {
+        const strength = 0.02 * alpha;
+        this.nodes.forEach(node => {
+          if (node.vx !== undefined && node.vy !== undefined) {
+            node.vx += (Math.random() - 0.5) * strength;
+            node.vy += (Math.random() - 0.5) * strength;
+          }
+        });
+      })
       .on('tick', () => this.updatePositions())
       .on('end', () => this.onSimulationEnd());
   }
@@ -570,6 +595,32 @@ export class GraphRenderer {
    */
   private onSimulationEnd(): void {
     logger.debug('renderer', 'Force simulation ended');
+  }
+
+  /**
+   * Get offset position for file type clustering
+   */
+  private getTypeOffset(type: string): { x: number; y: number } {
+    const radius = 80; // Distance from center for type clusters
+    const typeAngles: Record<string, number> = {
+      'note': 0,          // 0 degrees
+      'image': Math.PI/3, // 60 degrees
+      'pdf': 2*Math.PI/3, // 120 degrees
+      'audio': Math.PI,   // 180 degrees
+      'video': 4*Math.PI/3, // 240 degrees
+      'other': 5*Math.PI/3  // 300 degrees
+    };
+    
+    const angle = typeAngles[type] || 0;
+    // Add some randomness to the angle
+    const jitteredAngle = angle + (Math.random() - 0.5) * 0.5;
+    // Add some randomness to the radius
+    const jitteredRadius = radius * (0.7 + Math.random() * 0.6);
+    
+    return {
+      x: Math.cos(jitteredAngle) * jitteredRadius,
+      y: Math.sin(jitteredAngle) * jitteredRadius
+    };
   }
 
   /**
