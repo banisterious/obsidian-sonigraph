@@ -17,11 +17,18 @@ export interface GraphNode {
     dominantColors?: string[];
     tags?: string[];
   };
+  // D3 simulation properties
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
 }
 
 export interface GraphLink {
-  source: string;
-  target: string;
+  source: string | GraphNode;
+  target: string | GraphNode;
   type: 'reference' | 'attachment' | 'tag';
   strength: number;
 }
@@ -75,7 +82,7 @@ export class GraphDataExtractor {
       
       this.lastCacheTime = now;
       
-      endTimer();
+      startTime();
       logger.info('extraction', `Graph extraction completed: ${nodes.length} nodes, ${links.length} links`, {
         nodeCount: nodes.length,
         linkCount: links.length,
@@ -84,12 +91,10 @@ export class GraphDataExtractor {
 
       return this.cachedData;
     } catch (error) {
-      endTimer();
+      startTime();
       logger.error('extraction', 'Failed to extract graph data', error as Error);
       throw error;
     }
-
-    const endTimer = startTime;
   }
 
   /**
@@ -201,14 +206,8 @@ export class GraphDataExtractor {
           // Process outgoing links
           if (metadata?.links) {
             for (const link of metadata.links) {
-              const targetPath = this.vault.adapter.path.normalize(
-                this.vault.adapter.path.join(
-                  this.vault.adapter.path.dirname(file.path),
-                  link.link
-                )
-              );
-              
-              const targetFile = this.vault.getAbstractFileByPath(targetPath + '.md') as TFile;
+              // Try to resolve the link
+              const targetFile = this.vault.getAbstractFileByPath(link.link + '.md') as TFile;
               if (targetFile && nodeMap.has(targetFile.path)) {
                 links.push({
                   source: node.id,
