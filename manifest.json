@@ -1,7 +1,7 @@
 {
 	"id": "sonigraph",
 	"name": "Sonigraph",
-	"version": "0.7.0",
+	"version": "0.7.1",
 	"minAppVersion": "0.15.0",
 	"description": "Transform your knowledge graph into music. Maps nodes and connections to musical parameters, allowing you to hear the relationships and complexity of your ideas.",
 	"author": "banisterious",
