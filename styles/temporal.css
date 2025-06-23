@@ -1,0 +1,259 @@
+/* ===================================
+   TEMPORAL GRAPH ANIMATION STYLES
+   ================================== */
+
+/* Demo Modal Container */
+.sonigraph-demo-container {
+  width: 100%;
+  height: 500px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background-color: var(--background-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+/* SVG Container */
+.sonigraph-temporal-svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===================================
+   NODES AND LINKS
+   ================================== */
+
+/* Link Styles */
+.sonigraph-temporal-links line {
+  stroke: var(--text-muted);
+  stroke-width: 1px;
+  stroke-opacity: 0.6;
+  transition: stroke-opacity 0.3s ease;
+}
+
+.sonigraph-temporal-links line.highlighted {
+  stroke-opacity: 0.9;
+  stroke-width: 2px;
+}
+
+/* Node Group */
+.sonigraph-temporal-node {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Node Circles */
+.sonigraph-temporal-node circle {
+  stroke: var(--background-primary);
+  stroke-width: 2px;
+  transition:
+    stroke-width 0.2s ease,
+    filter 0.2s ease;
+}
+
+.sonigraph-temporal-node circle.note-node {
+  fill: var(--color-blue);
+}
+
+.sonigraph-temporal-node circle.image-node {
+  fill: var(--color-orange);
+}
+
+.sonigraph-temporal-node circle.attachment-node {
+  fill: var(--color-green);
+}
+
+.sonigraph-temporal-node circle.pdf-node {
+  fill: var(--color-red);
+}
+
+.sonigraph-temporal-node circle.audio-node {
+  fill: var(--color-purple);
+}
+
+.sonigraph-temporal-node circle.video-node {
+  fill: var(--color-pink);
+}
+
+.sonigraph-temporal-node circle.other-node {
+  fill: var(--color-cyan);
+}
+
+.sonigraph-temporal-node:hover circle {
+  stroke-width: 3px;
+  filter: brightness(1.1);
+}
+
+/* Node Labels */
+.sonigraph-temporal-node text {
+  font-size: 12px;
+  font-family: var(--font-interface);
+  fill: var(--text-normal);
+  text-anchor: middle;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sonigraph-temporal-node:hover text {
+  opacity: 1;
+}
+
+.sonigraph-temporal-node text.labels-visible {
+  opacity: 1;
+}
+
+/* ===================================
+   CONTROLS
+   ================================== */
+
+.sonigraph-demo-controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sonigraph-demo-controls button {
+  padding: 6px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sonigraph-demo-controls button:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
+}
+
+.sonigraph-demo-controls button.mod-cta {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.sonigraph-demo-controls button.mod-cta:hover {
+  background: var(--interactive-accent-hover);
+  border-color: var(--interactive-accent-hover);
+}
+
+.sonigraph-demo-controls .info-text {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ===================================
+   ANIMATION STATES
+   ================================== */
+
+/* Nodes appearing animation */
+.sonigraph-temporal-node.appearing {
+  animation: sonigraph-nodeAppear 0.5s ease-out;
+}
+
+@keyframes sonigraph-nodeAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Links appearing animation */
+.sonigraph-temporal-links line.appearing {
+  animation: sonigraph-linkAppear 0.3s ease-out;
+}
+
+@keyframes sonigraph-linkAppear {
+  from {
+    stroke-opacity: 0;
+    stroke-dasharray: 5, 5;
+  }
+  to {
+    stroke-opacity: 0.6;
+    stroke-dasharray: none;
+  }
+}
+
+/* ===================================
+   RESPONSIVE DESIGN
+   ================================== */
+
+@media (max-width: 768px) {
+  .sonigraph-demo-container {
+    height: 400px;
+  }
+
+  .sonigraph-demo-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sonigraph-demo-controls .info-text {
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .sonigraph-temporal-node text {
+    font-size: 11px;
+  }
+}
+
+/* ===================================
+   ACCESSIBILITY
+   ================================== */
+
+.sonigraph-temporal-node:focus {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.sonigraph-temporal-node circle:focus-visible {
+  stroke-width: 3px;
+  stroke: var(--interactive-accent);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .sonigraph-temporal-links line {
+    stroke-width: 2px;
+    stroke-opacity: 0.8;
+  }
+
+  .sonigraph-temporal-node circle {
+    stroke-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sonigraph-temporal-node,
+  .sonigraph-temporal-node circle,
+  .sonigraph-temporal-node text,
+  .sonigraph-temporal-links line {
+    transition: none;
+  }
+
+  .sonigraph-temporal-node.appearing,
+  .sonigraph-temporal-links line.appearing {
+    animation: none;
+  }
+}
+
+/* ===================================
+   DARK/LIGHT THEME VARIANTS
+   ================================== */
+
+/* Theme variants will use the CSS custom properties automatically
+   since var(--color-*) adapts to light/dark themes */
