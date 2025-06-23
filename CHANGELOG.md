@@ -67,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated architecture documentation with hybrid sample/synthesis system details
 - Comprehensive logging and diagnostic capabilities for troubleshooting sample loading issues
 
-## [0.7.1] - 2025-06-23
+## [0.8.0] - 2025-06-23
 
 ### Added - Comprehensive Instrument Configuration & Documentation Restructuring
 - **Issue #015 Resolution**: Fixed whale volume controls and missing instrument configurations
