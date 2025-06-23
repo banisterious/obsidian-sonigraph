@@ -4,6 +4,9 @@ node_modules
 ui-mockups
 logs/
 
+# Claude AI assistant files
+.claude/
+
 # Sample cache directories (user-specific)
 .sonigraph-cache/
 
@@ -48,3 +51,4 @@ Thumbs.db
 
 # Zone Identifier files (Windows)
 *.Zone.Identifier
+*.mdZone.Identifier
