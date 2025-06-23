@@ -321,9 +321,6 @@ export class MaterialControlPanelModal extends Modal {
 		// Performance Metrics Card
 		this.createPerformanceMetricsCard();
 		
-		// Audio System Status Card
-		this.createAudioSystemCard();
-		
 		// Global Settings Card (moved from Master tab)
 		this.createGlobalSettingsCard();
 		
@@ -404,52 +401,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.contentContainer.appendChild(card.getElement());
 	}
 
-	private audioModeValueElement: HTMLElement | null = null;
 
-	private createAudioSystemCard(): void {
-		const card = new MaterialCard({
-			title: 'Audio system',
-			iconName: 'settings',
-			subtitle: 'Current audio configuration and settings',
-			elevation: 1
-		});
-
-		const content = card.getContent();
-		
-		// High Quality Samples Setting (moved from Global Settings)
-		createObsidianToggle(
-			content,
-			this.plugin.settings.useHighQualitySamples,
-			(enabled) => this.handleHighQualitySamplesChange(enabled),
-			{
-				name: 'Use high quality samples',
-				description: 'Load professional audio recordings when available (19/34 instruments). Uses built-in synthesis for remaining instruments. Audio format chosen automatically.'
-			}
-		);
-		
-		const systemInfo = content.createDiv({ cls: 'osp-system-info' });
-		systemInfo.style.marginTop = 'var(--md-space-4)';
-
-		// Audio format status
-		const formatRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		formatRow.createSpan({ text: 'Audio mode:', cls: 'osp-info-label' });
-		this.audioModeValueElement = formatRow.createSpan({ 
-			text: this.plugin.settings.useHighQualitySamples ? 'High quality samples' : 'Synthesis only', 
-			cls: 'osp-info-value' 
-		});
-
-		// Sample rate (mock for now)
-		const sampleRateRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		sampleRateRow.createSpan({ text: 'Sample rate:', cls: 'osp-info-label' });
-		sampleRateRow.createSpan({ text: '44.1 kHz', cls: 'osp-info-value' });
-
-		// Buffer size (mock for now)
-		const bufferRow = systemInfo.createDiv({ cls: 'osp-info-row' });
-		bufferRow.createSpan({ text: 'Buffer size:', cls: 'osp-info-label' });
-		bufferRow.createSpan({ text: '256 samples', cls: 'osp-info-value' });
-
-		this.contentContainer.appendChild(card.getElement());
-	}
 
 	private getEnabledInstrumentsList(): Array<{name: string, activeVoices: number, maxVoices: number}> {
 		const enabled: Array<{name: string, activeVoices: number, maxVoices: number}> = [];
@@ -664,25 +616,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.plugin.saveSettings();
 	}
 
-	private handleHighQualitySamplesChange(enabled: boolean): void {
-		logger.info('settings', `High quality samples setting changed to ${enabled}`);
-		this.plugin.settings.useHighQualitySamples = enabled;
-		this.plugin.saveSettings();
-		
-		// Update audio engine with new sample setting
-		if (this.plugin.audioEngine) {
-			this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			logger.debug('ui', 'Audio engine settings updated after high quality samples change', { 
-				useHighQualitySamples: enabled,
-				action: 'high-quality-samples-change'
-			});
-		}
-		
-		// Immediately update the audio mode display text
-		if (this.audioModeValueElement) {
-			this.audioModeValueElement.textContent = enabled ? 'High quality samples' : 'Synthesis only';
-		}
-	}
+	// Global high quality samples setting removed - now using per-instrument control
 
 	private createGlobalSettingsCard(): void {
 		const globalCard = new MaterialCard({
@@ -709,15 +643,8 @@ export class MaterialControlPanelModal extends Modal {
 			onToggle: (selected) => this.handleGlobalAction('resetAll', selected)
 		});
 		
-		const optimizeChip = new ActionChip({
-			text: 'Optimize Performance',
-			iconName: 'zap',
-			onToggle: (selected) => this.handleGlobalAction('optimize', selected)
-		});
-		
 		globalChipSet.appendChild(enableAllChip.getElement());
 		globalChipSet.appendChild(resetAllChip.getElement());
-		globalChipSet.appendChild(optimizeChip.getElement());
 		
 		this.contentContainer.appendChild(globalCard.getElement());
 	}
@@ -2176,10 +2103,8 @@ export class MaterialControlPanelModal extends Modal {
 	}
 
 	private instrumentSupportsQualityChoice(instrumentKey: string): boolean {
-		// Only show dropdown when global high-quality mode is enabled
-		if (!this.plugin.settings.useHighQualitySamples) {
-			return false;
-		}
+		// Show dropdown for all instruments that support quality choice
+		// (No longer dependent on global setting - per-instrument control)
 		
 		// Check if instrument has useHighQuality setting (indicates it supports choice)
 		const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentKey];
@@ -2262,12 +2187,7 @@ export class MaterialControlPanelModal extends Modal {
 					// Implementation would reset to DEFAULT_SETTINGS
 				}
 				break;
-			case 'optimize':
-				if (selected) {
-					// Run performance optimization
-					// Implementation would optimize voice allocation, enable adaptive quality, etc.
-				}
-				break;
+
 		}
 		
 		if (selected) {
@@ -2307,7 +2227,7 @@ export class MaterialControlPanelModal extends Modal {
 		availableSpecies: string[];
 		sources: string[];
 	} {
-		const isHighQuality = this.plugin.settings.useHighQualitySamples;
+		const isHighQuality = false; // Per-instrument quality control - no global setting
 		const isWhaleEnabled = this.plugin.settings.instruments.whaleHumpback?.enabled;
 		const whaleIntegrationEnabled = isHighQuality && isWhaleEnabled;
 
@@ -2330,7 +2250,6 @@ export class MaterialControlPanelModal extends Modal {
 		if (enabled) {
 			// Enable both high quality samples and whale instrument
 			await this.plugin.updateSettings({
-				useHighQualitySamples: true,
 				instruments: {
 					...this.plugin.settings.instruments,
 					whaleHumpback: {

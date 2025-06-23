@@ -130,7 +130,7 @@ export default class SonigraphPlugin extends Plugin {
 		try {
 			// Initialize whale integration with current settings
 			const whaleSettings = {
-				useWhaleExternal: this.settings.useHighQualitySamples && this.settings.instruments.whaleHumpback?.enabled,
+				useWhaleExternal: this.settings.instruments.whaleHumpback?.enabled && this.settings.instruments.whaleHumpback?.useHighQuality,
 				autoDiscovery: false, // Phase 1: Seed collection only
 				discoveryFrequency: 'never' as const,
 				qualityThreshold: 'strict' as const,
@@ -143,9 +143,9 @@ export default class SonigraphPlugin extends Plugin {
 
 			await initializeWhaleIntegration(whaleSettings, this.app.vault);
 			
-			logger.info('whale-integration', 'Whale integration initialized for high-quality samples', {
+			logger.info('whale-integration', 'Whale integration initialized for per-instrument quality control', {
 				enabled: whaleSettings.useWhaleExternal,
-				highQualitySamples: this.settings.useHighQualitySamples,
+				whaleUseHighQuality: this.settings.instruments.whaleHumpback?.useHighQuality,
 				whaleEnabled: this.settings.instruments.whaleHumpback?.enabled
 			});
 		} catch (error) {
@@ -355,7 +355,7 @@ export default class SonigraphPlugin extends Plugin {
 			if (whaleIntegration) {
 				// Update whale integration settings
 				const whaleSettings = {
-					useWhaleExternal: this.settings.useHighQualitySamples && this.settings.instruments.whaleHumpback?.enabled,
+					useWhaleExternal: this.settings.instruments.whaleHumpback?.enabled && this.settings.instruments.whaleHumpback?.useHighQuality,
 					autoDiscovery: false,
 					discoveryFrequency: 'never' as const,
 					qualityThreshold: 'strict' as const,
@@ -370,7 +370,7 @@ export default class SonigraphPlugin extends Plugin {
 				
 				logger.info('whale-integration', 'Whale integration settings updated', {
 					enabled: whaleSettings.useWhaleExternal,
-					highQualitySamples: this.settings.useHighQualitySamples,
+					whaleUseHighQuality: this.settings.instruments.whaleHumpback?.useHighQuality,
 					whaleEnabled: this.settings.instruments.whaleHumpback?.enabled
 				});
 			}
