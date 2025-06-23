@@ -97,6 +97,16 @@
 
 #### 📋 Planned Features
 
+**Effect Presets System**  
+**Priority**: High | **Effort**: 2-3 weeks | **User Impact**: Very High  
+**Features**:
+- 11 professional acoustic environment presets (Concert Hall, Jazz Club, Cathedral, etc.)
+- Family-level and global preset application
+- One-click acoustic transformation for all instruments
+- Custom preset creation and management
+- Venue-based, genre-based, and utility preset categories
+👉 [Complete Implementation Plan](features/effect-presets-implementation-plan.md)
+
 **Customizable Sequence Controls**  
 **Priority**: Medium | **Effort**: 2-3 weeks | **User Impact**: High  
 **Features**:
@@ -222,6 +232,7 @@
 ### High Impact, Medium Effort  
 - **Sample Manager** (3-4 weeks)
 - **Content Filtering** (3-4 weeks)
+- **Effect Presets System** (2-3 weeks)
 - **Customizable Sequence Controls** (2-3 weeks)
 - **Control Center Instrument Search** (1-2 weeks)
 
