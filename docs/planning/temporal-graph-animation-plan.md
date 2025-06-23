@@ -1,4 +1,4 @@
-# Temporal Graph Animation with D3-Force Integration
+# Sonic Graph Feature with Temporal Animation
 
 ## Table of Contents
 
@@ -6,6 +6,10 @@
 2. [Project Goals](#project-goals)
    - [Primary Objectives](#primary-objectives)
    - [Secondary Objectives](#secondary-objectives)
+3. [Refined Requirements](#refined-requirements)
+   - [Control Center Integration](#control-center-integration)
+   - [Modal Design](#modal-design)
+   - [User Experience Flow](#user-experience-flow)
 3. [Technical Architecture](#technical-architecture)
    - [Core Components](#core-components)
      - [Graph Data Extractor](#1-graph-data-extractor-srcgraphgraphdataextractorts)
@@ -41,20 +45,103 @@
 
 ## Overview
 
-This document outlines the implementation plan for adding a temporal graph animation feature to the Sonigraph plugin using D3-force simulation. The feature will visualize the evolution of a knowledge graph over time based on file creation dates, synchronized with musical sonification.
+This document outlines the implementation plan for adding a "Sonic Graph" feature to the Sonigraph plugin using D3-force simulation. The feature provides a static knowledge graph visualization that can be animated over time based on file creation dates, synchronized with musical sonification from the existing audio engine.
 
 ## Project Goals
 
 ### Primary Objectives
-- **Temporal Visualization**: Show knowledge graph evolution over time using file creation dates
-- **Audio-Visual Sync**: Synchronize graph animations with musical events from the audio engine
+- **Static Graph Visualization**: Show complete knowledge graph with all vault files and connections
+- **Temporal Animation**: Optional time-based animation showing graph evolution using file creation dates
+- **Audio-Visual Sync**: Synchronize graph animations with musical events from the existing audio engine
 - **Multi-Media Support**: Include both notes and attachments (images, PDFs, etc.) as graph nodes
-- **Interactive Timeline**: Allow users to scrub through time and control animation playback
+- **Control Center Integration**: Seamless integration with existing Sonigraph interface
 
 ### Secondary Objectives
+- **Interactive Timeline**: Allow users to scrub through time and control animation playback
 - **Performance Optimization**: Smooth 60fps animation even with large graphs (1000+ nodes)
 - **Customizable Visualization**: User-configurable visual styles and animation parameters
 - **Export Capabilities**: Save timeline animations as video or audio files
+
+## Refined Requirements
+
+Based on design discussions and mockup creation, the following requirements have been established:
+
+### Control Center Integration
+
+#### **New "Sonic Graph" Tab**
+- **Tab Placement**: Added to existing Control Center navigation drawer after "Experimental" tab
+- **Tab Structure**: Follows existing family-based tab pattern with drawer navigation
+- **Compact Preview**: Shows static graph visualization in Control Center tab
+- **Launch Button**: "🌐 Open Full Sonic Graph" button to open dedicated modal
+- **Play Integration**: "▶️ Play Sonic Graph" button to start temporal animation with audio
+
+#### **Audio Engine Integration**
+- **Instrument Respect**: Uses currently enabled instruments from Control Center
+- **Real-time Updates**: If user changes instruments while modal is open, audio mapping updates
+- **Audio Status**: Shows "Audio: X instruments" status reflecting current enabled instruments
+- **Graceful Fallback**: If no instruments enabled, shows appropriate guidance to user
+
+### Modal Design
+
+#### **Two-Modal Strategy**
+1. **Control Center Modal**: Existing modal with new Sonic Graph tab
+2. **Dedicated Sonic Graph Modal**: Larger modal for full graph exploration
+
+#### **Sonic Graph Modal Features**
+- **Modal Header**: 
+  - Title: "🌐 Sonic Graph"
+  - Control Center button: "🎛️ Control Center" (opens Control Center modal)
+  - Settings button: "⚙️ Settings" (future modal configuration)
+  - Close button: "×"
+- **CSS Sizing**: Uses `:has()` selector for appropriate modal dimensions
+- **Static by Default**: Opens with complete static graph showing all files
+- **Play-Triggered Animation**: Timeline and animation only activate when user clicks Play
+
+### User Experience Flow
+
+#### **Discovery Path**
+1. User opens Control Center for normal Sonigraph usage
+2. Notices new "Sonic Graph" tab in navigation drawer
+3. Clicks tab to see compact graph preview with vault overview
+4. Sees static graph representing all files and connections
+5. Can click "Play Sonic Graph" for temporal animation + audio
+6. Can click "Open Full Sonic Graph" for detailed exploration
+
+#### **Modal Interaction**
+1. **Static Mode** (default):
+   - Complete knowledge graph visible
+   - All files and connections shown
+   - No timeline visible
+   - Mode indicator: "📊 Static Mode"
+   
+2. **Animated Mode** (after clicking Play):
+   - Timeline appears and becomes active
+   - Temporal animation begins with audio sonification
+   - Mode indicator: "🎵 Animated Mode - Playing" 
+   - User can pause/stop to return to static mode
+
+#### **Cross-Modal Navigation**
+- **From Sonic Graph Modal**: "🎛️ Control Center" button opens Control Center
+- **From Control Center**: User can return to Sonic Graph tab or launch full modal
+- **Consistent State**: Both modals respect same instrument settings and preferences
+
+#### **Audio Behavior**
+- **Static Mode**: No audio (graph is silent)
+- **Play Button**: Starts temporal animation with musical sonification
+- **Instrument Mapping**: 
+  - Notes (markdown) → Piano/Keyboard instruments
+  - Images → String instruments  
+  - PDFs → Brass instruments
+  - Audio files → Woodwind instruments
+  - Other files → Electronic/Experimental instruments
+- **Note Duration**: Based on content length for markdown files, fixed short durations for attachments
+- **Timeline Synchronization**: Music plays as nodes appear chronologically
+
+#### **Naming and Branding**
+- **Feature Name**: "Sonic Graph" (not "Timelapse")
+- **Clear Distinction**: Differentiated from Obsidian's standard Graph view
+- **Sonigraph Context**: Obviously part of the audio plugin ecosystem
+- **Temporal Aspect**: Animation and timeline are secondary features, not primary branding
 
 ## Technical Architecture
 
