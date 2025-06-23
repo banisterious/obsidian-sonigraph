@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-23 22:03:04 UTC
+ * - Generated: 2025-06-23 22:41:30 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -1882,7 +1882,7 @@
    COMPONENT: CONTROLS.CSS
    ========================================================================== */
 
-/* Component Size: 604 lines, 13.3 KB */
+/* Component Size: 701 lines, 15.52 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROLS STYLESHEET
@@ -1945,6 +1945,103 @@
 /* ==========================================================================
    CONTROL PANEL COMPONENTS
    ========================================================================== */
+
+/* ==========================================================================
+   EXCLUSION FIELDS
+   ========================================================================== */
+
+.osp-exclusion-section {
+  margin-bottom: var(--size-4-4);
+}
+
+.osp-exclusion-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-normal);
+  margin-bottom: var(--size-2-1);
+  font-size: var(--font-ui-medium);
+}
+
+.osp-exclusion-description {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  margin-bottom: var(--size-4-2);
+}
+
+.osp-exclusion-container {
+  min-height: 40px;
+  margin-bottom: var(--size-4-2);
+  padding: var(--size-2-2);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-primary-alt);
+}
+
+.osp-exclusion-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: var(--size-2-2);
+}
+
+.osp-exclusion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--size-2-1) var(--size-2-2);
+  margin-bottom: var(--size-2-1);
+  background: var(--background-secondary);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.osp-exclusion-item:last-child {
+  margin-bottom: 0;
+}
+
+.osp-exclusion-item-text {
+  flex: 1;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  word-break: break-all;
+}
+
+.osp-exclusion-remove-btn {
+  background: var(--interactive-normal);
+  border: none;
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--size-2-2);
+  transition: all 0.2s ease;
+}
+
+.osp-exclusion-remove-btn:hover {
+  background: var(--interactive-hover);
+  color: var(--text-error);
+}
+
+.osp-exclusion-add-btn {
+  background: var(--interactive-accent);
+  border: none;
+  border-radius: var(--radius-s);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  padding: var(--size-2-1) var(--size-4-2);
+  transition: all 0.2s ease;
+}
+
+.osp-exclusion-add-btn:hover {
+  background: var(--interactive-accent-hover);
+}
 
 /* Sonigraph Control Panel Styling */
 .sonigraph-control-panel {
@@ -6838,7 +6935,7 @@ details.osp-advanced-settings {
    COMPONENT: TEMPORAL.CSS
    ========================================================================== */
 
-/* Component Size: 711 lines, 14.97 KB */
+/* Component Size: 721 lines, 15.29 KB */
 
 /* ===================================
    TEMPORAL GRAPH ANIMATION STYLES
@@ -7145,15 +7242,24 @@ details.osp-advanced-settings {
   overflow: hidden;
 }
 
-.sonic-graph-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+/* Modal close button positioning to avoid overlap with header - following Control Center pattern */
+.sonic-graph-modal .modal-close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1002;
+  /* Let Obsidian handle all styling */
 }
 
-/* Header - Sticky and minimal */
+.sonic-graph-modal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Header - Sticky following Control Center pattern */
 .sonic-graph-header {
   position: sticky;
   top: 0;
@@ -7161,9 +7267,10 @@ details.osp-advanced-settings {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--osp-spacing-sm) var(--osp-spacing-md);
+  padding: 12px 20px;
+  padding-right: 56px; /* Make space for close button like Control Center */
   border-bottom: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
+  background: var(--background-primary);
   flex-shrink: 0;
   min-height: 50px;
 }
@@ -8123,10 +8230,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-23 22:03:04 UTC
+ * Build completed: 2025-06-23 22:41:30 UTC
  * Components processed: 19
- * Total lines: 7926
- * Total size: 165.91 KB
+ * Total lines: 8033
+ * Total size: 168.46 KB
  * Build duration: 0.02 seconds
  * 
  * Component breakdown:
@@ -8135,7 +8242,7 @@ details.osp-advanced-settings {
  * - layout.css: 933 lines, 13.56 KB
  * - utilities.css: 283 lines, 3.57 KB
  * - buttons.css: 441 lines, 10.78 KB
- * - controls.css: 604 lines, 13.3 KB
+ * - controls.css: 701 lines, 15.52 KB
  * - cards.css: 611 lines, 13.86 KB
  * - lists.css: 136 lines, 3.11 KB
  * - navigation.css: 337 lines, 7.72 KB
@@ -8145,7 +8252,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - temporal.css: 711 lines, 14.97 KB
+ * - temporal.css: 721 lines, 15.29 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB

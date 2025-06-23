@@ -207,6 +207,8 @@ export interface SonigraphSettings {
 	antiCracklingDetuning?: number; // Issue #010 Future-Proof Fix: Configurable micro-detuning amount in cents (±)
 	logLevel?: 'off' | 'error' | 'warn' | 'info' | 'debug'; // Persistent logging level
 	sonicGraphShowFileNames?: boolean; // Show file names in Sonic Graph visualization
+	sonicGraphExcludeFolders?: string[]; // Folders to exclude from Sonic Graph
+	sonicGraphExcludeFiles?: string[]; // Files to exclude from Sonic Graph
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
@@ -292,6 +294,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	antiCracklingDetuning: 2.0, // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
 	logLevel: 'warn', // Default to warn level to capture important initialization issues
 	sonicGraphShowFileNames: false, // Default to hiding file names for cleaner visualization
+	sonicGraphExcludeFolders: [], // No folders excluded by default
+	sonicGraphExcludeFiles: [], // No files excluded by default
 	effects: {
 		orchestralreverbhall: { enabled: true },
 		'3bandeq': { enabled: true },

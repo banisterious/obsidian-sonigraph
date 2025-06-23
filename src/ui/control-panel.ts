@@ -11,6 +11,8 @@ import { PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErr
 import { GraphDemoModal } from './GraphDemoModal';
 import { GraphDataExtractor } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
+import { FolderSuggestModal } from './FolderSuggestModal';
+import { FileSuggestModal } from './FileSuggestModal';
 
 const logger = getLogger('control-panel');
 
@@ -195,12 +197,12 @@ export class MaterialControlPanelModal extends Modal {
 		pauseBtn.appendText('Pause');
 		pauseBtn.addEventListener('click', () => this.handlePause());
 
-		// Demo button (fourth)
-		const demoBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--accent' });
-		const demoIcon = createLucideIcon('activity', 16);
-		demoBtn.appendChild(demoIcon);
-		demoBtn.appendText('Demo');
-		demoBtn.addEventListener('click', () => this.handleDemo());
+		// Sonic Graph button (fourth)
+		const sonicGraphBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--accent' });
+		const sonicGraphIcon = createLucideIcon('chart-network', 16);
+		sonicGraphBtn.appendChild(sonicGraphIcon);
+		sonicGraphBtn.appendText('Sonic Graph');
+		sonicGraphBtn.addEventListener('click', () => this.launchSonicGraphModal());
 	}
 
 	/**
@@ -909,9 +911,9 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createSonicGraphControlsCard(): void {
 		const card = new MaterialCard({
-			title: 'Sonic graph controls',
-			iconName: 'play-circle',
-			subtitle: 'Launch temporal animation with audio',
+			title: 'Sonic graph settings',
+			iconName: 'settings',
+			subtitle: 'Configure graph visualization preferences',
 			elevation: 1
 		});
 
@@ -940,16 +942,10 @@ export class MaterialControlPanelModal extends Modal {
 		);
 		logger.debug('ui', 'Show file names toggle created');
 
-		// Launch button
-		const launchButton = new MaterialButton({
-			text: 'Launch Sonic Graph',
-			iconName: 'external-link',
-			variant: 'filled',
-			onClick: () => this.launchSonicGraphModal()
-		});
+		// Exclusion settings
+		this.createExclusionFields(settingsSection);
 
-		const buttonContainer = content.createDiv({ cls: 'osp-button-container' });
-		buttonContainer.appendChild(launchButton.getElement());
+		// Note: Launch functionality moved to header Sonic Graph button
 
 		// Quick stats
 		const statsContainer = content.createDiv({ cls: 'osp-stats-row' });
@@ -977,7 +973,10 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private async initializeGraphPreview(container: HTMLElement, loadingDiv: HTMLElement): Promise<void> {
 		try {
-			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
+			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache, {
+				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
+				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
+			});
 			const graphData = await extractor.extractGraphData();
 			
 			// Remove loading indicator
@@ -1005,7 +1004,10 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private async updateSonicGraphStats(filesEl: HTMLElement, linksEl: HTMLElement): Promise<void> {
 		try {
-			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
+			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache, {
+				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
+				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
+			});
 			const graphData = await extractor.extractGraphData();
 			
 			const filesValue = filesEl.querySelector('.osp-stat-value') as HTMLElement;
@@ -1053,6 +1055,224 @@ export class MaterialControlPanelModal extends Modal {
 			logger.debug('ui', `Graph file names visibility updated: ${enabled}`);
 		} else {
 			logger.debug('ui', 'Graph renderer not yet initialized, will apply setting when created');
+		}
+	}
+
+	/**
+	 * Create exclusion fields for folders and files
+	 */
+	private createExclusionFields(container: HTMLElement): void {
+		// Exclude folders section
+		const excludeFoldersSection = container.createDiv({ cls: 'osp-exclusion-section' });
+		excludeFoldersSection.style.marginTop = 'var(--md-space-4)';
+		
+		const foldersLabel = excludeFoldersSection.createDiv({ cls: 'osp-exclusion-label' });
+		foldersLabel.textContent = 'Exclude folders';
+		
+		const foldersDescription = excludeFoldersSection.createDiv({ cls: 'osp-exclusion-description' });
+		foldersDescription.textContent = 'Folders to exclude from the graph visualization';
+		
+		const foldersContainer = excludeFoldersSection.createDiv({ cls: 'osp-exclusion-container' });
+		this.createExclusionList(foldersContainer, 'folders');
+		
+		const addFolderBtn = excludeFoldersSection.createEl('button', { 
+			cls: 'osp-exclusion-add-btn',
+			text: 'Add folder'
+		});
+		addFolderBtn.addEventListener('click', () => this.openFolderSuggestModal());
+
+		// Exclude files section
+		const excludeFilesSection = container.createDiv({ cls: 'osp-exclusion-section' });
+		excludeFilesSection.style.marginTop = 'var(--md-space-4)';
+		
+		const filesLabel = excludeFilesSection.createDiv({ cls: 'osp-exclusion-label' });
+		filesLabel.textContent = 'Exclude files';
+		
+		const filesDescription = excludeFilesSection.createDiv({ cls: 'osp-exclusion-description' });
+		filesDescription.textContent = 'Files to exclude from the graph visualization';
+		
+		const filesContainer = excludeFilesSection.createDiv({ cls: 'osp-exclusion-container' });
+		this.createExclusionList(filesContainer, 'files');
+		
+		const addFileBtn = excludeFilesSection.createEl('button', { 
+			cls: 'osp-exclusion-add-btn',
+			text: 'Add file'
+		});
+		addFileBtn.addEventListener('click', () => this.openFileSuggestModal());
+	}
+
+	/**
+	 * Create exclusion list display
+	 */
+	private createExclusionList(container: HTMLElement, type: 'folders' | 'files'): void {
+		const settingKey = type === 'folders' ? 'sonicGraphExcludeFolders' : 'sonicGraphExcludeFiles';
+		const exclusionList = this.plugin.settings[settingKey] || [];
+		
+		logger.debug('ui', `Creating exclusion list for ${type}`, { settingKey, exclusionList, listLength: exclusionList.length });
+		
+		if (exclusionList.length === 0) {
+			const emptyMessage = container.createDiv({ cls: 'osp-exclusion-empty' });
+			emptyMessage.textContent = type === 'folders' ? 'No folders excluded' : 'No files excluded';
+			logger.debug('ui', `Created empty message for ${type}`);
+			return;
+		}
+
+		exclusionList.forEach((item, index) => {
+			logger.debug('ui', `Creating exclusion item: ${item}`);
+			const itemEl = container.createDiv({ cls: 'osp-exclusion-item' });
+			
+			const itemText = itemEl.createDiv({ cls: 'osp-exclusion-item-text' });
+			itemText.textContent = item;
+			
+			const removeBtn = itemEl.createEl('button', { 
+				cls: 'osp-exclusion-remove-btn',
+				text: '×'
+			});
+			removeBtn.addEventListener('click', () => this.removeExclusionItem(type, index));
+		});
+	}
+
+	/**
+	 * Open folder suggest modal
+	 */
+	private openFolderSuggestModal(): void {
+		const modal = new FolderSuggestModal(this.app, (folder) => {
+			this.addExclusionItem('folders', folder.path);
+		});
+		modal.open();
+	}
+
+	/**
+	 * Open file suggest modal
+	 */
+	private openFileSuggestModal(): void {
+		const modal = new FileSuggestModal(this.app, (file) => {
+			this.addExclusionItem('files', file.path);
+		});
+		modal.open();
+	}
+
+	/**
+	 * Add exclusion item
+	 */
+	private addExclusionItem(type: 'folders' | 'files', path: string): void {
+		const settingKey = type === 'folders' ? 'sonicGraphExcludeFolders' : 'sonicGraphExcludeFiles';
+		const currentList = this.plugin.settings[settingKey] || [];
+		
+		logger.debug('ui', `Adding ${type} exclusion: ${path}`, { currentList, settingKey });
+		
+		// Check if already exists
+		if (currentList.includes(path)) {
+			new Notice(`${type === 'folders' ? 'Folder' : 'File'} already excluded`);
+			return;
+		}
+		
+		// Add to list
+		currentList.push(path);
+		this.plugin.settings[settingKey] = currentList;
+		
+		logger.debug('ui', `Updated settings`, { newList: currentList });
+		
+		// Save settings
+		this.plugin.saveSettings().then(() => {
+			logger.debug('ui', 'Settings saved successfully');
+			// Refresh the UI after settings are saved
+			this.refreshExclusionLists();
+		}).catch(error => {
+			logger.error('ui', 'Failed to save settings', error);
+		});
+		
+		logger.debug('ui', `Added ${type === 'folders' ? 'folder' : 'file'} exclusion: ${path}`);
+		new Notice(`${type === 'folders' ? 'Folder' : 'File'} excluded: ${path}`);
+	}
+
+	/**
+	 * Remove exclusion item
+	 */
+	private removeExclusionItem(type: 'folders' | 'files', index: number): void {
+		const settingKey = type === 'folders' ? 'sonicGraphExcludeFolders' : 'sonicGraphExcludeFiles';
+		const currentList = this.plugin.settings[settingKey] || [];
+		
+		if (index >= 0 && index < currentList.length) {
+			const removedItem = currentList.splice(index, 1)[0];
+			this.plugin.settings[settingKey] = currentList;
+			this.plugin.saveSettings();
+			
+			// Refresh the UI
+			this.refreshExclusionLists();
+			
+			logger.debug('ui', `Removed ${type === 'folders' ? 'folder' : 'file'} exclusion: ${removedItem}`);
+			new Notice(`${type === 'folders' ? 'Folder' : 'File'} exclusion removed: ${removedItem}`);
+		}
+	}
+
+	/**
+	 * Refresh exclusion lists display
+	 */
+	private refreshExclusionLists(): void {
+		logger.debug('ui', 'Refreshing exclusion lists');
+		
+		// Find and refresh both exclusion containers
+		const exclusionSections = this.contentContainer.querySelectorAll('.osp-exclusion-section');
+		logger.debug('ui', `Found ${exclusionSections.length} exclusion sections`);
+		
+		// First section should be folders, second should be files
+		if (exclusionSections.length >= 1) {
+			const foldersContainer = exclusionSections[0].querySelector('.osp-exclusion-container') as HTMLElement;
+			if (foldersContainer) {
+				logger.debug('ui', 'Refreshing folders container');
+				foldersContainer.empty();
+				this.createExclusionList(foldersContainer, 'folders');
+			}
+		}
+		
+		if (exclusionSections.length >= 2) {
+			const filesContainer = exclusionSections[1].querySelector('.osp-exclusion-container') as HTMLElement;
+			if (filesContainer) {
+				logger.debug('ui', 'Refreshing files container');
+				filesContainer.empty();
+				this.createExclusionList(filesContainer, 'files');
+			}
+		}
+
+		// Refresh graph preview and stats with new exclusion settings
+		this.refreshGraphWithExclusions();
+	}
+
+	/**
+	 * Refresh graph preview and stats with updated exclusion settings
+	 */
+	private async refreshGraphWithExclusions(): Promise<void> {
+		try {
+			// Update stats
+			const statsContainer = this.contentContainer.querySelector('.osp-stats-row');
+			if (statsContainer) {
+				const filesStat = statsContainer.querySelector('.osp-stat-compact:first-child') as HTMLElement;
+				const linksStat = statsContainer.querySelector('.osp-stat-compact:last-child') as HTMLElement;
+				if (filesStat && linksStat) {
+					await this.updateSonicGraphStats(filesStat, linksStat);
+				}
+			}
+
+			// Refresh graph preview if it exists
+			if (this.graphRenderer) {
+				const graphPreviewContainer = this.contentContainer.querySelector('.osp-graph-preview-container') as HTMLElement;
+				if (graphPreviewContainer) {
+					// Clear current graph
+					this.graphRenderer.destroy();
+					this.graphRenderer = null;
+					
+					// Show loading indicator
+					graphPreviewContainer.empty();
+					const loadingDiv = graphPreviewContainer.createDiv({ cls: 'osp-graph-loading' });
+					loadingDiv.textContent = 'Updating graph...';
+					
+					// Reinitialize with new exclusions
+					await this.initializeGraphPreview(graphPreviewContainer, loadingDiv);
+				}
+			}
+		} catch (error) {
+			logger.error('ui', 'Failed to refresh graph with exclusions:', error);
 		}
 	}
 
