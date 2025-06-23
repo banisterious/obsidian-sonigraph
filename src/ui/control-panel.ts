@@ -1023,12 +1023,19 @@ export class MaterialControlPanelModal extends Modal {
 	 * Launch the full Sonic Graph modal
 	 */
 	private launchSonicGraphModal(): void {
-		// Close current modal and open Sonic Graph modal
+		logger.debug('ui', 'Launching Sonic Graph modal');
+		
+		// Close Control Center first for smooth transition
 		this.close();
 		
-		// TODO: Implement SonicGraphModal
-		new Notice('Sonic Graph modal coming soon!');
-		logger.info('ui', 'Sonic Graph modal launched');
+		// Import and open Sonic Graph modal
+		import('./SonicGraphModal').then(({ SonicGraphModal }) => {
+			const sonicGraphModal = new SonicGraphModal(this.app, this.plugin);
+			sonicGraphModal.open();
+		}).catch(error => {
+			logger.error('Failed to load Sonic Graph modal', error.message);
+			new Notice('Failed to open Sonic Graph modal');
+		});
 	}
 
 	/**

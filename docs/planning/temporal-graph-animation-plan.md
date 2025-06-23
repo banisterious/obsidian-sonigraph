@@ -453,6 +453,86 @@ src/
 
 ## Future Enhancements
 
+### Phase 5: Custom Instrument Assignment
+**Goal**: User-controlled instrument mapping for personalized sonification
+
+#### Node-Level Assignment
+- **Manual assignment** - Right-click context menu to assign instruments to specific files
+- **Bulk assignment tools** - Assign by tags, folders, date ranges, or file types
+- **Visual indicators** - Node colors/shapes reflect assigned instruments in graph
+- **Assignment storage** - Multiple options: frontmatter, plugin settings, or sidecar files
+- **Smart defaults** - Fallback hierarchy: custom → file type → default mapping
+- **Conflict resolution** - Handle overlapping assignment rules gracefully
+- **Import/export** - Share instrument assignment sets between vaults
+- **Conditional assignments** - Dynamic rules based on file properties or content
+- **Real-time modification** - Change instrument assignments during playback
+
+#### Line-Level Assignment (Advanced)
+**Goal**: Granular instrument control within individual documents
+
+##### Content-Based Automatic Assignment
+- **Markdown structure mapping**:
+  - Headers (`# ## ###`) → Brass instruments (announcements/fanfares)
+  - Lists (`- * +`) → Percussion (rhythmic elements)
+  - Code blocks (```) → Electronic/synthetic instruments
+  - Quotes (`>`) → Strings (contemplative/flowing)
+  - Bold/Italic → Accent instruments or volume changes
+  - Links → Transition sounds or chord changes
+- **Semantic analysis**:
+  - Sentiment detection → Major/minor key selection
+  - Topic modeling → Technical vs. expressive instrument choices
+  - Writing style → Formal (classical) vs. casual (modern) instruments
+  - Emotional intensity → Soft vs. powerful instrument selection
+
+##### Manual Assignment Interface
+- **In-editor integration**:
+  - Line gutters with small instrument icons
+  - Right-click context menus for any line
+  - Keyboard shortcuts for quick assignment
+  - Command palette integration
+- **Bulk assignment tools**:
+  - Pattern matching with regex support
+  - Selection-based multi-line assignment
+  - Tag-based automatic assignment
+  - Template-based patterns for document types
+
+##### Storage and Data Management
+- **Frontmatter approach**:
+  ```yaml
+  sonic-graph:
+    line-instruments:
+      1: "piano"
+      5: "violin"
+      12-15: "flute"
+      "h1": "trumpet"  # All H1 headers
+      "code": "synth"  # All code blocks
+  ```
+- **Sidecar file approach**: `.sonic-assignments.json` files
+- **Plugin settings**: Global rules and per-vault customizations
+- **Performance optimization**:
+  - Incremental parsing of changed lines only
+  - Caching with file modification timestamps
+  - Lazy loading during playback
+  - Background processing during idle time
+
+##### Musical Implementation
+- **Timing and rhythm**:
+  - Line duration based on content length
+  - Phrase grouping for related lines
+  - Breathing space between sections
+  - Tempo mapping based on document flow
+- **Harmonic considerations**:
+  - Chord progressions within paragraphs
+  - Key relationship maintenance
+  - Smooth voice leading between instruments
+  - Counterpoint for simultaneous instruments
+
+##### Progressive Implementation
+1. **Foundation**: Basic line parsing, manual assignment UI, fallback systems
+2. **Automation**: Markdown structure detection, pattern-based rules, bulk tools
+3. **Intelligence**: Semantic analysis, context-aware suggestions, learning patterns
+4. **Advanced**: Real-time assignment, collaborative sharing, composition tools
+
 ### Potential Extensions
 - **Collaborative Timelines**: Show multiple users' contributions
 - **Semantic Analysis**: Group nodes by topic or content similarity

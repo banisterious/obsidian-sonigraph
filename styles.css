@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-23 21:10:55 UTC
+ * - Generated: 2025-06-23 22:03:04 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6838,7 +6838,7 @@ details.osp-advanced-settings {
    COMPONENT: TEMPORAL.CSS
    ========================================================================== */
 
-/* Component Size: 283 lines, 5.93 KB */
+/* Component Size: 711 lines, 14.97 KB */
 
 /* ===================================
    TEMPORAL GRAPH ANIMATION STYLES
@@ -7122,6 +7122,434 @@ details.osp-advanced-settings {
 
 /* Theme variants will use the CSS custom properties automatically
    since var(--color-*) adapts to light/dark themes */
+
+/* ==========================================================================
+   Sonic Graph Modal Styles
+   ========================================================================== */
+
+/* Modal sizing - Large modal for graph visualization */
+.modal.sonic-graph-modal {
+  height: var(--modal-height);
+  width: var(--modal-width);
+  max-height: var(--modal-max-height);
+  max-width: var(--modal-max-width);
+  padding: 0 0 0 0.5em;
+}
+
+/* Modal content */
+.sonic-graph-modal {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sonic-graph-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Header - Sticky and minimal */
+.sonic-graph-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--osp-spacing-sm) var(--osp-spacing-md);
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+  min-height: 50px;
+}
+
+.sonic-graph-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sonic-graph-title {
+  margin: 0;
+  font-size: var(--osp-font-size-h2);
+  font-weight: 500;
+  color: var(--text-normal);
+  text-align: center;
+}
+
+.sonic-graph-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--osp-spacing-xs);
+  padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--osp-font-size-small);
+  cursor: pointer;
+  transition: all var(--osp-transition-fast) var(--osp-easing);
+}
+
+.sonic-graph-header-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
+}
+
+.sonic-graph-header-btn--secondary {
+  background: var(--background-secondary);
+}
+
+.sonic-graph-header-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.sonic-graph-header-btn--ghost:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border);
+}
+
+/* Graph container - Reduced height to prevent scrolling */
+.sonic-graph-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--background-primary);
+  max-height: calc(100vh - 200px); /* Ensure no scrolling */
+  min-height: 400px;
+}
+
+.sonic-graph-canvas {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.sonic-graph-canvas:active {
+  cursor: grabbing;
+}
+
+/* Loading state */
+.sonic-graph-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--osp-spacing-md);
+  color: var(--text-muted);
+}
+
+.sonic-graph-loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sonic-graph-loading-text {
+  font-size: var(--osp-font-size-base);
+}
+
+/* Error state */
+.sonic-graph-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--osp-spacing-md);
+  text-align: center;
+  color: var(--text-error);
+}
+
+.sonic-graph-error-text {
+  font-size: var(--osp-font-size-base);
+  margin: 0;
+}
+
+.sonic-graph-error-retry {
+  padding: var(--osp-spacing-sm) var(--osp-spacing-md);
+  border: 1px solid var(--text-error);
+  border-radius: var(--osp-border-radius-sm);
+  background: transparent;
+  color: var(--text-error);
+  cursor: pointer;
+  transition: all var(--osp-transition-fast) var(--osp-easing);
+}
+
+.sonic-graph-error-retry:hover {
+  background: var(--text-error);
+  color: var(--background-primary);
+}
+
+/* Timeline */
+.sonic-graph-timeline {
+  padding: var(--osp-spacing-md);
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+}
+
+.sonic-graph-scrubber-container {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-md);
+  margin-bottom: var(--osp-spacing-sm);
+}
+
+.sonic-graph-scrubber-label {
+  font-size: var(--osp-font-size-small);
+  font-weight: 500;
+  color: var(--text-normal);
+  min-width: 60px;
+}
+
+.sonic-graph-scrubber {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--background-modifier-border);
+  outline: none;
+  cursor: pointer;
+}
+
+.sonic-graph-scrubber::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--osp-primary);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: var(--osp-shadow-sm);
+}
+
+.sonic-graph-scrubber::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--osp-primary);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: var(--osp-shadow-sm);
+}
+
+.sonic-graph-timeline-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--osp-font-size-small);
+  color: var(--text-muted);
+}
+
+/* Controls - Now includes stats and navigation */
+.sonic-graph-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--osp-spacing-md);
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  flex-shrink: 0;
+  min-height: 80px;
+  gap: var(--osp-spacing-lg);
+}
+
+.sonic-graph-play-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-lg);
+  flex: 0 0 auto;
+}
+
+.sonic-graph-play-button-container {
+  display: flex;
+  align-items: center;
+}
+
+.sonic-graph-speed-container {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-sm);
+}
+
+.sonic-graph-speed-label {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-normal);
+}
+
+.sonic-graph-speed-select {
+  padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--osp-font-size-small);
+  cursor: pointer;
+}
+
+.sonic-graph-stats-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.sonic-graph-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sonic-graph-stats-text {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.sonic-graph-view-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-md);
+  flex: 0 0 auto;
+}
+
+.sonic-graph-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-sm);
+}
+
+.sonic-graph-toggle {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sonic-graph-toggle-label {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.sonic-graph-control-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--osp-spacing-xs);
+  padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--osp-font-size-small);
+  cursor: pointer;
+  transition: all var(--osp-transition-fast) var(--osp-easing);
+}
+
+.sonic-graph-control-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
+}
+
+.sonic-graph-control-btn--secondary {
+  background: var(--background-secondary);
+}
+
+/* Tooltip styles */
+.sonic-graph-tooltip {
+  font-family: var(--osp-font-family);
+  line-height: 1.4;
+}
+
+.sonic-graph-tooltip-title {
+  font-weight: 600;
+  font-size: var(--osp-font-size-base);
+  color: var(--text-normal);
+  margin-bottom: var(--osp-spacing-xs);
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: var(--osp-spacing-xs);
+}
+
+.sonic-graph-tooltip-path {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: var(--osp-spacing-sm);
+  word-break: break-all;
+}
+
+.sonic-graph-tooltip-meta {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-muted);
+}
+
+.sonic-graph-tooltip-meta > div {
+  margin-bottom: 2px;
+}
+
+.sonic-graph-tooltip-meta > div:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .modal:has(.sonic-graph-modal) {
+    width: 95vw;
+    height: 85vh;
+    min-width: 800px;
+    min-height: 500px;
+  }
+
+  .sonic-graph-controls {
+    flex-direction: column;
+    gap: var(--osp-spacing-md);
+    align-items: stretch;
+    min-height: auto;
+  }
+
+  .sonic-graph-play-controls,
+  .sonic-graph-view-controls {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 900px) {
+  .modal:has(.sonic-graph-modal) {
+    width: 98vw;
+    height: 90vh;
+    min-width: 600px;
+    min-height: 400px;
+  }
+
+  .sonic-graph-header {
+    flex-direction: column;
+    gap: var(--osp-spacing-sm);
+    align-items: stretch;
+    min-height: auto;
+  }
+
+  .sonic-graph-header-left,
+  .sonic-graph-header-right {
+    justify-content: center;
+  }
+}
 
 
 /* End of temporal.css */
@@ -7695,11 +8123,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-23 21:10:55 UTC
+ * Build completed: 2025-06-23 22:03:04 UTC
  * Components processed: 19
- * Total lines: 7498
- * Total size: 156.88 KB
- * Build duration: 0.01 seconds
+ * Total lines: 7926
+ * Total size: 165.91 KB
+ * Build duration: 0.02 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -7717,7 +8145,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - temporal.css: 283 lines, 5.93 KB
+ * - temporal.css: 711 lines, 14.97 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB

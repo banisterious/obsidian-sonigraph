@@ -27,6 +27,7 @@ export class GraphRenderer {
   private linkGroup: any;
   private nodeGroup: any;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
+  private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
   
   private simulation: d3.Simulation<GraphNode, GraphLink>;
   private config: RenderConfig;
@@ -43,7 +44,7 @@ export class GraphRenderer {
       width: 800,
       height: 600,
       nodeRadius: 8,
-      linkDistance: 50,
+      linkDistance: 30, // Reduced from 50 to bring connected nodes closer
       showLabels: false,
       enableZoom: true,
       ...config
@@ -52,12 +53,13 @@ export class GraphRenderer {
     this.forceConfig = {
       centerStrength: 0.3,
       linkStrength: 0.5,
-      chargeStrength: -150,
-      collisionRadius: 12
+      chargeStrength: -80, // Reduced from -150 to bring nodes closer
+      collisionRadius: 10   // Reduced from 12 to allow tighter packing
     };
 
     this.initializeSVG();
     this.initializeSimulation();
+    this.initializeTooltip();
     
     logger.debug('renderer', 'GraphRenderer initialized', { config: this.config });
   }
@@ -122,6 +124,29 @@ export class GraphRenderer {
       )
       .on('tick', () => this.updatePositions())
       .on('end', () => this.onSimulationEnd());
+  }
+
+  /**
+   * Initialize tooltip for node information
+   */
+  private initializeTooltip(): void {
+    // Create tooltip div
+    this.tooltip = d3.select(this.container)
+      .append('div')
+      .attr('class', 'sonic-graph-tooltip')
+      .style('position', 'absolute')
+      .style('visibility', 'hidden')
+      .style('background', 'var(--background-primary)')
+      .style('border', '1px solid var(--background-modifier-border)')
+      .style('border-radius', 'var(--osp-border-radius-sm)')
+      .style('padding', 'var(--osp-spacing-sm)')
+      .style('font-size', 'var(--osp-font-size-small)')
+      .style('color', 'var(--text-normal)')
+      .style('box-shadow', 'var(--osp-shadow-md)')
+      .style('z-index', '1000')
+      .style('pointer-events', 'none')
+      .style('max-width', '200px')
+      .style('word-wrap', 'break-word');
   }
 
   /**
@@ -269,17 +294,27 @@ export class GraphRenderer {
   }
 
   /**
-   * Setup node interactions (hover, click, etc.)
+   * Setup node interactions (hover, click, tooltips)
    */
   private setupNodeInteractions(selection: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>): void {
     selection
       .on('mouseover', (event, d) => {
         // Highlight connected links
         this.highlightConnectedLinks(d.id, true);
+        
+        // Show tooltip
+        this.showTooltip(event, d);
+      })
+      .on('mousemove', (event, d) => {
+        // Update tooltip position as mouse moves
+        this.updateTooltipPosition(event);
       })
       .on('mouseout', (event, d) => {
         // Remove highlight from connected links
         this.highlightConnectedLinks(d.id, false);
+        
+        // Hide tooltip
+        this.hideTooltip();
       })
       .on('click', (event, d) => {
         // Could emit event to open file in Obsidian
@@ -463,6 +498,74 @@ export class GraphRenderer {
   }
 
   /**
+   * Show tooltip with node information
+   */
+  private showTooltip(event: MouseEvent, node: GraphNode): void {
+    const tooltipContent = this.createTooltipContent(node);
+    
+    this.tooltip
+      .html(tooltipContent)
+      .style('visibility', 'visible');
+    
+    this.updateTooltipPosition(event);
+  }
+
+  /**
+   * Update tooltip position based on mouse event
+   */
+  private updateTooltipPosition(event: MouseEvent): void {
+    const containerRect = this.container.getBoundingClientRect();
+    const x = event.clientX - containerRect.left + 10;
+    const y = event.clientY - containerRect.top - 10;
+    
+    this.tooltip
+      .style('left', x + 'px')
+      .style('top', y + 'px');
+  }
+
+  /**
+   * Hide tooltip
+   */
+  private hideTooltip(): void {
+    this.tooltip.style('visibility', 'hidden');
+  }
+
+  /**
+   * Create tooltip content for a node
+   */
+  private createTooltipContent(node: GraphNode): string {
+    const creationDate = node.creationDate.toLocaleDateString();
+    const modificationDate = node.modificationDate.toLocaleDateString();
+    const fileSize = this.formatFileSize(node.fileSize);
+    const connectionCount = node.connections.length;
+    
+    return `
+      <div class="sonic-graph-tooltip-title">${node.title}</div>
+      <div class="sonic-graph-tooltip-path">${node.path}</div>
+      <div class="sonic-graph-tooltip-meta">
+        <div>Type: ${node.type}</div>
+        <div>Size: ${fileSize}</div>
+        <div>Created: ${creationDate}</div>
+        <div>Modified: ${modificationDate}</div>
+        <div>Connections: ${connectionCount}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Format file size in human-readable format
+   */
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  /**
    * Handle simulation end
    */
   private onSimulationEnd(): void {
@@ -474,6 +577,12 @@ export class GraphRenderer {
    */
   destroy(): void {
     this.simulation.stop();
+    
+    // Remove tooltip
+    if (this.tooltip) {
+      this.tooltip.remove();
+    }
+    
     d3.select(this.container).selectAll('*').remove();
     logger.debug('renderer', 'GraphRenderer destroyed');
   }

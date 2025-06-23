@@ -196,6 +196,8 @@ var init_constants = __esm({
       // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
       logLevel: "warn",
       // Default to warn level to capture important initialization issues
+      sonicGraphShowFileNames: false,
+      // Default to hiding file names for cleaner visualization
       effects: {
         orchestralreverbhall: { enabled: true },
         "3bandeq": { enabled: true },
@@ -2570,6 +2572,9977 @@ var init_logging = __esm({
   }
 });
 
+// src/ui/components.ts
+function createObsidianToggle(container, initialValue, onChange, options) {
+  const settingItem = container.createDiv({ cls: "setting-item" });
+  if ((options == null ? void 0 : options.name) || (options == null ? void 0 : options.description)) {
+    const settingItemInfo = settingItem.createDiv({ cls: "setting-item-info" });
+    if (options.name) {
+      settingItemInfo.createDiv({
+        cls: "setting-item-name",
+        text: options.name
+      });
+    }
+    if (options.description) {
+      settingItemInfo.createDiv({
+        cls: "setting-item-description",
+        text: options.description
+      });
+    }
+  }
+  const settingItemControl = settingItem.createDiv({ cls: "setting-item-control" });
+  const checkboxContainer = settingItemControl.createDiv({
+    cls: `checkbox-container${initialValue ? " is-enabled" : ""}`
+  });
+  const checkbox = checkboxContainer.createEl("input", {
+    type: "checkbox",
+    attr: { tabindex: "0" }
+  });
+  checkbox.checked = initialValue;
+  if (options == null ? void 0 : options.disabled) {
+    checkbox.disabled = true;
+    checkboxContainer.addClass("is-disabled");
+  }
+  checkbox.addEventListener("change", async (event) => {
+    const originalDisabled = checkbox.disabled;
+    const checkboxId = Math.random().toString(36).substr(2, 9);
+    try {
+      const newValue = checkbox.checked;
+      logger2.debug("ui", "Checkbox change event fired", {
+        checkboxId,
+        newValue,
+        disabled: checkbox.disabled,
+        containerElement: checkboxContainer
+      });
+      checkbox.disabled = true;
+      if (newValue) {
+        checkboxContainer.addClass("is-enabled");
+      } else {
+        checkboxContainer.removeClass("is-enabled");
+      }
+      logger2.debug("ui", "Calling onChange callback", { checkboxId });
+      await onChange(newValue);
+      logger2.debug("ui", "Checkbox onChange callback completed", { checkboxId, newValue });
+    } catch (error) {
+      logger2.error("ui", "Error in checkbox change handler", { checkboxId, error });
+      checkbox.checked = !checkbox.checked;
+      if (checkbox.checked) {
+        checkboxContainer.addClass("is-enabled");
+      } else {
+        checkboxContainer.removeClass("is-enabled");
+      }
+    } finally {
+      checkbox.disabled = originalDisabled;
+      logger2.debug("ui", "Checkbox re-enabled", { checkboxId, disabled: checkbox.disabled });
+    }
+  });
+  checkboxContainer.addEventListener("click", (event) => {
+    if (event.target !== checkbox && !checkbox.disabled) {
+      logger2.debug("ui", "Container clicked, forwarding to checkbox", { target: event.target });
+      event.preventDefault();
+      event.stopPropagation();
+      checkbox.click();
+    }
+  });
+  return checkbox;
+}
+var logger2;
+var init_components = __esm({
+  "src/ui/components.ts"() {
+    init_logging();
+    logger2 = getLogger("components");
+  }
+});
+
+// src/ui/lucide-icons.ts
+function setLucideIcon(element, iconName, size = 20) {
+  element.empty();
+  const actualIconName = LUCIDE_ICONS[iconName] || iconName;
+  (0, import_obsidian2.setIcon)(element, actualIconName);
+  element.addClass("lucide-icon");
+  element.style.width = `${size}px`;
+  element.style.height = `${size}px`;
+  element.style.display = "inline-flex";
+  element.style.alignItems = "center";
+  element.style.justifyContent = "center";
+}
+function createLucideIcon(iconName, size = 20) {
+  const iconElement = document.createElement("span");
+  setLucideIcon(iconElement, iconName, size);
+  return iconElement;
+}
+function getFamilyIcon(familyName) {
+  const family = familyName.toLowerCase();
+  return FAMILY_ICONS[family] || "music";
+}
+function getInstrumentIcon(instrumentName) {
+  const instrument = instrumentName.toLowerCase().replace(/\s+/g, "");
+  return INSTRUMENT_ICONS[instrument] || "music";
+}
+var import_obsidian2, LUCIDE_ICONS, FAMILY_ICONS, INSTRUMENT_ICONS, EFFECT_ICONS, TAB_CONFIGS;
+var init_lucide_icons = __esm({
+  "src/ui/lucide-icons.ts"() {
+    import_obsidian2 = require("obsidian");
+    LUCIDE_ICONS = {
+      // Navigation and UI
+      menu: "menu",
+      close: "x",
+      settings: "settings",
+      search: "search",
+      filter: "filter",
+      more: "more-horizontal",
+      // Audio Controls
+      play: "play",
+      pause: "pause",
+      stop: "square",
+      volume: "volume-2",
+      volumeOff: "volume-x",
+      headphones: "headphones",
+      // Status and Monitoring
+      activity: "activity",
+      analytics: "bar-chart-3",
+      cpu: "cpu",
+      zap: "zap",
+      checkCircle: "check-circle",
+      alertCircle: "alert-circle",
+      info: "info",
+      // Musical Elements
+      music: "music",
+      musicNote: "music",
+      waveform: "activity",
+      equalizer: "sliders-horizontal",
+      // Instrument Families
+      strings: "music",
+      // Piano/keyboard for strings
+      woodwinds: "circle",
+      // Using circle for woodwinds
+      brass: "volume-2",
+      // Horn-like icon for brass
+      percussion: "circle",
+      // Circle for percussion
+      electronic: "zap",
+      // Electronic/synthesizer
+      experimental: "flask",
+      // Science flask for experimental
+      // Individual Instruments - Strings
+      piano: "music",
+      violin: "music",
+      viola: "music",
+      cello: "music",
+      doubleBass: "music",
+      harp: "music",
+      guitar: "music",
+      // Individual Instruments - Woodwinds
+      flute: "circle",
+      clarinet: "circle",
+      saxophone: "circle",
+      bassoon: "circle",
+      oboe: "circle",
+      // Individual Instruments - Brass
+      trumpet: "volume-2",
+      frenchHorn: "volume-2",
+      trombone: "volume-2",
+      tuba: "volume-2",
+      // Individual Instruments - Vocals
+      // Individual Instruments - Percussion
+      timpani: "circle",
+      xylophone: "grid-3x3",
+      vibraphone: "grid-3x3",
+      gongs: "circle",
+      // Individual Instruments - Electronic
+      leadSynth: "zap",
+      bassSynth: "zap",
+      arpSynth: "zap",
+      // Individual Instruments - Experimental
+      whaleHumpback: "activity",
+      // Effects
+      reverb: "activity",
+      chorus: "repeat",
+      delay: "clock",
+      distortion: "zap",
+      compressor: "maximize-2",
+      // Controls
+      enable: "toggle-right",
+      disable: "toggle-left",
+      volumeControl: "volume-2",
+      voices: "users",
+      // Actions
+      save: "save",
+      load: "folder-open",
+      reset: "rotate-ccw",
+      copy: "copy",
+      paste: "clipboard",
+      delete: "trash-2",
+      // States
+      enabled: "check-circle",
+      disabled: "circle",
+      active: "circle",
+      inactive: "circle",
+      warning: "alert-triangle",
+      error: "x-circle",
+      success: "check-circle",
+      // Arrows and Navigation
+      arrowLeft: "arrow-left",
+      arrowRight: "arrow-right",
+      arrowUp: "arrow-up",
+      arrowDown: "arrow-down",
+      chevronLeft: "chevron-left",
+      chevronRight: "chevron-right",
+      chevronUp: "chevron-up",
+      chevronDown: "chevron-down",
+      // Plus/Minus
+      plus: "plus",
+      minus: "minus",
+      plusCircle: "plus-circle",
+      minusCircle: "minus-circle",
+      // Toggles and Controls
+      toggleOn: "toggle-right",
+      toggleOff: "toggle-left",
+      powerOn: "power",
+      powerOff: "power-off"
+    };
+    FAMILY_ICONS = {
+      keyboard: LUCIDE_ICONS.piano,
+      strings: LUCIDE_ICONS.strings,
+      woodwinds: LUCIDE_ICONS.woodwinds,
+      brass: LUCIDE_ICONS.brass,
+      percussion: LUCIDE_ICONS.percussion,
+      electronic: LUCIDE_ICONS.electronic,
+      experimental: LUCIDE_ICONS.experimental
+    };
+    INSTRUMENT_ICONS = {
+      // Strings
+      violin: LUCIDE_ICONS.violin,
+      viola: LUCIDE_ICONS.viola,
+      cello: LUCIDE_ICONS.cello,
+      doubleBass: LUCIDE_ICONS.doubleBass,
+      harp: LUCIDE_ICONS.harp,
+      piano: LUCIDE_ICONS.piano,
+      guitar: LUCIDE_ICONS.guitar,
+      // Woodwinds
+      flute: LUCIDE_ICONS.flute,
+      clarinet: LUCIDE_ICONS.clarinet,
+      saxophone: LUCIDE_ICONS.saxophone,
+      bassoon: LUCIDE_ICONS.bassoon,
+      oboe: LUCIDE_ICONS.oboe,
+      // Brass
+      trumpet: LUCIDE_ICONS.trumpet,
+      frenchHorn: LUCIDE_ICONS.frenchHorn,
+      trombone: LUCIDE_ICONS.trombone,
+      tuba: LUCIDE_ICONS.tuba,
+      // Vocals
+      // Percussion
+      timpani: LUCIDE_ICONS.timpani,
+      xylophone: LUCIDE_ICONS.xylophone,
+      vibraphone: LUCIDE_ICONS.vibraphone,
+      gongs: LUCIDE_ICONS.gongs,
+      // Electronic
+      leadSynth: LUCIDE_ICONS.leadSynth,
+      bassSynth: LUCIDE_ICONS.bassSynth,
+      arpSynth: LUCIDE_ICONS.arpSynth,
+      // Experimental
+      whaleHumpback: LUCIDE_ICONS.whaleHumpback
+    };
+    EFFECT_ICONS = {
+      reverb: LUCIDE_ICONS.reverb,
+      chorus: LUCIDE_ICONS.chorus,
+      filter: LUCIDE_ICONS.filter,
+      delay: LUCIDE_ICONS.delay,
+      distortion: LUCIDE_ICONS.distortion,
+      compressor: LUCIDE_ICONS.compressor
+    };
+    TAB_CONFIGS = [
+      {
+        id: "status",
+        name: "Status",
+        icon: "bar-chart-3",
+        description: "System monitoring and diagnostics"
+      },
+      {
+        id: "musical",
+        name: "Musical",
+        icon: "music",
+        description: "Scale, tempo, and musical parameters"
+      },
+      {
+        id: "master",
+        name: "Master",
+        icon: "sliders-horizontal",
+        description: "Global controls and presets"
+      },
+      {
+        id: "keyboard",
+        name: "Keyboard",
+        icon: "piano",
+        description: "6 keyboard instruments",
+        instrumentCount: 6
+      },
+      {
+        id: "strings",
+        name: "Strings",
+        icon: "music",
+        description: "9 string instruments",
+        instrumentCount: 9
+      },
+      {
+        id: "woodwinds",
+        name: "Woodwinds",
+        icon: "circle",
+        description: "5 woodwind instruments",
+        instrumentCount: 5
+      },
+      {
+        id: "brass",
+        name: "Brass",
+        icon: "volume-2",
+        description: "4 brass instruments",
+        instrumentCount: 4
+      },
+      {
+        id: "percussion",
+        name: "Percussion",
+        icon: "circle",
+        description: "4 percussion instruments",
+        instrumentCount: 4
+      },
+      {
+        id: "electronic",
+        name: "Electronic",
+        icon: "zap",
+        description: "3 electronic synthesizers",
+        instrumentCount: 3
+      },
+      {
+        id: "experimental",
+        name: "Experimental",
+        icon: "flask",
+        description: "Experimental sound sources",
+        instrumentCount: 1
+      },
+      {
+        id: "sonic-graph",
+        name: "Sonic Graph",
+        icon: "globe",
+        description: "Knowledge graph visualization with temporal animation"
+      }
+    ];
+  }
+});
+
+// src/ui/material-components.ts
+function createGrid(columns) {
+  const grid = document.createElement("div");
+  grid.className = `ospcc-grid ${columns ? `ospcc-grid--${columns}` : ""}`;
+  return grid;
+}
+var logger3, MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton;
+var init_material_components = __esm({
+  "src/ui/material-components.ts"() {
+    init_lucide_icons();
+    init_logging();
+    logger3 = getLogger("material-components");
+    MaterialCard = class {
+      constructor(options) {
+        this.container = this.createCardContainer(options);
+        this.header = this.createHeader(options);
+        this.content = this.createContent();
+        this.container.appendChild(this.header);
+        this.container.appendChild(this.content);
+      }
+      createCardContainer(options) {
+        const card = document.createElement("div");
+        card.className = `ospcc-card ${options.elevation ? `ospcc-elevation-${options.elevation}` : ""} ${options.className || ""}`;
+        if (options.onClick) {
+          card.style.cursor = "pointer";
+          card.addEventListener("click", options.onClick);
+        }
+        return card;
+      }
+      createHeader(options) {
+        const header = document.createElement("div");
+        header.className = "ospcc-card__header";
+        const titleContainer = header.createDiv({ cls: "ospcc-card__title" });
+        if (options.iconName) {
+          const icon = createLucideIcon(options.iconName, 24);
+          titleContainer.appendChild(icon);
+        }
+        titleContainer.appendText(options.title);
+        if (options.subtitle) {
+          const subtitle = header.createDiv({ cls: "ospcc-card__subtitle" });
+          subtitle.textContent = options.subtitle;
+        }
+        return header;
+      }
+      createContent() {
+        return this.container.createDiv({ cls: "ospcc-card__content" });
+      }
+      /**
+       * Get the content container for adding content
+       */
+      getContent() {
+        return this.content;
+      }
+      /**
+       * Get the card container element
+       */
+      getElement() {
+        return this.container;
+      }
+      /**
+       * Add action buttons to the card
+       */
+      addActions() {
+        if (!this.actions) {
+          this.actions = this.container.createDiv({ cls: "ospcc-card__actions" });
+        }
+        return this.actions;
+      }
+      /**
+       * Update the card title
+       */
+      setTitle(title) {
+        const titleEl = this.header.querySelector(".ospcc-card__title");
+        if (titleEl) {
+          const textNode = Array.from(titleEl.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+          if (textNode) {
+            textNode.textContent = title;
+          }
+        }
+      }
+      /**
+       * Update the card subtitle
+       */
+      setSubtitle(subtitle) {
+        let subtitleEl = this.header.querySelector(".ospcc-card__subtitle");
+        if (!subtitleEl) {
+          subtitleEl = this.header.createDiv({ cls: "ospcc-card__subtitle" });
+        }
+        subtitleEl.textContent = subtitle;
+      }
+    };
+    EffectSection = class {
+      constructor(options) {
+        this.options = options;
+        this.parameterSliders = [];
+        this.container = this.createEffectSection();
+      }
+      createEffectSection() {
+        const section = document.createElement("div");
+        section.className = `effect-card ${this.options.enabled ? "effect-card--enabled" : ""} ${this.options.className || ""}`;
+        const header = section.createDiv({ cls: "effect-header" });
+        this.createHeader(header);
+        if (this.options.parameters.length > 0) {
+          this.createParameters(section);
+        }
+        return section;
+      }
+      createHeader(container) {
+        const title = container.createDiv({ cls: "effect-title" });
+        const icon = createLucideIcon(this.options.iconName, 20);
+        title.appendChild(icon);
+        title.appendText(this.options.effectName);
+        const toggleContainer = container.createDiv({ cls: "ospcc-switch" });
+        toggleContainer.style.marginLeft = "auto";
+        toggleContainer.style.transform = "scale(0.8)";
+        this.enableSwitch = toggleContainer.createEl("input", {
+          type: "checkbox",
+          cls: "ospcc-switch__input"
+        });
+        this.enableSwitch.checked = this.options.enabled;
+        this.enableSwitch.addEventListener("change", () => {
+          this.updateEnabledState(this.enableSwitch.checked);
+        });
+        const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+        const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
+        toggleContainer.addEventListener("click", (e) => {
+          if (e.target !== this.enableSwitch) {
+            e.preventDefault();
+            this.enableSwitch.checked = !this.enableSwitch.checked;
+            this.enableSwitch.dispatchEvent(new Event("change"));
+          }
+        });
+      }
+      createParameters(container) {
+        this.options.parameters.forEach((param) => {
+          const group = container.createDiv({ cls: "control-group" });
+          const label = group.createEl("label", { cls: "control-label" });
+          label.textContent = param.name;
+          const slider = new MaterialSlider({
+            value: param.value,
+            min: param.min || 0,
+            max: param.max || 1,
+            step: param.step || 0.1,
+            unit: param.unit || "",
+            onChange: param.onChange
+          });
+          group.appendChild(slider.getElement());
+          this.parameterSliders.push(slider);
+        });
+      }
+      updateEnabledState(enabled) {
+        this.options.enabled = enabled;
+        this.container.classList.toggle("effect-card--enabled", enabled);
+        if (this.options.onEnabledChange) {
+          this.options.onEnabledChange(enabled);
+        }
+      }
+      getElement() {
+        return this.container;
+      }
+      setEnabled(enabled) {
+        this.enableSwitch.checked = enabled;
+        this.updateEnabledState(enabled);
+      }
+      setParameterValue(parameterIndex, value) {
+        if (parameterIndex < this.parameterSliders.length) {
+          this.parameterSliders[parameterIndex].setValue(value);
+        }
+      }
+    };
+    ActionChip = class {
+      constructor(options) {
+        this.options = options;
+        this.container = this.createActionChip();
+      }
+      createActionChip() {
+        const chip = document.createElement("div");
+        chip.className = `ospcc-chip ${this.options.selected ? "ospcc-chip--selected" : ""} ${this.options.className || ""}`;
+        if (this.options.iconName) {
+          const icon = createLucideIcon(this.options.iconName, 16);
+          chip.appendChild(icon);
+        }
+        chip.appendText(this.options.text);
+        chip.addEventListener("click", () => {
+          if (!this.options.disabled) {
+            this.toggle();
+          }
+        });
+        if (this.options.disabled) {
+          chip.style.opacity = "0.5";
+          chip.style.cursor = "not-allowed";
+        }
+        return chip;
+      }
+      toggle() {
+        const newSelected = !this.options.selected;
+        this.options.selected = newSelected;
+        this.container.classList.toggle("ospcc-chip--selected", newSelected);
+        if (this.options.onToggle) {
+          this.options.onToggle(newSelected);
+        }
+      }
+      getElement() {
+        return this.container;
+      }
+      setSelected(selected) {
+        this.options.selected = selected;
+        this.container.classList.toggle("ospcc-chip--selected", selected);
+      }
+      setText(text) {
+        const textNode = Array.from(this.container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+        if (textNode) {
+          textNode.textContent = text;
+        }
+      }
+    };
+    MaterialSlider = class {
+      constructor(options) {
+        this.options = options;
+        this.container = this.createSlider();
+        this.updateDisplay();
+      }
+      createSlider() {
+        const sliderContainer = document.createElement("div");
+        sliderContainer.className = `ospcc-slider-container ${this.options.className || ""}`;
+        this.slider = sliderContainer.createDiv({ cls: "ospcc-slider" });
+        const trackContainer = this.slider.createDiv({ cls: "ospcc-slider__track-container" });
+        this.track = trackContainer.createDiv({ cls: "ospcc-slider__track" });
+        const activeTrack = this.track.createDiv({ cls: "ospcc-slider__track-active" });
+        this.thumb = this.slider.createDiv({ cls: "ospcc-slider__thumb" });
+        this.valueDisplay = sliderContainer.createDiv({ cls: "slider-value" });
+        this.setupInteraction();
+        return sliderContainer;
+      }
+      setupInteraction() {
+        let isDragging = false;
+        const updateValue = (clientX) => {
+          const rect = this.slider.getBoundingClientRect();
+          const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+          const min2 = this.options.min || 0;
+          const max2 = this.options.max || 1;
+          const step = this.options.step || 0.1;
+          let value = min2 + percentage * (max2 - min2);
+          value = Math.round(value / step) * step;
+          value = Math.max(min2, Math.min(max2, value));
+          this.options.value = value;
+          this.updateDisplay();
+          if (this.options.onChange) {
+            this.options.onChange(value);
+          }
+        };
+        this.slider.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          updateValue(e.clientX);
+          e.preventDefault();
+        });
+        document.addEventListener("mousemove", (e) => {
+          if (isDragging) {
+            updateValue(e.clientX);
+          }
+        });
+        document.addEventListener("mouseup", () => {
+          isDragging = false;
+        });
+        this.slider.addEventListener("mouseenter", () => {
+          this.thumb.style.transform = "translate(-50%, -50%) scale(1.1)";
+        });
+        this.slider.addEventListener("mouseleave", () => {
+          if (!isDragging) {
+            this.thumb.style.transform = "translate(-50%, -50%) scale(1)";
+          }
+        });
+      }
+      updateDisplay() {
+        const min2 = this.options.min || 0;
+        const max2 = this.options.max || 1;
+        const percentage = (this.options.value - min2) / (max2 - min2) * 100;
+        this.thumb.style.left = `${percentage}%`;
+        const activeTrack = this.track.querySelector(".ospcc-slider__track-active");
+        if (activeTrack) {
+          activeTrack.style.width = `${percentage}%`;
+        }
+        const displayValue = this.options.displayValue || `${this.options.value.toFixed(1)}${this.options.unit || ""}`;
+        this.valueDisplay.textContent = displayValue;
+        this.thumb.setAttribute("data-value", displayValue);
+      }
+      getElement() {
+        return this.container;
+      }
+      setValue(value) {
+        this.options.value = value;
+        this.updateDisplay();
+      }
+      getValue() {
+        return this.options.value;
+      }
+      setDisplayValue(displayValue) {
+        this.options.displayValue = displayValue;
+        this.updateDisplay();
+      }
+    };
+    MaterialButton = class {
+      constructor(options) {
+        this.container = this.createButton(options);
+      }
+      createButton(options) {
+        const button = document.createElement("button");
+        button.className = `ospcc-button ospcc-button--${options.variant || "filled"} ${options.className || ""}`;
+        button.disabled = options.disabled || false;
+        if (options.iconName) {
+          const icon = createLucideIcon(options.iconName, 18);
+          button.appendChild(icon);
+        }
+        button.appendText(options.text);
+        if (options.onClick) {
+          button.addEventListener("click", options.onClick);
+        }
+        return button;
+      }
+      getElement() {
+        return this.container;
+      }
+      setDisabled(disabled) {
+        this.container.disabled = disabled;
+      }
+      setText(text) {
+        const textNode = Array.from(this.container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+        if (textNode) {
+          textNode.textContent = text;
+        }
+      }
+    };
+  }
+});
+
+// src/ui/play-button-manager.ts
+var logger4, STATE_CONFIGS, LOADING_MESSAGES, VALID_TRANSITIONS, PlayButtonManager;
+var init_play_button_manager = __esm({
+  "src/ui/play-button-manager.ts"() {
+    init_lucide_icons();
+    init_logging();
+    logger4 = getLogger("play-button-manager");
+    STATE_CONFIGS = {
+      idle: {
+        icon: "play",
+        text: "Play",
+        disabled: false,
+        cssClass: "osp-header-btn--idle"
+      },
+      loading: {
+        icon: "loader-2",
+        text: "Loading...",
+        disabled: true,
+        cssClass: "osp-header-btn--loading",
+        animation: "perimeter-pulse 1.5s ease-in-out infinite"
+      },
+      playing: {
+        icon: "pause",
+        text: "Playing",
+        disabled: false,
+        cssClass: "osp-header-btn--playing",
+        animation: "pulse-glow 2s ease-in-out infinite"
+      },
+      paused: {
+        icon: "play",
+        text: "Resume",
+        disabled: false,
+        cssClass: "osp-header-btn--paused"
+      },
+      stopping: {
+        icon: "loader-2",
+        text: "Stopping...",
+        disabled: true,
+        cssClass: "osp-header-btn--stopping",
+        animation: "spin 1s linear infinite"
+      }
+    };
+    LOADING_MESSAGES = {
+      analyzing: "Analyzing vault...",
+      generating: "Generating sequence...",
+      initializing: "Initializing audio...",
+      starting: "Starting playback..."
+    };
+    VALID_TRANSITIONS = {
+      idle: ["loading", "idle"],
+      // Allow idle -> idle for reinitialization
+      loading: ["playing", "idle"],
+      // idle on error
+      playing: ["paused", "stopping", "idle"],
+      // idle on completion
+      paused: ["playing", "stopping", "idle"],
+      stopping: ["idle"]
+    };
+    PlayButtonManager = class {
+      constructor() {
+        this.button = null;
+        this.currentState = "idle";
+        this.currentSubstate = null;
+        this.stateChangeListeners = [];
+      }
+      /**
+       * Initialize the manager with a button element
+       */
+      initialize(button) {
+        this.button = button;
+        this.setState("idle");
+        logger4.debug("manager", "Play button manager initialized");
+      }
+      /**
+       * Get current state
+       */
+      getCurrentState() {
+        return this.currentState;
+      }
+      /**
+       * Set button state with validation
+       */
+      setState(newState, substate) {
+        if (!this.isValidTransition(this.currentState, newState)) {
+          logger4.warn("manager", `Invalid state transition: ${this.currentState} -> ${newState}`);
+          return;
+        }
+        const previousState = this.currentState;
+        this.currentState = newState;
+        this.currentSubstate = substate || null;
+        logger4.debug("manager", `State transition: ${previousState} -> ${newState}`, {
+          substate: this.currentSubstate
+        });
+        this.updateButton();
+        this.notifyStateChange(newState);
+      }
+      /**
+       * Set loading substate for detailed feedback
+       */
+      setLoadingSubstate(substate) {
+        if (this.currentState === "loading") {
+          this.currentSubstate = substate;
+          this.updateButton();
+          logger4.debug("manager", `Loading substate: ${substate}`);
+        }
+      }
+      /**
+       * Add state change listener
+       */
+      onStateChange(listener) {
+        this.stateChangeListeners.push(listener);
+      }
+      /**
+       * Remove state change listener
+       */
+      removeStateChangeListener(listener) {
+        const index2 = this.stateChangeListeners.indexOf(listener);
+        if (index2 > -1) {
+          this.stateChangeListeners.splice(index2, 1);
+        }
+      }
+      /**
+       * Check if state transition is valid
+       */
+      isValidTransition(from, to) {
+        var _a, _b;
+        return (_b = (_a = VALID_TRANSITIONS[from]) == null ? void 0 : _a.includes(to)) != null ? _b : false;
+      }
+      /**
+       * Update button appearance based on current state
+       */
+      updateButton() {
+        if (!this.button)
+          return;
+        const button = this.button;
+        const config = STATE_CONFIGS[this.currentState];
+        button.textContent = "";
+        button.className = button.className.replace(/osp-header-btn--\w+/g, "");
+        button.disabled = config.disabled;
+        button.classList.add(config.cssClass);
+        const icon = createLucideIcon(config.icon, 16);
+        if (config.animation) {
+          icon.style.animation = config.animation;
+        }
+        button.appendChild(icon);
+        const text = this.getDisplayText();
+        button.appendText(text);
+        this.updateAccessibility(button, text);
+      }
+      /**
+       * Get display text based on state and substate
+       */
+      getDisplayText() {
+        if (this.currentState === "loading" && this.currentSubstate) {
+          return LOADING_MESSAGES[this.currentSubstate];
+        }
+        return STATE_CONFIGS[this.currentState].text;
+      }
+      /**
+       * Update accessibility attributes
+       */
+      updateAccessibility(button, text) {
+        button.setAttribute("aria-label", text);
+        button.setAttribute("data-state", this.currentState);
+        if (this.currentState === "loading" || this.currentState === "stopping") {
+          button.setAttribute("aria-busy", "true");
+        } else {
+          button.removeAttribute("aria-busy");
+        }
+      }
+      /**
+       * Notify all state change listeners
+       */
+      notifyStateChange(state) {
+        this.stateChangeListeners.forEach((listener) => {
+          try {
+            listener(state);
+          } catch (error) {
+            logger4.error("manager", "Error in state change listener", error);
+          }
+        });
+      }
+      /**
+       * Update loading progress (Phase 3: Enhanced feedback)
+       * Updates button text with progress percentage during loading
+       */
+      updateLoadingProgress(percent, context2) {
+        if (this.currentState !== "loading")
+          return;
+        if (!this.button)
+          return;
+        const progressText = context2 ? `${context2} ${Math.round(percent)}%` : `Loading ${Math.round(percent)}%`;
+        const textNode = this.button.childNodes[1];
+        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+          textNode.textContent = progressText;
+        }
+        this.button.setAttribute("aria-label", progressText);
+        logger4.debug("manager", `Updated loading progress: ${progressText}`);
+      }
+      /**
+       * Force state reset (for error recovery)
+       */
+      forceReset() {
+        logger4.info("manager", "Force resetting play button state");
+        this.currentState = "idle";
+        this.currentSubstate = null;
+        this.updateButton();
+      }
+      /**
+       * Get state configuration for external use
+       */
+      getStateConfig(state) {
+        return { ...STATE_CONFIGS[state] };
+      }
+      /**
+       * Cleanup resources
+       */
+      dispose() {
+        this.stateChangeListeners = [];
+        this.button = null;
+        logger4.debug("manager", "Play button manager disposed");
+      }
+    };
+  }
+});
+
+// node_modules/d3-array/src/index.js
+var init_src = __esm({
+  "node_modules/d3-array/src/index.js"() {
+  }
+});
+
+// node_modules/d3-axis/src/index.js
+var init_src2 = __esm({
+  "node_modules/d3-axis/src/index.js"() {
+  }
+});
+
+// node_modules/d3-dispatch/src/dispatch.js
+function dispatch() {
+  for (var i = 0, n = arguments.length, _ = {}, t; i < n; ++i) {
+    if (!(t = arguments[i] + "") || t in _ || /[\s.]/.test(t))
+      throw new Error("illegal type: " + t);
+    _[t] = [];
+  }
+  return new Dispatch(_);
+}
+function Dispatch(_) {
+  this._ = _;
+}
+function parseTypenames(typenames, types) {
+  return typenames.trim().split(/^|\s+/).map(function(t) {
+    var name = "", i = t.indexOf(".");
+    if (i >= 0)
+      name = t.slice(i + 1), t = t.slice(0, i);
+    if (t && !types.hasOwnProperty(t))
+      throw new Error("unknown type: " + t);
+    return { type: t, name };
+  });
+}
+function get(type2, name) {
+  for (var i = 0, n = type2.length, c2; i < n; ++i) {
+    if ((c2 = type2[i]).name === name) {
+      return c2.value;
+    }
+  }
+}
+function set(type2, name, callback) {
+  for (var i = 0, n = type2.length; i < n; ++i) {
+    if (type2[i].name === name) {
+      type2[i] = noop, type2 = type2.slice(0, i).concat(type2.slice(i + 1));
+      break;
+    }
+  }
+  if (callback != null)
+    type2.push({ name, value: callback });
+  return type2;
+}
+var noop, dispatch_default;
+var init_dispatch = __esm({
+  "node_modules/d3-dispatch/src/dispatch.js"() {
+    noop = { value: () => {
+    } };
+    Dispatch.prototype = dispatch.prototype = {
+      constructor: Dispatch,
+      on: function(typename, callback) {
+        var _ = this._, T = parseTypenames(typename + "", _), t, i = -1, n = T.length;
+        if (arguments.length < 2) {
+          while (++i < n)
+            if ((t = (typename = T[i]).type) && (t = get(_[t], typename.name)))
+              return t;
+          return;
+        }
+        if (callback != null && typeof callback !== "function")
+          throw new Error("invalid callback: " + callback);
+        while (++i < n) {
+          if (t = (typename = T[i]).type)
+            _[t] = set(_[t], typename.name, callback);
+          else if (callback == null)
+            for (t in _)
+              _[t] = set(_[t], typename.name, null);
+        }
+        return this;
+      },
+      copy: function() {
+        var copy = {}, _ = this._;
+        for (var t in _)
+          copy[t] = _[t].slice();
+        return new Dispatch(copy);
+      },
+      call: function(type2, that) {
+        if ((n = arguments.length - 2) > 0)
+          for (var args = new Array(n), i = 0, n, t; i < n; ++i)
+            args[i] = arguments[i + 2];
+        if (!this._.hasOwnProperty(type2))
+          throw new Error("unknown type: " + type2);
+        for (t = this._[type2], i = 0, n = t.length; i < n; ++i)
+          t[i].value.apply(that, args);
+      },
+      apply: function(type2, that, args) {
+        if (!this._.hasOwnProperty(type2))
+          throw new Error("unknown type: " + type2);
+        for (var t = this._[type2], i = 0, n = t.length; i < n; ++i)
+          t[i].value.apply(that, args);
+      }
+    };
+    dispatch_default = dispatch;
+  }
+});
+
+// node_modules/d3-dispatch/src/index.js
+var init_src3 = __esm({
+  "node_modules/d3-dispatch/src/index.js"() {
+    init_dispatch();
+  }
+});
+
+// node_modules/d3-selection/src/namespaces.js
+var xhtml, namespaces_default;
+var init_namespaces = __esm({
+  "node_modules/d3-selection/src/namespaces.js"() {
+    xhtml = "http://www.w3.org/1999/xhtml";
+    namespaces_default = {
+      svg: "http://www.w3.org/2000/svg",
+      xhtml,
+      xlink: "http://www.w3.org/1999/xlink",
+      xml: "http://www.w3.org/XML/1998/namespace",
+      xmlns: "http://www.w3.org/2000/xmlns/"
+    };
+  }
+});
+
+// node_modules/d3-selection/src/namespace.js
+function namespace_default(name) {
+  var prefix = name += "", i = prefix.indexOf(":");
+  if (i >= 0 && (prefix = name.slice(0, i)) !== "xmlns")
+    name = name.slice(i + 1);
+  return namespaces_default.hasOwnProperty(prefix) ? { space: namespaces_default[prefix], local: name } : name;
+}
+var init_namespace = __esm({
+  "node_modules/d3-selection/src/namespace.js"() {
+    init_namespaces();
+  }
+});
+
+// node_modules/d3-selection/src/creator.js
+function creatorInherit(name) {
+  return function() {
+    var document2 = this.ownerDocument, uri = this.namespaceURI;
+    return uri === xhtml && document2.documentElement.namespaceURI === xhtml ? document2.createElement(name) : document2.createElementNS(uri, name);
+  };
+}
+function creatorFixed(fullname) {
+  return function() {
+    return this.ownerDocument.createElementNS(fullname.space, fullname.local);
+  };
+}
+function creator_default(name) {
+  var fullname = namespace_default(name);
+  return (fullname.local ? creatorFixed : creatorInherit)(fullname);
+}
+var init_creator = __esm({
+  "node_modules/d3-selection/src/creator.js"() {
+    init_namespace();
+    init_namespaces();
+  }
+});
+
+// node_modules/d3-selection/src/selector.js
+function none() {
+}
+function selector_default(selector) {
+  return selector == null ? none : function() {
+    return this.querySelector(selector);
+  };
+}
+var init_selector = __esm({
+  "node_modules/d3-selection/src/selector.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/select.js
+function select_default(select) {
+  if (typeof select !== "function")
+    select = selector_default(select);
+  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = new Array(n), node, subnode, i = 0; i < n; ++i) {
+      if ((node = group[i]) && (subnode = select.call(node, node.__data__, i, group))) {
+        if ("__data__" in node)
+          subnode.__data__ = node.__data__;
+        subgroup[i] = subnode;
+      }
+    }
+  }
+  return new Selection(subgroups, this._parents);
+}
+var init_select = __esm({
+  "node_modules/d3-selection/src/selection/select.js"() {
+    init_selection();
+    init_selector();
+  }
+});
+
+// node_modules/d3-selection/src/array.js
+function array(x3) {
+  return x3 == null ? [] : Array.isArray(x3) ? x3 : Array.from(x3);
+}
+var init_array = __esm({
+  "node_modules/d3-selection/src/array.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selectorAll.js
+function empty() {
+  return [];
+}
+function selectorAll_default(selector) {
+  return selector == null ? empty : function() {
+    return this.querySelectorAll(selector);
+  };
+}
+var init_selectorAll = __esm({
+  "node_modules/d3-selection/src/selectorAll.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/selectAll.js
+function arrayAll(select) {
+  return function() {
+    return array(select.apply(this, arguments));
+  };
+}
+function selectAll_default(select) {
+  if (typeof select === "function")
+    select = arrayAll(select);
+  else
+    select = selectorAll_default(select);
+  for (var groups = this._groups, m2 = groups.length, subgroups = [], parents = [], j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
+      if (node = group[i]) {
+        subgroups.push(select.call(node, node.__data__, i, group));
+        parents.push(node);
+      }
+    }
+  }
+  return new Selection(subgroups, parents);
+}
+var init_selectAll = __esm({
+  "node_modules/d3-selection/src/selection/selectAll.js"() {
+    init_selection();
+    init_array();
+    init_selectorAll();
+  }
+});
+
+// node_modules/d3-selection/src/matcher.js
+function matcher_default(selector) {
+  return function() {
+    return this.matches(selector);
+  };
+}
+function childMatcher(selector) {
+  return function(node) {
+    return node.matches(selector);
+  };
+}
+var init_matcher = __esm({
+  "node_modules/d3-selection/src/matcher.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/selectChild.js
+function childFind(match) {
+  return function() {
+    return find.call(this.children, match);
+  };
+}
+function childFirst() {
+  return this.firstElementChild;
+}
+function selectChild_default(match) {
+  return this.select(match == null ? childFirst : childFind(typeof match === "function" ? match : childMatcher(match)));
+}
+var find;
+var init_selectChild = __esm({
+  "node_modules/d3-selection/src/selection/selectChild.js"() {
+    init_matcher();
+    find = Array.prototype.find;
+  }
+});
+
+// node_modules/d3-selection/src/selection/selectChildren.js
+function children() {
+  return Array.from(this.children);
+}
+function childrenFilter(match) {
+  return function() {
+    return filter.call(this.children, match);
+  };
+}
+function selectChildren_default(match) {
+  return this.selectAll(match == null ? children : childrenFilter(typeof match === "function" ? match : childMatcher(match)));
+}
+var filter;
+var init_selectChildren = __esm({
+  "node_modules/d3-selection/src/selection/selectChildren.js"() {
+    init_matcher();
+    filter = Array.prototype.filter;
+  }
+});
+
+// node_modules/d3-selection/src/selection/filter.js
+function filter_default(match) {
+  if (typeof match !== "function")
+    match = matcher_default(match);
+  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = [], node, i = 0; i < n; ++i) {
+      if ((node = group[i]) && match.call(node, node.__data__, i, group)) {
+        subgroup.push(node);
+      }
+    }
+  }
+  return new Selection(subgroups, this._parents);
+}
+var init_filter = __esm({
+  "node_modules/d3-selection/src/selection/filter.js"() {
+    init_selection();
+    init_matcher();
+  }
+});
+
+// node_modules/d3-selection/src/selection/sparse.js
+function sparse_default(update) {
+  return new Array(update.length);
+}
+var init_sparse = __esm({
+  "node_modules/d3-selection/src/selection/sparse.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/enter.js
+function enter_default() {
+  return new Selection(this._enter || this._groups.map(sparse_default), this._parents);
+}
+function EnterNode(parent, datum2) {
+  this.ownerDocument = parent.ownerDocument;
+  this.namespaceURI = parent.namespaceURI;
+  this._next = null;
+  this._parent = parent;
+  this.__data__ = datum2;
+}
+var init_enter = __esm({
+  "node_modules/d3-selection/src/selection/enter.js"() {
+    init_sparse();
+    init_selection();
+    EnterNode.prototype = {
+      constructor: EnterNode,
+      appendChild: function(child) {
+        return this._parent.insertBefore(child, this._next);
+      },
+      insertBefore: function(child, next) {
+        return this._parent.insertBefore(child, next);
+      },
+      querySelector: function(selector) {
+        return this._parent.querySelector(selector);
+      },
+      querySelectorAll: function(selector) {
+        return this._parent.querySelectorAll(selector);
+      }
+    };
+  }
+});
+
+// node_modules/d3-selection/src/constant.js
+function constant_default(x3) {
+  return function() {
+    return x3;
+  };
+}
+var init_constant = __esm({
+  "node_modules/d3-selection/src/constant.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/data.js
+function bindIndex(parent, group, enter, update, exit, data) {
+  var i = 0, node, groupLength = group.length, dataLength = data.length;
+  for (; i < dataLength; ++i) {
+    if (node = group[i]) {
+      node.__data__ = data[i];
+      update[i] = node;
+    } else {
+      enter[i] = new EnterNode(parent, data[i]);
+    }
+  }
+  for (; i < groupLength; ++i) {
+    if (node = group[i]) {
+      exit[i] = node;
+    }
+  }
+}
+function bindKey(parent, group, enter, update, exit, data, key) {
+  var i, node, nodeByKeyValue = /* @__PURE__ */ new Map(), groupLength = group.length, dataLength = data.length, keyValues = new Array(groupLength), keyValue;
+  for (i = 0; i < groupLength; ++i) {
+    if (node = group[i]) {
+      keyValues[i] = keyValue = key.call(node, node.__data__, i, group) + "";
+      if (nodeByKeyValue.has(keyValue)) {
+        exit[i] = node;
+      } else {
+        nodeByKeyValue.set(keyValue, node);
+      }
+    }
+  }
+  for (i = 0; i < dataLength; ++i) {
+    keyValue = key.call(parent, data[i], i, data) + "";
+    if (node = nodeByKeyValue.get(keyValue)) {
+      update[i] = node;
+      node.__data__ = data[i];
+      nodeByKeyValue.delete(keyValue);
+    } else {
+      enter[i] = new EnterNode(parent, data[i]);
+    }
+  }
+  for (i = 0; i < groupLength; ++i) {
+    if ((node = group[i]) && nodeByKeyValue.get(keyValues[i]) === node) {
+      exit[i] = node;
+    }
+  }
+}
+function datum(node) {
+  return node.__data__;
+}
+function data_default(value, key) {
+  if (!arguments.length)
+    return Array.from(this, datum);
+  var bind = key ? bindKey : bindIndex, parents = this._parents, groups = this._groups;
+  if (typeof value !== "function")
+    value = constant_default(value);
+  for (var m2 = groups.length, update = new Array(m2), enter = new Array(m2), exit = new Array(m2), j = 0; j < m2; ++j) {
+    var parent = parents[j], group = groups[j], groupLength = group.length, data = arraylike(value.call(parent, parent && parent.__data__, j, parents)), dataLength = data.length, enterGroup = enter[j] = new Array(dataLength), updateGroup = update[j] = new Array(dataLength), exitGroup = exit[j] = new Array(groupLength);
+    bind(parent, group, enterGroup, updateGroup, exitGroup, data, key);
+    for (var i0 = 0, i1 = 0, previous, next; i0 < dataLength; ++i0) {
+      if (previous = enterGroup[i0]) {
+        if (i0 >= i1)
+          i1 = i0 + 1;
+        while (!(next = updateGroup[i1]) && ++i1 < dataLength)
+          ;
+        previous._next = next || null;
+      }
+    }
+  }
+  update = new Selection(update, parents);
+  update._enter = enter;
+  update._exit = exit;
+  return update;
+}
+function arraylike(data) {
+  return typeof data === "object" && "length" in data ? data : Array.from(data);
+}
+var init_data = __esm({
+  "node_modules/d3-selection/src/selection/data.js"() {
+    init_selection();
+    init_enter();
+    init_constant();
+  }
+});
+
+// node_modules/d3-selection/src/selection/exit.js
+function exit_default() {
+  return new Selection(this._exit || this._groups.map(sparse_default), this._parents);
+}
+var init_exit = __esm({
+  "node_modules/d3-selection/src/selection/exit.js"() {
+    init_sparse();
+    init_selection();
+  }
+});
+
+// node_modules/d3-selection/src/selection/join.js
+function join_default(onenter, onupdate, onexit) {
+  var enter = this.enter(), update = this, exit = this.exit();
+  if (typeof onenter === "function") {
+    enter = onenter(enter);
+    if (enter)
+      enter = enter.selection();
+  } else {
+    enter = enter.append(onenter + "");
+  }
+  if (onupdate != null) {
+    update = onupdate(update);
+    if (update)
+      update = update.selection();
+  }
+  if (onexit == null)
+    exit.remove();
+  else
+    onexit(exit);
+  return enter && update ? enter.merge(update).order() : update;
+}
+var init_join = __esm({
+  "node_modules/d3-selection/src/selection/join.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/merge.js
+function merge_default(context2) {
+  var selection2 = context2.selection ? context2.selection() : context2;
+  for (var groups0 = this._groups, groups1 = selection2._groups, m0 = groups0.length, m1 = groups1.length, m2 = Math.min(m0, m1), merges = new Array(m0), j = 0; j < m2; ++j) {
+    for (var group0 = groups0[j], group1 = groups1[j], n = group0.length, merge = merges[j] = new Array(n), node, i = 0; i < n; ++i) {
+      if (node = group0[i] || group1[i]) {
+        merge[i] = node;
+      }
+    }
+  }
+  for (; j < m0; ++j) {
+    merges[j] = groups0[j];
+  }
+  return new Selection(merges, this._parents);
+}
+var init_merge = __esm({
+  "node_modules/d3-selection/src/selection/merge.js"() {
+    init_selection();
+  }
+});
+
+// node_modules/d3-selection/src/selection/order.js
+function order_default() {
+  for (var groups = this._groups, j = -1, m2 = groups.length; ++j < m2; ) {
+    for (var group = groups[j], i = group.length - 1, next = group[i], node; --i >= 0; ) {
+      if (node = group[i]) {
+        if (next && node.compareDocumentPosition(next) ^ 4)
+          next.parentNode.insertBefore(node, next);
+        next = node;
+      }
+    }
+  }
+  return this;
+}
+var init_order = __esm({
+  "node_modules/d3-selection/src/selection/order.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/sort.js
+function sort_default(compare) {
+  if (!compare)
+    compare = ascending;
+  function compareNode(a2, b) {
+    return a2 && b ? compare(a2.__data__, b.__data__) : !a2 - !b;
+  }
+  for (var groups = this._groups, m2 = groups.length, sortgroups = new Array(m2), j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, sortgroup = sortgroups[j] = new Array(n), node, i = 0; i < n; ++i) {
+      if (node = group[i]) {
+        sortgroup[i] = node;
+      }
+    }
+    sortgroup.sort(compareNode);
+  }
+  return new Selection(sortgroups, this._parents).order();
+}
+function ascending(a2, b) {
+  return a2 < b ? -1 : a2 > b ? 1 : a2 >= b ? 0 : NaN;
+}
+var init_sort = __esm({
+  "node_modules/d3-selection/src/selection/sort.js"() {
+    init_selection();
+  }
+});
+
+// node_modules/d3-selection/src/selection/call.js
+function call_default() {
+  var callback = arguments[0];
+  arguments[0] = this;
+  callback.apply(null, arguments);
+  return this;
+}
+var init_call = __esm({
+  "node_modules/d3-selection/src/selection/call.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/nodes.js
+function nodes_default() {
+  return Array.from(this);
+}
+var init_nodes = __esm({
+  "node_modules/d3-selection/src/selection/nodes.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/node.js
+function node_default() {
+  for (var groups = this._groups, j = 0, m2 = groups.length; j < m2; ++j) {
+    for (var group = groups[j], i = 0, n = group.length; i < n; ++i) {
+      var node = group[i];
+      if (node)
+        return node;
+    }
+  }
+  return null;
+}
+var init_node = __esm({
+  "node_modules/d3-selection/src/selection/node.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/size.js
+function size_default() {
+  let size = 0;
+  for (const node of this)
+    ++size;
+  return size;
+}
+var init_size = __esm({
+  "node_modules/d3-selection/src/selection/size.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/empty.js
+function empty_default() {
+  return !this.node();
+}
+var init_empty = __esm({
+  "node_modules/d3-selection/src/selection/empty.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/each.js
+function each_default(callback) {
+  for (var groups = this._groups, j = 0, m2 = groups.length; j < m2; ++j) {
+    for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
+      if (node = group[i])
+        callback.call(node, node.__data__, i, group);
+    }
+  }
+  return this;
+}
+var init_each = __esm({
+  "node_modules/d3-selection/src/selection/each.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/attr.js
+function attrRemove(name) {
+  return function() {
+    this.removeAttribute(name);
+  };
+}
+function attrRemoveNS(fullname) {
+  return function() {
+    this.removeAttributeNS(fullname.space, fullname.local);
+  };
+}
+function attrConstant(name, value) {
+  return function() {
+    this.setAttribute(name, value);
+  };
+}
+function attrConstantNS(fullname, value) {
+  return function() {
+    this.setAttributeNS(fullname.space, fullname.local, value);
+  };
+}
+function attrFunction(name, value) {
+  return function() {
+    var v = value.apply(this, arguments);
+    if (v == null)
+      this.removeAttribute(name);
+    else
+      this.setAttribute(name, v);
+  };
+}
+function attrFunctionNS(fullname, value) {
+  return function() {
+    var v = value.apply(this, arguments);
+    if (v == null)
+      this.removeAttributeNS(fullname.space, fullname.local);
+    else
+      this.setAttributeNS(fullname.space, fullname.local, v);
+  };
+}
+function attr_default(name, value) {
+  var fullname = namespace_default(name);
+  if (arguments.length < 2) {
+    var node = this.node();
+    return fullname.local ? node.getAttributeNS(fullname.space, fullname.local) : node.getAttribute(fullname);
+  }
+  return this.each((value == null ? fullname.local ? attrRemoveNS : attrRemove : typeof value === "function" ? fullname.local ? attrFunctionNS : attrFunction : fullname.local ? attrConstantNS : attrConstant)(fullname, value));
+}
+var init_attr = __esm({
+  "node_modules/d3-selection/src/selection/attr.js"() {
+    init_namespace();
+  }
+});
+
+// node_modules/d3-selection/src/window.js
+function window_default(node) {
+  return node.ownerDocument && node.ownerDocument.defaultView || node.document && node || node.defaultView;
+}
+var init_window = __esm({
+  "node_modules/d3-selection/src/window.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/style.js
+function styleRemove(name) {
+  return function() {
+    this.style.removeProperty(name);
+  };
+}
+function styleConstant(name, value, priority) {
+  return function() {
+    this.style.setProperty(name, value, priority);
+  };
+}
+function styleFunction(name, value, priority) {
+  return function() {
+    var v = value.apply(this, arguments);
+    if (v == null)
+      this.style.removeProperty(name);
+    else
+      this.style.setProperty(name, v, priority);
+  };
+}
+function style_default(name, value, priority) {
+  return arguments.length > 1 ? this.each((value == null ? styleRemove : typeof value === "function" ? styleFunction : styleConstant)(name, value, priority == null ? "" : priority)) : styleValue(this.node(), name);
+}
+function styleValue(node, name) {
+  return node.style.getPropertyValue(name) || window_default(node).getComputedStyle(node, null).getPropertyValue(name);
+}
+var init_style = __esm({
+  "node_modules/d3-selection/src/selection/style.js"() {
+    init_window();
+  }
+});
+
+// node_modules/d3-selection/src/selection/property.js
+function propertyRemove(name) {
+  return function() {
+    delete this[name];
+  };
+}
+function propertyConstant(name, value) {
+  return function() {
+    this[name] = value;
+  };
+}
+function propertyFunction(name, value) {
+  return function() {
+    var v = value.apply(this, arguments);
+    if (v == null)
+      delete this[name];
+    else
+      this[name] = v;
+  };
+}
+function property_default(name, value) {
+  return arguments.length > 1 ? this.each((value == null ? propertyRemove : typeof value === "function" ? propertyFunction : propertyConstant)(name, value)) : this.node()[name];
+}
+var init_property = __esm({
+  "node_modules/d3-selection/src/selection/property.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/classed.js
+function classArray(string) {
+  return string.trim().split(/^|\s+/);
+}
+function classList(node) {
+  return node.classList || new ClassList(node);
+}
+function ClassList(node) {
+  this._node = node;
+  this._names = classArray(node.getAttribute("class") || "");
+}
+function classedAdd(node, names) {
+  var list = classList(node), i = -1, n = names.length;
+  while (++i < n)
+    list.add(names[i]);
+}
+function classedRemove(node, names) {
+  var list = classList(node), i = -1, n = names.length;
+  while (++i < n)
+    list.remove(names[i]);
+}
+function classedTrue(names) {
+  return function() {
+    classedAdd(this, names);
+  };
+}
+function classedFalse(names) {
+  return function() {
+    classedRemove(this, names);
+  };
+}
+function classedFunction(names, value) {
+  return function() {
+    (value.apply(this, arguments) ? classedAdd : classedRemove)(this, names);
+  };
+}
+function classed_default(name, value) {
+  var names = classArray(name + "");
+  if (arguments.length < 2) {
+    var list = classList(this.node()), i = -1, n = names.length;
+    while (++i < n)
+      if (!list.contains(names[i]))
+        return false;
+    return true;
+  }
+  return this.each((typeof value === "function" ? classedFunction : value ? classedTrue : classedFalse)(names, value));
+}
+var init_classed = __esm({
+  "node_modules/d3-selection/src/selection/classed.js"() {
+    ClassList.prototype = {
+      add: function(name) {
+        var i = this._names.indexOf(name);
+        if (i < 0) {
+          this._names.push(name);
+          this._node.setAttribute("class", this._names.join(" "));
+        }
+      },
+      remove: function(name) {
+        var i = this._names.indexOf(name);
+        if (i >= 0) {
+          this._names.splice(i, 1);
+          this._node.setAttribute("class", this._names.join(" "));
+        }
+      },
+      contains: function(name) {
+        return this._names.indexOf(name) >= 0;
+      }
+    };
+  }
+});
+
+// node_modules/d3-selection/src/selection/text.js
+function textRemove() {
+  this.textContent = "";
+}
+function textConstant(value) {
+  return function() {
+    this.textContent = value;
+  };
+}
+function textFunction(value) {
+  return function() {
+    var v = value.apply(this, arguments);
+    this.textContent = v == null ? "" : v;
+  };
+}
+function text_default(value) {
+  return arguments.length ? this.each(value == null ? textRemove : (typeof value === "function" ? textFunction : textConstant)(value)) : this.node().textContent;
+}
+var init_text = __esm({
+  "node_modules/d3-selection/src/selection/text.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/html.js
+function htmlRemove() {
+  this.innerHTML = "";
+}
+function htmlConstant(value) {
+  return function() {
+    this.innerHTML = value;
+  };
+}
+function htmlFunction(value) {
+  return function() {
+    var v = value.apply(this, arguments);
+    this.innerHTML = v == null ? "" : v;
+  };
+}
+function html_default(value) {
+  return arguments.length ? this.each(value == null ? htmlRemove : (typeof value === "function" ? htmlFunction : htmlConstant)(value)) : this.node().innerHTML;
+}
+var init_html = __esm({
+  "node_modules/d3-selection/src/selection/html.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/raise.js
+function raise() {
+  if (this.nextSibling)
+    this.parentNode.appendChild(this);
+}
+function raise_default() {
+  return this.each(raise);
+}
+var init_raise = __esm({
+  "node_modules/d3-selection/src/selection/raise.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/lower.js
+function lower() {
+  if (this.previousSibling)
+    this.parentNode.insertBefore(this, this.parentNode.firstChild);
+}
+function lower_default() {
+  return this.each(lower);
+}
+var init_lower = __esm({
+  "node_modules/d3-selection/src/selection/lower.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/append.js
+function append_default(name) {
+  var create2 = typeof name === "function" ? name : creator_default(name);
+  return this.select(function() {
+    return this.appendChild(create2.apply(this, arguments));
+  });
+}
+var init_append = __esm({
+  "node_modules/d3-selection/src/selection/append.js"() {
+    init_creator();
+  }
+});
+
+// node_modules/d3-selection/src/selection/insert.js
+function constantNull() {
+  return null;
+}
+function insert_default(name, before) {
+  var create2 = typeof name === "function" ? name : creator_default(name), select = before == null ? constantNull : typeof before === "function" ? before : selector_default(before);
+  return this.select(function() {
+    return this.insertBefore(create2.apply(this, arguments), select.apply(this, arguments) || null);
+  });
+}
+var init_insert = __esm({
+  "node_modules/d3-selection/src/selection/insert.js"() {
+    init_creator();
+    init_selector();
+  }
+});
+
+// node_modules/d3-selection/src/selection/remove.js
+function remove() {
+  var parent = this.parentNode;
+  if (parent)
+    parent.removeChild(this);
+}
+function remove_default() {
+  return this.each(remove);
+}
+var init_remove = __esm({
+  "node_modules/d3-selection/src/selection/remove.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/clone.js
+function selection_cloneShallow() {
+  var clone = this.cloneNode(false), parent = this.parentNode;
+  return parent ? parent.insertBefore(clone, this.nextSibling) : clone;
+}
+function selection_cloneDeep() {
+  var clone = this.cloneNode(true), parent = this.parentNode;
+  return parent ? parent.insertBefore(clone, this.nextSibling) : clone;
+}
+function clone_default(deep) {
+  return this.select(deep ? selection_cloneDeep : selection_cloneShallow);
+}
+var init_clone = __esm({
+  "node_modules/d3-selection/src/selection/clone.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/datum.js
+function datum_default(value) {
+  return arguments.length ? this.property("__data__", value) : this.node().__data__;
+}
+var init_datum = __esm({
+  "node_modules/d3-selection/src/selection/datum.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/on.js
+function contextListener(listener) {
+  return function(event) {
+    listener.call(this, event, this.__data__);
+  };
+}
+function parseTypenames2(typenames) {
+  return typenames.trim().split(/^|\s+/).map(function(t) {
+    var name = "", i = t.indexOf(".");
+    if (i >= 0)
+      name = t.slice(i + 1), t = t.slice(0, i);
+    return { type: t, name };
+  });
+}
+function onRemove(typename) {
+  return function() {
+    var on = this.__on;
+    if (!on)
+      return;
+    for (var j = 0, i = -1, m2 = on.length, o; j < m2; ++j) {
+      if (o = on[j], (!typename.type || o.type === typename.type) && o.name === typename.name) {
+        this.removeEventListener(o.type, o.listener, o.options);
+      } else {
+        on[++i] = o;
+      }
+    }
+    if (++i)
+      on.length = i;
+    else
+      delete this.__on;
+  };
+}
+function onAdd(typename, value, options) {
+  return function() {
+    var on = this.__on, o, listener = contextListener(value);
+    if (on)
+      for (var j = 0, m2 = on.length; j < m2; ++j) {
+        if ((o = on[j]).type === typename.type && o.name === typename.name) {
+          this.removeEventListener(o.type, o.listener, o.options);
+          this.addEventListener(o.type, o.listener = listener, o.options = options);
+          o.value = value;
+          return;
+        }
+      }
+    this.addEventListener(typename.type, listener, options);
+    o = { type: typename.type, name: typename.name, value, listener, options };
+    if (!on)
+      this.__on = [o];
+    else
+      on.push(o);
+  };
+}
+function on_default(typename, value, options) {
+  var typenames = parseTypenames2(typename + ""), i, n = typenames.length, t;
+  if (arguments.length < 2) {
+    var on = this.node().__on;
+    if (on)
+      for (var j = 0, m2 = on.length, o; j < m2; ++j) {
+        for (i = 0, o = on[j]; i < n; ++i) {
+          if ((t = typenames[i]).type === o.type && t.name === o.name) {
+            return o.value;
+          }
+        }
+      }
+    return;
+  }
+  on = value ? onAdd : onRemove;
+  for (i = 0; i < n; ++i)
+    this.each(on(typenames[i], value, options));
+  return this;
+}
+var init_on = __esm({
+  "node_modules/d3-selection/src/selection/on.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/dispatch.js
+function dispatchEvent(node, type2, params) {
+  var window3 = window_default(node), event = window3.CustomEvent;
+  if (typeof event === "function") {
+    event = new event(type2, params);
+  } else {
+    event = window3.document.createEvent("Event");
+    if (params)
+      event.initEvent(type2, params.bubbles, params.cancelable), event.detail = params.detail;
+    else
+      event.initEvent(type2, false, false);
+  }
+  node.dispatchEvent(event);
+}
+function dispatchConstant(type2, params) {
+  return function() {
+    return dispatchEvent(this, type2, params);
+  };
+}
+function dispatchFunction(type2, params) {
+  return function() {
+    return dispatchEvent(this, type2, params.apply(this, arguments));
+  };
+}
+function dispatch_default2(type2, params) {
+  return this.each((typeof params === "function" ? dispatchFunction : dispatchConstant)(type2, params));
+}
+var init_dispatch2 = __esm({
+  "node_modules/d3-selection/src/selection/dispatch.js"() {
+    init_window();
+  }
+});
+
+// node_modules/d3-selection/src/selection/iterator.js
+function* iterator_default() {
+  for (var groups = this._groups, j = 0, m2 = groups.length; j < m2; ++j) {
+    for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
+      if (node = group[i])
+        yield node;
+    }
+  }
+}
+var init_iterator = __esm({
+  "node_modules/d3-selection/src/selection/iterator.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/selection/index.js
+function Selection(groups, parents) {
+  this._groups = groups;
+  this._parents = parents;
+}
+function selection() {
+  return new Selection([[document.documentElement]], root);
+}
+function selection_selection() {
+  return this;
+}
+var root, selection_default;
+var init_selection = __esm({
+  "node_modules/d3-selection/src/selection/index.js"() {
+    init_select();
+    init_selectAll();
+    init_selectChild();
+    init_selectChildren();
+    init_filter();
+    init_data();
+    init_enter();
+    init_exit();
+    init_join();
+    init_merge();
+    init_order();
+    init_sort();
+    init_call();
+    init_nodes();
+    init_node();
+    init_size();
+    init_empty();
+    init_each();
+    init_attr();
+    init_style();
+    init_property();
+    init_classed();
+    init_text();
+    init_html();
+    init_raise();
+    init_lower();
+    init_append();
+    init_insert();
+    init_remove();
+    init_clone();
+    init_datum();
+    init_on();
+    init_dispatch2();
+    init_iterator();
+    root = [null];
+    Selection.prototype = selection.prototype = {
+      constructor: Selection,
+      select: select_default,
+      selectAll: selectAll_default,
+      selectChild: selectChild_default,
+      selectChildren: selectChildren_default,
+      filter: filter_default,
+      data: data_default,
+      enter: enter_default,
+      exit: exit_default,
+      join: join_default,
+      merge: merge_default,
+      selection: selection_selection,
+      order: order_default,
+      sort: sort_default,
+      call: call_default,
+      nodes: nodes_default,
+      node: node_default,
+      size: size_default,
+      empty: empty_default,
+      each: each_default,
+      attr: attr_default,
+      style: style_default,
+      property: property_default,
+      classed: classed_default,
+      text: text_default,
+      html: html_default,
+      raise: raise_default,
+      lower: lower_default,
+      append: append_default,
+      insert: insert_default,
+      remove: remove_default,
+      clone: clone_default,
+      datum: datum_default,
+      on: on_default,
+      dispatch: dispatch_default2,
+      [Symbol.iterator]: iterator_default
+    };
+    selection_default = selection;
+  }
+});
+
+// node_modules/d3-selection/src/select.js
+function select_default2(selector) {
+  return typeof selector === "string" ? new Selection([[document.querySelector(selector)]], [document.documentElement]) : new Selection([[selector]], root);
+}
+var init_select2 = __esm({
+  "node_modules/d3-selection/src/select.js"() {
+    init_selection();
+  }
+});
+
+// node_modules/d3-selection/src/sourceEvent.js
+function sourceEvent_default(event) {
+  let sourceEvent;
+  while (sourceEvent = event.sourceEvent)
+    event = sourceEvent;
+  return event;
+}
+var init_sourceEvent = __esm({
+  "node_modules/d3-selection/src/sourceEvent.js"() {
+  }
+});
+
+// node_modules/d3-selection/src/pointer.js
+function pointer_default(event, node) {
+  event = sourceEvent_default(event);
+  if (node === void 0)
+    node = event.currentTarget;
+  if (node) {
+    var svg = node.ownerSVGElement || node;
+    if (svg.createSVGPoint) {
+      var point = svg.createSVGPoint();
+      point.x = event.clientX, point.y = event.clientY;
+      point = point.matrixTransform(node.getScreenCTM().inverse());
+      return [point.x, point.y];
+    }
+    if (node.getBoundingClientRect) {
+      var rect = node.getBoundingClientRect();
+      return [event.clientX - rect.left - node.clientLeft, event.clientY - rect.top - node.clientTop];
+    }
+  }
+  return [event.pageX, event.pageY];
+}
+var init_pointer = __esm({
+  "node_modules/d3-selection/src/pointer.js"() {
+    init_sourceEvent();
+  }
+});
+
+// node_modules/d3-selection/src/index.js
+var init_src4 = __esm({
+  "node_modules/d3-selection/src/index.js"() {
+    init_matcher();
+    init_namespace();
+    init_pointer();
+    init_select2();
+    init_selection();
+    init_selector();
+    init_selectorAll();
+    init_style();
+  }
+});
+
+// node_modules/d3-drag/src/noevent.js
+function nopropagation(event) {
+  event.stopImmediatePropagation();
+}
+function noevent_default(event) {
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}
+var nonpassive, nonpassivecapture;
+var init_noevent = __esm({
+  "node_modules/d3-drag/src/noevent.js"() {
+    nonpassive = { passive: false };
+    nonpassivecapture = { capture: true, passive: false };
+  }
+});
+
+// node_modules/d3-drag/src/nodrag.js
+function nodrag_default(view) {
+  var root2 = view.document.documentElement, selection2 = select_default2(view).on("dragstart.drag", noevent_default, nonpassivecapture);
+  if ("onselectstart" in root2) {
+    selection2.on("selectstart.drag", noevent_default, nonpassivecapture);
+  } else {
+    root2.__noselect = root2.style.MozUserSelect;
+    root2.style.MozUserSelect = "none";
+  }
+}
+function yesdrag(view, noclick) {
+  var root2 = view.document.documentElement, selection2 = select_default2(view).on("dragstart.drag", null);
+  if (noclick) {
+    selection2.on("click.drag", noevent_default, nonpassivecapture);
+    setTimeout(function() {
+      selection2.on("click.drag", null);
+    }, 0);
+  }
+  if ("onselectstart" in root2) {
+    selection2.on("selectstart.drag", null);
+  } else {
+    root2.style.MozUserSelect = root2.__noselect;
+    delete root2.__noselect;
+  }
+}
+var init_nodrag = __esm({
+  "node_modules/d3-drag/src/nodrag.js"() {
+    init_src4();
+    init_noevent();
+  }
+});
+
+// node_modules/d3-drag/src/constant.js
+var constant_default2;
+var init_constant2 = __esm({
+  "node_modules/d3-drag/src/constant.js"() {
+    constant_default2 = (x3) => () => x3;
+  }
+});
+
+// node_modules/d3-drag/src/event.js
+function DragEvent(type2, {
+  sourceEvent,
+  subject,
+  target,
+  identifier,
+  active,
+  x: x3,
+  y: y3,
+  dx,
+  dy,
+  dispatch: dispatch2
+}) {
+  Object.defineProperties(this, {
+    type: { value: type2, enumerable: true, configurable: true },
+    sourceEvent: { value: sourceEvent, enumerable: true, configurable: true },
+    subject: { value: subject, enumerable: true, configurable: true },
+    target: { value: target, enumerable: true, configurable: true },
+    identifier: { value: identifier, enumerable: true, configurable: true },
+    active: { value: active, enumerable: true, configurable: true },
+    x: { value: x3, enumerable: true, configurable: true },
+    y: { value: y3, enumerable: true, configurable: true },
+    dx: { value: dx, enumerable: true, configurable: true },
+    dy: { value: dy, enumerable: true, configurable: true },
+    _: { value: dispatch2 }
+  });
+}
+var init_event = __esm({
+  "node_modules/d3-drag/src/event.js"() {
+    DragEvent.prototype.on = function() {
+      var value = this._.on.apply(this._, arguments);
+      return value === this._ ? this : value;
+    };
+  }
+});
+
+// node_modules/d3-drag/src/drag.js
+function defaultFilter(event) {
+  return !event.ctrlKey && !event.button;
+}
+function defaultContainer() {
+  return this.parentNode;
+}
+function defaultSubject(event, d) {
+  return d == null ? { x: event.x, y: event.y } : d;
+}
+function defaultTouchable() {
+  return navigator.maxTouchPoints || "ontouchstart" in this;
+}
+function drag_default() {
+  var filter2 = defaultFilter, container = defaultContainer, subject = defaultSubject, touchable = defaultTouchable, gestures = {}, listeners = dispatch_default("start", "drag", "end"), active = 0, mousedownx, mousedowny, mousemoving, touchending, clickDistance2 = 0;
+  function drag(selection2) {
+    selection2.on("mousedown.drag", mousedowned).filter(touchable).on("touchstart.drag", touchstarted).on("touchmove.drag", touchmoved, nonpassive).on("touchend.drag touchcancel.drag", touchended).style("touch-action", "none").style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
+  }
+  function mousedowned(event, d) {
+    if (touchending || !filter2.call(this, event, d))
+      return;
+    var gesture = beforestart(this, container.call(this, event, d), event, d, "mouse");
+    if (!gesture)
+      return;
+    select_default2(event.view).on("mousemove.drag", mousemoved, nonpassivecapture).on("mouseup.drag", mouseupped, nonpassivecapture);
+    nodrag_default(event.view);
+    nopropagation(event);
+    mousemoving = false;
+    mousedownx = event.clientX;
+    mousedowny = event.clientY;
+    gesture("start", event);
+  }
+  function mousemoved(event) {
+    noevent_default(event);
+    if (!mousemoving) {
+      var dx = event.clientX - mousedownx, dy = event.clientY - mousedowny;
+      mousemoving = dx * dx + dy * dy > clickDistance2;
+    }
+    gestures.mouse("drag", event);
+  }
+  function mouseupped(event) {
+    select_default2(event.view).on("mousemove.drag mouseup.drag", null);
+    yesdrag(event.view, mousemoving);
+    noevent_default(event);
+    gestures.mouse("end", event);
+  }
+  function touchstarted(event, d) {
+    if (!filter2.call(this, event, d))
+      return;
+    var touches = event.changedTouches, c2 = container.call(this, event, d), n = touches.length, i, gesture;
+    for (i = 0; i < n; ++i) {
+      if (gesture = beforestart(this, c2, event, d, touches[i].identifier, touches[i])) {
+        nopropagation(event);
+        gesture("start", event, touches[i]);
+      }
+    }
+  }
+  function touchmoved(event) {
+    var touches = event.changedTouches, n = touches.length, i, gesture;
+    for (i = 0; i < n; ++i) {
+      if (gesture = gestures[touches[i].identifier]) {
+        noevent_default(event);
+        gesture("drag", event, touches[i]);
+      }
+    }
+  }
+  function touchended(event) {
+    var touches = event.changedTouches, n = touches.length, i, gesture;
+    if (touchending)
+      clearTimeout(touchending);
+    touchending = setTimeout(function() {
+      touchending = null;
+    }, 500);
+    for (i = 0; i < n; ++i) {
+      if (gesture = gestures[touches[i].identifier]) {
+        nopropagation(event);
+        gesture("end", event, touches[i]);
+      }
+    }
+  }
+  function beforestart(that, container2, event, d, identifier, touch) {
+    var dispatch2 = listeners.copy(), p = pointer_default(touch || event, container2), dx, dy, s;
+    if ((s = subject.call(that, new DragEvent("beforestart", {
+      sourceEvent: event,
+      target: drag,
+      identifier,
+      active,
+      x: p[0],
+      y: p[1],
+      dx: 0,
+      dy: 0,
+      dispatch: dispatch2
+    }), d)) == null)
+      return;
+    dx = s.x - p[0] || 0;
+    dy = s.y - p[1] || 0;
+    return function gesture(type2, event2, touch2) {
+      var p0 = p, n;
+      switch (type2) {
+        case "start":
+          gestures[identifier] = gesture, n = active++;
+          break;
+        case "end":
+          delete gestures[identifier], --active;
+        case "drag":
+          p = pointer_default(touch2 || event2, container2), n = active;
+          break;
+      }
+      dispatch2.call(
+        type2,
+        that,
+        new DragEvent(type2, {
+          sourceEvent: event2,
+          subject: s,
+          target: drag,
+          identifier,
+          active: n,
+          x: p[0] + dx,
+          y: p[1] + dy,
+          dx: p[0] - p0[0],
+          dy: p[1] - p0[1],
+          dispatch: dispatch2
+        }),
+        d
+      );
+    };
+  }
+  drag.filter = function(_) {
+    return arguments.length ? (filter2 = typeof _ === "function" ? _ : constant_default2(!!_), drag) : filter2;
+  };
+  drag.container = function(_) {
+    return arguments.length ? (container = typeof _ === "function" ? _ : constant_default2(_), drag) : container;
+  };
+  drag.subject = function(_) {
+    return arguments.length ? (subject = typeof _ === "function" ? _ : constant_default2(_), drag) : subject;
+  };
+  drag.touchable = function(_) {
+    return arguments.length ? (touchable = typeof _ === "function" ? _ : constant_default2(!!_), drag) : touchable;
+  };
+  drag.on = function() {
+    var value = listeners.on.apply(listeners, arguments);
+    return value === listeners ? drag : value;
+  };
+  drag.clickDistance = function(_) {
+    return arguments.length ? (clickDistance2 = (_ = +_) * _, drag) : Math.sqrt(clickDistance2);
+  };
+  return drag;
+}
+var init_drag = __esm({
+  "node_modules/d3-drag/src/drag.js"() {
+    init_src3();
+    init_src4();
+    init_nodrag();
+    init_noevent();
+    init_constant2();
+    init_event();
+  }
+});
+
+// node_modules/d3-drag/src/index.js
+var init_src5 = __esm({
+  "node_modules/d3-drag/src/index.js"() {
+    init_drag();
+    init_nodrag();
+  }
+});
+
+// node_modules/d3-color/src/define.js
+function define_default(constructor, factory, prototype) {
+  constructor.prototype = factory.prototype = prototype;
+  prototype.constructor = constructor;
+}
+function extend(parent, definition) {
+  var prototype = Object.create(parent.prototype);
+  for (var key in definition)
+    prototype[key] = definition[key];
+  return prototype;
+}
+var init_define = __esm({
+  "node_modules/d3-color/src/define.js"() {
+  }
+});
+
+// node_modules/d3-color/src/color.js
+function Color() {
+}
+function color_formatHex() {
+  return this.rgb().formatHex();
+}
+function color_formatHex8() {
+  return this.rgb().formatHex8();
+}
+function color_formatHsl() {
+  return hslConvert(this).formatHsl();
+}
+function color_formatRgb() {
+  return this.rgb().formatRgb();
+}
+function color(format2) {
+  var m2, l;
+  format2 = (format2 + "").trim().toLowerCase();
+  return (m2 = reHex.exec(format2)) ? (l = m2[1].length, m2 = parseInt(m2[1], 16), l === 6 ? rgbn(m2) : l === 3 ? new Rgb(m2 >> 8 & 15 | m2 >> 4 & 240, m2 >> 4 & 15 | m2 & 240, (m2 & 15) << 4 | m2 & 15, 1) : l === 8 ? rgba(m2 >> 24 & 255, m2 >> 16 & 255, m2 >> 8 & 255, (m2 & 255) / 255) : l === 4 ? rgba(m2 >> 12 & 15 | m2 >> 8 & 240, m2 >> 8 & 15 | m2 >> 4 & 240, m2 >> 4 & 15 | m2 & 240, ((m2 & 15) << 4 | m2 & 15) / 255) : null) : (m2 = reRgbInteger.exec(format2)) ? new Rgb(m2[1], m2[2], m2[3], 1) : (m2 = reRgbPercent.exec(format2)) ? new Rgb(m2[1] * 255 / 100, m2[2] * 255 / 100, m2[3] * 255 / 100, 1) : (m2 = reRgbaInteger.exec(format2)) ? rgba(m2[1], m2[2], m2[3], m2[4]) : (m2 = reRgbaPercent.exec(format2)) ? rgba(m2[1] * 255 / 100, m2[2] * 255 / 100, m2[3] * 255 / 100, m2[4]) : (m2 = reHslPercent.exec(format2)) ? hsla(m2[1], m2[2] / 100, m2[3] / 100, 1) : (m2 = reHslaPercent.exec(format2)) ? hsla(m2[1], m2[2] / 100, m2[3] / 100, m2[4]) : named.hasOwnProperty(format2) ? rgbn(named[format2]) : format2 === "transparent" ? new Rgb(NaN, NaN, NaN, 0) : null;
+}
+function rgbn(n) {
+  return new Rgb(n >> 16 & 255, n >> 8 & 255, n & 255, 1);
+}
+function rgba(r, g, b, a2) {
+  if (a2 <= 0)
+    r = g = b = NaN;
+  return new Rgb(r, g, b, a2);
+}
+function rgbConvert(o) {
+  if (!(o instanceof Color))
+    o = color(o);
+  if (!o)
+    return new Rgb();
+  o = o.rgb();
+  return new Rgb(o.r, o.g, o.b, o.opacity);
+}
+function rgb(r, g, b, opacity) {
+  return arguments.length === 1 ? rgbConvert(r) : new Rgb(r, g, b, opacity == null ? 1 : opacity);
+}
+function Rgb(r, g, b, opacity) {
+  this.r = +r;
+  this.g = +g;
+  this.b = +b;
+  this.opacity = +opacity;
+}
+function rgb_formatHex() {
+  return `#${hex(this.r)}${hex(this.g)}${hex(this.b)}`;
+}
+function rgb_formatHex8() {
+  return `#${hex(this.r)}${hex(this.g)}${hex(this.b)}${hex((isNaN(this.opacity) ? 1 : this.opacity) * 255)}`;
+}
+function rgb_formatRgb() {
+  const a2 = clampa(this.opacity);
+  return `${a2 === 1 ? "rgb(" : "rgba("}${clampi(this.r)}, ${clampi(this.g)}, ${clampi(this.b)}${a2 === 1 ? ")" : `, ${a2})`}`;
+}
+function clampa(opacity) {
+  return isNaN(opacity) ? 1 : Math.max(0, Math.min(1, opacity));
+}
+function clampi(value) {
+  return Math.max(0, Math.min(255, Math.round(value) || 0));
+}
+function hex(value) {
+  value = clampi(value);
+  return (value < 16 ? "0" : "") + value.toString(16);
+}
+function hsla(h, s, l, a2) {
+  if (a2 <= 0)
+    h = s = l = NaN;
+  else if (l <= 0 || l >= 1)
+    h = s = NaN;
+  else if (s <= 0)
+    h = NaN;
+  return new Hsl(h, s, l, a2);
+}
+function hslConvert(o) {
+  if (o instanceof Hsl)
+    return new Hsl(o.h, o.s, o.l, o.opacity);
+  if (!(o instanceof Color))
+    o = color(o);
+  if (!o)
+    return new Hsl();
+  if (o instanceof Hsl)
+    return o;
+  o = o.rgb();
+  var r = o.r / 255, g = o.g / 255, b = o.b / 255, min2 = Math.min(r, g, b), max2 = Math.max(r, g, b), h = NaN, s = max2 - min2, l = (max2 + min2) / 2;
+  if (s) {
+    if (r === max2)
+      h = (g - b) / s + (g < b) * 6;
+    else if (g === max2)
+      h = (b - r) / s + 2;
+    else
+      h = (r - g) / s + 4;
+    s /= l < 0.5 ? max2 + min2 : 2 - max2 - min2;
+    h *= 60;
+  } else {
+    s = l > 0 && l < 1 ? 0 : h;
+  }
+  return new Hsl(h, s, l, o.opacity);
+}
+function hsl(h, s, l, opacity) {
+  return arguments.length === 1 ? hslConvert(h) : new Hsl(h, s, l, opacity == null ? 1 : opacity);
+}
+function Hsl(h, s, l, opacity) {
+  this.h = +h;
+  this.s = +s;
+  this.l = +l;
+  this.opacity = +opacity;
+}
+function clamph(value) {
+  value = (value || 0) % 360;
+  return value < 0 ? value + 360 : value;
+}
+function clampt(value) {
+  return Math.max(0, Math.min(1, value || 0));
+}
+function hsl2rgb(h, m1, m2) {
+  return (h < 60 ? m1 + (m2 - m1) * h / 60 : h < 180 ? m2 : h < 240 ? m1 + (m2 - m1) * (240 - h) / 60 : m1) * 255;
+}
+var darker, brighter, reI, reN, reP, reHex, reRgbInteger, reRgbPercent, reRgbaInteger, reRgbaPercent, reHslPercent, reHslaPercent, named;
+var init_color = __esm({
+  "node_modules/d3-color/src/color.js"() {
+    init_define();
+    darker = 0.7;
+    brighter = 1 / darker;
+    reI = "\\s*([+-]?\\d+)\\s*";
+    reN = "\\s*([+-]?(?:\\d*\\.)?\\d+(?:[eE][+-]?\\d+)?)\\s*";
+    reP = "\\s*([+-]?(?:\\d*\\.)?\\d+(?:[eE][+-]?\\d+)?)%\\s*";
+    reHex = /^#([0-9a-f]{3,8})$/;
+    reRgbInteger = new RegExp(`^rgb\\(${reI},${reI},${reI}\\)$`);
+    reRgbPercent = new RegExp(`^rgb\\(${reP},${reP},${reP}\\)$`);
+    reRgbaInteger = new RegExp(`^rgba\\(${reI},${reI},${reI},${reN}\\)$`);
+    reRgbaPercent = new RegExp(`^rgba\\(${reP},${reP},${reP},${reN}\\)$`);
+    reHslPercent = new RegExp(`^hsl\\(${reN},${reP},${reP}\\)$`);
+    reHslaPercent = new RegExp(`^hsla\\(${reN},${reP},${reP},${reN}\\)$`);
+    named = {
+      aliceblue: 15792383,
+      antiquewhite: 16444375,
+      aqua: 65535,
+      aquamarine: 8388564,
+      azure: 15794175,
+      beige: 16119260,
+      bisque: 16770244,
+      black: 0,
+      blanchedalmond: 16772045,
+      blue: 255,
+      blueviolet: 9055202,
+      brown: 10824234,
+      burlywood: 14596231,
+      cadetblue: 6266528,
+      chartreuse: 8388352,
+      chocolate: 13789470,
+      coral: 16744272,
+      cornflowerblue: 6591981,
+      cornsilk: 16775388,
+      crimson: 14423100,
+      cyan: 65535,
+      darkblue: 139,
+      darkcyan: 35723,
+      darkgoldenrod: 12092939,
+      darkgray: 11119017,
+      darkgreen: 25600,
+      darkgrey: 11119017,
+      darkkhaki: 12433259,
+      darkmagenta: 9109643,
+      darkolivegreen: 5597999,
+      darkorange: 16747520,
+      darkorchid: 10040012,
+      darkred: 9109504,
+      darksalmon: 15308410,
+      darkseagreen: 9419919,
+      darkslateblue: 4734347,
+      darkslategray: 3100495,
+      darkslategrey: 3100495,
+      darkturquoise: 52945,
+      darkviolet: 9699539,
+      deeppink: 16716947,
+      deepskyblue: 49151,
+      dimgray: 6908265,
+      dimgrey: 6908265,
+      dodgerblue: 2003199,
+      firebrick: 11674146,
+      floralwhite: 16775920,
+      forestgreen: 2263842,
+      fuchsia: 16711935,
+      gainsboro: 14474460,
+      ghostwhite: 16316671,
+      gold: 16766720,
+      goldenrod: 14329120,
+      gray: 8421504,
+      green: 32768,
+      greenyellow: 11403055,
+      grey: 8421504,
+      honeydew: 15794160,
+      hotpink: 16738740,
+      indianred: 13458524,
+      indigo: 4915330,
+      ivory: 16777200,
+      khaki: 15787660,
+      lavender: 15132410,
+      lavenderblush: 16773365,
+      lawngreen: 8190976,
+      lemonchiffon: 16775885,
+      lightblue: 11393254,
+      lightcoral: 15761536,
+      lightcyan: 14745599,
+      lightgoldenrodyellow: 16448210,
+      lightgray: 13882323,
+      lightgreen: 9498256,
+      lightgrey: 13882323,
+      lightpink: 16758465,
+      lightsalmon: 16752762,
+      lightseagreen: 2142890,
+      lightskyblue: 8900346,
+      lightslategray: 7833753,
+      lightslategrey: 7833753,
+      lightsteelblue: 11584734,
+      lightyellow: 16777184,
+      lime: 65280,
+      limegreen: 3329330,
+      linen: 16445670,
+      magenta: 16711935,
+      maroon: 8388608,
+      mediumaquamarine: 6737322,
+      mediumblue: 205,
+      mediumorchid: 12211667,
+      mediumpurple: 9662683,
+      mediumseagreen: 3978097,
+      mediumslateblue: 8087790,
+      mediumspringgreen: 64154,
+      mediumturquoise: 4772300,
+      mediumvioletred: 13047173,
+      midnightblue: 1644912,
+      mintcream: 16121850,
+      mistyrose: 16770273,
+      moccasin: 16770229,
+      navajowhite: 16768685,
+      navy: 128,
+      oldlace: 16643558,
+      olive: 8421376,
+      olivedrab: 7048739,
+      orange: 16753920,
+      orangered: 16729344,
+      orchid: 14315734,
+      palegoldenrod: 15657130,
+      palegreen: 10025880,
+      paleturquoise: 11529966,
+      palevioletred: 14381203,
+      papayawhip: 16773077,
+      peachpuff: 16767673,
+      peru: 13468991,
+      pink: 16761035,
+      plum: 14524637,
+      powderblue: 11591910,
+      purple: 8388736,
+      rebeccapurple: 6697881,
+      red: 16711680,
+      rosybrown: 12357519,
+      royalblue: 4286945,
+      saddlebrown: 9127187,
+      salmon: 16416882,
+      sandybrown: 16032864,
+      seagreen: 3050327,
+      seashell: 16774638,
+      sienna: 10506797,
+      silver: 12632256,
+      skyblue: 8900331,
+      slateblue: 6970061,
+      slategray: 7372944,
+      slategrey: 7372944,
+      snow: 16775930,
+      springgreen: 65407,
+      steelblue: 4620980,
+      tan: 13808780,
+      teal: 32896,
+      thistle: 14204888,
+      tomato: 16737095,
+      turquoise: 4251856,
+      violet: 15631086,
+      wheat: 16113331,
+      white: 16777215,
+      whitesmoke: 16119285,
+      yellow: 16776960,
+      yellowgreen: 10145074
+    };
+    define_default(Color, color, {
+      copy(channels) {
+        return Object.assign(new this.constructor(), this, channels);
+      },
+      displayable() {
+        return this.rgb().displayable();
+      },
+      hex: color_formatHex,
+      // Deprecated! Use color.formatHex.
+      formatHex: color_formatHex,
+      formatHex8: color_formatHex8,
+      formatHsl: color_formatHsl,
+      formatRgb: color_formatRgb,
+      toString: color_formatRgb
+    });
+    define_default(Rgb, rgb, extend(Color, {
+      brighter(k) {
+        k = k == null ? brighter : Math.pow(brighter, k);
+        return new Rgb(this.r * k, this.g * k, this.b * k, this.opacity);
+      },
+      darker(k) {
+        k = k == null ? darker : Math.pow(darker, k);
+        return new Rgb(this.r * k, this.g * k, this.b * k, this.opacity);
+      },
+      rgb() {
+        return this;
+      },
+      clamp() {
+        return new Rgb(clampi(this.r), clampi(this.g), clampi(this.b), clampa(this.opacity));
+      },
+      displayable() {
+        return -0.5 <= this.r && this.r < 255.5 && (-0.5 <= this.g && this.g < 255.5) && (-0.5 <= this.b && this.b < 255.5) && (0 <= this.opacity && this.opacity <= 1);
+      },
+      hex: rgb_formatHex,
+      // Deprecated! Use color.formatHex.
+      formatHex: rgb_formatHex,
+      formatHex8: rgb_formatHex8,
+      formatRgb: rgb_formatRgb,
+      toString: rgb_formatRgb
+    }));
+    define_default(Hsl, hsl, extend(Color, {
+      brighter(k) {
+        k = k == null ? brighter : Math.pow(brighter, k);
+        return new Hsl(this.h, this.s, this.l * k, this.opacity);
+      },
+      darker(k) {
+        k = k == null ? darker : Math.pow(darker, k);
+        return new Hsl(this.h, this.s, this.l * k, this.opacity);
+      },
+      rgb() {
+        var h = this.h % 360 + (this.h < 0) * 360, s = isNaN(h) || isNaN(this.s) ? 0 : this.s, l = this.l, m2 = l + (l < 0.5 ? l : 1 - l) * s, m1 = 2 * l - m2;
+        return new Rgb(
+          hsl2rgb(h >= 240 ? h - 240 : h + 120, m1, m2),
+          hsl2rgb(h, m1, m2),
+          hsl2rgb(h < 120 ? h + 240 : h - 120, m1, m2),
+          this.opacity
+        );
+      },
+      clamp() {
+        return new Hsl(clamph(this.h), clampt(this.s), clampt(this.l), clampa(this.opacity));
+      },
+      displayable() {
+        return (0 <= this.s && this.s <= 1 || isNaN(this.s)) && (0 <= this.l && this.l <= 1) && (0 <= this.opacity && this.opacity <= 1);
+      },
+      formatHsl() {
+        const a2 = clampa(this.opacity);
+        return `${a2 === 1 ? "hsl(" : "hsla("}${clamph(this.h)}, ${clampt(this.s) * 100}%, ${clampt(this.l) * 100}%${a2 === 1 ? ")" : `, ${a2})`}`;
+      }
+    }));
+  }
+});
+
+// node_modules/d3-color/src/index.js
+var init_src6 = __esm({
+  "node_modules/d3-color/src/index.js"() {
+    init_color();
+  }
+});
+
+// node_modules/d3-interpolate/src/basis.js
+function basis(t12, v0, v1, v2, v3) {
+  var t2 = t12 * t12, t3 = t2 * t12;
+  return ((1 - 3 * t12 + 3 * t2 - t3) * v0 + (4 - 6 * t2 + 3 * t3) * v1 + (1 + 3 * t12 + 3 * t2 - 3 * t3) * v2 + t3 * v3) / 6;
+}
+function basis_default(values) {
+  var n = values.length - 1;
+  return function(t) {
+    var i = t <= 0 ? t = 0 : t >= 1 ? (t = 1, n - 1) : Math.floor(t * n), v1 = values[i], v2 = values[i + 1], v0 = i > 0 ? values[i - 1] : 2 * v1 - v2, v3 = i < n - 1 ? values[i + 2] : 2 * v2 - v1;
+    return basis((t - i / n) * n, v0, v1, v2, v3);
+  };
+}
+var init_basis = __esm({
+  "node_modules/d3-interpolate/src/basis.js"() {
+  }
+});
+
+// node_modules/d3-interpolate/src/basisClosed.js
+function basisClosed_default(values) {
+  var n = values.length;
+  return function(t) {
+    var i = Math.floor(((t %= 1) < 0 ? ++t : t) * n), v0 = values[(i + n - 1) % n], v1 = values[i % n], v2 = values[(i + 1) % n], v3 = values[(i + 2) % n];
+    return basis((t - i / n) * n, v0, v1, v2, v3);
+  };
+}
+var init_basisClosed = __esm({
+  "node_modules/d3-interpolate/src/basisClosed.js"() {
+    init_basis();
+  }
+});
+
+// node_modules/d3-interpolate/src/constant.js
+var constant_default3;
+var init_constant3 = __esm({
+  "node_modules/d3-interpolate/src/constant.js"() {
+    constant_default3 = (x3) => () => x3;
+  }
+});
+
+// node_modules/d3-interpolate/src/color.js
+function linear(a2, d) {
+  return function(t) {
+    return a2 + t * d;
+  };
+}
+function exponential(a2, b, y3) {
+  return a2 = Math.pow(a2, y3), b = Math.pow(b, y3) - a2, y3 = 1 / y3, function(t) {
+    return Math.pow(a2 + t * b, y3);
+  };
+}
+function gamma(y3) {
+  return (y3 = +y3) === 1 ? nogamma : function(a2, b) {
+    return b - a2 ? exponential(a2, b, y3) : constant_default3(isNaN(a2) ? b : a2);
+  };
+}
+function nogamma(a2, b) {
+  var d = b - a2;
+  return d ? linear(a2, d) : constant_default3(isNaN(a2) ? b : a2);
+}
+var init_color2 = __esm({
+  "node_modules/d3-interpolate/src/color.js"() {
+    init_constant3();
+  }
+});
+
+// node_modules/d3-interpolate/src/rgb.js
+function rgbSpline(spline) {
+  return function(colors) {
+    var n = colors.length, r = new Array(n), g = new Array(n), b = new Array(n), i, color2;
+    for (i = 0; i < n; ++i) {
+      color2 = rgb(colors[i]);
+      r[i] = color2.r || 0;
+      g[i] = color2.g || 0;
+      b[i] = color2.b || 0;
+    }
+    r = spline(r);
+    g = spline(g);
+    b = spline(b);
+    color2.opacity = 1;
+    return function(t) {
+      color2.r = r(t);
+      color2.g = g(t);
+      color2.b = b(t);
+      return color2 + "";
+    };
+  };
+}
+var rgb_default, rgbBasis, rgbBasisClosed;
+var init_rgb = __esm({
+  "node_modules/d3-interpolate/src/rgb.js"() {
+    init_src6();
+    init_basis();
+    init_basisClosed();
+    init_color2();
+    rgb_default = function rgbGamma(y3) {
+      var color2 = gamma(y3);
+      function rgb2(start3, end) {
+        var r = color2((start3 = rgb(start3)).r, (end = rgb(end)).r), g = color2(start3.g, end.g), b = color2(start3.b, end.b), opacity = nogamma(start3.opacity, end.opacity);
+        return function(t) {
+          start3.r = r(t);
+          start3.g = g(t);
+          start3.b = b(t);
+          start3.opacity = opacity(t);
+          return start3 + "";
+        };
+      }
+      rgb2.gamma = rgbGamma;
+      return rgb2;
+    }(1);
+    rgbBasis = rgbSpline(basis_default);
+    rgbBasisClosed = rgbSpline(basisClosed_default);
+  }
+});
+
+// node_modules/d3-interpolate/src/number.js
+function number_default(a2, b) {
+  return a2 = +a2, b = +b, function(t) {
+    return a2 * (1 - t) + b * t;
+  };
+}
+var init_number = __esm({
+  "node_modules/d3-interpolate/src/number.js"() {
+  }
+});
+
+// node_modules/d3-interpolate/src/string.js
+function zero(b) {
+  return function() {
+    return b;
+  };
+}
+function one(b) {
+  return function(t) {
+    return b(t) + "";
+  };
+}
+function string_default(a2, b) {
+  var bi = reA.lastIndex = reB.lastIndex = 0, am, bm, bs, i = -1, s = [], q = [];
+  a2 = a2 + "", b = b + "";
+  while ((am = reA.exec(a2)) && (bm = reB.exec(b))) {
+    if ((bs = bm.index) > bi) {
+      bs = b.slice(bi, bs);
+      if (s[i])
+        s[i] += bs;
+      else
+        s[++i] = bs;
+    }
+    if ((am = am[0]) === (bm = bm[0])) {
+      if (s[i])
+        s[i] += bm;
+      else
+        s[++i] = bm;
+    } else {
+      s[++i] = null;
+      q.push({ i, x: number_default(am, bm) });
+    }
+    bi = reB.lastIndex;
+  }
+  if (bi < b.length) {
+    bs = b.slice(bi);
+    if (s[i])
+      s[i] += bs;
+    else
+      s[++i] = bs;
+  }
+  return s.length < 2 ? q[0] ? one(q[0].x) : zero(b) : (b = q.length, function(t) {
+    for (var i2 = 0, o; i2 < b; ++i2)
+      s[(o = q[i2]).i] = o.x(t);
+    return s.join("");
+  });
+}
+var reA, reB;
+var init_string = __esm({
+  "node_modules/d3-interpolate/src/string.js"() {
+    init_number();
+    reA = /[-+]?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]?\d+)?/g;
+    reB = new RegExp(reA.source, "g");
+  }
+});
+
+// node_modules/d3-interpolate/src/transform/decompose.js
+function decompose_default(a2, b, c2, d, e, f) {
+  var scaleX, scaleY, skewX;
+  if (scaleX = Math.sqrt(a2 * a2 + b * b))
+    a2 /= scaleX, b /= scaleX;
+  if (skewX = a2 * c2 + b * d)
+    c2 -= a2 * skewX, d -= b * skewX;
+  if (scaleY = Math.sqrt(c2 * c2 + d * d))
+    c2 /= scaleY, d /= scaleY, skewX /= scaleY;
+  if (a2 * d < b * c2)
+    a2 = -a2, b = -b, skewX = -skewX, scaleX = -scaleX;
+  return {
+    translateX: e,
+    translateY: f,
+    rotate: Math.atan2(b, a2) * degrees,
+    skewX: Math.atan(skewX) * degrees,
+    scaleX,
+    scaleY
+  };
+}
+var degrees, identity;
+var init_decompose = __esm({
+  "node_modules/d3-interpolate/src/transform/decompose.js"() {
+    degrees = 180 / Math.PI;
+    identity = {
+      translateX: 0,
+      translateY: 0,
+      rotate: 0,
+      skewX: 0,
+      scaleX: 1,
+      scaleY: 1
+    };
+  }
+});
+
+// node_modules/d3-interpolate/src/transform/parse.js
+function parseCss(value) {
+  const m2 = new (typeof DOMMatrix === "function" ? DOMMatrix : WebKitCSSMatrix)(value + "");
+  return m2.isIdentity ? identity : decompose_default(m2.a, m2.b, m2.c, m2.d, m2.e, m2.f);
+}
+function parseSvg(value) {
+  if (value == null)
+    return identity;
+  if (!svgNode)
+    svgNode = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  svgNode.setAttribute("transform", value);
+  if (!(value = svgNode.transform.baseVal.consolidate()))
+    return identity;
+  value = value.matrix;
+  return decompose_default(value.a, value.b, value.c, value.d, value.e, value.f);
+}
+var svgNode;
+var init_parse = __esm({
+  "node_modules/d3-interpolate/src/transform/parse.js"() {
+    init_decompose();
+  }
+});
+
+// node_modules/d3-interpolate/src/transform/index.js
+function interpolateTransform(parse, pxComma, pxParen, degParen) {
+  function pop(s) {
+    return s.length ? s.pop() + " " : "";
+  }
+  function translate(xa, ya, xb, yb, s, q) {
+    if (xa !== xb || ya !== yb) {
+      var i = s.push("translate(", null, pxComma, null, pxParen);
+      q.push({ i: i - 4, x: number_default(xa, xb) }, { i: i - 2, x: number_default(ya, yb) });
+    } else if (xb || yb) {
+      s.push("translate(" + xb + pxComma + yb + pxParen);
+    }
+  }
+  function rotate(a2, b, s, q) {
+    if (a2 !== b) {
+      if (a2 - b > 180)
+        b += 360;
+      else if (b - a2 > 180)
+        a2 += 360;
+      q.push({ i: s.push(pop(s) + "rotate(", null, degParen) - 2, x: number_default(a2, b) });
+    } else if (b) {
+      s.push(pop(s) + "rotate(" + b + degParen);
+    }
+  }
+  function skewX(a2, b, s, q) {
+    if (a2 !== b) {
+      q.push({ i: s.push(pop(s) + "skewX(", null, degParen) - 2, x: number_default(a2, b) });
+    } else if (b) {
+      s.push(pop(s) + "skewX(" + b + degParen);
+    }
+  }
+  function scale(xa, ya, xb, yb, s, q) {
+    if (xa !== xb || ya !== yb) {
+      var i = s.push(pop(s) + "scale(", null, ",", null, ")");
+      q.push({ i: i - 4, x: number_default(xa, xb) }, { i: i - 2, x: number_default(ya, yb) });
+    } else if (xb !== 1 || yb !== 1) {
+      s.push(pop(s) + "scale(" + xb + "," + yb + ")");
+    }
+  }
+  return function(a2, b) {
+    var s = [], q = [];
+    a2 = parse(a2), b = parse(b);
+    translate(a2.translateX, a2.translateY, b.translateX, b.translateY, s, q);
+    rotate(a2.rotate, b.rotate, s, q);
+    skewX(a2.skewX, b.skewX, s, q);
+    scale(a2.scaleX, a2.scaleY, b.scaleX, b.scaleY, s, q);
+    a2 = b = null;
+    return function(t) {
+      var i = -1, n = q.length, o;
+      while (++i < n)
+        s[(o = q[i]).i] = o.x(t);
+      return s.join("");
+    };
+  };
+}
+var interpolateTransformCss, interpolateTransformSvg;
+var init_transform = __esm({
+  "node_modules/d3-interpolate/src/transform/index.js"() {
+    init_number();
+    init_parse();
+    interpolateTransformCss = interpolateTransform(parseCss, "px, ", "px)", "deg)");
+    interpolateTransformSvg = interpolateTransform(parseSvg, ", ", ")", ")");
+  }
+});
+
+// node_modules/d3-interpolate/src/zoom.js
+function cosh(x3) {
+  return ((x3 = Math.exp(x3)) + 1 / x3) / 2;
+}
+function sinh(x3) {
+  return ((x3 = Math.exp(x3)) - 1 / x3) / 2;
+}
+function tanh(x3) {
+  return ((x3 = Math.exp(2 * x3)) - 1) / (x3 + 1);
+}
+var epsilon2, zoom_default;
+var init_zoom = __esm({
+  "node_modules/d3-interpolate/src/zoom.js"() {
+    epsilon2 = 1e-12;
+    zoom_default = function zoomRho(rho, rho2, rho4) {
+      function zoom(p0, p1) {
+        var ux0 = p0[0], uy0 = p0[1], w0 = p0[2], ux1 = p1[0], uy1 = p1[1], w1 = p1[2], dx = ux1 - ux0, dy = uy1 - uy0, d2 = dx * dx + dy * dy, i, S;
+        if (d2 < epsilon2) {
+          S = Math.log(w1 / w0) / rho;
+          i = function(t) {
+            return [
+              ux0 + t * dx,
+              uy0 + t * dy,
+              w0 * Math.exp(rho * t * S)
+            ];
+          };
+        } else {
+          var d1 = Math.sqrt(d2), b0 = (w1 * w1 - w0 * w0 + rho4 * d2) / (2 * w0 * rho2 * d1), b1 = (w1 * w1 - w0 * w0 - rho4 * d2) / (2 * w1 * rho2 * d1), r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0), r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1);
+          S = (r1 - r0) / rho;
+          i = function(t) {
+            var s = t * S, coshr0 = cosh(r0), u = w0 / (rho2 * d1) * (coshr0 * tanh(rho * s + r0) - sinh(r0));
+            return [
+              ux0 + u * dx,
+              uy0 + u * dy,
+              w0 * coshr0 / cosh(rho * s + r0)
+            ];
+          };
+        }
+        i.duration = S * 1e3 * rho / Math.SQRT2;
+        return i;
+      }
+      zoom.rho = function(_) {
+        var _1 = Math.max(1e-3, +_), _2 = _1 * _1, _4 = _2 * _2;
+        return zoomRho(_1, _2, _4);
+      };
+      return zoom;
+    }(Math.SQRT2, 2, 4);
+  }
+});
+
+// node_modules/d3-interpolate/src/index.js
+var init_src7 = __esm({
+  "node_modules/d3-interpolate/src/index.js"() {
+    init_number();
+    init_string();
+    init_transform();
+    init_zoom();
+    init_rgb();
+  }
+});
+
+// node_modules/d3-timer/src/timer.js
+function now() {
+  return clockNow || (setFrame(clearNow), clockNow = clock.now() + clockSkew);
+}
+function clearNow() {
+  clockNow = 0;
+}
+function Timer() {
+  this._call = this._time = this._next = null;
+}
+function timer(callback, delay, time) {
+  var t = new Timer();
+  t.restart(callback, delay, time);
+  return t;
+}
+function timerFlush() {
+  now();
+  ++frame;
+  var t = taskHead, e;
+  while (t) {
+    if ((e = clockNow - t._time) >= 0)
+      t._call.call(void 0, e);
+    t = t._next;
+  }
+  --frame;
+}
+function wake() {
+  clockNow = (clockLast = clock.now()) + clockSkew;
+  frame = timeout = 0;
+  try {
+    timerFlush();
+  } finally {
+    frame = 0;
+    nap();
+    clockNow = 0;
+  }
+}
+function poke() {
+  var now3 = clock.now(), delay = now3 - clockLast;
+  if (delay > pokeDelay)
+    clockSkew -= delay, clockLast = now3;
+}
+function nap() {
+  var t02, t12 = taskHead, t2, time = Infinity;
+  while (t12) {
+    if (t12._call) {
+      if (time > t12._time)
+        time = t12._time;
+      t02 = t12, t12 = t12._next;
+    } else {
+      t2 = t12._next, t12._next = null;
+      t12 = t02 ? t02._next = t2 : taskHead = t2;
+    }
+  }
+  taskTail = t02;
+  sleep(time);
+}
+function sleep(time) {
+  if (frame)
+    return;
+  if (timeout)
+    timeout = clearTimeout(timeout);
+  var delay = time - clockNow;
+  if (delay > 24) {
+    if (time < Infinity)
+      timeout = setTimeout(wake, time - clock.now() - clockSkew);
+    if (interval)
+      interval = clearInterval(interval);
+  } else {
+    if (!interval)
+      clockLast = clock.now(), interval = setInterval(poke, pokeDelay);
+    frame = 1, setFrame(wake);
+  }
+}
+var frame, timeout, interval, pokeDelay, taskHead, taskTail, clockLast, clockNow, clockSkew, clock, setFrame;
+var init_timer = __esm({
+  "node_modules/d3-timer/src/timer.js"() {
+    frame = 0;
+    timeout = 0;
+    interval = 0;
+    pokeDelay = 1e3;
+    clockLast = 0;
+    clockNow = 0;
+    clockSkew = 0;
+    clock = typeof performance === "object" && performance.now ? performance : Date;
+    setFrame = typeof window === "object" && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(f) {
+      setTimeout(f, 17);
+    };
+    Timer.prototype = timer.prototype = {
+      constructor: Timer,
+      restart: function(callback, delay, time) {
+        if (typeof callback !== "function")
+          throw new TypeError("callback is not a function");
+        time = (time == null ? now() : +time) + (delay == null ? 0 : +delay);
+        if (!this._next && taskTail !== this) {
+          if (taskTail)
+            taskTail._next = this;
+          else
+            taskHead = this;
+          taskTail = this;
+        }
+        this._call = callback;
+        this._time = time;
+        sleep();
+      },
+      stop: function() {
+        if (this._call) {
+          this._call = null;
+          this._time = Infinity;
+          sleep();
+        }
+      }
+    };
+  }
+});
+
+// node_modules/d3-timer/src/timeout.js
+function timeout_default(callback, delay, time) {
+  var t = new Timer();
+  delay = delay == null ? 0 : +delay;
+  t.restart((elapsed) => {
+    t.stop();
+    callback(elapsed + delay);
+  }, delay, time);
+  return t;
+}
+var init_timeout = __esm({
+  "node_modules/d3-timer/src/timeout.js"() {
+    init_timer();
+  }
+});
+
+// node_modules/d3-timer/src/index.js
+var init_src8 = __esm({
+  "node_modules/d3-timer/src/index.js"() {
+    init_timer();
+    init_timeout();
+  }
+});
+
+// node_modules/d3-transition/src/transition/schedule.js
+function schedule_default(node, name, id2, index2, group, timing) {
+  var schedules = node.__transition;
+  if (!schedules)
+    node.__transition = {};
+  else if (id2 in schedules)
+    return;
+  create(node, id2, {
+    name,
+    index: index2,
+    // For context during callback.
+    group,
+    // For context during callback.
+    on: emptyOn,
+    tween: emptyTween,
+    time: timing.time,
+    delay: timing.delay,
+    duration: timing.duration,
+    ease: timing.ease,
+    timer: null,
+    state: CREATED
+  });
+}
+function init(node, id2) {
+  var schedule = get2(node, id2);
+  if (schedule.state > CREATED)
+    throw new Error("too late; already scheduled");
+  return schedule;
+}
+function set2(node, id2) {
+  var schedule = get2(node, id2);
+  if (schedule.state > STARTED)
+    throw new Error("too late; already running");
+  return schedule;
+}
+function get2(node, id2) {
+  var schedule = node.__transition;
+  if (!schedule || !(schedule = schedule[id2]))
+    throw new Error("transition not found");
+  return schedule;
+}
+function create(node, id2, self2) {
+  var schedules = node.__transition, tween;
+  schedules[id2] = self2;
+  self2.timer = timer(schedule, 0, self2.time);
+  function schedule(elapsed) {
+    self2.state = SCHEDULED;
+    self2.timer.restart(start3, self2.delay, self2.time);
+    if (self2.delay <= elapsed)
+      start3(elapsed - self2.delay);
+  }
+  function start3(elapsed) {
+    var i, j, n, o;
+    if (self2.state !== SCHEDULED)
+      return stop();
+    for (i in schedules) {
+      o = schedules[i];
+      if (o.name !== self2.name)
+        continue;
+      if (o.state === STARTED)
+        return timeout_default(start3);
+      if (o.state === RUNNING) {
+        o.state = ENDED;
+        o.timer.stop();
+        o.on.call("interrupt", node, node.__data__, o.index, o.group);
+        delete schedules[i];
+      } else if (+i < id2) {
+        o.state = ENDED;
+        o.timer.stop();
+        o.on.call("cancel", node, node.__data__, o.index, o.group);
+        delete schedules[i];
+      }
+    }
+    timeout_default(function() {
+      if (self2.state === STARTED) {
+        self2.state = RUNNING;
+        self2.timer.restart(tick, self2.delay, self2.time);
+        tick(elapsed);
+      }
+    });
+    self2.state = STARTING;
+    self2.on.call("start", node, node.__data__, self2.index, self2.group);
+    if (self2.state !== STARTING)
+      return;
+    self2.state = STARTED;
+    tween = new Array(n = self2.tween.length);
+    for (i = 0, j = -1; i < n; ++i) {
+      if (o = self2.tween[i].value.call(node, node.__data__, self2.index, self2.group)) {
+        tween[++j] = o;
+      }
+    }
+    tween.length = j + 1;
+  }
+  function tick(elapsed) {
+    var t = elapsed < self2.duration ? self2.ease.call(null, elapsed / self2.duration) : (self2.timer.restart(stop), self2.state = ENDING, 1), i = -1, n = tween.length;
+    while (++i < n) {
+      tween[i].call(node, t);
+    }
+    if (self2.state === ENDING) {
+      self2.on.call("end", node, node.__data__, self2.index, self2.group);
+      stop();
+    }
+  }
+  function stop() {
+    self2.state = ENDED;
+    self2.timer.stop();
+    delete schedules[id2];
+    for (var i in schedules)
+      return;
+    delete node.__transition;
+  }
+}
+var emptyOn, emptyTween, CREATED, SCHEDULED, STARTING, STARTED, RUNNING, ENDING, ENDED;
+var init_schedule = __esm({
+  "node_modules/d3-transition/src/transition/schedule.js"() {
+    init_src3();
+    init_src8();
+    emptyOn = dispatch_default("start", "end", "cancel", "interrupt");
+    emptyTween = [];
+    CREATED = 0;
+    SCHEDULED = 1;
+    STARTING = 2;
+    STARTED = 3;
+    RUNNING = 4;
+    ENDING = 5;
+    ENDED = 6;
+  }
+});
+
+// node_modules/d3-transition/src/interrupt.js
+function interrupt_default(node, name) {
+  var schedules = node.__transition, schedule, active, empty2 = true, i;
+  if (!schedules)
+    return;
+  name = name == null ? null : name + "";
+  for (i in schedules) {
+    if ((schedule = schedules[i]).name !== name) {
+      empty2 = false;
+      continue;
+    }
+    active = schedule.state > STARTING && schedule.state < ENDING;
+    schedule.state = ENDED;
+    schedule.timer.stop();
+    schedule.on.call(active ? "interrupt" : "cancel", node, node.__data__, schedule.index, schedule.group);
+    delete schedules[i];
+  }
+  if (empty2)
+    delete node.__transition;
+}
+var init_interrupt = __esm({
+  "node_modules/d3-transition/src/interrupt.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/selection/interrupt.js
+function interrupt_default2(name) {
+  return this.each(function() {
+    interrupt_default(this, name);
+  });
+}
+var init_interrupt2 = __esm({
+  "node_modules/d3-transition/src/selection/interrupt.js"() {
+    init_interrupt();
+  }
+});
+
+// node_modules/d3-transition/src/transition/tween.js
+function tweenRemove(id2, name) {
+  var tween0, tween1;
+  return function() {
+    var schedule = set2(this, id2), tween = schedule.tween;
+    if (tween !== tween0) {
+      tween1 = tween0 = tween;
+      for (var i = 0, n = tween1.length; i < n; ++i) {
+        if (tween1[i].name === name) {
+          tween1 = tween1.slice();
+          tween1.splice(i, 1);
+          break;
+        }
+      }
+    }
+    schedule.tween = tween1;
+  };
+}
+function tweenFunction(id2, name, value) {
+  var tween0, tween1;
+  if (typeof value !== "function")
+    throw new Error();
+  return function() {
+    var schedule = set2(this, id2), tween = schedule.tween;
+    if (tween !== tween0) {
+      tween1 = (tween0 = tween).slice();
+      for (var t = { name, value }, i = 0, n = tween1.length; i < n; ++i) {
+        if (tween1[i].name === name) {
+          tween1[i] = t;
+          break;
+        }
+      }
+      if (i === n)
+        tween1.push(t);
+    }
+    schedule.tween = tween1;
+  };
+}
+function tween_default(name, value) {
+  var id2 = this._id;
+  name += "";
+  if (arguments.length < 2) {
+    var tween = get2(this.node(), id2).tween;
+    for (var i = 0, n = tween.length, t; i < n; ++i) {
+      if ((t = tween[i]).name === name) {
+        return t.value;
+      }
+    }
+    return null;
+  }
+  return this.each((value == null ? tweenRemove : tweenFunction)(id2, name, value));
+}
+function tweenValue(transition2, name, value) {
+  var id2 = transition2._id;
+  transition2.each(function() {
+    var schedule = set2(this, id2);
+    (schedule.value || (schedule.value = {}))[name] = value.apply(this, arguments);
+  });
+  return function(node) {
+    return get2(node, id2).value[name];
+  };
+}
+var init_tween = __esm({
+  "node_modules/d3-transition/src/transition/tween.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/interpolate.js
+function interpolate_default(a2, b) {
+  var c2;
+  return (typeof b === "number" ? number_default : b instanceof color ? rgb_default : (c2 = color(b)) ? (b = c2, rgb_default) : string_default)(a2, b);
+}
+var init_interpolate = __esm({
+  "node_modules/d3-transition/src/transition/interpolate.js"() {
+    init_src6();
+    init_src7();
+  }
+});
+
+// node_modules/d3-transition/src/transition/attr.js
+function attrRemove2(name) {
+  return function() {
+    this.removeAttribute(name);
+  };
+}
+function attrRemoveNS2(fullname) {
+  return function() {
+    this.removeAttributeNS(fullname.space, fullname.local);
+  };
+}
+function attrConstant2(name, interpolate, value1) {
+  var string00, string1 = value1 + "", interpolate0;
+  return function() {
+    var string0 = this.getAttribute(name);
+    return string0 === string1 ? null : string0 === string00 ? interpolate0 : interpolate0 = interpolate(string00 = string0, value1);
+  };
+}
+function attrConstantNS2(fullname, interpolate, value1) {
+  var string00, string1 = value1 + "", interpolate0;
+  return function() {
+    var string0 = this.getAttributeNS(fullname.space, fullname.local);
+    return string0 === string1 ? null : string0 === string00 ? interpolate0 : interpolate0 = interpolate(string00 = string0, value1);
+  };
+}
+function attrFunction2(name, interpolate, value) {
+  var string00, string10, interpolate0;
+  return function() {
+    var string0, value1 = value(this), string1;
+    if (value1 == null)
+      return void this.removeAttribute(name);
+    string0 = this.getAttribute(name);
+    string1 = value1 + "";
+    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : (string10 = string1, interpolate0 = interpolate(string00 = string0, value1));
+  };
+}
+function attrFunctionNS2(fullname, interpolate, value) {
+  var string00, string10, interpolate0;
+  return function() {
+    var string0, value1 = value(this), string1;
+    if (value1 == null)
+      return void this.removeAttributeNS(fullname.space, fullname.local);
+    string0 = this.getAttributeNS(fullname.space, fullname.local);
+    string1 = value1 + "";
+    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : (string10 = string1, interpolate0 = interpolate(string00 = string0, value1));
+  };
+}
+function attr_default2(name, value) {
+  var fullname = namespace_default(name), i = fullname === "transform" ? interpolateTransformSvg : interpolate_default;
+  return this.attrTween(name, typeof value === "function" ? (fullname.local ? attrFunctionNS2 : attrFunction2)(fullname, i, tweenValue(this, "attr." + name, value)) : value == null ? (fullname.local ? attrRemoveNS2 : attrRemove2)(fullname) : (fullname.local ? attrConstantNS2 : attrConstant2)(fullname, i, value));
+}
+var init_attr2 = __esm({
+  "node_modules/d3-transition/src/transition/attr.js"() {
+    init_src7();
+    init_src4();
+    init_tween();
+    init_interpolate();
+  }
+});
+
+// node_modules/d3-transition/src/transition/attrTween.js
+function attrInterpolate(name, i) {
+  return function(t) {
+    this.setAttribute(name, i.call(this, t));
+  };
+}
+function attrInterpolateNS(fullname, i) {
+  return function(t) {
+    this.setAttributeNS(fullname.space, fullname.local, i.call(this, t));
+  };
+}
+function attrTweenNS(fullname, value) {
+  var t02, i0;
+  function tween() {
+    var i = value.apply(this, arguments);
+    if (i !== i0)
+      t02 = (i0 = i) && attrInterpolateNS(fullname, i);
+    return t02;
+  }
+  tween._value = value;
+  return tween;
+}
+function attrTween(name, value) {
+  var t02, i0;
+  function tween() {
+    var i = value.apply(this, arguments);
+    if (i !== i0)
+      t02 = (i0 = i) && attrInterpolate(name, i);
+    return t02;
+  }
+  tween._value = value;
+  return tween;
+}
+function attrTween_default(name, value) {
+  var key = "attr." + name;
+  if (arguments.length < 2)
+    return (key = this.tween(key)) && key._value;
+  if (value == null)
+    return this.tween(key, null);
+  if (typeof value !== "function")
+    throw new Error();
+  var fullname = namespace_default(name);
+  return this.tween(key, (fullname.local ? attrTweenNS : attrTween)(fullname, value));
+}
+var init_attrTween = __esm({
+  "node_modules/d3-transition/src/transition/attrTween.js"() {
+    init_src4();
+  }
+});
+
+// node_modules/d3-transition/src/transition/delay.js
+function delayFunction(id2, value) {
+  return function() {
+    init(this, id2).delay = +value.apply(this, arguments);
+  };
+}
+function delayConstant(id2, value) {
+  return value = +value, function() {
+    init(this, id2).delay = value;
+  };
+}
+function delay_default(value) {
+  var id2 = this._id;
+  return arguments.length ? this.each((typeof value === "function" ? delayFunction : delayConstant)(id2, value)) : get2(this.node(), id2).delay;
+}
+var init_delay = __esm({
+  "node_modules/d3-transition/src/transition/delay.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/duration.js
+function durationFunction(id2, value) {
+  return function() {
+    set2(this, id2).duration = +value.apply(this, arguments);
+  };
+}
+function durationConstant(id2, value) {
+  return value = +value, function() {
+    set2(this, id2).duration = value;
+  };
+}
+function duration_default(value) {
+  var id2 = this._id;
+  return arguments.length ? this.each((typeof value === "function" ? durationFunction : durationConstant)(id2, value)) : get2(this.node(), id2).duration;
+}
+var init_duration = __esm({
+  "node_modules/d3-transition/src/transition/duration.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/ease.js
+function easeConstant(id2, value) {
+  if (typeof value !== "function")
+    throw new Error();
+  return function() {
+    set2(this, id2).ease = value;
+  };
+}
+function ease_default(value) {
+  var id2 = this._id;
+  return arguments.length ? this.each(easeConstant(id2, value)) : get2(this.node(), id2).ease;
+}
+var init_ease = __esm({
+  "node_modules/d3-transition/src/transition/ease.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/easeVarying.js
+function easeVarying(id2, value) {
+  return function() {
+    var v = value.apply(this, arguments);
+    if (typeof v !== "function")
+      throw new Error();
+    set2(this, id2).ease = v;
+  };
+}
+function easeVarying_default(value) {
+  if (typeof value !== "function")
+    throw new Error();
+  return this.each(easeVarying(this._id, value));
+}
+var init_easeVarying = __esm({
+  "node_modules/d3-transition/src/transition/easeVarying.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/filter.js
+function filter_default2(match) {
+  if (typeof match !== "function")
+    match = matcher_default(match);
+  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = [], node, i = 0; i < n; ++i) {
+      if ((node = group[i]) && match.call(node, node.__data__, i, group)) {
+        subgroup.push(node);
+      }
+    }
+  }
+  return new Transition(subgroups, this._parents, this._name, this._id);
+}
+var init_filter2 = __esm({
+  "node_modules/d3-transition/src/transition/filter.js"() {
+    init_src4();
+    init_transition2();
+  }
+});
+
+// node_modules/d3-transition/src/transition/merge.js
+function merge_default2(transition2) {
+  if (transition2._id !== this._id)
+    throw new Error();
+  for (var groups0 = this._groups, groups1 = transition2._groups, m0 = groups0.length, m1 = groups1.length, m2 = Math.min(m0, m1), merges = new Array(m0), j = 0; j < m2; ++j) {
+    for (var group0 = groups0[j], group1 = groups1[j], n = group0.length, merge = merges[j] = new Array(n), node, i = 0; i < n; ++i) {
+      if (node = group0[i] || group1[i]) {
+        merge[i] = node;
+      }
+    }
+  }
+  for (; j < m0; ++j) {
+    merges[j] = groups0[j];
+  }
+  return new Transition(merges, this._parents, this._name, this._id);
+}
+var init_merge2 = __esm({
+  "node_modules/d3-transition/src/transition/merge.js"() {
+    init_transition2();
+  }
+});
+
+// node_modules/d3-transition/src/transition/on.js
+function start(name) {
+  return (name + "").trim().split(/^|\s+/).every(function(t) {
+    var i = t.indexOf(".");
+    if (i >= 0)
+      t = t.slice(0, i);
+    return !t || t === "start";
+  });
+}
+function onFunction(id2, name, listener) {
+  var on0, on1, sit = start(name) ? init : set2;
+  return function() {
+    var schedule = sit(this, id2), on = schedule.on;
+    if (on !== on0)
+      (on1 = (on0 = on).copy()).on(name, listener);
+    schedule.on = on1;
+  };
+}
+function on_default2(name, listener) {
+  var id2 = this._id;
+  return arguments.length < 2 ? get2(this.node(), id2).on.on(name) : this.each(onFunction(id2, name, listener));
+}
+var init_on2 = __esm({
+  "node_modules/d3-transition/src/transition/on.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/remove.js
+function removeFunction(id2) {
+  return function() {
+    var parent = this.parentNode;
+    for (var i in this.__transition)
+      if (+i !== id2)
+        return;
+    if (parent)
+      parent.removeChild(this);
+  };
+}
+function remove_default2() {
+  return this.on("end.remove", removeFunction(this._id));
+}
+var init_remove2 = __esm({
+  "node_modules/d3-transition/src/transition/remove.js"() {
+  }
+});
+
+// node_modules/d3-transition/src/transition/select.js
+function select_default3(select) {
+  var name = this._name, id2 = this._id;
+  if (typeof select !== "function")
+    select = selector_default(select);
+  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = new Array(n), node, subnode, i = 0; i < n; ++i) {
+      if ((node = group[i]) && (subnode = select.call(node, node.__data__, i, group))) {
+        if ("__data__" in node)
+          subnode.__data__ = node.__data__;
+        subgroup[i] = subnode;
+        schedule_default(subgroup[i], name, id2, i, subgroup, get2(node, id2));
+      }
+    }
+  }
+  return new Transition(subgroups, this._parents, name, id2);
+}
+var init_select3 = __esm({
+  "node_modules/d3-transition/src/transition/select.js"() {
+    init_src4();
+    init_transition2();
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/selectAll.js
+function selectAll_default2(select) {
+  var name = this._name, id2 = this._id;
+  if (typeof select !== "function")
+    select = selectorAll_default(select);
+  for (var groups = this._groups, m2 = groups.length, subgroups = [], parents = [], j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
+      if (node = group[i]) {
+        for (var children2 = select.call(node, node.__data__, i, group), child, inherit2 = get2(node, id2), k = 0, l = children2.length; k < l; ++k) {
+          if (child = children2[k]) {
+            schedule_default(child, name, id2, k, children2, inherit2);
+          }
+        }
+        subgroups.push(children2);
+        parents.push(node);
+      }
+    }
+  }
+  return new Transition(subgroups, parents, name, id2);
+}
+var init_selectAll2 = __esm({
+  "node_modules/d3-transition/src/transition/selectAll.js"() {
+    init_src4();
+    init_transition2();
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/selection.js
+function selection_default2() {
+  return new Selection2(this._groups, this._parents);
+}
+var Selection2;
+var init_selection2 = __esm({
+  "node_modules/d3-transition/src/transition/selection.js"() {
+    init_src4();
+    Selection2 = selection_default.prototype.constructor;
+  }
+});
+
+// node_modules/d3-transition/src/transition/style.js
+function styleNull(name, interpolate) {
+  var string00, string10, interpolate0;
+  return function() {
+    var string0 = styleValue(this, name), string1 = (this.style.removeProperty(name), styleValue(this, name));
+    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : interpolate0 = interpolate(string00 = string0, string10 = string1);
+  };
+}
+function styleRemove2(name) {
+  return function() {
+    this.style.removeProperty(name);
+  };
+}
+function styleConstant2(name, interpolate, value1) {
+  var string00, string1 = value1 + "", interpolate0;
+  return function() {
+    var string0 = styleValue(this, name);
+    return string0 === string1 ? null : string0 === string00 ? interpolate0 : interpolate0 = interpolate(string00 = string0, value1);
+  };
+}
+function styleFunction2(name, interpolate, value) {
+  var string00, string10, interpolate0;
+  return function() {
+    var string0 = styleValue(this, name), value1 = value(this), string1 = value1 + "";
+    if (value1 == null)
+      string1 = value1 = (this.style.removeProperty(name), styleValue(this, name));
+    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : (string10 = string1, interpolate0 = interpolate(string00 = string0, value1));
+  };
+}
+function styleMaybeRemove(id2, name) {
+  var on0, on1, listener0, key = "style." + name, event = "end." + key, remove2;
+  return function() {
+    var schedule = set2(this, id2), on = schedule.on, listener = schedule.value[key] == null ? remove2 || (remove2 = styleRemove2(name)) : void 0;
+    if (on !== on0 || listener0 !== listener)
+      (on1 = (on0 = on).copy()).on(event, listener0 = listener);
+    schedule.on = on1;
+  };
+}
+function style_default2(name, value, priority) {
+  var i = (name += "") === "transform" ? interpolateTransformCss : interpolate_default;
+  return value == null ? this.styleTween(name, styleNull(name, i)).on("end.style." + name, styleRemove2(name)) : typeof value === "function" ? this.styleTween(name, styleFunction2(name, i, tweenValue(this, "style." + name, value))).each(styleMaybeRemove(this._id, name)) : this.styleTween(name, styleConstant2(name, i, value), priority).on("end.style." + name, null);
+}
+var init_style2 = __esm({
+  "node_modules/d3-transition/src/transition/style.js"() {
+    init_src7();
+    init_src4();
+    init_schedule();
+    init_tween();
+    init_interpolate();
+  }
+});
+
+// node_modules/d3-transition/src/transition/styleTween.js
+function styleInterpolate(name, i, priority) {
+  return function(t) {
+    this.style.setProperty(name, i.call(this, t), priority);
+  };
+}
+function styleTween(name, value, priority) {
+  var t, i0;
+  function tween() {
+    var i = value.apply(this, arguments);
+    if (i !== i0)
+      t = (i0 = i) && styleInterpolate(name, i, priority);
+    return t;
+  }
+  tween._value = value;
+  return tween;
+}
+function styleTween_default(name, value, priority) {
+  var key = "style." + (name += "");
+  if (arguments.length < 2)
+    return (key = this.tween(key)) && key._value;
+  if (value == null)
+    return this.tween(key, null);
+  if (typeof value !== "function")
+    throw new Error();
+  return this.tween(key, styleTween(name, value, priority == null ? "" : priority));
+}
+var init_styleTween = __esm({
+  "node_modules/d3-transition/src/transition/styleTween.js"() {
+  }
+});
+
+// node_modules/d3-transition/src/transition/text.js
+function textConstant2(value) {
+  return function() {
+    this.textContent = value;
+  };
+}
+function textFunction2(value) {
+  return function() {
+    var value1 = value(this);
+    this.textContent = value1 == null ? "" : value1;
+  };
+}
+function text_default2(value) {
+  return this.tween("text", typeof value === "function" ? textFunction2(tweenValue(this, "text", value)) : textConstant2(value == null ? "" : value + ""));
+}
+var init_text2 = __esm({
+  "node_modules/d3-transition/src/transition/text.js"() {
+    init_tween();
+  }
+});
+
+// node_modules/d3-transition/src/transition/textTween.js
+function textInterpolate(i) {
+  return function(t) {
+    this.textContent = i.call(this, t);
+  };
+}
+function textTween(value) {
+  var t02, i0;
+  function tween() {
+    var i = value.apply(this, arguments);
+    if (i !== i0)
+      t02 = (i0 = i) && textInterpolate(i);
+    return t02;
+  }
+  tween._value = value;
+  return tween;
+}
+function textTween_default(value) {
+  var key = "text";
+  if (arguments.length < 1)
+    return (key = this.tween(key)) && key._value;
+  if (value == null)
+    return this.tween(key, null);
+  if (typeof value !== "function")
+    throw new Error();
+  return this.tween(key, textTween(value));
+}
+var init_textTween = __esm({
+  "node_modules/d3-transition/src/transition/textTween.js"() {
+  }
+});
+
+// node_modules/d3-transition/src/transition/transition.js
+function transition_default() {
+  var name = this._name, id0 = this._id, id1 = newId();
+  for (var groups = this._groups, m2 = groups.length, j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
+      if (node = group[i]) {
+        var inherit2 = get2(node, id0);
+        schedule_default(node, name, id1, i, group, {
+          time: inherit2.time + inherit2.delay + inherit2.duration,
+          delay: 0,
+          duration: inherit2.duration,
+          ease: inherit2.ease
+        });
+      }
+    }
+  }
+  return new Transition(groups, this._parents, name, id1);
+}
+var init_transition = __esm({
+  "node_modules/d3-transition/src/transition/transition.js"() {
+    init_transition2();
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/end.js
+function end_default() {
+  var on0, on1, that = this, id2 = that._id, size = that.size();
+  return new Promise(function(resolve, reject) {
+    var cancel = { value: reject }, end = { value: function() {
+      if (--size === 0)
+        resolve();
+    } };
+    that.each(function() {
+      var schedule = set2(this, id2), on = schedule.on;
+      if (on !== on0) {
+        on1 = (on0 = on).copy();
+        on1._.cancel.push(cancel);
+        on1._.interrupt.push(cancel);
+        on1._.end.push(end);
+      }
+      schedule.on = on1;
+    });
+    if (size === 0)
+      resolve();
+  });
+}
+var init_end = __esm({
+  "node_modules/d3-transition/src/transition/end.js"() {
+    init_schedule();
+  }
+});
+
+// node_modules/d3-transition/src/transition/index.js
+function Transition(groups, parents, name, id2) {
+  this._groups = groups;
+  this._parents = parents;
+  this._name = name;
+  this._id = id2;
+}
+function transition(name) {
+  return selection_default().transition(name);
+}
+function newId() {
+  return ++id;
+}
+var id, selection_prototype;
+var init_transition2 = __esm({
+  "node_modules/d3-transition/src/transition/index.js"() {
+    init_src4();
+    init_attr2();
+    init_attrTween();
+    init_delay();
+    init_duration();
+    init_ease();
+    init_easeVarying();
+    init_filter2();
+    init_merge2();
+    init_on2();
+    init_remove2();
+    init_select3();
+    init_selectAll2();
+    init_selection2();
+    init_style2();
+    init_styleTween();
+    init_text2();
+    init_textTween();
+    init_transition();
+    init_tween();
+    init_end();
+    id = 0;
+    selection_prototype = selection_default.prototype;
+    Transition.prototype = transition.prototype = {
+      constructor: Transition,
+      select: select_default3,
+      selectAll: selectAll_default2,
+      selectChild: selection_prototype.selectChild,
+      selectChildren: selection_prototype.selectChildren,
+      filter: filter_default2,
+      merge: merge_default2,
+      selection: selection_default2,
+      transition: transition_default,
+      call: selection_prototype.call,
+      nodes: selection_prototype.nodes,
+      node: selection_prototype.node,
+      size: selection_prototype.size,
+      empty: selection_prototype.empty,
+      each: selection_prototype.each,
+      on: on_default2,
+      attr: attr_default2,
+      attrTween: attrTween_default,
+      style: style_default2,
+      styleTween: styleTween_default,
+      text: text_default2,
+      textTween: textTween_default,
+      remove: remove_default2,
+      tween: tween_default,
+      delay: delay_default,
+      duration: duration_default,
+      ease: ease_default,
+      easeVarying: easeVarying_default,
+      end: end_default,
+      [Symbol.iterator]: selection_prototype[Symbol.iterator]
+    };
+  }
+});
+
+// node_modules/d3-ease/src/cubic.js
+function cubicInOut(t) {
+  return ((t *= 2) <= 1 ? t * t * t : (t -= 2) * t * t + 2) / 2;
+}
+var init_cubic = __esm({
+  "node_modules/d3-ease/src/cubic.js"() {
+  }
+});
+
+// node_modules/d3-ease/src/index.js
+var init_src9 = __esm({
+  "node_modules/d3-ease/src/index.js"() {
+    init_cubic();
+  }
+});
+
+// node_modules/d3-transition/src/selection/transition.js
+function inherit(node, id2) {
+  var timing;
+  while (!(timing = node.__transition) || !(timing = timing[id2])) {
+    if (!(node = node.parentNode)) {
+      throw new Error(`transition ${id2} not found`);
+    }
+  }
+  return timing;
+}
+function transition_default2(name) {
+  var id2, timing;
+  if (name instanceof Transition) {
+    id2 = name._id, name = name._name;
+  } else {
+    id2 = newId(), (timing = defaultTiming).time = now(), name = name == null ? null : name + "";
+  }
+  for (var groups = this._groups, m2 = groups.length, j = 0; j < m2; ++j) {
+    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
+      if (node = group[i]) {
+        schedule_default(node, name, id2, i, group, timing || inherit(node, id2));
+      }
+    }
+  }
+  return new Transition(groups, this._parents, name, id2);
+}
+var defaultTiming;
+var init_transition3 = __esm({
+  "node_modules/d3-transition/src/selection/transition.js"() {
+    init_transition2();
+    init_schedule();
+    init_src9();
+    init_src8();
+    defaultTiming = {
+      time: null,
+      // Set on use.
+      delay: 0,
+      duration: 250,
+      ease: cubicInOut
+    };
+  }
+});
+
+// node_modules/d3-transition/src/selection/index.js
+var init_selection3 = __esm({
+  "node_modules/d3-transition/src/selection/index.js"() {
+    init_src4();
+    init_interrupt2();
+    init_transition3();
+    selection_default.prototype.interrupt = interrupt_default2;
+    selection_default.prototype.transition = transition_default2;
+  }
+});
+
+// node_modules/d3-transition/src/index.js
+var init_src10 = __esm({
+  "node_modules/d3-transition/src/index.js"() {
+    init_selection3();
+    init_interrupt();
+  }
+});
+
+// node_modules/d3-brush/src/constant.js
+var init_constant4 = __esm({
+  "node_modules/d3-brush/src/constant.js"() {
+  }
+});
+
+// node_modules/d3-brush/src/event.js
+var init_event2 = __esm({
+  "node_modules/d3-brush/src/event.js"() {
+  }
+});
+
+// node_modules/d3-brush/src/noevent.js
+var init_noevent2 = __esm({
+  "node_modules/d3-brush/src/noevent.js"() {
+  }
+});
+
+// node_modules/d3-brush/src/brush.js
+function number1(e) {
+  return [+e[0], +e[1]];
+}
+function number2(e) {
+  return [number1(e[0]), number1(e[1])];
+}
+function type(t) {
+  return { type: t };
+}
+var abs, max, min, X, Y, XY;
+var init_brush = __esm({
+  "node_modules/d3-brush/src/brush.js"() {
+    init_src10();
+    init_constant4();
+    init_event2();
+    init_noevent2();
+    ({ abs, max, min } = Math);
+    X = {
+      name: "x",
+      handles: ["w", "e"].map(type),
+      input: function(x3, e) {
+        return x3 == null ? null : [[+x3[0], e[0][1]], [+x3[1], e[1][1]]];
+      },
+      output: function(xy) {
+        return xy && [xy[0][0], xy[1][0]];
+      }
+    };
+    Y = {
+      name: "y",
+      handles: ["n", "s"].map(type),
+      input: function(y3, e) {
+        return y3 == null ? null : [[e[0][0], +y3[0]], [e[1][0], +y3[1]]];
+      },
+      output: function(xy) {
+        return xy && [xy[0][1], xy[1][1]];
+      }
+    };
+    XY = {
+      name: "xy",
+      handles: ["n", "w", "e", "s", "nw", "ne", "sw", "se"].map(type),
+      input: function(xy) {
+        return xy == null ? null : number2(xy);
+      },
+      output: function(xy) {
+        return xy;
+      }
+    };
+  }
+});
+
+// node_modules/d3-brush/src/index.js
+var init_src11 = __esm({
+  "node_modules/d3-brush/src/index.js"() {
+    init_brush();
+  }
+});
+
+// node_modules/d3-path/src/index.js
+var init_src12 = __esm({
+  "node_modules/d3-path/src/index.js"() {
+  }
+});
+
+// node_modules/d3-chord/src/index.js
+var init_src13 = __esm({
+  "node_modules/d3-chord/src/index.js"() {
+  }
+});
+
+// node_modules/d3-contour/src/index.js
+var init_src14 = __esm({
+  "node_modules/d3-contour/src/index.js"() {
+  }
+});
+
+// node_modules/d3-delaunay/src/index.js
+var init_src15 = __esm({
+  "node_modules/d3-delaunay/src/index.js"() {
+  }
+});
+
+// node_modules/d3-dsv/src/index.js
+var init_src16 = __esm({
+  "node_modules/d3-dsv/src/index.js"() {
+  }
+});
+
+// node_modules/d3-fetch/src/index.js
+var init_src17 = __esm({
+  "node_modules/d3-fetch/src/index.js"() {
+  }
+});
+
+// node_modules/d3-force/src/center.js
+function center_default(x3, y3) {
+  var nodes, strength = 1;
+  if (x3 == null)
+    x3 = 0;
+  if (y3 == null)
+    y3 = 0;
+  function force() {
+    var i, n = nodes.length, node, sx = 0, sy = 0;
+    for (i = 0; i < n; ++i) {
+      node = nodes[i], sx += node.x, sy += node.y;
+    }
+    for (sx = (sx / n - x3) * strength, sy = (sy / n - y3) * strength, i = 0; i < n; ++i) {
+      node = nodes[i], node.x -= sx, node.y -= sy;
+    }
+  }
+  force.initialize = function(_) {
+    nodes = _;
+  };
+  force.x = function(_) {
+    return arguments.length ? (x3 = +_, force) : x3;
+  };
+  force.y = function(_) {
+    return arguments.length ? (y3 = +_, force) : y3;
+  };
+  force.strength = function(_) {
+    return arguments.length ? (strength = +_, force) : strength;
+  };
+  return force;
+}
+var init_center = __esm({
+  "node_modules/d3-force/src/center.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/add.js
+function add_default(d) {
+  const x3 = +this._x.call(null, d), y3 = +this._y.call(null, d);
+  return add(this.cover(x3, y3), x3, y3, d);
+}
+function add(tree, x3, y3, d) {
+  if (isNaN(x3) || isNaN(y3))
+    return tree;
+  var parent, node = tree._root, leaf = { data: d }, x0 = tree._x0, y0 = tree._y0, x1 = tree._x1, y1 = tree._y1, xm, ym, xp, yp, right, bottom, i, j;
+  if (!node)
+    return tree._root = leaf, tree;
+  while (node.length) {
+    if (right = x3 >= (xm = (x0 + x1) / 2))
+      x0 = xm;
+    else
+      x1 = xm;
+    if (bottom = y3 >= (ym = (y0 + y1) / 2))
+      y0 = ym;
+    else
+      y1 = ym;
+    if (parent = node, !(node = node[i = bottom << 1 | right]))
+      return parent[i] = leaf, tree;
+  }
+  xp = +tree._x.call(null, node.data);
+  yp = +tree._y.call(null, node.data);
+  if (x3 === xp && y3 === yp)
+    return leaf.next = node, parent ? parent[i] = leaf : tree._root = leaf, tree;
+  do {
+    parent = parent ? parent[i] = new Array(4) : tree._root = new Array(4);
+    if (right = x3 >= (xm = (x0 + x1) / 2))
+      x0 = xm;
+    else
+      x1 = xm;
+    if (bottom = y3 >= (ym = (y0 + y1) / 2))
+      y0 = ym;
+    else
+      y1 = ym;
+  } while ((i = bottom << 1 | right) === (j = (yp >= ym) << 1 | xp >= xm));
+  return parent[j] = node, parent[i] = leaf, tree;
+}
+function addAll(data) {
+  var d, i, n = data.length, x3, y3, xz = new Array(n), yz = new Array(n), x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (i = 0; i < n; ++i) {
+    if (isNaN(x3 = +this._x.call(null, d = data[i])) || isNaN(y3 = +this._y.call(null, d)))
+      continue;
+    xz[i] = x3;
+    yz[i] = y3;
+    if (x3 < x0)
+      x0 = x3;
+    if (x3 > x1)
+      x1 = x3;
+    if (y3 < y0)
+      y0 = y3;
+    if (y3 > y1)
+      y1 = y3;
+  }
+  if (x0 > x1 || y0 > y1)
+    return this;
+  this.cover(x0, y0).cover(x1, y1);
+  for (i = 0; i < n; ++i) {
+    add(this, xz[i], yz[i], data[i]);
+  }
+  return this;
+}
+var init_add = __esm({
+  "node_modules/d3-quadtree/src/add.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/cover.js
+function cover_default(x3, y3) {
+  if (isNaN(x3 = +x3) || isNaN(y3 = +y3))
+    return this;
+  var x0 = this._x0, y0 = this._y0, x1 = this._x1, y1 = this._y1;
+  if (isNaN(x0)) {
+    x1 = (x0 = Math.floor(x3)) + 1;
+    y1 = (y0 = Math.floor(y3)) + 1;
+  } else {
+    var z = x1 - x0 || 1, node = this._root, parent, i;
+    while (x0 > x3 || x3 >= x1 || y0 > y3 || y3 >= y1) {
+      i = (y3 < y0) << 1 | x3 < x0;
+      parent = new Array(4), parent[i] = node, node = parent, z *= 2;
+      switch (i) {
+        case 0:
+          x1 = x0 + z, y1 = y0 + z;
+          break;
+        case 1:
+          x0 = x1 - z, y1 = y0 + z;
+          break;
+        case 2:
+          x1 = x0 + z, y0 = y1 - z;
+          break;
+        case 3:
+          x0 = x1 - z, y0 = y1 - z;
+          break;
+      }
+    }
+    if (this._root && this._root.length)
+      this._root = node;
+  }
+  this._x0 = x0;
+  this._y0 = y0;
+  this._x1 = x1;
+  this._y1 = y1;
+  return this;
+}
+var init_cover = __esm({
+  "node_modules/d3-quadtree/src/cover.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/data.js
+function data_default2() {
+  var data = [];
+  this.visit(function(node) {
+    if (!node.length)
+      do
+        data.push(node.data);
+      while (node = node.next);
+  });
+  return data;
+}
+var init_data2 = __esm({
+  "node_modules/d3-quadtree/src/data.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/extent.js
+function extent_default(_) {
+  return arguments.length ? this.cover(+_[0][0], +_[0][1]).cover(+_[1][0], +_[1][1]) : isNaN(this._x0) ? void 0 : [[this._x0, this._y0], [this._x1, this._y1]];
+}
+var init_extent = __esm({
+  "node_modules/d3-quadtree/src/extent.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/quad.js
+function quad_default(node, x0, y0, x1, y1) {
+  this.node = node;
+  this.x0 = x0;
+  this.y0 = y0;
+  this.x1 = x1;
+  this.y1 = y1;
+}
+var init_quad = __esm({
+  "node_modules/d3-quadtree/src/quad.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/find.js
+function find_default(x3, y3, radius) {
+  var data, x0 = this._x0, y0 = this._y0, x1, y1, x22, y22, x32 = this._x1, y32 = this._y1, quads = [], node = this._root, q, i;
+  if (node)
+    quads.push(new quad_default(node, x0, y0, x32, y32));
+  if (radius == null)
+    radius = Infinity;
+  else {
+    x0 = x3 - radius, y0 = y3 - radius;
+    x32 = x3 + radius, y32 = y3 + radius;
+    radius *= radius;
+  }
+  while (q = quads.pop()) {
+    if (!(node = q.node) || (x1 = q.x0) > x32 || (y1 = q.y0) > y32 || (x22 = q.x1) < x0 || (y22 = q.y1) < y0)
+      continue;
+    if (node.length) {
+      var xm = (x1 + x22) / 2, ym = (y1 + y22) / 2;
+      quads.push(
+        new quad_default(node[3], xm, ym, x22, y22),
+        new quad_default(node[2], x1, ym, xm, y22),
+        new quad_default(node[1], xm, y1, x22, ym),
+        new quad_default(node[0], x1, y1, xm, ym)
+      );
+      if (i = (y3 >= ym) << 1 | x3 >= xm) {
+        q = quads[quads.length - 1];
+        quads[quads.length - 1] = quads[quads.length - 1 - i];
+        quads[quads.length - 1 - i] = q;
+      }
+    } else {
+      var dx = x3 - +this._x.call(null, node.data), dy = y3 - +this._y.call(null, node.data), d2 = dx * dx + dy * dy;
+      if (d2 < radius) {
+        var d = Math.sqrt(radius = d2);
+        x0 = x3 - d, y0 = y3 - d;
+        x32 = x3 + d, y32 = y3 + d;
+        data = node.data;
+      }
+    }
+  }
+  return data;
+}
+var init_find = __esm({
+  "node_modules/d3-quadtree/src/find.js"() {
+    init_quad();
+  }
+});
+
+// node_modules/d3-quadtree/src/remove.js
+function remove_default3(d) {
+  if (isNaN(x3 = +this._x.call(null, d)) || isNaN(y3 = +this._y.call(null, d)))
+    return this;
+  var parent, node = this._root, retainer, previous, next, x0 = this._x0, y0 = this._y0, x1 = this._x1, y1 = this._y1, x3, y3, xm, ym, right, bottom, i, j;
+  if (!node)
+    return this;
+  if (node.length)
+    while (true) {
+      if (right = x3 >= (xm = (x0 + x1) / 2))
+        x0 = xm;
+      else
+        x1 = xm;
+      if (bottom = y3 >= (ym = (y0 + y1) / 2))
+        y0 = ym;
+      else
+        y1 = ym;
+      if (!(parent = node, node = node[i = bottom << 1 | right]))
+        return this;
+      if (!node.length)
+        break;
+      if (parent[i + 1 & 3] || parent[i + 2 & 3] || parent[i + 3 & 3])
+        retainer = parent, j = i;
+    }
+  while (node.data !== d)
+    if (!(previous = node, node = node.next))
+      return this;
+  if (next = node.next)
+    delete node.next;
+  if (previous)
+    return next ? previous.next = next : delete previous.next, this;
+  if (!parent)
+    return this._root = next, this;
+  next ? parent[i] = next : delete parent[i];
+  if ((node = parent[0] || parent[1] || parent[2] || parent[3]) && node === (parent[3] || parent[2] || parent[1] || parent[0]) && !node.length) {
+    if (retainer)
+      retainer[j] = node;
+    else
+      this._root = node;
+  }
+  return this;
+}
+function removeAll(data) {
+  for (var i = 0, n = data.length; i < n; ++i)
+    this.remove(data[i]);
+  return this;
+}
+var init_remove3 = __esm({
+  "node_modules/d3-quadtree/src/remove.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/root.js
+function root_default() {
+  return this._root;
+}
+var init_root = __esm({
+  "node_modules/d3-quadtree/src/root.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/size.js
+function size_default2() {
+  var size = 0;
+  this.visit(function(node) {
+    if (!node.length)
+      do
+        ++size;
+      while (node = node.next);
+  });
+  return size;
+}
+var init_size2 = __esm({
+  "node_modules/d3-quadtree/src/size.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/visit.js
+function visit_default(callback) {
+  var quads = [], q, node = this._root, child, x0, y0, x1, y1;
+  if (node)
+    quads.push(new quad_default(node, this._x0, this._y0, this._x1, this._y1));
+  while (q = quads.pop()) {
+    if (!callback(node = q.node, x0 = q.x0, y0 = q.y0, x1 = q.x1, y1 = q.y1) && node.length) {
+      var xm = (x0 + x1) / 2, ym = (y0 + y1) / 2;
+      if (child = node[3])
+        quads.push(new quad_default(child, xm, ym, x1, y1));
+      if (child = node[2])
+        quads.push(new quad_default(child, x0, ym, xm, y1));
+      if (child = node[1])
+        quads.push(new quad_default(child, xm, y0, x1, ym));
+      if (child = node[0])
+        quads.push(new quad_default(child, x0, y0, xm, ym));
+    }
+  }
+  return this;
+}
+var init_visit = __esm({
+  "node_modules/d3-quadtree/src/visit.js"() {
+    init_quad();
+  }
+});
+
+// node_modules/d3-quadtree/src/visitAfter.js
+function visitAfter_default(callback) {
+  var quads = [], next = [], q;
+  if (this._root)
+    quads.push(new quad_default(this._root, this._x0, this._y0, this._x1, this._y1));
+  while (q = quads.pop()) {
+    var node = q.node;
+    if (node.length) {
+      var child, x0 = q.x0, y0 = q.y0, x1 = q.x1, y1 = q.y1, xm = (x0 + x1) / 2, ym = (y0 + y1) / 2;
+      if (child = node[0])
+        quads.push(new quad_default(child, x0, y0, xm, ym));
+      if (child = node[1])
+        quads.push(new quad_default(child, xm, y0, x1, ym));
+      if (child = node[2])
+        quads.push(new quad_default(child, x0, ym, xm, y1));
+      if (child = node[3])
+        quads.push(new quad_default(child, xm, ym, x1, y1));
+    }
+    next.push(q);
+  }
+  while (q = next.pop()) {
+    callback(q.node, q.x0, q.y0, q.x1, q.y1);
+  }
+  return this;
+}
+var init_visitAfter = __esm({
+  "node_modules/d3-quadtree/src/visitAfter.js"() {
+    init_quad();
+  }
+});
+
+// node_modules/d3-quadtree/src/x.js
+function defaultX(d) {
+  return d[0];
+}
+function x_default(_) {
+  return arguments.length ? (this._x = _, this) : this._x;
+}
+var init_x = __esm({
+  "node_modules/d3-quadtree/src/x.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/y.js
+function defaultY(d) {
+  return d[1];
+}
+function y_default(_) {
+  return arguments.length ? (this._y = _, this) : this._y;
+}
+var init_y = __esm({
+  "node_modules/d3-quadtree/src/y.js"() {
+  }
+});
+
+// node_modules/d3-quadtree/src/quadtree.js
+function quadtree(nodes, x3, y3) {
+  var tree = new Quadtree(x3 == null ? defaultX : x3, y3 == null ? defaultY : y3, NaN, NaN, NaN, NaN);
+  return nodes == null ? tree : tree.addAll(nodes);
+}
+function Quadtree(x3, y3, x0, y0, x1, y1) {
+  this._x = x3;
+  this._y = y3;
+  this._x0 = x0;
+  this._y0 = y0;
+  this._x1 = x1;
+  this._y1 = y1;
+  this._root = void 0;
+}
+function leaf_copy(leaf) {
+  var copy = { data: leaf.data }, next = copy;
+  while (leaf = leaf.next)
+    next = next.next = { data: leaf.data };
+  return copy;
+}
+var treeProto;
+var init_quadtree = __esm({
+  "node_modules/d3-quadtree/src/quadtree.js"() {
+    init_add();
+    init_cover();
+    init_data2();
+    init_extent();
+    init_find();
+    init_remove3();
+    init_root();
+    init_size2();
+    init_visit();
+    init_visitAfter();
+    init_x();
+    init_y();
+    treeProto = quadtree.prototype = Quadtree.prototype;
+    treeProto.copy = function() {
+      var copy = new Quadtree(this._x, this._y, this._x0, this._y0, this._x1, this._y1), node = this._root, nodes, child;
+      if (!node)
+        return copy;
+      if (!node.length)
+        return copy._root = leaf_copy(node), copy;
+      nodes = [{ source: node, target: copy._root = new Array(4) }];
+      while (node = nodes.pop()) {
+        for (var i = 0; i < 4; ++i) {
+          if (child = node.source[i]) {
+            if (child.length)
+              nodes.push({ source: child, target: node.target[i] = new Array(4) });
+            else
+              node.target[i] = leaf_copy(child);
+          }
+        }
+      }
+      return copy;
+    };
+    treeProto.add = add_default;
+    treeProto.addAll = addAll;
+    treeProto.cover = cover_default;
+    treeProto.data = data_default2;
+    treeProto.extent = extent_default;
+    treeProto.find = find_default;
+    treeProto.remove = remove_default3;
+    treeProto.removeAll = removeAll;
+    treeProto.root = root_default;
+    treeProto.size = size_default2;
+    treeProto.visit = visit_default;
+    treeProto.visitAfter = visitAfter_default;
+    treeProto.x = x_default;
+    treeProto.y = y_default;
+  }
+});
+
+// node_modules/d3-quadtree/src/index.js
+var init_src18 = __esm({
+  "node_modules/d3-quadtree/src/index.js"() {
+    init_quadtree();
+  }
+});
+
+// node_modules/d3-force/src/constant.js
+function constant_default5(x3) {
+  return function() {
+    return x3;
+  };
+}
+var init_constant5 = __esm({
+  "node_modules/d3-force/src/constant.js"() {
+  }
+});
+
+// node_modules/d3-force/src/jiggle.js
+function jiggle_default(random) {
+  return (random() - 0.5) * 1e-6;
+}
+var init_jiggle = __esm({
+  "node_modules/d3-force/src/jiggle.js"() {
+  }
+});
+
+// node_modules/d3-force/src/collide.js
+function x(d) {
+  return d.x + d.vx;
+}
+function y(d) {
+  return d.y + d.vy;
+}
+function collide_default(radius) {
+  var nodes, radii, random, strength = 1, iterations = 1;
+  if (typeof radius !== "function")
+    radius = constant_default5(radius == null ? 1 : +radius);
+  function force() {
+    var i, n = nodes.length, tree, node, xi, yi, ri, ri2;
+    for (var k = 0; k < iterations; ++k) {
+      tree = quadtree(nodes, x, y).visitAfter(prepare);
+      for (i = 0; i < n; ++i) {
+        node = nodes[i];
+        ri = radii[node.index], ri2 = ri * ri;
+        xi = node.x + node.vx;
+        yi = node.y + node.vy;
+        tree.visit(apply);
+      }
+    }
+    function apply(quad, x0, y0, x1, y1) {
+      var data = quad.data, rj = quad.r, r = ri + rj;
+      if (data) {
+        if (data.index > node.index) {
+          var x3 = xi - data.x - data.vx, y3 = yi - data.y - data.vy, l = x3 * x3 + y3 * y3;
+          if (l < r * r) {
+            if (x3 === 0)
+              x3 = jiggle_default(random), l += x3 * x3;
+            if (y3 === 0)
+              y3 = jiggle_default(random), l += y3 * y3;
+            l = (r - (l = Math.sqrt(l))) / l * strength;
+            node.vx += (x3 *= l) * (r = (rj *= rj) / (ri2 + rj));
+            node.vy += (y3 *= l) * r;
+            data.vx -= x3 * (r = 1 - r);
+            data.vy -= y3 * r;
+          }
+        }
+        return;
+      }
+      return x0 > xi + r || x1 < xi - r || y0 > yi + r || y1 < yi - r;
+    }
+  }
+  function prepare(quad) {
+    if (quad.data)
+      return quad.r = radii[quad.data.index];
+    for (var i = quad.r = 0; i < 4; ++i) {
+      if (quad[i] && quad[i].r > quad.r) {
+        quad.r = quad[i].r;
+      }
+    }
+  }
+  function initialize() {
+    if (!nodes)
+      return;
+    var i, n = nodes.length, node;
+    radii = new Array(n);
+    for (i = 0; i < n; ++i)
+      node = nodes[i], radii[node.index] = +radius(node, i, nodes);
+  }
+  force.initialize = function(_nodes, _random) {
+    nodes = _nodes;
+    random = _random;
+    initialize();
+  };
+  force.iterations = function(_) {
+    return arguments.length ? (iterations = +_, force) : iterations;
+  };
+  force.strength = function(_) {
+    return arguments.length ? (strength = +_, force) : strength;
+  };
+  force.radius = function(_) {
+    return arguments.length ? (radius = typeof _ === "function" ? _ : constant_default5(+_), initialize(), force) : radius;
+  };
+  return force;
+}
+var init_collide = __esm({
+  "node_modules/d3-force/src/collide.js"() {
+    init_src18();
+    init_constant5();
+    init_jiggle();
+  }
+});
+
+// node_modules/d3-force/src/link.js
+function index(d) {
+  return d.index;
+}
+function find2(nodeById, nodeId) {
+  var node = nodeById.get(nodeId);
+  if (!node)
+    throw new Error("node not found: " + nodeId);
+  return node;
+}
+function link_default(links) {
+  var id2 = index, strength = defaultStrength, strengths, distance = constant_default5(30), distances, nodes, count, bias, random, iterations = 1;
+  if (links == null)
+    links = [];
+  function defaultStrength(link) {
+    return 1 / Math.min(count[link.source.index], count[link.target.index]);
+  }
+  function force(alpha) {
+    for (var k = 0, n = links.length; k < iterations; ++k) {
+      for (var i = 0, link, source, target, x3, y3, l, b; i < n; ++i) {
+        link = links[i], source = link.source, target = link.target;
+        x3 = target.x + target.vx - source.x - source.vx || jiggle_default(random);
+        y3 = target.y + target.vy - source.y - source.vy || jiggle_default(random);
+        l = Math.sqrt(x3 * x3 + y3 * y3);
+        l = (l - distances[i]) / l * alpha * strengths[i];
+        x3 *= l, y3 *= l;
+        target.vx -= x3 * (b = bias[i]);
+        target.vy -= y3 * b;
+        source.vx += x3 * (b = 1 - b);
+        source.vy += y3 * b;
+      }
+    }
+  }
+  function initialize() {
+    if (!nodes)
+      return;
+    var i, n = nodes.length, m2 = links.length, nodeById = new Map(nodes.map((d, i2) => [id2(d, i2, nodes), d])), link;
+    for (i = 0, count = new Array(n); i < m2; ++i) {
+      link = links[i], link.index = i;
+      if (typeof link.source !== "object")
+        link.source = find2(nodeById, link.source);
+      if (typeof link.target !== "object")
+        link.target = find2(nodeById, link.target);
+      count[link.source.index] = (count[link.source.index] || 0) + 1;
+      count[link.target.index] = (count[link.target.index] || 0) + 1;
+    }
+    for (i = 0, bias = new Array(m2); i < m2; ++i) {
+      link = links[i], bias[i] = count[link.source.index] / (count[link.source.index] + count[link.target.index]);
+    }
+    strengths = new Array(m2), initializeStrength();
+    distances = new Array(m2), initializeDistance();
+  }
+  function initializeStrength() {
+    if (!nodes)
+      return;
+    for (var i = 0, n = links.length; i < n; ++i) {
+      strengths[i] = +strength(links[i], i, links);
+    }
+  }
+  function initializeDistance() {
+    if (!nodes)
+      return;
+    for (var i = 0, n = links.length; i < n; ++i) {
+      distances[i] = +distance(links[i], i, links);
+    }
+  }
+  force.initialize = function(_nodes, _random) {
+    nodes = _nodes;
+    random = _random;
+    initialize();
+  };
+  force.links = function(_) {
+    return arguments.length ? (links = _, initialize(), force) : links;
+  };
+  force.id = function(_) {
+    return arguments.length ? (id2 = _, force) : id2;
+  };
+  force.iterations = function(_) {
+    return arguments.length ? (iterations = +_, force) : iterations;
+  };
+  force.strength = function(_) {
+    return arguments.length ? (strength = typeof _ === "function" ? _ : constant_default5(+_), initializeStrength(), force) : strength;
+  };
+  force.distance = function(_) {
+    return arguments.length ? (distance = typeof _ === "function" ? _ : constant_default5(+_), initializeDistance(), force) : distance;
+  };
+  return force;
+}
+var init_link = __esm({
+  "node_modules/d3-force/src/link.js"() {
+    init_constant5();
+    init_jiggle();
+  }
+});
+
+// node_modules/d3-force/src/lcg.js
+function lcg_default() {
+  let s = 1;
+  return () => (s = (a * s + c) % m) / m;
+}
+var a, c, m;
+var init_lcg = __esm({
+  "node_modules/d3-force/src/lcg.js"() {
+    a = 1664525;
+    c = 1013904223;
+    m = 4294967296;
+  }
+});
+
+// node_modules/d3-force/src/simulation.js
+function x2(d) {
+  return d.x;
+}
+function y2(d) {
+  return d.y;
+}
+function simulation_default(nodes) {
+  var simulation, alpha = 1, alphaMin = 1e-3, alphaDecay = 1 - Math.pow(alphaMin, 1 / 300), alphaTarget = 0, velocityDecay = 0.6, forces = /* @__PURE__ */ new Map(), stepper = timer(step), event = dispatch_default("tick", "end"), random = lcg_default();
+  if (nodes == null)
+    nodes = [];
+  function step() {
+    tick();
+    event.call("tick", simulation);
+    if (alpha < alphaMin) {
+      stepper.stop();
+      event.call("end", simulation);
+    }
+  }
+  function tick(iterations) {
+    var i, n = nodes.length, node;
+    if (iterations === void 0)
+      iterations = 1;
+    for (var k = 0; k < iterations; ++k) {
+      alpha += (alphaTarget - alpha) * alphaDecay;
+      forces.forEach(function(force) {
+        force(alpha);
+      });
+      for (i = 0; i < n; ++i) {
+        node = nodes[i];
+        if (node.fx == null)
+          node.x += node.vx *= velocityDecay;
+        else
+          node.x = node.fx, node.vx = 0;
+        if (node.fy == null)
+          node.y += node.vy *= velocityDecay;
+        else
+          node.y = node.fy, node.vy = 0;
+      }
+    }
+    return simulation;
+  }
+  function initializeNodes() {
+    for (var i = 0, n = nodes.length, node; i < n; ++i) {
+      node = nodes[i], node.index = i;
+      if (node.fx != null)
+        node.x = node.fx;
+      if (node.fy != null)
+        node.y = node.fy;
+      if (isNaN(node.x) || isNaN(node.y)) {
+        var radius = initialRadius * Math.sqrt(0.5 + i), angle = i * initialAngle;
+        node.x = radius * Math.cos(angle);
+        node.y = radius * Math.sin(angle);
+      }
+      if (isNaN(node.vx) || isNaN(node.vy)) {
+        node.vx = node.vy = 0;
+      }
+    }
+  }
+  function initializeForce(force) {
+    if (force.initialize)
+      force.initialize(nodes, random);
+    return force;
+  }
+  initializeNodes();
+  return simulation = {
+    tick,
+    restart: function() {
+      return stepper.restart(step), simulation;
+    },
+    stop: function() {
+      return stepper.stop(), simulation;
+    },
+    nodes: function(_) {
+      return arguments.length ? (nodes = _, initializeNodes(), forces.forEach(initializeForce), simulation) : nodes;
+    },
+    alpha: function(_) {
+      return arguments.length ? (alpha = +_, simulation) : alpha;
+    },
+    alphaMin: function(_) {
+      return arguments.length ? (alphaMin = +_, simulation) : alphaMin;
+    },
+    alphaDecay: function(_) {
+      return arguments.length ? (alphaDecay = +_, simulation) : +alphaDecay;
+    },
+    alphaTarget: function(_) {
+      return arguments.length ? (alphaTarget = +_, simulation) : alphaTarget;
+    },
+    velocityDecay: function(_) {
+      return arguments.length ? (velocityDecay = 1 - _, simulation) : 1 - velocityDecay;
+    },
+    randomSource: function(_) {
+      return arguments.length ? (random = _, forces.forEach(initializeForce), simulation) : random;
+    },
+    force: function(name, _) {
+      return arguments.length > 1 ? (_ == null ? forces.delete(name) : forces.set(name, initializeForce(_)), simulation) : forces.get(name);
+    },
+    find: function(x3, y3, radius) {
+      var i = 0, n = nodes.length, dx, dy, d2, node, closest;
+      if (radius == null)
+        radius = Infinity;
+      else
+        radius *= radius;
+      for (i = 0; i < n; ++i) {
+        node = nodes[i];
+        dx = x3 - node.x;
+        dy = y3 - node.y;
+        d2 = dx * dx + dy * dy;
+        if (d2 < radius)
+          closest = node, radius = d2;
+      }
+      return closest;
+    },
+    on: function(name, _) {
+      return arguments.length > 1 ? (event.on(name, _), simulation) : event.on(name);
+    }
+  };
+}
+var initialRadius, initialAngle;
+var init_simulation = __esm({
+  "node_modules/d3-force/src/simulation.js"() {
+    init_src3();
+    init_src8();
+    init_lcg();
+    initialRadius = 10;
+    initialAngle = Math.PI * (3 - Math.sqrt(5));
+  }
+});
+
+// node_modules/d3-force/src/manyBody.js
+function manyBody_default() {
+  var nodes, node, random, alpha, strength = constant_default5(-30), strengths, distanceMin2 = 1, distanceMax2 = Infinity, theta2 = 0.81;
+  function force(_) {
+    var i, n = nodes.length, tree = quadtree(nodes, x2, y2).visitAfter(accumulate);
+    for (alpha = _, i = 0; i < n; ++i)
+      node = nodes[i], tree.visit(apply);
+  }
+  function initialize() {
+    if (!nodes)
+      return;
+    var i, n = nodes.length, node2;
+    strengths = new Array(n);
+    for (i = 0; i < n; ++i)
+      node2 = nodes[i], strengths[node2.index] = +strength(node2, i, nodes);
+  }
+  function accumulate(quad) {
+    var strength2 = 0, q, c2, weight = 0, x3, y3, i;
+    if (quad.length) {
+      for (x3 = y3 = i = 0; i < 4; ++i) {
+        if ((q = quad[i]) && (c2 = Math.abs(q.value))) {
+          strength2 += q.value, weight += c2, x3 += c2 * q.x, y3 += c2 * q.y;
+        }
+      }
+      quad.x = x3 / weight;
+      quad.y = y3 / weight;
+    } else {
+      q = quad;
+      q.x = q.data.x;
+      q.y = q.data.y;
+      do
+        strength2 += strengths[q.data.index];
+      while (q = q.next);
+    }
+    quad.value = strength2;
+  }
+  function apply(quad, x1, _, x22) {
+    if (!quad.value)
+      return true;
+    var x3 = quad.x - node.x, y3 = quad.y - node.y, w = x22 - x1, l = x3 * x3 + y3 * y3;
+    if (w * w / theta2 < l) {
+      if (l < distanceMax2) {
+        if (x3 === 0)
+          x3 = jiggle_default(random), l += x3 * x3;
+        if (y3 === 0)
+          y3 = jiggle_default(random), l += y3 * y3;
+        if (l < distanceMin2)
+          l = Math.sqrt(distanceMin2 * l);
+        node.vx += x3 * quad.value * alpha / l;
+        node.vy += y3 * quad.value * alpha / l;
+      }
+      return true;
+    } else if (quad.length || l >= distanceMax2)
+      return;
+    if (quad.data !== node || quad.next) {
+      if (x3 === 0)
+        x3 = jiggle_default(random), l += x3 * x3;
+      if (y3 === 0)
+        y3 = jiggle_default(random), l += y3 * y3;
+      if (l < distanceMin2)
+        l = Math.sqrt(distanceMin2 * l);
+    }
+    do
+      if (quad.data !== node) {
+        w = strengths[quad.data.index] * alpha / l;
+        node.vx += x3 * w;
+        node.vy += y3 * w;
+      }
+    while (quad = quad.next);
+  }
+  force.initialize = function(_nodes, _random) {
+    nodes = _nodes;
+    random = _random;
+    initialize();
+  };
+  force.strength = function(_) {
+    return arguments.length ? (strength = typeof _ === "function" ? _ : constant_default5(+_), initialize(), force) : strength;
+  };
+  force.distanceMin = function(_) {
+    return arguments.length ? (distanceMin2 = _ * _, force) : Math.sqrt(distanceMin2);
+  };
+  force.distanceMax = function(_) {
+    return arguments.length ? (distanceMax2 = _ * _, force) : Math.sqrt(distanceMax2);
+  };
+  force.theta = function(_) {
+    return arguments.length ? (theta2 = _ * _, force) : Math.sqrt(theta2);
+  };
+  return force;
+}
+var init_manyBody = __esm({
+  "node_modules/d3-force/src/manyBody.js"() {
+    init_src18();
+    init_constant5();
+    init_jiggle();
+    init_simulation();
+  }
+});
+
+// node_modules/d3-force/src/index.js
+var init_src19 = __esm({
+  "node_modules/d3-force/src/index.js"() {
+    init_center();
+    init_collide();
+    init_link();
+    init_manyBody();
+    init_simulation();
+  }
+});
+
+// node_modules/d3-format/src/formatDecimal.js
+function formatDecimal_default(x3) {
+  return Math.abs(x3 = Math.round(x3)) >= 1e21 ? x3.toLocaleString("en").replace(/,/g, "") : x3.toString(10);
+}
+function formatDecimalParts(x3, p) {
+  if ((i = (x3 = p ? x3.toExponential(p - 1) : x3.toExponential()).indexOf("e")) < 0)
+    return null;
+  var i, coefficient = x3.slice(0, i);
+  return [
+    coefficient.length > 1 ? coefficient[0] + coefficient.slice(2) : coefficient,
+    +x3.slice(i + 1)
+  ];
+}
+var init_formatDecimal = __esm({
+  "node_modules/d3-format/src/formatDecimal.js"() {
+  }
+});
+
+// node_modules/d3-format/src/exponent.js
+function exponent_default(x3) {
+  return x3 = formatDecimalParts(Math.abs(x3)), x3 ? x3[1] : NaN;
+}
+var init_exponent = __esm({
+  "node_modules/d3-format/src/exponent.js"() {
+    init_formatDecimal();
+  }
+});
+
+// node_modules/d3-format/src/formatGroup.js
+function formatGroup_default(grouping, thousands) {
+  return function(value, width) {
+    var i = value.length, t = [], j = 0, g = grouping[0], length = 0;
+    while (i > 0 && g > 0) {
+      if (length + g + 1 > width)
+        g = Math.max(1, width - length);
+      t.push(value.substring(i -= g, i + g));
+      if ((length += g + 1) > width)
+        break;
+      g = grouping[j = (j + 1) % grouping.length];
+    }
+    return t.reverse().join(thousands);
+  };
+}
+var init_formatGroup = __esm({
+  "node_modules/d3-format/src/formatGroup.js"() {
+  }
+});
+
+// node_modules/d3-format/src/formatNumerals.js
+function formatNumerals_default(numerals) {
+  return function(value) {
+    return value.replace(/[0-9]/g, function(i) {
+      return numerals[+i];
+    });
+  };
+}
+var init_formatNumerals = __esm({
+  "node_modules/d3-format/src/formatNumerals.js"() {
+  }
+});
+
+// node_modules/d3-format/src/formatSpecifier.js
+function formatSpecifier(specifier) {
+  if (!(match = re.exec(specifier)))
+    throw new Error("invalid format: " + specifier);
+  var match;
+  return new FormatSpecifier({
+    fill: match[1],
+    align: match[2],
+    sign: match[3],
+    symbol: match[4],
+    zero: match[5],
+    width: match[6],
+    comma: match[7],
+    precision: match[8] && match[8].slice(1),
+    trim: match[9],
+    type: match[10]
+  });
+}
+function FormatSpecifier(specifier) {
+  this.fill = specifier.fill === void 0 ? " " : specifier.fill + "";
+  this.align = specifier.align === void 0 ? ">" : specifier.align + "";
+  this.sign = specifier.sign === void 0 ? "-" : specifier.sign + "";
+  this.symbol = specifier.symbol === void 0 ? "" : specifier.symbol + "";
+  this.zero = !!specifier.zero;
+  this.width = specifier.width === void 0 ? void 0 : +specifier.width;
+  this.comma = !!specifier.comma;
+  this.precision = specifier.precision === void 0 ? void 0 : +specifier.precision;
+  this.trim = !!specifier.trim;
+  this.type = specifier.type === void 0 ? "" : specifier.type + "";
+}
+var re;
+var init_formatSpecifier = __esm({
+  "node_modules/d3-format/src/formatSpecifier.js"() {
+    re = /^(?:(.)?([<>=^]))?([+\-( ])?([$#])?(0)?(\d+)?(,)?(\.\d+)?(~)?([a-z%])?$/i;
+    formatSpecifier.prototype = FormatSpecifier.prototype;
+    FormatSpecifier.prototype.toString = function() {
+      return this.fill + this.align + this.sign + this.symbol + (this.zero ? "0" : "") + (this.width === void 0 ? "" : Math.max(1, this.width | 0)) + (this.comma ? "," : "") + (this.precision === void 0 ? "" : "." + Math.max(0, this.precision | 0)) + (this.trim ? "~" : "") + this.type;
+    };
+  }
+});
+
+// node_modules/d3-format/src/formatTrim.js
+function formatTrim_default(s) {
+  out:
+    for (var n = s.length, i = 1, i0 = -1, i1; i < n; ++i) {
+      switch (s[i]) {
+        case ".":
+          i0 = i1 = i;
+          break;
+        case "0":
+          if (i0 === 0)
+            i0 = i;
+          i1 = i;
+          break;
+        default:
+          if (!+s[i])
+            break out;
+          if (i0 > 0)
+            i0 = 0;
+          break;
+      }
+    }
+  return i0 > 0 ? s.slice(0, i0) + s.slice(i1 + 1) : s;
+}
+var init_formatTrim = __esm({
+  "node_modules/d3-format/src/formatTrim.js"() {
+  }
+});
+
+// node_modules/d3-format/src/formatPrefixAuto.js
+function formatPrefixAuto_default(x3, p) {
+  var d = formatDecimalParts(x3, p);
+  if (!d)
+    return x3 + "";
+  var coefficient = d[0], exponent = d[1], i = exponent - (prefixExponent = Math.max(-8, Math.min(8, Math.floor(exponent / 3))) * 3) + 1, n = coefficient.length;
+  return i === n ? coefficient : i > n ? coefficient + new Array(i - n + 1).join("0") : i > 0 ? coefficient.slice(0, i) + "." + coefficient.slice(i) : "0." + new Array(1 - i).join("0") + formatDecimalParts(x3, Math.max(0, p + i - 1))[0];
+}
+var prefixExponent;
+var init_formatPrefixAuto = __esm({
+  "node_modules/d3-format/src/formatPrefixAuto.js"() {
+    init_formatDecimal();
+  }
+});
+
+// node_modules/d3-format/src/formatRounded.js
+function formatRounded_default(x3, p) {
+  var d = formatDecimalParts(x3, p);
+  if (!d)
+    return x3 + "";
+  var coefficient = d[0], exponent = d[1];
+  return exponent < 0 ? "0." + new Array(-exponent).join("0") + coefficient : coefficient.length > exponent + 1 ? coefficient.slice(0, exponent + 1) + "." + coefficient.slice(exponent + 1) : coefficient + new Array(exponent - coefficient.length + 2).join("0");
+}
+var init_formatRounded = __esm({
+  "node_modules/d3-format/src/formatRounded.js"() {
+    init_formatDecimal();
+  }
+});
+
+// node_modules/d3-format/src/formatTypes.js
+var formatTypes_default;
+var init_formatTypes = __esm({
+  "node_modules/d3-format/src/formatTypes.js"() {
+    init_formatDecimal();
+    init_formatPrefixAuto();
+    init_formatRounded();
+    formatTypes_default = {
+      "%": (x3, p) => (x3 * 100).toFixed(p),
+      "b": (x3) => Math.round(x3).toString(2),
+      "c": (x3) => x3 + "",
+      "d": formatDecimal_default,
+      "e": (x3, p) => x3.toExponential(p),
+      "f": (x3, p) => x3.toFixed(p),
+      "g": (x3, p) => x3.toPrecision(p),
+      "o": (x3) => Math.round(x3).toString(8),
+      "p": (x3, p) => formatRounded_default(x3 * 100, p),
+      "r": formatRounded_default,
+      "s": formatPrefixAuto_default,
+      "X": (x3) => Math.round(x3).toString(16).toUpperCase(),
+      "x": (x3) => Math.round(x3).toString(16)
+    };
+  }
+});
+
+// node_modules/d3-format/src/identity.js
+function identity_default(x3) {
+  return x3;
+}
+var init_identity = __esm({
+  "node_modules/d3-format/src/identity.js"() {
+  }
+});
+
+// node_modules/d3-format/src/locale.js
+function locale_default(locale3) {
+  var group = locale3.grouping === void 0 || locale3.thousands === void 0 ? identity_default : formatGroup_default(map.call(locale3.grouping, Number), locale3.thousands + ""), currencyPrefix = locale3.currency === void 0 ? "" : locale3.currency[0] + "", currencySuffix = locale3.currency === void 0 ? "" : locale3.currency[1] + "", decimal = locale3.decimal === void 0 ? "." : locale3.decimal + "", numerals = locale3.numerals === void 0 ? identity_default : formatNumerals_default(map.call(locale3.numerals, String)), percent = locale3.percent === void 0 ? "%" : locale3.percent + "", minus = locale3.minus === void 0 ? "\u2212" : locale3.minus + "", nan = locale3.nan === void 0 ? "NaN" : locale3.nan + "";
+  function newFormat(specifier) {
+    specifier = formatSpecifier(specifier);
+    var fill = specifier.fill, align = specifier.align, sign = specifier.sign, symbol = specifier.symbol, zero2 = specifier.zero, width = specifier.width, comma = specifier.comma, precision = specifier.precision, trim = specifier.trim, type2 = specifier.type;
+    if (type2 === "n")
+      comma = true, type2 = "g";
+    else if (!formatTypes_default[type2])
+      precision === void 0 && (precision = 12), trim = true, type2 = "g";
+    if (zero2 || fill === "0" && align === "=")
+      zero2 = true, fill = "0", align = "=";
+    var prefix = symbol === "$" ? currencyPrefix : symbol === "#" && /[boxX]/.test(type2) ? "0" + type2.toLowerCase() : "", suffix = symbol === "$" ? currencySuffix : /[%p]/.test(type2) ? percent : "";
+    var formatType = formatTypes_default[type2], maybeSuffix = /[defgprs%]/.test(type2);
+    precision = precision === void 0 ? 6 : /[gprs]/.test(type2) ? Math.max(1, Math.min(21, precision)) : Math.max(0, Math.min(20, precision));
+    function format2(value) {
+      var valuePrefix = prefix, valueSuffix = suffix, i, n, c2;
+      if (type2 === "c") {
+        valueSuffix = formatType(value) + valueSuffix;
+        value = "";
+      } else {
+        value = +value;
+        var valueNegative = value < 0 || 1 / value < 0;
+        value = isNaN(value) ? nan : formatType(Math.abs(value), precision);
+        if (trim)
+          value = formatTrim_default(value);
+        if (valueNegative && +value === 0 && sign !== "+")
+          valueNegative = false;
+        valuePrefix = (valueNegative ? sign === "(" ? sign : minus : sign === "-" || sign === "(" ? "" : sign) + valuePrefix;
+        valueSuffix = (type2 === "s" ? prefixes[8 + prefixExponent / 3] : "") + valueSuffix + (valueNegative && sign === "(" ? ")" : "");
+        if (maybeSuffix) {
+          i = -1, n = value.length;
+          while (++i < n) {
+            if (c2 = value.charCodeAt(i), 48 > c2 || c2 > 57) {
+              valueSuffix = (c2 === 46 ? decimal + value.slice(i + 1) : value.slice(i)) + valueSuffix;
+              value = value.slice(0, i);
+              break;
+            }
+          }
+        }
+      }
+      if (comma && !zero2)
+        value = group(value, Infinity);
+      var length = valuePrefix.length + value.length + valueSuffix.length, padding = length < width ? new Array(width - length + 1).join(fill) : "";
+      if (comma && zero2)
+        value = group(padding + value, padding.length ? width - valueSuffix.length : Infinity), padding = "";
+      switch (align) {
+        case "<":
+          value = valuePrefix + value + valueSuffix + padding;
+          break;
+        case "=":
+          value = valuePrefix + padding + value + valueSuffix;
+          break;
+        case "^":
+          value = padding.slice(0, length = padding.length >> 1) + valuePrefix + value + valueSuffix + padding.slice(length);
+          break;
+        default:
+          value = padding + valuePrefix + value + valueSuffix;
+          break;
+      }
+      return numerals(value);
+    }
+    format2.toString = function() {
+      return specifier + "";
+    };
+    return format2;
+  }
+  function formatPrefix2(specifier, value) {
+    var f = newFormat((specifier = formatSpecifier(specifier), specifier.type = "f", specifier)), e = Math.max(-8, Math.min(8, Math.floor(exponent_default(value) / 3))) * 3, k = Math.pow(10, -e), prefix = prefixes[8 + e / 3];
+    return function(value2) {
+      return f(k * value2) + prefix;
+    };
+  }
+  return {
+    format: newFormat,
+    formatPrefix: formatPrefix2
+  };
+}
+var map, prefixes;
+var init_locale = __esm({
+  "node_modules/d3-format/src/locale.js"() {
+    init_exponent();
+    init_formatGroup();
+    init_formatNumerals();
+    init_formatSpecifier();
+    init_formatTrim();
+    init_formatTypes();
+    init_formatPrefixAuto();
+    init_identity();
+    map = Array.prototype.map;
+    prefixes = ["y", "z", "a", "f", "p", "n", "\xB5", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y"];
+  }
+});
+
+// node_modules/d3-format/src/defaultLocale.js
+function defaultLocale(definition) {
+  locale = locale_default(definition);
+  format = locale.format;
+  formatPrefix = locale.formatPrefix;
+  return locale;
+}
+var locale, format, formatPrefix;
+var init_defaultLocale = __esm({
+  "node_modules/d3-format/src/defaultLocale.js"() {
+    init_locale();
+    defaultLocale({
+      thousands: ",",
+      grouping: [3],
+      currency: ["$", ""]
+    });
+  }
+});
+
+// node_modules/d3-format/src/index.js
+var init_src20 = __esm({
+  "node_modules/d3-format/src/index.js"() {
+    init_defaultLocale();
+  }
+});
+
+// node_modules/d3-geo/src/index.js
+var init_src21 = __esm({
+  "node_modules/d3-geo/src/index.js"() {
+  }
+});
+
+// node_modules/d3-hierarchy/src/index.js
+var init_src22 = __esm({
+  "node_modules/d3-hierarchy/src/index.js"() {
+  }
+});
+
+// node_modules/d3-polygon/src/index.js
+var init_src23 = __esm({
+  "node_modules/d3-polygon/src/index.js"() {
+  }
+});
+
+// node_modules/d3-random/src/index.js
+var init_src24 = __esm({
+  "node_modules/d3-random/src/index.js"() {
+  }
+});
+
+// node_modules/d3-time/src/interval.js
+function timeInterval(floori, offseti, count, field) {
+  function interval2(date) {
+    return floori(date = arguments.length === 0 ? new Date() : new Date(+date)), date;
+  }
+  interval2.floor = (date) => {
+    return floori(date = new Date(+date)), date;
+  };
+  interval2.ceil = (date) => {
+    return floori(date = new Date(date - 1)), offseti(date, 1), floori(date), date;
+  };
+  interval2.round = (date) => {
+    const d0 = interval2(date), d1 = interval2.ceil(date);
+    return date - d0 < d1 - date ? d0 : d1;
+  };
+  interval2.offset = (date, step) => {
+    return offseti(date = new Date(+date), step == null ? 1 : Math.floor(step)), date;
+  };
+  interval2.range = (start3, stop, step) => {
+    const range2 = [];
+    start3 = interval2.ceil(start3);
+    step = step == null ? 1 : Math.floor(step);
+    if (!(start3 < stop) || !(step > 0))
+      return range2;
+    let previous;
+    do
+      range2.push(previous = new Date(+start3)), offseti(start3, step), floori(start3);
+    while (previous < start3 && start3 < stop);
+    return range2;
+  };
+  interval2.filter = (test) => {
+    return timeInterval((date) => {
+      if (date >= date)
+        while (floori(date), !test(date))
+          date.setTime(date - 1);
+    }, (date, step) => {
+      if (date >= date) {
+        if (step < 0)
+          while (++step <= 0) {
+            while (offseti(date, -1), !test(date)) {
+            }
+          }
+        else
+          while (--step >= 0) {
+            while (offseti(date, 1), !test(date)) {
+            }
+          }
+      }
+    });
+  };
+  if (count) {
+    interval2.count = (start3, end) => {
+      t0.setTime(+start3), t1.setTime(+end);
+      floori(t0), floori(t1);
+      return Math.floor(count(t0, t1));
+    };
+    interval2.every = (step) => {
+      step = Math.floor(step);
+      return !isFinite(step) || !(step > 0) ? null : !(step > 1) ? interval2 : interval2.filter(field ? (d) => field(d) % step === 0 : (d) => interval2.count(0, d) % step === 0);
+    };
+  }
+  return interval2;
+}
+var t0, t1;
+var init_interval = __esm({
+  "node_modules/d3-time/src/interval.js"() {
+    t0 = new Date();
+    t1 = new Date();
+  }
+});
+
+// node_modules/d3-time/src/duration.js
+var durationSecond, durationMinute, durationHour, durationDay, durationWeek, durationMonth, durationYear;
+var init_duration2 = __esm({
+  "node_modules/d3-time/src/duration.js"() {
+    durationSecond = 1e3;
+    durationMinute = durationSecond * 60;
+    durationHour = durationMinute * 60;
+    durationDay = durationHour * 24;
+    durationWeek = durationDay * 7;
+    durationMonth = durationDay * 30;
+    durationYear = durationDay * 365;
+  }
+});
+
+// node_modules/d3-time/src/day.js
+var timeDay, timeDays, utcDay, utcDays, unixDay, unixDays;
+var init_day = __esm({
+  "node_modules/d3-time/src/day.js"() {
+    init_interval();
+    init_duration2();
+    timeDay = timeInterval(
+      (date) => date.setHours(0, 0, 0, 0),
+      (date, step) => date.setDate(date.getDate() + step),
+      (start3, end) => (end - start3 - (end.getTimezoneOffset() - start3.getTimezoneOffset()) * durationMinute) / durationDay,
+      (date) => date.getDate() - 1
+    );
+    timeDays = timeDay.range;
+    utcDay = timeInterval((date) => {
+      date.setUTCHours(0, 0, 0, 0);
+    }, (date, step) => {
+      date.setUTCDate(date.getUTCDate() + step);
+    }, (start3, end) => {
+      return (end - start3) / durationDay;
+    }, (date) => {
+      return date.getUTCDate() - 1;
+    });
+    utcDays = utcDay.range;
+    unixDay = timeInterval((date) => {
+      date.setUTCHours(0, 0, 0, 0);
+    }, (date, step) => {
+      date.setUTCDate(date.getUTCDate() + step);
+    }, (start3, end) => {
+      return (end - start3) / durationDay;
+    }, (date) => {
+      return Math.floor(date / durationDay);
+    });
+    unixDays = unixDay.range;
+  }
+});
+
+// node_modules/d3-time/src/week.js
+function timeWeekday(i) {
+  return timeInterval((date) => {
+    date.setDate(date.getDate() - (date.getDay() + 7 - i) % 7);
+    date.setHours(0, 0, 0, 0);
+  }, (date, step) => {
+    date.setDate(date.getDate() + step * 7);
+  }, (start3, end) => {
+    return (end - start3 - (end.getTimezoneOffset() - start3.getTimezoneOffset()) * durationMinute) / durationWeek;
+  });
+}
+function utcWeekday(i) {
+  return timeInterval((date) => {
+    date.setUTCDate(date.getUTCDate() - (date.getUTCDay() + 7 - i) % 7);
+    date.setUTCHours(0, 0, 0, 0);
+  }, (date, step) => {
+    date.setUTCDate(date.getUTCDate() + step * 7);
+  }, (start3, end) => {
+    return (end - start3) / durationWeek;
+  });
+}
+var timeSunday, timeMonday, timeTuesday, timeWednesday, timeThursday, timeFriday, timeSaturday, timeSundays, timeMondays, timeTuesdays, timeWednesdays, timeThursdays, timeFridays, timeSaturdays, utcSunday, utcMonday, utcTuesday, utcWednesday, utcThursday, utcFriday, utcSaturday, utcSundays, utcMondays, utcTuesdays, utcWednesdays, utcThursdays, utcFridays, utcSaturdays;
+var init_week = __esm({
+  "node_modules/d3-time/src/week.js"() {
+    init_interval();
+    init_duration2();
+    timeSunday = timeWeekday(0);
+    timeMonday = timeWeekday(1);
+    timeTuesday = timeWeekday(2);
+    timeWednesday = timeWeekday(3);
+    timeThursday = timeWeekday(4);
+    timeFriday = timeWeekday(5);
+    timeSaturday = timeWeekday(6);
+    timeSundays = timeSunday.range;
+    timeMondays = timeMonday.range;
+    timeTuesdays = timeTuesday.range;
+    timeWednesdays = timeWednesday.range;
+    timeThursdays = timeThursday.range;
+    timeFridays = timeFriday.range;
+    timeSaturdays = timeSaturday.range;
+    utcSunday = utcWeekday(0);
+    utcMonday = utcWeekday(1);
+    utcTuesday = utcWeekday(2);
+    utcWednesday = utcWeekday(3);
+    utcThursday = utcWeekday(4);
+    utcFriday = utcWeekday(5);
+    utcSaturday = utcWeekday(6);
+    utcSundays = utcSunday.range;
+    utcMondays = utcMonday.range;
+    utcTuesdays = utcTuesday.range;
+    utcWednesdays = utcWednesday.range;
+    utcThursdays = utcThursday.range;
+    utcFridays = utcFriday.range;
+    utcSaturdays = utcSaturday.range;
+  }
+});
+
+// node_modules/d3-time/src/year.js
+var timeYear, timeYears, utcYear, utcYears;
+var init_year = __esm({
+  "node_modules/d3-time/src/year.js"() {
+    init_interval();
+    timeYear = timeInterval((date) => {
+      date.setMonth(0, 1);
+      date.setHours(0, 0, 0, 0);
+    }, (date, step) => {
+      date.setFullYear(date.getFullYear() + step);
+    }, (start3, end) => {
+      return end.getFullYear() - start3.getFullYear();
+    }, (date) => {
+      return date.getFullYear();
+    });
+    timeYear.every = (k) => {
+      return !isFinite(k = Math.floor(k)) || !(k > 0) ? null : timeInterval((date) => {
+        date.setFullYear(Math.floor(date.getFullYear() / k) * k);
+        date.setMonth(0, 1);
+        date.setHours(0, 0, 0, 0);
+      }, (date, step) => {
+        date.setFullYear(date.getFullYear() + step * k);
+      });
+    };
+    timeYears = timeYear.range;
+    utcYear = timeInterval((date) => {
+      date.setUTCMonth(0, 1);
+      date.setUTCHours(0, 0, 0, 0);
+    }, (date, step) => {
+      date.setUTCFullYear(date.getUTCFullYear() + step);
+    }, (start3, end) => {
+      return end.getUTCFullYear() - start3.getUTCFullYear();
+    }, (date) => {
+      return date.getUTCFullYear();
+    });
+    utcYear.every = (k) => {
+      return !isFinite(k = Math.floor(k)) || !(k > 0) ? null : timeInterval((date) => {
+        date.setUTCFullYear(Math.floor(date.getUTCFullYear() / k) * k);
+        date.setUTCMonth(0, 1);
+        date.setUTCHours(0, 0, 0, 0);
+      }, (date, step) => {
+        date.setUTCFullYear(date.getUTCFullYear() + step * k);
+      });
+    };
+    utcYears = utcYear.range;
+  }
+});
+
+// node_modules/d3-time/src/index.js
+var init_src25 = __esm({
+  "node_modules/d3-time/src/index.js"() {
+    init_day();
+    init_week();
+    init_year();
+  }
+});
+
+// node_modules/d3-time-format/src/locale.js
+function localDate(d) {
+  if (0 <= d.y && d.y < 100) {
+    var date = new Date(-1, d.m, d.d, d.H, d.M, d.S, d.L);
+    date.setFullYear(d.y);
+    return date;
+  }
+  return new Date(d.y, d.m, d.d, d.H, d.M, d.S, d.L);
+}
+function utcDate(d) {
+  if (0 <= d.y && d.y < 100) {
+    var date = new Date(Date.UTC(-1, d.m, d.d, d.H, d.M, d.S, d.L));
+    date.setUTCFullYear(d.y);
+    return date;
+  }
+  return new Date(Date.UTC(d.y, d.m, d.d, d.H, d.M, d.S, d.L));
+}
+function newDate(y3, m2, d) {
+  return { y: y3, m: m2, d, H: 0, M: 0, S: 0, L: 0 };
+}
+function formatLocale(locale3) {
+  var locale_dateTime = locale3.dateTime, locale_date = locale3.date, locale_time = locale3.time, locale_periods = locale3.periods, locale_weekdays = locale3.days, locale_shortWeekdays = locale3.shortDays, locale_months = locale3.months, locale_shortMonths = locale3.shortMonths;
+  var periodRe = formatRe(locale_periods), periodLookup = formatLookup(locale_periods), weekdayRe = formatRe(locale_weekdays), weekdayLookup = formatLookup(locale_weekdays), shortWeekdayRe = formatRe(locale_shortWeekdays), shortWeekdayLookup = formatLookup(locale_shortWeekdays), monthRe = formatRe(locale_months), monthLookup = formatLookup(locale_months), shortMonthRe = formatRe(locale_shortMonths), shortMonthLookup = formatLookup(locale_shortMonths);
+  var formats = {
+    "a": formatShortWeekday,
+    "A": formatWeekday,
+    "b": formatShortMonth,
+    "B": formatMonth,
+    "c": null,
+    "d": formatDayOfMonth,
+    "e": formatDayOfMonth,
+    "f": formatMicroseconds,
+    "g": formatYearISO,
+    "G": formatFullYearISO,
+    "H": formatHour24,
+    "I": formatHour12,
+    "j": formatDayOfYear,
+    "L": formatMilliseconds,
+    "m": formatMonthNumber,
+    "M": formatMinutes,
+    "p": formatPeriod,
+    "q": formatQuarter,
+    "Q": formatUnixTimestamp,
+    "s": formatUnixTimestampSeconds,
+    "S": formatSeconds,
+    "u": formatWeekdayNumberMonday,
+    "U": formatWeekNumberSunday,
+    "V": formatWeekNumberISO,
+    "w": formatWeekdayNumberSunday,
+    "W": formatWeekNumberMonday,
+    "x": null,
+    "X": null,
+    "y": formatYear,
+    "Y": formatFullYear,
+    "Z": formatZone,
+    "%": formatLiteralPercent
+  };
+  var utcFormats = {
+    "a": formatUTCShortWeekday,
+    "A": formatUTCWeekday,
+    "b": formatUTCShortMonth,
+    "B": formatUTCMonth,
+    "c": null,
+    "d": formatUTCDayOfMonth,
+    "e": formatUTCDayOfMonth,
+    "f": formatUTCMicroseconds,
+    "g": formatUTCYearISO,
+    "G": formatUTCFullYearISO,
+    "H": formatUTCHour24,
+    "I": formatUTCHour12,
+    "j": formatUTCDayOfYear,
+    "L": formatUTCMilliseconds,
+    "m": formatUTCMonthNumber,
+    "M": formatUTCMinutes,
+    "p": formatUTCPeriod,
+    "q": formatUTCQuarter,
+    "Q": formatUnixTimestamp,
+    "s": formatUnixTimestampSeconds,
+    "S": formatUTCSeconds,
+    "u": formatUTCWeekdayNumberMonday,
+    "U": formatUTCWeekNumberSunday,
+    "V": formatUTCWeekNumberISO,
+    "w": formatUTCWeekdayNumberSunday,
+    "W": formatUTCWeekNumberMonday,
+    "x": null,
+    "X": null,
+    "y": formatUTCYear,
+    "Y": formatUTCFullYear,
+    "Z": formatUTCZone,
+    "%": formatLiteralPercent
+  };
+  var parses = {
+    "a": parseShortWeekday,
+    "A": parseWeekday,
+    "b": parseShortMonth,
+    "B": parseMonth,
+    "c": parseLocaleDateTime,
+    "d": parseDayOfMonth,
+    "e": parseDayOfMonth,
+    "f": parseMicroseconds,
+    "g": parseYear,
+    "G": parseFullYear,
+    "H": parseHour24,
+    "I": parseHour24,
+    "j": parseDayOfYear,
+    "L": parseMilliseconds,
+    "m": parseMonthNumber,
+    "M": parseMinutes,
+    "p": parsePeriod,
+    "q": parseQuarter,
+    "Q": parseUnixTimestamp,
+    "s": parseUnixTimestampSeconds,
+    "S": parseSeconds,
+    "u": parseWeekdayNumberMonday,
+    "U": parseWeekNumberSunday,
+    "V": parseWeekNumberISO,
+    "w": parseWeekdayNumberSunday,
+    "W": parseWeekNumberMonday,
+    "x": parseLocaleDate,
+    "X": parseLocaleTime,
+    "y": parseYear,
+    "Y": parseFullYear,
+    "Z": parseZone,
+    "%": parseLiteralPercent
+  };
+  formats.x = newFormat(locale_date, formats);
+  formats.X = newFormat(locale_time, formats);
+  formats.c = newFormat(locale_dateTime, formats);
+  utcFormats.x = newFormat(locale_date, utcFormats);
+  utcFormats.X = newFormat(locale_time, utcFormats);
+  utcFormats.c = newFormat(locale_dateTime, utcFormats);
+  function newFormat(specifier, formats2) {
+    return function(date) {
+      var string = [], i = -1, j = 0, n = specifier.length, c2, pad2, format2;
+      if (!(date instanceof Date))
+        date = new Date(+date);
+      while (++i < n) {
+        if (specifier.charCodeAt(i) === 37) {
+          string.push(specifier.slice(j, i));
+          if ((pad2 = pads[c2 = specifier.charAt(++i)]) != null)
+            c2 = specifier.charAt(++i);
+          else
+            pad2 = c2 === "e" ? " " : "0";
+          if (format2 = formats2[c2])
+            c2 = format2(date, pad2);
+          string.push(c2);
+          j = i + 1;
+        }
+      }
+      string.push(specifier.slice(j, i));
+      return string.join("");
+    };
+  }
+  function newParse(specifier, Z) {
+    return function(string) {
+      var d = newDate(1900, void 0, 1), i = parseSpecifier(d, specifier, string += "", 0), week, day;
+      if (i != string.length)
+        return null;
+      if ("Q" in d)
+        return new Date(d.Q);
+      if ("s" in d)
+        return new Date(d.s * 1e3 + ("L" in d ? d.L : 0));
+      if (Z && !("Z" in d))
+        d.Z = 0;
+      if ("p" in d)
+        d.H = d.H % 12 + d.p * 12;
+      if (d.m === void 0)
+        d.m = "q" in d ? d.q : 0;
+      if ("V" in d) {
+        if (d.V < 1 || d.V > 53)
+          return null;
+        if (!("w" in d))
+          d.w = 1;
+        if ("Z" in d) {
+          week = utcDate(newDate(d.y, 0, 1)), day = week.getUTCDay();
+          week = day > 4 || day === 0 ? utcMonday.ceil(week) : utcMonday(week);
+          week = utcDay.offset(week, (d.V - 1) * 7);
+          d.y = week.getUTCFullYear();
+          d.m = week.getUTCMonth();
+          d.d = week.getUTCDate() + (d.w + 6) % 7;
+        } else {
+          week = localDate(newDate(d.y, 0, 1)), day = week.getDay();
+          week = day > 4 || day === 0 ? timeMonday.ceil(week) : timeMonday(week);
+          week = timeDay.offset(week, (d.V - 1) * 7);
+          d.y = week.getFullYear();
+          d.m = week.getMonth();
+          d.d = week.getDate() + (d.w + 6) % 7;
+        }
+      } else if ("W" in d || "U" in d) {
+        if (!("w" in d))
+          d.w = "u" in d ? d.u % 7 : "W" in d ? 1 : 0;
+        day = "Z" in d ? utcDate(newDate(d.y, 0, 1)).getUTCDay() : localDate(newDate(d.y, 0, 1)).getDay();
+        d.m = 0;
+        d.d = "W" in d ? (d.w + 6) % 7 + d.W * 7 - (day + 5) % 7 : d.w + d.U * 7 - (day + 6) % 7;
+      }
+      if ("Z" in d) {
+        d.H += d.Z / 100 | 0;
+        d.M += d.Z % 100;
+        return utcDate(d);
+      }
+      return localDate(d);
+    };
+  }
+  function parseSpecifier(d, specifier, string, j) {
+    var i = 0, n = specifier.length, m2 = string.length, c2, parse;
+    while (i < n) {
+      if (j >= m2)
+        return -1;
+      c2 = specifier.charCodeAt(i++);
+      if (c2 === 37) {
+        c2 = specifier.charAt(i++);
+        parse = parses[c2 in pads ? specifier.charAt(i++) : c2];
+        if (!parse || (j = parse(d, string, j)) < 0)
+          return -1;
+      } else if (c2 != string.charCodeAt(j++)) {
+        return -1;
+      }
+    }
+    return j;
+  }
+  function parsePeriod(d, string, i) {
+    var n = periodRe.exec(string.slice(i));
+    return n ? (d.p = periodLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
+  }
+  function parseShortWeekday(d, string, i) {
+    var n = shortWeekdayRe.exec(string.slice(i));
+    return n ? (d.w = shortWeekdayLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
+  }
+  function parseWeekday(d, string, i) {
+    var n = weekdayRe.exec(string.slice(i));
+    return n ? (d.w = weekdayLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
+  }
+  function parseShortMonth(d, string, i) {
+    var n = shortMonthRe.exec(string.slice(i));
+    return n ? (d.m = shortMonthLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
+  }
+  function parseMonth(d, string, i) {
+    var n = monthRe.exec(string.slice(i));
+    return n ? (d.m = monthLookup.get(n[0].toLowerCase()), i + n[0].length) : -1;
+  }
+  function parseLocaleDateTime(d, string, i) {
+    return parseSpecifier(d, locale_dateTime, string, i);
+  }
+  function parseLocaleDate(d, string, i) {
+    return parseSpecifier(d, locale_date, string, i);
+  }
+  function parseLocaleTime(d, string, i) {
+    return parseSpecifier(d, locale_time, string, i);
+  }
+  function formatShortWeekday(d) {
+    return locale_shortWeekdays[d.getDay()];
+  }
+  function formatWeekday(d) {
+    return locale_weekdays[d.getDay()];
+  }
+  function formatShortMonth(d) {
+    return locale_shortMonths[d.getMonth()];
+  }
+  function formatMonth(d) {
+    return locale_months[d.getMonth()];
+  }
+  function formatPeriod(d) {
+    return locale_periods[+(d.getHours() >= 12)];
+  }
+  function formatQuarter(d) {
+    return 1 + ~~(d.getMonth() / 3);
+  }
+  function formatUTCShortWeekday(d) {
+    return locale_shortWeekdays[d.getUTCDay()];
+  }
+  function formatUTCWeekday(d) {
+    return locale_weekdays[d.getUTCDay()];
+  }
+  function formatUTCShortMonth(d) {
+    return locale_shortMonths[d.getUTCMonth()];
+  }
+  function formatUTCMonth(d) {
+    return locale_months[d.getUTCMonth()];
+  }
+  function formatUTCPeriod(d) {
+    return locale_periods[+(d.getUTCHours() >= 12)];
+  }
+  function formatUTCQuarter(d) {
+    return 1 + ~~(d.getUTCMonth() / 3);
+  }
+  return {
+    format: function(specifier) {
+      var f = newFormat(specifier += "", formats);
+      f.toString = function() {
+        return specifier;
+      };
+      return f;
+    },
+    parse: function(specifier) {
+      var p = newParse(specifier += "", false);
+      p.toString = function() {
+        return specifier;
+      };
+      return p;
+    },
+    utcFormat: function(specifier) {
+      var f = newFormat(specifier += "", utcFormats);
+      f.toString = function() {
+        return specifier;
+      };
+      return f;
+    },
+    utcParse: function(specifier) {
+      var p = newParse(specifier += "", true);
+      p.toString = function() {
+        return specifier;
+      };
+      return p;
+    }
+  };
+}
+function pad(value, fill, width) {
+  var sign = value < 0 ? "-" : "", string = (sign ? -value : value) + "", length = string.length;
+  return sign + (length < width ? new Array(width - length + 1).join(fill) + string : string);
+}
+function requote(s) {
+  return s.replace(requoteRe, "\\$&");
+}
+function formatRe(names) {
+  return new RegExp("^(?:" + names.map(requote).join("|") + ")", "i");
+}
+function formatLookup(names) {
+  return new Map(names.map((name, i) => [name.toLowerCase(), i]));
+}
+function parseWeekdayNumberSunday(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 1));
+  return n ? (d.w = +n[0], i + n[0].length) : -1;
+}
+function parseWeekdayNumberMonday(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 1));
+  return n ? (d.u = +n[0], i + n[0].length) : -1;
+}
+function parseWeekNumberSunday(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.U = +n[0], i + n[0].length) : -1;
+}
+function parseWeekNumberISO(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.V = +n[0], i + n[0].length) : -1;
+}
+function parseWeekNumberMonday(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.W = +n[0], i + n[0].length) : -1;
+}
+function parseFullYear(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 4));
+  return n ? (d.y = +n[0], i + n[0].length) : -1;
+}
+function parseYear(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.y = +n[0] + (+n[0] > 68 ? 1900 : 2e3), i + n[0].length) : -1;
+}
+function parseZone(d, string, i) {
+  var n = /^(Z)|([+-]\d\d)(?::?(\d\d))?/.exec(string.slice(i, i + 6));
+  return n ? (d.Z = n[1] ? 0 : -(n[2] + (n[3] || "00")), i + n[0].length) : -1;
+}
+function parseQuarter(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 1));
+  return n ? (d.q = n[0] * 3 - 3, i + n[0].length) : -1;
+}
+function parseMonthNumber(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.m = n[0] - 1, i + n[0].length) : -1;
+}
+function parseDayOfMonth(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.d = +n[0], i + n[0].length) : -1;
+}
+function parseDayOfYear(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 3));
+  return n ? (d.m = 0, d.d = +n[0], i + n[0].length) : -1;
+}
+function parseHour24(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.H = +n[0], i + n[0].length) : -1;
+}
+function parseMinutes(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.M = +n[0], i + n[0].length) : -1;
+}
+function parseSeconds(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 2));
+  return n ? (d.S = +n[0], i + n[0].length) : -1;
+}
+function parseMilliseconds(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 3));
+  return n ? (d.L = +n[0], i + n[0].length) : -1;
+}
+function parseMicroseconds(d, string, i) {
+  var n = numberRe.exec(string.slice(i, i + 6));
+  return n ? (d.L = Math.floor(n[0] / 1e3), i + n[0].length) : -1;
+}
+function parseLiteralPercent(d, string, i) {
+  var n = percentRe.exec(string.slice(i, i + 1));
+  return n ? i + n[0].length : -1;
+}
+function parseUnixTimestamp(d, string, i) {
+  var n = numberRe.exec(string.slice(i));
+  return n ? (d.Q = +n[0], i + n[0].length) : -1;
+}
+function parseUnixTimestampSeconds(d, string, i) {
+  var n = numberRe.exec(string.slice(i));
+  return n ? (d.s = +n[0], i + n[0].length) : -1;
+}
+function formatDayOfMonth(d, p) {
+  return pad(d.getDate(), p, 2);
+}
+function formatHour24(d, p) {
+  return pad(d.getHours(), p, 2);
+}
+function formatHour12(d, p) {
+  return pad(d.getHours() % 12 || 12, p, 2);
+}
+function formatDayOfYear(d, p) {
+  return pad(1 + timeDay.count(timeYear(d), d), p, 3);
+}
+function formatMilliseconds(d, p) {
+  return pad(d.getMilliseconds(), p, 3);
+}
+function formatMicroseconds(d, p) {
+  return formatMilliseconds(d, p) + "000";
+}
+function formatMonthNumber(d, p) {
+  return pad(d.getMonth() + 1, p, 2);
+}
+function formatMinutes(d, p) {
+  return pad(d.getMinutes(), p, 2);
+}
+function formatSeconds(d, p) {
+  return pad(d.getSeconds(), p, 2);
+}
+function formatWeekdayNumberMonday(d) {
+  var day = d.getDay();
+  return day === 0 ? 7 : day;
+}
+function formatWeekNumberSunday(d, p) {
+  return pad(timeSunday.count(timeYear(d) - 1, d), p, 2);
+}
+function dISO(d) {
+  var day = d.getDay();
+  return day >= 4 || day === 0 ? timeThursday(d) : timeThursday.ceil(d);
+}
+function formatWeekNumberISO(d, p) {
+  d = dISO(d);
+  return pad(timeThursday.count(timeYear(d), d) + (timeYear(d).getDay() === 4), p, 2);
+}
+function formatWeekdayNumberSunday(d) {
+  return d.getDay();
+}
+function formatWeekNumberMonday(d, p) {
+  return pad(timeMonday.count(timeYear(d) - 1, d), p, 2);
+}
+function formatYear(d, p) {
+  return pad(d.getFullYear() % 100, p, 2);
+}
+function formatYearISO(d, p) {
+  d = dISO(d);
+  return pad(d.getFullYear() % 100, p, 2);
+}
+function formatFullYear(d, p) {
+  return pad(d.getFullYear() % 1e4, p, 4);
+}
+function formatFullYearISO(d, p) {
+  var day = d.getDay();
+  d = day >= 4 || day === 0 ? timeThursday(d) : timeThursday.ceil(d);
+  return pad(d.getFullYear() % 1e4, p, 4);
+}
+function formatZone(d) {
+  var z = d.getTimezoneOffset();
+  return (z > 0 ? "-" : (z *= -1, "+")) + pad(z / 60 | 0, "0", 2) + pad(z % 60, "0", 2);
+}
+function formatUTCDayOfMonth(d, p) {
+  return pad(d.getUTCDate(), p, 2);
+}
+function formatUTCHour24(d, p) {
+  return pad(d.getUTCHours(), p, 2);
+}
+function formatUTCHour12(d, p) {
+  return pad(d.getUTCHours() % 12 || 12, p, 2);
+}
+function formatUTCDayOfYear(d, p) {
+  return pad(1 + utcDay.count(utcYear(d), d), p, 3);
+}
+function formatUTCMilliseconds(d, p) {
+  return pad(d.getUTCMilliseconds(), p, 3);
+}
+function formatUTCMicroseconds(d, p) {
+  return formatUTCMilliseconds(d, p) + "000";
+}
+function formatUTCMonthNumber(d, p) {
+  return pad(d.getUTCMonth() + 1, p, 2);
+}
+function formatUTCMinutes(d, p) {
+  return pad(d.getUTCMinutes(), p, 2);
+}
+function formatUTCSeconds(d, p) {
+  return pad(d.getUTCSeconds(), p, 2);
+}
+function formatUTCWeekdayNumberMonday(d) {
+  var dow = d.getUTCDay();
+  return dow === 0 ? 7 : dow;
+}
+function formatUTCWeekNumberSunday(d, p) {
+  return pad(utcSunday.count(utcYear(d) - 1, d), p, 2);
+}
+function UTCdISO(d) {
+  var day = d.getUTCDay();
+  return day >= 4 || day === 0 ? utcThursday(d) : utcThursday.ceil(d);
+}
+function formatUTCWeekNumberISO(d, p) {
+  d = UTCdISO(d);
+  return pad(utcThursday.count(utcYear(d), d) + (utcYear(d).getUTCDay() === 4), p, 2);
+}
+function formatUTCWeekdayNumberSunday(d) {
+  return d.getUTCDay();
+}
+function formatUTCWeekNumberMonday(d, p) {
+  return pad(utcMonday.count(utcYear(d) - 1, d), p, 2);
+}
+function formatUTCYear(d, p) {
+  return pad(d.getUTCFullYear() % 100, p, 2);
+}
+function formatUTCYearISO(d, p) {
+  d = UTCdISO(d);
+  return pad(d.getUTCFullYear() % 100, p, 2);
+}
+function formatUTCFullYear(d, p) {
+  return pad(d.getUTCFullYear() % 1e4, p, 4);
+}
+function formatUTCFullYearISO(d, p) {
+  var day = d.getUTCDay();
+  d = day >= 4 || day === 0 ? utcThursday(d) : utcThursday.ceil(d);
+  return pad(d.getUTCFullYear() % 1e4, p, 4);
+}
+function formatUTCZone() {
+  return "+0000";
+}
+function formatLiteralPercent() {
+  return "%";
+}
+function formatUnixTimestamp(d) {
+  return +d;
+}
+function formatUnixTimestampSeconds(d) {
+  return Math.floor(+d / 1e3);
+}
+var pads, numberRe, percentRe, requoteRe;
+var init_locale2 = __esm({
+  "node_modules/d3-time-format/src/locale.js"() {
+    init_src25();
+    pads = { "-": "", "_": " ", "0": "0" };
+    numberRe = /^\s*\d+/;
+    percentRe = /^%/;
+    requoteRe = /[\\^$*+?|[\]().{}]/g;
+  }
+});
+
+// node_modules/d3-time-format/src/defaultLocale.js
+function defaultLocale2(definition) {
+  locale2 = formatLocale(definition);
+  timeFormat = locale2.format;
+  timeParse = locale2.parse;
+  utcFormat = locale2.utcFormat;
+  utcParse = locale2.utcParse;
+  return locale2;
+}
+var locale2, timeFormat, timeParse, utcFormat, utcParse;
+var init_defaultLocale2 = __esm({
+  "node_modules/d3-time-format/src/defaultLocale.js"() {
+    init_locale2();
+    defaultLocale2({
+      dateTime: "%x, %X",
+      date: "%-m/%-d/%Y",
+      time: "%-I:%M:%S %p",
+      periods: ["AM", "PM"],
+      days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      shortDays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+      shortMonths: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    });
+  }
+});
+
+// node_modules/d3-time-format/src/index.js
+var init_src26 = __esm({
+  "node_modules/d3-time-format/src/index.js"() {
+    init_defaultLocale2();
+  }
+});
+
+// node_modules/d3-scale/src/index.js
+var init_src27 = __esm({
+  "node_modules/d3-scale/src/index.js"() {
+  }
+});
+
+// node_modules/d3-scale-chromatic/src/index.js
+var init_src28 = __esm({
+  "node_modules/d3-scale-chromatic/src/index.js"() {
+  }
+});
+
+// node_modules/d3-shape/src/index.js
+var init_src29 = __esm({
+  "node_modules/d3-shape/src/index.js"() {
+  }
+});
+
+// node_modules/d3-zoom/src/constant.js
+var constant_default6;
+var init_constant6 = __esm({
+  "node_modules/d3-zoom/src/constant.js"() {
+    constant_default6 = (x3) => () => x3;
+  }
+});
+
+// node_modules/d3-zoom/src/event.js
+function ZoomEvent(type2, {
+  sourceEvent,
+  target,
+  transform: transform2,
+  dispatch: dispatch2
+}) {
+  Object.defineProperties(this, {
+    type: { value: type2, enumerable: true, configurable: true },
+    sourceEvent: { value: sourceEvent, enumerable: true, configurable: true },
+    target: { value: target, enumerable: true, configurable: true },
+    transform: { value: transform2, enumerable: true, configurable: true },
+    _: { value: dispatch2 }
+  });
+}
+var init_event3 = __esm({
+  "node_modules/d3-zoom/src/event.js"() {
+  }
+});
+
+// node_modules/d3-zoom/src/transform.js
+function Transform(k, x3, y3) {
+  this.k = k;
+  this.x = x3;
+  this.y = y3;
+}
+function transform(node) {
+  while (!node.__zoom)
+    if (!(node = node.parentNode))
+      return identity2;
+  return node.__zoom;
+}
+var identity2;
+var init_transform2 = __esm({
+  "node_modules/d3-zoom/src/transform.js"() {
+    Transform.prototype = {
+      constructor: Transform,
+      scale: function(k) {
+        return k === 1 ? this : new Transform(this.k * k, this.x, this.y);
+      },
+      translate: function(x3, y3) {
+        return x3 === 0 & y3 === 0 ? this : new Transform(this.k, this.x + this.k * x3, this.y + this.k * y3);
+      },
+      apply: function(point) {
+        return [point[0] * this.k + this.x, point[1] * this.k + this.y];
+      },
+      applyX: function(x3) {
+        return x3 * this.k + this.x;
+      },
+      applyY: function(y3) {
+        return y3 * this.k + this.y;
+      },
+      invert: function(location) {
+        return [(location[0] - this.x) / this.k, (location[1] - this.y) / this.k];
+      },
+      invertX: function(x3) {
+        return (x3 - this.x) / this.k;
+      },
+      invertY: function(y3) {
+        return (y3 - this.y) / this.k;
+      },
+      rescaleX: function(x3) {
+        return x3.copy().domain(x3.range().map(this.invertX, this).map(x3.invert, x3));
+      },
+      rescaleY: function(y3) {
+        return y3.copy().domain(y3.range().map(this.invertY, this).map(y3.invert, y3));
+      },
+      toString: function() {
+        return "translate(" + this.x + "," + this.y + ") scale(" + this.k + ")";
+      }
+    };
+    identity2 = new Transform(1, 0, 0);
+    transform.prototype = Transform.prototype;
+  }
+});
+
+// node_modules/d3-zoom/src/noevent.js
+function nopropagation3(event) {
+  event.stopImmediatePropagation();
+}
+function noevent_default3(event) {
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}
+var init_noevent3 = __esm({
+  "node_modules/d3-zoom/src/noevent.js"() {
+  }
+});
+
+// node_modules/d3-zoom/src/zoom.js
+function defaultFilter2(event) {
+  return (!event.ctrlKey || event.type === "wheel") && !event.button;
+}
+function defaultExtent() {
+  var e = this;
+  if (e instanceof SVGElement) {
+    e = e.ownerSVGElement || e;
+    if (e.hasAttribute("viewBox")) {
+      e = e.viewBox.baseVal;
+      return [[e.x, e.y], [e.x + e.width, e.y + e.height]];
+    }
+    return [[0, 0], [e.width.baseVal.value, e.height.baseVal.value]];
+  }
+  return [[0, 0], [e.clientWidth, e.clientHeight]];
+}
+function defaultTransform() {
+  return this.__zoom || identity2;
+}
+function defaultWheelDelta(event) {
+  return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 2e-3) * (event.ctrlKey ? 10 : 1);
+}
+function defaultTouchable2() {
+  return navigator.maxTouchPoints || "ontouchstart" in this;
+}
+function defaultConstrain(transform2, extent, translateExtent) {
+  var dx0 = transform2.invertX(extent[0][0]) - translateExtent[0][0], dx1 = transform2.invertX(extent[1][0]) - translateExtent[1][0], dy0 = transform2.invertY(extent[0][1]) - translateExtent[0][1], dy1 = transform2.invertY(extent[1][1]) - translateExtent[1][1];
+  return transform2.translate(
+    dx1 > dx0 ? (dx0 + dx1) / 2 : Math.min(0, dx0) || Math.max(0, dx1),
+    dy1 > dy0 ? (dy0 + dy1) / 2 : Math.min(0, dy0) || Math.max(0, dy1)
+  );
+}
+function zoom_default2() {
+  var filter2 = defaultFilter2, extent = defaultExtent, constrain = defaultConstrain, wheelDelta = defaultWheelDelta, touchable = defaultTouchable2, scaleExtent = [0, Infinity], translateExtent = [[-Infinity, -Infinity], [Infinity, Infinity]], duration = 250, interpolate = zoom_default, listeners = dispatch_default("start", "zoom", "end"), touchstarting, touchfirst, touchending, touchDelay = 500, wheelDelay = 150, clickDistance2 = 0, tapDistance = 10;
+  function zoom(selection2) {
+    selection2.property("__zoom", defaultTransform).on("wheel.zoom", wheeled, { passive: false }).on("mousedown.zoom", mousedowned).on("dblclick.zoom", dblclicked).filter(touchable).on("touchstart.zoom", touchstarted).on("touchmove.zoom", touchmoved).on("touchend.zoom touchcancel.zoom", touchended).style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
+  }
+  zoom.transform = function(collection, transform2, point, event) {
+    var selection2 = collection.selection ? collection.selection() : collection;
+    selection2.property("__zoom", defaultTransform);
+    if (collection !== selection2) {
+      schedule(collection, transform2, point, event);
+    } else {
+      selection2.interrupt().each(function() {
+        gesture(this, arguments).event(event).start().zoom(null, typeof transform2 === "function" ? transform2.apply(this, arguments) : transform2).end();
+      });
+    }
+  };
+  zoom.scaleBy = function(selection2, k, p, event) {
+    zoom.scaleTo(selection2, function() {
+      var k0 = this.__zoom.k, k1 = typeof k === "function" ? k.apply(this, arguments) : k;
+      return k0 * k1;
+    }, p, event);
+  };
+  zoom.scaleTo = function(selection2, k, p, event) {
+    zoom.transform(selection2, function() {
+      var e = extent.apply(this, arguments), t02 = this.__zoom, p0 = p == null ? centroid(e) : typeof p === "function" ? p.apply(this, arguments) : p, p1 = t02.invert(p0), k1 = typeof k === "function" ? k.apply(this, arguments) : k;
+      return constrain(translate(scale(t02, k1), p0, p1), e, translateExtent);
+    }, p, event);
+  };
+  zoom.translateBy = function(selection2, x3, y3, event) {
+    zoom.transform(selection2, function() {
+      return constrain(this.__zoom.translate(
+        typeof x3 === "function" ? x3.apply(this, arguments) : x3,
+        typeof y3 === "function" ? y3.apply(this, arguments) : y3
+      ), extent.apply(this, arguments), translateExtent);
+    }, null, event);
+  };
+  zoom.translateTo = function(selection2, x3, y3, p, event) {
+    zoom.transform(selection2, function() {
+      var e = extent.apply(this, arguments), t = this.__zoom, p0 = p == null ? centroid(e) : typeof p === "function" ? p.apply(this, arguments) : p;
+      return constrain(identity2.translate(p0[0], p0[1]).scale(t.k).translate(
+        typeof x3 === "function" ? -x3.apply(this, arguments) : -x3,
+        typeof y3 === "function" ? -y3.apply(this, arguments) : -y3
+      ), e, translateExtent);
+    }, p, event);
+  };
+  function scale(transform2, k) {
+    k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], k));
+    return k === transform2.k ? transform2 : new Transform(k, transform2.x, transform2.y);
+  }
+  function translate(transform2, p0, p1) {
+    var x3 = p0[0] - p1[0] * transform2.k, y3 = p0[1] - p1[1] * transform2.k;
+    return x3 === transform2.x && y3 === transform2.y ? transform2 : new Transform(transform2.k, x3, y3);
+  }
+  function centroid(extent2) {
+    return [(+extent2[0][0] + +extent2[1][0]) / 2, (+extent2[0][1] + +extent2[1][1]) / 2];
+  }
+  function schedule(transition2, transform2, point, event) {
+    transition2.on("start.zoom", function() {
+      gesture(this, arguments).event(event).start();
+    }).on("interrupt.zoom end.zoom", function() {
+      gesture(this, arguments).event(event).end();
+    }).tween("zoom", function() {
+      var that = this, args = arguments, g = gesture(that, args).event(event), e = extent.apply(that, args), p = point == null ? centroid(e) : typeof point === "function" ? point.apply(that, args) : point, w = Math.max(e[1][0] - e[0][0], e[1][1] - e[0][1]), a2 = that.__zoom, b = typeof transform2 === "function" ? transform2.apply(that, args) : transform2, i = interpolate(a2.invert(p).concat(w / a2.k), b.invert(p).concat(w / b.k));
+      return function(t) {
+        if (t === 1)
+          t = b;
+        else {
+          var l = i(t), k = w / l[2];
+          t = new Transform(k, p[0] - l[0] * k, p[1] - l[1] * k);
+        }
+        g.zoom(null, t);
+      };
+    });
+  }
+  function gesture(that, args, clean) {
+    return !clean && that.__zooming || new Gesture(that, args);
+  }
+  function Gesture(that, args) {
+    this.that = that;
+    this.args = args;
+    this.active = 0;
+    this.sourceEvent = null;
+    this.extent = extent.apply(that, args);
+    this.taps = 0;
+  }
+  Gesture.prototype = {
+    event: function(event) {
+      if (event)
+        this.sourceEvent = event;
+      return this;
+    },
+    start: function() {
+      if (++this.active === 1) {
+        this.that.__zooming = this;
+        this.emit("start");
+      }
+      return this;
+    },
+    zoom: function(key, transform2) {
+      if (this.mouse && key !== "mouse")
+        this.mouse[1] = transform2.invert(this.mouse[0]);
+      if (this.touch0 && key !== "touch")
+        this.touch0[1] = transform2.invert(this.touch0[0]);
+      if (this.touch1 && key !== "touch")
+        this.touch1[1] = transform2.invert(this.touch1[0]);
+      this.that.__zoom = transform2;
+      this.emit("zoom");
+      return this;
+    },
+    end: function() {
+      if (--this.active === 0) {
+        delete this.that.__zooming;
+        this.emit("end");
+      }
+      return this;
+    },
+    emit: function(type2) {
+      var d = select_default2(this.that).datum();
+      listeners.call(
+        type2,
+        this.that,
+        new ZoomEvent(type2, {
+          sourceEvent: this.sourceEvent,
+          target: zoom,
+          type: type2,
+          transform: this.that.__zoom,
+          dispatch: listeners
+        }),
+        d
+      );
+    }
+  };
+  function wheeled(event, ...args) {
+    if (!filter2.apply(this, arguments))
+      return;
+    var g = gesture(this, args).event(event), t = this.__zoom, k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], t.k * Math.pow(2, wheelDelta.apply(this, arguments)))), p = pointer_default(event);
+    if (g.wheel) {
+      if (g.mouse[0][0] !== p[0] || g.mouse[0][1] !== p[1]) {
+        g.mouse[1] = t.invert(g.mouse[0] = p);
+      }
+      clearTimeout(g.wheel);
+    } else if (t.k === k)
+      return;
+    else {
+      g.mouse = [p, t.invert(p)];
+      interrupt_default(this);
+      g.start();
+    }
+    noevent_default3(event);
+    g.wheel = setTimeout(wheelidled, wheelDelay);
+    g.zoom("mouse", constrain(translate(scale(t, k), g.mouse[0], g.mouse[1]), g.extent, translateExtent));
+    function wheelidled() {
+      g.wheel = null;
+      g.end();
+    }
+  }
+  function mousedowned(event, ...args) {
+    if (touchending || !filter2.apply(this, arguments))
+      return;
+    var currentTarget = event.currentTarget, g = gesture(this, args, true).event(event), v = select_default2(event.view).on("mousemove.zoom", mousemoved, true).on("mouseup.zoom", mouseupped, true), p = pointer_default(event, currentTarget), x0 = event.clientX, y0 = event.clientY;
+    nodrag_default(event.view);
+    nopropagation3(event);
+    g.mouse = [p, this.__zoom.invert(p)];
+    interrupt_default(this);
+    g.start();
+    function mousemoved(event2) {
+      noevent_default3(event2);
+      if (!g.moved) {
+        var dx = event2.clientX - x0, dy = event2.clientY - y0;
+        g.moved = dx * dx + dy * dy > clickDistance2;
+      }
+      g.event(event2).zoom("mouse", constrain(translate(g.that.__zoom, g.mouse[0] = pointer_default(event2, currentTarget), g.mouse[1]), g.extent, translateExtent));
+    }
+    function mouseupped(event2) {
+      v.on("mousemove.zoom mouseup.zoom", null);
+      yesdrag(event2.view, g.moved);
+      noevent_default3(event2);
+      g.event(event2).end();
+    }
+  }
+  function dblclicked(event, ...args) {
+    if (!filter2.apply(this, arguments))
+      return;
+    var t02 = this.__zoom, p0 = pointer_default(event.changedTouches ? event.changedTouches[0] : event, this), p1 = t02.invert(p0), k1 = t02.k * (event.shiftKey ? 0.5 : 2), t12 = constrain(translate(scale(t02, k1), p0, p1), extent.apply(this, args), translateExtent);
+    noevent_default3(event);
+    if (duration > 0)
+      select_default2(this).transition().duration(duration).call(schedule, t12, p0, event);
+    else
+      select_default2(this).call(zoom.transform, t12, p0, event);
+  }
+  function touchstarted(event, ...args) {
+    if (!filter2.apply(this, arguments))
+      return;
+    var touches = event.touches, n = touches.length, g = gesture(this, args, event.changedTouches.length === n).event(event), started, i, t, p;
+    nopropagation3(event);
+    for (i = 0; i < n; ++i) {
+      t = touches[i], p = pointer_default(t, this);
+      p = [p, this.__zoom.invert(p), t.identifier];
+      if (!g.touch0)
+        g.touch0 = p, started = true, g.taps = 1 + !!touchstarting;
+      else if (!g.touch1 && g.touch0[2] !== p[2])
+        g.touch1 = p, g.taps = 0;
+    }
+    if (touchstarting)
+      touchstarting = clearTimeout(touchstarting);
+    if (started) {
+      if (g.taps < 2)
+        touchfirst = p[0], touchstarting = setTimeout(function() {
+          touchstarting = null;
+        }, touchDelay);
+      interrupt_default(this);
+      g.start();
+    }
+  }
+  function touchmoved(event, ...args) {
+    if (!this.__zooming)
+      return;
+    var g = gesture(this, args).event(event), touches = event.changedTouches, n = touches.length, i, t, p, l;
+    noevent_default3(event);
+    for (i = 0; i < n; ++i) {
+      t = touches[i], p = pointer_default(t, this);
+      if (g.touch0 && g.touch0[2] === t.identifier)
+        g.touch0[0] = p;
+      else if (g.touch1 && g.touch1[2] === t.identifier)
+        g.touch1[0] = p;
+    }
+    t = g.that.__zoom;
+    if (g.touch1) {
+      var p0 = g.touch0[0], l0 = g.touch0[1], p1 = g.touch1[0], l1 = g.touch1[1], dp = (dp = p1[0] - p0[0]) * dp + (dp = p1[1] - p0[1]) * dp, dl = (dl = l1[0] - l0[0]) * dl + (dl = l1[1] - l0[1]) * dl;
+      t = scale(t, Math.sqrt(dp / dl));
+      p = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
+      l = [(l0[0] + l1[0]) / 2, (l0[1] + l1[1]) / 2];
+    } else if (g.touch0)
+      p = g.touch0[0], l = g.touch0[1];
+    else
+      return;
+    g.zoom("touch", constrain(translate(t, p, l), g.extent, translateExtent));
+  }
+  function touchended(event, ...args) {
+    if (!this.__zooming)
+      return;
+    var g = gesture(this, args).event(event), touches = event.changedTouches, n = touches.length, i, t;
+    nopropagation3(event);
+    if (touchending)
+      clearTimeout(touchending);
+    touchending = setTimeout(function() {
+      touchending = null;
+    }, touchDelay);
+    for (i = 0; i < n; ++i) {
+      t = touches[i];
+      if (g.touch0 && g.touch0[2] === t.identifier)
+        delete g.touch0;
+      else if (g.touch1 && g.touch1[2] === t.identifier)
+        delete g.touch1;
+    }
+    if (g.touch1 && !g.touch0)
+      g.touch0 = g.touch1, delete g.touch1;
+    if (g.touch0)
+      g.touch0[1] = this.__zoom.invert(g.touch0[0]);
+    else {
+      g.end();
+      if (g.taps === 2) {
+        t = pointer_default(t, this);
+        if (Math.hypot(touchfirst[0] - t[0], touchfirst[1] - t[1]) < tapDistance) {
+          var p = select_default2(this).on("dblclick.zoom");
+          if (p)
+            p.apply(this, arguments);
+        }
+      }
+    }
+  }
+  zoom.wheelDelta = function(_) {
+    return arguments.length ? (wheelDelta = typeof _ === "function" ? _ : constant_default6(+_), zoom) : wheelDelta;
+  };
+  zoom.filter = function(_) {
+    return arguments.length ? (filter2 = typeof _ === "function" ? _ : constant_default6(!!_), zoom) : filter2;
+  };
+  zoom.touchable = function(_) {
+    return arguments.length ? (touchable = typeof _ === "function" ? _ : constant_default6(!!_), zoom) : touchable;
+  };
+  zoom.extent = function(_) {
+    return arguments.length ? (extent = typeof _ === "function" ? _ : constant_default6([[+_[0][0], +_[0][1]], [+_[1][0], +_[1][1]]]), zoom) : extent;
+  };
+  zoom.scaleExtent = function(_) {
+    return arguments.length ? (scaleExtent[0] = +_[0], scaleExtent[1] = +_[1], zoom) : [scaleExtent[0], scaleExtent[1]];
+  };
+  zoom.translateExtent = function(_) {
+    return arguments.length ? (translateExtent[0][0] = +_[0][0], translateExtent[1][0] = +_[1][0], translateExtent[0][1] = +_[0][1], translateExtent[1][1] = +_[1][1], zoom) : [[translateExtent[0][0], translateExtent[0][1]], [translateExtent[1][0], translateExtent[1][1]]];
+  };
+  zoom.constrain = function(_) {
+    return arguments.length ? (constrain = _, zoom) : constrain;
+  };
+  zoom.duration = function(_) {
+    return arguments.length ? (duration = +_, zoom) : duration;
+  };
+  zoom.interpolate = function(_) {
+    return arguments.length ? (interpolate = _, zoom) : interpolate;
+  };
+  zoom.on = function() {
+    var value = listeners.on.apply(listeners, arguments);
+    return value === listeners ? zoom : value;
+  };
+  zoom.clickDistance = function(_) {
+    return arguments.length ? (clickDistance2 = (_ = +_) * _, zoom) : Math.sqrt(clickDistance2);
+  };
+  zoom.tapDistance = function(_) {
+    return arguments.length ? (tapDistance = +_, zoom) : tapDistance;
+  };
+  return zoom;
+}
+var init_zoom2 = __esm({
+  "node_modules/d3-zoom/src/zoom.js"() {
+    init_src3();
+    init_src5();
+    init_src7();
+    init_src4();
+    init_src10();
+    init_constant6();
+    init_event3();
+    init_transform2();
+    init_noevent3();
+  }
+});
+
+// node_modules/d3-zoom/src/index.js
+var init_src30 = __esm({
+  "node_modules/d3-zoom/src/index.js"() {
+    init_zoom2();
+    init_transform2();
+  }
+});
+
+// node_modules/d3/src/index.js
+var init_src31 = __esm({
+  "node_modules/d3/src/index.js"() {
+    init_src();
+    init_src2();
+    init_src11();
+    init_src13();
+    init_src6();
+    init_src14();
+    init_src15();
+    init_src3();
+    init_src5();
+    init_src16();
+    init_src9();
+    init_src17();
+    init_src19();
+    init_src20();
+    init_src21();
+    init_src22();
+    init_src7();
+    init_src12();
+    init_src23();
+    init_src18();
+    init_src24();
+    init_src27();
+    init_src28();
+    init_src4();
+    init_src29();
+    init_src25();
+    init_src26();
+    init_src8();
+    init_src10();
+    init_src30();
+  }
+});
+
+// src/ui/GraphDemoModal.ts
+var import_obsidian3, GraphDemoModal;
+var init_GraphDemoModal = __esm({
+  "src/ui/GraphDemoModal.ts"() {
+    import_obsidian3 = require("obsidian");
+    init_src31();
+    GraphDemoModal = class extends import_obsidian3.Modal {
+      constructor(app) {
+        super(app);
+        this.svg = null;
+        this.simulation = null;
+        this.nodes = [];
+        this.links = [];
+        this.showLabels = false;
+        this.visibleNodes = /* @__PURE__ */ new Set();
+        this.visibleLinks = /* @__PURE__ */ new Set();
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl("h2", { text: "D3-Force Animation Demo" });
+        contentEl.createEl("p", { text: "A simple demonstration of temporal graph animation" });
+        const graphContainer = contentEl.createDiv("sonigraph-demo-container");
+        this.createSampleData();
+        this.initializeVisualization(graphContainer);
+        this.addControls(contentEl);
+      }
+      createSampleData() {
+        const baseDate = new Date("2024-01-01");
+        const calculateRadius = (textLength, linkCount) => {
+          const baseSize = 8;
+          const textFactor = Math.min(textLength / 100, 3);
+          const linkFactor = Math.min(linkCount * 2, 6);
+          return baseSize + textFactor + linkFactor;
+        };
+        this.nodes = [
+          {
+            id: "note1",
+            name: "First Note",
+            type: "note",
+            creationDate: new Date(baseDate.getTime() + 0 * 24 * 60 * 60 * 1e3),
+            textLength: 150,
+            linkCount: 1,
+            radius: 0
+            // Will be calculated below
+          },
+          {
+            id: "note2",
+            name: "Second Note",
+            type: "note",
+            creationDate: new Date(baseDate.getTime() + 5 * 24 * 60 * 60 * 1e3),
+            textLength: 300,
+            linkCount: 3,
+            radius: 0
+          },
+          {
+            id: "image1",
+            name: "Screenshot",
+            type: "image",
+            creationDate: new Date(baseDate.getTime() + 10 * 24 * 60 * 60 * 1e3),
+            textLength: 50,
+            linkCount: 1,
+            radius: 0
+          },
+          {
+            id: "note3",
+            name: "Third Note",
+            type: "note",
+            creationDate: new Date(baseDate.getTime() + 15 * 24 * 60 * 60 * 1e3),
+            textLength: 500,
+            linkCount: 2,
+            radius: 0
+          },
+          {
+            id: "image2",
+            name: "Diagram",
+            type: "image",
+            creationDate: new Date(baseDate.getTime() + 20 * 24 * 60 * 60 * 1e3),
+            textLength: 25,
+            linkCount: 1,
+            radius: 0
+          }
+        ];
+        this.nodes.forEach((node) => {
+          node.radius = calculateRadius(node.textLength, node.linkCount);
+        });
+        this.links = [
+          { source: "note1", target: "note2" },
+          { source: "note2", target: "image1" },
+          { source: "note2", target: "note3" },
+          { source: "note3", target: "image2" }
+        ];
+      }
+      initializeVisualization(container) {
+        const width = 800;
+        const height = 500;
+        this.svg = select_default2(container).append("svg").attr("class", "sonigraph-temporal-svg").attr("width", width).attr("height", height).attr("viewBox", `0 0 ${width} ${height}`);
+        this.simulation = simulation_default(this.nodes).force("link", link_default(this.links).id((d) => d.id).distance(80)).force("charge", manyBody_default().strength(-300)).force("center", center_default(width / 2, height / 2)).force("collision", collide_default().radius((d) => d.radius + 5));
+        const linkGroup = this.svg.append("g").attr("class", "sonigraph-temporal-links").selectAll("line").data(this.links).enter().append("line");
+        const nodeGroup = this.svg.append("g").attr("class", "sonigraph-temporal-nodes").selectAll("g").data(this.nodes).enter().append("g").attr("class", "sonigraph-temporal-node");
+        nodeGroup.append("circle").attr("r", (d) => d.radius).attr("class", (d) => `${d.type}-node`);
+        nodeGroup.append("text").text((d) => d.name).attr("font-size", "12px").attr("font-family", "var(--font-interface)").attr("fill", "var(--text-normal)").attr("text-anchor", "middle").attr("dy", (d) => d.radius + 16).style("pointer-events", "none").style("opacity", 0).style("transition", "opacity 0.2s");
+        nodeGroup.on("mouseenter", function(event, d) {
+          select_default2(this).select("text").style("opacity", 1);
+          select_default2(this).select("circle").style("stroke-width", 3);
+        }).on("mouseleave", function(event, d) {
+          if (!this.showLabels) {
+            select_default2(this).select("text").style("opacity", 0);
+          }
+          select_default2(this).select("circle").style("stroke-width", 2);
+        }.bind(this));
+        const drag = drag_default().on("start", (event, d) => {
+          if (!event.active && this.simulation)
+            this.simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        }).on("drag", (event, d) => {
+          d.fx = event.x;
+          d.fy = event.y;
+        }).on("end", (event, d) => {
+          if (!event.active && this.simulation)
+            this.simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        });
+        nodeGroup.call(drag);
+        this.simulation.on("tick", () => {
+          linkGroup.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+          nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+        });
+      }
+      addControls(container) {
+        const controlsContainer = container.createDiv("sonigraph-demo-controls");
+        const restartBtn = controlsContainer.createEl("button", { text: "Restart Animation" });
+        restartBtn.classList.add("mod-cta");
+        restartBtn.onclick = () => {
+          if (this.simulation) {
+            this.simulation.alpha(1).restart();
+          }
+        };
+        const temporalBtn = controlsContainer.createEl("button", { text: "Show Temporal Animation" });
+        temporalBtn.onclick = () => this.startTemporalAnimation();
+        const labelsBtn = controlsContainer.createEl("button", { text: "Toggle Labels" });
+        labelsBtn.onclick = () => this.toggleLabels();
+        const resetBtn = controlsContainer.createEl("button", { text: "Reset View" });
+        resetBtn.onclick = () => this.resetView();
+        const infoText = controlsContainer.createDiv("info-text");
+        infoText.innerHTML = "Blue = Notes, Orange = Images<br/>Node size = text length + connections";
+      }
+      startTemporalAnimation() {
+        if (!this.svg || !this.simulation)
+          return;
+        this.visibleNodes.clear();
+        this.visibleLinks.clear();
+        this.svg.selectAll(".node").style("opacity", 0);
+        this.svg.selectAll(".links line").style("opacity", 0);
+        const sortedNodes = [...this.nodes].sort(
+          (a2, b) => a2.creationDate.getTime() - b.creationDate.getTime()
+        );
+        sortedNodes.forEach((node, index2) => {
+          setTimeout(() => {
+            this.visibleNodes.add(node.id);
+            this.svg.selectAll(".node").filter((d) => d.id === node.id).transition().duration(500).style("opacity", 1);
+            this.updateVisibleLinks();
+            this.playNodeSound(node);
+            if (this.simulation) {
+              this.simulation.alpha(0.3).restart();
+            }
+          }, index2 * 1e3);
+        });
+      }
+      updateVisibleLinks() {
+        this.links.forEach((link) => {
+          const sourceId = typeof link.source === "string" ? link.source : link.source.id;
+          const targetId = typeof link.target === "string" ? link.target : link.target.id;
+          if (this.visibleNodes.has(sourceId) && this.visibleNodes.has(targetId)) {
+            const linkKey = `${sourceId}-${targetId}`;
+            if (!this.visibleLinks.has(linkKey)) {
+              this.visibleLinks.add(linkKey);
+              this.svg.selectAll(".links line").filter((d) => {
+                const dSourceId = typeof d.source === "string" ? d.source : d.source.id;
+                const dTargetId = typeof d.target === "string" ? d.target : d.target.id;
+                return dSourceId === sourceId && dTargetId === targetId || dSourceId === targetId && dTargetId === sourceId;
+              }).transition().duration(300).style("opacity", 0.6);
+            }
+          }
+        });
+      }
+      playNodeSound(node) {
+        try {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          const baseFreq = node.type === "note" ? 440 : 330;
+          const sizeMultiplier = 1 + (node.radius - 8) * 0.1;
+          oscillator.frequency.setValueAtTime(baseFreq * sizeMultiplier, audioContext.currentTime);
+          oscillator.type = node.type === "note" ? "sine" : "triangle";
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.3);
+        } catch (error) {
+          console.log(`\u266A ${node.name} (${node.type})`);
+        }
+      }
+      toggleLabels() {
+        this.showLabels = !this.showLabels;
+        if (this.svg) {
+          this.svg.selectAll(".node text").style("opacity", this.showLabels ? 1 : 0);
+        }
+      }
+      resetView() {
+        this.visibleNodes.clear();
+        this.visibleLinks.clear();
+        this.nodes.forEach((node) => this.visibleNodes.add(node.id));
+        if (this.svg) {
+          this.svg.selectAll(".node").style("opacity", 1);
+          this.svg.selectAll(".links line").style("opacity", 0.6);
+          if (this.simulation) {
+            this.simulation.alpha(1).restart();
+          }
+        }
+      }
+      onClose() {
+        if (this.simulation) {
+          this.simulation.stop();
+        }
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+  }
+});
+
+// src/graph/GraphDataExtractor.ts
+var logger5, GraphDataExtractor;
+var init_GraphDataExtractor = __esm({
+  "src/graph/GraphDataExtractor.ts"() {
+    init_logging();
+    logger5 = getLogger("GraphDataExtractor");
+    GraphDataExtractor = class {
+      // 30 seconds
+      constructor(vault, metadataCache) {
+        this.cachedData = null;
+        this.lastCacheTime = 0;
+        this.CACHE_DURATION = 3e4;
+        this.vault = vault;
+        this.metadataCache = metadataCache;
+      }
+      /**
+       * Extract complete graph data from the vault
+       */
+      async extractGraphData(forceRefresh = false) {
+        const now3 = Date.now();
+        if (!forceRefresh && this.cachedData && now3 - this.lastCacheTime < this.CACHE_DURATION) {
+          logger5.debug("extraction", "Returning cached graph data");
+          return this.cachedData;
+        }
+        logger5.info("extraction", "Starting graph data extraction");
+        const startTime = logger5.time("graphExtraction");
+        try {
+          const nodes = await this.extractNodes();
+          const links = this.extractLinks(nodes);
+          const timeRange2 = this.calculateTimeRange(nodes);
+          this.cachedData = {
+            nodes,
+            links,
+            timeRange: timeRange2
+          };
+          this.lastCacheTime = now3;
+          startTime();
+          logger5.info("extraction", `Graph extraction completed: ${nodes.length} nodes, ${links.length} links`, {
+            nodeCount: nodes.length,
+            linkCount: links.length,
+            timeSpan: timeRange2.end.getTime() - timeRange2.start.getTime()
+          });
+          return this.cachedData;
+        } catch (error) {
+          startTime();
+          logger5.error("extraction", "Failed to extract graph data", error);
+          throw error;
+        }
+      }
+      /**
+       * Extract all files as nodes
+       */
+      async extractNodes() {
+        const files = this.vault.getFiles();
+        const nodes = [];
+        for (const file of files) {
+          try {
+            const node = await this.createNodeFromFile(file);
+            if (node) {
+              nodes.push(node);
+            }
+          } catch (error) {
+            logger5.warn("extraction", `Failed to process file: ${file.path}`, { path: file.path, error });
+          }
+        }
+        logger5.debug("extraction", `Extracted ${nodes.length} nodes from ${files.length} files`);
+        return nodes;
+      }
+      /**
+       * Create a node from a TFile
+       */
+      async createNodeFromFile(file) {
+        const metadata = this.metadataCache.getFileCache(file);
+        const stat = file.stat;
+        const node = {
+          id: file.path,
+          type: this.getFileType(file),
+          title: this.getDisplayTitle(file, metadata),
+          path: file.path,
+          creationDate: new Date(stat.ctime),
+          modificationDate: new Date(stat.mtime),
+          fileSize: stat.size,
+          connections: [],
+          metadata: await this.extractFileMetadata(file, metadata)
+        };
+        return node;
+      }
+      /**
+       * Determine file type based on extension
+       */
+      getFileType(file) {
+        const ext = file.extension.toLowerCase();
+        if (ext === "md")
+          return "note";
+        if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext))
+          return "image";
+        if (ext === "pdf")
+          return "pdf";
+        if (["mp3", "wav", "ogg", "flac", "m4a"].includes(ext))
+          return "audio";
+        if (["mp4", "avi", "mkv", "mov", "webm"].includes(ext))
+          return "video";
+        return "other";
+      }
+      /**
+       * Get display title for a file
+       */
+      getDisplayTitle(file, metadata) {
+        var _a;
+        if ((_a = metadata == null ? void 0 : metadata.frontmatter) == null ? void 0 : _a.title) {
+          return metadata.frontmatter.title;
+        }
+        return file.basename;
+      }
+      /**
+       * Extract additional metadata from file
+       */
+      async extractFileMetadata(file, metadata) {
+        const result = {};
+        if (metadata == null ? void 0 : metadata.tags) {
+          result.tags = metadata.tags.map((tag) => tag.tag);
+        }
+        if (file.extension.toLowerCase() in ["jpg", "jpeg", "png", "gif", "bmp", "webp"]) {
+          result.dimensions = { width: 0, height: 0 };
+          result.dominantColors = [];
+        }
+        return Object.keys(result).length > 0 ? result : void 0;
+      }
+      /**
+       * Extract links between nodes
+       */
+      extractLinks(nodes) {
+        const links = [];
+        const nodeMap = new Map(nodes.map((node) => [node.path, node]));
+        for (const node of nodes) {
+          if (node.type === "note") {
+            const file = this.vault.getAbstractFileByPath(node.path);
+            if (file) {
+              const metadata = this.metadataCache.getFileCache(file);
+              if (metadata == null ? void 0 : metadata.links) {
+                for (const link of metadata.links) {
+                  const targetFile = this.vault.getAbstractFileByPath(link.link + ".md");
+                  if (targetFile && nodeMap.has(targetFile.path)) {
+                    links.push({
+                      source: node.id,
+                      target: targetFile.path,
+                      type: "reference",
+                      strength: 1
+                    });
+                  }
+                }
+              }
+              if (metadata == null ? void 0 : metadata.embeds) {
+                for (const embed of metadata.embeds) {
+                  const targetFile = this.vault.getAbstractFileByPath(embed.link);
+                  if (targetFile && nodeMap.has(targetFile.path)) {
+                    links.push({
+                      source: node.id,
+                      target: targetFile.path,
+                      type: "attachment",
+                      strength: 0.8
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+        logger5.debug("extraction", `Extracted ${links.length} links`);
+        return links;
+      }
+      /**
+       * Calculate the time range of the graph
+       */
+      calculateTimeRange(nodes) {
+        if (nodes.length === 0) {
+          const now3 = new Date();
+          return { start: now3, end: now3 };
+        }
+        let earliest = nodes[0].creationDate;
+        let latest = nodes[0].creationDate;
+        for (const node of nodes) {
+          if (node.creationDate < earliest) {
+            earliest = node.creationDate;
+          }
+          if (node.creationDate > latest) {
+            latest = node.creationDate;
+          }
+        }
+        return { start: earliest, end: latest };
+      }
+      /**
+       * Clear cached data
+       */
+      clearCache() {
+        this.cachedData = null;
+        this.lastCacheTime = 0;
+        logger5.debug("extraction", "Graph data cache cleared");
+      }
+    };
+  }
+});
+
+// src/graph/GraphRenderer.ts
+var logger6, GraphRenderer;
+var init_GraphRenderer = __esm({
+  "src/graph/GraphRenderer.ts"() {
+    init_src31();
+    init_logging();
+    logger6 = getLogger("GraphRenderer");
+    GraphRenderer = class {
+      constructor(container, config = {}) {
+        this.nodes = [];
+        this.links = [];
+        this.visibleNodes = /* @__PURE__ */ new Set();
+        this.visibleLinks = /* @__PURE__ */ new Set();
+        this.container = container;
+        this.config = {
+          width: 800,
+          height: 600,
+          nodeRadius: 8,
+          linkDistance: 30,
+          // Reduced from 50 to bring connected nodes closer
+          showLabels: false,
+          enableZoom: true,
+          ...config
+        };
+        this.forceConfig = {
+          centerStrength: 0.3,
+          linkStrength: 0.5,
+          chargeStrength: -80,
+          // Reduced from -150 to bring nodes closer
+          collisionRadius: 10
+          // Reduced from 12 to allow tighter packing
+        };
+        this.initializeSVG();
+        this.initializeSimulation();
+        this.initializeTooltip();
+        logger6.debug("renderer", "GraphRenderer initialized", { config: this.config });
+      }
+      /**
+       * Initialize the SVG container and groups
+       */
+      initializeSVG() {
+        select_default2(this.container).selectAll("*").remove();
+        this.svg = select_default2(this.container).append("svg").attr("class", "sonigraph-temporal-svg").attr("width", this.config.width).attr("height", this.config.height);
+        this.g = this.svg.append("g");
+        this.g.append("g").attr("class", "sonigraph-temporal-links");
+        this.g.append("g").attr("class", "sonigraph-temporal-nodes");
+        if (this.config.enableZoom) {
+          this.zoom = zoom_default2().scaleExtent([0.1, 4]).on("zoom", (event) => {
+            this.g.attr("transform", event.transform);
+          });
+          this.svg.call(this.zoom);
+          this.svg.on("touchstart.zoom", null);
+          this.svg.on("touchmove.zoom", null);
+          this.svg.on("touchend.zoom", null);
+        }
+      }
+      /**
+       * Initialize the D3 force simulation
+       */
+      initializeSimulation() {
+        this.simulation = simulation_default().force(
+          "link",
+          link_default().id((d) => d.id).distance(this.config.linkDistance).strength(this.forceConfig.linkStrength)
+        ).force(
+          "charge",
+          manyBody_default().strength(this.forceConfig.chargeStrength)
+        ).force("center", center_default(
+          this.config.width / 2,
+          this.config.height / 2
+        ).strength(this.forceConfig.centerStrength)).force(
+          "collision",
+          collide_default().radius(this.forceConfig.collisionRadius)
+        ).on("tick", () => this.updatePositions()).on("end", () => this.onSimulationEnd());
+      }
+      /**
+       * Initialize tooltip for node information
+       */
+      initializeTooltip() {
+        this.tooltip = select_default2(this.container).append("div").attr("class", "sonic-graph-tooltip").style("position", "absolute").style("visibility", "hidden").style("background", "var(--background-primary)").style("border", "1px solid var(--background-modifier-border)").style("border-radius", "var(--osp-border-radius-sm)").style("padding", "var(--osp-spacing-sm)").style("font-size", "var(--osp-font-size-small)").style("color", "var(--text-normal)").style("box-shadow", "var(--osp-shadow-md)").style("z-index", "1000").style("pointer-events", "none").style("max-width", "200px").style("word-wrap", "break-word");
+      }
+      /**
+       * Render the graph with given nodes and links
+       */
+      render(nodes, links) {
+        logger6.debug("renderer", `Rendering graph: ${nodes.length} nodes, ${links.length} links`);
+        this.nodes = nodes;
+        this.links = links;
+        this.visibleNodes = new Set(nodes.map((n) => n.id));
+        this.visibleLinks = new Set(links.map((l, i) => `${l.source}-${l.target}-${i}`));
+        this.updateSimulation();
+        this.renderLinks();
+        this.renderNodes();
+        this.setInitialView();
+      }
+      /**
+       * Update which nodes are visible (for temporal animation)
+       */
+      updateVisibleNodes(visibleNodeIds) {
+        this.visibleNodes = visibleNodeIds;
+        this.visibleLinks.clear();
+        this.links.forEach((link, i) => {
+          const sourceId = typeof link.source === "string" ? link.source : link.source.id;
+          const targetId = typeof link.target === "string" ? link.target : link.target.id;
+          if (this.visibleNodes.has(sourceId) && this.visibleNodes.has(targetId)) {
+            this.visibleLinks.add(`${sourceId}-${targetId}-${i}`);
+          }
+        });
+        this.updateNodeVisibility();
+        this.updateLinkVisibility();
+      }
+      /**
+       * Update the simulation with current data
+       */
+      updateSimulation() {
+        const visibleNodes = this.nodes.filter((n) => this.visibleNodes.has(n.id));
+        const visibleLinks = this.links.filter(
+          (l, i) => this.visibleLinks.has(`${typeof l.source === "string" ? l.source : l.source.id}-${typeof l.target === "string" ? l.target : l.target.id}-${i}`)
+        );
+        this.simulation.nodes(visibleNodes);
+        this.simulation.force("link").links(visibleLinks);
+        this.simulation.alpha(1).restart();
+      }
+      /**
+       * Render links
+       */
+      renderLinks() {
+        const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(this.links, (d, i) => `${typeof d.source === "string" ? d.source : d.source.id}-${typeof d.target === "string" ? d.target : d.target.id}-${i}`);
+        linkSelection.enter().append("line").attr("class", "appearing").style("opacity", 0).transition().duration(300).style("opacity", 1).on("end", function() {
+          select_default2(this).classed("appearing", false);
+        });
+        linkSelection.exit().transition().duration(200).style("opacity", 0).remove();
+        this.linkGroup = this.g.select(".sonigraph-temporal-links").selectAll("line");
+      }
+      /**
+       * Render nodes
+       */
+      renderNodes() {
+        const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(this.nodes, (d) => d.id);
+        const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
+        nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`);
+        const textElements = nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "").text((d) => d.title);
+        if (this.config.showLabels) {
+          textElements.style("display", "block").style("opacity", "1");
+        } else {
+          textElements.style("display", "none").style("opacity", "0");
+        }
+        logger6.debug("renderer", `Node labels created with showLabels: ${this.config.showLabels}`);
+        nodeEnter.transition().duration(500).style("opacity", 1).on("end", function() {
+          select_default2(this).classed("appearing", false);
+        });
+        nodeSelection.exit().transition().duration(300).style("opacity", 0).attr("transform", "scale(0.1)").remove();
+        this.nodeGroup = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
+      }
+      /**
+       * Setup node interactions (hover, click, tooltips)
+       */
+      setupNodeInteractions(selection2) {
+        selection2.on("mouseover", (event, d) => {
+          this.highlightConnectedLinks(d.id, true);
+          this.showTooltip(event, d);
+        }).on("mousemove", (event, d) => {
+          this.updateTooltipPosition(event);
+        }).on("mouseout", (event, d) => {
+          this.highlightConnectedLinks(d.id, false);
+          this.hideTooltip();
+        }).on("click", (event, d) => {
+          logger6.debug("renderer", `Node clicked: ${d.title}`, { node: d });
+        });
+      }
+      /**
+       * Highlight links connected to a node
+       */
+      highlightConnectedLinks(nodeId, highlight) {
+        this.linkGroup.classed("highlighted", function(d) {
+          const sourceId = typeof d.source === "string" ? d.source : d.source.id;
+          const targetId = typeof d.target === "string" ? d.target : d.target.id;
+          if (sourceId === nodeId || targetId === nodeId) {
+            return highlight;
+          }
+          return select_default2(this).classed("highlighted") && !highlight ? false : select_default2(this).classed("highlighted");
+        });
+      }
+      /**
+       * Update node visibility based on current visible set
+       */
+      updateNodeVisibility() {
+        this.nodeGroup.style("display", (d) => this.visibleNodes.has(d.id) ? "block" : "none");
+      }
+      /**
+       * Update link visibility based on current visible set
+       */
+      updateLinkVisibility() {
+        this.linkGroup.style("display", (d, i) => {
+          const sourceId = typeof d.source === "string" ? d.source : d.source.id;
+          const targetId = typeof d.target === "string" ? d.target : d.target.id;
+          const linkId = `${sourceId}-${targetId}-${i}`;
+          return this.visibleLinks.has(linkId) ? "block" : "none";
+        });
+      }
+      /**
+       * Update positions during simulation tick
+       */
+      updatePositions() {
+        this.linkGroup.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+        this.nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      }
+      /**
+       * Update configuration
+       */
+      updateConfig(newConfig) {
+        this.config = { ...this.config, ...newConfig };
+        if (newConfig.showLabels !== void 0) {
+          logger6.debug("renderer", `Updating showLabels to: ${this.config.showLabels}`);
+          const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
+          logger6.debug("renderer", `Found ${nodeSelection.size()} nodes to update`);
+          if (!nodeSelection.empty()) {
+            const textSelection = nodeSelection.selectAll("text");
+            logger6.debug("renderer", `Found ${textSelection.size()} text elements to update`);
+            if (this.config.showLabels) {
+              textSelection.classed("labels-visible", true).style("display", "block").style("opacity", "1");
+            } else {
+              textSelection.classed("labels-visible", false).style("display", "none").style("opacity", "0");
+            }
+            logger6.debug("renderer", `Labels ${this.config.showLabels ? "shown" : "hidden"} via inline styles`);
+          }
+        }
+        if (newConfig.nodeRadius !== void 0) {
+          const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
+          if (!nodeSelection.empty()) {
+            nodeSelection.selectAll("circle").attr("r", this.config.nodeRadius);
+          }
+        }
+        logger6.debug("renderer", "Configuration updated", { config: this.config });
+      }
+      /**
+       * Update force configuration
+       */
+      updateForces(newForceConfig) {
+        this.forceConfig = { ...this.forceConfig, ...newForceConfig };
+        this.simulation.force("charge", manyBody_default().strength(this.forceConfig.chargeStrength)).force("collision", collide_default().radius(this.forceConfig.collisionRadius)).force("center", center_default(this.config.width / 2, this.config.height / 2).strength(this.forceConfig.centerStrength));
+        if (this.simulation.force("link")) {
+          this.simulation.force("link").strength(this.forceConfig.linkStrength);
+        }
+        this.simulation.alpha(0.3).restart();
+        logger6.debug("renderer", "Force configuration updated", { forceConfig: this.forceConfig });
+      }
+      /**
+       * Resize the renderer
+       */
+      resize(width, height) {
+        this.config.width = width;
+        this.config.height = height;
+        this.svg.attr("width", width).attr("height", height);
+        this.simulation.force("center", center_default(width / 2, height / 2).strength(this.forceConfig.centerStrength));
+        logger6.debug("renderer", `Renderer resized to ${width}x${height}`);
+      }
+      /**
+       * Get current zoom transform
+       */
+      getZoomTransform() {
+        return transform(this.svg.node());
+      }
+      /**
+       * Set zoom transform
+       */
+      setZoomTransform(transform2) {
+        this.svg.call(this.zoom.transform, transform2);
+      }
+      /**
+       * Set initial view for static preview
+       */
+      setInitialView() {
+        const initialScale = 0.6;
+        const initialTransform = identity2.translate(this.config.width * 0.2, this.config.height * 0.2).scale(initialScale);
+        if (this.config.enableZoom && this.zoom) {
+          this.svg.call(this.zoom.transform, initialTransform);
+        }
+        setTimeout(() => {
+          this.simulation.stop();
+          logger6.debug("renderer", "Simulation stopped for static preview");
+        }, 1500);
+        logger6.debug("renderer", "Initial view set for static preview");
+      }
+      /**
+       * Show tooltip with node information
+       */
+      showTooltip(event, node) {
+        const tooltipContent = this.createTooltipContent(node);
+        this.tooltip.html(tooltipContent).style("visibility", "visible");
+        this.updateTooltipPosition(event);
+      }
+      /**
+       * Update tooltip position based on mouse event
+       */
+      updateTooltipPosition(event) {
+        const containerRect = this.container.getBoundingClientRect();
+        const x3 = event.clientX - containerRect.left + 10;
+        const y3 = event.clientY - containerRect.top - 10;
+        this.tooltip.style("left", x3 + "px").style("top", y3 + "px");
+      }
+      /**
+       * Hide tooltip
+       */
+      hideTooltip() {
+        this.tooltip.style("visibility", "hidden");
+      }
+      /**
+       * Create tooltip content for a node
+       */
+      createTooltipContent(node) {
+        const creationDate = node.creationDate.toLocaleDateString();
+        const modificationDate = node.modificationDate.toLocaleDateString();
+        const fileSize = this.formatFileSize(node.fileSize);
+        const connectionCount = node.connections.length;
+        return `
+      <div class="sonic-graph-tooltip-title">${node.title}</div>
+      <div class="sonic-graph-tooltip-path">${node.path}</div>
+      <div class="sonic-graph-tooltip-meta">
+        <div>Type: ${node.type}</div>
+        <div>Size: ${fileSize}</div>
+        <div>Created: ${creationDate}</div>
+        <div>Modified: ${modificationDate}</div>
+        <div>Connections: ${connectionCount}</div>
+      </div>
+    `;
+      }
+      /**
+       * Format file size in human-readable format
+       */
+      formatFileSize(bytes) {
+        if (bytes === 0)
+          return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+      }
+      /**
+       * Handle simulation end
+       */
+      onSimulationEnd() {
+        logger6.debug("renderer", "Force simulation ended");
+      }
+      /**
+       * Cleanup resources
+       */
+      destroy() {
+        this.simulation.stop();
+        if (this.tooltip) {
+          this.tooltip.remove();
+        }
+        select_default2(this.container).selectAll("*").remove();
+        logger6.debug("renderer", "GraphRenderer destroyed");
+      }
+    };
+  }
+});
+
+// src/ui/SonicGraphModal.ts
+var SonicGraphModal_exports = {};
+__export(SonicGraphModal_exports, {
+  SonicGraphModal: () => SonicGraphModal
+});
+var import_obsidian4, logger7, SonicGraphModal;
+var init_SonicGraphModal = __esm({
+  "src/ui/SonicGraphModal.ts"() {
+    import_obsidian4 = require("obsidian");
+    init_GraphDataExtractor();
+    init_GraphRenderer();
+    init_lucide_icons();
+    init_logging();
+    init_src31();
+    logger7 = getLogger("SonicGraphModal");
+    SonicGraphModal = class extends import_obsidian4.Modal {
+      constructor(app, plugin) {
+        super(app);
+        this.graphRenderer = null;
+        this.isAnimating = false;
+        this.showFileNames = false;
+        this.plugin = plugin;
+        this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache);
+        this.showFileNames = this.plugin.settings.sonicGraphShowFileNames || false;
+      }
+      onOpen() {
+        try {
+          const { contentEl } = this;
+          contentEl.empty();
+          logger7.debug("ui", "Opening Sonic Graph modal");
+          this.modalEl.addClass("sonic-graph-modal");
+          contentEl.addClass("sonic-graph-content");
+          this.createHeader();
+          this.createGraphArea();
+          this.createTimelineArea();
+          this.createControlsArea();
+          this.initializeGraph();
+        } catch (error) {
+          logger7.error("Error opening Sonic Graph modal", error.message);
+          new import_obsidian4.Notice("Failed to open Sonic Graph modal");
+        }
+      }
+      onClose() {
+        logger7.debug("ui", "Closing Sonic Graph modal");
+        if (this.graphRenderer) {
+          this.graphRenderer.destroy();
+          this.graphRenderer = null;
+        }
+        this.isAnimating = false;
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+      /**
+       * Create modal header with title only (sticky)
+       */
+      createHeader() {
+        this.headerContainer = this.contentEl.createDiv({ cls: "sonic-graph-header" });
+        const titleContainer = this.headerContainer.createDiv({ cls: "sonic-graph-title-container" });
+        titleContainer.createEl("h1", { text: "Sonic Graph", cls: "sonic-graph-title" });
+      }
+      /**
+       * Create main graph visualization area
+       */
+      createGraphArea() {
+        this.graphContainer = this.contentEl.createDiv({ cls: "sonic-graph-container" });
+        const graphCanvas = this.graphContainer.createDiv({ cls: "sonic-graph-canvas" });
+        graphCanvas.id = "sonic-graph-canvas";
+        const loadingIndicator = this.graphContainer.createDiv({ cls: "sonic-graph-loading" });
+        const loadingIcon = createLucideIcon("loader-2", 24);
+        loadingIcon.addClass("sonic-graph-loading-icon");
+        loadingIndicator.appendChild(loadingIcon);
+        loadingIndicator.createSpan({ text: "Loading graph...", cls: "sonic-graph-loading-text" });
+      }
+      /**
+       * Create timeline area (initially hidden)
+       */
+      createTimelineArea() {
+        this.timelineContainer = this.contentEl.createDiv({ cls: "sonic-graph-timeline" });
+        this.timelineContainer.style.display = "none";
+        const scrubberContainer = this.timelineContainer.createDiv({ cls: "sonic-graph-scrubber-container" });
+        scrubberContainer.createEl("label", { text: "Timeline", cls: "sonic-graph-scrubber-label" });
+        const scrubber = scrubberContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-scrubber"
+        });
+        scrubber.min = "0";
+        scrubber.max = "100";
+        scrubber.value = "0";
+        const timelineInfo = this.timelineContainer.createDiv({ cls: "sonic-graph-timeline-info" });
+        timelineInfo.createSpan({ text: "Start", cls: "sonic-graph-timeline-start" });
+        timelineInfo.createSpan({ text: "Current: 2024", cls: "sonic-graph-timeline-current" });
+        timelineInfo.createSpan({ text: "End", cls: "sonic-graph-timeline-end" });
+      }
+      /**
+       * Create controls area with play button, stats, and navigation
+       */
+      createControlsArea() {
+        this.controlsContainer = this.contentEl.createDiv({ cls: "sonic-graph-controls" });
+        const playControls = this.controlsContainer.createDiv({ cls: "sonic-graph-play-controls" });
+        const playButtonContainer = playControls.createDiv({ cls: "sonic-graph-play-button-container" });
+        this.playButton = new import_obsidian4.ButtonComponent(playButtonContainer);
+        this.playButton.setButtonText("Play Sonic Graph").setCta().onClick(() => this.toggleAnimation());
+        const speedContainer = playControls.createDiv({ cls: "sonic-graph-speed-container" });
+        speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
+        const speedSelect = speedContainer.createEl("select", { cls: "sonic-graph-speed-select" });
+        ["0.5x", "1x", "2x", "3x", "5x"].forEach((speed) => {
+          const option = speedSelect.createEl("option", { text: speed, value: speed });
+          if (speed === "1x")
+            option.selected = true;
+        });
+        const statsControls = this.controlsContainer.createDiv({ cls: "sonic-graph-stats-controls" });
+        this.statsContainer = statsControls.createDiv({ cls: "sonic-graph-stats" });
+        this.updateStats();
+        const viewControls = this.controlsContainer.createDiv({ cls: "sonic-graph-view-controls" });
+        const fileNamesContainer = viewControls.createDiv({ cls: "sonic-graph-toggle-container" });
+        const fileNamesToggle = fileNamesContainer.createEl("input", {
+          type: "checkbox",
+          cls: "sonic-graph-toggle"
+        });
+        fileNamesToggle.checked = this.showFileNames;
+        fileNamesToggle.addEventListener("change", () => this.handleShowFileNamesToggle());
+        fileNamesContainer.createEl("label", { text: "Show file names", cls: "sonic-graph-toggle-label" });
+        const resetViewBtn = viewControls.createEl("button", {
+          cls: "sonic-graph-control-btn"
+        });
+        const resetIcon = createLucideIcon("maximize-2", 16);
+        resetViewBtn.appendChild(resetIcon);
+        resetViewBtn.appendText("Reset View");
+        resetViewBtn.addEventListener("click", () => this.resetGraphView());
+        const controlCenterBtn = viewControls.createEl("button", {
+          cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary"
+        });
+        const controlCenterIcon = createLucideIcon("settings", 16);
+        controlCenterBtn.appendChild(controlCenterIcon);
+        controlCenterBtn.appendText("Control Center");
+        controlCenterBtn.addEventListener("click", () => this.openControlCenter());
+        const settingsBtn = viewControls.createEl("button", {
+          cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary"
+        });
+        const settingsIcon = createLucideIcon("sliders", 16);
+        settingsBtn.appendChild(settingsIcon);
+        settingsBtn.appendText("Settings");
+        settingsBtn.addEventListener("click", () => this.toggleSettings());
+      }
+      /**
+       * Initialize the graph visualization
+       */
+      async initializeGraph() {
+        try {
+          logger7.debug("ui", "Initializing Sonic Graph");
+          const graphData = await this.graphDataExtractor.extractGraphData();
+          logger7.debug("ui", `Extracted ${graphData.nodes.length} nodes and ${graphData.links.length} links`);
+          const canvasElement = document.getElementById("sonic-graph-canvas");
+          if (!canvasElement) {
+            throw new Error("Graph canvas element not found");
+          }
+          this.graphRenderer = new GraphRenderer(canvasElement, {
+            enableZoom: true,
+            showLabels: this.showFileNames
+          });
+          this.graphRenderer.render(graphData.nodes, graphData.links);
+          const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
+          if (loadingIndicator) {
+            loadingIndicator.remove();
+          }
+          this.updateStats();
+          logger7.debug("ui", "Sonic Graph initialized successfully");
+        } catch (error) {
+          logger7.error("Failed to initialize Sonic Graph", error.message);
+          new import_obsidian4.Notice("Failed to load graph data");
+          this.showErrorState();
+        }
+      }
+      /**
+       * Toggle animation playback
+       */
+      toggleAnimation() {
+        if (!this.graphRenderer) {
+          new import_obsidian4.Notice("Graph not ready");
+          return;
+        }
+        this.isAnimating = !this.isAnimating;
+        if (this.isAnimating) {
+          this.playButton.setButtonText("Pause Animation");
+          this.timelineContainer.style.display = "block";
+          logger7.debug("ui", "Starting Sonic Graph animation");
+          new import_obsidian4.Notice("Animation started (placeholder)");
+        } else {
+          this.playButton.setButtonText("Play Sonic Graph");
+          logger7.debug("ui", "Pausing Sonic Graph animation");
+          new import_obsidian4.Notice("Animation paused (placeholder)");
+        }
+      }
+      /**
+       * Handle file names toggle
+       */
+      handleShowFileNamesToggle() {
+        this.showFileNames = !this.showFileNames;
+        this.plugin.settings.sonicGraphShowFileNames = this.showFileNames;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateConfig({ showLabels: this.showFileNames });
+        }
+        logger7.debug("ui", `File names visibility toggled: ${this.showFileNames}`);
+      }
+      /**
+       * Reset graph view to initial state
+       */
+      resetGraphView() {
+        if (this.graphRenderer) {
+          this.graphRenderer.setZoomTransform(identity2.scale(0.6));
+          logger7.debug("ui", "Graph view reset");
+        }
+      }
+      /**
+       * Open Control Center modal
+       */
+      openControlCenter() {
+        this.close();
+        Promise.resolve().then(() => (init_control_panel(), control_panel_exports)).then(({ MaterialControlPanelModal: MaterialControlPanelModal2 }) => {
+          const controlCenter = new MaterialControlPanelModal2(this.app, this.plugin);
+          controlCenter.open();
+        });
+      }
+      /**
+       * Toggle settings panel (placeholder)
+       */
+      toggleSettings() {
+        new import_obsidian4.Notice("Settings panel coming soon");
+      }
+      /**
+       * Update stats display
+       */
+      updateStats() {
+        if (!this.statsContainer)
+          return;
+        this.statsContainer.empty();
+        const fileCount = this.app.vault.getMarkdownFiles().length;
+        const totalFiles = this.app.vault.getFiles().length;
+        this.statsContainer.createSpan({
+          text: `${fileCount} notes \u2022 ${totalFiles} total files`,
+          cls: "sonic-graph-stats-text"
+        });
+      }
+      /**
+       * Show error state
+       */
+      showErrorState() {
+        const errorContainer = this.graphContainer.createDiv({ cls: "sonic-graph-error" });
+        const errorIcon = createLucideIcon("alert-circle", 48);
+        errorContainer.appendChild(errorIcon);
+        errorContainer.createEl("p", {
+          text: "Failed to load graph data",
+          cls: "sonic-graph-error-text"
+        });
+        const retryBtn = errorContainer.createEl("button", {
+          text: "Retry",
+          cls: "sonic-graph-error-retry"
+        });
+        retryBtn.addEventListener("click", () => {
+          errorContainer.remove();
+          this.initializeGraph();
+        });
+      }
+    };
+  }
+});
+
+// src/ui/control-panel.ts
+var control_panel_exports = {};
+__export(control_panel_exports, {
+  MaterialControlPanelModal: () => MaterialControlPanelModal
+});
+var import_obsidian5, logger8, MaterialControlPanelModal;
+var init_control_panel = __esm({
+  "src/ui/control-panel.ts"() {
+    import_obsidian5 = require("obsidian");
+    init_logging();
+    init_components();
+    init_constants();
+    init_lucide_icons();
+    init_material_components();
+    init_play_button_manager();
+    init_GraphDemoModal();
+    init_GraphDataExtractor();
+    init_GraphRenderer();
+    logger8 = getLogger("control-panel");
+    MaterialControlPanelModal = class extends import_obsidian5.Modal {
+      constructor(app, plugin) {
+        super(app);
+        this.statusInterval = null;
+        this.activeTab = "status";
+        this.instrumentToggles = /* @__PURE__ */ new Map();
+        // Phase 3: Progress indication elements
+        this.progressElement = null;
+        this.progressText = null;
+        this.progressBar = null;
+        // Sonic Graph components
+        this.graphRenderer = null;
+        this.showFileNames = false;
+        // Issue #006 Fix: Store bound event handlers for proper cleanup
+        this.boundEventHandlers = null;
+        this.plugin = plugin;
+        this.playButtonManager = new PlayButtonManager();
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        logger8.debug("ui", "Opening Sonigraph Control Center");
+        this.modalEl.addClass("osp-control-center-modal");
+        if (this.playButtonManager) {
+          this.playButtonManager.forceReset();
+          logger8.debug("ui", "Play button manager state reset on modal open");
+        }
+        this.createModalContainer();
+        this.startStatusUpdates();
+      }
+      onClose() {
+        logger8.debug("ui", "Closing Sonigraph Control Center");
+        this.stopStatusUpdates();
+        this.cleanupAudioEngineEventListeners();
+        if (this.playButtonManager) {
+          this.playButtonManager.dispose();
+        }
+        if (this.graphRenderer) {
+          this.graphRenderer.destroy();
+          this.graphRenderer = null;
+        }
+      }
+      /**
+       * Create contained modal structure with sticky header
+       */
+      createModalContainer() {
+        const { contentEl } = this;
+        const closeButton = contentEl.createDiv({ cls: "modal-close-button" });
+        closeButton.addEventListener("click", () => this.close());
+        const modalContainer = contentEl.createDiv({ cls: "osp-modal-container" });
+        this.createStickyHeader(modalContainer);
+        const mainContainer = modalContainer.createDiv({ cls: "osp-main-container" });
+        this.createNavigationDrawer(mainContainer);
+        this.contentContainer = mainContainer.createDiv({ cls: "osp-content-area" });
+        this.showTab(this.activeTab);
+      }
+      /**
+       * Create sticky header with title and action buttons
+       */
+      createStickyHeader(container) {
+        this.appBar = container.createDiv({ cls: "osp-sticky-header" });
+        const titleSection = this.appBar.createDiv({ cls: "osp-header-title" });
+        const titleIcon = createLucideIcon("music", 20);
+        titleSection.appendChild(titleIcon);
+        titleSection.appendText("Sonigraph Control Center");
+        const actionsSection = this.appBar.createDiv({ cls: "osp-header-actions" });
+        this.createHeaderActions(actionsSection);
+      }
+      /**
+       * Create compact header action buttons
+       */
+      createHeaderActions(container) {
+        const volumeContainer = container.createDiv({ cls: "osp-header-volume" });
+        const volumeIcon = createLucideIcon("volume-2", 14);
+        volumeContainer.appendChild(volumeIcon);
+        const volumeSlider = new MaterialSlider({
+          value: this.plugin.settings.volume || 0.5,
+          min: 0,
+          max: 1,
+          step: 0.1,
+          unit: "",
+          className: "osp-header-slider",
+          onChange: (value) => this.handleMasterVolumeChange(value)
+        });
+        volumeContainer.appendChild(volumeSlider.getElement());
+        const playBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--primary" });
+        this.playButton = playBtn;
+        this.playButtonManager.initialize(playBtn);
+        this.playButtonManager.onStateChange((state) => {
+          logger8.debug("ui", `Play button state changed: ${state}`);
+        });
+        this.setupAudioEngineEventListeners();
+        playBtn.addEventListener("click", () => this.handlePlay());
+        const stopBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--secondary" });
+        const stopIcon = createLucideIcon("square", 16);
+        stopBtn.appendChild(stopIcon);
+        stopBtn.appendText("Stop");
+        stopBtn.addEventListener("click", () => this.handleStop());
+        const pauseBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--secondary" });
+        const pauseIcon = createLucideIcon("pause", 16);
+        pauseBtn.appendChild(pauseIcon);
+        pauseBtn.appendText("Pause");
+        pauseBtn.addEventListener("click", () => this.handlePause());
+        const demoBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--accent" });
+        const demoIcon = createLucideIcon("activity", 16);
+        demoBtn.appendChild(demoIcon);
+        demoBtn.appendText("Demo");
+        demoBtn.addEventListener("click", () => this.handleDemo());
+      }
+      /**
+       * Create navigation drawer
+       */
+      createNavigationDrawer(container) {
+        this.drawer = container.createDiv({ cls: "osp-drawer" });
+        const header = this.drawer.createDiv({ cls: "osp-drawer__header" });
+        const headerTitle = header.createDiv({ cls: "osp-drawer__title" });
+        headerTitle.textContent = "Navigation";
+        const content = this.drawer.createDiv({ cls: "osp-drawer__content" });
+        this.createNavigationList(content);
+      }
+      /**
+       * Create navigation list with family-based tabs
+       */
+      createNavigationList(container) {
+        const list = container.createEl("ul", { cls: "osp-nav-list" });
+        TAB_CONFIGS.forEach((tabConfig, index2) => {
+          const listItem = list.createEl("li", {
+            cls: `osp-nav-item ${tabConfig.id === this.activeTab ? "osp-nav-item--active" : ""}`
+          });
+          listItem.setAttribute("data-tab", tabConfig.id);
+          const graphic = listItem.createDiv({ cls: "osp-nav-item__icon" });
+          setLucideIcon(graphic, tabConfig.icon, 20);
+          const text = listItem.createDiv({ cls: "osp-nav-item__text" });
+          text.textContent = tabConfig.name;
+          if (!["status", "musical", "master"].includes(tabConfig.id)) {
+            const meta = listItem.createDiv({ cls: "osp-nav-item__meta" });
+            const enabledCount = this.getEnabledCount(tabConfig.id);
+            const totalCount = this.getTotalCount(tabConfig.id);
+            meta.textContent = `${enabledCount}/${totalCount}`;
+          }
+          if (tabConfig.id === "master") {
+            const divider = container.createDiv({ cls: "osp-nav-divider" });
+          }
+          listItem.addEventListener("click", () => {
+            this.switchTab(tabConfig.id);
+          });
+        });
+      }
+      /**
+       * Update navigation counts without rebuilding the entire drawer
+       */
+      updateNavigationCounts() {
+        this.drawer.querySelectorAll(".osp-nav-item").forEach((item) => {
+          const tabId = item.getAttribute("data-tab");
+          if (tabId) {
+            const tabConfig = TAB_CONFIGS.find((config) => config.id === tabId);
+            if (tabConfig && !["status", "musical", "master"].includes(tabId)) {
+              const metaElement = item.querySelector(".osp-nav-item__meta");
+              if (metaElement) {
+                const enabledCount = this.getEnabledCount(tabId);
+                const totalCount = this.getTotalCount(tabId);
+                metaElement.textContent = `${enabledCount}/${totalCount}`;
+              }
+            }
+          }
+        });
+      }
+      /**
+       * Switch to a different tab
+       */
+      switchTab(tabId) {
+        this.drawer.querySelectorAll(".osp-nav-item").forEach((item) => {
+          item.classList.remove("osp-nav-item--active");
+        });
+        const activeItem = this.drawer.querySelector(`[data-tab="${tabId}"]`);
+        if (activeItem) {
+          activeItem.classList.add("osp-nav-item--active");
+        }
+        this.activeTab = tabId;
+        this.showTab(tabId);
+      }
+      /**
+       * Show content for the specified tab
+       */
+      showTab(tabId) {
+        this.contentContainer.empty();
+        switch (tabId) {
+          case "status":
+            this.createStatusTab();
+            break;
+          case "musical":
+            this.createMusicalTab();
+            break;
+          case "master":
+            this.createMasterTab();
+            break;
+          case "sonic-graph":
+            this.createSonicGraphTab();
+            break;
+          case "keyboard":
+          case "strings":
+          case "woodwinds":
+          case "brass":
+          case "percussion":
+          case "electronic":
+          case "experimental":
+            this.createFamilyTab(tabId);
+            break;
+          default:
+            this.createPlaceholderTab(tabId);
+        }
+      }
+      /**
+       * Create Status tab content
+       */
+      createStatusTab() {
+        this.createActiveInstrumentsCard();
+        this.createPerformanceMetricsCard();
+        this.createGlobalSettingsCard();
+        this.createLoggingCard();
+      }
+      createActiveInstrumentsCard() {
+        const card = new MaterialCard({
+          title: "Active instruments",
+          iconName: "music",
+          subtitle: "Currently enabled instruments and their status",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const enabledInstruments = this.getEnabledInstrumentsList();
+        if (enabledInstruments.length === 0) {
+          content.createDiv({
+            text: "No instruments currently enabled",
+            cls: "osp-status-empty"
+          });
+        } else {
+          enabledInstruments.forEach((instrument) => {
+            const instrumentRow = content.createDiv({ cls: "osp-instrument-status-row" });
+            const icon = createLucideIcon("music", 16);
+            instrumentRow.appendChild(icon);
+            const name = instrumentRow.createSpan({ cls: "osp-instrument-name" });
+            name.textContent = this.capitalizeWords(instrument.name);
+            const status = instrumentRow.createSpan({ cls: "osp-instrument-voices" });
+            status.textContent = `${instrument.activeVoices}/${instrument.maxVoices} voices`;
+          });
+        }
+        this.contentContainer.appendChild(card.getElement());
+      }
+      createPerformanceMetricsCard() {
+        const card = new MaterialCard({
+          title: "Performance metrics",
+          iconName: "zap",
+          subtitle: "Real-time system performance metrics",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const status = this.plugin.getStatus();
+        const statsRow = content.createDiv({ cls: "osp-stats-row" });
+        const cpuStat = statsRow.createDiv({ cls: "osp-stat-compact" });
+        cpuStat.innerHTML = `
+			<span class="osp-stat-value">12%</span>
+			<span class="osp-stat-label">CPU</span>
+		`;
+        const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
+        voicesStat.innerHTML = `
+			<span class="osp-stat-value">${status.audio.currentNotes || 0}</span>
+			<span class="osp-stat-label">Voices</span>
+		`;
+        const contextStat = statsRow.createDiv({ cls: "osp-stat-compact" });
+        const contextValue = status.audio.audioContext || "Suspended";
+        const contextColor = contextValue === "running" ? "var(--text-success)" : "var(--text-warning)";
+        contextStat.innerHTML = `
+			<span class="osp-stat-value" style="color: ${contextColor}">${contextValue}</span>
+			<span class="osp-stat-label">Context</span>
+		`;
+        this.contentContainer.appendChild(card.getElement());
+      }
+      getEnabledInstrumentsList() {
+        const enabled = [];
+        Object.entries(this.plugin.settings.instruments).forEach(([key, settings]) => {
+          if (settings.enabled) {
+            enabled.push({
+              name: key,
+              activeVoices: this.getInstrumentActiveVoices(key),
+              maxVoices: settings.maxVoices
+            });
+          }
+        });
+        return enabled;
+      }
+      /**
+       * Create Musical tab content
+       */
+      createMusicalTab() {
+        this.createScaleKeyCard();
+        this.createTempoTimingCard();
+        this.createMasterTuningCard();
+      }
+      /**
+       * Create Sonic Graph tab content
+       */
+      createSonicGraphTab() {
+        this.createGraphPreviewCard();
+        this.createSonicGraphControlsCard();
+      }
+      createScaleKeyCard() {
+        const card = new MaterialCard({
+          title: "Scale & key",
+          iconName: "music",
+          subtitle: "Musical scale and key signature settings",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const settingsGrid = createGrid("2-col");
+        const scaleGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
+        scaleGroup.createEl("label", { text: "Musical scale", cls: "osp-control-label" });
+        const scaleSelect = scaleGroup.createEl("select", { cls: "osp-select" });
+        ["Major", "Minor", "Dorian", "Mixolydian", "Pentatonic"].forEach((scale) => {
+          const option = scaleSelect.createEl("option", { value: scale.toLowerCase(), text: scale });
+          if (scale === "Major")
+            option.selected = true;
+        });
+        const keyGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
+        keyGroup.createEl("label", { text: "Key signature", cls: "osp-control-label" });
+        const keySelect = keyGroup.createEl("select", { cls: "osp-select" });
+        ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].forEach((key) => {
+          const option = keySelect.createEl("option", { value: key, text: key });
+          if (key === "C")
+            option.selected = true;
+        });
+        content.appendChild(settingsGrid);
+        this.contentContainer.appendChild(card.getElement());
+      }
+      createTempoTimingCard() {
+        const card = new MaterialCard({
+          title: "Tempo & timing",
+          iconName: "clock",
+          subtitle: "Playback speed and timing controls",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const tempoGroup = content.createDiv({ cls: "osp-control-group" });
+        tempoGroup.createEl("label", { text: "Tempo (BPM)", cls: "osp-control-label" });
+        const tempoSlider = new MaterialSlider({
+          value: 120,
+          min: 60,
+          max: 200,
+          step: 5,
+          unit: " BPM",
+          onChange: (value) => this.handleTempoChange(value)
+        });
+        tempoGroup.appendChild(tempoSlider.getElement());
+        const durationGroup = content.createDiv({ cls: "osp-control-group" });
+        durationGroup.createEl("label", { text: "Note duration", cls: "osp-control-label" });
+        const durationSlider = new MaterialSlider({
+          value: 0.5,
+          min: 0.1,
+          max: 2,
+          step: 0.1,
+          unit: "s",
+          onChange: (value) => this.handleNoteDurationChange(value)
+        });
+        durationGroup.appendChild(durationSlider.getElement());
+        this.contentContainer.appendChild(card.getElement());
+      }
+      createMasterTuningCard() {
+        var _a;
+        const card = new MaterialCard({
+          title: "Master tuning",
+          iconName: "settings",
+          subtitle: "Global tuning and harmonic settings",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const tuningGroup = content.createDiv({ cls: "osp-control-group" });
+        tuningGroup.createEl("label", { text: "Concert pitch (A4)", cls: "osp-control-label" });
+        const tuningSlider = new MaterialSlider({
+          value: 440,
+          min: 415,
+          max: 466,
+          step: 1,
+          unit: " Hz",
+          displayValue: "440 Hz",
+          onChange: (value) => this.handleTuningChange(value)
+        });
+        tuningGroup.appendChild(tuningSlider.getElement());
+        const microtuningGroup = content.createDiv({ cls: "control-group control-group--toggle" });
+        const microtuningLabel = microtuningGroup.createEl("label", { cls: "control-label" });
+        microtuningLabel.textContent = "Enable microtuning";
+        const controlWrapper = microtuningGroup.createDiv({ cls: "control-wrapper" });
+        const switchContainer = controlWrapper.createDiv({ cls: "ospcc-switch" });
+        switchContainer.setAttribute("title", "Toggle microtuning precision on/off");
+        const microtuningToggle = switchContainer.createEl("input", {
+          type: "checkbox",
+          cls: "ospcc-switch__input"
+        });
+        microtuningToggle.checked = (_a = this.plugin.settings.microtuning) != null ? _a : false;
+        microtuningToggle.addEventListener("change", () => {
+          logger8.debug("ui", "Microtuning toggle changed", { enabled: microtuningToggle.checked });
+          this.handleMicrotuningChange(microtuningToggle.checked);
+        });
+        const track = switchContainer.createDiv({ cls: "ospcc-switch__track" });
+        const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
+        switchContainer.addEventListener("click", (e) => {
+          if (e.target !== microtuningToggle) {
+            e.preventDefault();
+            microtuningToggle.checked = !microtuningToggle.checked;
+            microtuningToggle.dispatchEvent(new Event("change"));
+          }
+        });
+        this.contentContainer.appendChild(card.getElement());
+      }
+      // Musical parameter handlers
+      handleTempoChange(tempo) {
+        logger8.info("musical", `Tempo changed to ${tempo} BPM`);
+      }
+      handleNoteDurationChange(duration) {
+        logger8.info("musical", `Note duration changed to ${duration}s`);
+      }
+      handleTuningChange(frequency) {
+        logger8.info("musical", `Concert pitch changed to ${frequency} Hz`);
+      }
+      handleMicrotuningChange(enabled) {
+        logger8.info("musical", `Microtuning ${enabled ? "enabled" : "disabled"}`);
+        this.plugin.settings.microtuning = enabled;
+        this.plugin.saveSettings();
+      }
+      handleMasterEffectEnabledChange(effectName, enabled) {
+        logger8.info("effects", `Master effect ${effectName} ${enabled ? "enabled" : "disabled"}`);
+        if (!this.plugin.settings.effects) {
+          this.plugin.settings.effects = {};
+        }
+        if (!this.plugin.settings.effects[effectName]) {
+          this.plugin.settings.effects[effectName] = { enabled: false };
+        }
+        this.plugin.settings.effects[effectName].enabled = enabled;
+        this.plugin.saveSettings();
+      }
+      handleMasterEffectChange(effectName, paramName, value) {
+        logger8.debug("effects", `Master effect ${effectName} ${paramName} changed to ${value}`);
+        if (!this.plugin.settings.effects) {
+          this.plugin.settings.effects = {};
+        }
+        if (!this.plugin.settings.effects[effectName]) {
+          this.plugin.settings.effects[effectName] = { enabled: false };
+        }
+        this.plugin.settings.effects[effectName][paramName] = value;
+        this.plugin.saveSettings();
+      }
+      // Global high quality samples setting removed - now using per-instrument control
+      createGlobalSettingsCard() {
+        const globalCard = new MaterialCard({
+          title: "Global settings",
+          iconName: "settings",
+          subtitle: "System configuration and bulk operations",
+          elevation: 1
+        });
+        const globalContent = globalCard.getContent();
+        const globalChipSet = globalContent.createDiv({ cls: "ospcc-chip-set" });
+        const enableAllChip = new ActionChip({
+          text: "Enable All Instruments",
+          iconName: "checkCircle",
+          onToggle: (selected) => this.handleGlobalAction("enableAll", selected)
+        });
+        const resetAllChip = new ActionChip({
+          text: "Reset All Settings",
+          iconName: "reset",
+          onToggle: (selected) => this.handleGlobalAction("resetAll", selected)
+        });
+        globalChipSet.appendChild(enableAllChip.getElement());
+        globalChipSet.appendChild(resetAllChip.getElement());
+        this.contentContainer.appendChild(globalCard.getElement());
+      }
+      createLoggingCard() {
+        const loggingCard = new MaterialCard({
+          title: "Logging",
+          iconName: "file-text",
+          subtitle: "Debug logging level and log export",
+          elevation: 1
+        });
+        const loggingContent = loggingCard.getContent();
+        const logLevelGroup = loggingContent.createDiv({ cls: "osp-control-group" });
+        logLevelGroup.createEl("label", { text: "Logging level", cls: "osp-control-label" });
+        const logLevelSelect = logLevelGroup.createEl("select", { cls: "osp-select" });
+        const logLevelOptions = [
+          { value: "off", text: "Off" },
+          { value: "error", text: "Errors only" },
+          { value: "warn", text: "Warnings" },
+          { value: "info", text: "Info" },
+          { value: "debug", text: "Debug" }
+        ];
+        logLevelOptions.forEach((option) => {
+          const optionEl = logLevelSelect.createEl("option", { value: option.value, text: option.text });
+          if (option.value === LoggerFactory.getLogLevel())
+            optionEl.selected = true;
+        });
+        logLevelSelect.addEventListener("change", async () => {
+          const newLevel = logLevelSelect.value;
+          LoggerFactory.setLogLevel(newLevel);
+          await this.plugin.updateSettings({ logLevel: newLevel });
+          logger8.info("settings-change", "Log level changed from Control Center", {
+            level: newLevel,
+            persisted: true
+          });
+        });
+        const logChipSet = loggingContent.createDiv({ cls: "ospcc-chip-set" });
+        logChipSet.style.marginTop = "var(--md-space-4)";
+        const exportLogsChip = new ActionChip({
+          text: "Export logs",
+          iconName: "download",
+          onToggle: (selected) => this.handleExportLogs(selected)
+        });
+        logChipSet.appendChild(exportLogsChip.getElement());
+        this.contentContainer.appendChild(loggingCard.getElement());
+      }
+      /**
+       * Create Master tab content
+       */
+      createMasterTab() {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
+        const masterEffectsCard = new MaterialCard({
+          title: "Master effects",
+          iconName: "equalizer",
+          subtitle: "Global orchestral processing",
+          elevation: 1
+        });
+        const masterContent = masterEffectsCard.getContent();
+        const effects = this.plugin.settings.effects || {};
+        this.createHorizontalEffectSection(
+          masterContent,
+          "Orchestral reverb hall",
+          "reverb",
+          (_b = (_a = effects.orchestralreverbhall) == null ? void 0 : _a.enabled) != null ? _b : true,
+          [
+            { name: "Hall size", value: (_d = (_c = effects.orchestralreverbhall) == null ? void 0 : _c.hallsize) != null ? _d : 0.8, min: 0, max: 1, step: 0.1, unit: "" },
+            { name: "Decay time", value: (_f = (_e = effects.orchestralreverbhall) == null ? void 0 : _e.decaytime) != null ? _f : 3.5, min: 0.5, max: 10, step: 0.1, unit: "s" }
+          ]
+        );
+        this.createHorizontalEffectSection(
+          masterContent,
+          "3-band EQ",
+          "equalizer",
+          (_h = (_g = effects["3bandeq"]) == null ? void 0 : _g.enabled) != null ? _h : true,
+          [
+            { name: "Bass boost", value: (_j = (_i = effects["3bandeq"]) == null ? void 0 : _i.bassboost) != null ? _j : 0, min: -12, max: 12, step: 1, unit: "dB" },
+            { name: "Treble boost", value: (_l = (_k = effects["3bandeq"]) == null ? void 0 : _k.trebleboost) != null ? _l : 0, min: -12, max: 12, step: 1, unit: "dB" }
+          ]
+        );
+        this.createHorizontalEffectSection(
+          masterContent,
+          "Dynamic compressor",
+          "compressor",
+          (_n = (_m = effects.dynamiccompressor) == null ? void 0 : _m.enabled) != null ? _n : false,
+          [
+            { name: "Threshold", value: (_p = (_o = effects.dynamiccompressor) == null ? void 0 : _o.threshold) != null ? _p : -20, min: -40, max: 0, step: 1, unit: "dB" },
+            { name: "Ratio", value: (_r = (_q = effects.dynamiccompressor) == null ? void 0 : _q.ratio) != null ? _r : 4, min: 1, max: 20, step: 1, unit: ":1" }
+          ]
+        );
+        const performanceCard = new MaterialCard({
+          title: "Performance optimization",
+          iconName: "zap",
+          subtitle: "CPU monitoring and adaptive quality control",
+          elevation: 1
+        });
+        const perfContent = performanceCard.getContent();
+        const perfStatsRow = perfContent.createDiv({ cls: "osp-stats-row" });
+        const cpuStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
+        cpuStat.innerHTML = `
+			<span class="osp-stat-value">23%</span>
+			<span class="osp-stat-label">CPU usage</span>
+		`;
+        const voicesStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
+        voicesStat.innerHTML = `
+			<span class="osp-stat-value">47/128</span>
+			<span class="osp-stat-label">Voices</span>
+		`;
+        const qualityStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
+        qualityStat.innerHTML = `
+			<span class="osp-stat-value" style="color: var(--color-green)">High</span>
+			<span class="osp-stat-label">Audio quality</span>
+		`;
+        this.contentContainer.appendChild(masterEffectsCard.getElement());
+        this.contentContainer.appendChild(performanceCard.getElement());
+      }
+      /**
+       * Create horizontal effect section for Master Effects
+       */
+      createHorizontalEffectSection(container, effectName, iconName, enabled, parameters) {
+        const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
+        const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
+        const titleArea = header.createDiv({ cls: "osp-effect-title-area" });
+        const icon = createLucideIcon(iconName, 16);
+        titleArea.appendChild(icon);
+        titleArea.appendText(effectName);
+        const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
+        toggleContainer.setAttribute("title", `Toggle ${effectName} on/off`);
+        const toggleInput = toggleContainer.createEl("input", {
+          type: "checkbox",
+          cls: "ospcc-switch__input"
+        });
+        toggleInput.checked = enabled;
+        toggleInput.addEventListener("change", () => {
+          logger8.debug("ui", "Master effect toggle changed", { effectName, enabled: toggleInput.checked });
+          this.handleMasterEffectEnabledChange(effectName.toLowerCase().replace(/\s+/g, ""), toggleInput.checked);
+        });
+        const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+        const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
+        toggleContainer.addEventListener("click", (e) => {
+          if (e.target !== toggleInput) {
+            e.preventDefault();
+            toggleInput.checked = !toggleInput.checked;
+            toggleInput.dispatchEvent(new Event("change"));
+          }
+        });
+        const paramsContainer = section.createDiv({ cls: "osp-effect-params-horizontal" });
+        parameters.forEach((param) => {
+          const paramGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
+          const label = paramGroup.createDiv({ cls: "osp-param-label" });
+          label.textContent = param.name;
+          const sliderContainer = paramGroup.createDiv({ cls: "osp-param-slider" });
+          const slider = new MaterialSlider({
+            value: param.value,
+            min: param.min,
+            max: param.max,
+            step: param.step,
+            unit: param.unit,
+            onChange: (value) => this.handleMasterEffectChange(effectName.toLowerCase().replace(/\s+/g, ""), param.name.toLowerCase().replace(/\s+/g, ""), value)
+          });
+          sliderContainer.appendChild(slider.getElement());
+        });
+      }
+      /**
+       * Create Graph Preview Card for Sonic Graph tab
+       */
+      createGraphPreviewCard() {
+        const card = new MaterialCard({
+          title: "Knowledge graph preview",
+          iconName: "globe",
+          subtitle: "Static view of your vault structure and connections",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const graphContainer = content.createDiv({
+          cls: "osp-graph-preview-container",
+          attr: { style: "height: 300px; border: 1px solid var(--background-modifier-border); border-radius: 4px; background: var(--background-primary-alt);" }
+        });
+        const loadingDiv = graphContainer.createDiv({
+          cls: "osp-graph-loading",
+          text: "Loading graph preview...",
+          attr: { style: "display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);" }
+        });
+        this.initializeGraphPreview(graphContainer, loadingDiv);
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create Sonic Graph Controls Card
+       */
+      createSonicGraphControlsCard() {
+        const card = new MaterialCard({
+          title: "Sonic graph controls",
+          iconName: "play-circle",
+          subtitle: "Launch temporal animation with audio",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const description = content.createDiv({ cls: "osp-control-description" });
+        description.innerHTML = `
+			<p>Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.</p>
+		`;
+        const settingsSection = content.createDiv({ cls: "osp-settings-section" });
+        settingsSection.style.marginBottom = "var(--md-space-4)";
+        logger8.debug("ui", `Creating show file names toggle with initial state: ${this.showFileNames}`);
+        createObsidianToggle(
+          settingsSection,
+          this.showFileNames,
+          // Use current state
+          (enabled) => this.handleShowFileNamesToggle(enabled),
+          {
+            name: "Show file names",
+            description: "Display file names as labels on graph nodes"
+          }
+        );
+        logger8.debug("ui", "Show file names toggle created");
+        const launchButton = new MaterialButton({
+          text: "Launch Sonic Graph",
+          iconName: "external-link",
+          variant: "filled",
+          onClick: () => this.launchSonicGraphModal()
+        });
+        const buttonContainer = content.createDiv({ cls: "osp-button-container" });
+        buttonContainer.appendChild(launchButton.getElement());
+        const statsContainer = content.createDiv({ cls: "osp-stats-row" });
+        const filesStat = statsContainer.createDiv({ cls: "osp-stat-compact" });
+        filesStat.innerHTML = `
+			<span class="osp-stat-value">\u2014</span>
+			<span class="osp-stat-label">Files</span>
+		`;
+        const linksStat = statsContainer.createDiv({ cls: "osp-stat-compact" });
+        linksStat.innerHTML = `
+			<span class="osp-stat-value">\u2014</span>
+			<span class="osp-stat-label">Links</span>
+		`;
+        this.updateSonicGraphStats(filesStat, linksStat);
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Initialize graph preview visualization
+       */
+      async initializeGraphPreview(container, loadingDiv) {
+        try {
+          const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
+          const graphData = await extractor.extractGraphData();
+          loadingDiv.remove();
+          this.graphRenderer = new GraphRenderer(container, {
+            width: container.clientWidth,
+            height: 300,
+            enableZoom: true,
+            // Enable zoom for interactive preview
+            showLabels: this.showFileNames
+            // Use stored toggle state
+          });
+          this.graphRenderer.render(graphData.nodes, graphData.links);
+          logger8.debug("ui", `Graph renderer initialized with showLabels: ${this.showFileNames}`);
+        } catch (error) {
+          logger8.error("ui", "Failed to initialize graph preview:", error);
+          loadingDiv.textContent = "Failed to load graph preview";
+        }
+      }
+      /**
+       * Update stats for Sonic Graph controls
+       */
+      async updateSonicGraphStats(filesEl, linksEl) {
+        try {
+          const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
+          const graphData = await extractor.extractGraphData();
+          const filesValue = filesEl.querySelector(".osp-stat-value");
+          const linksValue = linksEl.querySelector(".osp-stat-value");
+          if (filesValue)
+            filesValue.textContent = graphData.nodes.length.toString();
+          if (linksValue)
+            linksValue.textContent = graphData.links.length.toString();
+        } catch (error) {
+          logger8.error("ui", "Failed to update Sonic Graph stats:", error);
+        }
+      }
+      /**
+       * Launch the full Sonic Graph modal
+       */
+      launchSonicGraphModal() {
+        logger8.debug("ui", "Launching Sonic Graph modal");
+        this.close();
+        Promise.resolve().then(() => (init_SonicGraphModal(), SonicGraphModal_exports)).then(({ SonicGraphModal: SonicGraphModal2 }) => {
+          const sonicGraphModal = new SonicGraphModal2(this.app, this.plugin);
+          sonicGraphModal.open();
+        }).catch((error) => {
+          logger8.error("Failed to load Sonic Graph modal", error.message);
+          new import_obsidian5.Notice("Failed to open Sonic Graph modal");
+        });
+      }
+      /**
+       * Handle show file names toggle
+       */
+      handleShowFileNamesToggle(enabled) {
+        this.showFileNames = enabled;
+        logger8.debug("ui", `Show file names toggled: ${enabled}, renderer exists: ${!!this.graphRenderer}`);
+        new import_obsidian5.Notice(`File names ${enabled ? "shown" : "hidden"}`);
+        if (this.graphRenderer) {
+          this.graphRenderer.updateConfig({ showLabels: enabled });
+          logger8.debug("ui", `Graph file names visibility updated: ${enabled}`);
+        } else {
+          logger8.debug("ui", "Graph renderer not yet initialized, will apply setting when created");
+        }
+      }
+      /**
+       * Create family tab content (Strings, Woodwinds, etc.)
+       */
+      createFamilyTab(familyId) {
+        const tabConfig = TAB_CONFIGS.find((tab) => tab.id === familyId);
+        if (!tabConfig)
+          return;
+        this.createFamilyOverviewCard(familyId, tabConfig);
+        this.createInstrumentsCard(familyId, tabConfig);
+        if (familyId === "experimental") {
+          this.createWhaleIntegrationCard();
+        }
+        this.createFamilyEffectsCard(familyId, tabConfig);
+      }
+      /**
+       * Create family overview card with stats and bulk actions
+       */
+      createFamilyOverviewCard(familyId, tabConfig) {
+        const card = new MaterialCard({
+          title: `${tabConfig.name} family overview`,
+          iconName: getFamilyIcon(familyId),
+          subtitle: `${this.getEnabledCount(familyId)} of ${this.getTotalCount(familyId)} instruments enabled`,
+          elevation: 1
+        });
+        const content = card.getContent();
+        const statsRow = content.createDiv({ cls: "osp-stats-row" });
+        const enabledStat = statsRow.createDiv({ cls: "osp-stat-compact" });
+        enabledStat.innerHTML = `
+			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}</span>
+			<span class="osp-stat-label">Enabled</span>
+		`;
+        const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
+        voicesStat.innerHTML = `
+			<span class="osp-stat-value">${this.getActiveVoices(familyId)}</span>
+			<span class="osp-stat-label">Voices</span>
+		`;
+        const avgVolumeStat = statsRow.createDiv({ cls: "osp-stat-compact" });
+        avgVolumeStat.innerHTML = `
+			<span class="osp-stat-value">0.7</span>
+			<span class="osp-stat-label">Avg Vol</span>
+		`;
+        const actionsRow = content.createDiv({ cls: "osp-actions-row" });
+        const enableAllBtn = actionsRow.createEl("button", {
+          cls: "osp-action-btn osp-action-btn--primary",
+          text: "Enable All"
+        });
+        enableAllBtn.addEventListener("click", () => this.handleBulkAction(familyId, "enableAll", true));
+        const disableAllBtn = actionsRow.createEl("button", {
+          cls: "osp-action-btn osp-action-btn--secondary",
+          text: "Disable All"
+        });
+        disableAllBtn.addEventListener("click", () => this.handleBulkAction(familyId, "disableAll", true));
+        const resetBtn = actionsRow.createEl("button", {
+          cls: "osp-action-btn osp-action-btn--secondary",
+          text: "Reset"
+        });
+        resetBtn.addEventListener("click", () => this.handleBulkAction(familyId, "resetVolumes", true));
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create instruments card for family
+       */
+      createInstrumentsCard(familyId, tabConfig) {
+        const card = new MaterialCard({
+          title: "Individual instruments",
+          iconName: "list",
+          subtitle: "Configure instrument-specific settings",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const instruments = this.getInstrumentsForFamily(familyId);
+        instruments.forEach((instrument) => {
+          var _a;
+          const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrument];
+          this.createHorizontalInstrumentSection(content, instrument, {
+            enabled: (settings == null ? void 0 : settings.enabled) || false,
+            volume: (settings == null ? void 0 : settings.volume) || 0.7,
+            maxVoices: (settings == null ? void 0 : settings.maxVoices) || 4,
+            activeVoices: this.getInstrumentActiveVoices(instrument)
+          });
+        });
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create whale integration card for experimental family
+       */
+      createWhaleIntegrationCard() {
+        const card = new MaterialCard({
+          title: "Whale sound integration",
+          iconName: "waves",
+          subtitle: "High-quality external whale samples from marine research institutions",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const whaleIntegration2 = this.getWhaleIntegrationStatus();
+        createObsidianToggle(
+          content,
+          whaleIntegration2.enabled,
+          (enabled) => this.handleWhaleIntegrationToggle(enabled),
+          {
+            name: "Use external whale samples",
+            description: "Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions"
+          }
+        );
+        const statusSection = content.createDiv({ cls: "osp-whale-status" });
+        statusSection.style.marginTop = "var(--md-space-4)";
+        const collectionRow = statusSection.createDiv({ cls: "osp-info-row" });
+        collectionRow.createSpan({ text: "Sample collection:", cls: "osp-info-label" });
+        const collectionStatus = collectionRow.createSpan({
+          text: whaleIntegration2.collectionStatus,
+          cls: "osp-info-value"
+        });
+        const speciesRow = statusSection.createDiv({ cls: "osp-info-row" });
+        speciesRow.createSpan({ text: "Available species:", cls: "osp-info-label" });
+        speciesRow.createSpan({
+          text: whaleIntegration2.availableSpecies.join(", "),
+          cls: "osp-info-value"
+        });
+        const sourcesRow = statusSection.createDiv({ cls: "osp-info-row" });
+        sourcesRow.createSpan({ text: "Sources:", cls: "osp-info-label" });
+        sourcesRow.createSpan({
+          text: whaleIntegration2.sources.join(", "),
+          cls: "osp-info-value"
+        });
+        const actionsRow = content.createDiv({ cls: "osp-actions-row" });
+        actionsRow.style.marginTop = "var(--md-space-4)";
+        const previewBtn = actionsRow.createEl("button", {
+          cls: "osp-action-btn osp-action-btn--primary",
+          text: "Preview sample"
+        });
+        previewBtn.addEventListener("click", () => this.handleWhalePreview());
+        const attributionBtn = actionsRow.createEl("button", {
+          cls: "osp-action-btn osp-action-btn--secondary",
+          text: "Attribution info"
+        });
+        attributionBtn.addEventListener("click", () => this.handleWhaleAttribution());
+        const discoveryBtn = actionsRow.createEl("button", {
+          cls: "osp-action-btn osp-action-btn--secondary",
+          text: "Find new samples"
+        });
+        discoveryBtn.disabled = true;
+        discoveryBtn.title = "Manual sample discovery coming in Phase 2";
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create family effects card
+       */
+      createFamilyEffectsCard(familyId, tabConfig) {
+        const card = new MaterialCard({
+          title: `${tabConfig.name} effects`,
+          iconName: "sliders-horizontal",
+          subtitle: "Family-wide effect processing",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const effectsGrid = createGrid("3-col");
+        const reverbSection = new EffectSection({
+          effectName: "Reverb",
+          iconName: "reverb",
+          enabled: this.getFamilyEffectState(familyId, "reverb"),
+          parameters: [
+            {
+              name: "Decay Time",
+              value: 2.5,
+              min: 0.1,
+              max: 10,
+              step: 0.1,
+              unit: "s",
+              onChange: (value) => this.handleEffectParameterChange(familyId, "reverb", "decay", value)
+            },
+            {
+              name: "Wet Level",
+              value: 0.3,
+              min: 0,
+              max: 1,
+              step: 0.1,
+              unit: "",
+              onChange: (value) => this.handleEffectParameterChange(familyId, "reverb", "wet", value)
+            }
+          ],
+          onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, "reverb", enabled)
+        });
+        const chorusSection = new EffectSection({
+          effectName: "Chorus",
+          iconName: "chorus",
+          enabled: this.getFamilyEffectState(familyId, "chorus"),
+          parameters: [
+            {
+              name: "Rate",
+              value: 1.5,
+              min: 0.1,
+              max: 10,
+              step: 0.1,
+              unit: "Hz",
+              onChange: (value) => this.handleEffectParameterChange(familyId, "chorus", "frequency", value)
+            },
+            {
+              name: "Depth",
+              value: 0.4,
+              min: 0,
+              max: 1,
+              step: 0.1,
+              unit: "",
+              onChange: (value) => this.handleEffectParameterChange(familyId, "chorus", "depth", value)
+            }
+          ],
+          onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, "chorus", enabled)
+        });
+        const filterSection = new EffectSection({
+          effectName: "Filter",
+          iconName: "filter",
+          enabled: false,
+          parameters: [
+            {
+              name: "Frequency",
+              value: 800,
+              min: 20,
+              max: 2e4,
+              step: 10,
+              unit: "Hz",
+              onChange: (value) => this.handleEffectParameterChange(familyId, "filter", "frequency", value)
+            },
+            {
+              name: "Resonance",
+              value: 1,
+              min: 0.1,
+              max: 30,
+              step: 0.1,
+              unit: "",
+              onChange: (value) => this.handleEffectParameterChange(familyId, "filter", "Q", value)
+            }
+          ],
+          onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, "filter", enabled)
+        });
+        effectsGrid.appendChild(reverbSection.getElement());
+        effectsGrid.appendChild(chorusSection.getElement());
+        effectsGrid.appendChild(filterSection.getElement());
+        content.appendChild(effectsGrid);
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create placeholder tab for future implementation
+       */
+      createPlaceholderTab(tabId) {
+        const tabConfig = TAB_CONFIGS.find((tab) => tab.id === tabId);
+        const card = this.createCard(
+          (tabConfig == null ? void 0 : tabConfig.name) || "Tab",
+          (tabConfig == null ? void 0 : tabConfig.icon) || "settings",
+          "This tab is under development"
+        );
+        const content = card.querySelector(".ospcc-card__content");
+        content.textContent = `${(tabConfig == null ? void 0 : tabConfig.name) || "This"} tab functionality will be implemented soon...`;
+        this.contentContainer.appendChild(card);
+      }
+      /**
+       * Utility method to create basic cards for simple tabs
+       */
+      createCard(title, iconName, subtitle) {
+        const card = new MaterialCard({
+          title,
+          iconName,
+          subtitle,
+          elevation: 1
+        });
+        return card.getElement();
+      }
+      // Utility methods
+      getEnabledCount(familyId) {
+        const instruments = this.getInstrumentsForFamily(familyId);
+        const enabledInstruments = instruments.filter((inst) => {
+          var _a;
+          const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[inst];
+          const isEnabled = settings == null ? void 0 : settings.enabled;
+          if (familyId === "strings" || familyId === "woodwinds") {
+            logger8.debug("ui", "Checking family instrument enabled state", {
+              familyId,
+              instrument: inst,
+              hasSettings: !!settings,
+              isEnabled,
+              action: "count-enabled-instruments"
+            });
+          }
+          return isEnabled;
+        });
+        if (familyId === "strings" || familyId === "woodwinds") {
+          logger8.debug("ui", "Family enabled count result", {
+            familyId,
+            totalInstruments: instruments.length,
+            enabledCount: enabledInstruments.length,
+            instruments,
+            enabledInstruments,
+            action: "family-enabled-count"
+          });
+        }
+        return enabledInstruments.length;
+      }
+      /**
+       * Get total count of instruments available in a family
+       * @param familyId - The family identifier
+       * @returns Total number of instruments in the family
+       */
+      getTotalCount(familyId) {
+        const instruments = this.getInstrumentsForFamily(familyId);
+        return instruments.length;
+      }
+      getActiveVoices(familyId) {
+        const instruments = this.getInstrumentsForFamily(familyId);
+        let totalVoices = 0;
+        instruments.forEach((instrument) => {
+          var _a;
+          const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrument];
+          if (settings == null ? void 0 : settings.enabled) {
+            totalVoices += settings.maxVoices || 0;
+          }
+        });
+        return totalVoices;
+      }
+      getInstrumentsForFamily(familyId) {
+        const allInstruments = Object.keys(this.plugin.settings.instruments);
+        logger8.debug("ui", "All available instruments in settings", {
+          allInstruments,
+          totalCount: allInstruments.length,
+          action: "get-family-instruments"
+        });
+        const familyMap = {
+          // Based on actual instruments defined in DEFAULT_SETTINGS
+          strings: ["strings", "violin", "cello", "contrabass", "guitar", "guitarElectric", "guitarNylon", "bassElectric", "harp"],
+          woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
+          brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
+          percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
+          electronic: ["leadSynth", "bassSynth", "arpSynth"],
+          // All electronic instruments
+          experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"],
+          // Additional families for other instruments
+          keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"]
+        };
+        const familyInstruments = familyMap[familyId] || [];
+        const validInstruments = familyInstruments.filter(
+          (inst) => allInstruments.includes(inst)
+        );
+        const invalidInstruments = familyInstruments.filter(
+          (inst) => !allInstruments.includes(inst)
+        );
+        if (invalidInstruments.length > 0) {
+          logger8.warn("ui", "Family mapping includes non-existent instruments", {
+            familyId,
+            invalidInstruments,
+            validInstruments,
+            allAvailableInstruments: allInstruments,
+            action: "validate-family-mapping"
+          });
+        }
+        logger8.debug("ui", "Family instrument mapping", {
+          familyId,
+          requestedInstruments: familyInstruments,
+          validInstruments,
+          invalidInstruments,
+          validCount: validInstruments.length,
+          invalidCount: invalidInstruments.length,
+          action: "family-mapping-result"
+        });
+        return validInstruments;
+      }
+      // Event handlers
+      handlePause() {
+        logger8.info("ui", "Pause clicked");
+        this.playButtonManager.setState("paused");
+        this.plugin.stopPlayback();
+      }
+      async handleResume() {
+        logger8.info("ui", "Resume clicked");
+        this.playButtonManager.setState("loading", "starting");
+        try {
+          await this.plugin.playSequence();
+        } catch (error) {
+          logger8.error("ui", "Failed to resume sequence", error);
+          this.playButtonManager.setState("idle");
+        }
+      }
+      handleStop() {
+        logger8.info("ui", "Stop clicked");
+        this.playButtonManager.setState("stopping");
+        this.plugin.stopPlayback();
+      }
+      handleDemo() {
+        logger8.debug("ui", "Demo button clicked");
+        const demoModal = new GraphDemoModal(this.app);
+        demoModal.open();
+      }
+      async handlePlay() {
+        logger8.info("ui", "Play clicked");
+        const currentState = this.playButtonManager.getCurrentState();
+        if (currentState === "playing") {
+          this.handlePause();
+          return;
+        } else if (currentState === "paused") {
+          this.handleResume();
+          return;
+        } else if (currentState === "loading" || currentState === "stopping") {
+          return;
+        }
+        this.playButtonManager.setState("loading", "analyzing");
+        try {
+          this.playButtonManager.setLoadingSubstate("analyzing");
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          this.playButtonManager.setLoadingSubstate("generating");
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          this.playButtonManager.setLoadingSubstate("initializing");
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          this.playButtonManager.setLoadingSubstate("starting");
+          await this.plugin.playSequence();
+        } catch (error) {
+          logger8.error("ui", "Failed to play sequence", error);
+          this.playButtonManager.setState("idle");
+        }
+      }
+      handleMasterVolumeChange(volume) {
+        logger8.info("ui", `Master volume changed to ${volume}`);
+        this.plugin.settings.volume = volume;
+        this.plugin.saveSettings();
+      }
+      /**
+       * Enhanced Play Button: Audio Engine Event Integration
+       */
+      setupAudioEngineEventListeners() {
+        if (!this.plugin.audioEngine) {
+          logger8.warn("ui", "Cannot setup audio event listeners: AudioEngine not available");
+          return;
+        }
+        if (this.boundEventHandlers) {
+          logger8.debug("ui", "Audio engine event listeners already configured, skipping setup");
+          return;
+        }
+        this.boundEventHandlers = {
+          handlePlaybackStarted: this.handlePlaybackStarted.bind(this),
+          handlePlaybackEnded: this.handlePlaybackEnded.bind(this),
+          handlePlaybackStopped: this.handlePlaybackStopped.bind(this),
+          handlePlaybackError: this.handlePlaybackError.bind(this),
+          handleSequenceProgress: this.handleSequenceProgress.bind(this)
+        };
+        this.plugin.audioEngine.on("playback-started", this.boundEventHandlers.handlePlaybackStarted);
+        this.plugin.audioEngine.on("playback-ended", this.boundEventHandlers.handlePlaybackEnded);
+        this.plugin.audioEngine.on("playback-stopped", this.boundEventHandlers.handlePlaybackStopped);
+        this.plugin.audioEngine.on("playback-error", this.boundEventHandlers.handlePlaybackError);
+        this.plugin.audioEngine.on("sequence-progress", this.boundEventHandlers.handleSequenceProgress);
+        logger8.debug("ui", "Audio engine event listeners configured with bound handlers");
+      }
+      cleanupAudioEngineEventListeners() {
+        if (!this.plugin.audioEngine || !this.boundEventHandlers) {
+          return;
+        }
+        this.plugin.audioEngine.off("playback-started", this.boundEventHandlers.handlePlaybackStarted);
+        this.plugin.audioEngine.off("playback-ended", this.boundEventHandlers.handlePlaybackEnded);
+        this.plugin.audioEngine.off("playback-stopped", this.boundEventHandlers.handlePlaybackStopped);
+        this.plugin.audioEngine.off("playback-error", this.boundEventHandlers.handlePlaybackError);
+        this.plugin.audioEngine.off("sequence-progress", this.boundEventHandlers.handleSequenceProgress);
+        this.boundEventHandlers = null;
+        logger8.debug("ui", "Audio engine event listeners cleaned up (specific handlers only)");
+      }
+      handlePlaybackStarted() {
+        logger8.debug("ui", "Audio engine playback started - switching to playing state");
+        this.playButtonManager.setState("playing");
+        this.showProgressIndication();
+      }
+      handlePlaybackEnded() {
+        logger8.debug("ui", "Audio engine playback ended - switching to idle state");
+        this.playButtonManager.setState("idle");
+        this.hideProgressIndication();
+      }
+      handlePlaybackStopped() {
+        logger8.debug("ui", "Audio engine playback stopped - switching to idle state");
+        this.playButtonManager.setState("idle");
+        this.hideProgressIndication();
+      }
+      handlePlaybackError(data) {
+        var _a;
+        const errorData = data;
+        logger8.error("ui", "Audio engine playback error", {
+          error: (_a = errorData == null ? void 0 : errorData.error) == null ? void 0 : _a.message,
+          context: errorData == null ? void 0 : errorData.context
+        });
+        this.playButtonManager.setState("idle");
+        this.hideProgressIndication();
+      }
+      handleSequenceProgress(data) {
+        const progressData = data;
+        if (progressData) {
+          logger8.debug("ui", "Sequence progress update", {
+            percent: progressData.percentComplete.toFixed(1),
+            currentNote: progressData.currentIndex,
+            totalNotes: progressData.totalNotes
+          });
+          this.updateProgressIndication(progressData);
+        }
+      }
+      startStatusUpdates() {
+      }
+      stopStatusUpdates() {
+        if (this.statusInterval) {
+          clearInterval(this.statusInterval);
+          this.statusInterval = null;
+        }
+      }
+      /**
+       * Phase 3: Progress indication methods
+       */
+      showProgressIndication() {
+        if (!this.playButton)
+          return;
+        if (!this.progressElement) {
+          this.progressElement = this.playButton.createDiv({ cls: "osp-play-progress" });
+          this.progressBar = this.progressElement.createDiv({ cls: "osp-progress-bar" });
+          this.progressBar.createDiv({ cls: "osp-progress-fill" });
+          this.progressText = this.progressElement.createDiv({
+            cls: "osp-progress-text",
+            text: "Starting..."
+          });
+        }
+        this.progressElement.addClass("osp-progress--visible");
+        logger8.debug("ui", "Progress indication shown");
+      }
+      hideProgressIndication() {
+        if (this.progressElement) {
+          this.progressElement.removeClass("osp-progress--visible");
+          setTimeout(() => {
+            if (this.progressElement && this.progressElement.parentNode) {
+              this.progressElement.remove();
+              this.progressElement = null;
+              this.progressBar = null;
+              this.progressText = null;
+            }
+          }, 300);
+        }
+        logger8.debug("ui", "Progress indication hidden");
+      }
+      updateProgressIndication(progressData) {
+        if (!this.progressElement || !this.progressBar || !this.progressText)
+          return;
+        const progressFill = this.progressBar.querySelector(".osp-progress-fill");
+        if (progressFill) {
+          progressFill.style.width = `${Math.min(progressData.percentComplete, 100)}%`;
+        }
+        const currentMinutes = Math.floor(progressData.elapsedTime / 6e4);
+        const currentSeconds = Math.floor(progressData.elapsedTime % 6e4 / 1e3);
+        const totalMinutes = Math.floor(progressData.estimatedTotalTime / 6e4);
+        const totalSeconds = Math.floor(progressData.estimatedTotalTime % 6e4 / 1e3);
+        const timeString = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")} / ${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
+        this.progressText.textContent = `Playing: ${progressData.currentIndex}/${progressData.totalNotes} notes (${timeString})`;
+        if (progressData.percentComplete > 90) {
+          this.progressElement.addClass("osp-progress--finishing");
+        } else {
+          this.progressElement.removeClass("osp-progress--finishing");
+        }
+      }
+      // Event handlers for component interactions
+      handleBulkAction(familyId, action, selected) {
+        logger8.info("ui", `Bulk action: ${action} for ${familyId}`, { selected });
+        const instruments = this.getInstrumentsForFamily(familyId);
+        switch (action) {
+          case "enableAll":
+            if (selected) {
+              logger8.debug("ui", "Enabling all instruments in family", {
+                familyId,
+                instruments,
+                action: "enable-all-start",
+                instrumentCount: instruments.length
+              });
+              instruments.forEach((instrument) => {
+                const instrumentKey = instrument;
+                if (this.plugin.settings.instruments[instrumentKey]) {
+                  this.plugin.settings.instruments[instrumentKey].enabled = true;
+                }
+              });
+              if (this.plugin.audioEngine) {
+                this.plugin.audioEngine.updateSettings(this.plugin.settings);
+                logger8.debug("ui", "Audio engine settings updated after bulk enable", {
+                  familyId,
+                  action: "bulk-enable-audio-update"
+                });
+              }
+            }
+            break;
+          case "disableAll":
+            if (selected) {
+              logger8.debug("ui", "Disabling all instruments in family", {
+                familyId,
+                instruments,
+                action: "disable-all-start",
+                instrumentCount: instruments.length
+              });
+              instruments.forEach((instrument) => {
+                const instrumentKey = instrument;
+                const settings = this.plugin.settings.instruments[instrumentKey];
+                if (settings) {
+                  logger8.debug("ui", "Disabling instrument", {
+                    instrument,
+                    wasEnabled: settings.enabled,
+                    action: "disable-instrument"
+                  });
+                  const wasEnabled = settings.enabled;
+                  settings.enabled = false;
+                  if (instrument === "piano") {
+                    logger8.info("ui", "Piano specifically disabled", {
+                      instrument: "piano",
+                      wasEnabled,
+                      nowEnabled: settings.enabled,
+                      action: "disable-piano-specifically"
+                    });
+                  }
+                  if (settings.effects) {
+                    settings.effects.reverb.enabled = false;
+                    settings.effects.chorus.enabled = false;
+                    settings.effects.filter.enabled = false;
+                  }
+                } else {
+                  logger8.warn("ui", "Instrument not found in settings", {
+                    instrument,
+                    availableInstruments: Object.keys(this.plugin.settings.instruments),
+                    action: "disable-all-missing-instrument",
+                    familyId
+                  });
+                }
+              });
+              logger8.debug("ui", "After disable all, checking remaining enabled instruments", { familyId });
+              const allInstrumentKeys = Object.keys(this.plugin.settings.instruments);
+              const stillEnabled = allInstrumentKeys.filter((key) => {
+                const settings = this.plugin.settings.instruments[key];
+                return settings == null ? void 0 : settings.enabled;
+              });
+              logger8.debug("ui", "Instruments still enabled after disable all", {
+                familyId,
+                stillEnabledInstruments: stillEnabled,
+                totalEnabledCount: stillEnabled.length,
+                action: "disable-all-complete"
+              });
+              if (this.plugin.audioEngine) {
+                this.plugin.audioEngine.updateSettings(this.plugin.settings);
+                logger8.debug("ui", "Audio engine settings updated after bulk disable", {
+                  familyId,
+                  action: "bulk-disable-audio-update"
+                });
+              }
+            }
+            break;
+          case "resetVolumes":
+            if (selected) {
+              instruments.forEach((instrument) => {
+                const instrumentKey = instrument;
+                if (this.plugin.settings.instruments[instrumentKey]) {
+                  this.plugin.settings.instruments[instrumentKey].volume = 0.7;
+                }
+              });
+            }
+            break;
+          case "defaultEffects":
+            if (selected) {
+            }
+            break;
+        }
+        this.plugin.saveSettings();
+        this.updateNavigationCounts();
+        this.showTab(familyId);
+      }
+      handleInstrumentEnabledChange(instrument, enabled) {
+        logger8.info("ui", `Instrument ${instrument} enabled changed`, { enabled });
+        const instrumentKey = instrument;
+        if (this.plugin.settings.instruments[instrumentKey]) {
+          this.plugin.settings.instruments[instrumentKey].enabled = enabled;
+          this.plugin.saveSettings();
+        }
+        this.updateNavigationCounts();
+        if (this.plugin.audioEngine) {
+          this.plugin.audioEngine.updateSettings(this.plugin.settings);
+          logger8.debug("ui", "Audio engine settings updated after instrument enable/disable", {
+            instrument,
+            enabled
+          });
+        }
+      }
+      handleInstrumentVolumeChange(instrument, volume) {
+        logger8.debug("ui", `Instrument ${instrument} volume changed`, { volume });
+        const instrumentKey = instrument;
+        if (this.plugin.settings.instruments[instrumentKey]) {
+          this.plugin.settings.instruments[instrumentKey].volume = volume;
+          this.plugin.saveSettings();
+        }
+        if (this.plugin.audioEngine) {
+        }
+      }
+      handleInstrumentMaxVoicesChange(instrument, maxVoices) {
+        logger8.debug("ui", `Instrument ${instrument} max voices changed`, { maxVoices });
+        const instrumentKey = instrument;
+        if (this.plugin.settings.instruments[instrumentKey]) {
+          this.plugin.settings.instruments[instrumentKey].maxVoices = maxVoices;
+          this.plugin.saveSettings();
+        }
+      }
+      handleEffectEnabledChange(familyId, effectType, enabled) {
+        logger8.info("ui", `Effect ${effectType} for ${familyId} enabled changed`, { enabled });
+        const instruments = this.getInstrumentsForFamily(familyId);
+        instruments.forEach((instrument) => {
+          const instrumentKey = instrument;
+          const settings = this.plugin.settings.instruments[instrumentKey];
+          if (settings && settings.effects) {
+            if (!settings.effects[effectType]) {
+              settings.effects[effectType] = {
+                enabled,
+                params: this.getDefaultEffectParams(effectType)
+              };
+            } else {
+              settings.effects[effectType].enabled = enabled;
+            }
+          }
+        });
+        this.plugin.saveSettings();
+      }
+      handleEffectParameterChange(familyId, effectType, parameter, value) {
+        logger8.debug("ui", `Effect ${effectType} parameter ${parameter} changed for ${familyId}`, { value });
+        const instruments = this.getInstrumentsForFamily(familyId);
+        instruments.forEach((instrument) => {
+          const instrumentKey = instrument;
+          const settings = this.plugin.settings.instruments[instrumentKey];
+          if (settings && settings.effects) {
+            if (!settings.effects[effectType]) {
+              settings.effects[effectType] = {
+                enabled: true,
+                params: this.getDefaultEffectParams(effectType)
+              };
+            }
+            settings.effects[effectType].params[parameter] = value;
+          }
+        });
+        this.plugin.saveSettings();
+      }
+      getDefaultEffectParams(effectType) {
+        switch (effectType) {
+          case "reverb":
+            return { decay: 2, preDelay: 0.1, wet: 0.3 };
+          case "chorus":
+            return { frequency: 1, depth: 0.3, delayTime: 0.02, feedback: 0.1 };
+          case "filter":
+            return { frequency: 1e3, Q: 1, type: "lowpass" };
+          default:
+            return {};
+        }
+      }
+      getInstrumentActiveVoices(instrument) {
+        var _a;
+        const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrument];
+        if (settings == null ? void 0 : settings.enabled) {
+          return Math.floor(Math.random() * (settings.maxVoices || 4));
+        }
+        return 0;
+      }
+      /**
+       * Create horizontal instrument section similar to effect sections
+       */
+      createHorizontalInstrumentSection(container, instrumentName, options) {
+        var _a, _b, _c, _d, _e, _f, _g;
+        const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
+        const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
+        const title = header.createDiv({ cls: "osp-effect-title-area" });
+        const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
+        title.appendChild(icon);
+        const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
+        const titleWithStatus = this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo);
+        title.innerHTML += titleWithStatus;
+        const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
+        toggleContainer.setAttribute("data-tooltip", `Toggle ${instrumentInfo.name} on/off`);
+        toggleContainer.setAttribute("title", `Toggle ${instrumentInfo.name} on/off`);
+        const toggleInput = toggleContainer.createEl("input", {
+          type: "checkbox",
+          cls: "ospcc-switch__input"
+        });
+        const canToggle = !this.instrumentRequiresHighQuality(instrumentName) || this.checkIfSampleDownloaded(instrumentName);
+        const isEnabled = options.enabled && canToggle;
+        toggleInput.checked = isEnabled;
+        if (!canToggle) {
+          toggleInput.disabled = true;
+          toggleContainer.classList.add("ospcc-switch--unavailable");
+          toggleContainer.style.cursor = "not-allowed";
+          toggleContainer.setAttribute("data-tooltip", `${instrumentInfo.name} samples not yet downloaded`);
+          toggleContainer.setAttribute("title", `${instrumentInfo.name} samples not yet downloaded`);
+        }
+        toggleInput.addEventListener("change", () => {
+          if (canToggle) {
+            logger8.debug("ui", "Instrument toggle changed", { instrumentName, enabled: toggleInput.checked });
+            this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
+          }
+        });
+        const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+        const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
+        if (canToggle) {
+          toggleContainer.addEventListener("click", (e) => {
+            if (e.target !== toggleInput) {
+              e.preventDefault();
+              toggleInput.checked = !toggleInput.checked;
+              toggleInput.dispatchEvent(new Event("change"));
+            }
+          });
+        }
+        const paramsContainer = section.createDiv({ cls: "osp-effect-params-horizontal" });
+        const volumeGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
+        const volumeLabel = volumeGroup.createDiv({ cls: "osp-param-label" });
+        volumeLabel.textContent = "Volume";
+        const volumeSliderContainer = volumeGroup.createDiv({ cls: "osp-param-slider" });
+        const volumeSlider = new MaterialSlider({
+          value: options.volume,
+          min: 0,
+          max: 1,
+          step: 0.1,
+          unit: "",
+          onChange: (value) => this.handleInstrumentVolumeChange(instrumentName, value)
+        });
+        volumeSliderContainer.appendChild(volumeSlider.getElement());
+        const voicesGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
+        const voicesLabel = voicesGroup.createDiv({ cls: "osp-param-label" });
+        voicesLabel.textContent = "Max voices";
+        const voicesSliderContainer = voicesGroup.createDiv({ cls: "osp-param-slider" });
+        const voicesSlider = new MaterialSlider({
+          value: options.maxVoices,
+          min: 1,
+          max: 8,
+          step: 1,
+          unit: "",
+          onChange: (value) => this.handleInstrumentMaxVoicesChange(instrumentName, Math.round(value))
+        });
+        voicesSliderContainer.appendChild(voicesSlider.getElement());
+        const effectsGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal osp-effects-toggles" });
+        const effectsLabel = effectsGroup.createDiv({ cls: "osp-param-label" });
+        effectsLabel.textContent = "Effects";
+        const effectsContainer = effectsGroup.createDiv({ cls: "osp-effects-container" });
+        const instrumentSettings = this.plugin.settings.instruments[instrumentName];
+        this.createEffectToggle(effectsContainer, "Reverb", "reverb", instrumentName, ((_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.enabled) || false);
+        this.createEffectToggle(effectsContainer, "Chorus", "chorus", instrumentName, ((_d = (_c = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _c.chorus) == null ? void 0 : _d.enabled) || false);
+        this.createEffectToggle(effectsContainer, "Filter", "filter", instrumentName, ((_f = (_e = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _e.filter) == null ? void 0 : _f.enabled) || false);
+        if (this.instrumentSupportsQualityChoice(instrumentName)) {
+          const qualityGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
+          const qualityLabel = qualityGroup.createDiv({ cls: "osp-param-label" });
+          qualityLabel.textContent = "Quality";
+          const qualityContainer = qualityGroup.createDiv({ cls: "setting-item" });
+          const qualitySelect = qualityContainer.createEl("select", { cls: "dropdown" });
+          qualitySelect.createEl("option", {
+            value: "synthesis",
+            text: "Use synthesis"
+          });
+          qualitySelect.createEl("option", {
+            value: "recording",
+            text: "Use recording"
+          });
+          const currentSettings = this.plugin.settings.instruments[instrumentName];
+          const usesHighQuality = (_g = currentSettings.useHighQuality) != null ? _g : false;
+          qualitySelect.value = usesHighQuality ? "recording" : "synthesis";
+          qualitySelect.addEventListener("change", async () => {
+            const useRecording = qualitySelect.value === "recording";
+            if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
+              const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
+              if (!isDownloaded) {
+                new import_obsidian5.Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
+                qualitySelect.value = "synthesis";
+                return;
+              }
+            }
+            this.plugin.settings.instruments[instrumentName].useHighQuality = useRecording;
+            await this.plugin.saveSettings();
+            const modeText = useRecording ? "recording" : "synthesis";
+            new import_obsidian5.Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
+          });
+          if (this.instrumentRequiresHighQuality(instrumentName)) {
+            const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
+            if (!isDownloaded) {
+              const recordingOption = qualitySelect.querySelector('option[value="recording"]');
+              if (recordingOption) {
+                recordingOption.disabled = true;
+                recordingOption.text = "Use recording (not downloaded)";
+              }
+            }
+          }
+        }
+      }
+      /**
+       * Create individual effect toggle for instruments
+       */
+      createEffectToggle(container, effectName, effectKey, instrumentName, enabled) {
+        const toggleGroup = container.createDiv({ cls: "osp-effect-toggle-group" });
+        const label = toggleGroup.createDiv({ cls: "osp-effect-toggle-label" });
+        label.textContent = effectName;
+        const toggleContainer = toggleGroup.createDiv({ cls: "ospcc-switch osp-effect-toggle" });
+        const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
+        toggleContainer.setAttribute("data-tooltip", `Toggle ${effectName} for ${instrumentInfo.name}`);
+        toggleContainer.setAttribute("title", `Toggle ${effectName} for ${instrumentInfo.name}`);
+        const toggleInput = toggleContainer.createEl("input", {
+          type: "checkbox",
+          cls: "ospcc-switch__input"
+        });
+        toggleInput.checked = enabled;
+        toggleInput.addEventListener("change", (e) => {
+          this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
+        });
+        const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
+        const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
+        toggleContainer.addEventListener("click", (e) => {
+          if (e.target !== toggleInput) {
+            e.preventDefault();
+            toggleInput.checked = !toggleInput.checked;
+            toggleInput.dispatchEvent(new Event("change"));
+          }
+        });
+      }
+      /**
+       * Handle individual instrument effect toggle changes
+       */
+      handleInstrumentEffectChange(instrumentName, effectKey, enabled) {
+        logger8.info("ui", `Instrument ${instrumentName} effect ${effectKey} changed`, { enabled });
+        const instrumentKey = instrumentName;
+        const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+        if (instrumentSettings && instrumentSettings.effects) {
+          switch (effectKey) {
+            case "reverb":
+              instrumentSettings.effects.reverb.enabled = enabled;
+              break;
+            case "chorus":
+              instrumentSettings.effects.chorus.enabled = enabled;
+              break;
+            case "filter":
+              instrumentSettings.effects.filter.enabled = enabled;
+              break;
+          }
+          this.plugin.saveSettings();
+          if (this.plugin.audioEngine) {
+            logger8.debug("ui", `Audio engine would update ${effectKey} for ${instrumentName}`, { enabled });
+          }
+        } else {
+          logger8.warn("ui", `Could not find settings for instrument ${instrumentName}`);
+        }
+      }
+      /**
+       * Get the family-wide effect state based on instrument effect states
+       * Returns true if any instrument in the family has the effect enabled
+       */
+      getFamilyEffectState(familyId, effectType) {
+        const instruments = this.getInstrumentsForFamily(familyId);
+        return instruments.some((instrument) => {
+          var _a, _b, _c;
+          const instrumentKey = instrument;
+          const settings = this.plugin.settings.instruments[instrumentKey];
+          if (settings && settings.effects) {
+            switch (effectType) {
+              case "reverb":
+                return ((_a = settings.effects.reverb) == null ? void 0 : _a.enabled) || false;
+              case "chorus":
+                return ((_b = settings.effects.chorus) == null ? void 0 : _b.enabled) || false;
+              case "filter":
+                return ((_c = settings.effects.filter) == null ? void 0 : _c.enabled) || false;
+              default:
+                return false;
+            }
+          }
+          return false;
+        });
+      }
+      capitalizeWords(str) {
+        return str.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()).trim();
+      }
+      instrumentRequiresHighQuality(instrumentKey) {
+        const highQualityInstruments = ["whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
+        return highQualityInstruments.includes(instrumentKey);
+      }
+      instrumentIsSynthesisOnly(instrumentKey) {
+        const synthesisOnlyInstruments = ["strings", "electricPiano", "harpsichord", "accordion", "celesta", "timpani", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth"];
+        return synthesisOnlyInstruments.includes(instrumentKey);
+      }
+      instrumentSupportsQualityChoice(instrumentKey) {
+        const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+        if (!instrumentSettings || !("useHighQuality" in instrumentSettings)) {
+          return false;
+        }
+        if (this.instrumentIsSynthesisOnly(instrumentKey)) {
+          return false;
+        }
+        const requiresHighQuality = this.instrumentRequiresHighQuality(instrumentKey);
+        return !requiresHighQuality;
+      }
+      createInstrumentTitleWithStatus(instrumentKey, instrumentInfo) {
+        let titleText = `${instrumentInfo.icon} ${instrumentInfo.name}`;
+        if (this.instrumentRequiresHighQuality(instrumentKey)) {
+          const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
+          const statusText = isDownloaded ? "(downloaded)" : "(not downloaded)";
+          titleText += ` <em>${statusText}</em>`;
+        }
+        return titleText;
+      }
+      checkIfSampleDownloaded(instrumentKey) {
+        try {
+          const whaleIntegration2 = this.plugin.whaleIntegration;
+          if (!whaleIntegration2 || !whaleIntegration2.whaleManager) {
+            return false;
+          }
+          const speciesMap = {
+            "whaleBlue": "blue",
+            "whaleOrca": "orca",
+            "whaleGray": "gray",
+            "whaleSperm": "sperm",
+            "whaleMinke": "minke",
+            "whaleFin": "fin",
+            "whaleRight": "right",
+            "whaleSei": "sei",
+            "whalePilot": "pilot"
+          };
+          const species = speciesMap[instrumentKey];
+          if (!species)
+            return false;
+          const cacheStatus = whaleIntegration2.whaleManager.getCacheStatus();
+          return (cacheStatus.cacheBySpecies[species] || 0) > 0;
+        } catch (error) {
+          return false;
+        }
+      }
+      handleGlobalAction(action, selected) {
+        logger8.info("ui", `Global action: ${action}`, { selected });
+        switch (action) {
+          case "enableAll":
+            if (selected) {
+              Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
+                const key = instrumentKey;
+                this.plugin.settings.instruments[key].enabled = true;
+              });
+            }
+            break;
+          case "resetAll":
+            if (selected) {
+            }
+            break;
+        }
+        if (selected) {
+          this.plugin.saveSettings();
+          this.showTab(this.activeTab);
+        }
+      }
+      handleExportLogs(selected) {
+        if (selected) {
+          logger8.info("ui", "Exporting logs from Control Center");
+          const now3 = new Date();
+          const pad2 = (n) => n.toString().padStart(2, "0");
+          const filename = `osp-logs-${now3.getFullYear()}${pad2(now3.getMonth() + 1)}${pad2(now3.getDate())}-${pad2(now3.getHours())}${pad2(now3.getMinutes())}${pad2(now3.getSeconds())}.json`;
+          const logs = LoggerFactory.getLogs();
+          const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a2 = document.createElement("a");
+          a2.href = url;
+          a2.download = filename;
+          document.body.appendChild(a2);
+          a2.click();
+          document.body.removeChild(a2);
+          URL.revokeObjectURL(url);
+          logger8.info("export", "Logs exported from Control Center", { filename });
+        }
+      }
+      /**
+       * Get whale integration status for UI display
+       */
+      getWhaleIntegrationStatus() {
+        var _a;
+        const isHighQuality = false;
+        const isWhaleEnabled = (_a = this.plugin.settings.instruments.whaleHumpback) == null ? void 0 : _a.enabled;
+        const whaleIntegrationEnabled = isHighQuality && isWhaleEnabled;
+        return {
+          enabled: whaleIntegrationEnabled || false,
+          collectionStatus: whaleIntegrationEnabled ? "Seed collection (10 samples)" : "Disabled",
+          availableSpecies: whaleIntegrationEnabled ? ["Humpback", "Blue", "Orca", "Gray", "Sperm", "Minke", "Fin"] : ["None"],
+          sources: whaleIntegrationEnabled ? ["NOAA Fisheries", "MBARI MARS", "NOAA PMEL"] : ["None"]
+        };
+      }
+      /**
+       * Handle whale integration toggle
+       */
+      async handleWhaleIntegrationToggle(enabled) {
+        if (enabled) {
+          await this.plugin.updateSettings({
+            instruments: {
+              ...this.plugin.settings.instruments,
+              whaleHumpback: {
+                ...this.plugin.settings.instruments.whaleHumpback,
+                enabled: true
+              }
+            }
+          });
+          logger8.info("whale-ui", "Whale integration enabled via UI", {
+            highQualitySamples: true,
+            whaleEnabled: true
+          });
+        } else {
+          await this.plugin.updateSettings({
+            instruments: {
+              ...this.plugin.settings.instruments,
+              whaleHumpback: {
+                ...this.plugin.settings.instruments.whaleHumpback,
+                enabled: false
+              }
+            }
+          });
+          logger8.info("whale-ui", "Whale integration disabled via UI", {
+            whaleEnabled: false
+          });
+        }
+        this.showTab("experimental");
+      }
+      /**
+       * Handle whale sample preview
+       */
+      handleWhalePreview() {
+        if (this.plugin.audioEngine) {
+          this.plugin.audioEngine.playTestNote(80);
+          logger8.info("whale-ui", "Whale sample preview triggered", {
+            frequency: 80
+          });
+        } else {
+          logger8.warn("whale-ui", "Cannot preview whale sample: audio engine not available");
+        }
+      }
+      /**
+       * Handle whale attribution info display
+       */
+      handleWhaleAttribution() {
+        const attributionInfo = `
+# Whale Sample Attribution
+
+## NOAA Fisheries
+- Right whale upcalls and multi-sound patterns
+- Sei whale downsweeps  
+- Pilot whale multi-sound recordings
+- Source: https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals
+
+## MBARI MARS Observatory
+- Blue whale D-calls from Monterey Bay (36.71\xB0N, 122.187\xB0W)
+- Orca vocalizations from California deep-sea observatory
+- Gray whale migration recordings
+- Sperm whale echolocation clicks
+- Source: Deep-sea cabled observatory hydrophone recordings
+
+## NOAA PMEL Acoustics Program
+- Alaska humpback whale songs (Winter 1999)
+- Atlantic minke whale downsweeps
+- Source: https://www.pmel.noaa.gov/acoustics/whales/
+
+## Freesound.org Contributors
+- Caribbean humpback whale field recordings by listeningtowhales
+- Newfoundland sperm whale echolocation by smithereens
+- All samples used under Creative Commons licensing
+
+All whale samples are authentic recordings from marine research institutions and field recordings, ensuring scientific accuracy and educational value.
+		`.trim();
+        console.log(attributionInfo);
+        logger8.info("whale-ui", "Whale attribution info displayed");
+        new import_obsidian5.Notice("Whale sample attribution information logged to console. Check developer tools for details.");
+      }
+    };
+  }
+});
+
 // src/external/freesound/types.ts
 var init_types = __esm({
   "src/external/freesound/types.ts"() {
@@ -2577,11 +12550,11 @@ var init_types = __esm({
 });
 
 // src/external/freesound/client.ts
-var logger13, _FreesoundAPIClient, FreesoundAPIClient;
+var logger14, _FreesoundAPIClient, FreesoundAPIClient;
 var init_client = __esm({
   "src/external/freesound/client.ts"() {
     init_logging();
-    logger13 = getLogger("freesound-client");
+    logger14 = getLogger("freesound-client");
     _FreesoundAPIClient = class {
       constructor(clientId = _FreesoundAPIClient.CLIENT_ID, clientSecret) {
         this.clientId = clientId;
@@ -2603,10 +12576,10 @@ var init_client = __esm({
             allResults.push(...results.results);
             await this.respectRateLimit();
           }
-          logger13.info("search", `Found ${allResults.length} potential whale samples`);
+          logger14.info("search", `Found ${allResults.length} potential whale samples`);
           return this.processSamples(allResults, query);
         } catch (error) {
-          logger13.error("search", "Whale sample search failed:", error);
+          logger14.error("search", "Whale sample search failed:", error);
           throw new Error(`Freesound search failed: ${error}`);
         }
       }
@@ -2813,7 +12786,7 @@ var init_client = __esm({
             rejected.push(sample);
           }
         }
-        logger13.info("validation", `Validation results: ${validated.length} valid, ${rejected.length} rejected`);
+        logger14.info("validation", `Validation results: ${validated.length} valid, ${rejected.length} rejected`);
         return {
           samples: uniqueSamples,
           validated,
@@ -2949,7 +12922,7 @@ var init_client = __esm({
       async respectRateLimit() {
         if (this.rateLimitRemaining < 5) {
           const waitTime = Math.max(1e3, (this.rateLimitReset - Date.now()) / 1e3);
-          logger13.info("rate-limit", `Rate limit low, waiting ${waitTime}ms`);
+          logger14.info("rate-limit", `Rate limit low, waiting ${waitTime}ms`);
           await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
@@ -2975,7 +12948,7 @@ var init_client = __esm({
         }
         const auth = await response.json();
         this.accessToken = auth.access_token;
-        logger13.info("auth", "Freesound authentication successful");
+        logger14.info("auth", "Freesound authentication successful");
       }
       /**
        * Download sample audio data
@@ -3002,12 +12975,12 @@ var init_client = __esm({
 });
 
 // src/external/freesound/whale-audio-manager.ts
-var logger14, WhaleAudioManager;
+var logger15, WhaleAudioManager;
 var init_whale_audio_manager = __esm({
   "src/external/freesound/whale-audio-manager.ts"() {
     init_client();
     init_logging();
-    logger14 = getLogger("whale-audio-manager");
+    logger15 = getLogger("whale-audio-manager");
     WhaleAudioManager = class {
       constructor(settings, clientId, clientSecret, vault) {
         this.sampleUrls = /* @__PURE__ */ new Map();
@@ -3126,7 +13099,7 @@ var init_whale_audio_manager = __esm({
         Object.entries(this.SEED_COLLECTION).forEach(([species, urls]) => {
           this.sampleUrls.set(species, urls);
         });
-        logger14.info("init", "Initialized whale audio manager with seed collection");
+        logger15.info("init", "Initialized whale audio manager with seed collection");
       }
       /**
        * Initialize cache directory structure in the user's vault
@@ -3137,7 +13110,7 @@ var init_whale_audio_manager = __esm({
         try {
           if (!await this.vault.adapter.exists(this.cacheDir)) {
             await this.vault.adapter.mkdir(this.cacheDir);
-            logger14.info("cache-init", "Created whale sample cache directory", {
+            logger15.info("cache-init", "Created whale sample cache directory", {
               path: this.cacheDir
             });
           }
@@ -3149,12 +13122,12 @@ var init_whale_audio_manager = __esm({
             }
           }
           await this.loadCacheIndex();
-          logger14.info("cache-init", "Cache directory structure initialized", {
+          logger15.info("cache-init", "Cache directory structure initialized", {
             cacheDir: this.cacheDir,
             speciesDirectories: species.length
           });
         } catch (error) {
-          logger14.error("cache-init", "Failed to initialize cache directory", {
+          logger15.error("cache-init", "Failed to initialize cache directory", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -3174,13 +13147,13 @@ var init_whale_audio_manager = __esm({
             Object.entries(cacheIndex.urlToFile || {}).forEach(([url, filePath]) => {
               this.fileCache.set(url, filePath);
             });
-            logger14.info("cache-index", "Loaded cache index", {
+            logger15.info("cache-index", "Loaded cache index", {
               cachedFiles: this.fileCache.size,
               indexPath
             });
           }
         } catch (error) {
-          logger14.warn("cache-index", "Failed to load cache index, starting fresh", {
+          logger15.warn("cache-index", "Failed to load cache index, starting fresh", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -3200,12 +13173,12 @@ var init_whale_audio_manager = __esm({
             totalFiles: this.fileCache.size
           };
           await this.vault.adapter.write(indexPath, JSON.stringify(cacheIndex, null, 2));
-          logger14.debug("cache-index", "Saved cache index", {
+          logger15.debug("cache-index", "Saved cache index", {
             totalFiles: this.fileCache.size,
             indexPath
           });
         } catch (error) {
-          logger14.error("cache-index", "Failed to save cache index", {
+          logger15.error("cache-index", "Failed to save cache index", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -3233,7 +13206,7 @@ var init_whale_audio_manager = __esm({
             return await audioContext.decodeAudioData(arrayBuffer);
           }
         } catch (error) {
-          logger14.warn("cache-load", "Failed to load cached sample", {
+          logger15.warn("cache-load", "Failed to load cached sample", {
             url: url.substring(0, 60) + "...",
             filePath,
             error: error instanceof Error ? error.message : String(error)
@@ -3255,14 +13228,14 @@ var init_whale_audio_manager = __esm({
           await this.vault.adapter.writeBinary(filePath, arrayBuffer);
           this.fileCache.set(url, filePath);
           await this.saveCacheIndex();
-          logger14.info("cache-save", "Sample cached to disk", {
+          logger15.info("cache-save", "Sample cached to disk", {
             species,
             fileName,
             filePath,
             size: `${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`
           });
         } catch (error) {
-          logger14.error("cache-save", "Failed to cache sample to disk", {
+          logger15.error("cache-save", "Failed to cache sample to disk", {
             url: url.substring(0, 60) + "...",
             species,
             error: error instanceof Error ? error.message : String(error)
@@ -3297,14 +13270,14 @@ var init_whale_audio_manager = __esm({
         try {
           const cacheStats = await this.getCacheStats();
           if (cacheStats.totalSizeGB > maxSizeGB) {
-            logger14.info("cache-cleanup", "Starting cache cleanup", {
+            logger15.info("cache-cleanup", "Starting cache cleanup", {
               currentSize: `${cacheStats.totalSizeGB.toFixed(2)}GB`,
               maxSize: `${maxSizeGB}GB`,
               totalFiles: cacheStats.totalFiles
             });
           }
         } catch (error) {
-          logger14.error("cache-cleanup", "Failed to cleanup cache", {
+          logger15.error("cache-cleanup", "Failed to cleanup cache", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -3327,7 +13300,7 @@ var init_whale_audio_manager = __esm({
        * Download and cache whale samples locally for better performance
        */
       async downloadAndCacheSamples() {
-        logger14.info("cache-init", "Starting whale sample caching process", {
+        logger15.info("cache-init", "Starting whale sample caching process", {
           totalSpecies: this.sampleUrls.size,
           totalUrls: Array.from(this.sampleUrls.values()).reduce((sum, urls) => sum + urls.length, 0)
         });
@@ -3337,7 +13310,7 @@ var init_whale_audio_manager = __esm({
             (url) => url.includes(".wav") || url.includes(".mp3") || url.includes(".ogg")
           );
           if (directUrls.length === 0) {
-            logger14.debug("cache-init", "No direct audio URLs found for species", {
+            logger15.debug("cache-init", "No direct audio URLs found for species", {
               species,
               totalUrls: urls.length
             });
@@ -3349,7 +13322,7 @@ var init_whale_audio_manager = __esm({
         try {
           await Promise.allSettled(downloadPromises);
           const totalCached = Array.from(this.cachedSamples.values()).reduce((sum, buffers) => sum + buffers.length, 0);
-          logger14.info("cache-init", "Whale sample caching completed", {
+          logger15.info("cache-init", "Whale sample caching completed", {
             totalCached,
             speciesCached: this.cachedSamples.size,
             cacheStatus: Object.fromEntries(
@@ -3357,7 +13330,7 @@ var init_whale_audio_manager = __esm({
             )
           });
         } catch (error) {
-          logger14.error("cache-init", "Error during sample caching", {
+          logger15.error("cache-init", "Error during sample caching", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -3367,27 +13340,27 @@ var init_whale_audio_manager = __esm({
        */
       async downloadSpeciesSamples(species, urls) {
         const buffers = [];
-        logger14.debug("cache-download", "Downloading samples for species", {
+        logger15.debug("cache-download", "Downloading samples for species", {
           species,
           urlCount: urls.length
         });
         for (let i = 0; i < urls.length; i++) {
           const url = urls[i];
           try {
-            logger14.debug("cache-download", "Processing sample", {
+            logger15.debug("cache-download", "Processing sample", {
               species,
               url: url.substring(0, 60) + "...",
               progress: `${i + 1}/${urls.length}`
             });
             if (await this.isSampleCached(url)) {
-              logger14.debug("cache-download", "Loading from disk cache", {
+              logger15.debug("cache-download", "Loading from disk cache", {
                 species,
                 url: url.substring(0, 60) + "..."
               });
               const cachedBuffer = await this.loadCachedSample(url);
               if (cachedBuffer) {
                 buffers.push(cachedBuffer);
-                logger14.debug("cache-download", "Successfully loaded from disk cache", {
+                logger15.debug("cache-download", "Successfully loaded from disk cache", {
                   species,
                   bufferLength: cachedBuffer.length,
                   sampleRate: cachedBuffer.sampleRate
@@ -3398,7 +13371,7 @@ var init_whale_audio_manager = __esm({
             const audioBuffer = await this.downloadAndDecodeAudio(url, species);
             if (audioBuffer) {
               buffers.push(audioBuffer);
-              logger14.debug("cache-download", "Successfully downloaded and cached sample", {
+              logger15.debug("cache-download", "Successfully downloaded and cached sample", {
                 species,
                 bufferLength: audioBuffer.length,
                 sampleRate: audioBuffer.sampleRate,
@@ -3407,14 +13380,14 @@ var init_whale_audio_manager = __esm({
             }
             if (i < urls.length - 1) {
               const delayMs = url.includes("archive.org") ? 3e3 : 1500;
-              logger14.debug("cache-download", "Adding delay between downloads", {
+              logger15.debug("cache-download", "Adding delay between downloads", {
                 delayMs,
                 remaining: urls.length - i - 1
               });
               await this.delay(delayMs);
             }
           } catch (error) {
-            logger14.warn("cache-download", "Failed to download sample", {
+            logger15.warn("cache-download", "Failed to download sample", {
               species,
               url: url.substring(0, 60) + "...",
               error: error instanceof Error ? error.message : String(error)
@@ -3423,13 +13396,13 @@ var init_whale_audio_manager = __esm({
         }
         if (buffers.length > 0) {
           this.cachedSamples.set(species, buffers);
-          logger14.info("cache-download", "Cached samples for species", {
+          logger15.info("cache-download", "Cached samples for species", {
             species,
             sampleCount: buffers.length,
             requestedCount: urls.length
           });
         } else {
-          logger14.warn("cache-download", "No samples successfully cached for species", {
+          logger15.warn("cache-download", "No samples successfully cached for species", {
             species,
             attemptedUrls: urls.length
           });
@@ -3445,7 +13418,7 @@ var init_whale_audio_manager = __esm({
        * Download and decode audio from URL with proper error handling and CORS bypass
        */
       async downloadAndDecodeAudio(url, species) {
-        logger14.debug("download", "Starting download attempt", {
+        logger15.debug("download", "Starting download attempt", {
           url: url.substring(0, 60) + "..."
         });
         if (url.includes("web.archive.org") || url.includes("archive.org")) {
@@ -3464,7 +13437,7 @@ var init_whale_audio_manager = __esm({
           const arrayBuffer = await response.arrayBuffer();
           return await this.validateAndDecodeAudio(arrayBuffer, url);
         } catch (error) {
-          logger14.debug("download", "Direct fetch failed, trying CORS proxy fallback", {
+          logger15.debug("download", "Direct fetch failed, trying CORS proxy fallback", {
             url: url.substring(0, 60) + "...",
             error: error instanceof Error ? error.message : String(error)
           });
@@ -3475,7 +13448,7 @@ var init_whale_audio_manager = __esm({
        * Download URLs using CORS proxy services with retry logic
        */
       async downloadWithCorsProxy(url, species) {
-        logger14.debug("download", "Using CORS proxy approach", {
+        logger15.debug("download", "Using CORS proxy approach", {
           url: url.substring(0, 60) + "..."
         });
         const corsProxies = [
@@ -3497,7 +13470,7 @@ var init_whale_audio_manager = __esm({
         ];
         for (let i = 0; i < corsProxies.length; i++) {
           const proxy = corsProxies[i];
-          logger14.debug("download", `Trying CORS proxy ${i + 1}/${corsProxies.length}`, {
+          logger15.debug("download", `Trying CORS proxy ${i + 1}/${corsProxies.length}`, {
             originalUrl: url.substring(0, 60) + "...",
             proxyService: proxy.name,
             attempt: i + 1
@@ -3510,7 +13483,7 @@ var init_whale_audio_manager = __esm({
             await this.delay(2e3);
           }
         }
-        logger14.warn("download", "All CORS proxy attempts failed", {
+        logger15.warn("download", "All CORS proxy attempts failed", {
           url: url.substring(0, 60) + "...",
           attemptedProxies: corsProxies.length
         });
@@ -3523,7 +13496,7 @@ var init_whale_audio_manager = __esm({
         const proxyService = proxyUrl.split("?")[0];
         for (let retry = 0; retry < maxRetries; retry++) {
           try {
-            logger14.debug("download", `Trying CORS proxy ${proxyIndex}/${totalProxies}`, {
+            logger15.debug("download", `Trying CORS proxy ${proxyIndex}/${totalProxies}`, {
               originalUrl: originalUrl.substring(0, 60) + "...",
               proxyService,
               attempt: proxyIndex,
@@ -3535,7 +13508,7 @@ var init_whale_audio_manager = __esm({
             });
             if (proxyResponse.ok) {
               const arrayBuffer = await proxyResponse.arrayBuffer();
-              logger14.debug("download", "CORS proxy response received", {
+              logger15.debug("download", "CORS proxy response received", {
                 proxy: proxyService,
                 size: arrayBuffer.byteLength,
                 status: proxyResponse.status
@@ -3545,7 +13518,7 @@ var init_whale_audio_manager = __esm({
                 if (species) {
                   await this.cacheSampleToDisk(originalUrl, arrayBuffer, species);
                 }
-                logger14.info("download", "CORS proxy successful", {
+                logger15.info("download", "CORS proxy successful", {
                   proxy: proxyService,
                   size: arrayBuffer.byteLength,
                   duration: audioBuffer.length / audioBuffer.sampleRate,
@@ -3559,7 +13532,7 @@ var init_whale_audio_manager = __esm({
               const baseBackoff = Math.pow(2, retry) * 1e3;
               const jitter = Math.random() * 500;
               const backoffMs = Math.min(baseBackoff + jitter, 3e4);
-              logger14.warn("download", "CORS proxy rate limited, retrying with backoff", {
+              logger15.warn("download", "CORS proxy rate limited, retrying with backoff", {
                 proxy: proxyService,
                 status: proxyResponse.status,
                 retryAfter: `${Math.round(backoffMs)}ms`,
@@ -3572,13 +13545,13 @@ var init_whale_audio_manager = __esm({
                 await this.delay(backoffMs);
                 continue;
               } else {
-                logger14.warn("download", "Max retries reached for rate limited proxy", {
+                logger15.warn("download", "Max retries reached for rate limited proxy", {
                   proxy: proxyService,
                   maxRetries
                 });
               }
             } else {
-              logger14.debug("download", "CORS proxy returned error status", {
+              logger15.debug("download", "CORS proxy returned error status", {
                 proxy: proxyService,
                 status: proxyResponse.status,
                 statusText: proxyResponse.statusText
@@ -3586,7 +13559,7 @@ var init_whale_audio_manager = __esm({
               break;
             }
           } catch (proxyError) {
-            logger14.debug("download", "CORS proxy failed with exception", {
+            logger15.debug("download", "CORS proxy failed with exception", {
               proxy: proxyService,
               error: proxyError instanceof Error ? proxyError.message : String(proxyError),
               retry: retry + 1,
@@ -3595,7 +13568,7 @@ var init_whale_audio_manager = __esm({
             break;
           }
         }
-        logger14.debug("download", "CORS proxy exhausted all retries", {
+        logger15.debug("download", "CORS proxy exhausted all retries", {
           proxy: proxyService,
           maxRetries,
           remaining: totalProxies - proxyIndex
@@ -3608,7 +13581,7 @@ var init_whale_audio_manager = __esm({
       async validateAndDecodeAudio(arrayBuffer, originalUrl) {
         try {
           if (arrayBuffer.byteLength < 1e3) {
-            logger14.debug("download", "Response too small, likely not audio data", {
+            logger15.debug("download", "Response too small, likely not audio data", {
               size: arrayBuffer.byteLength,
               url: originalUrl.substring(0, 60) + "..."
             });
@@ -3618,7 +13591,7 @@ var init_whale_audio_manager = __esm({
           const textDecoder = new TextDecoder();
           const preview = textDecoder.decode(firstBytes).toLowerCase();
           if (preview.includes("<html") || preview.includes("<!doctype")) {
-            logger14.debug("download", "Received HTML instead of audio data", {
+            logger15.debug("download", "Received HTML instead of audio data", {
               preview: preview.substring(0, 50) + "...",
               url: originalUrl.substring(0, 60) + "..."
             });
@@ -3626,7 +13599,7 @@ var init_whale_audio_manager = __esm({
           }
           const audioContext = new (window.AudioContext || window.webkitAudioContext)();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-          logger14.debug("download", "Audio validation and decode successful", {
+          logger15.debug("download", "Audio validation and decode successful", {
             url: originalUrl.substring(0, 60) + "...",
             size: arrayBuffer.byteLength,
             duration: audioBuffer.length / audioBuffer.sampleRate,
@@ -3635,7 +13608,7 @@ var init_whale_audio_manager = __esm({
           });
           return audioBuffer;
         } catch (decodeError) {
-          logger14.debug("download", "Audio decode failed", {
+          logger15.debug("download", "Audio decode failed", {
             url: originalUrl.substring(0, 60) + "...",
             error: decodeError instanceof Error ? decodeError.message : String(decodeError),
             size: arrayBuffer.byteLength
@@ -3649,7 +13622,7 @@ var init_whale_audio_manager = __esm({
        */
       async loadWhaleSample(frequency, species) {
         const targetSpecies = species || this.mapFrequencyToSpecies(frequency);
-        logger14.info("whale-manager", "Loading whale sample from cache", {
+        logger15.info("whale-manager", "Loading whale sample from cache", {
           requestedSpecies: species,
           frequency,
           targetSpecies,
@@ -3659,7 +13632,7 @@ var init_whale_audio_manager = __esm({
           try {
             await this.initializationPromise;
           } catch (error) {
-            logger14.warn("whale-manager", "Initialization not complete, proceeding with available cache", {
+            logger15.warn("whale-manager", "Initialization not complete, proceeding with available cache", {
               error: error instanceof Error ? error.message : String(error)
             });
           }
@@ -3667,7 +13640,7 @@ var init_whale_audio_manager = __esm({
         try {
           const cachedBuffers = this.cachedSamples.get(targetSpecies) || [];
           if (cachedBuffers.length === 0) {
-            logger14.warn("whale-manager", "No cached samples available for species", {
+            logger15.warn("whale-manager", "No cached samples available for species", {
               species: targetSpecies,
               availableSpecies: Array.from(this.cachedSamples.keys()),
               totalCached: Array.from(this.cachedSamples.values()).reduce((sum, arr) => sum + arr.length, 0)
@@ -3676,7 +13649,7 @@ var init_whale_audio_manager = __esm({
           }
           const selectedIndex = Math.floor(Math.random() * cachedBuffers.length);
           const selectedBuffer = cachedBuffers[selectedIndex];
-          logger14.info("whale-manager", "Successfully loaded whale sample from cache", {
+          logger15.info("whale-manager", "Successfully loaded whale sample from cache", {
             species: targetSpecies,
             selectedIndex,
             totalCached: cachedBuffers.length,
@@ -3687,7 +13660,7 @@ var init_whale_audio_manager = __esm({
           });
           return selectedBuffer;
         } catch (error) {
-          logger14.error("whale-manager", "Failed to load whale sample from cache", {
+          logger15.error("whale-manager", "Failed to load whale sample from cache", {
             species: targetSpecies,
             frequency,
             error: error instanceof Error ? error.message : String(error)
@@ -3769,7 +13742,7 @@ var init_whale_audio_manager = __esm({
           throw new Error("Automated discovery is disabled in settings");
         }
         if (!manual && !this.shouldRunDiscovery()) {
-          logger14.info("discovery", "Skipping discovery due to frequency limits");
+          logger15.info("discovery", "Skipping discovery due to frequency limits");
           return {
             samples: [],
             validated: [],
@@ -3785,7 +13758,7 @@ var init_whale_audio_manager = __esm({
           licenseFilter: "cc",
           trustedSources: true
         };
-        logger14.info("discovery", `Starting ${manual ? "manual" : "automatic"} discovery for ${species}`);
+        logger15.info("discovery", `Starting ${manual ? "manual" : "automatic"} discovery for ${species}`);
         const result = await this.freesoundClient.searchWhaleContent(query);
         this.lastDiscoveryTime = Date.now();
         return result;
@@ -3817,7 +13790,7 @@ var init_whale_audio_manager = __esm({
         const allUrls = [...currentUrls, ...newUrls];
         const limitedUrls = allUrls.slice(0, maxSamples);
         this.sampleUrls.set(species, limitedUrls);
-        logger14.info("samples", `Added ${newUrls.length} new samples for ${species}, total: ${limitedUrls.length}`);
+        logger15.info("samples", `Added ${newUrls.length} new samples for ${species}, total: ${limitedUrls.length}`);
       }
       /**
        * Get current sample collection statistics (cached samples)
@@ -3851,7 +13824,7 @@ var init_whale_audio_manager = __esm({
        */
       clearSpeciesSamples(species) {
         this.sampleUrls.delete(species);
-        logger14.info("samples", `Cleared samples for ${species}`);
+        logger15.info("samples", `Cleared samples for ${species}`);
       }
       /**
        * Reset to seed collection
@@ -3859,7 +13832,7 @@ var init_whale_audio_manager = __esm({
       resetToSeedCollection() {
         this.sampleUrls.clear();
         this.initializeSeedCollection();
-        logger14.info("samples", "Reset to seed collection");
+        logger15.info("samples", "Reset to seed collection");
       }
       /**
        * Export sample URLs for storage in plugin settings
@@ -3879,7 +13852,7 @@ var init_whale_audio_manager = __esm({
         Object.entries(data).forEach(([species, urls]) => {
           this.sampleUrls.set(species, urls);
         });
-        logger14.info("settings", "Imported sample URLs from settings");
+        logger15.info("settings", "Imported sample URLs from settings");
       }
       /**
        * Update settings
@@ -3932,13 +13905,13 @@ __export(whale_integration_exports, {
   tryLoadExternalWhaleSample: () => tryLoadExternalWhaleSample
 });
 async function initializeWhaleIntegration(settings, vault) {
-  logger15.info("global-init", "Initializing global whale integration", {
+  logger16.info("global-init", "Initializing global whale integration", {
     hasSettings: !!settings,
     settingsKeys: settings ? Object.keys(settings) : []
   });
   whaleIntegration = new WhaleIntegration(settings, vault);
   await whaleIntegration.initialize();
-  logger15.info("global-init", "Global whale integration initialization complete", {
+  logger16.info("global-init", "Global whale integration initialization complete", {
     isAvailable: whaleIntegration.isAvailable(),
     settings: whaleIntegration.getSettings()
   });
@@ -3947,24 +13920,24 @@ function getWhaleIntegration() {
   return whaleIntegration;
 }
 async function tryLoadExternalWhaleSample(instrumentName, note, frequency) {
-  logger15.debug("external-loading", "tryLoadExternalWhaleSample called", {
+  logger16.debug("external-loading", "tryLoadExternalWhaleSample called", {
     instrumentName,
     note,
     frequency,
     hasIntegration: !!whaleIntegration
   });
   if (!whaleIntegration) {
-    logger15.warn("external-loading", "No whale integration available");
+    logger16.warn("external-loading", "No whale integration available");
     return null;
   }
   return await whaleIntegration.loadInstrumentSample(instrumentName, note, frequency);
 }
-var logger15, _WhaleIntegration, WhaleIntegration, whaleIntegration;
+var logger16, _WhaleIntegration, WhaleIntegration, whaleIntegration;
 var init_whale_integration = __esm({
   "src/external/whale-integration.ts"() {
     init_freesound();
     init_logging();
-    logger15 = getLogger("whale-integration");
+    logger16 = getLogger("whale-integration");
     _WhaleIntegration = class {
       constructor(userSettings, vault) {
         this.whaleManager = null;
@@ -3980,23 +13953,23 @@ var init_whale_integration = __esm({
        * Initialize whale integration (Phase 1: Seed Collection)
        */
       async initialize() {
-        logger15.info("init", "Starting whale integration initialization", {
+        logger16.info("init", "Starting whale integration initialization", {
           useWhaleExternal: this.settings.useWhaleExternal,
           settings: this.settings
         });
         if (!this.settings.useWhaleExternal) {
-          logger15.info("init", "Whale external samples disabled in settings");
+          logger16.info("init", "Whale external samples disabled in settings");
           return;
         }
         try {
           this.whaleManager = new WhaleAudioManager(this.settings, void 0, void 0, this.vault);
           this.isEnabled = true;
-          logger15.info("init", "Whale integration initialized with seed collection", {
+          logger16.info("init", "Whale integration initialized with seed collection", {
             isEnabled: this.isEnabled,
             hasManager: !!this.whaleManager
           });
         } catch (error) {
-          logger15.error("init", "Failed to initialize whale integration:", error);
+          logger16.error("init", "Failed to initialize whale integration:", error);
           this.isEnabled = false;
         }
       }
@@ -4004,7 +13977,7 @@ var init_whale_integration = __esm({
        * Enhanced instrument loader that handles external whale samples
        */
       async loadInstrumentSample(instrumentName, note, frequency) {
-        logger15.debug("sample-loading", "loadInstrumentSample called", {
+        logger16.debug("sample-loading", "loadInstrumentSample called", {
           instrumentName,
           note,
           frequency,
@@ -4012,20 +13985,20 @@ var init_whale_integration = __esm({
           hasManager: !!this.whaleManager
         });
         if (!this.isEnabled || !this.whaleManager) {
-          logger15.debug("sample-loading", "Whale integration not available", {
+          logger16.debug("sample-loading", "Whale integration not available", {
             isEnabled: this.isEnabled,
             hasManager: !!this.whaleManager
           });
           return null;
         }
         const isWhaleInst = this.isWhaleInstrument(instrumentName);
-        logger15.debug("sample-loading", "Checking if whale instrument", {
+        logger16.debug("sample-loading", "Checking if whale instrument", {
           instrumentName,
           isWhaleInstrument: isWhaleInst
         });
         if (isWhaleInst) {
           const species = this.extractWhaleSpecies(instrumentName);
-          logger15.info("sample-loading", "Loading external whale sample", {
+          logger16.info("sample-loading", "Loading external whale sample", {
             instrumentName,
             species,
             frequency,
@@ -4034,7 +14007,7 @@ var init_whale_integration = __esm({
           try {
             const audioBuffer = await this.whaleManager.loadWhaleSample(frequency, species);
             if (audioBuffer) {
-              logger15.info("sample-loading", "Successfully loaded external whale sample", {
+              logger16.info("sample-loading", "Successfully loaded external whale sample", {
                 instrumentName,
                 species,
                 bufferLength: audioBuffer.length,
@@ -4043,14 +14016,14 @@ var init_whale_integration = __esm({
               });
               return audioBuffer;
             } else {
-              logger15.warn("sample-loading", "No whale sample returned from manager", {
+              logger16.warn("sample-loading", "No whale sample returned from manager", {
                 instrumentName,
                 species,
                 frequency
               });
             }
           } catch (error) {
-            logger15.error("sample-loading", "Failed to load external whale sample", {
+            logger16.error("sample-loading", "Failed to load external whale sample", {
               instrumentName,
               species,
               frequency,
@@ -4058,7 +14031,7 @@ var init_whale_integration = __esm({
             });
           }
         }
-        logger15.debug("sample-loading", "Falling back to regular instrument loading", {
+        logger16.debug("sample-loading", "Falling back to regular instrument loading", {
           instrumentName,
           reason: isWhaleInst ? "whale_sample_failed" : "not_whale_instrument"
         });
@@ -4171,7 +14144,7 @@ var init_whale_integration = __esm({
       cleanup() {
         this.isEnabled = false;
         this.whaleManager = null;
-        logger15.info("cleanup", "Whale integration cleaned up");
+        logger16.info("cleanup", "Whale integration cleaned up");
       }
       /**
        * Check if whale integration is available and enabled
@@ -4210,7 +14183,7 @@ __export(main_exports, {
   default: () => SonigraphPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian6 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 init_constants();
 
 // src/ui/settings.ts
@@ -4252,8 +14225,8 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(advancedSection).setName("Export logs").setDesc("Download all plugin logs as a JSON file for support or debugging.").addButton(
       (button) => button.setButtonText("Export Logs").onClick(async () => {
         const now3 = new Date();
-        const pad = (n) => n.toString().padStart(2, "0");
-        const filename = `osp-logs-${now3.getFullYear()}${pad(now3.getMonth() + 1)}${pad(now3.getDate())}-${pad(now3.getHours())}${pad(now3.getMinutes())}${pad(now3.getSeconds())}.json`;
+        const pad2 = (n) => n.toString().padStart(2, "0");
+        const filename = `osp-logs-${now3.getFullYear()}${pad2(now3.getMonth() + 1)}${pad2(now3.getDate())}-${pad2(now3.getHours())}${pad2(now3.getMinutes())}${pad2(now3.getSeconds())}.json`;
         const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
         const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -4271,7485 +14244,11 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
   }
 };
 
-// src/ui/control-panel.ts
-var import_obsidian4 = require("obsidian");
-init_logging();
-
-// src/ui/components.ts
-init_logging();
-var logger2 = getLogger("components");
-function createObsidianToggle(container, initialValue, onChange, options) {
-  const settingItem = container.createDiv({ cls: "setting-item" });
-  if ((options == null ? void 0 : options.name) || (options == null ? void 0 : options.description)) {
-    const settingItemInfo = settingItem.createDiv({ cls: "setting-item-info" });
-    if (options.name) {
-      settingItemInfo.createDiv({
-        cls: "setting-item-name",
-        text: options.name
-      });
-    }
-    if (options.description) {
-      settingItemInfo.createDiv({
-        cls: "setting-item-description",
-        text: options.description
-      });
-    }
-  }
-  const settingItemControl = settingItem.createDiv({ cls: "setting-item-control" });
-  const checkboxContainer = settingItemControl.createDiv({
-    cls: `checkbox-container${initialValue ? " is-enabled" : ""}`
-  });
-  const checkbox = checkboxContainer.createEl("input", {
-    type: "checkbox",
-    attr: { tabindex: "0" }
-  });
-  checkbox.checked = initialValue;
-  if (options == null ? void 0 : options.disabled) {
-    checkbox.disabled = true;
-    checkboxContainer.addClass("is-disabled");
-  }
-  checkbox.addEventListener("change", async (event) => {
-    const originalDisabled = checkbox.disabled;
-    const checkboxId = Math.random().toString(36).substr(2, 9);
-    try {
-      const newValue = checkbox.checked;
-      logger2.debug("ui", "Checkbox change event fired", {
-        checkboxId,
-        newValue,
-        disabled: checkbox.disabled,
-        containerElement: checkboxContainer
-      });
-      checkbox.disabled = true;
-      if (newValue) {
-        checkboxContainer.addClass("is-enabled");
-      } else {
-        checkboxContainer.removeClass("is-enabled");
-      }
-      logger2.debug("ui", "Calling onChange callback", { checkboxId });
-      await onChange(newValue);
-      logger2.debug("ui", "Checkbox onChange callback completed", { checkboxId, newValue });
-    } catch (error) {
-      logger2.error("ui", "Error in checkbox change handler", { checkboxId, error });
-      checkbox.checked = !checkbox.checked;
-      if (checkbox.checked) {
-        checkboxContainer.addClass("is-enabled");
-      } else {
-        checkboxContainer.removeClass("is-enabled");
-      }
-    } finally {
-      checkbox.disabled = originalDisabled;
-      logger2.debug("ui", "Checkbox re-enabled", { checkboxId, disabled: checkbox.disabled });
-    }
-  });
-  checkboxContainer.addEventListener("click", (event) => {
-    if (event.target !== checkbox && !checkbox.disabled) {
-      logger2.debug("ui", "Container clicked, forwarding to checkbox", { target: event.target });
-      event.preventDefault();
-      event.stopPropagation();
-      checkbox.click();
-    }
-  });
-  return checkbox;
-}
-
-// src/ui/control-panel.ts
-init_constants();
-
-// src/ui/lucide-icons.ts
-var import_obsidian2 = require("obsidian");
-var LUCIDE_ICONS = {
-  // Navigation and UI
-  menu: "menu",
-  close: "x",
-  settings: "settings",
-  search: "search",
-  filter: "filter",
-  more: "more-horizontal",
-  // Audio Controls
-  play: "play",
-  pause: "pause",
-  stop: "square",
-  volume: "volume-2",
-  volumeOff: "volume-x",
-  headphones: "headphones",
-  // Status and Monitoring
-  activity: "activity",
-  analytics: "bar-chart-3",
-  cpu: "cpu",
-  zap: "zap",
-  checkCircle: "check-circle",
-  alertCircle: "alert-circle",
-  info: "info",
-  // Musical Elements
-  music: "music",
-  musicNote: "music",
-  waveform: "activity",
-  equalizer: "sliders-horizontal",
-  // Instrument Families
-  strings: "music",
-  // Piano/keyboard for strings
-  woodwinds: "circle",
-  // Using circle for woodwinds
-  brass: "volume-2",
-  // Horn-like icon for brass
-  percussion: "circle",
-  // Circle for percussion
-  electronic: "zap",
-  // Electronic/synthesizer
-  experimental: "flask",
-  // Science flask for experimental
-  // Individual Instruments - Strings
-  piano: "music",
-  violin: "music",
-  viola: "music",
-  cello: "music",
-  doubleBass: "music",
-  harp: "music",
-  guitar: "music",
-  // Individual Instruments - Woodwinds
-  flute: "circle",
-  clarinet: "circle",
-  saxophone: "circle",
-  bassoon: "circle",
-  oboe: "circle",
-  // Individual Instruments - Brass
-  trumpet: "volume-2",
-  frenchHorn: "volume-2",
-  trombone: "volume-2",
-  tuba: "volume-2",
-  // Individual Instruments - Vocals
-  // Individual Instruments - Percussion
-  timpani: "circle",
-  xylophone: "grid-3x3",
-  vibraphone: "grid-3x3",
-  gongs: "circle",
-  // Individual Instruments - Electronic
-  leadSynth: "zap",
-  bassSynth: "zap",
-  arpSynth: "zap",
-  // Individual Instruments - Experimental
-  whaleHumpback: "activity",
-  // Effects
-  reverb: "activity",
-  chorus: "repeat",
-  delay: "clock",
-  distortion: "zap",
-  compressor: "maximize-2",
-  // Controls
-  enable: "toggle-right",
-  disable: "toggle-left",
-  volumeControl: "volume-2",
-  voices: "users",
-  // Actions
-  save: "save",
-  load: "folder-open",
-  reset: "rotate-ccw",
-  copy: "copy",
-  paste: "clipboard",
-  delete: "trash-2",
-  // States
-  enabled: "check-circle",
-  disabled: "circle",
-  active: "circle",
-  inactive: "circle",
-  warning: "alert-triangle",
-  error: "x-circle",
-  success: "check-circle",
-  // Arrows and Navigation
-  arrowLeft: "arrow-left",
-  arrowRight: "arrow-right",
-  arrowUp: "arrow-up",
-  arrowDown: "arrow-down",
-  chevronLeft: "chevron-left",
-  chevronRight: "chevron-right",
-  chevronUp: "chevron-up",
-  chevronDown: "chevron-down",
-  // Plus/Minus
-  plus: "plus",
-  minus: "minus",
-  plusCircle: "plus-circle",
-  minusCircle: "minus-circle",
-  // Toggles and Controls
-  toggleOn: "toggle-right",
-  toggleOff: "toggle-left",
-  powerOn: "power",
-  powerOff: "power-off"
-};
-var FAMILY_ICONS = {
-  keyboard: LUCIDE_ICONS.piano,
-  strings: LUCIDE_ICONS.strings,
-  woodwinds: LUCIDE_ICONS.woodwinds,
-  brass: LUCIDE_ICONS.brass,
-  percussion: LUCIDE_ICONS.percussion,
-  electronic: LUCIDE_ICONS.electronic,
-  experimental: LUCIDE_ICONS.experimental
-};
-var INSTRUMENT_ICONS = {
-  // Strings
-  violin: LUCIDE_ICONS.violin,
-  viola: LUCIDE_ICONS.viola,
-  cello: LUCIDE_ICONS.cello,
-  doubleBass: LUCIDE_ICONS.doubleBass,
-  harp: LUCIDE_ICONS.harp,
-  piano: LUCIDE_ICONS.piano,
-  guitar: LUCIDE_ICONS.guitar,
-  // Woodwinds
-  flute: LUCIDE_ICONS.flute,
-  clarinet: LUCIDE_ICONS.clarinet,
-  saxophone: LUCIDE_ICONS.saxophone,
-  bassoon: LUCIDE_ICONS.bassoon,
-  oboe: LUCIDE_ICONS.oboe,
-  // Brass
-  trumpet: LUCIDE_ICONS.trumpet,
-  frenchHorn: LUCIDE_ICONS.frenchHorn,
-  trombone: LUCIDE_ICONS.trombone,
-  tuba: LUCIDE_ICONS.tuba,
-  // Vocals
-  // Percussion
-  timpani: LUCIDE_ICONS.timpani,
-  xylophone: LUCIDE_ICONS.xylophone,
-  vibraphone: LUCIDE_ICONS.vibraphone,
-  gongs: LUCIDE_ICONS.gongs,
-  // Electronic
-  leadSynth: LUCIDE_ICONS.leadSynth,
-  bassSynth: LUCIDE_ICONS.bassSynth,
-  arpSynth: LUCIDE_ICONS.arpSynth,
-  // Experimental
-  whaleHumpback: LUCIDE_ICONS.whaleHumpback
-};
-var EFFECT_ICONS = {
-  reverb: LUCIDE_ICONS.reverb,
-  chorus: LUCIDE_ICONS.chorus,
-  filter: LUCIDE_ICONS.filter,
-  delay: LUCIDE_ICONS.delay,
-  distortion: LUCIDE_ICONS.distortion,
-  compressor: LUCIDE_ICONS.compressor
-};
-function setLucideIcon(element, iconName, size = 20) {
-  element.empty();
-  const actualIconName = LUCIDE_ICONS[iconName] || iconName;
-  (0, import_obsidian2.setIcon)(element, actualIconName);
-  element.addClass("lucide-icon");
-  element.style.width = `${size}px`;
-  element.style.height = `${size}px`;
-  element.style.display = "inline-flex";
-  element.style.alignItems = "center";
-  element.style.justifyContent = "center";
-}
-function createLucideIcon(iconName, size = 20) {
-  const iconElement = document.createElement("span");
-  setLucideIcon(iconElement, iconName, size);
-  return iconElement;
-}
-function getFamilyIcon(familyName) {
-  const family = familyName.toLowerCase();
-  return FAMILY_ICONS[family] || "music";
-}
-function getInstrumentIcon(instrumentName) {
-  const instrument = instrumentName.toLowerCase().replace(/\s+/g, "");
-  return INSTRUMENT_ICONS[instrument] || "music";
-}
-var TAB_CONFIGS = [
-  {
-    id: "status",
-    name: "Status",
-    icon: "bar-chart-3",
-    description: "System monitoring and diagnostics"
-  },
-  {
-    id: "musical",
-    name: "Musical",
-    icon: "music",
-    description: "Scale, tempo, and musical parameters"
-  },
-  {
-    id: "master",
-    name: "Master",
-    icon: "sliders-horizontal",
-    description: "Global controls and presets"
-  },
-  {
-    id: "keyboard",
-    name: "Keyboard",
-    icon: "piano",
-    description: "6 keyboard instruments",
-    instrumentCount: 6
-  },
-  {
-    id: "strings",
-    name: "Strings",
-    icon: "music",
-    description: "9 string instruments",
-    instrumentCount: 9
-  },
-  {
-    id: "woodwinds",
-    name: "Woodwinds",
-    icon: "circle",
-    description: "5 woodwind instruments",
-    instrumentCount: 5
-  },
-  {
-    id: "brass",
-    name: "Brass",
-    icon: "volume-2",
-    description: "4 brass instruments",
-    instrumentCount: 4
-  },
-  {
-    id: "percussion",
-    name: "Percussion",
-    icon: "circle",
-    description: "4 percussion instruments",
-    instrumentCount: 4
-  },
-  {
-    id: "electronic",
-    name: "Electronic",
-    icon: "zap",
-    description: "3 electronic synthesizers",
-    instrumentCount: 3
-  },
-  {
-    id: "experimental",
-    name: "Experimental",
-    icon: "flask",
-    description: "Experimental sound sources",
-    instrumentCount: 1
-  },
-  {
-    id: "sonic-graph",
-    name: "Sonic Graph",
-    icon: "globe",
-    description: "Knowledge graph visualization with temporal animation"
-  }
-];
-
-// src/ui/material-components.ts
-init_logging();
-var logger3 = getLogger("material-components");
-var MaterialCard = class {
-  constructor(options) {
-    this.container = this.createCardContainer(options);
-    this.header = this.createHeader(options);
-    this.content = this.createContent();
-    this.container.appendChild(this.header);
-    this.container.appendChild(this.content);
-  }
-  createCardContainer(options) {
-    const card = document.createElement("div");
-    card.className = `ospcc-card ${options.elevation ? `ospcc-elevation-${options.elevation}` : ""} ${options.className || ""}`;
-    if (options.onClick) {
-      card.style.cursor = "pointer";
-      card.addEventListener("click", options.onClick);
-    }
-    return card;
-  }
-  createHeader(options) {
-    const header = document.createElement("div");
-    header.className = "ospcc-card__header";
-    const titleContainer = header.createDiv({ cls: "ospcc-card__title" });
-    if (options.iconName) {
-      const icon = createLucideIcon(options.iconName, 24);
-      titleContainer.appendChild(icon);
-    }
-    titleContainer.appendText(options.title);
-    if (options.subtitle) {
-      const subtitle = header.createDiv({ cls: "ospcc-card__subtitle" });
-      subtitle.textContent = options.subtitle;
-    }
-    return header;
-  }
-  createContent() {
-    return this.container.createDiv({ cls: "ospcc-card__content" });
-  }
-  /**
-   * Get the content container for adding content
-   */
-  getContent() {
-    return this.content;
-  }
-  /**
-   * Get the card container element
-   */
-  getElement() {
-    return this.container;
-  }
-  /**
-   * Add action buttons to the card
-   */
-  addActions() {
-    if (!this.actions) {
-      this.actions = this.container.createDiv({ cls: "ospcc-card__actions" });
-    }
-    return this.actions;
-  }
-  /**
-   * Update the card title
-   */
-  setTitle(title) {
-    const titleEl = this.header.querySelector(".ospcc-card__title");
-    if (titleEl) {
-      const textNode = Array.from(titleEl.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
-      if (textNode) {
-        textNode.textContent = title;
-      }
-    }
-  }
-  /**
-   * Update the card subtitle
-   */
-  setSubtitle(subtitle) {
-    let subtitleEl = this.header.querySelector(".ospcc-card__subtitle");
-    if (!subtitleEl) {
-      subtitleEl = this.header.createDiv({ cls: "ospcc-card__subtitle" });
-    }
-    subtitleEl.textContent = subtitle;
-  }
-};
-var EffectSection = class {
-  constructor(options) {
-    this.options = options;
-    this.parameterSliders = [];
-    this.container = this.createEffectSection();
-  }
-  createEffectSection() {
-    const section = document.createElement("div");
-    section.className = `effect-card ${this.options.enabled ? "effect-card--enabled" : ""} ${this.options.className || ""}`;
-    const header = section.createDiv({ cls: "effect-header" });
-    this.createHeader(header);
-    if (this.options.parameters.length > 0) {
-      this.createParameters(section);
-    }
-    return section;
-  }
-  createHeader(container) {
-    const title = container.createDiv({ cls: "effect-title" });
-    const icon = createLucideIcon(this.options.iconName, 20);
-    title.appendChild(icon);
-    title.appendText(this.options.effectName);
-    const toggleContainer = container.createDiv({ cls: "ospcc-switch" });
-    toggleContainer.style.marginLeft = "auto";
-    toggleContainer.style.transform = "scale(0.8)";
-    this.enableSwitch = toggleContainer.createEl("input", {
-      type: "checkbox",
-      cls: "ospcc-switch__input"
-    });
-    this.enableSwitch.checked = this.options.enabled;
-    this.enableSwitch.addEventListener("change", () => {
-      this.updateEnabledState(this.enableSwitch.checked);
-    });
-    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
-    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
-    toggleContainer.addEventListener("click", (e) => {
-      if (e.target !== this.enableSwitch) {
-        e.preventDefault();
-        this.enableSwitch.checked = !this.enableSwitch.checked;
-        this.enableSwitch.dispatchEvent(new Event("change"));
-      }
-    });
-  }
-  createParameters(container) {
-    this.options.parameters.forEach((param) => {
-      const group = container.createDiv({ cls: "control-group" });
-      const label = group.createEl("label", { cls: "control-label" });
-      label.textContent = param.name;
-      const slider = new MaterialSlider({
-        value: param.value,
-        min: param.min || 0,
-        max: param.max || 1,
-        step: param.step || 0.1,
-        unit: param.unit || "",
-        onChange: param.onChange
-      });
-      group.appendChild(slider.getElement());
-      this.parameterSliders.push(slider);
-    });
-  }
-  updateEnabledState(enabled) {
-    this.options.enabled = enabled;
-    this.container.classList.toggle("effect-card--enabled", enabled);
-    if (this.options.onEnabledChange) {
-      this.options.onEnabledChange(enabled);
-    }
-  }
-  getElement() {
-    return this.container;
-  }
-  setEnabled(enabled) {
-    this.enableSwitch.checked = enabled;
-    this.updateEnabledState(enabled);
-  }
-  setParameterValue(parameterIndex, value) {
-    if (parameterIndex < this.parameterSliders.length) {
-      this.parameterSliders[parameterIndex].setValue(value);
-    }
-  }
-};
-var ActionChip = class {
-  constructor(options) {
-    this.options = options;
-    this.container = this.createActionChip();
-  }
-  createActionChip() {
-    const chip = document.createElement("div");
-    chip.className = `ospcc-chip ${this.options.selected ? "ospcc-chip--selected" : ""} ${this.options.className || ""}`;
-    if (this.options.iconName) {
-      const icon = createLucideIcon(this.options.iconName, 16);
-      chip.appendChild(icon);
-    }
-    chip.appendText(this.options.text);
-    chip.addEventListener("click", () => {
-      if (!this.options.disabled) {
-        this.toggle();
-      }
-    });
-    if (this.options.disabled) {
-      chip.style.opacity = "0.5";
-      chip.style.cursor = "not-allowed";
-    }
-    return chip;
-  }
-  toggle() {
-    const newSelected = !this.options.selected;
-    this.options.selected = newSelected;
-    this.container.classList.toggle("ospcc-chip--selected", newSelected);
-    if (this.options.onToggle) {
-      this.options.onToggle(newSelected);
-    }
-  }
-  getElement() {
-    return this.container;
-  }
-  setSelected(selected) {
-    this.options.selected = selected;
-    this.container.classList.toggle("ospcc-chip--selected", selected);
-  }
-  setText(text) {
-    const textNode = Array.from(this.container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
-    if (textNode) {
-      textNode.textContent = text;
-    }
-  }
-};
-var MaterialSlider = class {
-  constructor(options) {
-    this.options = options;
-    this.container = this.createSlider();
-    this.updateDisplay();
-  }
-  createSlider() {
-    const sliderContainer = document.createElement("div");
-    sliderContainer.className = `ospcc-slider-container ${this.options.className || ""}`;
-    this.slider = sliderContainer.createDiv({ cls: "ospcc-slider" });
-    const trackContainer = this.slider.createDiv({ cls: "ospcc-slider__track-container" });
-    this.track = trackContainer.createDiv({ cls: "ospcc-slider__track" });
-    const activeTrack = this.track.createDiv({ cls: "ospcc-slider__track-active" });
-    this.thumb = this.slider.createDiv({ cls: "ospcc-slider__thumb" });
-    this.valueDisplay = sliderContainer.createDiv({ cls: "slider-value" });
-    this.setupInteraction();
-    return sliderContainer;
-  }
-  setupInteraction() {
-    let isDragging = false;
-    const updateValue = (clientX) => {
-      const rect = this.slider.getBoundingClientRect();
-      const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      const min2 = this.options.min || 0;
-      const max2 = this.options.max || 1;
-      const step = this.options.step || 0.1;
-      let value = min2 + percentage * (max2 - min2);
-      value = Math.round(value / step) * step;
-      value = Math.max(min2, Math.min(max2, value));
-      this.options.value = value;
-      this.updateDisplay();
-      if (this.options.onChange) {
-        this.options.onChange(value);
-      }
-    };
-    this.slider.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      updateValue(e.clientX);
-      e.preventDefault();
-    });
-    document.addEventListener("mousemove", (e) => {
-      if (isDragging) {
-        updateValue(e.clientX);
-      }
-    });
-    document.addEventListener("mouseup", () => {
-      isDragging = false;
-    });
-    this.slider.addEventListener("mouseenter", () => {
-      this.thumb.style.transform = "translate(-50%, -50%) scale(1.1)";
-    });
-    this.slider.addEventListener("mouseleave", () => {
-      if (!isDragging) {
-        this.thumb.style.transform = "translate(-50%, -50%) scale(1)";
-      }
-    });
-  }
-  updateDisplay() {
-    const min2 = this.options.min || 0;
-    const max2 = this.options.max || 1;
-    const percentage = (this.options.value - min2) / (max2 - min2) * 100;
-    this.thumb.style.left = `${percentage}%`;
-    const activeTrack = this.track.querySelector(".ospcc-slider__track-active");
-    if (activeTrack) {
-      activeTrack.style.width = `${percentage}%`;
-    }
-    const displayValue = this.options.displayValue || `${this.options.value.toFixed(1)}${this.options.unit || ""}`;
-    this.valueDisplay.textContent = displayValue;
-    this.thumb.setAttribute("data-value", displayValue);
-  }
-  getElement() {
-    return this.container;
-  }
-  setValue(value) {
-    this.options.value = value;
-    this.updateDisplay();
-  }
-  getValue() {
-    return this.options.value;
-  }
-  setDisplayValue(displayValue) {
-    this.options.displayValue = displayValue;
-    this.updateDisplay();
-  }
-};
-var MaterialButton = class {
-  constructor(options) {
-    this.container = this.createButton(options);
-  }
-  createButton(options) {
-    const button = document.createElement("button");
-    button.className = `ospcc-button ospcc-button--${options.variant || "filled"} ${options.className || ""}`;
-    button.disabled = options.disabled || false;
-    if (options.iconName) {
-      const icon = createLucideIcon(options.iconName, 18);
-      button.appendChild(icon);
-    }
-    button.appendText(options.text);
-    if (options.onClick) {
-      button.addEventListener("click", options.onClick);
-    }
-    return button;
-  }
-  getElement() {
-    return this.container;
-  }
-  setDisabled(disabled) {
-    this.container.disabled = disabled;
-  }
-  setText(text) {
-    const textNode = Array.from(this.container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
-    if (textNode) {
-      textNode.textContent = text;
-    }
-  }
-};
-function createGrid(columns) {
-  const grid = document.createElement("div");
-  grid.className = `ospcc-grid ${columns ? `ospcc-grid--${columns}` : ""}`;
-  return grid;
-}
-
-// src/ui/play-button-manager.ts
-init_logging();
-var logger4 = getLogger("play-button-manager");
-var STATE_CONFIGS = {
-  idle: {
-    icon: "play",
-    text: "Play",
-    disabled: false,
-    cssClass: "osp-header-btn--idle"
-  },
-  loading: {
-    icon: "loader-2",
-    text: "Loading...",
-    disabled: true,
-    cssClass: "osp-header-btn--loading",
-    animation: "perimeter-pulse 1.5s ease-in-out infinite"
-  },
-  playing: {
-    icon: "pause",
-    text: "Playing",
-    disabled: false,
-    cssClass: "osp-header-btn--playing",
-    animation: "pulse-glow 2s ease-in-out infinite"
-  },
-  paused: {
-    icon: "play",
-    text: "Resume",
-    disabled: false,
-    cssClass: "osp-header-btn--paused"
-  },
-  stopping: {
-    icon: "loader-2",
-    text: "Stopping...",
-    disabled: true,
-    cssClass: "osp-header-btn--stopping",
-    animation: "spin 1s linear infinite"
-  }
-};
-var LOADING_MESSAGES = {
-  analyzing: "Analyzing vault...",
-  generating: "Generating sequence...",
-  initializing: "Initializing audio...",
-  starting: "Starting playback..."
-};
-var VALID_TRANSITIONS = {
-  idle: ["loading", "idle"],
-  // Allow idle -> idle for reinitialization
-  loading: ["playing", "idle"],
-  // idle on error
-  playing: ["paused", "stopping", "idle"],
-  // idle on completion
-  paused: ["playing", "stopping", "idle"],
-  stopping: ["idle"]
-};
-var PlayButtonManager = class {
-  constructor() {
-    this.button = null;
-    this.currentState = "idle";
-    this.currentSubstate = null;
-    this.stateChangeListeners = [];
-  }
-  /**
-   * Initialize the manager with a button element
-   */
-  initialize(button) {
-    this.button = button;
-    this.setState("idle");
-    logger4.debug("manager", "Play button manager initialized");
-  }
-  /**
-   * Get current state
-   */
-  getCurrentState() {
-    return this.currentState;
-  }
-  /**
-   * Set button state with validation
-   */
-  setState(newState, substate) {
-    if (!this.isValidTransition(this.currentState, newState)) {
-      logger4.warn("manager", `Invalid state transition: ${this.currentState} -> ${newState}`);
-      return;
-    }
-    const previousState = this.currentState;
-    this.currentState = newState;
-    this.currentSubstate = substate || null;
-    logger4.debug("manager", `State transition: ${previousState} -> ${newState}`, {
-      substate: this.currentSubstate
-    });
-    this.updateButton();
-    this.notifyStateChange(newState);
-  }
-  /**
-   * Set loading substate for detailed feedback
-   */
-  setLoadingSubstate(substate) {
-    if (this.currentState === "loading") {
-      this.currentSubstate = substate;
-      this.updateButton();
-      logger4.debug("manager", `Loading substate: ${substate}`);
-    }
-  }
-  /**
-   * Add state change listener
-   */
-  onStateChange(listener) {
-    this.stateChangeListeners.push(listener);
-  }
-  /**
-   * Remove state change listener
-   */
-  removeStateChangeListener(listener) {
-    const index2 = this.stateChangeListeners.indexOf(listener);
-    if (index2 > -1) {
-      this.stateChangeListeners.splice(index2, 1);
-    }
-  }
-  /**
-   * Check if state transition is valid
-   */
-  isValidTransition(from, to) {
-    var _a, _b;
-    return (_b = (_a = VALID_TRANSITIONS[from]) == null ? void 0 : _a.includes(to)) != null ? _b : false;
-  }
-  /**
-   * Update button appearance based on current state
-   */
-  updateButton() {
-    if (!this.button)
-      return;
-    const button = this.button;
-    const config = STATE_CONFIGS[this.currentState];
-    button.textContent = "";
-    button.className = button.className.replace(/osp-header-btn--\w+/g, "");
-    button.disabled = config.disabled;
-    button.classList.add(config.cssClass);
-    const icon = createLucideIcon(config.icon, 16);
-    if (config.animation) {
-      icon.style.animation = config.animation;
-    }
-    button.appendChild(icon);
-    const text = this.getDisplayText();
-    button.appendText(text);
-    this.updateAccessibility(button, text);
-  }
-  /**
-   * Get display text based on state and substate
-   */
-  getDisplayText() {
-    if (this.currentState === "loading" && this.currentSubstate) {
-      return LOADING_MESSAGES[this.currentSubstate];
-    }
-    return STATE_CONFIGS[this.currentState].text;
-  }
-  /**
-   * Update accessibility attributes
-   */
-  updateAccessibility(button, text) {
-    button.setAttribute("aria-label", text);
-    button.setAttribute("data-state", this.currentState);
-    if (this.currentState === "loading" || this.currentState === "stopping") {
-      button.setAttribute("aria-busy", "true");
-    } else {
-      button.removeAttribute("aria-busy");
-    }
-  }
-  /**
-   * Notify all state change listeners
-   */
-  notifyStateChange(state) {
-    this.stateChangeListeners.forEach((listener) => {
-      try {
-        listener(state);
-      } catch (error) {
-        logger4.error("manager", "Error in state change listener", error);
-      }
-    });
-  }
-  /**
-   * Update loading progress (Phase 3: Enhanced feedback)
-   * Updates button text with progress percentage during loading
-   */
-  updateLoadingProgress(percent, context2) {
-    if (this.currentState !== "loading")
-      return;
-    if (!this.button)
-      return;
-    const progressText = context2 ? `${context2} ${Math.round(percent)}%` : `Loading ${Math.round(percent)}%`;
-    const textNode = this.button.childNodes[1];
-    if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-      textNode.textContent = progressText;
-    }
-    this.button.setAttribute("aria-label", progressText);
-    logger4.debug("manager", `Updated loading progress: ${progressText}`);
-  }
-  /**
-   * Force state reset (for error recovery)
-   */
-  forceReset() {
-    logger4.info("manager", "Force resetting play button state");
-    this.currentState = "idle";
-    this.currentSubstate = null;
-    this.updateButton();
-  }
-  /**
-   * Get state configuration for external use
-   */
-  getStateConfig(state) {
-    return { ...STATE_CONFIGS[state] };
-  }
-  /**
-   * Cleanup resources
-   */
-  dispose() {
-    this.stateChangeListeners = [];
-    this.button = null;
-    logger4.debug("manager", "Play button manager disposed");
-  }
-};
-
-// src/ui/GraphDemoModal.ts
-var import_obsidian3 = require("obsidian");
-
-// node_modules/d3-dispatch/src/dispatch.js
-var noop = { value: () => {
-} };
-function dispatch() {
-  for (var i = 0, n = arguments.length, _ = {}, t; i < n; ++i) {
-    if (!(t = arguments[i] + "") || t in _ || /[\s.]/.test(t))
-      throw new Error("illegal type: " + t);
-    _[t] = [];
-  }
-  return new Dispatch(_);
-}
-function Dispatch(_) {
-  this._ = _;
-}
-function parseTypenames(typenames, types) {
-  return typenames.trim().split(/^|\s+/).map(function(t) {
-    var name = "", i = t.indexOf(".");
-    if (i >= 0)
-      name = t.slice(i + 1), t = t.slice(0, i);
-    if (t && !types.hasOwnProperty(t))
-      throw new Error("unknown type: " + t);
-    return { type: t, name };
-  });
-}
-Dispatch.prototype = dispatch.prototype = {
-  constructor: Dispatch,
-  on: function(typename, callback) {
-    var _ = this._, T = parseTypenames(typename + "", _), t, i = -1, n = T.length;
-    if (arguments.length < 2) {
-      while (++i < n)
-        if ((t = (typename = T[i]).type) && (t = get(_[t], typename.name)))
-          return t;
-      return;
-    }
-    if (callback != null && typeof callback !== "function")
-      throw new Error("invalid callback: " + callback);
-    while (++i < n) {
-      if (t = (typename = T[i]).type)
-        _[t] = set(_[t], typename.name, callback);
-      else if (callback == null)
-        for (t in _)
-          _[t] = set(_[t], typename.name, null);
-    }
-    return this;
-  },
-  copy: function() {
-    var copy = {}, _ = this._;
-    for (var t in _)
-      copy[t] = _[t].slice();
-    return new Dispatch(copy);
-  },
-  call: function(type2, that) {
-    if ((n = arguments.length - 2) > 0)
-      for (var args = new Array(n), i = 0, n, t; i < n; ++i)
-        args[i] = arguments[i + 2];
-    if (!this._.hasOwnProperty(type2))
-      throw new Error("unknown type: " + type2);
-    for (t = this._[type2], i = 0, n = t.length; i < n; ++i)
-      t[i].value.apply(that, args);
-  },
-  apply: function(type2, that, args) {
-    if (!this._.hasOwnProperty(type2))
-      throw new Error("unknown type: " + type2);
-    for (var t = this._[type2], i = 0, n = t.length; i < n; ++i)
-      t[i].value.apply(that, args);
-  }
-};
-function get(type2, name) {
-  for (var i = 0, n = type2.length, c2; i < n; ++i) {
-    if ((c2 = type2[i]).name === name) {
-      return c2.value;
-    }
-  }
-}
-function set(type2, name, callback) {
-  for (var i = 0, n = type2.length; i < n; ++i) {
-    if (type2[i].name === name) {
-      type2[i] = noop, type2 = type2.slice(0, i).concat(type2.slice(i + 1));
-      break;
-    }
-  }
-  if (callback != null)
-    type2.push({ name, value: callback });
-  return type2;
-}
-var dispatch_default = dispatch;
-
-// node_modules/d3-selection/src/namespaces.js
-var xhtml = "http://www.w3.org/1999/xhtml";
-var namespaces_default = {
-  svg: "http://www.w3.org/2000/svg",
-  xhtml,
-  xlink: "http://www.w3.org/1999/xlink",
-  xml: "http://www.w3.org/XML/1998/namespace",
-  xmlns: "http://www.w3.org/2000/xmlns/"
-};
-
-// node_modules/d3-selection/src/namespace.js
-function namespace_default(name) {
-  var prefix = name += "", i = prefix.indexOf(":");
-  if (i >= 0 && (prefix = name.slice(0, i)) !== "xmlns")
-    name = name.slice(i + 1);
-  return namespaces_default.hasOwnProperty(prefix) ? { space: namespaces_default[prefix], local: name } : name;
-}
-
-// node_modules/d3-selection/src/creator.js
-function creatorInherit(name) {
-  return function() {
-    var document2 = this.ownerDocument, uri = this.namespaceURI;
-    return uri === xhtml && document2.documentElement.namespaceURI === xhtml ? document2.createElement(name) : document2.createElementNS(uri, name);
-  };
-}
-function creatorFixed(fullname) {
-  return function() {
-    return this.ownerDocument.createElementNS(fullname.space, fullname.local);
-  };
-}
-function creator_default(name) {
-  var fullname = namespace_default(name);
-  return (fullname.local ? creatorFixed : creatorInherit)(fullname);
-}
-
-// node_modules/d3-selection/src/selector.js
-function none() {
-}
-function selector_default(selector) {
-  return selector == null ? none : function() {
-    return this.querySelector(selector);
-  };
-}
-
-// node_modules/d3-selection/src/selection/select.js
-function select_default(select) {
-  if (typeof select !== "function")
-    select = selector_default(select);
-  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = new Array(n), node, subnode, i = 0; i < n; ++i) {
-      if ((node = group[i]) && (subnode = select.call(node, node.__data__, i, group))) {
-        if ("__data__" in node)
-          subnode.__data__ = node.__data__;
-        subgroup[i] = subnode;
-      }
-    }
-  }
-  return new Selection(subgroups, this._parents);
-}
-
-// node_modules/d3-selection/src/array.js
-function array(x3) {
-  return x3 == null ? [] : Array.isArray(x3) ? x3 : Array.from(x3);
-}
-
-// node_modules/d3-selection/src/selectorAll.js
-function empty() {
-  return [];
-}
-function selectorAll_default(selector) {
-  return selector == null ? empty : function() {
-    return this.querySelectorAll(selector);
-  };
-}
-
-// node_modules/d3-selection/src/selection/selectAll.js
-function arrayAll(select) {
-  return function() {
-    return array(select.apply(this, arguments));
-  };
-}
-function selectAll_default(select) {
-  if (typeof select === "function")
-    select = arrayAll(select);
-  else
-    select = selectorAll_default(select);
-  for (var groups = this._groups, m2 = groups.length, subgroups = [], parents = [], j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
-      if (node = group[i]) {
-        subgroups.push(select.call(node, node.__data__, i, group));
-        parents.push(node);
-      }
-    }
-  }
-  return new Selection(subgroups, parents);
-}
-
-// node_modules/d3-selection/src/matcher.js
-function matcher_default(selector) {
-  return function() {
-    return this.matches(selector);
-  };
-}
-function childMatcher(selector) {
-  return function(node) {
-    return node.matches(selector);
-  };
-}
-
-// node_modules/d3-selection/src/selection/selectChild.js
-var find = Array.prototype.find;
-function childFind(match) {
-  return function() {
-    return find.call(this.children, match);
-  };
-}
-function childFirst() {
-  return this.firstElementChild;
-}
-function selectChild_default(match) {
-  return this.select(match == null ? childFirst : childFind(typeof match === "function" ? match : childMatcher(match)));
-}
-
-// node_modules/d3-selection/src/selection/selectChildren.js
-var filter = Array.prototype.filter;
-function children() {
-  return Array.from(this.children);
-}
-function childrenFilter(match) {
-  return function() {
-    return filter.call(this.children, match);
-  };
-}
-function selectChildren_default(match) {
-  return this.selectAll(match == null ? children : childrenFilter(typeof match === "function" ? match : childMatcher(match)));
-}
-
-// node_modules/d3-selection/src/selection/filter.js
-function filter_default(match) {
-  if (typeof match !== "function")
-    match = matcher_default(match);
-  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = [], node, i = 0; i < n; ++i) {
-      if ((node = group[i]) && match.call(node, node.__data__, i, group)) {
-        subgroup.push(node);
-      }
-    }
-  }
-  return new Selection(subgroups, this._parents);
-}
-
-// node_modules/d3-selection/src/selection/sparse.js
-function sparse_default(update) {
-  return new Array(update.length);
-}
-
-// node_modules/d3-selection/src/selection/enter.js
-function enter_default() {
-  return new Selection(this._enter || this._groups.map(sparse_default), this._parents);
-}
-function EnterNode(parent, datum2) {
-  this.ownerDocument = parent.ownerDocument;
-  this.namespaceURI = parent.namespaceURI;
-  this._next = null;
-  this._parent = parent;
-  this.__data__ = datum2;
-}
-EnterNode.prototype = {
-  constructor: EnterNode,
-  appendChild: function(child) {
-    return this._parent.insertBefore(child, this._next);
-  },
-  insertBefore: function(child, next) {
-    return this._parent.insertBefore(child, next);
-  },
-  querySelector: function(selector) {
-    return this._parent.querySelector(selector);
-  },
-  querySelectorAll: function(selector) {
-    return this._parent.querySelectorAll(selector);
-  }
-};
-
-// node_modules/d3-selection/src/constant.js
-function constant_default(x3) {
-  return function() {
-    return x3;
-  };
-}
-
-// node_modules/d3-selection/src/selection/data.js
-function bindIndex(parent, group, enter, update, exit, data) {
-  var i = 0, node, groupLength = group.length, dataLength = data.length;
-  for (; i < dataLength; ++i) {
-    if (node = group[i]) {
-      node.__data__ = data[i];
-      update[i] = node;
-    } else {
-      enter[i] = new EnterNode(parent, data[i]);
-    }
-  }
-  for (; i < groupLength; ++i) {
-    if (node = group[i]) {
-      exit[i] = node;
-    }
-  }
-}
-function bindKey(parent, group, enter, update, exit, data, key) {
-  var i, node, nodeByKeyValue = /* @__PURE__ */ new Map(), groupLength = group.length, dataLength = data.length, keyValues = new Array(groupLength), keyValue;
-  for (i = 0; i < groupLength; ++i) {
-    if (node = group[i]) {
-      keyValues[i] = keyValue = key.call(node, node.__data__, i, group) + "";
-      if (nodeByKeyValue.has(keyValue)) {
-        exit[i] = node;
-      } else {
-        nodeByKeyValue.set(keyValue, node);
-      }
-    }
-  }
-  for (i = 0; i < dataLength; ++i) {
-    keyValue = key.call(parent, data[i], i, data) + "";
-    if (node = nodeByKeyValue.get(keyValue)) {
-      update[i] = node;
-      node.__data__ = data[i];
-      nodeByKeyValue.delete(keyValue);
-    } else {
-      enter[i] = new EnterNode(parent, data[i]);
-    }
-  }
-  for (i = 0; i < groupLength; ++i) {
-    if ((node = group[i]) && nodeByKeyValue.get(keyValues[i]) === node) {
-      exit[i] = node;
-    }
-  }
-}
-function datum(node) {
-  return node.__data__;
-}
-function data_default(value, key) {
-  if (!arguments.length)
-    return Array.from(this, datum);
-  var bind = key ? bindKey : bindIndex, parents = this._parents, groups = this._groups;
-  if (typeof value !== "function")
-    value = constant_default(value);
-  for (var m2 = groups.length, update = new Array(m2), enter = new Array(m2), exit = new Array(m2), j = 0; j < m2; ++j) {
-    var parent = parents[j], group = groups[j], groupLength = group.length, data = arraylike(value.call(parent, parent && parent.__data__, j, parents)), dataLength = data.length, enterGroup = enter[j] = new Array(dataLength), updateGroup = update[j] = new Array(dataLength), exitGroup = exit[j] = new Array(groupLength);
-    bind(parent, group, enterGroup, updateGroup, exitGroup, data, key);
-    for (var i0 = 0, i1 = 0, previous, next; i0 < dataLength; ++i0) {
-      if (previous = enterGroup[i0]) {
-        if (i0 >= i1)
-          i1 = i0 + 1;
-        while (!(next = updateGroup[i1]) && ++i1 < dataLength)
-          ;
-        previous._next = next || null;
-      }
-    }
-  }
-  update = new Selection(update, parents);
-  update._enter = enter;
-  update._exit = exit;
-  return update;
-}
-function arraylike(data) {
-  return typeof data === "object" && "length" in data ? data : Array.from(data);
-}
-
-// node_modules/d3-selection/src/selection/exit.js
-function exit_default() {
-  return new Selection(this._exit || this._groups.map(sparse_default), this._parents);
-}
-
-// node_modules/d3-selection/src/selection/join.js
-function join_default(onenter, onupdate, onexit) {
-  var enter = this.enter(), update = this, exit = this.exit();
-  if (typeof onenter === "function") {
-    enter = onenter(enter);
-    if (enter)
-      enter = enter.selection();
-  } else {
-    enter = enter.append(onenter + "");
-  }
-  if (onupdate != null) {
-    update = onupdate(update);
-    if (update)
-      update = update.selection();
-  }
-  if (onexit == null)
-    exit.remove();
-  else
-    onexit(exit);
-  return enter && update ? enter.merge(update).order() : update;
-}
-
-// node_modules/d3-selection/src/selection/merge.js
-function merge_default(context2) {
-  var selection2 = context2.selection ? context2.selection() : context2;
-  for (var groups0 = this._groups, groups1 = selection2._groups, m0 = groups0.length, m1 = groups1.length, m2 = Math.min(m0, m1), merges = new Array(m0), j = 0; j < m2; ++j) {
-    for (var group0 = groups0[j], group1 = groups1[j], n = group0.length, merge = merges[j] = new Array(n), node, i = 0; i < n; ++i) {
-      if (node = group0[i] || group1[i]) {
-        merge[i] = node;
-      }
-    }
-  }
-  for (; j < m0; ++j) {
-    merges[j] = groups0[j];
-  }
-  return new Selection(merges, this._parents);
-}
-
-// node_modules/d3-selection/src/selection/order.js
-function order_default() {
-  for (var groups = this._groups, j = -1, m2 = groups.length; ++j < m2; ) {
-    for (var group = groups[j], i = group.length - 1, next = group[i], node; --i >= 0; ) {
-      if (node = group[i]) {
-        if (next && node.compareDocumentPosition(next) ^ 4)
-          next.parentNode.insertBefore(node, next);
-        next = node;
-      }
-    }
-  }
-  return this;
-}
-
-// node_modules/d3-selection/src/selection/sort.js
-function sort_default(compare) {
-  if (!compare)
-    compare = ascending;
-  function compareNode(a2, b) {
-    return a2 && b ? compare(a2.__data__, b.__data__) : !a2 - !b;
-  }
-  for (var groups = this._groups, m2 = groups.length, sortgroups = new Array(m2), j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, sortgroup = sortgroups[j] = new Array(n), node, i = 0; i < n; ++i) {
-      if (node = group[i]) {
-        sortgroup[i] = node;
-      }
-    }
-    sortgroup.sort(compareNode);
-  }
-  return new Selection(sortgroups, this._parents).order();
-}
-function ascending(a2, b) {
-  return a2 < b ? -1 : a2 > b ? 1 : a2 >= b ? 0 : NaN;
-}
-
-// node_modules/d3-selection/src/selection/call.js
-function call_default() {
-  var callback = arguments[0];
-  arguments[0] = this;
-  callback.apply(null, arguments);
-  return this;
-}
-
-// node_modules/d3-selection/src/selection/nodes.js
-function nodes_default() {
-  return Array.from(this);
-}
-
-// node_modules/d3-selection/src/selection/node.js
-function node_default() {
-  for (var groups = this._groups, j = 0, m2 = groups.length; j < m2; ++j) {
-    for (var group = groups[j], i = 0, n = group.length; i < n; ++i) {
-      var node = group[i];
-      if (node)
-        return node;
-    }
-  }
-  return null;
-}
-
-// node_modules/d3-selection/src/selection/size.js
-function size_default() {
-  let size = 0;
-  for (const node of this)
-    ++size;
-  return size;
-}
-
-// node_modules/d3-selection/src/selection/empty.js
-function empty_default() {
-  return !this.node();
-}
-
-// node_modules/d3-selection/src/selection/each.js
-function each_default(callback) {
-  for (var groups = this._groups, j = 0, m2 = groups.length; j < m2; ++j) {
-    for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
-      if (node = group[i])
-        callback.call(node, node.__data__, i, group);
-    }
-  }
-  return this;
-}
-
-// node_modules/d3-selection/src/selection/attr.js
-function attrRemove(name) {
-  return function() {
-    this.removeAttribute(name);
-  };
-}
-function attrRemoveNS(fullname) {
-  return function() {
-    this.removeAttributeNS(fullname.space, fullname.local);
-  };
-}
-function attrConstant(name, value) {
-  return function() {
-    this.setAttribute(name, value);
-  };
-}
-function attrConstantNS(fullname, value) {
-  return function() {
-    this.setAttributeNS(fullname.space, fullname.local, value);
-  };
-}
-function attrFunction(name, value) {
-  return function() {
-    var v = value.apply(this, arguments);
-    if (v == null)
-      this.removeAttribute(name);
-    else
-      this.setAttribute(name, v);
-  };
-}
-function attrFunctionNS(fullname, value) {
-  return function() {
-    var v = value.apply(this, arguments);
-    if (v == null)
-      this.removeAttributeNS(fullname.space, fullname.local);
-    else
-      this.setAttributeNS(fullname.space, fullname.local, v);
-  };
-}
-function attr_default(name, value) {
-  var fullname = namespace_default(name);
-  if (arguments.length < 2) {
-    var node = this.node();
-    return fullname.local ? node.getAttributeNS(fullname.space, fullname.local) : node.getAttribute(fullname);
-  }
-  return this.each((value == null ? fullname.local ? attrRemoveNS : attrRemove : typeof value === "function" ? fullname.local ? attrFunctionNS : attrFunction : fullname.local ? attrConstantNS : attrConstant)(fullname, value));
-}
-
-// node_modules/d3-selection/src/window.js
-function window_default(node) {
-  return node.ownerDocument && node.ownerDocument.defaultView || node.document && node || node.defaultView;
-}
-
-// node_modules/d3-selection/src/selection/style.js
-function styleRemove(name) {
-  return function() {
-    this.style.removeProperty(name);
-  };
-}
-function styleConstant(name, value, priority) {
-  return function() {
-    this.style.setProperty(name, value, priority);
-  };
-}
-function styleFunction(name, value, priority) {
-  return function() {
-    var v = value.apply(this, arguments);
-    if (v == null)
-      this.style.removeProperty(name);
-    else
-      this.style.setProperty(name, v, priority);
-  };
-}
-function style_default(name, value, priority) {
-  return arguments.length > 1 ? this.each((value == null ? styleRemove : typeof value === "function" ? styleFunction : styleConstant)(name, value, priority == null ? "" : priority)) : styleValue(this.node(), name);
-}
-function styleValue(node, name) {
-  return node.style.getPropertyValue(name) || window_default(node).getComputedStyle(node, null).getPropertyValue(name);
-}
-
-// node_modules/d3-selection/src/selection/property.js
-function propertyRemove(name) {
-  return function() {
-    delete this[name];
-  };
-}
-function propertyConstant(name, value) {
-  return function() {
-    this[name] = value;
-  };
-}
-function propertyFunction(name, value) {
-  return function() {
-    var v = value.apply(this, arguments);
-    if (v == null)
-      delete this[name];
-    else
-      this[name] = v;
-  };
-}
-function property_default(name, value) {
-  return arguments.length > 1 ? this.each((value == null ? propertyRemove : typeof value === "function" ? propertyFunction : propertyConstant)(name, value)) : this.node()[name];
-}
-
-// node_modules/d3-selection/src/selection/classed.js
-function classArray(string) {
-  return string.trim().split(/^|\s+/);
-}
-function classList(node) {
-  return node.classList || new ClassList(node);
-}
-function ClassList(node) {
-  this._node = node;
-  this._names = classArray(node.getAttribute("class") || "");
-}
-ClassList.prototype = {
-  add: function(name) {
-    var i = this._names.indexOf(name);
-    if (i < 0) {
-      this._names.push(name);
-      this._node.setAttribute("class", this._names.join(" "));
-    }
-  },
-  remove: function(name) {
-    var i = this._names.indexOf(name);
-    if (i >= 0) {
-      this._names.splice(i, 1);
-      this._node.setAttribute("class", this._names.join(" "));
-    }
-  },
-  contains: function(name) {
-    return this._names.indexOf(name) >= 0;
-  }
-};
-function classedAdd(node, names) {
-  var list = classList(node), i = -1, n = names.length;
-  while (++i < n)
-    list.add(names[i]);
-}
-function classedRemove(node, names) {
-  var list = classList(node), i = -1, n = names.length;
-  while (++i < n)
-    list.remove(names[i]);
-}
-function classedTrue(names) {
-  return function() {
-    classedAdd(this, names);
-  };
-}
-function classedFalse(names) {
-  return function() {
-    classedRemove(this, names);
-  };
-}
-function classedFunction(names, value) {
-  return function() {
-    (value.apply(this, arguments) ? classedAdd : classedRemove)(this, names);
-  };
-}
-function classed_default(name, value) {
-  var names = classArray(name + "");
-  if (arguments.length < 2) {
-    var list = classList(this.node()), i = -1, n = names.length;
-    while (++i < n)
-      if (!list.contains(names[i]))
-        return false;
-    return true;
-  }
-  return this.each((typeof value === "function" ? classedFunction : value ? classedTrue : classedFalse)(names, value));
-}
-
-// node_modules/d3-selection/src/selection/text.js
-function textRemove() {
-  this.textContent = "";
-}
-function textConstant(value) {
-  return function() {
-    this.textContent = value;
-  };
-}
-function textFunction(value) {
-  return function() {
-    var v = value.apply(this, arguments);
-    this.textContent = v == null ? "" : v;
-  };
-}
-function text_default(value) {
-  return arguments.length ? this.each(value == null ? textRemove : (typeof value === "function" ? textFunction : textConstant)(value)) : this.node().textContent;
-}
-
-// node_modules/d3-selection/src/selection/html.js
-function htmlRemove() {
-  this.innerHTML = "";
-}
-function htmlConstant(value) {
-  return function() {
-    this.innerHTML = value;
-  };
-}
-function htmlFunction(value) {
-  return function() {
-    var v = value.apply(this, arguments);
-    this.innerHTML = v == null ? "" : v;
-  };
-}
-function html_default(value) {
-  return arguments.length ? this.each(value == null ? htmlRemove : (typeof value === "function" ? htmlFunction : htmlConstant)(value)) : this.node().innerHTML;
-}
-
-// node_modules/d3-selection/src/selection/raise.js
-function raise() {
-  if (this.nextSibling)
-    this.parentNode.appendChild(this);
-}
-function raise_default() {
-  return this.each(raise);
-}
-
-// node_modules/d3-selection/src/selection/lower.js
-function lower() {
-  if (this.previousSibling)
-    this.parentNode.insertBefore(this, this.parentNode.firstChild);
-}
-function lower_default() {
-  return this.each(lower);
-}
-
-// node_modules/d3-selection/src/selection/append.js
-function append_default(name) {
-  var create2 = typeof name === "function" ? name : creator_default(name);
-  return this.select(function() {
-    return this.appendChild(create2.apply(this, arguments));
-  });
-}
-
-// node_modules/d3-selection/src/selection/insert.js
-function constantNull() {
-  return null;
-}
-function insert_default(name, before) {
-  var create2 = typeof name === "function" ? name : creator_default(name), select = before == null ? constantNull : typeof before === "function" ? before : selector_default(before);
-  return this.select(function() {
-    return this.insertBefore(create2.apply(this, arguments), select.apply(this, arguments) || null);
-  });
-}
-
-// node_modules/d3-selection/src/selection/remove.js
-function remove() {
-  var parent = this.parentNode;
-  if (parent)
-    parent.removeChild(this);
-}
-function remove_default() {
-  return this.each(remove);
-}
-
-// node_modules/d3-selection/src/selection/clone.js
-function selection_cloneShallow() {
-  var clone = this.cloneNode(false), parent = this.parentNode;
-  return parent ? parent.insertBefore(clone, this.nextSibling) : clone;
-}
-function selection_cloneDeep() {
-  var clone = this.cloneNode(true), parent = this.parentNode;
-  return parent ? parent.insertBefore(clone, this.nextSibling) : clone;
-}
-function clone_default(deep) {
-  return this.select(deep ? selection_cloneDeep : selection_cloneShallow);
-}
-
-// node_modules/d3-selection/src/selection/datum.js
-function datum_default(value) {
-  return arguments.length ? this.property("__data__", value) : this.node().__data__;
-}
-
-// node_modules/d3-selection/src/selection/on.js
-function contextListener(listener) {
-  return function(event) {
-    listener.call(this, event, this.__data__);
-  };
-}
-function parseTypenames2(typenames) {
-  return typenames.trim().split(/^|\s+/).map(function(t) {
-    var name = "", i = t.indexOf(".");
-    if (i >= 0)
-      name = t.slice(i + 1), t = t.slice(0, i);
-    return { type: t, name };
-  });
-}
-function onRemove(typename) {
-  return function() {
-    var on = this.__on;
-    if (!on)
-      return;
-    for (var j = 0, i = -1, m2 = on.length, o; j < m2; ++j) {
-      if (o = on[j], (!typename.type || o.type === typename.type) && o.name === typename.name) {
-        this.removeEventListener(o.type, o.listener, o.options);
-      } else {
-        on[++i] = o;
-      }
-    }
-    if (++i)
-      on.length = i;
-    else
-      delete this.__on;
-  };
-}
-function onAdd(typename, value, options) {
-  return function() {
-    var on = this.__on, o, listener = contextListener(value);
-    if (on)
-      for (var j = 0, m2 = on.length; j < m2; ++j) {
-        if ((o = on[j]).type === typename.type && o.name === typename.name) {
-          this.removeEventListener(o.type, o.listener, o.options);
-          this.addEventListener(o.type, o.listener = listener, o.options = options);
-          o.value = value;
-          return;
-        }
-      }
-    this.addEventListener(typename.type, listener, options);
-    o = { type: typename.type, name: typename.name, value, listener, options };
-    if (!on)
-      this.__on = [o];
-    else
-      on.push(o);
-  };
-}
-function on_default(typename, value, options) {
-  var typenames = parseTypenames2(typename + ""), i, n = typenames.length, t;
-  if (arguments.length < 2) {
-    var on = this.node().__on;
-    if (on)
-      for (var j = 0, m2 = on.length, o; j < m2; ++j) {
-        for (i = 0, o = on[j]; i < n; ++i) {
-          if ((t = typenames[i]).type === o.type && t.name === o.name) {
-            return o.value;
-          }
-        }
-      }
-    return;
-  }
-  on = value ? onAdd : onRemove;
-  for (i = 0; i < n; ++i)
-    this.each(on(typenames[i], value, options));
-  return this;
-}
-
-// node_modules/d3-selection/src/selection/dispatch.js
-function dispatchEvent(node, type2, params) {
-  var window3 = window_default(node), event = window3.CustomEvent;
-  if (typeof event === "function") {
-    event = new event(type2, params);
-  } else {
-    event = window3.document.createEvent("Event");
-    if (params)
-      event.initEvent(type2, params.bubbles, params.cancelable), event.detail = params.detail;
-    else
-      event.initEvent(type2, false, false);
-  }
-  node.dispatchEvent(event);
-}
-function dispatchConstant(type2, params) {
-  return function() {
-    return dispatchEvent(this, type2, params);
-  };
-}
-function dispatchFunction(type2, params) {
-  return function() {
-    return dispatchEvent(this, type2, params.apply(this, arguments));
-  };
-}
-function dispatch_default2(type2, params) {
-  return this.each((typeof params === "function" ? dispatchFunction : dispatchConstant)(type2, params));
-}
-
-// node_modules/d3-selection/src/selection/iterator.js
-function* iterator_default() {
-  for (var groups = this._groups, j = 0, m2 = groups.length; j < m2; ++j) {
-    for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
-      if (node = group[i])
-        yield node;
-    }
-  }
-}
-
-// node_modules/d3-selection/src/selection/index.js
-var root = [null];
-function Selection(groups, parents) {
-  this._groups = groups;
-  this._parents = parents;
-}
-function selection() {
-  return new Selection([[document.documentElement]], root);
-}
-function selection_selection() {
-  return this;
-}
-Selection.prototype = selection.prototype = {
-  constructor: Selection,
-  select: select_default,
-  selectAll: selectAll_default,
-  selectChild: selectChild_default,
-  selectChildren: selectChildren_default,
-  filter: filter_default,
-  data: data_default,
-  enter: enter_default,
-  exit: exit_default,
-  join: join_default,
-  merge: merge_default,
-  selection: selection_selection,
-  order: order_default,
-  sort: sort_default,
-  call: call_default,
-  nodes: nodes_default,
-  node: node_default,
-  size: size_default,
-  empty: empty_default,
-  each: each_default,
-  attr: attr_default,
-  style: style_default,
-  property: property_default,
-  classed: classed_default,
-  text: text_default,
-  html: html_default,
-  raise: raise_default,
-  lower: lower_default,
-  append: append_default,
-  insert: insert_default,
-  remove: remove_default,
-  clone: clone_default,
-  datum: datum_default,
-  on: on_default,
-  dispatch: dispatch_default2,
-  [Symbol.iterator]: iterator_default
-};
-var selection_default = selection;
-
-// node_modules/d3-selection/src/select.js
-function select_default2(selector) {
-  return typeof selector === "string" ? new Selection([[document.querySelector(selector)]], [document.documentElement]) : new Selection([[selector]], root);
-}
-
-// node_modules/d3-selection/src/sourceEvent.js
-function sourceEvent_default(event) {
-  let sourceEvent;
-  while (sourceEvent = event.sourceEvent)
-    event = sourceEvent;
-  return event;
-}
-
-// node_modules/d3-selection/src/pointer.js
-function pointer_default(event, node) {
-  event = sourceEvent_default(event);
-  if (node === void 0)
-    node = event.currentTarget;
-  if (node) {
-    var svg = node.ownerSVGElement || node;
-    if (svg.createSVGPoint) {
-      var point = svg.createSVGPoint();
-      point.x = event.clientX, point.y = event.clientY;
-      point = point.matrixTransform(node.getScreenCTM().inverse());
-      return [point.x, point.y];
-    }
-    if (node.getBoundingClientRect) {
-      var rect = node.getBoundingClientRect();
-      return [event.clientX - rect.left - node.clientLeft, event.clientY - rect.top - node.clientTop];
-    }
-  }
-  return [event.pageX, event.pageY];
-}
-
-// node_modules/d3-drag/src/noevent.js
-var nonpassive = { passive: false };
-var nonpassivecapture = { capture: true, passive: false };
-function nopropagation(event) {
-  event.stopImmediatePropagation();
-}
-function noevent_default(event) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
-}
-
-// node_modules/d3-drag/src/nodrag.js
-function nodrag_default(view) {
-  var root2 = view.document.documentElement, selection2 = select_default2(view).on("dragstart.drag", noevent_default, nonpassivecapture);
-  if ("onselectstart" in root2) {
-    selection2.on("selectstart.drag", noevent_default, nonpassivecapture);
-  } else {
-    root2.__noselect = root2.style.MozUserSelect;
-    root2.style.MozUserSelect = "none";
-  }
-}
-function yesdrag(view, noclick) {
-  var root2 = view.document.documentElement, selection2 = select_default2(view).on("dragstart.drag", null);
-  if (noclick) {
-    selection2.on("click.drag", noevent_default, nonpassivecapture);
-    setTimeout(function() {
-      selection2.on("click.drag", null);
-    }, 0);
-  }
-  if ("onselectstart" in root2) {
-    selection2.on("selectstart.drag", null);
-  } else {
-    root2.style.MozUserSelect = root2.__noselect;
-    delete root2.__noselect;
-  }
-}
-
-// node_modules/d3-drag/src/constant.js
-var constant_default2 = (x3) => () => x3;
-
-// node_modules/d3-drag/src/event.js
-function DragEvent(type2, {
-  sourceEvent,
-  subject,
-  target,
-  identifier,
-  active,
-  x: x3,
-  y: y3,
-  dx,
-  dy,
-  dispatch: dispatch2
-}) {
-  Object.defineProperties(this, {
-    type: { value: type2, enumerable: true, configurable: true },
-    sourceEvent: { value: sourceEvent, enumerable: true, configurable: true },
-    subject: { value: subject, enumerable: true, configurable: true },
-    target: { value: target, enumerable: true, configurable: true },
-    identifier: { value: identifier, enumerable: true, configurable: true },
-    active: { value: active, enumerable: true, configurable: true },
-    x: { value: x3, enumerable: true, configurable: true },
-    y: { value: y3, enumerable: true, configurable: true },
-    dx: { value: dx, enumerable: true, configurable: true },
-    dy: { value: dy, enumerable: true, configurable: true },
-    _: { value: dispatch2 }
-  });
-}
-DragEvent.prototype.on = function() {
-  var value = this._.on.apply(this._, arguments);
-  return value === this._ ? this : value;
-};
-
-// node_modules/d3-drag/src/drag.js
-function defaultFilter(event) {
-  return !event.ctrlKey && !event.button;
-}
-function defaultContainer() {
-  return this.parentNode;
-}
-function defaultSubject(event, d) {
-  return d == null ? { x: event.x, y: event.y } : d;
-}
-function defaultTouchable() {
-  return navigator.maxTouchPoints || "ontouchstart" in this;
-}
-function drag_default() {
-  var filter2 = defaultFilter, container = defaultContainer, subject = defaultSubject, touchable = defaultTouchable, gestures = {}, listeners = dispatch_default("start", "drag", "end"), active = 0, mousedownx, mousedowny, mousemoving, touchending, clickDistance2 = 0;
-  function drag(selection2) {
-    selection2.on("mousedown.drag", mousedowned).filter(touchable).on("touchstart.drag", touchstarted).on("touchmove.drag", touchmoved, nonpassive).on("touchend.drag touchcancel.drag", touchended).style("touch-action", "none").style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
-  }
-  function mousedowned(event, d) {
-    if (touchending || !filter2.call(this, event, d))
-      return;
-    var gesture = beforestart(this, container.call(this, event, d), event, d, "mouse");
-    if (!gesture)
-      return;
-    select_default2(event.view).on("mousemove.drag", mousemoved, nonpassivecapture).on("mouseup.drag", mouseupped, nonpassivecapture);
-    nodrag_default(event.view);
-    nopropagation(event);
-    mousemoving = false;
-    mousedownx = event.clientX;
-    mousedowny = event.clientY;
-    gesture("start", event);
-  }
-  function mousemoved(event) {
-    noevent_default(event);
-    if (!mousemoving) {
-      var dx = event.clientX - mousedownx, dy = event.clientY - mousedowny;
-      mousemoving = dx * dx + dy * dy > clickDistance2;
-    }
-    gestures.mouse("drag", event);
-  }
-  function mouseupped(event) {
-    select_default2(event.view).on("mousemove.drag mouseup.drag", null);
-    yesdrag(event.view, mousemoving);
-    noevent_default(event);
-    gestures.mouse("end", event);
-  }
-  function touchstarted(event, d) {
-    if (!filter2.call(this, event, d))
-      return;
-    var touches = event.changedTouches, c2 = container.call(this, event, d), n = touches.length, i, gesture;
-    for (i = 0; i < n; ++i) {
-      if (gesture = beforestart(this, c2, event, d, touches[i].identifier, touches[i])) {
-        nopropagation(event);
-        gesture("start", event, touches[i]);
-      }
-    }
-  }
-  function touchmoved(event) {
-    var touches = event.changedTouches, n = touches.length, i, gesture;
-    for (i = 0; i < n; ++i) {
-      if (gesture = gestures[touches[i].identifier]) {
-        noevent_default(event);
-        gesture("drag", event, touches[i]);
-      }
-    }
-  }
-  function touchended(event) {
-    var touches = event.changedTouches, n = touches.length, i, gesture;
-    if (touchending)
-      clearTimeout(touchending);
-    touchending = setTimeout(function() {
-      touchending = null;
-    }, 500);
-    for (i = 0; i < n; ++i) {
-      if (gesture = gestures[touches[i].identifier]) {
-        nopropagation(event);
-        gesture("end", event, touches[i]);
-      }
-    }
-  }
-  function beforestart(that, container2, event, d, identifier, touch) {
-    var dispatch2 = listeners.copy(), p = pointer_default(touch || event, container2), dx, dy, s;
-    if ((s = subject.call(that, new DragEvent("beforestart", {
-      sourceEvent: event,
-      target: drag,
-      identifier,
-      active,
-      x: p[0],
-      y: p[1],
-      dx: 0,
-      dy: 0,
-      dispatch: dispatch2
-    }), d)) == null)
-      return;
-    dx = s.x - p[0] || 0;
-    dy = s.y - p[1] || 0;
-    return function gesture(type2, event2, touch2) {
-      var p0 = p, n;
-      switch (type2) {
-        case "start":
-          gestures[identifier] = gesture, n = active++;
-          break;
-        case "end":
-          delete gestures[identifier], --active;
-        case "drag":
-          p = pointer_default(touch2 || event2, container2), n = active;
-          break;
-      }
-      dispatch2.call(
-        type2,
-        that,
-        new DragEvent(type2, {
-          sourceEvent: event2,
-          subject: s,
-          target: drag,
-          identifier,
-          active: n,
-          x: p[0] + dx,
-          y: p[1] + dy,
-          dx: p[0] - p0[0],
-          dy: p[1] - p0[1],
-          dispatch: dispatch2
-        }),
-        d
-      );
-    };
-  }
-  drag.filter = function(_) {
-    return arguments.length ? (filter2 = typeof _ === "function" ? _ : constant_default2(!!_), drag) : filter2;
-  };
-  drag.container = function(_) {
-    return arguments.length ? (container = typeof _ === "function" ? _ : constant_default2(_), drag) : container;
-  };
-  drag.subject = function(_) {
-    return arguments.length ? (subject = typeof _ === "function" ? _ : constant_default2(_), drag) : subject;
-  };
-  drag.touchable = function(_) {
-    return arguments.length ? (touchable = typeof _ === "function" ? _ : constant_default2(!!_), drag) : touchable;
-  };
-  drag.on = function() {
-    var value = listeners.on.apply(listeners, arguments);
-    return value === listeners ? drag : value;
-  };
-  drag.clickDistance = function(_) {
-    return arguments.length ? (clickDistance2 = (_ = +_) * _, drag) : Math.sqrt(clickDistance2);
-  };
-  return drag;
-}
-
-// node_modules/d3-color/src/define.js
-function define_default(constructor, factory, prototype) {
-  constructor.prototype = factory.prototype = prototype;
-  prototype.constructor = constructor;
-}
-function extend(parent, definition) {
-  var prototype = Object.create(parent.prototype);
-  for (var key in definition)
-    prototype[key] = definition[key];
-  return prototype;
-}
-
-// node_modules/d3-color/src/color.js
-function Color() {
-}
-var darker = 0.7;
-var brighter = 1 / darker;
-var reI = "\\s*([+-]?\\d+)\\s*";
-var reN = "\\s*([+-]?(?:\\d*\\.)?\\d+(?:[eE][+-]?\\d+)?)\\s*";
-var reP = "\\s*([+-]?(?:\\d*\\.)?\\d+(?:[eE][+-]?\\d+)?)%\\s*";
-var reHex = /^#([0-9a-f]{3,8})$/;
-var reRgbInteger = new RegExp(`^rgb\\(${reI},${reI},${reI}\\)$`);
-var reRgbPercent = new RegExp(`^rgb\\(${reP},${reP},${reP}\\)$`);
-var reRgbaInteger = new RegExp(`^rgba\\(${reI},${reI},${reI},${reN}\\)$`);
-var reRgbaPercent = new RegExp(`^rgba\\(${reP},${reP},${reP},${reN}\\)$`);
-var reHslPercent = new RegExp(`^hsl\\(${reN},${reP},${reP}\\)$`);
-var reHslaPercent = new RegExp(`^hsla\\(${reN},${reP},${reP},${reN}\\)$`);
-var named = {
-  aliceblue: 15792383,
-  antiquewhite: 16444375,
-  aqua: 65535,
-  aquamarine: 8388564,
-  azure: 15794175,
-  beige: 16119260,
-  bisque: 16770244,
-  black: 0,
-  blanchedalmond: 16772045,
-  blue: 255,
-  blueviolet: 9055202,
-  brown: 10824234,
-  burlywood: 14596231,
-  cadetblue: 6266528,
-  chartreuse: 8388352,
-  chocolate: 13789470,
-  coral: 16744272,
-  cornflowerblue: 6591981,
-  cornsilk: 16775388,
-  crimson: 14423100,
-  cyan: 65535,
-  darkblue: 139,
-  darkcyan: 35723,
-  darkgoldenrod: 12092939,
-  darkgray: 11119017,
-  darkgreen: 25600,
-  darkgrey: 11119017,
-  darkkhaki: 12433259,
-  darkmagenta: 9109643,
-  darkolivegreen: 5597999,
-  darkorange: 16747520,
-  darkorchid: 10040012,
-  darkred: 9109504,
-  darksalmon: 15308410,
-  darkseagreen: 9419919,
-  darkslateblue: 4734347,
-  darkslategray: 3100495,
-  darkslategrey: 3100495,
-  darkturquoise: 52945,
-  darkviolet: 9699539,
-  deeppink: 16716947,
-  deepskyblue: 49151,
-  dimgray: 6908265,
-  dimgrey: 6908265,
-  dodgerblue: 2003199,
-  firebrick: 11674146,
-  floralwhite: 16775920,
-  forestgreen: 2263842,
-  fuchsia: 16711935,
-  gainsboro: 14474460,
-  ghostwhite: 16316671,
-  gold: 16766720,
-  goldenrod: 14329120,
-  gray: 8421504,
-  green: 32768,
-  greenyellow: 11403055,
-  grey: 8421504,
-  honeydew: 15794160,
-  hotpink: 16738740,
-  indianred: 13458524,
-  indigo: 4915330,
-  ivory: 16777200,
-  khaki: 15787660,
-  lavender: 15132410,
-  lavenderblush: 16773365,
-  lawngreen: 8190976,
-  lemonchiffon: 16775885,
-  lightblue: 11393254,
-  lightcoral: 15761536,
-  lightcyan: 14745599,
-  lightgoldenrodyellow: 16448210,
-  lightgray: 13882323,
-  lightgreen: 9498256,
-  lightgrey: 13882323,
-  lightpink: 16758465,
-  lightsalmon: 16752762,
-  lightseagreen: 2142890,
-  lightskyblue: 8900346,
-  lightslategray: 7833753,
-  lightslategrey: 7833753,
-  lightsteelblue: 11584734,
-  lightyellow: 16777184,
-  lime: 65280,
-  limegreen: 3329330,
-  linen: 16445670,
-  magenta: 16711935,
-  maroon: 8388608,
-  mediumaquamarine: 6737322,
-  mediumblue: 205,
-  mediumorchid: 12211667,
-  mediumpurple: 9662683,
-  mediumseagreen: 3978097,
-  mediumslateblue: 8087790,
-  mediumspringgreen: 64154,
-  mediumturquoise: 4772300,
-  mediumvioletred: 13047173,
-  midnightblue: 1644912,
-  mintcream: 16121850,
-  mistyrose: 16770273,
-  moccasin: 16770229,
-  navajowhite: 16768685,
-  navy: 128,
-  oldlace: 16643558,
-  olive: 8421376,
-  olivedrab: 7048739,
-  orange: 16753920,
-  orangered: 16729344,
-  orchid: 14315734,
-  palegoldenrod: 15657130,
-  palegreen: 10025880,
-  paleturquoise: 11529966,
-  palevioletred: 14381203,
-  papayawhip: 16773077,
-  peachpuff: 16767673,
-  peru: 13468991,
-  pink: 16761035,
-  plum: 14524637,
-  powderblue: 11591910,
-  purple: 8388736,
-  rebeccapurple: 6697881,
-  red: 16711680,
-  rosybrown: 12357519,
-  royalblue: 4286945,
-  saddlebrown: 9127187,
-  salmon: 16416882,
-  sandybrown: 16032864,
-  seagreen: 3050327,
-  seashell: 16774638,
-  sienna: 10506797,
-  silver: 12632256,
-  skyblue: 8900331,
-  slateblue: 6970061,
-  slategray: 7372944,
-  slategrey: 7372944,
-  snow: 16775930,
-  springgreen: 65407,
-  steelblue: 4620980,
-  tan: 13808780,
-  teal: 32896,
-  thistle: 14204888,
-  tomato: 16737095,
-  turquoise: 4251856,
-  violet: 15631086,
-  wheat: 16113331,
-  white: 16777215,
-  whitesmoke: 16119285,
-  yellow: 16776960,
-  yellowgreen: 10145074
-};
-define_default(Color, color, {
-  copy(channels) {
-    return Object.assign(new this.constructor(), this, channels);
-  },
-  displayable() {
-    return this.rgb().displayable();
-  },
-  hex: color_formatHex,
-  // Deprecated! Use color.formatHex.
-  formatHex: color_formatHex,
-  formatHex8: color_formatHex8,
-  formatHsl: color_formatHsl,
-  formatRgb: color_formatRgb,
-  toString: color_formatRgb
-});
-function color_formatHex() {
-  return this.rgb().formatHex();
-}
-function color_formatHex8() {
-  return this.rgb().formatHex8();
-}
-function color_formatHsl() {
-  return hslConvert(this).formatHsl();
-}
-function color_formatRgb() {
-  return this.rgb().formatRgb();
-}
-function color(format) {
-  var m2, l;
-  format = (format + "").trim().toLowerCase();
-  return (m2 = reHex.exec(format)) ? (l = m2[1].length, m2 = parseInt(m2[1], 16), l === 6 ? rgbn(m2) : l === 3 ? new Rgb(m2 >> 8 & 15 | m2 >> 4 & 240, m2 >> 4 & 15 | m2 & 240, (m2 & 15) << 4 | m2 & 15, 1) : l === 8 ? rgba(m2 >> 24 & 255, m2 >> 16 & 255, m2 >> 8 & 255, (m2 & 255) / 255) : l === 4 ? rgba(m2 >> 12 & 15 | m2 >> 8 & 240, m2 >> 8 & 15 | m2 >> 4 & 240, m2 >> 4 & 15 | m2 & 240, ((m2 & 15) << 4 | m2 & 15) / 255) : null) : (m2 = reRgbInteger.exec(format)) ? new Rgb(m2[1], m2[2], m2[3], 1) : (m2 = reRgbPercent.exec(format)) ? new Rgb(m2[1] * 255 / 100, m2[2] * 255 / 100, m2[3] * 255 / 100, 1) : (m2 = reRgbaInteger.exec(format)) ? rgba(m2[1], m2[2], m2[3], m2[4]) : (m2 = reRgbaPercent.exec(format)) ? rgba(m2[1] * 255 / 100, m2[2] * 255 / 100, m2[3] * 255 / 100, m2[4]) : (m2 = reHslPercent.exec(format)) ? hsla(m2[1], m2[2] / 100, m2[3] / 100, 1) : (m2 = reHslaPercent.exec(format)) ? hsla(m2[1], m2[2] / 100, m2[3] / 100, m2[4]) : named.hasOwnProperty(format) ? rgbn(named[format]) : format === "transparent" ? new Rgb(NaN, NaN, NaN, 0) : null;
-}
-function rgbn(n) {
-  return new Rgb(n >> 16 & 255, n >> 8 & 255, n & 255, 1);
-}
-function rgba(r, g, b, a2) {
-  if (a2 <= 0)
-    r = g = b = NaN;
-  return new Rgb(r, g, b, a2);
-}
-function rgbConvert(o) {
-  if (!(o instanceof Color))
-    o = color(o);
-  if (!o)
-    return new Rgb();
-  o = o.rgb();
-  return new Rgb(o.r, o.g, o.b, o.opacity);
-}
-function rgb(r, g, b, opacity) {
-  return arguments.length === 1 ? rgbConvert(r) : new Rgb(r, g, b, opacity == null ? 1 : opacity);
-}
-function Rgb(r, g, b, opacity) {
-  this.r = +r;
-  this.g = +g;
-  this.b = +b;
-  this.opacity = +opacity;
-}
-define_default(Rgb, rgb, extend(Color, {
-  brighter(k) {
-    k = k == null ? brighter : Math.pow(brighter, k);
-    return new Rgb(this.r * k, this.g * k, this.b * k, this.opacity);
-  },
-  darker(k) {
-    k = k == null ? darker : Math.pow(darker, k);
-    return new Rgb(this.r * k, this.g * k, this.b * k, this.opacity);
-  },
-  rgb() {
-    return this;
-  },
-  clamp() {
-    return new Rgb(clampi(this.r), clampi(this.g), clampi(this.b), clampa(this.opacity));
-  },
-  displayable() {
-    return -0.5 <= this.r && this.r < 255.5 && (-0.5 <= this.g && this.g < 255.5) && (-0.5 <= this.b && this.b < 255.5) && (0 <= this.opacity && this.opacity <= 1);
-  },
-  hex: rgb_formatHex,
-  // Deprecated! Use color.formatHex.
-  formatHex: rgb_formatHex,
-  formatHex8: rgb_formatHex8,
-  formatRgb: rgb_formatRgb,
-  toString: rgb_formatRgb
-}));
-function rgb_formatHex() {
-  return `#${hex(this.r)}${hex(this.g)}${hex(this.b)}`;
-}
-function rgb_formatHex8() {
-  return `#${hex(this.r)}${hex(this.g)}${hex(this.b)}${hex((isNaN(this.opacity) ? 1 : this.opacity) * 255)}`;
-}
-function rgb_formatRgb() {
-  const a2 = clampa(this.opacity);
-  return `${a2 === 1 ? "rgb(" : "rgba("}${clampi(this.r)}, ${clampi(this.g)}, ${clampi(this.b)}${a2 === 1 ? ")" : `, ${a2})`}`;
-}
-function clampa(opacity) {
-  return isNaN(opacity) ? 1 : Math.max(0, Math.min(1, opacity));
-}
-function clampi(value) {
-  return Math.max(0, Math.min(255, Math.round(value) || 0));
-}
-function hex(value) {
-  value = clampi(value);
-  return (value < 16 ? "0" : "") + value.toString(16);
-}
-function hsla(h, s, l, a2) {
-  if (a2 <= 0)
-    h = s = l = NaN;
-  else if (l <= 0 || l >= 1)
-    h = s = NaN;
-  else if (s <= 0)
-    h = NaN;
-  return new Hsl(h, s, l, a2);
-}
-function hslConvert(o) {
-  if (o instanceof Hsl)
-    return new Hsl(o.h, o.s, o.l, o.opacity);
-  if (!(o instanceof Color))
-    o = color(o);
-  if (!o)
-    return new Hsl();
-  if (o instanceof Hsl)
-    return o;
-  o = o.rgb();
-  var r = o.r / 255, g = o.g / 255, b = o.b / 255, min2 = Math.min(r, g, b), max2 = Math.max(r, g, b), h = NaN, s = max2 - min2, l = (max2 + min2) / 2;
-  if (s) {
-    if (r === max2)
-      h = (g - b) / s + (g < b) * 6;
-    else if (g === max2)
-      h = (b - r) / s + 2;
-    else
-      h = (r - g) / s + 4;
-    s /= l < 0.5 ? max2 + min2 : 2 - max2 - min2;
-    h *= 60;
-  } else {
-    s = l > 0 && l < 1 ? 0 : h;
-  }
-  return new Hsl(h, s, l, o.opacity);
-}
-function hsl(h, s, l, opacity) {
-  return arguments.length === 1 ? hslConvert(h) : new Hsl(h, s, l, opacity == null ? 1 : opacity);
-}
-function Hsl(h, s, l, opacity) {
-  this.h = +h;
-  this.s = +s;
-  this.l = +l;
-  this.opacity = +opacity;
-}
-define_default(Hsl, hsl, extend(Color, {
-  brighter(k) {
-    k = k == null ? brighter : Math.pow(brighter, k);
-    return new Hsl(this.h, this.s, this.l * k, this.opacity);
-  },
-  darker(k) {
-    k = k == null ? darker : Math.pow(darker, k);
-    return new Hsl(this.h, this.s, this.l * k, this.opacity);
-  },
-  rgb() {
-    var h = this.h % 360 + (this.h < 0) * 360, s = isNaN(h) || isNaN(this.s) ? 0 : this.s, l = this.l, m2 = l + (l < 0.5 ? l : 1 - l) * s, m1 = 2 * l - m2;
-    return new Rgb(
-      hsl2rgb(h >= 240 ? h - 240 : h + 120, m1, m2),
-      hsl2rgb(h, m1, m2),
-      hsl2rgb(h < 120 ? h + 240 : h - 120, m1, m2),
-      this.opacity
-    );
-  },
-  clamp() {
-    return new Hsl(clamph(this.h), clampt(this.s), clampt(this.l), clampa(this.opacity));
-  },
-  displayable() {
-    return (0 <= this.s && this.s <= 1 || isNaN(this.s)) && (0 <= this.l && this.l <= 1) && (0 <= this.opacity && this.opacity <= 1);
-  },
-  formatHsl() {
-    const a2 = clampa(this.opacity);
-    return `${a2 === 1 ? "hsl(" : "hsla("}${clamph(this.h)}, ${clampt(this.s) * 100}%, ${clampt(this.l) * 100}%${a2 === 1 ? ")" : `, ${a2})`}`;
-  }
-}));
-function clamph(value) {
-  value = (value || 0) % 360;
-  return value < 0 ? value + 360 : value;
-}
-function clampt(value) {
-  return Math.max(0, Math.min(1, value || 0));
-}
-function hsl2rgb(h, m1, m2) {
-  return (h < 60 ? m1 + (m2 - m1) * h / 60 : h < 180 ? m2 : h < 240 ? m1 + (m2 - m1) * (240 - h) / 60 : m1) * 255;
-}
-
-// node_modules/d3-interpolate/src/basis.js
-function basis(t1, v0, v1, v2, v3) {
-  var t2 = t1 * t1, t3 = t2 * t1;
-  return ((1 - 3 * t1 + 3 * t2 - t3) * v0 + (4 - 6 * t2 + 3 * t3) * v1 + (1 + 3 * t1 + 3 * t2 - 3 * t3) * v2 + t3 * v3) / 6;
-}
-function basis_default(values) {
-  var n = values.length - 1;
-  return function(t) {
-    var i = t <= 0 ? t = 0 : t >= 1 ? (t = 1, n - 1) : Math.floor(t * n), v1 = values[i], v2 = values[i + 1], v0 = i > 0 ? values[i - 1] : 2 * v1 - v2, v3 = i < n - 1 ? values[i + 2] : 2 * v2 - v1;
-    return basis((t - i / n) * n, v0, v1, v2, v3);
-  };
-}
-
-// node_modules/d3-interpolate/src/basisClosed.js
-function basisClosed_default(values) {
-  var n = values.length;
-  return function(t) {
-    var i = Math.floor(((t %= 1) < 0 ? ++t : t) * n), v0 = values[(i + n - 1) % n], v1 = values[i % n], v2 = values[(i + 1) % n], v3 = values[(i + 2) % n];
-    return basis((t - i / n) * n, v0, v1, v2, v3);
-  };
-}
-
-// node_modules/d3-interpolate/src/constant.js
-var constant_default3 = (x3) => () => x3;
-
-// node_modules/d3-interpolate/src/color.js
-function linear(a2, d) {
-  return function(t) {
-    return a2 + t * d;
-  };
-}
-function exponential(a2, b, y3) {
-  return a2 = Math.pow(a2, y3), b = Math.pow(b, y3) - a2, y3 = 1 / y3, function(t) {
-    return Math.pow(a2 + t * b, y3);
-  };
-}
-function gamma(y3) {
-  return (y3 = +y3) === 1 ? nogamma : function(a2, b) {
-    return b - a2 ? exponential(a2, b, y3) : constant_default3(isNaN(a2) ? b : a2);
-  };
-}
-function nogamma(a2, b) {
-  var d = b - a2;
-  return d ? linear(a2, d) : constant_default3(isNaN(a2) ? b : a2);
-}
-
-// node_modules/d3-interpolate/src/rgb.js
-var rgb_default = function rgbGamma(y3) {
-  var color2 = gamma(y3);
-  function rgb2(start3, end) {
-    var r = color2((start3 = rgb(start3)).r, (end = rgb(end)).r), g = color2(start3.g, end.g), b = color2(start3.b, end.b), opacity = nogamma(start3.opacity, end.opacity);
-    return function(t) {
-      start3.r = r(t);
-      start3.g = g(t);
-      start3.b = b(t);
-      start3.opacity = opacity(t);
-      return start3 + "";
-    };
-  }
-  rgb2.gamma = rgbGamma;
-  return rgb2;
-}(1);
-function rgbSpline(spline) {
-  return function(colors) {
-    var n = colors.length, r = new Array(n), g = new Array(n), b = new Array(n), i, color2;
-    for (i = 0; i < n; ++i) {
-      color2 = rgb(colors[i]);
-      r[i] = color2.r || 0;
-      g[i] = color2.g || 0;
-      b[i] = color2.b || 0;
-    }
-    r = spline(r);
-    g = spline(g);
-    b = spline(b);
-    color2.opacity = 1;
-    return function(t) {
-      color2.r = r(t);
-      color2.g = g(t);
-      color2.b = b(t);
-      return color2 + "";
-    };
-  };
-}
-var rgbBasis = rgbSpline(basis_default);
-var rgbBasisClosed = rgbSpline(basisClosed_default);
-
-// node_modules/d3-interpolate/src/number.js
-function number_default(a2, b) {
-  return a2 = +a2, b = +b, function(t) {
-    return a2 * (1 - t) + b * t;
-  };
-}
-
-// node_modules/d3-interpolate/src/string.js
-var reA = /[-+]?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]?\d+)?/g;
-var reB = new RegExp(reA.source, "g");
-function zero(b) {
-  return function() {
-    return b;
-  };
-}
-function one(b) {
-  return function(t) {
-    return b(t) + "";
-  };
-}
-function string_default(a2, b) {
-  var bi = reA.lastIndex = reB.lastIndex = 0, am, bm, bs, i = -1, s = [], q = [];
-  a2 = a2 + "", b = b + "";
-  while ((am = reA.exec(a2)) && (bm = reB.exec(b))) {
-    if ((bs = bm.index) > bi) {
-      bs = b.slice(bi, bs);
-      if (s[i])
-        s[i] += bs;
-      else
-        s[++i] = bs;
-    }
-    if ((am = am[0]) === (bm = bm[0])) {
-      if (s[i])
-        s[i] += bm;
-      else
-        s[++i] = bm;
-    } else {
-      s[++i] = null;
-      q.push({ i, x: number_default(am, bm) });
-    }
-    bi = reB.lastIndex;
-  }
-  if (bi < b.length) {
-    bs = b.slice(bi);
-    if (s[i])
-      s[i] += bs;
-    else
-      s[++i] = bs;
-  }
-  return s.length < 2 ? q[0] ? one(q[0].x) : zero(b) : (b = q.length, function(t) {
-    for (var i2 = 0, o; i2 < b; ++i2)
-      s[(o = q[i2]).i] = o.x(t);
-    return s.join("");
-  });
-}
-
-// node_modules/d3-interpolate/src/transform/decompose.js
-var degrees = 180 / Math.PI;
-var identity = {
-  translateX: 0,
-  translateY: 0,
-  rotate: 0,
-  skewX: 0,
-  scaleX: 1,
-  scaleY: 1
-};
-function decompose_default(a2, b, c2, d, e, f) {
-  var scaleX, scaleY, skewX;
-  if (scaleX = Math.sqrt(a2 * a2 + b * b))
-    a2 /= scaleX, b /= scaleX;
-  if (skewX = a2 * c2 + b * d)
-    c2 -= a2 * skewX, d -= b * skewX;
-  if (scaleY = Math.sqrt(c2 * c2 + d * d))
-    c2 /= scaleY, d /= scaleY, skewX /= scaleY;
-  if (a2 * d < b * c2)
-    a2 = -a2, b = -b, skewX = -skewX, scaleX = -scaleX;
-  return {
-    translateX: e,
-    translateY: f,
-    rotate: Math.atan2(b, a2) * degrees,
-    skewX: Math.atan(skewX) * degrees,
-    scaleX,
-    scaleY
-  };
-}
-
-// node_modules/d3-interpolate/src/transform/parse.js
-var svgNode;
-function parseCss(value) {
-  const m2 = new (typeof DOMMatrix === "function" ? DOMMatrix : WebKitCSSMatrix)(value + "");
-  return m2.isIdentity ? identity : decompose_default(m2.a, m2.b, m2.c, m2.d, m2.e, m2.f);
-}
-function parseSvg(value) {
-  if (value == null)
-    return identity;
-  if (!svgNode)
-    svgNode = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  svgNode.setAttribute("transform", value);
-  if (!(value = svgNode.transform.baseVal.consolidate()))
-    return identity;
-  value = value.matrix;
-  return decompose_default(value.a, value.b, value.c, value.d, value.e, value.f);
-}
-
-// node_modules/d3-interpolate/src/transform/index.js
-function interpolateTransform(parse, pxComma, pxParen, degParen) {
-  function pop(s) {
-    return s.length ? s.pop() + " " : "";
-  }
-  function translate(xa, ya, xb, yb, s, q) {
-    if (xa !== xb || ya !== yb) {
-      var i = s.push("translate(", null, pxComma, null, pxParen);
-      q.push({ i: i - 4, x: number_default(xa, xb) }, { i: i - 2, x: number_default(ya, yb) });
-    } else if (xb || yb) {
-      s.push("translate(" + xb + pxComma + yb + pxParen);
-    }
-  }
-  function rotate(a2, b, s, q) {
-    if (a2 !== b) {
-      if (a2 - b > 180)
-        b += 360;
-      else if (b - a2 > 180)
-        a2 += 360;
-      q.push({ i: s.push(pop(s) + "rotate(", null, degParen) - 2, x: number_default(a2, b) });
-    } else if (b) {
-      s.push(pop(s) + "rotate(" + b + degParen);
-    }
-  }
-  function skewX(a2, b, s, q) {
-    if (a2 !== b) {
-      q.push({ i: s.push(pop(s) + "skewX(", null, degParen) - 2, x: number_default(a2, b) });
-    } else if (b) {
-      s.push(pop(s) + "skewX(" + b + degParen);
-    }
-  }
-  function scale(xa, ya, xb, yb, s, q) {
-    if (xa !== xb || ya !== yb) {
-      var i = s.push(pop(s) + "scale(", null, ",", null, ")");
-      q.push({ i: i - 4, x: number_default(xa, xb) }, { i: i - 2, x: number_default(ya, yb) });
-    } else if (xb !== 1 || yb !== 1) {
-      s.push(pop(s) + "scale(" + xb + "," + yb + ")");
-    }
-  }
-  return function(a2, b) {
-    var s = [], q = [];
-    a2 = parse(a2), b = parse(b);
-    translate(a2.translateX, a2.translateY, b.translateX, b.translateY, s, q);
-    rotate(a2.rotate, b.rotate, s, q);
-    skewX(a2.skewX, b.skewX, s, q);
-    scale(a2.scaleX, a2.scaleY, b.scaleX, b.scaleY, s, q);
-    a2 = b = null;
-    return function(t) {
-      var i = -1, n = q.length, o;
-      while (++i < n)
-        s[(o = q[i]).i] = o.x(t);
-      return s.join("");
-    };
-  };
-}
-var interpolateTransformCss = interpolateTransform(parseCss, "px, ", "px)", "deg)");
-var interpolateTransformSvg = interpolateTransform(parseSvg, ", ", ")", ")");
-
-// node_modules/d3-interpolate/src/zoom.js
-var epsilon2 = 1e-12;
-function cosh(x3) {
-  return ((x3 = Math.exp(x3)) + 1 / x3) / 2;
-}
-function sinh(x3) {
-  return ((x3 = Math.exp(x3)) - 1 / x3) / 2;
-}
-function tanh(x3) {
-  return ((x3 = Math.exp(2 * x3)) - 1) / (x3 + 1);
-}
-var zoom_default = function zoomRho(rho, rho2, rho4) {
-  function zoom(p0, p1) {
-    var ux0 = p0[0], uy0 = p0[1], w0 = p0[2], ux1 = p1[0], uy1 = p1[1], w1 = p1[2], dx = ux1 - ux0, dy = uy1 - uy0, d2 = dx * dx + dy * dy, i, S;
-    if (d2 < epsilon2) {
-      S = Math.log(w1 / w0) / rho;
-      i = function(t) {
-        return [
-          ux0 + t * dx,
-          uy0 + t * dy,
-          w0 * Math.exp(rho * t * S)
-        ];
-      };
-    } else {
-      var d1 = Math.sqrt(d2), b0 = (w1 * w1 - w0 * w0 + rho4 * d2) / (2 * w0 * rho2 * d1), b1 = (w1 * w1 - w0 * w0 - rho4 * d2) / (2 * w1 * rho2 * d1), r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0), r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1);
-      S = (r1 - r0) / rho;
-      i = function(t) {
-        var s = t * S, coshr0 = cosh(r0), u = w0 / (rho2 * d1) * (coshr0 * tanh(rho * s + r0) - sinh(r0));
-        return [
-          ux0 + u * dx,
-          uy0 + u * dy,
-          w0 * coshr0 / cosh(rho * s + r0)
-        ];
-      };
-    }
-    i.duration = S * 1e3 * rho / Math.SQRT2;
-    return i;
-  }
-  zoom.rho = function(_) {
-    var _1 = Math.max(1e-3, +_), _2 = _1 * _1, _4 = _2 * _2;
-    return zoomRho(_1, _2, _4);
-  };
-  return zoom;
-}(Math.SQRT2, 2, 4);
-
-// node_modules/d3-timer/src/timer.js
-var frame = 0;
-var timeout = 0;
-var interval = 0;
-var pokeDelay = 1e3;
-var taskHead;
-var taskTail;
-var clockLast = 0;
-var clockNow = 0;
-var clockSkew = 0;
-var clock = typeof performance === "object" && performance.now ? performance : Date;
-var setFrame = typeof window === "object" && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(f) {
-  setTimeout(f, 17);
-};
-function now() {
-  return clockNow || (setFrame(clearNow), clockNow = clock.now() + clockSkew);
-}
-function clearNow() {
-  clockNow = 0;
-}
-function Timer() {
-  this._call = this._time = this._next = null;
-}
-Timer.prototype = timer.prototype = {
-  constructor: Timer,
-  restart: function(callback, delay, time) {
-    if (typeof callback !== "function")
-      throw new TypeError("callback is not a function");
-    time = (time == null ? now() : +time) + (delay == null ? 0 : +delay);
-    if (!this._next && taskTail !== this) {
-      if (taskTail)
-        taskTail._next = this;
-      else
-        taskHead = this;
-      taskTail = this;
-    }
-    this._call = callback;
-    this._time = time;
-    sleep();
-  },
-  stop: function() {
-    if (this._call) {
-      this._call = null;
-      this._time = Infinity;
-      sleep();
-    }
-  }
-};
-function timer(callback, delay, time) {
-  var t = new Timer();
-  t.restart(callback, delay, time);
-  return t;
-}
-function timerFlush() {
-  now();
-  ++frame;
-  var t = taskHead, e;
-  while (t) {
-    if ((e = clockNow - t._time) >= 0)
-      t._call.call(void 0, e);
-    t = t._next;
-  }
-  --frame;
-}
-function wake() {
-  clockNow = (clockLast = clock.now()) + clockSkew;
-  frame = timeout = 0;
-  try {
-    timerFlush();
-  } finally {
-    frame = 0;
-    nap();
-    clockNow = 0;
-  }
-}
-function poke() {
-  var now3 = clock.now(), delay = now3 - clockLast;
-  if (delay > pokeDelay)
-    clockSkew -= delay, clockLast = now3;
-}
-function nap() {
-  var t0, t1 = taskHead, t2, time = Infinity;
-  while (t1) {
-    if (t1._call) {
-      if (time > t1._time)
-        time = t1._time;
-      t0 = t1, t1 = t1._next;
-    } else {
-      t2 = t1._next, t1._next = null;
-      t1 = t0 ? t0._next = t2 : taskHead = t2;
-    }
-  }
-  taskTail = t0;
-  sleep(time);
-}
-function sleep(time) {
-  if (frame)
-    return;
-  if (timeout)
-    timeout = clearTimeout(timeout);
-  var delay = time - clockNow;
-  if (delay > 24) {
-    if (time < Infinity)
-      timeout = setTimeout(wake, time - clock.now() - clockSkew);
-    if (interval)
-      interval = clearInterval(interval);
-  } else {
-    if (!interval)
-      clockLast = clock.now(), interval = setInterval(poke, pokeDelay);
-    frame = 1, setFrame(wake);
-  }
-}
-
-// node_modules/d3-timer/src/timeout.js
-function timeout_default(callback, delay, time) {
-  var t = new Timer();
-  delay = delay == null ? 0 : +delay;
-  t.restart((elapsed) => {
-    t.stop();
-    callback(elapsed + delay);
-  }, delay, time);
-  return t;
-}
-
-// node_modules/d3-transition/src/transition/schedule.js
-var emptyOn = dispatch_default("start", "end", "cancel", "interrupt");
-var emptyTween = [];
-var CREATED = 0;
-var SCHEDULED = 1;
-var STARTING = 2;
-var STARTED = 3;
-var RUNNING = 4;
-var ENDING = 5;
-var ENDED = 6;
-function schedule_default(node, name, id2, index2, group, timing) {
-  var schedules = node.__transition;
-  if (!schedules)
-    node.__transition = {};
-  else if (id2 in schedules)
-    return;
-  create(node, id2, {
-    name,
-    index: index2,
-    // For context during callback.
-    group,
-    // For context during callback.
-    on: emptyOn,
-    tween: emptyTween,
-    time: timing.time,
-    delay: timing.delay,
-    duration: timing.duration,
-    ease: timing.ease,
-    timer: null,
-    state: CREATED
-  });
-}
-function init(node, id2) {
-  var schedule = get2(node, id2);
-  if (schedule.state > CREATED)
-    throw new Error("too late; already scheduled");
-  return schedule;
-}
-function set2(node, id2) {
-  var schedule = get2(node, id2);
-  if (schedule.state > STARTED)
-    throw new Error("too late; already running");
-  return schedule;
-}
-function get2(node, id2) {
-  var schedule = node.__transition;
-  if (!schedule || !(schedule = schedule[id2]))
-    throw new Error("transition not found");
-  return schedule;
-}
-function create(node, id2, self2) {
-  var schedules = node.__transition, tween;
-  schedules[id2] = self2;
-  self2.timer = timer(schedule, 0, self2.time);
-  function schedule(elapsed) {
-    self2.state = SCHEDULED;
-    self2.timer.restart(start3, self2.delay, self2.time);
-    if (self2.delay <= elapsed)
-      start3(elapsed - self2.delay);
-  }
-  function start3(elapsed) {
-    var i, j, n, o;
-    if (self2.state !== SCHEDULED)
-      return stop();
-    for (i in schedules) {
-      o = schedules[i];
-      if (o.name !== self2.name)
-        continue;
-      if (o.state === STARTED)
-        return timeout_default(start3);
-      if (o.state === RUNNING) {
-        o.state = ENDED;
-        o.timer.stop();
-        o.on.call("interrupt", node, node.__data__, o.index, o.group);
-        delete schedules[i];
-      } else if (+i < id2) {
-        o.state = ENDED;
-        o.timer.stop();
-        o.on.call("cancel", node, node.__data__, o.index, o.group);
-        delete schedules[i];
-      }
-    }
-    timeout_default(function() {
-      if (self2.state === STARTED) {
-        self2.state = RUNNING;
-        self2.timer.restart(tick, self2.delay, self2.time);
-        tick(elapsed);
-      }
-    });
-    self2.state = STARTING;
-    self2.on.call("start", node, node.__data__, self2.index, self2.group);
-    if (self2.state !== STARTING)
-      return;
-    self2.state = STARTED;
-    tween = new Array(n = self2.tween.length);
-    for (i = 0, j = -1; i < n; ++i) {
-      if (o = self2.tween[i].value.call(node, node.__data__, self2.index, self2.group)) {
-        tween[++j] = o;
-      }
-    }
-    tween.length = j + 1;
-  }
-  function tick(elapsed) {
-    var t = elapsed < self2.duration ? self2.ease.call(null, elapsed / self2.duration) : (self2.timer.restart(stop), self2.state = ENDING, 1), i = -1, n = tween.length;
-    while (++i < n) {
-      tween[i].call(node, t);
-    }
-    if (self2.state === ENDING) {
-      self2.on.call("end", node, node.__data__, self2.index, self2.group);
-      stop();
-    }
-  }
-  function stop() {
-    self2.state = ENDED;
-    self2.timer.stop();
-    delete schedules[id2];
-    for (var i in schedules)
-      return;
-    delete node.__transition;
-  }
-}
-
-// node_modules/d3-transition/src/interrupt.js
-function interrupt_default(node, name) {
-  var schedules = node.__transition, schedule, active, empty2 = true, i;
-  if (!schedules)
-    return;
-  name = name == null ? null : name + "";
-  for (i in schedules) {
-    if ((schedule = schedules[i]).name !== name) {
-      empty2 = false;
-      continue;
-    }
-    active = schedule.state > STARTING && schedule.state < ENDING;
-    schedule.state = ENDED;
-    schedule.timer.stop();
-    schedule.on.call(active ? "interrupt" : "cancel", node, node.__data__, schedule.index, schedule.group);
-    delete schedules[i];
-  }
-  if (empty2)
-    delete node.__transition;
-}
-
-// node_modules/d3-transition/src/selection/interrupt.js
-function interrupt_default2(name) {
-  return this.each(function() {
-    interrupt_default(this, name);
-  });
-}
-
-// node_modules/d3-transition/src/transition/tween.js
-function tweenRemove(id2, name) {
-  var tween0, tween1;
-  return function() {
-    var schedule = set2(this, id2), tween = schedule.tween;
-    if (tween !== tween0) {
-      tween1 = tween0 = tween;
-      for (var i = 0, n = tween1.length; i < n; ++i) {
-        if (tween1[i].name === name) {
-          tween1 = tween1.slice();
-          tween1.splice(i, 1);
-          break;
-        }
-      }
-    }
-    schedule.tween = tween1;
-  };
-}
-function tweenFunction(id2, name, value) {
-  var tween0, tween1;
-  if (typeof value !== "function")
-    throw new Error();
-  return function() {
-    var schedule = set2(this, id2), tween = schedule.tween;
-    if (tween !== tween0) {
-      tween1 = (tween0 = tween).slice();
-      for (var t = { name, value }, i = 0, n = tween1.length; i < n; ++i) {
-        if (tween1[i].name === name) {
-          tween1[i] = t;
-          break;
-        }
-      }
-      if (i === n)
-        tween1.push(t);
-    }
-    schedule.tween = tween1;
-  };
-}
-function tween_default(name, value) {
-  var id2 = this._id;
-  name += "";
-  if (arguments.length < 2) {
-    var tween = get2(this.node(), id2).tween;
-    for (var i = 0, n = tween.length, t; i < n; ++i) {
-      if ((t = tween[i]).name === name) {
-        return t.value;
-      }
-    }
-    return null;
-  }
-  return this.each((value == null ? tweenRemove : tweenFunction)(id2, name, value));
-}
-function tweenValue(transition2, name, value) {
-  var id2 = transition2._id;
-  transition2.each(function() {
-    var schedule = set2(this, id2);
-    (schedule.value || (schedule.value = {}))[name] = value.apply(this, arguments);
-  });
-  return function(node) {
-    return get2(node, id2).value[name];
-  };
-}
-
-// node_modules/d3-transition/src/transition/interpolate.js
-function interpolate_default(a2, b) {
-  var c2;
-  return (typeof b === "number" ? number_default : b instanceof color ? rgb_default : (c2 = color(b)) ? (b = c2, rgb_default) : string_default)(a2, b);
-}
-
-// node_modules/d3-transition/src/transition/attr.js
-function attrRemove2(name) {
-  return function() {
-    this.removeAttribute(name);
-  };
-}
-function attrRemoveNS2(fullname) {
-  return function() {
-    this.removeAttributeNS(fullname.space, fullname.local);
-  };
-}
-function attrConstant2(name, interpolate, value1) {
-  var string00, string1 = value1 + "", interpolate0;
-  return function() {
-    var string0 = this.getAttribute(name);
-    return string0 === string1 ? null : string0 === string00 ? interpolate0 : interpolate0 = interpolate(string00 = string0, value1);
-  };
-}
-function attrConstantNS2(fullname, interpolate, value1) {
-  var string00, string1 = value1 + "", interpolate0;
-  return function() {
-    var string0 = this.getAttributeNS(fullname.space, fullname.local);
-    return string0 === string1 ? null : string0 === string00 ? interpolate0 : interpolate0 = interpolate(string00 = string0, value1);
-  };
-}
-function attrFunction2(name, interpolate, value) {
-  var string00, string10, interpolate0;
-  return function() {
-    var string0, value1 = value(this), string1;
-    if (value1 == null)
-      return void this.removeAttribute(name);
-    string0 = this.getAttribute(name);
-    string1 = value1 + "";
-    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : (string10 = string1, interpolate0 = interpolate(string00 = string0, value1));
-  };
-}
-function attrFunctionNS2(fullname, interpolate, value) {
-  var string00, string10, interpolate0;
-  return function() {
-    var string0, value1 = value(this), string1;
-    if (value1 == null)
-      return void this.removeAttributeNS(fullname.space, fullname.local);
-    string0 = this.getAttributeNS(fullname.space, fullname.local);
-    string1 = value1 + "";
-    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : (string10 = string1, interpolate0 = interpolate(string00 = string0, value1));
-  };
-}
-function attr_default2(name, value) {
-  var fullname = namespace_default(name), i = fullname === "transform" ? interpolateTransformSvg : interpolate_default;
-  return this.attrTween(name, typeof value === "function" ? (fullname.local ? attrFunctionNS2 : attrFunction2)(fullname, i, tweenValue(this, "attr." + name, value)) : value == null ? (fullname.local ? attrRemoveNS2 : attrRemove2)(fullname) : (fullname.local ? attrConstantNS2 : attrConstant2)(fullname, i, value));
-}
-
-// node_modules/d3-transition/src/transition/attrTween.js
-function attrInterpolate(name, i) {
-  return function(t) {
-    this.setAttribute(name, i.call(this, t));
-  };
-}
-function attrInterpolateNS(fullname, i) {
-  return function(t) {
-    this.setAttributeNS(fullname.space, fullname.local, i.call(this, t));
-  };
-}
-function attrTweenNS(fullname, value) {
-  var t0, i0;
-  function tween() {
-    var i = value.apply(this, arguments);
-    if (i !== i0)
-      t0 = (i0 = i) && attrInterpolateNS(fullname, i);
-    return t0;
-  }
-  tween._value = value;
-  return tween;
-}
-function attrTween(name, value) {
-  var t0, i0;
-  function tween() {
-    var i = value.apply(this, arguments);
-    if (i !== i0)
-      t0 = (i0 = i) && attrInterpolate(name, i);
-    return t0;
-  }
-  tween._value = value;
-  return tween;
-}
-function attrTween_default(name, value) {
-  var key = "attr." + name;
-  if (arguments.length < 2)
-    return (key = this.tween(key)) && key._value;
-  if (value == null)
-    return this.tween(key, null);
-  if (typeof value !== "function")
-    throw new Error();
-  var fullname = namespace_default(name);
-  return this.tween(key, (fullname.local ? attrTweenNS : attrTween)(fullname, value));
-}
-
-// node_modules/d3-transition/src/transition/delay.js
-function delayFunction(id2, value) {
-  return function() {
-    init(this, id2).delay = +value.apply(this, arguments);
-  };
-}
-function delayConstant(id2, value) {
-  return value = +value, function() {
-    init(this, id2).delay = value;
-  };
-}
-function delay_default(value) {
-  var id2 = this._id;
-  return arguments.length ? this.each((typeof value === "function" ? delayFunction : delayConstant)(id2, value)) : get2(this.node(), id2).delay;
-}
-
-// node_modules/d3-transition/src/transition/duration.js
-function durationFunction(id2, value) {
-  return function() {
-    set2(this, id2).duration = +value.apply(this, arguments);
-  };
-}
-function durationConstant(id2, value) {
-  return value = +value, function() {
-    set2(this, id2).duration = value;
-  };
-}
-function duration_default(value) {
-  var id2 = this._id;
-  return arguments.length ? this.each((typeof value === "function" ? durationFunction : durationConstant)(id2, value)) : get2(this.node(), id2).duration;
-}
-
-// node_modules/d3-transition/src/transition/ease.js
-function easeConstant(id2, value) {
-  if (typeof value !== "function")
-    throw new Error();
-  return function() {
-    set2(this, id2).ease = value;
-  };
-}
-function ease_default(value) {
-  var id2 = this._id;
-  return arguments.length ? this.each(easeConstant(id2, value)) : get2(this.node(), id2).ease;
-}
-
-// node_modules/d3-transition/src/transition/easeVarying.js
-function easeVarying(id2, value) {
-  return function() {
-    var v = value.apply(this, arguments);
-    if (typeof v !== "function")
-      throw new Error();
-    set2(this, id2).ease = v;
-  };
-}
-function easeVarying_default(value) {
-  if (typeof value !== "function")
-    throw new Error();
-  return this.each(easeVarying(this._id, value));
-}
-
-// node_modules/d3-transition/src/transition/filter.js
-function filter_default2(match) {
-  if (typeof match !== "function")
-    match = matcher_default(match);
-  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = [], node, i = 0; i < n; ++i) {
-      if ((node = group[i]) && match.call(node, node.__data__, i, group)) {
-        subgroup.push(node);
-      }
-    }
-  }
-  return new Transition(subgroups, this._parents, this._name, this._id);
-}
-
-// node_modules/d3-transition/src/transition/merge.js
-function merge_default2(transition2) {
-  if (transition2._id !== this._id)
-    throw new Error();
-  for (var groups0 = this._groups, groups1 = transition2._groups, m0 = groups0.length, m1 = groups1.length, m2 = Math.min(m0, m1), merges = new Array(m0), j = 0; j < m2; ++j) {
-    for (var group0 = groups0[j], group1 = groups1[j], n = group0.length, merge = merges[j] = new Array(n), node, i = 0; i < n; ++i) {
-      if (node = group0[i] || group1[i]) {
-        merge[i] = node;
-      }
-    }
-  }
-  for (; j < m0; ++j) {
-    merges[j] = groups0[j];
-  }
-  return new Transition(merges, this._parents, this._name, this._id);
-}
-
-// node_modules/d3-transition/src/transition/on.js
-function start(name) {
-  return (name + "").trim().split(/^|\s+/).every(function(t) {
-    var i = t.indexOf(".");
-    if (i >= 0)
-      t = t.slice(0, i);
-    return !t || t === "start";
-  });
-}
-function onFunction(id2, name, listener) {
-  var on0, on1, sit = start(name) ? init : set2;
-  return function() {
-    var schedule = sit(this, id2), on = schedule.on;
-    if (on !== on0)
-      (on1 = (on0 = on).copy()).on(name, listener);
-    schedule.on = on1;
-  };
-}
-function on_default2(name, listener) {
-  var id2 = this._id;
-  return arguments.length < 2 ? get2(this.node(), id2).on.on(name) : this.each(onFunction(id2, name, listener));
-}
-
-// node_modules/d3-transition/src/transition/remove.js
-function removeFunction(id2) {
-  return function() {
-    var parent = this.parentNode;
-    for (var i in this.__transition)
-      if (+i !== id2)
-        return;
-    if (parent)
-      parent.removeChild(this);
-  };
-}
-function remove_default2() {
-  return this.on("end.remove", removeFunction(this._id));
-}
-
-// node_modules/d3-transition/src/transition/select.js
-function select_default3(select) {
-  var name = this._name, id2 = this._id;
-  if (typeof select !== "function")
-    select = selector_default(select);
-  for (var groups = this._groups, m2 = groups.length, subgroups = new Array(m2), j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, subgroup = subgroups[j] = new Array(n), node, subnode, i = 0; i < n; ++i) {
-      if ((node = group[i]) && (subnode = select.call(node, node.__data__, i, group))) {
-        if ("__data__" in node)
-          subnode.__data__ = node.__data__;
-        subgroup[i] = subnode;
-        schedule_default(subgroup[i], name, id2, i, subgroup, get2(node, id2));
-      }
-    }
-  }
-  return new Transition(subgroups, this._parents, name, id2);
-}
-
-// node_modules/d3-transition/src/transition/selectAll.js
-function selectAll_default2(select) {
-  var name = this._name, id2 = this._id;
-  if (typeof select !== "function")
-    select = selectorAll_default(select);
-  for (var groups = this._groups, m2 = groups.length, subgroups = [], parents = [], j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
-      if (node = group[i]) {
-        for (var children2 = select.call(node, node.__data__, i, group), child, inherit2 = get2(node, id2), k = 0, l = children2.length; k < l; ++k) {
-          if (child = children2[k]) {
-            schedule_default(child, name, id2, k, children2, inherit2);
-          }
-        }
-        subgroups.push(children2);
-        parents.push(node);
-      }
-    }
-  }
-  return new Transition(subgroups, parents, name, id2);
-}
-
-// node_modules/d3-transition/src/transition/selection.js
-var Selection2 = selection_default.prototype.constructor;
-function selection_default2() {
-  return new Selection2(this._groups, this._parents);
-}
-
-// node_modules/d3-transition/src/transition/style.js
-function styleNull(name, interpolate) {
-  var string00, string10, interpolate0;
-  return function() {
-    var string0 = styleValue(this, name), string1 = (this.style.removeProperty(name), styleValue(this, name));
-    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : interpolate0 = interpolate(string00 = string0, string10 = string1);
-  };
-}
-function styleRemove2(name) {
-  return function() {
-    this.style.removeProperty(name);
-  };
-}
-function styleConstant2(name, interpolate, value1) {
-  var string00, string1 = value1 + "", interpolate0;
-  return function() {
-    var string0 = styleValue(this, name);
-    return string0 === string1 ? null : string0 === string00 ? interpolate0 : interpolate0 = interpolate(string00 = string0, value1);
-  };
-}
-function styleFunction2(name, interpolate, value) {
-  var string00, string10, interpolate0;
-  return function() {
-    var string0 = styleValue(this, name), value1 = value(this), string1 = value1 + "";
-    if (value1 == null)
-      string1 = value1 = (this.style.removeProperty(name), styleValue(this, name));
-    return string0 === string1 ? null : string0 === string00 && string1 === string10 ? interpolate0 : (string10 = string1, interpolate0 = interpolate(string00 = string0, value1));
-  };
-}
-function styleMaybeRemove(id2, name) {
-  var on0, on1, listener0, key = "style." + name, event = "end." + key, remove2;
-  return function() {
-    var schedule = set2(this, id2), on = schedule.on, listener = schedule.value[key] == null ? remove2 || (remove2 = styleRemove2(name)) : void 0;
-    if (on !== on0 || listener0 !== listener)
-      (on1 = (on0 = on).copy()).on(event, listener0 = listener);
-    schedule.on = on1;
-  };
-}
-function style_default2(name, value, priority) {
-  var i = (name += "") === "transform" ? interpolateTransformCss : interpolate_default;
-  return value == null ? this.styleTween(name, styleNull(name, i)).on("end.style." + name, styleRemove2(name)) : typeof value === "function" ? this.styleTween(name, styleFunction2(name, i, tweenValue(this, "style." + name, value))).each(styleMaybeRemove(this._id, name)) : this.styleTween(name, styleConstant2(name, i, value), priority).on("end.style." + name, null);
-}
-
-// node_modules/d3-transition/src/transition/styleTween.js
-function styleInterpolate(name, i, priority) {
-  return function(t) {
-    this.style.setProperty(name, i.call(this, t), priority);
-  };
-}
-function styleTween(name, value, priority) {
-  var t, i0;
-  function tween() {
-    var i = value.apply(this, arguments);
-    if (i !== i0)
-      t = (i0 = i) && styleInterpolate(name, i, priority);
-    return t;
-  }
-  tween._value = value;
-  return tween;
-}
-function styleTween_default(name, value, priority) {
-  var key = "style." + (name += "");
-  if (arguments.length < 2)
-    return (key = this.tween(key)) && key._value;
-  if (value == null)
-    return this.tween(key, null);
-  if (typeof value !== "function")
-    throw new Error();
-  return this.tween(key, styleTween(name, value, priority == null ? "" : priority));
-}
-
-// node_modules/d3-transition/src/transition/text.js
-function textConstant2(value) {
-  return function() {
-    this.textContent = value;
-  };
-}
-function textFunction2(value) {
-  return function() {
-    var value1 = value(this);
-    this.textContent = value1 == null ? "" : value1;
-  };
-}
-function text_default2(value) {
-  return this.tween("text", typeof value === "function" ? textFunction2(tweenValue(this, "text", value)) : textConstant2(value == null ? "" : value + ""));
-}
-
-// node_modules/d3-transition/src/transition/textTween.js
-function textInterpolate(i) {
-  return function(t) {
-    this.textContent = i.call(this, t);
-  };
-}
-function textTween(value) {
-  var t0, i0;
-  function tween() {
-    var i = value.apply(this, arguments);
-    if (i !== i0)
-      t0 = (i0 = i) && textInterpolate(i);
-    return t0;
-  }
-  tween._value = value;
-  return tween;
-}
-function textTween_default(value) {
-  var key = "text";
-  if (arguments.length < 1)
-    return (key = this.tween(key)) && key._value;
-  if (value == null)
-    return this.tween(key, null);
-  if (typeof value !== "function")
-    throw new Error();
-  return this.tween(key, textTween(value));
-}
-
-// node_modules/d3-transition/src/transition/transition.js
-function transition_default() {
-  var name = this._name, id0 = this._id, id1 = newId();
-  for (var groups = this._groups, m2 = groups.length, j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
-      if (node = group[i]) {
-        var inherit2 = get2(node, id0);
-        schedule_default(node, name, id1, i, group, {
-          time: inherit2.time + inherit2.delay + inherit2.duration,
-          delay: 0,
-          duration: inherit2.duration,
-          ease: inherit2.ease
-        });
-      }
-    }
-  }
-  return new Transition(groups, this._parents, name, id1);
-}
-
-// node_modules/d3-transition/src/transition/end.js
-function end_default() {
-  var on0, on1, that = this, id2 = that._id, size = that.size();
-  return new Promise(function(resolve, reject) {
-    var cancel = { value: reject }, end = { value: function() {
-      if (--size === 0)
-        resolve();
-    } };
-    that.each(function() {
-      var schedule = set2(this, id2), on = schedule.on;
-      if (on !== on0) {
-        on1 = (on0 = on).copy();
-        on1._.cancel.push(cancel);
-        on1._.interrupt.push(cancel);
-        on1._.end.push(end);
-      }
-      schedule.on = on1;
-    });
-    if (size === 0)
-      resolve();
-  });
-}
-
-// node_modules/d3-transition/src/transition/index.js
-var id = 0;
-function Transition(groups, parents, name, id2) {
-  this._groups = groups;
-  this._parents = parents;
-  this._name = name;
-  this._id = id2;
-}
-function transition(name) {
-  return selection_default().transition(name);
-}
-function newId() {
-  return ++id;
-}
-var selection_prototype = selection_default.prototype;
-Transition.prototype = transition.prototype = {
-  constructor: Transition,
-  select: select_default3,
-  selectAll: selectAll_default2,
-  selectChild: selection_prototype.selectChild,
-  selectChildren: selection_prototype.selectChildren,
-  filter: filter_default2,
-  merge: merge_default2,
-  selection: selection_default2,
-  transition: transition_default,
-  call: selection_prototype.call,
-  nodes: selection_prototype.nodes,
-  node: selection_prototype.node,
-  size: selection_prototype.size,
-  empty: selection_prototype.empty,
-  each: selection_prototype.each,
-  on: on_default2,
-  attr: attr_default2,
-  attrTween: attrTween_default,
-  style: style_default2,
-  styleTween: styleTween_default,
-  text: text_default2,
-  textTween: textTween_default,
-  remove: remove_default2,
-  tween: tween_default,
-  delay: delay_default,
-  duration: duration_default,
-  ease: ease_default,
-  easeVarying: easeVarying_default,
-  end: end_default,
-  [Symbol.iterator]: selection_prototype[Symbol.iterator]
-};
-
-// node_modules/d3-ease/src/cubic.js
-function cubicInOut(t) {
-  return ((t *= 2) <= 1 ? t * t * t : (t -= 2) * t * t + 2) / 2;
-}
-
-// node_modules/d3-transition/src/selection/transition.js
-var defaultTiming = {
-  time: null,
-  // Set on use.
-  delay: 0,
-  duration: 250,
-  ease: cubicInOut
-};
-function inherit(node, id2) {
-  var timing;
-  while (!(timing = node.__transition) || !(timing = timing[id2])) {
-    if (!(node = node.parentNode)) {
-      throw new Error(`transition ${id2} not found`);
-    }
-  }
-  return timing;
-}
-function transition_default2(name) {
-  var id2, timing;
-  if (name instanceof Transition) {
-    id2 = name._id, name = name._name;
-  } else {
-    id2 = newId(), (timing = defaultTiming).time = now(), name = name == null ? null : name + "";
-  }
-  for (var groups = this._groups, m2 = groups.length, j = 0; j < m2; ++j) {
-    for (var group = groups[j], n = group.length, node, i = 0; i < n; ++i) {
-      if (node = group[i]) {
-        schedule_default(node, name, id2, i, group, timing || inherit(node, id2));
-      }
-    }
-  }
-  return new Transition(groups, this._parents, name, id2);
-}
-
-// node_modules/d3-transition/src/selection/index.js
-selection_default.prototype.interrupt = interrupt_default2;
-selection_default.prototype.transition = transition_default2;
-
-// node_modules/d3-brush/src/brush.js
-var { abs, max, min } = Math;
-function number1(e) {
-  return [+e[0], +e[1]];
-}
-function number2(e) {
-  return [number1(e[0]), number1(e[1])];
-}
-var X = {
-  name: "x",
-  handles: ["w", "e"].map(type),
-  input: function(x3, e) {
-    return x3 == null ? null : [[+x3[0], e[0][1]], [+x3[1], e[1][1]]];
-  },
-  output: function(xy) {
-    return xy && [xy[0][0], xy[1][0]];
-  }
-};
-var Y = {
-  name: "y",
-  handles: ["n", "s"].map(type),
-  input: function(y3, e) {
-    return y3 == null ? null : [[e[0][0], +y3[0]], [e[1][0], +y3[1]]];
-  },
-  output: function(xy) {
-    return xy && [xy[0][1], xy[1][1]];
-  }
-};
-var XY = {
-  name: "xy",
-  handles: ["n", "w", "e", "s", "nw", "ne", "sw", "se"].map(type),
-  input: function(xy) {
-    return xy == null ? null : number2(xy);
-  },
-  output: function(xy) {
-    return xy;
-  }
-};
-function type(t) {
-  return { type: t };
-}
-
-// node_modules/d3-force/src/center.js
-function center_default(x3, y3) {
-  var nodes, strength = 1;
-  if (x3 == null)
-    x3 = 0;
-  if (y3 == null)
-    y3 = 0;
-  function force() {
-    var i, n = nodes.length, node, sx = 0, sy = 0;
-    for (i = 0; i < n; ++i) {
-      node = nodes[i], sx += node.x, sy += node.y;
-    }
-    for (sx = (sx / n - x3) * strength, sy = (sy / n - y3) * strength, i = 0; i < n; ++i) {
-      node = nodes[i], node.x -= sx, node.y -= sy;
-    }
-  }
-  force.initialize = function(_) {
-    nodes = _;
-  };
-  force.x = function(_) {
-    return arguments.length ? (x3 = +_, force) : x3;
-  };
-  force.y = function(_) {
-    return arguments.length ? (y3 = +_, force) : y3;
-  };
-  force.strength = function(_) {
-    return arguments.length ? (strength = +_, force) : strength;
-  };
-  return force;
-}
-
-// node_modules/d3-quadtree/src/add.js
-function add_default(d) {
-  const x3 = +this._x.call(null, d), y3 = +this._y.call(null, d);
-  return add(this.cover(x3, y3), x3, y3, d);
-}
-function add(tree, x3, y3, d) {
-  if (isNaN(x3) || isNaN(y3))
-    return tree;
-  var parent, node = tree._root, leaf = { data: d }, x0 = tree._x0, y0 = tree._y0, x1 = tree._x1, y1 = tree._y1, xm, ym, xp, yp, right, bottom, i, j;
-  if (!node)
-    return tree._root = leaf, tree;
-  while (node.length) {
-    if (right = x3 >= (xm = (x0 + x1) / 2))
-      x0 = xm;
-    else
-      x1 = xm;
-    if (bottom = y3 >= (ym = (y0 + y1) / 2))
-      y0 = ym;
-    else
-      y1 = ym;
-    if (parent = node, !(node = node[i = bottom << 1 | right]))
-      return parent[i] = leaf, tree;
-  }
-  xp = +tree._x.call(null, node.data);
-  yp = +tree._y.call(null, node.data);
-  if (x3 === xp && y3 === yp)
-    return leaf.next = node, parent ? parent[i] = leaf : tree._root = leaf, tree;
-  do {
-    parent = parent ? parent[i] = new Array(4) : tree._root = new Array(4);
-    if (right = x3 >= (xm = (x0 + x1) / 2))
-      x0 = xm;
-    else
-      x1 = xm;
-    if (bottom = y3 >= (ym = (y0 + y1) / 2))
-      y0 = ym;
-    else
-      y1 = ym;
-  } while ((i = bottom << 1 | right) === (j = (yp >= ym) << 1 | xp >= xm));
-  return parent[j] = node, parent[i] = leaf, tree;
-}
-function addAll(data) {
-  var d, i, n = data.length, x3, y3, xz = new Array(n), yz = new Array(n), x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (i = 0; i < n; ++i) {
-    if (isNaN(x3 = +this._x.call(null, d = data[i])) || isNaN(y3 = +this._y.call(null, d)))
-      continue;
-    xz[i] = x3;
-    yz[i] = y3;
-    if (x3 < x0)
-      x0 = x3;
-    if (x3 > x1)
-      x1 = x3;
-    if (y3 < y0)
-      y0 = y3;
-    if (y3 > y1)
-      y1 = y3;
-  }
-  if (x0 > x1 || y0 > y1)
-    return this;
-  this.cover(x0, y0).cover(x1, y1);
-  for (i = 0; i < n; ++i) {
-    add(this, xz[i], yz[i], data[i]);
-  }
-  return this;
-}
-
-// node_modules/d3-quadtree/src/cover.js
-function cover_default(x3, y3) {
-  if (isNaN(x3 = +x3) || isNaN(y3 = +y3))
-    return this;
-  var x0 = this._x0, y0 = this._y0, x1 = this._x1, y1 = this._y1;
-  if (isNaN(x0)) {
-    x1 = (x0 = Math.floor(x3)) + 1;
-    y1 = (y0 = Math.floor(y3)) + 1;
-  } else {
-    var z = x1 - x0 || 1, node = this._root, parent, i;
-    while (x0 > x3 || x3 >= x1 || y0 > y3 || y3 >= y1) {
-      i = (y3 < y0) << 1 | x3 < x0;
-      parent = new Array(4), parent[i] = node, node = parent, z *= 2;
-      switch (i) {
-        case 0:
-          x1 = x0 + z, y1 = y0 + z;
-          break;
-        case 1:
-          x0 = x1 - z, y1 = y0 + z;
-          break;
-        case 2:
-          x1 = x0 + z, y0 = y1 - z;
-          break;
-        case 3:
-          x0 = x1 - z, y0 = y1 - z;
-          break;
-      }
-    }
-    if (this._root && this._root.length)
-      this._root = node;
-  }
-  this._x0 = x0;
-  this._y0 = y0;
-  this._x1 = x1;
-  this._y1 = y1;
-  return this;
-}
-
-// node_modules/d3-quadtree/src/data.js
-function data_default2() {
-  var data = [];
-  this.visit(function(node) {
-    if (!node.length)
-      do
-        data.push(node.data);
-      while (node = node.next);
-  });
-  return data;
-}
-
-// node_modules/d3-quadtree/src/extent.js
-function extent_default(_) {
-  return arguments.length ? this.cover(+_[0][0], +_[0][1]).cover(+_[1][0], +_[1][1]) : isNaN(this._x0) ? void 0 : [[this._x0, this._y0], [this._x1, this._y1]];
-}
-
-// node_modules/d3-quadtree/src/quad.js
-function quad_default(node, x0, y0, x1, y1) {
-  this.node = node;
-  this.x0 = x0;
-  this.y0 = y0;
-  this.x1 = x1;
-  this.y1 = y1;
-}
-
-// node_modules/d3-quadtree/src/find.js
-function find_default(x3, y3, radius) {
-  var data, x0 = this._x0, y0 = this._y0, x1, y1, x22, y22, x32 = this._x1, y32 = this._y1, quads = [], node = this._root, q, i;
-  if (node)
-    quads.push(new quad_default(node, x0, y0, x32, y32));
-  if (radius == null)
-    radius = Infinity;
-  else {
-    x0 = x3 - radius, y0 = y3 - radius;
-    x32 = x3 + radius, y32 = y3 + radius;
-    radius *= radius;
-  }
-  while (q = quads.pop()) {
-    if (!(node = q.node) || (x1 = q.x0) > x32 || (y1 = q.y0) > y32 || (x22 = q.x1) < x0 || (y22 = q.y1) < y0)
-      continue;
-    if (node.length) {
-      var xm = (x1 + x22) / 2, ym = (y1 + y22) / 2;
-      quads.push(
-        new quad_default(node[3], xm, ym, x22, y22),
-        new quad_default(node[2], x1, ym, xm, y22),
-        new quad_default(node[1], xm, y1, x22, ym),
-        new quad_default(node[0], x1, y1, xm, ym)
-      );
-      if (i = (y3 >= ym) << 1 | x3 >= xm) {
-        q = quads[quads.length - 1];
-        quads[quads.length - 1] = quads[quads.length - 1 - i];
-        quads[quads.length - 1 - i] = q;
-      }
-    } else {
-      var dx = x3 - +this._x.call(null, node.data), dy = y3 - +this._y.call(null, node.data), d2 = dx * dx + dy * dy;
-      if (d2 < radius) {
-        var d = Math.sqrt(radius = d2);
-        x0 = x3 - d, y0 = y3 - d;
-        x32 = x3 + d, y32 = y3 + d;
-        data = node.data;
-      }
-    }
-  }
-  return data;
-}
-
-// node_modules/d3-quadtree/src/remove.js
-function remove_default3(d) {
-  if (isNaN(x3 = +this._x.call(null, d)) || isNaN(y3 = +this._y.call(null, d)))
-    return this;
-  var parent, node = this._root, retainer, previous, next, x0 = this._x0, y0 = this._y0, x1 = this._x1, y1 = this._y1, x3, y3, xm, ym, right, bottom, i, j;
-  if (!node)
-    return this;
-  if (node.length)
-    while (true) {
-      if (right = x3 >= (xm = (x0 + x1) / 2))
-        x0 = xm;
-      else
-        x1 = xm;
-      if (bottom = y3 >= (ym = (y0 + y1) / 2))
-        y0 = ym;
-      else
-        y1 = ym;
-      if (!(parent = node, node = node[i = bottom << 1 | right]))
-        return this;
-      if (!node.length)
-        break;
-      if (parent[i + 1 & 3] || parent[i + 2 & 3] || parent[i + 3 & 3])
-        retainer = parent, j = i;
-    }
-  while (node.data !== d)
-    if (!(previous = node, node = node.next))
-      return this;
-  if (next = node.next)
-    delete node.next;
-  if (previous)
-    return next ? previous.next = next : delete previous.next, this;
-  if (!parent)
-    return this._root = next, this;
-  next ? parent[i] = next : delete parent[i];
-  if ((node = parent[0] || parent[1] || parent[2] || parent[3]) && node === (parent[3] || parent[2] || parent[1] || parent[0]) && !node.length) {
-    if (retainer)
-      retainer[j] = node;
-    else
-      this._root = node;
-  }
-  return this;
-}
-function removeAll(data) {
-  for (var i = 0, n = data.length; i < n; ++i)
-    this.remove(data[i]);
-  return this;
-}
-
-// node_modules/d3-quadtree/src/root.js
-function root_default() {
-  return this._root;
-}
-
-// node_modules/d3-quadtree/src/size.js
-function size_default2() {
-  var size = 0;
-  this.visit(function(node) {
-    if (!node.length)
-      do
-        ++size;
-      while (node = node.next);
-  });
-  return size;
-}
-
-// node_modules/d3-quadtree/src/visit.js
-function visit_default(callback) {
-  var quads = [], q, node = this._root, child, x0, y0, x1, y1;
-  if (node)
-    quads.push(new quad_default(node, this._x0, this._y0, this._x1, this._y1));
-  while (q = quads.pop()) {
-    if (!callback(node = q.node, x0 = q.x0, y0 = q.y0, x1 = q.x1, y1 = q.y1) && node.length) {
-      var xm = (x0 + x1) / 2, ym = (y0 + y1) / 2;
-      if (child = node[3])
-        quads.push(new quad_default(child, xm, ym, x1, y1));
-      if (child = node[2])
-        quads.push(new quad_default(child, x0, ym, xm, y1));
-      if (child = node[1])
-        quads.push(new quad_default(child, xm, y0, x1, ym));
-      if (child = node[0])
-        quads.push(new quad_default(child, x0, y0, xm, ym));
-    }
-  }
-  return this;
-}
-
-// node_modules/d3-quadtree/src/visitAfter.js
-function visitAfter_default(callback) {
-  var quads = [], next = [], q;
-  if (this._root)
-    quads.push(new quad_default(this._root, this._x0, this._y0, this._x1, this._y1));
-  while (q = quads.pop()) {
-    var node = q.node;
-    if (node.length) {
-      var child, x0 = q.x0, y0 = q.y0, x1 = q.x1, y1 = q.y1, xm = (x0 + x1) / 2, ym = (y0 + y1) / 2;
-      if (child = node[0])
-        quads.push(new quad_default(child, x0, y0, xm, ym));
-      if (child = node[1])
-        quads.push(new quad_default(child, xm, y0, x1, ym));
-      if (child = node[2])
-        quads.push(new quad_default(child, x0, ym, xm, y1));
-      if (child = node[3])
-        quads.push(new quad_default(child, xm, ym, x1, y1));
-    }
-    next.push(q);
-  }
-  while (q = next.pop()) {
-    callback(q.node, q.x0, q.y0, q.x1, q.y1);
-  }
-  return this;
-}
-
-// node_modules/d3-quadtree/src/x.js
-function defaultX(d) {
-  return d[0];
-}
-function x_default(_) {
-  return arguments.length ? (this._x = _, this) : this._x;
-}
-
-// node_modules/d3-quadtree/src/y.js
-function defaultY(d) {
-  return d[1];
-}
-function y_default(_) {
-  return arguments.length ? (this._y = _, this) : this._y;
-}
-
-// node_modules/d3-quadtree/src/quadtree.js
-function quadtree(nodes, x3, y3) {
-  var tree = new Quadtree(x3 == null ? defaultX : x3, y3 == null ? defaultY : y3, NaN, NaN, NaN, NaN);
-  return nodes == null ? tree : tree.addAll(nodes);
-}
-function Quadtree(x3, y3, x0, y0, x1, y1) {
-  this._x = x3;
-  this._y = y3;
-  this._x0 = x0;
-  this._y0 = y0;
-  this._x1 = x1;
-  this._y1 = y1;
-  this._root = void 0;
-}
-function leaf_copy(leaf) {
-  var copy = { data: leaf.data }, next = copy;
-  while (leaf = leaf.next)
-    next = next.next = { data: leaf.data };
-  return copy;
-}
-var treeProto = quadtree.prototype = Quadtree.prototype;
-treeProto.copy = function() {
-  var copy = new Quadtree(this._x, this._y, this._x0, this._y0, this._x1, this._y1), node = this._root, nodes, child;
-  if (!node)
-    return copy;
-  if (!node.length)
-    return copy._root = leaf_copy(node), copy;
-  nodes = [{ source: node, target: copy._root = new Array(4) }];
-  while (node = nodes.pop()) {
-    for (var i = 0; i < 4; ++i) {
-      if (child = node.source[i]) {
-        if (child.length)
-          nodes.push({ source: child, target: node.target[i] = new Array(4) });
-        else
-          node.target[i] = leaf_copy(child);
-      }
-    }
-  }
-  return copy;
-};
-treeProto.add = add_default;
-treeProto.addAll = addAll;
-treeProto.cover = cover_default;
-treeProto.data = data_default2;
-treeProto.extent = extent_default;
-treeProto.find = find_default;
-treeProto.remove = remove_default3;
-treeProto.removeAll = removeAll;
-treeProto.root = root_default;
-treeProto.size = size_default2;
-treeProto.visit = visit_default;
-treeProto.visitAfter = visitAfter_default;
-treeProto.x = x_default;
-treeProto.y = y_default;
-
-// node_modules/d3-force/src/constant.js
-function constant_default5(x3) {
-  return function() {
-    return x3;
-  };
-}
-
-// node_modules/d3-force/src/jiggle.js
-function jiggle_default(random) {
-  return (random() - 0.5) * 1e-6;
-}
-
-// node_modules/d3-force/src/collide.js
-function x(d) {
-  return d.x + d.vx;
-}
-function y(d) {
-  return d.y + d.vy;
-}
-function collide_default(radius) {
-  var nodes, radii, random, strength = 1, iterations = 1;
-  if (typeof radius !== "function")
-    radius = constant_default5(radius == null ? 1 : +radius);
-  function force() {
-    var i, n = nodes.length, tree, node, xi, yi, ri, ri2;
-    for (var k = 0; k < iterations; ++k) {
-      tree = quadtree(nodes, x, y).visitAfter(prepare);
-      for (i = 0; i < n; ++i) {
-        node = nodes[i];
-        ri = radii[node.index], ri2 = ri * ri;
-        xi = node.x + node.vx;
-        yi = node.y + node.vy;
-        tree.visit(apply);
-      }
-    }
-    function apply(quad, x0, y0, x1, y1) {
-      var data = quad.data, rj = quad.r, r = ri + rj;
-      if (data) {
-        if (data.index > node.index) {
-          var x3 = xi - data.x - data.vx, y3 = yi - data.y - data.vy, l = x3 * x3 + y3 * y3;
-          if (l < r * r) {
-            if (x3 === 0)
-              x3 = jiggle_default(random), l += x3 * x3;
-            if (y3 === 0)
-              y3 = jiggle_default(random), l += y3 * y3;
-            l = (r - (l = Math.sqrt(l))) / l * strength;
-            node.vx += (x3 *= l) * (r = (rj *= rj) / (ri2 + rj));
-            node.vy += (y3 *= l) * r;
-            data.vx -= x3 * (r = 1 - r);
-            data.vy -= y3 * r;
-          }
-        }
-        return;
-      }
-      return x0 > xi + r || x1 < xi - r || y0 > yi + r || y1 < yi - r;
-    }
-  }
-  function prepare(quad) {
-    if (quad.data)
-      return quad.r = radii[quad.data.index];
-    for (var i = quad.r = 0; i < 4; ++i) {
-      if (quad[i] && quad[i].r > quad.r) {
-        quad.r = quad[i].r;
-      }
-    }
-  }
-  function initialize() {
-    if (!nodes)
-      return;
-    var i, n = nodes.length, node;
-    radii = new Array(n);
-    for (i = 0; i < n; ++i)
-      node = nodes[i], radii[node.index] = +radius(node, i, nodes);
-  }
-  force.initialize = function(_nodes, _random) {
-    nodes = _nodes;
-    random = _random;
-    initialize();
-  };
-  force.iterations = function(_) {
-    return arguments.length ? (iterations = +_, force) : iterations;
-  };
-  force.strength = function(_) {
-    return arguments.length ? (strength = +_, force) : strength;
-  };
-  force.radius = function(_) {
-    return arguments.length ? (radius = typeof _ === "function" ? _ : constant_default5(+_), initialize(), force) : radius;
-  };
-  return force;
-}
-
-// node_modules/d3-force/src/link.js
-function index(d) {
-  return d.index;
-}
-function find2(nodeById, nodeId) {
-  var node = nodeById.get(nodeId);
-  if (!node)
-    throw new Error("node not found: " + nodeId);
-  return node;
-}
-function link_default(links) {
-  var id2 = index, strength = defaultStrength, strengths, distance = constant_default5(30), distances, nodes, count, bias, random, iterations = 1;
-  if (links == null)
-    links = [];
-  function defaultStrength(link) {
-    return 1 / Math.min(count[link.source.index], count[link.target.index]);
-  }
-  function force(alpha) {
-    for (var k = 0, n = links.length; k < iterations; ++k) {
-      for (var i = 0, link, source, target, x3, y3, l, b; i < n; ++i) {
-        link = links[i], source = link.source, target = link.target;
-        x3 = target.x + target.vx - source.x - source.vx || jiggle_default(random);
-        y3 = target.y + target.vy - source.y - source.vy || jiggle_default(random);
-        l = Math.sqrt(x3 * x3 + y3 * y3);
-        l = (l - distances[i]) / l * alpha * strengths[i];
-        x3 *= l, y3 *= l;
-        target.vx -= x3 * (b = bias[i]);
-        target.vy -= y3 * b;
-        source.vx += x3 * (b = 1 - b);
-        source.vy += y3 * b;
-      }
-    }
-  }
-  function initialize() {
-    if (!nodes)
-      return;
-    var i, n = nodes.length, m2 = links.length, nodeById = new Map(nodes.map((d, i2) => [id2(d, i2, nodes), d])), link;
-    for (i = 0, count = new Array(n); i < m2; ++i) {
-      link = links[i], link.index = i;
-      if (typeof link.source !== "object")
-        link.source = find2(nodeById, link.source);
-      if (typeof link.target !== "object")
-        link.target = find2(nodeById, link.target);
-      count[link.source.index] = (count[link.source.index] || 0) + 1;
-      count[link.target.index] = (count[link.target.index] || 0) + 1;
-    }
-    for (i = 0, bias = new Array(m2); i < m2; ++i) {
-      link = links[i], bias[i] = count[link.source.index] / (count[link.source.index] + count[link.target.index]);
-    }
-    strengths = new Array(m2), initializeStrength();
-    distances = new Array(m2), initializeDistance();
-  }
-  function initializeStrength() {
-    if (!nodes)
-      return;
-    for (var i = 0, n = links.length; i < n; ++i) {
-      strengths[i] = +strength(links[i], i, links);
-    }
-  }
-  function initializeDistance() {
-    if (!nodes)
-      return;
-    for (var i = 0, n = links.length; i < n; ++i) {
-      distances[i] = +distance(links[i], i, links);
-    }
-  }
-  force.initialize = function(_nodes, _random) {
-    nodes = _nodes;
-    random = _random;
-    initialize();
-  };
-  force.links = function(_) {
-    return arguments.length ? (links = _, initialize(), force) : links;
-  };
-  force.id = function(_) {
-    return arguments.length ? (id2 = _, force) : id2;
-  };
-  force.iterations = function(_) {
-    return arguments.length ? (iterations = +_, force) : iterations;
-  };
-  force.strength = function(_) {
-    return arguments.length ? (strength = typeof _ === "function" ? _ : constant_default5(+_), initializeStrength(), force) : strength;
-  };
-  force.distance = function(_) {
-    return arguments.length ? (distance = typeof _ === "function" ? _ : constant_default5(+_), initializeDistance(), force) : distance;
-  };
-  return force;
-}
-
-// node_modules/d3-force/src/lcg.js
-var a = 1664525;
-var c = 1013904223;
-var m = 4294967296;
-function lcg_default() {
-  let s = 1;
-  return () => (s = (a * s + c) % m) / m;
-}
-
-// node_modules/d3-force/src/simulation.js
-function x2(d) {
-  return d.x;
-}
-function y2(d) {
-  return d.y;
-}
-var initialRadius = 10;
-var initialAngle = Math.PI * (3 - Math.sqrt(5));
-function simulation_default(nodes) {
-  var simulation, alpha = 1, alphaMin = 1e-3, alphaDecay = 1 - Math.pow(alphaMin, 1 / 300), alphaTarget = 0, velocityDecay = 0.6, forces = /* @__PURE__ */ new Map(), stepper = timer(step), event = dispatch_default("tick", "end"), random = lcg_default();
-  if (nodes == null)
-    nodes = [];
-  function step() {
-    tick();
-    event.call("tick", simulation);
-    if (alpha < alphaMin) {
-      stepper.stop();
-      event.call("end", simulation);
-    }
-  }
-  function tick(iterations) {
-    var i, n = nodes.length, node;
-    if (iterations === void 0)
-      iterations = 1;
-    for (var k = 0; k < iterations; ++k) {
-      alpha += (alphaTarget - alpha) * alphaDecay;
-      forces.forEach(function(force) {
-        force(alpha);
-      });
-      for (i = 0; i < n; ++i) {
-        node = nodes[i];
-        if (node.fx == null)
-          node.x += node.vx *= velocityDecay;
-        else
-          node.x = node.fx, node.vx = 0;
-        if (node.fy == null)
-          node.y += node.vy *= velocityDecay;
-        else
-          node.y = node.fy, node.vy = 0;
-      }
-    }
-    return simulation;
-  }
-  function initializeNodes() {
-    for (var i = 0, n = nodes.length, node; i < n; ++i) {
-      node = nodes[i], node.index = i;
-      if (node.fx != null)
-        node.x = node.fx;
-      if (node.fy != null)
-        node.y = node.fy;
-      if (isNaN(node.x) || isNaN(node.y)) {
-        var radius = initialRadius * Math.sqrt(0.5 + i), angle = i * initialAngle;
-        node.x = radius * Math.cos(angle);
-        node.y = radius * Math.sin(angle);
-      }
-      if (isNaN(node.vx) || isNaN(node.vy)) {
-        node.vx = node.vy = 0;
-      }
-    }
-  }
-  function initializeForce(force) {
-    if (force.initialize)
-      force.initialize(nodes, random);
-    return force;
-  }
-  initializeNodes();
-  return simulation = {
-    tick,
-    restart: function() {
-      return stepper.restart(step), simulation;
-    },
-    stop: function() {
-      return stepper.stop(), simulation;
-    },
-    nodes: function(_) {
-      return arguments.length ? (nodes = _, initializeNodes(), forces.forEach(initializeForce), simulation) : nodes;
-    },
-    alpha: function(_) {
-      return arguments.length ? (alpha = +_, simulation) : alpha;
-    },
-    alphaMin: function(_) {
-      return arguments.length ? (alphaMin = +_, simulation) : alphaMin;
-    },
-    alphaDecay: function(_) {
-      return arguments.length ? (alphaDecay = +_, simulation) : +alphaDecay;
-    },
-    alphaTarget: function(_) {
-      return arguments.length ? (alphaTarget = +_, simulation) : alphaTarget;
-    },
-    velocityDecay: function(_) {
-      return arguments.length ? (velocityDecay = 1 - _, simulation) : 1 - velocityDecay;
-    },
-    randomSource: function(_) {
-      return arguments.length ? (random = _, forces.forEach(initializeForce), simulation) : random;
-    },
-    force: function(name, _) {
-      return arguments.length > 1 ? (_ == null ? forces.delete(name) : forces.set(name, initializeForce(_)), simulation) : forces.get(name);
-    },
-    find: function(x3, y3, radius) {
-      var i = 0, n = nodes.length, dx, dy, d2, node, closest;
-      if (radius == null)
-        radius = Infinity;
-      else
-        radius *= radius;
-      for (i = 0; i < n; ++i) {
-        node = nodes[i];
-        dx = x3 - node.x;
-        dy = y3 - node.y;
-        d2 = dx * dx + dy * dy;
-        if (d2 < radius)
-          closest = node, radius = d2;
-      }
-      return closest;
-    },
-    on: function(name, _) {
-      return arguments.length > 1 ? (event.on(name, _), simulation) : event.on(name);
-    }
-  };
-}
-
-// node_modules/d3-force/src/manyBody.js
-function manyBody_default() {
-  var nodes, node, random, alpha, strength = constant_default5(-30), strengths, distanceMin2 = 1, distanceMax2 = Infinity, theta2 = 0.81;
-  function force(_) {
-    var i, n = nodes.length, tree = quadtree(nodes, x2, y2).visitAfter(accumulate);
-    for (alpha = _, i = 0; i < n; ++i)
-      node = nodes[i], tree.visit(apply);
-  }
-  function initialize() {
-    if (!nodes)
-      return;
-    var i, n = nodes.length, node2;
-    strengths = new Array(n);
-    for (i = 0; i < n; ++i)
-      node2 = nodes[i], strengths[node2.index] = +strength(node2, i, nodes);
-  }
-  function accumulate(quad) {
-    var strength2 = 0, q, c2, weight = 0, x3, y3, i;
-    if (quad.length) {
-      for (x3 = y3 = i = 0; i < 4; ++i) {
-        if ((q = quad[i]) && (c2 = Math.abs(q.value))) {
-          strength2 += q.value, weight += c2, x3 += c2 * q.x, y3 += c2 * q.y;
-        }
-      }
-      quad.x = x3 / weight;
-      quad.y = y3 / weight;
-    } else {
-      q = quad;
-      q.x = q.data.x;
-      q.y = q.data.y;
-      do
-        strength2 += strengths[q.data.index];
-      while (q = q.next);
-    }
-    quad.value = strength2;
-  }
-  function apply(quad, x1, _, x22) {
-    if (!quad.value)
-      return true;
-    var x3 = quad.x - node.x, y3 = quad.y - node.y, w = x22 - x1, l = x3 * x3 + y3 * y3;
-    if (w * w / theta2 < l) {
-      if (l < distanceMax2) {
-        if (x3 === 0)
-          x3 = jiggle_default(random), l += x3 * x3;
-        if (y3 === 0)
-          y3 = jiggle_default(random), l += y3 * y3;
-        if (l < distanceMin2)
-          l = Math.sqrt(distanceMin2 * l);
-        node.vx += x3 * quad.value * alpha / l;
-        node.vy += y3 * quad.value * alpha / l;
-      }
-      return true;
-    } else if (quad.length || l >= distanceMax2)
-      return;
-    if (quad.data !== node || quad.next) {
-      if (x3 === 0)
-        x3 = jiggle_default(random), l += x3 * x3;
-      if (y3 === 0)
-        y3 = jiggle_default(random), l += y3 * y3;
-      if (l < distanceMin2)
-        l = Math.sqrt(distanceMin2 * l);
-    }
-    do
-      if (quad.data !== node) {
-        w = strengths[quad.data.index] * alpha / l;
-        node.vx += x3 * w;
-        node.vy += y3 * w;
-      }
-    while (quad = quad.next);
-  }
-  force.initialize = function(_nodes, _random) {
-    nodes = _nodes;
-    random = _random;
-    initialize();
-  };
-  force.strength = function(_) {
-    return arguments.length ? (strength = typeof _ === "function" ? _ : constant_default5(+_), initialize(), force) : strength;
-  };
-  force.distanceMin = function(_) {
-    return arguments.length ? (distanceMin2 = _ * _, force) : Math.sqrt(distanceMin2);
-  };
-  force.distanceMax = function(_) {
-    return arguments.length ? (distanceMax2 = _ * _, force) : Math.sqrt(distanceMax2);
-  };
-  force.theta = function(_) {
-    return arguments.length ? (theta2 = _ * _, force) : Math.sqrt(theta2);
-  };
-  return force;
-}
-
-// node_modules/d3-zoom/src/constant.js
-var constant_default6 = (x3) => () => x3;
-
-// node_modules/d3-zoom/src/event.js
-function ZoomEvent(type2, {
-  sourceEvent,
-  target,
-  transform: transform2,
-  dispatch: dispatch2
-}) {
-  Object.defineProperties(this, {
-    type: { value: type2, enumerable: true, configurable: true },
-    sourceEvent: { value: sourceEvent, enumerable: true, configurable: true },
-    target: { value: target, enumerable: true, configurable: true },
-    transform: { value: transform2, enumerable: true, configurable: true },
-    _: { value: dispatch2 }
-  });
-}
-
-// node_modules/d3-zoom/src/transform.js
-function Transform(k, x3, y3) {
-  this.k = k;
-  this.x = x3;
-  this.y = y3;
-}
-Transform.prototype = {
-  constructor: Transform,
-  scale: function(k) {
-    return k === 1 ? this : new Transform(this.k * k, this.x, this.y);
-  },
-  translate: function(x3, y3) {
-    return x3 === 0 & y3 === 0 ? this : new Transform(this.k, this.x + this.k * x3, this.y + this.k * y3);
-  },
-  apply: function(point) {
-    return [point[0] * this.k + this.x, point[1] * this.k + this.y];
-  },
-  applyX: function(x3) {
-    return x3 * this.k + this.x;
-  },
-  applyY: function(y3) {
-    return y3 * this.k + this.y;
-  },
-  invert: function(location) {
-    return [(location[0] - this.x) / this.k, (location[1] - this.y) / this.k];
-  },
-  invertX: function(x3) {
-    return (x3 - this.x) / this.k;
-  },
-  invertY: function(y3) {
-    return (y3 - this.y) / this.k;
-  },
-  rescaleX: function(x3) {
-    return x3.copy().domain(x3.range().map(this.invertX, this).map(x3.invert, x3));
-  },
-  rescaleY: function(y3) {
-    return y3.copy().domain(y3.range().map(this.invertY, this).map(y3.invert, y3));
-  },
-  toString: function() {
-    return "translate(" + this.x + "," + this.y + ") scale(" + this.k + ")";
-  }
-};
-var identity2 = new Transform(1, 0, 0);
-transform.prototype = Transform.prototype;
-function transform(node) {
-  while (!node.__zoom)
-    if (!(node = node.parentNode))
-      return identity2;
-  return node.__zoom;
-}
-
-// node_modules/d3-zoom/src/noevent.js
-function nopropagation3(event) {
-  event.stopImmediatePropagation();
-}
-function noevent_default3(event) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
-}
-
-// node_modules/d3-zoom/src/zoom.js
-function defaultFilter2(event) {
-  return (!event.ctrlKey || event.type === "wheel") && !event.button;
-}
-function defaultExtent() {
-  var e = this;
-  if (e instanceof SVGElement) {
-    e = e.ownerSVGElement || e;
-    if (e.hasAttribute("viewBox")) {
-      e = e.viewBox.baseVal;
-      return [[e.x, e.y], [e.x + e.width, e.y + e.height]];
-    }
-    return [[0, 0], [e.width.baseVal.value, e.height.baseVal.value]];
-  }
-  return [[0, 0], [e.clientWidth, e.clientHeight]];
-}
-function defaultTransform() {
-  return this.__zoom || identity2;
-}
-function defaultWheelDelta(event) {
-  return -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 2e-3) * (event.ctrlKey ? 10 : 1);
-}
-function defaultTouchable2() {
-  return navigator.maxTouchPoints || "ontouchstart" in this;
-}
-function defaultConstrain(transform2, extent, translateExtent) {
-  var dx0 = transform2.invertX(extent[0][0]) - translateExtent[0][0], dx1 = transform2.invertX(extent[1][0]) - translateExtent[1][0], dy0 = transform2.invertY(extent[0][1]) - translateExtent[0][1], dy1 = transform2.invertY(extent[1][1]) - translateExtent[1][1];
-  return transform2.translate(
-    dx1 > dx0 ? (dx0 + dx1) / 2 : Math.min(0, dx0) || Math.max(0, dx1),
-    dy1 > dy0 ? (dy0 + dy1) / 2 : Math.min(0, dy0) || Math.max(0, dy1)
-  );
-}
-function zoom_default2() {
-  var filter2 = defaultFilter2, extent = defaultExtent, constrain = defaultConstrain, wheelDelta = defaultWheelDelta, touchable = defaultTouchable2, scaleExtent = [0, Infinity], translateExtent = [[-Infinity, -Infinity], [Infinity, Infinity]], duration = 250, interpolate = zoom_default, listeners = dispatch_default("start", "zoom", "end"), touchstarting, touchfirst, touchending, touchDelay = 500, wheelDelay = 150, clickDistance2 = 0, tapDistance = 10;
-  function zoom(selection2) {
-    selection2.property("__zoom", defaultTransform).on("wheel.zoom", wheeled, { passive: false }).on("mousedown.zoom", mousedowned).on("dblclick.zoom", dblclicked).filter(touchable).on("touchstart.zoom", touchstarted).on("touchmove.zoom", touchmoved).on("touchend.zoom touchcancel.zoom", touchended).style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
-  }
-  zoom.transform = function(collection, transform2, point, event) {
-    var selection2 = collection.selection ? collection.selection() : collection;
-    selection2.property("__zoom", defaultTransform);
-    if (collection !== selection2) {
-      schedule(collection, transform2, point, event);
-    } else {
-      selection2.interrupt().each(function() {
-        gesture(this, arguments).event(event).start().zoom(null, typeof transform2 === "function" ? transform2.apply(this, arguments) : transform2).end();
-      });
-    }
-  };
-  zoom.scaleBy = function(selection2, k, p, event) {
-    zoom.scaleTo(selection2, function() {
-      var k0 = this.__zoom.k, k1 = typeof k === "function" ? k.apply(this, arguments) : k;
-      return k0 * k1;
-    }, p, event);
-  };
-  zoom.scaleTo = function(selection2, k, p, event) {
-    zoom.transform(selection2, function() {
-      var e = extent.apply(this, arguments), t0 = this.__zoom, p0 = p == null ? centroid(e) : typeof p === "function" ? p.apply(this, arguments) : p, p1 = t0.invert(p0), k1 = typeof k === "function" ? k.apply(this, arguments) : k;
-      return constrain(translate(scale(t0, k1), p0, p1), e, translateExtent);
-    }, p, event);
-  };
-  zoom.translateBy = function(selection2, x3, y3, event) {
-    zoom.transform(selection2, function() {
-      return constrain(this.__zoom.translate(
-        typeof x3 === "function" ? x3.apply(this, arguments) : x3,
-        typeof y3 === "function" ? y3.apply(this, arguments) : y3
-      ), extent.apply(this, arguments), translateExtent);
-    }, null, event);
-  };
-  zoom.translateTo = function(selection2, x3, y3, p, event) {
-    zoom.transform(selection2, function() {
-      var e = extent.apply(this, arguments), t = this.__zoom, p0 = p == null ? centroid(e) : typeof p === "function" ? p.apply(this, arguments) : p;
-      return constrain(identity2.translate(p0[0], p0[1]).scale(t.k).translate(
-        typeof x3 === "function" ? -x3.apply(this, arguments) : -x3,
-        typeof y3 === "function" ? -y3.apply(this, arguments) : -y3
-      ), e, translateExtent);
-    }, p, event);
-  };
-  function scale(transform2, k) {
-    k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], k));
-    return k === transform2.k ? transform2 : new Transform(k, transform2.x, transform2.y);
-  }
-  function translate(transform2, p0, p1) {
-    var x3 = p0[0] - p1[0] * transform2.k, y3 = p0[1] - p1[1] * transform2.k;
-    return x3 === transform2.x && y3 === transform2.y ? transform2 : new Transform(transform2.k, x3, y3);
-  }
-  function centroid(extent2) {
-    return [(+extent2[0][0] + +extent2[1][0]) / 2, (+extent2[0][1] + +extent2[1][1]) / 2];
-  }
-  function schedule(transition2, transform2, point, event) {
-    transition2.on("start.zoom", function() {
-      gesture(this, arguments).event(event).start();
-    }).on("interrupt.zoom end.zoom", function() {
-      gesture(this, arguments).event(event).end();
-    }).tween("zoom", function() {
-      var that = this, args = arguments, g = gesture(that, args).event(event), e = extent.apply(that, args), p = point == null ? centroid(e) : typeof point === "function" ? point.apply(that, args) : point, w = Math.max(e[1][0] - e[0][0], e[1][1] - e[0][1]), a2 = that.__zoom, b = typeof transform2 === "function" ? transform2.apply(that, args) : transform2, i = interpolate(a2.invert(p).concat(w / a2.k), b.invert(p).concat(w / b.k));
-      return function(t) {
-        if (t === 1)
-          t = b;
-        else {
-          var l = i(t), k = w / l[2];
-          t = new Transform(k, p[0] - l[0] * k, p[1] - l[1] * k);
-        }
-        g.zoom(null, t);
-      };
-    });
-  }
-  function gesture(that, args, clean) {
-    return !clean && that.__zooming || new Gesture(that, args);
-  }
-  function Gesture(that, args) {
-    this.that = that;
-    this.args = args;
-    this.active = 0;
-    this.sourceEvent = null;
-    this.extent = extent.apply(that, args);
-    this.taps = 0;
-  }
-  Gesture.prototype = {
-    event: function(event) {
-      if (event)
-        this.sourceEvent = event;
-      return this;
-    },
-    start: function() {
-      if (++this.active === 1) {
-        this.that.__zooming = this;
-        this.emit("start");
-      }
-      return this;
-    },
-    zoom: function(key, transform2) {
-      if (this.mouse && key !== "mouse")
-        this.mouse[1] = transform2.invert(this.mouse[0]);
-      if (this.touch0 && key !== "touch")
-        this.touch0[1] = transform2.invert(this.touch0[0]);
-      if (this.touch1 && key !== "touch")
-        this.touch1[1] = transform2.invert(this.touch1[0]);
-      this.that.__zoom = transform2;
-      this.emit("zoom");
-      return this;
-    },
-    end: function() {
-      if (--this.active === 0) {
-        delete this.that.__zooming;
-        this.emit("end");
-      }
-      return this;
-    },
-    emit: function(type2) {
-      var d = select_default2(this.that).datum();
-      listeners.call(
-        type2,
-        this.that,
-        new ZoomEvent(type2, {
-          sourceEvent: this.sourceEvent,
-          target: zoom,
-          type: type2,
-          transform: this.that.__zoom,
-          dispatch: listeners
-        }),
-        d
-      );
-    }
-  };
-  function wheeled(event, ...args) {
-    if (!filter2.apply(this, arguments))
-      return;
-    var g = gesture(this, args).event(event), t = this.__zoom, k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], t.k * Math.pow(2, wheelDelta.apply(this, arguments)))), p = pointer_default(event);
-    if (g.wheel) {
-      if (g.mouse[0][0] !== p[0] || g.mouse[0][1] !== p[1]) {
-        g.mouse[1] = t.invert(g.mouse[0] = p);
-      }
-      clearTimeout(g.wheel);
-    } else if (t.k === k)
-      return;
-    else {
-      g.mouse = [p, t.invert(p)];
-      interrupt_default(this);
-      g.start();
-    }
-    noevent_default3(event);
-    g.wheel = setTimeout(wheelidled, wheelDelay);
-    g.zoom("mouse", constrain(translate(scale(t, k), g.mouse[0], g.mouse[1]), g.extent, translateExtent));
-    function wheelidled() {
-      g.wheel = null;
-      g.end();
-    }
-  }
-  function mousedowned(event, ...args) {
-    if (touchending || !filter2.apply(this, arguments))
-      return;
-    var currentTarget = event.currentTarget, g = gesture(this, args, true).event(event), v = select_default2(event.view).on("mousemove.zoom", mousemoved, true).on("mouseup.zoom", mouseupped, true), p = pointer_default(event, currentTarget), x0 = event.clientX, y0 = event.clientY;
-    nodrag_default(event.view);
-    nopropagation3(event);
-    g.mouse = [p, this.__zoom.invert(p)];
-    interrupt_default(this);
-    g.start();
-    function mousemoved(event2) {
-      noevent_default3(event2);
-      if (!g.moved) {
-        var dx = event2.clientX - x0, dy = event2.clientY - y0;
-        g.moved = dx * dx + dy * dy > clickDistance2;
-      }
-      g.event(event2).zoom("mouse", constrain(translate(g.that.__zoom, g.mouse[0] = pointer_default(event2, currentTarget), g.mouse[1]), g.extent, translateExtent));
-    }
-    function mouseupped(event2) {
-      v.on("mousemove.zoom mouseup.zoom", null);
-      yesdrag(event2.view, g.moved);
-      noevent_default3(event2);
-      g.event(event2).end();
-    }
-  }
-  function dblclicked(event, ...args) {
-    if (!filter2.apply(this, arguments))
-      return;
-    var t0 = this.__zoom, p0 = pointer_default(event.changedTouches ? event.changedTouches[0] : event, this), p1 = t0.invert(p0), k1 = t0.k * (event.shiftKey ? 0.5 : 2), t1 = constrain(translate(scale(t0, k1), p0, p1), extent.apply(this, args), translateExtent);
-    noevent_default3(event);
-    if (duration > 0)
-      select_default2(this).transition().duration(duration).call(schedule, t1, p0, event);
-    else
-      select_default2(this).call(zoom.transform, t1, p0, event);
-  }
-  function touchstarted(event, ...args) {
-    if (!filter2.apply(this, arguments))
-      return;
-    var touches = event.touches, n = touches.length, g = gesture(this, args, event.changedTouches.length === n).event(event), started, i, t, p;
-    nopropagation3(event);
-    for (i = 0; i < n; ++i) {
-      t = touches[i], p = pointer_default(t, this);
-      p = [p, this.__zoom.invert(p), t.identifier];
-      if (!g.touch0)
-        g.touch0 = p, started = true, g.taps = 1 + !!touchstarting;
-      else if (!g.touch1 && g.touch0[2] !== p[2])
-        g.touch1 = p, g.taps = 0;
-    }
-    if (touchstarting)
-      touchstarting = clearTimeout(touchstarting);
-    if (started) {
-      if (g.taps < 2)
-        touchfirst = p[0], touchstarting = setTimeout(function() {
-          touchstarting = null;
-        }, touchDelay);
-      interrupt_default(this);
-      g.start();
-    }
-  }
-  function touchmoved(event, ...args) {
-    if (!this.__zooming)
-      return;
-    var g = gesture(this, args).event(event), touches = event.changedTouches, n = touches.length, i, t, p, l;
-    noevent_default3(event);
-    for (i = 0; i < n; ++i) {
-      t = touches[i], p = pointer_default(t, this);
-      if (g.touch0 && g.touch0[2] === t.identifier)
-        g.touch0[0] = p;
-      else if (g.touch1 && g.touch1[2] === t.identifier)
-        g.touch1[0] = p;
-    }
-    t = g.that.__zoom;
-    if (g.touch1) {
-      var p0 = g.touch0[0], l0 = g.touch0[1], p1 = g.touch1[0], l1 = g.touch1[1], dp = (dp = p1[0] - p0[0]) * dp + (dp = p1[1] - p0[1]) * dp, dl = (dl = l1[0] - l0[0]) * dl + (dl = l1[1] - l0[1]) * dl;
-      t = scale(t, Math.sqrt(dp / dl));
-      p = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
-      l = [(l0[0] + l1[0]) / 2, (l0[1] + l1[1]) / 2];
-    } else if (g.touch0)
-      p = g.touch0[0], l = g.touch0[1];
-    else
-      return;
-    g.zoom("touch", constrain(translate(t, p, l), g.extent, translateExtent));
-  }
-  function touchended(event, ...args) {
-    if (!this.__zooming)
-      return;
-    var g = gesture(this, args).event(event), touches = event.changedTouches, n = touches.length, i, t;
-    nopropagation3(event);
-    if (touchending)
-      clearTimeout(touchending);
-    touchending = setTimeout(function() {
-      touchending = null;
-    }, touchDelay);
-    for (i = 0; i < n; ++i) {
-      t = touches[i];
-      if (g.touch0 && g.touch0[2] === t.identifier)
-        delete g.touch0;
-      else if (g.touch1 && g.touch1[2] === t.identifier)
-        delete g.touch1;
-    }
-    if (g.touch1 && !g.touch0)
-      g.touch0 = g.touch1, delete g.touch1;
-    if (g.touch0)
-      g.touch0[1] = this.__zoom.invert(g.touch0[0]);
-    else {
-      g.end();
-      if (g.taps === 2) {
-        t = pointer_default(t, this);
-        if (Math.hypot(touchfirst[0] - t[0], touchfirst[1] - t[1]) < tapDistance) {
-          var p = select_default2(this).on("dblclick.zoom");
-          if (p)
-            p.apply(this, arguments);
-        }
-      }
-    }
-  }
-  zoom.wheelDelta = function(_) {
-    return arguments.length ? (wheelDelta = typeof _ === "function" ? _ : constant_default6(+_), zoom) : wheelDelta;
-  };
-  zoom.filter = function(_) {
-    return arguments.length ? (filter2 = typeof _ === "function" ? _ : constant_default6(!!_), zoom) : filter2;
-  };
-  zoom.touchable = function(_) {
-    return arguments.length ? (touchable = typeof _ === "function" ? _ : constant_default6(!!_), zoom) : touchable;
-  };
-  zoom.extent = function(_) {
-    return arguments.length ? (extent = typeof _ === "function" ? _ : constant_default6([[+_[0][0], +_[0][1]], [+_[1][0], +_[1][1]]]), zoom) : extent;
-  };
-  zoom.scaleExtent = function(_) {
-    return arguments.length ? (scaleExtent[0] = +_[0], scaleExtent[1] = +_[1], zoom) : [scaleExtent[0], scaleExtent[1]];
-  };
-  zoom.translateExtent = function(_) {
-    return arguments.length ? (translateExtent[0][0] = +_[0][0], translateExtent[1][0] = +_[1][0], translateExtent[0][1] = +_[0][1], translateExtent[1][1] = +_[1][1], zoom) : [[translateExtent[0][0], translateExtent[0][1]], [translateExtent[1][0], translateExtent[1][1]]];
-  };
-  zoom.constrain = function(_) {
-    return arguments.length ? (constrain = _, zoom) : constrain;
-  };
-  zoom.duration = function(_) {
-    return arguments.length ? (duration = +_, zoom) : duration;
-  };
-  zoom.interpolate = function(_) {
-    return arguments.length ? (interpolate = _, zoom) : interpolate;
-  };
-  zoom.on = function() {
-    var value = listeners.on.apply(listeners, arguments);
-    return value === listeners ? zoom : value;
-  };
-  zoom.clickDistance = function(_) {
-    return arguments.length ? (clickDistance2 = (_ = +_) * _, zoom) : Math.sqrt(clickDistance2);
-  };
-  zoom.tapDistance = function(_) {
-    return arguments.length ? (tapDistance = +_, zoom) : tapDistance;
-  };
-  return zoom;
-}
-
-// src/ui/GraphDemoModal.ts
-var GraphDemoModal = class extends import_obsidian3.Modal {
-  constructor(app) {
-    super(app);
-    this.svg = null;
-    this.simulation = null;
-    this.nodes = [];
-    this.links = [];
-    this.showLabels = false;
-    this.visibleNodes = /* @__PURE__ */ new Set();
-    this.visibleLinks = /* @__PURE__ */ new Set();
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.createEl("h2", { text: "D3-Force Animation Demo" });
-    contentEl.createEl("p", { text: "A simple demonstration of temporal graph animation" });
-    const graphContainer = contentEl.createDiv("sonigraph-demo-container");
-    this.createSampleData();
-    this.initializeVisualization(graphContainer);
-    this.addControls(contentEl);
-  }
-  createSampleData() {
-    const baseDate = new Date("2024-01-01");
-    const calculateRadius = (textLength, linkCount) => {
-      const baseSize = 8;
-      const textFactor = Math.min(textLength / 100, 3);
-      const linkFactor = Math.min(linkCount * 2, 6);
-      return baseSize + textFactor + linkFactor;
-    };
-    this.nodes = [
-      {
-        id: "note1",
-        name: "First Note",
-        type: "note",
-        creationDate: new Date(baseDate.getTime() + 0 * 24 * 60 * 60 * 1e3),
-        textLength: 150,
-        linkCount: 1,
-        radius: 0
-        // Will be calculated below
-      },
-      {
-        id: "note2",
-        name: "Second Note",
-        type: "note",
-        creationDate: new Date(baseDate.getTime() + 5 * 24 * 60 * 60 * 1e3),
-        textLength: 300,
-        linkCount: 3,
-        radius: 0
-      },
-      {
-        id: "image1",
-        name: "Screenshot",
-        type: "image",
-        creationDate: new Date(baseDate.getTime() + 10 * 24 * 60 * 60 * 1e3),
-        textLength: 50,
-        linkCount: 1,
-        radius: 0
-      },
-      {
-        id: "note3",
-        name: "Third Note",
-        type: "note",
-        creationDate: new Date(baseDate.getTime() + 15 * 24 * 60 * 60 * 1e3),
-        textLength: 500,
-        linkCount: 2,
-        radius: 0
-      },
-      {
-        id: "image2",
-        name: "Diagram",
-        type: "image",
-        creationDate: new Date(baseDate.getTime() + 20 * 24 * 60 * 60 * 1e3),
-        textLength: 25,
-        linkCount: 1,
-        radius: 0
-      }
-    ];
-    this.nodes.forEach((node) => {
-      node.radius = calculateRadius(node.textLength, node.linkCount);
-    });
-    this.links = [
-      { source: "note1", target: "note2" },
-      { source: "note2", target: "image1" },
-      { source: "note2", target: "note3" },
-      { source: "note3", target: "image2" }
-    ];
-  }
-  initializeVisualization(container) {
-    const width = 800;
-    const height = 500;
-    this.svg = select_default2(container).append("svg").attr("class", "sonigraph-temporal-svg").attr("width", width).attr("height", height).attr("viewBox", `0 0 ${width} ${height}`);
-    this.simulation = simulation_default(this.nodes).force("link", link_default(this.links).id((d) => d.id).distance(80)).force("charge", manyBody_default().strength(-300)).force("center", center_default(width / 2, height / 2)).force("collision", collide_default().radius((d) => d.radius + 5));
-    const linkGroup = this.svg.append("g").attr("class", "sonigraph-temporal-links").selectAll("line").data(this.links).enter().append("line");
-    const nodeGroup = this.svg.append("g").attr("class", "sonigraph-temporal-nodes").selectAll("g").data(this.nodes).enter().append("g").attr("class", "sonigraph-temporal-node");
-    nodeGroup.append("circle").attr("r", (d) => d.radius).attr("class", (d) => `${d.type}-node`);
-    nodeGroup.append("text").text((d) => d.name).attr("font-size", "12px").attr("font-family", "var(--font-interface)").attr("fill", "var(--text-normal)").attr("text-anchor", "middle").attr("dy", (d) => d.radius + 16).style("pointer-events", "none").style("opacity", 0).style("transition", "opacity 0.2s");
-    nodeGroup.on("mouseenter", function(event, d) {
-      select_default2(this).select("text").style("opacity", 1);
-      select_default2(this).select("circle").style("stroke-width", 3);
-    }).on("mouseleave", function(event, d) {
-      if (!this.showLabels) {
-        select_default2(this).select("text").style("opacity", 0);
-      }
-      select_default2(this).select("circle").style("stroke-width", 2);
-    }.bind(this));
-    const drag = drag_default().on("start", (event, d) => {
-      if (!event.active && this.simulation)
-        this.simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }).on("drag", (event, d) => {
-      d.fx = event.x;
-      d.fy = event.y;
-    }).on("end", (event, d) => {
-      if (!event.active && this.simulation)
-        this.simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    });
-    nodeGroup.call(drag);
-    this.simulation.on("tick", () => {
-      linkGroup.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
-      nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
-    });
-  }
-  addControls(container) {
-    const controlsContainer = container.createDiv("sonigraph-demo-controls");
-    const restartBtn = controlsContainer.createEl("button", { text: "Restart Animation" });
-    restartBtn.classList.add("mod-cta");
-    restartBtn.onclick = () => {
-      if (this.simulation) {
-        this.simulation.alpha(1).restart();
-      }
-    };
-    const temporalBtn = controlsContainer.createEl("button", { text: "Show Temporal Animation" });
-    temporalBtn.onclick = () => this.startTemporalAnimation();
-    const labelsBtn = controlsContainer.createEl("button", { text: "Toggle Labels" });
-    labelsBtn.onclick = () => this.toggleLabels();
-    const resetBtn = controlsContainer.createEl("button", { text: "Reset View" });
-    resetBtn.onclick = () => this.resetView();
-    const infoText = controlsContainer.createDiv("info-text");
-    infoText.innerHTML = "Blue = Notes, Orange = Images<br/>Node size = text length + connections";
-  }
-  startTemporalAnimation() {
-    if (!this.svg || !this.simulation)
-      return;
-    this.visibleNodes.clear();
-    this.visibleLinks.clear();
-    this.svg.selectAll(".node").style("opacity", 0);
-    this.svg.selectAll(".links line").style("opacity", 0);
-    const sortedNodes = [...this.nodes].sort(
-      (a2, b) => a2.creationDate.getTime() - b.creationDate.getTime()
-    );
-    sortedNodes.forEach((node, index2) => {
-      setTimeout(() => {
-        this.visibleNodes.add(node.id);
-        this.svg.selectAll(".node").filter((d) => d.id === node.id).transition().duration(500).style("opacity", 1);
-        this.updateVisibleLinks();
-        this.playNodeSound(node);
-        if (this.simulation) {
-          this.simulation.alpha(0.3).restart();
-        }
-      }, index2 * 1e3);
-    });
-  }
-  updateVisibleLinks() {
-    this.links.forEach((link) => {
-      const sourceId = typeof link.source === "string" ? link.source : link.source.id;
-      const targetId = typeof link.target === "string" ? link.target : link.target.id;
-      if (this.visibleNodes.has(sourceId) && this.visibleNodes.has(targetId)) {
-        const linkKey = `${sourceId}-${targetId}`;
-        if (!this.visibleLinks.has(linkKey)) {
-          this.visibleLinks.add(linkKey);
-          this.svg.selectAll(".links line").filter((d) => {
-            const dSourceId = typeof d.source === "string" ? d.source : d.source.id;
-            const dTargetId = typeof d.target === "string" ? d.target : d.target.id;
-            return dSourceId === sourceId && dTargetId === targetId || dSourceId === targetId && dTargetId === sourceId;
-          }).transition().duration(300).style("opacity", 0.6);
-        }
-      }
-    });
-  }
-  playNodeSound(node) {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      const baseFreq = node.type === "note" ? 440 : 330;
-      const sizeMultiplier = 1 + (node.radius - 8) * 0.1;
-      oscillator.frequency.setValueAtTime(baseFreq * sizeMultiplier, audioContext.currentTime);
-      oscillator.type = node.type === "note" ? "sine" : "triangle";
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (error) {
-      console.log(`\u266A ${node.name} (${node.type})`);
-    }
-  }
-  toggleLabels() {
-    this.showLabels = !this.showLabels;
-    if (this.svg) {
-      this.svg.selectAll(".node text").style("opacity", this.showLabels ? 1 : 0);
-    }
-  }
-  resetView() {
-    this.visibleNodes.clear();
-    this.visibleLinks.clear();
-    this.nodes.forEach((node) => this.visibleNodes.add(node.id));
-    if (this.svg) {
-      this.svg.selectAll(".node").style("opacity", 1);
-      this.svg.selectAll(".links line").style("opacity", 0.6);
-      if (this.simulation) {
-        this.simulation.alpha(1).restart();
-      }
-    }
-  }
-  onClose() {
-    if (this.simulation) {
-      this.simulation.stop();
-    }
-    const { contentEl } = this;
-    contentEl.empty();
-  }
-};
-
-// src/graph/GraphDataExtractor.ts
-init_logging();
-var logger5 = getLogger("GraphDataExtractor");
-var GraphDataExtractor = class {
-  // 30 seconds
-  constructor(vault, metadataCache) {
-    this.cachedData = null;
-    this.lastCacheTime = 0;
-    this.CACHE_DURATION = 3e4;
-    this.vault = vault;
-    this.metadataCache = metadataCache;
-  }
-  /**
-   * Extract complete graph data from the vault
-   */
-  async extractGraphData(forceRefresh = false) {
-    const now3 = Date.now();
-    if (!forceRefresh && this.cachedData && now3 - this.lastCacheTime < this.CACHE_DURATION) {
-      logger5.debug("extraction", "Returning cached graph data");
-      return this.cachedData;
-    }
-    logger5.info("extraction", "Starting graph data extraction");
-    const startTime = logger5.time("graphExtraction");
-    try {
-      const nodes = await this.extractNodes();
-      const links = this.extractLinks(nodes);
-      const timeRange2 = this.calculateTimeRange(nodes);
-      this.cachedData = {
-        nodes,
-        links,
-        timeRange: timeRange2
-      };
-      this.lastCacheTime = now3;
-      startTime();
-      logger5.info("extraction", `Graph extraction completed: ${nodes.length} nodes, ${links.length} links`, {
-        nodeCount: nodes.length,
-        linkCount: links.length,
-        timeSpan: timeRange2.end.getTime() - timeRange2.start.getTime()
-      });
-      return this.cachedData;
-    } catch (error) {
-      startTime();
-      logger5.error("extraction", "Failed to extract graph data", error);
-      throw error;
-    }
-  }
-  /**
-   * Extract all files as nodes
-   */
-  async extractNodes() {
-    const files = this.vault.getFiles();
-    const nodes = [];
-    for (const file of files) {
-      try {
-        const node = await this.createNodeFromFile(file);
-        if (node) {
-          nodes.push(node);
-        }
-      } catch (error) {
-        logger5.warn("extraction", `Failed to process file: ${file.path}`, { path: file.path, error });
-      }
-    }
-    logger5.debug("extraction", `Extracted ${nodes.length} nodes from ${files.length} files`);
-    return nodes;
-  }
-  /**
-   * Create a node from a TFile
-   */
-  async createNodeFromFile(file) {
-    const metadata = this.metadataCache.getFileCache(file);
-    const stat = file.stat;
-    const node = {
-      id: file.path,
-      type: this.getFileType(file),
-      title: this.getDisplayTitle(file, metadata),
-      path: file.path,
-      creationDate: new Date(stat.ctime),
-      modificationDate: new Date(stat.mtime),
-      fileSize: stat.size,
-      connections: [],
-      metadata: await this.extractFileMetadata(file, metadata)
-    };
-    return node;
-  }
-  /**
-   * Determine file type based on extension
-   */
-  getFileType(file) {
-    const ext = file.extension.toLowerCase();
-    if (ext === "md")
-      return "note";
-    if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext))
-      return "image";
-    if (ext === "pdf")
-      return "pdf";
-    if (["mp3", "wav", "ogg", "flac", "m4a"].includes(ext))
-      return "audio";
-    if (["mp4", "avi", "mkv", "mov", "webm"].includes(ext))
-      return "video";
-    return "other";
-  }
-  /**
-   * Get display title for a file
-   */
-  getDisplayTitle(file, metadata) {
-    var _a;
-    if ((_a = metadata == null ? void 0 : metadata.frontmatter) == null ? void 0 : _a.title) {
-      return metadata.frontmatter.title;
-    }
-    return file.basename;
-  }
-  /**
-   * Extract additional metadata from file
-   */
-  async extractFileMetadata(file, metadata) {
-    const result = {};
-    if (metadata == null ? void 0 : metadata.tags) {
-      result.tags = metadata.tags.map((tag) => tag.tag);
-    }
-    if (file.extension.toLowerCase() in ["jpg", "jpeg", "png", "gif", "bmp", "webp"]) {
-      result.dimensions = { width: 0, height: 0 };
-      result.dominantColors = [];
-    }
-    return Object.keys(result).length > 0 ? result : void 0;
-  }
-  /**
-   * Extract links between nodes
-   */
-  extractLinks(nodes) {
-    const links = [];
-    const nodeMap = new Map(nodes.map((node) => [node.path, node]));
-    for (const node of nodes) {
-      if (node.type === "note") {
-        const file = this.vault.getAbstractFileByPath(node.path);
-        if (file) {
-          const metadata = this.metadataCache.getFileCache(file);
-          if (metadata == null ? void 0 : metadata.links) {
-            for (const link of metadata.links) {
-              const targetFile = this.vault.getAbstractFileByPath(link.link + ".md");
-              if (targetFile && nodeMap.has(targetFile.path)) {
-                links.push({
-                  source: node.id,
-                  target: targetFile.path,
-                  type: "reference",
-                  strength: 1
-                });
-              }
-            }
-          }
-          if (metadata == null ? void 0 : metadata.embeds) {
-            for (const embed of metadata.embeds) {
-              const targetFile = this.vault.getAbstractFileByPath(embed.link);
-              if (targetFile && nodeMap.has(targetFile.path)) {
-                links.push({
-                  source: node.id,
-                  target: targetFile.path,
-                  type: "attachment",
-                  strength: 0.8
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-    logger5.debug("extraction", `Extracted ${links.length} links`);
-    return links;
-  }
-  /**
-   * Calculate the time range of the graph
-   */
-  calculateTimeRange(nodes) {
-    if (nodes.length === 0) {
-      const now3 = new Date();
-      return { start: now3, end: now3 };
-    }
-    let earliest = nodes[0].creationDate;
-    let latest = nodes[0].creationDate;
-    for (const node of nodes) {
-      if (node.creationDate < earliest) {
-        earliest = node.creationDate;
-      }
-      if (node.creationDate > latest) {
-        latest = node.creationDate;
-      }
-    }
-    return { start: earliest, end: latest };
-  }
-  /**
-   * Clear cached data
-   */
-  clearCache() {
-    this.cachedData = null;
-    this.lastCacheTime = 0;
-    logger5.debug("extraction", "Graph data cache cleared");
-  }
-};
-
-// src/graph/GraphRenderer.ts
-init_logging();
-var logger6 = getLogger("GraphRenderer");
-var GraphRenderer = class {
-  constructor(container, config = {}) {
-    this.nodes = [];
-    this.links = [];
-    this.visibleNodes = /* @__PURE__ */ new Set();
-    this.visibleLinks = /* @__PURE__ */ new Set();
-    this.container = container;
-    this.config = {
-      width: 800,
-      height: 600,
-      nodeRadius: 8,
-      linkDistance: 50,
-      showLabels: false,
-      enableZoom: true,
-      ...config
-    };
-    this.forceConfig = {
-      centerStrength: 0.3,
-      linkStrength: 0.5,
-      chargeStrength: -150,
-      collisionRadius: 12
-    };
-    this.initializeSVG();
-    this.initializeSimulation();
-    logger6.debug("renderer", "GraphRenderer initialized", { config: this.config });
-  }
-  /**
-   * Initialize the SVG container and groups
-   */
-  initializeSVG() {
-    select_default2(this.container).selectAll("*").remove();
-    this.svg = select_default2(this.container).append("svg").attr("class", "sonigraph-temporal-svg").attr("width", this.config.width).attr("height", this.config.height);
-    this.g = this.svg.append("g");
-    this.g.append("g").attr("class", "sonigraph-temporal-links");
-    this.g.append("g").attr("class", "sonigraph-temporal-nodes");
-    if (this.config.enableZoom) {
-      this.zoom = zoom_default2().scaleExtent([0.1, 4]).on("zoom", (event) => {
-        this.g.attr("transform", event.transform);
-      });
-      this.svg.call(this.zoom);
-      this.svg.on("touchstart.zoom", null);
-      this.svg.on("touchmove.zoom", null);
-      this.svg.on("touchend.zoom", null);
-    }
-  }
-  /**
-   * Initialize the D3 force simulation
-   */
-  initializeSimulation() {
-    this.simulation = simulation_default().force(
-      "link",
-      link_default().id((d) => d.id).distance(this.config.linkDistance).strength(this.forceConfig.linkStrength)
-    ).force(
-      "charge",
-      manyBody_default().strength(this.forceConfig.chargeStrength)
-    ).force("center", center_default(
-      this.config.width / 2,
-      this.config.height / 2
-    ).strength(this.forceConfig.centerStrength)).force(
-      "collision",
-      collide_default().radius(this.forceConfig.collisionRadius)
-    ).on("tick", () => this.updatePositions()).on("end", () => this.onSimulationEnd());
-  }
-  /**
-   * Render the graph with given nodes and links
-   */
-  render(nodes, links) {
-    logger6.debug("renderer", `Rendering graph: ${nodes.length} nodes, ${links.length} links`);
-    this.nodes = nodes;
-    this.links = links;
-    this.visibleNodes = new Set(nodes.map((n) => n.id));
-    this.visibleLinks = new Set(links.map((l, i) => `${l.source}-${l.target}-${i}`));
-    this.updateSimulation();
-    this.renderLinks();
-    this.renderNodes();
-    this.setInitialView();
-  }
-  /**
-   * Update which nodes are visible (for temporal animation)
-   */
-  updateVisibleNodes(visibleNodeIds) {
-    this.visibleNodes = visibleNodeIds;
-    this.visibleLinks.clear();
-    this.links.forEach((link, i) => {
-      const sourceId = typeof link.source === "string" ? link.source : link.source.id;
-      const targetId = typeof link.target === "string" ? link.target : link.target.id;
-      if (this.visibleNodes.has(sourceId) && this.visibleNodes.has(targetId)) {
-        this.visibleLinks.add(`${sourceId}-${targetId}-${i}`);
-      }
-    });
-    this.updateNodeVisibility();
-    this.updateLinkVisibility();
-  }
-  /**
-   * Update the simulation with current data
-   */
-  updateSimulation() {
-    const visibleNodes = this.nodes.filter((n) => this.visibleNodes.has(n.id));
-    const visibleLinks = this.links.filter(
-      (l, i) => this.visibleLinks.has(`${typeof l.source === "string" ? l.source : l.source.id}-${typeof l.target === "string" ? l.target : l.target.id}-${i}`)
-    );
-    this.simulation.nodes(visibleNodes);
-    this.simulation.force("link").links(visibleLinks);
-    this.simulation.alpha(1).restart();
-  }
-  /**
-   * Render links
-   */
-  renderLinks() {
-    const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(this.links, (d, i) => `${typeof d.source === "string" ? d.source : d.source.id}-${typeof d.target === "string" ? d.target : d.target.id}-${i}`);
-    linkSelection.enter().append("line").attr("class", "appearing").style("opacity", 0).transition().duration(300).style("opacity", 1).on("end", function() {
-      select_default2(this).classed("appearing", false);
-    });
-    linkSelection.exit().transition().duration(200).style("opacity", 0).remove();
-    this.linkGroup = this.g.select(".sonigraph-temporal-links").selectAll("line");
-  }
-  /**
-   * Render nodes
-   */
-  renderNodes() {
-    const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(this.nodes, (d) => d.id);
-    const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
-    nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`);
-    const textElements = nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "").text((d) => d.title);
-    if (this.config.showLabels) {
-      textElements.style("display", "block").style("opacity", "1");
-    } else {
-      textElements.style("display", "none").style("opacity", "0");
-    }
-    logger6.debug("renderer", `Node labels created with showLabels: ${this.config.showLabels}`);
-    nodeEnter.transition().duration(500).style("opacity", 1).on("end", function() {
-      select_default2(this).classed("appearing", false);
-    });
-    nodeSelection.exit().transition().duration(300).style("opacity", 0).attr("transform", "scale(0.1)").remove();
-    this.nodeGroup = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
-  }
-  /**
-   * Setup node interactions (hover, click, etc.)
-   */
-  setupNodeInteractions(selection2) {
-    selection2.on("mouseover", (event, d) => {
-      this.highlightConnectedLinks(d.id, true);
-    }).on("mouseout", (event, d) => {
-      this.highlightConnectedLinks(d.id, false);
-    }).on("click", (event, d) => {
-      logger6.debug("renderer", `Node clicked: ${d.title}`, { node: d });
-    });
-  }
-  /**
-   * Highlight links connected to a node
-   */
-  highlightConnectedLinks(nodeId, highlight) {
-    this.linkGroup.classed("highlighted", function(d) {
-      const sourceId = typeof d.source === "string" ? d.source : d.source.id;
-      const targetId = typeof d.target === "string" ? d.target : d.target.id;
-      if (sourceId === nodeId || targetId === nodeId) {
-        return highlight;
-      }
-      return select_default2(this).classed("highlighted") && !highlight ? false : select_default2(this).classed("highlighted");
-    });
-  }
-  /**
-   * Update node visibility based on current visible set
-   */
-  updateNodeVisibility() {
-    this.nodeGroup.style("display", (d) => this.visibleNodes.has(d.id) ? "block" : "none");
-  }
-  /**
-   * Update link visibility based on current visible set
-   */
-  updateLinkVisibility() {
-    this.linkGroup.style("display", (d, i) => {
-      const sourceId = typeof d.source === "string" ? d.source : d.source.id;
-      const targetId = typeof d.target === "string" ? d.target : d.target.id;
-      const linkId = `${sourceId}-${targetId}-${i}`;
-      return this.visibleLinks.has(linkId) ? "block" : "none";
-    });
-  }
-  /**
-   * Update positions during simulation tick
-   */
-  updatePositions() {
-    this.linkGroup.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
-    this.nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
-  }
-  /**
-   * Update configuration
-   */
-  updateConfig(newConfig) {
-    this.config = { ...this.config, ...newConfig };
-    if (newConfig.showLabels !== void 0) {
-      logger6.debug("renderer", `Updating showLabels to: ${this.config.showLabels}`);
-      const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
-      logger6.debug("renderer", `Found ${nodeSelection.size()} nodes to update`);
-      if (!nodeSelection.empty()) {
-        const textSelection = nodeSelection.selectAll("text");
-        logger6.debug("renderer", `Found ${textSelection.size()} text elements to update`);
-        if (this.config.showLabels) {
-          textSelection.classed("labels-visible", true).style("display", "block").style("opacity", "1");
-        } else {
-          textSelection.classed("labels-visible", false).style("display", "none").style("opacity", "0");
-        }
-        logger6.debug("renderer", `Labels ${this.config.showLabels ? "shown" : "hidden"} via inline styles`);
-      }
-    }
-    if (newConfig.nodeRadius !== void 0) {
-      const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
-      if (!nodeSelection.empty()) {
-        nodeSelection.selectAll("circle").attr("r", this.config.nodeRadius);
-      }
-    }
-    logger6.debug("renderer", "Configuration updated", { config: this.config });
-  }
-  /**
-   * Update force configuration
-   */
-  updateForces(newForceConfig) {
-    this.forceConfig = { ...this.forceConfig, ...newForceConfig };
-    this.simulation.force("charge", manyBody_default().strength(this.forceConfig.chargeStrength)).force("collision", collide_default().radius(this.forceConfig.collisionRadius)).force("center", center_default(this.config.width / 2, this.config.height / 2).strength(this.forceConfig.centerStrength));
-    if (this.simulation.force("link")) {
-      this.simulation.force("link").strength(this.forceConfig.linkStrength);
-    }
-    this.simulation.alpha(0.3).restart();
-    logger6.debug("renderer", "Force configuration updated", { forceConfig: this.forceConfig });
-  }
-  /**
-   * Resize the renderer
-   */
-  resize(width, height) {
-    this.config.width = width;
-    this.config.height = height;
-    this.svg.attr("width", width).attr("height", height);
-    this.simulation.force("center", center_default(width / 2, height / 2).strength(this.forceConfig.centerStrength));
-    logger6.debug("renderer", `Renderer resized to ${width}x${height}`);
-  }
-  /**
-   * Get current zoom transform
-   */
-  getZoomTransform() {
-    return transform(this.svg.node());
-  }
-  /**
-   * Set zoom transform
-   */
-  setZoomTransform(transform2) {
-    this.svg.call(this.zoom.transform, transform2);
-  }
-  /**
-   * Set initial view for static preview
-   */
-  setInitialView() {
-    const initialScale = 0.6;
-    const initialTransform = identity2.translate(this.config.width * 0.2, this.config.height * 0.2).scale(initialScale);
-    if (this.config.enableZoom && this.zoom) {
-      this.svg.call(this.zoom.transform, initialTransform);
-    }
-    setTimeout(() => {
-      this.simulation.stop();
-      logger6.debug("renderer", "Simulation stopped for static preview");
-    }, 1500);
-    logger6.debug("renderer", "Initial view set for static preview");
-  }
-  /**
-   * Handle simulation end
-   */
-  onSimulationEnd() {
-    logger6.debug("renderer", "Force simulation ended");
-  }
-  /**
-   * Cleanup resources
-   */
-  destroy() {
-    this.simulation.stop();
-    select_default2(this.container).selectAll("*").remove();
-    logger6.debug("renderer", "GraphRenderer destroyed");
-  }
-};
-
-// src/ui/control-panel.ts
-var logger7 = getLogger("control-panel");
-var MaterialControlPanelModal = class extends import_obsidian4.Modal {
-  constructor(app, plugin) {
-    super(app);
-    this.statusInterval = null;
-    this.activeTab = "status";
-    this.instrumentToggles = /* @__PURE__ */ new Map();
-    // Phase 3: Progress indication elements
-    this.progressElement = null;
-    this.progressText = null;
-    this.progressBar = null;
-    // Sonic Graph components
-    this.graphRenderer = null;
-    this.showFileNames = false;
-    // Issue #006 Fix: Store bound event handlers for proper cleanup
-    this.boundEventHandlers = null;
-    this.plugin = plugin;
-    this.playButtonManager = new PlayButtonManager();
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    logger7.debug("ui", "Opening Sonigraph Control Center");
-    this.modalEl.addClass("osp-control-center-modal");
-    if (this.playButtonManager) {
-      this.playButtonManager.forceReset();
-      logger7.debug("ui", "Play button manager state reset on modal open");
-    }
-    this.createModalContainer();
-    this.startStatusUpdates();
-  }
-  onClose() {
-    logger7.debug("ui", "Closing Sonigraph Control Center");
-    this.stopStatusUpdates();
-    this.cleanupAudioEngineEventListeners();
-    if (this.playButtonManager) {
-      this.playButtonManager.dispose();
-    }
-    if (this.graphRenderer) {
-      this.graphRenderer.destroy();
-      this.graphRenderer = null;
-    }
-  }
-  /**
-   * Create contained modal structure with sticky header
-   */
-  createModalContainer() {
-    const { contentEl } = this;
-    const closeButton = contentEl.createDiv({ cls: "modal-close-button" });
-    closeButton.addEventListener("click", () => this.close());
-    const modalContainer = contentEl.createDiv({ cls: "osp-modal-container" });
-    this.createStickyHeader(modalContainer);
-    const mainContainer = modalContainer.createDiv({ cls: "osp-main-container" });
-    this.createNavigationDrawer(mainContainer);
-    this.contentContainer = mainContainer.createDiv({ cls: "osp-content-area" });
-    this.showTab(this.activeTab);
-  }
-  /**
-   * Create sticky header with title and action buttons
-   */
-  createStickyHeader(container) {
-    this.appBar = container.createDiv({ cls: "osp-sticky-header" });
-    const titleSection = this.appBar.createDiv({ cls: "osp-header-title" });
-    const titleIcon = createLucideIcon("music", 20);
-    titleSection.appendChild(titleIcon);
-    titleSection.appendText("Sonigraph Control Center");
-    const actionsSection = this.appBar.createDiv({ cls: "osp-header-actions" });
-    this.createHeaderActions(actionsSection);
-  }
-  /**
-   * Create compact header action buttons
-   */
-  createHeaderActions(container) {
-    const volumeContainer = container.createDiv({ cls: "osp-header-volume" });
-    const volumeIcon = createLucideIcon("volume-2", 14);
-    volumeContainer.appendChild(volumeIcon);
-    const volumeSlider = new MaterialSlider({
-      value: this.plugin.settings.volume || 0.5,
-      min: 0,
-      max: 1,
-      step: 0.1,
-      unit: "",
-      className: "osp-header-slider",
-      onChange: (value) => this.handleMasterVolumeChange(value)
-    });
-    volumeContainer.appendChild(volumeSlider.getElement());
-    const playBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--primary" });
-    this.playButton = playBtn;
-    this.playButtonManager.initialize(playBtn);
-    this.playButtonManager.onStateChange((state) => {
-      logger7.debug("ui", `Play button state changed: ${state}`);
-    });
-    this.setupAudioEngineEventListeners();
-    playBtn.addEventListener("click", () => this.handlePlay());
-    const stopBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--secondary" });
-    const stopIcon = createLucideIcon("square", 16);
-    stopBtn.appendChild(stopIcon);
-    stopBtn.appendText("Stop");
-    stopBtn.addEventListener("click", () => this.handleStop());
-    const pauseBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--secondary" });
-    const pauseIcon = createLucideIcon("pause", 16);
-    pauseBtn.appendChild(pauseIcon);
-    pauseBtn.appendText("Pause");
-    pauseBtn.addEventListener("click", () => this.handlePause());
-    const demoBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--accent" });
-    const demoIcon = createLucideIcon("activity", 16);
-    demoBtn.appendChild(demoIcon);
-    demoBtn.appendText("Demo");
-    demoBtn.addEventListener("click", () => this.handleDemo());
-  }
-  /**
-   * Create navigation drawer
-   */
-  createNavigationDrawer(container) {
-    this.drawer = container.createDiv({ cls: "osp-drawer" });
-    const header = this.drawer.createDiv({ cls: "osp-drawer__header" });
-    const headerTitle = header.createDiv({ cls: "osp-drawer__title" });
-    headerTitle.textContent = "Navigation";
-    const content = this.drawer.createDiv({ cls: "osp-drawer__content" });
-    this.createNavigationList(content);
-  }
-  /**
-   * Create navigation list with family-based tabs
-   */
-  createNavigationList(container) {
-    const list = container.createEl("ul", { cls: "osp-nav-list" });
-    TAB_CONFIGS.forEach((tabConfig, index2) => {
-      const listItem = list.createEl("li", {
-        cls: `osp-nav-item ${tabConfig.id === this.activeTab ? "osp-nav-item--active" : ""}`
-      });
-      listItem.setAttribute("data-tab", tabConfig.id);
-      const graphic = listItem.createDiv({ cls: "osp-nav-item__icon" });
-      setLucideIcon(graphic, tabConfig.icon, 20);
-      const text = listItem.createDiv({ cls: "osp-nav-item__text" });
-      text.textContent = tabConfig.name;
-      if (!["status", "musical", "master"].includes(tabConfig.id)) {
-        const meta = listItem.createDiv({ cls: "osp-nav-item__meta" });
-        const enabledCount = this.getEnabledCount(tabConfig.id);
-        const totalCount = this.getTotalCount(tabConfig.id);
-        meta.textContent = `${enabledCount}/${totalCount}`;
-      }
-      if (tabConfig.id === "master") {
-        const divider = container.createDiv({ cls: "osp-nav-divider" });
-      }
-      listItem.addEventListener("click", () => {
-        this.switchTab(tabConfig.id);
-      });
-    });
-  }
-  /**
-   * Update navigation counts without rebuilding the entire drawer
-   */
-  updateNavigationCounts() {
-    this.drawer.querySelectorAll(".osp-nav-item").forEach((item) => {
-      const tabId = item.getAttribute("data-tab");
-      if (tabId) {
-        const tabConfig = TAB_CONFIGS.find((config) => config.id === tabId);
-        if (tabConfig && !["status", "musical", "master"].includes(tabId)) {
-          const metaElement = item.querySelector(".osp-nav-item__meta");
-          if (metaElement) {
-            const enabledCount = this.getEnabledCount(tabId);
-            const totalCount = this.getTotalCount(tabId);
-            metaElement.textContent = `${enabledCount}/${totalCount}`;
-          }
-        }
-      }
-    });
-  }
-  /**
-   * Switch to a different tab
-   */
-  switchTab(tabId) {
-    this.drawer.querySelectorAll(".osp-nav-item").forEach((item) => {
-      item.classList.remove("osp-nav-item--active");
-    });
-    const activeItem = this.drawer.querySelector(`[data-tab="${tabId}"]`);
-    if (activeItem) {
-      activeItem.classList.add("osp-nav-item--active");
-    }
-    this.activeTab = tabId;
-    this.showTab(tabId);
-  }
-  /**
-   * Show content for the specified tab
-   */
-  showTab(tabId) {
-    this.contentContainer.empty();
-    switch (tabId) {
-      case "status":
-        this.createStatusTab();
-        break;
-      case "musical":
-        this.createMusicalTab();
-        break;
-      case "master":
-        this.createMasterTab();
-        break;
-      case "sonic-graph":
-        this.createSonicGraphTab();
-        break;
-      case "keyboard":
-      case "strings":
-      case "woodwinds":
-      case "brass":
-      case "percussion":
-      case "electronic":
-      case "experimental":
-        this.createFamilyTab(tabId);
-        break;
-      default:
-        this.createPlaceholderTab(tabId);
-    }
-  }
-  /**
-   * Create Status tab content
-   */
-  createStatusTab() {
-    this.createActiveInstrumentsCard();
-    this.createPerformanceMetricsCard();
-    this.createGlobalSettingsCard();
-    this.createLoggingCard();
-  }
-  createActiveInstrumentsCard() {
-    const card = new MaterialCard({
-      title: "Active instruments",
-      iconName: "music",
-      subtitle: "Currently enabled instruments and their status",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const enabledInstruments = this.getEnabledInstrumentsList();
-    if (enabledInstruments.length === 0) {
-      content.createDiv({
-        text: "No instruments currently enabled",
-        cls: "osp-status-empty"
-      });
-    } else {
-      enabledInstruments.forEach((instrument) => {
-        const instrumentRow = content.createDiv({ cls: "osp-instrument-status-row" });
-        const icon = createLucideIcon("music", 16);
-        instrumentRow.appendChild(icon);
-        const name = instrumentRow.createSpan({ cls: "osp-instrument-name" });
-        name.textContent = this.capitalizeWords(instrument.name);
-        const status = instrumentRow.createSpan({ cls: "osp-instrument-voices" });
-        status.textContent = `${instrument.activeVoices}/${instrument.maxVoices} voices`;
-      });
-    }
-    this.contentContainer.appendChild(card.getElement());
-  }
-  createPerformanceMetricsCard() {
-    const card = new MaterialCard({
-      title: "Performance metrics",
-      iconName: "zap",
-      subtitle: "Real-time system performance metrics",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const status = this.plugin.getStatus();
-    const statsRow = content.createDiv({ cls: "osp-stats-row" });
-    const cpuStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-    cpuStat.innerHTML = `
-			<span class="osp-stat-value">12%</span>
-			<span class="osp-stat-label">CPU</span>
-		`;
-    const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-    voicesStat.innerHTML = `
-			<span class="osp-stat-value">${status.audio.currentNotes || 0}</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
-    const contextStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-    const contextValue = status.audio.audioContext || "Suspended";
-    const contextColor = contextValue === "running" ? "var(--text-success)" : "var(--text-warning)";
-    contextStat.innerHTML = `
-			<span class="osp-stat-value" style="color: ${contextColor}">${contextValue}</span>
-			<span class="osp-stat-label">Context</span>
-		`;
-    this.contentContainer.appendChild(card.getElement());
-  }
-  getEnabledInstrumentsList() {
-    const enabled = [];
-    Object.entries(this.plugin.settings.instruments).forEach(([key, settings]) => {
-      if (settings.enabled) {
-        enabled.push({
-          name: key,
-          activeVoices: this.getInstrumentActiveVoices(key),
-          maxVoices: settings.maxVoices
-        });
-      }
-    });
-    return enabled;
-  }
-  /**
-   * Create Musical tab content
-   */
-  createMusicalTab() {
-    this.createScaleKeyCard();
-    this.createTempoTimingCard();
-    this.createMasterTuningCard();
-  }
-  /**
-   * Create Sonic Graph tab content
-   */
-  createSonicGraphTab() {
-    this.createGraphPreviewCard();
-    this.createSonicGraphControlsCard();
-  }
-  createScaleKeyCard() {
-    const card = new MaterialCard({
-      title: "Scale & key",
-      iconName: "music",
-      subtitle: "Musical scale and key signature settings",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const settingsGrid = createGrid("2-col");
-    const scaleGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
-    scaleGroup.createEl("label", { text: "Musical scale", cls: "osp-control-label" });
-    const scaleSelect = scaleGroup.createEl("select", { cls: "osp-select" });
-    ["Major", "Minor", "Dorian", "Mixolydian", "Pentatonic"].forEach((scale) => {
-      const option = scaleSelect.createEl("option", { value: scale.toLowerCase(), text: scale });
-      if (scale === "Major")
-        option.selected = true;
-    });
-    const keyGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
-    keyGroup.createEl("label", { text: "Key signature", cls: "osp-control-label" });
-    const keySelect = keyGroup.createEl("select", { cls: "osp-select" });
-    ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].forEach((key) => {
-      const option = keySelect.createEl("option", { value: key, text: key });
-      if (key === "C")
-        option.selected = true;
-    });
-    content.appendChild(settingsGrid);
-    this.contentContainer.appendChild(card.getElement());
-  }
-  createTempoTimingCard() {
-    const card = new MaterialCard({
-      title: "Tempo & timing",
-      iconName: "clock",
-      subtitle: "Playback speed and timing controls",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const tempoGroup = content.createDiv({ cls: "osp-control-group" });
-    tempoGroup.createEl("label", { text: "Tempo (BPM)", cls: "osp-control-label" });
-    const tempoSlider = new MaterialSlider({
-      value: 120,
-      min: 60,
-      max: 200,
-      step: 5,
-      unit: " BPM",
-      onChange: (value) => this.handleTempoChange(value)
-    });
-    tempoGroup.appendChild(tempoSlider.getElement());
-    const durationGroup = content.createDiv({ cls: "osp-control-group" });
-    durationGroup.createEl("label", { text: "Note duration", cls: "osp-control-label" });
-    const durationSlider = new MaterialSlider({
-      value: 0.5,
-      min: 0.1,
-      max: 2,
-      step: 0.1,
-      unit: "s",
-      onChange: (value) => this.handleNoteDurationChange(value)
-    });
-    durationGroup.appendChild(durationSlider.getElement());
-    this.contentContainer.appendChild(card.getElement());
-  }
-  createMasterTuningCard() {
-    var _a;
-    const card = new MaterialCard({
-      title: "Master tuning",
-      iconName: "settings",
-      subtitle: "Global tuning and harmonic settings",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const tuningGroup = content.createDiv({ cls: "osp-control-group" });
-    tuningGroup.createEl("label", { text: "Concert pitch (A4)", cls: "osp-control-label" });
-    const tuningSlider = new MaterialSlider({
-      value: 440,
-      min: 415,
-      max: 466,
-      step: 1,
-      unit: " Hz",
-      displayValue: "440 Hz",
-      onChange: (value) => this.handleTuningChange(value)
-    });
-    tuningGroup.appendChild(tuningSlider.getElement());
-    const microtuningGroup = content.createDiv({ cls: "control-group control-group--toggle" });
-    const microtuningLabel = microtuningGroup.createEl("label", { cls: "control-label" });
-    microtuningLabel.textContent = "Enable microtuning";
-    const controlWrapper = microtuningGroup.createDiv({ cls: "control-wrapper" });
-    const switchContainer = controlWrapper.createDiv({ cls: "ospcc-switch" });
-    switchContainer.setAttribute("title", "Toggle microtuning precision on/off");
-    const microtuningToggle = switchContainer.createEl("input", {
-      type: "checkbox",
-      cls: "ospcc-switch__input"
-    });
-    microtuningToggle.checked = (_a = this.plugin.settings.microtuning) != null ? _a : false;
-    microtuningToggle.addEventListener("change", () => {
-      logger7.debug("ui", "Microtuning toggle changed", { enabled: microtuningToggle.checked });
-      this.handleMicrotuningChange(microtuningToggle.checked);
-    });
-    const track = switchContainer.createDiv({ cls: "ospcc-switch__track" });
-    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
-    switchContainer.addEventListener("click", (e) => {
-      if (e.target !== microtuningToggle) {
-        e.preventDefault();
-        microtuningToggle.checked = !microtuningToggle.checked;
-        microtuningToggle.dispatchEvent(new Event("change"));
-      }
-    });
-    this.contentContainer.appendChild(card.getElement());
-  }
-  // Musical parameter handlers
-  handleTempoChange(tempo) {
-    logger7.info("musical", `Tempo changed to ${tempo} BPM`);
-  }
-  handleNoteDurationChange(duration) {
-    logger7.info("musical", `Note duration changed to ${duration}s`);
-  }
-  handleTuningChange(frequency) {
-    logger7.info("musical", `Concert pitch changed to ${frequency} Hz`);
-  }
-  handleMicrotuningChange(enabled) {
-    logger7.info("musical", `Microtuning ${enabled ? "enabled" : "disabled"}`);
-    this.plugin.settings.microtuning = enabled;
-    this.plugin.saveSettings();
-  }
-  handleMasterEffectEnabledChange(effectName, enabled) {
-    logger7.info("effects", `Master effect ${effectName} ${enabled ? "enabled" : "disabled"}`);
-    if (!this.plugin.settings.effects) {
-      this.plugin.settings.effects = {};
-    }
-    if (!this.plugin.settings.effects[effectName]) {
-      this.plugin.settings.effects[effectName] = { enabled: false };
-    }
-    this.plugin.settings.effects[effectName].enabled = enabled;
-    this.plugin.saveSettings();
-  }
-  handleMasterEffectChange(effectName, paramName, value) {
-    logger7.debug("effects", `Master effect ${effectName} ${paramName} changed to ${value}`);
-    if (!this.plugin.settings.effects) {
-      this.plugin.settings.effects = {};
-    }
-    if (!this.plugin.settings.effects[effectName]) {
-      this.plugin.settings.effects[effectName] = { enabled: false };
-    }
-    this.plugin.settings.effects[effectName][paramName] = value;
-    this.plugin.saveSettings();
-  }
-  // Global high quality samples setting removed - now using per-instrument control
-  createGlobalSettingsCard() {
-    const globalCard = new MaterialCard({
-      title: "Global settings",
-      iconName: "settings",
-      subtitle: "System configuration and bulk operations",
-      elevation: 1
-    });
-    const globalContent = globalCard.getContent();
-    const globalChipSet = globalContent.createDiv({ cls: "ospcc-chip-set" });
-    const enableAllChip = new ActionChip({
-      text: "Enable All Instruments",
-      iconName: "checkCircle",
-      onToggle: (selected) => this.handleGlobalAction("enableAll", selected)
-    });
-    const resetAllChip = new ActionChip({
-      text: "Reset All Settings",
-      iconName: "reset",
-      onToggle: (selected) => this.handleGlobalAction("resetAll", selected)
-    });
-    globalChipSet.appendChild(enableAllChip.getElement());
-    globalChipSet.appendChild(resetAllChip.getElement());
-    this.contentContainer.appendChild(globalCard.getElement());
-  }
-  createLoggingCard() {
-    const loggingCard = new MaterialCard({
-      title: "Logging",
-      iconName: "file-text",
-      subtitle: "Debug logging level and log export",
-      elevation: 1
-    });
-    const loggingContent = loggingCard.getContent();
-    const logLevelGroup = loggingContent.createDiv({ cls: "osp-control-group" });
-    logLevelGroup.createEl("label", { text: "Logging level", cls: "osp-control-label" });
-    const logLevelSelect = logLevelGroup.createEl("select", { cls: "osp-select" });
-    const logLevelOptions = [
-      { value: "off", text: "Off" },
-      { value: "error", text: "Errors only" },
-      { value: "warn", text: "Warnings" },
-      { value: "info", text: "Info" },
-      { value: "debug", text: "Debug" }
-    ];
-    logLevelOptions.forEach((option) => {
-      const optionEl = logLevelSelect.createEl("option", { value: option.value, text: option.text });
-      if (option.value === LoggerFactory.getLogLevel())
-        optionEl.selected = true;
-    });
-    logLevelSelect.addEventListener("change", async () => {
-      const newLevel = logLevelSelect.value;
-      LoggerFactory.setLogLevel(newLevel);
-      await this.plugin.updateSettings({ logLevel: newLevel });
-      logger7.info("settings-change", "Log level changed from Control Center", {
-        level: newLevel,
-        persisted: true
-      });
-    });
-    const logChipSet = loggingContent.createDiv({ cls: "ospcc-chip-set" });
-    logChipSet.style.marginTop = "var(--md-space-4)";
-    const exportLogsChip = new ActionChip({
-      text: "Export logs",
-      iconName: "download",
-      onToggle: (selected) => this.handleExportLogs(selected)
-    });
-    logChipSet.appendChild(exportLogsChip.getElement());
-    this.contentContainer.appendChild(loggingCard.getElement());
-  }
-  /**
-   * Create Master tab content
-   */
-  createMasterTab() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
-    const masterEffectsCard = new MaterialCard({
-      title: "Master effects",
-      iconName: "equalizer",
-      subtitle: "Global orchestral processing",
-      elevation: 1
-    });
-    const masterContent = masterEffectsCard.getContent();
-    const effects = this.plugin.settings.effects || {};
-    this.createHorizontalEffectSection(
-      masterContent,
-      "Orchestral reverb hall",
-      "reverb",
-      (_b = (_a = effects.orchestralreverbhall) == null ? void 0 : _a.enabled) != null ? _b : true,
-      [
-        { name: "Hall size", value: (_d = (_c = effects.orchestralreverbhall) == null ? void 0 : _c.hallsize) != null ? _d : 0.8, min: 0, max: 1, step: 0.1, unit: "" },
-        { name: "Decay time", value: (_f = (_e = effects.orchestralreverbhall) == null ? void 0 : _e.decaytime) != null ? _f : 3.5, min: 0.5, max: 10, step: 0.1, unit: "s" }
-      ]
-    );
-    this.createHorizontalEffectSection(
-      masterContent,
-      "3-band EQ",
-      "equalizer",
-      (_h = (_g = effects["3bandeq"]) == null ? void 0 : _g.enabled) != null ? _h : true,
-      [
-        { name: "Bass boost", value: (_j = (_i = effects["3bandeq"]) == null ? void 0 : _i.bassboost) != null ? _j : 0, min: -12, max: 12, step: 1, unit: "dB" },
-        { name: "Treble boost", value: (_l = (_k = effects["3bandeq"]) == null ? void 0 : _k.trebleboost) != null ? _l : 0, min: -12, max: 12, step: 1, unit: "dB" }
-      ]
-    );
-    this.createHorizontalEffectSection(
-      masterContent,
-      "Dynamic compressor",
-      "compressor",
-      (_n = (_m = effects.dynamiccompressor) == null ? void 0 : _m.enabled) != null ? _n : false,
-      [
-        { name: "Threshold", value: (_p = (_o = effects.dynamiccompressor) == null ? void 0 : _o.threshold) != null ? _p : -20, min: -40, max: 0, step: 1, unit: "dB" },
-        { name: "Ratio", value: (_r = (_q = effects.dynamiccompressor) == null ? void 0 : _q.ratio) != null ? _r : 4, min: 1, max: 20, step: 1, unit: ":1" }
-      ]
-    );
-    const performanceCard = new MaterialCard({
-      title: "Performance optimization",
-      iconName: "zap",
-      subtitle: "CPU monitoring and adaptive quality control",
-      elevation: 1
-    });
-    const perfContent = performanceCard.getContent();
-    const perfStatsRow = perfContent.createDiv({ cls: "osp-stats-row" });
-    const cpuStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
-    cpuStat.innerHTML = `
-			<span class="osp-stat-value">23%</span>
-			<span class="osp-stat-label">CPU usage</span>
-		`;
-    const voicesStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
-    voicesStat.innerHTML = `
-			<span class="osp-stat-value">47/128</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
-    const qualityStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
-    qualityStat.innerHTML = `
-			<span class="osp-stat-value" style="color: var(--color-green)">High</span>
-			<span class="osp-stat-label">Audio quality</span>
-		`;
-    this.contentContainer.appendChild(masterEffectsCard.getElement());
-    this.contentContainer.appendChild(performanceCard.getElement());
-  }
-  /**
-   * Create horizontal effect section for Master Effects
-   */
-  createHorizontalEffectSection(container, effectName, iconName, enabled, parameters) {
-    const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
-    const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
-    const titleArea = header.createDiv({ cls: "osp-effect-title-area" });
-    const icon = createLucideIcon(iconName, 16);
-    titleArea.appendChild(icon);
-    titleArea.appendText(effectName);
-    const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
-    toggleContainer.setAttribute("title", `Toggle ${effectName} on/off`);
-    const toggleInput = toggleContainer.createEl("input", {
-      type: "checkbox",
-      cls: "ospcc-switch__input"
-    });
-    toggleInput.checked = enabled;
-    toggleInput.addEventListener("change", () => {
-      logger7.debug("ui", "Master effect toggle changed", { effectName, enabled: toggleInput.checked });
-      this.handleMasterEffectEnabledChange(effectName.toLowerCase().replace(/\s+/g, ""), toggleInput.checked);
-    });
-    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
-    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
-    toggleContainer.addEventListener("click", (e) => {
-      if (e.target !== toggleInput) {
-        e.preventDefault();
-        toggleInput.checked = !toggleInput.checked;
-        toggleInput.dispatchEvent(new Event("change"));
-      }
-    });
-    const paramsContainer = section.createDiv({ cls: "osp-effect-params-horizontal" });
-    parameters.forEach((param) => {
-      const paramGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
-      const label = paramGroup.createDiv({ cls: "osp-param-label" });
-      label.textContent = param.name;
-      const sliderContainer = paramGroup.createDiv({ cls: "osp-param-slider" });
-      const slider = new MaterialSlider({
-        value: param.value,
-        min: param.min,
-        max: param.max,
-        step: param.step,
-        unit: param.unit,
-        onChange: (value) => this.handleMasterEffectChange(effectName.toLowerCase().replace(/\s+/g, ""), param.name.toLowerCase().replace(/\s+/g, ""), value)
-      });
-      sliderContainer.appendChild(slider.getElement());
-    });
-  }
-  /**
-   * Create Graph Preview Card for Sonic Graph tab
-   */
-  createGraphPreviewCard() {
-    const card = new MaterialCard({
-      title: "Knowledge graph preview",
-      iconName: "globe",
-      subtitle: "Static view of your vault structure and connections",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const graphContainer = content.createDiv({
-      cls: "osp-graph-preview-container",
-      attr: { style: "height: 300px; border: 1px solid var(--background-modifier-border); border-radius: 4px; background: var(--background-primary-alt);" }
-    });
-    const loadingDiv = graphContainer.createDiv({
-      cls: "osp-graph-loading",
-      text: "Loading graph preview...",
-      attr: { style: "display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);" }
-    });
-    this.initializeGraphPreview(graphContainer, loadingDiv);
-    this.contentContainer.appendChild(card.getElement());
-  }
-  /**
-   * Create Sonic Graph Controls Card
-   */
-  createSonicGraphControlsCard() {
-    const card = new MaterialCard({
-      title: "Sonic graph controls",
-      iconName: "play-circle",
-      subtitle: "Launch temporal animation with audio",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const description = content.createDiv({ cls: "osp-control-description" });
-    description.innerHTML = `
-			<p>Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.</p>
-		`;
-    const settingsSection = content.createDiv({ cls: "osp-settings-section" });
-    settingsSection.style.marginBottom = "var(--md-space-4)";
-    logger7.debug("ui", `Creating show file names toggle with initial state: ${this.showFileNames}`);
-    createObsidianToggle(
-      settingsSection,
-      this.showFileNames,
-      // Use current state
-      (enabled) => this.handleShowFileNamesToggle(enabled),
-      {
-        name: "Show file names",
-        description: "Display file names as labels on graph nodes"
-      }
-    );
-    logger7.debug("ui", "Show file names toggle created");
-    const launchButton = new MaterialButton({
-      text: "Launch Sonic Graph",
-      iconName: "external-link",
-      variant: "filled",
-      onClick: () => this.launchSonicGraphModal()
-    });
-    const buttonContainer = content.createDiv({ cls: "osp-button-container" });
-    buttonContainer.appendChild(launchButton.getElement());
-    const statsContainer = content.createDiv({ cls: "osp-stats-row" });
-    const filesStat = statsContainer.createDiv({ cls: "osp-stat-compact" });
-    filesStat.innerHTML = `
-			<span class="osp-stat-value">\u2014</span>
-			<span class="osp-stat-label">Files</span>
-		`;
-    const linksStat = statsContainer.createDiv({ cls: "osp-stat-compact" });
-    linksStat.innerHTML = `
-			<span class="osp-stat-value">\u2014</span>
-			<span class="osp-stat-label">Links</span>
-		`;
-    this.updateSonicGraphStats(filesStat, linksStat);
-    this.contentContainer.appendChild(card.getElement());
-  }
-  /**
-   * Initialize graph preview visualization
-   */
-  async initializeGraphPreview(container, loadingDiv) {
-    try {
-      const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
-      const graphData = await extractor.extractGraphData();
-      loadingDiv.remove();
-      this.graphRenderer = new GraphRenderer(container, {
-        width: container.clientWidth,
-        height: 300,
-        enableZoom: true,
-        // Enable zoom for interactive preview
-        showLabels: this.showFileNames
-        // Use stored toggle state
-      });
-      this.graphRenderer.render(graphData.nodes, graphData.links);
-      logger7.debug("ui", `Graph renderer initialized with showLabels: ${this.showFileNames}`);
-    } catch (error) {
-      logger7.error("ui", "Failed to initialize graph preview:", error);
-      loadingDiv.textContent = "Failed to load graph preview";
-    }
-  }
-  /**
-   * Update stats for Sonic Graph controls
-   */
-  async updateSonicGraphStats(filesEl, linksEl) {
-    try {
-      const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache);
-      const graphData = await extractor.extractGraphData();
-      const filesValue = filesEl.querySelector(".osp-stat-value");
-      const linksValue = linksEl.querySelector(".osp-stat-value");
-      if (filesValue)
-        filesValue.textContent = graphData.nodes.length.toString();
-      if (linksValue)
-        linksValue.textContent = graphData.links.length.toString();
-    } catch (error) {
-      logger7.error("ui", "Failed to update Sonic Graph stats:", error);
-    }
-  }
-  /**
-   * Launch the full Sonic Graph modal
-   */
-  launchSonicGraphModal() {
-    this.close();
-    new import_obsidian4.Notice("Sonic Graph modal coming soon!");
-    logger7.info("ui", "Sonic Graph modal launched");
-  }
-  /**
-   * Handle show file names toggle
-   */
-  handleShowFileNamesToggle(enabled) {
-    this.showFileNames = enabled;
-    logger7.debug("ui", `Show file names toggled: ${enabled}, renderer exists: ${!!this.graphRenderer}`);
-    new import_obsidian4.Notice(`File names ${enabled ? "shown" : "hidden"}`);
-    if (this.graphRenderer) {
-      this.graphRenderer.updateConfig({ showLabels: enabled });
-      logger7.debug("ui", `Graph file names visibility updated: ${enabled}`);
-    } else {
-      logger7.debug("ui", "Graph renderer not yet initialized, will apply setting when created");
-    }
-  }
-  /**
-   * Create family tab content (Strings, Woodwinds, etc.)
-   */
-  createFamilyTab(familyId) {
-    const tabConfig = TAB_CONFIGS.find((tab) => tab.id === familyId);
-    if (!tabConfig)
-      return;
-    this.createFamilyOverviewCard(familyId, tabConfig);
-    this.createInstrumentsCard(familyId, tabConfig);
-    if (familyId === "experimental") {
-      this.createWhaleIntegrationCard();
-    }
-    this.createFamilyEffectsCard(familyId, tabConfig);
-  }
-  /**
-   * Create family overview card with stats and bulk actions
-   */
-  createFamilyOverviewCard(familyId, tabConfig) {
-    const card = new MaterialCard({
-      title: `${tabConfig.name} family overview`,
-      iconName: getFamilyIcon(familyId),
-      subtitle: `${this.getEnabledCount(familyId)} of ${this.getTotalCount(familyId)} instruments enabled`,
-      elevation: 1
-    });
-    const content = card.getContent();
-    const statsRow = content.createDiv({ cls: "osp-stats-row" });
-    const enabledStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-    enabledStat.innerHTML = `
-			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}</span>
-			<span class="osp-stat-label">Enabled</span>
-		`;
-    const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-    voicesStat.innerHTML = `
-			<span class="osp-stat-value">${this.getActiveVoices(familyId)}</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
-    const avgVolumeStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-    avgVolumeStat.innerHTML = `
-			<span class="osp-stat-value">0.7</span>
-			<span class="osp-stat-label">Avg Vol</span>
-		`;
-    const actionsRow = content.createDiv({ cls: "osp-actions-row" });
-    const enableAllBtn = actionsRow.createEl("button", {
-      cls: "osp-action-btn osp-action-btn--primary",
-      text: "Enable All"
-    });
-    enableAllBtn.addEventListener("click", () => this.handleBulkAction(familyId, "enableAll", true));
-    const disableAllBtn = actionsRow.createEl("button", {
-      cls: "osp-action-btn osp-action-btn--secondary",
-      text: "Disable All"
-    });
-    disableAllBtn.addEventListener("click", () => this.handleBulkAction(familyId, "disableAll", true));
-    const resetBtn = actionsRow.createEl("button", {
-      cls: "osp-action-btn osp-action-btn--secondary",
-      text: "Reset"
-    });
-    resetBtn.addEventListener("click", () => this.handleBulkAction(familyId, "resetVolumes", true));
-    this.contentContainer.appendChild(card.getElement());
-  }
-  /**
-   * Create instruments card for family
-   */
-  createInstrumentsCard(familyId, tabConfig) {
-    const card = new MaterialCard({
-      title: "Individual instruments",
-      iconName: "list",
-      subtitle: "Configure instrument-specific settings",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const instruments = this.getInstrumentsForFamily(familyId);
-    instruments.forEach((instrument) => {
-      var _a;
-      const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrument];
-      this.createHorizontalInstrumentSection(content, instrument, {
-        enabled: (settings == null ? void 0 : settings.enabled) || false,
-        volume: (settings == null ? void 0 : settings.volume) || 0.7,
-        maxVoices: (settings == null ? void 0 : settings.maxVoices) || 4,
-        activeVoices: this.getInstrumentActiveVoices(instrument)
-      });
-    });
-    this.contentContainer.appendChild(card.getElement());
-  }
-  /**
-   * Create whale integration card for experimental family
-   */
-  createWhaleIntegrationCard() {
-    const card = new MaterialCard({
-      title: "Whale sound integration",
-      iconName: "waves",
-      subtitle: "High-quality external whale samples from marine research institutions",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const whaleIntegration2 = this.getWhaleIntegrationStatus();
-    createObsidianToggle(
-      content,
-      whaleIntegration2.enabled,
-      (enabled) => this.handleWhaleIntegrationToggle(enabled),
-      {
-        name: "Use external whale samples",
-        description: "Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions"
-      }
-    );
-    const statusSection = content.createDiv({ cls: "osp-whale-status" });
-    statusSection.style.marginTop = "var(--md-space-4)";
-    const collectionRow = statusSection.createDiv({ cls: "osp-info-row" });
-    collectionRow.createSpan({ text: "Sample collection:", cls: "osp-info-label" });
-    const collectionStatus = collectionRow.createSpan({
-      text: whaleIntegration2.collectionStatus,
-      cls: "osp-info-value"
-    });
-    const speciesRow = statusSection.createDiv({ cls: "osp-info-row" });
-    speciesRow.createSpan({ text: "Available species:", cls: "osp-info-label" });
-    speciesRow.createSpan({
-      text: whaleIntegration2.availableSpecies.join(", "),
-      cls: "osp-info-value"
-    });
-    const sourcesRow = statusSection.createDiv({ cls: "osp-info-row" });
-    sourcesRow.createSpan({ text: "Sources:", cls: "osp-info-label" });
-    sourcesRow.createSpan({
-      text: whaleIntegration2.sources.join(", "),
-      cls: "osp-info-value"
-    });
-    const actionsRow = content.createDiv({ cls: "osp-actions-row" });
-    actionsRow.style.marginTop = "var(--md-space-4)";
-    const previewBtn = actionsRow.createEl("button", {
-      cls: "osp-action-btn osp-action-btn--primary",
-      text: "Preview sample"
-    });
-    previewBtn.addEventListener("click", () => this.handleWhalePreview());
-    const attributionBtn = actionsRow.createEl("button", {
-      cls: "osp-action-btn osp-action-btn--secondary",
-      text: "Attribution info"
-    });
-    attributionBtn.addEventListener("click", () => this.handleWhaleAttribution());
-    const discoveryBtn = actionsRow.createEl("button", {
-      cls: "osp-action-btn osp-action-btn--secondary",
-      text: "Find new samples"
-    });
-    discoveryBtn.disabled = true;
-    discoveryBtn.title = "Manual sample discovery coming in Phase 2";
-    this.contentContainer.appendChild(card.getElement());
-  }
-  /**
-   * Create family effects card
-   */
-  createFamilyEffectsCard(familyId, tabConfig) {
-    const card = new MaterialCard({
-      title: `${tabConfig.name} effects`,
-      iconName: "sliders-horizontal",
-      subtitle: "Family-wide effect processing",
-      elevation: 1
-    });
-    const content = card.getContent();
-    const effectsGrid = createGrid("3-col");
-    const reverbSection = new EffectSection({
-      effectName: "Reverb",
-      iconName: "reverb",
-      enabled: this.getFamilyEffectState(familyId, "reverb"),
-      parameters: [
-        {
-          name: "Decay Time",
-          value: 2.5,
-          min: 0.1,
-          max: 10,
-          step: 0.1,
-          unit: "s",
-          onChange: (value) => this.handleEffectParameterChange(familyId, "reverb", "decay", value)
-        },
-        {
-          name: "Wet Level",
-          value: 0.3,
-          min: 0,
-          max: 1,
-          step: 0.1,
-          unit: "",
-          onChange: (value) => this.handleEffectParameterChange(familyId, "reverb", "wet", value)
-        }
-      ],
-      onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, "reverb", enabled)
-    });
-    const chorusSection = new EffectSection({
-      effectName: "Chorus",
-      iconName: "chorus",
-      enabled: this.getFamilyEffectState(familyId, "chorus"),
-      parameters: [
-        {
-          name: "Rate",
-          value: 1.5,
-          min: 0.1,
-          max: 10,
-          step: 0.1,
-          unit: "Hz",
-          onChange: (value) => this.handleEffectParameterChange(familyId, "chorus", "frequency", value)
-        },
-        {
-          name: "Depth",
-          value: 0.4,
-          min: 0,
-          max: 1,
-          step: 0.1,
-          unit: "",
-          onChange: (value) => this.handleEffectParameterChange(familyId, "chorus", "depth", value)
-        }
-      ],
-      onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, "chorus", enabled)
-    });
-    const filterSection = new EffectSection({
-      effectName: "Filter",
-      iconName: "filter",
-      enabled: false,
-      parameters: [
-        {
-          name: "Frequency",
-          value: 800,
-          min: 20,
-          max: 2e4,
-          step: 10,
-          unit: "Hz",
-          onChange: (value) => this.handleEffectParameterChange(familyId, "filter", "frequency", value)
-        },
-        {
-          name: "Resonance",
-          value: 1,
-          min: 0.1,
-          max: 30,
-          step: 0.1,
-          unit: "",
-          onChange: (value) => this.handleEffectParameterChange(familyId, "filter", "Q", value)
-        }
-      ],
-      onEnabledChange: (enabled) => this.handleEffectEnabledChange(familyId, "filter", enabled)
-    });
-    effectsGrid.appendChild(reverbSection.getElement());
-    effectsGrid.appendChild(chorusSection.getElement());
-    effectsGrid.appendChild(filterSection.getElement());
-    content.appendChild(effectsGrid);
-    this.contentContainer.appendChild(card.getElement());
-  }
-  /**
-   * Create placeholder tab for future implementation
-   */
-  createPlaceholderTab(tabId) {
-    const tabConfig = TAB_CONFIGS.find((tab) => tab.id === tabId);
-    const card = this.createCard(
-      (tabConfig == null ? void 0 : tabConfig.name) || "Tab",
-      (tabConfig == null ? void 0 : tabConfig.icon) || "settings",
-      "This tab is under development"
-    );
-    const content = card.querySelector(".ospcc-card__content");
-    content.textContent = `${(tabConfig == null ? void 0 : tabConfig.name) || "This"} tab functionality will be implemented soon...`;
-    this.contentContainer.appendChild(card);
-  }
-  /**
-   * Utility method to create basic cards for simple tabs
-   */
-  createCard(title, iconName, subtitle) {
-    const card = new MaterialCard({
-      title,
-      iconName,
-      subtitle,
-      elevation: 1
-    });
-    return card.getElement();
-  }
-  // Utility methods
-  getEnabledCount(familyId) {
-    const instruments = this.getInstrumentsForFamily(familyId);
-    const enabledInstruments = instruments.filter((inst) => {
-      var _a;
-      const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[inst];
-      const isEnabled = settings == null ? void 0 : settings.enabled;
-      if (familyId === "strings" || familyId === "woodwinds") {
-        logger7.debug("ui", "Checking family instrument enabled state", {
-          familyId,
-          instrument: inst,
-          hasSettings: !!settings,
-          isEnabled,
-          action: "count-enabled-instruments"
-        });
-      }
-      return isEnabled;
-    });
-    if (familyId === "strings" || familyId === "woodwinds") {
-      logger7.debug("ui", "Family enabled count result", {
-        familyId,
-        totalInstruments: instruments.length,
-        enabledCount: enabledInstruments.length,
-        instruments,
-        enabledInstruments,
-        action: "family-enabled-count"
-      });
-    }
-    return enabledInstruments.length;
-  }
-  /**
-   * Get total count of instruments available in a family
-   * @param familyId - The family identifier
-   * @returns Total number of instruments in the family
-   */
-  getTotalCount(familyId) {
-    const instruments = this.getInstrumentsForFamily(familyId);
-    return instruments.length;
-  }
-  getActiveVoices(familyId) {
-    const instruments = this.getInstrumentsForFamily(familyId);
-    let totalVoices = 0;
-    instruments.forEach((instrument) => {
-      var _a;
-      const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrument];
-      if (settings == null ? void 0 : settings.enabled) {
-        totalVoices += settings.maxVoices || 0;
-      }
-    });
-    return totalVoices;
-  }
-  getInstrumentsForFamily(familyId) {
-    const allInstruments = Object.keys(this.plugin.settings.instruments);
-    logger7.debug("ui", "All available instruments in settings", {
-      allInstruments,
-      totalCount: allInstruments.length,
-      action: "get-family-instruments"
-    });
-    const familyMap = {
-      // Based on actual instruments defined in DEFAULT_SETTINGS
-      strings: ["strings", "violin", "cello", "contrabass", "guitar", "guitarElectric", "guitarNylon", "bassElectric", "harp"],
-      woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
-      brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
-      percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
-      electronic: ["leadSynth", "bassSynth", "arpSynth"],
-      // All electronic instruments
-      experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"],
-      // Additional families for other instruments
-      keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"]
-    };
-    const familyInstruments = familyMap[familyId] || [];
-    const validInstruments = familyInstruments.filter(
-      (inst) => allInstruments.includes(inst)
-    );
-    const invalidInstruments = familyInstruments.filter(
-      (inst) => !allInstruments.includes(inst)
-    );
-    if (invalidInstruments.length > 0) {
-      logger7.warn("ui", "Family mapping includes non-existent instruments", {
-        familyId,
-        invalidInstruments,
-        validInstruments,
-        allAvailableInstruments: allInstruments,
-        action: "validate-family-mapping"
-      });
-    }
-    logger7.debug("ui", "Family instrument mapping", {
-      familyId,
-      requestedInstruments: familyInstruments,
-      validInstruments,
-      invalidInstruments,
-      validCount: validInstruments.length,
-      invalidCount: invalidInstruments.length,
-      action: "family-mapping-result"
-    });
-    return validInstruments;
-  }
-  // Event handlers
-  handlePause() {
-    logger7.info("ui", "Pause clicked");
-    this.playButtonManager.setState("paused");
-    this.plugin.stopPlayback();
-  }
-  async handleResume() {
-    logger7.info("ui", "Resume clicked");
-    this.playButtonManager.setState("loading", "starting");
-    try {
-      await this.plugin.playSequence();
-    } catch (error) {
-      logger7.error("ui", "Failed to resume sequence", error);
-      this.playButtonManager.setState("idle");
-    }
-  }
-  handleStop() {
-    logger7.info("ui", "Stop clicked");
-    this.playButtonManager.setState("stopping");
-    this.plugin.stopPlayback();
-  }
-  handleDemo() {
-    logger7.debug("ui", "Demo button clicked");
-    const demoModal = new GraphDemoModal(this.app);
-    demoModal.open();
-  }
-  async handlePlay() {
-    logger7.info("ui", "Play clicked");
-    const currentState = this.playButtonManager.getCurrentState();
-    if (currentState === "playing") {
-      this.handlePause();
-      return;
-    } else if (currentState === "paused") {
-      this.handleResume();
-      return;
-    } else if (currentState === "loading" || currentState === "stopping") {
-      return;
-    }
-    this.playButtonManager.setState("loading", "analyzing");
-    try {
-      this.playButtonManager.setLoadingSubstate("analyzing");
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      this.playButtonManager.setLoadingSubstate("generating");
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      this.playButtonManager.setLoadingSubstate("initializing");
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      this.playButtonManager.setLoadingSubstate("starting");
-      await this.plugin.playSequence();
-    } catch (error) {
-      logger7.error("ui", "Failed to play sequence", error);
-      this.playButtonManager.setState("idle");
-    }
-  }
-  handleMasterVolumeChange(volume) {
-    logger7.info("ui", `Master volume changed to ${volume}`);
-    this.plugin.settings.volume = volume;
-    this.plugin.saveSettings();
-  }
-  /**
-   * Enhanced Play Button: Audio Engine Event Integration
-   */
-  setupAudioEngineEventListeners() {
-    if (!this.plugin.audioEngine) {
-      logger7.warn("ui", "Cannot setup audio event listeners: AudioEngine not available");
-      return;
-    }
-    if (this.boundEventHandlers) {
-      logger7.debug("ui", "Audio engine event listeners already configured, skipping setup");
-      return;
-    }
-    this.boundEventHandlers = {
-      handlePlaybackStarted: this.handlePlaybackStarted.bind(this),
-      handlePlaybackEnded: this.handlePlaybackEnded.bind(this),
-      handlePlaybackStopped: this.handlePlaybackStopped.bind(this),
-      handlePlaybackError: this.handlePlaybackError.bind(this),
-      handleSequenceProgress: this.handleSequenceProgress.bind(this)
-    };
-    this.plugin.audioEngine.on("playback-started", this.boundEventHandlers.handlePlaybackStarted);
-    this.plugin.audioEngine.on("playback-ended", this.boundEventHandlers.handlePlaybackEnded);
-    this.plugin.audioEngine.on("playback-stopped", this.boundEventHandlers.handlePlaybackStopped);
-    this.plugin.audioEngine.on("playback-error", this.boundEventHandlers.handlePlaybackError);
-    this.plugin.audioEngine.on("sequence-progress", this.boundEventHandlers.handleSequenceProgress);
-    logger7.debug("ui", "Audio engine event listeners configured with bound handlers");
-  }
-  cleanupAudioEngineEventListeners() {
-    if (!this.plugin.audioEngine || !this.boundEventHandlers) {
-      return;
-    }
-    this.plugin.audioEngine.off("playback-started", this.boundEventHandlers.handlePlaybackStarted);
-    this.plugin.audioEngine.off("playback-ended", this.boundEventHandlers.handlePlaybackEnded);
-    this.plugin.audioEngine.off("playback-stopped", this.boundEventHandlers.handlePlaybackStopped);
-    this.plugin.audioEngine.off("playback-error", this.boundEventHandlers.handlePlaybackError);
-    this.plugin.audioEngine.off("sequence-progress", this.boundEventHandlers.handleSequenceProgress);
-    this.boundEventHandlers = null;
-    logger7.debug("ui", "Audio engine event listeners cleaned up (specific handlers only)");
-  }
-  handlePlaybackStarted() {
-    logger7.debug("ui", "Audio engine playback started - switching to playing state");
-    this.playButtonManager.setState("playing");
-    this.showProgressIndication();
-  }
-  handlePlaybackEnded() {
-    logger7.debug("ui", "Audio engine playback ended - switching to idle state");
-    this.playButtonManager.setState("idle");
-    this.hideProgressIndication();
-  }
-  handlePlaybackStopped() {
-    logger7.debug("ui", "Audio engine playback stopped - switching to idle state");
-    this.playButtonManager.setState("idle");
-    this.hideProgressIndication();
-  }
-  handlePlaybackError(data) {
-    var _a;
-    const errorData = data;
-    logger7.error("ui", "Audio engine playback error", {
-      error: (_a = errorData == null ? void 0 : errorData.error) == null ? void 0 : _a.message,
-      context: errorData == null ? void 0 : errorData.context
-    });
-    this.playButtonManager.setState("idle");
-    this.hideProgressIndication();
-  }
-  handleSequenceProgress(data) {
-    const progressData = data;
-    if (progressData) {
-      logger7.debug("ui", "Sequence progress update", {
-        percent: progressData.percentComplete.toFixed(1),
-        currentNote: progressData.currentIndex,
-        totalNotes: progressData.totalNotes
-      });
-      this.updateProgressIndication(progressData);
-    }
-  }
-  startStatusUpdates() {
-  }
-  stopStatusUpdates() {
-    if (this.statusInterval) {
-      clearInterval(this.statusInterval);
-      this.statusInterval = null;
-    }
-  }
-  /**
-   * Phase 3: Progress indication methods
-   */
-  showProgressIndication() {
-    if (!this.playButton)
-      return;
-    if (!this.progressElement) {
-      this.progressElement = this.playButton.createDiv({ cls: "osp-play-progress" });
-      this.progressBar = this.progressElement.createDiv({ cls: "osp-progress-bar" });
-      this.progressBar.createDiv({ cls: "osp-progress-fill" });
-      this.progressText = this.progressElement.createDiv({
-        cls: "osp-progress-text",
-        text: "Starting..."
-      });
-    }
-    this.progressElement.addClass("osp-progress--visible");
-    logger7.debug("ui", "Progress indication shown");
-  }
-  hideProgressIndication() {
-    if (this.progressElement) {
-      this.progressElement.removeClass("osp-progress--visible");
-      setTimeout(() => {
-        if (this.progressElement && this.progressElement.parentNode) {
-          this.progressElement.remove();
-          this.progressElement = null;
-          this.progressBar = null;
-          this.progressText = null;
-        }
-      }, 300);
-    }
-    logger7.debug("ui", "Progress indication hidden");
-  }
-  updateProgressIndication(progressData) {
-    if (!this.progressElement || !this.progressBar || !this.progressText)
-      return;
-    const progressFill = this.progressBar.querySelector(".osp-progress-fill");
-    if (progressFill) {
-      progressFill.style.width = `${Math.min(progressData.percentComplete, 100)}%`;
-    }
-    const currentMinutes = Math.floor(progressData.elapsedTime / 6e4);
-    const currentSeconds = Math.floor(progressData.elapsedTime % 6e4 / 1e3);
-    const totalMinutes = Math.floor(progressData.estimatedTotalTime / 6e4);
-    const totalSeconds = Math.floor(progressData.estimatedTotalTime % 6e4 / 1e3);
-    const timeString = `${currentMinutes}:${currentSeconds.toString().padStart(2, "0")} / ${totalMinutes}:${totalSeconds.toString().padStart(2, "0")}`;
-    this.progressText.textContent = `Playing: ${progressData.currentIndex}/${progressData.totalNotes} notes (${timeString})`;
-    if (progressData.percentComplete > 90) {
-      this.progressElement.addClass("osp-progress--finishing");
-    } else {
-      this.progressElement.removeClass("osp-progress--finishing");
-    }
-  }
-  // Event handlers for component interactions
-  handleBulkAction(familyId, action, selected) {
-    logger7.info("ui", `Bulk action: ${action} for ${familyId}`, { selected });
-    const instruments = this.getInstrumentsForFamily(familyId);
-    switch (action) {
-      case "enableAll":
-        if (selected) {
-          logger7.debug("ui", "Enabling all instruments in family", {
-            familyId,
-            instruments,
-            action: "enable-all-start",
-            instrumentCount: instruments.length
-          });
-          instruments.forEach((instrument) => {
-            const instrumentKey = instrument;
-            if (this.plugin.settings.instruments[instrumentKey]) {
-              this.plugin.settings.instruments[instrumentKey].enabled = true;
-            }
-          });
-          if (this.plugin.audioEngine) {
-            this.plugin.audioEngine.updateSettings(this.plugin.settings);
-            logger7.debug("ui", "Audio engine settings updated after bulk enable", {
-              familyId,
-              action: "bulk-enable-audio-update"
-            });
-          }
-        }
-        break;
-      case "disableAll":
-        if (selected) {
-          logger7.debug("ui", "Disabling all instruments in family", {
-            familyId,
-            instruments,
-            action: "disable-all-start",
-            instrumentCount: instruments.length
-          });
-          instruments.forEach((instrument) => {
-            const instrumentKey = instrument;
-            const settings = this.plugin.settings.instruments[instrumentKey];
-            if (settings) {
-              logger7.debug("ui", "Disabling instrument", {
-                instrument,
-                wasEnabled: settings.enabled,
-                action: "disable-instrument"
-              });
-              const wasEnabled = settings.enabled;
-              settings.enabled = false;
-              if (instrument === "piano") {
-                logger7.info("ui", "Piano specifically disabled", {
-                  instrument: "piano",
-                  wasEnabled,
-                  nowEnabled: settings.enabled,
-                  action: "disable-piano-specifically"
-                });
-              }
-              if (settings.effects) {
-                settings.effects.reverb.enabled = false;
-                settings.effects.chorus.enabled = false;
-                settings.effects.filter.enabled = false;
-              }
-            } else {
-              logger7.warn("ui", "Instrument not found in settings", {
-                instrument,
-                availableInstruments: Object.keys(this.plugin.settings.instruments),
-                action: "disable-all-missing-instrument",
-                familyId
-              });
-            }
-          });
-          logger7.debug("ui", "After disable all, checking remaining enabled instruments", { familyId });
-          const allInstrumentKeys = Object.keys(this.plugin.settings.instruments);
-          const stillEnabled = allInstrumentKeys.filter((key) => {
-            const settings = this.plugin.settings.instruments[key];
-            return settings == null ? void 0 : settings.enabled;
-          });
-          logger7.debug("ui", "Instruments still enabled after disable all", {
-            familyId,
-            stillEnabledInstruments: stillEnabled,
-            totalEnabledCount: stillEnabled.length,
-            action: "disable-all-complete"
-          });
-          if (this.plugin.audioEngine) {
-            this.plugin.audioEngine.updateSettings(this.plugin.settings);
-            logger7.debug("ui", "Audio engine settings updated after bulk disable", {
-              familyId,
-              action: "bulk-disable-audio-update"
-            });
-          }
-        }
-        break;
-      case "resetVolumes":
-        if (selected) {
-          instruments.forEach((instrument) => {
-            const instrumentKey = instrument;
-            if (this.plugin.settings.instruments[instrumentKey]) {
-              this.plugin.settings.instruments[instrumentKey].volume = 0.7;
-            }
-          });
-        }
-        break;
-      case "defaultEffects":
-        if (selected) {
-        }
-        break;
-    }
-    this.plugin.saveSettings();
-    this.updateNavigationCounts();
-    this.showTab(familyId);
-  }
-  handleInstrumentEnabledChange(instrument, enabled) {
-    logger7.info("ui", `Instrument ${instrument} enabled changed`, { enabled });
-    const instrumentKey = instrument;
-    if (this.plugin.settings.instruments[instrumentKey]) {
-      this.plugin.settings.instruments[instrumentKey].enabled = enabled;
-      this.plugin.saveSettings();
-    }
-    this.updateNavigationCounts();
-    if (this.plugin.audioEngine) {
-      this.plugin.audioEngine.updateSettings(this.plugin.settings);
-      logger7.debug("ui", "Audio engine settings updated after instrument enable/disable", {
-        instrument,
-        enabled
-      });
-    }
-  }
-  handleInstrumentVolumeChange(instrument, volume) {
-    logger7.debug("ui", `Instrument ${instrument} volume changed`, { volume });
-    const instrumentKey = instrument;
-    if (this.plugin.settings.instruments[instrumentKey]) {
-      this.plugin.settings.instruments[instrumentKey].volume = volume;
-      this.plugin.saveSettings();
-    }
-    if (this.plugin.audioEngine) {
-    }
-  }
-  handleInstrumentMaxVoicesChange(instrument, maxVoices) {
-    logger7.debug("ui", `Instrument ${instrument} max voices changed`, { maxVoices });
-    const instrumentKey = instrument;
-    if (this.plugin.settings.instruments[instrumentKey]) {
-      this.plugin.settings.instruments[instrumentKey].maxVoices = maxVoices;
-      this.plugin.saveSettings();
-    }
-  }
-  handleEffectEnabledChange(familyId, effectType, enabled) {
-    logger7.info("ui", `Effect ${effectType} for ${familyId} enabled changed`, { enabled });
-    const instruments = this.getInstrumentsForFamily(familyId);
-    instruments.forEach((instrument) => {
-      const instrumentKey = instrument;
-      const settings = this.plugin.settings.instruments[instrumentKey];
-      if (settings && settings.effects) {
-        if (!settings.effects[effectType]) {
-          settings.effects[effectType] = {
-            enabled,
-            params: this.getDefaultEffectParams(effectType)
-          };
-        } else {
-          settings.effects[effectType].enabled = enabled;
-        }
-      }
-    });
-    this.plugin.saveSettings();
-  }
-  handleEffectParameterChange(familyId, effectType, parameter, value) {
-    logger7.debug("ui", `Effect ${effectType} parameter ${parameter} changed for ${familyId}`, { value });
-    const instruments = this.getInstrumentsForFamily(familyId);
-    instruments.forEach((instrument) => {
-      const instrumentKey = instrument;
-      const settings = this.plugin.settings.instruments[instrumentKey];
-      if (settings && settings.effects) {
-        if (!settings.effects[effectType]) {
-          settings.effects[effectType] = {
-            enabled: true,
-            params: this.getDefaultEffectParams(effectType)
-          };
-        }
-        settings.effects[effectType].params[parameter] = value;
-      }
-    });
-    this.plugin.saveSettings();
-  }
-  getDefaultEffectParams(effectType) {
-    switch (effectType) {
-      case "reverb":
-        return { decay: 2, preDelay: 0.1, wet: 0.3 };
-      case "chorus":
-        return { frequency: 1, depth: 0.3, delayTime: 0.02, feedback: 0.1 };
-      case "filter":
-        return { frequency: 1e3, Q: 1, type: "lowpass" };
-      default:
-        return {};
-    }
-  }
-  getInstrumentActiveVoices(instrument) {
-    var _a;
-    const settings = (_a = this.plugin.settings.instruments) == null ? void 0 : _a[instrument];
-    if (settings == null ? void 0 : settings.enabled) {
-      return Math.floor(Math.random() * (settings.maxVoices || 4));
-    }
-    return 0;
-  }
-  /**
-   * Create horizontal instrument section similar to effect sections
-   */
-  createHorizontalInstrumentSection(container, instrumentName, options) {
-    var _a, _b, _c, _d, _e, _f, _g;
-    const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
-    const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
-    const title = header.createDiv({ cls: "osp-effect-title-area" });
-    const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
-    title.appendChild(icon);
-    const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
-    const titleWithStatus = this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo);
-    title.innerHTML += titleWithStatus;
-    const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
-    toggleContainer.setAttribute("data-tooltip", `Toggle ${instrumentInfo.name} on/off`);
-    toggleContainer.setAttribute("title", `Toggle ${instrumentInfo.name} on/off`);
-    const toggleInput = toggleContainer.createEl("input", {
-      type: "checkbox",
-      cls: "ospcc-switch__input"
-    });
-    const canToggle = !this.instrumentRequiresHighQuality(instrumentName) || this.checkIfSampleDownloaded(instrumentName);
-    const isEnabled = options.enabled && canToggle;
-    toggleInput.checked = isEnabled;
-    if (!canToggle) {
-      toggleInput.disabled = true;
-      toggleContainer.classList.add("ospcc-switch--unavailable");
-      toggleContainer.style.cursor = "not-allowed";
-      toggleContainer.setAttribute("data-tooltip", `${instrumentInfo.name} samples not yet downloaded`);
-      toggleContainer.setAttribute("title", `${instrumentInfo.name} samples not yet downloaded`);
-    }
-    toggleInput.addEventListener("change", () => {
-      if (canToggle) {
-        logger7.debug("ui", "Instrument toggle changed", { instrumentName, enabled: toggleInput.checked });
-        this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
-      }
-    });
-    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
-    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
-    if (canToggle) {
-      toggleContainer.addEventListener("click", (e) => {
-        if (e.target !== toggleInput) {
-          e.preventDefault();
-          toggleInput.checked = !toggleInput.checked;
-          toggleInput.dispatchEvent(new Event("change"));
-        }
-      });
-    }
-    const paramsContainer = section.createDiv({ cls: "osp-effect-params-horizontal" });
-    const volumeGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
-    const volumeLabel = volumeGroup.createDiv({ cls: "osp-param-label" });
-    volumeLabel.textContent = "Volume";
-    const volumeSliderContainer = volumeGroup.createDiv({ cls: "osp-param-slider" });
-    const volumeSlider = new MaterialSlider({
-      value: options.volume,
-      min: 0,
-      max: 1,
-      step: 0.1,
-      unit: "",
-      onChange: (value) => this.handleInstrumentVolumeChange(instrumentName, value)
-    });
-    volumeSliderContainer.appendChild(volumeSlider.getElement());
-    const voicesGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
-    const voicesLabel = voicesGroup.createDiv({ cls: "osp-param-label" });
-    voicesLabel.textContent = "Max voices";
-    const voicesSliderContainer = voicesGroup.createDiv({ cls: "osp-param-slider" });
-    const voicesSlider = new MaterialSlider({
-      value: options.maxVoices,
-      min: 1,
-      max: 8,
-      step: 1,
-      unit: "",
-      onChange: (value) => this.handleInstrumentMaxVoicesChange(instrumentName, Math.round(value))
-    });
-    voicesSliderContainer.appendChild(voicesSlider.getElement());
-    const effectsGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal osp-effects-toggles" });
-    const effectsLabel = effectsGroup.createDiv({ cls: "osp-param-label" });
-    effectsLabel.textContent = "Effects";
-    const effectsContainer = effectsGroup.createDiv({ cls: "osp-effects-container" });
-    const instrumentSettings = this.plugin.settings.instruments[instrumentName];
-    this.createEffectToggle(effectsContainer, "Reverb", "reverb", instrumentName, ((_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.enabled) || false);
-    this.createEffectToggle(effectsContainer, "Chorus", "chorus", instrumentName, ((_d = (_c = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _c.chorus) == null ? void 0 : _d.enabled) || false);
-    this.createEffectToggle(effectsContainer, "Filter", "filter", instrumentName, ((_f = (_e = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _e.filter) == null ? void 0 : _f.enabled) || false);
-    if (this.instrumentSupportsQualityChoice(instrumentName)) {
-      const qualityGroup = paramsContainer.createDiv({ cls: "osp-param-group-horizontal" });
-      const qualityLabel = qualityGroup.createDiv({ cls: "osp-param-label" });
-      qualityLabel.textContent = "Quality";
-      const qualityContainer = qualityGroup.createDiv({ cls: "setting-item" });
-      const qualitySelect = qualityContainer.createEl("select", { cls: "dropdown" });
-      qualitySelect.createEl("option", {
-        value: "synthesis",
-        text: "Use synthesis"
-      });
-      qualitySelect.createEl("option", {
-        value: "recording",
-        text: "Use recording"
-      });
-      const currentSettings = this.plugin.settings.instruments[instrumentName];
-      const usesHighQuality = (_g = currentSettings.useHighQuality) != null ? _g : false;
-      qualitySelect.value = usesHighQuality ? "recording" : "synthesis";
-      qualitySelect.addEventListener("change", async () => {
-        const useRecording = qualitySelect.value === "recording";
-        if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
-          const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
-          if (!isDownloaded) {
-            new import_obsidian4.Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
-            qualitySelect.value = "synthesis";
-            return;
-          }
-        }
-        this.plugin.settings.instruments[instrumentName].useHighQuality = useRecording;
-        await this.plugin.saveSettings();
-        const modeText = useRecording ? "recording" : "synthesis";
-        new import_obsidian4.Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
-      });
-      if (this.instrumentRequiresHighQuality(instrumentName)) {
-        const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
-        if (!isDownloaded) {
-          const recordingOption = qualitySelect.querySelector('option[value="recording"]');
-          if (recordingOption) {
-            recordingOption.disabled = true;
-            recordingOption.text = "Use recording (not downloaded)";
-          }
-        }
-      }
-    }
-  }
-  /**
-   * Create individual effect toggle for instruments
-   */
-  createEffectToggle(container, effectName, effectKey, instrumentName, enabled) {
-    const toggleGroup = container.createDiv({ cls: "osp-effect-toggle-group" });
-    const label = toggleGroup.createDiv({ cls: "osp-effect-toggle-label" });
-    label.textContent = effectName;
-    const toggleContainer = toggleGroup.createDiv({ cls: "ospcc-switch osp-effect-toggle" });
-    const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
-    toggleContainer.setAttribute("data-tooltip", `Toggle ${effectName} for ${instrumentInfo.name}`);
-    toggleContainer.setAttribute("title", `Toggle ${effectName} for ${instrumentInfo.name}`);
-    const toggleInput = toggleContainer.createEl("input", {
-      type: "checkbox",
-      cls: "ospcc-switch__input"
-    });
-    toggleInput.checked = enabled;
-    toggleInput.addEventListener("change", (e) => {
-      this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
-    });
-    const track = toggleContainer.createDiv({ cls: "ospcc-switch__track" });
-    const thumb = track.createDiv({ cls: "ospcc-switch__thumb" });
-    toggleContainer.addEventListener("click", (e) => {
-      if (e.target !== toggleInput) {
-        e.preventDefault();
-        toggleInput.checked = !toggleInput.checked;
-        toggleInput.dispatchEvent(new Event("change"));
-      }
-    });
-  }
-  /**
-   * Handle individual instrument effect toggle changes
-   */
-  handleInstrumentEffectChange(instrumentName, effectKey, enabled) {
-    logger7.info("ui", `Instrument ${instrumentName} effect ${effectKey} changed`, { enabled });
-    const instrumentKey = instrumentName;
-    const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
-    if (instrumentSettings && instrumentSettings.effects) {
-      switch (effectKey) {
-        case "reverb":
-          instrumentSettings.effects.reverb.enabled = enabled;
-          break;
-        case "chorus":
-          instrumentSettings.effects.chorus.enabled = enabled;
-          break;
-        case "filter":
-          instrumentSettings.effects.filter.enabled = enabled;
-          break;
-      }
-      this.plugin.saveSettings();
-      if (this.plugin.audioEngine) {
-        logger7.debug("ui", `Audio engine would update ${effectKey} for ${instrumentName}`, { enabled });
-      }
-    } else {
-      logger7.warn("ui", `Could not find settings for instrument ${instrumentName}`);
-    }
-  }
-  /**
-   * Get the family-wide effect state based on instrument effect states
-   * Returns true if any instrument in the family has the effect enabled
-   */
-  getFamilyEffectState(familyId, effectType) {
-    const instruments = this.getInstrumentsForFamily(familyId);
-    return instruments.some((instrument) => {
-      var _a, _b, _c;
-      const instrumentKey = instrument;
-      const settings = this.plugin.settings.instruments[instrumentKey];
-      if (settings && settings.effects) {
-        switch (effectType) {
-          case "reverb":
-            return ((_a = settings.effects.reverb) == null ? void 0 : _a.enabled) || false;
-          case "chorus":
-            return ((_b = settings.effects.chorus) == null ? void 0 : _b.enabled) || false;
-          case "filter":
-            return ((_c = settings.effects.filter) == null ? void 0 : _c.enabled) || false;
-          default:
-            return false;
-        }
-      }
-      return false;
-    });
-  }
-  capitalizeWords(str) {
-    return str.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()).trim();
-  }
-  instrumentRequiresHighQuality(instrumentKey) {
-    const highQualityInstruments = ["whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
-    return highQualityInstruments.includes(instrumentKey);
-  }
-  instrumentIsSynthesisOnly(instrumentKey) {
-    const synthesisOnlyInstruments = ["strings", "electricPiano", "harpsichord", "accordion", "celesta", "timpani", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth"];
-    return synthesisOnlyInstruments.includes(instrumentKey);
-  }
-  instrumentSupportsQualityChoice(instrumentKey) {
-    const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
-    if (!instrumentSettings || !("useHighQuality" in instrumentSettings)) {
-      return false;
-    }
-    if (this.instrumentIsSynthesisOnly(instrumentKey)) {
-      return false;
-    }
-    const requiresHighQuality = this.instrumentRequiresHighQuality(instrumentKey);
-    return !requiresHighQuality;
-  }
-  createInstrumentTitleWithStatus(instrumentKey, instrumentInfo) {
-    let titleText = `${instrumentInfo.icon} ${instrumentInfo.name}`;
-    if (this.instrumentRequiresHighQuality(instrumentKey)) {
-      const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
-      const statusText = isDownloaded ? "(downloaded)" : "(not downloaded)";
-      titleText += ` <em>${statusText}</em>`;
-    }
-    return titleText;
-  }
-  checkIfSampleDownloaded(instrumentKey) {
-    try {
-      const whaleIntegration2 = this.plugin.whaleIntegration;
-      if (!whaleIntegration2 || !whaleIntegration2.whaleManager) {
-        return false;
-      }
-      const speciesMap = {
-        "whaleBlue": "blue",
-        "whaleOrca": "orca",
-        "whaleGray": "gray",
-        "whaleSperm": "sperm",
-        "whaleMinke": "minke",
-        "whaleFin": "fin",
-        "whaleRight": "right",
-        "whaleSei": "sei",
-        "whalePilot": "pilot"
-      };
-      const species = speciesMap[instrumentKey];
-      if (!species)
-        return false;
-      const cacheStatus = whaleIntegration2.whaleManager.getCacheStatus();
-      return (cacheStatus.cacheBySpecies[species] || 0) > 0;
-    } catch (error) {
-      return false;
-    }
-  }
-  handleGlobalAction(action, selected) {
-    logger7.info("ui", `Global action: ${action}`, { selected });
-    switch (action) {
-      case "enableAll":
-        if (selected) {
-          Object.keys(this.plugin.settings.instruments).forEach((instrumentKey) => {
-            const key = instrumentKey;
-            this.plugin.settings.instruments[key].enabled = true;
-          });
-        }
-        break;
-      case "resetAll":
-        if (selected) {
-        }
-        break;
-    }
-    if (selected) {
-      this.plugin.saveSettings();
-      this.showTab(this.activeTab);
-    }
-  }
-  handleExportLogs(selected) {
-    if (selected) {
-      logger7.info("ui", "Exporting logs from Control Center");
-      const now3 = new Date();
-      const pad = (n) => n.toString().padStart(2, "0");
-      const filename = `osp-logs-${now3.getFullYear()}${pad(now3.getMonth() + 1)}${pad(now3.getDate())}-${pad(now3.getHours())}${pad(now3.getMinutes())}${pad(now3.getSeconds())}.json`;
-      const logs = LoggerFactory.getLogs();
-      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a2 = document.createElement("a");
-      a2.href = url;
-      a2.download = filename;
-      document.body.appendChild(a2);
-      a2.click();
-      document.body.removeChild(a2);
-      URL.revokeObjectURL(url);
-      logger7.info("export", "Logs exported from Control Center", { filename });
-    }
-  }
-  /**
-   * Get whale integration status for UI display
-   */
-  getWhaleIntegrationStatus() {
-    var _a;
-    const isHighQuality = false;
-    const isWhaleEnabled = (_a = this.plugin.settings.instruments.whaleHumpback) == null ? void 0 : _a.enabled;
-    const whaleIntegrationEnabled = isHighQuality && isWhaleEnabled;
-    return {
-      enabled: whaleIntegrationEnabled || false,
-      collectionStatus: whaleIntegrationEnabled ? "Seed collection (10 samples)" : "Disabled",
-      availableSpecies: whaleIntegrationEnabled ? ["Humpback", "Blue", "Orca", "Gray", "Sperm", "Minke", "Fin"] : ["None"],
-      sources: whaleIntegrationEnabled ? ["NOAA Fisheries", "MBARI MARS", "NOAA PMEL"] : ["None"]
-    };
-  }
-  /**
-   * Handle whale integration toggle
-   */
-  async handleWhaleIntegrationToggle(enabled) {
-    if (enabled) {
-      await this.plugin.updateSettings({
-        instruments: {
-          ...this.plugin.settings.instruments,
-          whaleHumpback: {
-            ...this.plugin.settings.instruments.whaleHumpback,
-            enabled: true
-          }
-        }
-      });
-      logger7.info("whale-ui", "Whale integration enabled via UI", {
-        highQualitySamples: true,
-        whaleEnabled: true
-      });
-    } else {
-      await this.plugin.updateSettings({
-        instruments: {
-          ...this.plugin.settings.instruments,
-          whaleHumpback: {
-            ...this.plugin.settings.instruments.whaleHumpback,
-            enabled: false
-          }
-        }
-      });
-      logger7.info("whale-ui", "Whale integration disabled via UI", {
-        whaleEnabled: false
-      });
-    }
-    this.showTab("experimental");
-  }
-  /**
-   * Handle whale sample preview
-   */
-  handleWhalePreview() {
-    if (this.plugin.audioEngine) {
-      this.plugin.audioEngine.playTestNote(80);
-      logger7.info("whale-ui", "Whale sample preview triggered", {
-        frequency: 80
-      });
-    } else {
-      logger7.warn("whale-ui", "Cannot preview whale sample: audio engine not available");
-    }
-  }
-  /**
-   * Handle whale attribution info display
-   */
-  handleWhaleAttribution() {
-    const attributionInfo = `
-# Whale Sample Attribution
-
-## NOAA Fisheries
-- Right whale upcalls and multi-sound patterns
-- Sei whale downsweeps  
-- Pilot whale multi-sound recordings
-- Source: https://www.fisheries.noaa.gov/national/science-data/sounds-ocean-mammals
-
-## MBARI MARS Observatory
-- Blue whale D-calls from Monterey Bay (36.71\xB0N, 122.187\xB0W)
-- Orca vocalizations from California deep-sea observatory
-- Gray whale migration recordings
-- Sperm whale echolocation clicks
-- Source: Deep-sea cabled observatory hydrophone recordings
-
-## NOAA PMEL Acoustics Program
-- Alaska humpback whale songs (Winter 1999)
-- Atlantic minke whale downsweeps
-- Source: https://www.pmel.noaa.gov/acoustics/whales/
-
-## Freesound.org Contributors
-- Caribbean humpback whale field recordings by listeningtowhales
-- Newfoundland sperm whale echolocation by smithereens
-- All samples used under Creative Commons licensing
-
-All whale samples are authentic recordings from marine research institutions and field recordings, ensuring scientific accuracy and educational value.
-		`.trim();
-    console.log(attributionInfo);
-    logger7.info("whale-ui", "Whale attribution info displayed");
-    new import_obsidian4.Notice("Whale sample attribution information logged to console. Check developer tools for details.");
-  }
-};
+// src/main.ts
+init_control_panel();
 
 // src/testing/TestSuiteModal.ts
-var import_obsidian5 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 
 // src/testing/performance/PerformanceMonitor.ts
 var PerformanceMonitor = class {
@@ -13897,7 +16396,7 @@ var AudioEngineTests = class {
 
 // src/testing/integration/IssueValidationTests.ts
 init_logging();
-var logger8 = getLogger("issue-validation-tests");
+var logger9 = getLogger("issue-validation-tests");
 var IssueValidationTests = class {
   constructor(audioEngine) {
     this.audioEngine = audioEngine;
@@ -13937,7 +16436,7 @@ var IssueValidationTests = class {
       for (const [familyName, instruments] of Object.entries(affectedFamilies)) {
         const familyResult = await this.testInstrumentFamilyPlayback(familyName, instruments);
         familyResults.push(familyResult);
-        logger8.debug("family-test", `Family ${familyName} test completed`, {
+        logger9.debug("family-test", `Family ${familyName} test completed`, {
           family: familyName,
           instruments: instruments.length,
           passed: familyResult.passed,
@@ -13996,7 +16495,7 @@ var IssueValidationTests = class {
       passed = true;
     } catch (err) {
       error = err.message;
-      logger8.error("issue003-test", "Issue #003 test failed", { error: err.message });
+      logger9.error("issue003-test", "Issue #003 test failed", { error: err.message });
     }
     const endTime = performance.now();
     return {
@@ -14376,7 +16875,7 @@ var IssueValidationTests = class {
    */
   async testVoiceManagementPerformance() {
     const times = [];
-    logger8.debug("test-start", "Starting testVoiceManagementPerformance", {
+    logger9.debug("test-start", "Starting testVoiceManagementPerformance", {
       hasAudioEngine: !!this.audioEngine,
       iterations: 50
     });
@@ -14387,7 +16886,7 @@ var IssueValidationTests = class {
         const testFrequency = 440 + i * 50;
         const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
         if (i % 10 === 0) {
-          logger8.debug("test-iteration", `Iteration ${i} completed`, {
+          logger9.debug("test-iteration", `Iteration ${i} completed`, {
             iteration: i,
             enabledInstruments: enabledInstruments.length,
             defaultInstrument,
@@ -14395,7 +16894,7 @@ var IssueValidationTests = class {
           });
         }
       } catch (error) {
-        logger8.error("test-error", `Iteration ${i} failed`, {
+        logger9.error("test-error", `Iteration ${i} failed`, {
           iteration: i,
           error: error.message
         });
@@ -14404,7 +16903,7 @@ var IssueValidationTests = class {
       const duration = end - start3;
       times.push(duration);
       if (i < 5 || duration > 10 || duration < 1e-3) {
-        logger8.debug("test-timing", `Iteration ${i} timing`, {
+        logger9.debug("test-timing", `Iteration ${i} timing`, {
           iteration: i,
           duration: duration.toFixed(4),
           isFirstFive: i < 5,
@@ -14416,7 +16915,7 @@ var IssueValidationTests = class {
     const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
     const minTime = Math.min(...times);
     const maxTime = Math.max(...times);
-    logger8.info("test-complete", "testVoiceManagementPerformance completed", {
+    logger9.info("test-complete", "testVoiceManagementPerformance completed", {
       averageTime: avgTime.toFixed(4),
       minTime: minTime.toFixed(4),
       maxTime: maxTime.toFixed(4),
@@ -14523,13 +17022,13 @@ var IssueValidationTests = class {
    */
   calculateProcessingStability(times) {
     if (times.length < 2) {
-      logger8.debug("stability", "Insufficient samples for stability calculation", { sampleCount: times.length });
+      logger9.debug("stability", "Insufficient samples for stability calculation", { sampleCount: times.length });
       return 1;
     }
     const mean = times.reduce((sum, t) => sum + t, 0) / times.length;
     const maxTime = Math.max(...times);
     const minTime = Math.min(...times);
-    logger8.debug("stability", "Processing stability calculation", {
+    logger9.debug("stability", "Processing stability calculation", {
       sampleCount: times.length,
       mean: mean.toFixed(6),
       maxTime: maxTime.toFixed(6),
@@ -14537,26 +17036,26 @@ var IssueValidationTests = class {
       firstFew: times.slice(0, 5).map((t) => t.toFixed(6))
     });
     if (mean < 0.01 && maxTime < 0.5) {
-      logger8.debug("stability", "Ultra-fast consistent processing detected", { mean, maxTime });
+      logger9.debug("stability", "Ultra-fast consistent processing detected", { mean, maxTime });
       return 1;
     }
     const variance = times.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / times.length;
     const stdDev = Math.sqrt(variance);
-    logger8.debug("stability", "Variance analysis", {
+    logger9.debug("stability", "Variance analysis", {
       variance: variance.toFixed(8),
       stdDev: stdDev.toFixed(6)
     });
     if (variance < 1e-6 || mean === 0) {
-      logger8.debug("stability", "Near-zero variance detected, perfect stability");
+      logger9.debug("stability", "Near-zero variance detected, perfect stability");
       return 1;
     }
     const coeffVar = stdDev / mean;
     if (!isFinite(coeffVar) || isNaN(coeffVar)) {
-      logger8.warn("stability", "Invalid coefficient of variation calculated", { coeffVar, stdDev, mean });
+      logger9.warn("stability", "Invalid coefficient of variation calculated", { coeffVar, stdDev, mean });
       return 1;
     }
     const stability = Math.max(0, Math.min(1, 1 - coeffVar));
-    logger8.debug("stability", "Final stability calculation", {
+    logger9.debug("stability", "Final stability calculation", {
       coefficientOfVariation: coeffVar.toFixed(6),
       stabilityPercent: (stability * 100).toFixed(1)
     });
@@ -14581,7 +17080,7 @@ var IssueValidationTests = class {
   }
   async testOptimizedVoiceAllocation() {
     const times = [];
-    logger8.debug("test-start", "Starting testOptimizedVoiceAllocation", {
+    logger9.debug("test-start", "Starting testOptimizedVoiceAllocation", {
       hasAudioEngine: !!this.audioEngine,
       iterations: 20
     });
@@ -14592,7 +17091,7 @@ var IssueValidationTests = class {
         const testFrequency = 440 + i * 100;
         const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
         if (i % 5 === 0) {
-          logger8.debug("test-iteration", `Iteration ${i} completed`, {
+          logger9.debug("test-iteration", `Iteration ${i} completed`, {
             iteration: i,
             enabledInstruments: enabledInstruments.length,
             defaultInstrument,
@@ -14600,7 +17099,7 @@ var IssueValidationTests = class {
           });
         }
       } catch (error) {
-        logger8.error("test-error", `Iteration ${i} failed`, {
+        logger9.error("test-error", `Iteration ${i} failed`, {
           iteration: i,
           error: error.message
         });
@@ -14610,7 +17109,7 @@ var IssueValidationTests = class {
     }
     const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
     const maxTime = Math.max(...times);
-    logger8.info("test-complete", "testOptimizedVoiceAllocation completed", {
+    logger9.info("test-complete", "testOptimizedVoiceAllocation completed", {
       averageTime: avgTime.toFixed(4),
       maxTime: maxTime.toFixed(4),
       totalIterations: times.length,
@@ -14699,7 +17198,7 @@ var IssueValidationTests = class {
       errors: []
     };
     try {
-      logger8.debug("family-test-start", `Testing family: ${familyName}`, {
+      logger9.debug("family-test-start", `Testing family: ${familyName}`, {
         family: familyName,
         instruments: instruments.length,
         instrumentNames: instruments
@@ -14715,7 +17214,7 @@ var IssueValidationTests = class {
       results.playbackSuccess = successfulInstruments.length > 0;
       results.voiceAllocationSuccess = successfulInstruments.length === instruments.length;
       results.passed = results.playbackSuccess;
-      logger8.debug("family-test-complete", `Family ${familyName} test completed`, {
+      logger9.debug("family-test-complete", `Family ${familyName} test completed`, {
         family: familyName,
         totalInstruments: instruments.length,
         successfulInstruments: successfulInstruments.length,
@@ -14724,7 +17223,7 @@ var IssueValidationTests = class {
       });
     } catch (error) {
       results.errors.push(`Family test error: ${error.message}`);
-      logger8.error("family-test-error", `Family ${familyName} test failed`, {
+      logger9.error("family-test-error", `Family ${familyName} test failed`, {
         family: familyName,
         error: error.message
       });
@@ -14842,7 +17341,7 @@ var IssueValidationTests = class {
       result.totalInstruments = testFrequencies.length;
       result.passed = result.failedInstruments.length === 0;
       const endTime = performance.now();
-      logger8.debug("voice-distribution-test", "Voice allocation distribution test completed", {
+      logger9.debug("voice-distribution-test", "Voice allocation distribution test completed", {
         totalTests: testFrequencies.length,
         failed: result.failedInstruments.length,
         avgTime: result.avgAllocationTime.toFixed(4),
@@ -15072,7 +17571,7 @@ var IssueValidationTests = class {
       if (realWorldIssues.length > 0) {
         realWorldIssues.forEach((issue) => warnings.push(`Real-world audio issue: ${issue}`));
       }
-      logger8.debug("config-validation", "Instrument configuration validation completed", {
+      logger9.debug("config-validation", "Instrument configuration validation completed", {
         totalInstruments: allInstrumentsValidated,
         typeSafeInstruments: typesSafeInstruments,
         familyIssues: familyConsistencyIssues,
@@ -15133,7 +17632,7 @@ var IssueValidationTests = class {
       }
       issues.push("MANUAL TEST REQUIRED: Test Play button multiple times in Obsidian - may only work once per session (Issue #006)");
       issues.push("MANUAL TEST REQUIRED: Test actual audio output in Obsidian for percussion/experimental families");
-      logger8.debug("real-world-validation", "Real-world audio validation completed", {
+      logger9.debug("real-world-validation", "Real-world audio validation completed", {
         issuesFound: issues.length,
         issues
       });
@@ -15603,8 +18102,8 @@ var createAddAudioWorkletModule = (cacheTestResult2, createNotSupportedError2, e
 };
 
 // node_modules/standardized-audio-context/build/es2019/helpers/get-value-for-key.js
-var getValueForKey = (map, key) => {
-  const value = map.get(key);
+var getValueForKey = (map2, key) => {
+  const value = map2.get(key);
   if (value === void 0) {
     throw new Error("A value with the given key could not be found.");
   }
@@ -25768,16 +28267,16 @@ var Param = class extends ToneWithContext {
   // 	MIT License, copyright (c) 2014 Jordan Santell
   //-------------------------------------
   // Calculates the the value along the curve produced by setTargetAtTime
-  _exponentialApproach(t0, v0, v1, timeConstant, t) {
-    return v1 + (v0 - v1) * Math.exp(-(t - t0) / timeConstant);
+  _exponentialApproach(t02, v0, v1, timeConstant, t) {
+    return v1 + (v0 - v1) * Math.exp(-(t - t02) / timeConstant);
   }
   // Calculates the the value along the curve produced by linearRampToValueAtTime
-  _linearInterpolate(t0, v0, t1, v1, t) {
-    return v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
+  _linearInterpolate(t02, v0, t12, v1, t) {
+    return v0 + (v1 - v0) * ((t - t02) / (t12 - t02));
   }
   // Calculates the the value along the curve produced by exponentialRampToValueAtTime
-  _exponentialInterpolate(t0, v0, t1, v1, t) {
-    return v0 * Math.pow(v1 / v0, (t - t0) / (t1 - t0));
+  _exponentialInterpolate(t02, v0, t12, v1, t) {
+    return v0 * Math.pow(v1 / v0, (t - t02) / (t12 - t02));
   }
 };
 
@@ -36059,8 +38558,8 @@ var ReportGenerator = class {
   /**
    * Generate test report in specified format
    */
-  async generateReport(results, format) {
-    switch (format) {
+  async generateReport(results, format2) {
+    switch (format2) {
       case "markdown":
         return this.generateMarkdownReport(results);
       case "json":
@@ -36068,7 +38567,7 @@ var ReportGenerator = class {
       case "csv":
         return this.generateCSVReport(results);
       default:
-        throw new Error(`Unsupported format: ${format}`);
+        throw new Error(`Unsupported format: ${format2}`);
     }
   }
   /**
@@ -36319,7 +38818,7 @@ ${JSON.stringify(this.getExportableData(results), null, 2)}
 };
 
 // src/testing/TestSuiteModal.ts
-var TestSuiteModal = class extends import_obsidian5.Modal {
+var TestSuiteModal = class extends import_obsidian6.Modal {
   constructor(app, audioEngine) {
     super(app);
     this.config = {
@@ -36417,7 +38916,7 @@ var TestSuiteModal = class extends import_obsidian5.Modal {
   }
   createTestCheckbox(container, key, title, description) {
     const testItem = container.createDiv("test-item");
-    new import_obsidian5.Setting(testItem).setName(title).setDesc(description).addToggle(
+    new import_obsidian6.Setting(testItem).setName(title).setDesc(description).addToggle(
       (toggle) => toggle.setValue(this.config.selectedTests[key]).onChange((value) => {
         this.config.selectedTests[key] = value;
       })
@@ -36426,27 +38925,27 @@ var TestSuiteModal = class extends import_obsidian5.Modal {
   createSettingsSection(container) {
     const section = container.createDiv("settings-section");
     section.createEl("h2", { text: "Test Settings" });
-    new import_obsidian5.Setting(section).setName("Export Format").setDesc("Choose format for test result exports").addDropdown(
+    new import_obsidian6.Setting(section).setName("Export Format").setDesc("Choose format for test result exports").addDropdown(
       (dropdown) => dropdown.addOption("markdown", "Markdown (for vault notes)").addOption("json", "JSON (for data analysis)").addOption("csv", "CSV (for spreadsheets)").setValue(this.config.exportFormat).onChange((value) => {
         this.config.exportFormat = value;
       })
     );
-    new import_obsidian5.Setting(section).setName("Real-time Metrics").setDesc("Display live performance metrics during testing").addToggle(
+    new import_obsidian6.Setting(section).setName("Real-time Metrics").setDesc("Display live performance metrics during testing").addToggle(
       (toggle) => toggle.setValue(this.config.realTimeMetrics).onChange((value) => {
         this.config.realTimeMetrics = value;
       })
     );
-    new import_obsidian5.Setting(section).setName("Detailed Logging").setDesc("Include verbose test execution details").addToggle(
+    new import_obsidian6.Setting(section).setName("Detailed Logging").setDesc("Include verbose test execution details").addToggle(
       (toggle) => toggle.setValue(this.config.detailedLogging).onChange((value) => {
         this.config.detailedLogging = value;
       })
     );
-    new import_obsidian5.Setting(section).setName("Logging Level").setDesc("Control the verbosity of test logging output").addDropdown(
+    new import_obsidian6.Setting(section).setName("Logging Level").setDesc("Control the verbosity of test logging output").addDropdown(
       (dropdown) => dropdown.addOption("none", "None - No logging").addOption("basic", "Basic - Essential information only").addOption("detailed", "Detailed - Comprehensive logging").addOption("debug", "Debug - Full diagnostic output").setValue(this.config.loggingLevel).onChange((value) => {
         this.config.loggingLevel = value;
       })
     );
-    new import_obsidian5.Setting(section).setName("Enable Log Export").setDesc("Include logs in exported test results").addToggle(
+    new import_obsidian6.Setting(section).setName("Enable Log Export").setDesc("Include logs in exported test results").addToggle(
       (toggle) => toggle.setValue(this.config.enableLogExport).onChange((value) => {
         this.config.enableLogExport = value;
       })
@@ -36455,12 +38954,12 @@ var TestSuiteModal = class extends import_obsidian5.Modal {
   createControlSection(container) {
     const section = container.createDiv("control-section");
     const buttonContainer = section.createDiv("button-container");
-    new import_obsidian5.ButtonComponent(buttonContainer).setButtonText("Run Selected Tests").setCta().onClick(() => this.runTests());
-    new import_obsidian5.ButtonComponent(buttonContainer).setButtonText("Stop Tests").setWarning().onClick(() => this.stopTests());
-    new import_obsidian5.ButtonComponent(buttonContainer).setButtonText("Quick Test").onClick(() => this.runQuickTest());
-    new import_obsidian5.ButtonComponent(buttonContainer).setButtonText("Export Results").onClick(() => this.exportResults());
-    new import_obsidian5.ButtonComponent(buttonContainer).setButtonText("Export Logs").onClick(() => this.exportLogs());
-    new import_obsidian5.ButtonComponent(buttonContainer).setButtonText("Copy to Clipboard").onClick(() => this.copyToClipboard());
+    new import_obsidian6.ButtonComponent(buttonContainer).setButtonText("Run Selected Tests").setCta().onClick(() => this.runTests());
+    new import_obsidian6.ButtonComponent(buttonContainer).setButtonText("Stop Tests").setWarning().onClick(() => this.stopTests());
+    new import_obsidian6.ButtonComponent(buttonContainer).setButtonText("Quick Test").onClick(() => this.runQuickTest());
+    new import_obsidian6.ButtonComponent(buttonContainer).setButtonText("Export Results").onClick(() => this.exportResults());
+    new import_obsidian6.ButtonComponent(buttonContainer).setButtonText("Export Logs").onClick(() => this.exportLogs());
+    new import_obsidian6.ButtonComponent(buttonContainer).setButtonText("Copy to Clipboard").onClick(() => this.copyToClipboard());
   }
   createMetricsDisplay(container) {
     const section = container.createDiv("metrics-section");
@@ -36969,7 +39468,7 @@ init_constants();
 
 // src/audio/percussion-engine.ts
 init_logging();
-var logger9 = getLogger("percussion-engine");
+var logger10 = getLogger("percussion-engine");
 var PercussionEngine = class {
   constructor(masterVolume, audioFormat = "wav") {
     this.timpaniSamplers = /* @__PURE__ */ new Map();
@@ -36983,23 +39482,23 @@ var PercussionEngine = class {
     this.gongResonators = /* @__PURE__ */ new Map();
     this.masterVolume = masterVolume;
     this.audioFormat = audioFormat;
-    logger9.debug("initialization", "PercussionEngine created");
+    logger10.debug("initialization", "PercussionEngine created");
   }
   async initializePercussion() {
-    logger9.info("initialization", "Initializing advanced percussion synthesis");
+    logger10.info("initialization", "Initializing advanced percussion synthesis");
     try {
       await this.initializeTimpani();
       await this.initializeXylophone();
       await this.initializeVibraphone();
       await this.initializeGongs();
-      logger9.info("initialization", "Advanced percussion synthesis ready");
+      logger10.info("initialization", "Advanced percussion synthesis ready");
     } catch (error) {
-      logger9.error("initialization", "Failed to initialize percussion", error);
+      logger10.error("initialization", "Failed to initialize percussion", error);
       throw error;
     }
   }
   async initializeTimpani() {
-    logger9.warn("timpani", "Timpani samples not available on CDN, using synthesis fallback");
+    logger10.warn("timpani", "Timpani samples not available on CDN, using synthesis fallback");
     const timpaniSizes = ["small", "medium", "large"];
     for (const size of timpaniSizes) {
       const synth = new PolySynth({
@@ -37026,7 +39525,7 @@ var PercussionEngine = class {
       this.timpaniSamplers.set(size, synth);
       this.timpaniPitchShifters.set(size, pitchShifter);
     }
-    logger9.debug("timpani", "Timpani initialization complete");
+    logger10.debug("timpani", "Timpani initialization complete");
   }
   async initializeXylophone() {
     const sampler = new Sampler({
@@ -37064,10 +39563,10 @@ var PercussionEngine = class {
     sampler.chain(resonanceFilter, brightReverb, this.masterVolume);
     this.xylophoneSamplers.set("main", sampler);
     this.malletEnvelopes.set("xylophone", attackEnvelope);
-    logger9.debug("xylophone", "Xylophone initialization complete");
+    logger10.debug("xylophone", "Xylophone initialization complete");
   }
   async initializeVibraphone() {
-    logger9.warn("vibraphone", "Vibraphone samples not available on CDN, using synthesis fallback");
+    logger10.warn("vibraphone", "Vibraphone samples not available on CDN, using synthesis fallback");
     const synth = new PolySynth({
       voice: AMSynth,
       options: {
@@ -37099,10 +39598,10 @@ var PercussionEngine = class {
     });
     synth.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
     this.vibraphoneMotors.set("main", motorLFO);
-    logger9.debug("vibraphone", "Vibraphone initialization complete");
+    logger10.debug("vibraphone", "Vibraphone initialization complete");
   }
   async initializeGongs() {
-    logger9.warn("gongs", "Gong samples not available on CDN, using synthesis fallback");
+    logger10.warn("gongs", "Gong samples not available on CDN, using synthesis fallback");
     const synth = new PolySynth({
       voice: AMSynth,
       options: {
@@ -37128,14 +39627,14 @@ var PercussionEngine = class {
     const shimmerDelay = new Delay(0.3);
     synth.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
     this.gongResonators.set("main", resonator);
-    logger9.debug("gongs", "Gongs initialization complete");
+    logger10.debug("gongs", "Gongs initialization complete");
   }
   // Advanced timpani with pitch bending
   triggerTimpani(note, velocity, duration, pitchBend) {
     const sampler = this.timpaniSamplers.get("medium");
     const pitchShifter = this.timpaniPitchShifters.get("medium");
     if (!sampler || !pitchShifter) {
-      logger9.warn("timpani", "Timpani sampler not initialized");
+      logger10.warn("timpani", "Timpani sampler not initialized");
       return;
     }
     if (pitchBend) {
@@ -37143,14 +39642,14 @@ var PercussionEngine = class {
     }
     const dynamicVelocity = Math.min(velocity * 1.2, 1);
     sampler.triggerAttackRelease(note, duration, now2(), dynamicVelocity);
-    logger9.debug("timpani", `Triggered timpani: ${note}, vel: ${velocity}, bend: ${pitchBend || 0}`);
+    logger10.debug("timpani", `Triggered timpani: ${note}, vel: ${velocity}, bend: ${pitchBend || 0}`);
   }
   // Mallet instruments with articulation control
   triggerMallet(instrument, note, velocity, duration, hardness) {
     const samplerMap = instrument === "xylophone" ? this.xylophoneSamplers : this.vibraphoneSamplers;
     const sampler = samplerMap.get("main");
     if (!sampler) {
-      logger9.warn("mallet", `${instrument} sampler not initialized`);
+      logger10.warn("mallet", `${instrument} sampler not initialized`);
       return;
     }
     const attackTime = hardness ? (1 - hardness) * 0.01 + 1e-3 : 1e-3;
@@ -37159,14 +39658,14 @@ var PercussionEngine = class {
       velocity * 0.9
     );
     sampler.triggerAttackRelease(note, duration, now2(), malletVelocity);
-    logger9.debug("mallet", `Triggered ${instrument}: ${note}, vel: ${velocity}, hardness: ${hardness || 0.5}`);
+    logger10.debug("mallet", `Triggered ${instrument}: ${note}, vel: ${velocity}, hardness: ${hardness || 0.5}`);
   }
   // Gongs with resonance control
   triggerGong(note, velocity, duration, resonance) {
     const sampler = this.gongSamplers.get("main");
     const resonator = this.gongResonators.get("main");
     if (!sampler || !resonator) {
-      logger9.warn("gongs", "Gong sampler not initialized");
+      logger10.warn("gongs", "Gong sampler not initialized");
       return;
     }
     if (resonance) {
@@ -37174,7 +39673,7 @@ var PercussionEngine = class {
     }
     const gongVelocity = Math.pow(velocity, 0.7);
     sampler.triggerAttackRelease(note, duration, now2(), gongVelocity);
-    logger9.debug("gongs", `Triggered gong: ${note}, vel: ${velocity}, resonance: ${resonance || 0.5}`);
+    logger10.debug("gongs", `Triggered gong: ${note}, vel: ${velocity}, resonance: ${resonance || 0.5}`);
   }
   // Motor control for vibraphone
   setVibraphoneMotorSpeed(speed) {
@@ -37208,63 +39707,63 @@ var PercussionEngine = class {
         }
       }
     }
-    logger9.debug("dynamics", `Adjusted percussion dynamics: ${dynamics}`);
+    logger10.debug("dynamics", `Adjusted percussion dynamics: ${dynamics}`);
   }
   /**
    * Update audio format and re-initialize all percussion instruments
    * Issue #005 Fix: Ensures percussion engines use correct sample format
    */
-  async updateAudioFormat(format) {
-    if (this.audioFormat === format) {
+  async updateAudioFormat(format2) {
+    if (this.audioFormat === format2) {
       return;
     }
-    logger9.debug("format-update", `Updating percussion audio format from ${this.audioFormat} to ${format}`);
-    this.audioFormat = format;
-    [this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers].forEach((map) => {
-      for (const [key, sampler] of map) {
+    logger10.debug("format-update", `Updating percussion audio format from ${this.audioFormat} to ${format2}`);
+    this.audioFormat = format2;
+    [this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers].forEach((map2) => {
+      for (const [key, sampler] of map2) {
         sampler.dispose();
       }
-      map.clear();
+      map2.clear();
     });
-    [this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators].forEach((map) => {
-      for (const [key, processor] of map) {
+    [this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators].forEach((map2) => {
+      for (const [key, processor] of map2) {
         if (processor.dispose)
           processor.dispose();
       }
-      map.clear();
+      map2.clear();
     });
     try {
       await this.initializeTimpani();
       await this.initializeXylophone();
       await this.initializeVibraphone();
       await this.initializeGongs();
-      logger9.info("format-update", `Successfully updated percussion engine to ${format} format`);
+      logger10.info("format-update", `Successfully updated percussion engine to ${format2} format`);
     } catch (error) {
-      logger9.error("format-update", `Failed to re-initialize percussion with ${format} format`, error);
+      logger10.error("format-update", `Failed to re-initialize percussion with ${format2} format`, error);
       throw error;
     }
   }
   dispose() {
-    [this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers].forEach((map) => {
-      for (const [key, sampler] of map) {
+    [this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers].forEach((map2) => {
+      for (const [key, sampler] of map2) {
         sampler.dispose();
       }
-      map.clear();
+      map2.clear();
     });
-    [this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators].forEach((map) => {
-      for (const [key, processor] of map) {
+    [this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators].forEach((map2) => {
+      for (const [key, processor] of map2) {
         if (processor.dispose)
           processor.dispose();
       }
-      map.clear();
+      map2.clear();
     });
-    logger9.debug("cleanup", "PercussionEngine disposed");
+    logger10.debug("cleanup", "PercussionEngine disposed");
   }
 };
 
 // src/audio/electronic-engine.ts
 init_logging();
-var logger10 = getLogger("electronic-engine");
+var logger11 = getLogger("electronic-engine");
 var ElectronicEngine = class {
   constructor(masterVolume) {
     this.leadSynths = /* @__PURE__ */ new Map();
@@ -37278,17 +39777,17 @@ var ElectronicEngine = class {
     this.arpSequencers = /* @__PURE__ */ new Map();
     this.arpPatterns = /* @__PURE__ */ new Map();
     this.masterVolume = masterVolume;
-    logger10.debug("initialization", "ElectronicEngine created");
+    logger11.debug("initialization", "ElectronicEngine created");
   }
   async initializeElectronic() {
-    logger10.info("initialization", "Initializing advanced electronic synthesis");
+    logger11.info("initialization", "Initializing advanced electronic synthesis");
     try {
       await this.initializeLeadSynth();
       await this.initializeBassSynth();
       await this.initializeArpSynth();
-      logger10.info("initialization", "Advanced electronic synthesis ready");
+      logger11.info("initialization", "Advanced electronic synthesis ready");
     } catch (error) {
-      logger10.error("initialization", "Failed to initialize electronic synthesis", error);
+      logger11.error("initialization", "Failed to initialize electronic synthesis", error);
       throw error;
     }
   }
@@ -37328,7 +39827,7 @@ var ElectronicEngine = class {
     this.leadSynths.set("main", leadSynth);
     this.filterLFOs.set("lead", filterLFO);
     this.filterInstances.set("lead", leadFilter);
-    logger10.debug("lead-synth", "Lead synth initialization complete");
+    logger11.debug("lead-synth", "Lead synth initialization complete");
   }
   async initializeBassSynth() {
     const bassSynth = new PolySynth({
@@ -37374,7 +39873,7 @@ var ElectronicEngine = class {
     this.bassSynths.set("main", bassSynth);
     this.bassSynths.set("sub", subOsc);
     this.filterInstances.set("bass", bassFilter);
-    logger10.debug("bass-synth", "Bass synth initialization complete");
+    logger11.debug("bass-synth", "Bass synth initialization complete");
   }
   async initializeArpSynth() {
     const arpSynth = new PolySynth({
@@ -37411,14 +39910,14 @@ var ElectronicEngine = class {
     this.arpSynths.set("main", arpSynth);
     this.filterLFOs.set("arp", sweepLFO);
     this.filterInstances.set("arp", arpFilter);
-    logger10.debug("arp-synth", "Arp synth initialization complete");
+    logger11.debug("arp-synth", "Arp synth initialization complete");
   }
   // Advanced lead synth with filter modulation
   triggerLeadSynth(note, velocity, duration, filterMod) {
     const synth = this.leadSynths.get("main");
     const filter2 = this.filterInstances.get("lead");
     if (!synth || !filter2) {
-      logger10.warn("lead-synth", "Lead synth not initialized");
+      logger11.warn("lead-synth", "Lead synth not initialized");
       return;
     }
     if (filterMod !== void 0) {
@@ -37427,14 +39926,14 @@ var ElectronicEngine = class {
     }
     const expressiveVelocity = Math.pow(velocity, 0.8);
     synth.triggerAttackRelease(note, duration, now2(), expressiveVelocity);
-    logger10.debug("lead-synth", `Triggered lead: ${note}, vel: ${velocity}, filter: ${filterMod || "auto"}`);
+    logger11.debug("lead-synth", `Triggered lead: ${note}, vel: ${velocity}, filter: ${filterMod || "auto"}`);
   }
   // Bass synth with sub-oscillator control
   triggerBassSynth(note, velocity, duration, subLevel) {
     const mainSynth = this.bassSynths.get("main");
     const subSynth = this.bassSynths.get("sub");
     if (!mainSynth || !subSynth) {
-      logger10.warn("bass-synth", "Bass synth not initialized");
+      logger11.warn("bass-synth", "Bass synth not initialized");
       return;
     }
     const bassVelocity = Math.min(velocity * 1.3, 1);
@@ -37444,18 +39943,18 @@ var ElectronicEngine = class {
       const subVelocity = velocity * subLevel * 0.8;
       subSynth.triggerAttackRelease(subNote, duration, now2(), subVelocity);
     }
-    logger10.debug("bass-synth", `Triggered bass: ${note}, vel: ${velocity}, sub: ${subLevel || 0}`);
+    logger11.debug("bass-synth", `Triggered bass: ${note}, vel: ${velocity}, sub: ${subLevel || 0}`);
   }
   // Arpeggiator with pattern sequencing
   triggerArpSynth(note, velocity, duration, pattern) {
     const synth = this.arpSynths.get("main");
     if (!synth) {
-      logger10.warn("arp-synth", "Arp synth not initialized");
+      logger11.warn("arp-synth", "Arp synth not initialized");
       return;
     }
     const arpVelocity = velocity * 0.8;
     synth.triggerAttackRelease(note, duration, now2(), arpVelocity);
-    logger10.debug("arp-synth", `Triggered arp: ${note}, vel: ${velocity}, pattern: ${pattern || "single"}`);
+    logger11.debug("arp-synth", `Triggered arp: ${note}, vel: ${velocity}, pattern: ${pattern || "single"}`);
   }
   // Utility: Transpose note by semitones
   transposeNote(note, semitones) {
@@ -37535,27 +40034,27 @@ var ElectronicEngine = class {
         }
       }
     }
-    logger10.debug("dynamics", `Adjusted electronic dynamics: ${dynamics}`);
+    logger11.debug("dynamics", `Adjusted electronic dynamics: ${dynamics}`);
   }
   dispose() {
-    [this.leadSynths, this.bassSynths, this.arpSynths].forEach((map) => {
-      for (const [key, synth] of map) {
+    [this.leadSynths, this.bassSynths, this.arpSynths].forEach((map2) => {
+      for (const [key, synth] of map2) {
         synth.dispose();
       }
-      map.clear();
+      map2.clear();
     });
-    [this.filterLFOs, this.modulationEnvelopes, this.filterInstances].forEach((map) => {
-      for (const [key, processor] of map) {
+    [this.filterLFOs, this.modulationEnvelopes, this.filterInstances].forEach((map2) => {
+      for (const [key, processor] of map2) {
         if (processor.dispose)
           processor.dispose();
       }
-      map.clear();
+      map2.clear();
     });
     for (const [key, timer2] of this.arpSequencers) {
       clearTimeout(timer2);
     }
     this.arpSequencers.clear();
-    logger10.debug("cleanup", "ElectronicEngine disposed");
+    logger11.debug("cleanup", "ElectronicEngine disposed");
   }
 };
 
@@ -37991,7 +40490,7 @@ var VoiceManager = class {
 
 // src/audio/effects/EffectBusManager.ts
 init_logging();
-var logger11 = getLogger("effect-bus-manager");
+var logger12 = getLogger("effect-bus-manager");
 var EffectBusManager = class {
   constructor() {
     this.enhancedRouting = false;
@@ -38006,7 +40505,7 @@ var EffectBusManager = class {
     this.masterCompressor = null;
     // Legacy per-instrument effects backup
     this.instrumentEffects = /* @__PURE__ */ new Map();
-    logger11.debug("initialization", "EffectBusManager created");
+    logger12.debug("initialization", "EffectBusManager created");
     this.initializeDefaultConfigs();
   }
   /**
@@ -38048,11 +40547,11 @@ var EffectBusManager = class {
   async enableEnhancedRouting() {
     if (this.enhancedRouting)
       return;
-    logger11.info("routing", "Enabling enhanced effect routing");
+    logger12.info("routing", "Enabling enhanced effect routing");
     await this.initializeMasterEffects();
     this.initializeSendReturnBuses();
     this.enhancedRouting = true;
-    logger11.info("routing", "Enhanced routing enabled");
+    logger12.info("routing", "Enhanced routing enabled");
   }
   /**
    * Disable enhanced routing system
@@ -38060,10 +40559,10 @@ var EffectBusManager = class {
   disableEnhancedRouting() {
     if (!this.enhancedRouting)
       return;
-    logger11.info("routing", "Disabling enhanced effect routing");
+    logger12.info("routing", "Disabling enhanced effect routing");
     this.disposeAllEffects();
     this.enhancedRouting = false;
-    logger11.info("routing", "Enhanced routing disabled");
+    logger12.info("routing", "Enhanced routing disabled");
   }
   /**
    * Initialize master effects chain
@@ -38084,7 +40583,7 @@ var EffectBusManager = class {
       release: 0.25
     }).connect(this.masterEQ);
     this.masterEffectsNodes.set("master-compressor", this.masterCompressor);
-    logger11.debug("effects", "Master effects initialized");
+    logger12.debug("effects", "Master effects initialized");
   }
   /**
    * Initialize send/return bus system
@@ -38092,12 +40591,12 @@ var EffectBusManager = class {
   initializeSendReturnBuses() {
     for (const [busId, bus] of this.sendBuses.entries()) {
       if (bus.enabled) {
-        logger11.debug("bus", `Initializing send bus: ${busId}`);
+        logger12.debug("bus", `Initializing send bus: ${busId}`);
       }
     }
     for (const [busId, bus] of this.returnBuses.entries()) {
       if (bus.enabled) {
-        logger11.debug("bus", `Initializing return bus: ${busId}`);
+        logger12.debug("bus", `Initializing return bus: ${busId}`);
       }
     }
   }
@@ -38123,7 +40622,7 @@ var EffectBusManager = class {
       }
     }
     this.effectChains.set(instrumentName, chain);
-    logger11.debug("effects", `Initialized effect chain for ${instrumentName}: ${effectList.join(", ")}`);
+    logger12.debug("effects", `Initialized effect chain for ${instrumentName}: ${effectList.join(", ")}`);
   }
   /**
    * Create Tone.js effect instance
@@ -38165,7 +40664,7 @@ var EffectBusManager = class {
           high: parameters.high || 0
         });
       default:
-        logger11.warn("effects", `Unknown effect type: ${type2}`);
+        logger12.warn("effects", `Unknown effect type: ${type2}`);
         return null;
     }
   }
@@ -38190,7 +40689,7 @@ var EffectBusManager = class {
       }
     }
     this.connectToMasterChain(currentNode);
-    logger11.debug("routing", `Connected ${instrumentName} through effect chain`);
+    logger12.debug("routing", `Connected ${instrumentName} through effect chain`);
   }
   /**
    * Connect to master effects chain
@@ -38230,7 +40729,7 @@ var EffectBusManager = class {
         chain.push(effectNode);
       }
       this.effectChains.set(instrumentName, chain);
-      logger11.debug("effects", `Added ${effectType} to ${instrumentName} chain`);
+      logger12.debug("effects", `Added ${effectType} to ${instrumentName} chain`);
     }
     return effectId;
   }
@@ -38251,7 +40750,7 @@ var EffectBusManager = class {
     this.effectNodeInstances.delete(effectId);
     chain.splice(index2, 1);
     this.effectChains.set(instrumentName, chain);
-    logger11.debug("effects", `Removed effect ${effectId} from ${instrumentName} chain`);
+    logger12.debug("effects", `Removed effect ${effectId} from ${instrumentName} chain`);
     return true;
   }
   /**
@@ -38265,7 +40764,7 @@ var EffectBusManager = class {
     if (!effectNode)
       return false;
     effectNode.enabled = !effectNode.enabled;
-    logger11.debug("effects", `Toggled ${effectId} enabled: ${effectNode.enabled}`);
+    logger12.debug("effects", `Toggled ${effectId} enabled: ${effectNode.enabled}`);
     return effectNode.enabled;
   }
   /**
@@ -38283,7 +40782,7 @@ var EffectBusManager = class {
     if (effectInstance && effectInstance.wet) {
       effectInstance.wet.value = effectNode.bypassed ? 0 : 1;
     }
-    logger11.debug("effects", `Toggled ${effectId} bypass: ${effectNode.bypassed}`);
+    logger12.debug("effects", `Toggled ${effectId} bypass: ${effectNode.bypassed}`);
     return effectNode.bypassed;
   }
   /**
@@ -38301,7 +40800,7 @@ var EffectBusManager = class {
     if (effectInstance) {
       this.applyParametersToInstance(effectInstance, effectNode.type, parameters);
     }
-    logger11.debug("effects", `Updated parameters for ${effectId}`);
+    logger12.debug("effects", `Updated parameters for ${effectId}`);
   }
   /**
    * Apply parameters to effect instance
@@ -38426,7 +40925,7 @@ var EffectBusManager = class {
     }
     this.effectChains.clear();
     this.masterEffectsNodes.clear();
-    logger11.debug("effects", "All effects disposed");
+    logger12.debug("effects", "All effects disposed");
   }
   /**
    * Dispose of the EffectBusManager
@@ -38436,7 +40935,7 @@ var EffectBusManager = class {
     this.sendBuses.clear();
     this.returnBuses.clear();
     this.instrumentEffects.clear();
-    logger11.debug("effects", "EffectBusManager disposed");
+    logger12.debug("effects", "EffectBusManager disposed");
   }
 };
 
@@ -39456,8 +41955,8 @@ var InstrumentConfigLoader = class {
   /**
    * Update audio format and reprocess loaded instruments
    */
-  updateAudioFormat(format) {
-    this.options.audioFormat = format;
+  updateAudioFormat(format2) {
+    this.options.audioFormat = format2;
     const reprocessed = /* @__PURE__ */ new Map();
     this.loadedInstruments.forEach((config, name) => {
       const updated = this.processInstrumentConfig(config, config.family);
@@ -39539,7 +42038,7 @@ init_logging();
 
 // src/audio/playback-events.ts
 init_logging();
-var logger12 = getLogger("playback-events");
+var logger13 = getLogger("playback-events");
 var PlaybackEventEmitter = class {
   constructor() {
     this.listeners = /* @__PURE__ */ new Map();
@@ -39552,7 +42051,7 @@ var PlaybackEventEmitter = class {
       this.listeners.set(event, []);
     }
     this.listeners.get(event).push(listener);
-    logger12.debug("events", `Added listener for ${event}`, {
+    logger13.debug("events", `Added listener for ${event}`, {
       listenerCount: this.listeners.get(event).length
     });
   }
@@ -39566,7 +42065,7 @@ var PlaybackEventEmitter = class {
     const index2 = eventListeners.indexOf(listener);
     if (index2 > -1) {
       eventListeners.splice(index2, 1);
-      logger12.debug("events", `Removed listener for ${event}`, {
+      logger13.debug("events", `Removed listener for ${event}`, {
         listenerCount: eventListeners.length
       });
     }
@@ -39577,10 +42076,10 @@ var PlaybackEventEmitter = class {
   removeAllListeners(event) {
     if (event) {
       this.listeners.delete(event);
-      logger12.debug("events", `Removed all listeners for ${event}`);
+      logger13.debug("events", `Removed all listeners for ${event}`);
     } else {
       this.listeners.clear();
-      logger12.debug("events", "Removed all event listeners");
+      logger13.debug("events", "Removed all event listeners");
     }
   }
   /**
@@ -39589,10 +42088,10 @@ var PlaybackEventEmitter = class {
   emit(event, data) {
     const eventListeners = this.listeners.get(event);
     if (!eventListeners || eventListeners.length === 0) {
-      logger12.debug("events", `No listeners for ${event}`);
+      logger13.debug("events", `No listeners for ${event}`);
       return;
     }
-    logger12.debug("events", `Emitting ${event}`, {
+    logger13.debug("events", `Emitting ${event}`, {
       listenerCount: eventListeners.length,
       data: data ? "present" : "none"
     });
@@ -39600,7 +42099,7 @@ var PlaybackEventEmitter = class {
       try {
         listener(data);
       } catch (error) {
-        logger12.error("events", `Error in ${event} listener`, error);
+        logger13.error("events", `Error in ${event} listener`, error);
       }
     });
   }
@@ -39622,12 +42121,12 @@ var PlaybackEventEmitter = class {
    */
   dispose() {
     this.listeners.clear();
-    logger12.debug("events", "PlaybackEventEmitter disposed");
+    logger13.debug("events", "PlaybackEventEmitter disposed");
   }
 };
 
 // src/audio/engine.ts
-var logger16 = getLogger("audio-engine");
+var logger17 = getLogger("audio-engine");
 var AudioEngine = class {
   // Master Effects Processing - moved to EffectBusManager
   constructor(settings) {
@@ -39669,7 +42168,7 @@ var AudioEngine = class {
     this.eventEmitter = new PlaybackEventEmitter();
     this.sequenceStartTime = 0;
     this.sequenceProgressTimer = null;
-    logger16.debug("initialization", "AudioEngine created");
+    logger17.debug("initialization", "AudioEngine created");
     this.voiceManager = new VoiceManager(true);
     this.effectBusManager = new EffectBusManager();
     this.instrumentConfigLoader = new InstrumentConfigLoader({
@@ -39817,11 +42316,11 @@ var AudioEngine = class {
     }
     this.generateCDNDiagnosticReport();
     try {
-      logger16.debug("audio", "Initializing AudioEngine");
+      logger17.debug("audio", "Initializing AudioEngine");
       await start2();
-      logger16.debug("audio", "Tone.js started successfully");
+      logger17.debug("audio", "Tone.js started successfully");
       this.volume = new Volume(this.settings.volume).toDestination();
-      logger16.debug("audio", "Master volume created");
+      logger17.debug("audio", "Master volume created");
       await this.initializeEffects();
       await this.initializeInstruments();
       await this.initializeAdvancedSynthesis();
@@ -39832,9 +42331,9 @@ var AudioEngine = class {
       }
       this.isInitialized = true;
       this.generateInitializationReport();
-      logger16.info("audio", "AudioEngine initialized successfully");
+      logger17.info("audio", "AudioEngine initialized successfully");
     } catch (error) {
-      logger16.error("audio", "Failed to initialize AudioEngine", error);
+      logger17.error("audio", "Failed to initialize AudioEngine", error);
       throw error;
     }
   }
@@ -39865,7 +42364,7 @@ var AudioEngine = class {
     }
     const status = configurationGaps.length === 0 ? "Optimal" : "Minor Issues";
     const quality = report.percussionEngine && report.electronicEngine ? "Full Advanced Synthesis" : "Standard Synthesis";
-    logger16.info("initialization-report", "Audio Engine Initialization Summary", {
+    logger17.info("initialization-report", "Audio Engine Initialization Summary", {
       status,
       quality,
       instruments: {
@@ -39888,17 +42387,17 @@ var AudioEngine = class {
       }
     });
     if (configurationGaps.length > 0) {
-      logger16.warn("initialization-report", "Configuration gaps detected", {
+      logger17.warn("initialization-report", "Configuration gaps detected", {
         issues: configurationGaps,
         impact: "Some instruments may not have proper volume/effects control"
       });
     }
   }
   async initializeAdvancedSynthesis() {
-    logger16.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
+    logger17.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
     try {
       const hasPercussionEnabled = this.hasPercussionInstrumentsEnabled();
-      logger16.debug("percussion", "\u{1F680} ISSUE #010 DEBUG: Percussion initialization check", {
+      logger17.debug("percussion", "\u{1F680} ISSUE #010 DEBUG: Percussion initialization check", {
         hasPercussionEnabled,
         enabledInstruments: Object.keys(this.settings.instruments).filter(
           (name) => {
@@ -39914,27 +42413,27 @@ var AudioEngine = class {
         )
       });
       if (this.volume && hasPercussionEnabled) {
-        logger16.debug("percussion", "Percussion instruments enabled, initializing percussion engine");
+        logger17.debug("percussion", "Percussion instruments enabled, initializing percussion engine");
         this.percussionEngine = new PercussionEngine(this.volume, "ogg");
         await this.percussionEngine.initializePercussion();
-        logger16.debug("percussion", "Advanced percussion synthesis initialized");
+        logger17.debug("percussion", "Advanced percussion synthesis initialized");
       } else {
-        logger16.info("percussion", "\u{1F680} ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)");
+        logger17.info("percussion", "\u{1F680} ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)");
       }
       const hasElectronicEnabled = this.hasElectronicInstrumentsEnabled();
       if (this.volume && hasElectronicEnabled) {
-        logger16.debug("electronic", "Electronic instruments enabled, initializing electronic engine");
+        logger17.debug("electronic", "Electronic instruments enabled, initializing electronic engine");
         this.electronicEngine = new ElectronicEngine(this.volume);
         await this.electronicEngine.initializeElectronic();
-        logger16.debug("electronic", "Advanced electronic synthesis initialized");
+        logger17.debug("electronic", "Advanced electronic synthesis initialized");
       } else {
-        logger16.info("electronic", "Skipping electronic engine initialization (no electronic instruments enabled)");
+        logger17.info("electronic", "Skipping electronic engine initialization (no electronic instruments enabled)");
       }
       await this.initializeMasterEffects();
       this.initializePerformanceOptimization();
-      logger16.info("advanced-synthesis", "Advanced synthesis engines ready");
+      logger17.info("advanced-synthesis", "Advanced synthesis engines ready");
     } catch (error) {
-      logger16.error("advanced-synthesis", "Failed to initialize advanced synthesis", error);
+      logger17.error("advanced-synthesis", "Failed to initialize advanced synthesis", error);
     }
   }
   async initializeEffects() {
@@ -39976,7 +42475,7 @@ var AudioEngine = class {
       this.instrumentEffects.set(instrumentName, effectMap);
     }
     this.validateInstrumentConfigurations(instruments);
-    logger16.info("initialization", "Per-instrument volume controls and effects initialized", {
+    logger17.info("initialization", "Per-instrument volume controls and effects initialized", {
       instrumentCount: instruments.length,
       effectsPerInstrument: 3,
       volumeControlsCreated: instruments.length
@@ -40001,18 +42500,18 @@ var AudioEngine = class {
       }
     }
     if (missingConfigurations.length > 0) {
-      logger16.error("configuration", "Instruments missing volume or effects configuration", {
+      logger17.error("configuration", "Instruments missing volume or effects configuration", {
         instruments: missingConfigurations,
         count: missingConfigurations.length
       });
     }
     if (defaultsApplied.length > 0) {
-      logger16.debug("configuration", "Applied default configuration for instruments", {
+      logger17.debug("configuration", "Applied default configuration for instruments", {
         instruments: defaultsApplied,
         count: defaultsApplied.length
       });
     }
-    logger16.info("configuration", "Configuration validation completed", {
+    logger17.info("configuration", "Configuration validation completed", {
       totalInstruments: instruments.length,
       fullyConfigured: instruments.length - missingConfigurations.length,
       missingConfiguration: missingConfigurations.length,
@@ -40021,7 +42520,7 @@ var AudioEngine = class {
   }
   // Phase 3.5: Enhanced Effect Routing initialization
   async initializeEnhancedRouting() {
-    logger16.debug("enhanced-routing", "Initializing enhanced effect routing");
+    logger17.debug("enhanced-routing", "Initializing enhanced effect routing");
     this.enhancedRouting = true;
     if (!this.settings.enhancedRouting) {
       this.settings = migrateToEnhancedRouting(this.settings);
@@ -40032,7 +42531,7 @@ var AudioEngine = class {
     }
     this.initializeSendReturnBuses();
     this.connectInstrumentsEnhanced();
-    logger16.info("enhanced-routing", "Enhanced effect routing initialized", {
+    logger17.info("enhanced-routing", "Enhanced effect routing initialized", {
       instrumentCount: instruments.length,
       enhancedRouting: true
     });
@@ -40041,7 +42540,7 @@ var AudioEngine = class {
     var _a;
     const effectChain = (_a = this.settings.enhancedRouting) == null ? void 0 : _a.effectChains.get(instrumentName);
     if (!effectChain) {
-      logger16.warn("enhanced-routing", `No effect chain found for ${instrumentName}`);
+      logger17.warn("enhanced-routing", `No effect chain found for ${instrumentName}`);
       return;
     }
     const effectNodes = [];
@@ -40053,7 +42552,7 @@ var AudioEngine = class {
       }
     }
     this.effectChains.set(instrumentName, effectNodes);
-    logger16.debug("enhanced-routing", `Effect chain initialized for ${instrumentName}`, {
+    logger17.debug("enhanced-routing", `Effect chain initialized for ${instrumentName}`, {
       nodeCount: effectNodes.length
     });
   }
@@ -40087,11 +42586,11 @@ var AudioEngine = class {
           const compressor = new Compressor(compressorSettings.params);
           return compressor;
         default:
-          logger16.warn("enhanced-routing", `Unknown effect type: ${node.type}`);
+          logger17.warn("enhanced-routing", `Unknown effect type: ${node.type}`);
           return null;
       }
     } catch (error) {
-      logger16.error("enhanced-routing", `Failed to create effect ${node.type}`, error);
+      logger17.error("enhanced-routing", `Failed to create effect ${node.type}`, error);
       return null;
     }
   }
@@ -40108,7 +42607,7 @@ var AudioEngine = class {
     for (const [busId, returnBus] of routingMatrix.returns) {
       this.returnBuses.set(busId, returnBus);
     }
-    logger16.debug("enhanced-routing", "Send/return buses initialized", {
+    logger17.debug("enhanced-routing", "Send/return buses initialized", {
       sendBuses: this.sendBuses.size,
       returnBuses: this.returnBuses.size
     });
@@ -40131,7 +42630,7 @@ var AudioEngine = class {
       }
       this.connectToMasterChain(output);
     }
-    logger16.debug("enhanced-routing", "Enhanced instrument connections established");
+    logger17.debug("enhanced-routing", "Enhanced instrument connections established");
   }
   connectToMasterChain(instrumentOutput) {
     let output = instrumentOutput;
@@ -40149,25 +42648,25 @@ var AudioEngine = class {
     }
   }
   connectSynthesisInstruments() {
-    logger16.debug("synthesis", "Connecting synthesis instruments to master output");
+    logger17.debug("synthesis", "Connecting synthesis instruments to master output");
     for (const [instrumentName, instrument] of this.instruments) {
       const volume = this.instrumentVolumes.get(instrumentName);
       if (!volume) {
-        logger16.error("synthesis", `Missing volume for instrument: ${instrumentName} - this indicates an initialization order problem`);
+        logger17.error("synthesis", `Missing volume for instrument: ${instrumentName} - this indicates an initialization order problem`);
         continue;
       }
       if (this.volume) {
         volume.connect(this.volume);
-        logger16.debug("synthesis", `Connected ${instrumentName} directly to master output (synthesis mode)`);
+        logger17.debug("synthesis", `Connected ${instrumentName} directly to master output (synthesis mode)`);
       } else {
-        logger16.error("synthesis", `Master volume not available when connecting ${instrumentName}`);
+        logger17.error("synthesis", `Master volume not available when connecting ${instrumentName}`);
       }
     }
   }
   async initializeInstruments() {
     var _a;
     const configs = this.getSamplerConfigs();
-    logger16.info("instruments", "Initializing instruments with per-instrument quality control");
+    logger17.info("instruments", "Initializing instruments with per-instrument quality control");
     const allInstruments = [
       "piano",
       "organ",
@@ -40206,7 +42705,7 @@ var AudioEngine = class {
       const instrumentSettings = this.settings.instruments[instrumentName];
       return (instrumentSettings == null ? void 0 : instrumentSettings.enabled) === true;
     });
-    logger16.info("instruments", `Initializing ${enabledInstruments.length} enabled instruments with individual quality control`);
+    logger17.info("instruments", `Initializing ${enabledInstruments.length} enabled instruments with individual quality control`);
     for (const instrumentName of enabledInstruments) {
       const instrumentSettings = this.settings.instruments[instrumentName];
       const useHighQuality = (_a = instrumentSettings == null ? void 0 : instrumentSettings.useHighQuality) != null ? _a : false;
@@ -40216,27 +42715,27 @@ var AudioEngine = class {
         await this.initializeInstrumentWithSamples(instrumentName, config);
       } else {
         if (useHighQuality && !hasSamples) {
-          logger16.warn("instruments", `${instrumentName} requested high-quality samples but none available, using synthesis`);
+          logger17.warn("instruments", `${instrumentName} requested high-quality samples but none available, using synthesis`);
         }
         this.initializeInstrumentWithSynthesis(instrumentName);
       }
     }
     this.applyInstrumentSettings();
-    logger16.info("instruments", `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
+    logger17.info("instruments", `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
   }
   async initializeInstrumentWithSamples(instrumentName, config) {
     var _a, _b, _c;
     try {
-      logger16.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
+      logger17.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
       const sampler = await new Promise((resolve, reject) => {
         const samplerInstance = new Sampler({
           ...config,
           onload: () => {
-            logger16.debug("samples", `${instrumentName} samples loaded successfully`);
+            logger17.debug("samples", `${instrumentName} samples loaded successfully`);
             resolve(samplerInstance);
           },
           onerror: (error) => {
-            logger16.error("samples", `${instrumentName} samples failed to load`, {
+            logger17.error("samples", `${instrumentName} samples failed to load`, {
               error: (error == null ? void 0 : error.message) || error,
               config: {
                 baseUrl: config.baseUrl,
@@ -40274,15 +42773,15 @@ var AudioEngine = class {
       }
       output.connect(this.volume);
       this.instruments.set(instrumentName, sampler);
-      logger16.info("instruments", `Successfully initialized ${instrumentName} with samples`);
+      logger17.info("instruments", `Successfully initialized ${instrumentName} with samples`);
     } catch (error) {
-      logger16.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
+      logger17.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
       this.initializeInstrumentWithSynthesis(instrumentName);
     }
   }
   initializeInstrumentWithSynthesis(instrumentName) {
     var _a, _b, _c;
-    logger16.debug("instruments", `Initializing ${instrumentName} with synthesis`);
+    logger17.debug("instruments", `Initializing ${instrumentName} with synthesis`);
     let synth;
     const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
     switch (instrumentName) {
@@ -40475,7 +42974,7 @@ var AudioEngine = class {
    * Enhanced whale initialization to handle all whale instruments consistently
    */
   initializeWhaleSynthesizer() {
-    logger16.debug("environmental", "Initializing whale synthesizers for all species");
+    logger17.debug("environmental", "Initializing whale synthesizers for all species");
     const whaleInstruments = [
       "whaleHumpback",
       "whaleBlue",
@@ -40492,10 +42991,10 @@ var AudioEngine = class {
     whaleInstruments.forEach((whaleType) => {
       const instrumentSettings = this.settings.instruments[whaleType];
       if (!(instrumentSettings == null ? void 0 : instrumentSettings.enabled)) {
-        logger16.debug("environmental", `Skipping disabled whale instrument: ${whaleType}`);
+        logger17.debug("environmental", `Skipping disabled whale instrument: ${whaleType}`);
         return;
       }
-      logger16.info("issue-015-fix", `\u{1F40B} WHALE SYNTHESIS: Initializing ${whaleType}`, {
+      logger17.info("issue-015-fix", `\u{1F40B} WHALE SYNTHESIS: Initializing ${whaleType}`, {
         whaleType,
         enabled: instrumentSettings.enabled,
         action: "whale-initialization"
@@ -40518,9 +43017,9 @@ var AudioEngine = class {
         });
         whaleReverb.generate().then(() => {
           whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
-          logger16.debug("environmental", `${whaleType} synthesizer effects chain connected`);
+          logger17.debug("environmental", `${whaleType} synthesizer effects chain connected`);
         }).catch((error) => {
-          logger16.warn("environmental", `Failed to generate ${whaleType} reverb, using fallback`, error);
+          logger17.warn("environmental", `Failed to generate ${whaleType} reverb, using fallback`, error);
           whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
         });
         this.instruments.set(whaleType, whaleSynth);
@@ -40533,21 +43032,21 @@ var AudioEngine = class {
           whaleEffects.set("chorus", whaleChorus);
         }
         initializedWhales++;
-        logger16.info("issue-015-fix", `\u2705 Successfully initialized ${whaleType}`, {
+        logger17.info("issue-015-fix", `\u2705 Successfully initialized ${whaleType}`, {
           whaleType,
           hasVolumeControl: this.instrumentVolumes.has(whaleType),
           hasSynthesizer: this.instruments.has(whaleType),
           action: "whale-initialization-success"
         });
       } catch (error) {
-        logger16.error("issue-015-fix", `\u274C Failed to initialize ${whaleType}`, {
+        logger17.error("issue-015-fix", `\u274C Failed to initialize ${whaleType}`, {
           whaleType,
           error: error.message,
           action: "whale-initialization-failure"
         });
       }
     });
-    logger16.info("environmental", `Whale synthesizers initialized successfully`, {
+    logger17.info("environmental", `Whale synthesizers initialized successfully`, {
       totalWhaleTypes: whaleInstruments.length,
       initializedWhales,
       skippedDisabled: whaleInstruments.length - initializedWhales
@@ -40670,7 +43169,7 @@ var AudioEngine = class {
       maxPolyphony: maxVoices,
       options: config
     });
-    logger16.debug("environmental", `Created ${whaleType} synthesizer with specific characteristics`, {
+    logger17.debug("environmental", `Created ${whaleType} synthesizer with specific characteristics`, {
       whaleType,
       maxVoices,
       harmonicity: config.harmonicity,
@@ -40686,30 +43185,30 @@ var AudioEngine = class {
     const configKeys = Object.keys(configs);
     const initializedKeys = Array.from(this.instruments.keys());
     const missingKeys = configKeys.filter((key) => !initializedKeys.includes(key));
-    logger16.debug("instruments", "Initializing missing instruments", {
+    logger17.debug("instruments", "Initializing missing instruments", {
       totalConfigs: configKeys.length,
       alreadyInitialized: initializedKeys.length,
       missing: missingKeys.length,
       missingInstruments: missingKeys,
       perInstrumentQuality: "Individual instrument control"
     });
-    logger16.info("instruments", "Creating synthesizers for missing instruments");
+    logger17.info("instruments", "Creating synthesizers for missing instruments");
     const settings = this.settings;
-    logger16.info("issue-014-fix", "\u{1F527} FAST-PATH SYNTHESIS: Applying enabled instrument filter", {
+    logger17.info("issue-014-fix", "\u{1F527} FAST-PATH SYNTHESIS: Applying enabled instrument filter", {
       totalMissingInstruments: missingKeys.length,
       missingInstruments: missingKeys
     });
     missingKeys.forEach((instrumentName) => {
       var _a, _b, _c, _d;
       if (((_a = settings.instruments[instrumentName]) == null ? void 0 : _a.enabled) !== true) {
-        logger16.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
+        logger17.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
           instrumentName,
           enabled: (_b = settings.instruments[instrumentName]) == null ? void 0 : _b.enabled,
           reason: "disabled-in-family-settings"
         });
         return;
       }
-      logger16.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
+      logger17.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
         instrumentName,
         enabled: (_c = settings.instruments[instrumentName]) == null ? void 0 : _c.enabled
       });
@@ -40721,10 +43220,10 @@ var AudioEngine = class {
           const sampler = new Sampler({
             ...config,
             onload: () => {
-              logger16.debug("samples", `${instrumentName} samples loaded successfully`);
+              logger17.debug("samples", `${instrumentName} samples loaded successfully`);
             },
             onerror: (error) => {
-              logger16.warn("samples", `${instrumentName} samples failed to load, falling back to synthesis`, { error });
+              logger17.warn("samples", `${instrumentName} samples failed to load, falling back to synthesis`, { error });
             }
           });
           const volume2 = new Volume(-6);
@@ -40734,10 +43233,10 @@ var AudioEngine = class {
             volume2.connect(this.volume);
           }
           this.instruments.set(instrumentName, sampler);
-          logger16.debug("instruments", `Created sample-based instrument: ${instrumentName}`);
+          logger17.debug("instruments", `Created sample-based instrument: ${instrumentName}`);
           return;
         } catch (error) {
-          logger16.warn("instruments", `Failed to create sampler for ${instrumentName}, using synthesis`, { error });
+          logger17.warn("instruments", `Failed to create sampler for ${instrumentName}, using synthesis`, { error });
         }
       }
       const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
@@ -40756,7 +43255,7 @@ var AudioEngine = class {
         volume.connect(this.volume);
       }
       this.instruments.set(instrumentName, synth);
-      logger16.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
+      logger17.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
     });
   }
   /**
@@ -40764,7 +43263,7 @@ var AudioEngine = class {
    * Issue #006 Fix: Targeted re-initialization to avoid affecting healthy instruments
    */
   async reinitializeSpecificInstruments(instrumentNames) {
-    logger16.info("issue-006-debug", "Starting targeted instrument re-initialization", {
+    logger17.info("issue-006-debug", "Starting targeted instrument re-initialization", {
       instrumentCount: instrumentNames.length,
       instruments: instrumentNames,
       action: "targeted-reinit-start"
@@ -40772,7 +43271,7 @@ var AudioEngine = class {
     const configs = this.getSamplerConfigs();
     for (const instrumentName of instrumentNames) {
       try {
-        logger16.info("issue-006-debug", `Re-initializing ${instrumentName}`, {
+        logger17.info("issue-006-debug", `Re-initializing ${instrumentName}`, {
           instrumentName,
           configExists: !!configs[instrumentName],
           action: "individual-reinit-start"
@@ -40785,7 +43284,7 @@ var AudioEngine = class {
         if (this.instrumentVolumes.has(instrumentName)) {
           this.instrumentVolumes.delete(instrumentName);
         }
-        logger16.info("issue-006-debug", `Re-creating synthesizer for ${instrumentName}`, {
+        logger17.info("issue-006-debug", `Re-creating synthesizer for ${instrumentName}`, {
           instrumentName,
           mode: "synthesis",
           action: "synth-reinit-start"
@@ -40823,7 +43322,7 @@ var AudioEngine = class {
         volume.connect(this.volume);
         this.instruments.set(instrumentName, synth);
         this.instrumentVolumes.set(instrumentName, volume);
-        logger16.info("issue-006-debug", `Successfully re-initialized synthesizer for ${instrumentName}`, {
+        logger17.info("issue-006-debug", `Successfully re-initialized synthesizer for ${instrumentName}`, {
           instrumentName,
           synthType: "PolySynth",
           finalVolumeValue: volume.volume.value,
@@ -40833,7 +43332,7 @@ var AudioEngine = class {
           action: "synth-reinit-success"
         });
         if (false) {
-          logger16.info("issue-006-debug", `Re-creating sampler for ${instrumentName}`, {
+          logger17.info("issue-006-debug", `Re-creating sampler for ${instrumentName}`, {
             instrumentName,
             mode: "samples",
             action: "sampler-reinit-start"
@@ -40844,7 +43343,7 @@ var AudioEngine = class {
           volume2.connect(this.volume);
           this.instruments.set(instrumentName, sampler);
           this.instrumentVolumes.set(instrumentName, volume2);
-          logger16.info("issue-006-debug", `Successfully re-initialized sampler for ${instrumentName}`, {
+          logger17.info("issue-006-debug", `Successfully re-initialized sampler for ${instrumentName}`, {
             instrumentName,
             finalVolumeValue: volume2.volume.value,
             finalVolumeMuted: volume2.mute,
@@ -40853,7 +43352,7 @@ var AudioEngine = class {
             action: "sampler-reinit-success"
           });
         } else {
-          logger16.error("issue-006-debug", `No valid initialization method for ${instrumentName}`, {
+          logger17.error("issue-006-debug", `No valid initialization method for ${instrumentName}`, {
             instrumentName,
             hasSamplerConfig: !!configs[instrumentName],
             perInstrumentQuality: "Individual instrument control",
@@ -40861,7 +43360,7 @@ var AudioEngine = class {
           });
         }
       } catch (error) {
-        logger16.error("issue-006-debug", `Failed to re-initialize ${instrumentName}`, {
+        logger17.error("issue-006-debug", `Failed to re-initialize ${instrumentName}`, {
           instrumentName,
           error: error.message,
           action: "individual-reinit-error"
@@ -40875,7 +43374,7 @@ var AudioEngine = class {
         this.setInstrumentEnabled(instrumentName, instrumentSettings.enabled);
       }
     });
-    logger16.info("issue-006-debug", "Targeted instrument re-initialization completed", {
+    logger17.info("issue-006-debug", "Targeted instrument re-initialization completed", {
       instrumentCount: instrumentNames.length,
       instruments: instrumentNames,
       action: "targeted-reinit-complete"
@@ -40885,7 +43384,7 @@ var AudioEngine = class {
     var _a, _b;
     try {
       const enabledInstrumentsList = this.getEnabledInstruments();
-      logger16.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
+      logger17.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
         sequenceLength: sequence.length,
         isInitialized: this.isInitialized,
         isPlaying: this.isPlaying,
@@ -40898,36 +43397,36 @@ var AudioEngine = class {
         hasBeenTriggeredCount: sequence.filter((n) => n.hasBeenTriggered).length,
         action: "play-sequence-init"
       });
-      logger16.info("debug", "Step 1: Checking initialization state", {
+      logger17.info("debug", "Step 1: Checking initialization state", {
         isInitialized: this.isInitialized,
         instrumentsSize: this.instruments.size
       });
       if (!this.isInitialized || !this.instruments.size) {
-        logger16.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
+        logger17.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
         await this.initializeEssentials();
-        logger16.info("debug", "Step 2: FAST-PATH initialization completed", {
+        logger17.info("debug", "Step 2: FAST-PATH initialization completed", {
           isInitialized: this.isInitialized,
           isMinimalMode: this.isMinimalMode,
           instrumentsSize: this.instruments.size
         });
       }
-      logger16.info("debug", "Step 3: Checking upgrade conditions", {
+      logger17.info("debug", "Step 3: Checking upgrade conditions", {
         isMinimalMode: this.isMinimalMode,
         shouldUpgrade: this.isMinimalMode
       });
-      logger16.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
+      logger17.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
         isMinimalMode: this.isMinimalMode,
         instrumentsSize: this.instruments.size,
         hasPiano: this.instruments.has("piano"),
         instrumentsList: Array.from(this.instruments.keys())
       });
       if (this.isMinimalMode) {
-        logger16.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
+        logger17.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
         const requiresSamples = enabledInstrumentsList.some((instrumentName) => {
           const settings = this.settings.instruments[instrumentName];
           return (settings == null ? void 0 : settings.useHighQuality) === true;
         });
-        logger16.info("debug", "Step 4: Sample requirements analysis", {
+        logger17.info("debug", "Step 4: Sample requirements analysis", {
           enabledInstruments: enabledInstrumentsList,
           requiresSamples,
           pianoUseHighQuality: (_a = this.settings.instruments.piano) == null ? void 0 : _a.useHighQuality,
@@ -40936,7 +43435,7 @@ var AudioEngine = class {
         const hasPercussion = this.hasPercussionInstrumentsEnabled();
         const hasElectronic = this.hasElectronicInstrumentsEnabled();
         const isSynthesisMode = false;
-        logger16.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
+        logger17.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
           currentInstrumentCount: this.instruments.size,
           currentInstruments: Array.from(this.instruments.keys()),
           hasPercussionEnabled: hasPercussion,
@@ -40954,12 +43453,12 @@ var AudioEngine = class {
           )
         });
         if (isSynthesisMode) {
-          logger16.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
+          logger17.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
           if (!this.volume) {
-            logger16.debug("playbook", "Creating master volume for synthesis mode");
+            logger17.debug("playbook", "Creating master volume for synthesis mode");
             this.volume = new Volume(this.settings.volume).toDestination();
           }
-          logger16.debug("playbook", "Clearing minimal mode instruments before full initialization", {
+          logger17.debug("playbook", "Clearing minimal mode instruments before full initialization", {
             instrumentsToDispose: Array.from(this.instruments.keys())
           });
           this.instruments.forEach((instrument) => instrument.dispose());
@@ -40969,38 +43468,38 @@ var AudioEngine = class {
           await this.initializeAdvancedSynthesis();
           this.isMinimalMode = false;
           this.isInitialized = true;
-          logger16.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
+          logger17.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
             instrumentsCreated: this.instruments.size,
             instrumentsList: Array.from(this.instruments.keys())
           });
         } else {
-          logger16.info("debug", "Step 5: Upgrading to full initialization with samples");
+          logger17.info("debug", "Step 5: Upgrading to full initialization with samples");
           await this.forceFullInitialization();
-          logger16.info("debug", "Step 6: Full initialization completed");
+          logger17.info("debug", "Step 6: Full initialization completed");
         }
-        logger16.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
+        logger17.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
           instrumentsAfterUpgrade: this.instruments.size,
           instrumentsList: Array.from(this.instruments.keys()),
           isInitialized: this.isInitialized,
           isMinimalMode: this.isMinimalMode
         });
       } else {
-        logger16.info("debug", "Step 3: No upgrade needed - not in minimal mode");
+        logger17.info("debug", "Step 3: No upgrade needed - not in minimal mode");
       }
       const sequenceInstruments = [...new Set(sequence.map((note) => note.instrument))];
-      logger16.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
+      logger17.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
         sequenceInstruments,
         availableInstruments: Array.from(this.instruments.keys()),
         enabledInstruments: enabledInstrumentsList,
         sequenceLength: sequence.length,
         instrumentMapSize: this.instruments.size
       });
-      logger16.info("debug", "Step 7: Starting volume node inspection");
+      logger17.info("debug", "Step 7: Starting volume node inspection");
       const corruptedVolumeInstruments = enabledInstrumentsList.filter((instrumentName) => {
         var _a2, _b2, _c, _d;
         const hasInstrument = this.instruments.has(instrumentName);
         const volumeNode = this.instrumentVolumes.get(instrumentName);
-        logger16.info("issue-006-debug", "Volume node inspection for enabled instrument", {
+        logger17.info("issue-006-debug", "Volume node inspection for enabled instrument", {
           instrumentName,
           hasInstrument,
           volumeNodeExists: !!volumeNode,
@@ -41010,14 +43509,14 @@ var AudioEngine = class {
           action: "volume-node-inspection"
         });
         if (hasInstrument && !volumeNode) {
-          logger16.warn("issue-006-debug", "Missing volume node detected", {
+          logger17.warn("issue-006-debug", "Missing volume node detected", {
             instrumentName,
             action: "missing-volume-node"
           });
           return true;
         }
         if (volumeNode && volumeNode.volume.value === null) {
-          logger16.error("issue-006-debug", "Corrupted volume node detected (null value)", {
+          logger17.error("issue-006-debug", "Corrupted volume node detected (null value)", {
             instrumentName,
             volumeValue: volumeNode.volume.value,
             volumeMuted: volumeNode.mute,
@@ -41027,7 +43526,7 @@ var AudioEngine = class {
         }
         const instrumentSettings = this.settings.instruments[instrumentName];
         if (hasInstrument && volumeNode && (instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-          logger16.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
+          logger17.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
             instrumentName,
             instrumentEnabled: instrumentSettings.enabled,
             volumeMuted: volumeNode.mute,
@@ -41037,21 +43536,21 @@ var AudioEngine = class {
         }
         return false;
       });
-      logger16.info("debug", "Step 8: Volume node inspection completed", {
+      logger17.info("debug", "Step 8: Volume node inspection completed", {
         corruptedCount: corruptedVolumeInstruments.length,
         corruptedInstruments: corruptedVolumeInstruments
       });
       if (corruptedVolumeInstruments.length > 0) {
         const currentLogLevel = LoggerFactory.getLogLevel();
         if (currentLogLevel === "debug") {
-          logger16.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
+          logger17.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
             corruptedVolumeInstruments,
             corruptedCount: corruptedVolumeInstruments.length,
             totalEnabledCount: enabledInstrumentsList.length,
             action: "corrupted-volume-nodes-detected"
           });
         } else {
-          logger16.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
+          logger17.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
             corruptedVolumeInstruments,
             corruptedCount: corruptedVolumeInstruments.length,
             totalEnabledCount: enabledInstrumentsList.length,
@@ -41059,13 +43558,13 @@ var AudioEngine = class {
           });
         }
         corruptedVolumeInstruments.forEach((instrumentName) => {
-          logger16.info("issue-006-debug", "Clearing corrupted volume node", {
+          logger17.info("issue-006-debug", "Clearing corrupted volume node", {
             instrumentName,
             action: "clear-corrupted-volume"
           });
           this.instrumentVolumes.delete(instrumentName);
         });
-        logger16.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
+        logger17.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
           corruptedInstruments: corruptedVolumeInstruments,
           action: "start-targeted-reinitialization"
         });
@@ -41077,7 +43576,7 @@ var AudioEngine = class {
             return true;
           }
           if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-            logger16.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+            logger17.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
               instrumentName,
               shouldBeEnabled: instrumentSettings.enabled,
               actuallyMuted: volumeNode.mute,
@@ -41089,42 +43588,42 @@ var AudioEngine = class {
         });
         if (stillCorrupted.length > 0) {
           if (currentLogLevel === "debug") {
-            logger16.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
+            logger17.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
               stillCorrupted,
               action: "reinitialization-failed"
             });
           } else {
-            logger16.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
+            logger17.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
               stillCorrupted,
               action: "reinitialization-incomplete"
             });
           }
         } else {
-          logger16.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
+          logger17.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
             fixedInstruments: corruptedVolumeInstruments,
             action: "reinitialization-success"
           });
         }
       }
-      logger16.info("debug", "Step 9: Continuing with playback logic...");
+      logger17.info("debug", "Step 9: Continuing with playback logic...");
       if (this.isPlaying) {
-        logger16.info("playback", "Stopping current sequence before starting new one");
+        logger17.info("playback", "Stopping current sequence before starting new one");
         this.stop();
       }
       if (sequence.length === 0) {
-        logger16.error("playback", "Empty sequence provided");
+        logger17.error("playback", "Empty sequence provided");
         throw new Error("No musical sequence to play");
       }
       const invalidNotes = sequence.filter(
         (note) => !note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
       );
       if (invalidNotes.length > 0) {
-        logger16.error("playback", "Invalid notes in sequence", {
+        logger17.error("playback", "Invalid notes in sequence", {
           invalidCount: invalidNotes.length,
           examples: invalidNotes.slice(0, 3)
         });
       }
-      logger16.info("playback", "Starting sequence playback", {
+      logger17.info("playback", "Starting sequence playback", {
         noteCount: sequence.length,
         totalDuration: this.getSequenceDuration(sequence),
         pitchRange: {
@@ -41137,14 +43636,14 @@ var AudioEngine = class {
         }
       });
       try {
-        logger16.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
+        logger17.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
         const processedSequence = sequence;
         processedSequence.forEach((note) => {
           if (note.hasBeenTriggered) {
             delete note.hasBeenTriggered;
           }
         });
-        logger16.debug("playback", "Reset note trigger flags for replay", {
+        logger17.debug("playback", "Reset note trigger flags for replay", {
           noteCount: processedSequence.length
         });
         this.currentSequence = processedSequence;
@@ -41152,7 +43651,7 @@ var AudioEngine = class {
         this.scheduledEvents = [];
         this.sequenceStartTime = Date.now();
         this.eventEmitter.emit("playback-started", null);
-        logger16.info("issue-006-debug", "Transport state before reset", {
+        logger17.info("issue-006-debug", "Transport state before reset", {
           state: getTransport().state,
           position: getTransport().position,
           seconds: getTransport().seconds,
@@ -41162,11 +43661,11 @@ var AudioEngine = class {
         if (getTransport().state === "started") {
           getTransport().stop();
           getTransport().cancel();
-          logger16.info("issue-006-debug", "Transport stopped and cancelled", {
+          logger17.info("issue-006-debug", "Transport stopped and cancelled", {
             action: "transport-stop-cancel"
           });
         }
-        logger16.info("issue-006-debug", "Transport state after reset", {
+        logger17.info("issue-006-debug", "Transport state after reset", {
           state: getTransport().state,
           position: getTransport().position,
           seconds: getTransport().seconds,
@@ -41174,19 +43673,19 @@ var AudioEngine = class {
         });
         const sequenceDuration = this.getSequenceDuration(processedSequence);
         getTransport().loopEnd = sequenceDuration + 2;
-        logger16.info("debug", "Starting sequence playback", {
+        logger17.info("debug", "Starting sequence playback", {
           sequenceDuration: sequenceDuration.toFixed(2),
           transportState: getTransport().state,
           currentTime: getContext().currentTime.toFixed(3)
         });
         this.startRealtimePlayback(processedSequence);
-        logger16.info("playback", "Real-time playback system started", {
+        logger17.info("playback", "Real-time playback system started", {
           noteCount: processedSequence.length,
           sequenceDuration: sequenceDuration.toFixed(2),
           audioContextState: getContext().state
         });
       } catch (error) {
-        logger16.error("playback", "Error processing sequence", {
+        logger17.error("playback", "Error processing sequence", {
           error: error instanceof Error ? {
             name: error.name,
             message: error.message,
@@ -41205,7 +43704,7 @@ var AudioEngine = class {
         throw error;
       }
     } catch (error) {
-      logger16.error("playback", "CRITICAL: Exception in playSequence method", {
+      logger17.error("playback", "CRITICAL: Exception in playSequence method", {
         error: error.message,
         stack: error.stack,
         sequenceLength: sequence == null ? void 0 : sequence.length,
@@ -41217,7 +43716,7 @@ var AudioEngine = class {
     }
   }
   startRealtimePlayback(sequence) {
-    logger16.info("playback", "Starting real-time playback system", {
+    logger17.info("playback", "Starting real-time playback system", {
       noteCount: sequence.length,
       maxDuration: Math.max(...sequence.map((n) => n.timing + n.duration))
     });
@@ -41228,11 +43727,11 @@ var AudioEngine = class {
     this.lastTriggerTime = 0;
     if (getContext().state === "suspended") {
       getContext().resume();
-      logger16.debug("context", "Resumed suspended audio context for real-time playback");
+      logger17.debug("context", "Resumed suspended audio context for real-time playback");
     }
     try {
       if (getContext().latencyHint !== "playback") {
-        logger16.debug("context", "Optimizing audio context for playback latency");
+        logger17.debug("context", "Optimizing audio context for playback latency");
       }
     } catch (e) {
     }
@@ -41247,7 +43746,7 @@ var AudioEngine = class {
       }
       const currentTime = getContext().currentTime;
       const elapsedTime = currentTime - this.realtimeStartTime;
-      logger16.debug("issue-006-debug", "Realtime timer tick", {
+      logger17.debug("issue-006-debug", "Realtime timer tick", {
         elapsedTime: elapsedTime.toFixed(3),
         contextTime: currentTime.toFixed(3),
         contextState: getContext().state,
@@ -41261,7 +43760,7 @@ var AudioEngine = class {
       if (notesToPlay.length > 0 || elapsedTime < 5) {
         const totalNotes = sequence.length;
         const triggeredNotes = sequence.filter((n) => n.hasBeenTriggered).length;
-        logger16.debug("issue-006-debug", "Note filtering completed", {
+        logger17.debug("issue-006-debug", "Note filtering completed", {
           totalNotes,
           triggeredNotes,
           notesToPlay: notesToPlay.length,
@@ -41272,7 +43771,7 @@ var AudioEngine = class {
       }
       const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
       if (timeSinceLastTrigger < 0.05 && notesToPlay.length > 0) {
-        logger16.debug("issue-006-debug", "Note skipped due to spacing constraint", {
+        logger17.debug("issue-006-debug", "Note skipped due to spacing constraint", {
           timeSinceLastTrigger: timeSinceLastTrigger.toFixed(3),
           notesToPlay: notesToPlay.length,
           action: "skip-spacing"
@@ -41287,23 +43786,23 @@ var AudioEngine = class {
       const frequency = mapping.pitch;
       const duration = mapping.duration;
       const velocity = mapping.velocity;
-      logger16.debug("issue-006-debug", "About to trigger note - extracting instrument", {
+      logger17.debug("issue-006-debug", "About to trigger note - extracting instrument", {
         elapsedTime: elapsedTime.toFixed(3),
         frequency: frequency.toFixed(1),
         duration: duration.toFixed(2),
         mappingInstrument: mapping.instrument || "none",
         action: "before-instrument-extraction"
       });
-      logger16.debug("trigger", `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
+      logger17.debug("trigger", `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
       let instrumentName;
       try {
         instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
-        logger16.debug("issue-006-debug", "Instrument determined successfully", {
+        logger17.debug("issue-006-debug", "Instrument determined successfully", {
           instrumentName,
           action: "instrument-determined"
         });
       } catch (error) {
-        logger16.error("issue-006-debug", "Failed to determine instrument", {
+        logger17.error("issue-006-debug", "Failed to determine instrument", {
           error: error.message,
           mapping,
           action: "instrument-determination-failed"
@@ -41321,7 +43820,7 @@ var AudioEngine = class {
         this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
       } else if (this.isEnvironmentalInstrument(instrumentName)) {
         this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch((error) => {
-          logger16.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, error);
+          logger17.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, error);
         });
       } else {
         const synth = this.instruments.get(instrumentName);
@@ -41330,7 +43829,7 @@ var AudioEngine = class {
             const detunedFrequency = this.applyFrequencyDetuning(frequency);
             const audioContext = getContext();
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
-            logger16.info("issue-006-debug", "triggerAttackRelease completed - verifying audio output", {
+            logger17.info("issue-006-debug", "triggerAttackRelease completed - verifying audio output", {
               instrumentName,
               synthConnected: synth.disposed === false,
               synthLoaded: synth instanceof Sampler ? synth.loaded || false : "not-sampler",
@@ -41340,7 +43839,7 @@ var AudioEngine = class {
             });
             const volumeNode = this.instrumentVolumes.get(instrumentName);
             const effectsMap = this.instrumentEffects.get(instrumentName);
-            logger16.info("issue-006-debug", "Audio pipeline verification", {
+            logger17.info("issue-006-debug", "Audio pipeline verification", {
               instrumentName,
               volumeNodeExists: !!volumeNode,
               volumeValue: (_b = (_a = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-value",
@@ -41353,7 +43852,7 @@ var AudioEngine = class {
               masterVolumeExists: !!this.volume,
               action: "audio-pipeline-verification"
             });
-            logger16.info("issue-006-debug", "Audio routing verification", {
+            logger17.info("issue-006-debug", "Audio routing verification", {
               instrumentName,
               synthToVolumeConnected: volumeNode ? "unknown" : "no-volume-node",
               volumeToDestination: this.volume ? "unknown" : "no-master-volume",
@@ -41361,7 +43860,7 @@ var AudioEngine = class {
               action: "audio-routing-verification"
             });
           } catch (error) {
-            logger16.error("issue-006-debug", "triggerAttackRelease failed with error", {
+            logger17.error("issue-006-debug", "triggerAttackRelease failed with error", {
               instrumentName,
               error: error.message,
               stack: error.stack,
@@ -41369,7 +43868,7 @@ var AudioEngine = class {
             });
           }
         } else {
-          logger16.warn("issue-006-debug", "Instrument not found in instruments map", {
+          logger17.warn("issue-006-debug", "Instrument not found in instruments map", {
             instrumentName,
             availableInstruments: Array.from(this.instruments.keys()),
             mapSize: this.instruments.size,
@@ -41387,7 +43886,7 @@ var AudioEngine = class {
       };
       this.eventEmitter.emit("sequence-progress", progressData);
       if (elapsedTime > maxEndTime + 1) {
-        logger16.info("playback", "Real-time sequence completed");
+        logger17.info("playback", "Real-time sequence completed");
         this.eventEmitter.emit("playback-ended", null);
         this.stop();
       }
@@ -41395,10 +43894,10 @@ var AudioEngine = class {
   }
   stop() {
     if (!this.isPlaying) {
-      logger16.debug("playback", "Stop called but no sequence is playing");
+      logger17.debug("playback", "Stop called but no sequence is playing");
       return;
     }
-    logger16.info("playback", "Stopping sequence playback");
+    logger17.info("playback", "Stopping sequence playback");
     this.isPlaying = false;
     this.eventEmitter.emit("playback-stopped", null);
     if (this.realtimeTimer !== null) {
@@ -41417,7 +43916,7 @@ var AudioEngine = class {
       synth.releaseAll();
     });
     this.currentSequence = [];
-    logger16.info("playback", "Sequence stopped and Transport reset");
+    logger17.info("playback", "Sequence stopped and Transport reset");
   }
   updateSettings(settings) {
     this.settings = settings;
@@ -41431,7 +43930,7 @@ var AudioEngine = class {
     if (this.isInitialized) {
       this.applyEffectSettings();
     }
-    logger16.debug("settings", "Audio settings updated", {
+    logger17.debug("settings", "Audio settings updated", {
       volume: settings.volume,
       tempo: settings.tempo,
       effectsApplied: this.isInitialized
@@ -41453,9 +43952,9 @@ var AudioEngine = class {
       if (settings.wet !== void 0) {
         reverb.wet.value = settings.wet;
       }
-      logger16.debug("effects", `Reverb settings updated for ${instrument}`, settings);
+      logger17.debug("effects", `Reverb settings updated for ${instrument}`, settings);
     } else {
-      logger16.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
+      logger17.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -41480,9 +43979,9 @@ var AudioEngine = class {
       if (settings.spread !== void 0) {
         chorus.spread = settings.spread;
       }
-      logger16.debug("effects", `Chorus settings updated for ${instrument}`, settings);
+      logger17.debug("effects", `Chorus settings updated for ${instrument}`, settings);
     } else {
-      logger16.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
+      logger17.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -41501,9 +44000,9 @@ var AudioEngine = class {
       if (settings.type !== void 0) {
         filter2.type = settings.type;
       }
-      logger16.debug("effects", `Filter settings updated for ${instrument}`, settings);
+      logger17.debug("effects", `Filter settings updated for ${instrument}`, settings);
     } else {
-      logger16.warn("effects", `Filter effect not found for instrument: ${instrument}`);
+      logger17.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -41517,9 +44016,9 @@ var AudioEngine = class {
       const instrumentSettings = this.settings.instruments[instrument];
       const wetLevel = ((_c = (_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.params) == null ? void 0 : _c.wet) || 0.25;
       reverb.wet.value = enabled ? wetLevel : 0;
-      logger16.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger17.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger16.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
+      logger17.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -41530,9 +44029,9 @@ var AudioEngine = class {
     const chorus = instrumentEffects == null ? void 0 : instrumentEffects.get("chorus");
     if (chorus) {
       chorus.wet.value = enabled ? 1 : 0;
-      logger16.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger17.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger16.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
+      logger17.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -41550,9 +44049,9 @@ var AudioEngine = class {
       } else {
         filter2.frequency.value = 2e4;
       }
-      logger16.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger17.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger16.warn("effects", `Filter effect not found for instrument: ${instrument}`);
+      logger17.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -41579,7 +44078,7 @@ var AudioEngine = class {
   updateInstrumentVolume(instrumentKey, volume) {
     var _a, _b, _c, _d;
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
-    logger16.info("issue-006-debug", "updateInstrumentVolume called", {
+    logger17.info("issue-006-debug", "updateInstrumentVolume called", {
       instrumentKey,
       volume,
       volumeNodeExists: !!instrumentVolume,
@@ -41590,7 +44089,7 @@ var AudioEngine = class {
     if (instrumentVolume) {
       const previousVolume = instrumentVolume.volume.value;
       const dbVolume = Math.log10(Math.max(0.01, volume)) * 20;
-      logger16.info("issue-006-debug", "About to set volume value", {
+      logger17.info("issue-006-debug", "About to set volume value", {
         instrumentKey,
         inputVolume: volume,
         calculatedDbVolume: dbVolume,
@@ -41598,7 +44097,7 @@ var AudioEngine = class {
         action: "before-volume-assignment"
       });
       instrumentVolume.volume.value = dbVolume;
-      logger16.info("issue-006-debug", "Volume value set", {
+      logger17.info("issue-006-debug", "Volume value set", {
         instrumentKey,
         newVolumeValue: instrumentVolume.volume.value,
         dbVolume,
@@ -41606,9 +44105,9 @@ var AudioEngine = class {
         volumeNodeConstructor: (_d = instrumentVolume.constructor) == null ? void 0 : _d.name,
         action: "after-volume-assignment"
       });
-      logger16.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume == null ? void 0 : previousVolume.toFixed(1)}dB`);
+      logger17.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume == null ? void 0 : previousVolume.toFixed(1)}dB`);
     } else {
-      logger16.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} in updateInstrumentVolume`, {
+      logger17.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} in updateInstrumentVolume`, {
         instrumentKey,
         volume,
         volumeMapSize: this.instrumentVolumes.size,
@@ -41625,9 +44124,9 @@ var AudioEngine = class {
     if (instrument) {
       if ("maxPolyphony" in instrument) {
         instrument.maxPolyphony = maxVoices;
-        logger16.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
+        logger17.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
       } else {
-        logger16.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
+        logger17.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
       }
     }
   }
@@ -41638,11 +44137,11 @@ var AudioEngine = class {
     var _a, _b, _c;
     const { isValidInstrumentKey: isValidInstrumentKey2 } = (init_constants(), __toCommonJS(constants_exports));
     if (!isValidInstrumentKey2(instrumentKey)) {
-      logger16.error("instrument-control", `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
+      logger17.error("instrument-control", `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
       return;
     }
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
-    logger16.info("issue-006-debug", "setInstrumentEnabled called", {
+    logger17.info("issue-006-debug", "setInstrumentEnabled called", {
       instrumentKey,
       enabled,
       volumeNodeExists: !!instrumentVolume,
@@ -41652,7 +44151,7 @@ var AudioEngine = class {
     });
     if (instrumentVolume) {
       if (enabled) {
-        logger16.info("issue-006-debug", `Re-enabling ${instrumentKey}`, {
+        logger17.info("issue-006-debug", `Re-enabling ${instrumentKey}`, {
           previousMute: instrumentVolume.mute,
           previousVolume: instrumentVolume.volume.value,
           action: "before-re-enable"
@@ -41661,31 +44160,31 @@ var AudioEngine = class {
         const instrumentSettings = this.settings.instruments[instrumentKey];
         if (instrumentSettings) {
           this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
-          logger16.info("issue-006-debug", `${instrumentKey} re-enabled successfully`, {
+          logger17.info("issue-006-debug", `${instrumentKey} re-enabled successfully`, {
             newMute: instrumentVolume.mute,
             newVolume: instrumentVolume.volume.value,
             targetVolume: instrumentSettings.volume,
             action: "after-re-enable"
           });
         } else {
-          logger16.warn("instrument-control", `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
+          logger17.warn("instrument-control", `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
         }
       } else {
-        logger16.info("issue-006-debug", `Disabling ${instrumentKey} using mute`, {
+        logger17.info("issue-006-debug", `Disabling ${instrumentKey} using mute`, {
           previousMute: instrumentVolume.mute,
           previousVolume: instrumentVolume.volume.value,
           action: "before-disable"
         });
         instrumentVolume.mute = true;
-        logger16.info("issue-006-debug", `${instrumentKey} disabled successfully`, {
+        logger17.info("issue-006-debug", `${instrumentKey} disabled successfully`, {
           newMute: instrumentVolume.mute,
           newVolume: instrumentVolume.volume.value,
           action: "after-disable"
         });
       }
-      logger16.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
+      logger17.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
     } else {
-      logger16.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} during enable/disable`, {
+      logger17.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} during enable/disable`, {
         instrumentKey,
         enabled,
         instrumentExists: this.instruments.has(instrumentKey),
@@ -41700,14 +44199,14 @@ var AudioEngine = class {
    * Apply initial instrument settings from plugin configuration
    */
   applyInstrumentSettings() {
-    logger16.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
+    logger17.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
     Object.entries(this.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
-      logger16.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
+      logger17.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
       this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
       this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
       this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
     });
-    logger16.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
+    logger17.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
   }
   /**
    * Update volume setting
@@ -41716,7 +44215,7 @@ var AudioEngine = class {
     if (this.isInitialized && this.volume) {
       const dbValue = this.settings.volume === 0 ? -Infinity : 20 * Math.log10(this.settings.volume);
       this.volume.volume.value = dbValue;
-      logger16.debug("audio", "Master volume updated", {
+      logger17.debug("audio", "Master volume updated", {
         rawValue: this.settings.volume,
         dbValue
       });
@@ -41728,7 +44227,7 @@ var AudioEngine = class {
     return Math.max(...sequence.map((mapping) => mapping.timing + mapping.duration));
   }
   handleSequenceComplete() {
-    logger16.info("playback", "Sequence playback completed");
+    logger17.info("playback", "Sequence playback completed");
     this.isPlaying = false;
     this.currentSequence = [];
     this.scheduledEvents = [];
@@ -41756,7 +44255,7 @@ var AudioEngine = class {
     if (this.instrumentCacheValid) {
       return this.cachedEnabledInstruments;
     }
-    logger16.debug("optimization", "Building enabled instruments cache - should be rare after first call");
+    logger17.debug("optimization", "Building enabled instruments cache - should be rare after first call");
     const enabled = [];
     Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
       if (settings.enabled) {
@@ -41765,7 +44264,7 @@ var AudioEngine = class {
     });
     this.cachedEnabledInstruments = enabled;
     this.instrumentCacheValid = true;
-    logger16.debug("optimization", `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
+    logger17.debug("optimization", `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
     return enabled;
   }
   /**
@@ -41781,16 +44280,16 @@ var AudioEngine = class {
    */
   onInstrumentSettingsChanged() {
     this.invalidateInstrumentCache();
-    logger16.debug("optimization", "Instrument cache invalidated due to settings change");
+    logger17.debug("optimization", "Instrument cache invalidated due to settings change");
   }
   /**
    * Public method for testing Phase 2.2 cached enabled instruments optimization
    * This allows tests to exercise the getEnabledInstruments() optimization path
    */
   getEnabledInstrumentsForTesting() {
-    logger16.debug("test", "getEnabledInstrumentsForTesting() called");
+    logger17.debug("test", "getEnabledInstrumentsForTesting() called");
     const result = this.getEnabledInstruments();
-    logger16.debug("test", `getEnabledInstrumentsForTesting() returning ${result.length} instruments`, result);
+    logger17.debug("test", `getEnabledInstrumentsForTesting() returning ${result.length} instruments`, result);
     return result;
   }
   /**
@@ -41798,7 +44297,7 @@ var AudioEngine = class {
    * This simulates the actual code path that calls getDefaultInstrument -> getEnabledInstruments
    */
   getDefaultInstrumentForTesting(frequency) {
-    logger16.debug("test", `getDefaultInstrumentForTesting() called with frequency ${frequency}`);
+    logger17.debug("test", `getDefaultInstrumentForTesting() called with frequency ${frequency}`);
     const mockMapping = {
       nodeId: "test-node",
       pitch: frequency,
@@ -41807,7 +44306,7 @@ var AudioEngine = class {
       timing: 0
     };
     const result = this.getDefaultInstrument(mockMapping);
-    logger16.debug("test", `getDefaultInstrumentForTesting() returning instrument: ${result}`);
+    logger17.debug("test", `getDefaultInstrumentForTesting() returning instrument: ${result}`);
     return result;
   }
   assignByFrequency(mapping, enabledInstruments) {
@@ -41941,7 +44440,7 @@ var AudioEngine = class {
       await this.initializeEssentials();
     }
     if (this.instruments.size > 0) {
-      logger16.debug("test", "Playing test note", { frequency });
+      logger17.debug("test", "Playing test note", { frequency });
       this.instruments.forEach((synth, instrumentName) => {
         if (instrumentName === "piano") {
           synth.triggerAttackRelease(frequency, "4n");
@@ -41959,7 +44458,7 @@ var AudioEngine = class {
       return;
     }
     try {
-      logger16.debug("audio", "Fast-path initialization for test notes");
+      logger17.debug("audio", "Fast-path initialization for test notes");
       await start2();
       this.volume = new Volume(this.settings.volume).toDestination();
       const enabledInstruments = this.getEnabledInstruments();
@@ -41967,7 +44466,7 @@ var AudioEngine = class {
         const settings = this.settings.instruments[instrumentName];
         return (settings == null ? void 0 : settings.useHighQuality) === true;
       });
-      logger16.info("audio", "Essential initialization - checking sample requirements", {
+      logger17.info("audio", "Essential initialization - checking sample requirements", {
         enabledInstruments,
         requiresSamples,
         instrumentsRequiringSamples: enabledInstruments.filter((instrumentName) => {
@@ -41976,7 +44475,7 @@ var AudioEngine = class {
         })
       });
       if (requiresSamples) {
-        logger16.info("audio", "\u{1F3B5} SAMPLE MODE: High-quality samples required - upgrading to full initialization");
+        logger17.info("audio", "\u{1F3B5} SAMPLE MODE: High-quality samples required - upgrading to full initialization");
         await this.initializeEffects();
         await this.initializeInstruments();
         await this.initializeAdvancedSynthesis();
@@ -41988,21 +44487,21 @@ var AudioEngine = class {
         this.generateInitializationReport();
         this.isInitialized = true;
         this.isMinimalMode = false;
-        logger16.info("audio", "\u{1F3B5} SAMPLE MODE: Full initialization completed with samples", {
+        logger17.info("audio", "\u{1F3B5} SAMPLE MODE: Full initialization completed with samples", {
           totalInstruments: this.instruments.size,
           instrumentsList: Array.from(this.instruments.keys()),
           samplesEnabled: true
         });
       } else {
-        logger16.info("audio", "\u{1F3B9} SYNTHESIS MODE: No samples required - using minimal initialization");
+        logger17.info("audio", "\u{1F3B9} SYNTHESIS MODE: No samples required - using minimal initialization");
         await this.initializeBasicPiano();
         await this.initializeLightweightSynthesis();
         this.isInitialized = true;
         this.isMinimalMode = true;
-        logger16.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
+        logger17.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
       }
     } catch (error) {
-      logger16.error("audio", "Failed to initialize essential components", error);
+      logger17.error("audio", "Failed to initialize essential components", error);
       throw error;
     }
   }
@@ -42013,10 +44512,10 @@ var AudioEngine = class {
   async forceFullInitialization() {
     var _a;
     try {
-      logger16.debug("audio", "Upgrading to full initialization");
+      logger17.debug("audio", "Upgrading to full initialization");
       const existingInstruments = new Map(this.instruments);
       const existingVolumes = new Map(this.instrumentVolumes);
-      logger16.info("audio", "\u{1F680} ISSUE #010 FIX: Preserving existing instruments during upgrade", {
+      logger17.info("audio", "\u{1F680} ISSUE #010 FIX: Preserving existing instruments during upgrade", {
         existingInstruments: Array.from(existingInstruments.keys()),
         existingVolumes: Array.from(existingVolumes.keys())
       });
@@ -42024,7 +44523,7 @@ var AudioEngine = class {
       await this.initializeInstruments();
       existingInstruments.forEach((instrument, instrumentName) => {
         if (instrumentName === "piano") {
-          logger16.info("audio", "\u{1F680} ISSUE #010 FIX: Restoring working piano from minimal mode");
+          logger17.info("audio", "\u{1F680} ISSUE #010 FIX: Restoring working piano from minimal mode");
           this.instruments.set(instrumentName, instrument);
           const existingVolume = existingVolumes.get(instrumentName);
           if (existingVolume) {
@@ -42040,14 +44539,14 @@ var AudioEngine = class {
       }
       this.generateInitializationReport();
       this.isMinimalMode = false;
-      logger16.info("audio", "Full AudioEngine initialization completed", {
+      logger17.info("audio", "Full AudioEngine initialization completed", {
         totalInstruments: this.instruments.size,
         preservedInstruments: Array.from(existingInstruments.keys()),
         finalInstruments: Array.from(this.instruments.keys()),
         instrumentMapSize: this.instruments.size
       });
     } catch (error) {
-      logger16.error("audio", "Failed to upgrade to full initialization", error);
+      logger17.error("audio", "Failed to upgrade to full initialization", error);
       throw error;
     }
   }
@@ -42074,9 +44573,9 @@ var AudioEngine = class {
       pianoPoly.connect(pianoVolume);
       pianoVolume.connect(this.volume);
       this.instruments.set("piano", pianoPoly);
-      logger16.debug("audio", "Basic piano synthesizer initialized");
+      logger17.debug("audio", "Basic piano synthesizer initialized");
     } catch (error) {
-      logger16.error("audio", "Failed to initialize basic piano", error);
+      logger17.error("audio", "Failed to initialize basic piano", error);
       throw error;
     }
   }
@@ -42273,12 +44772,12 @@ var AudioEngine = class {
         guitarNylonVolume.connect(this.volume);
         this.instruments.set("guitarNylon", guitarNylonPoly);
       }
-      logger16.debug("audio", "Lightweight synthesis initialized", {
+      logger17.debug("audio", "Lightweight synthesis initialized", {
         instrumentsCreated: this.instruments.size,
         synthesisMode: true
       });
     } catch (error) {
-      logger16.error("audio", "Failed to initialize lightweight percussion", error);
+      logger17.error("audio", "Failed to initialize lightweight percussion", error);
       throw error;
     }
   }
@@ -42299,7 +44798,7 @@ var AudioEngine = class {
       }
       return false;
     });
-    logger16.debug("family-check", `\u{1F680} ISSUE #010 DEBUG: Family check for ${familyType}`, {
+    logger17.debug("family-check", `\u{1F680} ISSUE #010 DEBUG: Family check for ${familyType}`, {
       enabledInstruments,
       familyInstruments,
       hasFamilyInstruments: familyInstruments.length > 0
@@ -42322,7 +44821,7 @@ var AudioEngine = class {
    * Clean up resources
    */
   dispose() {
-    logger16.info("cleanup", "Disposing AudioEngine");
+    logger17.info("cleanup", "Disposing AudioEngine");
     this.stop();
     this.instruments.forEach((synth, instrumentName) => {
       synth.dispose();
@@ -42344,7 +44843,7 @@ var AudioEngine = class {
     this.instrumentEffects.clear();
     this.eventEmitter.dispose();
     this.isInitialized = false;
-    logger16.info("cleanup", "AudioEngine disposed");
+    logger17.info("cleanup", "AudioEngine disposed");
   }
   applyEffectSettings() {
     if (!this.settings.instruments || !this.isInitialized)
@@ -42356,7 +44855,7 @@ var AudioEngine = class {
           return;
         const instrumentEffects = this.instrumentEffects.get(instrumentName);
         if (!instrumentEffects) {
-          logger16.debug("effects", `Skipping effect settings for ${instrumentName} - no effects initialized`);
+          logger17.debug("effects", `Skipping effect settings for ${instrumentName} - no effects initialized`);
           return;
         }
         const reverbSettings = instrumentSettings.effects.reverb;
@@ -42402,11 +44901,11 @@ var AudioEngine = class {
           }
         }
       });
-      logger16.debug("effects", "Applied per-instrument effect settings from plugin settings", {
+      logger17.debug("effects", "Applied per-instrument effect settings from plugin settings", {
         instruments: Object.keys(this.settings.instruments)
       });
     } catch (error) {
-      logger16.error("effects", "Failed to apply effect settings", error);
+      logger17.error("effects", "Failed to apply effect settings", error);
     }
   }
   /**
@@ -42741,20 +45240,20 @@ var AudioEngine = class {
    */
   async enableEnhancedRouting() {
     if (this.enhancedRouting) {
-      logger16.warn("enhanced-routing", "Enhanced routing already enabled");
+      logger17.warn("enhanced-routing", "Enhanced routing already enabled");
       return;
     }
     this.settings = migrateToEnhancedRouting(this.settings);
     this.settings.enhancedRouting.enabled = true;
     await this.initializeEnhancedRouting();
-    logger16.info("enhanced-routing", "Enhanced routing enabled successfully");
+    logger17.info("enhanced-routing", "Enhanced routing enabled successfully");
   }
   /**
    * Disable enhanced effect routing and revert to classic mode
    */
   async disableEnhancedRouting() {
     if (!this.enhancedRouting) {
-      logger16.warn("enhanced-routing", "Enhanced routing already disabled");
+      logger17.warn("enhanced-routing", "Enhanced routing already disabled");
       return;
     }
     this.enhancedRouting = false;
@@ -42766,7 +45265,7 @@ var AudioEngine = class {
     this.effectNodeInstances.clear();
     await this.initializeEffects();
     this.applyEffectSettings();
-    logger16.info("enhanced-routing", "Enhanced routing disabled, reverted to classic mode");
+    logger17.info("enhanced-routing", "Enhanced routing disabled, reverted to classic mode");
   }
   // Legacy getEffectChain method removed - now delegated to EffectBusManager
   // Legacy reorderEffectChain method removed - functionality moved to EffectBusManager
@@ -42822,7 +45321,7 @@ var AudioEngine = class {
     const volume = this.instrumentVolumes.get(instrumentName);
     const effectNodes = this.effectChains.get(instrumentName);
     if (!instrument || !volume || !effectNodes) {
-      logger16.warn("enhanced-routing", `Cannot reconnect ${instrumentName}: missing components`);
+      logger17.warn("enhanced-routing", `Cannot reconnect ${instrumentName}: missing components`);
       return;
     }
     instrument.disconnect();
@@ -42837,7 +45336,7 @@ var AudioEngine = class {
       }
     }
     this.connectToMasterChain(output);
-    logger16.debug("enhanced-routing", `Reconnected ${instrumentName} with updated effect chain`);
+    logger17.debug("enhanced-routing", `Reconnected ${instrumentName} with updated effect chain`);
   }
   // Legacy isEnhancedRoutingEnabled, getSendBuses, getReturnBuses methods removed - now delegated to EffectBusManager
   // Phase 8: Advanced Percussion Methods
@@ -42930,7 +45429,7 @@ var AudioEngine = class {
           }
         }
         if (!hasValidBuffers) {
-          logger16.warn("sample-fallback", `CDN samples failed to load for ${instrumentName}, creating synthesis fallback`, {
+          logger17.warn("sample-fallback", `CDN samples failed to load for ${instrumentName}, creating synthesis fallback`, {
             instrument: instrumentName,
             cdnPath: config.baseUrl,
             issue: "Issue #012 - Vocal Instrument Silence"
@@ -42947,7 +45446,7 @@ var AudioEngine = class {
       }, 5e3);
       return sampler;
     } catch (error) {
-      logger16.error("sample-fallback", `Failed to create Sampler for ${instrumentName}, using synthesis fallback`, error);
+      logger17.error("sample-fallback", `Failed to create Sampler for ${instrumentName}, using synthesis fallback`, error);
       return this.createVocalSynthesis(instrumentName);
     }
   }
@@ -42997,12 +45496,12 @@ var AudioEngine = class {
    */
   triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time) {
     if (!this.percussionEngine) {
-      logger16.debug("advanced-percussion", `Percussion engine not initialized, falling back to standard synthesis for ${instrumentName}`);
+      logger17.debug("advanced-percussion", `Percussion engine not initialized, falling back to standard synthesis for ${instrumentName}`);
       this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
       return;
     }
     if (!this.isValidPercussionParams(frequency, duration, velocity)) {
-      logger16.debug("advanced-percussion", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
+      logger17.debug("advanced-percussion", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
         frequency,
         duration,
         velocity
@@ -43034,9 +45533,9 @@ var AudioEngine = class {
           this.percussionEngine.triggerGong(note, velocity, duration, resonance);
           break;
       }
-      logger16.debug("advanced-percussion", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
+      logger17.debug("advanced-percussion", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger16.debug("advanced-percussion", `Falling back to standard synthesis for ${instrumentName}`, {
+      logger17.debug("advanced-percussion", `Falling back to standard synthesis for ${instrumentName}`, {
         error: error instanceof Error ? error.message : String(error),
         frequency: detunedFrequency,
         note
@@ -43059,12 +45558,12 @@ var AudioEngine = class {
       try {
         synth.triggerAttackRelease(frequency, duration, time, velocity);
       } catch (fallbackError) {
-        logger16.warn("synthesis-fallback", `Even standard synthesis failed for ${instrumentName}`, {
+        logger17.warn("synthesis-fallback", `Even standard synthesis failed for ${instrumentName}`, {
           error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
         });
       }
     } else {
-      logger16.warn("synthesis-fallback", `No synthesizer found for ${instrumentName}`);
+      logger17.warn("synthesis-fallback", `No synthesizer found for ${instrumentName}`);
     }
   }
   /**
@@ -43072,12 +45571,12 @@ var AudioEngine = class {
    */
   triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time) {
     if (!this.electronicEngine) {
-      logger16.debug("advanced-electronic", `Electronic engine not initialized, falling back to standard synthesis for ${instrumentName}`);
+      logger17.debug("advanced-electronic", `Electronic engine not initialized, falling back to standard synthesis for ${instrumentName}`);
       this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
       return;
     }
     if (!this.isValidPercussionParams(frequency, duration, velocity)) {
-      logger16.debug("advanced-electronic", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
+      logger17.debug("advanced-electronic", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
         frequency,
         duration,
         velocity
@@ -43103,9 +45602,9 @@ var AudioEngine = class {
           this.electronicEngine.triggerArpSynth(note, velocity, duration, patterns[patternIndex]);
           break;
       }
-      logger16.debug("advanced-electronic", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
+      logger17.debug("advanced-electronic", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger16.debug("advanced-electronic", `Falling back to standard synthesis for ${instrumentName}`, {
+      logger17.debug("advanced-electronic", `Falling back to standard synthesis for ${instrumentName}`, {
         error: error instanceof Error ? error.message : String(error),
         frequency: detunedFrequency,
         note
@@ -43124,23 +45623,23 @@ var AudioEngine = class {
           if (whaleSettings == null ? void 0 : whaleSettings.useHighQuality) {
             const externalSample = await this.tryLoadExternalWhaleSample(instrumentName, frequency, duration, velocity, time);
             if (externalSample) {
-              logger16.debug("environmental-sound", `External whale sample triggered: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration.toFixed(3)}`);
+              logger17.debug("environmental-sound", `External whale sample triggered: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration.toFixed(3)}`);
               return;
             }
           }
           const whaleSynth = this.instruments.get("whaleHumpback");
           if (!whaleSynth) {
-            logger16.warn("environmental-sound", "Persistent whale synthesizer not found");
+            logger17.warn("environmental-sound", "Persistent whale synthesizer not found");
             return;
           }
           const whaleFreq = Math.max(frequency * 0.5, 40);
           whaleSynth.triggerAttackRelease(whaleFreq, duration, time, velocity * 0.8);
-          logger16.debug("environmental-sound", `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
+          logger17.debug("environmental-sound", `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
           break;
       }
-      logger16.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
+      logger17.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger16.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, {
+      logger17.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, {
         error: error instanceof Error ? error.message : String(error),
         frequency
       });
@@ -43164,12 +45663,12 @@ var AudioEngine = class {
           player.dispose();
           volume.dispose();
         }, (duration + 1) * 1e3);
-        logger16.debug("whale-external", `External whale sample played: ${instrumentName}, freq: ${frequency.toFixed(1)}Hz`);
+        logger17.debug("whale-external", `External whale sample played: ${instrumentName}, freq: ${frequency.toFixed(1)}Hz`);
         return true;
       }
       return false;
     } catch (error) {
-      logger16.debug("whale-external", `Failed to load external whale sample for ${instrumentName}`, error);
+      logger17.debug("whale-external", `Failed to load external whale sample for ${instrumentName}`, error);
       return false;
     }
   }
@@ -43202,7 +45701,7 @@ var AudioEngine = class {
       const detuneAmount = (Math.random() - 0.5) * 2e-3;
       const detunedFrequency = frequency * (1 + detuneAmount);
       if (typeof window !== "undefined" && !((_c = (_b = window.location) == null ? void 0 : _b.href) == null ? void 0 : _c.includes("test"))) {
-        logger16.debug("detuning", `Phase conflict resolved: ${frequency.toFixed(2)}Hz \u2192 ${detunedFrequency.toFixed(2)}Hz`);
+        logger17.debug("detuning", `Phase conflict resolved: ${frequency.toFixed(2)}Hz \u2192 ${detunedFrequency.toFixed(2)}Hz`);
       }
       this.frequencyHistory.set(Math.round(detunedFrequency * 10) / 10, currentTime);
       return detunedFrequency;
@@ -43236,7 +45735,7 @@ var AudioEngine = class {
    * Master effects controls for orchestral processing
    */
   setMasterReverbDecay(decay) {
-    logger16.debug("master-effects", `Setting master reverb decay: ${decay}s`);
+    logger17.debug("master-effects", `Setting master reverb decay: ${decay}s`);
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
       const instrumentSettings = this.settings.instruments[instrumentName];
       if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && instrumentSettings.effects.reverb.enabled) {
@@ -43246,31 +45745,31 @@ var AudioEngine = class {
     });
   }
   setMasterBassBoost(boost) {
-    logger16.debug("master-effects", `Setting master bass boost: ${boost}dB`);
+    logger17.debug("master-effects", `Setting master bass boost: ${boost}dB`);
     if (this.masterEQ) {
       this.masterEQ.low.value = boost;
     }
   }
   setMasterTrebleBoost(boost) {
-    logger16.debug("master-effects", `Setting master treble boost: ${boost}dB`);
+    logger17.debug("master-effects", `Setting master treble boost: ${boost}dB`);
     if (this.masterEQ) {
       this.masterEQ.high.value = boost;
     }
   }
   setMasterCompression(ratio) {
-    logger16.debug("master-effects", `Setting master compression: ${ratio}`);
+    logger17.debug("master-effects", `Setting master compression: ${ratio}`);
     if (this.masterCompressor) {
       this.masterCompressor.threshold.value = -20 + ratio * 15;
       this.masterCompressor.ratio.value = 2 + ratio * 8;
     }
   }
   async initializeMasterEffects() {
-    logger16.debug("master-effects", "Initializing master effects chain via EffectBusManager");
+    logger17.debug("master-effects", "Initializing master effects chain via EffectBusManager");
     try {
       await this.effectBusManager.enableEnhancedRouting();
-      logger16.info("master-effects", "Master effects chain initialized via EffectBusManager");
+      logger17.info("master-effects", "Master effects chain initialized via EffectBusManager");
     } catch (error) {
-      logger16.error("master-effects", "Failed to initialize master effects", { error });
+      logger17.error("master-effects", "Failed to initialize master effects", { error });
     }
   }
   routeInstrumentsThroughMasterEffects() {
@@ -43280,9 +45779,9 @@ var AudioEngine = class {
       try {
         instrument.disconnect();
         instrument.connect(this.masterEQ);
-        logger16.debug("master-effects", `Routed ${instrumentName} through master effects`);
+        logger17.debug("master-effects", `Routed ${instrumentName} through master effects`);
       } catch (error) {
-        logger16.warn("master-effects", `Failed to route ${instrumentName} through master effects`, error);
+        logger17.warn("master-effects", `Failed to route ${instrumentName} through master effects`, error);
       }
     });
   }
@@ -43299,13 +45798,13 @@ var AudioEngine = class {
       this.masterCompressor.dispose();
       this.masterCompressor = null;
     }
-    logger16.debug("master-effects", "Master effects disposed");
+    logger17.debug("master-effects", "Master effects disposed");
   }
   /**
    * Performance optimization methods for 34-instrument orchestral load
    */
   initializePerformanceOptimization() {
-    logger16.debug("performance", "Initializing performance optimization systems");
+    logger17.debug("performance", "Initializing performance optimization systems");
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
       const instrumentSettings = this.settings.instruments[instrumentName];
       if (instrumentSettings == null ? void 0 : instrumentSettings.enabled) {
@@ -43313,7 +45812,7 @@ var AudioEngine = class {
       }
     });
     this.startPerformanceMonitoring();
-    logger16.info("performance", "Performance optimization initialized");
+    logger17.info("performance", "Performance optimization initialized");
   }
   createVoicePool(instrumentName, poolSize) {
     const pool = [];
@@ -43321,7 +45820,7 @@ var AudioEngine = class {
       pool.push({ available: true, lastUsed: 0 });
     }
     this.voicePool.set(instrumentName, pool);
-    logger16.debug("performance", `Created voice pool for ${instrumentName}: ${poolSize} voices`);
+    logger17.debug("performance", `Created voice pool for ${instrumentName}: ${poolSize} voices`);
   }
   startPerformanceMonitoring() {
     setInterval(() => {
@@ -43341,7 +45840,7 @@ var AudioEngine = class {
       this.increaseQuality();
     }
     this.lastCPUCheck = now3;
-    logger16.debug("performance", `CPU: ${cpuUsage.toFixed(1)}%, Latency: ${latency.toFixed(1)}ms, Quality: ${this.currentQualityLevel}`);
+    logger17.debug("performance", `CPU: ${cpuUsage.toFixed(1)}%, Latency: ${latency.toFixed(1)}ms, Quality: ${this.currentQualityLevel}`);
   }
   estimateCPUUsage() {
     let activeVoices = 0;
@@ -43374,7 +45873,7 @@ var AudioEngine = class {
         this.applyLowQuality();
         break;
     }
-    logger16.info("performance", `Reduced quality to ${this.currentQualityLevel} due to high CPU usage`);
+    logger17.info("performance", `Reduced quality to ${this.currentQualityLevel} due to high CPU usage`);
   }
   increaseQuality() {
     switch (this.currentQualityLevel) {
@@ -43387,7 +45886,7 @@ var AudioEngine = class {
         this.applyHighQuality();
         break;
     }
-    logger16.info("performance", `Increased quality to ${this.currentQualityLevel} due to low CPU usage`);
+    logger17.info("performance", `Increased quality to ${this.currentQualityLevel} due to low CPU usage`);
   }
   applyHighQuality() {
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
@@ -43445,7 +45944,7 @@ var AudioEngine = class {
       window.gc();
     }
     const memoryStats = this.voiceManager.getMemoryStats();
-    logger16.debug("performance", "Memory optimization completed", { voiceManagerStats: memoryStats });
+    logger17.debug("performance", "Memory optimization completed", { voiceManagerStats: memoryStats });
   }
   /**
    * Public performance monitoring API
@@ -43488,7 +45987,7 @@ var AudioEngine = class {
    * Emergency performance recovery
    */
   enablePerformanceEmergencyMode() {
-    logger16.warn("performance", "Activating emergency performance mode");
+    logger17.warn("performance", "Activating emergency performance mode");
     const essentialInstruments = ["piano", "strings", "flute", "clarinet", "saxophone"];
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
       const instrumentSettings = this.settings.instruments[instrumentName];
@@ -43499,13 +45998,13 @@ var AudioEngine = class {
     this.currentQualityLevel = "low";
     this.applyLowQuality();
     this.adaptiveQuality = false;
-    logger16.info("performance", "Emergency performance mode activated - disabled non-essential instruments");
+    logger17.info("performance", "Emergency performance mode activated - disabled non-essential instruments");
   }
   disablePerformanceEmergencyMode() {
     this.adaptiveQuality = true;
     this.currentQualityLevel = "high";
     this.applyHighQuality();
-    logger16.info("performance", "Emergency performance mode deactivated");
+    logger17.info("performance", "Emergency performance mode deactivated");
   }
   // Public getters for test suite
   get testIsInitialized() {
@@ -43522,7 +46021,7 @@ var AudioEngine = class {
    * This provides a complete overview of sample loading status across all 34 instruments
    */
   generateCDNDiagnosticReport() {
-    const logger20 = getLogger("AudioEngine");
+    const logger21 = getLogger("AudioEngine");
     const cdnStatus = {
       // Working CDN sources (confirmed in external-sample-sources-guide.md)
       availableInstruments: {
@@ -43576,7 +46075,7 @@ var AudioEngine = class {
     const availableCount = Object.keys(cdnStatus.availableInstruments).length;
     const missingCount = Object.keys(cdnStatus.missingInstruments).length;
     const coveragePercentage = Math.round(availableCount / totalInstruments * 100);
-    logger20.error("cdn-diagnosis", "\u{1F50D} ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report", {
+    logger21.error("cdn-diagnosis", "\u{1F50D} ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report", {
       summary: {
         totalInstruments,
         availableInstruments: availableCount,
@@ -43619,15 +46118,15 @@ var AudioEngine = class {
 
 // src/graph/parser.ts
 init_logging();
-var logger17 = getLogger("graph-parser");
+var logger18 = getLogger("graph-parser");
 var GraphParser = class {
   constructor(vault, metadataCache) {
     this.vault = vault;
     this.metadataCache = metadataCache;
   }
   async parseVault() {
-    const startTime = logger17.time("vault-parsing");
-    logger17.info("parsing", "Starting vault parsing", {
+    const startTime = logger18.time("vault-parsing");
+    logger18.info("parsing", "Starting vault parsing", {
       totalFiles: this.vault.getMarkdownFiles().length
     });
     const nodes = /* @__PURE__ */ new Map();
@@ -43639,7 +46138,7 @@ var GraphParser = class {
         nodes.set(file.path, node);
       }
     }
-    logger17.debug("parsing", "Created nodes", { nodeCount: nodes.size });
+    logger18.debug("parsing", "Created nodes", { nodeCount: nodes.size });
     for (const file of markdownFiles) {
       const connections = await this.extractConnectionsFromFile(file);
       const sourceNode = nodes.get(file.path);
@@ -43658,7 +46157,7 @@ var GraphParser = class {
       }
     }
     startTime();
-    logger17.info("parsing", "Vault parsing complete", {
+    logger18.info("parsing", "Vault parsing complete", {
       nodeCount: nodes.size,
       edgeCount: edges.length,
       avgConnectionsPerNode: edges.length / nodes.size
@@ -43687,7 +46186,7 @@ var GraphParser = class {
         modified: file.stat.mtime
       };
     } catch (error) {
-      logger17.error("file-parsing", `Failed to create node for file: ${file.path}`, error);
+      logger18.error("file-parsing", `Failed to create node for file: ${file.path}`, error);
       return null;
     }
   }
@@ -43704,7 +46203,7 @@ var GraphParser = class {
       }
       return [...new Set(connections)].filter((link) => link.trim().length > 0);
     } catch (error) {
-      logger17.error("connection-extraction", `Failed to extract connections from: ${file.path}`, error);
+      logger18.error("connection-extraction", `Failed to extract connections from: ${file.path}`, error);
       return [];
     }
   }
@@ -43758,7 +46257,7 @@ var GraphParser = class {
     const maxConnections = Math.max(...connectionCounts, 0);
     const minConnections = Math.min(...connectionCounts, 0);
     const isolatedNodes = connectionCounts.filter((count) => count === 0).length;
-    logger17.debug("graph-stats", "Calculated graph statistics", {
+    logger18.debug("graph-stats", "Calculated graph statistics", {
       nodeCount,
       edgeCount,
       avgConnections,
@@ -43782,7 +46281,7 @@ var GraphParser = class {
 // src/graph/musical-mapper.ts
 init_constants();
 init_logging();
-var logger18 = getLogger("musical-mapper");
+var logger19 = getLogger("musical-mapper");
 var MusicalMapper = class {
   // C4 in Hz
   constructor(settings) {
@@ -43798,7 +46297,7 @@ var MusicalMapper = class {
   updateMusicalParams() {
     this.scale = MUSICAL_SCALES[this.settings.scale] || MUSICAL_SCALES.major;
     this.rootNoteFreq = this.getRootNoteFrequency(this.settings.rootNote);
-    logger18.debug("params-update", "Musical parameters updated", {
+    logger19.debug("params-update", "Musical parameters updated", {
       scale: this.settings.scale,
       rootNote: this.settings.rootNote,
       rootFreq: this.rootNoteFreq,
@@ -43809,8 +46308,8 @@ var MusicalMapper = class {
    * Map graph nodes to musical parameters
    */
   mapGraphToMusic(graphData, stats) {
-    const startTime = logger18.time("musical-mapping");
-    logger18.info("mapping", "Starting musical mapping", {
+    const startTime = logger19.time("musical-mapping");
+    logger19.info("mapping", "Starting musical mapping", {
       nodeCount: stats.totalNodes,
       edgeCount: stats.totalEdges
     });
@@ -43823,7 +46322,7 @@ var MusicalMapper = class {
       mappings.push(mapping);
     }
     startTime();
-    logger18.info("mapping", "Musical mapping complete", {
+    logger19.info("mapping", "Musical mapping complete", {
       mappingsCreated: mappings.length,
       avgPitch: mappings.reduce((sum, m2) => sum + m2.pitch, 0) / mappings.length,
       totalDuration: mappings.reduce((sum, m2) => sum + m2.duration, 0)
@@ -43835,7 +46334,7 @@ var MusicalMapper = class {
     const duration = this.mapWordCountToDuration(node.wordCount);
     const velocity = this.mapPositionToVelocity(index2, totalNodes);
     const timing = Math.min(this.mapTimestampToTiming(node.created, node.modified), 5);
-    logger18.debug("node-mapping", `Mapped node: ${node.name}`, {
+    logger19.debug("node-mapping", `Mapped node: ${node.name}`, {
       connections: node.connectionCount,
       wordCount: node.wordCount,
       pitch,
@@ -43912,7 +46411,7 @@ var MusicalMapper = class {
    */
   generateSequence(mappings, graphData) {
     var _a, _b;
-    logger18.debug("sequence", "Generating playback sequence", {
+    logger19.debug("sequence", "Generating playback sequence", {
       totalMappings: mappings.length
     });
     const sequence = [...mappings];
@@ -43930,7 +46429,7 @@ var MusicalMapper = class {
       if (timeDiff < 0.05) {
         const jitter = Math.random() * jitterAmount;
         sequence[i].timing += jitter;
-        logger18.debug("sequence", `Applied anti-crackling jitter: ${jitter.toFixed(3)}s to note ${i}`);
+        logger19.debug("sequence", `Applied anti-crackling jitter: ${jitter.toFixed(3)}s to note ${i}`);
       }
     }
     const beatDuration = 60 / this.settings.tempo;
@@ -43940,7 +46439,7 @@ var MusicalMapper = class {
     });
     sequence.sort((a2, b) => a2.timing - b.timing);
     const finalDuration = Math.max(...sequence.map((m2) => m2.timing + m2.duration));
-    logger18.info("sequence", "Sequence generated with improved timing", {
+    logger19.info("sequence", "Sequence generated with improved timing", {
       totalDuration: finalDuration.toFixed(2),
       noteCount: sequence.length,
       firstNote: ((_a = sequence[0]) == null ? void 0 : _a.timing.toFixed(2)) || 0,
@@ -44002,7 +46501,7 @@ var MusicalMapper = class {
     const nodeHash = this.hashString(node.id + node.name);
     const instrumentIndex = nodeHash % finalCandidates.length;
     const selectedInstrument = finalCandidates[instrumentIndex];
-    logger18.debug("instrument-assignment", `Assigned ${selectedInstrument} to node ${node.name}`, {
+    logger19.debug("instrument-assignment", `Assigned ${selectedInstrument} to node ${node.name}`, {
       nodeId: node.id,
       connections: node.connectionCount,
       connectionRatio: connectionRatio.toFixed(3),
@@ -44031,8 +46530,8 @@ var MusicalMapper = class {
 // src/main.ts
 init_logging();
 init_whale_integration();
-var logger19 = getLogger("main");
-var SonigraphPlugin = class extends import_obsidian6.Plugin {
+var logger20 = getLogger("main");
+var SonigraphPlugin = class extends import_obsidian7.Plugin {
   constructor() {
     super(...arguments);
     this.audioEngine = null;
@@ -44041,7 +46540,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
     this.currentGraphData = null;
   }
   async onload() {
-    logger19.info("lifecycle", "Sonigraph plugin loading...");
+    logger20.info("lifecycle", "Sonigraph plugin loading...");
     await this.loadSettings();
     this.initializeLoggingLevel();
     this.initializeComponents();
@@ -44064,14 +46563,14 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       }
     });
     this.addSettingTab(new SonigraphSettingTab(this.app, this));
-    logger19.info("lifecycle", "Sonigraph plugin loaded successfully", {
+    logger20.info("lifecycle", "Sonigraph plugin loaded successfully", {
       settingsLoaded: true,
       componentsInitialized: true,
       whaleIntegrationEnabled: !!getWhaleIntegration()
     });
   }
   async onunload() {
-    logger19.info("lifecycle", "Sonigraph plugin unloading...");
+    logger20.info("lifecycle", "Sonigraph plugin unloading...");
     const whaleIntegration2 = getWhaleIntegration();
     if (whaleIntegration2) {
       whaleIntegration2.cleanup();
@@ -44083,7 +46582,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
     this.graphParser = null;
     this.musicalMapper = null;
     this.currentGraphData = null;
-    logger19.info("lifecycle", "Sonigraph plugin unloaded");
+    logger20.info("lifecycle", "Sonigraph plugin unloaded");
   }
   /**
    * Initialize logging level from saved settings
@@ -44091,23 +46590,23 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
   initializeLoggingLevel() {
     if (this.settings.logLevel) {
       LoggerFactory.setLogLevel(this.settings.logLevel);
-      logger19.info("initialization", "Logging level initialized from settings", {
+      logger20.info("initialization", "Logging level initialized from settings", {
         level: this.settings.logLevel
       });
     } else {
       const defaultLevel = "warn";
       LoggerFactory.setLogLevel(defaultLevel);
-      logger19.info("initialization", "Using default logging level", {
+      logger20.info("initialization", "Using default logging level", {
         level: defaultLevel
       });
     }
   }
   initializeComponents() {
-    logger19.debug("initialization", "Initializing plugin components");
+    logger20.debug("initialization", "Initializing plugin components");
     this.audioEngine = new AudioEngine(this.settings);
     this.graphParser = new GraphParser(this.app.vault, this.app.metadataCache);
     this.musicalMapper = new MusicalMapper(this.settings);
-    logger19.debug("initialization", "All components initialized");
+    logger20.debug("initialization", "All components initialized");
   }
   /**
    * Initialize whale integration for high-quality external samples
@@ -44129,24 +46628,24 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
         maxSamples: 50
       };
       await initializeWhaleIntegration(whaleSettings, this.app.vault);
-      logger19.info("whale-integration", "Whale integration initialized for per-instrument quality control", {
+      logger20.info("whale-integration", "Whale integration initialized for per-instrument quality control", {
         enabled: whaleSettings.useWhaleExternal,
         whaleUseHighQuality: (_c = this.settings.instruments.whaleHumpback) == null ? void 0 : _c.useHighQuality,
         whaleEnabled: (_d = this.settings.instruments.whaleHumpback) == null ? void 0 : _d.enabled
       });
     } catch (error) {
-      logger19.warn("whale-integration", "Failed to initialize whale integration", error);
+      logger20.warn("whale-integration", "Failed to initialize whale integration", error);
     }
   }
   openControlPanel() {
-    logger19.info("ui", "Opening Sonigraph Control Center");
+    logger20.info("ui", "Opening Sonigraph Control Center");
     const modal = new MaterialControlPanelModal(this.app, this);
     modal.open();
   }
   openTestSuite() {
-    logger19.info("ui", "Opening Audio Engine Test Suite");
+    logger20.info("ui", "Opening Audio Engine Test Suite");
     if (!this.audioEngine) {
-      logger19.error("ui", "Cannot open test suite: Audio engine not initialized");
+      logger20.error("ui", "Cannot open test suite: Audio engine not initialized");
       return;
     }
     const modal = new TestSuiteModal(this.app, this.audioEngine);
@@ -44157,10 +46656,10 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
    */
   async processVault() {
     if (!this.graphParser || !this.musicalMapper) {
-      logger19.error("processing", "Components not initialized");
+      logger20.error("processing", "Components not initialized");
       throw new Error("Plugin components not initialized");
     }
-    logger19.info("processing", "Starting vault processing");
+    logger20.info("processing", "Starting vault processing");
     try {
       const graphData = await this.graphParser.parseVault();
       const stats = this.graphParser.getGraphStats(graphData);
@@ -44172,14 +46671,14 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
         mappings,
         sequence
       };
-      logger19.info("processing", "Vault processing complete", {
+      logger20.info("processing", "Vault processing complete", {
         nodes: stats.totalNodes,
         edges: stats.totalEdges,
         mappings: mappings.length,
         sequenceLength: sequence.length
       });
     } catch (error) {
-      logger19.error("processing", "Failed to process vault", error);
+      logger20.error("processing", "Failed to process vault", error);
       throw error;
     }
   }
@@ -44189,23 +46688,23 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
   async playSequence() {
     var _a, _b;
     if (!this.audioEngine) {
-      logger19.error("playback", "Audio engine not initialized");
+      logger20.error("playback", "Audio engine not initialized");
       throw new Error("Audio engine not initialized");
     }
     if (!((_a = this.currentGraphData) == null ? void 0 : _a.sequence)) {
-      logger19.info("playback", "No sequence available, processing vault first");
+      logger20.info("playback", "No sequence available, processing vault first");
       await this.processVault();
     }
     if (!((_b = this.currentGraphData) == null ? void 0 : _b.sequence)) {
-      logger19.error("playback", "Failed to generate sequence");
+      logger20.error("playback", "Failed to generate sequence");
       throw new Error("No musical sequence available");
     }
-    logger19.info("playback", "Starting sequence playback", {
+    logger20.info("playback", "Starting sequence playback", {
       sequenceLength: this.currentGraphData.sequence.length,
       firstNote: this.currentGraphData.sequence[0],
       lastNote: this.currentGraphData.sequence[this.currentGraphData.sequence.length - 1]
     });
-    logger19.info("debug", "Sequence details", {
+    logger20.info("debug", "Sequence details", {
       totalNotes: this.currentGraphData.sequence.length,
       sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note) => ({
         pitch: note.pitch,
@@ -44215,11 +46714,11 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       }))
     });
     this.audioEngine.updateSettings(this.settings);
-    logger19.debug("playback", "Audio engine settings updated before playback");
+    logger20.debug("playback", "Audio engine settings updated before playback");
     try {
       await this.audioEngine.playSequence(this.currentGraphData.sequence);
     } catch (error) {
-      logger19.error("playback", "Failed to play sequence", error);
+      logger20.error("playback", "Failed to play sequence", error);
       throw error;
     }
   }
@@ -44229,7 +46728,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
   stopPlayback() {
     if (this.audioEngine) {
       this.audioEngine.stop();
-      logger19.info("playback", "Playback stopped");
+      logger20.info("playback", "Playback stopped");
     }
   }
   /**
@@ -44263,7 +46762,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
    * Update settings and refresh components
    */
   async updateSettings(newSettings) {
-    logger19.debug("settings", "Updating plugin settings", newSettings);
+    logger20.debug("settings", "Updating plugin settings", newSettings);
     this.settings = { ...this.settings, ...newSettings };
     if (this.audioEngine) {
       this.audioEngine.updateSettings(this.settings);
@@ -44275,7 +46774,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       await this.updateWhaleIntegration();
     }
     await this.saveSettings();
-    logger19.info("settings", "Settings updated successfully", {
+    logger20.info("settings", "Settings updated successfully", {
       whaleIntegrationUpdated: "useHighQualitySamples" in newSettings || newSettings.instruments && "whaleHumpback" in newSettings.instruments
     });
   }
@@ -44299,21 +46798,21 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
           maxSamples: 50
         };
         whaleIntegration2.updateSettings(whaleSettings);
-        logger19.info("whale-integration", "Whale integration settings updated", {
+        logger20.info("whale-integration", "Whale integration settings updated", {
           enabled: whaleSettings.useWhaleExternal,
           whaleUseHighQuality: (_c = this.settings.instruments.whaleHumpback) == null ? void 0 : _c.useHighQuality,
           whaleEnabled: (_d = this.settings.instruments.whaleHumpback) == null ? void 0 : _d.enabled
         });
       }
     } catch (error) {
-      logger19.warn("whale-integration", "Failed to update whale integration settings", error);
+      logger20.warn("whale-integration", "Failed to update whale integration settings", error);
     }
   }
   async loadSettings() {
     const data = await this.loadData();
     this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
     this.migrateSettings();
-    logger19.debug("settings", "Settings loaded", { settings: this.settings });
+    logger20.debug("settings", "Settings loaded", { settings: this.settings });
   }
   /**
    * Deep merge settings to preserve user configurations while adding new defaults
@@ -44338,7 +46837,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
                 ...userInstrument.effects || {}
               }
             };
-            logger19.debug("settings-merge", `Merged instrument ${instrumentKey}`, {
+            logger20.debug("settings-merge", `Merged instrument ${instrumentKey}`, {
               defaultEnabled: defaultInstrument.enabled,
               userEnabled: userInstrument.enabled,
               finalEnabled: merged.instruments[instrumentKey].enabled
@@ -44358,7 +46857,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     let migrationNeeded = false;
     if ("effects" in this.settings && !((_a = this.settings.effects) == null ? void 0 : _a.piano)) {
-      logger19.info("settings", "Migrating old effects structure to per-instrument structure");
+      logger20.info("settings", "Migrating old effects structure to per-instrument structure");
       migrationNeeded = true;
       const oldEffects = this.settings.effects;
       delete this.settings.effects;
@@ -44412,7 +46911,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       }
     }
     if (!this.settings.instruments.piano) {
-      logger19.info("settings", "Adding missing Piano instrument (core keyboard)");
+      logger20.info("settings", "Adding missing Piano instrument (core keyboard)");
       migrationNeeded = true;
       this.settings.instruments.piano = {
         enabled: true,
@@ -44428,7 +46927,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.organ) {
-      logger19.info("settings", "Adding missing Organ instrument (core keyboard)");
+      logger20.info("settings", "Adding missing Organ instrument (core keyboard)");
       migrationNeeded = true;
       this.settings.instruments.organ = {
         enabled: true,
@@ -44444,7 +46943,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.flute) {
-      logger19.info("settings", "Adding missing Flute instrument");
+      logger20.info("settings", "Adding missing Flute instrument");
       migrationNeeded = true;
       this.settings.instruments.flute = {
         enabled: true,
@@ -44458,7 +46957,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.clarinet) {
-      logger19.info("settings", "Adding missing Clarinet instrument");
+      logger20.info("settings", "Adding missing Clarinet instrument");
       migrationNeeded = true;
       this.settings.instruments.clarinet = {
         enabled: true,
@@ -44472,7 +46971,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.saxophone) {
-      logger19.info("settings", "Adding missing Saxophone instrument");
+      logger20.info("settings", "Adding missing Saxophone instrument");
       migrationNeeded = true;
       this.settings.instruments.saxophone = {
         enabled: true,
@@ -44486,7 +46985,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.contrabass) {
-      logger19.info("settings", "Adding missing Contrabass instrument (new string instrument)");
+      logger20.info("settings", "Adding missing Contrabass instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.contrabass = {
         enabled: false,
@@ -44503,7 +47002,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.guitarElectric) {
-      logger19.info("settings", "Adding missing Electric Guitar instrument (new string instrument)");
+      logger20.info("settings", "Adding missing Electric Guitar instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.guitarElectric = {
         enabled: false,
@@ -44520,7 +47019,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.guitarNylon) {
-      logger19.info("settings", "Adding missing Nylon Guitar instrument (new string instrument)");
+      logger20.info("settings", "Adding missing Nylon Guitar instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.guitarNylon = {
         enabled: false,
@@ -44537,7 +47036,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.bassElectric) {
-      logger19.info("settings", "Adding missing Electric Bass instrument (new string instrument)");
+      logger20.info("settings", "Adding missing Electric Bass instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.bassElectric = {
         enabled: false,
@@ -44554,7 +47053,7 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
       };
     }
     if (!this.settings.instruments.bassoon) {
-      logger19.info("settings", "Adding missing Bassoon instrument (new woodwind instrument)");
+      logger20.info("settings", "Adding missing Bassoon instrument (new woodwind instrument)");
       migrationNeeded = true;
       this.settings.instruments.bassoon = {
         enabled: false,
@@ -44572,12 +47071,12 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
     }
     if (migrationNeeded) {
       this.saveSettings();
-      logger19.info("settings", "Settings migration completed");
+      logger20.info("settings", "Settings migration completed");
     }
   }
   async saveSettings() {
     await this.saveData(this.settings);
-    logger19.debug("settings", "Settings saved");
+    logger20.debug("settings", "Settings saved");
   }
   getLogs() {
     return LoggerFactory.getLogs();
