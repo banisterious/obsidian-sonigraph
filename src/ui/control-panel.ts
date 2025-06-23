@@ -2118,7 +2118,7 @@ export class MaterialControlPanelModal extends Modal {
 
 	private instrumentIsSynthesisOnly(instrumentKey: string): boolean {
 		// These instruments don't have sample files available and are synthesis-only
-		const synthesisOnlyInstruments = ['strings', 'electricPiano', 'harpsichord', 'accordion', 'celesta'];
+		const synthesisOnlyInstruments = ['strings', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'timpani', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth'];
 		return synthesisOnlyInstruments.includes(instrumentKey);
 	}
 
