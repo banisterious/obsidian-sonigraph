@@ -249,14 +249,8 @@ export class AudioEngine {
 	}
 
 	private getSamplerConfigs() {
-		// Use the new modular InstrumentConfigLoader instead of the monolithic SAMPLER_CONFIGS
-		// Skip format replacement in synthesis-only mode - the loader handles format processing
-		if (!this.settings.useHighQualitySamples) {
-			// In synthesis-only mode, return empty configs since we use synthesizers
-			return {};
-		}
-		
-		// Load all instruments using the modular config system
+		// Use the new modular InstrumentConfigLoader to load all available instruments
+		// Individual instruments will decide whether to use samples or synthesis based on their useHighQuality setting
 		const loadedInstruments = this.instrumentConfigLoader.loadAllInstruments();
 		
 		// Return the loaded instruments for compatibility
@@ -325,7 +319,7 @@ export class AudioEngine {
 			voiceManager: !!this.voiceManager,
 			effectBusManager: !!this.effectBusManager,
 			enhancedRouting: this.settings.enhancedRouting?.enabled ?? false,
-			useHighQualitySamples: this.settings.useHighQualitySamples,
+			perInstrumentQuality: 'Individual instrument control',
 			performanceMode: this.settings.performanceMode?.mode ?? 'medium'
 		};
 		
@@ -358,7 +352,7 @@ export class AudioEngine {
 				effectBus: report.effectBusManager ? 'Ready' : 'Missing'
 			},
 			configuration: {
-				audioMode: report.useHighQualitySamples ? 'High Quality Samples (OGG)' : 'Synthesis Only',
+				audioMode: 'Per-instrument quality control',
 				performanceMode: report.performanceMode,
 				enhancedRouting: report.enhancedRouting ? 'Enabled' : 'Disabled',
 				gaps: configurationGaps.length > 0 ? configurationGaps : 'None'
@@ -727,1140 +721,297 @@ export class AudioEngine {
 	private async initializeInstruments(): Promise<void> {
 		const configs = this.getSamplerConfigs();
 		
-		// In synthesis mode, use synthesizers for all instruments instead of trying to load samples
-		if (!this.settings.useHighQualitySamples) {
-			logger.info('instruments', 'Synthesis mode - creating synthesizers for all instruments');
-			
-			// Create synthesizers only for enabled instruments based on user settings
-			const allInstruments = [
-				'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 
-				'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 
-				'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 
-				'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
-			];
-			
-			// Filter to only include instruments that are enabled in settings
-			const enabledInstruments = allInstruments.filter(instrumentName => {
-				const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
-				return instrumentSettings?.enabled === true;
-			});
-			
-			logger.info('instruments', `Creating synthesizers for ${enabledInstruments.length} enabled instruments: ${enabledInstruments.join(', ')}`);
-			
-			enabledInstruments.forEach(instrumentName => {
-				// Create specialized synthesizers using proven synthesis from initializeLightweightSynthesis
-				let synth: PolySynth;
-				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
-				
-				// Use specialized synthesis based on instrument type for better sound quality
-				switch (instrumentName) {
-					case 'timpani':
-						synth = new PolySynth({
-							voice: AMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								oscillator: { type: 'sine' },
-								envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2.0 },
-								volume: -12
-							}
-						});
-						break;
-					
-					case 'xylophone':
-					case 'vibraphone':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 4,
-								modulationIndex: 2,
-								oscillator: { type: 'triangle' },
-								envelope: { attack: 0.001, decay: 0.2, sustain: 0.1, release: 0.5 },
-								volume: -10
-							}
-						});
-						break;
-					
-					case 'strings':
-					case 'violin':
-					case 'cello':
-					case 'contrabass':
-					case 'guitar':
-					case 'guitarElectric':
-					case 'guitarNylon':
-					case 'bassElectric':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 1.5,
-								modulationIndex: 3,
-								oscillator: { type: 'sawtooth' },
-								envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 1.5 },
-								volume: -8
-							}
-						});
-						break;
-					
-					case 'flute':
-					case 'oboe':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 2,
-								modulationIndex: 1,
-								oscillator: { type: 'sine' },
-								envelope: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 1.0 },
-								volume: -6
-							}
-						});
-						break;
-					
-					case 'clarinet':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 3,
-								modulationIndex: 4,
-								oscillator: { type: 'square' },
-								envelope: { attack: 0.1, decay: 0.3, sustain: 0.7, release: 1.0 },
-								volume: -9
-							}
-						});
-						break;
-					
-					case 'trumpet':
-					case 'frenchHorn':
-					case 'trombone':
-					case 'tuba':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 2,
-								modulationIndex: 8,
-								oscillator: { type: 'sawtooth' },
-								envelope: { attack: 0.02, decay: 0.1, sustain: 0.8, release: 0.5 },
-								volume: -7
-							}
-						});
-						break;
-					
-					case 'saxophone':
-						synth = new PolySynth({
-							voice: AMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								oscillator: { type: 'sawtooth' },
-								envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
-								volume: -8
-							}
-						});
-						break;
-					
-					case 'piano':
-					case 'electricPiano':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 1,
-								modulationIndex: 1.5,
-								oscillator: { type: 'sine' },
-								envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 2.0 },
-								volume: -6
-							}
-						});
-						break;
-					
-					case 'organ':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 1,
-								modulationIndex: 0.5,
-								oscillator: { type: 'square' },
-								envelope: { attack: 0.1, decay: 0.1, sustain: 0.9, release: 0.3 },
-								volume: -8
-							}
-						});
-						break;
-					
-					case 'leadSynth':
-					case 'bassSynth':
-					case 'arpSynth':
-					case 'pad':
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 2,
-								modulationIndex: 6,
-								oscillator: { type: 'sawtooth' },
-								envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 },
-								volume: -8
-							}
-						});
-						break;
-					
-					default:
-						// Default for any remaining instruments
-						synth = new PolySynth({
-							voice: FMSynth,
-							maxPolyphony: maxVoices,
-							options: {
-								harmonicity: 1,
-								modulationIndex: 2,
-								oscillator: { type: 'sine' },
-								envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 },
-								volume: -8
-							}
-						});
-						break;
-				}
-				
-				// Create volume control
-				const volume = new Volume(-6);
-				this.instrumentVolumes.set(instrumentName, volume);
-				
-				// Connect synth → volume → master (direct routing for synthesis mode)
-				synth.connect(volume);
-				if (this.volume) {
-					volume.connect(this.volume);
-					logger.debug('instruments', `Connected ${instrumentName}: synth → volume → master`);
-				} else {
-					logger.warn('instruments', `Master volume not available for ${instrumentName} connection`);
-				}
-				
-				// Add to instruments map
-				this.instruments.set(instrumentName, synth);
-				
-				logger.debug('instruments', `Created specialized synthesis instrument: ${instrumentName}`);
-			});
-			
-			// Synthesis instruments are now fully connected: synth → volume → master
-			logger.debug('instruments', 'All synthesis instruments connected directly to master output');
-			this.applyInstrumentSettings();
-			return;
-		}
+		// Per-instrument quality control - each instrument decides synthesis vs samples individually
+		logger.info('instruments', 'Initializing instruments with per-instrument quality control');
 		
-		// Sample-based initialization for non-synthesis mode
-		// Issue #014 Fix: Only initialize instruments that are enabled in family settings
-		
-		// Piano - using Sampler with high-quality samples, fallback to basic synthesis
-		if (this.settings.instruments.piano?.enabled === true) {
-			// Issue #011: Enhanced CDN sample loading diagnostics
-			logger.info('cdn-diagnosis', 'Initializing piano sampler with CDN sample loading', {
-				instrument: 'piano',
-				baseUrl: configs.piano.baseUrl,
-				sampleCount: Object.keys(configs.piano.urls).length,
-				format: this.settings.useHighQualitySamples ? 'ogg' : 'synthesis',
-				effectiveFormat: 'ogg', // From Issue #005 resolution
-				urls: configs.piano.urls
-			});
-			
-			const pianoSampler = new Sampler({
-				...configs.piano,
-				onload: () => {
-					logger.info('cdn-diagnosis', 'Piano samples loaded successfully from CDN', {
-						instrument: 'piano',
-						baseUrl: configs.piano.baseUrl,
-						loadedSampleCount: Object.keys(configs.piano.urls).length,
-						status: 'success'
-					});
-				},
-				onerror: (error) => {
-					logger.error('cdn-diagnosis', 'Piano samples failed to load from CDN - investigating for Issue #011', { 
-						instrument: 'piano',
-						baseUrl: configs.piano.baseUrl,
-						sampleCount: Object.keys(configs.piano.urls).length,
-						error: error?.toString() || 'Unknown error',
-						fallbackMode: 'synthesis',
-						troubleshooting: 'Check network tab for 404/CORS errors'
-					});
-				}
-			});
-		const pianoVolume = new Volume(-6);
-		this.instrumentVolumes.set('piano', pianoVolume);
-		
-		let pianoOutput = pianoSampler.connect(pianoVolume);
-		
-		// Connect piano to its specific effects based on settings
-		const pianoEffects = this.instrumentEffects.get('piano');
-		if (pianoEffects && this.settings.instruments.piano.effects) {
-			if (this.settings.instruments.piano.effects.reverb.enabled) {
-				const reverb = pianoEffects.get('reverb');
-				if (reverb) pianoOutput = pianoOutput.connect(reverb);
-			}
-			if (this.settings.instruments.piano.effects.chorus.enabled) {
-				const chorus = pianoEffects.get('chorus');
-				if (chorus) pianoOutput = pianoOutput.connect(chorus);
-			}
-			if (this.settings.instruments.piano.effects.filter.enabled) {
-				const filter = pianoEffects.get('filter');
-				if (filter) pianoOutput = pianoOutput.connect(filter);
-			}
-		}
-		pianoOutput.connect(this.volume);
-		this.instruments.set('piano', pianoSampler);
-		}
-
-		// Organ - using Sampler with harmonium samples, fallback to basic synthesis
-		if (this.settings.instruments.organ?.enabled === true) {
-		
-		// Issue #011: Enhanced CDN sample loading diagnostics for harmonium/organ
-		logger.info('cdn-diagnosis', 'Initializing organ sampler with CDN sample loading', {
-			instrument: 'organ',
-			baseUrl: configs.organ.baseUrl,
-			sampleCount: Object.keys(configs.organ.urls).length,
-			expectedCDNPath: 'harmonium/', // Maps to nbrosowsky harmonium directory
-			availableOnCDN: true // Confirmed: 33 OGG samples available
-		});
-		
-		const organSampler = new Sampler({
-			...configs.organ,
-			onload: () => {
-				logger.info('cdn-diagnosis', 'Organ samples loaded successfully from CDN', {
-					instrument: 'organ',
-					baseUrl: configs.organ.baseUrl,
-					status: 'success'
-				});
-			},
-			onerror: (error) => {
-				logger.error('cdn-diagnosis', 'Organ samples failed to load from CDN - investigating for Issue #011', { 
-					instrument: 'organ',
-					baseUrl: configs.organ.baseUrl,
-					error: error?.toString() || 'Unknown error',
-					cdnStatus: 'harmonium directory exists with 33 OGG files',
-					troubleshooting: 'Check if harmonium path is correctly mapped'
-				});
-			}
-		});
-		const organVolume = new Volume(-6);
-		this.instrumentVolumes.set('organ', organVolume);
-		
-		let organOutput = organSampler.connect(organVolume);
-		
-		// Connect organ to its specific effects based on settings
-		const organEffects = this.instrumentEffects.get('organ');
-		if (organEffects && this.settings.instruments.organ.effects) {
-			if (this.settings.instruments.organ.effects.reverb.enabled) {
-				const reverb = organEffects.get('reverb');
-				if (reverb) organOutput = organOutput.connect(reverb);
-			}
-			if (this.settings.instruments.organ.effects.chorus.enabled) {
-				const chorus = organEffects.get('chorus');
-				if (chorus) organOutput = organOutput.connect(chorus);
-			}
-			if (this.settings.instruments.organ.effects.filter.enabled) {
-				const filter = organEffects.get('filter');
-				if (filter) organOutput = organOutput.connect(filter);
-			}
-		}
-		organOutput.connect(this.volume);
-		this.instruments.set('organ', organSampler);
-		}
-
-		// Strings - using Sampler with violin samples, fallback to basic synthesis
-		if (this.settings.instruments.strings?.enabled === true) {
-		const stringsSampler = new Sampler({
-			...configs.strings,
-			onload: () => {
-				logger.debug('samples', 'Strings samples loaded successfully');
-			},
-			onerror: (error) => {
-				logger.warn('samples', 'Strings samples failed to load, using basic synthesis', { error });
-			}
-		});
-		const stringsVolume = new Volume(-6);
-		this.instrumentVolumes.set('strings', stringsVolume);
-		
-		let stringsOutput = stringsSampler.connect(stringsVolume);
-		
-		// Connect strings to its specific effects based on settings
-		const stringsEffects = this.instrumentEffects.get('strings');
-		if (stringsEffects && this.settings.instruments.strings.effects) {
-			if (this.settings.instruments.strings.effects.reverb.enabled) {
-				const reverb = stringsEffects.get('reverb');
-				if (reverb) stringsOutput = stringsOutput.connect(reverb);
-			}
-			if (this.settings.instruments.strings.effects.chorus.enabled) {
-				const chorus = stringsEffects.get('chorus');
-				if (chorus) stringsOutput = stringsOutput.connect(chorus);
-			}
-			if (this.settings.instruments.strings.effects.filter.enabled) {
-				const filter = stringsEffects.get('filter');
-				if (filter) stringsOutput = stringsOutput.connect(filter);
-			}
-		}
-		stringsOutput.connect(this.volume);
-		this.instruments.set('strings', stringsSampler);
-		}
-
-		// Choir - using Sampler with choir samples
-		if (this.settings.instruments.choir?.enabled === true) {
-		const choirSampler = new Sampler(configs.choir);
-		const choirVolume = new Volume(-6);
-		this.instrumentVolumes.set('choir', choirVolume);
-		
-		let choirOutput = choirSampler.connect(choirVolume);
-		
-		// Connect choir to its specific effects based on settings
-		const choirEffects = this.instrumentEffects.get('choir');
-		if (choirEffects && this.settings.instruments.choir.effects) {
-			if (this.settings.instruments.choir.effects.reverb.enabled) {
-				const reverb = choirEffects.get('reverb');
-				if (reverb) choirOutput = choirOutput.connect(reverb);
-			}
-			if (this.settings.instruments.choir.effects.chorus.enabled) {
-				const chorus = choirEffects.get('chorus');
-				if (chorus) choirOutput = choirOutput.connect(chorus);
-			}
-			if (this.settings.instruments.choir.effects.filter.enabled) {
-				const filter = choirEffects.get('filter');
-				if (filter) choirOutput = choirOutput.connect(filter);
-			}
-		}
-		choirOutput.connect(this.volume);
-		this.instruments.set('choir', choirSampler);
-		}
-
-		// Vocal Pads - using Sampler with vocal pad samples
-		if (this.settings.instruments.vocalPads?.enabled === true) {
-		const vocalPadsSampler = new Sampler(configs.vocalPads);
-		const vocalPadsVolume = new Volume(-6);
-		this.instrumentVolumes.set('vocalPads', vocalPadsVolume);
-		
-		let vocalPadsOutput = vocalPadsSampler.connect(vocalPadsVolume);
-		
-		// Connect vocal pads to its specific effects based on settings
-		const vocalPadsEffects = this.instrumentEffects.get('vocalPads');
-		if (vocalPadsEffects && this.settings.instruments.vocalPads.effects) {
-			if (this.settings.instruments.vocalPads.effects.reverb.enabled) {
-				const reverb = vocalPadsEffects.get('reverb');
-				if (reverb) vocalPadsOutput = vocalPadsOutput.connect(reverb);
-			}
-			if (this.settings.instruments.vocalPads.effects.chorus.enabled) {
-				const chorus = vocalPadsEffects.get('chorus');
-				if (chorus) vocalPadsOutput = vocalPadsOutput.connect(chorus);
-			}
-			if (this.settings.instruments.vocalPads.effects.filter.enabled) {
-				const filter = vocalPadsEffects.get('filter');
-				if (filter) vocalPadsOutput = vocalPadsOutput.connect(filter);
-			}
-		}
-		vocalPadsOutput.connect(this.volume);
-		this.instruments.set('vocalPads', vocalPadsSampler);
-		}
-
-		// Pad - using Sampler with synthetic pad samples
-		if (this.settings.instruments.pad?.enabled === true) {
-		const padSampler = new Sampler(configs.pad);
-		const padVolume = new Volume(-6);
-		this.instrumentVolumes.set('pad', padVolume);
-		
-		let padOutput = padSampler.connect(padVolume);
-		
-		// Connect pad to its specific effects based on settings
-		const padEffects = this.instrumentEffects.get('pad');
-		if (padEffects && this.settings.instruments.pad.effects) {
-			if (this.settings.instruments.pad.effects.reverb.enabled) {
-				const reverb = padEffects.get('reverb');
-				if (reverb) padOutput = padOutput.connect(reverb);
-			}
-			if (this.settings.instruments.pad.effects.chorus.enabled) {
-				const chorus = padEffects.get('chorus');
-				if (chorus) padOutput = padOutput.connect(chorus);
-			}
-			if (this.settings.instruments.pad.effects.filter.enabled) {
-				const filter = padEffects.get('filter');
-				if (filter) padOutput = padOutput.connect(filter);
-			}
-		}
-		padOutput.connect(this.volume);
-		this.instruments.set('pad', padSampler);
-		}
-
-		// Soprano - using Sampler with soprano samples (Issue #012: with synthesis fallback)
-		if (this.settings.instruments.soprano?.enabled === true) {
-		const sopranoSampler = this.createSamplerWithFallback(configs.soprano, 'soprano');
-		const sopranoVolume = new Volume(-6);
-		this.instrumentVolumes.set('soprano', sopranoVolume);
-		
-		let sopranoOutput = sopranoSampler.connect(sopranoVolume);
-		
-		// Connect soprano to its specific effects based on settings
-		const sopranoEffects = this.instrumentEffects.get('soprano');
-		if (sopranoEffects && this.settings.instruments.soprano.effects) {
-			if (this.settings.instruments.soprano.effects.reverb.enabled) {
-				const reverb = sopranoEffects.get('reverb');
-				if (reverb) sopranoOutput = sopranoOutput.connect(reverb);
-			}
-			if (this.settings.instruments.soprano.effects.chorus.enabled) {
-				const chorus = sopranoEffects.get('chorus');
-				if (chorus) sopranoOutput = sopranoOutput.connect(chorus);
-			}
-			if (this.settings.instruments.soprano.effects.filter.enabled) {
-				const filter = sopranoEffects.get('filter');
-				if (filter) sopranoOutput = sopranoOutput.connect(filter);
-			}
-		}
-		sopranoOutput.connect(this.volume);
-		this.instruments.set('soprano', sopranoSampler);
-		}
-
-		// Alto - using Sampler with alto samples (Issue #012: with synthesis fallback)
-		if (this.settings.instruments.alto?.enabled === true) {
-		const altoSampler = this.createSamplerWithFallback(configs.alto, 'alto');
-		const altoVolume = new Volume(-6);
-		this.instrumentVolumes.set('alto', altoVolume);
-		
-		let altoOutput = altoSampler.connect(altoVolume);
-		
-		// Connect alto to its specific effects based on settings
-		const altoEffects = this.instrumentEffects.get('alto');
-		if (altoEffects && this.settings.instruments.alto.effects) {
-			if (this.settings.instruments.alto.effects.reverb.enabled) {
-				const reverb = altoEffects.get('reverb');
-				if (reverb) altoOutput = altoOutput.connect(reverb);
-			}
-			if (this.settings.instruments.alto.effects.chorus.enabled) {
-				const chorus = altoEffects.get('chorus');
-				if (chorus) altoOutput = altoOutput.connect(chorus);
-			}
-			if (this.settings.instruments.alto.effects.filter.enabled) {
-				const filter = altoEffects.get('filter');
-				if (filter) altoOutput = altoOutput.connect(filter);
-			}
-		}
-		altoOutput.connect(this.volume);
-		this.instruments.set('alto', altoSampler);
-		}
-
-		// Tenor - using Sampler with tenor samples (Issue #012: with synthesis fallback)
-		if (this.settings.instruments.tenor?.enabled === true) {
-		const tenorSampler = this.createSamplerWithFallback(configs.tenor, 'tenor');
-		const tenorVolume = new Volume(-6);
-		this.instrumentVolumes.set('tenor', tenorVolume);
-		
-		let tenorOutput = tenorSampler.connect(tenorVolume);
-		
-		// Connect tenor to its specific effects based on settings
-		const tenorEffects = this.instrumentEffects.get('tenor');
-		if (tenorEffects && this.settings.instruments.tenor.effects) {
-			if (this.settings.instruments.tenor.effects.reverb.enabled) {
-				const reverb = tenorEffects.get('reverb');
-				if (reverb) tenorOutput = tenorOutput.connect(reverb);
-			}
-			if (this.settings.instruments.tenor.effects.chorus.enabled) {
-				const chorus = tenorEffects.get('chorus');
-				if (chorus) tenorOutput = tenorOutput.connect(chorus);
-			}
-			if (this.settings.instruments.tenor.effects.filter.enabled) {
-				const filter = tenorEffects.get('filter');
-				if (filter) tenorOutput = tenorOutput.connect(filter);
-			}
-		}
-		tenorOutput.connect(this.volume);
-		this.instruments.set('tenor', tenorSampler);
-		}
-
-		// Bass - using Sampler with bass voice samples (Issue #012: with synthesis fallback)
-		if (this.settings.instruments.bass?.enabled === true) {
-		const bassSampler = this.createSamplerWithFallback(configs.bass, 'bass');
-		const bassVolume = new Volume(-6);
-		this.instrumentVolumes.set('bass', bassVolume);
-		
-		let bassOutput = bassSampler.connect(bassVolume);
-		
-		// Connect bass to its specific effects based on settings
-		const bassEffects = this.instrumentEffects.get('bass');
-		if (bassEffects && this.settings.instruments.bass.effects) {
-			if (this.settings.instruments.bass.effects.reverb.enabled) {
-				const reverb = bassEffects.get('reverb');
-				if (reverb) bassOutput = bassOutput.connect(reverb);
-			}
-			if (this.settings.instruments.bass.effects.chorus.enabled) {
-				const chorus = bassEffects.get('chorus');
-				if (chorus) bassOutput = bassOutput.connect(chorus);
-			}
-			if (this.settings.instruments.bass.effects.filter.enabled) {
-				const filter = bassEffects.get('filter');
-				if (filter) bassOutput = bassOutput.connect(filter);
-			}
-		}
-		bassOutput.connect(this.volume);
-		this.instruments.set('bass', bassSampler);
-		}
-
-		// Flute - using Sampler with flute samples
-		if (this.settings.instruments.flute?.enabled === true) {
-		const fluteSampler = new Sampler(configs.flute);
-		const fluteVolume = new Volume(-6);
-		this.instrumentVolumes.set('flute', fluteVolume);
-		
-		let fluteOutput = fluteSampler.connect(fluteVolume);
-		
-		// Connect flute to its specific effects based on settings
-		const fluteEffects = this.instrumentEffects.get('flute');
-		if (fluteEffects && this.settings.instruments.flute.effects) {
-			if (this.settings.instruments.flute.effects.reverb.enabled) {
-				const reverb = fluteEffects.get('reverb');
-				if (reverb) fluteOutput = fluteOutput.connect(reverb);
-			}
-			if (this.settings.instruments.flute.effects.chorus.enabled) {
-				const chorus = fluteEffects.get('chorus');
-				if (chorus) fluteOutput = fluteOutput.connect(chorus);
-			}
-			if (this.settings.instruments.flute.effects.filter.enabled) {
-				const filter = fluteEffects.get('filter');
-				if (filter) fluteOutput = fluteOutput.connect(filter);
-			}
-		}
-		fluteOutput.connect(this.volume);
-		this.instruments.set('flute', fluteSampler);
-		}
-
-		// Clarinet - using Sampler with clarinet samples
-		if (this.settings.instruments.clarinet?.enabled === true) {
-		const clarinetSampler = new Sampler(configs.clarinet);
-		const clarinetVolume = new Volume(-6);
-		this.instrumentVolumes.set('clarinet', clarinetVolume);
-		
-		let clarinetOutput = clarinetSampler.connect(clarinetVolume);
-		
-		// Connect clarinet to its specific effects based on settings
-		const clarinetEffects = this.instrumentEffects.get('clarinet');
-		if (clarinetEffects && this.settings.instruments.clarinet.effects) {
-			if (this.settings.instruments.clarinet.effects.reverb.enabled) {
-				const reverb = clarinetEffects.get('reverb');
-				if (reverb) clarinetOutput = clarinetOutput.connect(reverb);
-			}
-			if (this.settings.instruments.clarinet.effects.chorus.enabled) {
-				const chorus = clarinetEffects.get('chorus');
-				if (chorus) clarinetOutput = clarinetOutput.connect(chorus);
-			}
-			if (this.settings.instruments.clarinet.effects.filter.enabled) {
-				const filter = clarinetEffects.get('filter');
-				if (filter) clarinetOutput = clarinetOutput.connect(filter);
-			}
-		}
-		clarinetOutput.connect(this.volume);
-		this.instruments.set('clarinet', clarinetSampler);
-		}
-
-		// Saxophone - using Sampler with saxophone samples
-		if (this.settings.instruments.saxophone?.enabled === true) {
-		const saxophoneSampler = new Sampler(configs.saxophone);
-		const saxophoneVolume = new Volume(-6);
-		this.instrumentVolumes.set('saxophone', saxophoneVolume);
-		
-		let saxophoneOutput = saxophoneSampler.connect(saxophoneVolume);
-		
-		// Connect saxophone to its specific effects based on settings
-		const saxophoneEffects = this.instrumentEffects.get('saxophone');
-		if (saxophoneEffects && this.settings.instruments.saxophone.effects) {
-			if (this.settings.instruments.saxophone.effects.reverb.enabled) {
-				const reverb = saxophoneEffects.get('reverb');
-				if (reverb) saxophoneOutput = saxophoneOutput.connect(reverb);
-			}
-			if (this.settings.instruments.saxophone.effects.chorus.enabled) {
-				const chorus = saxophoneEffects.get('chorus');
-				if (chorus) saxophoneOutput = saxophoneOutput.connect(chorus);
-			}
-			if (this.settings.instruments.saxophone.effects.filter.enabled) {
-				const filter = saxophoneEffects.get('filter');
-				if (filter) saxophoneOutput = saxophoneOutput.connect(filter);
-			}
-		}
-		saxophoneOutput.connect(this.volume);
-		this.instruments.set('saxophone', saxophoneSampler);
-		}
-
-		// Phase 6B: Extended Keyboard Family - Electric Piano
-		if (this.settings.instruments.electricPiano?.enabled === true) {
-		const electricPianoSampler = new Sampler(configs.electricPiano);
-		const electricPianoVolume = new Volume(-6);
-		this.instrumentVolumes.set('electricPiano', electricPianoVolume);
-		
-		let electricPianoOutput = electricPianoSampler.connect(electricPianoVolume);
-		
-		// Connect electric piano to its specific effects based on settings
-		const electricPianoEffects = this.instrumentEffects.get('electricPiano');
-		if (electricPianoEffects && this.settings.instruments.electricPiano.effects) {
-			if (this.settings.instruments.electricPiano.effects.reverb.enabled) {
-				const reverb = electricPianoEffects.get('reverb');
-				if (reverb) electricPianoOutput = electricPianoOutput.connect(reverb);
-			}
-			if (this.settings.instruments.electricPiano.effects.chorus.enabled) {
-				const chorus = electricPianoEffects.get('chorus');
-				if (chorus) electricPianoOutput = electricPianoOutput.connect(chorus);
-			}
-			if (this.settings.instruments.electricPiano.effects.filter.enabled) {
-				const filter = electricPianoEffects.get('filter');
-				if (filter) electricPianoOutput = electricPianoOutput.connect(filter);
-			}
-		}
-		electricPianoOutput.connect(this.volume);
-		this.instruments.set('electricPiano', electricPianoSampler);
-		}
-
-		// Harpsichord - using Sampler with harpsichord samples
-		if (this.settings.instruments.harpsichord?.enabled === true) {
-		const harpsichordSampler = new Sampler(configs.harpsichord);
-		const harpsichordVolume = new Volume(-6);
-		this.instrumentVolumes.set('harpsichord', harpsichordVolume);
-		
-		let harpsichordOutput = harpsichordSampler.connect(harpsichordVolume);
-		
-		// Connect harpsichord to its specific effects based on settings
-		const harpsichordEffects = this.instrumentEffects.get('harpsichord');
-		if (harpsichordEffects && this.settings.instruments.harpsichord.effects) {
-			if (this.settings.instruments.harpsichord.effects.reverb.enabled) {
-				const reverb = harpsichordEffects.get('reverb');
-				if (reverb) harpsichordOutput = harpsichordOutput.connect(reverb);
-			}
-			if (this.settings.instruments.harpsichord.effects.chorus.enabled) {
-				const chorus = harpsichordEffects.get('chorus');
-				if (chorus) harpsichordOutput = harpsichordOutput.connect(chorus);
-			}
-			if (this.settings.instruments.harpsichord.effects.filter.enabled) {
-				const filter = harpsichordEffects.get('filter');
-				if (filter) harpsichordOutput = harpsichordOutput.connect(filter);
-			}
-		}
-		harpsichordOutput.connect(this.volume);
-		this.instruments.set('harpsichord', harpsichordSampler);
-		}
-
-		// Accordion - using Sampler with accordion samples
-		if (this.settings.instruments.accordion?.enabled === true) {
-		const accordionSampler = new Sampler(configs.accordion);
-		const accordionVolume = new Volume(-6);
-		this.instrumentVolumes.set('accordion', accordionVolume);
-		
-		let accordionOutput = accordionSampler.connect(accordionVolume);
-		
-		// Connect accordion to its specific effects based on settings
-		const accordionEffects = this.instrumentEffects.get('accordion');
-		if (accordionEffects && this.settings.instruments.accordion.effects) {
-			if (this.settings.instruments.accordion.effects.reverb.enabled) {
-				const reverb = accordionEffects.get('reverb');
-				if (reverb) accordionOutput = accordionOutput.connect(reverb);
-			}
-			if (this.settings.instruments.accordion.effects.chorus.enabled) {
-				const chorus = accordionEffects.get('chorus');
-				if (chorus) accordionOutput = accordionOutput.connect(chorus);
-			}
-			if (this.settings.instruments.accordion.effects.filter.enabled) {
-				const filter = accordionEffects.get('filter');
-				if (filter) accordionOutput = accordionOutput.connect(filter);
-			}
-		}
-		accordionOutput.connect(this.volume);
-		this.instruments.set('accordion', accordionSampler);
-		}
-
-		// Celesta - using Sampler with celesta samples
-		if (this.settings.instruments.celesta?.enabled === true) {
-		const celestaSampler = new Sampler(configs.celesta);
-		const celestaVolume = new Volume(-6);
-		this.instrumentVolumes.set('celesta', celestaVolume);
-		
-		let celestaOutput = celestaSampler.connect(celestaVolume);
-		
-		// Connect celesta to its specific effects based on settings
-		const celestaEffects = this.instrumentEffects.get('celesta');
-		if (celestaEffects && this.settings.instruments.celesta.effects) {
-			if (this.settings.instruments.celesta.effects.reverb.enabled) {
-				const reverb = celestaEffects.get('reverb');
-				if (reverb) celestaOutput = celestaOutput.connect(reverb);
-			}
-			if (this.settings.instruments.celesta.effects.chorus.enabled) {
-				const chorus = celestaEffects.get('chorus');
-				if (chorus) celestaOutput = celestaOutput.connect(chorus);
-			}
-			if (this.settings.instruments.celesta.effects.filter.enabled) {
-				const filter = celestaEffects.get('filter');
-				if (filter) celestaOutput = celestaOutput.connect(filter);
-			}
-		}
-		celestaOutput.connect(this.volume);
-		this.instruments.set('celesta', celestaSampler);
-		}
-
-		// Phase 7: Strings & Brass Completion - Violin
-		if (this.settings.instruments.violin?.enabled === true) {
-		const violinSampler = new Sampler(configs.violin);
-		const violinVolume = new Volume(-6);
-		this.instrumentVolumes.set('violin', violinVolume);
-		
-		let violinOutput = violinSampler.connect(violinVolume);
-		
-		// Connect violin to its specific effects based on settings
-		const violinEffects = this.instrumentEffects.get('violin');
-		if (violinEffects && this.settings.instruments.violin.effects) {
-			if (this.settings.instruments.violin.effects.reverb.enabled) {
-				const reverb = violinEffects.get('reverb');
-				if (reverb) violinOutput = violinOutput.connect(reverb);
-			}
-			if (this.settings.instruments.violin.effects.chorus.enabled) {
-				const chorus = violinEffects.get('chorus');
-				if (chorus) violinOutput = violinOutput.connect(chorus);
-			}
-			if (this.settings.instruments.violin.effects.filter.enabled) {
-				const filter = violinEffects.get('filter');
-				if (filter) violinOutput = violinOutput.connect(filter);
-			}
-		}
-		violinOutput.connect(this.volume);
-		this.instruments.set('violin', violinSampler);
-		}
-
-		// Cello - using Sampler with cello samples
-		if (this.settings.instruments.cello?.enabled === true) {
-		const celloSampler = new Sampler(configs.cello);
-		const celloVolume = new Volume(-6);
-		this.instrumentVolumes.set('cello', celloVolume);
-		
-		let celloOutput = celloSampler.connect(celloVolume);
-		
-		// Connect cello to its specific effects based on settings
-		const celloEffects = this.instrumentEffects.get('cello');
-		if (celloEffects && this.settings.instruments.cello.effects) {
-			if (this.settings.instruments.cello.effects.reverb.enabled) {
-				const reverb = celloEffects.get('reverb');
-				if (reverb) celloOutput = celloOutput.connect(reverb);
-			}
-			if (this.settings.instruments.cello.effects.chorus.enabled) {
-				const chorus = celloEffects.get('chorus');
-				if (chorus) celloOutput = celloOutput.connect(chorus);
-			}
-			if (this.settings.instruments.cello.effects.filter.enabled) {
-				const filter = celloEffects.get('filter');
-				if (filter) celloOutput = celloOutput.connect(filter);
-			}
-		}
-		celloOutput.connect(this.volume);
-		this.instruments.set('cello', celloSampler);
-		}
-
-		// Guitar - using Sampler with guitar samples
-		if (this.settings.instruments.guitar?.enabled === true) {
-		const guitarSampler = new Sampler(configs.guitar);
-		const guitarVolume = new Volume(-6);
-		this.instrumentVolumes.set('guitar', guitarVolume);
-		
-		let guitarOutput = guitarSampler.connect(guitarVolume);
-		
-		// Connect guitar to its specific effects based on settings
-		const guitarEffects = this.instrumentEffects.get('guitar');
-		if (guitarEffects && this.settings.instruments.guitar.effects) {
-			if (this.settings.instruments.guitar.effects.reverb.enabled) {
-				const reverb = guitarEffects.get('reverb');
-				if (reverb) guitarOutput = guitarOutput.connect(reverb);
-			}
-			if (this.settings.instruments.guitar.effects.chorus.enabled) {
-				const chorus = guitarEffects.get('chorus');
-				if (chorus) guitarOutput = guitarOutput.connect(chorus);
-			}
-			if (this.settings.instruments.guitar.effects.filter.enabled) {
-				const filter = guitarEffects.get('filter');
-				if (filter) guitarOutput = guitarOutput.connect(filter);
-			}
-		}
-		guitarOutput.connect(this.volume);
-		this.instruments.set('guitar', guitarSampler);
-		}
-
-		// Contrabass - using Sampler with contrabass samples
-		if (this.settings.instruments.contrabass?.enabled === true) {
-		const contrabassSampler = new Sampler(configs.contrabass);
-		const contrabassVolume = new Volume(-6);
-		this.instrumentVolumes.set('contrabass', contrabassVolume);
-		
-		let contrabassOutput = contrabassSampler.connect(contrabassVolume);
-		
-		// Connect contrabass to its specific effects based on settings
-		const contrabassEffects = this.instrumentEffects.get('contrabass');
-		if (contrabassEffects && this.settings.instruments.contrabass.effects) {
-			if (this.settings.instruments.contrabass.effects.reverb.enabled) {
-				const reverb = contrabassEffects.get('reverb');
-				if (reverb) contrabassOutput = contrabassOutput.connect(reverb);
-			}
-			if (this.settings.instruments.contrabass.effects.chorus.enabled) {
-				const chorus = contrabassEffects.get('chorus');
-				if (chorus) contrabassOutput = contrabassOutput.connect(chorus);
-			}
-			if (this.settings.instruments.contrabass.effects.filter.enabled) {
-				const filter = contrabassEffects.get('filter');
-				if (filter) contrabassOutput = contrabassOutput.connect(filter);
-			}
-		}
-		contrabassOutput.connect(this.volume);
-		this.instruments.set('contrabass', contrabassSampler);
-		}
-
-		// Electric Guitar - using Sampler with electric guitar samples
-		if (this.settings.instruments.guitarElectric?.enabled === true) {
-		const guitarElectricSampler = new Sampler(configs.guitarElectric);
-		const guitarElectricVolume = new Volume(-6);
-		this.instrumentVolumes.set('guitarElectric', guitarElectricVolume);
-		
-		let guitarElectricOutput = guitarElectricSampler.connect(guitarElectricVolume);
-		
-		// Connect electric guitar to its specific effects based on settings
-		const guitarElectricEffects = this.instrumentEffects.get('guitarElectric');
-		if (guitarElectricEffects && this.settings.instruments.guitarElectric.effects) {
-			if (this.settings.instruments.guitarElectric.effects.reverb.enabled) {
-				const reverb = guitarElectricEffects.get('reverb');
-				if (reverb) guitarElectricOutput = guitarElectricOutput.connect(reverb);
-			}
-			if (this.settings.instruments.guitarElectric.effects.chorus.enabled) {
-				const chorus = guitarElectricEffects.get('chorus');
-				if (chorus) guitarElectricOutput = guitarElectricOutput.connect(chorus);
-			}
-			if (this.settings.instruments.guitarElectric.effects.filter.enabled) {
-				const filter = guitarElectricEffects.get('filter');
-				if (filter) guitarElectricOutput = guitarElectricOutput.connect(filter);
-			}
-		}
-		guitarElectricOutput.connect(this.volume);
-		this.instruments.set('guitarElectric', guitarElectricSampler);
-		}
-
-		// Nylon Guitar - using Sampler with nylon guitar samples
-		if (this.settings.instruments.guitarNylon?.enabled === true) {
-		const guitarNylonSampler = new Sampler(configs.guitarNylon);
-		const guitarNylonVolume = new Volume(-6);
-		this.instrumentVolumes.set('guitarNylon', guitarNylonVolume);
-		
-		let guitarNylonOutput = guitarNylonSampler.connect(guitarNylonVolume);
-		
-		// Connect nylon guitar to its specific effects based on settings
-		const guitarNylonEffects = this.instrumentEffects.get('guitarNylon');
-		if (guitarNylonEffects && this.settings.instruments.guitarNylon.effects) {
-			if (this.settings.instruments.guitarNylon.effects.reverb.enabled) {
-				const reverb = guitarNylonEffects.get('reverb');
-				if (reverb) guitarNylonOutput = guitarNylonOutput.connect(reverb);
-			}
-			if (this.settings.instruments.guitarNylon.effects.chorus.enabled) {
-				const chorus = guitarNylonEffects.get('chorus');
-				if (chorus) guitarNylonOutput = guitarNylonOutput.connect(chorus);
-			}
-			if (this.settings.instruments.guitarNylon.effects.filter.enabled) {
-				const filter = guitarNylonEffects.get('filter');
-				if (filter) guitarNylonOutput = guitarNylonOutput.connect(filter);
-			}
-		}
-		guitarNylonOutput.connect(this.volume);
-		this.instruments.set('guitarNylon', guitarNylonSampler);
-		}
-
-		// Electric Bass - using Sampler with electric bass samples
-		if (this.settings.instruments.bassElectric?.enabled === true) {
-		const bassElectricSampler = new Sampler(configs.bassElectric);
-		const bassElectricVolume = new Volume(-6);
-		this.instrumentVolumes.set('bassElectric', bassElectricVolume);
-		
-		let bassElectricOutput = bassElectricSampler.connect(bassElectricVolume);
-		
-		// Connect electric bass to its specific effects based on settings
-		const bassElectricEffects = this.instrumentEffects.get('bassElectric');
-		if (bassElectricEffects && this.settings.instruments.bassElectric.effects) {
-			if (this.settings.instruments.bassElectric.effects.reverb.enabled) {
-				const reverb = bassElectricEffects.get('reverb');
-				if (reverb) bassElectricOutput = bassElectricOutput.connect(reverb);
-			}
-			if (this.settings.instruments.bassElectric.effects.chorus.enabled) {
-				const chorus = bassElectricEffects.get('chorus');
-				if (chorus) bassElectricOutput = bassElectricOutput.connect(chorus);
-			}
-			if (this.settings.instruments.bassElectric.effects.filter.enabled) {
-				const filter = bassElectricEffects.get('filter');
-				if (filter) bassElectricOutput = bassElectricOutput.connect(filter);
-			}
-		}
-		bassElectricOutput.connect(this.volume);
-		this.instruments.set('bassElectric', bassElectricSampler);
-		}
-
-		// Harp - using Sampler with harp samples
-		if (this.settings.instruments.harp?.enabled === true) {
-		const harpSampler = new Sampler(configs.harp);
-		const harpVolume = new Volume(-6);
-		this.instrumentVolumes.set('harp', harpVolume);
-		
-		let harpOutput = harpSampler.connect(harpVolume);
-		
-		// Connect harp to its specific effects based on settings
-		const harpEffects = this.instrumentEffects.get('harp');
-		if (harpEffects && this.settings.instruments.harp.effects) {
-			if (this.settings.instruments.harp.effects.reverb.enabled) {
-				const reverb = harpEffects.get('reverb');
-				if (reverb) harpOutput = harpOutput.connect(reverb);
-			}
-			if (this.settings.instruments.harp.effects.chorus.enabled) {
-				const chorus = harpEffects.get('chorus');
-				if (chorus) harpOutput = harpOutput.connect(chorus);
-			}
-			if (this.settings.instruments.harp.effects.filter.enabled) {
-				const filter = harpEffects.get('filter');
-				if (filter) harpOutput = harpOutput.connect(filter);
-			}
-		}
-		harpOutput.connect(this.volume);
-		this.instruments.set('harp', harpSampler);
-		}
-
-		// Trumpet - using Sampler with trumpet samples
-		if (this.settings.instruments.trumpet?.enabled === true) {
-		const trumpetSampler = new Sampler(configs.trumpet);
-		const trumpetVolume = new Volume(-6);
-		this.instrumentVolumes.set('trumpet', trumpetVolume);
-		
-		let trumpetOutput = trumpetSampler.connect(trumpetVolume);
-		
-		// Connect trumpet to its specific effects based on settings
-		const trumpetEffects = this.instrumentEffects.get('trumpet');
-		if (trumpetEffects && this.settings.instruments.trumpet.effects) {
-			if (this.settings.instruments.trumpet.effects.reverb.enabled) {
-				const reverb = trumpetEffects.get('reverb');
-				if (reverb) trumpetOutput = trumpetOutput.connect(reverb);
-			}
-			if (this.settings.instruments.trumpet.effects.chorus.enabled) {
-				const chorus = trumpetEffects.get('chorus');
-				if (chorus) trumpetOutput = trumpetOutput.connect(chorus);
-			}
-			if (this.settings.instruments.trumpet.effects.filter.enabled) {
-				const filter = trumpetEffects.get('filter');
-				if (filter) trumpetOutput = trumpetOutput.connect(filter);
-			}
-		}
-		trumpetOutput.connect(this.volume);
-		this.instruments.set('trumpet', trumpetSampler);
-		}
-
-		// French Horn - using Sampler with french horn samples
-		if (this.settings.instruments.frenchHorn?.enabled === true) {
-		const frenchHornSampler = new Sampler(configs.frenchHorn);
-		const frenchHornVolume = new Volume(-6);
-		this.instrumentVolumes.set('frenchHorn', frenchHornVolume);
-		
-		let frenchHornOutput = frenchHornSampler.connect(frenchHornVolume);
-		
-		// Connect french horn to its specific effects based on settings
-		const frenchHornEffects = this.instrumentEffects.get('frenchHorn');
-		if (frenchHornEffects && this.settings.instruments.frenchHorn.effects) {
-			if (this.settings.instruments.frenchHorn.effects.reverb.enabled) {
-				const reverb = frenchHornEffects.get('reverb');
-				if (reverb) frenchHornOutput = frenchHornOutput.connect(reverb);
-			}
-			if (this.settings.instruments.frenchHorn.effects.chorus.enabled) {
-				const chorus = frenchHornEffects.get('chorus');
-				if (chorus) frenchHornOutput = frenchHornOutput.connect(chorus);
-			}
-			if (this.settings.instruments.frenchHorn.effects.filter.enabled) {
-				const filter = frenchHornEffects.get('filter');
-				if (filter) frenchHornOutput = frenchHornOutput.connect(filter);
-			}
-		}
-		frenchHornOutput.connect(this.volume);
-		this.instruments.set('frenchHorn', frenchHornSampler);
-		}
-
-		// Trombone - using Sampler with trombone samples
-		if (this.settings.instruments.trombone?.enabled === true) {
-		const tromboneSampler = new Sampler(configs.trombone);
-		const tromboneVolume = new Volume(-6);
-		this.instrumentVolumes.set('trombone', tromboneVolume);
-		
-		let tromboneOutput = tromboneSampler.connect(tromboneVolume);
-		
-		// Connect trombone to its specific effects based on settings
-		const tromboneEffects = this.instrumentEffects.get('trombone');
-		if (tromboneEffects && this.settings.instruments.trombone.effects) {
-			if (this.settings.instruments.trombone.effects.reverb.enabled) {
-				const reverb = tromboneEffects.get('reverb');
-				if (reverb) tromboneOutput = tromboneOutput.connect(reverb);
-			}
-			if (this.settings.instruments.trombone.effects.chorus.enabled) {
-				const chorus = tromboneEffects.get('chorus');
-				if (chorus) tromboneOutput = tromboneOutput.connect(chorus);
-			}
-			if (this.settings.instruments.trombone.effects.filter.enabled) {
-				const filter = tromboneEffects.get('filter');
-				if (filter) tromboneOutput = tromboneOutput.connect(filter);
-			}
-		}
-		tromboneOutput.connect(this.volume);
-		this.instruments.set('trombone', tromboneSampler);
-		}
-
-		// Tuba - using Sampler with tuba samples
-		if (this.settings.instruments.tuba?.enabled === true) {
-		const tubaSampler = new Sampler(configs.tuba);
-		const tubaVolume = new Volume(-6);
-		this.instrumentVolumes.set('tuba', tubaVolume);
-		
-		let tubaOutput = tubaSampler.connect(tubaVolume);
-		
-		// Connect tuba to its specific effects based on settings
-		const tubaEffects = this.instrumentEffects.get('tuba');
-		if (tubaEffects && this.settings.instruments.tuba.effects) {
-			if (this.settings.instruments.tuba.effects.reverb.enabled) {
-				const reverb = tubaEffects.get('reverb');
-				if (reverb) tubaOutput = tubaOutput.connect(reverb);
-			}
-			if (this.settings.instruments.tuba.effects.chorus.enabled) {
-				const chorus = tubaEffects.get('chorus');
-				if (chorus) tubaOutput = tubaOutput.connect(chorus);
-			}
-			if (this.settings.instruments.tuba.effects.filter.enabled) {
-				const filter = tubaEffects.get('filter');
-				if (filter) tubaOutput = tubaOutput.connect(filter);
-			}
-		}
-		tubaOutput.connect(this.volume);
-		this.instruments.set('tuba', tubaSampler);
-		}
-
-		// Issue #014 Fix: Log enabled vs total instrument counts for sample mode
-		const totalSampleInstruments = [
-			'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'soprano', 'alto', 'tenor', 'bass',
-			'flute', 'clarinet', 'saxophone', 'electricPiano', 'harpsichord', 'accordion', 'celesta',
-			'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba'
+		// Get all instruments that are enabled in settings
+		const allInstruments = [
+			'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 
+			'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 
+			'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 
+			'trumpet', 'frenchHorn', 'trombone', 'tuba', 'bassoon', 'oboe', 
+			'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
 		];
-		const settings = this.settings; // Capture settings reference for arrow function
-		const enabledSampleInstruments = totalSampleInstruments.filter(instrumentName => 
-			settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled === true
-		);
 		
-		logger.info('instruments', `Issue #014 Fix: Sample mode initialization completed`, {
-			totalAvailable: totalSampleInstruments.length,
-			enabledCount: enabledSampleInstruments.length,
-			enabledInstruments: enabledSampleInstruments,
-			skippedCount: totalSampleInstruments.length - enabledSampleInstruments.length,
-			fix: 'Family toggle settings now properly respected in sample loading mode'
+		const enabledInstruments = allInstruments.filter(instrumentName => {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			return instrumentSettings?.enabled === true;
 		});
-
-		// Initialize persistent whale synthesizer for environmental sounds
-		this.initializeWhaleSynthesizer();
-
-		// Initialize any missing instruments dynamically (for instruments not manually coded above)
-		this.initializeMissingInstruments();
-
-		// Apply initial volume settings from plugin settings
+		
+		logger.info('instruments', `Initializing ${enabledInstruments.length} enabled instruments with individual quality control`);
+		
+		// Initialize each enabled instrument based on its individual useHighQuality setting
+		for (const instrumentName of enabledInstruments) {
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			const useHighQuality = instrumentSettings?.useHighQuality ?? false;
+			
+			if (useHighQuality && configs[instrumentName]) {
+				// Use high-quality samples if available and requested
+				await this.initializeInstrumentWithSamples(instrumentName, configs[instrumentName]);
+			} else {
+				// Use synthesis (either by choice or as fallback)
+				this.initializeInstrumentWithSynthesis(instrumentName);
+			}
+		}
+		
+		// Apply instrument settings and connect effects
 		this.applyInstrumentSettings();
-
-		logger.debug('instruments', 'All sampled instruments initialized', {
-			instrumentCount: this.instruments.size,
-			instruments: Array.from(this.instruments.keys()),
-			volumeControls: Array.from(this.instrumentVolumes.keys())
-		});
+		
+		logger.info('instruments', `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
+	}
+	
+	private async initializeInstrumentWithSamples(instrumentName: string, config: any): Promise<void> {
+		try {
+			logger.debug('instruments', `Initializing ${instrumentName} with high-quality samples`);
+			
+			const sampler = new Sampler({
+				...config,
+				onload: () => {
+					logger.debug('samples', `${instrumentName} samples loaded successfully`);
+				},
+									onerror: (error: any) => {
+					logger.warn('samples', `${instrumentName} samples failed to load, falling back to synthesis`, { error });
+					// Fallback to synthesis if samples fail to load
+					this.initializeInstrumentWithSynthesis(instrumentName);
+					return;
+				}
+			});
+			
+			// Create volume control
+			const volume = new Volume(-6);
+			this.instrumentVolumes.set(instrumentName, volume);
+			
+			// Connect to effects
+			let output = sampler.connect(volume);
+			const effects = this.instrumentEffects.get(instrumentName);
+			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+			
+			if (effects && instrumentSettings?.effects) {
+				if (instrumentSettings.effects.reverb?.enabled) {
+					const reverb = effects.get('reverb');
+					if (reverb) output = output.connect(reverb);
+				}
+				if (instrumentSettings.effects.chorus?.enabled) {
+					const chorus = effects.get('chorus');
+					if (chorus) output = output.connect(chorus);
+				}
+				if (instrumentSettings.effects.filter?.enabled) {
+					const filter = effects.get('filter');
+					if (filter) output = output.connect(filter);
+				}
+			}
+			
+			output.connect(this.volume);
+			this.instruments.set(instrumentName, sampler);
+			
+		} catch (error) {
+			logger.error('instruments', `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
+			this.initializeInstrumentWithSynthesis(instrumentName);
+		}
+	}
+	
+	private initializeInstrumentWithSynthesis(instrumentName: string): void {
+		logger.debug('instruments', `Initializing ${instrumentName} with synthesis`);
+		
+		let synth: PolySynth;
+		const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+		
+		// Use specialized synthesis based on instrument type for better sound quality
+		switch (instrumentName) {
+			case 'timpani':
+				synth = new PolySynth({
+					voice: AMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2.0 },
+						volume: -12
+					}
+				});
+				break;
+			
+			case 'xylophone':
+			case 'vibraphone':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 4,
+						modulationIndex: 2,
+						oscillator: { type: 'triangle' },
+						envelope: { attack: 0.001, decay: 0.2, sustain: 0.1, release: 0.5 },
+						volume: -10
+					}
+				});
+				break;
+			
+			case 'strings':
+			case 'violin':
+			case 'cello':
+			case 'contrabass':
+			case 'guitar':
+			case 'guitarElectric':
+			case 'guitarNylon':
+			case 'bassElectric':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 1.5,
+						modulationIndex: 3,
+						oscillator: { type: 'sawtooth' },
+						envelope: { attack: 0.05, decay: 0.1, sustain: 0.8, release: 1.5 },
+						volume: -8
+					}
+				});
+				break;
+			
+			case 'flute':
+			case 'oboe':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 2,
+						modulationIndex: 1,
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 1.0 },
+						volume: -6
+					}
+				});
+				break;
+			
+			case 'clarinet':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 3,
+						modulationIndex: 4,
+						oscillator: { type: 'square' },
+						envelope: { attack: 0.1, decay: 0.3, sustain: 0.7, release: 1.0 },
+						volume: -9
+					}
+				});
+				break;
+			
+			case 'trumpet':
+			case 'frenchHorn':
+			case 'trombone':
+			case 'tuba':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 2,
+						modulationIndex: 8,
+						oscillator: { type: 'sawtooth' },
+						envelope: { attack: 0.02, decay: 0.1, sustain: 0.8, release: 0.5 },
+						volume: -7
+					}
+				});
+				break;
+			
+			case 'saxophone':
+				synth = new PolySynth({
+					voice: AMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						oscillator: { type: 'sawtooth' },
+						envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
+						volume: -8
+					}
+				});
+				break;
+			
+			case 'piano':
+			case 'electricPiano':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 1,
+						modulationIndex: 1.5,
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 2.0 },
+						volume: -6
+					}
+				});
+				break;
+			
+			case 'organ':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 1,
+						modulationIndex: 0.5,
+						oscillator: { type: 'square' },
+						envelope: { attack: 0.1, decay: 0.1, sustain: 0.9, release: 0.3 },
+						volume: -8
+					}
+				});
+				break;
+			
+			case 'leadSynth':
+			case 'bassSynth':
+			case 'arpSynth':
+			case 'pad':
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 2,
+						modulationIndex: 6,
+						oscillator: { type: 'sawtooth' },
+						envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 },
+						volume: -8
+					}
+				});
+				break;
+			
+			default:
+				// Default for any remaining instruments (vocals, etc.)
+				synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: {
+						harmonicity: 1,
+						modulationIndex: 2,
+						oscillator: { type: 'sine' },
+						envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 },
+						volume: -8
+					}
+				});
+				break;
+		}
+		
+		// Create volume control
+		const volume = new Volume(-6);
+		this.instrumentVolumes.set(instrumentName, volume);
+		
+		// Connect synth to volume and effects
+		let output = synth.connect(volume);
+		const effects = this.instrumentEffects.get(instrumentName);
+		const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+		
+		if (effects && instrumentSettings?.effects) {
+			if (instrumentSettings.effects.reverb?.enabled) {
+				const reverb = effects.get('reverb');
+				if (reverb) output = output.connect(reverb);
+			}
+			if (instrumentSettings.effects.chorus?.enabled) {
+				const chorus = effects.get('chorus');
+				if (chorus) output = output.connect(chorus);
+			}
+			if (instrumentSettings.effects.filter?.enabled) {
+				const filter = effects.get('filter');
+				if (filter) output = output.connect(filter);
+			}
+		}
+		
+		output.connect(this.volume);
+		this.instruments.set(instrumentName, synth);
 	}
 
 	/**
@@ -1953,15 +1104,13 @@ export class AudioEngine {
 			alreadyInitialized: initializedKeys.length,
 			missing: missingKeys.length,
 			missingInstruments: missingKeys,
-			useHighQualitySamples: this.settings.useHighQualitySamples,
-			synthesisMode: !this.settings.useHighQualitySamples
+			perInstrumentQuality: 'Individual instrument control'
 		});
 
-		// In synthesis mode, create basic synthesizers instead of loading samples
-		if (!this.settings.useHighQualitySamples) {
-			logger.info('instruments', 'Synthesis-only mode - creating basic synthesizers');
-			// Issue #014 Fix: Only initialize instruments that are enabled in family settings
-			const settings = this.settings; // Capture for arrow function
+		// Create synthesizers for missing instruments (per-instrument quality control)
+		logger.info('instruments', 'Creating synthesizers for missing instruments');
+		// Issue #014 Fix: Only initialize instruments that are enabled in family settings
+		const settings = this.settings; // Capture for arrow function
 			
 			logger.info('issue-014-fix', '🔧 FAST-PATH SYNTHESIS: Applying enabled instrument filter', {
 				totalMissingInstruments: missingKeys.length,
@@ -1969,63 +1118,9 @@ export class AudioEngine {
 			});
 			
 			missingKeys.forEach(instrumentName => {
-				// Issue #014 Fix: Check if instrument is enabled before initializing
-				if (settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled !== true) {
-					logger.info('issue-014-fix', `🔧 FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
-						instrumentName,
-						enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled,
-						reason: 'disabled-in-family-settings'
-					});
-					return;
-				}
-				
-				logger.info('issue-014-fix', `🔧 FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
-					instrumentName,
-					enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled
-				});
-				// Create basic polyphonic synthesizer
-				// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
-				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
-				const synth = new PolySynth({
-					voice: FMSynth,
-					maxPolyphony: maxVoices,
-					options: {
-						oscillator: { type: 'sine' },
-						envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
-					}
-				});
-				
-				// Create volume control
-				const volume = new Volume(-6);
-				this.instrumentVolumes.set(instrumentName, volume);
-				
-				// Connect synth → volume → master
-				synth.connect(volume);
-				if (this.volume) {
-					volume.connect(this.volume);
-				}
-				
-				// Add to instruments map
-				this.instruments.set(instrumentName, synth);
-				
-				logger.debug('instruments', `Created synthesis instrument: ${instrumentName}`);
-			});
-			return;
-		}
-
-		// Continue with sample-based initialization for non-synthesis mode
-		// Issue #014 Fix: Only initialize instruments that are enabled in family settings
-		const settings = this.settings; // Capture for arrow function
-		
-		logger.info('issue-014-fix', '🔧 FAST-PATH: Applying enabled instrument filter', {
-			totalMissingInstruments: missingKeys.length,
-			missingInstruments: missingKeys
-		});
-
-		missingKeys.forEach(instrumentName => {
-			// Issue #014 Fix: Check if instrument is enabled before initializing
+							// Issue #014 Fix: Check if instrument is enabled before initializing
 			if (settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled !== true) {
-				logger.info('issue-014-fix', `🔧 FAST-PATH: Skipping disabled instrument: ${instrumentName}`, {
+				logger.info('issue-014-fix', `🔧 FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
 					instrumentName,
 					enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled,
 					reason: 'disabled-in-family-settings'
@@ -2033,92 +1128,71 @@ export class AudioEngine {
 				return;
 			}
 			
-			logger.info('issue-014-fix', `🔧 FAST-PATH: Initializing enabled instrument: ${instrumentName}`, {
+			logger.info('issue-014-fix', `🔧 FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
 				instrumentName,
 				enabled: settings.instruments[instrumentName as keyof typeof settings.instruments]?.enabled
 			});
 			
-			try {
-				// Environmental instruments prefer synthesis over samples until sample downloading is implemented
-				if (this.isEnvironmentalInstrument(instrumentName)) {
-					logger.debug('instruments', `Environmental instrument ${instrumentName} will use synthesis - samples can be downloaded later`);
-					
-					// Create synthesizer for environmental instruments
-					// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
-					const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
-					const synth = new PolySynth({
-						voice: FMSynth,
-						maxPolyphony: maxVoices,
-						options: {
-							oscillator: { type: 'sine' },
-							envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 } // Longer envelope for ambient sounds
+			// Check if instrument prefers samples and they're available
+			const instrumentSettings = settings.instruments[instrumentName as keyof typeof settings.instruments];
+			const useHighQuality = instrumentSettings?.useHighQuality ?? false;
+			const config = configs[instrumentName];
+			
+			if (useHighQuality && config) {
+				// Use samples if requested and available
+				try {
+					const sampler = new Sampler({
+						...config,
+						onload: () => {
+							logger.debug('samples', `${instrumentName} samples loaded successfully`);
+						},
+						onerror: (error: any) => {
+							logger.warn('samples', `${instrumentName} samples failed to load, falling back to synthesis`, { error });
+							// Fallback handled by synthesis creation below
 						}
 					});
 					
-					// Create volume control for environmental instruments
 					const volume = new Volume(-6);
 					this.instrumentVolumes.set(instrumentName, volume);
 					
-					// Connect synth → volume → master
-					synth.connect(volume);
+					sampler.connect(volume);
 					if (this.volume) {
 						volume.connect(this.volume);
 					}
 					
-					// Add to instruments map
-					this.instruments.set(instrumentName, synth);
-					
-					logger.debug('instruments', `Created synthesis instrument for environmental: ${instrumentName}`);
+					this.instruments.set(instrumentName, sampler);
+					logger.debug('instruments', `Created sample-based instrument: ${instrumentName}`);
 					return;
+				} catch (error) {
+					logger.warn('instruments', `Failed to create sampler for ${instrumentName}, using synthesis`, { error });
 				}
-				
-				const config = configs[instrumentName as keyof typeof configs];
-				
-				// Create sampler with error handling
-				const sampler = new Sampler({
-					...config,
-					onload: () => {
-						logger.debug('samples', `${instrumentName} samples loaded successfully`);
-					},
-					onerror: (error) => {
-						logger.warn('samples', `${instrumentName} samples failed to load, using basic synthesis`, { error });
-					}
-				});
-
-				// Create volume control
-				const volume = new Volume(-6);
-				this.instrumentVolumes.set(instrumentName, volume);
-
-				// Connect to effects if available
-				let output = sampler.connect(volume);
-				const effects = this.instrumentEffects.get(instrumentName);
-				const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
-
-				if (effects && instrumentSettings?.effects) {
-					if (instrumentSettings.effects.reverb?.enabled) {
-						const reverb = effects.get('reverb');
-						if (reverb) output = output.connect(reverb);
-					}
-					if (instrumentSettings.effects.chorus?.enabled) {
-						const chorus = effects.get('chorus');
-						if (chorus) output = output.connect(chorus);
-					}
-					if (instrumentSettings.effects.filter?.enabled) {
-						const filter = effects.get('filter');
-						if (filter) output = output.connect(filter);
-					}
-				}
-
-				// Connect to master volume
-				output.connect(this.volume);
-				
-				// Register the instrument
-				this.instruments.set(instrumentName, sampler);
-				
-				logger.debug('instruments', `Dynamically initialized ${instrumentName}`);
-			} catch (error) {
-				logger.error('instruments', `Failed to initialize ${instrumentName}`, { error });
 			}
+			
+			// Create synthesis instrument (default or fallback)
+			const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+			const synth = new PolySynth({
+				voice: FMSynth,
+				maxPolyphony: maxVoices,
+				options: {
+					oscillator: { type: 'sine' },
+					envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+				}
+			});
+			
+			// Create volume control
+			const volume = new Volume(-6);
+			this.instrumentVolumes.set(instrumentName, volume);
+			
+			// Connect synth → volume → master
+			synth.connect(volume);
+			if (this.volume) {
+				volume.connect(this.volume);
+			}
+			
+			// Add to instruments map
+			this.instruments.set(instrumentName, synth);
+			
+			logger.debug('instruments', `Created synthesis instrument: ${instrumentName}`);
 		});
 	}
 
@@ -2153,66 +1227,67 @@ export class AudioEngine {
 					this.instrumentVolumes.delete(instrumentName);
 				}
 
-				// Re-create the specific instrument based on current mode (synthesis vs samples)
-				if (!this.settings.useHighQualitySamples) {
-					// Synthesis mode - create PolySynth like in original initialization
-					logger.info('issue-006-debug', `Re-creating synthesizer for ${instrumentName}`, {
-						instrumentName,
-						mode: 'synthesis',
-						action: 'synth-reinit-start'
-					});
-					
-					// Use same synthesis logic as original initialization
-					let synthConfig;
-					if (this.isEnvironmentalInstrument(instrumentName)) {
-						synthConfig = {
-							oscillator: { type: 'sine' as const },
-							envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 }
-						};
-					} else if (this.isPercussionInstrument(instrumentName)) {
-						synthConfig = {
-							oscillator: { type: 'triangle' as const },
-							envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.8 }
-						};
-					} else if (this.isElectronicInstrument(instrumentName)) {
-						synthConfig = {
-							oscillator: { type: 'sawtooth' as const },
-							envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 }
-						};
-					} else {
-						synthConfig = {
-							oscillator: { type: 'sine' as const },
-							envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
-						};
-					}
-					
-					// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
-					const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
-					const synth = new PolySynth({
-						voice: FMSynth,
-						maxPolyphony: maxVoices,
-						options: synthConfig
-					});
-					const volume = new Volume(-6);
-					
-					// Connect synth → volume → master
-					synth.connect(volume);
-					volume.connect(this.volume);
-					
-					// Store references
-					this.instruments.set(instrumentName, synth);
-					this.instrumentVolumes.set(instrumentName, volume);
-					
-					logger.info('issue-006-debug', `Successfully re-initialized synthesizer for ${instrumentName}`, {
-						instrumentName,
-						synthType: 'PolySynth',
-						finalVolumeValue: volume.volume.value,
-						finalVolumeMuted: volume.mute,
-						instrumentExists: this.instruments.has(instrumentName),
-						volumeNodeExists: this.instrumentVolumes.has(instrumentName),
-						action: 'synth-reinit-success'
-					});
-				} else if (configs[instrumentName]) {
+				// Re-create the specific instrument using synthesis (per-instrument quality control)
+				// For now, use synthesis for re-initialization to ensure stability
+				logger.info('issue-006-debug', `Re-creating synthesizer for ${instrumentName}`, {
+					instrumentName,
+					mode: 'synthesis',
+					action: 'synth-reinit-start'
+				});
+				
+				// Use same synthesis logic as original initialization
+				let synthConfig;
+				if (this.isEnvironmentalInstrument(instrumentName)) {
+					synthConfig = {
+						oscillator: { type: 'sine' as const },
+						envelope: { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 }
+					};
+				} else if (this.isPercussionInstrument(instrumentName)) {
+					synthConfig = {
+						oscillator: { type: 'triangle' as const },
+						envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.8 }
+					};
+				} else if (this.isElectronicInstrument(instrumentName)) {
+					synthConfig = {
+						oscillator: { type: 'sawtooth' as const },
+						envelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.5 }
+					};
+				} else {
+					synthConfig = {
+						oscillator: { type: 'sine' as const },
+						envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 }
+					};
+				}
+				
+				// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
+				const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
+				const synth = new PolySynth({
+					voice: FMSynth,
+					maxPolyphony: maxVoices,
+					options: synthConfig
+				});
+				const volume = new Volume(-6);
+				
+				// Connect synth → volume → master
+				synth.connect(volume);
+				volume.connect(this.volume);
+				
+				// Store references
+				this.instruments.set(instrumentName, synth);
+				this.instrumentVolumes.set(instrumentName, volume);
+				
+				logger.info('issue-006-debug', `Successfully re-initialized synthesizer for ${instrumentName}`, {
+					instrumentName,
+					synthType: 'PolySynth',
+					finalVolumeValue: volume.volume.value,
+					finalVolumeMuted: volume.mute,
+					instrumentExists: this.instruments.has(instrumentName),
+					volumeNodeExists: this.instrumentVolumes.has(instrumentName),
+					action: 'synth-reinit-success'
+				});
+				
+				// Alternative: Sample-based instrument (if needed in future)
+				if (false && configs[instrumentName]) {
 					// Sample-based instrument
 					logger.info('issue-006-debug', `Re-creating sampler for ${instrumentName}`, {
 						instrumentName,
@@ -2245,7 +1320,7 @@ export class AudioEngine {
 					logger.error('issue-006-debug', `No valid initialization method for ${instrumentName}`, {
 						instrumentName,
 						hasSamplerConfig: !!configs[instrumentName],
-						useHighQualitySamples: this.settings.useHighQualitySamples,
+						perInstrumentQuality: 'Individual instrument control',
 						action: 'no-valid-init-method'
 					});
 				}
@@ -2310,7 +1385,7 @@ export class AudioEngine {
 			logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
 			const hasPercussion = this.hasPercussionInstrumentsEnabled();
 			const hasElectronic = this.hasElectronicInstrumentsEnabled();
-			const isSynthesisMode = !this.settings.useHighQualitySamples;
+			const isSynthesisMode = false; // Per-instrument quality control - no global synthesis mode
 			
 			logger.debug('playback', '🚀 ISSUE #010 DEBUG: Upgrade analysis', {
 				currentInstrumentCount: this.instruments.size,
@@ -2320,7 +1395,7 @@ export class AudioEngine {
 				willSkipPercussion: !hasPercussion,
 				willSkipElectronic: !hasElectronic,
 				isSynthesisMode,
-				useHighQualitySamples: this.settings.useHighQualitySamples,
+				perInstrumentQuality: 'Individual instrument control',
 				enabledInstruments: Object.keys(this.settings.instruments).filter(name => 
 					this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
 				)
@@ -2944,16 +2019,13 @@ export class AudioEngine {
 		
 		// Issue #005 Fix: Update InstrumentConfigLoader with new audio format
 		// This ensures that format changes are propagated to the sample loading system
-		// Only update if format is sample-based (not synthesis-only)
-		if (settings.useHighQualitySamples) {
-			// Convert to ogg since that's the only format that actually exists on nbrosowsky CDN
-			const effectiveFormat = 'ogg';
-			this.instrumentConfigLoader.updateAudioFormat(effectiveFormat as 'mp3' | 'wav' | 'ogg');
-			
-			// Also update PercussionEngine format if it exists
-			if (this.percussionEngine) {
-				this.percussionEngine.updateAudioFormat(effectiveFormat as 'wav' | 'ogg' | 'mp3');
-			}
+		// Always use ogg format since that's the only format that actually exists on nbrosowsky CDN
+		const effectiveFormat = 'ogg';
+		this.instrumentConfigLoader.updateAudioFormat(effectiveFormat as 'mp3' | 'wav' | 'ogg');
+		
+		// Also update PercussionEngine format if it exists
+		if (this.percussionEngine) {
+			this.percussionEngine.updateAudioFormat(effectiveFormat as 'wav' | 'ogg' | 'mp3');
 		}
 		
 		this.updateVolume();
@@ -2966,7 +2038,6 @@ export class AudioEngine {
 		logger.debug('settings', 'Audio settings updated', {
 			volume: settings.volume,
 			tempo: settings.tempo,
-			useHighQualitySamples: settings.useHighQualitySamples,
 			effectsApplied: this.isInitialized
 		});
 	}
@@ -3824,9 +2895,8 @@ export class AudioEngine {
 			}
 			
 			logger.debug('audio', 'Lightweight synthesis initialized', {
-				useHighQualitySamples: this.settings.useHighQualitySamples,
 				instrumentsCreated: this.instruments.size,
-				synthesisMode: !this.settings.useHighQualitySamples
+				synthesisMode: true
 			});
 			
 		} catch (error) {
@@ -4913,8 +3983,9 @@ export class AudioEngine {
 		try {
 			switch (instrumentName) {
 				case 'whaleHumpback':
-					// Try external whale samples first if high-quality mode is enabled
-					if (this.settings.useHighQualitySamples) {
+					// Try external whale samples first if high-quality mode is enabled for this instrument
+					const whaleSettings = this.settings.instruments.whaleHumpback;
+					if (whaleSettings?.useHighQuality) {
 						const externalSample = await this.tryLoadExternalWhaleSample(instrumentName, frequency, duration, velocity, time);
 						if (externalSample) {
 							logger.debug('environmental-sound', `External whale sample triggered: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration.toFixed(3)}`);
@@ -5537,7 +4608,7 @@ export class AudioEngine {
 			formatIssues: {
 				resolvedInIssue005: 'MP3→OGG format synchronization fixed',
 				currentBehavior: 'AudioEngine automatically uses OGG format',
-				userSelection: this.settings.useHighQualitySamples ? 'High Quality Samples' : 'Synthesis Only',
+				userSelection: 'Per-Instrument Quality Control',
 				effectiveFormat: 'ogg'
 			},
 			

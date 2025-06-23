@@ -203,7 +203,6 @@ export interface SonigraphSettings {
 	rootNote: string;
 	traversalMethod: string;
 	isEnabled: boolean;
-	useHighQualitySamples: boolean;
 	microtuning?: boolean;
 	antiCracklingDetuning?: number; // Issue #010 Future-Proof Fix: Configurable micro-detuning amount in cents (±)
 	logLevel?: 'off' | 'error' | 'warn' | 'info' | 'debug'; // Persistent logging level
@@ -295,7 +294,6 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	rootNote: 'C',
 	traversalMethod: 'breadth-first',
 	isEnabled: true,
-	useHighQualitySamples: false,
 	microtuning: false,
 	antiCracklingDetuning: 2.0, // Issue #010 Future-Proof Fix: Default ±2 cents detuning to prevent phase interference
 	logLevel: 'warn', // Default to warn level to capture important initialization issues
