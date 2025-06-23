@@ -51,7 +51,7 @@ export class IssueValidationTests {
             
             // Test affected families identified in Issue #003
             const affectedFamilies = {
-                vocals: ['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'],
+                			vocals: [] as string[],
                 percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
                 electronic: ['leadSynth', 'bassSynth', 'arpSynth'],
                 experimental: ['whaleHumpback']
@@ -1113,7 +1113,7 @@ export class IssueValidationTests {
             const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
             
             // Determine instrument type for better debugging
-            if (['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'].includes(instrumentName)) {
+            		if ([].includes(instrumentName)) {
                 result.instrumentType = 'vocals';
             } else if (['timpani', 'xylophone', 'vibraphone', 'gongs'].includes(instrumentName)) {
                 result.instrumentType = 'percussion';
@@ -1344,7 +1344,7 @@ export class IssueValidationTests {
                 result.engineErrors.push(`Electronic engine test failed: ${error.message}`);
             }
 
-            // Test vocal synthesis capabilities (for choir, soprano, alto, tenor, bass)
+            		// Test vocal synthesis capabilities (none available)
             try {
                 const vocalTest = await this.testVocalSynthesisStatus();
                 result.vocalEngineOk = vocalTest.initialized;
@@ -1398,7 +1398,7 @@ export class IssueValidationTests {
         return {
             initialized: true, // Would check actual vocal synthesis capabilities
             error: null,
-            instruments: ['choir', 'soprano', 'alto', 'tenor', 'bass', 'vocalPads'],
+            			instruments: [] as string[],
             ready: true
         };
     }

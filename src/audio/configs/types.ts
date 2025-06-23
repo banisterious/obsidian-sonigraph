@@ -65,11 +65,7 @@ export const DEFAULT_VOICE_LIMITS = {
     clarinet: 3,
     bassoon: 3,
     piccolo: 3,
-    soprano: 4,
-    alto: 4,
-    tenor: 4,
-    bass: 4,
-    choir: 8,
+    
     timpani: 2,
     xylophone: 6,
     vibraphone: 6,

@@ -274,8 +274,6 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.6,
           maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -299,108 +297,6 @@ var init_constants = __esm({
               params: {
                 frequency: 3500,
                 Q: 0.8,
-                type: "lowpass"
-              }
-            }
-          }
-        },
-        choir: {
-          enabled: true,
-          volume: 0.7,
-          maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 3.2,
-                preDelay: 0.05,
-                wet: 0.6
-              }
-            },
-            chorus: {
-              enabled: true,
-              params: {
-                frequency: 0.4,
-                depth: 0.6,
-                delayTime: 5,
-                feedback: 0.08
-              }
-            },
-            filter: {
-              enabled: false,
-              params: {
-                frequency: 2e3,
-                Q: 0.7,
-                type: "lowpass"
-              }
-            }
-          }
-        },
-        vocalPads: {
-          enabled: false,
-          volume: 0.5,
-          maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 4,
-                preDelay: 0.06,
-                wet: 0.7
-              }
-            },
-            chorus: {
-              enabled: true,
-              params: {
-                frequency: 0.3,
-                depth: 0.4,
-                delayTime: 6,
-                feedback: 0.05
-              }
-            },
-            filter: {
-              enabled: true,
-              params: {
-                frequency: 1500,
-                Q: 1.2,
-                type: "lowpass"
-              }
-            }
-          }
-        },
-        pad: {
-          enabled: false,
-          volume: 0.4,
-          maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 3.5,
-                preDelay: 0.08,
-                wet: 0.8
-              }
-            },
-            chorus: {
-              enabled: true,
-              params: {
-                frequency: 0.2,
-                depth: 0.7,
-                delayTime: 8,
-                feedback: 0.1
-              }
-            },
-            filter: {
-              enabled: true,
-              params: {
-                frequency: 1200,
-                Q: 1.5,
                 type: "lowpass"
               }
             }
@@ -508,149 +404,11 @@ var init_constants = __esm({
             }
           }
         },
-        soprano: {
-          enabled: true,
-          volume: 0.6,
-          maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 2.8,
-                preDelay: 0.03,
-                wet: 0.5
-              }
-            },
-            chorus: {
-              enabled: true,
-              params: {
-                frequency: 0.8,
-                depth: 0.3,
-                delayTime: 2.5,
-                feedback: 0.04
-              }
-            },
-            filter: {
-              enabled: true,
-              params: {
-                frequency: 4e3,
-                Q: 1.2,
-                type: "lowpass"
-              }
-            }
-          }
-        },
-        alto: {
-          enabled: false,
-          volume: 0.5,
-          maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 3,
-                preDelay: 0.04,
-                wet: 0.55
-              }
-            },
-            chorus: {
-              enabled: true,
-              params: {
-                frequency: 0.6,
-                depth: 0.35,
-                delayTime: 3,
-                feedback: 0.05
-              }
-            },
-            filter: {
-              enabled: true,
-              params: {
-                frequency: 3200,
-                Q: 1,
-                type: "lowpass"
-              }
-            }
-          }
-        },
-        tenor: {
-          enabled: false,
-          volume: 0.5,
-          maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 2.5,
-                preDelay: 0.03,
-                wet: 0.45
-              }
-            },
-            chorus: {
-              enabled: false,
-              params: {
-                frequency: 0.7,
-                depth: 0.25,
-                delayTime: 2.8,
-                feedback: 0.03
-              }
-            },
-            filter: {
-              enabled: true,
-              params: {
-                frequency: 2800,
-                Q: 0.9,
-                type: "lowpass"
-              }
-            }
-          }
-        },
-        bass: {
-          enabled: true,
-          volume: 0.7,
-          maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
-          effects: {
-            reverb: {
-              enabled: true,
-              params: {
-                decay: 3.5,
-                preDelay: 0.05,
-                wet: 0.6
-              }
-            },
-            chorus: {
-              enabled: false,
-              params: {
-                frequency: 0.4,
-                depth: 0.4,
-                delayTime: 4,
-                feedback: 0.06
-              }
-            },
-            filter: {
-              enabled: false,
-              params: {
-                frequency: 1500,
-                Q: 0.8,
-                type: "lowpass"
-              }
-            }
-          }
-        },
         // Phase 6B: Extended Keyboard Family
         electricPiano: {
           enabled: false,
           volume: 0.7,
           maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -683,8 +441,6 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.6,
           maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -717,8 +473,6 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.6,
           maxVoices: 8,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -751,8 +505,6 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.5,
           maxVoices: 6,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1161,7 +913,7 @@ var init_constants = __esm({
           volume: 0.8,
           maxVoices: 3,
           useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          // Default to synthesis (user can opt-in to samples)
           effects: {
             reverb: {
               enabled: true,
@@ -1229,8 +981,6 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1919,10 +1669,9 @@ var init_constants = __esm({
     };
     INSTRUMENT_FAMILIES = {
       keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"],
-      strings: ["strings", "violin", "cello", "guitar", "harp"],
+      strings: ["strings", "violin", "cello", "contrabass", "guitar", "guitarElectric", "guitarNylon", "bassElectric", "harp"],
       woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
       brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
-      vocals: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
       percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
       electronic: ["leadSynth", "bassSynth", "arpSynth"],
       experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"],
@@ -1946,24 +1695,6 @@ var init_constants = __esm({
         icon: "\u{1F3BB}",
         description: "AM synthesis with filtering for warm, flowing sounds",
         defaultFrequencyRange: "Very Low (<200Hz)"
-      },
-      choir: {
-        name: "Choir",
-        icon: "\u{1F3A4}",
-        description: "Additive synthesis with formant filtering for ethereal human voices",
-        defaultFrequencyRange: "High (1000-1400Hz)"
-      },
-      vocalPads: {
-        name: "Vocal Pads",
-        icon: "\u{1F30A}",
-        description: "Multi-layer sine waves with formant filtering for atmospheric textures",
-        defaultFrequencyRange: "Mid-High (600-1000Hz)"
-      },
-      pad: {
-        name: "Pad",
-        icon: "\u{1F39B}\uFE0F",
-        description: "Multi-oscillator synthesis with filter sweeps for ambient foundations",
-        defaultFrequencyRange: "Low-Mid (200-400Hz)"
       },
       flute: {
         name: "Flute",
@@ -2028,19 +1759,19 @@ var init_constants = __esm({
         defaultFrequencyRange: "Very Low (<100Hz)"
       },
       guitar: {
-        name: "Guitar",
+        name: "Guitar (acoustic)",
         icon: "\u{1F3B8}",
         description: "Karplus-Strong synthesis for authentic plucked string physics",
         defaultFrequencyRange: "Mid-High (600-1000Hz)"
       },
       guitarElectric: {
-        name: "Electric guitar",
+        name: "Guitar (electric)",
         icon: "\u{1F3B8}",
         description: "Amplified electric guitar with pickup simulation and effects processing",
         defaultFrequencyRange: "High (1000-1400Hz)"
       },
       guitarNylon: {
-        name: "Nylon guitar",
+        name: "Guitar (nylon)",
         icon: "\u{1F3B8}",
         description: "Classical nylon-string guitar with warm, mellow fingerpicked tones",
         defaultFrequencyRange: "Mid-High (600-1000Hz)"
@@ -2135,31 +1866,6 @@ var init_constants = __esm({
         icon: "\u{1F39B}\uFE0F",
         description: "Sequenced patterns with graph-sync capability and delay",
         defaultFrequencyRange: "Variable (Pattern-dependent)"
-      },
-      // Phase 6A: Individual Vocal Sections
-      soprano: {
-        name: "Soprano",
-        icon: "\u{1F469}\u200D\u{1F3A4}",
-        description: "High female voice with formant filtering and vowel morphing",
-        defaultFrequencyRange: "High-Mid (800-1200Hz)"
-      },
-      alto: {
-        name: "Alto",
-        icon: "\u{1F399}\uFE0F",
-        description: "Lower female voice with rich harmonics and breath noise modeling",
-        defaultFrequencyRange: "High (1000-1400Hz)"
-      },
-      tenor: {
-        name: "Tenor",
-        icon: "\u{1F9D1}\u200D\u{1F3A4}",
-        description: "High male voice with vocal expression and characteristics",
-        defaultFrequencyRange: "Mid-High (600-1000Hz)"
-      },
-      bass: {
-        name: "Bass",
-        icon: "\u{1F3A4}",
-        description: "Low male voice with chest resonance and sub-harmonics",
-        defaultFrequencyRange: "Very Low (<100Hz)"
       },
       // Phase 8B: Environmental & Natural Sounds
       whaleHumpback: {
@@ -4698,8 +4404,6 @@ var LUCIDE_ICONS = {
   // Using circle for woodwinds
   brass: "volume-2",
   // Horn-like icon for brass
-  vocals: "mic",
-  // Microphone for vocals
   percussion: "circle",
   // Circle for percussion
   electronic: "zap",
@@ -4726,10 +4430,6 @@ var LUCIDE_ICONS = {
   trombone: "volume-2",
   tuba: "volume-2",
   // Individual Instruments - Vocals
-  soprano: "mic",
-  alto: "mic",
-  tenor: "mic",
-  bass: "mic",
   // Individual Instruments - Percussion
   timpani: "circle",
   xylophone: "grid-3x3",
@@ -4792,7 +4492,6 @@ var FAMILY_ICONS = {
   strings: LUCIDE_ICONS.strings,
   woodwinds: LUCIDE_ICONS.woodwinds,
   brass: LUCIDE_ICONS.brass,
-  vocals: LUCIDE_ICONS.vocals,
   percussion: LUCIDE_ICONS.percussion,
   electronic: LUCIDE_ICONS.electronic,
   experimental: LUCIDE_ICONS.experimental
@@ -4818,10 +4517,6 @@ var INSTRUMENT_ICONS = {
   trombone: LUCIDE_ICONS.trombone,
   tuba: LUCIDE_ICONS.tuba,
   // Vocals
-  soprano: LUCIDE_ICONS.soprano,
-  alto: LUCIDE_ICONS.alto,
-  tenor: LUCIDE_ICONS.tenor,
-  bass: LUCIDE_ICONS.bass,
   // Percussion
   timpani: LUCIDE_ICONS.timpani,
   xylophone: LUCIDE_ICONS.xylophone,
@@ -4911,13 +4606,6 @@ var TAB_CONFIGS = [
     name: "Brass",
     icon: "volume-2",
     description: "4 brass instruments",
-    instrumentCount: 4
-  },
-  {
-    id: "vocals",
-    name: "Vocals",
-    icon: "mic",
-    description: "4 vocal ranges",
     instrumentCount: 4
   },
   {
@@ -9408,7 +9096,6 @@ var MaterialControlPanelModal = class extends import_obsidian4.Modal {
       case "strings":
       case "woodwinds":
       case "brass":
-      case "vocals":
       case "percussion":
       case "electronic":
       case "experimental":
@@ -10159,11 +9846,9 @@ var MaterialControlPanelModal = class extends import_obsidian4.Modal {
       strings: ["strings", "violin", "cello", "contrabass", "guitar", "guitarElectric", "guitarNylon", "bassElectric", "harp"],
       woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
       brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
-      vocals: ["choir", "vocalPads", "soprano", "alto", "tenor", "bass"],
-      // All vocal instruments including choir and pads
       percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
-      electronic: ["leadSynth", "bassSynth", "arpSynth", "pad"],
-      // All electronic instruments including pad
+      electronic: ["leadSynth", "bassSynth", "arpSynth"],
+      // All electronic instruments
       experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"],
       // Additional families for other instruments
       keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"]
@@ -10800,9 +10485,16 @@ var MaterialControlPanelModal = class extends import_obsidian4.Modal {
     const highQualityInstruments = ["whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
     return highQualityInstruments.includes(instrumentKey);
   }
+  instrumentIsSynthesisOnly(instrumentKey) {
+    const synthesisOnlyInstruments = ["strings", "electricPiano", "harpsichord", "accordion", "celesta"];
+    return synthesisOnlyInstruments.includes(instrumentKey);
+  }
   instrumentSupportsQualityChoice(instrumentKey) {
     const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
     if (!instrumentSettings || !("useHighQuality" in instrumentSettings)) {
+      return false;
+    }
+    if (this.instrumentIsSynthesisOnly(instrumentKey)) {
       return false;
     }
     const requiresHighQuality = this.instrumentRequiresHighQuality(instrumentKey);
@@ -12329,7 +12021,7 @@ var ComponentTests = class {
         throw new Error("InstrumentConfigLoader not found");
       }
       const loadTimes = [];
-      const testInstruments = ["piano", "strings", "flute", "trumpet", "choir"];
+      const testInstruments = ["piano", "strings", "flute", "trumpet"];
       for (const instrument of testInstruments) {
         const loadStart = performance.now();
         const config = configLoader.loadInstrument(instrument);
@@ -12607,7 +12299,7 @@ var AudioEngineTests = class {
     let metrics;
     try {
       const beforeMemory = this.getMemorySnapshot();
-      const testInstruments = ["piano", "strings", "flute", "trumpet", "choir", "guitar", "saxophone"];
+      const testInstruments = ["piano", "strings", "flute", "trumpet", "guitar", "saxophone"];
       const loadResults = [];
       for (const instrument of testInstruments) {
         const loadStart = performance.now();
@@ -13000,7 +12692,7 @@ var AudioEngineTests = class {
    */
   generateStressSequence() {
     const sequence = [];
-    const instruments = ["piano", "strings", "flute", "trumpet", "choir"];
+    const instruments = ["piano", "strings", "flute", "trumpet"];
     const baseTime = Date.now();
     for (let i = 0; i < 100; i++) {
       sequence.push({
@@ -13163,7 +12855,7 @@ var IssueValidationTests = class {
     try {
       const beforeMemory = this.getMemorySnapshot();
       const affectedFamilies = {
-        vocals: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
+        vocals: [],
         percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
         electronic: ["leadSynth", "bassSynth", "arpSynth"],
         experimental: ["whaleHumpback"]
@@ -13986,7 +13678,7 @@ var IssueValidationTests = class {
       result.voiceAllocated = enabledInstruments.includes(instrumentName);
       const testFrequency = 440;
       const defaultInstrument = this.audioEngine.getDefaultInstrumentForTesting(testFrequency);
-      if (["choir", "soprano", "alto", "tenor", "bass", "vocalPads"].includes(instrumentName)) {
+      if ([].includes(instrumentName)) {
         result.instrumentType = "vocals";
       } else if (["timpani", "xylophone", "vibraphone", "gongs"].includes(instrumentName)) {
         result.instrumentType = "percussion";
@@ -14215,7 +13907,7 @@ var IssueValidationTests = class {
       initialized: true,
       // Would check actual vocal synthesis capabilities
       error: null,
-      instruments: ["choir", "soprano", "alto", "tenor", "bass", "vocalPads"],
+      instruments: [],
       ready: true
     };
   }
@@ -37730,142 +37422,64 @@ var keyboardInstruments = {
         "C4": `C4.${FORMAT_PLACEHOLDER}`,
         "C5": `C5.${FORMAT_PLACEHOLDER}`,
         "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "F6": `F6.${FORMAT_PLACEHOLDER}`,
+        "A2": `A2.${FORMAT_PLACEHOLDER}`,
+        "A3": `A3.${FORMAT_PLACEHOLDER}`,
+        "A4": `A4.${FORMAT_PLACEHOLDER}`,
         "F#2": `Fs2.${FORMAT_PLACEHOLDER}`,
         "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
         "F#4": `Fs4.${FORMAT_PLACEHOLDER}`,
-        "F#5": `Fs5.${FORMAT_PLACEHOLDER}`,
-        "F#6": `Fs6.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "G6": `G6.${FORMAT_PLACEHOLDER}`
+        "F#5": `Fs5.${FORMAT_PLACEHOLDER}`
       },
       release: 0.8,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/organ/",
       effects: ["chorus", "reverb"],
       maxVoices: 6,
       priority: "medium",
-      category: "keyboard",
-      useHighQuality: false
+      category: "keyboard"
     },
     electricPiano: {
-      urls: {
-        "A1": `A1.${FORMAT_PLACEHOLDER}`,
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
-        "E2": `E2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "E6": `E6.${FORMAT_PLACEHOLDER}`
-      },
+      // Note: No samples available - synthesis only
+      urls: {},
       release: 2.5,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/electric-piano/",
+      baseUrl: "",
       effects: ["reverb", "chorus"],
       maxVoices: 8,
       priority: "medium",
       category: "keyboard",
-      useHighQuality: false
+      requiresHighQuality: false
     },
     harpsichord: {
-      urls: {
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
-        "D2": `D2.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "A2": `A2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`
-      },
+      // Note: No samples available - synthesis only
+      urls: {},
       release: 1,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harpsichord/",
+      baseUrl: "",
       effects: ["reverb", "filter"],
       maxVoices: 8,
       priority: "medium",
       category: "keyboard",
-      useHighQuality: false
+      requiresHighQuality: false
     },
     accordion: {
-      urls: {
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`
-      },
+      // Note: No samples available - synthesis only
+      urls: {},
       release: 2.8,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/accordion/",
+      baseUrl: "",
       effects: ["reverb", "chorus"],
       maxVoices: 6,
       priority: "low",
       category: "keyboard",
-      useHighQuality: false
+      requiresHighQuality: false
     },
     celesta: {
-      urls: {
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D6": `D6.${FORMAT_PLACEHOLDER}`,
-        "E6": `E6.${FORMAT_PLACEHOLDER}`,
-        "F6": `F6.${FORMAT_PLACEHOLDER}`
-      },
+      // Note: No samples available - synthesis only
+      urls: {},
       release: 3.5,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/celesta/",
+      baseUrl: "",
       effects: ["reverb", "filter"],
       maxVoices: 6,
       priority: "low",
       category: "keyboard",
-      useHighQuality: false
+      requiresHighQuality: false
     }
   }
 };
@@ -37876,52 +37490,33 @@ var stringInstruments = {
   description: "Violin, viola, cello, bass, guitar, harp and other stringed instruments",
   instruments: {
     strings: {
-      urls: {
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D#3": `Ds3.${FORMAT_PLACEHOLDER}`,
-        "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D#4": `Ds4.${FORMAT_PLACEHOLDER}`,
-        "F#4": `Fs4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D#5": `Ds5.${FORMAT_PLACEHOLDER}`,
-        "F#5": `Fs5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D#6": `Ds6.${FORMAT_PLACEHOLDER}`,
-        "F#6": `Fs6.${FORMAT_PLACEHOLDER}`,
-        "A6": `A6.${FORMAT_PLACEHOLDER}`
-      },
+      // Note: No dedicated string ensemble samples available - synthesis only
+      urls: {},
       release: 2,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
+      baseUrl: "",
       effects: ["reverb", "filter"],
       maxVoices: 4,
       priority: "high",
       category: "strings",
-      useHighQuality: false
+      requiresHighQuality: false
     },
     violin: {
       urls: {
         "G3": `G3.${FORMAT_PLACEHOLDER}`,
         "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
         "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
         "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
         "G4": `G4.${FORMAT_PLACEHOLDER}`,
         "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
         "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
         "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
         "G5": `G5.${FORMAT_PLACEHOLDER}`,
         "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`
+        "A6": `A6.${FORMAT_PLACEHOLDER}`,
+        "C6": `C6.${FORMAT_PLACEHOLDER}`,
+        "C7": `C7.${FORMAT_PLACEHOLDER}`,
+        "E6": `E6.${FORMAT_PLACEHOLDER}`,
+        "G6": `G6.${FORMAT_PLACEHOLDER}`
       },
       release: 2,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/",
@@ -38111,32 +37706,28 @@ var stringInstruments = {
     },
     harp: {
       urls: {
-        "C1": `C1.${FORMAT_PLACEHOLDER}`,
-        "D1": `D1.${FORMAT_PLACEHOLDER}`,
-        "F1": `F1.${FORMAT_PLACEHOLDER}`,
-        "G1": `G1.${FORMAT_PLACEHOLDER}`,
-        "A1": `A1.${FORMAT_PLACEHOLDER}`,
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
+        "C5": `C5.${FORMAT_PLACEHOLDER}`,
         "D2": `D2.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "A2": `A2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
         "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`
+        "D6": `D6.${FORMAT_PLACEHOLDER}`,
+        "D7": `D7.${FORMAT_PLACEHOLDER}`,
+        "E1": `E1.${FORMAT_PLACEHOLDER}`,
+        "E3": `E3.${FORMAT_PLACEHOLDER}`,
+        "E5": `E5.${FORMAT_PLACEHOLDER}`,
+        "F2": `F2.${FORMAT_PLACEHOLDER}`,
+        "F4": `F4.${FORMAT_PLACEHOLDER}`,
+        "F6": `F6.${FORMAT_PLACEHOLDER}`,
+        "F7": `F7.${FORMAT_PLACEHOLDER}`,
+        "G1": `G1.${FORMAT_PLACEHOLDER}`,
+        "G3": `G3.${FORMAT_PLACEHOLDER}`,
+        "G5": `G5.${FORMAT_PLACEHOLDER}`
       },
       release: 4,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harp/",
       effects: ["reverb", "filter"],
       maxVoices: 12,
       priority: "medium",
-      category: "strings",
-      useHighQuality: false
+      category: "strings"
     }
   }
 };
@@ -38148,24 +37739,13 @@ var brassInstruments = {
   instruments: {
     trumpet: {
       urls: {
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
+        "C5": `C5.${FORMAT_PLACEHOLDER}`,
         "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
+        "Ds5": `Ds5.${FORMAT_PLACEHOLDER}`,
         "F4": `F4.${FORMAT_PLACEHOLDER}`,
         "G4": `G4.${FORMAT_PLACEHOLDER}`,
         "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`
+        "As4": `As4.${FORMAT_PLACEHOLDER}`
       },
       release: 1.8,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/",
@@ -38174,26 +37754,13 @@ var brassInstruments = {
       priority: "high",
       category: "brass"
     },
-    frenchHorn: {
+    "french-horn": {
       urls: {
-        "B2": `B2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
+        "D2": `D2.${FORMAT_PLACEHOLDER}`,
         "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`
+        "G2": `G2.${FORMAT_PLACEHOLDER}`,
+        "A1": `A1.${FORMAT_PLACEHOLDER}`,
+        "A3": `A3.${FORMAT_PLACEHOLDER}`
       },
       release: 2.5,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/french-horn/",
@@ -38204,24 +37771,12 @@ var brassInstruments = {
     },
     trombone: {
       urls: {
-        "A1": `A1.${FORMAT_PLACEHOLDER}`,
-        "B1": `B1.${FORMAT_PLACEHOLDER}`,
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
-        "D2": `D2.${FORMAT_PLACEHOLDER}`,
-        "E2": `E2.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "A2": `A2.${FORMAT_PLACEHOLDER}`,
-        "B2": `B2.${FORMAT_PLACEHOLDER}`,
+        "As2": `As2.${FORMAT_PLACEHOLDER}`,
         "C3": `C3.${FORMAT_PLACEHOLDER}`,
         "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
+        "F2": `F2.${FORMAT_PLACEHOLDER}`,
         "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`
+        "As1": `As1.${FORMAT_PLACEHOLDER}`
       },
       release: 2.2,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
@@ -38232,21 +37787,12 @@ var brassInstruments = {
     },
     tuba: {
       urls: {
-        "E1": `E1.${FORMAT_PLACEHOLDER}`,
-        "F1": `F1.${FORMAT_PLACEHOLDER}`,
-        "G1": `G1.${FORMAT_PLACEHOLDER}`,
-        "A1": `A1.${FORMAT_PLACEHOLDER}`,
-        "B1": `B1.${FORMAT_PLACEHOLDER}`,
-        "C2": `C2.${FORMAT_PLACEHOLDER}`,
+        "As1": `As1.${FORMAT_PLACEHOLDER}`,
         "D2": `D2.${FORMAT_PLACEHOLDER}`,
-        "E2": `E2.${FORMAT_PLACEHOLDER}`,
-        "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
-        "A2": `A2.${FORMAT_PLACEHOLDER}`,
-        "B2": `B2.${FORMAT_PLACEHOLDER}`,
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
         "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`
+        "Ds2": `Ds2.${FORMAT_PLACEHOLDER}`,
+        "F1": `F1.${FORMAT_PLACEHOLDER}`,
+        "As0": `As0.${FORMAT_PLACEHOLDER}`
       },
       release: 3.5,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
@@ -38258,159 +37804,50 @@ var brassInstruments = {
   }
 };
 
-// src/audio/configs/vocal-instruments.ts
-var vocalInstruments = {
-  name: "Vocal Instruments",
-  description: "Choir, individual voice sections, and vocal pads",
-  instruments: {
-    choir: {
-      urls: {
-        "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "D#3": `Ds3.${FORMAT_PLACEHOLDER}`,
-        "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D#4": `Ds4.${FORMAT_PLACEHOLDER}`,
-        "F#4": `Fs4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D#5": `Ds5.${FORMAT_PLACEHOLDER}`,
-        "F#5": `Fs5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D#6": `Ds6.${FORMAT_PLACEHOLDER}`
-      },
-      release: 3,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/choir/",
-      effects: ["reverb", "chorus"],
-      maxVoices: 8,
-      priority: "high",
-      category: "vocals"
-    }
-    // Vocal instruments with invalid URLs disabled until valid samples are found
-    // The nbrosowsky-tonejs-instruments collection does not contain vocal samples
-    /*
-            soprano: {
-                urls: {
-                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`,
-                    "F4": `F4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
-                    "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`, "D5": `D5.${FORMAT_PLACEHOLDER}`,
-                    "E5": `E5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "G5": `G5.${FORMAT_PLACEHOLDER}`,
-                    "A5": `A5.${FORMAT_PLACEHOLDER}`, "B5": `B5.${FORMAT_PLACEHOLDER}`, "C6": `C6.${FORMAT_PLACEHOLDER}`,
-                    "D6": `D6.${FORMAT_PLACEHOLDER}`, "E6": `E6.${FORMAT_PLACEHOLDER}`, "F6": `F6.${FORMAT_PLACEHOLDER}`
-                },
-                release: 2.5,
-                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/soprano/", // INVALID URL
-                effects: ['reverb', 'chorus', 'filter'],
-                maxVoices: 4,
-                priority: 'high',
-                category: 'vocals'
-            },
-    
-            alto: {
-                urls: {
-                    "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`, "B3": `B3.${FORMAT_PLACEHOLDER}`,
-                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`,
-                    "F4": `F4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
-                    "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`, "D5": `D5.${FORMAT_PLACEHOLDER}`,
-                    "E5": `E5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "G5": `G5.${FORMAT_PLACEHOLDER}`
-                },
-                release: 2.8,
-                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/alto/", // INVALID URL
-                effects: ['reverb', 'chorus', 'filter'],
-                maxVoices: 4,
-                priority: 'high',
-                category: 'vocals'
-            },
-    
-            tenor: {
-                urls: {
-                    "C3": `C3.${FORMAT_PLACEHOLDER}`, "D3": `D3.${FORMAT_PLACEHOLDER}`, "E3": `E3.${FORMAT_PLACEHOLDER}`,
-                    "F3": `F3.${FORMAT_PLACEHOLDER}`, "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`,
-                    "B3": `B3.${FORMAT_PLACEHOLDER}`, "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`,
-                    "E4": `E4.${FORMAT_PLACEHOLDER}`, "F4": `F4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`,
-                    "A4": `A4.${FORMAT_PLACEHOLDER}`, "B4": `B4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`
-                },
-                release: 2.3,
-                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tenor/", // INVALID URL
-                effects: ['reverb', 'filter'],
-                maxVoices: 4,
-                priority: 'high',
-                category: 'vocals'
-            },
-    
-            bass: {
-                urls: {
-                    "E2": `E2.${FORMAT_PLACEHOLDER}`, "F2": `F2.${FORMAT_PLACEHOLDER}`, "G2": `G2.${FORMAT_PLACEHOLDER}`,
-                    "A2": `A2.${FORMAT_PLACEHOLDER}`, "B2": `B2.${FORMAT_PLACEHOLDER}`, "C3": `C3.${FORMAT_PLACEHOLDER}`,
-                    "D3": `D3.${FORMAT_PLACEHOLDER}`, "E3": `E3.${FORMAT_PLACEHOLDER}`, "F3": `F3.${FORMAT_PLACEHOLDER}`,
-                    "G3": `G3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`, "B3": `B3.${FORMAT_PLACEHOLDER}`,
-                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`
-                },
-                release: 3.2,
-                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bass-voice/", // INVALID URL
-                effects: ['reverb'],
-                maxVoices: 4,
-                priority: 'high',
-                category: 'vocals'
-            },
-    
-            vocalPads: {
-                urls: {
-                    "C2": `C2.${FORMAT_PLACEHOLDER}`, "F2": `F2.${FORMAT_PLACEHOLDER}`, "A2": `A2.${FORMAT_PLACEHOLDER}`,
-                    "C3": `C3.${FORMAT_PLACEHOLDER}`, "F3": `F3.${FORMAT_PLACEHOLDER}`, "A3": `A3.${FORMAT_PLACEHOLDER}`,
-                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "F4": `F4.${FORMAT_PLACEHOLDER}`, "A4": `A4.${FORMAT_PLACEHOLDER}`,
-                    "C5": `C5.${FORMAT_PLACEHOLDER}`, "F5": `F5.${FORMAT_PLACEHOLDER}`, "A5": `A5.${FORMAT_PLACEHOLDER}`
-                },
-                release: 4.0,
-                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/vocal-pads/", // INVALID URL
-                effects: ['reverb', 'filter'],
-                maxVoices: 6,
-                priority: 'medium',
-                category: 'vocals'
-            },
-    
-            pad: {
-                urls: {
-                    "C1": `C1.${FORMAT_PLACEHOLDER}`, "G1": `G1.${FORMAT_PLACEHOLDER}`, "C2": `C2.${FORMAT_PLACEHOLDER}`,
-                    "G2": `G2.${FORMAT_PLACEHOLDER}`, "C3": `C3.${FORMAT_PLACEHOLDER}`, "G3": `G3.${FORMAT_PLACEHOLDER}`,
-                    "C4": `C4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "C5": `C5.${FORMAT_PLACEHOLDER}`,
-                    "G5": `G5.${FORMAT_PLACEHOLDER}`, "C6": `C6.${FORMAT_PLACEHOLDER}`
-                },
-                release: 5.0,
-                baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/synth-pad/", // INVALID URL
-                effects: ['reverb', 'filter'],
-                maxVoices: 8,
-                priority: 'low',
-                category: 'vocals'
-            }
-            */
-  }
-};
-
 // src/audio/configs/woodwind-instruments.ts
 var woodwindInstruments = {
   name: "Woodwind Instruments",
-  description: "Flute, clarinet, saxophone, oboe and other wind instruments",
+  description: "Flute, clarinet, saxophone, bassoon and other wind instruments",
   instruments: {
+    // Oboe - no samples available, synthesis only
+    oboe: {
+      urls: {},
+      release: 1.6,
+      baseUrl: "",
+      effects: ["reverb", "filter"],
+      maxVoices: 3,
+      priority: "medium",
+      category: "woodwind",
+      requiresHighQuality: false
+    },
+    // Clarinet - only include available samples
+    clarinet: {
+      urls: {
+        "D3": `D3.${FORMAT_PLACEHOLDER}`,
+        "D4": `D4.${FORMAT_PLACEHOLDER}`,
+        "D5": `D5.${FORMAT_PLACEHOLDER}`,
+        "F2": `F2.${FORMAT_PLACEHOLDER}`,
+        "F3": `F3.${FORMAT_PLACEHOLDER}`,
+        "F4": `F4.${FORMAT_PLACEHOLDER}`,
+        "F5": `F5.${FORMAT_PLACEHOLDER}`
+      },
+      release: 2,
+      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/",
+      effects: ["reverb", "filter"],
+      maxVoices: 3,
+      priority: "medium",
+      category: "woodwind"
+    },
+    // Flute - only include available samples
     flute: {
       urls: {
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
         "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
         "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
+        "C4": `C4.${FORMAT_PLACEHOLDER}`,
+        "C5": `C5.${FORMAT_PLACEHOLDER}`,
         "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D6": `D6.${FORMAT_PLACEHOLDER}`,
+        "E4": `E4.${FORMAT_PLACEHOLDER}`,
+        "E5": `E5.${FORMAT_PLACEHOLDER}`,
         "E6": `E6.${FORMAT_PLACEHOLDER}`
       },
       release: 1.5,
@@ -38420,62 +37857,20 @@ var woodwindInstruments = {
       priority: "medium",
       category: "woodwind"
     },
-    clarinet: {
-      urls: {
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D6": `D6.${FORMAT_PLACEHOLDER}`,
-        "E6": `E6.${FORMAT_PLACEHOLDER}`
-      },
-      release: 2,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/clarinet/",
-      effects: ["reverb", "filter"],
-      maxVoices: 3,
-      priority: "medium",
-      category: "woodwind"
-    },
+    // Saxophone - only include available samples
     saxophone: {
       urls: {
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "E3": `E3.${FORMAT_PLACEHOLDER}`,
+        "Ds4": `Ds4.${FORMAT_PLACEHOLDER}`,
+        "Ds5": `Ds5.${FORMAT_PLACEHOLDER}`,
         "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
-        "B3": `B3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
         "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
         "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
+        "A3": `A3.${FORMAT_PLACEHOLDER}`,
+        "A4": `A4.${FORMAT_PLACEHOLDER}`,
         "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`
+        "C3": `C3.${FORMAT_PLACEHOLDER}`,
+        "C4": `C4.${FORMAT_PLACEHOLDER}`,
+        "C5": `C5.${FORMAT_PLACEHOLDER}`
       },
       release: 1.8,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/",
@@ -38484,49 +37879,20 @@ var woodwindInstruments = {
       priority: "medium",
       category: "woodwind"
     },
+    // Bassoon - already correctly configured
     bassoon: {
       urls: {
-        "G2": `G2.${FORMAT_PLACEHOLDER}`,
         "A2": `A2.${FORMAT_PLACEHOLDER}`,
+        "C2": `C2.${FORMAT_PLACEHOLDER}`,
         "C3": `C3.${FORMAT_PLACEHOLDER}`,
-        "G3": `G3.${FORMAT_PLACEHOLDER}`,
-        "A3": `A3.${FORMAT_PLACEHOLDER}`,
         "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`
+        "E2": `E2.${FORMAT_PLACEHOLDER}`,
+        "G1": `G1.${FORMAT_PLACEHOLDER}`,
+        "G2": `G2.${FORMAT_PLACEHOLDER}`,
+        "G3": `G3.${FORMAT_PLACEHOLDER}`
       },
       release: 2.2,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bassoon/",
-      effects: ["reverb", "filter"],
-      maxVoices: 3,
-      priority: "medium",
-      category: "woodwind",
-      useHighQuality: false
-    },
-    oboe: {
-      urls: {
-        "Bb3": `Bb3.${FORMAT_PLACEHOLDER}`,
-        "C4": `C4.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "E4": `E4.${FORMAT_PLACEHOLDER}`,
-        "F4": `F4.${FORMAT_PLACEHOLDER}`,
-        "G4": `G4.${FORMAT_PLACEHOLDER}`,
-        "A4": `A4.${FORMAT_PLACEHOLDER}`,
-        "B4": `B4.${FORMAT_PLACEHOLDER}`,
-        "C5": `C5.${FORMAT_PLACEHOLDER}`,
-        "D5": `D5.${FORMAT_PLACEHOLDER}`,
-        "E5": `E5.${FORMAT_PLACEHOLDER}`,
-        "F5": `F5.${FORMAT_PLACEHOLDER}`,
-        "G5": `G5.${FORMAT_PLACEHOLDER}`,
-        "A5": `A5.${FORMAT_PLACEHOLDER}`,
-        "B5": `B5.${FORMAT_PLACEHOLDER}`,
-        "C6": `C6.${FORMAT_PLACEHOLDER}`,
-        "D6": `D6.${FORMAT_PLACEHOLDER}`
-      },
-      release: 1.6,
-      baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/oboe/",
       effects: ["reverb", "filter"],
       maxVoices: 3,
       priority: "medium",
@@ -38901,7 +38267,6 @@ var instrumentFamilies = [
   keyboardInstruments,
   stringInstruments,
   brassInstruments,
-  vocalInstruments,
   woodwindInstruments,
   percussionInstruments,
   electronicInstruments,
@@ -39562,7 +38927,7 @@ var AudioEngine = class {
   }
   async initializeEffects() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
-    const instruments = ["piano", "organ", "strings", "choir", "vocalPads", "pad", "flute", "clarinet", "saxophone", "soprano", "alto", "tenor", "bass", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "contrabass", "guitarElectric", "guitarNylon", "bassElectric", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback"];
+    const instruments = ["piano", "organ", "strings", "flute", "clarinet", "saxophone", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "contrabass", "guitarElectric", "guitarNylon", "bassElectric", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "bassoon", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
     for (const instrumentName of instruments) {
       const instrumentSettings = this.settings.instruments[instrumentName];
       const volumeLevel = (_c = (_b = instrumentSettings == null ? void 0 : instrumentSettings.volume) != null ? _b : (_a = DEFAULT_SETTINGS.instruments[instrumentName]) == null ? void 0 : _a.volume) != null ? _c : 0.7;
@@ -39795,16 +39160,9 @@ var AudioEngine = class {
       "piano",
       "organ",
       "strings",
-      "choir",
-      "vocalPads",
-      "pad",
       "flute",
       "clarinet",
       "saxophone",
-      "soprano",
-      "alto",
-      "tenor",
-      "bass",
       "electricPiano",
       "harpsichord",
       "accordion",
@@ -39840,9 +39198,14 @@ var AudioEngine = class {
     for (const instrumentName of enabledInstruments) {
       const instrumentSettings = this.settings.instruments[instrumentName];
       const useHighQuality = (_a = instrumentSettings == null ? void 0 : instrumentSettings.useHighQuality) != null ? _a : false;
-      if (useHighQuality && configs[instrumentName]) {
-        await this.initializeInstrumentWithSamples(instrumentName, configs[instrumentName]);
+      const config = configs[instrumentName];
+      const hasSamples = config && config.urls && Object.keys(config.urls).length > 0;
+      if (useHighQuality && hasSamples) {
+        await this.initializeInstrumentWithSamples(instrumentName, config);
       } else {
+        if (useHighQuality && !hasSamples) {
+          logger14.warn("instruments", `${instrumentName} requested high-quality samples but none available, using synthesis`);
+        }
         this.initializeInstrumentWithSynthesis(instrumentName);
       }
     }
@@ -39853,16 +39216,27 @@ var AudioEngine = class {
     var _a, _b, _c;
     try {
       logger14.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
-      const sampler = new Sampler({
-        ...config,
-        onload: () => {
-          logger14.debug("samples", `${instrumentName} samples loaded successfully`);
-        },
-        onerror: (error) => {
-          logger14.warn("samples", `${instrumentName} samples failed to load, falling back to synthesis`, { error });
-          this.initializeInstrumentWithSynthesis(instrumentName);
-          return;
-        }
+      const sampler = await new Promise((resolve, reject) => {
+        const samplerInstance = new Sampler({
+          ...config,
+          onload: () => {
+            logger14.debug("samples", `${instrumentName} samples loaded successfully`);
+            resolve(samplerInstance);
+          },
+          onerror: (error) => {
+            logger14.error("samples", `${instrumentName} samples failed to load`, {
+              error: (error == null ? void 0 : error.message) || error,
+              config: {
+                baseUrl: config.baseUrl,
+                sampleCount: Object.keys(config.urls || {}).length
+              }
+            });
+            reject(new Error(`Sample loading failed: ${(error == null ? void 0 : error.message) || error}`));
+          }
+        });
+        setTimeout(() => {
+          reject(new Error("Sample loading timeout"));
+        }, 1e4);
       });
       const volume = new Volume(-6);
       this.instrumentVolumes.set(instrumentName, volume);
@@ -39888,6 +39262,7 @@ var AudioEngine = class {
       }
       output.connect(this.volume);
       this.instruments.set(instrumentName, sampler);
+      logger14.info("instruments", `Successfully initialized ${instrumentName} with samples`);
     } catch (error) {
       logger14.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
       this.initializeInstrumentWithSynthesis(instrumentName);
@@ -40083,64 +39458,213 @@ var AudioEngine = class {
   /**
    * Initialize persistent whale synthesizer for environmental sounds
    */
+  /**
+   * Issue #015 Fix: Initialize all whale species with proper volume controls and effects
+   * Enhanced whale initialization to handle all whale instruments consistently
+   */
   initializeWhaleSynthesizer() {
-    logger14.debug("environmental", "Initializing persistent whale synthesizer");
-    const maxVoices = this.getInstrumentPolyphonyLimit("whaleHumpback");
+    logger14.debug("environmental", "Initializing whale synthesizers for all species");
+    const whaleInstruments = [
+      "whaleHumpback",
+      "whaleBlue",
+      "whaleOrca",
+      "whaleGray",
+      "whaleSperm",
+      "whaleMinke",
+      "whaleFin",
+      "whaleRight",
+      "whaleSei",
+      "whalePilot"
+    ];
+    let initializedWhales = 0;
+    whaleInstruments.forEach((whaleType) => {
+      const instrumentSettings = this.settings.instruments[whaleType];
+      if (!(instrumentSettings == null ? void 0 : instrumentSettings.enabled)) {
+        logger14.debug("environmental", `Skipping disabled whale instrument: ${whaleType}`);
+        return;
+      }
+      logger14.info("issue-015-fix", `\u{1F40B} WHALE SYNTHESIS: Initializing ${whaleType}`, {
+        whaleType,
+        enabled: instrumentSettings.enabled,
+        action: "whale-initialization"
+      });
+      try {
+        const whaleSynth = this.createWhaleSpecificSynth(whaleType);
+        const whaleVolume = new Volume(-6);
+        this.instrumentVolumes.set(whaleType, whaleVolume);
+        const whaleReverb = new Reverb({
+          decay: 8,
+          // Very long reverb for oceanic effect
+          wet: 0.4
+        });
+        const whaleChorus = new Chorus({
+          frequency: 0.3,
+          // Very slow chorus for underwater movement
+          depth: 0.8,
+          delayTime: 8,
+          feedback: 0.1
+        });
+        whaleReverb.generate().then(() => {
+          whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+          logger14.debug("environmental", `${whaleType} synthesizer effects chain connected`);
+        }).catch((error) => {
+          logger14.warn("environmental", `Failed to generate ${whaleType} reverb, using fallback`, error);
+          whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+        });
+        this.instruments.set(whaleType, whaleSynth);
+        if (!this.instrumentEffects.has(whaleType)) {
+          this.instrumentEffects.set(whaleType, /* @__PURE__ */ new Map());
+        }
+        const whaleEffects = this.instrumentEffects.get(whaleType);
+        if (whaleEffects) {
+          whaleEffects.set("reverb", whaleReverb);
+          whaleEffects.set("chorus", whaleChorus);
+        }
+        initializedWhales++;
+        logger14.info("issue-015-fix", `\u2705 Successfully initialized ${whaleType}`, {
+          whaleType,
+          hasVolumeControl: this.instrumentVolumes.has(whaleType),
+          hasSynthesizer: this.instruments.has(whaleType),
+          action: "whale-initialization-success"
+        });
+      } catch (error) {
+        logger14.error("issue-015-fix", `\u274C Failed to initialize ${whaleType}`, {
+          whaleType,
+          error: error.message,
+          action: "whale-initialization-failure"
+        });
+      }
+    });
+    logger14.info("environmental", `Whale synthesizers initialized successfully`, {
+      totalWhaleTypes: whaleInstruments.length,
+      initializedWhales,
+      skippedDisabled: whaleInstruments.length - initializedWhales
+    });
+  }
+  /**
+   * Issue #015 Fix: Create whale-specific synthesizers with unique characteristics
+   */
+  createWhaleSpecificSynth(whaleType) {
+    const maxVoices = this.getInstrumentPolyphonyLimit(whaleType);
+    let config;
+    switch (whaleType) {
+      case "whaleBlue":
+        config = {
+          harmonicity: 0.1,
+          modulationIndex: 20,
+          oscillator: { type: "sine" },
+          modulation: { type: "sine" },
+          envelope: {
+            attack: 2,
+            decay: 1,
+            sustain: 0.95,
+            release: 8
+            // Very long release for infrasonic calls
+          },
+          modulationEnvelope: {
+            attack: 3,
+            decay: 2,
+            sustain: 0.8,
+            release: 10
+          }
+        };
+        break;
+      case "whaleOrca":
+        config = {
+          harmonicity: 2,
+          modulationIndex: 6,
+          oscillator: { type: "square" },
+          modulation: { type: "sawtooth" },
+          envelope: {
+            attack: 0.1,
+            decay: 0.3,
+            sustain: 0.7,
+            release: 2
+          },
+          modulationEnvelope: {
+            attack: 0.05,
+            decay: 0.2,
+            sustain: 0.5,
+            release: 1.5
+          }
+        };
+        break;
+      case "whaleGray":
+        config = {
+          harmonicity: 0.8,
+          modulationIndex: 15,
+          oscillator: { type: "sine" },
+          modulation: { type: "triangle" },
+          envelope: {
+            attack: 1,
+            decay: 0.8,
+            sustain: 0.85,
+            release: 7
+          },
+          modulationEnvelope: {
+            attack: 1.5,
+            decay: 1,
+            sustain: 0.7,
+            release: 5
+          }
+        };
+        break;
+      case "whaleSperm":
+        config = {
+          harmonicity: 3,
+          modulationIndex: 4,
+          oscillator: { type: "square" },
+          modulation: { type: "pulse" },
+          envelope: {
+            attack: 0.05,
+            decay: 0.1,
+            sustain: 0.3,
+            release: 1
+          },
+          modulationEnvelope: {
+            attack: 0.02,
+            decay: 0.1,
+            sustain: 0.2,
+            release: 0.8
+          }
+        };
+        break;
+      case "whaleHumpback":
+      default:
+        config = {
+          harmonicity: 0.5,
+          modulationIndex: 12,
+          oscillator: { type: "sine" },
+          modulation: { type: "sine" },
+          envelope: {
+            attack: 0.3 + Math.random() * 0.4,
+            // 0.3-0.7 second attack
+            decay: 0.5,
+            sustain: 0.9,
+            release: 2 + Math.random() * 3
+            // 2-5 second release
+          },
+          modulationEnvelope: {
+            attack: 1,
+            decay: 0.5,
+            sustain: 0.6,
+            release: 4
+          }
+        };
+        break;
+    }
     const whaleSynth = new PolySynth({
       voice: FMSynth,
       maxPolyphony: maxVoices,
-      options: {
-        harmonicity: 0.5,
-        modulationIndex: 12,
-        oscillator: { type: "sine" },
-        modulation: { type: "sine" },
-        envelope: {
-          attack: 0.3 + Math.random() * 0.4,
-          // 0.3-0.7 second attack
-          decay: 0.5,
-          sustain: 0.9,
-          release: 2 + Math.random() * 3
-          // 2-5 second release
-        },
-        modulationEnvelope: {
-          attack: 1,
-          decay: 0.5,
-          sustain: 0.6,
-          release: 4
-        }
-      }
+      options: config
     });
-    const whaleVolume = new Volume(-6);
-    this.instrumentVolumes.set("whaleHumpback", whaleVolume);
-    const whaleReverb = new Reverb({
-      decay: 8,
-      // Very long reverb for oceanic effect
-      wet: 0.4
+    logger14.debug("environmental", `Created ${whaleType} synthesizer with specific characteristics`, {
+      whaleType,
+      maxVoices,
+      harmonicity: config.harmonicity,
+      modulationIndex: config.modulationIndex
     });
-    const whaleChorus = new Chorus({
-      frequency: 0.3,
-      // Very slow chorus for underwater movement
-      depth: 0.8,
-      delayTime: 8,
-      feedback: 0.1
-    });
-    whaleReverb.generate().then(() => {
-      whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
-      logger14.debug("environmental", "Whale synthesizer effects chain connected");
-    }).catch((error) => {
-      logger14.warn("environmental", "Failed to generate whale reverb, using fallback", error);
-      whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
-    });
-    this.instruments.set("whaleHumpback", whaleSynth);
-    if (!this.instrumentEffects.has("whaleHumpback")) {
-      this.instrumentEffects.set("whaleHumpback", /* @__PURE__ */ new Map());
-    }
-    const whaleEffects = this.instrumentEffects.get("whaleHumpback");
-    if (whaleEffects) {
-      whaleEffects.set("reverb", whaleReverb);
-      whaleEffects.set("chorus", whaleChorus);
-    }
-    logger14.info("environmental", "Persistent whale synthesizer initialized successfully");
+    return whaleSynth;
   }
   /**
    * Initialize any instruments that exist in SAMPLER_CONFIGS but weren't manually created above
@@ -40346,295 +39870,337 @@ var AudioEngine = class {
     });
   }
   async playSequence(sequence) {
-    const enabledInstrumentsList = this.getEnabledInstruments();
-    logger14.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
-      sequenceLength: sequence.length,
-      isInitialized: this.isInitialized,
-      isPlaying: this.isPlaying,
-      instrumentMapSize: this.instruments.size,
-      enabledInstrumentsCount: enabledInstrumentsList.length,
-      enabledInstruments: enabledInstrumentsList,
-      audioContextState: getContext().state,
-      transportState: getTransport().state,
-      currentTime: getContext().currentTime.toFixed(3),
-      hasBeenTriggeredCount: sequence.filter((n) => n.hasBeenTriggered).length,
-      action: "play-sequence-init"
-    });
-    if (!this.isInitialized || !this.instruments.size) {
-      logger14.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
-      await this.initializeEssentials();
-    }
-    logger14.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
-      isMinimalMode: this.isMinimalMode,
-      instrumentsSize: this.instruments.size,
-      hasPiano: this.instruments.has("piano"),
-      instrumentsList: Array.from(this.instruments.keys())
-    });
-    if (this.isMinimalMode) {
-      logger14.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
-      const hasPercussion = this.hasPercussionInstrumentsEnabled();
-      const hasElectronic = this.hasElectronicInstrumentsEnabled();
-      const isSynthesisMode = false;
-      logger14.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
-        currentInstrumentCount: this.instruments.size,
-        currentInstruments: Array.from(this.instruments.keys()),
-        hasPercussionEnabled: hasPercussion,
-        hasElectronicEnabled: hasElectronic,
-        willSkipPercussion: !hasPercussion,
-        willSkipElectronic: !hasElectronic,
-        isSynthesisMode,
-        perInstrumentQuality: "Individual instrument control",
-        enabledInstruments: Object.keys(this.settings.instruments).filter(
-          (name) => {
-            var _a;
-            return (_a = this.settings.instruments[name]) == null ? void 0 : _a.enabled;
-          }
-        )
-      });
-      if (isSynthesisMode) {
-        logger14.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
-        if (!this.volume) {
-          logger14.debug("playbook", "Creating master volume for synthesis mode");
-          this.volume = new Volume(this.settings.volume).toDestination();
-        }
-        logger14.debug("playbook", "Clearing minimal mode instruments before full initialization", {
-          instrumentsToDispose: Array.from(this.instruments.keys())
-        });
-        this.instruments.forEach((instrument) => instrument.dispose());
-        this.instruments.clear();
-        await this.initializeInstruments();
-        await this.initializeEffects();
-        await this.initializeAdvancedSynthesis();
-        this.isMinimalMode = false;
-        this.isInitialized = true;
-        logger14.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
-          instrumentsCreated: this.instruments.size,
-          instrumentsList: Array.from(this.instruments.keys())
-        });
-      } else {
-        await this.forceFullInitialization();
-      }
-      logger14.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
-        instrumentsAfterUpgrade: this.instruments.size,
-        instrumentsList: Array.from(this.instruments.keys()),
+    var _a, _b;
+    try {
+      const enabledInstrumentsList = this.getEnabledInstruments();
+      logger14.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
+        sequenceLength: sequence.length,
         isInitialized: this.isInitialized,
-        isMinimalMode: this.isMinimalMode
+        isPlaying: this.isPlaying,
+        instrumentMapSize: this.instruments.size,
+        enabledInstrumentsCount: enabledInstrumentsList.length,
+        enabledInstruments: enabledInstrumentsList,
+        audioContextState: getContext().state,
+        transportState: getTransport().state,
+        currentTime: getContext().currentTime.toFixed(3),
+        hasBeenTriggeredCount: sequence.filter((n) => n.hasBeenTriggered).length,
+        action: "play-sequence-init"
       });
-    }
-    const sequenceInstruments = [...new Set(sequence.map((note) => note.instrument))];
-    logger14.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
-      sequenceInstruments,
-      availableInstruments: Array.from(this.instruments.keys()),
-      enabledInstruments: enabledInstrumentsList,
-      sequenceLength: sequence.length,
-      instrumentMapSize: this.instruments.size
-    });
-    const corruptedVolumeInstruments = enabledInstrumentsList.filter((instrumentName) => {
-      var _a, _b, _c, _d;
-      const hasInstrument = this.instruments.has(instrumentName);
-      const volumeNode = this.instrumentVolumes.get(instrumentName);
-      logger14.info("issue-006-debug", "Volume node inspection for enabled instrument", {
-        instrumentName,
-        hasInstrument,
-        volumeNodeExists: !!volumeNode,
-        volumeValue: (_b = (_a = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-property",
-        volumeMuted: (_c = volumeNode == null ? void 0 : volumeNode.mute) != null ? _c : "no-mute-property",
-        volumeConstructor: ((_d = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _d.name) || "no-constructor",
-        action: "volume-node-inspection"
+      logger14.info("debug", "Step 1: Checking initialization state", {
+        isInitialized: this.isInitialized,
+        instrumentsSize: this.instruments.size
       });
-      if (hasInstrument && !volumeNode) {
-        logger14.warn("issue-006-debug", "Missing volume node detected", {
-          instrumentName,
-          action: "missing-volume-node"
+      if (!this.isInitialized || !this.instruments.size) {
+        logger14.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
+        await this.initializeEssentials();
+        logger14.info("debug", "Step 2: FAST-PATH initialization completed", {
+          isInitialized: this.isInitialized,
+          isMinimalMode: this.isMinimalMode,
+          instrumentsSize: this.instruments.size
         });
-        return true;
       }
-      if (volumeNode && volumeNode.volume.value === null) {
-        logger14.error("issue-006-debug", "Corrupted volume node detected (null value)", {
-          instrumentName,
-          volumeValue: volumeNode.volume.value,
-          volumeMuted: volumeNode.mute,
-          action: "corrupted-volume-node"
+      logger14.info("debug", "Step 3: Checking upgrade conditions", {
+        isMinimalMode: this.isMinimalMode,
+        shouldUpgrade: this.isMinimalMode
+      });
+      logger14.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
+        isMinimalMode: this.isMinimalMode,
+        instrumentsSize: this.instruments.size,
+        hasPiano: this.instruments.has("piano"),
+        instrumentsList: Array.from(this.instruments.keys())
+      });
+      if (this.isMinimalMode) {
+        logger14.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
+        const requiresSamples = enabledInstrumentsList.some((instrumentName) => {
+          const settings = this.settings.instruments[instrumentName];
+          return (settings == null ? void 0 : settings.useHighQuality) === true;
         });
-        return true;
-      }
-      const instrumentSettings = this.settings.instruments[instrumentName];
-      if (hasInstrument && volumeNode && (instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-        logger14.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
-          instrumentName,
-          instrumentEnabled: instrumentSettings.enabled,
-          volumeMuted: volumeNode.mute,
-          action: "enabled-but-muted"
+        logger14.info("debug", "Step 4: Sample requirements analysis", {
+          enabledInstruments: enabledInstrumentsList,
+          requiresSamples,
+          pianoUseHighQuality: (_a = this.settings.instruments.piano) == null ? void 0 : _a.useHighQuality,
+          pianoEnabled: (_b = this.settings.instruments.piano) == null ? void 0 : _b.enabled
         });
-        return true;
-      }
-      return false;
-    });
-    if (corruptedVolumeInstruments.length > 0) {
-      const currentLogLevel = LoggerFactory.getLogLevel();
-      if (currentLogLevel === "debug") {
-        logger14.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
-          corruptedVolumeInstruments,
-          corruptedCount: corruptedVolumeInstruments.length,
-          totalEnabledCount: enabledInstrumentsList.length,
-          action: "corrupted-volume-nodes-detected"
+        const hasPercussion = this.hasPercussionInstrumentsEnabled();
+        const hasElectronic = this.hasElectronicInstrumentsEnabled();
+        const isSynthesisMode = false;
+        logger14.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
+          currentInstrumentCount: this.instruments.size,
+          currentInstruments: Array.from(this.instruments.keys()),
+          hasPercussionEnabled: hasPercussion,
+          hasElectronicEnabled: hasElectronic,
+          willSkipPercussion: !hasPercussion,
+          willSkipElectronic: !hasElectronic,
+          isSynthesisMode,
+          requiresSamples,
+          perInstrumentQuality: "Individual instrument control",
+          enabledInstruments: Object.keys(this.settings.instruments).filter(
+            (name) => {
+              var _a2;
+              return (_a2 = this.settings.instruments[name]) == null ? void 0 : _a2.enabled;
+            }
+          )
+        });
+        if (isSynthesisMode) {
+          logger14.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
+          if (!this.volume) {
+            logger14.debug("playbook", "Creating master volume for synthesis mode");
+            this.volume = new Volume(this.settings.volume).toDestination();
+          }
+          logger14.debug("playbook", "Clearing minimal mode instruments before full initialization", {
+            instrumentsToDispose: Array.from(this.instruments.keys())
+          });
+          this.instruments.forEach((instrument) => instrument.dispose());
+          this.instruments.clear();
+          await this.initializeInstruments();
+          await this.initializeEffects();
+          await this.initializeAdvancedSynthesis();
+          this.isMinimalMode = false;
+          this.isInitialized = true;
+          logger14.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
+            instrumentsCreated: this.instruments.size,
+            instrumentsList: Array.from(this.instruments.keys())
+          });
+        } else {
+          logger14.info("debug", "Step 5: Upgrading to full initialization with samples");
+          await this.forceFullInitialization();
+          logger14.info("debug", "Step 6: Full initialization completed");
+        }
+        logger14.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
+          instrumentsAfterUpgrade: this.instruments.size,
+          instrumentsList: Array.from(this.instruments.keys()),
+          isInitialized: this.isInitialized,
+          isMinimalMode: this.isMinimalMode
         });
       } else {
-        logger14.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
-          corruptedVolumeInstruments,
-          corruptedCount: corruptedVolumeInstruments.length,
-          totalEnabledCount: enabledInstrumentsList.length,
-          action: "muted-volume-nodes-detected"
-        });
+        logger14.info("debug", "Step 3: No upgrade needed - not in minimal mode");
       }
-      corruptedVolumeInstruments.forEach((instrumentName) => {
-        logger14.info("issue-006-debug", "Clearing corrupted volume node", {
-          instrumentName,
-          action: "clear-corrupted-volume"
-        });
-        this.instrumentVolumes.delete(instrumentName);
+      const sequenceInstruments = [...new Set(sequence.map((note) => note.instrument))];
+      logger14.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
+        sequenceInstruments,
+        availableInstruments: Array.from(this.instruments.keys()),
+        enabledInstruments: enabledInstrumentsList,
+        sequenceLength: sequence.length,
+        instrumentMapSize: this.instruments.size
       });
-      logger14.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
-        corruptedInstruments: corruptedVolumeInstruments,
-        action: "start-targeted-reinitialization"
-      });
-      await this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
-      const stillCorrupted = corruptedVolumeInstruments.filter((instrumentName) => {
+      logger14.info("debug", "Step 7: Starting volume node inspection");
+      const corruptedVolumeInstruments = enabledInstrumentsList.filter((instrumentName) => {
+        var _a2, _b2, _c, _d;
+        const hasInstrument = this.instruments.has(instrumentName);
         const volumeNode = this.instrumentVolumes.get(instrumentName);
-        const instrumentSettings = this.settings.instruments[instrumentName];
-        if (!volumeNode || volumeNode.volume.value === null) {
+        logger14.info("issue-006-debug", "Volume node inspection for enabled instrument", {
+          instrumentName,
+          hasInstrument,
+          volumeNodeExists: !!volumeNode,
+          volumeValue: (_b2 = (_a2 = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a2.value) != null ? _b2 : "no-volume-property",
+          volumeMuted: (_c = volumeNode == null ? void 0 : volumeNode.mute) != null ? _c : "no-mute-property",
+          volumeConstructor: ((_d = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _d.name) || "no-constructor",
+          action: "volume-node-inspection"
+        });
+        if (hasInstrument && !volumeNode) {
+          logger14.warn("issue-006-debug", "Missing volume node detected", {
+            instrumentName,
+            action: "missing-volume-node"
+          });
           return true;
         }
-        if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-          logger14.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+        if (volumeNode && volumeNode.volume.value === null) {
+          logger14.error("issue-006-debug", "Corrupted volume node detected (null value)", {
             instrumentName,
-            shouldBeEnabled: instrumentSettings.enabled,
-            actuallyMuted: volumeNode.mute,
-            action: "unexpected-mute-on-enabled-instrument"
+            volumeValue: volumeNode.volume.value,
+            volumeMuted: volumeNode.mute,
+            action: "corrupted-volume-node"
+          });
+          return true;
+        }
+        const instrumentSettings = this.settings.instruments[instrumentName];
+        if (hasInstrument && volumeNode && (instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
+          logger14.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
+            instrumentName,
+            instrumentEnabled: instrumentSettings.enabled,
+            volumeMuted: volumeNode.mute,
+            action: "enabled-but-muted"
           });
           return true;
         }
         return false;
       });
-      if (stillCorrupted.length > 0) {
+      logger14.info("debug", "Step 8: Volume node inspection completed", {
+        corruptedCount: corruptedVolumeInstruments.length,
+        corruptedInstruments: corruptedVolumeInstruments
+      });
+      if (corruptedVolumeInstruments.length > 0) {
+        const currentLogLevel = LoggerFactory.getLogLevel();
         if (currentLogLevel === "debug") {
-          logger14.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
-            stillCorrupted,
-            action: "reinitialization-failed"
+          logger14.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
+            corruptedVolumeInstruments,
+            corruptedCount: corruptedVolumeInstruments.length,
+            totalEnabledCount: enabledInstrumentsList.length,
+            action: "corrupted-volume-nodes-detected"
           });
         } else {
-          logger14.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
-            stillCorrupted,
-            action: "reinitialization-incomplete"
+          logger14.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
+            corruptedVolumeInstruments,
+            corruptedCount: corruptedVolumeInstruments.length,
+            totalEnabledCount: enabledInstrumentsList.length,
+            action: "muted-volume-nodes-detected"
           });
         }
-      } else {
-        logger14.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
-          fixedInstruments: corruptedVolumeInstruments,
-          action: "reinitialization-success"
+        corruptedVolumeInstruments.forEach((instrumentName) => {
+          logger14.info("issue-006-debug", "Clearing corrupted volume node", {
+            instrumentName,
+            action: "clear-corrupted-volume"
+          });
+          this.instrumentVolumes.delete(instrumentName);
+        });
+        logger14.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
+          corruptedInstruments: corruptedVolumeInstruments,
+          action: "start-targeted-reinitialization"
+        });
+        await this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
+        const stillCorrupted = corruptedVolumeInstruments.filter((instrumentName) => {
+          const volumeNode = this.instrumentVolumes.get(instrumentName);
+          const instrumentSettings = this.settings.instruments[instrumentName];
+          if (!volumeNode || volumeNode.volume.value === null) {
+            return true;
+          }
+          if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
+            logger14.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+              instrumentName,
+              shouldBeEnabled: instrumentSettings.enabled,
+              actuallyMuted: volumeNode.mute,
+              action: "unexpected-mute-on-enabled-instrument"
+            });
+            return true;
+          }
+          return false;
+        });
+        if (stillCorrupted.length > 0) {
+          if (currentLogLevel === "debug") {
+            logger14.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
+              stillCorrupted,
+              action: "reinitialization-failed"
+            });
+          } else {
+            logger14.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
+              stillCorrupted,
+              action: "reinitialization-incomplete"
+            });
+          }
+        } else {
+          logger14.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
+            fixedInstruments: corruptedVolumeInstruments,
+            action: "reinitialization-success"
+          });
+        }
+      }
+      logger14.info("debug", "Step 9: Continuing with playback logic...");
+      if (this.isPlaying) {
+        logger14.info("playback", "Stopping current sequence before starting new one");
+        this.stop();
+      }
+      if (sequence.length === 0) {
+        logger14.error("playback", "Empty sequence provided");
+        throw new Error("No musical sequence to play");
+      }
+      const invalidNotes = sequence.filter(
+        (note) => !note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
+      );
+      if (invalidNotes.length > 0) {
+        logger14.error("playback", "Invalid notes in sequence", {
+          invalidCount: invalidNotes.length,
+          examples: invalidNotes.slice(0, 3)
         });
       }
-    } else {
-      logger14.info("issue-006-debug", "All enabled instruments have healthy volume nodes", {
-        enabledCount: enabledInstrumentsList.length,
-        action: "volume-nodes-healthy"
-      });
-    }
-    if (this.isPlaying) {
-      logger14.info("playback", "Stopping current sequence before starting new one");
-      this.stop();
-    }
-    if (sequence.length === 0) {
-      logger14.error("playback", "Empty sequence provided");
-      throw new Error("No musical sequence to play");
-    }
-    const invalidNotes = sequence.filter(
-      (note) => !note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
-    );
-    if (invalidNotes.length > 0) {
-      logger14.error("playback", "Invalid notes in sequence", {
-        invalidCount: invalidNotes.length,
-        examples: invalidNotes.slice(0, 3)
-      });
-    }
-    logger14.info("playback", "Starting sequence playback", {
-      noteCount: sequence.length,
-      totalDuration: this.getSequenceDuration(sequence),
-      pitchRange: {
-        min: Math.min(...sequence.map((n) => n.pitch)),
-        max: Math.max(...sequence.map((n) => n.pitch))
-      },
-      durationRange: {
-        min: Math.min(...sequence.map((n) => n.duration)),
-        max: Math.max(...sequence.map((n) => n.duration))
-      }
-    });
-    try {
-      logger14.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
-      const processedSequence = sequence;
-      processedSequence.forEach((note) => {
-        if (note.hasBeenTriggered) {
-          delete note.hasBeenTriggered;
+      logger14.info("playback", "Starting sequence playback", {
+        noteCount: sequence.length,
+        totalDuration: this.getSequenceDuration(sequence),
+        pitchRange: {
+          min: Math.min(...sequence.map((n) => n.pitch)),
+          max: Math.max(...sequence.map((n) => n.pitch))
+        },
+        durationRange: {
+          min: Math.min(...sequence.map((n) => n.duration)),
+          max: Math.max(...sequence.map((n) => n.duration))
         }
       });
-      logger14.debug("playback", "Reset note trigger flags for replay", {
-        noteCount: processedSequence.length
-      });
-      this.currentSequence = processedSequence;
-      this.isPlaying = true;
-      this.scheduledEvents = [];
-      this.sequenceStartTime = Date.now();
-      this.eventEmitter.emit("playback-started", null);
-      logger14.info("issue-006-debug", "Transport state before reset", {
-        state: getTransport().state,
-        position: getTransport().position,
-        seconds: getTransport().seconds,
-        bpm: getTransport().bpm.value,
-        action: "transport-state-before-reset"
-      });
-      if (getTransport().state === "started") {
-        getTransport().stop();
-        getTransport().cancel();
-        logger14.info("issue-006-debug", "Transport stopped and cancelled", {
-          action: "transport-stop-cancel"
+      try {
+        logger14.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
+        const processedSequence = sequence;
+        processedSequence.forEach((note) => {
+          if (note.hasBeenTriggered) {
+            delete note.hasBeenTriggered;
+          }
         });
+        logger14.debug("playback", "Reset note trigger flags for replay", {
+          noteCount: processedSequence.length
+        });
+        this.currentSequence = processedSequence;
+        this.isPlaying = true;
+        this.scheduledEvents = [];
+        this.sequenceStartTime = Date.now();
+        this.eventEmitter.emit("playback-started", null);
+        logger14.info("issue-006-debug", "Transport state before reset", {
+          state: getTransport().state,
+          position: getTransport().position,
+          seconds: getTransport().seconds,
+          bpm: getTransport().bpm.value,
+          action: "transport-state-before-reset"
+        });
+        if (getTransport().state === "started") {
+          getTransport().stop();
+          getTransport().cancel();
+          logger14.info("issue-006-debug", "Transport stopped and cancelled", {
+            action: "transport-stop-cancel"
+          });
+        }
+        logger14.info("issue-006-debug", "Transport state after reset", {
+          state: getTransport().state,
+          position: getTransport().position,
+          seconds: getTransport().seconds,
+          action: "transport-state-after-reset"
+        });
+        const sequenceDuration = this.getSequenceDuration(processedSequence);
+        getTransport().loopEnd = sequenceDuration + 2;
+        logger14.info("debug", "Starting sequence playback", {
+          sequenceDuration: sequenceDuration.toFixed(2),
+          transportState: getTransport().state,
+          currentTime: getContext().currentTime.toFixed(3)
+        });
+        this.startRealtimePlayback(processedSequence);
+        logger14.info("playback", "Real-time playback system started", {
+          noteCount: processedSequence.length,
+          sequenceDuration: sequenceDuration.toFixed(2),
+          audioContextState: getContext().state
+        });
+      } catch (error) {
+        logger14.error("playback", "Error processing sequence", {
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          } : error,
+          sequenceLength: (sequence == null ? void 0 : sequence.length) || 0,
+          isInitialized: this.isInitialized,
+          instrumentCount: this.instruments.size,
+          audioContextState: getContext().state
+        });
+        const errorData = {
+          error: error instanceof Error ? error : new Error(String(error)),
+          context: "sequence-processing"
+        };
+        this.eventEmitter.emit("playback-error", errorData);
+        throw error;
       }
-      logger14.info("issue-006-debug", "Transport state after reset", {
-        state: getTransport().state,
-        position: getTransport().position,
-        seconds: getTransport().seconds,
-        action: "transport-state-after-reset"
-      });
-      const sequenceDuration = this.getSequenceDuration(processedSequence);
-      getTransport().loopEnd = sequenceDuration + 2;
-      logger14.info("debug", "Starting sequence playback", {
-        sequenceDuration: sequenceDuration.toFixed(2),
-        transportState: getTransport().state,
-        currentTime: getContext().currentTime.toFixed(3)
-      });
-      this.startRealtimePlayback(processedSequence);
-      logger14.info("playback", "Real-time playback system started", {
-        noteCount: processedSequence.length,
-        sequenceDuration: sequenceDuration.toFixed(2),
-        audioContextState: getContext().state
-      });
     } catch (error) {
-      logger14.error("playback", "Error processing sequence", {
-        error: error instanceof Error ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        } : error,
-        sequenceLength: (sequence == null ? void 0 : sequence.length) || 0,
+      logger14.error("playback", "CRITICAL: Exception in playSequence method", {
+        error: error.message,
+        stack: error.stack,
+        sequenceLength: sequence == null ? void 0 : sequence.length,
         isInitialized: this.isInitialized,
-        instrumentCount: this.instruments.size,
-        audioContextState: getContext().state
+        isMinimalMode: this.isMinimalMode,
+        instrumentsSize: this.instruments.size
       });
-      const errorData = {
-        error: error instanceof Error ? error : new Error(String(error)),
-        context: "sequence-processing"
-      };
-      this.eventEmitter.emit("playback-error", errorData);
       throw error;
     }
   }
@@ -41251,31 +40817,25 @@ var AudioEngine = class {
         return "xylophone";
       return sortedInstruments[0];
     } else if (mapping.pitch > 1200) {
-      if (enabledInstruments.includes("soprano"))
-        return "soprano";
       if (enabledInstruments.includes("clarinet"))
         return "clarinet";
       if (enabledInstruments.includes("violin"))
         return "violin";
       if (enabledInstruments.includes("oboe"))
         return "oboe";
-      return enabledInstruments.includes("choir") ? "choir" : sortedInstruments[0];
+      return sortedInstruments[0];
     } else if (mapping.pitch > 1e3) {
-      if (enabledInstruments.includes("choir"))
-        return "choir";
-      if (enabledInstruments.includes("alto"))
-        return "alto";
       if (enabledInstruments.includes("vibraphone"))
         return "vibraphone";
-      return enabledInstruments.includes("clarinet") ? "clarinet" : sortedInstruments[0];
+      if (enabledInstruments.includes("clarinet"))
+        return "clarinet";
+      return sortedInstruments[0];
     } else if (mapping.pitch > 800) {
-      if (enabledInstruments.includes("vocalPads"))
-        return "vocalPads";
       if (enabledInstruments.includes("guitar"))
         return "guitar";
-      if (enabledInstruments.includes("tenor"))
-        return "tenor";
-      return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
+      if (enabledInstruments.includes("organ"))
+        return "organ";
+      return sortedInstruments[0];
     } else if (mapping.pitch > 600) {
       if (enabledInstruments.includes("organ"))
         return "organ";
@@ -41293,8 +40853,6 @@ var AudioEngine = class {
         return "trumpet";
       return enabledInstruments.includes("organ") ? "organ" : sortedInstruments[0];
     } else if (mapping.pitch > 300) {
-      if (enabledInstruments.includes("pad"))
-        return "pad";
       if (enabledInstruments.includes("electricPiano"))
         return "electricPiano";
       if (enabledInstruments.includes("cello"))
@@ -41315,8 +40873,6 @@ var AudioEngine = class {
         return "whaleHumpback";
       return sortedInstruments[0];
     } else if (mapping.pitch > 100) {
-      if (enabledInstruments.includes("bass"))
-        return "bass";
       if (enabledInstruments.includes("tuba"))
         return "tuba";
       if (enabledInstruments.includes("bassSynth"))
@@ -41333,8 +40889,6 @@ var AudioEngine = class {
         return "leadSynth";
       if (enabledInstruments.includes("tuba"))
         return "tuba";
-      if (enabledInstruments.includes("bass"))
-        return "bass";
       return enabledInstruments.includes("strings") ? "strings" : sortedInstruments[0];
     }
   }
@@ -41388,6 +40942,7 @@ var AudioEngine = class {
    * Only initializes essential components to prevent processing spikes
    */
   async initializeEssentials() {
+    var _a;
     if (this.isInitialized) {
       return;
     }
@@ -41395,11 +40950,45 @@ var AudioEngine = class {
       logger14.debug("audio", "Fast-path initialization for test notes");
       await start2();
       this.volume = new Volume(this.settings.volume).toDestination();
-      await this.initializeBasicPiano();
-      await this.initializeLightweightSynthesis();
-      this.isInitialized = true;
-      this.isMinimalMode = true;
-      logger14.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
+      const enabledInstruments = this.getEnabledInstruments();
+      const requiresSamples = enabledInstruments.some((instrumentName) => {
+        const settings = this.settings.instruments[instrumentName];
+        return (settings == null ? void 0 : settings.useHighQuality) === true;
+      });
+      logger14.info("audio", "Essential initialization - checking sample requirements", {
+        enabledInstruments,
+        requiresSamples,
+        instrumentsRequiringSamples: enabledInstruments.filter((instrumentName) => {
+          const settings = this.settings.instruments[instrumentName];
+          return (settings == null ? void 0 : settings.useHighQuality) === true;
+        })
+      });
+      if (requiresSamples) {
+        logger14.info("audio", "\u{1F3B5} SAMPLE MODE: High-quality samples required - upgrading to full initialization");
+        await this.initializeEffects();
+        await this.initializeInstruments();
+        await this.initializeAdvancedSynthesis();
+        if ((_a = this.settings.enhancedRouting) == null ? void 0 : _a.enabled) {
+          await this.initializeEnhancedRouting();
+        } else {
+          this.applyEffectSettings();
+        }
+        this.generateInitializationReport();
+        this.isInitialized = true;
+        this.isMinimalMode = false;
+        logger14.info("audio", "\u{1F3B5} SAMPLE MODE: Full initialization completed with samples", {
+          totalInstruments: this.instruments.size,
+          instrumentsList: Array.from(this.instruments.keys()),
+          samplesEnabled: true
+        });
+      } else {
+        logger14.info("audio", "\u{1F3B9} SYNTHESIS MODE: No samples required - using minimal initialization");
+        await this.initializeBasicPiano();
+        await this.initializeLightweightSynthesis();
+        this.isInitialized = true;
+        this.isMinimalMode = true;
+        logger14.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
+      }
     } catch (error) {
       logger14.error("audio", "Failed to initialize essential components", error);
       throw error;
@@ -41464,7 +41053,9 @@ var AudioEngine = class {
           envelope: { attack: 1e-3, decay: 1, sustain: 0.3, release: 0.3 },
           modulation: { type: "square" },
           modulationEnvelope: { attack: 2e-3, decay: 0.2, sustain: 0, release: 0.2 }
-        }
+        },
+        maxPolyphony: 16
+        // Increased to handle complex sequences and chords
       });
       const pianoVolume = new Volume(this.settings.instruments.piano.volume);
       this.instrumentVolumes.set("piano", pianoVolume);
@@ -41482,10 +41073,12 @@ var AudioEngine = class {
    * Issue #010 Fix: Provides clean sounds without CDN sample processing spikes that cause crackling
    */
   async initializeLightweightSynthesis() {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     try {
       const timpaniPoly = new PolySynth({
         voice: AMSynth,
+        maxPolyphony: 6,
+        // Added polyphony limit
         options: {
           oscillator: { type: "sine" },
           envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2 },
@@ -41495,6 +41088,8 @@ var AudioEngine = class {
       });
       const xylophonePoly = new PolySynth({
         voice: FMSynth,
+        maxPolyphony: 8,
+        // Added polyphony limit
         options: {
           harmonicity: 8,
           modulationIndex: 5,
@@ -41505,6 +41100,8 @@ var AudioEngine = class {
       });
       const stringsPoly = new PolySynth({
         voice: AMSynth,
+        maxPolyphony: 6,
+        // Added polyphony limit
         options: {
           oscillator: { type: "sawtooth" },
           envelope: { attack: 0.1, decay: 0.2, sustain: 0.7, release: 1.5 },
@@ -41513,6 +41110,8 @@ var AudioEngine = class {
       });
       const flutePoly = new PolySynth({
         voice: FMSynth,
+        maxPolyphony: 4,
+        // Added polyphony limit
         options: {
           harmonicity: 1,
           modulationIndex: 2,
@@ -41523,6 +41122,8 @@ var AudioEngine = class {
       });
       const clarinetPoly = new PolySynth({
         voice: FMSynth,
+        maxPolyphony: 4,
+        // Added polyphony limit
         options: {
           harmonicity: 3,
           modulationIndex: 4,
@@ -41533,6 +41134,8 @@ var AudioEngine = class {
       });
       const trumpetPoly = new PolySynth({
         voice: FMSynth,
+        maxPolyphony: 4,
+        // Added polyphony limit
         options: {
           harmonicity: 2,
           modulationIndex: 8,
@@ -41543,11 +41146,50 @@ var AudioEngine = class {
       });
       const saxophonePoly = new PolySynth({
         voice: AMSynth,
+        maxPolyphony: 4,
+        // Added polyphony limit
         options: {
           oscillator: { type: "sawtooth" },
           envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
           volume: -8
         }
+      });
+      const tubaPoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 1,
+          modulationIndex: 3,
+          oscillator: { type: "sawtooth" },
+          envelope: { attack: 0.1, decay: 0.4, sustain: 0.6, release: 3.5 },
+          volume: -5
+          // Louder for deep brass character
+        },
+        maxPolyphony: 8
+        // Increased from default 32 to handle complex sequences
+      });
+      const bassoonPoly = new PolySynth({
+        voice: FMSynth,
+        options: {
+          harmonicity: 2,
+          modulationIndex: 6,
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.08, decay: 0.3, sustain: 0.7, release: 2.2 },
+          volume: -7
+          // Moderate volume for woodwind character
+        },
+        maxPolyphony: 6
+        // Increased to handle complex sequences
+      });
+      const guitarNylonPoly = new PolySynth({
+        voice: AMSynth,
+        options: {
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.02, decay: 1.5, sustain: 0.3, release: 2 },
+          volume: -8
+          // Gentle volume for acoustic character
+        },
+        maxPolyphony: 8
+        // Increased to handle guitar chords and complex sequences
       });
       if ((_a = this.settings.instruments.timpani) == null ? void 0 : _a.enabled) {
         const timpaniVolume = new Volume(this.settings.instruments.timpani.volume);
@@ -41597,6 +41239,27 @@ var AudioEngine = class {
         saxophonePoly.connect(saxophoneVolume);
         saxophoneVolume.connect(this.volume);
         this.instruments.set("saxophone", saxophonePoly);
+      }
+      if ((_h = this.settings.instruments.tuba) == null ? void 0 : _h.enabled) {
+        const tubaVolume = new Volume(this.settings.instruments.tuba.volume);
+        this.instrumentVolumes.set("tuba", tubaVolume);
+        tubaPoly.connect(tubaVolume);
+        tubaVolume.connect(this.volume);
+        this.instruments.set("tuba", tubaPoly);
+      }
+      if ((_i = this.settings.instruments.bassoon) == null ? void 0 : _i.enabled) {
+        const bassoonVolume = new Volume(this.settings.instruments.bassoon.volume);
+        this.instrumentVolumes.set("bassoon", bassoonVolume);
+        bassoonPoly.connect(bassoonVolume);
+        bassoonVolume.connect(this.volume);
+        this.instruments.set("bassoon", bassoonPoly);
+      }
+      if ((_j = this.settings.instruments.guitarNylon) == null ? void 0 : _j.enabled) {
+        const guitarNylonVolume = new Volume(this.settings.instruments.guitarNylon.volume);
+        this.instrumentVolumes.set("guitarNylon", guitarNylonVolume);
+        guitarNylonPoly.connect(guitarNylonVolume);
+        guitarNylonVolume.connect(this.volume);
+        this.instruments.set("guitarNylon", guitarNylonPoly);
       }
       logger14.debug("audio", "Lightweight synthesis initialized", {
         instrumentsCreated: this.instruments.size,
@@ -41679,6 +41342,11 @@ var AudioEngine = class {
         const instrumentSettings = this.settings.instruments[instrumentName];
         if (!(instrumentSettings == null ? void 0 : instrumentSettings.effects))
           return;
+        const instrumentEffects = this.instrumentEffects.get(instrumentName);
+        if (!instrumentEffects) {
+          logger14.debug("effects", `Skipping effect settings for ${instrumentName} - no effects initialized`);
+          return;
+        }
         const reverbSettings = instrumentSettings.effects.reverb;
         if (reverbSettings) {
           this.setReverbEnabled(reverbSettings.enabled, instrumentName);
@@ -42168,7 +41836,7 @@ var AudioEngine = class {
     return ["timpani", "xylophone", "vibraphone", "gongs"].includes(instrumentName);
   }
   isElectronicInstrument(instrumentName) {
-    return ["pad", "leadSynth", "bassSynth", "arpSynth"].includes(instrumentName);
+    return ["leadSynth", "bassSynth", "arpSynth"].includes(instrumentName);
   }
   isEnvironmentalInstrument(instrumentName) {
     return ["whaleHumpback"].includes(instrumentName);
@@ -42179,7 +41847,8 @@ var AudioEngine = class {
   getDefaultVoiceLimits() {
     return {
       DEFAULT_VOICE_LIMITS: {
-        piano: 8,
+        piano: 16,
+        // Increased for complex sequences
         organ: 6,
         harpsichord: 8,
         strings: 4,
@@ -42191,22 +41860,22 @@ var AudioEngine = class {
         trumpet: 3,
         horn: 3,
         trombone: 3,
-        tuba: 2,
+        tuba: 8,
+        // Increased for complex sequences
         flute: 3,
         oboe: 3,
         clarinet: 3,
-        bassoon: 3,
+        bassoon: 6,
+        // Increased for complex sequences
         piccolo: 3,
-        soprano: 4,
-        alto: 4,
-        tenor: 4,
-        bass: 4,
-        choir: 8,
         timpani: 2,
         xylophone: 6,
         vibraphone: 6,
         gongs: 4,
-        default: 4
+        guitarNylon: 8,
+        // Added for nylon guitar
+        default: 6
+        // Increased default for better performance
       }
     };
   }
@@ -42219,7 +41888,7 @@ var AudioEngine = class {
     if (specificLimit) {
       return specificLimit;
     }
-    if (["piano", "organ", "harpsichord", "harp", "choir"].includes(instrumentName)) {
+    if (["piano", "organ", "harpsichord", "harp"].includes(instrumentName)) {
       return 8;
     } else if (["strings", "violin", "viola", "cello", "contrabass"].includes(instrumentName)) {
       return 4;
@@ -42275,64 +41944,15 @@ var AudioEngine = class {
    */
   createVocalSynthesis(instrumentName) {
     const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
-    switch (instrumentName) {
-      case "soprano":
-        return new PolySynth({
-          voice: AMSynth,
-          maxPolyphony: maxVoices,
-          options: {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.1, decay: 0.3, sustain: 0.8, release: 2 },
-            volume: -8
-            // Soprano - higher, clearer
-          }
-        });
-      case "alto":
-        return new PolySynth({
-          voice: AMSynth,
-          maxPolyphony: maxVoices,
-          options: {
-            oscillator: { type: "triangle" },
-            envelope: { attack: 0.12, decay: 0.4, sustain: 0.7, release: 2.2 },
-            volume: -10
-            // Alto - warmer, mid-range
-          }
-        });
-      case "tenor":
-        return new PolySynth({
-          voice: AMSynth,
-          maxPolyphony: maxVoices,
-          options: {
-            oscillator: { type: "sawtooth" },
-            envelope: { attack: 0.15, decay: 0.5, sustain: 0.6, release: 2.5 },
-            volume: -12
-            // Tenor - fuller, male range
-          }
-        });
-      case "bass":
-        return new PolySynth({
-          voice: FMSynth,
-          maxPolyphony: maxVoices,
-          options: {
-            harmonicity: 1.5,
-            modulationIndex: 2,
-            oscillator: { type: "square" },
-            envelope: { attack: 0.2, decay: 0.6, sustain: 0.5, release: 3 },
-            volume: -14
-            // Bass - deep, rich
-          }
-        });
-      default:
-        return new PolySynth({
-          voice: AMSynth,
-          maxPolyphony: maxVoices,
-          options: {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.1, decay: 0.4, sustain: 0.7, release: 2 },
-            volume: -10
-          }
-        });
-    }
+    return new PolySynth({
+      voice: AMSynth,
+      maxPolyphony: maxVoices,
+      options: {
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.1, decay: 0.4, sustain: 0.7, release: 2 },
+        volume: -10
+      }
+    });
   }
   /**
    * Issue #012: Reconnect instrument to effects chain after fallback creation
@@ -42923,12 +42543,6 @@ var AudioEngine = class {
       // Missing from CDN (confirmed in external-sample-sources-guide.md)
       missingInstruments: {
         // Vocal Family (0/6 available)
-        choir: { status: "MISSING", path: "choir/", reason: "Directory does not exist on nbrosowsky CDN" },
-        vocalPads: { status: "MISSING", path: "vocal-pads/", reason: "Directory does not exist on nbrosowsky CDN" },
-        soprano: { status: "MISSING", path: "soprano/", reason: "Directory does not exist on nbrosowsky CDN" },
-        alto: { status: "MISSING", path: "alto/", reason: "Directory does not exist on nbrosowsky CDN" },
-        tenor: { status: "MISSING", path: "tenor/", reason: "Directory does not exist on nbrosowsky CDN" },
-        bass: { status: "MISSING", path: "bass/", reason: "Directory does not exist on nbrosowsky CDN" },
         // Percussion Family (3/4 missing)
         timpani: { status: "MISSING", path: "timpani/", reason: "Directory does not exist on nbrosowsky CDN" },
         vibraphone: { status: "MISSING", path: "vibraphone/", reason: "Directory does not exist on nbrosowsky CDN" },
@@ -43355,8 +42969,8 @@ var MusicalMapper = class {
     const instrumentsByRange = {
       low: ["bass", "tuba", "cello", "bassSynth", "timpani"],
       mid: ["piano", "strings", "guitar", "organ", "pad", "saxophone", "trombone", "frenchHorn"],
-      high: ["violin", "flute", "clarinet", "trumpet", "soprano", "xylophone", "vibraphone", "oboe"],
-      very_high: ["alto", "tenor", "leadSynth", "arpSynth", "gongs", "harp"]
+      high: ["violin", "flute", "clarinet", "trumpet", "xylophone", "vibraphone", "oboe"],
+      very_high: ["leadSynth", "arpSynth", "gongs", "harp"]
     };
     const connectionRatio = node.connectionCount / Math.max(totalNodes, 1);
     let rangeKey;
@@ -43817,48 +43431,6 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
         }
       };
     }
-    if (!this.settings.instruments.choir) {
-      logger17.info("settings", "Adding missing Choir instrument");
-      migrationNeeded = true;
-      this.settings.instruments.choir = {
-        enabled: true,
-        volume: 0.7,
-        maxVoices: 8,
-        effects: {
-          reverb: { enabled: true, params: { decay: 3.2, preDelay: 0.05, wet: 0.6 } },
-          chorus: { enabled: true, params: { frequency: 0.4, depth: 0.6, delayTime: 5, feedback: 0.08 } },
-          filter: { enabled: false, params: { frequency: 2e3, Q: 0.7, type: "lowpass" } }
-        }
-      };
-    }
-    if (!this.settings.instruments.vocalPads) {
-      logger17.info("settings", "Adding missing Vocal Pads instrument");
-      migrationNeeded = true;
-      this.settings.instruments.vocalPads = {
-        enabled: true,
-        volume: 0.5,
-        maxVoices: 8,
-        effects: {
-          reverb: { enabled: true, params: { decay: 4, preDelay: 0.06, wet: 0.7 } },
-          chorus: { enabled: false, params: { frequency: 0.3, depth: 0.4, delayTime: 6, feedback: 0.05 } },
-          filter: { enabled: true, params: { frequency: 1500, Q: 1.2, type: "lowpass" } }
-        }
-      };
-    }
-    if (!this.settings.instruments.pad) {
-      logger17.info("settings", "Adding missing Pad instrument");
-      migrationNeeded = true;
-      this.settings.instruments.pad = {
-        enabled: true,
-        volume: 0.4,
-        maxVoices: 8,
-        effects: {
-          reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.08, wet: 0.8 } },
-          chorus: { enabled: false, params: { frequency: 0.2, depth: 0.7, delayTime: 8, feedback: 0.1 } },
-          filter: { enabled: true, params: { frequency: 1200, Q: 1.5, type: "lowpass" } }
-        }
-      };
-    }
     if (!this.settings.instruments.flute) {
       logger17.info("settings", "Adding missing Flute instrument");
       migrationNeeded = true;
@@ -43898,66 +43470,6 @@ var SonigraphPlugin = class extends import_obsidian6.Plugin {
           reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.04, wet: 0.45 } },
           chorus: { enabled: true, params: { frequency: 0.6, depth: 0.4, delayTime: 3.5, feedback: 0.06 } },
           filter: { enabled: false, params: { frequency: 3e3, Q: 0.9, type: "lowpass" } }
-        }
-      };
-    }
-    if (!this.settings.instruments.soprano) {
-      logger17.info("settings", "Adding missing Soprano instrument (Phase 6A)");
-      migrationNeeded = true;
-      this.settings.instruments.soprano = {
-        enabled: false,
-        // Disabled by default to avoid overwhelming users
-        volume: 0.6,
-        maxVoices: 4,
-        effects: {
-          reverb: { enabled: true, params: { decay: 2.8, preDelay: 0.03, wet: 0.5 } },
-          chorus: { enabled: true, params: { frequency: 0.8, depth: 0.3, delayTime: 2.5, feedback: 0.04 } },
-          filter: { enabled: true, params: { frequency: 4e3, Q: 1.2, type: "lowpass" } }
-        }
-      };
-    }
-    if (!this.settings.instruments.alto) {
-      logger17.info("settings", "Adding missing Alto instrument (Phase 6A)");
-      migrationNeeded = true;
-      this.settings.instruments.alto = {
-        enabled: false,
-        // Disabled by default
-        volume: 0.5,
-        maxVoices: 4,
-        effects: {
-          reverb: { enabled: true, params: { decay: 3, preDelay: 0.04, wet: 0.55 } },
-          chorus: { enabled: true, params: { frequency: 0.6, depth: 0.35, delayTime: 3, feedback: 0.05 } },
-          filter: { enabled: true, params: { frequency: 3200, Q: 1, type: "lowpass" } }
-        }
-      };
-    }
-    if (!this.settings.instruments.tenor) {
-      logger17.info("settings", "Adding missing Tenor instrument (Phase 6A)");
-      migrationNeeded = true;
-      this.settings.instruments.tenor = {
-        enabled: false,
-        // Disabled by default
-        volume: 0.5,
-        maxVoices: 4,
-        effects: {
-          reverb: { enabled: true, params: { decay: 2.5, preDelay: 0.03, wet: 0.45 } },
-          chorus: { enabled: false, params: { frequency: 0.7, depth: 0.25, delayTime: 2.8, feedback: 0.03 } },
-          filter: { enabled: true, params: { frequency: 2800, Q: 0.9, type: "lowpass" } }
-        }
-      };
-    }
-    if (!this.settings.instruments.bass) {
-      logger17.info("settings", "Adding missing Bass instrument (Phase 6A)");
-      migrationNeeded = true;
-      this.settings.instruments.bass = {
-        enabled: false,
-        // Disabled by default
-        volume: 0.7,
-        maxVoices: 4,
-        effects: {
-          reverb: { enabled: true, params: { decay: 3.5, preDelay: 0.05, wet: 0.6 } },
-          chorus: { enabled: false, params: { frequency: 0.4, depth: 0.4, delayTime: 4, feedback: 0.06 } },
-          filter: { enabled: false, params: { frequency: 1500, Q: 0.8, type: "lowpass" } }
         }
       };
     }
