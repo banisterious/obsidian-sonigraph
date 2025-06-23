@@ -8,6 +8,7 @@ import { TAB_CONFIGS, setLucideIcon, createLucideIcon, getFamilyIcon, getInstrum
 import { MaterialCard, StatCard, InstrumentCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
 import { PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
+import { GraphDemoModal } from './GraphDemoModal';
 
 const logger = getLogger('control-panel');
 
@@ -181,6 +182,13 @@ export class MaterialControlPanelModal extends Modal {
 		pauseBtn.appendChild(pauseIcon);
 		pauseBtn.appendText('Pause');
 		pauseBtn.addEventListener('click', () => this.handlePause());
+
+		// Demo button (fourth)
+		const demoBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--accent' });
+		const demoIcon = createLucideIcon('activity', 16);
+		demoBtn.appendChild(demoIcon);
+		demoBtn.appendText('Demo');
+		demoBtn.addEventListener('click', () => this.handleDemo());
 	}
 
 	/**
@@ -1314,6 +1322,12 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Audio engine will emit 'playback-stopped' event which will transition to idle
 		this.plugin.stopPlayback();
+	}
+
+	private handleDemo(): void {
+		logger.debug('ui', 'Demo button clicked');
+		const demoModal = new GraphDemoModal(this.app);
+		demoModal.open();
 	}
 
 	private async handlePlay(): Promise<void> {
