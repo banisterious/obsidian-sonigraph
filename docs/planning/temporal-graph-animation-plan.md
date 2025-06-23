@@ -365,6 +365,110 @@ class TimelineModal extends Modal {
 - Export capabilities
 - Full integration with plugin ecosystem
 
+### Phase 5: Content Filtering and Exclusion (Completed)
+**Goal**: User control over which files and folders appear in the graph
+
+#### Tasks Completed:
+1. **Settings Integration**
+   - Added `sonicGraphExcludeFolders` and `sonicGraphExcludeFiles` arrays to plugin settings
+   - Integrated with existing settings system for persistence
+
+2. **Autocomplete Modal Implementation**
+   - Created `FolderSuggestModal.ts` extending Obsidian's `FuzzySuggestModal<TFolder>`
+   - Created `FileSuggestModal.ts` extending Obsidian's `FuzzySuggestModal<TFile>`
+   - Both modals use native Obsidian fuzzy search with proper instructions
+
+3. **Control Center UI Enhancement**
+   - Added exclusion fields to Sonic Graph Controls Card
+   - Implemented "Exclude folders" and "Exclude files" sections
+   - Each section includes:
+     - Descriptive labels and help text
+     - Container for displaying current exclusions
+     - "Add" button to open selection modal
+     - Individual remove buttons for each exclusion
+
+4. **Graph Data Filtering**
+   - Modified `GraphDataExtractor` constructor to accept exclusion options
+   - Added `shouldExcludeFile()` method for filtering logic
+   - Updated `extractNodes()` to skip excluded files and folders
+   - All instantiations updated to pass exclusion settings
+
+5. **Auto-Refresh Functionality**
+   - Implemented `refreshGraphWithExclusions()` for real-time updates
+   - Graph preview and statistics refresh when exclusions change
+   - Maintains user's current view state during updates
+
+6. **UI Styling and Polish**
+   - Added comprehensive CSS in `styles/controls.css`
+   - Styled exclusion containers, items, and buttons
+   - Proper hover effects and empty state messaging
+   - Consistent with Obsidian design patterns
+
+#### Technical Implementation:
+```typescript
+// Settings interface extension
+interface SonigraphSettings {
+  sonicGraphExcludeFolders?: string[];
+  sonicGraphExcludeFiles?: string[];
+  // ... existing settings
+}
+
+// Graph filtering logic
+class GraphDataExtractor {
+  constructor(
+    private app: App,
+    private excludeFolders: string[] = [],
+    private excludeFiles: string[] = []
+  ) {}
+
+  private shouldExcludeFile(file: TFile): boolean {
+    // Check if file itself is excluded
+    if (this.excludeFiles.includes(file.path)) return true;
+    
+    // Check if file is in excluded folder
+    return this.excludeFolders.some(folder => 
+      file.path.startsWith(folder + '/')
+    );
+  }
+}
+```
+
+#### User Experience:
+- **Discovery**: Users find exclusion controls in Sonic Graph tab
+- **Selection**: Native Obsidian autocomplete for familiar UX
+- **Management**: Clear display of current exclusions with easy removal
+- **Feedback**: Real-time graph updates show filtering effects
+- **Persistence**: Settings saved automatically across sessions
+
+#### Deliverables:
+- ✅ Folder exclusion with autocomplete selection
+- ✅ File exclusion with autocomplete selection  
+- ✅ Real-time graph filtering and refresh
+- ✅ Persistent settings storage
+- ✅ Professional UI integration
+- ✅ Modal structure fixes for proper header display
+
+#### Additional Improvements:
+1. **Icon Enhancement**
+   - Changed Sonic Graph button icon from 'activity' to 'chart-network'
+   - Provides better visual representation of network/graph functionality
+   - Maintains consistency with graph visualization theme
+
+2. **Modal Structure Fixes**
+   - **Issue**: Sonic Graph modal header was covering the close button
+   - **Solution**: Adopted Control Center modal pattern:
+     - Close button positioned outside main container with absolute positioning
+     - Header includes right padding (56px) to avoid close button overlap
+     - Proper z-index layering (close button: 1002, header: 1001)
+     - Container structure matches proven Control Center approach
+   - **Result**: Professional modal interface with accessible close button
+
+3. **Code Quality Improvements**
+   - Enhanced error handling and user feedback throughout exclusion system
+   - Comprehensive logging for debugging exclusion operations
+   - Proper async/await patterns for modal interactions
+   - TypeScript type safety for all new components
+
 ## Technical Specifications
 
 ### Dependencies
@@ -383,19 +487,28 @@ class TimelineModal extends Modal {
 ```
 src/
 ├── graph/
-│   ├── GraphDataExtractor.ts      # Vault data extraction
+│   ├── GraphDataExtractor.ts      # Vault data extraction (✅ Enhanced with exclusion filtering)
 │   ├── TemporalGraphAnimator.ts   # D3-force animation controller
 │   ├── AudioVisualSync.ts         # Audio-visual synchronization
 │   ├── GraphRenderer.ts           # SVG rendering and styling
 │   ├── TimelineController.ts      # Timeline playback logic
 │   └── types.ts                   # Graph-related type definitions
 ├── ui/
+│   ├── SonicGraphModal.ts         # ✅ Main sonic graph interface (implemented)
+│   ├── FolderSuggestModal.ts      # ✅ Folder selection autocomplete (implemented)
+│   ├── FileSuggestModal.ts        # ✅ File selection autocomplete (implemented)
+│   ├── control-panel.ts           # ✅ Enhanced with exclusion controls (implemented)
 │   ├── TimelineModal.ts           # Main timeline interface
 │   ├── TimelineControls.ts        # Playback controls component
 │   └── GraphSettingsPanel.ts     # Configuration interface
-└── utils/
-    ├── GraphUtils.ts              # Graph analysis utilities
-    └── ColorExtraction.ts         # Image color analysis
+├── utils/
+│   ├── constants.ts               # ✅ Enhanced with exclusion settings (implemented)
+│   ├── GraphUtils.ts              # Graph analysis utilities
+│   └── ColorExtraction.ts         # Image color analysis
+└── styles/
+    ├── controls.css               # ✅ Enhanced with exclusion styling (implemented)
+    ├── temporal.css               # ✅ Enhanced with modal fixes (implemented)
+    └── ...                        # Other style files
 ```
 
 ### Performance Targets
