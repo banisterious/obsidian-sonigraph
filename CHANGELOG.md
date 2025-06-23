@@ -67,9 +67,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated architecture documentation with hybrid sample/synthesis system details
 - Comprehensive logging and diagnostic capabilities for troubleshooting sample loading issues
 
+## [0.7.1] - 2025-06-23
+
+### Added - Comprehensive Instrument Configuration & Documentation Restructuring
+- **Issue #015 Resolution**: Fixed whale volume controls and missing instrument configurations
+- **Complete Instrument Audit**: Corrected sample configurations for all 34 instruments against nbrosowsky CDN availability
+- **Enhanced Audio Engine**: Added automatic sample detection and graceful fallback to synthesis for instruments without available samples
+- **Synthesis-Only Instruments**: Properly configured electric piano, harpsichord, accordion, celesta, and string ensemble as synthesis-only with UI dropdown removal
+- **Guitar Family Reorganization**: Renamed and grouped acoustic, electric, and nylon guitars with consistent naming
+- **Effect Presets Implementation Plan**: Added comprehensive technical specifications for 11 professional acoustic environment presets
+
+### Changed
+- **Documentation Structure**: Eliminated overlap between development roadmap and feature catalog with clear separation of strategic vs. technical content
+- **Development Roadmap**: Streamlined to focus on strategic planning with status tracking and cross-references to detailed specifications
+- **Feature Catalog**: Enhanced with comprehensive technical specifications moved from roadmap, including implementation details for all planned features
+- **Instrument Configurations**: Updated all woodwind, brass, and string instruments to only include samples that actually exist in the CDN
+- **UI Logic**: Improved dropdown visibility logic to hide "Use recording" option for synthesis-only instruments
+
+### Fixed
+- **Piano Sample Loading**: Resolved "Use recording" setting being ignored, now properly loads piano samples when enabled
+- **Organ Configuration**: Fixed hardcoded synthesis override and updated to use available organ samples instead of non-existent harmonium samples
+- **Missing Samples**: Corrected configurations for oboe (synthesis-only), clarinet, flute, saxophone, trumpet, french horn, trombone, harp, and violin
+- **Instrument Naming**: Standardized guitar family naming for better user clarity
+- **Volume Control Issues**: Resolved whale instrument volume control problems that initiated this fix branch
+
+### Technical
+- Enhanced `initializeEssentials` method to automatically detect sample requirements and upgrade to full initialization
+- Added `requiresHighQuality` flag and `hasSamples` detection logic for robust sample/synthesis decisions
+- Implemented comprehensive error handling for missing sample files with automatic fallback
+- Updated audio engine logging for better debugging of sample loading vs. synthesis decisions
+- Added Table of Contents to development roadmap for improved navigation
+
 ## [Unreleased]
 
 ### Planned
-- Multiple CDN fallback system (Issue #013)
-- Browser caching for samples (Issue #014)
-- User preferences for sample management (Issue #015) 
+- Multiple CDN fallback system
+- Browser caching for samples
+- User preferences for sample management 
