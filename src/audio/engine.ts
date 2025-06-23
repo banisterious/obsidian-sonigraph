@@ -417,8 +417,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects and volume controls - Phase 8B: Now supporting 39 instruments (Complete Orchestral Vision + Environmental Sounds + New String Instruments)
-		const instruments = ['piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'];
+		// Initialize per-instrument effects and volume controls - Phase 8B: Now supporting 49 instruments (Complete Orchestral Vision + Environmental Sounds + New String Instruments + All 10 Whale Species + Bassoon)
+		const instruments = ['piano', 'organ', 'strings', 'flute', 'clarinet', 'saxophone', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'bassoon', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'];
 		
 		for (const instrumentName of instruments) {
 			// Create volume control with settings from constants or default
@@ -726,8 +726,8 @@ export class AudioEngine {
 		
 		// Get all instruments that are enabled in settings
 		const allInstruments = [
-			'piano', 'organ', 'strings', 'choir', 'vocalPads', 'pad', 'flute', 'clarinet', 'saxophone', 
-			'soprano', 'alto', 'tenor', 'bass', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 
+			'piano', 'organ', 'strings', 'flute', 'clarinet', 'saxophone', 
+			'electricPiano', 'harpsichord', 'accordion', 'celesta', 
 			'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 
 			'trumpet', 'frenchHorn', 'trombone', 'tuba', 'bassoon', 'oboe', 
 			'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
@@ -745,11 +745,17 @@ export class AudioEngine {
 			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
 			const useHighQuality = instrumentSettings?.useHighQuality ?? false;
 			
-			if (useHighQuality && configs[instrumentName]) {
+			const config = configs[instrumentName];
+			const hasSamples = config && config.urls && Object.keys(config.urls).length > 0;
+			
+			if (useHighQuality && hasSamples) {
 				// Use high-quality samples if available and requested
-				await this.initializeInstrumentWithSamples(instrumentName, configs[instrumentName]);
+				await this.initializeInstrumentWithSamples(instrumentName, config);
 			} else {
-				// Use synthesis (either by choice or as fallback)
+				// Use synthesis (either by choice, as fallback, or no samples available)
+				if (useHighQuality && !hasSamples) {
+					logger.warn('instruments', `${instrumentName} requested high-quality samples but none available, using synthesis`);
+				}
 				this.initializeInstrumentWithSynthesis(instrumentName);
 			}
 		}
@@ -764,17 +770,30 @@ export class AudioEngine {
 		try {
 			logger.debug('instruments', `Initializing ${instrumentName} with high-quality samples`);
 			
-			const sampler = new Sampler({
-				...config,
-				onload: () => {
-					logger.debug('samples', `${instrumentName} samples loaded successfully`);
-				},
-									onerror: (error: any) => {
-					logger.warn('samples', `${instrumentName} samples failed to load, falling back to synthesis`, { error });
-					// Fallback to synthesis if samples fail to load
-					this.initializeInstrumentWithSynthesis(instrumentName);
-					return;
-				}
+			// Use Promise-based loading for better error handling
+			const sampler = await new Promise<Sampler>((resolve, reject) => {
+				const samplerInstance = new Sampler({
+					...config,
+					onload: () => {
+						logger.debug('samples', `${instrumentName} samples loaded successfully`);
+						resolve(samplerInstance);
+					},
+					onerror: (error: any) => {
+						logger.error('samples', `${instrumentName} samples failed to load`, { 
+							error: error?.message || error,
+							config: {
+								baseUrl: config.baseUrl,
+								sampleCount: Object.keys(config.urls || {}).length
+							}
+						});
+						reject(new Error(`Sample loading failed: ${error?.message || error}`));
+					}
+				});
+				
+				// Timeout after 10 seconds
+				setTimeout(() => {
+					reject(new Error('Sample loading timeout'));
+				}, 10000);
 			});
 			
 			// Create volume control
@@ -803,6 +822,8 @@ export class AudioEngine {
 			
 			output.connect(this.volume);
 			this.instruments.set(instrumentName, sampler);
+			
+			logger.info('instruments', `Successfully initialized ${instrumentName} with samples`);
 			
 		} catch (error) {
 			logger.error('instruments', `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
@@ -1017,77 +1038,237 @@ export class AudioEngine {
 	/**
 	 * Initialize persistent whale synthesizer for environmental sounds
 	 */
+	/**
+	 * Issue #015 Fix: Initialize all whale species with proper volume controls and effects
+	 * Enhanced whale initialization to handle all whale instruments consistently
+	 */
 	private initializeWhaleSynthesizer(): void {
-		logger.debug('environmental', 'Initializing persistent whale synthesizer');
+		logger.debug('environmental', 'Initializing whale synthesizers for all species');
 
-		// Create persistent whale synthesizer with FM synthesis
-		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
-		const maxVoices = this.getInstrumentPolyphonyLimit('whaleHumpback');
-		const whaleSynth = new PolySynth({
-			voice: FMSynth,
-			maxPolyphony: maxVoices,
-			options: {
-				harmonicity: 0.5,
-				modulationIndex: 12,
-				oscillator: { type: 'sine' },
-				modulation: { type: 'sine' },
-				envelope: {
-					attack: 0.3 + (Math.random() * 0.4), // 0.3-0.7 second attack
-					decay: 0.5,
-					sustain: 0.9,
-					release: 2.0 + (Math.random() * 3.0) // 2-5 second release
-				},
-				modulationEnvelope: {
-					attack: 1.0,
-					decay: 0.5,
-					sustain: 0.6,
-					release: 4.0
+		// Define all whale instruments that need initialization
+		const whaleInstruments = [
+			'whaleHumpback', 'whaleBlue', 'whaleOrca', 
+			'whaleGray', 'whaleSperm', 'whaleMinke',
+			'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'
+		];
+
+		let initializedWhales = 0;
+
+		whaleInstruments.forEach(whaleType => {
+			// Issue #015 Fix: Check if whale instrument is enabled before creating
+			const instrumentSettings = this.settings.instruments[whaleType as keyof SonigraphSettings['instruments']];
+			if (!instrumentSettings?.enabled) {
+				logger.debug('environmental', `Skipping disabled whale instrument: ${whaleType}`);
+				return;
+			}
+
+			logger.info('issue-015-fix', `🐋 WHALE SYNTHESIS: Initializing ${whaleType}`, {
+				whaleType,
+				enabled: instrumentSettings.enabled,
+				action: 'whale-initialization'
+			});
+
+			try {
+				// Create species-specific synthesizer
+				const whaleSynth = this.createWhaleSpecificSynth(whaleType);
+				
+				// Create volume control - Issue #015 Fix: This was missing for non-humpback whales
+				const whaleVolume = new Volume(-6);
+				this.instrumentVolumes.set(whaleType, whaleVolume);
+
+				// Create persistent effects for whale
+				const whaleReverb = new Reverb({
+					decay: 8.0, // Very long reverb for oceanic effect
+					wet: 0.4
+				});
+				
+				const whaleChorus = new Chorus({
+					frequency: 0.3, // Very slow chorus for underwater movement
+					depth: 0.8,
+					delayTime: 8,
+					feedback: 0.1
+				});
+
+				// Generate reverb and connect chain
+				whaleReverb.generate().then(() => {
+					// Connect: whale -> reverb -> chorus -> volume -> master
+					whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+					logger.debug('environmental', `${whaleType} synthesizer effects chain connected`);
+				}).catch((error) => {
+					logger.warn('environmental', `Failed to generate ${whaleType} reverb, using fallback`, error);
+					// Fallback without reverb
+					whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+				});
+
+				// Store persistent synthesizer and effects
+				this.instruments.set(whaleType, whaleSynth);
+				
+				// Store effects for potential later control
+				if (!this.instrumentEffects.has(whaleType)) {
+					this.instrumentEffects.set(whaleType, new Map());
 				}
+				const whaleEffects = this.instrumentEffects.get(whaleType);
+				if (whaleEffects) {
+					whaleEffects.set('reverb', whaleReverb);
+					whaleEffects.set('chorus', whaleChorus);
+				}
+
+				initializedWhales++;
+				logger.info('issue-015-fix', `✅ Successfully initialized ${whaleType}`, {
+					whaleType,
+					hasVolumeControl: this.instrumentVolumes.has(whaleType),
+					hasSynthesizer: this.instruments.has(whaleType),
+					action: 'whale-initialization-success'
+				});
+
+			} catch (error) {
+				logger.error('issue-015-fix', `❌ Failed to initialize ${whaleType}`, {
+					whaleType,
+					error: error.message,
+					action: 'whale-initialization-failure'
+				});
 			}
 		});
 
-		// Create volume control for whale
-		const whaleVolume = new Volume(-6);
-		this.instrumentVolumes.set('whaleHumpback', whaleVolume);
-
-		// Create persistent effects for whale
-		const whaleReverb = new Reverb({
-			decay: 8.0, // Very long reverb for oceanic effect
-			wet: 0.4
+		logger.info('environmental', `Whale synthesizers initialized successfully`, {
+			totalWhaleTypes: whaleInstruments.length,
+			initializedWhales,
+			skippedDisabled: whaleInstruments.length - initializedWhales
 		});
+	}
+
+	/**
+	 * Issue #015 Fix: Create whale-specific synthesizers with unique characteristics
+	 */
+	private createWhaleSpecificSynth(whaleType: string): PolySynth {
+		const maxVoices = this.getInstrumentPolyphonyLimit(whaleType);
+
+		// Define whale-specific synthesis characteristics based on species
+		let config: any;
 		
-		const whaleChorus = new Chorus({
-			frequency: 0.3, // Very slow chorus for underwater movement
-			depth: 0.8,
-			delayTime: 8,
-			feedback: 0.1
+		switch (whaleType) {
+			case 'whaleBlue':
+				// Blue whale - infrasonic characteristics
+				config = {
+					harmonicity: 0.1,
+					modulationIndex: 20,
+					oscillator: { type: 'sine' },
+					modulation: { type: 'sine' },
+					envelope: {
+						attack: 2.0,
+						decay: 1.0,
+						sustain: 0.95,
+						release: 8.0 // Very long release for infrasonic calls
+					},
+					modulationEnvelope: {
+						attack: 3.0,
+						decay: 2.0,
+						sustain: 0.8,
+						release: 10.0
+					}
+				};
+				break;
+			case 'whaleOrca':
+				// Orca - high-frequency clicks and calls
+				config = {
+					harmonicity: 2.0,
+					modulationIndex: 6,
+					oscillator: { type: 'square' },
+					modulation: { type: 'sawtooth' },
+					envelope: {
+						attack: 0.1,
+						decay: 0.3,
+						sustain: 0.7,
+						release: 2.0
+					},
+					modulationEnvelope: {
+						attack: 0.05,
+						decay: 0.2,
+						sustain: 0.5,
+						release: 1.5
+					}
+				};
+				break;
+			case 'whaleGray':
+				// Gray whale - migration calls
+				config = {
+					harmonicity: 0.8,
+					modulationIndex: 15,
+					oscillator: { type: 'sine' },
+					modulation: { type: 'triangle' },
+					envelope: {
+						attack: 1.0,
+						decay: 0.8,
+						sustain: 0.85,
+						release: 7.0
+					},
+					modulationEnvelope: {
+						attack: 1.5,
+						decay: 1.0,
+						sustain: 0.7,
+						release: 5.0
+					}
+				};
+				break;
+			case 'whaleSperm':
+				// Sperm whale - echolocation clicks
+				config = {
+					harmonicity: 3.0,
+					modulationIndex: 4,
+					oscillator: { type: 'square' },
+					modulation: { type: 'pulse' },
+					envelope: {
+						attack: 0.05,
+						decay: 0.1,
+						sustain: 0.3,
+						release: 1.0
+					},
+					modulationEnvelope: {
+						attack: 0.02,
+						decay: 0.1,
+						sustain: 0.2,
+						release: 0.8
+					}
+				};
+				break;
+			case 'whaleHumpback':
+			default:
+				// Original humpback whale configuration (complex songs) - also fallback
+				config = {
+					harmonicity: 0.5,
+					modulationIndex: 12,
+					oscillator: { type: 'sine' },
+					modulation: { type: 'sine' },
+					envelope: {
+						attack: 0.3 + (Math.random() * 0.4), // 0.3-0.7 second attack
+						decay: 0.5,
+						sustain: 0.9,
+						release: 2.0 + (Math.random() * 3.0) // 2-5 second release
+					},
+					modulationEnvelope: {
+						attack: 1.0,
+						decay: 0.5,
+						sustain: 0.6,
+						release: 4.0
+					}
+				};
+				break;
+		}
+
+		const whaleSynth = new PolySynth({
+			voice: FMSynth,
+			maxPolyphony: maxVoices,
+			options: config
 		});
 
-		// Generate reverb and connect chain
-		whaleReverb.generate().then(() => {
-			// Connect: whale -> reverb -> chorus -> volume -> master
-			whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
-			logger.debug('environmental', 'Whale synthesizer effects chain connected');
-		}).catch((error) => {
-			logger.warn('environmental', 'Failed to generate whale reverb, using fallback', error);
-			// Fallback without reverb
-			whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
+		logger.debug('environmental', `Created ${whaleType} synthesizer with specific characteristics`, {
+			whaleType,
+			maxVoices,
+			harmonicity: config.harmonicity,
+			modulationIndex: config.modulationIndex
 		});
 
-		// Store persistent synthesizer and effects
-		this.instruments.set('whaleHumpback', whaleSynth);
-		
-		// Store effects for potential later control
-		if (!this.instrumentEffects.has('whaleHumpback')) {
-			this.instrumentEffects.set('whaleHumpback', new Map());
-		}
-		const whaleEffects = this.instrumentEffects.get('whaleHumpback');
-		if (whaleEffects) {
-			whaleEffects.set('reverb', whaleReverb);
-			whaleEffects.set('chorus', whaleChorus);
-		}
-
-		logger.info('environmental', 'Persistent whale synthesizer initialized successfully');
+		return whaleSynth;
 	}
 
 	/**
@@ -1350,383 +1531,433 @@ export class AudioEngine {
 	}
 
 	async playSequence(sequence: MusicalMapping[]): Promise<void> {
-		// Issue #006 Comprehensive Debug: Log initial state for this play attempt
-		const enabledInstrumentsList = this.getEnabledInstruments();
-		logger.info('issue-006-debug', 'PlaySequence initiated - complete state snapshot', {
-			sequenceLength: sequence.length,
-			isInitialized: this.isInitialized,
-			isPlaying: this.isPlaying,
-			instrumentMapSize: this.instruments.size,
-			enabledInstrumentsCount: enabledInstrumentsList.length,
-			enabledInstruments: enabledInstrumentsList,
-			audioContextState: getContext().state,
-			transportState: getTransport().state,
-			currentTime: getContext().currentTime.toFixed(3),
-			hasBeenTriggeredCount: sequence.filter(n => n.hasBeenTriggered).length,
-			action: 'play-sequence-init'
-		});
-		
-		if (!this.isInitialized || !this.instruments.size) {
-			logger.warn('playback', '🚀 ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!');
-			await this.initializeEssentials();
-		}
-
-		// Issue #010 Fix: For sequence playback, upgrade to full initialization if needed
-		logger.debug('playback', '🚀 ISSUE #010 DEBUG: Checking upgrade conditions', {
-			isMinimalMode: this.isMinimalMode,
-			instrumentsSize: this.instruments.size,
-			hasPiano: this.instruments.has('piano'),
-			instrumentsList: Array.from(this.instruments.keys())
-		});
-		
-		// Future-proof upgrade logic: Any time we're in minimal mode during playback, upgrade to full mode
-		// This is independent of the number of instruments currently loaded and will work with any minimal initialization strategy
-		if (this.isMinimalMode) {
-			logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
-			const hasPercussion = this.hasPercussionInstrumentsEnabled();
-			const hasElectronic = this.hasElectronicInstrumentsEnabled();
-			const isSynthesisMode = false; // Per-instrument quality control - no global synthesis mode
+		try {
+			// Issue #006 Comprehensive Debug: Log initial state for this play attempt
+			const enabledInstrumentsList = this.getEnabledInstruments();
+			logger.info('issue-006-debug', 'PlaySequence initiated - complete state snapshot', {
+				sequenceLength: sequence.length,
+				isInitialized: this.isInitialized,
+				isPlaying: this.isPlaying,
+				instrumentMapSize: this.instruments.size,
+				enabledInstrumentsCount: enabledInstrumentsList.length,
+				enabledInstruments: enabledInstrumentsList,
+				audioContextState: getContext().state,
+				transportState: getTransport().state,
+				currentTime: getContext().currentTime.toFixed(3),
+				hasBeenTriggeredCount: sequence.filter(n => n.hasBeenTriggered).length,
+				action: 'play-sequence-init'
+			});
 			
-			logger.debug('playback', '🚀 ISSUE #010 DEBUG: Upgrade analysis', {
-				currentInstrumentCount: this.instruments.size,
-				currentInstruments: Array.from(this.instruments.keys()),
-				hasPercussionEnabled: hasPercussion,
-				hasElectronicEnabled: hasElectronic,
-				willSkipPercussion: !hasPercussion,
-				willSkipElectronic: !hasElectronic,
-				isSynthesisMode,
-				perInstrumentQuality: 'Individual instrument control',
-				enabledInstruments: Object.keys(this.settings.instruments).filter(name => 
-					this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
-				)
+			logger.info('debug', 'Step 1: Checking initialization state', {
+				isInitialized: this.isInitialized,
+				instrumentsSize: this.instruments.size
+			});
+			
+			if (!this.isInitialized || !this.instruments.size) {
+				logger.warn('playback', '🚀 ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!');
+				await this.initializeEssentials();
+				logger.info('debug', 'Step 2: FAST-PATH initialization completed', {
+					isInitialized: this.isInitialized,
+					isMinimalMode: this.isMinimalMode,
+					instrumentsSize: this.instruments.size
+				});
+			}
+
+			logger.info('debug', 'Step 3: Checking upgrade conditions', {
+				isMinimalMode: this.isMinimalMode,
+				shouldUpgrade: this.isMinimalMode
 			});
 
-			// Issue #010 Critical Fix: In synthesis mode, skip CDN sample loading entirely
-			if (isSynthesisMode) {
-				logger.warn('playbook', '🚀 ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments');
+			// Issue #010 Fix: For sequence playback, upgrade to full initialization if needed
+			logger.debug('playback', '🚀 ISSUE #010 DEBUG: Checking upgrade conditions', {
+				isMinimalMode: this.isMinimalMode,
+				instrumentsSize: this.instruments.size,
+				hasPiano: this.instruments.has('piano'),
+				instrumentsList: Array.from(this.instruments.keys())
+			});
+			
+			// Future-proof upgrade logic: Any time we're in minimal mode during playback, upgrade to full mode
+			// This is independent of the number of instruments currently loaded and will work with any minimal initialization strategy
+			if (this.isMinimalMode) {
+				logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
 				
-				// Ensure master volume exists before synthesis initialization
-				if (!this.volume) {
-					logger.debug('playbook', 'Creating master volume for synthesis mode');
-					this.volume = new Volume(this.settings.volume).toDestination();
+				// Check if any enabled instruments require high quality samples
+				const requiresSamples = enabledInstrumentsList.some(instrumentName => {
+					const settings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+					return settings?.useHighQuality === true;
+				});
+				
+				logger.info('debug', 'Step 4: Sample requirements analysis', {
+					enabledInstruments: enabledInstrumentsList,
+					requiresSamples,
+					pianoUseHighQuality: this.settings.instruments.piano?.useHighQuality,
+					pianoEnabled: this.settings.instruments.piano?.enabled
+				});
+				
+				const hasPercussion = this.hasPercussionInstrumentsEnabled();
+				const hasElectronic = this.hasElectronicInstrumentsEnabled();
+				const isSynthesisMode = false; // Per-instrument quality control - no global synthesis mode
+				
+				logger.debug('playback', '🚀 ISSUE #010 DEBUG: Upgrade analysis', {
+					currentInstrumentCount: this.instruments.size,
+					currentInstruments: Array.from(this.instruments.keys()),
+					hasPercussionEnabled: hasPercussion,
+					hasElectronicEnabled: hasElectronic,
+					willSkipPercussion: !hasPercussion,
+					willSkipElectronic: !hasElectronic,
+					isSynthesisMode,
+					requiresSamples,
+					perInstrumentQuality: 'Individual instrument control',
+					enabledInstruments: Object.keys(this.settings.instruments).filter(name => 
+						this.settings.instruments[name as keyof typeof this.settings.instruments]?.enabled
+					)
+				});
+
+				// Issue #010 Critical Fix: In synthesis mode, skip CDN sample loading entirely
+				if (isSynthesisMode) {
+					logger.warn('playbook', '🚀 ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments');
+					
+					// Ensure master volume exists before synthesis initialization
+					if (!this.volume) {
+						logger.debug('playbook', 'Creating master volume for synthesis mode');
+						this.volume = new Volume(this.settings.volume).toDestination();
+					}
+					
+					// Clear existing minimal instruments to prevent conflicts
+					logger.debug('playbook', 'Clearing minimal mode instruments before full initialization', {
+						instrumentsToDispose: Array.from(this.instruments.keys())
+					});
+					this.instruments.forEach(instrument => instrument.dispose());
+					this.instruments.clear();
+					
+					// Initialize full synthesis for all 34 instruments (skip CDN loading)
+					await this.initializeInstruments(); // This method handles synthesis mode and routing
+					await this.initializeEffects();
+					
+					// NOTE: Synthesis instruments are already connected during initializeInstruments()
+					// No additional routing needed - direct synthesis: synth → volume → master
+					
+					await this.initializeAdvancedSynthesis();
+					
+					// Mark as fully initialized
+					this.isMinimalMode = false;
+					this.isInitialized = true;
+					
+					logger.info('playbook', '🚀 ISSUE #010 FIX: Full synthesis initialization completed', {
+						instrumentsCreated: this.instruments.size,
+						instrumentsList: Array.from(this.instruments.keys())
+					});
+				} else {
+					// Sample-based mode: use CDN samples
+					logger.info('debug', 'Step 5: Upgrading to full initialization with samples');
+					await this.forceFullInitialization();
+					logger.info('debug', 'Step 6: Full initialization completed');
 				}
 				
-				// Clear existing minimal instruments to prevent conflicts
-				logger.debug('playbook', 'Clearing minimal mode instruments before full initialization', {
-					instrumentsToDispose: Array.from(this.instruments.keys())
-				});
-				this.instruments.forEach(instrument => instrument.dispose());
-				this.instruments.clear();
-				
-				// Initialize full synthesis for all 34 instruments (skip CDN loading)
-				await this.initializeInstruments(); // This method handles synthesis mode and routing
-				await this.initializeEffects();
-				
-				// NOTE: Synthesis instruments are already connected during initializeInstruments()
-				// No additional routing needed - direct synthesis: synth → volume → master
-				
-				await this.initializeAdvancedSynthesis();
-				
-				// Mark as fully initialized
-				this.isMinimalMode = false;
-				this.isInitialized = true;
-				
-				logger.info('playbook', '🚀 ISSUE #010 FIX: Full synthesis initialization completed', {
-					instrumentsCreated: this.instruments.size,
-					instrumentsList: Array.from(this.instruments.keys())
+				// Issue #010 Fix: Log state after upgrade to confirm instruments are loaded
+				logger.info('playback', '🚀 ISSUE #010 FIX: Upgrade completed - verifying instruments', {
+					instrumentsAfterUpgrade: this.instruments.size,
+					instrumentsList: Array.from(this.instruments.keys()),
+					isInitialized: this.isInitialized,
+					isMinimalMode: this.isMinimalMode
 				});
 			} else {
-				// Sample-based mode: use CDN samples
-				await this.forceFullInitialization();
+				logger.info('debug', 'Step 3: No upgrade needed - not in minimal mode');
 			}
-			
-			// Issue #010 Fix: Log state after upgrade to confirm instruments are loaded
-			logger.info('playback', '🚀 ISSUE #010 FIX: Upgrade completed - verifying instruments', {
-				instrumentsAfterUpgrade: this.instruments.size,
-				instrumentsList: Array.from(this.instruments.keys()),
-				isInitialized: this.isInitialized,
-				isMinimalMode: this.isMinimalMode
-			});
-		}
 
-		// Issue #010 Fix: Debug sequence instrument requirements vs available instruments
-		const sequenceInstruments = [...new Set(sequence.map(note => note.instrument))];
-		logger.info('playback', '🚀 ISSUE #010 DEBUG: Sequence instrument analysis', {
-			sequenceInstruments,
-			availableInstruments: Array.from(this.instruments.keys()),
-			enabledInstruments: enabledInstrumentsList,
-			sequenceLength: sequence.length,
-			instrumentMapSize: this.instruments.size
-		});
+			// Issue #010 Fix: Debug sequence instrument requirements vs available instruments
+			const sequenceInstruments = [...new Set(sequence.map(note => note.instrument))];
+			logger.info('playback', '🚀 ISSUE #010 DEBUG: Sequence instrument analysis', {
+				sequenceInstruments,
+				availableInstruments: Array.from(this.instruments.keys()),
+				enabledInstruments: enabledInstrumentsList,
+				sequenceLength: sequence.length,
+				instrumentMapSize: this.instruments.size
+			});
 
-		// Issue #006 Fix: Ensure enabled instruments have properly functioning volume nodes
-		// Check for both missing volume nodes and corrupted volume nodes (null value, muted)
-		const corruptedVolumeInstruments = enabledInstrumentsList.filter(instrumentName => {
-			const hasInstrument = this.instruments.has(instrumentName);
-			const volumeNode = this.instrumentVolumes.get(instrumentName);
-			
-			// Log detailed volume node state for each enabled instrument
-			logger.info('issue-006-debug', 'Volume node inspection for enabled instrument', {
-				instrumentName,
-				hasInstrument,
-				volumeNodeExists: !!volumeNode,
-				volumeValue: volumeNode?.volume?.value ?? 'no-volume-property',
-				volumeMuted: volumeNode?.mute ?? 'no-mute-property',
-				volumeConstructor: volumeNode?.constructor?.name || 'no-constructor',
-				action: 'volume-node-inspection'
-			});
-			
-			// Missing volume node entirely
-			if (hasInstrument && !volumeNode) {
-				logger.warn('issue-006-debug', 'Missing volume node detected', {
-					instrumentName,
-					action: 'missing-volume-node'
-				});
-				return true;
-			}
-			
-			// Check for volume node corruption (null value indicates corruption)
-			// Note: After Issue #006 fix, mute=true is normal for disabled instruments
-			if (volumeNode && volumeNode.volume.value === null) {
-				logger.error('issue-006-debug', 'Corrupted volume node detected (null value)', {
-					instrumentName,
-					volumeValue: volumeNode.volume.value,
-					volumeMuted: volumeNode.mute,
-					action: 'corrupted-volume-node'
-				});
-				return true;
-			}
-			
-			// Check if instrument should be enabled but is muted (potential inconsistency)
-			const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
-			if (hasInstrument && volumeNode && instrumentSettings?.enabled && volumeNode.mute === true) {
-				// Issue #009 Fix: Convert to debug level to reduce log noise
-				logger.debug('issue-006-debug', 'Enabled instrument is muted - potential state inconsistency', {
-					instrumentName,
-					instrumentEnabled: instrumentSettings.enabled,
-					volumeMuted: volumeNode.mute,
-					action: 'enabled-but-muted'
-				});
-				return true;
-			}
-			
-			return false;
-		});
+			logger.info('debug', 'Step 7: Starting volume node inspection');
 
-		if (corruptedVolumeInstruments.length > 0) {
-			// Issue #009 Fix: Only log as error in debug mode, otherwise use debug level to reduce noise
-			const currentLogLevel = LoggerFactory.getLogLevel();
-			if (currentLogLevel === 'debug') {
-				logger.error('issue-006-debug', 'CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization', {
-					corruptedVolumeInstruments,
-					corruptedCount: corruptedVolumeInstruments.length,
-					totalEnabledCount: enabledInstrumentsList.length,
-					action: 'corrupted-volume-nodes-detected'
-				});
-			} else {
-				logger.debug('issue-006-debug', 'Found enabled instruments with muted volume nodes - attempting re-initialization', {
-					corruptedVolumeInstruments,
-					corruptedCount: corruptedVolumeInstruments.length,
-					totalEnabledCount: enabledInstrumentsList.length,
-					action: 'muted-volume-nodes-detected'
-				});
-			}
-			
-			// Clear corrupted volume nodes before re-initialization
-			corruptedVolumeInstruments.forEach(instrumentName => {
-				logger.info('issue-006-debug', 'Clearing corrupted volume node', {
-					instrumentName,
-					action: 'clear-corrupted-volume'
-				});
-				this.instrumentVolumes.delete(instrumentName);
-			});
-			
-			// Re-initialize ONLY the corrupted instruments to avoid affecting healthy ones
-			logger.info('issue-006-debug', 'Starting targeted re-initialization for corrupted instruments', {
-				corruptedInstruments: corruptedVolumeInstruments,
-				action: 'start-targeted-reinitialization'
-			});
-			await this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
-			
-			// Verify re-initialization success - only check instruments that should be enabled
-			const stillCorrupted = corruptedVolumeInstruments.filter(instrumentName => {
+			// Issue #006 Fix: Ensure enabled instruments have properly functioning volume nodes
+			// Check for both missing volume nodes and corrupted volume nodes (null value, muted)
+			const corruptedVolumeInstruments = enabledInstrumentsList.filter(instrumentName => {
+				const hasInstrument = this.instruments.has(instrumentName);
 				const volumeNode = this.instrumentVolumes.get(instrumentName);
-				const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 				
-				// Only consider it corrupted if the volume node is missing or has null value
-				// Don't consider mute=true as corruption since that's the correct state for disabled instruments
-				if (!volumeNode || volumeNode.volume.value === null) {
+				// Log detailed volume node state for each enabled instrument
+				logger.info('issue-006-debug', 'Volume node inspection for enabled instrument', {
+					instrumentName,
+					hasInstrument,
+					volumeNodeExists: !!volumeNode,
+					volumeValue: volumeNode?.volume?.value ?? 'no-volume-property',
+					volumeMuted: volumeNode?.mute ?? 'no-mute-property',
+					volumeConstructor: volumeNode?.constructor?.name || 'no-constructor',
+					action: 'volume-node-inspection'
+				});
+				
+				// Missing volume node entirely
+				if (hasInstrument && !volumeNode) {
+					logger.warn('issue-006-debug', 'Missing volume node detected', {
+						instrumentName,
+						action: 'missing-volume-node'
+					});
 					return true;
 				}
 				
-				// If the instrument should be enabled but is muted, that indicates corruption
-				if (instrumentSettings?.enabled && volumeNode.mute === true) {
-					// Issue #009 Fix: Convert to debug level to reduce log noise
-					logger.debug('issue-006-debug', `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+				// Check for volume node corruption (null value indicates corruption)
+				// Note: After Issue #006 fix, mute=true is normal for disabled instruments
+				if (volumeNode && volumeNode.volume.value === null) {
+					logger.error('issue-006-debug', 'Corrupted volume node detected (null value)', {
 						instrumentName,
-						shouldBeEnabled: instrumentSettings.enabled,
-						actuallyMuted: volumeNode.mute,
-						action: 'unexpected-mute-on-enabled-instrument'
+						volumeValue: volumeNode.volume.value,
+						volumeMuted: volumeNode.mute,
+						action: 'corrupted-volume-node'
+					});
+					return true;
+				}
+				
+				// Check if instrument should be enabled but is muted (potential inconsistency)
+				const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
+				if (hasInstrument && volumeNode && instrumentSettings?.enabled && volumeNode.mute === true) {
+					// Issue #009 Fix: Convert to debug level to reduce log noise
+					logger.debug('issue-006-debug', 'Enabled instrument is muted - potential state inconsistency', {
+						instrumentName,
+						instrumentEnabled: instrumentSettings.enabled,
+						volumeMuted: volumeNode.mute,
+						action: 'enabled-but-muted'
 					});
 					return true;
 				}
 				
 				return false;
 			});
-			
-			if (stillCorrupted.length > 0) {
+
+			logger.info('debug', 'Step 8: Volume node inspection completed', {
+				corruptedCount: corruptedVolumeInstruments.length,
+				corruptedInstruments: corruptedVolumeInstruments
+			});
+
+			if (corruptedVolumeInstruments.length > 0) {
 				// Issue #009 Fix: Only log as error in debug mode, otherwise use debug level to reduce noise
+				const currentLogLevel = LoggerFactory.getLogLevel();
 				if (currentLogLevel === 'debug') {
-					logger.error('issue-006-debug', 'CRITICAL: Re-initialization failed to fix corrupted volume nodes', {
-						stillCorrupted,
-						action: 'reinitialization-failed'
+					logger.error('issue-006-debug', 'CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization', {
+						corruptedVolumeInstruments,
+						corruptedCount: corruptedVolumeInstruments.length,
+						totalEnabledCount: enabledInstrumentsList.length,
+						action: 'corrupted-volume-nodes-detected'
 					});
 				} else {
-					logger.debug('issue-006-debug', 'Re-initialization could not unmute some volume nodes', {
-						stillCorrupted,
-						action: 'reinitialization-incomplete'
+					logger.debug('issue-006-debug', 'Found enabled instruments with muted volume nodes - attempting re-initialization', {
+						corruptedVolumeInstruments,
+						corruptedCount: corruptedVolumeInstruments.length,
+						totalEnabledCount: enabledInstrumentsList.length,
+						action: 'muted-volume-nodes-detected'
 					});
 				}
-			} else {
-				logger.info('issue-006-debug', 'Re-initialization successfully fixed all corrupted volume nodes', {
-					fixedInstruments: corruptedVolumeInstruments,
-					action: 'reinitialization-success'
+				
+				// Clear corrupted volume nodes before re-initialization
+				corruptedVolumeInstruments.forEach(instrumentName => {
+					logger.info('issue-006-debug', 'Clearing corrupted volume node', {
+						instrumentName,
+						action: 'clear-corrupted-volume'
+					});
+					this.instrumentVolumes.delete(instrumentName);
+				});
+				
+				// Re-initialize ONLY the corrupted instruments to avoid affecting healthy ones
+				logger.info('issue-006-debug', 'Starting targeted re-initialization for corrupted instruments', {
+					corruptedInstruments: corruptedVolumeInstruments,
+					action: 'start-targeted-reinitialization'
+				});
+				await this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
+				
+				// Verify re-initialization success - only check instruments that should be enabled
+				const stillCorrupted = corruptedVolumeInstruments.filter(instrumentName => {
+					const volumeNode = this.instrumentVolumes.get(instrumentName);
+					const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
+					
+					// Only consider it corrupted if the volume node is missing or has null value
+					// Don't consider mute=true as corruption since that's the correct state for disabled instruments
+					if (!volumeNode || volumeNode.volume.value === null) {
+						return true;
+					}
+					
+					// If the instrument should be enabled but is muted, that indicates corruption
+					if (instrumentSettings?.enabled && volumeNode.mute === true) {
+						// Issue #009 Fix: Convert to debug level to reduce log noise
+						logger.debug('issue-006-debug', `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+							instrumentName,
+							shouldBeEnabled: instrumentSettings.enabled,
+							actuallyMuted: volumeNode.mute,
+							action: 'unexpected-mute-on-enabled-instrument'
+						});
+						return true;
+					}
+					
+					return false;
+				});
+				
+				if (stillCorrupted.length > 0) {
+					// Issue #009 Fix: Only log as error in debug mode, otherwise use debug level to reduce noise
+					if (currentLogLevel === 'debug') {
+						logger.error('issue-006-debug', 'CRITICAL: Re-initialization failed to fix corrupted volume nodes', {
+							stillCorrupted,
+							action: 'reinitialization-failed'
+						});
+					} else {
+						logger.debug('issue-006-debug', 'Re-initialization could not unmute some volume nodes', {
+							stillCorrupted,
+							action: 'reinitialization-incomplete'
+						});
+					}
+				} else {
+					logger.info('issue-006-debug', 'Re-initialization successfully fixed all corrupted volume nodes', {
+						fixedInstruments: corruptedVolumeInstruments,
+						action: 'reinitialization-success'
+					});
+				}
+			}
+
+			logger.info('debug', 'Step 9: Continuing with playback logic...');
+
+			if (this.isPlaying) {
+				logger.info('playback', 'Stopping current sequence before starting new one');
+				this.stop();
+			}
+
+			// Detailed sequence validation
+			if (sequence.length === 0) {
+				logger.error('playback', 'Empty sequence provided');
+				throw new Error('No musical sequence to play');
+			}
+
+			// Check for valid musical data
+			const invalidNotes = sequence.filter(note => 
+				!note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
+			);
+			
+			if (invalidNotes.length > 0) {
+				logger.error('playback', 'Invalid notes in sequence', {
+					invalidCount: invalidNotes.length,
+					examples: invalidNotes.slice(0, 3)
 				});
 			}
-		} else {
-			logger.info('issue-006-debug', 'All enabled instruments have healthy volume nodes', {
-				enabledCount: enabledInstrumentsList.length,
-				action: 'volume-nodes-healthy'
-			});
-		}
 
-		if (this.isPlaying) {
-			logger.info('playback', 'Stopping current sequence before starting new one');
-			this.stop();
-		}
-
-		// Detailed sequence validation
-		if (sequence.length === 0) {
-			logger.error('playback', 'Empty sequence provided');
-			throw new Error('No musical sequence to play');
-		}
-
-		// Check for valid musical data
-		const invalidNotes = sequence.filter(note => 
-			!note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
-		);
-		
-		if (invalidNotes.length > 0) {
-			logger.error('playback', 'Invalid notes in sequence', {
-				invalidCount: invalidNotes.length,
-				examples: invalidNotes.slice(0, 3)
-			});
-		}
-
-		logger.info('playback', 'Starting sequence playback', {
-			noteCount: sequence.length,
-			totalDuration: this.getSequenceDuration(sequence),
-			pitchRange: {
-				min: Math.min(...sequence.map(n => n.pitch)),
-				max: Math.max(...sequence.map(n => n.pitch))
-			},
-			durationRange: {
-				min: Math.min(...sequence.map(n => n.duration)),
-				max: Math.max(...sequence.map(n => n.duration))
-			}
-		});
-
-		try {
-			logger.debug('playback', 'Processing musical sequence', { noteCount: sequence.length });
-
-			// Process sequence directly without harmonic engine for now
-			const processedSequence = sequence;
-
-			// Issue #006 Fix: Reset hasBeenTriggered flags for all notes to allow replay
-			processedSequence.forEach(note => {
-				if (note.hasBeenTriggered) {
-					delete note.hasBeenTriggered;
+			logger.info('playback', 'Starting sequence playback', {
+				noteCount: sequence.length,
+				totalDuration: this.getSequenceDuration(sequence),
+				pitchRange: {
+					min: Math.min(...sequence.map(n => n.pitch)),
+					max: Math.max(...sequence.map(n => n.pitch))
+				},
+				durationRange: {
+					min: Math.min(...sequence.map(n => n.duration)),
+					max: Math.max(...sequence.map(n => n.duration))
 				}
 			});
-			logger.debug('playback', 'Reset note trigger flags for replay', {
-				noteCount: processedSequence.length
-			});
 
-			this.currentSequence = processedSequence;
-			this.isPlaying = true;
-			this.scheduledEvents = [];
-			
-			// Enhanced Play Button: Emit playback started event
-			this.sequenceStartTime = Date.now();
-			this.eventEmitter.emit('playback-started', null);
+			try {
+				logger.debug('playback', 'Processing musical sequence', { noteCount: sequence.length });
 
-			// Issue #006 Debug: Log Transport state before reset
-			logger.info('issue-006-debug', 'Transport state before reset', {
-				state: getTransport().state,
-				position: getTransport().position,
-				seconds: getTransport().seconds,
-				bpm: getTransport().bpm.value,
-				action: 'transport-state-before-reset'
-			});
+				// Process sequence directly without harmonic engine for now
+				const processedSequence = sequence;
 
-			// Ensure Transport is stopped and reset
-			if (getTransport().state === 'started') {
-				getTransport().stop();
-				getTransport().cancel(); // Clear all scheduled events
-				logger.info('issue-006-debug', 'Transport stopped and cancelled', {
-					action: 'transport-stop-cancel'
+				// Issue #006 Fix: Reset hasBeenTriggered flags for all notes to allow replay
+				processedSequence.forEach(note => {
+					if (note.hasBeenTriggered) {
+						delete note.hasBeenTriggered;
+					}
 				});
+				logger.debug('playback', 'Reset note trigger flags for replay', {
+					noteCount: processedSequence.length
+				});
+
+				this.currentSequence = processedSequence;
+				this.isPlaying = true;
+				this.scheduledEvents = [];
+				
+				// Enhanced Play Button: Emit playback started event
+				this.sequenceStartTime = Date.now();
+				this.eventEmitter.emit('playback-started', null);
+
+				// Issue #006 Debug: Log Transport state before reset
+				logger.info('issue-006-debug', 'Transport state before reset', {
+					state: getTransport().state,
+					position: getTransport().position,
+					seconds: getTransport().seconds,
+					bpm: getTransport().bpm.value,
+					action: 'transport-state-before-reset'
+				});
+
+				// Ensure Transport is stopped and reset
+				if (getTransport().state === 'started') {
+					getTransport().stop();
+					getTransport().cancel(); // Clear all scheduled events
+					logger.info('issue-006-debug', 'Transport stopped and cancelled', {
+						action: 'transport-stop-cancel'
+					});
+				}
+
+				// Issue #006 Debug: Log Transport state after reset
+				logger.info('issue-006-debug', 'Transport state after reset', {
+					state: getTransport().state,
+					position: getTransport().position,
+					seconds: getTransport().seconds,
+					action: 'transport-state-after-reset'
+				});
+
+				// Set a reasonable loop length for the transport
+				const sequenceDuration = this.getSequenceDuration(processedSequence);
+				getTransport().loopEnd = sequenceDuration + 2; // Add buffer
+
+				logger.info('debug', 'Starting sequence playback', { 
+					sequenceDuration: sequenceDuration.toFixed(2),
+					transportState: getTransport().state,
+					currentTime: getContext().currentTime.toFixed(3)
+				});
+
+				// Real-time scheduling - start playback timer
+				this.startRealtimePlayback(processedSequence);
+
+				logger.info('playback', 'Real-time playback system started', {
+					noteCount: processedSequence.length,
+					sequenceDuration: sequenceDuration.toFixed(2),
+					audioContextState: getContext().state
+				});
+
+				// Issue #010 Fix: Removed test tone - this was causing the "brief note" the user heard
+				// The real sequence should play via the real-time scheduling system
+			} catch (error) {
+				logger.error('playback', 'Error processing sequence', {
+					error: error instanceof Error ? {
+						name: error.name,
+						message: error.message,
+						stack: error.stack
+					} : error,
+					sequenceLength: sequence?.length || 0,
+					isInitialized: this.isInitialized,
+					instrumentCount: this.instruments.size,
+					audioContextState: getContext().state
+				});
+				
+				// Enhanced Play Button: Emit error event
+				const errorData: PlaybackErrorData = {
+					error: error instanceof Error ? error : new Error(String(error)),
+					context: 'sequence-processing'
+				};
+				this.eventEmitter.emit('playback-error', errorData);
+				
+				throw error;
 			}
-
-			// Issue #006 Debug: Log Transport state after reset
-			logger.info('issue-006-debug', 'Transport state after reset', {
-				state: getTransport().state,
-				position: getTransport().position,
-				seconds: getTransport().seconds,
-				action: 'transport-state-after-reset'
-			});
-
-			// Set a reasonable loop length for the transport
-			const sequenceDuration = this.getSequenceDuration(processedSequence);
-			getTransport().loopEnd = sequenceDuration + 2; // Add buffer
-
-			logger.info('debug', 'Starting sequence playback', { 
-				sequenceDuration: sequenceDuration.toFixed(2),
-				transportState: getTransport().state,
-				currentTime: getContext().currentTime.toFixed(3)
-			});
-
-			// Real-time scheduling - start playback timer
-			this.startRealtimePlayback(processedSequence);
-
-			logger.info('playback', 'Real-time playback system started', {
-				noteCount: processedSequence.length,
-				sequenceDuration: sequenceDuration.toFixed(2),
-				audioContextState: getContext().state
-			});
-
-			// Issue #010 Fix: Removed test tone - this was causing the "brief note" the user heard
-			// The real sequence should play via the real-time scheduling system
 		} catch (error) {
-			logger.error('playback', 'Error processing sequence', {
-				error: error instanceof Error ? {
-					name: error.name,
-					message: error.message,
-					stack: error.stack
-				} : error,
-				sequenceLength: sequence?.length || 0,
+			logger.error('playback', 'CRITICAL: Exception in playSequence method', {
+				error: error.message,
+				stack: error.stack,
+				sequenceLength: sequence?.length,
 				isInitialized: this.isInitialized,
-				instrumentCount: this.instruments.size,
-				audioContextState: getContext().state
+				isMinimalMode: this.isMinimalMode,
+				instrumentsSize: this.instruments.size
 			});
-			
-			// Enhanced Play Button: Emit error event
-			const errorData: PlaybackErrorData = {
-				error: error instanceof Error ? error : new Error(String(error)),
-				context: 'sequence-processing'
-			};
-			this.eventEmitter.emit('playback-error', errorData);
-			
 			throw error;
 		}
 	}
@@ -2492,24 +2723,21 @@ export class AudioEngine {
 			if (enabledInstruments.includes('xylophone')) return 'xylophone';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 1200) {
-			// High-mid pitch - prefer soprano, clarinet, violin, oboe if available
-			if (enabledInstruments.includes('soprano')) return 'soprano';
+			// High-mid pitch - prefer clarinet, violin, oboe if available
 			if (enabledInstruments.includes('clarinet')) return 'clarinet';
 			if (enabledInstruments.includes('violin')) return 'violin';
 			if (enabledInstruments.includes('oboe')) return 'oboe';
-			return enabledInstruments.includes('choir') ? 'choir' : sortedInstruments[0];
+			return sortedInstruments[0];
 		} else if (mapping.pitch > 1000) {
-			// High pitch - prefer choir, alto, vibraphone if available
-			if (enabledInstruments.includes('choir')) return 'choir';
-			if (enabledInstruments.includes('alto')) return 'alto';
+			// High pitch - prefer vibraphone, clarinet if available
 			if (enabledInstruments.includes('vibraphone')) return 'vibraphone';
-			return enabledInstruments.includes('clarinet') ? 'clarinet' : sortedInstruments[0];
+			if (enabledInstruments.includes('clarinet')) return 'clarinet';
+			return sortedInstruments[0];
 		} else if (mapping.pitch > 800) {
-			// Mid-high pitch - prefer vocalPads, guitar, tenor if available
-			if (enabledInstruments.includes('vocalPads')) return 'vocalPads';
+			// Mid-high pitch - prefer guitar, organ if available
 			if (enabledInstruments.includes('guitar')) return 'guitar';
-			if (enabledInstruments.includes('tenor')) return 'tenor';
-			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
+			if (enabledInstruments.includes('organ')) return 'organ';
+			return sortedInstruments[0];
 		} else if (mapping.pitch > 600) {
 			// Mid pitch - prefer organ, accordion, frenchHorn if available
 			if (enabledInstruments.includes('organ')) return 'organ';
@@ -2523,8 +2751,7 @@ export class AudioEngine {
 			if (enabledInstruments.includes('trumpet')) return 'trumpet';
 			return enabledInstruments.includes('organ') ? 'organ' : sortedInstruments[0];
 		} else if (mapping.pitch > 300) {
-			// Low-mid pitch - prefer pad, electricPiano, cello, trombone if available
-			if (enabledInstruments.includes('pad')) return 'pad';
+			// Low-mid pitch - prefer electricPiano, cello, trombone if available
 			if (enabledInstruments.includes('electricPiano')) return 'electricPiano';
 			if (enabledInstruments.includes('cello')) return 'cello';
 			if (enabledInstruments.includes('trombone')) return 'trombone';
@@ -2538,19 +2765,17 @@ export class AudioEngine {
 			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			return sortedInstruments[0];
 		} else if (mapping.pitch > 100) {
-			// Very low pitch - prefer bass voice, tuba, bassSynth, whaleHumpback if available
-			if (enabledInstruments.includes('bass')) return 'bass';
+			// Very low pitch - prefer tuba, bassSynth, whaleHumpback if available
 			if (enabledInstruments.includes('tuba')) return 'tuba';
 			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
 			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else {
-			// Ultra low pitch - prefer gongs, whaleHumpback, tuba, bass if available
+			// Ultra low pitch - prefer gongs, whaleHumpback, tuba if available
 			if (enabledInstruments.includes('gongs')) return 'gongs';
 			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			if (enabledInstruments.includes('leadSynth')) return 'leadSynth';
 			if (enabledInstruments.includes('tuba')) return 'tuba';
-			if (enabledInstruments.includes('bass')) return 'bass';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		}
 	}
@@ -2634,16 +2859,70 @@ export class AudioEngine {
 			// Create master volume control
 			this.volume = new Volume(this.settings.volume).toDestination();
 			
-			// Initialize only basic piano for test notes (no CDN samples)
-			await this.initializeBasicPiano();
+			// Check if any enabled instruments require high-quality samples
+			const enabledInstruments = this.getEnabledInstruments();
+			const requiresSamples = enabledInstruments.some(instrumentName => {
+				const settings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+				return settings?.useHighQuality === true;
+			});
 			
-			// Initialize lightweight synthesis for common instruments (no CDN samples)
-			await this.initializeLightweightSynthesis();
+			logger.info('audio', 'Essential initialization - checking sample requirements', {
+				enabledInstruments,
+				requiresSamples,
+				instrumentsRequiringSamples: enabledInstruments.filter(instrumentName => {
+					const settings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+					return settings?.useHighQuality === true;
+				})
+			});
 			
-			// Mark as initialized but keep it minimal
-			this.isInitialized = true;
-			this.isMinimalMode = true;
-			logger.warn('audio', '🚀 ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion');
+			if (requiresSamples) {
+				// Force immediate upgrade to full initialization with samples
+				logger.info('audio', '🎵 SAMPLE MODE: High-quality samples required - upgrading to full initialization');
+				
+				// Initialize effects first to ensure volume/effects maps are populated
+				await this.initializeEffects();
+				
+				// Initialize all instruments with proper sample/synthesis selection
+				await this.initializeInstruments();
+				
+				// Initialize advanced synthesis engines
+				await this.initializeAdvancedSynthesis();
+				
+				// Check if enhanced routing is enabled
+				if (this.settings.enhancedRouting?.enabled) {
+					await this.initializeEnhancedRouting();
+				} else {
+					this.applyEffectSettings();
+				}
+				
+				// Generate comprehensive initialization report
+				this.generateInitializationReport();
+				
+				// Mark as fully initialized (not minimal mode)
+				this.isInitialized = true;
+				this.isMinimalMode = false;
+				
+				logger.info('audio', '🎵 SAMPLE MODE: Full initialization completed with samples', {
+					totalInstruments: this.instruments.size,
+					instrumentsList: Array.from(this.instruments.keys()),
+					samplesEnabled: true
+				});
+			} else {
+				// No samples required - use minimal synthesis initialization
+				logger.info('audio', '🎹 SYNTHESIS MODE: No samples required - using minimal initialization');
+				
+				// Initialize only basic piano for test notes (no CDN samples)
+				await this.initializeBasicPiano();
+				
+				// Initialize lightweight synthesis for common instruments (no CDN samples)
+				await this.initializeLightweightSynthesis();
+				
+				// Mark as initialized but keep it minimal
+				this.isInitialized = true;
+				this.isMinimalMode = true;
+				
+				logger.warn('audio', '🚀 ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion');
+			}
 			
 		} catch (error) {
 			logger.error('audio', 'Failed to initialize essential components', error);
@@ -2732,7 +3011,8 @@ export class AudioEngine {
 					envelope: { attack: 0.001, decay: 1, sustain: 0.3, release: 0.3 },
 					modulation: { type: 'square' },
 					modulationEnvelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.2 }
-				}
+				},
+				maxPolyphony: 16 // Increased to handle complex sequences and chords
 			});
 
 			// Create volume control
@@ -2762,6 +3042,7 @@ export class AudioEngine {
 			// Timpani - Deep, resonant synthetic drums
 			const timpaniPoly = new PolySynth({
 				voice: AMSynth,
+				maxPolyphony: 6, // Added polyphony limit
 				options: {
 					oscillator: { type: 'sine' },
 					envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 2.0 },
@@ -2772,6 +3053,7 @@ export class AudioEngine {
 			// Xylophone - Bright, percussive synthesis
 			const xylophonePoly = new PolySynth({
 				voice: FMSynth,
+				maxPolyphony: 8, // Added polyphony limit
 				options: {
 					harmonicity: 8,
 					modulationIndex: 5,
@@ -2784,6 +3066,7 @@ export class AudioEngine {
 			// Strings - Warm, flowing synthesis (Issue #010 Fix: Replaces CDN samples)
 			const stringsPoly = new PolySynth({
 				voice: AMSynth,
+				maxPolyphony: 6, // Added polyphony limit
 				options: {
 					oscillator: { type: 'sawtooth' },
 					envelope: { attack: 0.1, decay: 0.2, sustain: 0.7, release: 1.5 },
@@ -2794,6 +3077,7 @@ export class AudioEngine {
 			// Flute - Airy, crystalline synthesis (Issue #010 Fix: Replaces CDN samples)
 			const flutePoly = new PolySynth({
 				voice: FMSynth,
+				maxPolyphony: 4, // Added polyphony limit
 				options: {
 					harmonicity: 1,
 					modulationIndex: 2,
@@ -2806,6 +3090,7 @@ export class AudioEngine {
 			// Clarinet - Warm woodwind synthesis (Issue #010 Fix: Replaces CDN samples)
 			const clarinetPoly = new PolySynth({
 				voice: FMSynth,
+				maxPolyphony: 4, // Added polyphony limit
 				options: {
 					harmonicity: 3,
 					modulationIndex: 4,
@@ -2818,6 +3103,7 @@ export class AudioEngine {
 			// Trumpet - Bright brass synthesis (Issue #010 Fix: Replaces CDN samples)
 			const trumpetPoly = new PolySynth({
 				voice: FMSynth,
+				maxPolyphony: 4, // Added polyphony limit
 				options: {
 					harmonicity: 2,
 					modulationIndex: 8,
@@ -2830,11 +3116,49 @@ export class AudioEngine {
 			// Saxophone - Rich reed synthesis (Issue #010 Fix: Replaces CDN samples)
 			const saxophonePoly = new PolySynth({
 				voice: AMSynth,
+				maxPolyphony: 4, // Added polyphony limit
 				options: {
 					oscillator: { type: 'sawtooth' },
 					envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 1.2 },
 					volume: -8
 				}
+			});
+
+			// Tuba - Deep brass synthesis (Issue #015 Fix: Replaces CDN samples)
+			const tubaPoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 1,
+					modulationIndex: 3,
+					oscillator: { type: 'sawtooth' },
+					envelope: { attack: 0.1, decay: 0.4, sustain: 0.6, release: 3.5 },
+					volume: -5 // Louder for deep brass character
+				},
+				maxPolyphony: 8 // Increased from default 32 to handle complex sequences
+			});
+
+			// Bassoon - Deep woodwind synthesis (Issue #015 Fix: Replaces CDN samples)
+			const bassoonPoly = new PolySynth({
+				voice: FMSynth,
+				options: {
+					harmonicity: 2,
+					modulationIndex: 6,
+					oscillator: { type: 'triangle' },
+					envelope: { attack: 0.08, decay: 0.3, sustain: 0.7, release: 2.2 },
+					volume: -7 // Moderate volume for woodwind character
+				},
+				maxPolyphony: 6 // Increased to handle complex sequences
+			});
+
+			// Nylon Guitar - Warm string synthesis (Issue #015 Fix: Replaces CDN samples)
+			const guitarNylonPoly = new PolySynth({
+				voice: AMSynth,
+				options: {
+					oscillator: { type: 'triangle' },
+					envelope: { attack: 0.02, decay: 1.5, sustain: 0.3, release: 2.0 },
+					volume: -8 // Gentle volume for acoustic character
+				},
+				maxPolyphony: 8 // Increased to handle guitar chords and complex sequences
 			});
 
 			// Connect instruments directly to master volume (minimal processing for performance)
@@ -2892,6 +3216,30 @@ export class AudioEngine {
 				saxophonePoly.connect(saxophoneVolume);
 				saxophoneVolume.connect(this.volume);
 				this.instruments.set('saxophone', saxophonePoly);
+			}
+
+			if (this.settings.instruments.tuba?.enabled) {
+				const tubaVolume = new Volume(this.settings.instruments.tuba.volume);
+				this.instrumentVolumes.set('tuba', tubaVolume);
+				tubaPoly.connect(tubaVolume);
+				tubaVolume.connect(this.volume);
+				this.instruments.set('tuba', tubaPoly);
+			}
+
+			if (this.settings.instruments.bassoon?.enabled) {
+				const bassoonVolume = new Volume(this.settings.instruments.bassoon.volume);
+				this.instrumentVolumes.set('bassoon', bassoonVolume);
+				bassoonPoly.connect(bassoonVolume);
+				bassoonVolume.connect(this.volume);
+				this.instruments.set('bassoon', bassoonPoly);
+			}
+
+			if (this.settings.instruments.guitarNylon?.enabled) {
+				const guitarNylonVolume = new Volume(this.settings.instruments.guitarNylon.volume);
+				this.instrumentVolumes.set('guitarNylon', guitarNylonVolume);
+				guitarNylonPoly.connect(guitarNylonVolume);
+				guitarNylonVolume.connect(this.volume);
+				this.instruments.set('guitarNylon', guitarNylonPoly);
 			}
 			
 			logger.debug('audio', 'Lightweight synthesis initialized', {
@@ -2995,6 +3343,13 @@ export class AudioEngine {
 			Object.keys(this.settings.instruments).forEach(instrumentName => {
 				const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
 				if (!instrumentSettings?.effects) return;
+				
+				// Check if the instrument actually has effects initialized in the audio engine
+				const instrumentEffects = this.instrumentEffects.get(instrumentName);
+				if (!instrumentEffects) {
+					logger.debug('effects', `Skipping effect settings for ${instrumentName} - no effects initialized`);
+					return;
+				}
 
 				// Apply reverb settings
 				const reverbSettings = instrumentSettings.effects.reverb;
@@ -3593,7 +3948,7 @@ export class AudioEngine {
 	}
 
 	private isElectronicInstrument(instrumentName: string): boolean {
-		return ['pad', 'leadSynth', 'bassSynth', 'arpSynth'].includes(instrumentName);
+		return ['leadSynth', 'bassSynth', 'arpSynth'].includes(instrumentName);
 	}
 
 	private isEnvironmentalInstrument(instrumentName: string): boolean {
@@ -3606,7 +3961,7 @@ export class AudioEngine {
 	private getDefaultVoiceLimits() {
 		return {
 			DEFAULT_VOICE_LIMITS: {
-				piano: 8,
+				piano: 16, // Increased for complex sequences
 				organ: 6,
 				harpsichord: 8,
 				strings: 4,
@@ -3618,22 +3973,19 @@ export class AudioEngine {
 				trumpet: 3,
 				horn: 3,
 				trombone: 3,
-				tuba: 2,
+				tuba: 8, // Increased for complex sequences
 				flute: 3,
 				oboe: 3,
 				clarinet: 3,
-				bassoon: 3,
+				bassoon: 6, // Increased for complex sequences
 				piccolo: 3,
-				soprano: 4,
-				alto: 4,
-				tenor: 4,
-				bass: 4,
-				choir: 8,
+				
 				timpani: 2,
 				xylophone: 6,
 				vibraphone: 6,
 				gongs: 4,
-				default: 4
+				guitarNylon: 8, // Added for nylon guitar
+				default: 6 // Increased default for better performance
 			}
 		};
 	}
@@ -3652,7 +4004,7 @@ export class AudioEngine {
 		}
 		
 		// Use default based on instrument category
-		if (['piano', 'organ', 'harpsichord', 'harp', 'choir'].includes(instrumentName)) {
+		if (['piano', 'organ', 'harpsichord', 'harp'].includes(instrumentName)) {
 			return 8; // High polyphony for keyboard and choral instruments
 		} else if (['strings', 'violin', 'viola', 'cello', 'contrabass'].includes(instrumentName)) {
 			return 4; // Medium polyphony for strings
@@ -3726,66 +4078,16 @@ export class AudioEngine {
 	private createVocalSynthesis(instrumentName: string): PolySynth {
 		const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
 		
-		// Create vocal-specific synthesis based on voice type
-		switch (instrumentName) {
-			case 'soprano':
-				return new PolySynth({
-					voice: AMSynth,
-					maxPolyphony: maxVoices,
-					options: {
-						oscillator: { type: 'sine' },
-						envelope: { attack: 0.1, decay: 0.3, sustain: 0.8, release: 2.0 },
-						volume: -8 // Soprano - higher, clearer
-					}
-				});
-			
-			case 'alto':
-				return new PolySynth({
-					voice: AMSynth,
-					maxPolyphony: maxVoices,
-					options: {
-						oscillator: { type: 'triangle' },
-						envelope: { attack: 0.12, decay: 0.4, sustain: 0.7, release: 2.2 },
-						volume: -10 // Alto - warmer, mid-range
-					}
-				});
-			
-			case 'tenor':
-				return new PolySynth({
-					voice: AMSynth,
-					maxPolyphony: maxVoices,
-					options: {
-						oscillator: { type: 'sawtooth' },
-						envelope: { attack: 0.15, decay: 0.5, sustain: 0.6, release: 2.5 },
-						volume: -12 // Tenor - fuller, male range
-					}
-				});
-			
-			case 'bass':
-				return new PolySynth({
-					voice: FMSynth,
-					maxPolyphony: maxVoices,
-					options: {
-						harmonicity: 1.5,
-						modulationIndex: 2,
-						oscillator: { type: 'square' },
-						envelope: { attack: 0.2, decay: 0.6, sustain: 0.5, release: 3.0 },
-						volume: -14 // Bass - deep, rich
-					}
-				});
-			
-			default:
-				// Generic vocal synthesis
-				return new PolySynth({
-					voice: AMSynth,
-					maxPolyphony: maxVoices,
-					options: {
-						oscillator: { type: 'sine' },
-						envelope: { attack: 0.1, decay: 0.4, sustain: 0.7, release: 2.0 },
-						volume: -10
-					}
-				});
-		}
+		// Generic synthesis for remaining instruments
+		return new PolySynth({
+			voice: AMSynth,
+			maxPolyphony: maxVoices,
+			options: {
+				oscillator: { type: 'sine' },
+				envelope: { attack: 0.1, decay: 0.4, sustain: 0.7, release: 2.0 },
+				volume: -10
+			}
+		});
 	}
 
 	/**
@@ -4556,12 +4858,9 @@ export class AudioEngine {
 			// Missing from CDN (confirmed in external-sample-sources-guide.md)
 			missingInstruments: {
 				// Vocal Family (0/6 available)
-				choir: { status: 'MISSING', path: 'choir/', reason: 'Directory does not exist on nbrosowsky CDN' },
-				vocalPads: { status: 'MISSING', path: 'vocal-pads/', reason: 'Directory does not exist on nbrosowsky CDN' },
-				soprano: { status: 'MISSING', path: 'soprano/', reason: 'Directory does not exist on nbrosowsky CDN' },
-				alto: { status: 'MISSING', path: 'alto/', reason: 'Directory does not exist on nbrosowsky CDN' },
-				tenor: { status: 'MISSING', path: 'tenor/', reason: 'Directory does not exist on nbrosowsky CDN' },
-				bass: { status: 'MISSING', path: 'bass/', reason: 'Directory does not exist on nbrosowsky CDN' },
+				
+
+
 				
 				// Percussion Family (3/4 missing)
 				timpani: { status: 'MISSING', path: 'timpani/', reason: 'Directory does not exist on nbrosowsky CDN' },

@@ -299,8 +299,8 @@ export class MusicalMapper {
 		const instrumentsByRange = {
 			low: ['bass', 'tuba', 'cello', 'bassSynth', 'timpani'],
 			mid: ['piano', 'strings', 'guitar', 'organ', 'pad', 'saxophone', 'trombone', 'frenchHorn'],
-			high: ['violin', 'flute', 'clarinet', 'trumpet', 'soprano', 'xylophone', 'vibraphone', 'oboe'],
-			very_high: ['alto', 'tenor', 'leadSynth', 'arpSynth', 'gongs', 'harp']
+					high: ['violin', 'flute', 'clarinet', 'trumpet', 'xylophone', 'vibraphone', 'oboe'],
+		very_high: ['leadSynth', 'arpSynth', 'gongs', 'harp']
 		};
 
 		// Determine frequency range based on connections (matches our pitch mapping)

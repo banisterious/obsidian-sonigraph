@@ -768,7 +768,7 @@ export class ComponentTests {
             }
 
             const loadTimes: number[] = [];
-            const testInstruments = ['piano', 'strings', 'flute', 'trumpet', 'choir'];
+            		const testInstruments = ['piano', 'strings', 'flute', 'trumpet'];
 
             for (const instrument of testInstruments) {
                 const loadStart = performance.now();

@@ -131,7 +131,7 @@ export class AudioEngineTests {
             const beforeMemory = this.getMemorySnapshot();
             
             // Test loading multiple instruments
-            const testInstruments = ['piano', 'strings', 'flute', 'trumpet', 'choir', 'guitar', 'saxophone'];
+            		const testInstruments = ['piano', 'strings', 'flute', 'trumpet', 'guitar', 'saxophone'];
             const loadResults = [];
 
             for (const instrument of testInstruments) {
@@ -620,7 +620,7 @@ export class AudioEngineTests {
      */
     private generateStressSequence(): any[] {
         const sequence = [];
-        const instruments = ['piano', 'strings', 'flute', 'trumpet', 'choir'];
+        		const instruments = ['piano', 'strings', 'flute', 'trumpet'];
         const baseTime = Date.now();
 
         // Generate many concurrent notes
