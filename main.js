@@ -202,6 +202,10 @@ var init_constants = __esm({
       // No folders excluded by default
       sonicGraphExcludeFiles: [],
       // No files excluded by default
+      sonicGraphAnimationDuration: 60,
+      // Default 60 seconds for more contemplative pacing
+      sonicGraphAnimationSpeed: 1,
+      // Default to normal speed
       effects: {
         orchestralreverbhall: { enabled: true },
         "3bandeq": { enabled: true },
@@ -10292,8 +10296,9 @@ var init_GraphRenderer = __esm({
         const modificationDate = node.modificationDate.toLocaleDateString();
         const fileSize = this.formatFileSize(node.fileSize);
         const connectionCount = node.connections.length;
+        const fileName = node.title.split("/").pop() || node.title;
         return `
-      <div class="sonic-graph-tooltip-title">${node.title}</div>
+      <div class="sonic-graph-tooltip-title">${fileName}</div>
       <div class="sonic-graph-tooltip-path">${node.path}</div>
       <div class="sonic-graph-tooltip-meta">
         <div>Type: ${node.type}</div>
@@ -10458,30 +10463,45 @@ var init_TemporalGraphAnimator = __esm({
         this.visibleNodes = /* @__PURE__ */ new Set();
         this.nodes = nodes;
         this.links = links;
-        const dates = nodes.map((n) => n.creationDate).filter((d) => d);
-        const minDate = dates.length > 0 ? new Date(Math.min(...dates.map((d) => d.getTime()))) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1e3);
-        const maxDate = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : new Date();
+        const now3 = new Date();
+        const oneYearAgo = new Date(now3.getTime() - 365 * 24 * 60 * 60 * 1e3);
         this.config = {
-          startDate: minDate,
-          endDate: maxDate,
-          duration: 30,
-          // 30 seconds default
+          startDate: oneYearAgo,
+          endDate: now3,
+          duration: 60,
+          // 60 seconds default for more contemplative pacing
           speed: 1,
+          enableIntelligentSpacing: true,
+          // Enable spacing by default
+          simultaneousThreshold: 0.01,
+          // 10ms threshold for truly simultaneous events
+          maxSpacingWindow: 10,
+          // Spread over max 10 seconds for large clusters
+          minEventSpacing: 0.2,
+          // Minimum 200ms between events for clear separation
           ...config
         };
+        if (this.nodes.length > 0) {
+          const dates = this.nodes.map((n) => n.creationDate).filter((d) => d !== void 0);
+          if (dates.length > 0) {
+            const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+            const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+            if (!(config == null ? void 0 : config.startDate))
+              this.config.startDate = minDate;
+            if (!(config == null ? void 0 : config.endDate))
+              this.config.endDate = maxDate;
+          }
+        }
         this.buildTimeline();
         logger9.debug("animator", "TemporalGraphAnimator created", {
-          nodeCount: nodes.length,
-          linkCount: links.length,
-          timelineEvents: this.timeline.length,
-          dateRange: {
-            start: this.config.startDate.toISOString(),
-            end: this.config.endDate.toISOString()
-          }
+          nodeCount: this.nodes.length,
+          linkCount: this.links.length,
+          config: this.config,
+          timelineEvents: this.timeline.length
         });
       }
       /**
-       * Build timeline events from node creation dates
+       * Build timeline of events based on node creation dates
        */
       buildTimeline() {
         var _a, _b;
@@ -10493,13 +10513,14 @@ var init_TemporalGraphAnimator = __esm({
           logger9.warn("timeline", "Invalid date range for timeline");
           return;
         }
+        const initialEvents = [];
         this.nodes.forEach((node) => {
           if (node.creationDate) {
             const nodeTime = node.creationDate.getTime();
             if (nodeTime >= startTime && nodeTime <= endTime) {
               const normalizedTime = (nodeTime - startTime) / timeRange2;
               const animationTime = normalizedTime * this.config.duration;
-              this.timeline.push({
+              initialEvents.push({
                 timestamp: animationTime,
                 nodeId: node.id,
                 type: "appear"
@@ -10507,12 +10528,100 @@ var init_TemporalGraphAnimator = __esm({
             }
           }
         });
-        this.timeline.sort((a2, b) => a2.timestamp - b.timestamp);
-        logger9.debug("timeline", "Timeline built", {
-          events: this.timeline.length,
+        initialEvents.sort((a2, b) => a2.timestamp - b.timestamp);
+        this.timeline = this.addIntelligentSpacing(initialEvents);
+        logger9.debug("timeline", "Timeline built with intelligent spacing", {
+          originalEvents: initialEvents.length,
+          finalEvents: this.timeline.length,
           firstEvent: ((_a = this.timeline[0]) == null ? void 0 : _a.timestamp) || 0,
           lastEvent: ((_b = this.timeline[this.timeline.length - 1]) == null ? void 0 : _b.timestamp) || 0
         });
+      }
+      /**
+       * Add intelligent spacing to events that would appear simultaneously
+       */
+      addIntelligentSpacing(events) {
+        if (events.length === 0)
+          return events;
+        if (!this.config.enableIntelligentSpacing) {
+          return events;
+        }
+        const spacedEvents = [];
+        const simultaneousThreshold = this.config.simultaneousThreshold || 0.1;
+        const maxSpacingWindow = this.config.maxSpacingWindow || 2;
+        const minSpacing = this.config.minEventSpacing || 0.05;
+        let i = 0;
+        while (i < events.length) {
+          const currentTime = events[i].timestamp;
+          const simultaneousEvents = [];
+          while (i < events.length && Math.abs(events[i].timestamp - currentTime) <= simultaneousThreshold) {
+            simultaneousEvents.push(events[i]);
+            i++;
+          }
+          if (simultaneousEvents.length === 1) {
+            spacedEvents.push(simultaneousEvents[0]);
+          } else {
+            const spacingWindow = Math.min(maxSpacingWindow, simultaneousEvents.length * minSpacing * 2);
+            const spacing = spacingWindow / (simultaneousEvents.length - 1);
+            simultaneousEvents.sort((a2, b) => {
+              const hashA = this.hashString(a2.nodeId);
+              const hashB = this.hashString(b.nodeId);
+              return hashA - hashB;
+            });
+            simultaneousEvents.forEach((event, index2) => {
+              const spacedEvent = { ...event };
+              if (index2 === 0) {
+                spacedEvent.timestamp = currentTime;
+              } else {
+                spacedEvent.timestamp = currentTime + spacing * index2;
+              }
+              spacedEvents.push(spacedEvent);
+            });
+            logger9.debug("timeline", "Applied spacing to simultaneous events", {
+              originalTime: currentTime.toFixed(3),
+              eventCount: simultaneousEvents.length,
+              spacingWindow: spacingWindow.toFixed(3),
+              individualSpacing: spacing.toFixed(3),
+              threshold: simultaneousThreshold
+            });
+          }
+        }
+        spacedEvents.sort((a2, b) => a2.timestamp - b.timestamp);
+        const finalEvents = [];
+        for (let i2 = 0; i2 < spacedEvents.length; i2++) {
+          const event = spacedEvents[i2];
+          if (finalEvents.length === 0) {
+            finalEvents.push(event);
+          } else {
+            const lastEvent = finalEvents[finalEvents.length - 1];
+            const timeDiff = event.timestamp - lastEvent.timestamp;
+            if (timeDiff < minSpacing) {
+              const adjustedEvent = { ...event };
+              adjustedEvent.timestamp = lastEvent.timestamp + minSpacing;
+              finalEvents.push(adjustedEvent);
+              logger9.debug("timeline", "Applied minimum spacing adjustment", {
+                originalTime: event.timestamp.toFixed(3),
+                adjustedTime: adjustedEvent.timestamp.toFixed(3),
+                minSpacing
+              });
+            } else {
+              finalEvents.push(event);
+            }
+          }
+        }
+        return finalEvents;
+      }
+      /**
+       * Simple hash function for consistent node ordering
+       */
+      hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash = hash & hash;
+        }
+        return Math.abs(hash);
       }
       /**
        * Start animation playback
@@ -10992,6 +11101,7 @@ var init_SonicGraphModal = __esm({
         this.musicalMapper = null;
         this.isAnimating = false;
         this.showFileNames = false;
+        this.isTimelineView = false;
         this.plugin = plugin;
         this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache, {
           excludeFolders: plugin.settings.sonicGraphExcludeFolders || [],
@@ -11070,9 +11180,19 @@ var init_SonicGraphModal = __esm({
         this.timelineScrubber.value = "0";
         this.timelineScrubber.addEventListener("input", () => this.handleTimelineScrub());
         this.timelineInfo = this.timelineContainer.createDiv({ cls: "sonic-graph-timeline-info" });
-        this.timelineInfo.createSpan({ text: "Start", cls: "sonic-graph-timeline-start" });
-        this.timelineInfo.createSpan({ text: "Current: 2024", cls: "sonic-graph-timeline-current" });
-        this.timelineInfo.createSpan({ text: "End", cls: "sonic-graph-timeline-end" });
+        const yearsTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track sonic-graph-timeline-years" });
+        yearsTrack.createEl("div", { text: "Years:", cls: "sonic-graph-timeline-track-label" });
+        const yearsLine = yearsTrack.createDiv({ cls: "sonic-graph-timeline-line" });
+        const yearsMarkers = yearsLine.createDiv({ cls: "sonic-graph-timeline-markers sonic-graph-timeline-years-markers" });
+        const timeTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track sonic-graph-timeline-time" });
+        timeTrack.createEl("div", { text: "Time:", cls: "sonic-graph-timeline-track-label" });
+        const timeLine = timeTrack.createDiv({ cls: "sonic-graph-timeline-line" });
+        const timeMarkers = timeLine.createDiv({ cls: "sonic-graph-timeline-markers sonic-graph-timeline-time-markers" });
+        const currentIndicator = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-current-indicator" });
+        currentIndicator.createEl("div", { cls: "sonic-graph-timeline-current-line" });
+        const currentLabel = currentIndicator.createEl("div", { cls: "sonic-graph-timeline-current-label" });
+        currentLabel.createSpan({ text: "Current: 2024", cls: "sonic-graph-timeline-current-year" });
+        currentLabel.createSpan({ text: "0s", cls: "sonic-graph-timeline-current-time" });
       }
       /**
        * Create controls area with play button, stats, and navigation
@@ -11086,9 +11206,11 @@ var init_SonicGraphModal = __esm({
         const speedContainer = playControls.createDiv({ cls: "sonic-graph-speed-container" });
         speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
         this.speedSelect = speedContainer.createEl("select", { cls: "sonic-graph-speed-select" });
-        ["0.5x", "1x", "2x", "3x", "5x"].forEach((speed) => {
+        const savedSpeed = this.plugin.settings.sonicGraphAnimationSpeed || 1;
+        const savedSpeedString = `${savedSpeed}x`;
+        ["0.1x", "0.25x", "0.5x", "1x", "2x", "3x", "5x"].forEach((speed) => {
           const option = this.speedSelect.createEl("option", { text: speed, value: speed });
-          if (speed === "1x")
+          if (speed === savedSpeedString)
             option.selected = true;
         });
         this.speedSelect.addEventListener("change", () => this.handleSpeedChange());
@@ -11096,6 +11218,14 @@ var init_SonicGraphModal = __esm({
         this.statsContainer = statsControls.createDiv({ cls: "sonic-graph-stats" });
         this.updateStats();
         const viewControls = this.controlsContainer.createDiv({ cls: "sonic-graph-view-controls" });
+        const viewModeContainer = viewControls.createDiv({ cls: "sonic-graph-view-mode-container" });
+        this.viewModeBtn = viewModeContainer.createEl("button", {
+          cls: "sonic-graph-control-btn sonic-graph-view-mode-btn"
+        });
+        const viewModeIcon = createLucideIcon("eye", 16);
+        this.viewModeBtn.appendChild(viewModeIcon);
+        this.viewModeBtn.appendText("Static View");
+        this.viewModeBtn.addEventListener("click", () => this.toggleViewMode());
         const fileNamesContainer = viewControls.createDiv({ cls: "sonic-graph-toggle-container" });
         const fileNamesToggle = fileNamesContainer.createEl("input", {
           type: "checkbox",
@@ -11148,6 +11278,7 @@ var init_SonicGraphModal = __esm({
             loadingIndicator.remove();
           }
           this.updateStats();
+          this.updateViewMode();
           logger11.debug("ui", "Sonic Graph initialized successfully");
         } catch (error) {
           logger11.error("Failed to initialize Sonic Graph", error.message);
@@ -11162,6 +11293,10 @@ var init_SonicGraphModal = __esm({
         if (!this.graphRenderer) {
           new import_obsidian6.Notice("Graph not ready");
           return;
+        }
+        if (!this.isTimelineView) {
+          this.isTimelineView = true;
+          this.updateViewMode();
         }
         this.isAnimating = !this.isAnimating;
         if (this.isAnimating) {
@@ -11214,6 +11349,56 @@ var init_SonicGraphModal = __esm({
           this.graphRenderer.updateConfig({ showLabels: this.showFileNames });
         }
         logger11.debug("ui", `File names visibility toggled: ${this.showFileNames}`);
+      }
+      /**
+       * Toggle between Static View and Timeline View
+       */
+      toggleViewMode() {
+        this.isTimelineView = !this.isTimelineView;
+        this.updateViewMode();
+        logger11.debug("ui", `View mode toggled: ${this.isTimelineView ? "Timeline" : "Static"}`);
+      }
+      /**
+       * Update UI based on current view mode
+       */
+      updateViewMode() {
+        if (this.isTimelineView) {
+          this.viewModeBtn.innerHTML = "";
+          const timelineIcon = createLucideIcon("play-circle", 16);
+          this.viewModeBtn.appendChild(timelineIcon);
+          this.viewModeBtn.appendText("Timeline View");
+          this.timelineContainer.style.display = "block";
+          if (!this.temporalAnimator) {
+            this.initializeTemporalAnimator().catch((error) => {
+              logger11.error("Failed to initialize temporal animator for timeline view", error);
+              this.isTimelineView = false;
+              this.updateViewMode();
+            });
+          } else {
+            this.temporalAnimator.stop();
+            if (this.graphRenderer) {
+              this.graphRenderer.updateVisibleNodes(/* @__PURE__ */ new Set());
+            }
+          }
+        } else {
+          this.viewModeBtn.innerHTML = "";
+          const staticIcon = createLucideIcon("eye", 16);
+          this.viewModeBtn.appendChild(staticIcon);
+          this.viewModeBtn.appendText("Static View");
+          this.timelineContainer.style.display = "none";
+          if (this.temporalAnimator) {
+            this.temporalAnimator.stop();
+          }
+          this.isAnimating = false;
+          this.playButton.setButtonText("Play Sonic Graph");
+          if (this.graphRenderer) {
+            this.graphDataExtractor.extractGraphData().then((graphData) => {
+              var _a;
+              const allNodeIds = new Set(graphData.nodes.map((node) => node.id));
+              (_a = this.graphRenderer) == null ? void 0 : _a.updateVisibleNodes(allNodeIds);
+            });
+          }
+        }
       }
       /**
        * Reset graph view to initial state
@@ -11285,8 +11470,8 @@ var init_SonicGraphModal = __esm({
             graphData.nodes,
             graphData.links,
             {
-              duration: 30,
-              // 30 second animation
+              duration: this.plugin.settings.sonicGraphAnimationDuration || 60,
+              // Use user setting or default to 60 seconds
               speed: 1
             }
           );
@@ -11304,6 +11489,8 @@ var init_SonicGraphModal = __esm({
           this.temporalAnimator.onNodeAppeared((node) => {
             this.handleNodeAppearance(node);
           });
+          this.updateTimelineMarkers();
+          this.updateCurrentPosition(0, 0);
           this.musicalMapper = new MusicalMapper(this.plugin.settings);
           logger11.info("ui", "Temporal animator initialized successfully");
         } catch (error) {
@@ -11315,11 +11502,13 @@ var init_SonicGraphModal = __esm({
        * Handle speed control change
        */
       handleSpeedChange() {
-        if (!this.temporalAnimator)
-          return;
         const speedValue = this.speedSelect.value;
         const speed = parseFloat(speedValue.replace("x", ""));
-        this.temporalAnimator.setSpeed(speed);
+        this.plugin.settings.sonicGraphAnimationSpeed = speed;
+        this.plugin.saveSettings();
+        if (this.temporalAnimator) {
+          this.temporalAnimator.setSpeed(speed);
+        }
         logger11.debug("ui", "Animation speed changed", { speed });
       }
       /**
@@ -11342,20 +11531,118 @@ var init_SonicGraphModal = __esm({
           this.timelineScrubber.value = (progress * 100).toString();
         }
         if (this.timelineInfo && this.temporalAnimator) {
-          const timelineInfo = this.temporalAnimator.getTimelineInfo();
-          const currentSpan = this.timelineInfo.querySelector(".sonic-graph-timeline-current");
-          if (currentSpan) {
-            const currentDate = new Date(
-              timelineInfo.startDate.getTime() + progress * (timelineInfo.endDate.getTime() - timelineInfo.startDate.getTime())
-            );
-            currentSpan.textContent = `Current: ${currentDate.getFullYear()}`;
+          this.updateTimelineMarkers();
+          this.updateCurrentPosition(currentTime, progress);
+        }
+      }
+      /**
+       * Update timeline markers for years and time
+       */
+      updateTimelineMarkers() {
+        if (!this.temporalAnimator)
+          return;
+        const timelineInfo = this.temporalAnimator.getTimelineInfo();
+        this.updateYearsMarkers(timelineInfo);
+        this.updateTimeMarkers(timelineInfo);
+      }
+      /**
+       * Update years markers along the timeline
+       */
+      updateYearsMarkers(timelineInfo) {
+        const yearsMarkersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-years-markers");
+        if (!yearsMarkersContainer)
+          return;
+        yearsMarkersContainer.innerHTML = "";
+        const startYear = timelineInfo.startDate.getFullYear();
+        const endYear = timelineInfo.endDate.getFullYear();
+        const yearRange = endYear - startYear;
+        const years = [];
+        if (yearRange <= 1) {
+          const startMonth = timelineInfo.startDate.getMonth();
+          const endMonth = timelineInfo.endDate.getMonth();
+          for (let month = startMonth; month <= endMonth + 12; month += 3) {
+            const date = new Date(startYear, month);
+            if (date >= timelineInfo.startDate && date <= timelineInfo.endDate) {
+              years.push(date.getFullYear() + date.getMonth() / 12);
+            }
           }
-          const startSpan = this.timelineInfo.querySelector(".sonic-graph-timeline-start");
-          const endSpan = this.timelineInfo.querySelector(".sonic-graph-timeline-end");
-          if (startSpan)
-            startSpan.textContent = timelineInfo.startDate.getFullYear().toString();
-          if (endSpan)
-            endSpan.textContent = timelineInfo.endDate.getFullYear().toString();
+        } else if (yearRange <= 5) {
+          for (let year = startYear; year <= endYear; year++) {
+            years.push(year);
+          }
+        } else if (yearRange <= 10) {
+          for (let year = startYear; year <= endYear; year += 2) {
+            years.push(year);
+          }
+        } else {
+          const step = Math.max(1, Math.floor(yearRange / 8));
+          for (let year = startYear; year <= endYear; year += step) {
+            years.push(year);
+          }
+        }
+        years.forEach((year) => {
+          const yearProgress = (year - startYear) / yearRange;
+          const marker = yearsMarkersContainer.createEl("div", { cls: "sonic-graph-timeline-marker" });
+          marker.style.left = `${yearProgress * 100}%`;
+          marker.createEl("div", { cls: "sonic-graph-timeline-marker-line" });
+          const label = marker.createEl("div", { cls: "sonic-graph-timeline-marker-label" });
+          label.textContent = Math.floor(year).toString();
+        });
+      }
+      /**
+       * Update time markers along the timeline
+       */
+      updateTimeMarkers(timelineInfo) {
+        const timeMarkersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-time-markers");
+        if (!timeMarkersContainer)
+          return;
+        timeMarkersContainer.innerHTML = "";
+        const duration = timelineInfo.duration;
+        const timeIntervals = [];
+        if (duration <= 30) {
+          for (let t = 0; t <= duration; t += 5) {
+            timeIntervals.push(t);
+          }
+        } else if (duration <= 120) {
+          for (let t = 0; t <= duration; t += 10) {
+            timeIntervals.push(t);
+          }
+        } else {
+          for (let t = 0; t <= duration; t += 30) {
+            timeIntervals.push(t);
+          }
+        }
+        timeIntervals.forEach((time) => {
+          const timeProgress = time / duration;
+          const marker = timeMarkersContainer.createEl("div", { cls: "sonic-graph-timeline-marker" });
+          marker.style.left = `${timeProgress * 100}%`;
+          marker.createEl("div", { cls: "sonic-graph-timeline-marker-line" });
+          const label = marker.createEl("div", { cls: "sonic-graph-timeline-marker-label" });
+          label.textContent = `${Math.floor(time)}s`;
+        });
+      }
+      /**
+       * Update current position indicator
+       */
+      updateCurrentPosition(currentTime, progress) {
+        if (!this.temporalAnimator)
+          return;
+        const timelineInfo = this.temporalAnimator.getTimelineInfo();
+        const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
+        if (currentIndicator) {
+          const indicator = currentIndicator;
+          indicator.style.left = `${progress * 100}%`;
+        }
+        const currentYearSpan = this.timelineInfo.querySelector(".sonic-graph-timeline-current-year");
+        const currentTimeSpan = this.timelineInfo.querySelector(".sonic-graph-timeline-current-time");
+        if (currentYearSpan) {
+          const currentDate = new Date(
+            timelineInfo.startDate.getTime() + progress * (timelineInfo.endDate.getTime() - timelineInfo.startDate.getTime())
+          );
+          currentYearSpan.textContent = `Current: ${currentDate.getFullYear()}`;
+        }
+        if (currentTimeSpan) {
+          currentTimeSpan.textContent = `${Math.floor(currentTime)}s`;
         }
       }
       /**
@@ -11407,14 +11694,12 @@ var init_SonicGraphModal = __esm({
        * Create a musical mapping for a graph node
        */
       createMusicalMappingForNode(node) {
-        const instrumentMap = {
-          "note": "piano",
-          "image": "violin",
-          "pdf": "trumpet",
-          "audio": "flute",
-          "video": "cello",
-          "other": "synth"
-        };
+        const enabledInstruments = this.getEnabledInstruments();
+        if (enabledInstruments.length === 0) {
+          logger11.warn("audio", "No instruments enabled for temporal animation");
+          return this.createFallbackMapping(node, "piano");
+        }
+        const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
         const baseFreq = 261.63;
         const fileNameHash = this.hashString(node.title);
         const pitchOffset = fileNameHash % 24 - 12;
@@ -11425,13 +11710,123 @@ var init_SonicGraphModal = __esm({
         const baseVelocity = 0.5;
         const connectionFactor = Math.min(node.connections.length / 10, 0.4);
         const velocity = baseVelocity + connectionFactor;
+        logger11.debug("audio", "Created musical mapping for node", {
+          nodeId: node.id,
+          nodeType: node.type,
+          selectedInstrument,
+          enabledInstrumentsCount: enabledInstruments.length,
+          pitch: pitch.toFixed(2)
+        });
         return {
           nodeId: node.id,
           pitch,
           duration,
           velocity,
           timing: 0,
-          instrument: instrumentMap[node.type] || "piano"
+          instrument: selectedInstrument
+        };
+      }
+      /**
+       * Get list of currently enabled instruments from settings
+       */
+      getEnabledInstruments() {
+        const enabled = [];
+        Object.entries(this.plugin.settings.instruments).forEach(([instrumentName, settings]) => {
+          if (settings == null ? void 0 : settings.enabled) {
+            enabled.push(instrumentName);
+          }
+        });
+        logger11.debug("audio", "Found enabled instruments", {
+          count: enabled.length,
+          instruments: enabled
+        });
+        return enabled;
+      }
+      /**
+       * Select appropriate instrument for file type from user's enabled instruments
+       */
+      selectInstrumentForFileType(fileType, enabledInstruments) {
+        const instrumentCategories = {
+          keyboard: ["piano", "organ", "electricPiano", "harpsichord", "accordion", "celesta"],
+          strings: ["violin", "cello", "contrabass", "guitar", "guitarElectric", "guitarNylon", "bassElectric", "harp", "strings"],
+          brass: ["trumpet", "frenchHorn", "trombone", "tuba"],
+          woodwinds: ["flute", "clarinet", "saxophone", "bassoon", "oboe"],
+          percussion: ["timpani", "xylophone", "vibraphone", "gongs"],
+          electronic: ["leadSynth", "bassSynth", "arpSynth"],
+          experimental: ["whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"]
+        };
+        const fileTypePreferences = {
+          "note": ["keyboard", "strings"],
+          // Notes sound good with keyboard or strings
+          "image": ["strings", "woodwinds"],
+          // Images are visual, strings/woodwinds are expressive
+          "pdf": ["brass", "keyboard"],
+          // PDFs are formal, brass/keyboard are authoritative
+          "audio": ["woodwinds", "electronic"],
+          // Audio files with musical instruments
+          "video": ["strings", "brass"],
+          // Videos with rich, full instruments
+          "other": ["electronic", "experimental"]
+          // Other files with synthetic sounds
+        };
+        const preferredCategories = fileTypePreferences[fileType] || ["keyboard"];
+        for (const category of preferredCategories) {
+          const categoryInstruments = instrumentCategories[category] || [];
+          const availableInCategory = categoryInstruments.filter((inst) => enabledInstruments.includes(inst));
+          if (availableInCategory.length > 0) {
+            const fileHash2 = this.hashString(fileType + category);
+            const selectedIndex = fileHash2 % availableInCategory.length;
+            const selected = availableInCategory[selectedIndex];
+            logger11.debug("audio", "Selected instrument from preferred category", {
+              fileType,
+              category,
+              availableInCategory,
+              selected
+            });
+            return selected;
+          }
+        }
+        const allCategorizedInstruments = Object.values(instrumentCategories).flat();
+        const uncategorizedInstruments = enabledInstruments.filter(
+          (inst) => !allCategorizedInstruments.includes(inst)
+        );
+        if (uncategorizedInstruments.length > 0) {
+          const fileHash2 = this.hashString(fileType + "uncategorized");
+          const selectedIndex = fileHash2 % uncategorizedInstruments.length;
+          const selected = uncategorizedInstruments[selectedIndex];
+          logger11.debug("audio", "Selected uncategorized instrument", {
+            fileType,
+            uncategorizedInstruments,
+            selected,
+            note: "This instrument was not in predefined categories"
+          });
+          return selected;
+        }
+        const fileHash = this.hashString(fileType);
+        const fallbackIndex = fileHash % enabledInstruments.length;
+        const fallback = enabledInstruments[fallbackIndex];
+        logger11.debug("audio", "Using final fallback instrument selection", {
+          fileType,
+          enabledInstruments,
+          fallback
+        });
+        return fallback;
+      }
+      /**
+       * Create fallback mapping when no instruments are enabled
+       */
+      createFallbackMapping(node, fallbackInstrument) {
+        const baseFreq = 261.63;
+        const fileNameHash = this.hashString(node.title);
+        const pitchOffset = fileNameHash % 24 - 12;
+        const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
+        return {
+          nodeId: node.id,
+          pitch,
+          duration: 0.3,
+          velocity: 0.5,
+          timing: 0,
+          instrument: fallbackInstrument
         };
       }
       /**
@@ -15238,6 +15633,13 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
       this.app.setting.close();
       this.plugin.openControlPanel();
     }));
+    new import_obsidian.Setting(containerEl).setName("Sonic Graph animation duration").setDesc("Base duration for temporal graph animations in seconds. Higher values create more contemplative pacing.").addSlider(
+      (slider) => slider.setLimits(15, 300, 15).setValue(this.plugin.settings.sonicGraphAnimationDuration || 60).setDynamicTooltip().onChange(async (value) => {
+        this.plugin.settings.sonicGraphAnimationDuration = value;
+        await this.plugin.saveSettings();
+        logger.info("settings-change", "Animation duration changed", { duration: value });
+      })
+    );
     const advancedSection = containerEl.createEl("details", { cls: "osp-advanced-settings" });
     advancedSection.createEl("summary", { text: "Advanced", cls: "osp-advanced-summary" });
     advancedSection.open = false;
