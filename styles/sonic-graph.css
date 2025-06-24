@@ -696,6 +696,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
 }
 
 .sonic-graph-stats-text {
@@ -704,29 +705,42 @@
   opacity: 0.8;
 }
 
+/* Temporal Spacing Controls */
+.sonic-graph-spacing-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.sonic-graph-spacing-label {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sonic-graph-spacing-select {
+  padding: 2px 6px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--osp-font-size-small);
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.sonic-graph-spacing-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 1px var(--interactive-accent-hover);
+}
+
 .sonic-graph-view-controls {
   display: flex;
   align-items: center;
   gap: var(--osp-spacing-md);
   flex: 0 0 auto;
-}
-
-.sonic-graph-toggle-container {
-  display: flex;
-  align-items: center;
-  gap: var(--osp-spacing-sm);
-}
-
-.sonic-graph-toggle {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.sonic-graph-toggle-label {
-  font-size: var(--osp-font-size-small);
-  color: var(--text-normal);
-  cursor: pointer;
 }
 
 .sonic-graph-control-btn {

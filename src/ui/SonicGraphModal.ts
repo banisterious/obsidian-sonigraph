@@ -25,7 +25,6 @@ export class SonicGraphModal extends Modal {
     private temporalAnimator: TemporalGraphAnimator | null = null;
     private musicalMapper: MusicalMapper | null = null;
     private isAnimating: boolean = false;
-    private showFileNames: boolean = false;
     private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
     // UI elements
@@ -39,6 +38,8 @@ export class SonicGraphModal extends Modal {
     private timelineScrubber: HTMLInputElement;
     private timelineInfo: HTMLElement;
     private viewModeBtn: HTMLButtonElement;
+    private spacingSelect: HTMLSelectElement;
+    private detectedSpacing: 'dense' | 'balanced' | 'sparse' = 'balanced';
 
     constructor(app: App, plugin: SonigraphPlugin) {
         super(app);
@@ -49,7 +50,7 @@ export class SonicGraphModal extends Modal {
         });
         
         // Load settings
-        this.showFileNames = this.plugin.settings.sonicGraphShowFileNames || false;
+        // (removed showFileNames setting)
     }
 
     onOpen() {
@@ -190,7 +191,7 @@ export class SonicGraphModal extends Modal {
         const playButtonContainer = playControls.createDiv({ cls: 'sonic-graph-play-button-container' });
         this.playButton = new ButtonComponent(playButtonContainer);
         this.playButton
-            .setButtonText('Play Sonic Graph')
+            .setButtonText('Play')
             .onClick(() => this.toggleAnimation());
         
         // Speed control
@@ -199,7 +200,7 @@ export class SonicGraphModal extends Modal {
         this.speedSelect = speedContainer.createEl('select', { cls: 'sonic-graph-speed-select' });
         const savedSpeed = this.plugin.settings.sonicGraphAnimationSpeed || 1.0;
         const savedSpeedString = `${savedSpeed}x`;
-        ['0.1x', '0.25x', '0.5x', '1x', '2x', '3x', '5x'].forEach(speed => {
+        ['0.1x', '0.25x', '0.5x', '1x', '2x', '5x', '10x', '20x', '50x'].forEach(speed => {
             const option = this.speedSelect.createEl('option', { text: speed, value: speed });
             if (speed === savedSpeedString) option.selected = true;
         });
@@ -223,15 +224,6 @@ export class SonicGraphModal extends Modal {
         this.viewModeBtn.appendText('Static View');
         this.viewModeBtn.addEventListener('click', () => this.toggleViewMode());
         
-        // Show file names toggle
-        const fileNamesContainer = viewControls.createDiv({ cls: 'sonic-graph-toggle-container' });
-        const fileNamesToggle = fileNamesContainer.createEl('input', { 
-            type: 'checkbox',
-            cls: 'sonic-graph-toggle'
-        });
-        fileNamesToggle.checked = this.showFileNames;
-        fileNamesToggle.addEventListener('change', () => this.handleShowFileNamesToggle());
-        fileNamesContainer.createEl('label', { text: 'Show file names', cls: 'sonic-graph-toggle-label' });
         
         // Reset view button
         const resetViewBtn = viewControls.createEl('button', { 
@@ -280,7 +272,7 @@ export class SonicGraphModal extends Modal {
             
             this.graphRenderer = new GraphRenderer(canvasElement, {
                 enableZoom: true,
-                showLabels: this.showFileNames
+                showLabels: false
             });
             
             // Render the graph
@@ -404,7 +396,7 @@ export class SonicGraphModal extends Modal {
             
         } else {
             // Pause animation
-            this.playButton.setButtonText('Play Sonic Graph');
+            this.playButton.setButtonText('Play');
             
             // Hide current position indicator when animation stops
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
@@ -421,23 +413,6 @@ export class SonicGraphModal extends Modal {
         }
     }
 
-    /**
-     * Handle file names toggle
-     */
-    private handleShowFileNamesToggle(): void {
-        this.showFileNames = !this.showFileNames;
-        
-        // Save setting
-        this.plugin.settings.sonicGraphShowFileNames = this.showFileNames;
-        this.plugin.saveSettings();
-        
-        // Update graph renderer
-        if (this.graphRenderer) {
-            this.graphRenderer.updateConfig({ showLabels: this.showFileNames });
-        }
-        
-        logger.debug('ui', `File names visibility toggled: ${this.showFileNames}`);
-    }
 
     /**
      * Toggle between Static View and Timeline View
@@ -495,7 +470,7 @@ export class SonicGraphModal extends Modal {
                 this.temporalAnimator.stop();
             }
             this.isAnimating = false;
-            this.playButton.setButtonText('Play Sonic Graph');
+            this.playButton.setButtonText('Play');
             
             // Hide current position indicator in Static View
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
@@ -562,6 +537,115 @@ export class SonicGraphModal extends Modal {
             text: `${fileCount} notes • ${totalFiles} total files`,
             cls: 'sonic-graph-stats-text'
         });
+
+        // Add temporal spacing control
+        this.createTemporalSpacingControl();
+    }
+
+    /**
+     * Create temporal spacing control with auto-detection
+     */
+    private async createTemporalSpacingControl(): Promise<void> {
+        if (!this.statsContainer) return;
+
+        try {
+            // Get graph data for detection
+            const graphData = await this.graphDataExtractor.extractGraphData();
+            const detection = this.detectTemporalClustering(graphData.nodes);
+            this.detectedSpacing = detection.type;
+
+            // Create spacing container (inline)
+            const spacingContainer = this.statsContainer.createDiv({ 
+                cls: 'sonic-graph-spacing-container' 
+            });
+
+            // Label
+            spacingContainer.createEl('label', { 
+                text: 'Timeline:', 
+                cls: 'sonic-graph-spacing-label' 
+            });
+
+            // Dropdown
+            this.spacingSelect = spacingContainer.createEl('select', { 
+                cls: 'sonic-graph-spacing-select' 
+            });
+
+            // Shortened options
+            const options = [
+                { value: 'auto', label: `Auto (${detection.type})` },
+                { value: 'dense', label: 'Dense' },
+                { value: 'balanced', label: 'Balanced' },
+                { value: 'sparse', label: 'Sparse' }
+            ];
+
+            options.forEach(option => {
+                const optionEl = this.spacingSelect.createEl('option', { 
+                    value: option.value,
+                    text: option.label
+                });
+                if (option.value === 'auto') {
+                    optionEl.selected = true;
+                }
+            });
+
+            // Event listener
+            this.spacingSelect.addEventListener('change', () => {
+                logger.debug('temporal-spacing', 'User changed spacing setting', {
+                    value: this.spacingSelect.value,
+                    detectedSpacing: this.detectedSpacing
+                });
+            });
+
+            logger.debug('temporal-spacing', 'Created spacing control', {
+                detectedType: detection.type,
+                confidence: detection.confidence,
+                reason: detection.reason
+            });
+
+        } catch (error) {
+            logger.warn('temporal-spacing', 'Failed to create spacing control', (error as Error).message);
+        }
+    }
+
+    /**
+     * Get spacing configuration based on user selection
+     */
+    private getSpacingConfiguration(): { enableIntelligentSpacing: boolean, simultaneousThreshold: number, maxSpacingWindow: number, minEventSpacing: number } {
+        const selectedValue = this.spacingSelect?.value || 'auto';
+        const actualSpacing = selectedValue === 'auto' ? this.detectedSpacing : selectedValue;
+
+        logger.debug('temporal-spacing', 'Getting spacing configuration', {
+            selectedValue,
+            detectedSpacing: this.detectedSpacing,
+            actualSpacing
+        });
+
+        switch (actualSpacing) {
+            case 'dense':
+                return {
+                    enableIntelligentSpacing: false,
+                    simultaneousThreshold: 0.01,
+                    maxSpacingWindow: 1,
+                    minEventSpacing: 0.05
+                };
+            
+            case 'sparse':
+                return {
+                    enableIntelligentSpacing: true,
+                    simultaneousThreshold: 0.01,
+                    maxSpacingWindow: 10,
+                    minEventSpacing: 0.2
+                };
+            
+            case 'balanced':
+            default:
+                return {
+                    enableIntelligentSpacing: true,
+                    simultaneousThreshold: 0.01,
+                    maxSpacingWindow: 5,
+                    minEventSpacing: 0.1
+                };
+        }
     }
 
     /**
@@ -596,13 +680,17 @@ export class SonicGraphModal extends Modal {
             // Extract graph data if not already done
             const graphData = await this.graphDataExtractor.extractGraphData();
             
-            // Create temporal animator
+            // Get spacing configuration based on user selection
+            const spacingConfig = this.getSpacingConfiguration();
+
+            // Create temporal animator with spacing configuration
             this.temporalAnimator = new TemporalGraphAnimator(
                 graphData.nodes,
                 graphData.links,
                 {
                     duration: this.plugin.settings.sonicGraphAnimationDuration || 60, // Use user setting or default to 60 seconds
-                    speed: 1.0
+                    speed: 1.0,
+                    ...spacingConfig
                 }
             );
             
@@ -798,7 +886,7 @@ export class SonicGraphModal extends Modal {
      */
     private handleAnimationEnd(): void {
         this.isAnimating = false;
-        this.playButton.setButtonText('Play Sonic Graph');
+        this.playButton.setButtonText('Play');
         
         // Hide current position indicator when animation completes
         const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
@@ -1049,6 +1137,74 @@ export class SonicGraphModal extends Modal {
             velocity: 0.5,
             timing: 0,
             instrument: fallbackInstrument
+        };
+    }
+
+    /**
+     * Detect temporal clustering in node creation dates to recommend spacing settings
+     */
+    private detectTemporalClustering(nodes: GraphNode[]): { type: 'dense' | 'balanced' | 'sparse', confidence: number, reason: string } {
+        if (nodes.length === 0) {
+            return { type: 'balanced', confidence: 0, reason: 'No nodes available' };
+        }
+
+        const dates = nodes.map(n => n.creationDate.getTime()).sort((a, b) => a - b);
+        const totalSpan = dates[dates.length - 1] - dates[0];
+        const oneDay = 24 * 60 * 60 * 1000;
+
+        // Group files by day to detect clustering
+        const dayGroups = new Map<string, number>();
+        dates.forEach(timestamp => {
+            const dayKey = new Date(timestamp).toDateString();
+            dayGroups.set(dayKey, (dayGroups.get(dayKey) || 0) + 1);
+        });
+
+        const largestDayCluster = Math.max(...dayGroups.values());
+        const clusteringRatio = largestDayCluster / nodes.length;
+        const spanInDays = Math.max(1, totalSpan / oneDay);
+        const averageNodesPerDay = nodes.length / spanInDays;
+
+        logger.debug('temporal-detection', 'Analyzing temporal distribution', {
+            totalNodes: nodes.length,
+            spanInDays: spanInDays.toFixed(1),
+            largestDayCluster,
+            clusteringRatio: clusteringRatio.toFixed(3),
+            averageNodesPerDay: averageNodesPerDay.toFixed(1),
+            uniqueDays: dayGroups.size
+        });
+
+        // High clustering: >40% of files created on same day
+        if (clusteringRatio > 0.4) {
+            return {
+                type: 'sparse',
+                confidence: Math.min(0.9, clusteringRatio),
+                reason: `${Math.round(clusteringRatio * 100)}% of files created on same day - use sparse spacing to avoid audio chaos`
+            };
+        }
+
+        // Very distributed: files span years with low daily density
+        if (spanInDays > 365 && averageNodesPerDay < 2) {
+            return {
+                type: 'dense',
+                confidence: Math.min(0.9, spanInDays / 365 / 10),
+                reason: `Files span ${Math.round(spanInDays / 365)} years with natural spacing - use dense audio for better experience`
+            };
+        }
+
+        // Moderate clustering: some bulk days but not overwhelming
+        if (clusteringRatio > 0.2 || averageNodesPerDay > 5) {
+            return {
+                type: 'balanced',
+                confidence: 0.7,
+                reason: `Mixed temporal pattern - balanced spacing recommended`
+            };
+        }
+
+        // Default case
+        return {
+            type: 'balanced',
+            confidence: 0.5,
+            reason: `Standard temporal distribution - balanced spacing`
         };
     }
 
