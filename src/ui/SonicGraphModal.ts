@@ -140,7 +140,7 @@ export class SonicGraphModal extends Modal {
      */
     private createTimelineArea(container: HTMLElement): void {
         this.timelineContainer = container.createDiv({ cls: 'sonic-graph-timeline' });
-        this.timelineContainer.style.display = 'none'; // Hidden until animation starts
+        		this.timelineContainer.classList.add('timeline-hidden'); // Hidden until animation starts
         
         // Timeline scrubber
         const scrubberContainer = this.timelineContainer.createDiv({ cls: 'sonic-graph-scrubber-container' });
@@ -198,7 +198,6 @@ export class SonicGraphModal extends Modal {
         this.playButton = new ButtonComponent(playButtonContainer);
         this.playButton
             .setButtonText('Play Sonic Graph')
-            .setCta()
             .onClick(() => this.toggleAnimation());
         
         // Speed control
@@ -348,7 +347,8 @@ export class SonicGraphModal extends Modal {
             
             // Start animation
             this.playButton.setButtonText('Pause Animation');
-            this.timelineContainer.style.display = 'block';
+            this.timelineContainer.classList.remove('timeline-hidden');
+            this.timelineContainer.classList.add('timeline-visible');
             
             // Initialize audio engine before starting animation
             try {
@@ -429,7 +429,8 @@ export class SonicGraphModal extends Modal {
             this.viewModeBtn.appendText('Timeline View');
             
             // Show timeline controls
-            this.timelineContainer.style.display = 'block';
+            this.timelineContainer.classList.remove('timeline-hidden');
+            this.timelineContainer.classList.add('timeline-visible');
             
             // Initialize temporal animator if needed
             if (!this.temporalAnimator) {
@@ -455,7 +456,8 @@ export class SonicGraphModal extends Modal {
             this.viewModeBtn.appendText('Static View');
             
             // Hide timeline controls
-            this.timelineContainer.style.display = 'none';
+            this.timelineContainer.classList.add('timeline-hidden');
+            this.timelineContainer.classList.remove('timeline-visible');
             
             // Stop any animation
             if (this.temporalAnimator) {
