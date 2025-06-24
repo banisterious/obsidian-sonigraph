@@ -604,15 +604,17 @@ export class SonicGraphModal extends Modal {
      * Create a musical mapping for a graph node
      */
     private createMusicalMappingForNode(node: GraphNode): any {
-        // Map file type to instrument
-        const instrumentMap: Record<string, string> = {
-            'note': 'piano',
-            'image': 'violin',
-            'pdf': 'trumpet',
-            'audio': 'flute',
-            'video': 'cello',
-            'other': 'synth'
-        };
+        // Get enabled instruments from user's settings
+        const enabledInstruments = this.getEnabledInstruments();
+        
+        if (enabledInstruments.length === 0) {
+            logger.warn('audio', 'No instruments enabled for temporal animation');
+            // Fallback to piano if nothing is enabled
+            return this.createFallbackMapping(node, 'piano');
+        }
+        
+        // Map file type to instrument categories, then select from user's enabled instruments
+        const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
         
         // Calculate pitch based on node properties
         const baseFreq = 261.63; // C4
@@ -630,13 +632,146 @@ export class SonicGraphModal extends Modal {
         const connectionFactor = Math.min(node.connections.length / 10, 0.4);
         const velocity = baseVelocity + connectionFactor;
         
+        logger.debug('audio', 'Created musical mapping for node', {
+            nodeId: node.id,
+            nodeType: node.type,
+            selectedInstrument,
+            enabledInstrumentsCount: enabledInstruments.length,
+            pitch: pitch.toFixed(2)
+        });
+        
         return {
             nodeId: node.id,
             pitch: pitch,
             duration: duration,
             velocity: velocity,
             timing: 0,
-            instrument: instrumentMap[node.type] || 'piano'
+            instrument: selectedInstrument
+        };
+    }
+
+    /**
+     * Get list of currently enabled instruments from settings
+     */
+    private getEnabledInstruments(): string[] {
+        const enabled: string[] = [];
+        
+        // Check all instruments in settings
+        Object.entries(this.plugin.settings.instruments).forEach(([instrumentName, settings]) => {
+            if (settings?.enabled) {
+                enabled.push(instrumentName);
+            }
+        });
+        
+        logger.debug('audio', 'Found enabled instruments', { 
+            count: enabled.length, 
+            instruments: enabled 
+        });
+        
+        return enabled;
+    }
+
+    /**
+     * Select appropriate instrument for file type from user's enabled instruments
+     */
+    private selectInstrumentForFileType(fileType: string, enabledInstruments: string[]): string {
+        // Define instrument categories by type
+        const instrumentCategories = {
+            keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta'],
+            strings: ['violin', 'cello', 'contrabass', 'guitar', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'strings'],
+            brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
+            woodwinds: ['flute', 'clarinet', 'saxophone', 'bassoon', 'oboe'],
+            percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
+            electronic: ['leadSynth', 'bassSynth', 'arpSynth'],
+            experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot']
+        };
+
+        // File type to preferred instrument category mapping
+        const fileTypePreferences: Record<string, string[]> = {
+            'note': ['keyboard', 'strings'], // Notes sound good with keyboard or strings
+            'image': ['strings', 'woodwinds'], // Images are visual, strings/woodwinds are expressive
+            'pdf': ['brass', 'keyboard'], // PDFs are formal, brass/keyboard are authoritative
+            'audio': ['woodwinds', 'electronic'], // Audio files with musical instruments
+            'video': ['strings', 'brass'], // Videos with rich, full instruments
+            'other': ['electronic', 'experimental'] // Other files with synthetic sounds
+        };
+
+        const preferredCategories = fileTypePreferences[fileType] || ['keyboard'];
+        
+        // Try to find an enabled instrument from preferred categories
+        for (const category of preferredCategories) {
+            const categoryInstruments = instrumentCategories[category as keyof typeof instrumentCategories] || [];
+            const availableInCategory = categoryInstruments.filter(inst => enabledInstruments.includes(inst));
+            
+            if (availableInCategory.length > 0) {
+                // Use consistent selection based on file hash for reproducibility
+                const fileHash = this.hashString(fileType + category);
+                const selectedIndex = fileHash % availableInCategory.length;
+                const selected = availableInCategory[selectedIndex];
+                
+                logger.debug('audio', 'Selected instrument from preferred category', {
+                    fileType,
+                    category,
+                    availableInCategory,
+                    selected
+                });
+                
+                return selected;
+            }
+        }
+        
+        // Find any uncategorized instruments (instruments not in any of our categories)
+        const allCategorizedInstruments = Object.values(instrumentCategories).flat();
+        const uncategorizedInstruments = enabledInstruments.filter(inst => 
+            !allCategorizedInstruments.includes(inst)
+        );
+        
+        if (uncategorizedInstruments.length > 0) {
+            // Use uncategorized instruments as a fallback
+            const fileHash = this.hashString(fileType + 'uncategorized');
+            const selectedIndex = fileHash % uncategorizedInstruments.length;
+            const selected = uncategorizedInstruments[selectedIndex];
+            
+            logger.debug('audio', 'Selected uncategorized instrument', {
+                fileType,
+                uncategorizedInstruments,
+                selected,
+                note: 'This instrument was not in predefined categories'
+            });
+            
+            return selected;
+        }
+        
+        // Final fallback: select any enabled instrument
+        const fileHash = this.hashString(fileType);
+        const fallbackIndex = fileHash % enabledInstruments.length;
+        const fallback = enabledInstruments[fallbackIndex];
+        
+        logger.debug('audio', 'Using final fallback instrument selection', {
+            fileType,
+            enabledInstruments,
+            fallback
+        });
+        
+        return fallback;
+    }
+
+    /**
+     * Create fallback mapping when no instruments are enabled
+     */
+    private createFallbackMapping(node: GraphNode, fallbackInstrument: string): any {
+        const baseFreq = 261.63; // C4
+        const fileNameHash = this.hashString(node.title);
+        const pitchOffset = (fileNameHash % 24) - 12;
+        const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
+        
+        return {
+            nodeId: node.id,
+            pitch: pitch,
+            duration: 0.3,
+            velocity: 0.5,
+            timing: 0,
+            instrument: fallbackInstrument
         };
     }
 
