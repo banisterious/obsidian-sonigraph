@@ -209,6 +209,8 @@ export interface SonigraphSettings {
 	sonicGraphShowFileNames?: boolean; // Show file names in Sonic Graph visualization
 	sonicGraphExcludeFolders?: string[]; // Folders to exclude from Sonic Graph
 	sonicGraphExcludeFiles?: string[]; // Files to exclude from Sonic Graph
+	sonicGraphAnimationDuration?: number; // Base animation duration in seconds (default 60)
+	sonicGraphAnimationSpeed?: number; // Animation speed multiplier (default 1.0)
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
@@ -296,6 +298,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	sonicGraphShowFileNames: false, // Default to hiding file names for cleaner visualization
 	sonicGraphExcludeFolders: [], // No folders excluded by default
 	sonicGraphExcludeFiles: [], // No files excluded by default
+	sonicGraphAnimationDuration: 60, // Default 60 seconds for more contemplative pacing
+	sonicGraphAnimationSpeed: 1.0, // Default to normal speed
 	effects: {
 		orchestralreverbhall: { enabled: true },
 		'3bandeq': { enabled: true },

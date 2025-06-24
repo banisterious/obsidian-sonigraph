@@ -47,6 +47,21 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					this.plugin.openControlPanel();
 				}));
 
+		// Sonic Graph Animation Duration Setting
+		new Setting(containerEl)
+			.setName('Sonic Graph animation duration')
+			.setDesc('Base duration for temporal graph animations in seconds. Higher values create more contemplative pacing.')
+			.addSlider(slider => slider
+				.setLimits(15, 300, 15) // 15 seconds to 5 minutes, in 15-second increments
+				.setValue(this.plugin.settings.sonicGraphAnimationDuration || 60)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.sonicGraphAnimationDuration = value;
+					await this.plugin.saveSettings();
+					logger.info('settings-change', 'Animation duration changed', { duration: value });
+				})
+			);
+
 		// --- Advanced Section ---
 		const advancedSection = containerEl.createEl('details', { cls: 'osp-advanced-settings' });
 		advancedSection.createEl('summary', { text: 'Advanced', cls: 'osp-advanced-summary' });

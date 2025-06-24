@@ -26,6 +26,7 @@ export class SonicGraphModal extends Modal {
     private musicalMapper: MusicalMapper | null = null;
     private isAnimating: boolean = false;
     private showFileNames: boolean = false;
+    private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
     // UI elements
     private headerContainer: HTMLElement;
@@ -37,6 +38,7 @@ export class SonicGraphModal extends Modal {
     private speedSelect: HTMLSelectElement;
     private timelineScrubber: HTMLInputElement;
     private timelineInfo: HTMLElement;
+    private viewModeBtn: HTMLButtonElement;
 
     constructor(app: App, plugin: SonigraphPlugin) {
         super(app);
@@ -153,11 +155,33 @@ export class SonicGraphModal extends Modal {
         this.timelineScrubber.value = '0';
         this.timelineScrubber.addEventListener('input', () => this.handleTimelineScrub());
         
-        // Timeline info
+        // Enhanced timeline info with dual tracks
         this.timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
-        this.timelineInfo.createSpan({ text: 'Start', cls: 'sonic-graph-timeline-start' });
-        this.timelineInfo.createSpan({ text: 'Current: 2024', cls: 'sonic-graph-timeline-current' });
-        this.timelineInfo.createSpan({ text: 'End', cls: 'sonic-graph-timeline-end' });
+        
+        // Years track
+        const yearsTrack = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-track sonic-graph-timeline-years' });
+        yearsTrack.createEl('div', { text: 'Years:', cls: 'sonic-graph-timeline-track-label' });
+        const yearsLine = yearsTrack.createDiv({ cls: 'sonic-graph-timeline-line' });
+        
+        // Years markers container
+        const yearsMarkers = yearsLine.createDiv({ cls: 'sonic-graph-timeline-markers sonic-graph-timeline-years-markers' });
+        // Markers will be populated dynamically
+        
+        // Time track  
+        const timeTrack = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-track sonic-graph-timeline-time' });
+        timeTrack.createEl('div', { text: 'Time:', cls: 'sonic-graph-timeline-track-label' });
+        const timeLine = timeTrack.createDiv({ cls: 'sonic-graph-timeline-line' });
+        
+        // Time markers container
+        const timeMarkers = timeLine.createDiv({ cls: 'sonic-graph-timeline-markers sonic-graph-timeline-time-markers' });
+        // Markers will be populated dynamically
+        
+        // Current position indicator (spans both tracks)
+        const currentIndicator = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-current-indicator' });
+        currentIndicator.createEl('div', { cls: 'sonic-graph-timeline-current-line' });
+        const currentLabel = currentIndicator.createEl('div', { cls: 'sonic-graph-timeline-current-label' });
+        currentLabel.createSpan({ text: 'Current: 2024', cls: 'sonic-graph-timeline-current-year' });
+        currentLabel.createSpan({ text: '0s', cls: 'sonic-graph-timeline-current-time' });
     }
 
     /**
@@ -181,9 +205,11 @@ export class SonicGraphModal extends Modal {
         const speedContainer = playControls.createDiv({ cls: 'sonic-graph-speed-container' });
         speedContainer.createEl('label', { text: 'Speed:', cls: 'sonic-graph-speed-label' });
         this.speedSelect = speedContainer.createEl('select', { cls: 'sonic-graph-speed-select' });
-        ['0.5x', '1x', '2x', '3x', '5x'].forEach(speed => {
+        const savedSpeed = this.plugin.settings.sonicGraphAnimationSpeed || 1.0;
+        const savedSpeedString = `${savedSpeed}x`;
+        ['0.1x', '0.25x', '0.5x', '1x', '2x', '3x', '5x'].forEach(speed => {
             const option = this.speedSelect.createEl('option', { text: speed, value: speed });
-            if (speed === '1x') option.selected = true;
+            if (speed === savedSpeedString) option.selected = true;
         });
         this.speedSelect.addEventListener('change', () => this.handleSpeedChange());
         
@@ -194,6 +220,16 @@ export class SonicGraphModal extends Modal {
         
         // Right side - View controls and navigation
         const viewControls = this.controlsContainer.createDiv({ cls: 'sonic-graph-view-controls' });
+        
+        // View mode toggle (Static/Timeline)
+        const viewModeContainer = viewControls.createDiv({ cls: 'sonic-graph-view-mode-container' });
+        this.viewModeBtn = viewModeContainer.createEl('button', { 
+            cls: 'sonic-graph-control-btn sonic-graph-view-mode-btn' 
+        });
+        const viewModeIcon = createLucideIcon('eye', 16);
+        this.viewModeBtn.appendChild(viewModeIcon);
+        this.viewModeBtn.appendText('Static View');
+        this.viewModeBtn.addEventListener('click', () => this.toggleViewMode());
         
         // Show file names toggle
         const fileNamesContainer = viewControls.createDiv({ cls: 'sonic-graph-toggle-container' });
@@ -267,6 +303,9 @@ export class SonicGraphModal extends Modal {
             // Update stats
             this.updateStats();
             
+            // Initialize view mode (starts in Static View)
+            this.updateViewMode();
+            
             logger.debug('ui', 'Sonic Graph initialized successfully');
             
         } catch (error) {
@@ -285,6 +324,12 @@ export class SonicGraphModal extends Modal {
         if (!this.graphRenderer) {
             new Notice('Graph not ready');
             return;
+        }
+        
+        // Switch to Timeline View if not already there
+        if (!this.isTimelineView) {
+            this.isTimelineView = true;
+            this.updateViewMode();
         }
         
         this.isAnimating = !this.isAnimating;
@@ -361,6 +406,73 @@ export class SonicGraphModal extends Modal {
         }
         
         logger.debug('ui', `File names visibility toggled: ${this.showFileNames}`);
+    }
+
+    /**
+     * Toggle between Static View and Timeline View
+     */
+    private toggleViewMode(): void {
+        this.isTimelineView = !this.isTimelineView;
+        this.updateViewMode();
+        logger.debug('ui', `View mode toggled: ${this.isTimelineView ? 'Timeline' : 'Static'}`);
+    }
+
+    /**
+     * Update UI based on current view mode
+     */
+    private updateViewMode(): void {
+        if (this.isTimelineView) {
+            // Timeline View - show animation controls, hide all nodes initially
+            this.viewModeBtn.innerHTML = '';
+            const timelineIcon = createLucideIcon('play-circle', 16);
+            this.viewModeBtn.appendChild(timelineIcon);
+            this.viewModeBtn.appendText('Timeline View');
+            
+            // Show timeline controls
+            this.timelineContainer.style.display = 'block';
+            
+            // Initialize temporal animator if needed
+            if (!this.temporalAnimator) {
+                this.initializeTemporalAnimator().catch(error => {
+                    logger.error('Failed to initialize temporal animator for timeline view', error);
+                    // Fall back to static view
+                    this.isTimelineView = false;
+                    this.updateViewMode();
+                });
+            } else {
+                // Reset to beginning and hide all nodes
+                this.temporalAnimator.stop();
+                if (this.graphRenderer) {
+                    this.graphRenderer.updateVisibleNodes(new Set());
+                }
+            }
+            
+        } else {
+            // Static View - show all nodes, hide animation controls
+            this.viewModeBtn.innerHTML = '';
+            const staticIcon = createLucideIcon('eye', 16);
+            this.viewModeBtn.appendChild(staticIcon);
+            this.viewModeBtn.appendText('Static View');
+            
+            // Hide timeline controls
+            this.timelineContainer.style.display = 'none';
+            
+            // Stop any animation
+            if (this.temporalAnimator) {
+                this.temporalAnimator.stop();
+            }
+            this.isAnimating = false;
+            this.playButton.setButtonText('Play Sonic Graph');
+            
+            // Show all nodes
+            if (this.graphRenderer) {
+                // Get all node IDs to show them all
+                this.graphDataExtractor.extractGraphData().then(graphData => {
+                    const allNodeIds = new Set(graphData.nodes.map(node => node.id));
+                    this.graphRenderer?.updateVisibleNodes(allNodeIds);
+                });
+            }
+        }
     }
 
     /**
@@ -450,7 +562,7 @@ export class SonicGraphModal extends Modal {
                 graphData.nodes,
                 graphData.links,
                 {
-                    duration: 30, // 30 second animation
+                    duration: this.plugin.settings.sonicGraphAnimationDuration || 60, // Use user setting or default to 60 seconds
                     speed: 1.0
                 }
             );
@@ -474,6 +586,10 @@ export class SonicGraphModal extends Modal {
                 this.handleNodeAppearance(node);
             });
             
+            // Initialize timeline markers
+            this.updateTimelineMarkers();
+            this.updateCurrentPosition(0, 0); // Initialize at start position
+            
             // Initialize musical mapper for audio
             this.musicalMapper = new MusicalMapper(this.plugin.settings);
             
@@ -489,12 +605,18 @@ export class SonicGraphModal extends Modal {
      * Handle speed control change
      */
     private handleSpeedChange(): void {
-        if (!this.temporalAnimator) return;
-        
         const speedValue = this.speedSelect.value;
         const speed = parseFloat(speedValue.replace('x', ''));
         
-        this.temporalAnimator.setSpeed(speed);
+        // Save setting
+        this.plugin.settings.sonicGraphAnimationSpeed = speed;
+        this.plugin.saveSettings();
+        
+        // Update animator if it exists
+        if (this.temporalAnimator) {
+            this.temporalAnimator.setSpeed(speed);
+        }
+        
         logger.debug('ui', 'Animation speed changed', { speed });
     }
 
@@ -523,21 +645,162 @@ export class SonicGraphModal extends Modal {
         
         // Update timeline info
         if (this.timelineInfo && this.temporalAnimator) {
-            const timelineInfo = this.temporalAnimator.getTimelineInfo();
-            const currentSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-current');
-            if (currentSpan) {
-                const currentDate = new Date(
-                    timelineInfo.startDate.getTime() + 
-                    (progress * (timelineInfo.endDate.getTime() - timelineInfo.startDate.getTime()))
-                );
-                currentSpan.textContent = `Current: ${currentDate.getFullYear()}`;
+            this.updateTimelineMarkers();
+            this.updateCurrentPosition(currentTime, progress);
+        }
+    }
+
+    /**
+     * Update timeline markers for years and time
+     */
+    private updateTimelineMarkers(): void {
+        if (!this.temporalAnimator) return;
+        
+        const timelineInfo = this.temporalAnimator.getTimelineInfo();
+        
+        // Update years markers
+        this.updateYearsMarkers(timelineInfo);
+        
+        // Update time markers
+        this.updateTimeMarkers(timelineInfo);
+    }
+
+    /**
+     * Update years markers along the timeline
+     */
+    private updateYearsMarkers(timelineInfo: any): void {
+        const yearsMarkersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-years-markers');
+        if (!yearsMarkersContainer) return;
+        
+        // Clear existing markers
+        yearsMarkersContainer.innerHTML = '';
+        
+        const startYear = timelineInfo.startDate.getFullYear();
+        const endYear = timelineInfo.endDate.getFullYear();
+        const yearRange = endYear - startYear;
+        
+        // Generate year markers - show more years for better granularity
+        const years: number[] = [];
+        
+        if (yearRange <= 1) {
+            // For short ranges, show months
+            const startMonth = timelineInfo.startDate.getMonth();
+            const endMonth = timelineInfo.endDate.getMonth();
+            for (let month = startMonth; month <= endMonth + 12; month += 3) {
+                const date = new Date(startYear, month);
+                if (date >= timelineInfo.startDate && date <= timelineInfo.endDate) {
+                    years.push(date.getFullYear() + date.getMonth() / 12);
+                }
             }
+        } else if (yearRange <= 5) {
+            // For medium ranges, show every year
+            for (let year = startYear; year <= endYear; year++) {
+                years.push(year);
+            }
+        } else if (yearRange <= 10) {
+            // For longer ranges, show every 2 years
+            for (let year = startYear; year <= endYear; year += 2) {
+                years.push(year);
+            }
+        } else {
+            // For very long ranges, show every 5 years
+            const step = Math.max(1, Math.floor(yearRange / 8));
+            for (let year = startYear; year <= endYear; year += step) {
+                years.push(year);
+            }
+        }
+        
+        // Create markers
+        years.forEach(year => {
+            const yearProgress = (year - startYear) / yearRange;
+            const marker = yearsMarkersContainer.createEl('div', { cls: 'sonic-graph-timeline-marker' });
+            marker.style.left = `${yearProgress * 100}%`;
             
-            // Update start/end dates
-            const startSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-start');
-            const endSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-end');
-            if (startSpan) startSpan.textContent = timelineInfo.startDate.getFullYear().toString();
-            if (endSpan) endSpan.textContent = timelineInfo.endDate.getFullYear().toString();
+            // Vertical line
+            marker.createEl('div', { cls: 'sonic-graph-timeline-marker-line' });
+            
+            // Label
+            const label = marker.createEl('div', { cls: 'sonic-graph-timeline-marker-label' });
+            label.textContent = Math.floor(year).toString();
+        });
+    }
+
+    /**
+     * Update time markers along the timeline
+     */
+    private updateTimeMarkers(timelineInfo: any): void {
+        const timeMarkersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-time-markers');
+        if (!timeMarkersContainer) return;
+        
+        // Clear existing markers
+        timeMarkersContainer.innerHTML = '';
+        
+        const duration = timelineInfo.duration;
+        
+        // Generate time markers based on duration
+        const timeIntervals: number[] = [];
+        
+        if (duration <= 30) {
+            // For short durations, show every 5 seconds
+            for (let t = 0; t <= duration; t += 5) {
+                timeIntervals.push(t);
+            }
+        } else if (duration <= 120) {
+            // For medium durations, show every 10 seconds
+            for (let t = 0; t <= duration; t += 10) {
+                timeIntervals.push(t);
+            }
+        } else {
+            // For long durations, show every 30 seconds
+            for (let t = 0; t <= duration; t += 30) {
+                timeIntervals.push(t);
+            }
+        }
+        
+        // Create markers
+        timeIntervals.forEach(time => {
+            const timeProgress = time / duration;
+            const marker = timeMarkersContainer.createEl('div', { cls: 'sonic-graph-timeline-marker' });
+            marker.style.left = `${timeProgress * 100}%`;
+            
+            // Vertical line
+            marker.createEl('div', { cls: 'sonic-graph-timeline-marker-line' });
+            
+            // Label
+            const label = marker.createEl('div', { cls: 'sonic-graph-timeline-marker-label' });
+            label.textContent = `${Math.floor(time)}s`;
+        });
+    }
+
+    /**
+     * Update current position indicator
+     */
+    private updateCurrentPosition(currentTime: number, progress: number): void {
+        if (!this.temporalAnimator) return;
+        
+        const timelineInfo = this.temporalAnimator.getTimelineInfo();
+        
+        // Update current position indicator
+        const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
+        if (currentIndicator) {
+            const indicator = currentIndicator as HTMLElement;
+            indicator.style.left = `${progress * 100}%`;
+        }
+        
+        // Update current labels
+        const currentYearSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-current-year');
+        const currentTimeSpan = this.timelineInfo.querySelector('.sonic-graph-timeline-current-time');
+        
+        if (currentYearSpan) {
+            const currentDate = new Date(
+                timelineInfo.startDate.getTime() + 
+                (progress * (timelineInfo.endDate.getTime() - timelineInfo.startDate.getTime()))
+            );
+            currentYearSpan.textContent = `Current: ${currentDate.getFullYear()}`;
+        }
+        
+        if (currentTimeSpan) {
+            currentTimeSpan.textContent = `${Math.floor(currentTime)}s`;
         }
     }
 

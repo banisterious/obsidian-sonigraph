@@ -474,7 +474,7 @@ class GraphDataExtractor {
 - `src/ui/SonicGraphModal.ts` - Audio integration and timeline controls
 - `src/graph/GraphDataExtractor.ts` - Exclusion filtering and comprehensive metadata
 - `src/ui/control-panel.ts` - Exclusion UI and graph controls
-- `styles/temporal.css` - Timeline controls and modal styling
+- `styles/sonic-graph.css` - Sonic Graph visualization and temporal animation styling
 - `styles/controls.css` - Exclusion system styling
 
 ### 🎵 **Audio System Status**
@@ -563,7 +563,7 @@ src/
 │   └── ColorExtraction.ts         # Image color analysis
 └── styles/
     ├── controls.css               # ✅ Enhanced with exclusion styling (implemented)
-    ├── temporal.css               # ✅ Enhanced with modal fixes (implemented)
+    ├── sonic-graph.css            # ✅ Enhanced with modal fixes (implemented)
     └── ...                        # Other style files
 ```
 

@@ -564,8 +564,11 @@ export class GraphRenderer {
     const fileSize = this.formatFileSize(node.fileSize);
     const connectionCount = node.connections.length;
     
+    // Extract just the filename from the full path
+    const fileName = node.title.split('/').pop() || node.title;
+    
     return `
-      <div class="sonic-graph-tooltip-title">${node.title}</div>
+      <div class="sonic-graph-tooltip-title">${fileName}</div>
       <div class="sonic-graph-tooltip-path">${node.path}</div>
       <div class="sonic-graph-tooltip-meta">
         <div>Type: ${node.type}</div>
