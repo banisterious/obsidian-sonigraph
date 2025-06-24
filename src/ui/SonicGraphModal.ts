@@ -38,8 +38,10 @@ export class SonicGraphModal extends Modal {
     private timelineScrubber: HTMLInputElement;
     private timelineInfo: HTMLElement;
     private viewModeBtn: HTMLButtonElement;
-    private spacingSelect: HTMLSelectElement;
     private detectedSpacing: 'dense' | 'balanced' | 'sparse' = 'balanced';
+    private settingsPanel: HTMLElement;
+    private settingsButton: HTMLButtonElement;
+    private isSettingsVisible: boolean = false;
 
     constructor(app: App, plugin: SonigraphPlugin) {
         super(app);
@@ -72,7 +74,7 @@ export class SonicGraphModal extends Modal {
             
             // Create modal structure inside container
             this.createHeader(modalContainer);
-            this.createGraphArea(modalContainer);
+            this.createMainContent(modalContainer);
             this.createTimelineArea(modalContainer);
             this.createControlsArea(modalContainer);
             
@@ -119,10 +121,13 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
-     * Create main graph visualization area
+     * Create main content area with graph and settings panel
      */
-    private createGraphArea(container: HTMLElement): void {
-        this.graphContainer = container.createDiv({ cls: 'sonic-graph-container' });
+    private createMainContent(container: HTMLElement): void {
+        const mainContent = container.createDiv({ cls: 'sonic-graph-main-content' });
+        
+        // Graph area (left side)
+        this.graphContainer = mainContent.createDiv({ cls: 'sonic-graph-container' });
         
         // Graph canvas
         const graphCanvas = this.graphContainer.createDiv({ cls: 'sonic-graph-canvas' });
@@ -134,6 +139,10 @@ export class SonicGraphModal extends Modal {
         loadingIcon.addClass('sonic-graph-loading-icon');
         loadingIndicator.appendChild(loadingIcon);
         loadingIndicator.createSpan({ text: 'Loading graph...', cls: 'sonic-graph-loading-text' });
+        
+        // Settings panel (right side, initially hidden)
+        this.settingsPanel = mainContent.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
+        this.createSettingsContent();
     }
 
     /**
@@ -224,7 +233,6 @@ export class SonicGraphModal extends Modal {
         this.viewModeBtn.appendText('Static View');
         this.viewModeBtn.addEventListener('click', () => this.toggleViewMode());
         
-        
         // Reset view button
         const resetViewBtn = viewControls.createEl('button', { 
             cls: 'sonic-graph-control-btn' 
@@ -234,23 +242,14 @@ export class SonicGraphModal extends Modal {
         resetViewBtn.appendText('Reset View');
         resetViewBtn.addEventListener('click', () => this.resetGraphView());
         
-        // Control Center button
-        const controlCenterBtn = viewControls.createEl('button', { 
-            cls: 'sonic-graph-control-btn sonic-graph-control-btn--secondary' 
-        });
-        const controlCenterIcon = createLucideIcon('settings', 16);
-        controlCenterBtn.appendChild(controlCenterIcon);
-        controlCenterBtn.appendText('Control Center');
-        controlCenterBtn.addEventListener('click', () => this.openControlCenter());
-        
         // Settings button
-        const settingsBtn = viewControls.createEl('button', { 
+        this.settingsButton = viewControls.createEl('button', { 
             cls: 'sonic-graph-control-btn sonic-graph-control-btn--secondary' 
         });
         const settingsIcon = createLucideIcon('sliders', 16);
-        settingsBtn.appendChild(settingsIcon);
-        settingsBtn.appendText('Settings');
-        settingsBtn.addEventListener('click', () => this.toggleSettings());
+        this.settingsButton.appendChild(settingsIcon);
+        this.settingsButton.appendText('Settings');
+        this.settingsButton.addEventListener('click', () => this.toggleSettings());
     }
 
     /**
@@ -263,6 +262,15 @@ export class SonicGraphModal extends Modal {
             // Extract graph data
             const graphData = await this.graphDataExtractor.extractGraphData();
             logger.debug('ui', `Extracted ${graphData.nodes.length} nodes and ${graphData.links.length} links`);
+            
+            // Detect temporal clustering for spacing configuration
+            const detection = this.detectTemporalClustering(graphData.nodes);
+            this.detectedSpacing = detection.type;
+            logger.debug('temporal-spacing', 'Detected temporal clustering', {
+                type: detection.type,
+                confidence: detection.confidence,
+                reason: detection.reason
+            });
             
             // Create graph renderer
             const canvasElement = document.getElementById('sonic-graph-canvas');
@@ -277,6 +285,16 @@ export class SonicGraphModal extends Modal {
             
             // Render the graph
             this.graphRenderer.render(graphData.nodes, graphData.links);
+            
+            // Set initial zoom level to be more zoomed out and centered
+            const canvasRect = canvasElement.getBoundingClientRect();
+            const centerX = canvasRect.width / 2;
+            const centerY = canvasRect.height / 2;
+            this.graphRenderer.setZoomTransform(
+                d3.zoomIdentity
+                    .translate(centerX * 0.6, centerY * 0.6) // Center with some offset
+                    .scale(0.4)
+            );
             
             // Hide loading indicator
             const loadingIndicator = this.graphContainer.querySelector('.sonic-graph-loading');
@@ -433,6 +451,7 @@ export class SonicGraphModal extends Modal {
             const timelineIcon = createLucideIcon('play-circle', 16);
             this.viewModeBtn.appendChild(timelineIcon);
             this.viewModeBtn.appendText('Timeline View');
+            this.viewModeBtn.style.display = 'inline-flex';
             
             // Show timeline controls
             this.timelineContainer.classList.remove('timeline-hidden');
@@ -455,11 +474,8 @@ export class SonicGraphModal extends Modal {
             }
             
         } else {
-            // Static View - show all nodes, hide animation controls
-            this.viewModeBtn.innerHTML = '';
-            const staticIcon = createLucideIcon('eye', 16);
-            this.viewModeBtn.appendChild(staticIcon);
-            this.viewModeBtn.appendText('Static View');
+            // Static View - hide view mode button since Play button indicates timeline mode
+            this.viewModeBtn.style.display = 'none';
             
             // Hide timeline controls
             this.timelineContainer.classList.add('timeline-hidden');
@@ -494,8 +510,21 @@ export class SonicGraphModal extends Modal {
      */
     private resetGraphView(): void {
         if (this.graphRenderer) {
-            // Reset zoom to initial view
-            this.graphRenderer.setZoomTransform(d3.zoomIdentity.scale(0.6));
+            // Reset zoom to initial view (more zoomed out and centered)
+            const canvasElement = document.getElementById('sonic-graph-canvas');
+            if (canvasElement) {
+                const canvasRect = canvasElement.getBoundingClientRect();
+                const centerX = canvasRect.width / 2;
+                const centerY = canvasRect.height / 2;
+                this.graphRenderer.setZoomTransform(
+                    d3.zoomIdentity
+                        .translate(centerX * 0.6, centerY * 0.6) // Center with some offset
+                        .scale(0.4)
+                );
+            } else {
+                // Fallback if canvas not found
+                this.graphRenderer.setZoomTransform(d3.zoomIdentity.scale(0.4));
+            }
             logger.debug('ui', 'Graph view reset');
         }
     }
@@ -514,11 +543,217 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
-     * Toggle settings panel (placeholder)
+     * Create settings panel content
+     */
+    private createSettingsContent(): void {
+        // Settings header
+        const settingsHeader = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-header' });
+        const headerTitle = settingsHeader.createEl('h3', { 
+            text: '⚙️ Timeline Settings', 
+            cls: 'sonic-graph-settings-title' 
+        });
+        
+        const closeButton = settingsHeader.createEl('button', { 
+            cls: 'sonic-graph-settings-close' 
+        });
+        closeButton.textContent = '×';
+        closeButton.addEventListener('click', () => this.toggleSettings());
+        
+        // Settings content (scrollable area)
+        const settingsContent = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-content' });
+        
+        // Timeline section
+        this.createTimelineSettings(settingsContent);
+        
+        // Audio section
+        this.createAudioSettings(settingsContent);
+        
+        // Visual section
+        this.createVisualSettings(settingsContent);
+        
+        // Navigation section
+        this.createNavigationSettings(settingsContent);
+    }
+
+    /**
+     * Create timeline settings section
+     */
+    private createTimelineSettings(container: HTMLElement): void {
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'TIMELINE', cls: 'sonic-graph-settings-section-title' });
+        
+        // Audio Density Slider
+        const densityItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        densityItem.createEl('label', { text: 'Audio Density', cls: 'sonic-graph-setting-label' });
+        densityItem.createEl('div', { 
+            text: 'Control how frequently notes play during animation', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const densityContainer = densityItem.createDiv({ cls: 'sonic-graph-density-slider-container' });
+        const densitySlider = densityContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-density-slider'
+        });
+        densitySlider.min = '0';
+        densitySlider.max = '100';
+        densitySlider.value = '30';
+        
+        const densityLabels = densityContainer.createDiv({ cls: 'sonic-graph-density-labels' });
+        densityLabels.createEl('span', { text: 'Dense', cls: 'sonic-graph-density-label' });
+        densityLabels.createEl('span', { text: 'Sparse', cls: 'sonic-graph-density-label' });
+        
+        // Animation Duration
+        const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        durationItem.createEl('label', { text: 'Animation Duration', cls: 'sonic-graph-setting-label' });
+        durationItem.createEl('div', { 
+            text: 'Total time for complete timeline animation', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const durationSelect = durationItem.createEl('select', { cls: 'sonic-graph-setting-select' });
+        ['15 seconds', '30 seconds', '60 seconds', '120 seconds', 'Custom...'].forEach(option => {
+            const optionEl = durationSelect.createEl('option', { text: option });
+            if (option === '60 seconds') optionEl.selected = true;
+        });
+        
+        // Loop Animation
+        const loopItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        loopItem.createEl('label', { text: 'Loop Animation', cls: 'sonic-graph-setting-label' });
+        loopItem.createEl('div', { 
+            text: 'Automatically restart animation when complete', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const loopToggle = loopItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
+        const toggleSwitch = loopToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        const toggleHandle = toggleSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        loopToggle.createEl('span', { text: 'Enable looping' });
+        
+        toggleSwitch.addEventListener('click', () => {
+            toggleSwitch.toggleClass('active', !toggleSwitch.hasClass('active'));
+        });
+    }
+
+    /**
+     * Create audio settings section
+     */
+    private createAudioSettings(container: HTMLElement): void {
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'AUDIO', cls: 'sonic-graph-settings-section-title' });
+        
+        // Auto-detection Override
+        const detectionItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        detectionItem.createEl('label', { text: 'Auto-detection', cls: 'sonic-graph-setting-label' });
+        detectionItem.createEl('div', { 
+            text: 'Override automatic temporal clustering detection', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const detectionSelect = detectionItem.createEl('select', { cls: 'sonic-graph-setting-select' });
+        [`Auto (${this.detectedSpacing} detected)`, 'Force Dense', 'Force Balanced', 'Force Sparse'].forEach(option => {
+            const optionEl = detectionSelect.createEl('option', { text: option });
+            if (option.includes('Auto')) optionEl.selected = true;
+        });
+        
+        // Note Duration
+        const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        durationItem.createEl('label', { text: 'Note Duration', cls: 'sonic-graph-setting-label' });
+        durationItem.createEl('div', { 
+            text: 'Base duration for individual notes', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const durationInput = durationItem.createEl('input', { 
+            type: 'number',
+            cls: 'sonic-graph-setting-input'
+        });
+        durationInput.value = '0.3';
+        durationInput.step = '0.1';
+        durationInput.min = '0.1';
+        durationInput.max = '2.0';
+    }
+
+    /**
+     * Create visual settings section
+     */
+    private createVisualSettings(container: HTMLElement): void {
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'VISUAL', cls: 'sonic-graph-settings-section-title' });
+        
+        // Timeline Markers
+        const markersItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        markersItem.createEl('label', { text: 'Timeline Markers', cls: 'sonic-graph-setting-label' });
+        markersItem.createEl('div', { 
+            text: 'Show year markers on timeline', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const markersToggle = markersItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
+        const markersSwitch = markersToggle.createDiv({ cls: 'sonic-graph-toggle-switch active' });
+        const markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        markersToggle.createEl('span', { text: 'Show markers' });
+        
+        markersSwitch.addEventListener('click', () => {
+            markersSwitch.toggleClass('active', !markersSwitch.hasClass('active'));
+        });
+        
+        // Animation Style
+        const styleItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        styleItem.createEl('label', { text: 'Animation Style', cls: 'sonic-graph-setting-label' });
+        styleItem.createEl('div', { 
+            text: 'How nodes appear during animation', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const styleSelect = styleItem.createEl('select', { cls: 'sonic-graph-setting-select' });
+        ['Fade in', 'Scale up', 'Slide in', 'Pop in'].forEach(option => {
+            const optionEl = styleSelect.createEl('option', { text: option });
+            if (option === 'Fade in') optionEl.selected = true;
+        });
+    }
+
+    /**
+     * Create navigation settings section
+     */
+    private createNavigationSettings(container: HTMLElement): void {
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'NAVIGATION', cls: 'sonic-graph-settings-section-title' });
+        
+        // Control Center Button
+        const controlCenterItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        controlCenterItem.createEl('label', { text: 'Audio Control', cls: 'sonic-graph-setting-label' });
+        controlCenterItem.createEl('div', { 
+            text: 'Open the main audio control interface', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const controlCenterBtn = controlCenterItem.createEl('button', { 
+            cls: 'sonic-graph-control-btn sonic-graph-control-btn--secondary',
+            text: '🎵 Control Center'
+        });
+        const controlCenterIcon = createLucideIcon('settings', 16);
+        controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
+        controlCenterBtn.addEventListener('click', () => this.openControlCenter());
+    }
+
+    /**
+     * Toggle settings panel visibility
      */
     private toggleSettings(): void {
-        // TODO: Implement settings panel
-        new Notice('Settings panel coming soon');
+        this.isSettingsVisible = !this.isSettingsVisible;
+        
+        if (this.isSettingsVisible) {
+            this.settingsPanel.removeClass('hidden');
+            this.settingsButton.addClass('active');
+        } else {
+            this.settingsPanel.addClass('hidden');
+            this.settingsButton.removeClass('active');
+        }
+        
+        logger.debug('ui', 'Settings panel toggled', { 
+            visible: this.isSettingsVisible 
+        });
     }
 
     /**
@@ -537,85 +772,16 @@ export class SonicGraphModal extends Modal {
             text: `${fileCount} notes • ${totalFiles} total files`,
             cls: 'sonic-graph-stats-text'
         });
-
-        // Add temporal spacing control
-        this.createTemporalSpacingControl();
     }
 
     /**
-     * Create temporal spacing control with auto-detection
-     */
-    private async createTemporalSpacingControl(): Promise<void> {
-        if (!this.statsContainer) return;
-
-        try {
-            // Get graph data for detection
-            const graphData = await this.graphDataExtractor.extractGraphData();
-            const detection = this.detectTemporalClustering(graphData.nodes);
-            this.detectedSpacing = detection.type;
-
-            // Create spacing container (inline)
-            const spacingContainer = this.statsContainer.createDiv({ 
-                cls: 'sonic-graph-spacing-container' 
-            });
-
-            // Label
-            spacingContainer.createEl('label', { 
-                text: 'Timeline:', 
-                cls: 'sonic-graph-spacing-label' 
-            });
-
-            // Dropdown
-            this.spacingSelect = spacingContainer.createEl('select', { 
-                cls: 'sonic-graph-spacing-select' 
-            });
-
-            // Shortened options
-            const options = [
-                { value: 'auto', label: `Auto (${detection.type})` },
-                { value: 'dense', label: 'Dense' },
-                { value: 'balanced', label: 'Balanced' },
-                { value: 'sparse', label: 'Sparse' }
-            ];
-
-            options.forEach(option => {
-                const optionEl = this.spacingSelect.createEl('option', { 
-                    value: option.value,
-                    text: option.label
-                });
-                if (option.value === 'auto') {
-                    optionEl.selected = true;
-                }
-            });
-
-            // Event listener
-            this.spacingSelect.addEventListener('change', () => {
-                logger.debug('temporal-spacing', 'User changed spacing setting', {
-                    value: this.spacingSelect.value,
-                    detectedSpacing: this.detectedSpacing
-                });
-            });
-
-            logger.debug('temporal-spacing', 'Created spacing control', {
-                detectedType: detection.type,
-                confidence: detection.confidence,
-                reason: detection.reason
-            });
-
-        } catch (error) {
-            logger.warn('temporal-spacing', 'Failed to create spacing control', (error as Error).message);
-        }
-    }
-
-    /**
-     * Get spacing configuration based on user selection
+     * Get default spacing configuration (now uses settings panel controls)
      */
     private getSpacingConfiguration(): { enableIntelligentSpacing: boolean, simultaneousThreshold: number, maxSpacingWindow: number, minEventSpacing: number } {
-        const selectedValue = this.spacingSelect?.value || 'auto';
-        const actualSpacing = selectedValue === 'auto' ? this.detectedSpacing : selectedValue;
+        // Use detected spacing since settings are now in the panel
+        const actualSpacing = this.detectedSpacing;
 
         logger.debug('temporal-spacing', 'Getting spacing configuration', {
-            selectedValue,
             detectedSpacing: this.detectedSpacing,
             actualSpacing
         });

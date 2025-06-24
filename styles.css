@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-24 19:50:31 UTC
+ * - Generated: 2025-06-24 22:50:59 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6935,7 +6935,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 908 lines, 19.54 KB */
+/* Component Size: 1175 lines, 25.67 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -7224,22 +7224,16 @@ details.osp-advanced-settings {
    Sonic Graph Modal Styles
    ========================================================================== */
 
-/* Modal sizing - Large modal for graph visualization */
+/* Large modal for graph visualization */
 .modal.sonic-graph-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   height: var(--modal-height);
   width: var(--modal-width);
   max-height: var(--modal-max-height);
   max-width: var(--modal-max-width);
   padding: 0 0 0 0.5em;
-}
-
-/* Modal content */
-.sonic-graph-modal {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 /* Modal close button positioning to avoid overlap with header - following Control Center pattern */
@@ -7322,19 +7316,11 @@ details.osp-advanced-settings {
   border-color: var(--background-modifier-border);
 }
 
-/* Graph container - Let flexbox handle sizing */
-.sonic-graph-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--background-primary);
-  min-height: 180px;
-  max-height: calc(100% - 180px);
-}
-
 .sonic-graph-canvas {
+  flex: 1;
   width: 100%;
-  height: 100%;
+  height: 600px !important; /* Force height with !important */
+  min-height: 400px;
   cursor: grab;
 }
 
@@ -7414,9 +7400,7 @@ details.osp-advanced-settings {
   flex-shrink: 0;
   height: 100px;
   overflow-y: auto;
-  margin-top: -85px;
   position: relative;
-  z-index: 1;
 }
 
 .sonic-graph-scrubber-container {
@@ -7680,6 +7664,289 @@ details.osp-advanced-settings {
   align-items: center;
   gap: var(--osp-spacing-md);
   flex: 0 0 auto;
+}
+
+/* Main Content Layout with Settings Panel */
+.sonic-graph-main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0; /* Ensure flex child can shrink */
+  height: 100%; /* Take full available height */
+  align-items: stretch; /* Ensure children fill height */
+}
+
+.sonic-graph-container {
+  flex: 2;
+  position: relative;
+  overflow: hidden;
+  transition: flex 0.3s ease;
+  background: var(--background-primary);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+/* When settings panel is open, adjust proportions */
+.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden)) .sonic-graph-container {
+  flex: 4; /* Give graph more space when settings open */
+}
+
+.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden))
+  .sonic-graph-settings-panel {
+  flex: 2;
+}
+
+.sonic-graph-settings-panel {
+  flex: 1;
+  background: var(--background-secondary);
+  border-left: 1px solid var(--background-modifier-border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  min-height: 0; /* Ensure flex child can shrink */
+  max-height: 100%; /* Constrain to parent height */
+  display: flex;
+  flex-direction: column;
+}
+
+.sonic-graph-settings-panel.hidden {
+  flex: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
+/* Settings Panel Content */
+.sonic-graph-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--osp-spacing-md);
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+}
+
+.sonic-graph-settings-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 0;
+}
+
+.sonic-graph-settings-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.sonic-graph-settings-close:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.sonic-graph-settings-content {
+  padding: var(--osp-spacing-md);
+  padding-bottom: var(--osp-spacing-lg);
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  max-height: 500px !important; /* Force constraint with !important */
+}
+
+.sonic-graph-settings-section {
+  margin-bottom: var(--osp-spacing-md);
+  padding-bottom: var(--osp-spacing-md);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sonic-graph-settings-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.sonic-graph-settings-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: var(--osp-spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sonic-graph-setting-item {
+  margin-bottom: var(--osp-spacing-md);
+}
+
+.sonic-graph-setting-item:last-child {
+  margin-bottom: 0;
+}
+
+.sonic-graph-setting-label {
+  display: block;
+  font-size: var(--osp-font-size-small);
+  color: var(--text-normal);
+  margin-bottom: var(--osp-spacing-xs);
+  font-weight: 500;
+}
+
+.sonic-graph-setting-description {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: var(--osp-spacing-sm);
+  line-height: 1.4;
+}
+
+/* Density Slider */
+.sonic-graph-density-slider-container {
+  position: relative;
+  margin: var(--osp-spacing-sm) 0;
+}
+
+.sonic-graph-density-slider {
+  width: 100%;
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sonic-graph-density-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-density-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-density-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--osp-spacing-xs);
+}
+
+.sonic-graph-density-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Form Controls */
+.sonic-graph-setting-input {
+  width: 100%;
+  padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--osp-font-size-small);
+}
+
+.sonic-graph-setting-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 1px var(--interactive-accent-hover);
+}
+
+.sonic-graph-setting-select {
+  width: 100%;
+  padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--osp-font-size-small);
+  cursor: pointer;
+}
+
+.sonic-graph-setting-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 1px var(--interactive-accent-hover);
+}
+
+/* Toggle Switches */
+.sonic-graph-setting-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-sm);
+}
+
+.sonic-graph-toggle-switch {
+  width: 32px;
+  height: 18px;
+  background: var(--background-modifier-border);
+  border-radius: 9px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sonic-graph-toggle-switch.active {
+  background: var(--interactive-accent);
+}
+
+.sonic-graph-toggle-handle {
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s ease;
+}
+
+.sonic-graph-toggle-switch.active .sonic-graph-toggle-handle {
+  left: 16px;
+}
+
+/* Settings Button Active State */
+.sonic-graph-control-btn.active {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: white;
+}
+
+/* Scrollbar Styling for Settings Panel */
+.sonic-graph-settings-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sonic-graph-settings-panel::-webkit-scrollbar-track {
+  background: var(--background-primary);
+}
+
+.sonic-graph-settings-panel::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.sonic-graph-settings-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .sonic-graph-control-btn {
@@ -8417,11 +8684,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-24 19:50:31 UTC
+ * Build completed: 2025-06-24 22:50:59 UTC
  * Components processed: 19
- * Total lines: 8220
- * Total size: 172.7 KB
- * Build duration: 0.02 seconds
+ * Total lines: 8487
+ * Total size: 178.84 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -8439,7 +8706,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - sonic-graph.css: 908 lines, 19.54 KB
+ * - sonic-graph.css: 1175 lines, 25.67 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB
