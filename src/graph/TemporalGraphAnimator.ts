@@ -259,6 +259,30 @@ export class TemporalGraphAnimator {
    * Start animation playback
    */
   play(): void {
+    logger.info('playback', 'Temporal animator play called', { 
+      timelineEvents: this.timeline.length,
+      duration: this.config.duration,
+      isPlaying: this.isPlaying,
+      isPaused: this.isPaused
+    });
+    
+    // Debug: Log sample of timeline events to understand the issue
+    if (this.timeline.length > 0) {
+      const sampleEvents = this.timeline.slice(0, 10);
+      logger.info('playback', 'Sample timeline events (first 10)', {
+        events: sampleEvents.map(e => ({
+          timestamp: e.timestamp.toFixed(3),
+          nodeId: e.nodeId,
+          type: e.type
+        })),
+        totalEvents: this.timeline.length,
+        dateRange: {
+          start: this.config.startDate.toISOString(),
+          end: this.config.endDate.toISOString()
+        }
+      });
+    }
+    
     if (this.isPlaying && !this.isPaused) {
       logger.debug('playback', 'Animation already playing');
       return;
@@ -406,7 +430,13 @@ export class TemporalGraphAnimator {
     
     // Trigger appearance callbacks for newly visible nodes
     if (newlyAppearedNodes.length > 0) {
-      logger.debug('animation', `${newlyAppearedNodes.length} nodes appeared at time ${this.currentTime.toFixed(2)}s`);
+      logger.info('animation', 'Nodes appeared in temporal animation', {
+        count: newlyAppearedNodes.length,
+        time: this.currentTime.toFixed(2),
+        nodeIds: newlyAppearedNodes.map(n => n.id),
+        nodeTitles: newlyAppearedNodes.map(n => n.title),
+        hasCallback: !!this.onNodeAppear
+      });
       newlyAppearedNodes.forEach(node => {
         this.onNodeAppear?.(node);
       });
