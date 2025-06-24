@@ -11124,6 +11124,7 @@ var init_SonicGraphModal = __esm({
         this.isAnimating = false;
         this.isTimelineView = false;
         this.detectedSpacing = "balanced";
+        this.isSettingsVisible = false;
         this.plugin = plugin;
         this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache, {
           excludeFolders: plugin.settings.sonicGraphExcludeFolders || [],
@@ -11140,7 +11141,7 @@ var init_SonicGraphModal = __esm({
           closeButton.addEventListener("click", () => this.close());
           const modalContainer = contentEl.createDiv({ cls: "sonic-graph-modal-container" });
           this.createHeader(modalContainer);
-          this.createGraphArea(modalContainer);
+          this.createMainContent(modalContainer);
           this.createTimelineArea(modalContainer);
           this.createControlsArea(modalContainer);
           this.initializeGraph();
@@ -11172,10 +11173,11 @@ var init_SonicGraphModal = __esm({
         titleContainer.createEl("h1", { text: "Sonic Graph", cls: "sonic-graph-title" });
       }
       /**
-       * Create main graph visualization area
+       * Create main content area with graph and settings panel
        */
-      createGraphArea(container) {
-        this.graphContainer = container.createDiv({ cls: "sonic-graph-container" });
+      createMainContent(container) {
+        const mainContent = container.createDiv({ cls: "sonic-graph-main-content" });
+        this.graphContainer = mainContent.createDiv({ cls: "sonic-graph-container" });
         const graphCanvas = this.graphContainer.createDiv({ cls: "sonic-graph-canvas" });
         graphCanvas.id = "sonic-graph-canvas";
         const loadingIndicator = this.graphContainer.createDiv({ cls: "sonic-graph-loading" });
@@ -11183,6 +11185,8 @@ var init_SonicGraphModal = __esm({
         loadingIcon.addClass("sonic-graph-loading-icon");
         loadingIndicator.appendChild(loadingIcon);
         loadingIndicator.createSpan({ text: "Loading graph...", cls: "sonic-graph-loading-text" });
+        this.settingsPanel = mainContent.createDiv({ cls: "sonic-graph-settings-panel hidden" });
+        this.createSettingsContent();
       }
       /**
        * Create timeline area (initially hidden)
@@ -11250,20 +11254,13 @@ var init_SonicGraphModal = __esm({
         resetViewBtn.appendChild(resetIcon);
         resetViewBtn.appendText("Reset View");
         resetViewBtn.addEventListener("click", () => this.resetGraphView());
-        const controlCenterBtn = viewControls.createEl("button", {
-          cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary"
-        });
-        const controlCenterIcon = createLucideIcon("settings", 16);
-        controlCenterBtn.appendChild(controlCenterIcon);
-        controlCenterBtn.appendText("Control Center");
-        controlCenterBtn.addEventListener("click", () => this.openControlCenter());
-        const settingsBtn = viewControls.createEl("button", {
+        this.settingsButton = viewControls.createEl("button", {
           cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary"
         });
         const settingsIcon = createLucideIcon("sliders", 16);
-        settingsBtn.appendChild(settingsIcon);
-        settingsBtn.appendText("Settings");
-        settingsBtn.addEventListener("click", () => this.toggleSettings());
+        this.settingsButton.appendChild(settingsIcon);
+        this.settingsButton.appendText("Settings");
+        this.settingsButton.addEventListener("click", () => this.toggleSettings());
       }
       /**
        * Initialize the graph visualization
@@ -11273,6 +11270,13 @@ var init_SonicGraphModal = __esm({
           logger11.debug("ui", "Initializing Sonic Graph");
           const graphData = await this.graphDataExtractor.extractGraphData();
           logger11.debug("ui", `Extracted ${graphData.nodes.length} nodes and ${graphData.links.length} links`);
+          const detection = this.detectTemporalClustering(graphData.nodes);
+          this.detectedSpacing = detection.type;
+          logger11.debug("temporal-spacing", "Detected temporal clustering", {
+            type: detection.type,
+            confidence: detection.confidence,
+            reason: detection.reason
+          });
           const canvasElement = document.getElementById("sonic-graph-canvas");
           if (!canvasElement) {
             throw new Error("Graph canvas element not found");
@@ -11282,6 +11286,12 @@ var init_SonicGraphModal = __esm({
             showLabels: false
           });
           this.graphRenderer.render(graphData.nodes, graphData.links);
+          const canvasRect = canvasElement.getBoundingClientRect();
+          const centerX = canvasRect.width / 2;
+          const centerY = canvasRect.height / 2;
+          this.graphRenderer.setZoomTransform(
+            identity2.translate(centerX * 0.6, centerY * 0.6).scale(0.4)
+          );
           const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
           if (loadingIndicator) {
             loadingIndicator.remove();
@@ -11395,6 +11405,7 @@ var init_SonicGraphModal = __esm({
           const timelineIcon = createLucideIcon("play-circle", 16);
           this.viewModeBtn.appendChild(timelineIcon);
           this.viewModeBtn.appendText("Timeline View");
+          this.viewModeBtn.style.display = "inline-flex";
           this.timelineContainer.classList.remove("timeline-hidden");
           this.timelineContainer.classList.add("timeline-visible");
           if (!this.temporalAnimator) {
@@ -11410,10 +11421,7 @@ var init_SonicGraphModal = __esm({
             }
           }
         } else {
-          this.viewModeBtn.innerHTML = "";
-          const staticIcon = createLucideIcon("eye", 16);
-          this.viewModeBtn.appendChild(staticIcon);
-          this.viewModeBtn.appendText("Static View");
+          this.viewModeBtn.style.display = "none";
           this.timelineContainer.classList.add("timeline-hidden");
           this.timelineContainer.classList.remove("timeline-visible");
           if (this.temporalAnimator) {
@@ -11439,7 +11447,17 @@ var init_SonicGraphModal = __esm({
        */
       resetGraphView() {
         if (this.graphRenderer) {
-          this.graphRenderer.setZoomTransform(identity2.scale(0.6));
+          const canvasElement = document.getElementById("sonic-graph-canvas");
+          if (canvasElement) {
+            const canvasRect = canvasElement.getBoundingClientRect();
+            const centerX = canvasRect.width / 2;
+            const centerY = canvasRect.height / 2;
+            this.graphRenderer.setZoomTransform(
+              identity2.translate(centerX * 0.6, centerY * 0.6).scale(0.4)
+            );
+          } else {
+            this.graphRenderer.setZoomTransform(identity2.scale(0.4));
+          }
           logger11.debug("ui", "Graph view reset");
         }
       }
@@ -11454,10 +11472,174 @@ var init_SonicGraphModal = __esm({
         });
       }
       /**
-       * Toggle settings panel (placeholder)
+       * Create settings panel content
+       */
+      createSettingsContent() {
+        const settingsHeader = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-header" });
+        const headerTitle = settingsHeader.createEl("h3", {
+          text: "\u2699\uFE0F Timeline Settings",
+          cls: "sonic-graph-settings-title"
+        });
+        const closeButton = settingsHeader.createEl("button", {
+          cls: "sonic-graph-settings-close"
+        });
+        closeButton.textContent = "\xD7";
+        closeButton.addEventListener("click", () => this.toggleSettings());
+        const settingsContent = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-content" });
+        this.createTimelineSettings(settingsContent);
+        this.createAudioSettings(settingsContent);
+        this.createVisualSettings(settingsContent);
+        this.createNavigationSettings(settingsContent);
+      }
+      /**
+       * Create timeline settings section
+       */
+      createTimelineSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "TIMELINE", cls: "sonic-graph-settings-section-title" });
+        const densityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        densityItem.createEl("label", { text: "Audio Density", cls: "sonic-graph-setting-label" });
+        densityItem.createEl("div", {
+          text: "Control how frequently notes play during animation",
+          cls: "sonic-graph-setting-description"
+        });
+        const densityContainer = densityItem.createDiv({ cls: "sonic-graph-density-slider-container" });
+        const densitySlider = densityContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-density-slider"
+        });
+        densitySlider.min = "0";
+        densitySlider.max = "100";
+        densitySlider.value = "30";
+        const densityLabels = densityContainer.createDiv({ cls: "sonic-graph-density-labels" });
+        densityLabels.createEl("span", { text: "Dense", cls: "sonic-graph-density-label" });
+        densityLabels.createEl("span", { text: "Sparse", cls: "sonic-graph-density-label" });
+        const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        durationItem.createEl("label", { text: "Animation Duration", cls: "sonic-graph-setting-label" });
+        durationItem.createEl("div", {
+          text: "Total time for complete timeline animation",
+          cls: "sonic-graph-setting-description"
+        });
+        const durationSelect = durationItem.createEl("select", { cls: "sonic-graph-setting-select" });
+        ["15 seconds", "30 seconds", "60 seconds", "120 seconds", "Custom..."].forEach((option) => {
+          const optionEl = durationSelect.createEl("option", { text: option });
+          if (option === "60 seconds")
+            optionEl.selected = true;
+        });
+        const loopItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        loopItem.createEl("label", { text: "Loop Animation", cls: "sonic-graph-setting-label" });
+        loopItem.createEl("div", {
+          text: "Automatically restart animation when complete",
+          cls: "sonic-graph-setting-description"
+        });
+        const loopToggle = loopItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const toggleSwitch = loopToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        const toggleHandle = toggleSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        loopToggle.createEl("span", { text: "Enable looping" });
+        toggleSwitch.addEventListener("click", () => {
+          toggleSwitch.toggleClass("active", !toggleSwitch.hasClass("active"));
+        });
+      }
+      /**
+       * Create audio settings section
+       */
+      createAudioSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "AUDIO", cls: "sonic-graph-settings-section-title" });
+        const detectionItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        detectionItem.createEl("label", { text: "Auto-detection", cls: "sonic-graph-setting-label" });
+        detectionItem.createEl("div", {
+          text: "Override automatic temporal clustering detection",
+          cls: "sonic-graph-setting-description"
+        });
+        const detectionSelect = detectionItem.createEl("select", { cls: "sonic-graph-setting-select" });
+        [`Auto (${this.detectedSpacing} detected)`, "Force Dense", "Force Balanced", "Force Sparse"].forEach((option) => {
+          const optionEl = detectionSelect.createEl("option", { text: option });
+          if (option.includes("Auto"))
+            optionEl.selected = true;
+        });
+        const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        durationItem.createEl("label", { text: "Note Duration", cls: "sonic-graph-setting-label" });
+        durationItem.createEl("div", {
+          text: "Base duration for individual notes",
+          cls: "sonic-graph-setting-description"
+        });
+        const durationInput = durationItem.createEl("input", {
+          type: "number",
+          cls: "sonic-graph-setting-input"
+        });
+        durationInput.value = "0.3";
+        durationInput.step = "0.1";
+        durationInput.min = "0.1";
+        durationInput.max = "2.0";
+      }
+      /**
+       * Create visual settings section
+       */
+      createVisualSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "VISUAL", cls: "sonic-graph-settings-section-title" });
+        const markersItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        markersItem.createEl("label", { text: "Timeline Markers", cls: "sonic-graph-setting-label" });
+        markersItem.createEl("div", {
+          text: "Show year markers on timeline",
+          cls: "sonic-graph-setting-description"
+        });
+        const markersToggle = markersItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const markersSwitch = markersToggle.createDiv({ cls: "sonic-graph-toggle-switch active" });
+        const markersHandle = markersSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        markersToggle.createEl("span", { text: "Show markers" });
+        markersSwitch.addEventListener("click", () => {
+          markersSwitch.toggleClass("active", !markersSwitch.hasClass("active"));
+        });
+        const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        styleItem.createEl("label", { text: "Animation Style", cls: "sonic-graph-setting-label" });
+        styleItem.createEl("div", {
+          text: "How nodes appear during animation",
+          cls: "sonic-graph-setting-description"
+        });
+        const styleSelect = styleItem.createEl("select", { cls: "sonic-graph-setting-select" });
+        ["Fade in", "Scale up", "Slide in", "Pop in"].forEach((option) => {
+          const optionEl = styleSelect.createEl("option", { text: option });
+          if (option === "Fade in")
+            optionEl.selected = true;
+        });
+      }
+      /**
+       * Create navigation settings section
+       */
+      createNavigationSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "NAVIGATION", cls: "sonic-graph-settings-section-title" });
+        const controlCenterItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        controlCenterItem.createEl("label", { text: "Audio Control", cls: "sonic-graph-setting-label" });
+        controlCenterItem.createEl("div", {
+          text: "Open the main audio control interface",
+          cls: "sonic-graph-setting-description"
+        });
+        const controlCenterBtn = controlCenterItem.createEl("button", {
+          cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary",
+          text: "\u{1F3B5} Control Center"
+        });
+        const controlCenterIcon = createLucideIcon("settings", 16);
+        controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
+        controlCenterBtn.addEventListener("click", () => this.openControlCenter());
+      }
+      /**
+       * Toggle settings panel visibility
        */
       toggleSettings() {
-        new import_obsidian6.Notice("Settings panel coming soon");
+        this.isSettingsVisible = !this.isSettingsVisible;
+        if (this.isSettingsVisible) {
+          this.settingsPanel.removeClass("hidden");
+          this.settingsButton.addClass("active");
+        } else {
+          this.settingsPanel.addClass("hidden");
+          this.settingsButton.removeClass("active");
+        }
+        logger11.debug("ui", "Settings panel toggled", {
+          visible: this.isSettingsVisible
+        });
       }
       /**
        * Update stats display
@@ -11472,67 +11654,13 @@ var init_SonicGraphModal = __esm({
           text: `${fileCount} notes \u2022 ${totalFiles} total files`,
           cls: "sonic-graph-stats-text"
         });
-        this.createTemporalSpacingControl();
       }
       /**
-       * Create temporal spacing control with auto-detection
-       */
-      async createTemporalSpacingControl() {
-        if (!this.statsContainer)
-          return;
-        try {
-          const graphData = await this.graphDataExtractor.extractGraphData();
-          const detection = this.detectTemporalClustering(graphData.nodes);
-          this.detectedSpacing = detection.type;
-          const spacingContainer = this.statsContainer.createDiv({
-            cls: "sonic-graph-spacing-container"
-          });
-          spacingContainer.createEl("label", {
-            text: "Timeline:",
-            cls: "sonic-graph-spacing-label"
-          });
-          this.spacingSelect = spacingContainer.createEl("select", {
-            cls: "sonic-graph-spacing-select"
-          });
-          const options = [
-            { value: "auto", label: `Auto (${detection.type})` },
-            { value: "dense", label: "Dense" },
-            { value: "balanced", label: "Balanced" },
-            { value: "sparse", label: "Sparse" }
-          ];
-          options.forEach((option) => {
-            const optionEl = this.spacingSelect.createEl("option", {
-              value: option.value,
-              text: option.label
-            });
-            if (option.value === "auto") {
-              optionEl.selected = true;
-            }
-          });
-          this.spacingSelect.addEventListener("change", () => {
-            logger11.debug("temporal-spacing", "User changed spacing setting", {
-              value: this.spacingSelect.value,
-              detectedSpacing: this.detectedSpacing
-            });
-          });
-          logger11.debug("temporal-spacing", "Created spacing control", {
-            detectedType: detection.type,
-            confidence: detection.confidence,
-            reason: detection.reason
-          });
-        } catch (error) {
-          logger11.warn("temporal-spacing", "Failed to create spacing control", error.message);
-        }
-      }
-      /**
-       * Get spacing configuration based on user selection
+       * Get default spacing configuration (now uses settings panel controls)
        */
       getSpacingConfiguration() {
-        var _a;
-        const selectedValue = ((_a = this.spacingSelect) == null ? void 0 : _a.value) || "auto";
-        const actualSpacing = selectedValue === "auto" ? this.detectedSpacing : selectedValue;
+        const actualSpacing = this.detectedSpacing;
         logger11.debug("temporal-spacing", "Getting spacing configuration", {
-          selectedValue,
           detectedSpacing: this.detectedSpacing,
           actualSpacing
         });
