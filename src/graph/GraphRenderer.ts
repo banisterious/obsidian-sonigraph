@@ -155,23 +155,10 @@ export class GraphRenderer {
    * Initialize tooltip for node information
    */
   private initializeTooltip(): void {
-    // Create tooltip div
+    // Create tooltip div - all styles now in CSS
     this.tooltip = d3.select(this.container)
       .append('div')
-      .attr('class', 'sonic-graph-tooltip')
-      .style('position', 'absolute')
-      .style('visibility', 'hidden')
-      .style('background', 'var(--background-primary)')
-      .style('border', '1px solid var(--background-modifier-border)')
-      .style('border-radius', 'var(--osp-border-radius-sm)')
-      .style('padding', 'var(--osp-spacing-sm)')
-      .style('font-size', 'var(--osp-font-size-small)')
-      .style('color', 'var(--text-normal)')
-      .style('box-shadow', 'var(--osp-shadow-md)')
-      .style('z-index', '1000')
-      .style('pointer-events', 'none')
-      .style('max-width', '200px')
-      .style('word-wrap', 'break-word');
+      .attr('class', 'sonic-graph-tooltip');
   }
 
   /**
@@ -287,15 +274,8 @@ export class GraphRenderer {
     // Add labels to new nodes
     const textElements = nodeEnter.append('text')
       .attr('dy', this.config.nodeRadius + 15)
-      .attr('class', this.config.showLabels ? 'labels-visible' : '')
+      .attr('class', this.config.showLabels ? 'labels-visible' : 'labels-hidden')
       .text(d => d.title);
-    
-    // Set initial visibility with inline styles
-    if (this.config.showLabels) {
-      textElements.style('display', 'block').style('opacity', '1');
-    } else {
-      textElements.style('display', 'none').style('opacity', '0');
-    }
     
     logger.debug('renderer', `Node labels created with showLabels: ${this.config.showLabels}`);
 
@@ -414,21 +394,19 @@ export class GraphRenderer {
         const textSelection = nodeSelection.selectAll('text');
         logger.debug('renderer', `Found ${textSelection.size()} text elements to update`);
         
-        // Use both class and inline style for maximum compatibility
+        // Use CSS classes for visibility control
         if (this.config.showLabels) {
           textSelection
             .classed('labels-visible', true)
-            .style('display', 'block')
-            .style('opacity', '1');
+            .classed('labels-hidden', false);
         } else {
           textSelection
             .classed('labels-visible', false)
-            .style('display', 'none')
-            .style('opacity', '0');
+            .classed('labels-hidden', true);
         }
         
         // Log the state for debugging
-        logger.debug('renderer', `Labels ${this.config.showLabels ? 'shown' : 'hidden'} via inline styles`);
+        logger.debug('renderer', `Labels ${this.config.showLabels ? 'shown' : 'hidden'} via CSS classes`);
       }
     }
     
@@ -530,7 +508,8 @@ export class GraphRenderer {
     
     this.tooltip
       .html(tooltipContent)
-      .style('visibility', 'visible');
+      .classed('tooltip-visible', true)
+      .classed('tooltip-hidden', false);
     
     this.updateTooltipPosition(event);
   }
@@ -552,7 +531,9 @@ export class GraphRenderer {
    * Hide tooltip
    */
   private hideTooltip(): void {
-    this.tooltip.style('visibility', 'hidden');
+    this.tooltip
+      .classed('tooltip-visible', false)
+      .classed('tooltip-hidden', true);
   }
 
   /**
