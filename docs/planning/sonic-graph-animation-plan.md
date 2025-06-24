@@ -20,9 +20,55 @@
 4. [Implementation Phases](#implementation-phases)
    - [Phase 1: Foundation](#phase-1-foundation-week-1) ✅ **COMPLETED**
    - [Phase 2: Temporal Animation](#phase-2-temporal-animation-week-2) ✅ **COMPLETED**
-   - [Phase 3: Enhanced Visualization](#phase-3-enhanced-visualization-week-3) 🚧 **IN PROGRESS**
+   - [Phase 3: Enhanced Visualization](#phase-3-enhanced-visualization-week-3) ✅ **COMPLETED**
+   - [Phase 3.5: Audio Integration](#phase-35-audio-integration) 🚧 **IN PROGRESS**
    - [Phase 4: Advanced Audio Mapping](#phase-4-advanced-audio-mapping-week-4) ⏳ **PLANNED**
    - [Phase 5: Content Filtering and Exclusion](#phase-5-content-filtering-and-exclusion-completed) ✅ **COMPLETED**
+
+### Phase 3.5: Audio Integration 🚧 **IN PROGRESS**
+
+**Goal**: Synchronize temporal graph animation with musical sonification using existing audio engine
+
+#### **Completed Components** ✅
+- **Audio Callback System**: `onNodeAppeared` callback triggers audio when nodes appear during animation
+- **Musical Mapping**: Node properties (file type, size, connections) mapped to musical parameters (pitch, duration, velocity, instrument)
+- **Instrument Selection**: File types automatically assigned to appropriate instrument categories:
+  - Notes (markdown) → Keyboard instruments (piano, organ)
+  - Images → String instruments (violin, guitar)
+  - PDFs → Brass instruments (trumpet, trombone)
+  - Audio files → Woodwind instruments (flute, clarinet)
+  - Other files → Electronic/Experimental instruments
+- **Settings Integration**: Sonic Graph respects instrument enablement from Control Center
+- **Logging Infrastructure**: Comprehensive debug logging for audio troubleshooting
+
+#### **Current Issues** 🔧
+- **Partial Audio Playback**: Only first 3 nodes play audio, then animation continues silently
+- **Audio Engine Synchronization**: Need to investigate timing/state issues during animation
+- **Instrument State Management**: Audio engine instrument map occasionally out of sync with settings
+
+#### **Technical Implementation Details**
+```typescript
+// Audio callback registration in SonicGraphModal
+this.temporalAnimator.onNodeAppeared((node) => {
+    this.handleNodeAppearance(node);
+});
+
+// Musical mapping algorithm
+private createMusicalMappingForNode(node: GraphNode): MusicalMapping {
+    const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
+    const pitch = baseFreq * Math.pow(2, (fileNameHash % 24 - 12) / 12);
+    const duration = Math.min(baseDuration + sizeFactor, 1.0);
+    const velocity = baseVelocity + connectionFactor;
+    return { nodeId: node.id, pitch, duration, velocity, instrument: selectedInstrument };
+}
+```
+
+#### **Next Steps** 🎯
+1. **Debug Audio Cutoff**: Investigate why audio stops after 3 nodes
+2. **Timing Optimization**: Ensure audio engine remains responsive during animation
+3. **Error Handling**: Add graceful fallbacks for audio failures
+4. **Performance Testing**: Verify audio performance with large graphs (1000+ nodes)
+
 5. [Technical Specifications](#technical-specifications)
    - [Dependencies](#dependencies)
    - [File Structure](#file-structure)

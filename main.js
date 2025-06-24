@@ -2493,8 +2493,6 @@ var init_logging = __esm({
         return enrichedError;
       }
       log(level, category, message, data) {
-        if (LOG_LEVELS[level] > LoggerFactory.getLogLevelValue())
-          return;
         if (level === "off")
           return;
         const entry = {
@@ -2510,22 +2508,24 @@ var init_logging = __esm({
       }
       output(entry) {
         LoggerFactory.collectLog(entry);
-        const contextStr = entry.context ? ` [${JSON.stringify(entry.context)}]` : "";
-        const dataStr = entry.data ? ` | ${JSON.stringify(entry.data)}` : "";
-        const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
-        switch (entry.level) {
-          case "debug":
-            console.debug(logMessage);
-            break;
-          case "info":
-            console.info(logMessage);
-            break;
-          case "warn":
-            console.warn(logMessage);
-            break;
-          case "error":
-            console.error(logMessage);
-            break;
+        if (LOG_LEVELS[entry.level] <= LoggerFactory.getLogLevelValue()) {
+          const contextStr = entry.context ? ` [${JSON.stringify(entry.context)}]` : "";
+          const dataStr = entry.data ? ` | ${JSON.stringify(entry.data)}` : "";
+          const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
+          switch (entry.level) {
+            case "debug":
+              console.debug(logMessage);
+              break;
+            case "info":
+              console.info(logMessage);
+              break;
+            case "warn":
+              console.warn(logMessage);
+              break;
+            case "error":
+              console.error(logMessage);
+              break;
+          }
         }
       }
     };
@@ -10622,6 +10622,27 @@ var init_TemporalGraphAnimator = __esm({
        * Start animation playback
        */
       play() {
+        logger9.info("playback", "Temporal animator play called", {
+          timelineEvents: this.timeline.length,
+          duration: this.config.duration,
+          isPlaying: this.isPlaying,
+          isPaused: this.isPaused
+        });
+        if (this.timeline.length > 0) {
+          const sampleEvents = this.timeline.slice(0, 10);
+          logger9.info("playback", "Sample timeline events (first 10)", {
+            events: sampleEvents.map((e) => ({
+              timestamp: e.timestamp.toFixed(3),
+              nodeId: e.nodeId,
+              type: e.type
+            })),
+            totalEvents: this.timeline.length,
+            dateRange: {
+              start: this.config.startDate.toISOString(),
+              end: this.config.endDate.toISOString()
+            }
+          });
+        }
         if (this.isPlaying && !this.isPaused) {
           logger9.debug("playback", "Animation already playing");
           return;
@@ -10730,7 +10751,13 @@ var init_TemporalGraphAnimator = __esm({
         this.visibleNodes = visibleNodeIds;
         (_a = this.onVisibilityChange) == null ? void 0 : _a.call(this, visibleNodeIds);
         if (newlyAppearedNodes.length > 0) {
-          logger9.debug("animation", `${newlyAppearedNodes.length} nodes appeared at time ${this.currentTime.toFixed(2)}s`);
+          logger9.info("animation", "Nodes appeared in temporal animation", {
+            count: newlyAppearedNodes.length,
+            time: this.currentTime.toFixed(2),
+            nodeIds: newlyAppearedNodes.map((n) => n.id),
+            nodeTitles: newlyAppearedNodes.map((n) => n.title),
+            hasCallback: !!this.onNodeAppear
+          });
           newlyAppearedNodes.forEach((node) => {
             var _a2;
             (_a2 = this.onNodeAppear) == null ? void 0 : _a2.call(this, node);
@@ -11175,19 +11202,15 @@ var init_SonicGraphModal = __esm({
         this.timelineScrubber.value = "0";
         this.timelineScrubber.addEventListener("input", () => this.handleTimelineScrub());
         this.timelineInfo = this.timelineContainer.createDiv({ cls: "sonic-graph-timeline-info" });
-        const yearsTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track sonic-graph-timeline-years" });
-        yearsTrack.createEl("div", { text: "Years:", cls: "sonic-graph-timeline-track-label" });
-        const yearsLine = yearsTrack.createDiv({ cls: "sonic-graph-timeline-line" });
-        const yearsMarkers = yearsLine.createDiv({ cls: "sonic-graph-timeline-markers sonic-graph-timeline-years-markers" });
-        const timeTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track sonic-graph-timeline-time" });
-        timeTrack.createEl("div", { text: "Time:", cls: "sonic-graph-timeline-track-label" });
-        const timeLine = timeTrack.createDiv({ cls: "sonic-graph-timeline-line" });
-        const timeMarkers = timeLine.createDiv({ cls: "sonic-graph-timeline-markers sonic-graph-timeline-time-markers" });
+        const timelineTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track-unified" });
+        const timelineLine = timelineTrack.createDiv({ cls: "sonic-graph-timeline-line-unified" });
+        const markersContainer = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-markers" });
         const currentIndicator = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-current-indicator" });
         currentIndicator.createEl("div", { cls: "sonic-graph-timeline-current-line" });
         const currentLabel = currentIndicator.createEl("div", { cls: "sonic-graph-timeline-current-label" });
-        currentLabel.createSpan({ text: "Current: 2024", cls: "sonic-graph-timeline-current-year" });
+        currentLabel.createSpan({ text: "Current: \u2014", cls: "sonic-graph-timeline-current-year" });
         currentLabel.createSpan({ text: "0s", cls: "sonic-graph-timeline-current-time" });
+        currentIndicator.style.display = "none";
       }
       /**
        * Create controls area with play button, stats, and navigation
@@ -11285,6 +11308,7 @@ var init_SonicGraphModal = __esm({
        * Toggle animation playback
        */
       async toggleAnimation() {
+        var _a, _b;
         if (!this.graphRenderer) {
           new import_obsidian6.Notice("Graph not ready");
           return;
@@ -11295,6 +11319,39 @@ var init_SonicGraphModal = __esm({
         }
         this.isAnimating = !this.isAnimating;
         if (this.isAnimating) {
+          try {
+            const status = this.plugin.audioEngine.getStatus();
+            if (!status.isInitialized) {
+              logger11.info("audio", "Audio engine not initialized - initializing for animation");
+              await this.plugin.audioEngine.initialize();
+              new import_obsidian6.Notice("Audio engine initialized");
+            } else {
+              const enabledInstruments = this.getEnabledInstruments();
+              const audioEngineInstruments = Array.from(((_a = this.plugin.audioEngine["instruments"]) == null ? void 0 : _a.keys()) || []);
+              const missingInstruments = enabledInstruments.filter((inst) => !audioEngineInstruments.includes(inst));
+              const extraInstruments = audioEngineInstruments.filter((inst) => !enabledInstruments.includes(inst));
+              if (missingInstruments.length > 0 || extraInstruments.length > 0) {
+                logger11.info("audio", "Instrument configuration changed - reinitializing audio engine", {
+                  enabledInstruments,
+                  audioEngineInstruments,
+                  missingInstruments,
+                  extraInstruments
+                });
+                await this.plugin.audioEngine.initialize();
+                new import_obsidian6.Notice("Audio engine updated with new instruments");
+              } else {
+                logger11.info("audio", "Audio engine already initialized with correct instruments", {
+                  audioContext: status.audioContext,
+                  volume: status.volume,
+                  instruments: audioEngineInstruments
+                });
+              }
+            }
+            logger11.info("audio", "Audio engine ready for Sonic Graph animation");
+          } catch (audioError) {
+            logger11.warn("Failed to check audio engine for animation", audioError.message);
+            new import_obsidian6.Notice("Audio check failed - animation may be silent");
+          }
           if (!this.temporalAnimator) {
             await this.initializeTemporalAnimator();
           }
@@ -11306,27 +11363,23 @@ var init_SonicGraphModal = __esm({
           this.playButton.setButtonText("Pause Animation");
           this.timelineContainer.classList.remove("timeline-hidden");
           this.timelineContainer.classList.add("timeline-visible");
-          try {
-            const status = this.plugin.audioEngine.getStatus();
-            if (!status.isInitialized) {
-              logger11.info("audio", "Initializing audio engine for animation");
-              await this.plugin.audioEngine.initialize();
-              new import_obsidian6.Notice("Audio engine initialized");
-            }
-            const audioStatus = this.plugin.audioEngine.getStatus();
-            if (audioStatus.currentNotes === 0) {
-              logger11.info("audio", "Enabling basic instruments for animation");
-              new import_obsidian6.Notice("Audio ready for animation");
-            }
-          } catch (audioError) {
-            logger11.warn("Failed to initialize audio for animation", audioError.message);
-            new import_obsidian6.Notice("Audio initialization failed - animation will be silent");
+          const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
+          if (currentIndicator) {
+            currentIndicator.style.display = "block";
           }
+          logger11.info("ui", "About to call temporalAnimator.play()", {
+            hasTemporalAnimator: !!this.temporalAnimator,
+            temporalAnimatorType: (_b = this.temporalAnimator) == null ? void 0 : _b.constructor.name
+          });
           this.temporalAnimator.play();
           logger11.info("ui", "Starting Sonic Graph temporal animation");
           new import_obsidian6.Notice("Sonic Graph animation started");
         } else {
           this.playButton.setButtonText("Play Sonic Graph");
+          const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
+          if (currentIndicator) {
+            currentIndicator.style.display = "none";
+          }
           if (this.temporalAnimator) {
             this.temporalAnimator.pause();
           }
@@ -11389,6 +11442,10 @@ var init_SonicGraphModal = __esm({
           }
           this.isAnimating = false;
           this.playButton.setButtonText("Play Sonic Graph");
+          const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
+          if (currentIndicator) {
+            currentIndicator.style.display = "none";
+          }
           if (this.graphRenderer) {
             this.graphDataExtractor.extractGraphData().then((graphData) => {
               var _a;
@@ -11487,8 +11544,16 @@ var init_SonicGraphModal = __esm({
           this.temporalAnimator.onNodeAppeared((node) => {
             this.handleNodeAppearance(node);
           });
+          logger11.info("ui", "Temporal animator callbacks registered");
           this.updateTimelineMarkers();
           this.updateCurrentPosition(0, 0);
+          const timelineInfo = this.temporalAnimator.getTimelineInfo();
+          logger11.info("ui", "Temporal animator timeline info", {
+            eventCount: timelineInfo.eventCount,
+            duration: timelineInfo.duration,
+            startDate: timelineInfo.startDate.toISOString(),
+            endDate: timelineInfo.endDate.toISOString()
+          });
           this.musicalMapper = new MusicalMapper(this.plugin.settings);
           logger11.info("ui", "Temporal animator initialized successfully");
         } catch (error) {
@@ -11540,61 +11605,16 @@ var init_SonicGraphModal = __esm({
         if (!this.temporalAnimator)
           return;
         const timelineInfo = this.temporalAnimator.getTimelineInfo();
-        this.updateYearsMarkers(timelineInfo);
         this.updateTimeMarkers(timelineInfo);
-      }
-      /**
-       * Update years markers along the timeline
-       */
-      updateYearsMarkers(timelineInfo) {
-        const yearsMarkersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-years-markers");
-        if (!yearsMarkersContainer)
-          return;
-        yearsMarkersContainer.innerHTML = "";
-        const startYear = timelineInfo.startDate.getFullYear();
-        const endYear = timelineInfo.endDate.getFullYear();
-        const yearRange = endYear - startYear;
-        const years = [];
-        if (yearRange <= 1) {
-          const startMonth = timelineInfo.startDate.getMonth();
-          const endMonth = timelineInfo.endDate.getMonth();
-          for (let month = startMonth; month <= endMonth + 12; month += 3) {
-            const date = new Date(startYear, month);
-            if (date >= timelineInfo.startDate && date <= timelineInfo.endDate) {
-              years.push(date.getFullYear() + date.getMonth() / 12);
-            }
-          }
-        } else if (yearRange <= 5) {
-          for (let year = startYear; year <= endYear; year++) {
-            years.push(year);
-          }
-        } else if (yearRange <= 10) {
-          for (let year = startYear; year <= endYear; year += 2) {
-            years.push(year);
-          }
-        } else {
-          const step = Math.max(1, Math.floor(yearRange / 8));
-          for (let year = startYear; year <= endYear; year += step) {
-            years.push(year);
-          }
-        }
-        years.forEach((year) => {
-          const yearProgress = (year - startYear) / yearRange;
-          const marker = yearsMarkersContainer.createEl("div", { cls: "sonic-graph-timeline-marker" });
-          marker.style.left = `${yearProgress * 100}%`;
-          marker.createEl("div", { cls: "sonic-graph-timeline-marker-line" });
-          const label = marker.createEl("div", { cls: "sonic-graph-timeline-marker-label" });
-          label.textContent = Math.floor(year).toString();
-        });
       }
       /**
        * Update time markers along the timeline
        */
       updateTimeMarkers(timelineInfo) {
-        const timeMarkersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-time-markers");
-        if (!timeMarkersContainer)
+        const markersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-markers");
+        if (!markersContainer)
           return;
-        timeMarkersContainer.innerHTML = "";
+        markersContainer.innerHTML = "";
         const duration = timelineInfo.duration;
         const timeIntervals = [];
         if (duration <= 30) {
@@ -11612,7 +11632,7 @@ var init_SonicGraphModal = __esm({
         }
         timeIntervals.forEach((time) => {
           const timeProgress = time / duration;
-          const marker = timeMarkersContainer.createEl("div", { cls: "sonic-graph-timeline-marker" });
+          const marker = markersContainer.createEl("div", { cls: "sonic-graph-timeline-marker time-marker" });
           marker.style.left = `${timeProgress * 100}%`;
           marker.createEl("div", { cls: "sonic-graph-timeline-marker-line" });
           const label = marker.createEl("div", { cls: "sonic-graph-timeline-marker-label" });
@@ -11649,6 +11669,10 @@ var init_SonicGraphModal = __esm({
       handleAnimationEnd() {
         this.isAnimating = false;
         this.playButton.setButtonText("Play Sonic Graph");
+        const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
+        if (currentIndicator) {
+          currentIndicator.style.display = "none";
+        }
         logger11.info("ui", "Sonic Graph animation completed");
         new import_obsidian6.Notice("Animation completed");
       }
@@ -11656,8 +11680,15 @@ var init_SonicGraphModal = __esm({
        * Handle node appearance for audio synchronization
        */
       async handleNodeAppearance(node) {
-        if (!this.plugin.audioEngine)
+        logger11.info("audio", "handleNodeAppearance called", {
+          nodeId: node.id,
+          nodeTitle: node.title,
+          hasAudioEngine: !!this.plugin.audioEngine
+        });
+        if (!this.plugin.audioEngine) {
+          logger11.warn("audio", "No audio engine available for node appearance");
           return;
+        }
         try {
           const status = this.plugin.audioEngine.getStatus();
           if (!status.isInitialized) {
@@ -11673,11 +11704,16 @@ var init_SonicGraphModal = __esm({
             audioEngineStatus: this.plugin.audioEngine.getStatus()
           });
           try {
-            await this.plugin.audioEngine.playTestNote(mapping.pitch);
-            logger11.debug("audio", "Test note played successfully");
-          } catch (testError) {
-            logger11.warn("Test note failed", testError.message);
             await this.plugin.audioEngine.playSequence([mapping]);
+            logger11.debug("audio", "Instrument note played successfully", { instrument: mapping.instrument });
+          } catch (playError) {
+            logger11.warn("Instrument playback failed", playError.message);
+            try {
+              await this.plugin.audioEngine.playTestNote(mapping.pitch);
+              logger11.debug("audio", "Fallback test note played");
+            } catch (testError) {
+              logger11.error("Both instrument and test note playback failed", testError.message);
+            }
           }
           logger11.info("audio", "Successfully played note for node appearance", {
             nodeId: node.id,
@@ -11730,6 +11766,11 @@ var init_SonicGraphModal = __esm({
       getEnabledInstruments() {
         const enabled = [];
         Object.entries(this.plugin.settings.instruments).forEach(([instrumentName, settings]) => {
+          logger11.debug("audio", "Checking instrument", {
+            instrumentName,
+            enabled: settings == null ? void 0 : settings.enabled,
+            settings
+          });
           if (settings == null ? void 0 : settings.enabled) {
             enabled.push(instrumentName);
           }
