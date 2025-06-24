@@ -10060,7 +10060,7 @@ var init_GraphRenderer = __esm({
        * Initialize tooltip for node information
        */
       initializeTooltip() {
-        this.tooltip = select_default2(this.container).append("div").attr("class", "sonic-graph-tooltip").style("position", "absolute").style("visibility", "hidden").style("background", "var(--background-primary)").style("border", "1px solid var(--background-modifier-border)").style("border-radius", "var(--osp-border-radius-sm)").style("padding", "var(--osp-spacing-sm)").style("font-size", "var(--osp-font-size-small)").style("color", "var(--text-normal)").style("box-shadow", "var(--osp-shadow-md)").style("z-index", "1000").style("pointer-events", "none").style("max-width", "200px").style("word-wrap", "break-word");
+        this.tooltip = select_default2(this.container).append("div").attr("class", "sonic-graph-tooltip");
       }
       /**
        * Render the graph with given nodes and links
@@ -10122,12 +10122,7 @@ var init_GraphRenderer = __esm({
         const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(this.nodes, (d) => d.id);
         const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
         nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`);
-        const textElements = nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "").text((d) => d.title);
-        if (this.config.showLabels) {
-          textElements.style("display", "block").style("opacity", "1");
-        } else {
-          textElements.style("display", "none").style("opacity", "0");
-        }
+        const textElements = nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "labels-hidden").text((d) => d.title);
         logger6.debug("renderer", `Node labels created with showLabels: ${this.config.showLabels}`);
         nodeEnter.transition().duration(500).style("opacity", 1).on("end", function() {
           select_default2(this).classed("appearing", false);
@@ -10201,11 +10196,11 @@ var init_GraphRenderer = __esm({
             const textSelection = nodeSelection.selectAll("text");
             logger6.debug("renderer", `Found ${textSelection.size()} text elements to update`);
             if (this.config.showLabels) {
-              textSelection.classed("labels-visible", true).style("display", "block").style("opacity", "1");
+              textSelection.classed("labels-visible", true).classed("labels-hidden", false);
             } else {
-              textSelection.classed("labels-visible", false).style("display", "none").style("opacity", "0");
+              textSelection.classed("labels-visible", false).classed("labels-hidden", true);
             }
-            logger6.debug("renderer", `Labels ${this.config.showLabels ? "shown" : "hidden"} via inline styles`);
+            logger6.debug("renderer", `Labels ${this.config.showLabels ? "shown" : "hidden"} via CSS classes`);
           }
         }
         if (newConfig.nodeRadius !== void 0) {
@@ -10270,7 +10265,7 @@ var init_GraphRenderer = __esm({
        */
       showTooltip(event, node) {
         const tooltipContent = this.createTooltipContent(node);
-        this.tooltip.html(tooltipContent).style("visibility", "visible");
+        this.tooltip.html(tooltipContent).classed("tooltip-visible", true).classed("tooltip-hidden", false);
         this.updateTooltipPosition(event);
       }
       /**
@@ -10286,7 +10281,7 @@ var init_GraphRenderer = __esm({
        * Hide tooltip
        */
       hideTooltip() {
-        this.tooltip.style("visibility", "hidden");
+        this.tooltip.classed("tooltip-visible", false).classed("tooltip-hidden", true);
       }
       /**
        * Create tooltip content for a node
@@ -11168,7 +11163,7 @@ var init_SonicGraphModal = __esm({
        */
       createTimelineArea(container) {
         this.timelineContainer = container.createDiv({ cls: "sonic-graph-timeline" });
-        this.timelineContainer.style.display = "none";
+        this.timelineContainer.classList.add("timeline-hidden");
         const scrubberContainer = this.timelineContainer.createDiv({ cls: "sonic-graph-scrubber-container" });
         scrubberContainer.createEl("label", { text: "Timeline", cls: "sonic-graph-scrubber-label" });
         this.timelineScrubber = scrubberContainer.createEl("input", {
@@ -11202,7 +11197,7 @@ var init_SonicGraphModal = __esm({
         const playControls = this.controlsContainer.createDiv({ cls: "sonic-graph-play-controls" });
         const playButtonContainer = playControls.createDiv({ cls: "sonic-graph-play-button-container" });
         this.playButton = new import_obsidian6.ButtonComponent(playButtonContainer);
-        this.playButton.setButtonText("Play Sonic Graph").setCta().onClick(() => this.toggleAnimation());
+        this.playButton.setButtonText("Play Sonic Graph").onClick(() => this.toggleAnimation());
         const speedContainer = playControls.createDiv({ cls: "sonic-graph-speed-container" });
         speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
         this.speedSelect = speedContainer.createEl("select", { cls: "sonic-graph-speed-select" });
@@ -11309,7 +11304,8 @@ var init_SonicGraphModal = __esm({
             return;
           }
           this.playButton.setButtonText("Pause Animation");
-          this.timelineContainer.style.display = "block";
+          this.timelineContainer.classList.remove("timeline-hidden");
+          this.timelineContainer.classList.add("timeline-visible");
           try {
             const status = this.plugin.audioEngine.getStatus();
             if (!status.isInitialized) {
@@ -11367,7 +11363,8 @@ var init_SonicGraphModal = __esm({
           const timelineIcon = createLucideIcon("play-circle", 16);
           this.viewModeBtn.appendChild(timelineIcon);
           this.viewModeBtn.appendText("Timeline View");
-          this.timelineContainer.style.display = "block";
+          this.timelineContainer.classList.remove("timeline-hidden");
+          this.timelineContainer.classList.add("timeline-visible");
           if (!this.temporalAnimator) {
             this.initializeTemporalAnimator().catch((error) => {
               logger11.error("Failed to initialize temporal animator for timeline view", error);
@@ -11385,7 +11382,8 @@ var init_SonicGraphModal = __esm({
           const staticIcon = createLucideIcon("eye", 16);
           this.viewModeBtn.appendChild(staticIcon);
           this.viewModeBtn.appendText("Static View");
-          this.timelineContainer.style.display = "none";
+          this.timelineContainer.classList.add("timeline-hidden");
+          this.timelineContainer.classList.remove("timeline-visible");
           if (this.temporalAnimator) {
             this.temporalAnimator.stop();
           }

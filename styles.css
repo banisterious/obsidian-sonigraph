@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-24 02:43:27 UTC
+ * - Generated: 2025-06-24 03:35:09 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6935,7 +6935,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 866 lines, 18.29 KB */
+/* Component Size: 914 lines, 19.44 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -7267,12 +7267,12 @@ details.osp-advanced-settings {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 12px 20px;
-  padding-right: 56px; /* Make space for close button like Control Center */
+  padding: 8px 16px;
+  padding-right: 48px; /* Make space for close button like Control Center */
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   flex-shrink: 0;
-  min-height: 50px;
+  min-height: 40px;
 }
 
 .sonic-graph-title-container {
@@ -7322,14 +7322,14 @@ details.osp-advanced-settings {
   border-color: var(--background-modifier-border);
 }
 
-/* Graph container - Reduced height to prevent scrolling */
+/* Graph container - Let flexbox handle sizing */
 .sonic-graph-container {
   flex: 1;
   position: relative;
   overflow: hidden;
   background: var(--background-primary);
-  max-height: calc(100vh - 200px); /* Ensure no scrolling */
-  min-height: 400px;
+  min-height: 180px;
+  max-height: calc(100% - 180px);
 }
 
 .sonic-graph-canvas {
@@ -7406,19 +7406,24 @@ details.osp-advanced-settings {
   color: var(--background-primary);
 }
 
-/* Timeline */
+/* Timeline - Fixed height for content */
 .sonic-graph-timeline {
-  padding: var(--osp-spacing-md);
+  padding: var(--osp-spacing-xs) var(--osp-spacing-md);
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
   flex-shrink: 0;
+  height: 180px;
+  overflow-y: auto;
+  margin-top: -20px;
+  position: relative;
+  z-index: 1;
 }
 
 .sonic-graph-scrubber-container {
   display: flex;
   align-items: center;
   gap: var(--osp-spacing-md);
-  margin-bottom: var(--osp-spacing-sm);
+  margin-bottom: var(--osp-spacing-xs);
 }
 
 .sonic-graph-scrubber-label {
@@ -7460,7 +7465,7 @@ details.osp-advanced-settings {
 
 .sonic-graph-timeline-info {
   position: relative;
-  padding: var(--osp-spacing-md) 0;
+  padding: var(--osp-spacing-xs) 0;
   font-size: var(--osp-font-size-small);
   color: var(--text-muted);
 }
@@ -7469,12 +7474,12 @@ details.osp-advanced-settings {
 .sonic-graph-timeline-track {
   display: flex;
   align-items: center;
-  margin-bottom: var(--osp-spacing-sm);
+  margin-bottom: var(--osp-spacing-xs);
   position: relative;
 }
 
 .sonic-graph-timeline-track:last-child {
-  margin-bottom: 0;
+  margin-bottom: var(--osp-spacing-xs);
 }
 
 .sonic-graph-timeline-track-label {
@@ -7486,7 +7491,7 @@ details.osp-advanced-settings {
 
 .sonic-graph-timeline-line {
   flex: 1;
-  height: 30px;
+  height: 24px;
   position: relative;
   background: var(--background-secondary);
   border-radius: var(--osp-border-radius-sm);
@@ -7598,12 +7603,12 @@ details.osp-advanced-settings {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--osp-spacing-md);
+  padding: var(--osp-spacing-xs) var(--osp-spacing-md);
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   flex-shrink: 0;
-  min-height: 80px;
-  gap: var(--osp-spacing-lg);
+  min-height: 36px;
+  gap: var(--osp-spacing-sm);
 }
 
 .sonic-graph-play-controls {
@@ -7726,8 +7731,29 @@ details.osp-advanced-settings {
 
 /* Tooltip styles */
 .sonic-graph-tooltip {
+  position: absolute;
+  visibility: hidden;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--osp-border-radius-sm);
+  padding: var(--osp-spacing-sm);
+  font-size: var(--osp-font-size-small);
   font-family: var(--osp-font-family);
+  color: var(--text-normal);
+  box-shadow: var(--osp-shadow-md);
+  z-index: 1000;
+  pointer-events: none;
+  max-width: 200px;
+  word-wrap: break-word;
   line-height: 1.4;
+}
+
+.sonic-graph-tooltip.tooltip-visible {
+  visibility: visible;
+}
+
+.sonic-graph-tooltip.tooltip-hidden {
+  visibility: hidden;
 }
 
 .sonic-graph-tooltip-title {
@@ -7760,6 +7786,26 @@ details.osp-advanced-settings {
   margin-bottom: 0;
 }
 
+/* Timeline visibility states */
+.sonic-graph-timeline.timeline-hidden {
+  display: none;
+}
+
+.sonic-graph-timeline.timeline-visible {
+  display: block;
+}
+
+/* Node label visibility states */
+.sonigraph-temporal-node text.labels-visible {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.sonigraph-temporal-node text.labels-hidden {
+  display: none !important;
+  opacity: 0 !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .modal:has(.sonic-graph-modal) {
@@ -7771,9 +7817,10 @@ details.osp-advanced-settings {
 
   .sonic-graph-controls {
     flex-direction: column;
-    gap: var(--osp-spacing-md);
+    gap: var(--osp-spacing-sm);
     align-items: stretch;
     min-height: auto;
+    padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
   }
 
   .sonic-graph-play-controls,
@@ -7792,9 +7839,10 @@ details.osp-advanced-settings {
 
   .sonic-graph-header {
     flex-direction: column;
-    gap: var(--osp-spacing-sm);
+    gap: var(--osp-spacing-xs);
     align-items: stretch;
     min-height: auto;
+    padding: var(--osp-spacing-xs);
   }
 
   .sonic-graph-header-left,
@@ -8375,10 +8423,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-24 02:43:27 UTC
+ * Build completed: 2025-06-24 03:35:09 UTC
  * Components processed: 19
- * Total lines: 8178
- * Total size: 171.46 KB
+ * Total lines: 8226
+ * Total size: 172.61 KB
  * Build duration: 0.01 seconds
  * 
  * Component breakdown:
@@ -8397,7 +8445,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - sonic-graph.css: 866 lines, 18.29 KB
+ * - sonic-graph.css: 914 lines, 19.44 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB
