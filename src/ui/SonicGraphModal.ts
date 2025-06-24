@@ -155,33 +155,26 @@ export class SonicGraphModal extends Modal {
         this.timelineScrubber.value = '0';
         this.timelineScrubber.addEventListener('input', () => this.handleTimelineScrub());
         
-        // Enhanced timeline info with dual tracks
+        // Unified timeline info with single timeline bar
         this.timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
         
-        // Years track
-        const yearsTrack = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-track sonic-graph-timeline-years' });
-        yearsTrack.createEl('div', { text: 'Years:', cls: 'sonic-graph-timeline-track-label' });
-        const yearsLine = yearsTrack.createDiv({ cls: 'sonic-graph-timeline-line' });
+        // Single unified timeline track
+        const timelineTrack = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-track-unified' });
+        const timelineLine = timelineTrack.createDiv({ cls: 'sonic-graph-timeline-line-unified' });
         
-        // Years markers container
-        const yearsMarkers = yearsLine.createDiv({ cls: 'sonic-graph-timeline-markers sonic-graph-timeline-years-markers' });
+        // Unified markers container that spans the timeline
+        const markersContainer = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-markers' });
         // Markers will be populated dynamically
         
-        // Time track  
-        const timeTrack = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-track sonic-graph-timeline-time' });
-        timeTrack.createEl('div', { text: 'Time:', cls: 'sonic-graph-timeline-track-label' });
-        const timeLine = timeTrack.createDiv({ cls: 'sonic-graph-timeline-line' });
-        
-        // Time markers container
-        const timeMarkers = timeLine.createDiv({ cls: 'sonic-graph-timeline-markers sonic-graph-timeline-time-markers' });
-        // Markers will be populated dynamically
-        
-        // Current position indicator (spans both tracks)
+        // Current position indicator (spans both tracks) - hidden by default
         const currentIndicator = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-current-indicator' });
         currentIndicator.createEl('div', { cls: 'sonic-graph-timeline-current-line' });
         const currentLabel = currentIndicator.createEl('div', { cls: 'sonic-graph-timeline-current-label' });
-        currentLabel.createSpan({ text: 'Current: 2024', cls: 'sonic-graph-timeline-current-year' });
+        currentLabel.createSpan({ text: 'Current: —', cls: 'sonic-graph-timeline-current-year' });
         currentLabel.createSpan({ text: '0s', cls: 'sonic-graph-timeline-current-time' });
+        
+        // Hide current indicator by default - only show during animation
+        currentIndicator.style.display = 'none';
     }
 
     /**
@@ -334,6 +327,48 @@ export class SonicGraphModal extends Modal {
         this.isAnimating = !this.isAnimating;
         
         if (this.isAnimating) {
+            // Check audio engine status and handle instrument changes BEFORE starting animation
+            try {
+                const status = this.plugin.audioEngine.getStatus();
+                
+                if (!status.isInitialized) {
+                    logger.info('audio', 'Audio engine not initialized - initializing for animation');
+                    await this.plugin.audioEngine.initialize();
+                    new Notice('Audio engine initialized');
+                } else {
+                    // Check if enabled instruments match what's loaded in audio engine
+                    const enabledInstruments = this.getEnabledInstruments();
+                    const audioEngineInstruments = Array.from(this.plugin.audioEngine['instruments']?.keys() || []);
+                    
+                    const missingInstruments = enabledInstruments.filter(inst => !audioEngineInstruments.includes(inst));
+                    const extraInstruments = audioEngineInstruments.filter(inst => !enabledInstruments.includes(inst));
+                    
+                    if (missingInstruments.length > 0 || extraInstruments.length > 0) {
+                        logger.info('audio', 'Instrument configuration changed - reinitializing audio engine', {
+                            enabledInstruments,
+                            audioEngineInstruments,
+                            missingInstruments,
+                            extraInstruments
+                        });
+                        
+                        // Force reinitialization to load new instrument configuration
+                        await this.plugin.audioEngine.initialize();
+                        new Notice('Audio engine updated with new instruments');
+                    } else {
+                        logger.info('audio', 'Audio engine already initialized with correct instruments', {
+                            audioContext: status.audioContext,
+                            volume: status.volume,
+                            instruments: audioEngineInstruments
+                        });
+                    }
+                }
+                
+                logger.info('audio', 'Audio engine ready for Sonic Graph animation');
+            } catch (audioError) {
+                logger.warn('Failed to check audio engine for animation', (audioError as Error).message);
+                new Notice('Audio check failed - animation may be silent');
+            }
+            
             // Initialize temporal animator if not already done
             if (!this.temporalAnimator) {
                 await this.initializeTemporalAnimator();
@@ -350,28 +385,18 @@ export class SonicGraphModal extends Modal {
             this.timelineContainer.classList.remove('timeline-hidden');
             this.timelineContainer.classList.add('timeline-visible');
             
-            // Initialize audio engine before starting animation
-            try {
-                const status = this.plugin.audioEngine.getStatus();
-                if (!status.isInitialized) {
-                    logger.info('audio', 'Initializing audio engine for animation');
-                    await this.plugin.audioEngine.initialize();
-                    new Notice('Audio engine initialized');
-                }
-                
-                // Enable some basic instruments if none are enabled
-                const audioStatus = this.plugin.audioEngine.getStatus();
-                if (audioStatus.currentNotes === 0) {
-                    logger.info('audio', 'Enabling basic instruments for animation');
-                    // This would typically be done through settings, but for testing:
-                    new Notice('Audio ready for animation');
-                }
-            } catch (audioError) {
-                logger.warn('Failed to initialize audio for animation', (audioError as Error).message);
-                new Notice('Audio initialization failed - animation will be silent');
+            // Show current position indicator during animation
+            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+            if (currentIndicator) {
+                currentIndicator.style.display = 'block';
             }
             
             // Start temporal animation
+            logger.info('ui', 'About to call temporalAnimator.play()', {
+                hasTemporalAnimator: !!this.temporalAnimator,
+                temporalAnimatorType: this.temporalAnimator?.constructor.name
+            });
+            
             this.temporalAnimator.play();
             
             logger.info('ui', 'Starting Sonic Graph temporal animation');
@@ -380,6 +405,12 @@ export class SonicGraphModal extends Modal {
         } else {
             // Pause animation
             this.playButton.setButtonText('Play Sonic Graph');
+            
+            // Hide current position indicator when animation stops
+            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+            if (currentIndicator) {
+                currentIndicator.style.display = 'none';
+            }
             
             if (this.temporalAnimator) {
                 this.temporalAnimator.pause();
@@ -465,6 +496,12 @@ export class SonicGraphModal extends Modal {
             }
             this.isAnimating = false;
             this.playButton.setButtonText('Play Sonic Graph');
+            
+            // Hide current position indicator in Static View
+            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+            if (currentIndicator) {
+                currentIndicator.style.display = 'none';
+            }
             
             // Show all nodes
             if (this.graphRenderer) {
@@ -588,9 +625,20 @@ export class SonicGraphModal extends Modal {
                 this.handleNodeAppearance(node);
             });
             
+            logger.info('ui', 'Temporal animator callbacks registered');
+            
             // Initialize timeline markers
             this.updateTimelineMarkers();
             this.updateCurrentPosition(0, 0); // Initialize at start position
+            
+            // Log timeline info for debugging
+            const timelineInfo = this.temporalAnimator.getTimelineInfo();
+            logger.info('ui', 'Temporal animator timeline info', {
+                eventCount: timelineInfo.eventCount,
+                duration: timelineInfo.duration,
+                startDate: timelineInfo.startDate.toISOString(),
+                endDate: timelineInfo.endDate.toISOString()
+            });
             
             // Initialize musical mapper for audio
             this.musicalMapper = new MusicalMapper(this.plugin.settings);
@@ -660,82 +708,21 @@ export class SonicGraphModal extends Modal {
         
         const timelineInfo = this.temporalAnimator.getTimelineInfo();
         
-        // Update years markers
-        this.updateYearsMarkers(timelineInfo);
-        
-        // Update time markers
+        // Only update time markers - years shown on current position indicator
         this.updateTimeMarkers(timelineInfo);
     }
 
-    /**
-     * Update years markers along the timeline
-     */
-    private updateYearsMarkers(timelineInfo: any): void {
-        const yearsMarkersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-years-markers');
-        if (!yearsMarkersContainer) return;
-        
-        // Clear existing markers
-        yearsMarkersContainer.innerHTML = '';
-        
-        const startYear = timelineInfo.startDate.getFullYear();
-        const endYear = timelineInfo.endDate.getFullYear();
-        const yearRange = endYear - startYear;
-        
-        // Generate year markers - show more years for better granularity
-        const years: number[] = [];
-        
-        if (yearRange <= 1) {
-            // For short ranges, show months
-            const startMonth = timelineInfo.startDate.getMonth();
-            const endMonth = timelineInfo.endDate.getMonth();
-            for (let month = startMonth; month <= endMonth + 12; month += 3) {
-                const date = new Date(startYear, month);
-                if (date >= timelineInfo.startDate && date <= timelineInfo.endDate) {
-                    years.push(date.getFullYear() + date.getMonth() / 12);
-                }
-            }
-        } else if (yearRange <= 5) {
-            // For medium ranges, show every year
-            for (let year = startYear; year <= endYear; year++) {
-                years.push(year);
-            }
-        } else if (yearRange <= 10) {
-            // For longer ranges, show every 2 years
-            for (let year = startYear; year <= endYear; year += 2) {
-                years.push(year);
-            }
-        } else {
-            // For very long ranges, show every 5 years
-            const step = Math.max(1, Math.floor(yearRange / 8));
-            for (let year = startYear; year <= endYear; year += step) {
-                years.push(year);
-            }
-        }
-        
-        // Create markers
-        years.forEach(year => {
-            const yearProgress = (year - startYear) / yearRange;
-            const marker = yearsMarkersContainer.createEl('div', { cls: 'sonic-graph-timeline-marker' });
-            marker.style.left = `${yearProgress * 100}%`;
-            
-            // Vertical line
-            marker.createEl('div', { cls: 'sonic-graph-timeline-marker-line' });
-            
-            // Label
-            const label = marker.createEl('div', { cls: 'sonic-graph-timeline-marker-label' });
-            label.textContent = Math.floor(year).toString();
-        });
-    }
+
 
     /**
      * Update time markers along the timeline
      */
     private updateTimeMarkers(timelineInfo: any): void {
-        const timeMarkersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-time-markers');
-        if (!timeMarkersContainer) return;
+        const markersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-markers');
+        if (!markersContainer) return;
         
-        // Clear existing markers
-        timeMarkersContainer.innerHTML = '';
+        // Clear all existing markers (both time and year markers)
+        markersContainer.innerHTML = '';
         
         const duration = timelineInfo.duration;
         
@@ -762,7 +749,7 @@ export class SonicGraphModal extends Modal {
         // Create markers
         timeIntervals.forEach(time => {
             const timeProgress = time / duration;
-            const marker = timeMarkersContainer.createEl('div', { cls: 'sonic-graph-timeline-marker' });
+            const marker = markersContainer.createEl('div', { cls: 'sonic-graph-timeline-marker time-marker' });
             marker.style.left = `${timeProgress * 100}%`;
             
             // Vertical line
@@ -813,6 +800,12 @@ export class SonicGraphModal extends Modal {
         this.isAnimating = false;
         this.playButton.setButtonText('Play Sonic Graph');
         
+        // Hide current position indicator when animation completes
+        const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+        if (currentIndicator) {
+            currentIndicator.style.display = 'none';
+        }
+        
         logger.info('ui', 'Sonic Graph animation completed');
         new Notice('Animation completed');
     }
@@ -821,7 +814,16 @@ export class SonicGraphModal extends Modal {
      * Handle node appearance for audio synchronization
      */
     private async handleNodeAppearance(node: GraphNode): Promise<void> {
-        if (!this.plugin.audioEngine) return;
+        logger.info('audio', 'handleNodeAppearance called', { 
+            nodeId: node.id, 
+            nodeTitle: node.title,
+            hasAudioEngine: !!this.plugin.audioEngine 
+        });
+        
+        if (!this.plugin.audioEngine) {
+            logger.warn('audio', 'No audio engine available for node appearance');
+            return;
+        }
         
         try {
             // Ensure audio engine is initialized
@@ -842,15 +844,20 @@ export class SonicGraphModal extends Modal {
                 audioEngineStatus: this.plugin.audioEngine.getStatus()
             });
             
-            // Try to play a simple test note first
+            // Play the note using the selected instrument through the sequence method
             try {
-                await this.plugin.audioEngine.playTestNote(mapping.pitch);
-                logger.debug('audio', 'Test note played successfully');
-            } catch (testError) {
-                logger.warn('Test note failed', (testError as Error).message);
-                
-                // Fallback: try to play through the sequence method
                 await this.plugin.audioEngine.playSequence([mapping]);
+                logger.debug('audio', 'Instrument note played successfully', { instrument: mapping.instrument });
+            } catch (playError) {
+                logger.warn('Instrument playback failed', (playError as Error).message);
+                
+                // Fallback: try basic test note
+                try {
+                    await this.plugin.audioEngine.playTestNote(mapping.pitch);
+                    logger.debug('audio', 'Fallback test note played');
+                } catch (testError) {
+                    logger.error('Both instrument and test note playback failed', (testError as Error).message);
+                }
             }
             
             logger.info('audio', 'Successfully played note for node appearance', { 
@@ -923,6 +930,11 @@ export class SonicGraphModal extends Modal {
         
         // Check all instruments in settings
         Object.entries(this.plugin.settings.instruments).forEach(([instrumentName, settings]) => {
+            logger.debug('audio', 'Checking instrument', { 
+                instrumentName, 
+                enabled: settings?.enabled,
+                settings: settings 
+            });
             if (settings?.enabled) {
                 enabled.push(instrumentName);
             }

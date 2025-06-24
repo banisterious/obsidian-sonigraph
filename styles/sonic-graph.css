@@ -473,9 +473,9 @@
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
   flex-shrink: 0;
-  height: 180px;
+  height: 100px;
   overflow-y: auto;
-  margin-top: -35px;
+  margin-top: -85px;
   position: relative;
   z-index: 1;
 }
@@ -532,40 +532,32 @@
 }
 
 /* Timeline tracks */
-.sonic-graph-timeline-track {
+/* Unified timeline track */
+.sonic-graph-timeline-track-unified {
+  position: relative;
+  height: 40px;
   display: flex;
   align-items: center;
   margin-bottom: var(--osp-spacing-xs);
+}
+
+.sonic-graph-timeline-line-unified {
   position: relative;
-}
-
-.sonic-graph-timeline-track:last-child {
-  margin-bottom: var(--osp-spacing-xs);
-}
-
-.sonic-graph-timeline-track-label {
-  width: 60px;
-  flex-shrink: 0;
-  font-weight: 500;
-  color: var(--text-normal);
-}
-
-.sonic-graph-timeline-line {
-  flex: 1;
-  height: 24px;
-  position: relative;
+  width: 100%;
+  height: 6px;
   background: var(--background-secondary);
   border-radius: var(--osp-border-radius-sm);
   border: 1px solid var(--background-modifier-border);
 }
 
-/* Timeline markers */
+/* Timeline markers - span across all tracks */
 .sonic-graph-timeline-markers {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  pointer-events: none;
 }
 
 .sonic-graph-timeline-marker {
@@ -573,13 +565,14 @@
   top: 0;
   bottom: 0;
   transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .sonic-graph-timeline-marker-line {
-  width: 2px;
+  width: 1px;
   height: 100%;
   background: var(--text-muted);
-  opacity: 0.6;
+  opacity: 0.4;
   margin: 0 auto;
 }
 
@@ -591,28 +584,15 @@
   font-size: var(--osp-font-size-xs);
   color: var(--text-muted);
   white-space: nowrap;
-  margin-top: 2px;
+  margin-top: 4px;
+  background: var(--background-secondary);
+  padding: 1px 4px;
+  border-radius: var(--osp-border-radius-xs);
 }
 
-/* Years track specific styling */
-.sonic-graph-timeline-years .sonic-graph-timeline-marker-line {
-  background: var(--color-blue);
-  opacity: 0.7;
-}
-
-.sonic-graph-timeline-years .sonic-graph-timeline-marker-label {
-  color: var(--color-blue);
-  font-weight: 500;
-}
-
-/* Time track specific styling */
-.sonic-graph-timeline-time .sonic-graph-timeline-marker-line {
-  background: var(--color-green);
-  opacity: 0.7;
-}
-
-.sonic-graph-timeline-time .sonic-graph-timeline-marker-label {
-  color: var(--color-green);
+/* Time marker styling */
+.sonic-graph-timeline-marker.time-marker .sonic-graph-timeline-marker-label {
+  color: var(--text-normal);
   font-weight: 500;
 }
 

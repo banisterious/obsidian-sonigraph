@@ -83,8 +83,6 @@ class Logger implements ILogger {
 	}
 
 	private log(level: LogLevel, category: string, message: string, data?: any): void {
-		// Filter based on global log level
-		if (LOG_LEVELS[level] > LoggerFactory.getLogLevelValue()) return;
 		if (level === 'off') return;
 		const entry: LogEntry = {
 			timestamp: new Date(),
@@ -99,24 +97,28 @@ class Logger implements ILogger {
 	}
 
 	private output(entry: LogEntry): void {
-		// Collect logs for export
+		// Always collect logs for export regardless of current log level
 		LoggerFactory.collectLog(entry);
-		const contextStr = entry.context ? ` [${JSON.stringify(entry.context)}]` : '';
-		const dataStr = entry.data ? ` | ${JSON.stringify(entry.data)}` : '';
-		const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
-		switch (entry.level) {
-			case 'debug':
-				console.debug(logMessage);
-				break;
-			case 'info':
-				console.info(logMessage);
-				break;
-			case 'warn':
-				console.warn(logMessage);
-				break;
-			case 'error':
-				console.error(logMessage);
-				break;
+		
+		// Only output to console if the log level is appropriate
+		if (LOG_LEVELS[entry.level] <= LoggerFactory.getLogLevelValue()) {
+			const contextStr = entry.context ? ` [${JSON.stringify(entry.context)}]` : '';
+			const dataStr = entry.data ? ` | ${JSON.stringify(entry.data)}` : '';
+			const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
+			switch (entry.level) {
+				case 'debug':
+					console.debug(logMessage);
+					break;
+				case 'info':
+					console.info(logMessage);
+					break;
+				case 'warn':
+					console.warn(logMessage);
+					break;
+				case 'error':
+					console.error(logMessage);
+					break;
+			}
 		}
 	}
 }
