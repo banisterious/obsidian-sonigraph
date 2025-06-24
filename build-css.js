@@ -42,7 +42,7 @@ const CONFIG = {
     'effects.css',       // Effects, presets, and audio components
     'status.css',        // Status displays and real-time feedback
     'controlcenter.css', // Control Center framework
-    'temporal.css',      // Temporal graph animation system
+    'sonic-graph.css',   // Sonic Graph visualization and temporal animation system
     'animations.css',    // Keyframes and transitions
     'responsive.css',    // Responsive breakpoints
     'theme.css'          // Theme compatibility and accessibility (last)

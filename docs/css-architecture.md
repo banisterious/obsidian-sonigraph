@@ -40,6 +40,7 @@ styles/
 ├── effects.css          # Effects, presets, and audio components
 ├── status.css           # Status displays and real-time feedback
 ├── controlcenter.css    # Control Center framework (Material Design 3)
+├── sonic-graph.css      # Sonic Graph visualization and temporal animation
 ├── animations.css       # Keyframes and transitions
 ├── responsive.css       # Responsive breakpoints
 └── theme.css           # Theme compatibility and accessibility
@@ -53,7 +54,7 @@ The build system concatenates files in dependency order:
 2. **Layout Layer**: `layout.css`, `utilities.css`
 3. **Component Layer**: `buttons.css`, `controls.css`, `cards.css`, `lists.css`
 4. **Feature Layer**: `navigation.css`, `modals.css`, `settings.css`, `effects.css`, `status.css`
-5. **Framework Layer**: `controlcenter.css`
+5. **Framework Layer**: `controlcenter.css`, `sonic-graph.css`
 6. **Enhancement Layer**: `animations.css`, `responsive.css`, `theme.css`
 
 ## Naming Conventions

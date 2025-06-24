@@ -59,12 +59,12 @@ export class TemporalGraphAnimator {
     this.config = {
       startDate: oneYearAgo,
       endDate: now,
-      duration: 30, // 30 seconds default
+      duration: 60, // 60 seconds default for more contemplative pacing
       speed: 1.0,
       enableIntelligentSpacing: true, // Enable spacing by default
-      simultaneousThreshold: 0.1, // 100ms threshold
-      maxSpacingWindow: 2.0, // Spread over max 2 seconds
-      minEventSpacing: 0.05, // Minimum 50ms between events
+      simultaneousThreshold: 0.01, // 10ms threshold for truly simultaneous events
+      maxSpacingWindow: 10.0, // Spread over max 10 seconds for large clusters
+      minEventSpacing: 0.2, // Minimum 200ms between events for clear separation
       ...config
     };
     
@@ -209,7 +209,37 @@ export class TemporalGraphAnimator {
     // Final sort to ensure timeline is in chronological order
     spacedEvents.sort((a, b) => a.timestamp - b.timestamp);
     
-    return spacedEvents;
+    // Final pass: Ensure minimum spacing between ALL consecutive events
+    const finalEvents: TimelineEvent[] = [];
+    for (let i = 0; i < spacedEvents.length; i++) {
+      const event = spacedEvents[i];
+      
+      if (finalEvents.length === 0) {
+        // First event, no adjustment needed
+        finalEvents.push(event);
+      } else {
+        const lastEvent = finalEvents[finalEvents.length - 1];
+        const timeDiff = event.timestamp - lastEvent.timestamp;
+        
+        if (timeDiff < minSpacing) {
+          // Adjust this event to maintain minimum spacing
+          const adjustedEvent = { ...event };
+          adjustedEvent.timestamp = lastEvent.timestamp + minSpacing;
+          finalEvents.push(adjustedEvent);
+          
+          logger.debug('timeline', 'Applied minimum spacing adjustment', {
+            originalTime: event.timestamp.toFixed(3),
+            adjustedTime: adjustedEvent.timestamp.toFixed(3),
+            minSpacing: minSpacing
+          });
+        } else {
+          // Sufficient spacing, no adjustment needed
+          finalEvents.push(event);
+        }
+      }
+    }
+    
+    return finalEvents;
   }
 
   /**
