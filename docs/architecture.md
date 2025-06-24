@@ -12,29 +12,36 @@
   - [2.3. Effects Processing](#23-effects-processing)
   - [2.4. Voice Management](#24-voice-management)
   - [2.5. Performance Optimization](#25-performance-optimization)
-- [3. Logging System](#3-logging-system)
-  - [3.1. Architecture](#31-architecture)
-  - [3.2. Components](#32-components)
-  - [3.3. Usage Patterns](#33-usage-patterns)
-  - [3.4. Configuration](#34-configuration)
-- [4. UI Components](#4-ui-components)
-  - [4.1. Component System](#41-component-system)
-  - [4.2. Obsidian Integration](#42-obsidian-integration)
-  - [4.3. Material Design Implementation](#43-material-design-implementation)
-- [5. Graph Processing](#5-graph-processing)
-  - [5.1. Data Acquisition](#51-data-acquisition)
-  - [5.2. Musical Mapping](#52-musical-mapping)
-  - [5.3. Sequence Generation](#53-sequence-generation)
-- [6. Performance & Monitoring](#6-performance--monitoring)
-  - [6.1. Performance Considerations](#61-performance-considerations)
-  - [6.2. Monitoring Systems](#62-monitoring-systems)
-  - [6.3. Optimization Strategies](#63-optimization-strategies)
-- [7. External Integrations](#7-external-integrations)
-  - [7.1. External Sample Sources Integration](#71-external-sample-sources-integration)
-- [8. API Reference](#8-api-reference)
-  - [8.1. AudioEngine API](#81-audioengine-api)
-  - [8.2. Logging API](#82-logging-api)
-  - [8.3. UI Components API](#83-ui-components-api)
+- [3. Sonic Graph System](#3-sonic-graph-system)
+  - [3.1. Architecture Overview](#31-architecture-overview)
+  - [3.2. Temporal Graph Animation](#32-temporal-graph-animation)
+  - [3.3. Graph Data Extraction](#33-graph-data-extraction)
+  - [3.4. Dynamic Instrument Selection](#34-dynamic-instrument-selection)
+  - [3.5. Content Filtering & Exclusion](#35-content-filtering--exclusion)
+  - [3.6. Visual Rendering](#36-visual-rendering)
+- [4. Logging System](#4-logging-system)
+  - [4.1. Architecture](#41-architecture)
+  - [4.2. Components](#42-components)
+  - [4.3. Usage Patterns](#43-usage-patterns)
+  - [4.4. Configuration](#44-configuration)
+- [5. UI Components](#5-ui-components)
+  - [5.1. Component System](#51-component-system)
+  - [5.2. Obsidian Integration](#52-obsidian-integration)
+  - [5.3. Material Design Implementation](#53-material-design-implementation)
+- [6. Graph Processing](#6-graph-processing)
+  - [6.1. Data Acquisition](#61-data-acquisition)
+  - [6.2. Musical Mapping](#62-musical-mapping)
+  - [6.3. Sequence Generation](#63-sequence-generation)
+- [7. Performance & Monitoring](#7-performance--monitoring)
+  - [7.1. Performance Considerations](#71-performance-considerations)
+  - [7.2. Monitoring Systems](#72-monitoring-systems)
+  - [7.3. Optimization Strategies](#73-optimization-strategies)
+- [8. External Integrations](#8-external-integrations)
+  - [8.1. External Sample Sources Integration](#81-external-sample-sources-integration)
+- [9. API Reference](#9-api-reference)
+  - [9.1. AudioEngine API](#91-audioengine-api)
+  - [9.2. Logging API](#92-logging-api)
+  - [9.3. UI Components API](#93-ui-components-api)
 
 ---
 
@@ -50,6 +57,7 @@ Sonigraph is built on a modular architecture designed for scalability and mainta
 - **Control Center**: Professional 6-tab Material Design interface
 - **Logging System**: Enterprise-grade logging with multiple adapters
 - **Effects Engine**: Per-instrument effects processing with master bus
+- **Sonic Graph System**: Dynamic graph visualization and interaction
 
 ### 1.2. Technology Stack
 
@@ -73,6 +81,9 @@ src/
 ├── graph/
 │   ├── parser.ts          # Vault data extraction
 │   ├── musical-mapper.ts  # Graph-to-music mapping
+│   ├── GraphDataExtractor.ts # Sonic Graph data extraction and filtering
+│   ├── GraphRenderer.ts   # D3.js-based visualization
+│   ├── TemporalGraphAnimator.ts # Timeline animation system
 │   └── types.ts           # Graph data interfaces
 ├── audio/
 │   ├── engine.ts          # Main orchestral audio engine
@@ -80,7 +91,10 @@ src/
 │   ├── percussion-engine.ts # Advanced percussion synthesis
 │   └── electronic-engine.ts # Electronic synthesis suite
 ├── ui/
-│   ├── control-panel.ts # Control Center
+│   ├── control-panel.ts   # Control Center with Sonic Graph integration
+│   ├── SonicGraphModal.ts # Main Sonic Graph interface
+│   ├── FolderSuggestModal.ts # Folder exclusion autocomplete
+│   ├── FileSuggestModal.ts # File exclusion autocomplete
 │   ├── settings.ts        # Settings management
 │   ├── components.ts      # Reusable UI components
 │   ├── lucide-icons.ts    # Icon system integration
@@ -273,9 +287,324 @@ interface PerformanceMode {
 
 ---
 
-## 3. Logging System
+## 3. Sonic Graph System
 
-### 3.1. Architecture
+### 3.1. Architecture Overview
+
+The Sonic Graph System provides a comprehensive temporal graph visualization with real-time audio synchronization, enabling users to experience their knowledge graph evolution through both visual and auditory channels.
+
+**Core Architecture:**
+```
+src/graph/
+├── GraphDataExtractor.ts     # Vault data extraction and filtering
+├── GraphRenderer.ts          # D3.js-based visualization
+├── TemporalGraphAnimator.ts  # Timeline animation system
+├── musical-mapper.ts         # Graph-to-audio mapping
+└── types.ts                  # Graph data interfaces
+
+src/ui/
+├── SonicGraphModal.ts        # Main graph interface
+├── FolderSuggestModal.ts     # Folder exclusion autocomplete
+├── FileSuggestModal.ts       # File exclusion autocomplete
+└── control-panel.ts          # Control Center integration
+```
+
+**Key Features:**
+- **Temporal Animation**: Time-based node appearance with intelligent spacing
+- **Dynamic Audio Mapping**: Respects user's Control Center instrument selections
+- **Content Filtering**: Advanced exclusion system with native Obsidian autocomplete
+- **Force-Directed Layout**: D3.js simulation with organic clustering
+- **Real-time Synchronization**: Visual and audio events perfectly synchronized
+
+### 3.2. Temporal Graph Animation
+
+**TemporalGraphAnimator Class:**
+```typescript
+export class TemporalGraphAnimator {
+  private nodes: GraphNode[] = [];
+  private timeline: TimelineEvent[] = [];
+  private config: AnimationConfig;
+  
+  // Intelligent spacing configuration
+  enableIntelligentSpacing: boolean = true;
+  simultaneousThreshold: number = 0.1; // 100ms threshold
+  maxSpacingWindow: number = 2.0; // Spread over max 2 seconds
+  minEventSpacing: number = 0.05; // Minimum 50ms between events
+}
+```
+
+**Timeline Building Process:**
+1. **Initial Mapping**: Map file creation dates to animation timeline
+2. **Cluster Detection**: Identify simultaneous events (within 100ms threshold)
+3. **Intelligent Spacing**: Spread clustered events over configurable time window
+4. **Consistent Ordering**: Use file hash for reproducible event ordering
+5. **Final Sorting**: Ensure chronological timeline integrity
+
+**Intelligent Spacing Algorithm:**
+```typescript
+private addIntelligentSpacing(events: TimelineEvent[]): TimelineEvent[] {
+  const simultaneousEvents: TimelineEvent[] = [];
+  
+  // Collect simultaneous events
+  while (Math.abs(events[i].timestamp - currentTime) <= threshold) {
+    simultaneousEvents.push(events[i]);
+  }
+  
+  // Spread them over time window
+  const spacing = spacingWindow / (simultaneousEvents.length - 1);
+  simultaneousEvents.forEach((event, index) => {
+    event.timestamp = currentTime + (spacing * index);
+  });
+}
+```
+
+**Animation Controls:**
+- **Play/Pause/Stop**: Full playback control with state management
+- **Speed Control**: Variable speed (0.5x to 5x) with real-time adjustment
+- **Seek Functionality**: Click-to-seek on timeline scrubber
+- **Progress Tracking**: Real-time progress updates and completion callbacks
+
+### 3.3. Graph Data Extraction
+
+**GraphDataExtractor Class:**
+```typescript
+export class GraphDataExtractor {
+  constructor(
+    private app: App,
+    private excludeFolders: string[] = [],
+    private excludeFiles: string[] = []
+  ) {}
+  
+  async extractGraphData(): Promise<GraphData> {
+    const nodes = await this.extractNodes();
+    const links = await this.extractLinks(nodes);
+    return { nodes, links };
+  }
+}
+```
+
+**Node Extraction Process:**
+1. **File Discovery**: Scan all vault files (notes, images, PDFs, audio, video)
+2. **Metadata Extraction**: Creation date, modification date, file size, connections
+3. **Exclusion Filtering**: Apply user-defined folder/file exclusions
+4. **Type Classification**: Categorize files for appropriate visual/audio treatment
+
+**Supported File Types:**
+```typescript
+interface GraphNode {
+  id: string;
+  type: 'note' | 'image' | 'pdf' | 'audio' | 'video' | 'other';
+  title: string;
+  creationDate: Date;
+  modificationDate: Date;
+  fileSize: number;
+  connections: string[];
+  metadata?: {
+    dimensions?: { width: number; height: number };
+    dominantColors?: string[];
+    tags?: string[];
+  };
+}
+```
+
+**Link Detection:**
+- **Wikilinks**: `[[Internal Links]]` between notes
+- **Markdown Links**: `[Text](path)` references
+- **Embeds**: `![[Embedded Content]]` relationships
+- **Tag Connections**: Shared tag relationships
+- **Folder Hierarchies**: Parent-child folder relationships
+
+### 3.4. Dynamic Instrument Selection
+
+**Intelligent Instrument Mapping:**
+The system dynamically selects instruments based on user's Control Center settings rather than hardcoded mappings.
+
+**Selection Algorithm:**
+```typescript
+private selectInstrumentForFileType(fileType: string, enabledInstruments: string[]): string {
+  // Define instrument categories
+  const instrumentCategories = {
+    keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord'],
+    strings: ['violin', 'cello', 'guitar', 'harp'],
+    brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
+    woodwinds: ['flute', 'clarinet', 'saxophone', 'oboe'],
+    electronic: ['leadSynth', 'bassSynth', 'arpSynth'],
+    experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca']
+  };
+
+  // File type preferences
+  const fileTypePreferences = {
+    'note': ['keyboard', 'strings'],
+    'image': ['strings', 'woodwinds'], 
+    'pdf': ['brass', 'keyboard'],
+    'audio': ['woodwinds', 'electronic'],
+    'video': ['strings', 'brass'],
+    'other': ['electronic', 'experimental']
+  };
+}
+```
+
+**Fallback Hierarchy:**
+1. **Preferred Categories**: Select from user's enabled instruments in preferred categories
+2. **Uncategorized Instruments**: Use any enabled instruments not in predefined categories
+3. **Any Enabled**: Final fallback to any enabled instrument
+4. **Default**: Piano fallback if no instruments enabled
+
+**Musical Property Mapping:**
+```typescript
+private createMusicalMappingForNode(node: GraphNode) {
+  return {
+    pitch: baseFreq * Math.pow(2, pitchOffset / 12), // File hash → pitch
+    duration: Math.min(baseDuration + sizeFactor, 1.0), // File size → duration
+    velocity: baseVelocity + connectionFactor, // Connections → velocity
+    instrument: selectedInstrument // Dynamic selection
+  };
+}
+```
+
+### 3.5. Content Filtering & Exclusion
+
+**Advanced Exclusion System:**
+The system provides granular control over which content appears in the graph visualization.
+
+**Exclusion Types:**
+- **Folder Exclusion**: Exclude entire folders and their contents
+- **File Exclusion**: Exclude specific files by path
+- **Real-time Filtering**: Immediate graph updates when exclusions change
+
+**Native Obsidian Integration:**
+```typescript
+// Folder selection with native autocomplete
+export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
+  getItems(): TFolder[] {
+    return this.app.vault.getAllLoadedFiles()
+      .filter(file => file instanceof TFolder) as TFolder[];
+  }
+  
+  getItemText(folder: TFolder): string {
+    return folder.path;
+  }
+}
+
+// File selection with native autocomplete  
+export class FileSuggestModal extends FuzzySuggestModal<TFile> {
+  getItems(): TFile[] {
+    return this.app.vault.getFiles();
+  }
+}
+```
+
+**UI Integration:**
+- **Exclusion Lists**: Visual display of current exclusions with remove buttons
+- **Add Buttons**: Native Obsidian autocomplete for adding exclusions
+- **Real-time Updates**: Graph preview refreshes automatically
+- **Persistent Settings**: Exclusions saved to plugin settings
+
+**Filtering Logic:**
+```typescript
+private shouldExcludeFile(file: TFile): boolean {
+  // Check direct file exclusion
+  if (this.excludeFiles.includes(file.path)) return true;
+  
+  // Check folder exclusion
+  return this.excludeFolders.some(folder => 
+    file.path.startsWith(folder + '/')
+  );
+}
+```
+
+### 3.6. Visual Rendering
+
+**D3.js Force Simulation:**
+The system uses D3.js for sophisticated force-directed graph layout with organic positioning.
+
+**GraphRenderer Class:**
+```typescript
+export class GraphRenderer {
+  private simulation: d3.ForceSimulation<GraphNode, GraphLink>;
+  private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+  
+  initializeSimulation() {
+    this.simulation = d3.forceSimulation(this.nodes)
+      .force('link', d3.forceLink(this.links).distance(25))
+      .force('charge', d3.forceManyBody().strength(-60))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide().radius(12))
+      .force('x', d3.forceX().strength(0.1))
+      .force('y', d3.forceY().strength(0.1));
+  }
+}
+```
+
+**Organic Clustering:**
+- **File Type Forces**: Cluster similar file types together
+- **Jitter Force**: Continuous small movements for natural appearance
+- **Collision Detection**: Prevent node overlap with proper spacing
+- **Adaptive Positioning**: Dynamic layout based on graph structure
+
+**Visual Styling:**
+```typescript
+// File type color mapping
+const fileTypeColors = {
+  'note': '#4f46e5',      // Indigo for notes
+  'image': '#059669',     // Emerald for images  
+  'pdf': '#dc2626',       // Red for PDFs
+  'audio': '#7c3aed',     // Violet for audio
+  'video': '#ea580c',     // Orange for videos
+  'other': '#6b7280'      // Gray for other files
+};
+
+// Node sizing based on connections
+const nodeRadius = Math.max(4, Math.min(12, Math.sqrt(node.connections.length) * 2));
+```
+
+**Interactive Features:**
+- **Zoom & Pan**: Full D3.js zoom behavior with reset controls
+- **Node Tooltips**: Hover information showing file details
+- **Timeline Scrubber**: Interactive timeline with click-to-seek
+- **Speed Controls**: Real-time animation speed adjustment
+- **File Name Toggle**: Show/hide file labels on nodes
+
+**Performance Optimizations:**
+- **Efficient Rendering**: SVG-based rendering for medium-sized graphs
+- **Force Simulation Tuning**: Optimized force parameters for smooth animation
+- **Memory Management**: Proper cleanup of D3.js resources
+- **Responsive Design**: Adaptive layout for different screen sizes
+
+**Modal Integration:**
+```typescript
+export class SonicGraphModal extends Modal {
+  private graphRenderer: GraphRenderer;
+  private temporalAnimator: TemporalGraphAnimator;
+  private musicalMapper: MusicalMapper;
+  
+  async initializeGraph() {
+    // Extract graph data with exclusions
+    const graphData = await this.graphDataExtractor.extractGraphData();
+    
+    // Initialize renderer
+    this.graphRenderer = new GraphRenderer(this.graphContainer, graphData);
+    
+    // Initialize temporal animator
+    this.temporalAnimator = new TemporalGraphAnimator(
+      graphData.nodes, 
+      graphData.links,
+      { duration: 30, enableIntelligentSpacing: true }
+    );
+    
+    // Set up audio synchronization
+    this.temporalAnimator.onNodeAppeared((node) => {
+      this.handleNodeAppearance(node);
+    });
+  }
+}
+```
+
+---
+
+## 4. Logging System
+
+### 4.1. Architecture
 
 The logging system provides enterprise-grade logging capabilities with flexibility, performance, and extensibility.
 
@@ -286,7 +615,7 @@ The logging system provides enterprise-grade logging capabilities with flexibili
 - **Defensive Coding**: Built with reliability in mind
 - **Extensibility**: Easy to add new outputs or formatters
 
-### 3.2. Components
+### 4.2. Components
 
 **Core Components:**
 - **LogManager**: Central singleton managing all loggers and adapters
@@ -317,7 +646,7 @@ interface ILogger {
 }
 ```
 
-### 3.3. Usage Patterns
+### 4.3. Usage Patterns
 
 **Basic Usage:**
 ```typescript
@@ -352,7 +681,7 @@ function expensiveOperation() {
 }
 ```
 
-### 3.4. Configuration
+### 4.4. Configuration
 
 ```typescript
 interface LoggingConfig {
@@ -379,9 +708,9 @@ loggerFactory.initialize({
 
 ---
 
-## 4. UI Components
+## 5. UI Components
 
-### 4.1. Component System
+### 5.1. Component System
 
 The UI system provides standardized Obsidian-compatible components that ensure perfect visual consistency with the native interface.
 
@@ -391,7 +720,7 @@ The UI system provides standardized Obsidian-compatible components that ensure p
 - **Reusable Components**: Modular components for consistent interface elements
 - **Responsive Design**: Adaptive layouts for different screen sizes
 
-### 4.2. Obsidian Integration
+### 5.2. Obsidian Integration
 
 **Toggle Components:**
 
@@ -429,7 +758,7 @@ const checkbox = createObsidianToggle(
 - `is-enabled` - Added when toggle is ON
 - `is-disabled` - Added when toggle is disabled
 
-### 4.3. Material Design Implementation
+### 5.3. Material Design Implementation
 
 **Control Center Modal Structure:**
 ```typescript
@@ -494,9 +823,9 @@ class MaterialControlPanelModal extends Modal {
 
 ---
 
-## 5. Graph Processing
+## 6. Graph Processing
 
-### 5.1. Data Acquisition
+### 6.1. Data Acquisition
 
 **Graph Data Sources:**
 - Obsidian vault files via `app.vault.getFiles()`
@@ -511,7 +840,7 @@ class MaterialControlPanelModal extends Modal {
 4. **Graph Construction**: Build weighted adjacency list representation
 5. **Analysis**: Calculate node properties (degree, centrality, clustering)
 
-### 5.2. Musical Mapping
+### 6.2. Musical Mapping
 
 **Parameter Mapping System:**
 ```typescript
@@ -531,7 +860,7 @@ interface MusicalMapping {
 - **Node Importance → Velocity**: More important = louder
 - **Modification Time → Timing**: Recently modified = plays sooner
 
-### 5.3. Sequence Generation
+### 6.3. Sequence Generation
 
 **Sequence Processing:**
 1. **Graph Analysis**: Calculate statistical properties for mapping
@@ -543,9 +872,9 @@ interface MusicalMapping {
 
 ---
 
-## 6. Performance & Monitoring
+## 7. Performance & Monitoring
 
-### 6.1. Performance Considerations
+### 7.1. Performance Considerations
 
 **Memory Usage:**
 - **Sample Caching**: ~30-40MB for complete instrument library
@@ -563,7 +892,7 @@ interface MusicalMapping {
 - **Scheduling Optimization**: Ultra-efficient audio event scheduling
 - **Frequency Detuning**: Phase conflict resolution with minimal overhead
 
-### 6.2. Monitoring Systems
+### 7.2. Monitoring Systems
 
 **Real-Time Performance Monitoring:**
 ```typescript
@@ -592,7 +921,7 @@ interface PerformanceMetrics {
   - Voice allocation performance metrics
   - Memory leak detection and prevention
 
-### 6.3. Optimization Strategies
+### 7.3. Optimization Strategies
 
 **Adaptive Performance Scaling:**
 ```typescript
@@ -639,9 +968,9 @@ class PerformanceOptimizer {
 
 ---
 
-## 7. External Integrations
+## 8. External Integrations
 
-### 7.1. External Sample Sources Integration
+### 8.1. External Sample Sources Integration
 
 **Primary CDN Integration (Issue #011 Resolution):**
 Sonigraph uses the nbrosowsky.github.io CDN as its primary sample source, providing 19/34 instruments with high-quality OGG samples. The system includes comprehensive diagnostic reporting and graceful synthesis fallback for missing samples.
@@ -672,9 +1001,9 @@ The architecture supports expansion to additional sample sources while maintaini
 
 ---
 
-## 8. API Reference
+## 9. API Reference
 
-### 8.1. AudioEngine API
+### 9.1. AudioEngine API
 
 ```typescript
 class AudioEngine {
@@ -747,7 +1076,7 @@ interface SonigraphSettings {
 }
 ```
 
-### 8.2. Logging API
+### 9.2. Logging API
 
 ```typescript
 // Logger Factory
@@ -776,7 +1105,7 @@ interface LoggingConfig {
 }
 ```
 
-### 8.3. UI Components API
+### 9.3. UI Components API
 
 ```typescript
 // Toggle Components
