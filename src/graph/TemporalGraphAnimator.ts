@@ -21,6 +21,12 @@ export interface AnimationConfig {
   endDate: Date;
   duration: number; // Animation duration in seconds
   speed: number; // Playback speed multiplier (1.0 = normal)
+  
+  // Intelligent spacing options
+  enableIntelligentSpacing?: boolean; // Whether to space out simultaneous events
+  simultaneousThreshold?: number; // Time threshold for considering events simultaneous (seconds)
+  maxSpacingWindow?: number; // Maximum time window to spread events over (seconds)
+  minEventSpacing?: number; // Minimum spacing between individual events (seconds)
 }
 
 export class TemporalGraphAnimator {
@@ -46,34 +52,49 @@ export class TemporalGraphAnimator {
     this.nodes = nodes;
     this.links = links;
     
-    // Calculate default date range from nodes
-    const dates = nodes.map(n => n.creationDate).filter(d => d);
-    const minDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-    const maxDate = dates.length > 0 ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
+    // Set default configuration
+    const now = new Date();
+    const oneYearAgo = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
     
     this.config = {
-      startDate: minDate,
-      endDate: maxDate,
+      startDate: oneYearAgo,
+      endDate: now,
       duration: 30, // 30 seconds default
       speed: 1.0,
+      enableIntelligentSpacing: true, // Enable spacing by default
+      simultaneousThreshold: 0.1, // 100ms threshold
+      maxSpacingWindow: 2.0, // Spread over max 2 seconds
+      minEventSpacing: 0.05, // Minimum 50ms between events
       ...config
     };
+    
+    // Calculate actual date range from nodes if not provided
+    if (this.nodes.length > 0) {
+      const dates = this.nodes
+        .map(n => n.creationDate)
+        .filter(d => d !== undefined) as Date[];
+      
+      if (dates.length > 0) {
+        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        
+        if (!config?.startDate) this.config.startDate = minDate;
+        if (!config?.endDate) this.config.endDate = maxDate;
+      }
+    }
     
     this.buildTimeline();
     
     logger.debug('animator', 'TemporalGraphAnimator created', {
-      nodeCount: nodes.length,
-      linkCount: links.length,
-      timelineEvents: this.timeline.length,
-      dateRange: {
-        start: this.config.startDate.toISOString(),
-        end: this.config.endDate.toISOString()
-      }
+      nodeCount: this.nodes.length,
+      linkCount: this.links.length,
+      config: this.config,
+      timelineEvents: this.timeline.length
     });
   }
 
   /**
-   * Build timeline events from node creation dates
+   * Build timeline of events based on node creation dates
    */
   private buildTimeline(): void {
     this.timeline = [];
@@ -87,7 +108,8 @@ export class TemporalGraphAnimator {
       return;
     }
     
-    // Create appearance events for each node
+    // First pass: Create initial appearance events for each node
+    const initialEvents: TimelineEvent[] = [];
     this.nodes.forEach(node => {
       if (node.creationDate) {
         const nodeTime = node.creationDate.getTime();
@@ -96,7 +118,7 @@ export class TemporalGraphAnimator {
           const normalizedTime = (nodeTime - startTime) / timeRange;
           const animationTime = normalizedTime * this.config.duration;
           
-          this.timeline.push({
+          initialEvents.push({
             timestamp: animationTime,
             nodeId: node.id,
             type: 'appear'
@@ -105,14 +127,102 @@ export class TemporalGraphAnimator {
       }
     });
     
-    // Sort timeline by timestamp
-    this.timeline.sort((a, b) => a.timestamp - b.timestamp);
+    // Sort by timestamp to identify clusters
+    initialEvents.sort((a, b) => a.timestamp - b.timestamp);
     
-    logger.debug('timeline', 'Timeline built', {
-      events: this.timeline.length,
+    // Second pass: Add intelligent spacing for simultaneous events
+    this.timeline = this.addIntelligentSpacing(initialEvents);
+    
+    logger.debug('timeline', 'Timeline built with intelligent spacing', {
+      originalEvents: initialEvents.length,
+      finalEvents: this.timeline.length,
       firstEvent: this.timeline[0]?.timestamp || 0,
       lastEvent: this.timeline[this.timeline.length - 1]?.timestamp || 0
     });
+  }
+
+  /**
+   * Add intelligent spacing to events that would appear simultaneously
+   */
+  private addIntelligentSpacing(events: TimelineEvent[]): TimelineEvent[] {
+    if (events.length === 0) return events;
+    
+    // Check if intelligent spacing is enabled
+    if (!this.config.enableIntelligentSpacing) {
+      return events;
+    }
+    
+    const spacedEvents: TimelineEvent[] = [];
+    const simultaneousThreshold = this.config.simultaneousThreshold || 0.1;
+    const maxSpacingWindow = this.config.maxSpacingWindow || 2.0;
+    const minSpacing = this.config.minEventSpacing || 0.05;
+    
+    let i = 0;
+    while (i < events.length) {
+      const currentTime = events[i].timestamp;
+      const simultaneousEvents: TimelineEvent[] = [];
+      
+      // Collect all events that are simultaneous (within threshold)
+      while (i < events.length && Math.abs(events[i].timestamp - currentTime) <= simultaneousThreshold) {
+        simultaneousEvents.push(events[i]);
+        i++;
+      }
+      
+      if (simultaneousEvents.length === 1) {
+        // Single event, no spacing needed
+        spacedEvents.push(simultaneousEvents[0]);
+      } else {
+        // Multiple simultaneous events - spread them out
+        const spacingWindow = Math.min(maxSpacingWindow, simultaneousEvents.length * minSpacing * 2);
+        const spacing = spacingWindow / (simultaneousEvents.length - 1);
+        
+        // Sort simultaneous events by a consistent factor for reproducible spacing
+        simultaneousEvents.sort((a, b) => {
+          // Use node ID hash for consistent ordering
+          const hashA = this.hashString(a.nodeId);
+          const hashB = this.hashString(b.nodeId);
+          return hashA - hashB;
+        });
+        
+        simultaneousEvents.forEach((event, index) => {
+          const spacedEvent = { ...event };
+          if (index === 0) {
+            // First event keeps original time
+            spacedEvent.timestamp = currentTime;
+          } else {
+            // Subsequent events are spaced out
+            spacedEvent.timestamp = currentTime + (spacing * index);
+          }
+          spacedEvents.push(spacedEvent);
+        });
+        
+        logger.debug('timeline', 'Applied spacing to simultaneous events', {
+          originalTime: currentTime.toFixed(3),
+          eventCount: simultaneousEvents.length,
+          spacingWindow: spacingWindow.toFixed(3),
+          individualSpacing: spacing.toFixed(3),
+          threshold: simultaneousThreshold
+        });
+      }
+    }
+    
+    // Final sort to ensure timeline is in chronological order
+    spacedEvents.sort((a, b) => a.timestamp - b.timestamp);
+    
+    return spacedEvents;
+  }
+
+  /**
+   * Simple hash function for consistent node ordering
+   */
+  private hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
   }
 
   /**
