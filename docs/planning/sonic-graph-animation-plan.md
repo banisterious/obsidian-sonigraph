@@ -204,7 +204,9 @@ this.simulation = d3.forceSimulation(nodes)
 ```
 
 **Clustering Algorithms:**
+- **Journal-Centric Gravitational Model**: High-connection nodes (journals) act as gravitational centers with orbital positioning for attachments
 - **Connection-Based Clustering**: Group nodes by link relationships and strength
+- **Temporal Clustering**: Group by creation/modification time with recent activity creating "hot zones"
 - **Orphan Detection**: Identify unconnected nodes and create artificial clustering
 - **File-Type Affinity**: Subtle attraction between similar file types (notes, images, etc.)
 - **Folder Hierarchy**: Optional clustering based on folder relationships
@@ -232,7 +234,15 @@ this.simulation = d3.forceSimulation(nodes)
 2. Add inter-cluster repulsion forces
 3. Create visual breathing space between distinct groups
 
-**Phase D: Fine-Tuning and Polish**
+**Phase D: Link Rendering Improvements**
+1. **Fix Link ID Consistency**: Standardize link ID generation across all renderer methods
+2. **Improve Link Detection**: Better link resolution using `getFirstLinkpathDest()` for robust path handling
+3. **Enhanced CSS Visibility**: Increase link opacity from 0.6 to 0.8, stroke-width to 1.5px, add fallback colors
+4. **Expand Link Scope**: Extract links from all file types, not just notes
+5. **Add Link Debugging**: Comprehensive logging for link resolution and visibility tracking
+6. **Temporal Link Animation**: Intelligent link appearance timing relative to connected nodes
+
+**Phase E: Fine-Tuning and Polish**
 1. Parameter optimization through user testing
 2. Performance testing with large graphs (1000+ nodes)
 3. Settings integration for user customization
@@ -245,13 +255,75 @@ this.simulation = d3.forceSimulation(nodes)
 - **Organic Flow**: Natural, non-uniform distribution that feels intentional
 - **Maintained Readability**: Tighter clustering without sacrificing legibility
 
+#### **User Experience Enhancements** ✨
+
+**Interactive Cluster Controls:**
+- **Cluster Highlighting**: Mouse hover highlights entire cluster with visual boundaries
+- **Audio Preview**: Hover plays cluster's musical theme preview
+- **Manual Cluster Repositioning**: Click-and-drag cluster center to move entire cluster as a unit while maintaining internal node relationships
+- **Right-Click Options**: Context menu for cluster musical theme selection
+- **Temporary Clustering**: Create exploratory clusters for investigation
+
+**Adaptive Performance System:**
+- **Adaptive Granularity**: More detailed clustering for small graphs, broader for large graphs
+- **Performance Scaling**: Dynamic adjustment based on graph size and zoom level
+- **Zoom-Based Complexity**: Audio and visual detail adapts to current zoom level
+
 #### **Settings Integration** ⚙️
 Future settings panel controls for layout customization:
 - **Clustering Strength**: Slider for link-based attraction intensity
 - **Group Separation**: Control spacing between distinct clusters  
 - **Orphan Behavior**: Toggle between clustering vs. dispersal for unconnected nodes
 - **File-Type Affinity**: Enable/disable similar file type attraction
-- **Layout Presets**: "Tight Clusters", "Balanced", "Dispersed" quick options
+- **Temporal Clustering**: Enable time-based clustering with recency weighting
+- **Journal Gravity**: Adjust gravitational strength of high-connection nodes
+- **Layout Presets**: "Tight Clusters", "Balanced", "Dispersed", "Journal-Centric" quick options
+
+#### **Musical Theming System** 🎵
+
+**Cluster-Based Musical Properties**: Instead of arbitrary group assignments, musical theming will be based on cluster characteristics:
+
+**Size-Based Instrumentation:**
+- **Large Clusters (20+ nodes)**: Full orchestral sections (strings, brass, woodwinds)
+- **Medium Clusters (5-19 nodes)**: Chamber ensembles (string quartet, brass quintet)  
+- **Small Clusters (2-4 nodes)**: Solo instruments or duos
+- **Isolated Nodes**: Experimental/ambient sounds (whale song, pads)
+
+**Density-Based Musical Complexity:**
+- **Dense Clusters**: Complex harmonic progressions, faster note intervals
+- **Moderate Clusters**: Balanced rhythmic patterns, standard harmonies
+- **Sparse Clusters**: Simple melodies, extended note durations
+
+**Type-Based Instrument Selection:**
+- **Journal-Heavy Clusters**: Keyboard instruments (piano, organ) for narrative content
+- **Media-Rich Clusters**: Strings and woodwinds for creative/visual content
+- **Reference Clusters**: Brass instruments for authoritative/factual content
+- **Mixed Clusters**: Electronic instruments for diverse content types
+
+**Advanced Musical Mapping:**
+- **Connection Strength Audio Cues**: Strong links = consonant intervals, weak links = dissonant intervals
+- **Velocity-Based Expression**: Recent activity affects note intensity, older files play softer
+- **Harmonic Progression Mapping**: Journal clusters establish key signatures, sub-clusters use related keys
+- **Level-of-Detail Audio**: Zoom level affects musical complexity (simplified when zoomed out)
+
+**Technical Implementation:**
+```typescript
+interface ClusterMusicalProperties {
+  size: 'small' | 'medium' | 'large' | 'isolated';
+  density: 'sparse' | 'moderate' | 'dense';
+  dominantTypes: string[];
+  connectionStrength: number;
+  instrumentAssignment: string[];
+  harmonicRole: 'primary' | 'supporting' | 'ambient';
+}
+
+class ClusterMusicalMapper {
+  analyzeCluster(nodes: GraphNode[]): ClusterMusicalProperties
+  assignInstrumentsBySize(nodeCount: number): string[]
+  assignInstrumentsByDensity(connectionsPerNode: number): string[]
+  assignInstrumentsByType(fileTypes: string[]): string[]
+}
+```
 
 #### **Success Metrics** 📊
 - **Visual Coherence**: Related content appears logically grouped
@@ -259,6 +331,7 @@ Future settings panel controls for layout customization:
 - **Attachment Clarity**: Images/PDFs obviously associated with relevant notes
 - **Orphan Organization**: Unconnected files don't appear randomly scattered
 - **Performance Maintenance**: Smooth animation despite more complex force calculations
+- **Musical Meaningfulness**: Audio experience reflects actual content relationships rather than arbitrary groupings
 
 ### Phase 3.6: UI Enhancement and Settings Panel ✅ **COMPLETED**
 
