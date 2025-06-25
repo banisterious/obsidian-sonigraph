@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
+import { SonicGraphSettings } from '../utils/constants';
 
 const logger = getLogger('GraphRenderer');
 
@@ -18,6 +19,12 @@ export interface ForceConfig {
   linkStrength: number;
   chargeStrength: number;
   collisionRadius: number;
+  // Phase 3.8: Enhanced clustering parameters
+  strongLinkDistance: number;    // Distance for strong connections (>0.7 strength)
+  weakLinkDistance: number;      // Distance for weak connections (<=0.7 strength) 
+  orphanRepulsion: number;       // Reduced repulsion for orphaned nodes
+  clusterStrength: number;       // Strength of clustering force
+  separationStrength: number;    // Force between distinct groups
 }
 
 export class GraphRenderer {
@@ -27,7 +34,7 @@ export class GraphRenderer {
   private linkGroup: any;
   private nodeGroup: any;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
-  private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
+  // Removed tooltip property - using native browser tooltips
   
   private simulation: d3.Simulation<GraphNode, GraphLink>;
   private config: RenderConfig;
@@ -39,15 +46,10 @@ export class GraphRenderer {
   private visibleLinks: Set<string> = new Set();
   private animationStyle: 'fade' | 'scale' | 'slide' | 'pop' = 'fade';
   
-  // Performance optimization for mouseover events
-  private lastTooltipUpdate: number = 0;
-  private tooltipThrottleMs: number = 16; // ~60fps
-  private isTooltipVisible: boolean = false;
+  // Phase 3.8: Settings integration
+  private layoutSettings: SonicGraphSettings['layout'] | null = null;
   
-  // Performance optimization for force simulation
-  private lastPositionUpdate: number = 0;
-  private positionUpdateThrottleMs: number = 16; // ~60fps
-  private pendingPositionUpdate: boolean = false;
+  // Tooltip variables removed - using native browser tooltips
 
   constructor(container: HTMLElement, config: Partial<RenderConfig> = {}) {
     this.container = container;
@@ -55,22 +57,28 @@ export class GraphRenderer {
       width: 800,
       height: 600,
       nodeRadius: 8,
-      linkDistance: 25, // Much smaller for tighter clustering
+      linkDistance: 35, // Phase 3.8: Increased for better node spacing
       showLabels: false,
       enableZoom: true,
       ...config
     };
     
     this.forceConfig = {
-      centerStrength: 0.2, // Slightly stronger to pull nodes together
-      linkStrength: 0.4,   // Stronger links to keep connected nodes close
-      chargeStrength: -60, // Reduced repulsion to allow closer packing
-      collisionRadius: 12   // Smaller collision radius for tighter packing
+      centerStrength: 0.15, // Phase 3.8: Slightly reduced for more organic spread
+      linkStrength: 0.6,    // Phase 3.8: Increased for stronger clustering
+      chargeStrength: -120, // Phase 3.8: Increased repulsion for better node spacing
+      collisionRadius: 24,  // Phase 3.8: One node-sized space between nodes (8+8+8)
+      // Phase 3.8: Enhanced clustering parameters (optimized)
+      strongLinkDistance: 30,    // Phase 3.8: Increased for better spacing while maintaining clusters
+      weakLinkDistance: 80,      // Phase 3.8: Increased for more distance for weak connections
+      orphanRepulsion: -30,      // Phase 3.8: Slightly reduced for orphan clustering
+      clusterStrength: 0.15,     // Phase 3.8: Increased for better clustering
+      separationStrength: 0.08   // Phase 3.8: Increased for clearer group boundaries
     };
 
     this.initializeSVG();
     this.initializeSimulation();
-    this.initializeTooltip();
+    // Tooltip initialization removed - using native browser tooltips
     
     logger.debug('renderer', 'GraphRenderer initialized', { config: this.config });
   }
@@ -104,16 +112,15 @@ export class GraphRenderer {
           this.g.attr('transform', event.transform);
         });
 
-      this.svg.call(this.zoom);
+      // Configure zoom with touch event optimization before applying
+      this.zoom
+        .filter((event) => {
+          // Allow all mouse events, but be more selective with touch
+          return !event.ctrlKey && !event.button;
+        })
+        .touchable(() => false); // Disable touch events to prevent violations
       
-      // Fix touch event warnings by properly configuring passive listeners
-      const svgNode = this.svg.node() as SVGSVGElement;
-      if (svgNode) {
-        // Remove default D3 touch handlers and add passive ones
-        svgNode.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-        svgNode.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-        svgNode.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
-      }
+      this.svg.call(this.zoom);
     }
   }
 
@@ -124,11 +131,18 @@ export class GraphRenderer {
     this.simulation = d3.forceSimulation<GraphNode>()
       .force('link', d3.forceLink<GraphNode, GraphLink>()
         .id(d => d.id)
-        .distance(this.config.linkDistance)
-        .strength(this.forceConfig.linkStrength)
+        // Phase 3.8: Variable link distance based on connection strength
+        .distance((d: GraphLink) => {
+          return d.strength > 0.7 ? this.forceConfig.strongLinkDistance : this.forceConfig.weakLinkDistance;
+        })
+        // Phase 3.8: Amplify connection strength for better clustering
+        .strength((d: GraphLink) => d.strength * this.forceConfig.linkStrength * 1.5)
       )
       .force('charge', d3.forceManyBody<GraphNode>()
-        .strength(this.forceConfig.chargeStrength)
+        // Phase 3.8: Adaptive charge based on node connections
+        .strength((d: GraphNode) => {
+          return d.connections.length > 0 ? this.forceConfig.chargeStrength : this.forceConfig.orphanRepulsion;
+        })
       )
       .force('center', d3.forceCenter<GraphNode>(
         this.config.width / 2, 
@@ -137,24 +151,10 @@ export class GraphRenderer {
       .force('collision', d3.forceCollide<GraphNode>()
         .radius(this.forceConfig.collisionRadius)
       )
-      // Add organic clustering based on file type
-      .force('cluster', (alpha) => {
-        const strength = 0.1 * alpha;
-        this.nodes.forEach(node => {
-          if (node.x !== undefined && node.y !== undefined) {
-            // Create loose clusters by file type
-            const typeOffset = this.getTypeOffset(node.type);
-            const targetX = this.config.width / 2 + typeOffset.x;
-            const targetY = this.config.height / 2 + typeOffset.y;
-            
-            node.vx = (node.vx || 0) + (targetX - node.x) * strength;
-            node.vy = (node.vy || 0) + (targetY - node.y) * strength;
-          }
-        });
-      })
-      // Add random jitter to break symmetry
+      // Phase 3.8: Simplified jitter force (clustering applied once at start)
       .force('jitter', (alpha) => {
-        const strength = 0.02 * alpha;
+        if (alpha < 0.1) return; // Only apply jitter at high alpha
+        const strength = 0.01 * alpha; // Reduced jitter strength
         this.nodes.forEach(node => {
           if (node.vx !== undefined && node.vy !== undefined) {
             node.vx += (Math.random() - 0.5) * strength;
@@ -163,29 +163,15 @@ export class GraphRenderer {
         });
       })
       .on('tick', () => {
-        // Throttle position updates to reduce animation frame load
-        const now = performance.now();
-        if (now - this.lastPositionUpdate >= this.positionUpdateThrottleMs && !this.pendingPositionUpdate) {
-          this.pendingPositionUpdate = true;
-          requestAnimationFrame(() => {
-            this.updatePositions();
-            this.lastPositionUpdate = performance.now();
-            this.pendingPositionUpdate = false;
-          });
-        }
+        // Optimized position updates
+        this.updatePositions();
       })
+      .alphaDecay(0.023) // Standard decay rate
+      .velocityDecay(0.4) // Smooth movement
       .on('end', () => this.onSimulationEnd());
   }
 
-  /**
-   * Initialize tooltip for node information
-   */
-  private initializeTooltip(): void {
-    // Create tooltip div - all styles now in CSS
-    this.tooltip = d3.select(this.container)
-      .append('div')
-      .attr('class', 'sonic-graph-tooltip');
-  }
+  // Tooltip initialization removed - using native browser tooltips
 
   /**
    * Render the graph with given nodes and links
@@ -195,6 +181,12 @@ export class GraphRenderer {
     
     this.nodes = nodes;
     this.links = links;
+    
+    // Phase 3.8: Apply adaptive performance scaling
+    this.applyAdaptiveScaling(nodes.length);
+    
+    // Phase 3.8: Apply initial clustering positioning (one-time)
+    this.applyInitialClustering();
     
     // Initialize all nodes as visible for static rendering
     this.visibleNodes = new Set(nodes.map(n => n.id));
@@ -249,23 +241,50 @@ export class GraphRenderer {
 
   /**
    * Render links
+   * Phase 3.8: Enhanced with link type and strength attributes for CSS styling
    */
   private renderLinks(): void {
     const linkSelection = this.g.select('.sonigraph-temporal-links')
       .selectAll('line')
       .data(this.links, (d: any, i) => this.getLinkId(d, i));
 
-    // Enter new links
-    linkSelection.enter()
+    // Enter new links with Phase 3.8 enhancements
+    const linkEnter = linkSelection.enter()
       .append('line')
       .attr('class', 'appearing')
-      .style('opacity', 0)
+      // Phase 3.8: Add data attributes for CSS styling
+      .attr('data-link-type', (d: GraphLink) => d.type)
+      .attr('data-strength', (d: GraphLink) => this.getStrengthCategory(d.strength))
+      .style('opacity', 0);
+
+    // Phase 3.8: Enhanced link appearance animation
+    linkEnter
       .transition()
       .duration(300)
       .style('opacity', 1)
       .on('end', function() {
         d3.select(this).classed('appearing', false);
       });
+
+    // Phase 3.8: Add hover interactions for links
+    linkEnter
+      .on('mouseenter', function(event, d) {
+        d3.select(this).classed('highlighted', true);
+        logger.debug('link-hover', 'Link hovered', {
+          source: typeof d.source === 'string' ? d.source : d.source.id,
+          target: typeof d.target === 'string' ? d.target : d.target.id,
+          type: d.type,
+          strength: d.strength
+        });
+      })
+      .on('mouseleave', function() {
+        d3.select(this).classed('highlighted', false);
+      });
+
+    // Update existing links with new data attributes
+    linkSelection
+      .attr('data-link-type', (d: GraphLink) => d.type)
+      .attr('data-strength', (d: GraphLink) => this.getStrengthCategory(d.strength));
 
     // Remove old links
     linkSelection.exit()
@@ -275,6 +294,15 @@ export class GraphRenderer {
       .remove();
 
     this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
+  }
+
+  /**
+   * Phase 3.8: Categorize link strength for CSS styling
+   */
+  private getStrengthCategory(strength: number): string {
+    if (strength >= 0.7) return 'strong';
+    if (strength >= 0.4) return 'medium';
+    return 'weak';
   }
 
   /**
@@ -292,10 +320,14 @@ export class GraphRenderer {
       .style('opacity', 0)
       .call(this.setupNodeInteractions.bind(this));
 
-    // Add circles to new nodes
+    // Add circles to new nodes with tooltips
     nodeEnter.append('circle')
       .attr('r', this.config.nodeRadius)
-      .attr('class', d => `${d.type}-node`);
+      .attr('class', d => `${d.type}-node`)
+      .attr('title', (d: GraphNode) => {
+        const fileName = d.title.split('/').pop() || d.title;
+        return fileName;
+      });
 
     // Add labels to new nodes
     nodeEnter.append('text')
@@ -329,49 +361,15 @@ export class GraphRenderer {
    */
   private setupNodeInteractions(selection: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>): void {
     selection
-      .on('mouseover', (event, d) => {
-        // Throttle mouseover events for performance
-        const now = performance.now();
-        if (now - this.lastTooltipUpdate < this.tooltipThrottleMs) {
-          return;
-        }
-        this.lastTooltipUpdate = now;
-        
-        // Use requestAnimationFrame to avoid forced reflows
-        requestAnimationFrame(() => {
-          // Highlight connected links
-          this.highlightConnectedLinks(d.id, true);
-          
-          // Show tooltip
-          this.showTooltip(event, d);
-          this.isTooltipVisible = true;
-        });
+      .on('mouseover', (_, d) => {
+        // Highlight connected links
+        this.highlightConnectedLinks(d.id, true);
       })
-      .on('mousemove', (event, d) => {
-        // Throttle mousemove events more aggressively
-        const now = performance.now();
-        if (now - this.lastTooltipUpdate < this.tooltipThrottleMs || !this.isTooltipVisible) {
-          return;
-        }
-        this.lastTooltipUpdate = now;
-        
-        // Use requestAnimationFrame for smooth tooltip positioning
-        requestAnimationFrame(() => {
-          this.updateTooltipPosition(event);
-        });
+      .on('mouseout', (_, d) => {
+        // Remove highlight from connected links
+        this.highlightConnectedLinks(d.id, false);
       })
-      .on('mouseout', (event, d) => {
-        // Use requestAnimationFrame to batch DOM updates
-        requestAnimationFrame(() => {
-          // Remove highlight from connected links
-          this.highlightConnectedLinks(d.id, false);
-          
-          // Hide tooltip
-          this.hideTooltip();
-          this.isTooltipVisible = false;
-        });
-      })
-      .on('click', (event, d) => {
+      .on('click', (_, d) => {
         // Could emit event to open file in Obsidian
         logger.debug('renderer', `Node clicked: ${d.title}`, { node: d });
       });
@@ -543,74 +541,12 @@ export class GraphRenderer {
     setTimeout(() => {
       this.simulation.stop();
       logger.debug('renderer', 'Simulation stopped for static preview');
-    }, 1500); // Let simulation run for 1.5 seconds to settle
+    }, 800); // Reduced from 1.5s to 0.8s for better performance
     
     logger.debug('renderer', 'Initial view set for static preview');
   }
 
-  /**
-   * Show tooltip with node information
-   */
-  private showTooltip(event: MouseEvent, node: GraphNode): void {
-    const tooltipContent = this.createTooltipContent(node);
-    
-    this.tooltip
-      .html(tooltipContent)
-      .classed('tooltip-visible', true)
-      .classed('tooltip-hidden', false);
-    
-    this.updateTooltipPosition(event);
-  }
-
-  /**
-   * Update tooltip position based on mouse event
-   */
-  private updateTooltipPosition(event: MouseEvent): void {
-    // Cache container rect to avoid repeated DOM queries
-    const containerRect = this.container.getBoundingClientRect();
-    const x = event.clientX - containerRect.left + 10;
-    const y = event.clientY - containerRect.top - 10;
-    
-    // Batch style updates to avoid layout thrashing
-    const tooltipNode = this.tooltip.node() as HTMLElement;
-    if (tooltipNode) {
-      tooltipNode.style.transform = `translate(${x}px, ${y}px)`;
-    }
-  }
-
-  /**
-   * Hide tooltip
-   */
-  private hideTooltip(): void {
-    this.tooltip
-      .classed('tooltip-visible', false)
-      .classed('tooltip-hidden', true);
-  }
-
-  /**
-   * Create tooltip content for a node
-   */
-  private createTooltipContent(node: GraphNode): string {
-    const creationDate = node.creationDate.toLocaleDateString();
-    const modificationDate = node.modificationDate.toLocaleDateString();
-    const fileSize = this.formatFileSize(node.fileSize);
-    const connectionCount = node.connections.length;
-    
-    // Extract just the filename from the full path
-    const fileName = node.title.split('/').pop() || node.title;
-    
-    return `
-      <div class="sonic-graph-tooltip-title">${fileName}</div>
-      <div class="sonic-graph-tooltip-path">${node.path}</div>
-      <div class="sonic-graph-tooltip-meta">
-        <div>Type: ${node.type}</div>
-        <div>Size: ${fileSize}</div>
-        <div>Created: ${creationDate}</div>
-        <div>Modified: ${modificationDate}</div>
-        <div>Connections: ${connectionCount}</div>
-      </div>
-    `;
-  }
+  // Tooltip methods removed - using native browser tooltips for better performance
 
   /**
    * Generate consistent link ID for D3.js data binding
@@ -621,24 +557,43 @@ export class GraphRenderer {
     return `${sourceId}-${targetId}-${index}`;
   }
 
-  /**
-   * Format file size in human-readable format
-   */
-  private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
+  // formatFileSize method removed - no longer needed with native tooltips
 
   /**
    * Handle simulation end
    */
   private onSimulationEnd(): void {
     logger.debug('renderer', 'Force simulation ended');
+  }
+
+  /**
+   * Get offset position for path-based grouping
+   */
+  private getPathBasedOffset(filePath: string, groups: any[]): { x: number; y: number } {
+    const radius = 100; // Distance from center for group clusters
+    
+    // Find which group this file belongs to
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i];
+      if (filePath.startsWith(group.path)) {
+        // Calculate angle based on group index
+        const angle = (i / groups.length) * 2 * Math.PI;
+        // Add some randomness for natural clustering
+        const jitteredAngle = angle + (Math.random() - 0.5) * 0.3;
+        const jitteredRadius = radius * (0.8 + Math.random() * 0.4);
+        
+        return {
+          x: Math.cos(jitteredAngle) * jitteredRadius,
+          y: Math.sin(jitteredAngle) * jitteredRadius
+        };
+      }
+    }
+    
+    // If no group match, place near center with some scatter
+    return {
+      x: (Math.random() - 0.5) * 40,
+      y: (Math.random() - 0.5) * 40
+    };
   }
 
   /**
@@ -697,15 +652,249 @@ export class GraphRenderer {
   }
 
   /**
+   * Phase 3.8: Update layout settings and apply changes
+   */
+  updateLayoutSettings(settings: SonicGraphSettings['layout']): void {
+    logger.debug('layout-settings', 'Updating layout settings', settings);
+    
+    this.layoutSettings = settings;
+    
+    // Apply layout preset if specified
+    if (settings.layoutPreset) {
+      this.applyLayoutPreset(settings.layoutPreset);
+    }
+    
+    // Update force parameters based on settings
+    this.forceConfig.clusterStrength = settings.clusteringStrength;
+    this.forceConfig.separationStrength = settings.groupSeparation;
+    
+    // Update simulation forces if simulation exists
+    if (this.simulation) {
+      this.updateSimulationForces();
+      this.simulation.alpha(0.3).restart(); // Gentle restart to apply changes
+    }
+    
+    logger.debug('layout-settings', 'Layout settings applied', settings);
+  }
+
+  /**
+   * Phase 3.8: Apply predefined layout presets
+   */
+  private applyLayoutPreset(preset: 'loose' | 'balanced' | 'tight' | 'very-tight'): void {
+    logger.debug('layout-preset', 'Applying layout preset', { preset });
+    
+    switch (preset) {
+      case 'loose':
+        this.forceConfig.clusterStrength = 0.1;
+        this.forceConfig.separationStrength = 0.04;
+        this.forceConfig.strongLinkDistance = 30;
+        this.forceConfig.weakLinkDistance = 80;
+        this.forceConfig.chargeStrength = -60;
+        break;
+        
+      case 'balanced':
+        this.forceConfig.clusterStrength = 0.15;
+        this.forceConfig.separationStrength = 0.08;
+        this.forceConfig.strongLinkDistance = 20;
+        this.forceConfig.weakLinkDistance = 60;
+        this.forceConfig.chargeStrength = -80;
+        break;
+        
+      case 'tight':
+        this.forceConfig.clusterStrength = 0.2;
+        this.forceConfig.separationStrength = 0.12;
+        this.forceConfig.strongLinkDistance = 15;
+        this.forceConfig.weakLinkDistance = 40;
+        this.forceConfig.chargeStrength = -100;
+        break;
+        
+      case 'very-tight':
+        this.forceConfig.clusterStrength = 0.25;
+        this.forceConfig.separationStrength = 0.15;
+        this.forceConfig.strongLinkDistance = 12;
+        this.forceConfig.weakLinkDistance = 35;
+        this.forceConfig.chargeStrength = -120;
+        break;
+    }
+    
+    logger.debug('layout-preset', 'Layout preset applied', { preset, config: this.forceConfig });
+  }
+
+  /**
+   * Phase 3.8: Apply initial clustering positioning (one-time optimization)
+   */
+  private applyInitialClustering(): void {
+    logger.debug('clustering', 'Applying initial clustering positioning');
+    
+    const layoutSettings = this.layoutSettings;
+    if (!layoutSettings) return;
+    
+    // Apply initial positions based on clustering method
+    this.nodes.forEach(node => {
+      let offset = { x: 0, y: 0 };
+      
+      // Check if path-based grouping is enabled
+      if (layoutSettings.pathBasedGrouping.enabled) {
+        offset = this.getPathBasedOffset(node.path, layoutSettings.pathBasedGrouping.groups);
+      } else {
+        // Fall back to file type clustering
+        offset = this.getTypeOffset(node.type);
+      }
+      
+      // Set initial positions for better clustering
+      node.x = this.config.width / 2 + offset.x + (Math.random() - 0.5) * 20;
+      node.y = this.config.height / 2 + offset.y + (Math.random() - 0.5) * 20;
+      
+      // For highly connected nodes (journals), position closer to center
+      if (node.connections.length > 5) {
+        const centerPull = 0.3;
+        node.x = node.x * (1 - centerPull) + (this.config.width / 2) * centerPull;
+        node.y = node.y * (1 - centerPull) + (this.config.height / 2) * centerPull;
+      }
+    });
+    
+    logger.debug('clustering', 'Initial clustering positioning applied');
+  }
+
+  // Phase 3.8: Clustering methods removed - now using one-time initial positioning
+
+  /**
+   * Phase 3.8: Adaptive performance scaling based on graph size
+   */
+  private applyAdaptiveScaling(nodeCount: number): void {
+    logger.debug('adaptive-scaling', `Applying adaptive scaling for ${nodeCount} nodes`);
+    
+    // Define scaling thresholds
+    if (nodeCount <= 50) {
+      // Small graphs: Full quality
+      this.forceConfig.clusterStrength = 0.15;
+      this.forceConfig.separationStrength = 0.08;
+      this.forceConfig.chargeStrength = -80;
+      logger.debug('adaptive-scaling', 'Applied small graph settings (full quality)');
+      
+    } else if (nodeCount <= 200) {
+      // Medium graphs: Balanced quality
+      this.forceConfig.clusterStrength = 0.12;
+      this.forceConfig.separationStrength = 0.06;
+      this.forceConfig.chargeStrength = -70;
+      logger.debug('adaptive-scaling', 'Applied medium graph settings (balanced quality)');
+      
+    } else if (nodeCount <= 500) {
+      // Large graphs: Performance focused
+      this.forceConfig.clusterStrength = 0.1;
+      this.forceConfig.separationStrength = 0.04;
+      this.forceConfig.chargeStrength = -60;
+      logger.debug('adaptive-scaling', 'Applied large graph settings (performance focused)');
+      
+    } else {
+      // Very large graphs: Minimal complexity
+      this.forceConfig.clusterStrength = 0.08;
+      this.forceConfig.separationStrength = 0.02;
+      this.forceConfig.chargeStrength = -50;
+      logger.debug('adaptive-scaling', 'Applied very large graph settings (minimal complexity)');
+    }
+    
+    // Update simulation with new parameters if it exists
+    if (this.simulation) {
+      this.updateSimulationForces();
+    }
+  }
+
+  /**
+   * Phase 3.8: Update simulation forces with current config
+   */
+  private updateSimulationForces(): void {
+    // Update charge force
+    (this.simulation.force('charge') as d3.ForceManyBody<GraphNode>)
+      ?.strength((d: GraphNode) => {
+        return d.connections.length > 0 ? this.forceConfig.chargeStrength : this.forceConfig.orphanRepulsion;
+      });
+    
+    // Update collision force
+    (this.simulation.force('collision') as d3.ForceCollide<GraphNode>)
+      ?.radius(this.forceConfig.collisionRadius);
+    
+    // Update link force
+    (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
+      ?.distance((d: GraphLink) => {
+        return d.strength > 0.7 ? this.forceConfig.strongLinkDistance : this.forceConfig.weakLinkDistance;
+      })
+      ?.strength((d: GraphLink) => d.strength * this.forceConfig.linkStrength * 1.5);
+    
+    logger.debug('adaptive-scaling', 'Updated simulation forces with new parameters');
+  }
+
+  /**
+   * Update graph data and restart simulation
+   */
+  updateData(nodes: GraphNode[], links: GraphLink[]): void {
+    logger.debug('renderer', 'Updating graph data', { 
+      nodeCount: nodes.length, 
+      linkCount: links.length 
+    });
+    
+    this.nodes = nodes;
+    this.links = links;
+    
+    // Update simulation with new data
+    this.simulation.nodes(this.nodes);
+    (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)?.links(this.links);
+    
+    // Re-render with new data
+    this.renderNodes();
+    this.renderLinks();
+    
+    // Restart simulation to apply spacing changes
+    this.restartSimulation();
+    
+    logger.debug('renderer', 'Graph data updated and simulation restarted');
+  }
+
+  /**
+   * Restart simulation with current configuration
+   */
+  restartSimulation(): void {
+    logger.debug('renderer', 'Restarting simulation with updated spacing parameters');
+    
+    // Update all forces with current configuration
+    this.updateSimulationForces();
+    
+    // Restart with medium alpha for visible movement but not chaos
+    this.simulation.alpha(0.5).restart();
+    
+    logger.debug('renderer', 'Simulation restarted', { 
+      collisionRadius: this.forceConfig.collisionRadius,
+      chargeStrength: this.forceConfig.chargeStrength,
+      strongLinkDistance: this.forceConfig.strongLinkDistance,
+      weakLinkDistance: this.forceConfig.weakLinkDistance
+    });
+  }
+
+  /**
+   * Force apply better spacing immediately
+   */
+  applyBetterSpacing(): void {
+    logger.debug('renderer', 'Applying better spacing configuration');
+    
+    // Update force configuration with better spacing
+    this.forceConfig.collisionRadius = 24;  // One node-sized space between nodes
+    this.forceConfig.chargeStrength = -120; // Stronger repulsion
+    this.forceConfig.strongLinkDistance = 30;
+    this.forceConfig.weakLinkDistance = 80;
+    
+    // Apply changes immediately
+    this.restartSimulation();
+    
+    logger.debug('renderer', 'Better spacing applied and simulation restarted');
+  }
+
+  /**
    * Cleanup resources
    */
   destroy(): void {
     this.simulation.stop();
     
-    // Remove tooltip
-    if (this.tooltip) {
-      this.tooltip.remove();
-    }
+    // No tooltip cleanup needed - using native browser tooltips
     
     d3.select(this.container).selectAll('*').remove();
     logger.debug('renderer', 'GraphRenderer destroyed');
