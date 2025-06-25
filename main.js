@@ -206,6 +206,33 @@ var init_constants = __esm({
       // Default 60 seconds for more contemplative pacing
       sonicGraphAnimationSpeed: 1,
       // Default to normal speed
+      sonicGraphSettings: {
+        timeline: {
+          duration: 60,
+          spacing: "auto",
+          loop: false,
+          showMarkers: true
+        },
+        audio: {
+          density: 30,
+          noteDuration: 0.3,
+          enableEffects: true,
+          autoDetectionOverride: "auto"
+        },
+        visual: {
+          showLabels: false,
+          showFileNames: false,
+          animationStyle: "fade",
+          nodeScaling: 1,
+          connectionOpacity: 0.6,
+          timelineMarkersEnabled: true
+        },
+        navigation: {
+          enableControlCenter: true,
+          enableReset: true,
+          enableExport: false
+        }
+      },
       effects: {
         orchestralreverbhall: { enabled: true },
         "3bandeq": { enabled: true },
@@ -9893,13 +9920,13 @@ var init_GraphDataExtractor = __esm({
         const links = [];
         const nodeMap = new Map(nodes.map((node) => [node.path, node]));
         for (const node of nodes) {
-          if (node.type === "note") {
-            const file = this.vault.getAbstractFileByPath(node.path);
-            if (file) {
-              const metadata = this.metadataCache.getFileCache(file);
+          const file = this.vault.getAbstractFileByPath(node.path);
+          if (file) {
+            const metadata = this.metadataCache.getFileCache(file);
+            if (metadata) {
               if (metadata == null ? void 0 : metadata.links) {
                 for (const link of metadata.links) {
-                  const targetFile = this.vault.getAbstractFileByPath(link.link + ".md");
+                  const targetFile = this.metadataCache.getFirstLinkpathDest(link.link, file.path);
                   if (targetFile && nodeMap.has(targetFile.path)) {
                     links.push({
                       source: node.id,
@@ -9907,12 +9934,15 @@ var init_GraphDataExtractor = __esm({
                       type: "reference",
                       strength: 1
                     });
+                    logger5.debug("links", `Link resolved: ${link.link} -> ${targetFile.path}`);
+                  } else {
+                    logger5.debug("links", `Link not resolved: ${link.link} (from ${file.path})`);
                   }
                 }
               }
               if (metadata == null ? void 0 : metadata.embeds) {
                 for (const embed of metadata.embeds) {
-                  const targetFile = this.vault.getAbstractFileByPath(embed.link);
+                  const targetFile = this.metadataCache.getFirstLinkpathDest(embed.link, file.path);
                   if (targetFile && nodeMap.has(targetFile.path)) {
                     links.push({
                       source: node.id,
@@ -9920,6 +9950,9 @@ var init_GraphDataExtractor = __esm({
                       type: "attachment",
                       strength: 0.8
                     });
+                    logger5.debug("links", `Embed resolved: ${embed.link} -> ${targetFile.path}`);
+                  } else {
+                    logger5.debug("links", `Embed not resolved: ${embed.link} (from ${file.path})`);
                   }
                 }
               }
@@ -9974,6 +10007,17 @@ var init_GraphRenderer = __esm({
         this.links = [];
         this.visibleNodes = /* @__PURE__ */ new Set();
         this.visibleLinks = /* @__PURE__ */ new Set();
+        this.animationStyle = "fade";
+        // Performance optimization for mouseover events
+        this.lastTooltipUpdate = 0;
+        this.tooltipThrottleMs = 16;
+        // ~60fps
+        this.isTooltipVisible = false;
+        // Performance optimization for force simulation
+        this.lastPositionUpdate = 0;
+        this.positionUpdateThrottleMs = 16;
+        // ~60fps
+        this.pendingPositionUpdate = false;
         this.container = container;
         this.config = {
           width: 800,
@@ -10014,9 +10058,12 @@ var init_GraphRenderer = __esm({
             this.g.attr("transform", event.transform);
           });
           this.svg.call(this.zoom);
-          this.svg.on("touchstart.zoom", null);
-          this.svg.on("touchmove.zoom", null);
-          this.svg.on("touchend.zoom", null);
+          const svgNode2 = this.svg.node();
+          if (svgNode2) {
+            svgNode2.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+            svgNode2.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+            svgNode2.addEventListener("touchend", (e) => e.preventDefault(), { passive: false });
+          }
         }
       }
       /**
@@ -10054,7 +10101,17 @@ var init_GraphRenderer = __esm({
               node.vy += (Math.random() - 0.5) * strength;
             }
           });
-        }).on("tick", () => this.updatePositions()).on("end", () => this.onSimulationEnd());
+        }).on("tick", () => {
+          const now3 = performance.now();
+          if (now3 - this.lastPositionUpdate >= this.positionUpdateThrottleMs && !this.pendingPositionUpdate) {
+            this.pendingPositionUpdate = true;
+            requestAnimationFrame(() => {
+              this.updatePositions();
+              this.lastPositionUpdate = performance.now();
+              this.pendingPositionUpdate = false;
+            });
+          }
+        }).on("end", () => this.onSimulationEnd());
       }
       /**
        * Initialize tooltip for node information
@@ -10070,7 +10127,7 @@ var init_GraphRenderer = __esm({
         this.nodes = nodes;
         this.links = links;
         this.visibleNodes = new Set(nodes.map((n) => n.id));
-        this.visibleLinks = new Set(links.map((l, i) => `${l.source}-${l.target}-${i}`));
+        this.visibleLinks = new Set(links.map((l, i) => this.getLinkId(l, i)));
         this.updateSimulation();
         this.renderLinks();
         this.renderNodes();
@@ -10108,7 +10165,7 @@ var init_GraphRenderer = __esm({
        * Render links
        */
       renderLinks() {
-        const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(this.links, (d, i) => `${typeof d.source === "string" ? d.source : d.source.id}-${typeof d.target === "string" ? d.target : d.target.id}-${i}`);
+        const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(this.links, (d, i) => this.getLinkId(d, i));
         linkSelection.enter().append("line").attr("class", "appearing").style("opacity", 0).transition().duration(300).style("opacity", 1).on("end", function() {
           select_default2(this).classed("appearing", false);
         });
@@ -10122,7 +10179,7 @@ var init_GraphRenderer = __esm({
         const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(this.nodes, (d) => d.id);
         const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
         nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`);
-        const textElements = nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "labels-hidden").text((d) => d.title);
+        nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "labels-hidden").text((d) => d.title);
         logger6.debug("renderer", `Node labels created with showLabels: ${this.config.showLabels}`);
         nodeEnter.transition().duration(500).style("opacity", 1).on("end", function() {
           select_default2(this).classed("appearing", false);
@@ -10135,13 +10192,31 @@ var init_GraphRenderer = __esm({
        */
       setupNodeInteractions(selection2) {
         selection2.on("mouseover", (event, d) => {
-          this.highlightConnectedLinks(d.id, true);
-          this.showTooltip(event, d);
+          const now3 = performance.now();
+          if (now3 - this.lastTooltipUpdate < this.tooltipThrottleMs) {
+            return;
+          }
+          this.lastTooltipUpdate = now3;
+          requestAnimationFrame(() => {
+            this.highlightConnectedLinks(d.id, true);
+            this.showTooltip(event, d);
+            this.isTooltipVisible = true;
+          });
         }).on("mousemove", (event, d) => {
-          this.updateTooltipPosition(event);
+          const now3 = performance.now();
+          if (now3 - this.lastTooltipUpdate < this.tooltipThrottleMs || !this.isTooltipVisible) {
+            return;
+          }
+          this.lastTooltipUpdate = now3;
+          requestAnimationFrame(() => {
+            this.updateTooltipPosition(event);
+          });
         }).on("mouseout", (event, d) => {
-          this.highlightConnectedLinks(d.id, false);
-          this.hideTooltip();
+          requestAnimationFrame(() => {
+            this.highlightConnectedLinks(d.id, false);
+            this.hideTooltip();
+            this.isTooltipVisible = false;
+          });
         }).on("click", (event, d) => {
           logger6.debug("renderer", `Node clicked: ${d.title}`, { node: d });
         });
@@ -10170,9 +10245,7 @@ var init_GraphRenderer = __esm({
        */
       updateLinkVisibility() {
         this.linkGroup.style("display", (d, i) => {
-          const sourceId = typeof d.source === "string" ? d.source : d.source.id;
-          const targetId = typeof d.target === "string" ? d.target : d.target.id;
-          const linkId = `${sourceId}-${targetId}-${i}`;
+          const linkId = this.getLinkId(d, i);
           return this.visibleLinks.has(linkId) ? "block" : "none";
         });
       }
@@ -10275,7 +10348,10 @@ var init_GraphRenderer = __esm({
         const containerRect = this.container.getBoundingClientRect();
         const x3 = event.clientX - containerRect.left + 10;
         const y3 = event.clientY - containerRect.top - 10;
-        this.tooltip.style("left", x3 + "px").style("top", y3 + "px");
+        const tooltipNode = this.tooltip.node();
+        if (tooltipNode) {
+          tooltipNode.style.transform = `translate(${x3}px, ${y3}px)`;
+        }
       }
       /**
        * Hide tooltip
@@ -10303,6 +10379,14 @@ var init_GraphRenderer = __esm({
         <div>Connections: ${connectionCount}</div>
       </div>
     `;
+      }
+      /**
+       * Generate consistent link ID for D3.js data binding
+       */
+      getLinkId(link, index2) {
+        const sourceId = typeof link.source === "string" ? link.source : link.source.id;
+        const targetId = typeof link.target === "string" ? link.target : link.target.id;
+        return `${sourceId}-${targetId}-${index2}`;
       }
       /**
        * Format file size in human-readable format
@@ -10347,6 +10431,22 @@ var init_GraphRenderer = __esm({
           x: Math.cos(jitteredAngle) * jitteredRadius,
           y: Math.sin(jitteredAngle) * jitteredRadius
         };
+      }
+      /**
+       * Update file name visibility on nodes
+       */
+      updateFileNameVisibility(showFileNames) {
+        logger6.debug("renderer", "Updating file name visibility", { showFileNames });
+        this.svg.selectAll(".node text").style("display", showFileNames ? "block" : "none").style("font-size", "10px").style("text-anchor", "middle").style("fill", "#666").style("pointer-events", "none");
+        logger6.debug("renderer", "File name visibility updated", { showFileNames });
+      }
+      /**
+       * Set animation style for node appearances
+       */
+      setAnimationStyle(style) {
+        logger6.debug("renderer", "Setting animation style", { style });
+        this.animationStyle = style;
+        logger6.debug("renderer", "Animation style set", { style });
       }
       /**
        * Cleanup resources
@@ -10709,10 +10809,17 @@ var init_TemporalGraphAnimator = __esm({
         logger9.debug("playback", "Speed changed", { speed });
       }
       /**
+       * Enable or disable animation looping
+       */
+      setLoop(loop) {
+        this.config.loop = loop;
+        logger9.debug("playback", "Loop setting changed", { loop });
+      }
+      /**
        * Main animation loop
        */
       animate() {
-        var _a;
+        var _a, _b;
         if (!this.isPlaying || this.isPaused) {
           return;
         }
@@ -10721,10 +10828,20 @@ var init_TemporalGraphAnimator = __esm({
         if (this.currentTime >= this.config.duration) {
           this.currentTime = this.config.duration;
           this.updateVisibility();
-          this.isPlaying = false;
-          (_a = this.onAnimationEnd) == null ? void 0 : _a.call(this);
-          logger9.info("playback", "Animation completed");
-          return;
+          if (this.config.loop) {
+            logger9.debug("playback", "Animation completed, looping...");
+            this.currentTime = 0;
+            this.animationStartTime = performance.now();
+            this.visibleNodes.clear();
+            (_a = this.onVisibilityChange) == null ? void 0 : _a.call(this, this.visibleNodes);
+            this.animationId = requestAnimationFrame(() => this.animate());
+            return;
+          } else {
+            this.isPlaying = false;
+            (_b = this.onAnimationEnd) == null ? void 0 : _b.call(this);
+            logger9.info("playback", "Animation completed");
+            return;
+          }
         }
         this.updateVisibility();
         this.animationId = requestAnimationFrame(() => this.animate());
@@ -10751,12 +10868,15 @@ var init_TemporalGraphAnimator = __esm({
         this.visibleNodes = visibleNodeIds;
         (_a = this.onVisibilityChange) == null ? void 0 : _a.call(this, visibleNodeIds);
         if (newlyAppearedNodes.length > 0) {
-          logger9.info("animation", "Nodes appeared in temporal animation", {
+          logger9.info("temporal-animation", "Nodes appeared in temporal animation", {
             count: newlyAppearedNodes.length,
-            time: this.currentTime.toFixed(2),
+            currentTime: this.currentTime.toFixed(2),
+            duration: this.config.duration,
             nodeIds: newlyAppearedNodes.map((n) => n.id),
             nodeTitles: newlyAppearedNodes.map((n) => n.title),
-            hasCallback: !!this.onNodeAppear
+            nodeTypes: newlyAppearedNodes.map((n) => n.type),
+            hasCallback: !!this.onNodeAppear,
+            callbackFunction: this.onNodeAppear ? "registered" : "missing"
           });
           newlyAppearedNodes.forEach((node) => {
             var _a2;
@@ -11309,7 +11429,7 @@ var init_SonicGraphModal = __esm({
        * Toggle animation playback
        */
       async toggleAnimation() {
-        var _a, _b;
+        var _a;
         if (!this.graphRenderer) {
           new import_obsidian6.Notice("Graph not ready");
           return;
@@ -11327,26 +11447,15 @@ var init_SonicGraphModal = __esm({
               await this.plugin.audioEngine.initialize();
               new import_obsidian6.Notice("Audio engine initialized");
             } else {
+              logger11.info("audio", "Reinitializing audio engine for animation to ensure fresh state");
+              await this.plugin.audioEngine.initialize();
               const enabledInstruments = this.getEnabledInstruments();
-              const audioEngineInstruments = Array.from(((_a = this.plugin.audioEngine["instruments"]) == null ? void 0 : _a.keys()) || []);
-              const missingInstruments = enabledInstruments.filter((inst) => !audioEngineInstruments.includes(inst));
-              const extraInstruments = audioEngineInstruments.filter((inst) => !enabledInstruments.includes(inst));
-              if (missingInstruments.length > 0 || extraInstruments.length > 0) {
-                logger11.info("audio", "Instrument configuration changed - reinitializing audio engine", {
-                  enabledInstruments,
-                  audioEngineInstruments,
-                  missingInstruments,
-                  extraInstruments
-                });
-                await this.plugin.audioEngine.initialize();
-                new import_obsidian6.Notice("Audio engine updated with new instruments");
-              } else {
-                logger11.info("audio", "Audio engine already initialized with correct instruments", {
-                  audioContext: status.audioContext,
-                  volume: status.volume,
-                  instruments: audioEngineInstruments
-                });
-              }
+              logger11.info("audio", "Audio engine reinitialized for animation", {
+                enabledInstruments,
+                enabledCount: enabledInstruments.length,
+                audioContext: this.plugin.audioEngine.getStatus().audioContext
+              });
+              new import_obsidian6.Notice("Audio engine ready for animation");
             }
             logger11.info("audio", "Audio engine ready for Sonic Graph animation");
           } catch (audioError) {
@@ -11370,7 +11479,7 @@ var init_SonicGraphModal = __esm({
           }
           logger11.info("ui", "About to call temporalAnimator.play()", {
             hasTemporalAnimator: !!this.temporalAnimator,
-            temporalAnimatorType: (_b = this.temporalAnimator) == null ? void 0 : _b.constructor.name
+            temporalAnimatorType: (_a = this.temporalAnimator) == null ? void 0 : _a.constructor.name
           });
           this.temporalAnimator.play();
           logger11.info("ui", "Starting Sonic Graph temporal animation");
@@ -11510,10 +11619,20 @@ var init_SonicGraphModal = __esm({
         });
         densitySlider.min = "0";
         densitySlider.max = "100";
-        densitySlider.value = "30";
+        densitySlider.value = this.getSonicGraphSettings().audio.density.toString();
+        const densityValueDisplay = densityContainer.createEl("span", {
+          text: this.getSonicGraphSettings().audio.density + "%",
+          cls: "sonic-graph-density-value"
+        });
+        densitySlider.addEventListener("input", (e) => {
+          const target = e.target;
+          const density = parseInt(target.value);
+          densityValueDisplay.textContent = density + "%";
+          this.updateAudioDensity(density);
+        });
         const densityLabels = densityContainer.createDiv({ cls: "sonic-graph-density-labels" });
-        densityLabels.createEl("span", { text: "Dense", cls: "sonic-graph-density-label" });
         densityLabels.createEl("span", { text: "Sparse", cls: "sonic-graph-density-label" });
+        densityLabels.createEl("span", { text: "Dense", cls: "sonic-graph-density-label" });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         durationItem.createEl("label", { text: "Animation Duration", cls: "sonic-graph-setting-label" });
         durationItem.createEl("div", {
@@ -11534,10 +11653,15 @@ var init_SonicGraphModal = __esm({
         });
         const loopToggle = loopItem.createDiv({ cls: "sonic-graph-setting-toggle" });
         const toggleSwitch = loopToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().timeline.loop) {
+          toggleSwitch.addClass("active");
+        }
         const toggleHandle = toggleSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
         loopToggle.createEl("span", { text: "Enable looping" });
         toggleSwitch.addEventListener("click", () => {
-          toggleSwitch.toggleClass("active", !toggleSwitch.hasClass("active"));
+          const isActive = toggleSwitch.hasClass("active");
+          toggleSwitch.toggleClass("active", !isActive);
+          this.updateLoopAnimation(!isActive);
         });
       }
       /**
@@ -11568,10 +11692,15 @@ var init_SonicGraphModal = __esm({
           type: "number",
           cls: "sonic-graph-setting-input"
         });
-        durationInput.value = "0.3";
+        durationInput.value = this.getSonicGraphSettings().audio.noteDuration.toString();
         durationInput.step = "0.1";
         durationInput.min = "0.1";
         durationInput.max = "2.0";
+        durationInput.addEventListener("input", (e) => {
+          const target = e.target;
+          const duration = parseFloat(target.value);
+          this.updateNoteDuration(duration);
+        });
       }
       /**
        * Create visual settings section
@@ -11586,11 +11715,16 @@ var init_SonicGraphModal = __esm({
           cls: "sonic-graph-setting-description"
         });
         const markersToggle = markersItem.createDiv({ cls: "sonic-graph-setting-toggle" });
-        const markersSwitch = markersToggle.createDiv({ cls: "sonic-graph-toggle-switch active" });
+        const markersSwitch = markersToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().visual.timelineMarkersEnabled) {
+          markersSwitch.addClass("active");
+        }
         const markersHandle = markersSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
         markersToggle.createEl("span", { text: "Show markers" });
         markersSwitch.addEventListener("click", () => {
-          markersSwitch.toggleClass("active", !markersSwitch.hasClass("active"));
+          const isActive = markersSwitch.hasClass("active");
+          markersSwitch.toggleClass("active", !isActive);
+          this.updateTimelineMarkersVisibility(!isActive);
         });
         const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         styleItem.createEl("label", { text: "Animation Style", cls: "sonic-graph-setting-label" });
@@ -11599,10 +11733,44 @@ var init_SonicGraphModal = __esm({
           cls: "sonic-graph-setting-description"
         });
         const styleSelect = styleItem.createEl("select", { cls: "sonic-graph-setting-select" });
-        ["Fade in", "Scale up", "Slide in", "Pop in"].forEach((option) => {
-          const optionEl = styleSelect.createEl("option", { text: option });
-          if (option === "Fade in")
+        const styleOptions = [
+          { display: "Fade in", value: "fade" },
+          { display: "Scale up", value: "scale" },
+          { display: "Slide in", value: "slide" },
+          { display: "Pop in", value: "pop" }
+        ];
+        const currentStyle = this.getSonicGraphSettings().visual.animationStyle;
+        styleOptions.forEach((option) => {
+          const optionEl = styleSelect.createEl("option", {
+            text: option.display,
+            value: option.value
+          });
+          if (option.value === currentStyle) {
             optionEl.selected = true;
+          }
+        });
+        styleSelect.addEventListener("change", (e) => {
+          const target = e.target;
+          const style = target.value;
+          this.updateAnimationStyle(style);
+        });
+        const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        fileNamesItem.createEl("label", { text: "Show File Names", cls: "sonic-graph-setting-label" });
+        fileNamesItem.createEl("div", {
+          text: "Display file names in small text beneath each node",
+          cls: "sonic-graph-setting-description"
+        });
+        const fileNamesToggle = fileNamesItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const fileNamesSwitch = fileNamesToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().visual.showFileNames) {
+          fileNamesSwitch.addClass("active");
+        }
+        const fileNamesHandle = fileNamesSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        fileNamesToggle.createEl("span", { text: "Show file names" });
+        fileNamesSwitch.addEventListener("click", () => {
+          const isActive = fileNamesSwitch.hasClass("active");
+          fileNamesSwitch.toggleClass("active", !isActive);
+          this.updateShowFileNames(!isActive);
         });
       }
       /**
@@ -11724,6 +11892,7 @@ var init_SonicGraphModal = __esm({
               duration: this.plugin.settings.sonicGraphAnimationDuration || 60,
               // Use user setting or default to 60 seconds
               speed: 1,
+              loop: this.getSonicGraphSettings().timeline.loop,
               ...spacingConfig
             }
           );
@@ -11739,6 +11908,12 @@ var init_SonicGraphModal = __esm({
             this.handleAnimationEnd();
           });
           this.temporalAnimator.onNodeAppeared((node) => {
+            logger11.debug("temporal-callback", "onNodeAppeared callback invoked", {
+              nodeId: node.id,
+              nodeTitle: node.title,
+              nodeType: node.type,
+              callbackRegistered: true
+            });
             this.handleNodeAppearance(node);
           });
           logger11.info("ui", "Temporal animator callbacks registered");
@@ -11812,6 +11987,12 @@ var init_SonicGraphModal = __esm({
         if (!markersContainer)
           return;
         markersContainer.innerHTML = "";
+        const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
+        if (!showMarkers) {
+          markersContainer.style.display = "none";
+          return;
+        }
+        markersContainer.style.display = "block";
         const duration = timelineInfo.duration;
         const timeIntervals = [];
         if (duration <= 30) {
@@ -11877,10 +12058,12 @@ var init_SonicGraphModal = __esm({
        * Handle node appearance for audio synchronization
        */
       async handleNodeAppearance(node) {
-        logger11.info("audio", "handleNodeAppearance called", {
+        logger11.debug("audio-sync", "Node appearance triggered in temporal animation", {
           nodeId: node.id,
           nodeTitle: node.title,
-          hasAudioEngine: !!this.plugin.audioEngine
+          nodeType: node.type,
+          hasAudioEngine: !!this.plugin.audioEngine,
+          timestamp: Date.now()
         });
         if (!this.plugin.audioEngine) {
           logger11.warn("audio", "No audio engine available for node appearance");
@@ -11893,23 +12076,72 @@ var init_SonicGraphModal = __esm({
             await this.plugin.audioEngine.initialize();
           }
           const mapping = this.createMusicalMappingForNode(node);
-          logger11.debug("audio", "About to play note for node appearance", {
+          if (mapping === null) {
+            logger11.debug("audio", "Note skipped due to audio density setting", {
+              nodeId: node.id,
+              nodeTitle: node.title
+            });
+            return;
+          }
+          logger11.info("audio-playback", "Attempting to play note for node appearance", {
             nodeId: node.id,
             nodeTitle: node.title,
-            pitch: mapping.pitch,
+            nodeType: node.type,
             instrument: mapping.instrument,
-            audioEngineStatus: this.plugin.audioEngine.getStatus()
+            pitch: mapping.pitch.toFixed(2),
+            duration: mapping.duration,
+            velocity: mapping.velocity,
+            audioEngineStatus: this.plugin.audioEngine.getStatus(),
+            mappingData: mapping
+          });
+          const audioStatus = this.plugin.audioEngine.getStatus();
+          logger11.info("audio-verification", "Verifying audio engine readiness before playback", {
+            requestedInstrument: mapping.instrument,
+            audioEngineInitialized: audioStatus.isInitialized,
+            audioContext: audioStatus.audioContext,
+            currentNotes: audioStatus.currentNotes,
+            volume: audioStatus.volume
           });
           try {
-            await this.plugin.audioEngine.playSequence([mapping]);
-            logger11.debug("audio", "Instrument note played successfully", { instrument: mapping.instrument });
+            await this.plugin.audioEngine.playNoteImmediate(mapping);
+            logger11.info("audio-success", "Audio note played successfully for node appearance", {
+              nodeId: node.id,
+              nodeTitle: node.title,
+              instrument: mapping.instrument,
+              pitch: mapping.pitch.toFixed(2),
+              duration: mapping.duration,
+              velocity: mapping.velocity,
+              playbackMethod: "immediate",
+              timestamp: Date.now()
+            });
           } catch (playError) {
-            logger11.warn("Instrument playback failed", playError.message);
+            logger11.warn("audio-playback-error", "Immediate playback failed for node appearance", {
+              nodeId: node.id,
+              nodeTitle: node.title,
+              instrument: mapping.instrument,
+              frequency: mapping.pitch,
+              error: playError.message,
+              stack: playError.stack,
+              playbackMethod: "immediate"
+            });
             try {
               await this.plugin.audioEngine.playTestNote(mapping.pitch);
-              logger11.debug("audio", "Fallback test note played");
+              logger11.info("audio-fallback-success", "Fallback test note played successfully", {
+                nodeId: node.id,
+                pitch: mapping.pitch.toFixed(2),
+                playbackMethod: "test-note",
+                timestamp: Date.now()
+              });
             } catch (testError) {
-              logger11.error("Both instrument and test note playback failed", testError.message);
+              logger11.error("audio-complete-failure", "Both sequence and test note playback failed", {
+                nodeId: node.id,
+                instrument: mapping.instrument,
+                sequenceError: playError.message,
+                testNoteError: testError.message,
+                audioEngineStatus: audioStatus,
+                timestamp: Date.now()
+              });
+              throw testError;
             }
           }
           logger11.info("audio", "Successfully played note for node appearance", {
@@ -11925,19 +12157,56 @@ var init_SonicGraphModal = __esm({
        * Create a musical mapping for a graph node
        */
       createMusicalMappingForNode(node) {
+        const settings = this.getSonicGraphSettings();
+        const densityProbability = settings.audio.density / 100;
+        const randomValue = Math.random();
+        logger11.debug("audio-density", "Audio density filtering", {
+          nodeId: node.id,
+          densitySetting: settings.audio.density,
+          densityProbability,
+          randomValue,
+          shouldPlay: randomValue <= densityProbability
+        });
+        if (randomValue > densityProbability) {
+          logger11.debug("audio-density", "Note skipped due to audio density", {
+            nodeId: node.id,
+            randomValue,
+            densityProbability
+          });
+          return null;
+        }
         const enabledInstruments = this.getEnabledInstruments();
         if (enabledInstruments.length === 0) {
           logger11.warn("audio", "No instruments enabled for temporal animation");
           return this.createFallbackMapping(node, "piano");
         }
         const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
+        const instrumentConfig = this.plugin.settings.instruments[selectedInstrument];
+        logger11.debug("instrument-selection", "Instrument selected for node", {
+          nodeId: node.id,
+          nodeType: node.type,
+          selectedInstrument,
+          enabledInstrumentsCount: enabledInstruments.length,
+          hasInstrumentConfig: !!instrumentConfig,
+          instrumentEnabled: instrumentConfig == null ? void 0 : instrumentConfig.enabled,
+          instrumentVolume: instrumentConfig == null ? void 0 : instrumentConfig.volume
+        });
+        if (!instrumentConfig || !instrumentConfig.enabled) {
+          logger11.warn("instrument-fallback", "Selected instrument not properly configured, using piano fallback", {
+            nodeId: node.id,
+            selectedInstrument,
+            hasConfig: !!instrumentConfig,
+            isEnabled: instrumentConfig == null ? void 0 : instrumentConfig.enabled
+          });
+          return this.createFallbackMapping(node, "piano");
+        }
         const baseFreq = 261.63;
         const fileNameHash = this.hashString(node.title);
         const pitchOffset = fileNameHash % 24 - 12;
         const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
-        const baseDuration = 0.3;
+        const baseDuration = settings.audio.noteDuration;
         const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
-        const duration = Math.min(baseDuration + sizeFactor, 1);
+        const duration = Math.min(baseDuration + sizeFactor, 2);
         const baseVelocity = 0.5;
         const connectionFactor = Math.min(node.connections.length / 10, 0.4);
         const velocity = baseVelocity + connectionFactor;
@@ -11958,6 +12227,122 @@ var init_SonicGraphModal = __esm({
         };
       }
       /**
+       * Get Sonic Graph settings with fallback to defaults
+       */
+      getSonicGraphSettings() {
+        const settings = this.plugin.settings.sonicGraphSettings;
+        if (!settings) {
+          return {
+            timeline: {
+              duration: 60,
+              spacing: "auto",
+              loop: false,
+              showMarkers: true
+            },
+            audio: {
+              density: 100,
+              noteDuration: 0.3,
+              enableEffects: true,
+              autoDetectionOverride: "auto"
+            },
+            visual: {
+              showLabels: false,
+              showFileNames: false,
+              animationStyle: "fade",
+              nodeScaling: 1,
+              connectionOpacity: 0.6,
+              timelineMarkersEnabled: true
+            },
+            navigation: {
+              enableControlCenter: true,
+              enableReset: true,
+              enableExport: false
+            }
+          };
+        }
+        return settings;
+      }
+      /**
+       * Update audio density setting and save to plugin settings
+       */
+      updateAudioDensity(density) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.audio.density = density;
+        this.plugin.saveSettings();
+        logger11.debug("settings", "Updated audio density", { density });
+      }
+      /**
+       * Update note duration setting and save to plugin settings
+       */
+      updateNoteDuration(duration) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.audio.noteDuration = duration;
+        this.plugin.saveSettings();
+        logger11.debug("settings", "Updated note duration", { duration });
+      }
+      /**
+       * Update timeline loop setting and save to plugin settings
+       */
+      updateLoopAnimation(loop) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.timeline.loop = loop;
+        this.plugin.saveSettings();
+        if (this.temporalAnimator) {
+          this.temporalAnimator.setLoop(loop);
+        }
+        logger11.debug("settings", "Updated loop animation", { loop });
+      }
+      /**
+       * Update show file names setting and save to plugin settings
+       */
+      updateShowFileNames(show) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.visual.showFileNames = show;
+        this.plugin.saveSettings();
+        logger11.debug("settings", "Updated show file names", { show });
+        if (this.graphRenderer) {
+          this.graphRenderer.updateFileNameVisibility(show);
+        }
+      }
+      /**
+       * Update timeline markers visibility and save to plugin settings
+       */
+      updateTimelineMarkersVisibility(show) {
+        var _a;
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.visual.timelineMarkersEnabled = show;
+        this.plugin.saveSettings();
+        logger11.debug("settings", "Updated timeline markers visibility", { show });
+        const markersContainer = (_a = this.timelineInfo) == null ? void 0 : _a.querySelector(".sonic-graph-timeline-markers");
+        if (markersContainer) {
+          markersContainer.style.display = show ? "block" : "none";
+        }
+      }
+      /**
+       * Update animation style and save to plugin settings
+       */
+      updateAnimationStyle(style) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.visual.animationStyle = style;
+        this.plugin.saveSettings();
+        logger11.debug("settings", "Updated animation style", { style });
+        if (this.graphRenderer) {
+          this.graphRenderer.setAnimationStyle(style);
+        }
+      }
+      /**
        * Get list of currently enabled instruments from settings
        */
       getEnabledInstruments() {
@@ -11972,9 +12357,11 @@ var init_SonicGraphModal = __esm({
             enabled.push(instrumentName);
           }
         });
-        logger11.debug("audio", "Found enabled instruments", {
-          count: enabled.length,
-          instruments: enabled
+        logger11.debug("instrument-detection", "Found enabled instruments for temporal animation", {
+          enabledCount: enabled.length,
+          enabledInstruments: enabled,
+          totalInstrumentsChecked: Object.keys(this.plugin.settings.instruments).length,
+          allInstruments: Object.keys(this.plugin.settings.instruments)
         });
         return enabled;
       }
@@ -46148,6 +46535,46 @@ var AudioEngine = class {
       audioContext: getContext().state,
       volume: this.settings.volume
     };
+  }
+  /**
+   * Play a note immediately without timing restrictions (for real-time triggering)
+   */
+  async playNoteImmediate(mapping) {
+    if (!this.isInitialized) {
+      logger21.warn("audio", "Audio engine not initialized for immediate note playback");
+      await this.initialize();
+    }
+    try {
+      const { pitch, duration, velocity, instrument } = mapping;
+      logger21.debug("immediate-playback", "Playing note immediately", {
+        instrument,
+        pitch: pitch.toFixed(2),
+        duration,
+        velocity
+      });
+      const synth = this.instruments.get(instrument);
+      if (!synth) {
+        logger21.warn("immediate-playback", `Instrument not found: ${instrument}`, {
+          availableInstruments: Array.from(this.instruments.keys())
+        });
+        const pianoSynth = this.instruments.get("piano");
+        if (pianoSynth) {
+          pianoSynth.triggerAttackRelease(pitch, duration, void 0, velocity);
+          return;
+        }
+        throw new Error(`Instrument ${instrument} not available and piano fallback failed`);
+      }
+      const detunedFrequency = this.applyFrequencyDetuning(pitch);
+      synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
+      logger21.debug("immediate-playback", "Note triggered successfully", {
+        instrument,
+        detunedFrequency: detunedFrequency.toFixed(2),
+        originalFrequency: pitch.toFixed(2)
+      });
+    } catch (error) {
+      logger21.error("Failed to play immediate note", error.message);
+      throw error;
+    }
   }
   /**
    * Play a single test note

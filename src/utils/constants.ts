@@ -196,6 +196,35 @@ export interface RoutingMatrix {
 	automations: EffectAutomation[];
 }
 
+// Phase 3.7: Sonic Graph settings panel controls interface
+export interface SonicGraphSettings {
+	timeline: {
+		duration: number;           // Animation duration in seconds (15, 30, 60, 120, or custom)
+		spacing: 'auto' | 'dense' | 'even' | 'custom'; // Timeline spacing mode
+		loop: boolean;              // Automatically restart animation when complete
+		showMarkers: boolean;       // Show year markers on timeline
+	};
+	audio: {
+		density: number;            // Audio density (0-100, controls note frequency)
+		noteDuration: number;       // Base note duration multiplier (0.1-2.0)
+		enableEffects: boolean;     // Enable/disable audio effects during animation
+		autoDetectionOverride?: 'auto' | 'dense' | 'balanced' | 'sparse'; // Override auto-detection
+	};
+	visual: {
+		showLabels: boolean;        // Show file labels on nodes
+		showFileNames: boolean;     // Show file names in small text beneath each node
+		animationStyle: 'fade' | 'scale' | 'slide' | 'pop'; // How nodes appear during animation
+		nodeScaling: number;        // Node size scaling factor (0.5-2.0)
+		connectionOpacity: number;  // Connection line opacity (0.1-1.0)
+		timelineMarkersEnabled: boolean; // Enable timeline year markers
+	};
+	navigation: {
+		enableControlCenter: boolean; // Show Control Center button
+		enableReset: boolean;         // Show Reset View button
+		enableExport: boolean;        // Show Export Timeline button (future)
+	};
+}
+
 export interface SonigraphSettings {
 	tempo: number;
 	volume: number;
@@ -211,6 +240,7 @@ export interface SonigraphSettings {
 	sonicGraphExcludeFiles?: string[]; // Files to exclude from Sonic Graph
 	sonicGraphAnimationDuration?: number; // Base animation duration in seconds (default 60)
 	sonicGraphAnimationSpeed?: number; // Animation speed multiplier (default 1.0)
+	sonicGraphSettings?: SonicGraphSettings; // Phase 3.7: Comprehensive settings panel controls
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
@@ -300,6 +330,33 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	sonicGraphExcludeFiles: [], // No files excluded by default
 	sonicGraphAnimationDuration: 60, // Default 60 seconds for more contemplative pacing
 	sonicGraphAnimationSpeed: 1.0, // Default to normal speed
+	sonicGraphSettings: {
+		timeline: {
+			duration: 60,
+			spacing: 'auto',
+			loop: false,
+			showMarkers: true
+		},
+		audio: {
+			density: 30,
+			noteDuration: 0.3,
+			enableEffects: true,
+			autoDetectionOverride: 'auto'
+		},
+		visual: {
+			showLabels: false,
+			showFileNames: false,
+			animationStyle: 'fade',
+			nodeScaling: 1.0,
+			connectionOpacity: 0.6,
+			timelineMarkersEnabled: true
+		},
+		navigation: {
+			enableControlCenter: true,
+			enableReset: true,
+			enableExport: false
+		}
+	},
 	effects: {
 		orchestralreverbhall: { enabled: true },
 		'3bandeq': { enabled: true },
