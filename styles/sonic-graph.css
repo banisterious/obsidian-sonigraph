@@ -42,9 +42,9 @@
 
 /* Link Styles */
 .sonigraph-temporal-links line {
-  stroke: var(--text-muted);
-  stroke-width: 1px;
-  stroke-opacity: 0.6;
+  stroke: var(--text-muted, #666666);
+  stroke-width: 1.5px;
+  stroke-opacity: 0.8;
   transition: stroke-opacity 0.3s ease;
 }
 
