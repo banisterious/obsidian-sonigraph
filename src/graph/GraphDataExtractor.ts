@@ -230,16 +230,19 @@ export class GraphDataExtractor {
     const nodeMap = new Map(nodes.map(node => [node.path, node]));
 
     for (const node of nodes) {
-      if (node.type === 'note') {
-        const file = this.vault.getAbstractFileByPath(node.path) as TFile;
-        if (file) {
-          const metadata = this.metadataCache.getFileCache(file);
+      // Expand scope to include all file types, but only process files that can have metadata
+      const file = this.vault.getAbstractFileByPath(node.path) as TFile;
+      if (file) {
+        const metadata = this.metadataCache.getFileCache(file);
+        
+        // Only process files with metadata (typically markdown files)
+        if (metadata) {
           
           // Process outgoing links
           if (metadata?.links) {
             for (const link of metadata.links) {
-              // Try to resolve the link
-              const targetFile = this.vault.getAbstractFileByPath(link.link + '.md') as TFile;
+              // Use Obsidian's proper link resolution
+              const targetFile = this.metadataCache.getFirstLinkpathDest(link.link, file.path);
               if (targetFile && nodeMap.has(targetFile.path)) {
                 links.push({
                   source: node.id,
@@ -247,6 +250,9 @@ export class GraphDataExtractor {
                   type: 'reference',
                   strength: 1.0
                 });
+                logger.debug('links', `Link resolved: ${link.link} -> ${targetFile.path}`);
+              } else {
+                logger.debug('links', `Link not resolved: ${link.link} (from ${file.path})`);
               }
             }
           }
@@ -254,7 +260,8 @@ export class GraphDataExtractor {
           // Process embeds
           if (metadata?.embeds) {
             for (const embed of metadata.embeds) {
-              const targetFile = this.vault.getAbstractFileByPath(embed.link) as TFile;
+              // Use proper link resolution for embeds too
+              const targetFile = this.metadataCache.getFirstLinkpathDest(embed.link, file.path);
               if (targetFile && nodeMap.has(targetFile.path)) {
                 links.push({
                   source: node.id,
@@ -262,6 +269,9 @@ export class GraphDataExtractor {
                   type: 'attachment',
                   strength: 0.8
                 });
+                logger.debug('links', `Embed resolved: ${embed.link} -> ${targetFile.path}`);
+              } else {
+                logger.debug('links', `Embed not resolved: ${embed.link} (from ${file.path})`);
               }
             }
           }

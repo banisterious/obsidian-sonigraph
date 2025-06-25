@@ -21,6 +21,7 @@ export interface AnimationConfig {
   endDate: Date;
   duration: number; // Animation duration in seconds
   speed: number; // Playback speed multiplier (1.0 = normal)
+  loop?: boolean; // Whether to loop the animation automatically
   
   // Intelligent spacing options
   enableIntelligentSpacing?: boolean; // Whether to space out simultaneous events
@@ -370,6 +371,14 @@ export class TemporalGraphAnimator {
   }
 
   /**
+   * Enable or disable animation looping
+   */
+  setLoop(loop: boolean): void {
+    this.config.loop = loop;
+    logger.debug('playback', 'Loop setting changed', { loop });
+  }
+
+  /**
    * Main animation loop
    */
   private animate(): void {
@@ -385,12 +394,28 @@ export class TemporalGraphAnimator {
       this.currentTime = this.config.duration;
       this.updateVisibility();
       
-      // Animation complete
-      this.isPlaying = false;
-      this.onAnimationEnd?.();
-      
-      logger.info('playback', 'Animation completed');
-      return;
+      // Check if looping is enabled
+      if (this.config.loop) {
+        // Reset for loop
+        logger.debug('playback', 'Animation completed, looping...');
+        this.currentTime = 0;
+        this.animationStartTime = performance.now();
+        this.visibleNodes.clear();
+        
+        // Trigger visibility change to reset the graph
+        this.onVisibilityChange?.(this.visibleNodes);
+        
+        // Continue the loop
+        this.animationId = requestAnimationFrame(() => this.animate());
+        return;
+      } else {
+        // Animation complete, no loop
+        this.isPlaying = false;
+        this.onAnimationEnd?.();
+        
+        logger.info('playback', 'Animation completed');
+        return;
+      }
     }
     
     this.updateVisibility();
@@ -430,13 +455,17 @@ export class TemporalGraphAnimator {
     
     // Trigger appearance callbacks for newly visible nodes
     if (newlyAppearedNodes.length > 0) {
-      logger.info('animation', 'Nodes appeared in temporal animation', {
+      logger.info('temporal-animation', 'Nodes appeared in temporal animation', {
         count: newlyAppearedNodes.length,
-        time: this.currentTime.toFixed(2),
+        currentTime: this.currentTime.toFixed(2),
+        duration: this.config.duration,
         nodeIds: newlyAppearedNodes.map(n => n.id),
         nodeTitles: newlyAppearedNodes.map(n => n.title),
-        hasCallback: !!this.onNodeAppear
+        nodeTypes: newlyAppearedNodes.map(n => n.type),
+        hasCallback: !!this.onNodeAppear,
+        callbackFunction: this.onNodeAppear ? 'registered' : 'missing'
       });
+      
       newlyAppearedNodes.forEach(node => {
         this.onNodeAppear?.(node);
       });

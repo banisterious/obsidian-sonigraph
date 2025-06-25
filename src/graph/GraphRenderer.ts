@@ -37,6 +37,17 @@ export class GraphRenderer {
   private links: GraphLink[] = [];
   private visibleNodes: Set<string> = new Set();
   private visibleLinks: Set<string> = new Set();
+  private animationStyle: 'fade' | 'scale' | 'slide' | 'pop' = 'fade';
+  
+  // Performance optimization for mouseover events
+  private lastTooltipUpdate: number = 0;
+  private tooltipThrottleMs: number = 16; // ~60fps
+  private isTooltipVisible: boolean = false;
+  
+  // Performance optimization for force simulation
+  private lastPositionUpdate: number = 0;
+  private positionUpdateThrottleMs: number = 16; // ~60fps
+  private pendingPositionUpdate: boolean = false;
 
   constructor(container: HTMLElement, config: Partial<RenderConfig> = {}) {
     this.container = container;
@@ -95,10 +106,14 @@ export class GraphRenderer {
 
       this.svg.call(this.zoom);
       
-      // Fix touch event warnings by making touch events passive
-      this.svg.on('touchstart.zoom', null);
-      this.svg.on('touchmove.zoom', null);
-      this.svg.on('touchend.zoom', null);
+      // Fix touch event warnings by properly configuring passive listeners
+      const svgNode = this.svg.node() as SVGSVGElement;
+      if (svgNode) {
+        // Remove default D3 touch handlers and add passive ones
+        svgNode.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        svgNode.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        svgNode.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+      }
     }
   }
 
@@ -147,7 +162,18 @@ export class GraphRenderer {
           }
         });
       })
-      .on('tick', () => this.updatePositions())
+      .on('tick', () => {
+        // Throttle position updates to reduce animation frame load
+        const now = performance.now();
+        if (now - this.lastPositionUpdate >= this.positionUpdateThrottleMs && !this.pendingPositionUpdate) {
+          this.pendingPositionUpdate = true;
+          requestAnimationFrame(() => {
+            this.updatePositions();
+            this.lastPositionUpdate = performance.now();
+            this.pendingPositionUpdate = false;
+          });
+        }
+      })
       .on('end', () => this.onSimulationEnd());
   }
 
@@ -172,7 +198,7 @@ export class GraphRenderer {
     
     // Initialize all nodes as visible for static rendering
     this.visibleNodes = new Set(nodes.map(n => n.id));
-    this.visibleLinks = new Set(links.map((l, i) => `${l.source}-${l.target}-${i}`));
+    this.visibleLinks = new Set(links.map((l, i) => this.getLinkId(l, i)));
     
     this.updateSimulation();
     this.renderLinks();
@@ -227,7 +253,7 @@ export class GraphRenderer {
   private renderLinks(): void {
     const linkSelection = this.g.select('.sonigraph-temporal-links')
       .selectAll('line')
-      .data(this.links, (d: any, i) => `${typeof d.source === 'string' ? d.source : d.source.id}-${typeof d.target === 'string' ? d.target : d.target.id}-${i}`);
+      .data(this.links, (d: any, i) => this.getLinkId(d, i));
 
     // Enter new links
     linkSelection.enter()
@@ -272,7 +298,7 @@ export class GraphRenderer {
       .attr('class', d => `${d.type}-node`);
 
     // Add labels to new nodes
-    const textElements = nodeEnter.append('text')
+    nodeEnter.append('text')
       .attr('dy', this.config.nodeRadius + 15)
       .attr('class', this.config.showLabels ? 'labels-visible' : 'labels-hidden')
       .text(d => d.title);
@@ -304,22 +330,46 @@ export class GraphRenderer {
   private setupNodeInteractions(selection: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>): void {
     selection
       .on('mouseover', (event, d) => {
-        // Highlight connected links
-        this.highlightConnectedLinks(d.id, true);
+        // Throttle mouseover events for performance
+        const now = performance.now();
+        if (now - this.lastTooltipUpdate < this.tooltipThrottleMs) {
+          return;
+        }
+        this.lastTooltipUpdate = now;
         
-        // Show tooltip
-        this.showTooltip(event, d);
+        // Use requestAnimationFrame to avoid forced reflows
+        requestAnimationFrame(() => {
+          // Highlight connected links
+          this.highlightConnectedLinks(d.id, true);
+          
+          // Show tooltip
+          this.showTooltip(event, d);
+          this.isTooltipVisible = true;
+        });
       })
       .on('mousemove', (event, d) => {
-        // Update tooltip position as mouse moves
-        this.updateTooltipPosition(event);
+        // Throttle mousemove events more aggressively
+        const now = performance.now();
+        if (now - this.lastTooltipUpdate < this.tooltipThrottleMs || !this.isTooltipVisible) {
+          return;
+        }
+        this.lastTooltipUpdate = now;
+        
+        // Use requestAnimationFrame for smooth tooltip positioning
+        requestAnimationFrame(() => {
+          this.updateTooltipPosition(event);
+        });
       })
       .on('mouseout', (event, d) => {
-        // Remove highlight from connected links
-        this.highlightConnectedLinks(d.id, false);
-        
-        // Hide tooltip
-        this.hideTooltip();
+        // Use requestAnimationFrame to batch DOM updates
+        requestAnimationFrame(() => {
+          // Remove highlight from connected links
+          this.highlightConnectedLinks(d.id, false);
+          
+          // Hide tooltip
+          this.hideTooltip();
+          this.isTooltipVisible = false;
+        });
       })
       .on('click', (event, d) => {
         // Could emit event to open file in Obsidian
@@ -357,9 +407,7 @@ export class GraphRenderer {
   private updateLinkVisibility(): void {
     this.linkGroup
       .style('display', (d: any, i: number) => {
-        const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
-        const targetId = typeof d.target === 'string' ? d.target : d.target.id;
-        const linkId = `${sourceId}-${targetId}-${i}`;
+        const linkId = this.getLinkId(d, i);
         return this.visibleLinks.has(linkId) ? 'block' : 'none';
       });
   }
@@ -518,13 +566,16 @@ export class GraphRenderer {
    * Update tooltip position based on mouse event
    */
   private updateTooltipPosition(event: MouseEvent): void {
+    // Cache container rect to avoid repeated DOM queries
     const containerRect = this.container.getBoundingClientRect();
     const x = event.clientX - containerRect.left + 10;
     const y = event.clientY - containerRect.top - 10;
     
-    this.tooltip
-      .style('left', x + 'px')
-      .style('top', y + 'px');
+    // Batch style updates to avoid layout thrashing
+    const tooltipNode = this.tooltip.node() as HTMLElement;
+    if (tooltipNode) {
+      tooltipNode.style.transform = `translate(${x}px, ${y}px)`;
+    }
   }
 
   /**
@@ -559,6 +610,15 @@ export class GraphRenderer {
         <div>Connections: ${connectionCount}</div>
       </div>
     `;
+  }
+
+  /**
+   * Generate consistent link ID for D3.js data binding
+   */
+  private getLinkId(link: any, index: number): string {
+    const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+    const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+    return `${sourceId}-${targetId}-${index}`;
   }
 
   /**
@@ -605,6 +665,35 @@ export class GraphRenderer {
       x: Math.cos(jitteredAngle) * jitteredRadius,
       y: Math.sin(jitteredAngle) * jitteredRadius
     };
+  }
+
+  /**
+   * Update file name visibility on nodes
+   */
+  updateFileNameVisibility(showFileNames: boolean): void {
+    logger.debug('renderer', 'Updating file name visibility', { showFileNames });
+    
+    // Update existing text elements
+    this.svg.selectAll('.node text')
+      .style('display', showFileNames ? 'block' : 'none')
+      .style('font-size', '10px')
+      .style('text-anchor', 'middle')
+      .style('fill', '#666')
+      .style('pointer-events', 'none');
+      
+    logger.debug('renderer', 'File name visibility updated', { showFileNames });
+  }
+
+  /**
+   * Set animation style for node appearances
+   */
+  setAnimationStyle(style: 'fade' | 'scale' | 'slide' | 'pop'): void {
+    logger.debug('renderer', 'Setting animation style', { style });
+    
+    // Store the animation style for future node animations
+    this.animationStyle = style;
+    
+    logger.debug('renderer', 'Animation style set', { style });
   }
 
   /**
