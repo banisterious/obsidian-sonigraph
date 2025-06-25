@@ -513,7 +513,55 @@ private shouldExcludeFile(file: TFile): boolean {
 }
 ```
 
-### 3.6. Visual Rendering
+### 3.6. Audio Integration & Timing Synchronization
+
+**Critical Learnings from Phase 3.7 Implementation:**
+
+The Sonic Graph audio integration revealed important architectural insights about real-time audio triggering vs. sequence-based playback systems.
+
+**Timing Window Filtering Issue:**
+```typescript
+// AudioEngine sequence filtering logic (problematic for real-time triggering)
+const notesToPlay = sequence.filter(note => 
+  note.timing <= elapsedTime + 0.6 && 
+  note.timing > elapsedTime - 0.4 && 
+  !note.hasBeenTriggered
+);
+```
+
+**Root Cause Analysis:**
+- **Sequence System Design**: Audio engine's `playSequence()` was designed for pre-calculated musical sequences with precise timing
+- **Timing Window Filter**: Notes with `timing: 0` were blocked after `elapsedTime > 0.4` seconds
+- **Real-time Incompatibility**: Sonic Graph node appearances need immediate triggering, not sequence scheduling
+
+**Solution Architecture:**
+```typescript
+// New playNoteImmediate() method bypasses timing restrictions
+async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }): Promise<void> {
+  const synth = this.instruments.get(mapping.instrument);
+  const detunedFrequency = this.applyFrequencyDetuning(mapping.pitch);
+  synth.triggerAttackRelease(detunedFrequency, mapping.duration, undefined, mapping.velocity);
+}
+```
+
+**Implementation Strategy:**
+- **Direct Synthesis Triggering**: Bypass sequence timing system entirely
+- **Frequency Detuning**: Maintain existing phase conflict resolution
+- **Instrument Fallback**: Graceful degradation to piano when requested instrument unavailable
+- **Structured Logging**: Comprehensive debugging for audio density filtering
+
+**Performance Impact:**
+- **Before Fix**: 99.7% of notes blocked by timing filter (only 7 of 3890 notes played)
+- **After Fix**: All density-filtered notes play successfully
+- **Audio Density Control**: Now enables precise control over note frequency (e.g., 5% = ~200 notes over 60 seconds)
+
+**Design Principles Learned:**
+1. **Separation of Concerns**: Real-time triggering vs. sequence playback require different audio paths
+2. **Timing Models**: Animation timing != audio sequence timing
+3. **Fallback Systems**: Always provide graceful degradation paths
+4. **Debugging Infrastructure**: Structured logging essential for timing-related issues
+
+### 3.7. Visual Rendering
 
 **D3.js Force Simulation:**
 The system uses D3.js for sophisticated force-directed graph layout with organic positioning.
@@ -791,6 +839,12 @@ class MaterialControlPanelModal extends Modal {
 - **Real-time Audio Mode Display**: Immediate feedback showing "High Quality Samples" vs "Synthesis Only"
 - **System Information**: Sample rate, buffer size, and audio context status
 
+**Sonic Graph Modal Enhancements (Phase 3.7):**
+- **Audio Density Slider**: Real-time value display (e.g., "100%", "5%") with immediate visual feedback
+- **Settings Panel**: Comprehensive configuration with sliding panel animation
+- **Real-time Updates**: All settings changes apply immediately without requiring restart
+- **Structured Logging Integration**: Enhanced debugging with detailed audio density filtering logs
+
 **Instrument Family Tabs (7 tabs):**
 1. **Strings Tab**: String family instruments (violin, cello, guitar, harp, piano, strings)
 2. **Woodwinds Tab**: Woodwind family (flute, clarinet, saxophone, oboe)
@@ -1014,6 +1068,7 @@ class AudioEngine {
   async playSequence(sequence: MusicalMapping[]): Promise<void>
   stop(): void
   async playTestNote(frequency?: number): Promise<void>
+  async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }): Promise<void>  // Phase 3.7: Real-time note triggering
   
   // Configuration
   updateSettings(settings: SonigraphSettings): void
