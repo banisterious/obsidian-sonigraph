@@ -346,31 +346,18 @@ export class SonicGraphModal extends Modal {
                     await this.plugin.audioEngine.initialize();
                     new Notice('Audio engine initialized');
                 } else {
-                    // Check if enabled instruments match what's loaded in audio engine
+                    // Always reinitialize audio engine to ensure fresh state for animation
+                    logger.info('audio', 'Reinitializing audio engine for animation to ensure fresh state');
+                    await this.plugin.audioEngine.initialize();
+                    
                     const enabledInstruments = this.getEnabledInstruments();
-                    const audioEngineInstruments = Array.from(this.plugin.audioEngine['instruments']?.keys() || []);
+                    logger.info('audio', 'Audio engine reinitialized for animation', {
+                        enabledInstruments: enabledInstruments,
+                        enabledCount: enabledInstruments.length,
+                        audioContext: this.plugin.audioEngine.getStatus().audioContext
+                    });
                     
-                    const missingInstruments = enabledInstruments.filter(inst => !audioEngineInstruments.includes(inst));
-                    const extraInstruments = audioEngineInstruments.filter(inst => !enabledInstruments.includes(inst));
-                    
-                    if (missingInstruments.length > 0 || extraInstruments.length > 0) {
-                        logger.info('audio', 'Instrument configuration changed - reinitializing audio engine', {
-                            enabledInstruments,
-                            audioEngineInstruments,
-                            missingInstruments,
-                            extraInstruments
-                        });
-                        
-                        // Force reinitialization to load new instrument configuration
-                        await this.plugin.audioEngine.initialize();
-                        new Notice('Audio engine updated with new instruments');
-                    } else {
-                        logger.info('audio', 'Audio engine already initialized with correct instruments', {
-                            audioContext: status.audioContext,
-                            volume: status.volume,
-                            instruments: audioEngineInstruments
-                        });
-                    }
+                    new Notice('Audio engine ready for animation');
                 }
                 
                 logger.info('audio', 'Audio engine ready for Sonic Graph animation');
@@ -597,11 +584,25 @@ export class SonicGraphModal extends Modal {
         });
         densitySlider.min = '0';
         densitySlider.max = '100';
-        densitySlider.value = '30';
+        densitySlider.value = this.getSonicGraphSettings().audio.density.toString();
+        
+        // Add value display for the slider
+        const densityValueDisplay = densityContainer.createEl('span', {
+            text: this.getSonicGraphSettings().audio.density + '%',
+            cls: 'sonic-graph-density-value'
+        });
+        
+        // Add event handler for audio density changes
+        densitySlider.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const density = parseInt(target.value);
+            densityValueDisplay.textContent = density + '%';
+            this.updateAudioDensity(density);
+        });
         
         const densityLabels = densityContainer.createDiv({ cls: 'sonic-graph-density-labels' });
-        densityLabels.createEl('span', { text: 'Dense', cls: 'sonic-graph-density-label' });
         densityLabels.createEl('span', { text: 'Sparse', cls: 'sonic-graph-density-label' });
+        densityLabels.createEl('span', { text: 'Dense', cls: 'sonic-graph-density-label' });
         
         // Animation Duration
         const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -627,11 +628,16 @@ export class SonicGraphModal extends Modal {
         
         const loopToggle = loopItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const toggleSwitch = loopToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        if (this.getSonicGraphSettings().timeline.loop) {
+            toggleSwitch.addClass('active');
+        }
         const toggleHandle = toggleSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         loopToggle.createEl('span', { text: 'Enable looping' });
         
         toggleSwitch.addEventListener('click', () => {
-            toggleSwitch.toggleClass('active', !toggleSwitch.hasClass('active'));
+            const isActive = toggleSwitch.hasClass('active');
+            toggleSwitch.toggleClass('active', !isActive);
+            this.updateLoopAnimation(!isActive);
         });
     }
 
@@ -668,10 +674,17 @@ export class SonicGraphModal extends Modal {
             type: 'number',
             cls: 'sonic-graph-setting-input'
         });
-        durationInput.value = '0.3';
+        durationInput.value = this.getSonicGraphSettings().audio.noteDuration.toString();
         durationInput.step = '0.1';
         durationInput.min = '0.1';
         durationInput.max = '2.0';
+        
+        // Add event handler for note duration changes
+        durationInput.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const duration = parseFloat(target.value);
+            this.updateNoteDuration(duration);
+        });
     }
 
     /**
@@ -690,12 +703,17 @@ export class SonicGraphModal extends Modal {
         });
         
         const markersToggle = markersItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
-        const markersSwitch = markersToggle.createDiv({ cls: 'sonic-graph-toggle-switch active' });
+        const markersSwitch = markersToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        if (this.getSonicGraphSettings().visual.timelineMarkersEnabled) {
+            markersSwitch.addClass('active');
+        }
         const markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         markersToggle.createEl('span', { text: 'Show markers' });
         
         markersSwitch.addEventListener('click', () => {
-            markersSwitch.toggleClass('active', !markersSwitch.hasClass('active'));
+            const isActive = markersSwitch.hasClass('active');
+            markersSwitch.toggleClass('active', !isActive);
+            this.updateTimelineMarkersVisibility(!isActive);
         });
         
         // Animation Style
@@ -707,9 +725,51 @@ export class SonicGraphModal extends Modal {
         });
         
         const styleSelect = styleItem.createEl('select', { cls: 'sonic-graph-setting-select' });
-        ['Fade in', 'Scale up', 'Slide in', 'Pop in'].forEach(option => {
-            const optionEl = styleSelect.createEl('option', { text: option });
-            if (option === 'Fade in') optionEl.selected = true;
+        const styleOptions = [
+            { display: 'Fade in', value: 'fade' },
+            { display: 'Scale up', value: 'scale' },
+            { display: 'Slide in', value: 'slide' },
+            { display: 'Pop in', value: 'pop' }
+        ];
+        
+        const currentStyle = this.getSonicGraphSettings().visual.animationStyle;
+        styleOptions.forEach(option => {
+            const optionEl = styleSelect.createEl('option', { 
+                text: option.display, 
+                value: option.value 
+            });
+            if (option.value === currentStyle) {
+                optionEl.selected = true;
+            }
+        });
+        
+        // Add event handler for animation style changes
+        styleSelect.addEventListener('change', (e) => {
+            const target = e.target as HTMLSelectElement;
+            const style = target.value as 'fade' | 'scale' | 'slide' | 'pop';
+            this.updateAnimationStyle(style);
+        });
+        
+        // Show File Names Toggle
+        const fileNamesItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        fileNamesItem.createEl('label', { text: 'Show File Names', cls: 'sonic-graph-setting-label' });
+        fileNamesItem.createEl('div', { 
+            text: 'Display file names in small text beneath each node', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const fileNamesToggle = fileNamesItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
+        const fileNamesSwitch = fileNamesToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        if (this.getSonicGraphSettings().visual.showFileNames) {
+            fileNamesSwitch.addClass('active');
+        }
+        const fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        fileNamesToggle.createEl('span', { text: 'Show file names' });
+        
+        fileNamesSwitch.addEventListener('click', () => {
+            const isActive = fileNamesSwitch.hasClass('active');
+            fileNamesSwitch.toggleClass('active', !isActive);
+            this.updateShowFileNames(!isActive);
         });
     }
 
@@ -856,6 +916,7 @@ export class SonicGraphModal extends Modal {
                 {
                     duration: this.plugin.settings.sonicGraphAnimationDuration || 60, // Use user setting or default to 60 seconds
                     speed: 1.0,
+                    loop: this.getSonicGraphSettings().timeline.loop,
                     ...spacingConfig
                 }
             );
@@ -876,6 +937,12 @@ export class SonicGraphModal extends Modal {
             });
             
             this.temporalAnimator.onNodeAppeared((node) => {
+                logger.debug('temporal-callback', 'onNodeAppeared callback invoked', { 
+                    nodeId: node.id,
+                    nodeTitle: node.title,
+                    nodeType: node.type,
+                    callbackRegistered: true
+                });
                 this.handleNodeAppearance(node);
             });
             
@@ -978,6 +1045,14 @@ export class SonicGraphModal extends Modal {
         // Clear all existing markers (both time and year markers)
         markersContainer.innerHTML = '';
         
+        // Check if markers should be shown
+        const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
+        if (!showMarkers) {
+            (markersContainer as HTMLElement).style.display = 'none';
+            return;
+        }
+        
+        (markersContainer as HTMLElement).style.display = 'block';
         const duration = timelineInfo.duration;
         
         // Generate time markers based on duration
@@ -1068,10 +1143,12 @@ export class SonicGraphModal extends Modal {
      * Handle node appearance for audio synchronization
      */
     private async handleNodeAppearance(node: GraphNode): Promise<void> {
-        logger.info('audio', 'handleNodeAppearance called', { 
+        logger.debug('audio-sync', 'Node appearance triggered in temporal animation', { 
             nodeId: node.id, 
             nodeTitle: node.title,
-            hasAudioEngine: !!this.plugin.audioEngine 
+            nodeType: node.type,
+            hasAudioEngine: !!this.plugin.audioEngine,
+            timestamp: Date.now()
         });
         
         if (!this.plugin.audioEngine) {
@@ -1090,27 +1167,83 @@ export class SonicGraphModal extends Modal {
             // Create a musical mapping based on node properties
             const mapping = this.createMusicalMappingForNode(node);
             
-            logger.debug('audio', 'About to play note for node appearance', { 
+            // Check if note should be skipped due to audio density setting
+            if (mapping === null) {
+                logger.debug('audio', 'Note skipped due to audio density setting', { 
+                    nodeId: node.id, 
+                    nodeTitle: node.title
+                });
+                return; // Skip this note entirely
+            }
+            
+            logger.info('audio-playback', 'Attempting to play note for node appearance', { 
                 nodeId: node.id, 
                 nodeTitle: node.title,
-                pitch: mapping.pitch,
+                nodeType: node.type,
                 instrument: mapping.instrument,
-                audioEngineStatus: this.plugin.audioEngine.getStatus()
+                pitch: mapping.pitch.toFixed(2),
+                duration: mapping.duration,
+                velocity: mapping.velocity,
+                audioEngineStatus: this.plugin.audioEngine.getStatus(),
+                mappingData: mapping
             });
             
-            // Play the note using the selected instrument through the sequence method
+            // Verify audio engine is ready before playing
+            const audioStatus = this.plugin.audioEngine.getStatus();
+            
+            logger.info('audio-verification', 'Verifying audio engine readiness before playback', {
+                requestedInstrument: mapping.instrument,
+                audioEngineInitialized: audioStatus.isInitialized,
+                audioContext: audioStatus.audioContext,
+                currentNotes: audioStatus.currentNotes,
+                volume: audioStatus.volume
+            });
+            
+            // Play the note immediately using the new immediate playback method
             try {
-                await this.plugin.audioEngine.playSequence([mapping]);
-                logger.debug('audio', 'Instrument note played successfully', { instrument: mapping.instrument });
+                await this.plugin.audioEngine.playNoteImmediate(mapping);
+                logger.info('audio-success', 'Audio note played successfully for node appearance', { 
+                    nodeId: node.id,
+                    nodeTitle: node.title,
+                    instrument: mapping.instrument,
+                    pitch: mapping.pitch.toFixed(2),
+                    duration: mapping.duration,
+                    velocity: mapping.velocity,
+                    playbackMethod: 'immediate',
+                    timestamp: Date.now()
+                });
             } catch (playError) {
-                logger.warn('Instrument playback failed', (playError as Error).message);
+                logger.warn('audio-playback-error', 'Immediate playback failed for node appearance', { 
+                    nodeId: node.id,
+                    nodeTitle: node.title,
+                    instrument: mapping.instrument,
+                    frequency: mapping.pitch,
+                    error: (playError as Error).message,
+                    stack: (playError as Error).stack,
+                    playbackMethod: 'immediate'
+                });
                 
                 // Fallback: try basic test note
                 try {
                     await this.plugin.audioEngine.playTestNote(mapping.pitch);
-                    logger.debug('audio', 'Fallback test note played');
+                    logger.info('audio-fallback-success', 'Fallback test note played successfully', {
+                        nodeId: node.id,
+                        pitch: mapping.pitch.toFixed(2),
+                        playbackMethod: 'test-note',
+                        timestamp: Date.now()
+                    });
                 } catch (testError) {
-                    logger.error('Both instrument and test note playback failed', (testError as Error).message);
+                    logger.error('audio-complete-failure', 'Both sequence and test note playback failed', {
+                        nodeId: node.id,
+                        instrument: mapping.instrument,
+                        sequenceError: (playError as Error).message,
+                        testNoteError: (testError as Error).message,
+                        audioEngineStatus: audioStatus,
+                        timestamp: Date.now()
+                    });
+                    
+                    // Still throw to indicate complete failure
+                    throw testError;
                 }
             }
             
@@ -1130,6 +1263,31 @@ export class SonicGraphModal extends Modal {
      * Create a musical mapping for a graph node
      */
     private createMusicalMappingForNode(node: GraphNode): any {
+        // Get settings for audio customization
+        const settings = this.getSonicGraphSettings();
+        
+        // Audio density affects the probability of playing a note (0-100)
+        const densityProbability = settings.audio.density / 100;
+        const randomValue = Math.random();
+        
+        logger.debug('audio-density', 'Audio density filtering', {
+            nodeId: node.id,
+            densitySetting: settings.audio.density,
+            densityProbability,
+            randomValue,
+            shouldPlay: randomValue <= densityProbability
+        });
+        
+        if (randomValue > densityProbability) {
+            // Skip this note based on density setting
+            logger.debug('audio-density', 'Note skipped due to audio density', {
+                nodeId: node.id,
+                randomValue,
+                densityProbability
+            });
+            return null;
+        }
+
         // Get enabled instruments from user's settings
         const enabledInstruments = this.getEnabledInstruments();
         
@@ -1142,16 +1300,39 @@ export class SonicGraphModal extends Modal {
         // Map file type to instrument categories, then select from user's enabled instruments
         const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
         
+        // Check if selected instrument has proper configuration
+        const instrumentConfig = this.plugin.settings.instruments[selectedInstrument as keyof typeof this.plugin.settings.instruments];
+        logger.debug('instrument-selection', 'Instrument selected for node', {
+            nodeId: node.id,
+            nodeType: node.type,
+            selectedInstrument,
+            enabledInstrumentsCount: enabledInstruments.length,
+            hasInstrumentConfig: !!instrumentConfig,
+            instrumentEnabled: instrumentConfig?.enabled,
+            instrumentVolume: instrumentConfig?.volume
+        });
+        
+        // Validate instrument selection - if not properly configured, use fallback
+        if (!instrumentConfig || !instrumentConfig.enabled) {
+            logger.warn('instrument-fallback', 'Selected instrument not properly configured, using piano fallback', {
+                nodeId: node.id,
+                selectedInstrument,
+                hasConfig: !!instrumentConfig,
+                isEnabled: instrumentConfig?.enabled
+            });
+            return this.createFallbackMapping(node, 'piano');
+        }
+        
         // Calculate pitch based on node properties
         const baseFreq = 261.63; // C4
         const fileNameHash = this.hashString(node.title);
         const pitchOffset = (fileNameHash % 24) - 12; // ±12 semitones
         const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
         
-        // Duration based on file size (logarithmic scale)
-        const baseDuration = 0.3;
+        // Duration based on file size (logarithmic scale) and note duration setting
+        const baseDuration = settings.audio.noteDuration; // Use setting instead of hardcoded 0.3
         const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
-        const duration = Math.min(baseDuration + sizeFactor, 1.0);
+        const duration = Math.min(baseDuration + sizeFactor, 2.0); // Allow longer notes up to 2 seconds
         
         // Velocity based on connections (if available)
         const baseVelocity = 0.5;
@@ -1177,6 +1358,155 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
+     * Get Sonic Graph settings with fallback to defaults
+     */
+    private getSonicGraphSettings() {
+        const settings = this.plugin.settings.sonicGraphSettings;
+        if (!settings) {
+            // Return default settings if not configured
+            return {
+                timeline: {
+                    duration: 60,
+                    spacing: 'auto' as const,
+                    loop: false,
+                    showMarkers: true
+                },
+                audio: {
+                    density: 100,
+                    noteDuration: 0.3,
+                    enableEffects: true,
+                    autoDetectionOverride: 'auto' as const
+                },
+                visual: {
+                    showLabels: false,
+                    showFileNames: false,
+                    animationStyle: 'fade' as const,
+                    nodeScaling: 1.0,
+                    connectionOpacity: 0.6,
+                    timelineMarkersEnabled: true
+                },
+                navigation: {
+                    enableControlCenter: true,
+                    enableReset: true,
+                    enableExport: false
+                }
+            };
+        }
+        return settings;
+    }
+
+    /**
+     * Update audio density setting and save to plugin settings
+     */
+    private updateAudioDensity(density: number): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.audio.density = density;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated audio density', { density });
+    }
+
+    /**
+     * Update note duration setting and save to plugin settings
+     */
+    private updateNoteDuration(duration: number): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.audio.noteDuration = duration;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated note duration', { duration });
+    }
+
+    /**
+     * Update timeline loop setting and save to plugin settings
+     */
+    private updateLoopAnimation(loop: boolean): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.timeline.loop = loop;
+        this.plugin.saveSettings();
+        
+        // Update the temporal animator if it exists
+        if (this.temporalAnimator) {
+            this.temporalAnimator.setLoop(loop);
+        }
+        
+        logger.debug('settings', 'Updated loop animation', { loop });
+    }
+
+    /**
+     * Update show file names setting and save to plugin settings
+     */
+    private updateShowFileNames(show: boolean): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.visual.showFileNames = show;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated show file names', { show });
+        
+        // Refresh the graph to show/hide file names
+        if (this.graphRenderer) {
+            this.graphRenderer.updateFileNameVisibility(show);
+        }
+    }
+
+    /**
+     * Update timeline markers visibility and save to plugin settings
+     */
+    private updateTimelineMarkersVisibility(show: boolean): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.visual.timelineMarkersEnabled = show;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated timeline markers visibility', { show });
+        
+        // Update the timeline markers display
+        const markersContainer = this.timelineInfo?.querySelector('.sonic-graph-timeline-markers') as HTMLElement;
+        if (markersContainer) {
+            markersContainer.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    /**
+     * Update animation style and save to plugin settings
+     */
+    private updateAnimationStyle(style: 'fade' | 'scale' | 'slide' | 'pop'): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.visual.animationStyle = style;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated animation style', { style });
+        
+        // Update the renderer's animation style if it exists
+        if (this.graphRenderer) {
+            this.graphRenderer.setAnimationStyle(style);
+        }
+    }
+
+    /**
      * Get list of currently enabled instruments from settings
      */
     private getEnabledInstruments(): string[] {
@@ -1194,9 +1524,11 @@ export class SonicGraphModal extends Modal {
             }
         });
         
-        logger.debug('audio', 'Found enabled instruments', { 
-            count: enabled.length, 
-            instruments: enabled 
+        logger.debug('instrument-detection', 'Found enabled instruments for temporal animation', { 
+            enabledCount: enabled.length, 
+            enabledInstruments: enabled,
+            totalInstrumentsChecked: Object.keys(this.plugin.settings.instruments).length,
+            allInstruments: Object.keys(this.plugin.settings.instruments)
         });
         
         return enabled;

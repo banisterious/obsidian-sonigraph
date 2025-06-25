@@ -2823,6 +2823,58 @@ export class AudioEngine {
 	}
 
 	/**
+	 * Play a note immediately without timing restrictions (for real-time triggering)
+	 */
+	async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }): Promise<void> {
+		if (!this.isInitialized) {
+			logger.warn('audio', 'Audio engine not initialized for immediate note playback');
+			await this.initialize();
+		}
+
+		try {
+			const { pitch, duration, velocity, instrument } = mapping;
+
+			logger.debug('immediate-playback', 'Playing note immediately', {
+				instrument: instrument,
+				pitch: pitch.toFixed(2),
+				duration: duration,
+				velocity: velocity
+			});
+
+			// Get the synthesizer for the specified instrument
+			const synth = this.instruments.get(instrument);
+			if (!synth) {
+				logger.warn('immediate-playback', `Instrument not found: ${instrument}`, {
+					availableInstruments: Array.from(this.instruments.keys())
+				});
+				// Fallback to piano if requested instrument not available
+				const pianoSynth = this.instruments.get('piano');
+				if (pianoSynth) {
+					pianoSynth.triggerAttackRelease(pitch, duration, undefined, velocity);
+					return;
+				}
+				throw new Error(`Instrument ${instrument} not available and piano fallback failed`);
+			}
+
+			// Apply frequency detuning for phase conflict resolution (from existing logic)
+			const detunedFrequency = this.applyFrequencyDetuning(pitch);
+
+			// Trigger the note immediately (no timing delay)
+			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
+
+			logger.debug('immediate-playback', 'Note triggered successfully', {
+				instrument: instrument,
+				detunedFrequency: detunedFrequency.toFixed(2),
+				originalFrequency: pitch.toFixed(2)
+			});
+
+		} catch (error) {
+			logger.error('Failed to play immediate note', (error as Error).message);
+			throw error;
+		}
+	}
+
+	/**
 	 * Play a single test note
 	 */
 	async playTestNote(frequency: number = 440): Promise<void> {
