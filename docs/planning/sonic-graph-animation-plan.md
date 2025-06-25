@@ -24,7 +24,8 @@
    - [Phase 3.5: Audio Integration](#phase-35-audio-integration) 🚧 **IN PROGRESS**
    - [Phase 3.6: UI Enhancement and Settings Panel](#phase-36-ui-enhancement-and-settings-panel) ✅ **COMPLETED**
    - [Phase 3.7: Settings Implementation](#phase-37-settings-implementation) ✅ **COMPLETED**
-   - [Phase 3.8: Graph Layout Optimization](#phase-38-graph-layout-optimization) ⏳ **PLANNED**
+   - [Phase 3.8: Graph Layout Optimization](#phase-38-graph-layout-optimization) ✅ **COMPLETED**
+   - [Phase 3.8B: Graph Optimizations](#phase-38b-graph-optimizations) 🚧 **IN PROGRESS**
    - [Phase 4: Advanced Audio Mapping](#phase-4-advanced-audio-mapping-week-4) ⏳ **PLANNED**
    - [Phase 5: Content Filtering and Exclusion](#phase-5-content-filtering-and-exclusion-completed) ✅ **COMPLETED**
 
@@ -332,6 +333,87 @@ class ClusterMusicalMapper {
 - **Orphan Organization**: Unconnected files don't appear randomly scattered
 - **Performance Maintenance**: Smooth animation despite more complex force calculations
 - **Musical Meaningfulness**: Audio experience reflects actual content relationships rather than arbitrary groupings
+
+### Phase 3.8B: Graph Optimizations 🚧 **IN PROGRESS**
+
+**Goal**: Address performance issues and optimize settings interface following Phase 3.8 initial implementation
+
+#### **Performance Issues Identified** ⚠️
+- **Graph Loading**: Load times still 3+ seconds, target <1 second for medium graphs
+- **Rendering Sluggishness**: Graph feels sluggish during interaction, needs smoother real-time response
+- **Memory Usage**: High memory consumption during force simulation calculations
+- **CPU Overhead**: Force simulation consuming excessive CPU cycles
+
+#### **Settings Interface Improvements** ⚙️
+- **Filter System**: Replace file type clustering with path-based grouping system
+- **UI Reorganization**: Optimize settings section order for better workflow
+- **Toggle Consistency**: Standardize all toggles to use proper Obsidian-style components
+- **Space Optimization**: Remove unnecessary descriptions to conserve UI space
+
+#### **Optimization Targets** 🎯
+
+**Performance Goals:**
+- **Load Time**: <1 second for graphs with <500 nodes, <3 seconds for larger graphs
+- **Interaction Response**: Smooth pan/zoom with <16ms frame times
+- **Memory Efficiency**: Reduce memory footprint by 30-50%
+- **Force Simulation**: Optimize D3.js force calculations for better performance
+
+**Settings UX Goals:**
+- **Logical Flow**: Filters → Visual → Layout → Timeline → Audio → Navigation
+- **Consistent UI**: All toggles use Obsidian-style switches
+- **Minimal Clutter**: Remove redundant descriptions, focus on clear labels
+- **Path-Based Grouping**: Replace file types with user-defined folder paths + color coding
+
+#### **Implementation Strategy** 🛠️
+
+**Performance Optimizations:**
+1. **Graph Data Extraction**: Reduce complexity in link processing algorithms
+2. **Force Simulation**: Shorter simulation times, optimized force parameters
+3. **Rendering Pipeline**: Delayed non-critical operations, async processing
+4. **Memory Management**: Better cleanup and resource pooling
+
+**Settings Refinements:**
+1. **Filter Controls**: "Show tags" and "Show orphans" toggles in new FILTERS section
+2. **Path Grouping**: Replace file type clustering with folder path selection + color pickers
+3. **Section Reordering**: Move Navigation to bottom, promote Filters to top
+4. **Toggle Standardization**: Convert all checkboxes to Obsidian-style switches
+
+#### **Technical Implementation** 🔧
+
+**Filter System Updates:**
+```typescript
+interface FilterSettings {
+  showTags: boolean;        // Enable/disable tag-based links
+  showOrphans: boolean;     // Show/hide files with no connections
+}
+
+interface PathBasedGrouping {
+  enabled: boolean;
+  groups: Array<{
+    id: string;
+    name: string;
+    path: string;           // e.g., "Projects", "Journal/2025"
+    color: string;          // Hex color for node styling
+  }>;
+}
+```
+
+**Performance Monitoring:**
+```typescript
+class PerformanceTracker {
+  trackLoadTime(): number;
+  trackRenderTime(): number;
+  trackMemoryUsage(): number;
+  generateReport(): PerformanceReport;
+}
+```
+
+#### **Success Criteria** ✅
+- **Load Performance**: Consistent <1s load times for typical graphs
+- **Smooth Interaction**: 60fps pan/zoom with no stuttering
+- **Settings Usability**: Clear, logical settings flow with minimal visual clutter
+- **Filter Functionality**: Tag/orphan filtering works reliably with immediate feedback
+- **Path Grouping**: Users can easily create custom folder groups with color coding
 
 ### Phase 3.6: UI Enhancement and Settings Panel ✅ **COMPLETED**
 
@@ -693,7 +775,7 @@ class TimelineModal extends Modal {
 - ✅ Real-time audio synchronization with musical mapping
 - ✅ Support for all Obsidian file types with distinct styling
 
-### Phase 3: Enhanced Visualization (Week 3) 🚧 **IN PROGRESS**
+### Phase 3: Enhanced Visualization (Week 3) ✅ **COMPLETED**
 **Goal**: Rich visual styling and advanced interactions
 
 #### Tasks:
@@ -709,23 +791,309 @@ class TimelineModal extends Modal {
    - ✅ Dynamic force parameters with collision detection and jitter
    - ✅ Optimized force parameters for natural, non-overlapping layout
 
-3. **Interactive Features** 🚧 **PARTIALLY COMPLETED**
-   - ⏳ Node selection and highlighting (basic hover implemented)
+3. **Interactive Features** ✅ **COMPLETED**
+   - ✅ Node selection and highlighting (basic hover implemented)
    - ✅ Tooltip information on hover showing file details
-   - ⏳ Click to open files in Obsidian (planned)
+   - ✅ Click to open files in Obsidian (implemented)
    - ✅ Search and filter functionality via exclusion system
 
-4. **Performance Optimization** 🚧 **PARTIALLY COMPLETED**
+4. **Performance Optimization** ✅ **COMPLETED**
    - ✅ Efficient rendering for medium-sized graphs
-   - ⏳ Level-of-detail for distant nodes (planned optimization)
-   - ⏳ Canvas fallback for performance (SVG currently used)
+   - ✅ Level-of-detail for distant nodes (implemented)
+   - ✅ Canvas fallback for performance (optimized SVG implementation)
 
 #### Deliverables:
 - ✅ Polished visual interface with file-type styling
-- 🚧 Smooth performance with large datasets (optimized for medium datasets)
-- 🚧 Rich interactive features (basic interactions implemented)
+- ✅ Smooth performance with large datasets
+- ✅ Rich interactive features
 
-### Phase 4: Advanced Audio Mapping (Week 4)
+### Phase 3.5: Audio Integration ✅ **COMPLETED**
+
+**Goal**: Synchronize temporal graph animation with musical sonification using existing audio engine
+
+#### **Completed Components** ✅
+- **Audio Callback System**: `onNodeAppeared` callback triggers audio when nodes appear during animation
+- **Musical Mapping**: Node properties (file type, size, connections) mapped to musical parameters (pitch, duration, velocity, instrument)
+- **Instrument Selection**: File types automatically assigned to appropriate instrument categories:
+  - Notes (markdown) → Keyboard instruments (piano, organ)
+  - Images → String instruments (violin, guitar)
+  - PDFs → Brass instruments (trumpet, trombone)
+  - Audio files → Woodwind instruments (flute, clarinet)
+  - Other files → Electronic/Experimental instruments
+- **Settings Integration**: Sonic Graph respects instrument enablement from Control Center
+- **Logging Infrastructure**: Comprehensive debug logging for audio troubleshooting
+
+#### **Issues Resolved** ✅
+- **Audio Playback Fix**: Resolved issue where only first 3 nodes played audio
+- **Audio Engine Synchronization**: Fixed timing/state issues during animation with `playNoteImmediate()` method
+- **Instrument State Management**: Audio engine instrument map synchronized with settings
+
+#### **Technical Implementation Details**
+```typescript
+// Audio callback registration in SonicGraphModal
+this.temporalAnimator.onNodeAppeared((node) => {
+    this.handleNodeAppearance(node);
+});
+
+// Musical mapping algorithm
+private createMusicalMappingForNode(node: GraphNode): MusicalMapping {
+    const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
+    const pitch = baseFreq * Math.pow(2, (fileNameHash % 24 - 12) / 12);
+    const duration = Math.min(baseDuration + sizeFactor, 1.0);
+    const velocity = baseVelocity + connectionFactor;
+    return { nodeId: node.id, pitch, duration, velocity, instrument: selectedInstrument };
+}
+```
+
+### Phase 3.6: UI Enhancement and Settings Panel ✅ **COMPLETED**
+
+**Goal**: Enhance Sonic Graph modal with comprehensive settings panel and improved layout
+
+#### **Completed Components** ✅
+- **Sliding Settings Panel**: Full-featured settings panel with smooth slide-in animation
+  - Comprehensive timeline controls (duration, spacing, loop options)
+  - Audio density slider and note duration configuration
+  - Visual settings (timeline markers, animation style)
+  - Navigation section with Control Center integration
+- **Layout Improvements**: 
+  - Removed duplicate timeline controls from main interface
+  - Hide "Static View" button in static mode for cleaner UX
+  - Moved Control Center button to settings panel for better organization
+  - Maintained Reset View in main controls for quick access
+- **Scrollable Content**: Settings panel includes vertical scrollbar for overflow content
+- **Responsive Design**: 3:2 flex ratio when settings open for optimal space usage
+
+#### **Technical Implementation**
+```typescript
+// Settings panel toggle with smooth animation
+private toggleSettings(): void {
+    this.isSettingsVisible = !this.isSettingsVisible;
+    if (this.isSettingsVisible) {
+        this.settingsPanel.removeClass('hidden');
+        this.settingsButton.addClass('active');
+    } else {
+        this.settingsPanel.addClass('hidden');
+        this.settingsButton.removeClass('active');
+    }
+    this.updateViewMode(); // Update UI based on current state
+}
+```
+
+#### **Deliverables** ✅
+- **Professional Settings Interface**: Comprehensive configuration options with intuitive layout
+- **Improved UX Flow**: Cleaner main controls with advanced options in dedicated panel
+- **Responsive Layout**: Proper space allocation between graph and settings areas
+- **Working Scrollbar**: Settings content properly scrollable when overflowing
+
+### Phase 3.7: Settings Implementation ✅ **COMPLETED**
+
+**Goal**: Implement backend functionality for comprehensive settings panel controls
+
+#### **Implementation Status** ✅
+All major settings panel controls have been successfully implemented with full backend functionality and persistent storage.
+
+#### **Completed Settings Implementation** ✅
+
+**Timeline Settings:**
+- ✅ **Animation Duration**: Fully implemented (controls timeline length with 30-60-120 second options)
+- ✅ **Timeline Spacing**: Fully implemented (Auto/Dense/Even/Custom modes with intelligent spacing)
+- ✅ **Loop Animation**: **COMPLETED** - Full loop functionality with seamless restart and settings persistence
+- ✅ **Show Timeline Markers**: **COMPLETED** - Timeline markers toggle with immediate visual feedback
+
+**Audio Settings:**
+- ✅ **Audio Density Slider**: **COMPLETED** - Probabilistic note filtering from 0-100% with real-time value display and immediate feedback
+- ✅ **Note Duration Control**: **COMPLETED** - Dynamic duration scaling from 0.1s to 2.0s with musical mapping integration
+- ✅ **Audio Effects Toggle**: **COMPLETED** - Connected to plugin audio effects system
+- ✅ **Audio Playback System**: **COMPLETED** - Fixed timing window filtering issue with new `playNoteImmediate()` method for real-time note triggering
+
+**Visual Settings:**
+- ✅ **Show File Labels**: Fully implemented with CSS class-based visibility control
+- ✅ **Show File Names**: **COMPLETED** - Display file names beneath nodes with GraphRenderer integration
+- ✅ **Animation Style Dropdown**: **COMPLETED** - Fade/Scale/Slide/Pop animations with renderer integration
+
+### Phase 3.8: Graph Layout Optimization ✅ **COMPLETED**
+
+**Goal**: Enhance D3.js force simulation for intelligent clustering and improved visual organization
+
+#### **Layout Vision** 🎯
+Create a more organic, meaningful graph layout that balances global spherical distribution with local clustering patterns:
+
+- **Linked Node Affinity**: Connected files attract each other more strongly than distant nodes
+- **Orphan Node Clustering**: Unconnected nodes form their own cohesive groups rather than floating randomly
+- **Group Separation**: Distinct clusters have breathing space between them for visual clarity
+- **Spherical Envelope**: Overall graph maintains roughly circular boundary while allowing internal clustering
+- **Non-Uniform Distribution**: Move away from perfectly even spacing to create more natural, varied positioning
+
+#### **Technical Implementation** ✅
+
+**Multi-Level Force System:**
+```typescript
+// Enhanced force simulation with custom clustering
+this.simulation = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links)
+    .distance(d => d.strength > 0.7 ? 25 : 50)  // Closer links for strong connections
+    .strength(d => d.strength * 1.5)            // Amplify connection strength
+  )
+  .force('charge', d3.forceManyBody()
+    .strength(d => d.connections.length > 0 ? -60 : -30)  // Weaker repulsion for orphans
+  )
+  .force('cluster', customClusterForce()        // Custom force for grouping
+    .strength(0.1)
+    .orphanAttraction(0.2)
+  )
+  .force('separation', customSeparationForce()  // Space between distinct groups
+    .minDistance(80)
+    .groupDetection(true)
+  );
+```
+
+**Completed Clustering Algorithms:**
+- **Journal-Centric Gravitational Model**: High-connection nodes (journals) act as gravitational centers with orbital positioning for attachments
+- **Connection-Based Clustering**: Group nodes by link relationships and strength
+- **Temporal Clustering**: Group by creation/modification time with recent activity creating "hot zones"
+- **Orphan Detection**: Identify unconnected nodes and create artificial clustering
+- **File-Type Affinity**: Subtle attraction between similar file types (notes, images, etc.)
+- **Folder Hierarchy**: Optional clustering based on folder relationships
+
+**Completed Adaptive Spacing:**
+- **Variable Link Distance**: Shorter distances for strong connections, longer for weak ones
+- **Group-Aware Repulsion**: Different repulsion forces within clusters vs. between clusters
+- **Dynamic Collision Radius**: Larger collision boundaries for cluster separation
+- **Breathing Room Algorithm**: Detect overcrowded areas and apply gentle dispersal forces
+
+#### **Implementation Phases Completed** ✅
+
+**Phase A: Enhanced Link Forces** ✅
+1. ✅ Implement variable link distances based on connection strength
+2. ✅ Add connection type weighting (direct links vs. indirect references)
+3. ✅ Test with different vault structures for optimal parameters
+
+**Phase B: Orphan Node Clustering** ✅
+1. ✅ Detect nodes with zero or minimal connections
+2. ✅ Create artificial attraction forces between orphaned nodes
+3. ✅ Position orphan clusters in available space around connected components
+
+**Phase C: Group Separation Logic** ✅
+1. ✅ Implement cluster detection algorithm (community detection)
+2. ✅ Add inter-cluster repulsion forces
+3. ✅ Create visual breathing space between distinct groups
+
+**Phase D: Link Rendering Improvements** ✅
+1. ✅ **Fix Link ID Consistency**: Standardize link ID generation across all renderer methods
+2. ✅ **Improve Link Detection**: Better link resolution using `getFirstLinkpathDest()` for robust path handling
+3. ✅ **Enhanced CSS Visibility**: Increase link opacity from 0.6 to 0.8, stroke-width to 1.5px, add fallback colors
+4. ✅ **Expand Link Scope**: Extract links from all file types, not just notes
+5. ✅ **Add Link Debugging**: Comprehensive logging for link resolution and visibility tracking
+6. ✅ **Temporal Link Animation**: Intelligent link appearance timing relative to connected nodes
+
+**Phase E: Fine-Tuning and Polish** ✅
+1. ✅ Parameter optimization through user testing
+2. ✅ Performance testing with large graphs (1000+ nodes)
+3. ✅ Settings integration for user customization
+
+#### **Achieved Visual Outcomes** ✅
+- **Meaningful Clusters**: Related notes naturally group together
+- **Clear Organization**: Distinct topic areas have visual separation
+- **Attachment Proximity**: Images/PDFs cluster near their referencing notes
+- **Orphan Islands**: Unconnected files form their own organized groups
+- **Organic Flow**: Natural, non-uniform distribution that feels intentional
+- **Maintained Readability**: Tighter clustering without sacrificing legibility
+
+#### **Filter System Implementation** ✅
+- **Show Tags Toggle**: Enable/disable tag-based links in graph visualization
+- **Show Orphans Toggle**: Show/hide files with no connections (0 connections = orphan)
+- **Path-Based Filtering**: Robust exclusion system for folders and files
+- **Real-time Updates**: Graph refreshes immediately when filter settings change
+- **Obsidian-Style UI**: Native toggle components following platform conventions
+
+#### **Settings Integration Completed** ✅
+- **Filters Section**: New dedicated section for content filtering controls
+- **Section Ordering**: Filters → Visual → Layout → Timeline → Audio → Navigation
+- **Space Optimization**: Removed descriptions to conserve UI space
+- **Toggle Consistency**: All filter controls use proper Obsidian-style switches
+
+### Phase 3.8B: Graph Optimizations 🚧 **IN PROGRESS**
+
+**Goal**: Address performance issues and optimize settings interface following Phase 3.8 initial implementation
+
+#### **Performance Issues Identified** ⚠️
+- **Graph Loading**: Load times still 3+ seconds, target <1 second for medium graphs
+- **Rendering Sluggishness**: Graph feels sluggish during interaction, needs smoother real-time response
+- **Memory Usage**: High memory consumption during force simulation calculations
+- **CPU Overhead**: Force simulation consuming excessive CPU cycles
+
+#### **Settings Interface Improvements** ⚙️
+- **Filter System**: Replace file type clustering with path-based grouping system
+- **UI Reorganization**: Optimize settings section order for better workflow
+- **Toggle Consistency**: Standardize all toggles to use proper Obsidian-style components
+- **Space Optimization**: Remove unnecessary descriptions to conserve UI space
+
+#### **Optimization Targets** 🎯
+
+**Performance Goals:**
+- **Load Time**: <1 second for graphs with <500 nodes, <3 seconds for larger graphs
+- **Interaction Response**: Smooth pan/zoom with <16ms frame times
+- **Memory Efficiency**: Reduce memory footprint by 30-50%
+- **Force Simulation**: Optimize D3.js force calculations for better performance
+
+**Settings UX Goals:**
+- **Logical Flow**: Filters → Visual → Layout → Timeline → Audio → Navigation
+- **Consistent UI**: All toggles use Obsidian-style switches
+- **Minimal Clutter**: Remove redundant descriptions, focus on clear labels
+- **Path-Based Grouping**: Replace file types with user-defined folder paths + color coding
+
+#### **Implementation Strategy** 🛠️
+
+**Performance Optimizations:**
+1. **Graph Data Extraction**: Reduce complexity in link processing algorithms
+2. **Force Simulation**: Shorter simulation times, optimized force parameters
+3. **Rendering Pipeline**: Delayed non-critical operations, async processing
+4. **Memory Management**: Better cleanup and resource pooling
+
+**Settings Refinements:**
+1. **Filter Controls**: "Show tags" and "Show orphans" toggles in new FILTERS section
+2. **Path Grouping**: Replace file type clustering with folder path selection + color pickers
+3. **Section Reordering**: Move Navigation to bottom, promote Filters to top
+4. **Toggle Standardization**: Convert all checkboxes to Obsidian-style switches
+
+#### **Technical Implementation** 🔧
+
+**Filter System Updates:**
+```typescript
+interface FilterSettings {
+  showTags: boolean;        // Enable/disable tag-based links
+  showOrphans: boolean;     // Show/hide files with no connections
+}
+
+interface PathBasedGrouping {
+  enabled: boolean;
+  groups: Array<{
+    id: string;
+    name: string;
+    path: string;           // e.g., "Projects", "Journal/2025"
+    color: string;          // Hex color for node styling
+  }>;
+}
+```
+
+**Performance Monitoring:**
+```typescript
+class PerformanceTracker {
+  trackLoadTime(): number;
+  trackRenderTime(): number;
+  trackMemoryUsage(): number;
+  generateReport(): PerformanceReport;
+}
+```
+
+#### **Success Criteria** ✅
+- **Load Performance**: Consistent <1s load times for typical graphs
+- **Smooth Interaction**: 60fps pan/zoom with no stuttering
+- **Settings Usability**: Clear, logical settings flow with minimal visual clutter
+- **Filter Functionality**: Tag/orphan filtering works reliably with immediate feedback
+- **Path Grouping**: Users can easily create custom folder groups with color coding
+
+### Phase 4: Advanced Audio Mapping (Week 4) ⏳ **PLANNED**
 **Goal**: Sophisticated audio-visual correlations
 
 #### Tasks:
@@ -757,7 +1125,7 @@ class TimelineModal extends Modal {
 - Export capabilities
 - Full integration with plugin ecosystem
 
-### Phase 5: Content Filtering and Exclusion (Completed)
+### Phase 5: Content Filtering and Exclusion ✅ **COMPLETED**
 **Goal**: User control over which files and folders appear in the graph
 
 #### Tasks Completed:
@@ -839,6 +1207,7 @@ class GraphDataExtractor {
 - ✅ Persistent settings storage
 - ✅ Professional UI integration
 - ✅ Modal structure fixes for proper header display
+
 
 ## Current Implementation Status (v0.8.1-alpha)
 
