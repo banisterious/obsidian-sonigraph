@@ -223,6 +223,28 @@ export interface SonicGraphSettings {
 		enableReset: boolean;         // Show Reset View button
 		enableExport: boolean;        // Show Export Timeline button (future)
 	};
+	// Phase 3.8: Graph Layout Optimization Settings
+	layout: {
+		clusteringStrength: number;         // Slider for link-based attraction intensity (0.0-0.3)
+		groupSeparation: number;            // Control spacing between distinct clusters (0.0-0.2)
+		pathBasedGrouping: {
+			enabled: boolean;               // Enable path-based grouping instead of file type clustering
+			groups: Array<{
+				id: string;                    // Unique identifier for the group
+				name: string;                   // Display name for the group
+				path: string;                   // Folder path (e.g., "Projects", "Journal")
+				color: string;                  // Hex color for nodes in this group
+			}>;
+		};
+		filters: {
+			showTags: boolean;              // Enable/disable tag-based links in the graph
+			showOrphans: boolean;           // Show/hide files with few or no connections
+		};
+		temporalClustering: boolean;        // Enable time-based clustering with recency weighting
+		journalGravity: number;             // Adjust gravitational strength of high-connection nodes (0.0-0.5)
+		layoutPreset: 'loose' | 'balanced' | 'tight' | 'very-tight'; // Quick layout options
+		adaptiveScaling: boolean;           // Enable automatic performance scaling based on graph size
+	};
 }
 
 export interface SonigraphSettings {
@@ -355,6 +377,36 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enableControlCenter: true,
 			enableReset: true,
 			enableExport: false
+		},
+		// Phase 3.8: Graph Layout Optimization Default Settings
+		layout: {
+			clusteringStrength: 0.15,           // Moderate clustering strength
+			groupSeparation: 0.08,              // Good spacing between groups
+			pathBasedGrouping: {
+				enabled: false,                 // Disabled by default
+				groups: [
+					{
+						id: 'journals',
+						name: 'Journals',
+						path: 'Journal',
+						color: '#4f46e5'           // Indigo
+					},
+					{
+						id: 'projects', 
+						name: 'Projects',
+						path: 'Projects',
+						color: '#059669'           // Emerald
+					}
+				]
+			},
+			filters: {
+				showTags: true,                 // Show tag-based links by default
+				showOrphans: true               // Show orphan files by default
+			},
+			temporalClustering: false,          // Disable by default for performance
+			journalGravity: 0.3,                // Moderate journal gravity
+			layoutPreset: 'balanced',           // Balanced layout by default
+			adaptiveScaling: true               // Enable automatic scaling
 		}
 	},
 	effects: {

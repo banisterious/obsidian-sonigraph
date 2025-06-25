@@ -231,6 +231,47 @@ var init_constants = __esm({
           enableControlCenter: true,
           enableReset: true,
           enableExport: false
+        },
+        // Phase 3.8: Graph Layout Optimization Default Settings
+        layout: {
+          clusteringStrength: 0.15,
+          // Moderate clustering strength
+          groupSeparation: 0.08,
+          // Good spacing between groups
+          pathBasedGrouping: {
+            enabled: false,
+            // Disabled by default
+            groups: [
+              {
+                id: "journals",
+                name: "Journals",
+                path: "Journal",
+                color: "#4f46e5"
+                // Indigo
+              },
+              {
+                id: "projects",
+                name: "Projects",
+                path: "Projects",
+                color: "#059669"
+                // Emerald
+              }
+            ]
+          },
+          filters: {
+            showTags: true,
+            // Show tag-based links by default
+            showOrphans: true
+            // Show orphan files by default
+          },
+          temporalClustering: false,
+          // Disable by default for performance
+          journalGravity: 0.3,
+          // Moderate journal gravity
+          layoutPreset: "balanced",
+          // Balanced layout by default
+          adaptiveScaling: true
+          // Enable automatic scaling
         }
       },
       effects: {
@@ -9777,10 +9818,23 @@ var init_GraphDataExtractor = __esm({
         this.cachedData = null;
         this.lastCacheTime = 0;
         this.CACHE_DURATION = 3e4;
+        logger5.debug("extraction", "GraphDataExtractor constructor started");
         this.vault = vault;
+        logger5.debug("extraction", "Vault assigned");
         this.metadataCache = metadataCache;
+        logger5.debug("extraction", "MetadataCache assigned");
         this.excludeFolders = (options == null ? void 0 : options.excludeFolders) || [];
         this.excludeFiles = (options == null ? void 0 : options.excludeFiles) || [];
+        this.filterSettings = (options == null ? void 0 : options.filterSettings) || {
+          showTags: true,
+          showOrphans: true
+        };
+        logger5.debug("extraction", "Exclusions and filters set:", {
+          excludeFolders: this.excludeFolders.length,
+          excludeFiles: this.excludeFiles.length,
+          filterSettings: this.filterSettings
+        });
+        logger5.debug("extraction", "GraphDataExtractor constructor completed");
       }
       /**
        * Extract complete graph data from the vault
@@ -9791,14 +9845,29 @@ var init_GraphDataExtractor = __esm({
           logger5.debug("extraction", "Returning cached graph data");
           return this.cachedData;
         }
-        logger5.info("extraction", "Starting graph data extraction");
+        logger5.info("graph-extraction", "Starting graph data extraction");
         const startTime = logger5.time("graphExtraction");
         try {
+          logger5.info("graph-extraction-nodes", "Starting node extraction");
           const nodes = await this.extractNodes();
+          logger5.info("graph-extraction-nodes", `Node extraction completed: ${nodes.length} nodes`);
+          logger5.info("graph-extraction-links", "Starting link extraction");
           const links = this.extractLinks(nodes);
-          const timeRange2 = this.calculateTimeRange(nodes);
+          logger5.info("graph-extraction-links", `Link extraction completed: ${links.length} links`);
+          let filteredNodes = nodes;
+          if (!this.filterSettings.showOrphans) {
+            logger5.info("graph-extraction-orphan-filter", "Filtering orphan nodes");
+            filteredNodes = this.filterOrphans(nodes, links);
+            logger5.info("graph-extraction-orphan-filter", `Orphan filtering completed: ${filteredNodes.length} nodes remaining (${nodes.length - filteredNodes.length} orphans removed)`);
+          }
+          logger5.info("graph-extraction-time", "Calculating time range");
+          const timeRange2 = this.calculateTimeRange(filteredNodes);
+          logger5.info("graph-extraction-time", "Time range calculated", {
+            start: timeRange2.start.toISOString(),
+            end: timeRange2.end.toISOString()
+          });
           this.cachedData = {
-            nodes,
+            nodes: filteredNodes,
             links,
             timeRange: timeRange2
           };
@@ -9915,52 +9984,202 @@ var init_GraphDataExtractor = __esm({
       }
       /**
        * Extract links between nodes
+       * Phase 3.8: Enhanced link detection with expanded scope and better consistency
        */
       extractLinks(nodes) {
         const links = [];
         const nodeMap = new Map(nodes.map((node) => [node.path, node]));
-        for (const node of nodes) {
+        const linkSet = /* @__PURE__ */ new Set();
+        logger5.info("graph-extraction-links", `Starting link extraction for ${nodes.length} nodes`);
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i];
+          if (i % 100 === 0) {
+            logger5.info("graph-extraction-links", `Processing node ${i + 1}/${nodes.length}: ${node.path}`);
+          }
           const file = this.vault.getAbstractFileByPath(node.path);
-          if (file) {
-            const metadata = this.metadataCache.getFileCache(file);
-            if (metadata) {
-              if (metadata == null ? void 0 : metadata.links) {
-                for (const link of metadata.links) {
-                  const targetFile = this.metadataCache.getFirstLinkpathDest(link.link, file.path);
-                  if (targetFile && nodeMap.has(targetFile.path)) {
+          if (!file)
+            continue;
+          const metadata = this.metadataCache.getFileCache(file);
+          if (metadata) {
+            if (metadata.links) {
+              logger5.debug("link-detection", `Processing ${metadata.links.length} links from ${file.path}`);
+              for (const link of metadata.links) {
+                const targetFile = this.metadataCache.getFirstLinkpathDest(link.link, file.path);
+                if (targetFile && nodeMap.has(targetFile.path)) {
+                  const linkId = this.generateLinkId(node.path, targetFile.path);
+                  if (!linkSet.has(linkId)) {
+                    linkSet.add(linkId);
                     links.push({
-                      source: node.id,
+                      source: node.path,
+                      // Use path for consistency
                       target: targetFile.path,
                       type: "reference",
-                      strength: 1
+                      strength: this.calculateLinkStrength(link, "reference")
                     });
-                    logger5.debug("links", `Link resolved: ${link.link} -> ${targetFile.path}`);
-                  } else {
-                    logger5.debug("links", `Link not resolved: ${link.link} (from ${file.path})`);
-                  }
-                }
-              }
-              if (metadata == null ? void 0 : metadata.embeds) {
-                for (const embed of metadata.embeds) {
-                  const targetFile = this.metadataCache.getFirstLinkpathDest(embed.link, file.path);
-                  if (targetFile && nodeMap.has(targetFile.path)) {
-                    links.push({
-                      source: node.id,
-                      target: targetFile.path,
-                      type: "attachment",
-                      strength: 0.8
+                    logger5.debug("link-success", `Link resolved: ${link.link} -> ${targetFile.path}`, {
+                      from: file.path,
+                      to: targetFile.path,
+                      linkText: link.link,
+                      strength: this.calculateLinkStrength(link, "reference")
                     });
-                    logger5.debug("links", `Embed resolved: ${embed.link} -> ${targetFile.path}`);
-                  } else {
-                    logger5.debug("links", `Embed not resolved: ${embed.link} (from ${file.path})`);
                   }
+                } else {
+                  logger5.debug("link-fail", `Link not resolved: ${link.link}`, {
+                    from: file.path,
+                    originalLink: link.link,
+                    reason: targetFile ? "target not in graph" : "target not found"
+                  });
                 }
               }
             }
+            if (metadata.embeds) {
+              logger5.debug("embed-detection", `Processing ${metadata.embeds.length} embeds from ${file.path}`);
+              for (const embed of metadata.embeds) {
+                const targetFile = this.metadataCache.getFirstLinkpathDest(embed.link, file.path);
+                if (targetFile && nodeMap.has(targetFile.path)) {
+                  const linkId = this.generateLinkId(node.path, targetFile.path);
+                  if (!linkSet.has(linkId)) {
+                    linkSet.add(linkId);
+                    links.push({
+                      source: node.path,
+                      // Use path for consistency
+                      target: targetFile.path,
+                      type: "attachment",
+                      strength: this.calculateLinkStrength(embed, "attachment")
+                    });
+                    logger5.debug("embed-success", `Embed resolved: ${embed.link} -> ${targetFile.path}`, {
+                      from: file.path,
+                      to: targetFile.path,
+                      embedText: embed.link,
+                      strength: this.calculateLinkStrength(embed, "attachment")
+                    });
+                  }
+                } else {
+                  logger5.debug("embed-fail", `Embed not resolved: ${embed.link}`, {
+                    from: file.path,
+                    originalEmbed: embed.link,
+                    reason: targetFile ? "target not in graph" : "target not found"
+                  });
+                }
+              }
+            }
+            if (this.filterSettings.showTags && metadata.tags && metadata.tags.length > 0) {
+              const nodeTags = metadata.tags.map((tag) => tag.tag);
+              const limitedTags = nodeTags.slice(0, 10);
+              this.createTagBasedLinks(node, limitedTags, nodes, links, linkSet);
+            }
+          }
+          if (i % 20 === 0) {
+            this.createFolderHierarchyLinks(node, nodes, links, linkSet);
           }
         }
-        logger5.debug("extraction", `Extracted ${links.length} links`);
+        logger5.debug("link-extraction-complete", `Extracted ${links.length} unique links`, {
+          totalNodes: nodes.length,
+          linksPerNode: (links.length / nodes.length).toFixed(2),
+          linkTypes: this.summarizeLinkTypes(links)
+        });
         return links;
+      }
+      /**
+       * Phase 3.8: Generate consistent link ID for deduplication
+       */
+      generateLinkId(sourcePath, targetPath) {
+        const [first, second] = [sourcePath, targetPath].sort();
+        return `${first}<->${second}`;
+      }
+      /**
+       * Phase 3.8: Calculate link strength based on link type and context
+       */
+      calculateLinkStrength(link, type2) {
+        const baseStrength = type2 === "reference" ? 1 : 0.8;
+        return baseStrength;
+      }
+      /**
+       * Phase 3.8: Create weak connections between nodes sharing tags
+       */
+      createTagBasedLinks(node, nodeTags, allNodes, links, linkSet) {
+        if (nodeTags.length === 0)
+          return;
+        let connectionsCreated = 0;
+        const MAX_CONNECTIONS_PER_NODE = 25;
+        for (const otherNode of allNodes) {
+          if (otherNode.id === node.id)
+            continue;
+          if (connectionsCreated >= MAX_CONNECTIONS_PER_NODE)
+            break;
+          const otherFile = this.vault.getAbstractFileByPath(otherNode.path);
+          if (!otherFile)
+            continue;
+          const otherMetadata = this.metadataCache.getFileCache(otherFile);
+          if (!(otherMetadata == null ? void 0 : otherMetadata.tags))
+            continue;
+          const otherTags = otherMetadata.tags.map((tag) => tag.tag);
+          const sharedTags = nodeTags.filter((tag) => otherTags.includes(tag));
+          if (sharedTags.length > 0) {
+            const linkId = this.generateLinkId(node.path, otherNode.path);
+            if (!linkSet.has(linkId)) {
+              linkSet.add(linkId);
+              links.push({
+                source: node.path,
+                target: otherNode.path,
+                type: "tag",
+                strength: Math.min(0.3 * sharedTags.length, 0.6)
+                // Weak connection, max 0.6
+              });
+              connectionsCreated++;
+              logger5.debug("tag-link", `Tag-based link created`, {
+                from: node.path,
+                to: otherNode.path,
+                sharedTags,
+                strength: Math.min(0.3 * sharedTags.length, 0.6)
+              });
+            }
+          }
+        }
+      }
+      /**
+       * Phase 3.8: Create hierarchy connections based on folder relationships
+       */
+      createFolderHierarchyLinks(node, allNodes, links, linkSet) {
+        const nodeFolderPath = node.path.substring(0, node.path.lastIndexOf("/"));
+        if (!nodeFolderPath)
+          return;
+        const siblingNodes = allNodes.filter((other) => {
+          if (other.id === node.id)
+            return false;
+          const otherFolderPath = other.path.substring(0, other.path.lastIndexOf("/"));
+          return otherFolderPath === nodeFolderPath;
+        });
+        const limitedSiblings = siblingNodes.slice(0, 10);
+        for (const sibling of limitedSiblings) {
+          const linkId = this.generateLinkId(node.path, sibling.path);
+          if (!linkSet.has(linkId)) {
+            linkSet.add(linkId);
+            links.push({
+              source: node.path,
+              target: sibling.path,
+              type: "reference",
+              strength: 0.2
+              // Very weak connection for folder siblings
+            });
+            logger5.debug("folder-link", `Folder hierarchy link created`, {
+              from: node.path,
+              to: sibling.path,
+              folder: nodeFolderPath,
+              strength: 0.2
+            });
+          }
+        }
+      }
+      /**
+       * Phase 3.8: Summarize link types for debugging
+       */
+      summarizeLinkTypes(links) {
+        const summary = {};
+        for (const link of links) {
+          summary[link.type] = (summary[link.type] || 0) + 1;
+        }
+        return summary;
       }
       /**
        * Calculate the time range of the graph
@@ -9983,6 +10202,28 @@ var init_GraphDataExtractor = __esm({
         return { start: earliest, end: latest };
       }
       /**
+       * Filter out orphan nodes (nodes with few or no connections)
+       */
+      filterOrphans(nodes, links) {
+        const connectionCounts = /* @__PURE__ */ new Map();
+        for (const node of nodes) {
+          connectionCounts.set(node.id, 0);
+        }
+        for (const link of links) {
+          const sourceId = typeof link.source === "string" ? link.source : link.source.id;
+          const targetId = typeof link.target === "string" ? link.target : link.target.id;
+          connectionCounts.set(sourceId, (connectionCounts.get(sourceId) || 0) + 1);
+          connectionCounts.set(targetId, (connectionCounts.get(targetId) || 0) + 1);
+        }
+        const ORPHAN_THRESHOLD = 1;
+        const filteredNodes = nodes.filter((node) => {
+          const connections = connectionCounts.get(node.id) || 0;
+          return connections >= ORPHAN_THRESHOLD;
+        });
+        logger5.debug("orphan-filter", `Filtered orphans: ${nodes.length} \u2192 ${filteredNodes.length} nodes (orphans = files with 0 connections)`);
+        return filteredNodes;
+      }
+      /**
        * Clear cached data
        */
       clearCache() {
@@ -10002,46 +10243,49 @@ var init_GraphRenderer = __esm({
     init_logging();
     logger6 = getLogger("GraphRenderer");
     GraphRenderer = class {
+      // Tooltip variables removed - using native browser tooltips
       constructor(container, config = {}) {
         this.nodes = [];
         this.links = [];
         this.visibleNodes = /* @__PURE__ */ new Set();
         this.visibleLinks = /* @__PURE__ */ new Set();
         this.animationStyle = "fade";
-        // Performance optimization for mouseover events
-        this.lastTooltipUpdate = 0;
-        this.tooltipThrottleMs = 16;
-        // ~60fps
-        this.isTooltipVisible = false;
-        // Performance optimization for force simulation
-        this.lastPositionUpdate = 0;
-        this.positionUpdateThrottleMs = 16;
-        // ~60fps
-        this.pendingPositionUpdate = false;
+        // Phase 3.8: Settings integration
+        this.layoutSettings = null;
         this.container = container;
         this.config = {
           width: 800,
           height: 600,
           nodeRadius: 8,
-          linkDistance: 25,
-          // Much smaller for tighter clustering
+          linkDistance: 35,
+          // Phase 3.8: Increased for better node spacing
           showLabels: false,
           enableZoom: true,
           ...config
         };
         this.forceConfig = {
-          centerStrength: 0.2,
-          // Slightly stronger to pull nodes together
-          linkStrength: 0.4,
-          // Stronger links to keep connected nodes close
-          chargeStrength: -60,
-          // Reduced repulsion to allow closer packing
-          collisionRadius: 12
-          // Smaller collision radius for tighter packing
+          centerStrength: 0.15,
+          // Phase 3.8: Slightly reduced for more organic spread
+          linkStrength: 0.6,
+          // Phase 3.8: Increased for stronger clustering
+          chargeStrength: -120,
+          // Phase 3.8: Increased repulsion for better node spacing
+          collisionRadius: 24,
+          // Phase 3.8: One node-sized space between nodes (8+8+8)
+          // Phase 3.8: Enhanced clustering parameters (optimized)
+          strongLinkDistance: 30,
+          // Phase 3.8: Increased for better spacing while maintaining clusters
+          weakLinkDistance: 80,
+          // Phase 3.8: Increased for more distance for weak connections
+          orphanRepulsion: -30,
+          // Phase 3.8: Slightly reduced for orphan clustering
+          clusterStrength: 0.15,
+          // Phase 3.8: Increased for better clustering
+          separationStrength: 0.08
+          // Phase 3.8: Increased for clearer group boundaries
         };
         this.initializeSVG();
         this.initializeSimulation();
-        this.initializeTooltip();
         logger6.debug("renderer", "GraphRenderer initialized", { config: this.config });
       }
       /**
@@ -10057,13 +10301,10 @@ var init_GraphRenderer = __esm({
           this.zoom = zoom_default2().scaleExtent([0.1, 4]).on("zoom", (event) => {
             this.g.attr("transform", event.transform);
           });
+          this.zoom.filter((event) => {
+            return !event.ctrlKey && !event.button;
+          }).touchable(() => false);
           this.svg.call(this.zoom);
-          const svgNode2 = this.svg.node();
-          if (svgNode2) {
-            svgNode2.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
-            svgNode2.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
-            svgNode2.addEventListener("touchend", (e) => e.preventDefault(), { passive: false });
-          }
         }
       }
       /**
@@ -10072,29 +10313,24 @@ var init_GraphRenderer = __esm({
       initializeSimulation() {
         this.simulation = simulation_default().force(
           "link",
-          link_default().id((d) => d.id).distance(this.config.linkDistance).strength(this.forceConfig.linkStrength)
+          link_default().id((d) => d.id).distance((d) => {
+            return d.strength > 0.7 ? this.forceConfig.strongLinkDistance : this.forceConfig.weakLinkDistance;
+          }).strength((d) => d.strength * this.forceConfig.linkStrength * 1.5)
         ).force(
           "charge",
-          manyBody_default().strength(this.forceConfig.chargeStrength)
+          manyBody_default().strength((d) => {
+            return d.connections.length > 0 ? this.forceConfig.chargeStrength : this.forceConfig.orphanRepulsion;
+          })
         ).force("center", center_default(
           this.config.width / 2,
           this.config.height / 2
         ).strength(this.forceConfig.centerStrength)).force(
           "collision",
           collide_default().radius(this.forceConfig.collisionRadius)
-        ).force("cluster", (alpha) => {
-          const strength = 0.1 * alpha;
-          this.nodes.forEach((node) => {
-            if (node.x !== void 0 && node.y !== void 0) {
-              const typeOffset = this.getTypeOffset(node.type);
-              const targetX = this.config.width / 2 + typeOffset.x;
-              const targetY = this.config.height / 2 + typeOffset.y;
-              node.vx = (node.vx || 0) + (targetX - node.x) * strength;
-              node.vy = (node.vy || 0) + (targetY - node.y) * strength;
-            }
-          });
-        }).force("jitter", (alpha) => {
-          const strength = 0.02 * alpha;
+        ).force("jitter", (alpha) => {
+          if (alpha < 0.1)
+            return;
+          const strength = 0.01 * alpha;
           this.nodes.forEach((node) => {
             if (node.vx !== void 0 && node.vy !== void 0) {
               node.vx += (Math.random() - 0.5) * strength;
@@ -10102,23 +10338,10 @@ var init_GraphRenderer = __esm({
             }
           });
         }).on("tick", () => {
-          const now3 = performance.now();
-          if (now3 - this.lastPositionUpdate >= this.positionUpdateThrottleMs && !this.pendingPositionUpdate) {
-            this.pendingPositionUpdate = true;
-            requestAnimationFrame(() => {
-              this.updatePositions();
-              this.lastPositionUpdate = performance.now();
-              this.pendingPositionUpdate = false;
-            });
-          }
-        }).on("end", () => this.onSimulationEnd());
+          this.updatePositions();
+        }).alphaDecay(0.023).velocityDecay(0.4).on("end", () => this.onSimulationEnd());
       }
-      /**
-       * Initialize tooltip for node information
-       */
-      initializeTooltip() {
-        this.tooltip = select_default2(this.container).append("div").attr("class", "sonic-graph-tooltip");
-      }
+      // Tooltip initialization removed - using native browser tooltips
       /**
        * Render the graph with given nodes and links
        */
@@ -10126,6 +10349,8 @@ var init_GraphRenderer = __esm({
         logger6.debug("renderer", `Rendering graph: ${nodes.length} nodes, ${links.length} links`);
         this.nodes = nodes;
         this.links = links;
+        this.applyAdaptiveScaling(nodes.length);
+        this.applyInitialClustering();
         this.visibleNodes = new Set(nodes.map((n) => n.id));
         this.visibleLinks = new Set(links.map((l, i) => this.getLinkId(l, i)));
         this.updateSimulation();
@@ -10163,14 +10388,38 @@ var init_GraphRenderer = __esm({
       }
       /**
        * Render links
+       * Phase 3.8: Enhanced with link type and strength attributes for CSS styling
        */
       renderLinks() {
         const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(this.links, (d, i) => this.getLinkId(d, i));
-        linkSelection.enter().append("line").attr("class", "appearing").style("opacity", 0).transition().duration(300).style("opacity", 1).on("end", function() {
+        const linkEnter = linkSelection.enter().append("line").attr("class", "appearing").attr("data-link-type", (d) => d.type).attr("data-strength", (d) => this.getStrengthCategory(d.strength)).style("opacity", 0);
+        linkEnter.transition().duration(300).style("opacity", 1).on("end", function() {
           select_default2(this).classed("appearing", false);
         });
+        linkEnter.on("mouseenter", function(event, d) {
+          select_default2(this).classed("highlighted", true);
+          logger6.debug("link-hover", "Link hovered", {
+            source: typeof d.source === "string" ? d.source : d.source.id,
+            target: typeof d.target === "string" ? d.target : d.target.id,
+            type: d.type,
+            strength: d.strength
+          });
+        }).on("mouseleave", function() {
+          select_default2(this).classed("highlighted", false);
+        });
+        linkSelection.attr("data-link-type", (d) => d.type).attr("data-strength", (d) => this.getStrengthCategory(d.strength));
         linkSelection.exit().transition().duration(200).style("opacity", 0).remove();
         this.linkGroup = this.g.select(".sonigraph-temporal-links").selectAll("line");
+      }
+      /**
+       * Phase 3.8: Categorize link strength for CSS styling
+       */
+      getStrengthCategory(strength) {
+        if (strength >= 0.7)
+          return "strong";
+        if (strength >= 0.4)
+          return "medium";
+        return "weak";
       }
       /**
        * Render nodes
@@ -10178,7 +10427,10 @@ var init_GraphRenderer = __esm({
       renderNodes() {
         const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(this.nodes, (d) => d.id);
         const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
-        nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`);
+        nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`).attr("title", (d) => {
+          const fileName = d.title.split("/").pop() || d.title;
+          return fileName;
+        });
         nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "labels-hidden").text((d) => d.title);
         logger6.debug("renderer", `Node labels created with showLabels: ${this.config.showLabels}`);
         nodeEnter.transition().duration(500).style("opacity", 1).on("end", function() {
@@ -10191,33 +10443,11 @@ var init_GraphRenderer = __esm({
        * Setup node interactions (hover, click, tooltips)
        */
       setupNodeInteractions(selection2) {
-        selection2.on("mouseover", (event, d) => {
-          const now3 = performance.now();
-          if (now3 - this.lastTooltipUpdate < this.tooltipThrottleMs) {
-            return;
-          }
-          this.lastTooltipUpdate = now3;
-          requestAnimationFrame(() => {
-            this.highlightConnectedLinks(d.id, true);
-            this.showTooltip(event, d);
-            this.isTooltipVisible = true;
-          });
-        }).on("mousemove", (event, d) => {
-          const now3 = performance.now();
-          if (now3 - this.lastTooltipUpdate < this.tooltipThrottleMs || !this.isTooltipVisible) {
-            return;
-          }
-          this.lastTooltipUpdate = now3;
-          requestAnimationFrame(() => {
-            this.updateTooltipPosition(event);
-          });
-        }).on("mouseout", (event, d) => {
-          requestAnimationFrame(() => {
-            this.highlightConnectedLinks(d.id, false);
-            this.hideTooltip();
-            this.isTooltipVisible = false;
-          });
-        }).on("click", (event, d) => {
+        selection2.on("mouseover", (_, d) => {
+          this.highlightConnectedLinks(d.id, true);
+        }).on("mouseout", (_, d) => {
+          this.highlightConnectedLinks(d.id, false);
+        }).on("click", (_, d) => {
           logger6.debug("renderer", `Node clicked: ${d.title}`, { node: d });
         });
       }
@@ -10330,56 +10560,10 @@ var init_GraphRenderer = __esm({
         setTimeout(() => {
           this.simulation.stop();
           logger6.debug("renderer", "Simulation stopped for static preview");
-        }, 1500);
+        }, 800);
         logger6.debug("renderer", "Initial view set for static preview");
       }
-      /**
-       * Show tooltip with node information
-       */
-      showTooltip(event, node) {
-        const tooltipContent = this.createTooltipContent(node);
-        this.tooltip.html(tooltipContent).classed("tooltip-visible", true).classed("tooltip-hidden", false);
-        this.updateTooltipPosition(event);
-      }
-      /**
-       * Update tooltip position based on mouse event
-       */
-      updateTooltipPosition(event) {
-        const containerRect = this.container.getBoundingClientRect();
-        const x3 = event.clientX - containerRect.left + 10;
-        const y3 = event.clientY - containerRect.top - 10;
-        const tooltipNode = this.tooltip.node();
-        if (tooltipNode) {
-          tooltipNode.style.transform = `translate(${x3}px, ${y3}px)`;
-        }
-      }
-      /**
-       * Hide tooltip
-       */
-      hideTooltip() {
-        this.tooltip.classed("tooltip-visible", false).classed("tooltip-hidden", true);
-      }
-      /**
-       * Create tooltip content for a node
-       */
-      createTooltipContent(node) {
-        const creationDate = node.creationDate.toLocaleDateString();
-        const modificationDate = node.modificationDate.toLocaleDateString();
-        const fileSize = this.formatFileSize(node.fileSize);
-        const connectionCount = node.connections.length;
-        const fileName = node.title.split("/").pop() || node.title;
-        return `
-      <div class="sonic-graph-tooltip-title">${fileName}</div>
-      <div class="sonic-graph-tooltip-path">${node.path}</div>
-      <div class="sonic-graph-tooltip-meta">
-        <div>Type: ${node.type}</div>
-        <div>Size: ${fileSize}</div>
-        <div>Created: ${creationDate}</div>
-        <div>Modified: ${modificationDate}</div>
-        <div>Connections: ${connectionCount}</div>
-      </div>
-    `;
-      }
+      // Tooltip methods removed - using native browser tooltips for better performance
       /**
        * Generate consistent link ID for D3.js data binding
        */
@@ -10388,22 +10572,34 @@ var init_GraphRenderer = __esm({
         const targetId = typeof link.target === "string" ? link.target : link.target.id;
         return `${sourceId}-${targetId}-${index2}`;
       }
-      /**
-       * Format file size in human-readable format
-       */
-      formatFileSize(bytes) {
-        if (bytes === 0)
-          return "0 B";
-        const k = 1024;
-        const sizes = ["B", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-      }
+      // formatFileSize method removed - no longer needed with native tooltips
       /**
        * Handle simulation end
        */
       onSimulationEnd() {
         logger6.debug("renderer", "Force simulation ended");
+      }
+      /**
+       * Get offset position for path-based grouping
+       */
+      getPathBasedOffset(filePath, groups) {
+        const radius = 100;
+        for (let i = 0; i < groups.length; i++) {
+          const group = groups[i];
+          if (filePath.startsWith(group.path)) {
+            const angle = i / groups.length * 2 * Math.PI;
+            const jitteredAngle = angle + (Math.random() - 0.5) * 0.3;
+            const jitteredRadius = radius * (0.8 + Math.random() * 0.4);
+            return {
+              x: Math.cos(jitteredAngle) * jitteredRadius,
+              y: Math.sin(jitteredAngle) * jitteredRadius
+            };
+          }
+        }
+        return {
+          x: (Math.random() - 0.5) * 40,
+          y: (Math.random() - 0.5) * 40
+        };
       }
       /**
        * Get offset position for file type clustering
@@ -10449,13 +10645,178 @@ var init_GraphRenderer = __esm({
         logger6.debug("renderer", "Animation style set", { style });
       }
       /**
+       * Phase 3.8: Update layout settings and apply changes
+       */
+      updateLayoutSettings(settings) {
+        logger6.debug("layout-settings", "Updating layout settings", settings);
+        this.layoutSettings = settings;
+        if (settings.layoutPreset) {
+          this.applyLayoutPreset(settings.layoutPreset);
+        }
+        this.forceConfig.clusterStrength = settings.clusteringStrength;
+        this.forceConfig.separationStrength = settings.groupSeparation;
+        if (this.simulation) {
+          this.updateSimulationForces();
+          this.simulation.alpha(0.3).restart();
+        }
+        logger6.debug("layout-settings", "Layout settings applied", settings);
+      }
+      /**
+       * Phase 3.8: Apply predefined layout presets
+       */
+      applyLayoutPreset(preset) {
+        logger6.debug("layout-preset", "Applying layout preset", { preset });
+        switch (preset) {
+          case "loose":
+            this.forceConfig.clusterStrength = 0.1;
+            this.forceConfig.separationStrength = 0.04;
+            this.forceConfig.strongLinkDistance = 30;
+            this.forceConfig.weakLinkDistance = 80;
+            this.forceConfig.chargeStrength = -60;
+            break;
+          case "balanced":
+            this.forceConfig.clusterStrength = 0.15;
+            this.forceConfig.separationStrength = 0.08;
+            this.forceConfig.strongLinkDistance = 20;
+            this.forceConfig.weakLinkDistance = 60;
+            this.forceConfig.chargeStrength = -80;
+            break;
+          case "tight":
+            this.forceConfig.clusterStrength = 0.2;
+            this.forceConfig.separationStrength = 0.12;
+            this.forceConfig.strongLinkDistance = 15;
+            this.forceConfig.weakLinkDistance = 40;
+            this.forceConfig.chargeStrength = -100;
+            break;
+          case "very-tight":
+            this.forceConfig.clusterStrength = 0.25;
+            this.forceConfig.separationStrength = 0.15;
+            this.forceConfig.strongLinkDistance = 12;
+            this.forceConfig.weakLinkDistance = 35;
+            this.forceConfig.chargeStrength = -120;
+            break;
+        }
+        logger6.debug("layout-preset", "Layout preset applied", { preset, config: this.forceConfig });
+      }
+      /**
+       * Phase 3.8: Apply initial clustering positioning (one-time optimization)
+       */
+      applyInitialClustering() {
+        logger6.debug("clustering", "Applying initial clustering positioning");
+        const layoutSettings = this.layoutSettings;
+        if (!layoutSettings)
+          return;
+        this.nodes.forEach((node) => {
+          let offset = { x: 0, y: 0 };
+          if (layoutSettings.pathBasedGrouping.enabled) {
+            offset = this.getPathBasedOffset(node.path, layoutSettings.pathBasedGrouping.groups);
+          } else {
+            offset = this.getTypeOffset(node.type);
+          }
+          node.x = this.config.width / 2 + offset.x + (Math.random() - 0.5) * 20;
+          node.y = this.config.height / 2 + offset.y + (Math.random() - 0.5) * 20;
+          if (node.connections.length > 5) {
+            const centerPull = 0.3;
+            node.x = node.x * (1 - centerPull) + this.config.width / 2 * centerPull;
+            node.y = node.y * (1 - centerPull) + this.config.height / 2 * centerPull;
+          }
+        });
+        logger6.debug("clustering", "Initial clustering positioning applied");
+      }
+      // Phase 3.8: Clustering methods removed - now using one-time initial positioning
+      /**
+       * Phase 3.8: Adaptive performance scaling based on graph size
+       */
+      applyAdaptiveScaling(nodeCount) {
+        logger6.debug("adaptive-scaling", `Applying adaptive scaling for ${nodeCount} nodes`);
+        if (nodeCount <= 50) {
+          this.forceConfig.clusterStrength = 0.15;
+          this.forceConfig.separationStrength = 0.08;
+          this.forceConfig.chargeStrength = -80;
+          logger6.debug("adaptive-scaling", "Applied small graph settings (full quality)");
+        } else if (nodeCount <= 200) {
+          this.forceConfig.clusterStrength = 0.12;
+          this.forceConfig.separationStrength = 0.06;
+          this.forceConfig.chargeStrength = -70;
+          logger6.debug("adaptive-scaling", "Applied medium graph settings (balanced quality)");
+        } else if (nodeCount <= 500) {
+          this.forceConfig.clusterStrength = 0.1;
+          this.forceConfig.separationStrength = 0.04;
+          this.forceConfig.chargeStrength = -60;
+          logger6.debug("adaptive-scaling", "Applied large graph settings (performance focused)");
+        } else {
+          this.forceConfig.clusterStrength = 0.08;
+          this.forceConfig.separationStrength = 0.02;
+          this.forceConfig.chargeStrength = -50;
+          logger6.debug("adaptive-scaling", "Applied very large graph settings (minimal complexity)");
+        }
+        if (this.simulation) {
+          this.updateSimulationForces();
+        }
+      }
+      /**
+       * Phase 3.8: Update simulation forces with current config
+       */
+      updateSimulationForces() {
+        var _a, _b, _c, _d;
+        (_a = this.simulation.force("charge")) == null ? void 0 : _a.strength((d) => {
+          return d.connections.length > 0 ? this.forceConfig.chargeStrength : this.forceConfig.orphanRepulsion;
+        });
+        (_b = this.simulation.force("collision")) == null ? void 0 : _b.radius(this.forceConfig.collisionRadius);
+        (_d = (_c = this.simulation.force("link")) == null ? void 0 : _c.distance((d) => {
+          return d.strength > 0.7 ? this.forceConfig.strongLinkDistance : this.forceConfig.weakLinkDistance;
+        })) == null ? void 0 : _d.strength((d) => d.strength * this.forceConfig.linkStrength * 1.5);
+        logger6.debug("adaptive-scaling", "Updated simulation forces with new parameters");
+      }
+      /**
+       * Update graph data and restart simulation
+       */
+      updateData(nodes, links) {
+        var _a;
+        logger6.debug("renderer", "Updating graph data", {
+          nodeCount: nodes.length,
+          linkCount: links.length
+        });
+        this.nodes = nodes;
+        this.links = links;
+        this.simulation.nodes(this.nodes);
+        (_a = this.simulation.force("link")) == null ? void 0 : _a.links(this.links);
+        this.renderNodes();
+        this.renderLinks();
+        this.restartSimulation();
+        logger6.debug("renderer", "Graph data updated and simulation restarted");
+      }
+      /**
+       * Restart simulation with current configuration
+       */
+      restartSimulation() {
+        logger6.debug("renderer", "Restarting simulation with updated spacing parameters");
+        this.updateSimulationForces();
+        this.simulation.alpha(0.5).restart();
+        logger6.debug("renderer", "Simulation restarted", {
+          collisionRadius: this.forceConfig.collisionRadius,
+          chargeStrength: this.forceConfig.chargeStrength,
+          strongLinkDistance: this.forceConfig.strongLinkDistance,
+          weakLinkDistance: this.forceConfig.weakLinkDistance
+        });
+      }
+      /**
+       * Force apply better spacing immediately
+       */
+      applyBetterSpacing() {
+        logger6.debug("renderer", "Applying better spacing configuration");
+        this.forceConfig.collisionRadius = 24;
+        this.forceConfig.chargeStrength = -120;
+        this.forceConfig.strongLinkDistance = 30;
+        this.forceConfig.weakLinkDistance = 80;
+        this.restartSimulation();
+        logger6.debug("renderer", "Better spacing applied and simulation restarted");
+      }
+      /**
        * Cleanup resources
        */
       destroy() {
         this.simulation.stop();
-        if (this.tooltip) {
-          this.tooltip.remove();
-        }
         select_default2(this.container).selectAll("*").remove();
         logger6.debug("renderer", "GraphRenderer destroyed");
       }
@@ -11245,29 +11606,62 @@ var init_SonicGraphModal = __esm({
         this.isTimelineView = false;
         this.detectedSpacing = "balanced";
         this.isSettingsVisible = false;
+        logger11.debug("ui", "SonicGraphModal constructor started");
         this.plugin = plugin;
-        this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache, {
-          excludeFolders: plugin.settings.sonicGraphExcludeFolders || [],
-          excludeFiles: plugin.settings.sonicGraphExcludeFiles || []
-        });
+        logger11.debug("ui", "Plugin assigned");
+        try {
+          const excludeFolders = plugin.settings.sonicGraphExcludeFolders || [];
+          const excludeFiles = plugin.settings.sonicGraphExcludeFiles || [];
+          const filterSettings = this.getSonicGraphSettings().layout.filters;
+          logger11.debug("ui", "Creating GraphDataExtractor with exclusions and filters:", { excludeFolders, excludeFiles, filterSettings });
+          this.graphDataExtractor = new GraphDataExtractor(app.vault, app.metadataCache, {
+            excludeFolders,
+            excludeFiles,
+            filterSettings
+          });
+          logger11.debug("ui", "GraphDataExtractor created successfully");
+        } catch (error) {
+          logger11.error("ui", "Failed to create GraphDataExtractor:", error.message);
+          logger11.error("ui", "GraphDataExtractor error stack:", error.stack);
+          throw error;
+        }
+        logger11.debug("ui", "SonicGraphModal constructor completed");
       }
       onOpen() {
+        logger11.info("sonic-graph-init", "Modal onOpen() started");
         try {
           const { contentEl } = this;
+          logger11.info("sonic-graph-init", "ContentEl acquired, emptying");
           contentEl.empty();
-          logger11.debug("ui", "Opening Sonic Graph modal");
+          logger11.info("sonic-graph-init", "ContentEl emptied successfully");
+          logger11.info("sonic-graph-init", "Adding modal CSS classes");
           this.modalEl.addClass("sonic-graph-modal");
+          logger11.info("sonic-graph-init", "Creating close button");
           const closeButton = contentEl.createDiv({ cls: "modal-close-button" });
           closeButton.addEventListener("click", () => this.close());
+          logger11.info("sonic-graph-init", "Creating modal container");
           const modalContainer = contentEl.createDiv({ cls: "sonic-graph-modal-container" });
+          logger11.info("sonic-graph-init", "Creating header");
           this.createHeader(modalContainer);
+          logger11.info("sonic-graph-init", "Header created successfully");
+          logger11.info("sonic-graph-init", "Creating main content");
           this.createMainContent(modalContainer);
+          logger11.info("sonic-graph-init", "Main content created successfully");
+          logger11.info("sonic-graph-init", "Creating timeline area");
           this.createTimelineArea(modalContainer);
+          logger11.info("sonic-graph-init", "Timeline area created successfully");
+          logger11.info("sonic-graph-init", "Creating controls area");
           this.createControlsArea(modalContainer);
-          this.initializeGraph();
+          logger11.info("sonic-graph-init", "Controls area created successfully");
+          logger11.info("sonic-graph-init", "Starting graph initialization - THIS IS THE CRITICAL STEP");
+          this.initializeGraph().catch((error) => {
+            logger11.error("sonic-graph-init", "Graph initialization failed:", error);
+            new import_obsidian6.Notice("Failed to initialize Sonic Graph: " + error.message);
+          });
         } catch (error) {
-          logger11.error("Error opening Sonic Graph modal", error.message);
-          new import_obsidian6.Notice("Failed to open Sonic Graph modal");
+          logger11.error("ui", "Error opening Sonic Graph modal:", error.message);
+          logger11.error("ui", "Error stack:", error.stack);
+          new import_obsidian6.Notice("Failed to open Sonic Graph modal: " + error.message);
         }
       }
       onClose() {
@@ -11387,25 +11781,75 @@ var init_SonicGraphModal = __esm({
        */
       async initializeGraph() {
         try {
-          logger11.debug("ui", "Initializing Sonic Graph");
+          logger11.info("sonic-graph-data", "Starting graph initialization");
+          logger11.info("sonic-graph-data", "Beginning graph data extraction");
+          logger11.debug("ui", "GraphDataExtractor configuration:", {
+            excludeFolders: this.graphDataExtractor["excludeFolders"],
+            excludeFiles: this.graphDataExtractor["excludeFiles"]
+          });
           const graphData = await this.graphDataExtractor.extractGraphData();
-          logger11.debug("ui", `Extracted ${graphData.nodes.length} nodes and ${graphData.links.length} links`);
+          logger11.info("sonic-graph-data", `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
+          if (graphData.nodes.length === 0) {
+            logger11.warn("ui", "No nodes found in graph data - possibly all files excluded");
+            throw new Error("No graph data found. Check your exclusion settings.");
+          }
+          logger11.info("sonic-graph-clustering", "Starting temporal clustering detection");
           const detection = this.detectTemporalClustering(graphData.nodes);
           this.detectedSpacing = detection.type;
-          logger11.debug("temporal-spacing", "Detected temporal clustering", {
+          logger11.info("sonic-graph-clustering", "Temporal clustering detected", {
             type: detection.type,
             confidence: detection.confidence,
             reason: detection.reason
           });
+          logger11.info("sonic-graph-renderer", "Looking for canvas element");
           const canvasElement = document.getElementById("sonic-graph-canvas");
           if (!canvasElement) {
+            logger11.error("sonic-graph-renderer", "Graph canvas element not found");
             throw new Error("Graph canvas element not found");
           }
+          logger11.info("sonic-graph-renderer", "Canvas element found", {
+            width: canvasElement.clientWidth,
+            height: canvasElement.clientHeight,
+            offsetWidth: canvasElement.offsetWidth,
+            offsetHeight: canvasElement.offsetHeight
+          });
+          logger11.info("sonic-graph-renderer", "Creating GraphRenderer instance");
           this.graphRenderer = new GraphRenderer(canvasElement, {
             enableZoom: true,
             showLabels: false
           });
-          this.graphRenderer.render(graphData.nodes, graphData.links);
+          logger11.info("sonic-graph-renderer", "GraphRenderer created successfully");
+          try {
+            logger11.info("sonic-graph-layout", "Getting layout settings");
+            const layoutSettings = this.getSonicGraphSettings().layout;
+            logger11.info("sonic-graph-layout", "Applying layout settings to renderer", layoutSettings);
+            this.graphRenderer.updateLayoutSettings(layoutSettings);
+            logger11.info("sonic-graph-layout", "Layout settings applied successfully");
+          } catch (layoutError) {
+            logger11.error("sonic-graph-layout", "Failed to apply layout settings:", layoutError.message);
+            logger11.error("sonic-graph-layout", "Layout error stack:", layoutError.stack);
+            throw new Error(`Layout configuration failed: ${layoutError.message}`);
+          }
+          try {
+            logger11.info("sonic-graph-render", "Starting graph render process");
+            logger11.info("sonic-graph-render", "Render data summary", {
+              nodeCount: graphData.nodes.length,
+              linkCount: graphData.links.length,
+              sampleNodes: graphData.nodes.slice(0, 3).map((n) => ({ id: n.id, type: n.type })),
+              sampleLinks: graphData.links.slice(0, 3).map((l) => ({ source: l.source, target: l.target, type: l.type }))
+            });
+            this.graphRenderer.render(graphData.nodes, graphData.links);
+            logger11.info("sonic-graph-render", "Graph render completed successfully");
+            setTimeout(() => {
+              logger11.info("sonic-graph-spacing", "Applying improved node spacing");
+              this.graphRenderer.applyBetterSpacing();
+              logger11.info("sonic-graph-spacing", "Improved node spacing applied");
+            }, 100);
+          } catch (renderError) {
+            logger11.error("sonic-graph-render", "Graph rendering failed:", renderError.message);
+            logger11.error("sonic-graph-render", "Render error stack:", renderError.stack);
+            throw new Error(`Graph rendering failed: ${renderError.message}`);
+          }
           const canvasRect = canvasElement.getBoundingClientRect();
           const centerX = canvasRect.width / 2;
           const centerY = canvasRect.height / 2;
@@ -11420,9 +11864,14 @@ var init_SonicGraphModal = __esm({
           this.updateViewMode();
           logger11.debug("ui", "Sonic Graph initialized successfully");
         } catch (error) {
-          logger11.error("Failed to initialize Sonic Graph", error.message);
-          new import_obsidian6.Notice("Failed to load graph data");
-          this.showErrorState();
+          logger11.error("ui", "Failed to initialize Sonic Graph:", error.message);
+          logger11.error("ui", "Initialization error stack:", error.stack);
+          const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
+          if (loadingIndicator) {
+            loadingIndicator.remove();
+          }
+          new import_obsidian6.Notice(`Failed to load graph data: ${error.message}`);
+          this.showErrorState(error.message);
         }
       }
       /**
@@ -11595,9 +12044,11 @@ var init_SonicGraphModal = __esm({
         closeButton.textContent = "\xD7";
         closeButton.addEventListener("click", () => this.toggleSettings());
         const settingsContent = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-content" });
+        this.createFiltersSettings(settingsContent);
+        this.createVisualSettings(settingsContent);
+        this.createLayoutSettings(settingsContent);
         this.createTimelineSettings(settingsContent);
         this.createAudioSettings(settingsContent);
-        this.createVisualSettings(settingsContent);
         this.createNavigationSettings(settingsContent);
       }
       /**
@@ -11607,7 +12058,7 @@ var init_SonicGraphModal = __esm({
         const section = container.createDiv({ cls: "sonic-graph-settings-section" });
         section.createEl("div", { text: "TIMELINE", cls: "sonic-graph-settings-section-title" });
         const densityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        densityItem.createEl("label", { text: "Audio Density", cls: "sonic-graph-setting-label" });
+        densityItem.createEl("label", { text: "Audio density", cls: "sonic-graph-setting-label" });
         densityItem.createEl("div", {
           text: "Control how frequently notes play during animation",
           cls: "sonic-graph-setting-description"
@@ -11634,7 +12085,7 @@ var init_SonicGraphModal = __esm({
         densityLabels.createEl("span", { text: "Sparse", cls: "sonic-graph-density-label" });
         densityLabels.createEl("span", { text: "Dense", cls: "sonic-graph-density-label" });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        durationItem.createEl("label", { text: "Animation Duration", cls: "sonic-graph-setting-label" });
+        durationItem.createEl("label", { text: "Animation duration", cls: "sonic-graph-setting-label" });
         durationItem.createEl("div", {
           text: "Total time for complete timeline animation",
           cls: "sonic-graph-setting-description"
@@ -11646,7 +12097,7 @@ var init_SonicGraphModal = __esm({
             optionEl.selected = true;
         });
         const loopItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        loopItem.createEl("label", { text: "Loop Animation", cls: "sonic-graph-setting-label" });
+        loopItem.createEl("label", { text: "Loop animation", cls: "sonic-graph-setting-label" });
         loopItem.createEl("div", {
           text: "Automatically restart animation when complete",
           cls: "sonic-graph-setting-description"
@@ -11683,7 +12134,7 @@ var init_SonicGraphModal = __esm({
             optionEl.selected = true;
         });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        durationItem.createEl("label", { text: "Note Duration", cls: "sonic-graph-setting-label" });
+        durationItem.createEl("label", { text: "Note duration", cls: "sonic-graph-setting-label" });
         durationItem.createEl("div", {
           text: "Base duration for individual notes",
           cls: "sonic-graph-setting-description"
@@ -11709,7 +12160,7 @@ var init_SonicGraphModal = __esm({
         const section = container.createDiv({ cls: "sonic-graph-settings-section" });
         section.createEl("div", { text: "VISUAL", cls: "sonic-graph-settings-section-title" });
         const markersItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        markersItem.createEl("label", { text: "Timeline Markers", cls: "sonic-graph-setting-label" });
+        markersItem.createEl("label", { text: "Timeline markers", cls: "sonic-graph-setting-label" });
         markersItem.createEl("div", {
           text: "Show year markers on timeline",
           cls: "sonic-graph-setting-description"
@@ -11727,7 +12178,7 @@ var init_SonicGraphModal = __esm({
           this.updateTimelineMarkersVisibility(!isActive);
         });
         const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        styleItem.createEl("label", { text: "Animation Style", cls: "sonic-graph-setting-label" });
+        styleItem.createEl("label", { text: "Animation style", cls: "sonic-graph-setting-label" });
         styleItem.createEl("div", {
           text: "How nodes appear during animation",
           cls: "sonic-graph-setting-description"
@@ -11755,7 +12206,7 @@ var init_SonicGraphModal = __esm({
           this.updateAnimationStyle(style);
         });
         const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        fileNamesItem.createEl("label", { text: "Show File Names", cls: "sonic-graph-setting-label" });
+        fileNamesItem.createEl("label", { text: "Show file names", cls: "sonic-graph-setting-label" });
         fileNamesItem.createEl("div", {
           text: "Display file names in small text beneath each node",
           cls: "sonic-graph-setting-description"
@@ -11780,7 +12231,7 @@ var init_SonicGraphModal = __esm({
         const section = container.createDiv({ cls: "sonic-graph-settings-section" });
         section.createEl("div", { text: "NAVIGATION", cls: "sonic-graph-settings-section-title" });
         const controlCenterItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        controlCenterItem.createEl("label", { text: "Audio Control", cls: "sonic-graph-setting-label" });
+        controlCenterItem.createEl("label", { text: "Audio control", cls: "sonic-graph-setting-label" });
         controlCenterItem.createEl("div", {
           text: "Open the main audio control interface",
           cls: "sonic-graph-setting-description"
@@ -11792,6 +12243,335 @@ var init_SonicGraphModal = __esm({
         const controlCenterIcon = createLucideIcon("settings", 16);
         controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
         controlCenterBtn.addEventListener("click", () => this.openControlCenter());
+      }
+      /**
+       * Phase 3.8: Create layout settings section
+       */
+      createLayoutSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "LAYOUT", cls: "sonic-graph-settings-section-title" });
+        const densityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        densityItem.createEl("label", { text: "Layout density", cls: "sonic-graph-setting-label" });
+        densityItem.createEl("div", {
+          text: "Controls overall graph compactness: loose, balanced, tight, or very tight",
+          cls: "sonic-graph-setting-description"
+        });
+        const densityContainer = densityItem.createDiv({ cls: "sonic-graph-slider-container" });
+        const densitySlider = densityContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-slider"
+        });
+        densitySlider.min = "1";
+        densitySlider.max = "4";
+        densitySlider.step = "1";
+        const currentPreset = this.getSonicGraphSettings().layout.layoutPreset;
+        const presetToDensity = {
+          "loose": 1,
+          "balanced": 2,
+          "tight": 3,
+          "very-tight": 4
+        };
+        densitySlider.value = (presetToDensity[currentPreset] || 2).toString();
+        const densityLabels = ["", "Loose", "Balanced", "Tight", "Very Tight"];
+        const densityValue = densityContainer.createEl("span", {
+          text: densityLabels[parseInt(densitySlider.value)],
+          cls: "sonic-graph-slider-value"
+        });
+        densitySlider.addEventListener("input", () => {
+          const value = parseInt(densitySlider.value);
+          densityValue.textContent = densityLabels[value];
+          const densityToPreset = {
+            1: "loose",
+            2: "balanced",
+            3: "tight",
+            4: "very-tight"
+          };
+          this.updateLayoutSetting("layoutPreset", densityToPreset[value]);
+        });
+        const clusteringItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        clusteringItem.createEl("label", { text: "Clustering strength", cls: "sonic-graph-setting-label" });
+        clusteringItem.createEl("div", {
+          text: "Controls how strongly connected files attract each other",
+          cls: "sonic-graph-setting-description"
+        });
+        const clusteringContainer = clusteringItem.createDiv({ cls: "sonic-graph-slider-container" });
+        const clusteringSlider = clusteringContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-slider"
+        });
+        clusteringSlider.min = "0";
+        clusteringSlider.max = "30";
+        clusteringSlider.step = "1";
+        clusteringSlider.value = (this.getSonicGraphSettings().layout.clusteringStrength * 100).toString();
+        const clusteringValue = clusteringContainer.createEl("span", {
+          text: `${Math.round(this.getSonicGraphSettings().layout.clusteringStrength * 100)}%`,
+          cls: "sonic-graph-slider-value"
+        });
+        clusteringSlider.addEventListener("input", () => {
+          const value = parseInt(clusteringSlider.value) / 100;
+          clusteringValue.textContent = `${Math.round(value * 100)}%`;
+          this.updateLayoutSetting("clusteringStrength", value);
+        });
+        const separationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        separationItem.createEl("label", { text: "Group separation", cls: "sonic-graph-setting-label" });
+        separationItem.createEl("div", {
+          text: "Controls spacing between different groups of files",
+          cls: "sonic-graph-setting-description"
+        });
+        const separationContainer = separationItem.createDiv({ cls: "sonic-graph-slider-container" });
+        const separationSlider = separationContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-slider"
+        });
+        separationSlider.min = "0";
+        separationSlider.max = "20";
+        separationSlider.step = "1";
+        separationSlider.value = (this.getSonicGraphSettings().layout.groupSeparation * 100).toString();
+        const separationValue = separationContainer.createEl("span", {
+          text: `${Math.round(this.getSonicGraphSettings().layout.groupSeparation * 100)}%`,
+          cls: "sonic-graph-slider-value"
+        });
+        separationSlider.addEventListener("input", () => {
+          const value = parseInt(separationSlider.value) / 100;
+          separationValue.textContent = `${Math.round(value * 100)}%`;
+          this.updateLayoutSetting("groupSeparation", value);
+        });
+        const groupingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        groupingItem.createEl("label", { text: "Path-based grouping", cls: "sonic-graph-setting-label" });
+        groupingItem.createEl("div", {
+          text: "Create custom groups based on folder paths with color coding",
+          cls: "sonic-graph-setting-description"
+        });
+        const groupingToggle = groupingItem.createEl("input", { type: "checkbox", cls: "sonic-graph-toggle" });
+        groupingToggle.checked = this.getSonicGraphSettings().layout.pathBasedGrouping.enabled;
+        groupingToggle.addEventListener("change", () => {
+          this.updatePathBasedGroupingSetting("enabled", groupingToggle.checked);
+        });
+        const groupsContainer = section.createDiv({ cls: "sonic-graph-groups-container" });
+        groupsContainer.style.marginTop = "10px";
+        groupsContainer.style.marginLeft = "20px";
+        if (!this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
+          groupsContainer.style.display = "none";
+        }
+        groupingToggle.addEventListener("change", () => {
+          groupsContainer.style.display = groupingToggle.checked ? "block" : "none";
+        });
+        this.createPathGroupsSettings(groupsContainer);
+      }
+      /**
+       * Create filters settings section (new section for show tags and show orphans)
+       */
+      createFiltersSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "FILTERS", cls: "sonic-graph-settings-section-title" });
+        const tagsItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        tagsItem.createEl("label", { text: "Show tags", cls: "sonic-graph-setting-label" });
+        const tagsToggle = tagsItem.createEl("input", { type: "checkbox", cls: "sonic-graph-toggle" });
+        tagsToggle.checked = this.getSonicGraphSettings().layout.filters.showTags;
+        tagsToggle.addEventListener("change", () => {
+          this.updateFilterSetting("showTags", tagsToggle.checked);
+        });
+        const orphansItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        orphansItem.createEl("label", { text: "Show orphans", cls: "sonic-graph-setting-label" });
+        const orphansToggle = orphansItem.createEl("input", { type: "checkbox", cls: "sonic-graph-toggle" });
+        orphansToggle.checked = this.getSonicGraphSettings().layout.filters.showOrphans;
+        orphansToggle.addEventListener("change", () => {
+          this.updateFilterSetting("showOrphans", orphansToggle.checked);
+        });
+      }
+      /**
+       * Phase 3.8: Update layout setting and apply to renderer
+       */
+      updateLayoutSetting(key, value) {
+        const currentSettings = this.getSonicGraphSettings();
+        currentSettings.layout[key] = value;
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        logger11.debug("layout-setting", `Updated layout setting: ${String(key)} = ${value}`);
+      }
+      /**
+       * Update path-based grouping setting
+       */
+      updatePathBasedGroupingSetting(key, value) {
+        const currentSettings = this.getSonicGraphSettings();
+        currentSettings.layout.pathBasedGrouping[key] = value;
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        logger11.debug("path-grouping", `Updated path-based grouping setting: ${String(key)} = ${value}`);
+      }
+      /**
+       * Update filter setting
+       */
+      updateFilterSetting(key, value) {
+        const currentSettings = this.getSonicGraphSettings();
+        currentSettings.layout.filters[key] = value;
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        logger11.debug("filter-setting", `Updated filter setting: ${String(key)} = ${value}`);
+      }
+      /**
+       * Create path groups settings interface
+       */
+      createPathGroupsSettings(container) {
+        const settings = this.getSonicGraphSettings();
+        const groups = settings.layout.pathBasedGrouping.groups;
+        groups.forEach((group, index2) => {
+          const groupItem = container.createDiv({ cls: "sonic-graph-group-item" });
+          groupItem.style.marginBottom = "15px";
+          groupItem.style.padding = "10px";
+          groupItem.style.border = "1px solid var(--background-modifier-border)";
+          groupItem.style.borderRadius = "4px";
+          const groupHeader = groupItem.createDiv({ cls: "sonic-graph-group-header" });
+          groupHeader.style.display = "flex";
+          groupHeader.style.justifyContent = "space-between";
+          groupHeader.style.alignItems = "center";
+          groupHeader.style.marginBottom = "10px";
+          const groupNameInput = groupHeader.createEl("input", {
+            type: "text",
+            value: group.name,
+            cls: "sonic-graph-group-name-input"
+          });
+          groupNameInput.style.border = "none";
+          groupNameInput.style.background = "transparent";
+          groupNameInput.style.fontSize = "14px";
+          groupNameInput.style.fontWeight = "bold";
+          groupNameInput.addEventListener("input", () => {
+            this.updateGroupProperty(index2, "name", groupNameInput.value);
+          });
+          const removeButton = groupHeader.createEl("button", {
+            text: "\xD7",
+            cls: "sonic-graph-remove-group-btn"
+          });
+          removeButton.style.background = "none";
+          removeButton.style.border = "none";
+          removeButton.style.fontSize = "18px";
+          removeButton.style.cursor = "pointer";
+          removeButton.style.color = "var(--text-muted)";
+          removeButton.addEventListener("click", () => {
+            this.removeGroup(index2);
+            this.refreshPathGroupsSettings();
+          });
+          const pathRow = groupItem.createDiv({ cls: "sonic-graph-group-row" });
+          pathRow.style.display = "flex";
+          pathRow.style.alignItems = "center";
+          pathRow.style.marginBottom = "10px";
+          const pathLabel = pathRow.createEl("label", { text: "Path:", cls: "sonic-graph-group-label" });
+          pathLabel.style.minWidth = "50px";
+          pathLabel.style.marginRight = "10px";
+          const pathInput = pathRow.createEl("input", {
+            type: "text",
+            value: group.path,
+            cls: "sonic-graph-group-path-input"
+          });
+          pathInput.style.flex = "1";
+          pathInput.style.marginRight = "10px";
+          pathInput.placeholder = "e.g., Projects, Journal/2025";
+          pathInput.addEventListener("input", () => {
+            this.updateGroupProperty(index2, "path", pathInput.value);
+          });
+          const colorRow = groupItem.createDiv({ cls: "sonic-graph-group-row" });
+          colorRow.style.display = "flex";
+          colorRow.style.alignItems = "center";
+          const colorLabel = colorRow.createEl("label", { text: "Color:", cls: "sonic-graph-group-label" });
+          colorLabel.style.minWidth = "50px";
+          colorLabel.style.marginRight = "10px";
+          const colorInput = colorRow.createEl("input", {
+            type: "color",
+            value: group.color,
+            cls: "sonic-graph-group-color-input"
+          });
+          colorInput.style.width = "50px";
+          colorInput.style.height = "30px";
+          colorInput.style.border = "none";
+          colorInput.style.borderRadius = "4px";
+          colorInput.style.cursor = "pointer";
+          colorInput.addEventListener("input", () => {
+            this.updateGroupProperty(index2, "color", colorInput.value);
+          });
+          const colorPreview = colorRow.createEl("div", { cls: "sonic-graph-color-preview" });
+          colorPreview.style.width = "20px";
+          colorPreview.style.height = "20px";
+          colorPreview.style.backgroundColor = group.color;
+          colorPreview.style.marginLeft = "10px";
+          colorPreview.style.borderRadius = "50%";
+          colorPreview.style.border = "1px solid var(--background-modifier-border)";
+        });
+        const addButton = container.createEl("button", {
+          text: "+ Add Group",
+          cls: "sonic-graph-add-group-btn"
+        });
+        addButton.style.width = "100%";
+        addButton.style.padding = "8px";
+        addButton.style.marginTop = "10px";
+        addButton.style.border = "1px dashed var(--background-modifier-border)";
+        addButton.style.background = "transparent";
+        addButton.style.cursor = "pointer";
+        addButton.style.borderRadius = "4px";
+        addButton.addEventListener("click", () => {
+          this.addNewGroup();
+          this.refreshPathGroupsSettings();
+        });
+      }
+      /**
+       * Update a specific group property
+       */
+      updateGroupProperty(groupIndex, property, value) {
+        const currentSettings = this.getSonicGraphSettings();
+        currentSettings.layout.pathBasedGrouping.groups[groupIndex][property] = value;
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        logger11.debug("path-grouping", `Updated group ${groupIndex} ${property}:`, value);
+      }
+      /**
+       * Add a new group
+       */
+      addNewGroup() {
+        const currentSettings = this.getSonicGraphSettings();
+        const newGroup = {
+          id: `group-${Date.now()}`,
+          name: "New Group",
+          path: "",
+          color: "#6366f1"
+        };
+        currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        logger11.debug("path-grouping", "Added new group:", newGroup);
+      }
+      /**
+       * Remove a group
+       */
+      removeGroup(groupIndex) {
+        const currentSettings = this.getSonicGraphSettings();
+        currentSettings.layout.pathBasedGrouping.groups.splice(groupIndex, 1);
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        logger11.debug("path-grouping", `Removed group at index ${groupIndex}`);
+      }
+      /**
+       * Refresh the path groups settings UI
+       */
+      refreshPathGroupsSettings() {
+        const groupsContainer = document.querySelector(".sonic-graph-groups-container");
+        if (groupsContainer) {
+          groupsContainer.empty();
+          this.createPathGroupsSettings(groupsContainer);
+        }
       }
       /**
        * Toggle settings panel visibility
@@ -11858,23 +12638,60 @@ var init_SonicGraphModal = __esm({
         }
       }
       /**
-       * Show error state
+       * Show error state with detailed error message
        */
-      showErrorState() {
+      showErrorState(errorMessage) {
+        const existingError = this.graphContainer.querySelector(".sonic-graph-error");
+        if (existingError) {
+          existingError.remove();
+        }
         const errorContainer = this.graphContainer.createDiv({ cls: "sonic-graph-error" });
         const errorIcon = createLucideIcon("alert-circle", 48);
         errorContainer.appendChild(errorIcon);
-        errorContainer.createEl("p", {
+        const errorTitle = errorContainer.createEl("h3", {
           text: "Failed to load graph data",
-          cls: "sonic-graph-error-text"
+          cls: "sonic-graph-error-title"
         });
+        if (errorMessage) {
+          const errorDetails = errorContainer.createEl("p", {
+            text: errorMessage,
+            cls: "sonic-graph-error-details"
+          });
+        }
         const retryBtn = errorContainer.createEl("button", {
           text: "Retry",
           cls: "sonic-graph-error-retry"
         });
-        retryBtn.addEventListener("click", () => {
-          errorContainer.remove();
-          this.initializeGraph();
+        retryBtn.addEventListener("click", async () => {
+          logger11.debug("ui", "Retry button clicked - attempting to reinitialize graph");
+          try {
+            retryBtn.textContent = "Retrying...";
+            retryBtn.disabled = true;
+            errorContainer.remove();
+            const loadingIndicator = this.graphContainer.createDiv({ cls: "sonic-graph-loading" });
+            const loadingIcon = createLucideIcon("loader-2", 24);
+            loadingIcon.addClass("sonic-graph-loading-icon");
+            loadingIndicator.appendChild(loadingIcon);
+            loadingIndicator.createSpan({ text: "Retrying...", cls: "sonic-graph-loading-text" });
+            await this.initializeGraph();
+          } catch (retryError) {
+            logger11.error("ui", "Retry failed:", retryError.message);
+          }
+        });
+        const debugBtn = errorContainer.createEl("button", {
+          text: "Copy Debug Info",
+          cls: "sonic-graph-error-debug"
+        });
+        debugBtn.addEventListener("click", () => {
+          const debugInfo = {
+            timestamp: new Date().toISOString(),
+            error: errorMessage,
+            excludeFolders: this.graphDataExtractor["excludeFolders"] || [],
+            excludeFiles: this.graphDataExtractor["excludeFiles"] || [],
+            vaultFileCount: this.app.vault.getFiles().length,
+            userAgent: navigator.userAgent
+          };
+          navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian6.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian6.Notice("Failed to copy debug info"));
         });
       }
       /**
@@ -12231,36 +13048,73 @@ var init_SonicGraphModal = __esm({
        */
       getSonicGraphSettings() {
         const settings = this.plugin.settings.sonicGraphSettings;
+        const defaultSettings = {
+          timeline: {
+            duration: 60,
+            spacing: "auto",
+            loop: false,
+            showMarkers: true
+          },
+          audio: {
+            density: 100,
+            noteDuration: 0.3,
+            enableEffects: true,
+            autoDetectionOverride: "auto"
+          },
+          visual: {
+            showLabels: false,
+            showFileNames: false,
+            animationStyle: "fade",
+            nodeScaling: 1,
+            connectionOpacity: 0.6,
+            timelineMarkersEnabled: true
+          },
+          navigation: {
+            enableControlCenter: true,
+            enableReset: true,
+            enableExport: false
+          },
+          // Phase 3.8: Layout settings default
+          layout: {
+            clusteringStrength: 0.15,
+            groupSeparation: 0.08,
+            pathBasedGrouping: {
+              enabled: false,
+              groups: [
+                {
+                  id: "journals",
+                  name: "Journals",
+                  path: "Journal",
+                  color: "#4f46e5"
+                },
+                {
+                  id: "projects",
+                  name: "Projects",
+                  path: "Projects",
+                  color: "#059669"
+                }
+              ]
+            },
+            filters: {
+              showTags: true,
+              showOrphans: true
+            },
+            temporalClustering: false,
+            journalGravity: 0.3,
+            layoutPreset: "balanced",
+            adaptiveScaling: true
+          }
+        };
         if (!settings) {
-          return {
-            timeline: {
-              duration: 60,
-              spacing: "auto",
-              loop: false,
-              showMarkers: true
-            },
-            audio: {
-              density: 100,
-              noteDuration: 0.3,
-              enableEffects: true,
-              autoDetectionOverride: "auto"
-            },
-            visual: {
-              showLabels: false,
-              showFileNames: false,
-              animationStyle: "fade",
-              nodeScaling: 1,
-              connectionOpacity: 0.6,
-              timelineMarkersEnabled: true
-            },
-            navigation: {
-              enableControlCenter: true,
-              enableReset: true,
-              enableExport: false
-            }
-          };
+          return defaultSettings;
         }
-        return settings;
+        return {
+          timeline: { ...defaultSettings.timeline, ...settings.timeline },
+          audio: { ...defaultSettings.audio, ...settings.audio },
+          visual: { ...defaultSettings.visual, ...settings.visual },
+          navigation: { ...defaultSettings.navigation, ...settings.navigation },
+          layout: { ...defaultSettings.layout, ...settings.layout }
+        };
       }
       /**
        * Update audio density setting and save to plugin settings
@@ -13293,13 +14147,30 @@ var init_control_panel = __esm({
       launchSonicGraphModal() {
         logger12.debug("ui", "Launching Sonic Graph modal");
         this.close();
-        Promise.resolve().then(() => (init_SonicGraphModal(), SonicGraphModal_exports)).then(({ SonicGraphModal: SonicGraphModal2 }) => {
-          const sonicGraphModal = new SonicGraphModal2(this.app, this.plugin);
-          sonicGraphModal.open();
-        }).catch((error) => {
-          logger12.error("Failed to load Sonic Graph modal", error.message);
-          new import_obsidian7.Notice("Failed to open Sonic Graph modal");
-        });
+        try {
+          logger12.debug("ui", "Starting dynamic import of SonicGraphModal");
+          Promise.resolve().then(() => (init_SonicGraphModal(), SonicGraphModal_exports)).then(({ SonicGraphModal: SonicGraphModal2 }) => {
+            logger12.debug("ui", "SonicGraphModal imported successfully, creating instance");
+            try {
+              const sonicGraphModal = new SonicGraphModal2(this.app, this.plugin);
+              logger12.debug("ui", "SonicGraphModal instance created, opening modal");
+              sonicGraphModal.open();
+              logger12.debug("ui", "SonicGraphModal.open() called");
+            } catch (constructorError) {
+              logger12.error("ui", "Failed to create SonicGraphModal instance:", constructorError.message);
+              logger12.error("ui", "Constructor error stack:", constructorError.stack);
+              new import_obsidian7.Notice("Failed to create Sonic Graph: " + constructorError.message);
+            }
+          }).catch((error) => {
+            logger12.error("ui", "Failed to import SonicGraphModal:", error.message);
+            logger12.error("ui", "Import error stack:", error.stack);
+            new import_obsidian7.Notice("Failed to load Sonic Graph: " + error.message);
+          });
+        } catch (outerError) {
+          logger12.error("ui", "Outer error in launchSonicGraphModal:", outerError.message);
+          logger12.error("ui", "Outer error stack:", outerError.stack);
+          new import_obsidian7.Notice("Failed to launch Sonic Graph: " + outerError.message);
+        }
       }
       /**
        * Handle show file names toggle
