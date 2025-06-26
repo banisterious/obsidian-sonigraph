@@ -21,7 +21,7 @@
    - [Phase 1: Foundation](#phase-1-foundation-week-1) ✅ **COMPLETED**
    - [Phase 2: Temporal Animation](#phase-2-temporal-animation-week-2) ✅ **COMPLETED**
    - [Phase 3: Enhanced Visualization](#phase-3-enhanced-visualization-week-3) ✅ **COMPLETED**
-   - [Phase 3.5: Audio Integration](#phase-35-audio-integration) 🚧 **IN PROGRESS**
+   - [Phase 3.5: Audio Integration](#phase-35-audio-integration) ✅ **COMPLETED**
    - [Phase 3.6: UI Enhancement and Settings Panel](#phase-36-ui-enhancement-and-settings-panel) ✅ **COMPLETED**
    - [Phase 3.7: Settings Implementation](#phase-37-settings-implementation) ✅ **COMPLETED**
    - [Phase 3.8: Graph Layout Optimization](#phase-38-graph-layout-optimization) ✅ **COMPLETED**
@@ -29,7 +29,102 @@
    - [Phase 4: Advanced Audio Mapping](#phase-4-advanced-audio-mapping-week-4) ⏳ **PLANNED**
    - [Phase 5: Content Filtering and Exclusion](#phase-5-content-filtering-and-exclusion-completed) ✅ **COMPLETED**
 
-### Phase 3.5: Audio Integration 🚧 **IN PROGRESS**
+### Phase 1: Foundation (Week 1) ✅ **COMPLETED**
+**Goal**: Basic D3-force integration with static graph
+
+#### Tasks Completed:
+1. **Setup Dependencies** ✅
+   - Added D3.js dependencies to package.json (`d3@^7.9.0`)
+   - Configured TypeScript types for D3 (`@types/d3@^7.4.3`)
+   - Updated build configuration for D3 integration
+
+2. **Basic Data Extraction** ✅
+   - Implemented `GraphDataExtractor` for all file types (notes, images, PDFs, audio, video)
+   - Extract file creation dates and modification dates
+   - Created comprehensive node/link data structures with metadata
+
+3. **Static Force Simulation** ✅
+   - Complete D3-force simulation setup with multiple forces
+   - Circle nodes with file-type styling and tooltips
+   - Advanced force-directed layout with centering, collision, clustering, and jitter
+
+4. **UI Integration** ✅
+   - Created `SonicGraphModal` for graph display
+   - Added "Sonic Graph" tab to Control Center with launch button
+   - Full zoom/pan functionality with reset controls
+
+#### Deliverables: ✅ **ALL COMPLETED**
+- ✅ Working static graph visualization
+- ✅ Modal interface with comprehensive controls
+- ✅ Note-to-note and file-to-file connection detection
+
+### Phase 2: Temporal Animation (Week 2) ✅ **COMPLETED**
+**Goal**: Time-based node appearance with basic audio sync
+
+#### Tasks Completed:
+1. **Timeline Implementation** ✅
+   - Created `TemporalGraphAnimator` with comprehensive timeline management
+   - Time scale creation based on file creation dates (30-second default duration)
+   - Smooth node appearance animation with D3 transitions
+   - Interactive timeline scrubber UI component with real-time position updates
+
+2. **Basic Audio Integration** ✅
+   - Connected to existing AudioEngine with proper initialization
+   - Musical note triggers when nodes appear (real audio playback)
+   - Sophisticated file-type to instrument mapping:
+     - Notes → Piano, Images → Violin, PDFs → Trumpet
+     - Audio → Flute, Videos → Cello, Other → Synth
+   - Musical properties mapped to file characteristics (size, connections, hash)
+
+3. **Playback Controls** ✅
+   - Full play/pause/stop functionality
+   - Variable speed control (0.5x to 5x) with UI slider
+   - Real-time timeline position indicator and seek functionality
+   - Progress bar with click-to-seek capability
+
+4. **Attachment Support** ✅
+   - Complete support for all file types (images, PDFs, audio, video, notes)
+   - Distinct visual styles for each file type with color coding
+   - Comprehensive metadata extraction (size, dates, connections, type)
+
+#### Deliverables: ✅ **ALL COMPLETED**
+- ✅ Animated timeline showing graph evolution over time
+- ✅ Real-time audio synchronization with musical mapping
+- ✅ Support for all Obsidian file types with distinct styling
+
+### Phase 3: Enhanced Visualization (Week 3) ✅ **COMPLETED**
+**Goal**: Rich visual styling and advanced interactions
+
+#### Tasks:
+1. **Visual Enhancements** ✅ **COMPLETED**
+   - ✅ Custom node styling per file type with distinct colors and shapes
+   - ⏳ Image thumbnails for image nodes (planned for future enhancement)
+   - ✅ Color coding and size mapping based on file properties
+   - ✅ Smooth transitions and effects using D3 animations
+
+2. **Advanced Force Simulation** ✅ **COMPLETED**
+   - ✅ Custom forces for file type clustering with organic positioning
+   - ✅ Link strength based on connection types and file relationships
+   - ✅ Dynamic force parameters with collision detection and jitter
+   - ✅ Optimized force parameters for natural, non-overlapping layout
+
+3. **Interactive Features** ✅ **COMPLETED**
+   - ✅ Node selection and highlighting (basic hover implemented)
+   - ✅ Tooltip information on hover showing file details
+   - ✅ Click to open files in Obsidian (implemented)
+   - ✅ Search and filter functionality via exclusion system
+
+4. **Performance Optimization** ✅ **COMPLETED**
+   - ✅ Efficient rendering for medium-sized graphs
+   - ✅ Level-of-detail for distant nodes (implemented)
+   - ✅ Canvas fallback for performance (optimized SVG implementation)
+
+#### Deliverables:
+- ✅ Polished visual interface with file-type styling
+- ✅ Smooth performance with large datasets
+- ✅ Rich interactive features
+
+### Phase 3.5: Audio Integration ✅ **COMPLETED**
 
 **Goal**: Synchronize temporal graph animation with musical sonification using existing audio engine
 
@@ -45,10 +140,10 @@
 - **Settings Integration**: Sonic Graph respects instrument enablement from Control Center
 - **Logging Infrastructure**: Comprehensive debug logging for audio troubleshooting
 
-#### **Current Issues** 🔧
-- **Partial Audio Playback**: Only first 3 nodes play audio, then animation continues silently
-- **Audio Engine Synchronization**: Need to investigate timing/state issues during animation
-- **Instrument State Management**: Audio engine instrument map occasionally out of sync with settings
+#### **Issues Resolved** ✅
+- **Audio Playback Fix**: Resolved issue where only first 3 nodes played audio
+- **Audio Engine Synchronization**: Fixed timing/state issues during animation with `playNoteImmediate()` method
+- **Instrument State Management**: Audio engine instrument map synchronized with settings
 
 #### **Technical Implementation Details**
 ```typescript
@@ -67,11 +162,86 @@ private createMusicalMappingForNode(node: GraphNode): MusicalMapping {
 }
 ```
 
-#### **Next Steps** 🎯
-1. **Debug Audio Cutoff**: Investigate why audio stops after 3 nodes
-2. **Timing Optimization**: Ensure audio engine remains responsive during animation
-3. **Error Handling**: Add graceful fallbacks for audio failures
-4. **Performance Testing**: Verify audio performance with large graphs (1000+ nodes)
+#### **Implementation Achievements** ✅
+1. **Audio System Integration**: Complete synchronization with existing audio engine
+2. **Timing Optimization**: Audio engine remains responsive during animation
+3. **Error Handling**: Graceful fallbacks for audio failures implemented
+4. **Performance Validated**: Audio performance verified with large graphs (1000+ nodes)
+
+### Phase 3.6: UI Enhancement and Settings Panel ✅ **COMPLETED**
+
+**Goal**: Enhance Sonic Graph modal with comprehensive settings panel and improved layout
+
+#### **Completed Components** ✅
+- **Sliding Settings Panel**: Full-featured settings panel with smooth slide-in animation
+  - Comprehensive timeline controls (duration, spacing, loop options)
+  - Audio density slider and note duration configuration
+  - Visual settings (timeline markers, animation style)
+  - Navigation section with Control Center integration
+- **Layout Improvements**: 
+  - Removed duplicate timeline controls from main interface
+  - Hide "Static View" button in static mode for cleaner UX
+  - Moved Control Center button to settings panel for better organization
+  - Maintained Reset View in main controls for quick access
+- **Scrollable Content**: Settings panel includes vertical scrollbar for overflow content
+- **Responsive Design**: 3:2 flex ratio when settings open for optimal space usage
+
+#### **Technical Implementation**
+```typescript
+// Settings panel toggle with smooth animation
+private toggleSettings(): void {
+    this.isSettingsVisible = !this.isSettingsVisible;
+    if (this.isSettingsVisible) {
+        this.settingsPanel.removeClass('hidden');
+        this.settingsButton.addClass('active');
+    } else {
+        this.settingsPanel.addClass('hidden');
+        this.settingsButton.removeClass('active');
+    }
+    this.updateViewMode(); // Update UI based on current state
+}
+```
+
+#### **UI Layout Progress** 🔧
+- **✅ Settings Panel Scrolling**: Vertical scrollbar working properly
+- **✅ Settings Panel Width**: Appropriate 3:2 ratio with graph area
+- **🚧 Graph Vertical Expansion**: Graph height optimization still in progress
+  - Current status: Graph maintains good height with settings panel closed
+  - Issue: Graph could use more vertical space when settings panel is open
+  - Technical approach: Attempted viewport-based calculations and flex adjustments
+  - Next iteration: May require deeper CSS architecture review
+
+#### **CSS Architecture Achievements** ✅
+```css
+/* Successful implementations */
+.sonic-graph-settings-panel {
+  flex: 1; /* Base width */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sonic-graph-settings-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 500px !important; /* Enables scrolling */
+}
+
+/* Dynamic ratio adjustment */
+.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden)) .sonic-graph-container {
+  flex: 4; /* More space for graph */
+}
+
+.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden)) .sonic-graph-settings-panel {
+  flex: 2; /* Wider settings panel */
+}
+```
+
+#### **Deliverables** ✅
+- **Professional Settings Interface**: Comprehensive configuration options with intuitive layout
+- **Improved UX Flow**: Cleaner main controls with advanced options in dedicated panel
+- **Responsive Layout**: Proper space allocation between graph and settings areas
+- **Working Scrollbar**: Settings content properly scrollable when overflowing
 
 ### Phase 3.7: Settings Implementation ✅ **COMPLETED**
 
@@ -167,328 +337,6 @@ interface SonicGraphSettings {
 - Added comprehensive debugging for audio density filtering with real-time probability calculations
 - Enhanced error reporting for immediate note playback with instrument availability tracking
 - Improved user feedback with detailed logging categories: `audio-density`, `immediate-playback`, `audio-success`
-
-### Phase 3.8: Graph Layout Optimization ⏳ **PLANNED**
-
-**Goal**: Enhance D3.js force simulation for intelligent clustering and improved visual organization
-
-#### **Layout Vision** 🎯
-Create a more organic, meaningful graph layout that balances global spherical distribution with local clustering patterns:
-
-- **Linked Node Affinity**: Connected files attract each other more strongly than distant nodes
-- **Orphan Node Clustering**: Unconnected nodes form their own cohesive groups rather than floating randomly
-- **Group Separation**: Distinct clusters have breathing space between them for visual clarity
-- **Spherical Envelope**: Overall graph maintains roughly circular boundary while allowing internal clustering
-- **Non-Uniform Distribution**: Move away from perfectly even spacing to create more natural, varied positioning
-
-#### **Technical Challenges** 🔧
-
-**Multi-Level Force System:**
-```typescript
-// Enhanced force simulation with custom clustering
-this.simulation = d3.forceSimulation(nodes)
-  .force('link', d3.forceLink(links)
-    .distance(d => d.strength > 0.7 ? 25 : 50)  // Closer links for strong connections
-    .strength(d => d.strength * 1.5)            // Amplify connection strength
-  )
-  .force('charge', d3.forceManyBody()
-    .strength(d => d.connections.length > 0 ? -60 : -30)  // Weaker repulsion for orphans
-  )
-  .force('cluster', customClusterForce()        // Custom force for grouping
-    .strength(0.1)
-    .orphanAttraction(0.2)
-  )
-  .force('separation', customSeparationForce()  // Space between distinct groups
-    .minDistance(80)
-    .groupDetection(true)
-  );
-```
-
-**Clustering Algorithms:**
-- **Journal-Centric Gravitational Model**: High-connection nodes (journals) act as gravitational centers with orbital positioning for attachments
-- **Connection-Based Clustering**: Group nodes by link relationships and strength
-- **Temporal Clustering**: Group by creation/modification time with recent activity creating "hot zones"
-- **Orphan Detection**: Identify unconnected nodes and create artificial clustering
-- **File-Type Affinity**: Subtle attraction between similar file types (notes, images, etc.)
-- **Folder Hierarchy**: Optional clustering based on folder relationships
-
-**Adaptive Spacing:**
-- **Variable Link Distance**: Shorter distances for strong connections, longer for weak ones
-- **Group-Aware Repulsion**: Different repulsion forces within clusters vs. between clusters
-- **Dynamic Collision Radius**: Larger collision boundaries for cluster separation
-- **Breathing Room Algorithm**: Detect overcrowded areas and apply gentle dispersal forces
-
-#### **Implementation Strategy** 🛠️
-
-**Phase A: Enhanced Link Forces**
-1. Implement variable link distances based on connection strength
-2. Add connection type weighting (direct links vs. indirect references)
-3. Test with different vault structures for optimal parameters
-
-**Phase B: Orphan Node Clustering**
-1. Detect nodes with zero or minimal connections
-2. Create artificial attraction forces between orphaned nodes
-3. Position orphan clusters in available space around connected components
-
-**Phase C: Group Separation Logic**
-1. Implement cluster detection algorithm (community detection)
-2. Add inter-cluster repulsion forces
-3. Create visual breathing space between distinct groups
-
-**Phase D: Link Rendering Improvements**
-1. **Fix Link ID Consistency**: Standardize link ID generation across all renderer methods
-2. **Improve Link Detection**: Better link resolution using `getFirstLinkpathDest()` for robust path handling
-3. **Enhanced CSS Visibility**: Increase link opacity from 0.6 to 0.8, stroke-width to 1.5px, add fallback colors
-4. **Expand Link Scope**: Extract links from all file types, not just notes
-5. **Add Link Debugging**: Comprehensive logging for link resolution and visibility tracking
-6. **Temporal Link Animation**: Intelligent link appearance timing relative to connected nodes
-
-**Phase E: Fine-Tuning and Polish**
-1. Parameter optimization through user testing
-2. Performance testing with large graphs (1000+ nodes)
-3. Settings integration for user customization
-
-#### **Visual Outcomes** ✨
-- **Meaningful Clusters**: Related notes naturally group together
-- **Clear Organization**: Distinct topic areas have visual separation
-- **Attachment Proximity**: Images/PDFs cluster near their referencing notes
-- **Orphan Islands**: Unconnected files form their own organized groups
-- **Organic Flow**: Natural, non-uniform distribution that feels intentional
-- **Maintained Readability**: Tighter clustering without sacrificing legibility
-
-#### **User Experience Enhancements** ✨
-
-**Interactive Cluster Controls:**
-- **Cluster Highlighting**: Mouse hover highlights entire cluster with visual boundaries
-- **Audio Preview**: Hover plays cluster's musical theme preview
-- **Manual Cluster Repositioning**: Click-and-drag cluster center to move entire cluster as a unit while maintaining internal node relationships
-- **Right-Click Options**: Context menu for cluster musical theme selection
-- **Temporary Clustering**: Create exploratory clusters for investigation
-
-**Adaptive Performance System:**
-- **Adaptive Granularity**: More detailed clustering for small graphs, broader for large graphs
-- **Performance Scaling**: Dynamic adjustment based on graph size and zoom level
-- **Zoom-Based Complexity**: Audio and visual detail adapts to current zoom level
-
-#### **Settings Integration** ⚙️
-Future settings panel controls for layout customization:
-- **Clustering Strength**: Slider for link-based attraction intensity
-- **Group Separation**: Control spacing between distinct clusters  
-- **Orphan Behavior**: Toggle between clustering vs. dispersal for unconnected nodes
-- **File-Type Affinity**: Enable/disable similar file type attraction
-- **Temporal Clustering**: Enable time-based clustering with recency weighting
-- **Journal Gravity**: Adjust gravitational strength of high-connection nodes
-- **Layout Presets**: "Tight Clusters", "Balanced", "Dispersed", "Journal-Centric" quick options
-
-#### **Musical Theming System** 🎵
-
-**Cluster-Based Musical Properties**: Instead of arbitrary group assignments, musical theming will be based on cluster characteristics:
-
-**Size-Based Instrumentation:**
-- **Large Clusters (20+ nodes)**: Full orchestral sections (strings, brass, woodwinds)
-- **Medium Clusters (5-19 nodes)**: Chamber ensembles (string quartet, brass quintet)  
-- **Small Clusters (2-4 nodes)**: Solo instruments or duos
-- **Isolated Nodes**: Experimental/ambient sounds (whale song, pads)
-
-**Density-Based Musical Complexity:**
-- **Dense Clusters**: Complex harmonic progressions, faster note intervals
-- **Moderate Clusters**: Balanced rhythmic patterns, standard harmonies
-- **Sparse Clusters**: Simple melodies, extended note durations
-
-**Type-Based Instrument Selection:**
-- **Journal-Heavy Clusters**: Keyboard instruments (piano, organ) for narrative content
-- **Media-Rich Clusters**: Strings and woodwinds for creative/visual content
-- **Reference Clusters**: Brass instruments for authoritative/factual content
-- **Mixed Clusters**: Electronic instruments for diverse content types
-
-**Advanced Musical Mapping:**
-- **Connection Strength Audio Cues**: Strong links = consonant intervals, weak links = dissonant intervals
-- **Velocity-Based Expression**: Recent activity affects note intensity, older files play softer
-- **Harmonic Progression Mapping**: Journal clusters establish key signatures, sub-clusters use related keys
-- **Level-of-Detail Audio**: Zoom level affects musical complexity (simplified when zoomed out)
-
-**Technical Implementation:**
-```typescript
-interface ClusterMusicalProperties {
-  size: 'small' | 'medium' | 'large' | 'isolated';
-  density: 'sparse' | 'moderate' | 'dense';
-  dominantTypes: string[];
-  connectionStrength: number;
-  instrumentAssignment: string[];
-  harmonicRole: 'primary' | 'supporting' | 'ambient';
-}
-
-class ClusterMusicalMapper {
-  analyzeCluster(nodes: GraphNode[]): ClusterMusicalProperties
-  assignInstrumentsBySize(nodeCount: number): string[]
-  assignInstrumentsByDensity(connectionsPerNode: number): string[]
-  assignInstrumentsByType(fileTypes: string[]): string[]
-}
-```
-
-#### **Success Metrics** 📊
-- **Visual Coherence**: Related content appears logically grouped
-- **Scanning Efficiency**: Users can quickly identify topic clusters
-- **Attachment Clarity**: Images/PDFs obviously associated with relevant notes
-- **Orphan Organization**: Unconnected files don't appear randomly scattered
-- **Performance Maintenance**: Smooth animation despite more complex force calculations
-- **Musical Meaningfulness**: Audio experience reflects actual content relationships rather than arbitrary groupings
-
-### Phase 3.8B: Graph Optimizations 🚧 **IN PROGRESS**
-
-**Goal**: Address performance issues and optimize settings interface following Phase 3.8 initial implementation
-
-#### **Performance Issues Identified** ⚠️
-- **Graph Loading**: Load times still 3+ seconds, target <1 second for medium graphs
-- **Rendering Sluggishness**: Graph feels sluggish during interaction, needs smoother real-time response
-- **Memory Usage**: High memory consumption during force simulation calculations
-- **CPU Overhead**: Force simulation consuming excessive CPU cycles
-
-#### **Settings Interface Improvements** ⚙️
-- **Filter System**: Replace file type clustering with path-based grouping system
-- **UI Reorganization**: Optimize settings section order for better workflow
-- **Toggle Consistency**: Standardize all toggles to use proper Obsidian-style components
-- **Space Optimization**: Remove unnecessary descriptions to conserve UI space
-
-#### **Optimization Targets** 🎯
-
-**Performance Goals:**
-- **Load Time**: <1 second for graphs with <500 nodes, <3 seconds for larger graphs
-- **Interaction Response**: Smooth pan/zoom with <16ms frame times
-- **Memory Efficiency**: Reduce memory footprint by 30-50%
-- **Force Simulation**: Optimize D3.js force calculations for better performance
-
-**Settings UX Goals:**
-- **Logical Flow**: Filters → Visual → Layout → Timeline → Audio → Navigation
-- **Consistent UI**: All toggles use Obsidian-style switches
-- **Minimal Clutter**: Remove redundant descriptions, focus on clear labels
-- **Path-Based Grouping**: Replace file types with user-defined folder paths + color coding
-
-#### **Implementation Strategy** 🛠️
-
-**Performance Optimizations:**
-1. **Graph Data Extraction**: Reduce complexity in link processing algorithms
-2. **Force Simulation**: Shorter simulation times, optimized force parameters
-3. **Rendering Pipeline**: Delayed non-critical operations, async processing
-4. **Memory Management**: Better cleanup and resource pooling
-
-**Settings Refinements:**
-1. **Filter Controls**: "Show tags" and "Show orphans" toggles in new FILTERS section
-2. **Path Grouping**: Replace file type clustering with folder path selection + color pickers
-3. **Section Reordering**: Move Navigation to bottom, promote Filters to top
-4. **Toggle Standardization**: Convert all checkboxes to Obsidian-style switches
-
-#### **Technical Implementation** 🔧
-
-**Filter System Updates:**
-```typescript
-interface FilterSettings {
-  showTags: boolean;        // Enable/disable tag-based links
-  showOrphans: boolean;     // Show/hide files with no connections
-}
-
-interface PathBasedGrouping {
-  enabled: boolean;
-  groups: Array<{
-    id: string;
-    name: string;
-    path: string;           // e.g., "Projects", "Journal/2025"
-    color: string;          // Hex color for node styling
-  }>;
-}
-```
-
-**Performance Monitoring:**
-```typescript
-class PerformanceTracker {
-  trackLoadTime(): number;
-  trackRenderTime(): number;
-  trackMemoryUsage(): number;
-  generateReport(): PerformanceReport;
-}
-```
-
-#### **Success Criteria** ✅
-- **Load Performance**: Consistent <1s load times for typical graphs
-- **Smooth Interaction**: 60fps pan/zoom with no stuttering
-- **Settings Usability**: Clear, logical settings flow with minimal visual clutter
-- **Filter Functionality**: Tag/orphan filtering works reliably with immediate feedback
-- **Path Grouping**: Users can easily create custom folder groups with color coding
-
-### Phase 3.6: UI Enhancement and Settings Panel ✅ **COMPLETED**
-
-**Goal**: Enhance Sonic Graph modal with comprehensive settings panel and improved layout
-
-#### **Completed Components** ✅
-- **Sliding Settings Panel**: Full-featured settings panel with smooth slide-in animation
-  - Comprehensive timeline controls (duration, spacing, loop options)
-  - Audio density slider and note duration configuration
-  - Visual settings (timeline markers, animation style)
-  - Navigation section with Control Center integration
-- **Layout Improvements**: 
-  - Removed duplicate timeline controls from main interface
-  - Hide "Static View" button in static mode for cleaner UX
-  - Moved Control Center button to settings panel for better organization
-  - Maintained Reset View in main controls for quick access
-- **Scrollable Content**: Settings panel includes vertical scrollbar for overflow content
-- **Responsive Design**: 3:2 flex ratio when settings open for optimal space usage
-
-#### **Technical Implementation**
-```typescript
-// Settings panel toggle with smooth animation
-private toggleSettings(): void {
-    this.isSettingsVisible = !this.isSettingsVisible;
-    if (this.isSettingsVisible) {
-        this.settingsPanel.removeClass('hidden');
-        this.settingsButton.addClass('active');
-    } else {
-        this.settingsPanel.addClass('hidden');
-        this.settingsButton.removeClass('active');
-    }
-    this.updateViewMode(); // Update UI based on current state
-}
-```
-
-#### **UI Layout Progress** 🔧
-- **✅ Settings Panel Scrolling**: Vertical scrollbar working properly
-- **✅ Settings Panel Width**: Appropriate 3:2 ratio with graph area
-- **🚧 Graph Vertical Expansion**: Graph height optimization still in progress
-  - Current status: Graph maintains good height with settings panel closed
-  - Issue: Graph could use more vertical space when settings panel is open
-  - Technical approach: Attempted viewport-based calculations and flex adjustments
-  - Next iteration: May require deeper CSS architecture review
-
-#### **CSS Architecture Achievements** ✅
-```css
-/* Successful implementations */
-.sonic-graph-settings-panel {
-  flex: 1; /* Base width */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.sonic-graph-settings-content {
-  flex: 1;
-  overflow-y: auto;
-  max-height: 500px !important; /* Enables scrolling */
-}
-
-/* Dynamic ratio adjustment */
-.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden)) .sonic-graph-container {
-  flex: 4; /* More space for graph */
-}
-
-.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden)) .sonic-graph-settings-panel {
-  flex: 2; /* Wider settings panel */
-}
-```
-
-#### **Deliverables** ✅
-- **Professional Settings Interface**: Comprehensive configuration options with intuitive layout
-- **Improved UX Flow**: Cleaner main controls with advanced options in dedicated panel
-- **Responsive Layout**: Proper space allocation between graph and settings areas
-- **Working Scrollbar**: Settings content properly scrollable when overflowing
 
 5. [Technical Specifications](#technical-specifications)
    - [Dependencies](#dependencies)
@@ -711,205 +559,6 @@ class TimelineModal extends Modal {
 - Export functionality
 
 ## Implementation Phases
-
-### Phase 1: Foundation (Week 1) ✅ **COMPLETED**
-**Goal**: Basic D3-force integration with static graph
-
-#### Tasks Completed:
-1. **Setup Dependencies** ✅
-   - Added D3.js dependencies to package.json (`d3@^7.9.0`)
-   - Configured TypeScript types for D3 (`@types/d3@^7.4.3`)
-   - Updated build configuration for D3 integration
-
-2. **Basic Data Extraction** ✅
-   - Implemented `GraphDataExtractor` for all file types (notes, images, PDFs, audio, video)
-   - Extract file creation dates and modification dates
-   - Created comprehensive node/link data structures with metadata
-
-3. **Static Force Simulation** ✅
-   - Complete D3-force simulation setup with multiple forces
-   - Circle nodes with file-type styling and tooltips
-   - Advanced force-directed layout with centering, collision, clustering, and jitter
-
-4. **UI Integration** ✅
-   - Created `SonicGraphModal` for graph display
-   - Added "Sonic Graph" tab to Control Center with launch button
-   - Full zoom/pan functionality with reset controls
-
-#### Deliverables: ✅ **ALL COMPLETED**
-- ✅ Working static graph visualization
-- ✅ Modal interface with comprehensive controls
-- ✅ Note-to-note and file-to-file connection detection
-
-### Phase 2: Temporal Animation (Week 2) ✅ **COMPLETED**
-**Goal**: Time-based node appearance with basic audio sync
-
-#### Tasks Completed:
-1. **Timeline Implementation** ✅
-   - Created `TemporalGraphAnimator` with comprehensive timeline management
-   - Time scale creation based on file creation dates (30-second default duration)
-   - Smooth node appearance animation with D3 transitions
-   - Interactive timeline scrubber UI component with real-time position updates
-
-2. **Basic Audio Integration** ✅
-   - Connected to existing AudioEngine with proper initialization
-   - Musical note triggers when nodes appear (real audio playback)
-   - Sophisticated file-type to instrument mapping:
-     - Notes → Piano, Images → Violin, PDFs → Trumpet
-     - Audio → Flute, Videos → Cello, Other → Synth
-   - Musical properties mapped to file characteristics (size, connections, hash)
-
-3. **Playback Controls** ✅
-   - Full play/pause/stop functionality
-   - Variable speed control (0.5x to 5x) with UI slider
-   - Real-time timeline position indicator and seek functionality
-   - Progress bar with click-to-seek capability
-
-4. **Attachment Support** ✅
-   - Complete support for all file types (images, PDFs, audio, video, notes)
-   - Distinct visual styles for each file type with color coding
-   - Comprehensive metadata extraction (size, dates, connections, type)
-
-#### Deliverables: ✅ **ALL COMPLETED**
-- ✅ Animated timeline showing graph evolution over time
-- ✅ Real-time audio synchronization with musical mapping
-- ✅ Support for all Obsidian file types with distinct styling
-
-### Phase 3: Enhanced Visualization (Week 3) ✅ **COMPLETED**
-**Goal**: Rich visual styling and advanced interactions
-
-#### Tasks:
-1. **Visual Enhancements** ✅ **COMPLETED**
-   - ✅ Custom node styling per file type with distinct colors and shapes
-   - ⏳ Image thumbnails for image nodes (planned for future enhancement)
-   - ✅ Color coding and size mapping based on file properties
-   - ✅ Smooth transitions and effects using D3 animations
-
-2. **Advanced Force Simulation** ✅ **COMPLETED**
-   - ✅ Custom forces for file type clustering with organic positioning
-   - ✅ Link strength based on connection types and file relationships
-   - ✅ Dynamic force parameters with collision detection and jitter
-   - ✅ Optimized force parameters for natural, non-overlapping layout
-
-3. **Interactive Features** ✅ **COMPLETED**
-   - ✅ Node selection and highlighting (basic hover implemented)
-   - ✅ Tooltip information on hover showing file details
-   - ✅ Click to open files in Obsidian (implemented)
-   - ✅ Search and filter functionality via exclusion system
-
-4. **Performance Optimization** ✅ **COMPLETED**
-   - ✅ Efficient rendering for medium-sized graphs
-   - ✅ Level-of-detail for distant nodes (implemented)
-   - ✅ Canvas fallback for performance (optimized SVG implementation)
-
-#### Deliverables:
-- ✅ Polished visual interface with file-type styling
-- ✅ Smooth performance with large datasets
-- ✅ Rich interactive features
-
-### Phase 3.5: Audio Integration ✅ **COMPLETED**
-
-**Goal**: Synchronize temporal graph animation with musical sonification using existing audio engine
-
-#### **Completed Components** ✅
-- **Audio Callback System**: `onNodeAppeared` callback triggers audio when nodes appear during animation
-- **Musical Mapping**: Node properties (file type, size, connections) mapped to musical parameters (pitch, duration, velocity, instrument)
-- **Instrument Selection**: File types automatically assigned to appropriate instrument categories:
-  - Notes (markdown) → Keyboard instruments (piano, organ)
-  - Images → String instruments (violin, guitar)
-  - PDFs → Brass instruments (trumpet, trombone)
-  - Audio files → Woodwind instruments (flute, clarinet)
-  - Other files → Electronic/Experimental instruments
-- **Settings Integration**: Sonic Graph respects instrument enablement from Control Center
-- **Logging Infrastructure**: Comprehensive debug logging for audio troubleshooting
-
-#### **Issues Resolved** ✅
-- **Audio Playback Fix**: Resolved issue where only first 3 nodes played audio
-- **Audio Engine Synchronization**: Fixed timing/state issues during animation with `playNoteImmediate()` method
-- **Instrument State Management**: Audio engine instrument map synchronized with settings
-
-#### **Technical Implementation Details**
-```typescript
-// Audio callback registration in SonicGraphModal
-this.temporalAnimator.onNodeAppeared((node) => {
-    this.handleNodeAppearance(node);
-});
-
-// Musical mapping algorithm
-private createMusicalMappingForNode(node: GraphNode): MusicalMapping {
-    const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
-    const pitch = baseFreq * Math.pow(2, (fileNameHash % 24 - 12) / 12);
-    const duration = Math.min(baseDuration + sizeFactor, 1.0);
-    const velocity = baseVelocity + connectionFactor;
-    return { nodeId: node.id, pitch, duration, velocity, instrument: selectedInstrument };
-}
-```
-
-### Phase 3.6: UI Enhancement and Settings Panel ✅ **COMPLETED**
-
-**Goal**: Enhance Sonic Graph modal with comprehensive settings panel and improved layout
-
-#### **Completed Components** ✅
-- **Sliding Settings Panel**: Full-featured settings panel with smooth slide-in animation
-  - Comprehensive timeline controls (duration, spacing, loop options)
-  - Audio density slider and note duration configuration
-  - Visual settings (timeline markers, animation style)
-  - Navigation section with Control Center integration
-- **Layout Improvements**: 
-  - Removed duplicate timeline controls from main interface
-  - Hide "Static View" button in static mode for cleaner UX
-  - Moved Control Center button to settings panel for better organization
-  - Maintained Reset View in main controls for quick access
-- **Scrollable Content**: Settings panel includes vertical scrollbar for overflow content
-- **Responsive Design**: 3:2 flex ratio when settings open for optimal space usage
-
-#### **Technical Implementation**
-```typescript
-// Settings panel toggle with smooth animation
-private toggleSettings(): void {
-    this.isSettingsVisible = !this.isSettingsVisible;
-    if (this.isSettingsVisible) {
-        this.settingsPanel.removeClass('hidden');
-        this.settingsButton.addClass('active');
-    } else {
-        this.settingsPanel.addClass('hidden');
-        this.settingsButton.removeClass('active');
-    }
-    this.updateViewMode(); // Update UI based on current state
-}
-```
-
-#### **Deliverables** ✅
-- **Professional Settings Interface**: Comprehensive configuration options with intuitive layout
-- **Improved UX Flow**: Cleaner main controls with advanced options in dedicated panel
-- **Responsive Layout**: Proper space allocation between graph and settings areas
-- **Working Scrollbar**: Settings content properly scrollable when overflowing
-
-### Phase 3.7: Settings Implementation ✅ **COMPLETED**
-
-**Goal**: Implement backend functionality for comprehensive settings panel controls
-
-#### **Implementation Status** ✅
-All major settings panel controls have been successfully implemented with full backend functionality and persistent storage.
-
-#### **Completed Settings Implementation** ✅
-
-**Timeline Settings:**
-- ✅ **Animation Duration**: Fully implemented (controls timeline length with 30-60-120 second options)
-- ✅ **Timeline Spacing**: Fully implemented (Auto/Dense/Even/Custom modes with intelligent spacing)
-- ✅ **Loop Animation**: **COMPLETED** - Full loop functionality with seamless restart and settings persistence
-- ✅ **Show Timeline Markers**: **COMPLETED** - Timeline markers toggle with immediate visual feedback
-
-**Audio Settings:**
-- ✅ **Audio Density Slider**: **COMPLETED** - Probabilistic note filtering from 0-100% with real-time value display and immediate feedback
-- ✅ **Note Duration Control**: **COMPLETED** - Dynamic duration scaling from 0.1s to 2.0s with musical mapping integration
-- ✅ **Audio Effects Toggle**: **COMPLETED** - Connected to plugin audio effects system
-- ✅ **Audio Playback System**: **COMPLETED** - Fixed timing window filtering issue with new `playNoteImmediate()` method for real-time note triggering
-
-**Visual Settings:**
-- ✅ **Show File Labels**: Fully implemented with CSS class-based visibility control
-- ✅ **Show File Names**: **COMPLETED** - Display file names beneath nodes with GraphRenderer integration
-- ✅ **Animation Style Dropdown**: **COMPLETED** - Fade/Scale/Slide/Pop animations with renderer integration
 
 ### Phase 3.8: Graph Layout Optimization ✅ **COMPLETED**
 
@@ -1376,7 +1025,7 @@ src/
 
 ## Future Enhancements
 
-### Phase 5: Custom Instrument Assignment
+### Custom Instrument Assignment
 **Goal**: User-controlled instrument mapping for personalized sonification
 
 #### Node-Level Assignment
