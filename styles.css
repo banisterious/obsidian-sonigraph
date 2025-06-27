@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-06-27 03:26:10 UTC
+ * - Generated: 2025-06-27 12:24:19 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6935,7 +6935,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 1329 lines, 29.54 KB */
+/* Component Size: 1355 lines, 30.18 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -8266,6 +8266,32 @@ details.osp-advanced-settings {
   }
 }
 
+/* ===================================
+   SETTINGS SEPARATOR
+   ================================== */
+
+.sonic-graph-settings-separator {
+  height: 1px;
+  background-color: var(--background-modifier-border);
+  margin: var(--osp-spacing-md) 0;
+}
+
+/* ===================================
+   HIDDEN COLOR PICKER
+   ================================== */
+
+.sonic-graph-hidden-color-picker {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 
 /* End of sonic-graph.css */
 
@@ -8838,11 +8864,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-06-27 03:26:10 UTC
+ * Build completed: 2025-06-27 12:24:19 UTC
  * Components processed: 19
- * Total lines: 8641
- * Total size: 182.71 KB
- * Build duration: 0.01 seconds
+ * Total lines: 8667
+ * Total size: 183.35 KB
+ * Build duration: 0.02 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -8860,7 +8886,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - sonic-graph.css: 1329 lines, 29.54 KB
+ * - sonic-graph.css: 1355 lines, 30.18 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB
