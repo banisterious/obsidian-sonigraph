@@ -12397,6 +12397,7 @@ var init_SonicGraphModal = __esm({
         closeButton.addEventListener("click", () => this.toggleSettings());
         const settingsContent = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-content" });
         this.createFiltersSettings(settingsContent);
+        this.createGroupsSettings(settingsContent);
         this.createVisualSettings(settingsContent);
         this.createLayoutSettings(settingsContent);
         this.createTimelineSettings(settingsContent);
@@ -12459,7 +12460,6 @@ var init_SonicGraphModal = __esm({
           toggleSwitch.addClass("active");
         }
         const toggleHandle = toggleSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-        loopToggle.createEl("span", { text: "Enable looping" });
         toggleSwitch.addEventListener("click", () => {
           const isActive = toggleSwitch.hasClass("active");
           toggleSwitch.toggleClass("active", !isActive);
@@ -12523,7 +12523,6 @@ var init_SonicGraphModal = __esm({
           markersSwitch.addClass("active");
         }
         const markersHandle = markersSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-        markersToggle.createEl("span", { text: "Show markers" });
         markersSwitch.addEventListener("click", () => {
           const isActive = markersSwitch.hasClass("active");
           markersSwitch.toggleClass("active", !isActive);
@@ -12692,30 +12691,6 @@ var init_SonicGraphModal = __esm({
           separationValue.textContent = `${Math.round(value * 100)}%`;
           this.updateLayoutSetting("groupSeparation", value);
         });
-        const groupingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        groupingItem.createEl("label", { text: "Path-based grouping", cls: "sonic-graph-setting-label" });
-        const groupingToggle = groupingItem.createDiv({ cls: "sonic-graph-setting-toggle" });
-        const groupingSwitch = groupingToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
-        if (this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
-          groupingSwitch.addClass("active");
-        }
-        const groupingHandle = groupingSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-        groupingSwitch.addEventListener("click", () => {
-          const isActive = groupingSwitch.hasClass("active");
-          groupingSwitch.toggleClass("active", !isActive);
-          this.updatePathBasedGroupingSetting("enabled", !isActive);
-        });
-        const groupsContainer = section.createDiv({ cls: "sonic-graph-groups-container" });
-        groupsContainer.style.marginTop = "10px";
-        groupsContainer.style.marginLeft = "20px";
-        if (!this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
-          groupsContainer.style.display = "none";
-        }
-        groupingSwitch.addEventListener("click", () => {
-          const isActive = groupingSwitch.hasClass("active");
-          groupsContainer.style.display = !isActive ? "block" : "none";
-        });
-        this.createPathGroupsSettings(groupsContainer);
       }
       /**
        * Create filters settings section (new section for show tags and show orphans)
@@ -12784,17 +12759,17 @@ var init_SonicGraphModal = __esm({
         logger11.debug("filter-setting", `Updated filter setting: ${String(key)} = ${value}`);
       }
       /**
+       * Create groups settings section
+       */
+      createGroupsSettings(container) {
+        const section = container.createDiv({ cls: "sonic-graph-settings-section" });
+        section.createEl("div", { text: "GROUPS", cls: "sonic-graph-settings-section-title" });
+        this.createPathGroupsSettings(section);
+      }
+      /**
        * Create path groups settings interface - New design
        */
       createPathGroupsSettings(container) {
-        const groupsHeader = container.createEl("div", {
-          text: "Groups",
-          cls: "sonic-graph-groups-header"
-        });
-        groupsHeader.style.fontSize = "12px";
-        groupsHeader.style.fontWeight = "600";
-        groupsHeader.style.color = "var(--text-normal)";
-        groupsHeader.style.marginBottom = "8px";
         const settings = this.getSonicGraphSettings();
         const groups = settings.layout.pathBasedGrouping.groups;
         const groupsList = container.createDiv({ cls: "sonic-graph-groups-list" });
@@ -12881,19 +12856,50 @@ var init_SonicGraphModal = __esm({
         const colorInput = document.createElement("input");
         colorInput.type = "color";
         colorInput.value = this.getSonicGraphSettings().layout.pathBasedGrouping.groups[groupIndex].color;
-        colorInput.style.opacity = "0";
+        colorInput.className = "sonic-graph-hidden-color-picker";
+        const dotRect = colorDot.getBoundingClientRect();
+        const modalRect = this.contentEl.getBoundingClientRect();
         colorInput.style.position = "absolute";
-        colorInput.style.pointerEvents = "none";
-        document.body.appendChild(colorInput);
-        colorInput.click();
+        colorInput.style.left = `${dotRect.left - modalRect.left}px`;
+        colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`;
+        colorInput.style.pointerEvents = "auto";
+        const modalContainer = this.contentEl;
+        modalContainer.appendChild(colorInput);
+        requestAnimationFrame(() => {
+          colorInput.click();
+        });
         colorInput.addEventListener("input", () => {
           const newColor = colorInput.value;
           this.updateGroupProperty(groupIndex, "color", newColor);
           colorDot.style.backgroundColor = newColor;
         });
+        const handleClickOutside = (e) => {
+          if (e.target === colorInput || e.target === colorDot) {
+            return;
+          }
+          if (modalContainer.contains(colorInput)) {
+            modalContainer.removeChild(colorInput);
+          }
+          document.removeEventListener("click", handleClickOutside);
+        };
+        colorInput.addEventListener("change", () => {
+          if (modalContainer.contains(colorInput)) {
+            modalContainer.removeChild(colorInput);
+          }
+          document.removeEventListener("click", handleClickOutside);
+        });
+        colorInput.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
         setTimeout(() => {
-          document.body.removeChild(colorInput);
+          document.addEventListener("click", handleClickOutside);
         }, 100);
+        setTimeout(() => {
+          if (modalContainer.contains(colorInput)) {
+            modalContainer.removeChild(colorInput);
+            document.removeEventListener("click", handleClickOutside);
+          }
+        }, 12e4);
       }
       /**
        * Show search options overlay
@@ -13037,10 +13043,10 @@ var init_SonicGraphModal = __esm({
        * Refresh the path groups settings UI
        */
       refreshPathGroupsSettings() {
-        const groupsContainer = document.querySelector(".sonic-graph-groups-container");
+        const groupsContainer = document.querySelector(".sonic-graph-groups-list");
         if (groupsContainer) {
           groupsContainer.empty();
-          this.createPathGroupsSettings(groupsContainer);
+          this.createPathGroupsSettings(groupsContainer.parentElement);
         }
       }
       /**
