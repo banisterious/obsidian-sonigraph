@@ -217,6 +217,7 @@ export interface SonicGraphSettings {
 		nodeScaling: number;        // Node size scaling factor (0.5-2.0)
 		connectionOpacity: number;  // Connection line opacity (0.1-1.0)
 		timelineMarkersEnabled: boolean; // Enable timeline year markers
+		loopAnimation: boolean;     // Enable loop animation
 	};
 	navigation: {
 		enableControlCenter: boolean; // Show Control Center button
@@ -371,7 +372,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			animationStyle: 'fade',
 			nodeScaling: 1.0,
 			connectionOpacity: 0.6,
-			timelineMarkersEnabled: true
+			timelineMarkersEnabled: true,
+			loopAnimation: false
 		},
 		navigation: {
 			enableControlCenter: true,

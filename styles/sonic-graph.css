@@ -914,6 +914,11 @@
 
 .sonic-graph-setting-item {
   margin-bottom: var(--osp-spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--osp-spacing-sm);
+  flex-direction: row;
 }
 
 .sonic-graph-setting-item:last-child {
@@ -921,18 +926,15 @@
 }
 
 .sonic-graph-setting-label {
-  display: block;
   font-size: var(--osp-font-size-small);
   color: var(--text-normal);
-  margin-bottom: var(--osp-spacing-xs);
   font-weight: 500;
+  flex-shrink: 0;
+  text-align: left;
 }
 
 .sonic-graph-setting-description {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: var(--osp-spacing-sm);
-  line-height: 1.4;
+  display: none; /* Hide descriptions as requested */
 }
 
 /* Density Slider */
@@ -1000,15 +1002,16 @@
   color: var(--text-muted);
 }
 
-/* Form Controls */
+/* Form Controls - Updated for right-aligned layout */
 .sonic-graph-setting-input {
-  width: 100%;
+  width: 120px; /* Fixed width instead of 100% */
   padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--osp-border-radius-sm);
   background: var(--background-primary);
   color: var(--text-normal);
   font-size: var(--osp-font-size-small);
+  flex-shrink: 0;
 }
 
 .sonic-graph-setting-input:focus {
@@ -1018,7 +1021,7 @@
 }
 
 .sonic-graph-setting-select {
-  width: 100%;
+  width: 140px; /* Narrower dropdown as requested */
   padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--osp-border-radius-sm);
@@ -1026,6 +1029,7 @@
   color: var(--text-normal);
   font-size: var(--osp-font-size-small);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .sonic-graph-setting-select:focus {
@@ -1034,11 +1038,67 @@
   box-shadow: 0 0 0 1px var(--interactive-accent-hover);
 }
 
-/* Toggle Switches */
+/* Toggle Switches - Right-aligned */
 .sonic-graph-setting-toggle {
   display: flex;
   align-items: center;
   gap: var(--osp-spacing-sm);
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+/* Slider controls for settings */
+.sonic-graph-slider-container {
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-sm);
+  flex-shrink: 0;
+  width: 180px; /* Fixed width for consistency */
+}
+
+.sonic-graph-slider {
+  flex: 1;
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sonic-graph-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-slider-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--interactive-accent);
+  background: var(--background-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
 }
 
 .sonic-graph-toggle-switch {

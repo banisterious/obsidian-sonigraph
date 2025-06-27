@@ -225,7 +225,8 @@ var init_constants = __esm({
           animationStyle: "fade",
           nodeScaling: 1,
           connectionOpacity: 0.6,
-          timelineMarkersEnabled: true
+          timelineMarkersEnabled: true,
+          loopAnimation: false
         },
         navigation: {
           enableControlCenter: true,
@@ -10250,6 +10251,15 @@ var init_GraphRenderer = __esm({
         this.visibleNodes = /* @__PURE__ */ new Set();
         this.visibleLinks = /* @__PURE__ */ new Set();
         this.animationStyle = "fade";
+        // Performance optimization: Viewport culling and batching
+        this.viewportBounds = { x: 0, y: 0, width: 0, height: 0 };
+        this.cullingMargin = 100;
+        // Extra margin around viewport for smoother scrolling
+        this.isDenseGraph = false;
+        this.lastUpdateTime = 0;
+        this.updateDebounceMs = 16;
+        // ~60fps
+        this.pendingUpdate = null;
         // Phase 3.8: Settings integration
         this.layoutSettings = null;
         this.container = container;
@@ -10264,25 +10274,25 @@ var init_GraphRenderer = __esm({
           ...config
         };
         this.forceConfig = {
-          centerStrength: 0.15,
-          // Phase 3.8: Slightly reduced for more organic spread
-          linkStrength: 0.6,
-          // Phase 3.8: Increased for stronger clustering
-          chargeStrength: -120,
-          // Phase 3.8: Increased repulsion for better node spacing
-          collisionRadius: 24,
-          // Phase 3.8: One node-sized space between nodes (8+8+8)
-          // Phase 3.8: Enhanced clustering parameters (optimized)
-          strongLinkDistance: 30,
-          // Phase 3.8: Increased for better spacing while maintaining clusters
-          weakLinkDistance: 80,
-          // Phase 3.8: Increased for more distance for weak connections
-          orphanRepulsion: -30,
-          // Phase 3.8: Slightly reduced for orphan clustering
-          clusterStrength: 0.15,
-          // Phase 3.8: Increased for better clustering
-          separationStrength: 0.08
-          // Phase 3.8: Increased for clearer group boundaries
+          centerStrength: 0.1,
+          // Reduced for more organic spread
+          linkStrength: 0.5,
+          // Slightly reduced to prevent rigid connections
+          chargeStrength: -60,
+          // Much less rigid repulsion for organic clusters
+          collisionRadius: 14,
+          // Smaller radius for more natural clustering
+          // Enhanced clustering parameters for rounded clusters
+          strongLinkDistance: 25,
+          // Tighter for strong connections
+          weakLinkDistance: 60,
+          // Reduced for less spacing
+          orphanRepulsion: -20,
+          // Gentler orphan repulsion
+          clusterStrength: 0.12,
+          // Balanced clustering
+          separationStrength: 0.06
+          // Softer separation for organic shapes
         };
         this.initializeSVG();
         this.initializeSimulation();
@@ -10297,9 +10307,12 @@ var init_GraphRenderer = __esm({
         this.g = this.svg.append("g");
         this.g.append("g").attr("class", "sonigraph-temporal-links");
         this.g.append("g").attr("class", "sonigraph-temporal-nodes");
+        this.initializeViewportBounds();
         if (this.config.enableZoom) {
           this.zoom = zoom_default2().scaleExtent([0.1, 4]).on("zoom", (event) => {
             this.g.attr("transform", event.transform);
+            this.updateViewportBounds(event.transform);
+            this.scheduleViewportUpdate();
           });
           this.zoom.filter((event) => {
             return !event.ctrlKey && !event.button;
@@ -10326,20 +10339,30 @@ var init_GraphRenderer = __esm({
           this.config.height / 2
         ).strength(this.forceConfig.centerStrength)).force(
           "collision",
-          collide_default().radius(this.forceConfig.collisionRadius)
+          collide_default().radius((d) => {
+            const baseRadius = this.forceConfig.collisionRadius;
+            const randomFactor = 0.7 + Math.random() * 0.6;
+            return baseRadius * randomFactor;
+          }).strength(0.8)
+          // Slightly softer collision for more organic overlap
         ).force("jitter", (alpha) => {
-          if (alpha < 0.1)
+          if (alpha < 0.05)
             return;
-          const strength = 0.01 * alpha;
+          const strength = 0.03 * alpha;
           this.nodes.forEach((node) => {
             if (node.vx !== void 0 && node.vy !== void 0) {
-              node.vx += (Math.random() - 0.5) * strength;
-              node.vy += (Math.random() - 0.5) * strength;
+              const angle = Math.random() * 2 * Math.PI;
+              const distance = Math.random() * strength;
+              node.vx += Math.cos(angle) * distance;
+              node.vy += Math.sin(angle) * distance;
             }
           });
         }).on("tick", () => {
+          if (this.simulation.alpha() > 0.3 || Math.random() < 0.1) {
+            this.constrainNodeCoordinates();
+          }
           this.updatePositions();
-        }).alphaDecay(0.023).velocityDecay(0.4).on("end", () => this.onSimulationEnd());
+        }).alphaDecay(0.05).velocityDecay(0.6).alphaMin(0.01).on("end", () => this.onSimulationEnd());
       }
       // Tooltip initialization removed - using native browser tooltips
       /**
@@ -10349,6 +10372,14 @@ var init_GraphRenderer = __esm({
         logger6.debug("renderer", `Rendering graph: ${nodes.length} nodes, ${links.length} links`);
         this.nodes = nodes;
         this.links = links;
+        this.initializeNodeCoordinates();
+        this.isDenseGraph = links.length > 500 || nodes.length > 200 && links.length > nodes.length * 2;
+        if (this.isDenseGraph) {
+          logger6.info("renderer", `Dense graph detected: ${links.length} links, enabling performance optimizations`);
+          this.disableTransitionsForDenseGraph();
+        } else {
+          this.enableTransitionsForNormalGraph();
+        }
         this.applyAdaptiveScaling(nodes.length);
         this.applyInitialClustering();
         this.visibleNodes = new Set(nodes.map((n) => n.id));
@@ -10356,7 +10387,6 @@ var init_GraphRenderer = __esm({
         this.updateSimulation();
         this.renderLinks();
         this.renderNodes();
-        this.setInitialView();
       }
       /**
        * Update which nodes are visible (for temporal animation)
@@ -10389,9 +10419,30 @@ var init_GraphRenderer = __esm({
       /**
        * Render links
        * Phase 3.8: Enhanced with link type and strength attributes for CSS styling
+       * Performance optimization: Only render visible links with valid coordinates
        */
       renderLinks() {
-        const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(this.links, (d, i) => this.getLinkId(d, i));
+        const validLinks = this.links.filter((link, i) => {
+          const linkId = this.getLinkId(link, i);
+          if (!this.visibleLinks.has(linkId)) {
+            return false;
+          }
+          const sourceNode = typeof link.source === "string" ? this.nodes.find((n) => n.id === link.source) : link.source;
+          const targetNode = typeof link.target === "string" ? this.nodes.find((n) => n.id === link.target) : link.target;
+          if (!sourceNode || !targetNode) {
+            logger6.debug("link-filtering", `Link ${linkId} missing nodes - source: ${!!sourceNode}, target: ${!!targetNode}`);
+            return false;
+          }
+          const sourceValid = this.hasValidCoordinates(sourceNode);
+          const targetValid = this.hasValidCoordinates(targetNode);
+          if (!sourceValid || !targetValid) {
+            logger6.debug("link-filtering", `Link ${linkId} invalid coords - source: [${sourceNode.x}, ${sourceNode.y}] valid: ${sourceValid}, target: [${targetNode.x}, ${targetNode.y}] valid: ${targetValid}`);
+            return false;
+          }
+          return true;
+        });
+        logger6.info("link-filtering", `Rendering ${validLinks.length} valid links out of ${this.links.length} total links (filtered out ${this.links.length - validLinks.length})`);
+        const linkSelection = this.g.select(".sonigraph-temporal-links").selectAll("line").data(validLinks, (d, i) => this.getLinkId(d, i));
         const linkEnter = linkSelection.enter().append("line").attr("class", "appearing").attr("data-link-type", (d) => d.type).attr("data-strength", (d) => this.getStrengthCategory(d.strength)).style("opacity", 0);
         linkEnter.transition().duration(300).style("opacity", 1).on("end", function() {
           select_default2(this).classed("appearing", false);
@@ -10423,9 +10474,14 @@ var init_GraphRenderer = __esm({
       }
       /**
        * Render nodes
+       * Performance optimization: Only render visible nodes with valid coordinates
        */
       renderNodes() {
-        const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(this.nodes, (d) => d.id);
+        const validNodes = this.nodes.filter((node) => {
+          return this.visibleNodes.has(node.id) && this.hasValidCoordinates(node);
+        });
+        logger6.debug("node-filtering", `Rendering ${validNodes.length} valid nodes out of ${this.nodes.length} total nodes`);
+        const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(validNodes, (d) => d.id);
         const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
         nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`).attr("title", (d) => {
           const fileName = d.title.split("/").pop() || d.title;
@@ -10483,8 +10539,52 @@ var init_GraphRenderer = __esm({
        * Update positions during simulation tick
        */
       updatePositions() {
-        this.linkGroup.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
-        this.nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+        if (this.isDenseGraph) {
+          this.updatePositionsBatched();
+        } else {
+          this.updatePositionsStandard();
+        }
+        if (Math.random() < 0.02) {
+          this.forceRemoveInvalidLinks();
+        }
+      }
+      /**
+       * Standard position updates for normal graphs
+       */
+      updatePositionsStandard() {
+        this.linkGroup = this.g.select(".sonigraph-temporal-links").selectAll("line");
+        this.linkGroup.style("display", (d) => {
+          const hasValidCoords = this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target);
+          return hasValidCoords ? "block" : "none";
+        }).filter((d) => this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target)).attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+        this.nodeGroup = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
+        this.nodeGroup.style("display", (d) => this.hasValidCoordinates(d) ? "block" : "none").filter((d) => this.hasValidCoordinates(d)).attr("transform", (d) => `translate(${d.x},${d.y})`);
+      }
+      /**
+       * Batched position updates for dense graphs (only visible elements)
+       */
+      updatePositionsBatched() {
+        const bounds = this.viewportBounds;
+        this.linkGroup = this.g.select(".sonigraph-temporal-links").selectAll("line");
+        this.linkGroup.style("display", (d) => {
+          if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
+            return "none";
+          }
+          const sourceVisible = this.isNodeInViewport(d.source, bounds);
+          const targetVisible = this.isNodeInViewport(d.target, bounds);
+          return sourceVisible || targetVisible ? "block" : "none";
+        }).filter((d) => {
+          if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
+            return false;
+          }
+          const sourceVisible = this.isNodeInViewport(d.source, bounds);
+          const targetVisible = this.isNodeInViewport(d.target, bounds);
+          return sourceVisible || targetVisible;
+        }).attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+        this.nodeGroup = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
+        this.nodeGroup.style("display", (d) => {
+          return this.hasValidCoordinates(d) && this.isNodeInViewport(d, bounds) ? "block" : "none";
+        }).filter((d) => this.hasValidCoordinates(d) && this.isNodeInViewport(d, bounds)).attr("transform", (d) => `translate(${d.x},${d.y})`);
       }
       /**
        * Update configuration
@@ -10545,23 +10645,52 @@ var init_GraphRenderer = __esm({
       /**
        * Set zoom transform
        */
+      /**
+       * Public method to set zoom transform (called by SonicGraphModal)
+       */
       setZoomTransform(transform2) {
-        this.svg.call(this.zoom.transform, transform2);
+        if (this.config.enableZoom && this.zoom) {
+          this.svg.call(this.zoom.transform, transform2);
+          logger6.info("zoom-set", `Zoom transform set externally: scale=${transform2.k}, translate=(${transform2.x}, ${transform2.y})`);
+        }
       }
       /**
-       * Set initial view for static preview
+       * Set initial view for static preview (deprecated - now handled by caller)
        */
       setInitialView() {
-        const initialScale = 0.6;
-        const initialTransform = identity2.translate(this.config.width * 0.2, this.config.height * 0.2).scale(initialScale);
+        const initialScale = 0.05;
+        const centerX = this.config.width / 2;
+        const centerY = this.config.height / 2;
+        logger6.info("zoom-setup", `Setting ULTRA zoom out: scale=${initialScale}, center=(${centerX}, ${centerY})`);
+        const initialTransform = identity2.translate(centerX, centerY).scale(initialScale);
         if (this.config.enableZoom && this.zoom) {
           this.svg.call(this.zoom.transform, initialTransform);
+          logger6.info("zoom-applied", "Ultra zoom transform applied");
+          this.g.attr("transform", `translate(${centerX}, ${centerY}) scale(${initialScale})`);
+          logger6.info("manual-transform", "Manual transform also applied");
         }
+        this.g.attr("transform", `translate(${centerX}, ${centerY}) scale(${initialScale})`);
+        let cleanupCount = 0;
+        const cleanupInterval = setInterval(() => {
+          if (Math.random() < 0.3) {
+            this.constrainNodeCoordinates();
+          }
+          const removed = this.forceRemoveInvalidLinks();
+          if (removed > 0) {
+            cleanupCount++;
+            logger6.warn("invalid-links", `Cleanup ${cleanupCount}: Removed ${removed} invalid links`);
+          }
+        }, 200);
         setTimeout(() => {
+          clearInterval(cleanupInterval);
           this.simulation.stop();
-          logger6.debug("renderer", "Simulation stopped for static preview");
-        }, 800);
-        logger6.debug("renderer", "Initial view set for static preview");
+          const finalRemoved = this.forceRemoveInvalidLinks();
+          if (finalRemoved > 0) {
+            logger6.info("post-simulation", `Simulation stopped. Final cleanup removed ${finalRemoved} invalid links`);
+          }
+          logger6.debug("renderer", "Simulation stopped with optimized performance");
+        }, 500);
+        logger6.debug("renderer", "Ultra aggressive initial view set with continuous cleanup");
       }
       // Tooltip methods removed - using native browser tooltips for better performance
       /**
@@ -10812,10 +10941,206 @@ var init_GraphRenderer = __esm({
         this.restartSimulation();
         logger6.debug("renderer", "Better spacing applied and simulation restarted");
       }
+      // Performance optimization: Viewport culling methods
+      /**
+       * Initialize viewport bounds on startup
+       */
+      initializeViewportBounds() {
+        const identity3 = identity2;
+        this.updateViewportBounds(identity3);
+      }
+      /**
+       * Update viewport bounds based on current zoom transform
+       */
+      updateViewportBounds(transform2) {
+        const containerRect = this.container.getBoundingClientRect();
+        this.viewportBounds = {
+          x: -transform2.x / transform2.k - this.cullingMargin,
+          y: -transform2.y / transform2.k - this.cullingMargin,
+          width: containerRect.width / transform2.k + this.cullingMargin * 2,
+          height: containerRect.height / transform2.k + this.cullingMargin * 2
+        };
+      }
+      /**
+       * Schedule a viewport update (debounced for performance)
+       */
+      scheduleViewportUpdate() {
+        if (!this.isDenseGraph)
+          return;
+        const now3 = performance.now();
+        if (now3 - this.lastUpdateTime < this.updateDebounceMs) {
+          if (this.pendingUpdate) {
+            cancelAnimationFrame(this.pendingUpdate);
+          }
+          this.pendingUpdate = requestAnimationFrame(() => {
+            this.updateVisibleElements();
+            this.lastUpdateTime = performance.now();
+            this.pendingUpdate = null;
+          });
+          return;
+        }
+        this.updateVisibleElements();
+        this.lastUpdateTime = now3;
+      }
+      /**
+       * Update which elements are visible based on viewport bounds
+       */
+      updateVisibleElements() {
+        if (!this.isDenseGraph)
+          return;
+        const bounds = this.viewportBounds;
+        let visibleLinksCount = 0;
+        let hiddenLinksCount = 0;
+        this.linkGroup.selectAll("line").style("display", (d) => {
+          const sourceNode = d.source;
+          const targetNode = d.target;
+          if (!this.hasValidCoordinates(sourceNode) || !this.hasValidCoordinates(targetNode)) {
+            hiddenLinksCount++;
+            return "none";
+          }
+          const sourceVisible = this.isNodeInViewport(sourceNode, bounds);
+          const targetVisible = this.isNodeInViewport(targetNode, bounds);
+          if (sourceVisible || targetVisible) {
+            visibleLinksCount++;
+            return "block";
+          } else {
+            hiddenLinksCount++;
+            return "none";
+          }
+        });
+        this.nodeGroup.selectAll("circle").style("display", (d) => {
+          if (!this.hasValidCoordinates(d)) {
+            return "none";
+          }
+          return this.isNodeInViewport(d, bounds) ? "block" : "none";
+        });
+        logger6.debug("viewport-culling", `Updated visibility: ${visibleLinksCount} visible, ${hiddenLinksCount} hidden links`);
+      }
+      /**
+       * Initialize node coordinates to prevent invalid positions
+       */
+      initializeNodeCoordinates() {
+        const centerX = this.config.width / 2;
+        const centerY = this.config.height / 2;
+        let invalidCount = 0;
+        this.nodes.forEach((node, index2) => {
+          if (!this.hasValidCoordinates(node)) {
+            const angle = index2 / this.nodes.length * 2 * Math.PI;
+            const radius = 50 + Math.random() * 100;
+            node.x = centerX + Math.cos(angle) * radius;
+            node.y = centerY + Math.sin(angle) * radius;
+            invalidCount++;
+          }
+        });
+        if (invalidCount > 0) {
+          logger6.debug("coordinate-init", `Initialized coordinates for ${invalidCount} nodes with invalid positions`);
+        }
+      }
+      /**
+       * Check if a node has valid coordinates (not NaN or undefined)
+       */
+      hasValidCoordinates(node) {
+        return node && typeof node.x === "number" && typeof node.y === "number" && !isNaN(node.x) && !isNaN(node.y) && isFinite(node.x) && isFinite(node.y);
+      }
+      /**
+       * Aggressively constrain all node coordinates to valid values
+       */
+      constrainNodeCoordinates() {
+        const centerX = this.config.width / 2;
+        const centerY = this.config.height / 2;
+        const maxDistance = Math.max(this.config.width, this.config.height);
+        this.nodes.forEach((node) => {
+          if (typeof node.x !== "number" || !isFinite(node.x) || isNaN(node.x)) {
+            node.x = centerX + (Math.random() - 0.5) * 20;
+            logger6.warn("coordinate-fix", `Fixed invalid x coordinate for node ${node.id}: set to ${node.x}`);
+          } else if (Math.abs(node.x - centerX) > maxDistance) {
+            node.x = centerX + Math.sign(node.x - centerX) * maxDistance * 0.9;
+          }
+          if (typeof node.y !== "number" || !isFinite(node.y) || isNaN(node.y)) {
+            node.y = centerY + (Math.random() - 0.5) * 20;
+            logger6.warn("coordinate-fix", `Fixed invalid y coordinate for node ${node.id}: set to ${node.y}`);
+          } else if (Math.abs(node.y - centerY) > maxDistance) {
+            node.y = centerY + Math.sign(node.y - centerY) * maxDistance * 0.9;
+          }
+          if (node.vx && (typeof node.vx !== "number" || !isFinite(node.vx) || isNaN(node.vx))) {
+            node.vx = 0;
+          }
+          if (node.vy && (typeof node.vy !== "number" || !isFinite(node.vy) || isNaN(node.vy))) {
+            node.vy = 0;
+          }
+        });
+      }
+      /**
+       * Check if a node is within the viewport bounds
+       */
+      isNodeInViewport(node, bounds) {
+        if (!this.hasValidCoordinates(node)) {
+          return false;
+        }
+        return node.x >= bounds.x && node.x <= bounds.x + bounds.width && node.y >= bounds.y && node.y <= bounds.y + bounds.height;
+      }
+      /**
+       * Disable CSS transitions for dense graphs to improve performance
+       */
+      disableTransitionsForDenseGraph() {
+        this.container.classList.add("dense-graph-mode");
+        const style = document.createElement("style");
+        style.textContent = `
+      .dense-graph-mode .sonigraph-temporal-svg * {
+        transition: none !important;
+        animation: none !important;
+      }
+    `;
+        if (!document.querySelector("#dense-graph-performance-style")) {
+          style.id = "dense-graph-performance-style";
+          document.head.appendChild(style);
+        }
+        logger6.debug("performance", "Disabled CSS transitions for dense graph");
+      }
+      /**
+       * Enable CSS transitions for normal graphs
+       */
+      enableTransitionsForNormalGraph() {
+        this.container.classList.remove("dense-graph-mode");
+        logger6.debug("performance", "Enabled CSS transitions for normal graph");
+      }
+      /**
+       * Force removal of all links with invalid coordinates from the DOM
+       */
+      forceRemoveInvalidLinks() {
+        const allLines = this.g.select(".sonigraph-temporal-links").selectAll("line");
+        let removedCount = 0;
+        allLines.each(function(d) {
+          const sourceNode = d.source;
+          const targetNode = d.target;
+          const sourceInvalid = !sourceNode || typeof sourceNode.x !== "number" || typeof sourceNode.y !== "number" || isNaN(sourceNode.x) || isNaN(sourceNode.y) || !isFinite(sourceNode.x) || !isFinite(sourceNode.y);
+          const targetInvalid = !targetNode || typeof targetNode.x !== "number" || typeof targetNode.y !== "number" || isNaN(targetNode.x) || isNaN(targetNode.y) || !isFinite(targetNode.x) || !isFinite(targetNode.y);
+          if (sourceInvalid || targetInvalid) {
+            if (removedCount < 5) {
+              logger6.warn("invalid-link-detail", "Removing invalid link", {
+                sourceValid: !sourceInvalid,
+                targetValid: !targetInvalid,
+                sourceCoords: sourceNode ? [sourceNode.x, sourceNode.y] : "null",
+                targetCoords: targetNode ? [targetNode.x, targetNode.y] : "null"
+              });
+            }
+            select_default2(this).remove();
+            removedCount++;
+          }
+        });
+        if (removedCount > 0) {
+          logger6.info("invalid-link-removal", `Force removed ${removedCount} links with invalid coordinates from DOM`);
+        }
+        return removedCount;
+      }
       /**
        * Cleanup resources
        */
       destroy() {
+        if (this.pendingUpdate) {
+          cancelAnimationFrame(this.pendingUpdate);
+          this.pendingUpdate = null;
+        }
         this.simulation.stop();
         select_default2(this.container).selectAll("*").remove();
         logger6.debug("renderer", "GraphRenderer destroyed");
@@ -11604,6 +11929,14 @@ var init_SonicGraphModal = __esm({
         this.musicalMapper = null;
         this.isAnimating = false;
         this.isTimelineView = false;
+        // false = Static View, true = Timeline View
+        // Performance optimization: Event listener management
+        this.eventListeners = [];
+        // Performance optimization: Settings debouncing
+        this.pendingSettingsUpdates = /* @__PURE__ */ new Map();
+        this.settingsUpdateTimeout = null;
+        // Performance optimization: Progress indicator
+        this.progressIndicator = null;
         this.detectedSpacing = "balanced";
         this.isSettingsVisible = false;
         logger11.debug("ui", "SonicGraphModal constructor started");
@@ -11638,7 +11971,7 @@ var init_SonicGraphModal = __esm({
           this.modalEl.addClass("sonic-graph-modal");
           logger11.info("sonic-graph-init", "Creating close button");
           const closeButton = contentEl.createDiv({ cls: "modal-close-button" });
-          closeButton.addEventListener("click", () => this.close());
+          this.addEventListener(closeButton, "click", () => this.close());
           logger11.info("sonic-graph-init", "Creating modal container");
           const modalContainer = contentEl.createDiv({ cls: "sonic-graph-modal-container" });
           logger11.info("sonic-graph-init", "Creating header");
@@ -11666,6 +11999,12 @@ var init_SonicGraphModal = __esm({
       }
       onClose() {
         logger11.debug("ui", "Closing Sonic Graph modal");
+        this.removeAllEventListeners();
+        if (this.settingsUpdateTimeout) {
+          clearTimeout(this.settingsUpdateTimeout);
+          this.settingsUpdateTimeout = null;
+        }
+        this.pendingSettingsUpdates.clear();
         if (this.temporalAnimator) {
           this.temporalAnimator.destroy();
           this.temporalAnimator = null;
@@ -11675,6 +12014,7 @@ var init_SonicGraphModal = __esm({
           this.graphRenderer = null;
         }
         this.isAnimating = false;
+        this.hideProgressIndicator();
         const { contentEl } = this;
         contentEl.empty();
       }
@@ -11717,7 +12057,7 @@ var init_SonicGraphModal = __esm({
         this.timelineScrubber.min = "0";
         this.timelineScrubber.max = "100";
         this.timelineScrubber.value = "0";
-        this.timelineScrubber.addEventListener("input", () => this.handleTimelineScrub());
+        this.addEventListener(this.timelineScrubber, "input", () => this.handleTimelineScrub());
         this.timelineInfo = this.timelineContainer.createDiv({ cls: "sonic-graph-timeline-info" });
         const timelineTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track-unified" });
         const timelineLine = timelineTrack.createDiv({ cls: "sonic-graph-timeline-line-unified" });
@@ -11748,7 +12088,7 @@ var init_SonicGraphModal = __esm({
           if (speed === savedSpeedString)
             option.selected = true;
         });
-        this.speedSelect.addEventListener("change", () => this.handleSpeedChange());
+        this.addEventListener(this.speedSelect, "change", () => this.handleSpeedChange());
         const statsControls = this.controlsContainer.createDiv({ cls: "sonic-graph-stats-controls" });
         this.statsContainer = statsControls.createDiv({ cls: "sonic-graph-stats" });
         this.updateStats();
@@ -11760,7 +12100,7 @@ var init_SonicGraphModal = __esm({
         const viewModeIcon = createLucideIcon("eye", 16);
         this.viewModeBtn.appendChild(viewModeIcon);
         this.viewModeBtn.appendText("Static View");
-        this.viewModeBtn.addEventListener("click", () => this.toggleViewMode());
+        this.addEventListener(this.viewModeBtn, "click", () => this.toggleViewMode());
         const resetViewBtn = viewControls.createEl("button", {
           cls: "sonic-graph-control-btn"
         });
@@ -11782,12 +12122,15 @@ var init_SonicGraphModal = __esm({
       async initializeGraph() {
         try {
           logger11.info("sonic-graph-data", "Starting graph initialization");
+          this.showProgressIndicator("Extracting graph data...");
           logger11.info("sonic-graph-data", "Beginning graph data extraction");
           logger11.debug("ui", "GraphDataExtractor configuration:", {
             excludeFolders: this.graphDataExtractor["excludeFolders"],
             excludeFiles: this.graphDataExtractor["excludeFiles"]
           });
-          const graphData = await this.graphDataExtractor.extractGraphData();
+          const graphData = await this.executeWhenIdle(async () => {
+            return await this.graphDataExtractor.extractGraphData();
+          });
           logger11.info("sonic-graph-data", `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
           if (graphData.nodes.length === 0) {
             logger11.warn("ui", "No nodes found in graph data - possibly all files excluded");
@@ -11813,17 +12156,23 @@ var init_SonicGraphModal = __esm({
             offsetWidth: canvasElement.offsetWidth,
             offsetHeight: canvasElement.offsetHeight
           });
+          this.showProgressIndicator("Initializing renderer...");
           logger11.info("sonic-graph-renderer", "Creating GraphRenderer instance");
-          this.graphRenderer = new GraphRenderer(canvasElement, {
-            enableZoom: true,
-            showLabels: false
+          this.graphRenderer = await this.executeWhenIdle(() => {
+            return new GraphRenderer(canvasElement, {
+              enableZoom: true,
+              showLabels: false
+            });
           });
           logger11.info("sonic-graph-renderer", "GraphRenderer created successfully");
+          this.showProgressIndicator("Applying layout settings...");
           try {
             logger11.info("sonic-graph-layout", "Getting layout settings");
             const layoutSettings = this.getSonicGraphSettings().layout;
             logger11.info("sonic-graph-layout", "Applying layout settings to renderer", layoutSettings);
-            this.graphRenderer.updateLayoutSettings(layoutSettings);
+            await this.executeWhenIdle(() => {
+              this.graphRenderer.updateLayoutSettings(layoutSettings);
+            });
             logger11.info("sonic-graph-layout", "Layout settings applied successfully");
           } catch (layoutError) {
             logger11.error("sonic-graph-layout", "Failed to apply layout settings:", layoutError.message);
@@ -11854,18 +12203,21 @@ var init_SonicGraphModal = __esm({
           const centerX = canvasRect.width / 2;
           const centerY = canvasRect.height / 2;
           this.graphRenderer.setZoomTransform(
-            identity2.translate(centerX * 0.6, centerY * 0.6).scale(0.4)
+            identity2.translate(centerX, centerY).scale(0.3)
+            // Better balance - shows full graph but not too tiny
           );
           const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
           if (loadingIndicator) {
             loadingIndicator.remove();
           }
+          this.hideProgressIndicator();
           this.updateStats();
           this.updateViewMode();
           logger11.debug("ui", "Sonic Graph initialized successfully");
         } catch (error) {
           logger11.error("ui", "Failed to initialize Sonic Graph:", error.message);
           logger11.error("ui", "Initialization error stack:", error.stack);
+          this.hideProgressIndicator();
           const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
           if (loadingIndicator) {
             loadingIndicator.remove();
@@ -12086,16 +12438,15 @@ var init_SonicGraphModal = __esm({
         densityLabels.createEl("span", { text: "Dense", cls: "sonic-graph-density-label" });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         durationItem.createEl("label", { text: "Animation duration", cls: "sonic-graph-setting-label" });
-        durationItem.createEl("div", {
-          text: "Total time for complete timeline animation",
-          cls: "sonic-graph-setting-description"
+        const durationDisplay = durationItem.createEl("span", {
+          text: "60 seconds",
+          cls: "sonic-graph-setting-value"
         });
-        const durationSelect = durationItem.createEl("select", { cls: "sonic-graph-setting-select" });
-        ["15 seconds", "30 seconds", "60 seconds", "120 seconds", "Custom..."].forEach((option) => {
-          const optionEl = durationSelect.createEl("option", { text: option });
-          if (option === "60 seconds")
-            optionEl.selected = true;
-        });
+        durationDisplay.style.fontSize = "12px";
+        durationDisplay.style.color = "var(--text-muted)";
+        durationDisplay.style.padding = "4px 8px";
+        durationDisplay.style.backgroundColor = "var(--background-secondary)";
+        durationDisplay.style.borderRadius = "4px";
         const loopItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         loopItem.createEl("label", { text: "Loop animation", cls: "sonic-graph-setting-label" });
         loopItem.createEl("div", {
@@ -12135,22 +12486,23 @@ var init_SonicGraphModal = __esm({
         });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         durationItem.createEl("label", { text: "Note duration", cls: "sonic-graph-setting-label" });
-        durationItem.createEl("div", {
-          text: "Base duration for individual notes",
-          cls: "sonic-graph-setting-description"
+        const durationContainer = durationItem.createDiv({ cls: "sonic-graph-slider-container" });
+        const durationSlider = durationContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-slider"
         });
-        const durationInput = durationItem.createEl("input", {
-          type: "number",
-          cls: "sonic-graph-setting-input"
+        durationSlider.min = "1";
+        durationSlider.max = "20";
+        durationSlider.step = "1";
+        durationSlider.value = (this.getSonicGraphSettings().audio.noteDuration * 10).toString();
+        const durationValue = durationContainer.createEl("span", {
+          text: `${this.getSonicGraphSettings().audio.noteDuration.toFixed(1)}s`,
+          cls: "sonic-graph-slider-value"
         });
-        durationInput.value = this.getSonicGraphSettings().audio.noteDuration.toString();
-        durationInput.step = "0.1";
-        durationInput.min = "0.1";
-        durationInput.max = "2.0";
-        durationInput.addEventListener("input", (e) => {
-          const target = e.target;
-          const duration = parseFloat(target.value);
-          this.updateNoteDuration(duration);
+        durationSlider.addEventListener("input", () => {
+          const value = parseInt(durationSlider.value) / 10;
+          durationValue.textContent = `${value.toFixed(1)}s`;
+          this.updateNoteDuration(value);
         });
       }
       /**
@@ -12179,10 +12531,6 @@ var init_SonicGraphModal = __esm({
         });
         const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         styleItem.createEl("label", { text: "Animation style", cls: "sonic-graph-setting-label" });
-        styleItem.createEl("div", {
-          text: "How nodes appear during animation",
-          cls: "sonic-graph-setting-description"
-        });
         const styleSelect = styleItem.createEl("select", { cls: "sonic-graph-setting-select" });
         const styleOptions = [
           { display: "Fade in", value: "fade" },
@@ -12205,19 +12553,27 @@ var init_SonicGraphModal = __esm({
           const style = target.value;
           this.updateAnimationStyle(style);
         });
+        const loopItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        loopItem.createEl("label", { text: "Loop animation", cls: "sonic-graph-setting-label" });
+        const loopToggle = loopItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const loopSwitch = loopToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().visual.loopAnimation) {
+          loopSwitch.addClass("active");
+        }
+        const loopHandle = loopSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        loopSwitch.addEventListener("click", () => {
+          const isActive = loopSwitch.hasClass("active");
+          loopSwitch.toggleClass("active", !isActive);
+          this.updateLoopAnimation(!isActive);
+        });
         const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         fileNamesItem.createEl("label", { text: "Show file names", cls: "sonic-graph-setting-label" });
-        fileNamesItem.createEl("div", {
-          text: "Display file names in small text beneath each node",
-          cls: "sonic-graph-setting-description"
-        });
         const fileNamesToggle = fileNamesItem.createDiv({ cls: "sonic-graph-setting-toggle" });
         const fileNamesSwitch = fileNamesToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
         if (this.getSonicGraphSettings().visual.showFileNames) {
           fileNamesSwitch.addClass("active");
         }
         const fileNamesHandle = fileNamesSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-        fileNamesToggle.createEl("span", { text: "Show file names" });
         fileNamesSwitch.addEventListener("click", () => {
           const isActive = fileNamesSwitch.hasClass("active");
           fileNamesSwitch.toggleClass("active", !isActive);
@@ -12338,14 +12694,16 @@ var init_SonicGraphModal = __esm({
         });
         const groupingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         groupingItem.createEl("label", { text: "Path-based grouping", cls: "sonic-graph-setting-label" });
-        groupingItem.createEl("div", {
-          text: "Create custom groups based on folder paths with color coding",
-          cls: "sonic-graph-setting-description"
-        });
-        const groupingToggle = groupingItem.createEl("input", { type: "checkbox", cls: "sonic-graph-toggle" });
-        groupingToggle.checked = this.getSonicGraphSettings().layout.pathBasedGrouping.enabled;
-        groupingToggle.addEventListener("change", () => {
-          this.updatePathBasedGroupingSetting("enabled", groupingToggle.checked);
+        const groupingToggle = groupingItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const groupingSwitch = groupingToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
+          groupingSwitch.addClass("active");
+        }
+        const groupingHandle = groupingSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        groupingSwitch.addEventListener("click", () => {
+          const isActive = groupingSwitch.hasClass("active");
+          groupingSwitch.toggleClass("active", !isActive);
+          this.updatePathBasedGroupingSetting("enabled", !isActive);
         });
         const groupsContainer = section.createDiv({ cls: "sonic-graph-groups-container" });
         groupsContainer.style.marginTop = "10px";
@@ -12353,8 +12711,9 @@ var init_SonicGraphModal = __esm({
         if (!this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
           groupsContainer.style.display = "none";
         }
-        groupingToggle.addEventListener("change", () => {
-          groupsContainer.style.display = groupingToggle.checked ? "block" : "none";
+        groupingSwitch.addEventListener("click", () => {
+          const isActive = groupingSwitch.hasClass("active");
+          groupsContainer.style.display = !isActive ? "block" : "none";
         });
         this.createPathGroupsSettings(groupsContainer);
       }
@@ -12366,31 +12725,37 @@ var init_SonicGraphModal = __esm({
         section.createEl("div", { text: "FILTERS", cls: "sonic-graph-settings-section-title" });
         const tagsItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         tagsItem.createEl("label", { text: "Show tags", cls: "sonic-graph-setting-label" });
-        const tagsToggle = tagsItem.createEl("input", { type: "checkbox", cls: "sonic-graph-toggle" });
-        tagsToggle.checked = this.getSonicGraphSettings().layout.filters.showTags;
-        tagsToggle.addEventListener("change", () => {
-          this.updateFilterSetting("showTags", tagsToggle.checked);
+        const tagsToggle = tagsItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const tagsSwitch = tagsToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().layout.filters.showTags) {
+          tagsSwitch.addClass("active");
+        }
+        const tagsHandle = tagsSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        tagsSwitch.addEventListener("click", () => {
+          const isActive = tagsSwitch.hasClass("active");
+          tagsSwitch.toggleClass("active", !isActive);
+          this.updateFilterSetting("showTags", !isActive);
         });
         const orphansItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         orphansItem.createEl("label", { text: "Show orphans", cls: "sonic-graph-setting-label" });
-        const orphansToggle = orphansItem.createEl("input", { type: "checkbox", cls: "sonic-graph-toggle" });
-        orphansToggle.checked = this.getSonicGraphSettings().layout.filters.showOrphans;
-        orphansToggle.addEventListener("change", () => {
-          this.updateFilterSetting("showOrphans", orphansToggle.checked);
+        const orphansToggle = orphansItem.createDiv({ cls: "sonic-graph-setting-toggle" });
+        const orphansSwitch = orphansToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        if (this.getSonicGraphSettings().layout.filters.showOrphans) {
+          orphansSwitch.addClass("active");
+        }
+        const orphansHandle = orphansSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        orphansSwitch.addEventListener("click", () => {
+          const isActive = orphansSwitch.hasClass("active");
+          orphansSwitch.toggleClass("active", !isActive);
+          this.updateFilterSetting("showOrphans", !isActive);
         });
       }
       /**
        * Phase 3.8: Update layout setting and apply to renderer
        */
       updateLayoutSetting(key, value) {
-        const currentSettings = this.getSonicGraphSettings();
-        currentSettings.layout[key] = value;
-        this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        if (this.graphRenderer) {
-          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
-        }
-        logger11.debug("layout-setting", `Updated layout setting: ${String(key)} = ${value}`);
+        this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
+        logger11.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
       }
       /**
        * Update path-based grouping setting
@@ -12419,107 +12784,212 @@ var init_SonicGraphModal = __esm({
         logger11.debug("filter-setting", `Updated filter setting: ${String(key)} = ${value}`);
       }
       /**
-       * Create path groups settings interface
+       * Create path groups settings interface - New design
        */
       createPathGroupsSettings(container) {
+        const groupsHeader = container.createEl("div", {
+          text: "Groups",
+          cls: "sonic-graph-groups-header"
+        });
+        groupsHeader.style.fontSize = "12px";
+        groupsHeader.style.fontWeight = "600";
+        groupsHeader.style.color = "var(--text-normal)";
+        groupsHeader.style.marginBottom = "8px";
         const settings = this.getSonicGraphSettings();
         const groups = settings.layout.pathBasedGrouping.groups;
+        const groupsList = container.createDiv({ cls: "sonic-graph-groups-list" });
         groups.forEach((group, index2) => {
-          const groupItem = container.createDiv({ cls: "sonic-graph-group-item" });
-          groupItem.style.marginBottom = "15px";
-          groupItem.style.padding = "10px";
-          groupItem.style.border = "1px solid var(--background-modifier-border)";
+          const groupItem = groupsList.createDiv({ cls: "sonic-graph-group-list-item" });
+          groupItem.style.display = "flex";
+          groupItem.style.alignItems = "center";
+          groupItem.style.marginBottom = "6px";
+          groupItem.style.padding = "4px 8px";
+          groupItem.style.backgroundColor = "var(--background-secondary)";
           groupItem.style.borderRadius = "4px";
-          const groupHeader = groupItem.createDiv({ cls: "sonic-graph-group-header" });
-          groupHeader.style.display = "flex";
-          groupHeader.style.justifyContent = "space-between";
-          groupHeader.style.alignItems = "center";
-          groupHeader.style.marginBottom = "10px";
-          const groupNameInput = groupHeader.createEl("input", {
-            type: "text",
-            value: group.name,
-            cls: "sonic-graph-group-name-input"
+          const colorDot = groupItem.createEl("div", { cls: "sonic-graph-group-color-dot" });
+          colorDot.style.width = "12px";
+          colorDot.style.height = "12px";
+          colorDot.style.borderRadius = "50%";
+          colorDot.style.backgroundColor = group.color;
+          colorDot.style.marginRight = "8px";
+          colorDot.style.cursor = "pointer";
+          const groupLabel = groupItem.createEl("span", {
+            text: this.formatGroupLabel(group),
+            cls: "sonic-graph-group-label"
           });
-          groupNameInput.style.border = "none";
-          groupNameInput.style.background = "transparent";
-          groupNameInput.style.fontSize = "14px";
-          groupNameInput.style.fontWeight = "bold";
-          groupNameInput.addEventListener("input", () => {
-            this.updateGroupProperty(index2, "name", groupNameInput.value);
-          });
-          const removeButton = groupHeader.createEl("button", {
+          groupLabel.style.flex = "1";
+          groupLabel.style.fontSize = "12px";
+          groupLabel.style.color = "var(--text-normal)";
+          const removeButton = groupItem.createEl("button", {
             text: "\xD7",
-            cls: "sonic-graph-remove-group-btn"
+            cls: "sonic-graph-group-remove-btn"
           });
           removeButton.style.background = "none";
           removeButton.style.border = "none";
-          removeButton.style.fontSize = "18px";
+          removeButton.style.fontSize = "14px";
           removeButton.style.cursor = "pointer";
           removeButton.style.color = "var(--text-muted)";
+          removeButton.style.padding = "2px 4px";
+          removeButton.style.marginLeft = "8px";
+          colorDot.addEventListener("click", () => {
+            this.showColorPicker(index2, colorDot);
+          });
           removeButton.addEventListener("click", () => {
             this.removeGroup(index2);
             this.refreshPathGroupsSettings();
           });
-          const pathRow = groupItem.createDiv({ cls: "sonic-graph-group-row" });
-          pathRow.style.display = "flex";
-          pathRow.style.alignItems = "center";
-          pathRow.style.marginBottom = "10px";
-          const pathLabel = pathRow.createEl("label", { text: "Path:", cls: "sonic-graph-group-label" });
-          pathLabel.style.minWidth = "50px";
-          pathLabel.style.marginRight = "10px";
-          const pathInput = pathRow.createEl("input", {
-            type: "text",
-            value: group.path,
-            cls: "sonic-graph-group-path-input"
-          });
-          pathInput.style.flex = "1";
-          pathInput.style.marginRight = "10px";
-          pathInput.placeholder = "e.g., Projects, Journal/2025";
-          pathInput.addEventListener("input", () => {
-            this.updateGroupProperty(index2, "path", pathInput.value);
-          });
-          const colorRow = groupItem.createDiv({ cls: "sonic-graph-group-row" });
-          colorRow.style.display = "flex";
-          colorRow.style.alignItems = "center";
-          const colorLabel = colorRow.createEl("label", { text: "Color:", cls: "sonic-graph-group-label" });
-          colorLabel.style.minWidth = "50px";
-          colorLabel.style.marginRight = "10px";
-          const colorInput = colorRow.createEl("input", {
-            type: "color",
-            value: group.color,
-            cls: "sonic-graph-group-color-input"
-          });
-          colorInput.style.width = "50px";
-          colorInput.style.height = "30px";
-          colorInput.style.border = "none";
-          colorInput.style.borderRadius = "4px";
-          colorInput.style.cursor = "pointer";
-          colorInput.addEventListener("input", () => {
-            this.updateGroupProperty(index2, "color", colorInput.value);
-          });
-          const colorPreview = colorRow.createEl("div", { cls: "sonic-graph-color-preview" });
-          colorPreview.style.width = "20px";
-          colorPreview.style.height = "20px";
-          colorPreview.style.backgroundColor = group.color;
-          colorPreview.style.marginLeft = "10px";
-          colorPreview.style.borderRadius = "50%";
-          colorPreview.style.border = "1px solid var(--background-modifier-border)";
         });
-        const addButton = container.createEl("button", {
-          text: "+ Add Group",
-          cls: "sonic-graph-add-group-btn"
+        const searchInput = container.createEl("input", {
+          type: "text",
+          placeholder: "Enter query...",
+          cls: "sonic-graph-group-search-input"
         });
-        addButton.style.width = "100%";
-        addButton.style.padding = "8px";
-        addButton.style.marginTop = "10px";
-        addButton.style.border = "1px dashed var(--background-modifier-border)";
-        addButton.style.background = "transparent";
-        addButton.style.cursor = "pointer";
-        addButton.style.borderRadius = "4px";
-        addButton.addEventListener("click", () => {
-          this.addNewGroup();
-          this.refreshPathGroupsSettings();
+        searchInput.style.width = "100%";
+        searchInput.style.padding = "8px 12px";
+        searchInput.style.marginTop = "8px";
+        searchInput.style.border = "1px solid #fbbf24";
+        searchInput.style.borderRadius = "4px";
+        searchInput.style.backgroundColor = "#fef3c7";
+        searchInput.style.fontSize = "12px";
+        searchInput.addEventListener("focus", () => {
+          this.showSearchOptionsOverlay(searchInput);
         });
+        searchInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            this.addGroupFromSearch(searchInput.value);
+            searchInput.value = "";
+            this.refreshPathGroupsSettings();
+          }
+        });
+      }
+      /**
+       * Format group label in type:name format
+       */
+      formatGroupLabel(group) {
+        let type2 = "path";
+        if (group.name.toLowerCase().includes("file") || group.path.includes(".")) {
+          type2 = "file";
+        } else if (group.name.toLowerCase().includes("tag")) {
+          type2 = "tag";
+        }
+        return `${type2}:${group.name}`;
+      }
+      /**
+       * Show color picker for group
+       */
+      showColorPicker(groupIndex, colorDot) {
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = this.getSonicGraphSettings().layout.pathBasedGrouping.groups[groupIndex].color;
+        colorInput.style.opacity = "0";
+        colorInput.style.position = "absolute";
+        colorInput.style.pointerEvents = "none";
+        document.body.appendChild(colorInput);
+        colorInput.click();
+        colorInput.addEventListener("input", () => {
+          const newColor = colorInput.value;
+          this.updateGroupProperty(groupIndex, "color", newColor);
+          colorDot.style.backgroundColor = newColor;
+        });
+        setTimeout(() => {
+          document.body.removeChild(colorInput);
+        }, 100);
+      }
+      /**
+       * Show search options overlay
+       */
+      showSearchOptionsOverlay(searchInput) {
+        const existingOverlay = document.querySelector(".sonic-graph-search-overlay");
+        if (existingOverlay) {
+          existingOverlay.remove();
+        }
+        const overlay = document.createElement("div");
+        overlay.className = "sonic-graph-search-overlay";
+        overlay.style.position = "absolute";
+        overlay.style.top = searchInput.offsetTop + searchInput.offsetHeight + 4 + "px";
+        overlay.style.left = searchInput.offsetLeft + "px";
+        overlay.style.width = searchInput.offsetWidth + "px";
+        overlay.style.backgroundColor = "var(--background-primary)";
+        overlay.style.border = "1px solid var(--background-modifier-border)";
+        overlay.style.borderRadius = "4px";
+        overlay.style.padding = "8px";
+        overlay.style.fontSize = "12px";
+        overlay.style.zIndex = "1000";
+        overlay.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+        const options = [
+          "path: match path of the file",
+          "file: match file name",
+          "tag: search for tags",
+          "line: search keywords on same line",
+          "section: search keywords under same heading",
+          "[property] match property"
+        ];
+        options.forEach((option) => {
+          const optionEl = document.createElement("div");
+          optionEl.textContent = option;
+          optionEl.style.padding = "4px 8px";
+          optionEl.style.cursor = "pointer";
+          optionEl.style.borderRadius = "2px";
+          optionEl.addEventListener("mouseenter", () => {
+            optionEl.style.backgroundColor = "var(--background-modifier-hover)";
+          });
+          optionEl.addEventListener("mouseleave", () => {
+            optionEl.style.backgroundColor = "transparent";
+          });
+          optionEl.addEventListener("click", () => {
+            const prefix = option.split(":")[0];
+            searchInput.value = prefix + ":";
+            searchInput.focus();
+            overlay.remove();
+          });
+          overlay.appendChild(optionEl);
+        });
+        searchInput.parentElement.appendChild(overlay);
+        setTimeout(() => {
+          document.addEventListener("click", function handleClickOutside(e) {
+            if (!overlay.contains(e.target) && e.target !== searchInput) {
+              overlay.remove();
+              document.removeEventListener("click", handleClickOutside);
+            }
+          });
+        }, 100);
+      }
+      /**
+       * Add group from search input
+       */
+      addGroupFromSearch(query) {
+        if (!query.trim())
+          return;
+        const currentSettings = this.getSonicGraphSettings();
+        let type2 = "path";
+        let name = query;
+        let path = query;
+        if (query.includes(":")) {
+          const parts = query.split(":", 2);
+          type2 = parts[0].toLowerCase();
+          name = parts[1];
+          path = parts[1];
+        }
+        const newGroup = {
+          id: `group-${Date.now()}`,
+          name,
+          path,
+          color: this.getRandomGroupColor()
+        };
+        currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        if (this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        logger11.debug("path-grouping", "Added new group from search:", newGroup);
+      }
+      /**
+       * Get random color for new groups
+       */
+      getRandomGroupColor() {
+        const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899"];
+        return colors[Math.floor(Math.random() * colors.length)];
       }
       /**
        * Update a specific group property
@@ -13067,7 +13537,8 @@ var init_SonicGraphModal = __esm({
             animationStyle: "fade",
             nodeScaling: 1,
             connectionOpacity: 0.6,
-            timelineMarkersEnabled: true
+            timelineMarkersEnabled: true,
+            loopAnimation: false
           },
           navigation: {
             enableControlCenter: true,
@@ -13139,20 +13610,6 @@ var init_SonicGraphModal = __esm({
         logger11.debug("settings", "Updated note duration", { duration });
       }
       /**
-       * Update timeline loop setting and save to plugin settings
-       */
-      updateLoopAnimation(loop) {
-        if (!this.plugin.settings.sonicGraphSettings) {
-          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
-        }
-        this.plugin.settings.sonicGraphSettings.timeline.loop = loop;
-        this.plugin.saveSettings();
-        if (this.temporalAnimator) {
-          this.temporalAnimator.setLoop(loop);
-        }
-        logger11.debug("settings", "Updated loop animation", { loop });
-      }
-      /**
        * Update show file names setting and save to plugin settings
        */
       updateShowFileNames(show) {
@@ -13194,6 +13651,20 @@ var init_SonicGraphModal = __esm({
         logger11.debug("settings", "Updated animation style", { style });
         if (this.graphRenderer) {
           this.graphRenderer.setAnimationStyle(style);
+        }
+      }
+      /**
+       * Update loop animation setting and save to plugin settings
+       */
+      updateLoopAnimation(enabled) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.visual.loopAnimation = enabled;
+        this.plugin.saveSettings();
+        logger11.debug("settings", "Updated loop animation", { enabled });
+        if (this.temporalAnimator) {
+          this.temporalAnimator.setLoop(enabled);
         }
       }
       /**
@@ -13371,6 +13842,113 @@ var init_SonicGraphModal = __esm({
           hash = hash & hash;
         }
         return Math.abs(hash);
+      }
+      // Performance optimization: Event listener management
+      addEventListener(element, event, handler2) {
+        element.addEventListener(event, handler2);
+        this.eventListeners.push({ element, event, handler: handler2 });
+      }
+      removeAllEventListeners() {
+        this.eventListeners.forEach(({ element, event, handler: handler2 }) => {
+          element.removeEventListener(event, handler2);
+        });
+        this.eventListeners = [];
+      }
+      // Performance optimization: Debounced settings updates
+      debounce(func, delay) {
+        let timeoutId;
+        return (...args) => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
+      scheduleSettingsUpdate(key, value) {
+        this.pendingSettingsUpdates.set(key, value);
+        if (this.settingsUpdateTimeout) {
+          clearTimeout(this.settingsUpdateTimeout);
+        }
+        this.settingsUpdateTimeout = setTimeout(() => {
+          this.flushSettingsUpdates();
+        }, 300);
+      }
+      flushSettingsUpdates() {
+        if (this.pendingSettingsUpdates.size === 0)
+          return;
+        const currentSettings = this.getSonicGraphSettings();
+        let needsRendererUpdate = false;
+        this.pendingSettingsUpdates.forEach((value, key) => {
+          if (key.startsWith("layout.")) {
+            const layoutKey = key.substring(7);
+            currentSettings.layout[layoutKey] = value;
+            needsRendererUpdate = true;
+          } else {
+            currentSettings[key] = value;
+          }
+        });
+        this.plugin.saveSettings();
+        if (needsRendererUpdate && this.graphRenderer) {
+          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        this.pendingSettingsUpdates.clear();
+        this.settingsUpdateTimeout = null;
+      }
+      // Performance optimization: Non-blocking operations
+      executeWhenIdle(callback) {
+        return new Promise((resolve) => {
+          if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(() => resolve(callback()));
+          } else {
+            setTimeout(() => resolve(callback()), 0);
+          }
+        });
+      }
+      // Performance optimization: Progress indicator
+      showProgressIndicator(message) {
+        if (!this.progressIndicator) {
+          this.progressIndicator = this.contentEl.createDiv({
+            cls: "sonic-graph-progress-indicator"
+          });
+          this.progressIndicator.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--background-primary);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+        }
+        this.progressIndicator.innerHTML = `
+            <div class="sonic-graph-spinner" style="
+                width: 20px;
+                height: 20px;
+                border: 2px solid var(--background-modifier-border);
+                border-top: 2px solid var(--interactive-accent);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+            <span>${message}</span>
+        `;
+        this.progressIndicator.style.display = "flex";
+      }
+      hideProgressIndicator() {
+        if (this.progressIndicator) {
+          this.progressIndicator.style.display = "none";
+        }
+      }
+      // Performance optimization: DOM operations batching
+      batchDOMUpdates(updates) {
+        const fragment = document.createDocumentFragment();
+        const tempContainer = document.createElement("div");
+        fragment.appendChild(tempContainer);
+        updates.forEach((update) => update());
+        requestAnimationFrame(() => {
+        });
       }
     };
   }

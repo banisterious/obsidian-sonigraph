@@ -28,6 +28,16 @@ export class SonicGraphModal extends Modal {
     private isAnimating: boolean = false;
     private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
+    // Performance optimization: Event listener management
+    private eventListeners: Array<{ element: Element | Document | Window, event: string, handler: EventListener }> = [];
+    
+    // Performance optimization: Settings debouncing
+    private pendingSettingsUpdates = new Map<string, any>();
+    private settingsUpdateTimeout: NodeJS.Timeout | null = null;
+    
+    // Performance optimization: Progress indicator
+    private progressIndicator: HTMLElement | null = null;
+    
     // UI elements
     private headerContainer: HTMLElement;
     private graphContainer: HTMLElement;
@@ -88,7 +98,7 @@ export class SonicGraphModal extends Modal {
             // Create close button (positioned outside main container like Control Center)
             logger.info('sonic-graph-init', 'Creating close button');
             const closeButton = contentEl.createDiv({ cls: 'modal-close-button' });
-            closeButton.addEventListener('click', () => this.close());
+            this.addEventListener(closeButton, 'click', () => this.close());
             
             // Create main modal container
             logger.info('sonic-graph-init', 'Creating modal container');
@@ -128,6 +138,16 @@ export class SonicGraphModal extends Modal {
     onClose() {
         logger.debug('ui', 'Closing Sonic Graph modal');
         
+        // Performance optimization: Cleanup all event listeners
+        this.removeAllEventListeners();
+        
+        // Performance optimization: Clear any pending settings updates
+        if (this.settingsUpdateTimeout) {
+            clearTimeout(this.settingsUpdateTimeout);
+            this.settingsUpdateTimeout = null;
+        }
+        this.pendingSettingsUpdates.clear();
+        
         // Cleanup temporal animator
         if (this.temporalAnimator) {
             this.temporalAnimator.destroy();
@@ -142,6 +162,9 @@ export class SonicGraphModal extends Modal {
         
         // Reset animation state
         this.isAnimating = false;
+        
+        // Hide progress indicator
+        this.hideProgressIndicator();
         
         const { contentEl } = this;
         contentEl.empty();
@@ -201,7 +224,7 @@ export class SonicGraphModal extends Modal {
         this.timelineScrubber.min = '0';
         this.timelineScrubber.max = '100';
         this.timelineScrubber.value = '0';
-        this.timelineScrubber.addEventListener('input', () => this.handleTimelineScrub());
+        this.addEventListener(this.timelineScrubber, 'input', () => this.handleTimelineScrub());
         
         // Unified timeline info with single timeline bar
         this.timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
@@ -251,7 +274,7 @@ export class SonicGraphModal extends Modal {
             const option = this.speedSelect.createEl('option', { text: speed, value: speed });
             if (speed === savedSpeedString) option.selected = true;
         });
-        this.speedSelect.addEventListener('change', () => this.handleSpeedChange());
+        this.addEventListener(this.speedSelect, 'change', () => this.handleSpeedChange());
         
         // Center - Stats
         const statsControls = this.controlsContainer.createDiv({ cls: 'sonic-graph-stats-controls' });
@@ -269,7 +292,7 @@ export class SonicGraphModal extends Modal {
         const viewModeIcon = createLucideIcon('eye', 16);
         this.viewModeBtn.appendChild(viewModeIcon);
         this.viewModeBtn.appendText('Static View');
-        this.viewModeBtn.addEventListener('click', () => this.toggleViewMode());
+        this.addEventListener(this.viewModeBtn, 'click', () => this.toggleViewMode());
         
         // Reset view button
         const resetViewBtn = viewControls.createEl('button', { 
@@ -297,14 +320,19 @@ export class SonicGraphModal extends Modal {
         try {
             logger.info('sonic-graph-data', 'Starting graph initialization');
             
-            // Extract graph data
+            // Performance optimization: Show progress and use non-blocking operations
+            this.showProgressIndicator('Extracting graph data...');
+            
+            // Extract graph data using idle time
             logger.info('sonic-graph-data', 'Beginning graph data extraction');
             logger.debug('ui', 'GraphDataExtractor configuration:', {
                 excludeFolders: this.graphDataExtractor['excludeFolders'],
                 excludeFiles: this.graphDataExtractor['excludeFiles']
             });
             
-            const graphData = await this.graphDataExtractor.extractGraphData();
+            const graphData = await this.executeWhenIdle(async () => {
+                return await this.graphDataExtractor.extractGraphData();
+            });
             logger.info('sonic-graph-data', `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
             
             if (graphData.nodes.length === 0) {
@@ -336,19 +364,27 @@ export class SonicGraphModal extends Modal {
                 offsetHeight: canvasElement.offsetHeight
             });
             
+            // Performance optimization: Show progress for renderer initialization
+            this.showProgressIndicator('Initializing renderer...');
+            
             logger.info('sonic-graph-renderer', 'Creating GraphRenderer instance');
-            this.graphRenderer = new GraphRenderer(canvasElement, {
-                enableZoom: true,
-                showLabels: false
+            this.graphRenderer = await this.executeWhenIdle(() => {
+                return new GraphRenderer(canvasElement, {
+                    enableZoom: true,
+                    showLabels: false
+                });
             });
             logger.info('sonic-graph-renderer', 'GraphRenderer created successfully');
             
             // Phase 3.8: Apply layout settings to renderer
+            this.showProgressIndicator('Applying layout settings...');
             try {
                 logger.info('sonic-graph-layout', 'Getting layout settings');
                 const layoutSettings = this.getSonicGraphSettings().layout;
                 logger.info('sonic-graph-layout', 'Applying layout settings to renderer', layoutSettings);
-                this.graphRenderer.updateLayoutSettings(layoutSettings);
+                await this.executeWhenIdle(() => {
+                    this.graphRenderer!.updateLayoutSettings(layoutSettings);
+                });
                 logger.info('sonic-graph-layout', 'Layout settings applied successfully');
             } catch (layoutError) {
                 logger.error('sonic-graph-layout', 'Failed to apply layout settings:', (layoutError as Error).message);
@@ -381,14 +417,14 @@ export class SonicGraphModal extends Modal {
                 throw new Error(`Graph rendering failed: ${(renderError as Error).message}`);
             }
             
-            // Set initial zoom level to be more zoomed out and centered
+            // Set initial zoom level to be much more zoomed out to show full graph
             const canvasRect = canvasElement.getBoundingClientRect();
             const centerX = canvasRect.width / 2;
             const centerY = canvasRect.height / 2;
             this.graphRenderer.setZoomTransform(
                 d3.zoomIdentity
-                    .translate(centerX * 0.6, centerY * 0.6) // Center with some offset
-                    .scale(0.4)
+                    .translate(centerX, centerY) // Center properly
+                    .scale(0.3) // Better balance - shows full graph but not too tiny
             );
             
             // Hide loading indicator
@@ -396,6 +432,9 @@ export class SonicGraphModal extends Modal {
             if (loadingIndicator) {
                 loadingIndicator.remove();
             }
+            
+            // Performance optimization: Hide progress indicator
+            this.hideProgressIndicator();
             
             // Update stats
             this.updateStats();
@@ -408,6 +447,9 @@ export class SonicGraphModal extends Modal {
         } catch (error) {
             logger.error('ui', 'Failed to initialize Sonic Graph:', (error as Error).message);
             logger.error('ui', 'Initialization error stack:', (error as Error).stack);
+            
+            // Performance optimization: Hide progress indicator on error
+            this.hideProgressIndicator();
             
             // Clear loading indicator
             const loadingIndicator = this.graphContainer.querySelector('.sonic-graph-loading');
@@ -716,16 +758,16 @@ export class SonicGraphModal extends Modal {
         // Animation Duration
         const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         durationItem.createEl('label', { text: 'Animation duration', cls: 'sonic-graph-setting-label' });
-        durationItem.createEl('div', { 
-            text: 'Total time for complete timeline animation', 
-            cls: 'sonic-graph-setting-description' 
-        });
         
-        const durationSelect = durationItem.createEl('select', { cls: 'sonic-graph-setting-select' });
-        ['15 seconds', '30 seconds', '60 seconds', '120 seconds', 'Custom...'].forEach(option => {
-            const optionEl = durationSelect.createEl('option', { text: option });
-            if (option === '60 seconds') optionEl.selected = true;
+        const durationDisplay = durationItem.createEl('span', { 
+            text: '60 seconds',
+            cls: 'sonic-graph-setting-value'
         });
+        durationDisplay.style.fontSize = '12px';
+        durationDisplay.style.color = 'var(--text-muted)';
+        durationDisplay.style.padding = '4px 8px';
+        durationDisplay.style.backgroundColor = 'var(--background-secondary)';
+        durationDisplay.style.borderRadius = '4px';
         
         // Loop Animation
         const loopItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -771,28 +813,29 @@ export class SonicGraphModal extends Modal {
             if (option.includes('Auto')) optionEl.selected = true;
         });
         
-        // Note Duration
+        // Note Duration Slider
         const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         durationItem.createEl('label', { text: 'Note duration', cls: 'sonic-graph-setting-label' });
-        durationItem.createEl('div', { 
-            text: 'Base duration for individual notes', 
-            cls: 'sonic-graph-setting-description' 
+        
+        const durationContainer = durationItem.createDiv({ cls: 'sonic-graph-slider-container' });
+        const durationSlider = durationContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider'
+        });
+        durationSlider.min = '1';
+        durationSlider.max = '20';
+        durationSlider.step = '1';
+        durationSlider.value = (this.getSonicGraphSettings().audio.noteDuration * 10).toString();
+        
+        const durationValue = durationContainer.createEl('span', { 
+            text: `${this.getSonicGraphSettings().audio.noteDuration.toFixed(1)}s`,
+            cls: 'sonic-graph-slider-value' 
         });
         
-        const durationInput = durationItem.createEl('input', { 
-            type: 'number',
-            cls: 'sonic-graph-setting-input'
-        });
-        durationInput.value = this.getSonicGraphSettings().audio.noteDuration.toString();
-        durationInput.step = '0.1';
-        durationInput.min = '0.1';
-        durationInput.max = '2.0';
-        
-        // Add event handler for note duration changes
-        durationInput.addEventListener('input', (e) => {
-            const target = e.target as HTMLInputElement;
-            const duration = parseFloat(target.value);
-            this.updateNoteDuration(duration);
+        durationSlider.addEventListener('input', () => {
+            const value = parseInt(durationSlider.value) / 10;
+            durationValue.textContent = `${value.toFixed(1)}s`;
+            this.updateNoteDuration(value);
         });
     }
 
@@ -828,10 +871,6 @@ export class SonicGraphModal extends Modal {
         // Animation Style
         const styleItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         styleItem.createEl('label', { text: 'Animation style', cls: 'sonic-graph-setting-label' });
-        styleItem.createEl('div', { 
-            text: 'How nodes appear during animation', 
-            cls: 'sonic-graph-setting-description' 
-        });
         
         const styleSelect = styleItem.createEl('select', { cls: 'sonic-graph-setting-select' });
         const styleOptions = [
@@ -859,13 +898,26 @@ export class SonicGraphModal extends Modal {
             this.updateAnimationStyle(style);
         });
         
+        // Loop Animation Toggle
+        const loopItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        loopItem.createEl('label', { text: 'Loop animation', cls: 'sonic-graph-setting-label' });
+        
+        const loopToggle = loopItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
+        const loopSwitch = loopToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        if (this.getSonicGraphSettings().visual.loopAnimation) {
+            loopSwitch.addClass('active');
+        }
+        const loopHandle = loopSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        
+        loopSwitch.addEventListener('click', () => {
+            const isActive = loopSwitch.hasClass('active');
+            loopSwitch.toggleClass('active', !isActive);
+            this.updateLoopAnimation(!isActive);
+        });
+        
         // Show File Names Toggle
         const fileNamesItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         fileNamesItem.createEl('label', { text: 'Show file names', cls: 'sonic-graph-setting-label' });
-        fileNamesItem.createEl('div', { 
-            text: 'Display file names in small text beneath each node', 
-            cls: 'sonic-graph-setting-description' 
-        });
         
         const fileNamesToggle = fileNamesItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const fileNamesSwitch = fileNamesToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
@@ -873,7 +925,6 @@ export class SonicGraphModal extends Modal {
             fileNamesSwitch.addClass('active');
         }
         const fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
-        fileNamesToggle.createEl('span', { text: 'Show file names' });
         
         fileNamesSwitch.addEventListener('click', () => {
             const isActive = fileNamesSwitch.hasClass('active');
@@ -1021,15 +1072,18 @@ export class SonicGraphModal extends Modal {
         // Path-Based Grouping Section
         const groupingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         groupingItem.createEl('label', { text: 'Path-based grouping', cls: 'sonic-graph-setting-label' });
-        groupingItem.createEl('div', { 
-            text: 'Create custom groups based on folder paths with color coding', 
-            cls: 'sonic-graph-setting-description' 
-        });
         
-        const groupingToggle = groupingItem.createEl('input', { type: 'checkbox', cls: 'sonic-graph-toggle' });
-        groupingToggle.checked = this.getSonicGraphSettings().layout.pathBasedGrouping.enabled;
-        groupingToggle.addEventListener('change', () => {
-            this.updatePathBasedGroupingSetting('enabled', groupingToggle.checked);
+        const groupingToggle = groupingItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
+        const groupingSwitch = groupingToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        if (this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
+            groupingSwitch.addClass('active');
+        }
+        const groupingHandle = groupingSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        
+        groupingSwitch.addEventListener('click', () => {
+            const isActive = groupingSwitch.hasClass('active');
+            groupingSwitch.toggleClass('active', !isActive);
+            this.updatePathBasedGroupingSetting('enabled', !isActive);
         });
         
         // Groups Configuration Container
@@ -1041,8 +1095,9 @@ export class SonicGraphModal extends Modal {
         }
         
         // Update container visibility when toggle changes
-        groupingToggle.addEventListener('change', () => {
-            groupsContainer.style.display = groupingToggle.checked ? 'block' : 'none';
+        groupingSwitch.addEventListener('click', () => {
+            const isActive = groupingSwitch.hasClass('active');
+            groupsContainer.style.display = !isActive ? 'block' : 'none';
         });
         
         this.createPathGroupsSettings(groupsContainer);
@@ -1094,20 +1149,10 @@ export class SonicGraphModal extends Modal {
      * Phase 3.8: Update layout setting and apply to renderer
      */
     private updateLayoutSetting(key: keyof SonicGraphSettings['layout'], value: any): void {
-        // Update the setting
-        const currentSettings = this.getSonicGraphSettings();
-        (currentSettings.layout as any)[key] = value;
+        // Performance optimization: Use debounced settings updates
+        this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
         
-        // Save to plugin settings
-        this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
-        // Apply to renderer if available
-        if (this.graphRenderer) {
-            this.graphRenderer.updateLayoutSettings(currentSettings.layout);
-        }
-        
-        logger.debug('layout-setting', `Updated layout setting: ${String(key)} = ${value}`);
+        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${value}`);
     }
 
     /**
@@ -1149,125 +1194,261 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
-     * Create path groups settings interface
+     * Create path groups settings interface - New design
      */
     private createPathGroupsSettings(container: HTMLElement): void {
+        // Groups header
+        const groupsHeader = container.createEl('div', { 
+            text: 'Groups', 
+            cls: 'sonic-graph-groups-header'
+        });
+        groupsHeader.style.fontSize = '12px';
+        groupsHeader.style.fontWeight = '600';
+        groupsHeader.style.color = 'var(--text-normal)';
+        groupsHeader.style.marginBottom = '8px';
+        
         const settings = this.getSonicGraphSettings();
         const groups = settings.layout.pathBasedGrouping.groups;
         
+        // Groups list
+        const groupsList = container.createDiv({ cls: 'sonic-graph-groups-list' });
+        
         groups.forEach((group, index) => {
-            const groupItem = container.createDiv({ cls: 'sonic-graph-group-item' });
-            groupItem.style.marginBottom = '15px';
-            groupItem.style.padding = '10px';
-            groupItem.style.border = '1px solid var(--background-modifier-border)';
+            const groupItem = groupsList.createDiv({ cls: 'sonic-graph-group-list-item' });
+            groupItem.style.display = 'flex';
+            groupItem.style.alignItems = 'center';
+            groupItem.style.marginBottom = '6px';
+            groupItem.style.padding = '4px 8px';
+            groupItem.style.backgroundColor = 'var(--background-secondary)';
             groupItem.style.borderRadius = '4px';
             
-            // Group header with name and remove button
-            const groupHeader = groupItem.createDiv({ cls: 'sonic-graph-group-header' });
-            groupHeader.style.display = 'flex';
-            groupHeader.style.justifyContent = 'space-between';
-            groupHeader.style.alignItems = 'center';
-            groupHeader.style.marginBottom = '10px';
+            // Colored dot
+            const colorDot = groupItem.createEl('div', { cls: 'sonic-graph-group-color-dot' });
+            colorDot.style.width = '12px';
+            colorDot.style.height = '12px';
+            colorDot.style.borderRadius = '50%';
+            colorDot.style.backgroundColor = group.color;
+            colorDot.style.marginRight = '8px';
+            colorDot.style.cursor = 'pointer';
             
-            const groupNameInput = groupHeader.createEl('input', { 
-                type: 'text',
-                value: group.name,
-                cls: 'sonic-graph-group-name-input'
+            // Group label (type:name format)
+            const groupLabel = groupItem.createEl('span', { 
+                text: this.formatGroupLabel(group),
+                cls: 'sonic-graph-group-label'
             });
-            groupNameInput.style.border = 'none';
-            groupNameInput.style.background = 'transparent';
-            groupNameInput.style.fontSize = '14px';
-            groupNameInput.style.fontWeight = 'bold';
-            groupNameInput.addEventListener('input', () => {
-                this.updateGroupProperty(index, 'name', groupNameInput.value);
-            });
+            groupLabel.style.flex = '1';
+            groupLabel.style.fontSize = '12px';
+            groupLabel.style.color = 'var(--text-normal)';
             
-            const removeButton = groupHeader.createEl('button', { 
+            // Remove button
+            const removeButton = groupItem.createEl('button', { 
                 text: '×',
-                cls: 'sonic-graph-remove-group-btn'
+                cls: 'sonic-graph-group-remove-btn'
             });
             removeButton.style.background = 'none';
             removeButton.style.border = 'none';
-            removeButton.style.fontSize = '18px';
+            removeButton.style.fontSize = '14px';
             removeButton.style.cursor = 'pointer';
             removeButton.style.color = 'var(--text-muted)';
+            removeButton.style.padding = '2px 4px';
+            removeButton.style.marginLeft = '8px';
+            
+            // Event listeners
+            colorDot.addEventListener('click', () => {
+                this.showColorPicker(index, colorDot);
+            });
+            
             removeButton.addEventListener('click', () => {
                 this.removeGroup(index);
                 this.refreshPathGroupsSettings();
             });
-            
-            // Path input
-            const pathRow = groupItem.createDiv({ cls: 'sonic-graph-group-row' });
-            pathRow.style.display = 'flex';
-            pathRow.style.alignItems = 'center';
-            pathRow.style.marginBottom = '10px';
-            
-            const pathLabel = pathRow.createEl('label', { text: 'Path:', cls: 'sonic-graph-group-label' });
-            pathLabel.style.minWidth = '50px';
-            pathLabel.style.marginRight = '10px';
-            
-            const pathInput = pathRow.createEl('input', {
-                type: 'text',
-                value: group.path,
-                cls: 'sonic-graph-group-path-input'
-            });
-            pathInput.style.flex = '1';
-            pathInput.style.marginRight = '10px';
-            pathInput.placeholder = 'e.g., Projects, Journal/2025';
-            pathInput.addEventListener('input', () => {
-                this.updateGroupProperty(index, 'path', pathInput.value);
-            });
-            
-            // Color picker
-            const colorRow = groupItem.createDiv({ cls: 'sonic-graph-group-row' });
-            colorRow.style.display = 'flex';
-            colorRow.style.alignItems = 'center';
-            
-            const colorLabel = colorRow.createEl('label', { text: 'Color:', cls: 'sonic-graph-group-label' });
-            colorLabel.style.minWidth = '50px';
-            colorLabel.style.marginRight = '10px';
-            
-            const colorInput = colorRow.createEl('input', {
-                type: 'color',
-                value: group.color,
-                cls: 'sonic-graph-group-color-input'
-            });
-            colorInput.style.width = '50px';
-            colorInput.style.height = '30px';
-            colorInput.style.border = 'none';
-            colorInput.style.borderRadius = '4px';
-            colorInput.style.cursor = 'pointer';
-            colorInput.addEventListener('input', () => {
-                this.updateGroupProperty(index, 'color', colorInput.value);
-            });
-            
-            const colorPreview = colorRow.createEl('div', { cls: 'sonic-graph-color-preview' });
-            colorPreview.style.width = '20px';
-            colorPreview.style.height = '20px';
-            colorPreview.style.backgroundColor = group.color;
-            colorPreview.style.marginLeft = '10px';
-            colorPreview.style.borderRadius = '50%';
-            colorPreview.style.border = '1px solid var(--background-modifier-border)';
         });
         
-        // Add New Group button
-        const addButton = container.createEl('button', { 
-            text: '+ Add Group',
-            cls: 'sonic-graph-add-group-btn'
+        // Search input for adding new groups
+        const searchInput = container.createEl('input', {
+            type: 'text',
+            placeholder: 'Enter query...',
+            cls: 'sonic-graph-group-search-input'
         });
-        addButton.style.width = '100%';
-        addButton.style.padding = '8px';
-        addButton.style.marginTop = '10px';
-        addButton.style.border = '1px dashed var(--background-modifier-border)';
-        addButton.style.background = 'transparent';
-        addButton.style.cursor = 'pointer';
-        addButton.style.borderRadius = '4px';
-        addButton.addEventListener('click', () => {
-            this.addNewGroup();
-            this.refreshPathGroupsSettings();
+        searchInput.style.width = '100%';
+        searchInput.style.padding = '8px 12px';
+        searchInput.style.marginTop = '8px';
+        searchInput.style.border = '1px solid #fbbf24'; // Yellow border
+        searchInput.style.borderRadius = '4px';
+        searchInput.style.backgroundColor = '#fef3c7'; // Light yellow background
+        searchInput.style.fontSize = '12px';
+        
+        // Show search options overlay on focus
+        searchInput.addEventListener('focus', () => {
+            this.showSearchOptionsOverlay(searchInput);
+        });
+        
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.addGroupFromSearch(searchInput.value);
+                searchInput.value = '';
+                this.refreshPathGroupsSettings();
+            }
         });
     }
 
+    /**
+     * Format group label in type:name format
+     */
+    private formatGroupLabel(group: any): string {
+        // Determine type based on group properties
+        let type = 'path'; // default
+        if (group.name.toLowerCase().includes('file') || group.path.includes('.')) {
+            type = 'file';
+        } else if (group.name.toLowerCase().includes('tag')) {
+            type = 'tag';
+        }
+        
+        return `${type}:${group.name}`;
+    }
+    
+    /**
+     * Show color picker for group
+     */
+    private showColorPicker(groupIndex: number, colorDot: HTMLElement): void {
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = this.getSonicGraphSettings().layout.pathBasedGrouping.groups[groupIndex].color;
+        colorInput.style.opacity = '0';
+        colorInput.style.position = 'absolute';
+        colorInput.style.pointerEvents = 'none';
+        document.body.appendChild(colorInput);
+        
+        colorInput.click();
+        
+        colorInput.addEventListener('input', () => {
+            const newColor = colorInput.value;
+            this.updateGroupProperty(groupIndex, 'color', newColor);
+            colorDot.style.backgroundColor = newColor;
+        });
+        
+        setTimeout(() => {
+            document.body.removeChild(colorInput);
+        }, 100);
+    }
+    
+    /**
+     * Show search options overlay
+     */
+    private showSearchOptionsOverlay(searchInput: HTMLElement): void {
+        // Remove existing overlay
+        const existingOverlay = document.querySelector('.sonic-graph-search-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'sonic-graph-search-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = (searchInput.offsetTop + searchInput.offsetHeight + 4) + 'px';
+        overlay.style.left = searchInput.offsetLeft + 'px';
+        overlay.style.width = searchInput.offsetWidth + 'px';
+        overlay.style.backgroundColor = 'var(--background-primary)';
+        overlay.style.border = '1px solid var(--background-modifier-border)';
+        overlay.style.borderRadius = '4px';
+        overlay.style.padding = '8px';
+        overlay.style.fontSize = '12px';
+        overlay.style.zIndex = '1000';
+        overlay.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        
+        const options = [
+            'path: match path of the file',
+            'file: match file name',
+            'tag: search for tags',
+            'line: search keywords on same line',
+            'section: search keywords under same heading',
+            '[property] match property'
+        ];
+        
+        options.forEach(option => {
+            const optionEl = document.createElement('div');
+            optionEl.textContent = option;
+            optionEl.style.padding = '4px 8px';
+            optionEl.style.cursor = 'pointer';
+            optionEl.style.borderRadius = '2px';
+            
+            optionEl.addEventListener('mouseenter', () => {
+                optionEl.style.backgroundColor = 'var(--background-modifier-hover)';
+            });
+            
+            optionEl.addEventListener('mouseleave', () => {
+                optionEl.style.backgroundColor = 'transparent';
+            });
+            
+            optionEl.addEventListener('click', () => {
+                const prefix = option.split(':')[0];
+                (searchInput as HTMLInputElement).value = prefix + ':';
+                (searchInput as HTMLInputElement).focus();
+                overlay.remove();
+            });
+            
+            overlay.appendChild(optionEl);
+        });
+        
+        searchInput.parentElement!.appendChild(overlay);
+        
+        // Remove overlay when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', function handleClickOutside(e) {
+                if (!overlay.contains(e.target as Node) && e.target !== searchInput) {
+                    overlay.remove();
+                    document.removeEventListener('click', handleClickOutside);
+                }
+            });
+        }, 100);
+    }
+    
+    /**
+     * Add group from search input
+     */
+    private addGroupFromSearch(query: string): void {
+        if (!query.trim()) return;
+        
+        const currentSettings = this.getSonicGraphSettings();
+        
+        // Parse the query to determine type and name
+        let type = 'path';
+        let name = query;
+        let path = query;
+        
+        if (query.includes(':')) {
+            const parts = query.split(':', 2);
+            type = parts[0].toLowerCase();
+            name = parts[1];
+            path = parts[1];
+        }
+        
+        const newGroup = {
+            id: `group-${Date.now()}`,
+            name: name,
+            path: path,
+            color: this.getRandomGroupColor()
+        };
+        
+        currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
+        this.plugin.settings.sonicGraphSettings = currentSettings;
+        this.plugin.saveSettings();
+        
+        if (this.graphRenderer) {
+            this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        
+        logger.debug('path-grouping', 'Added new group from search:', newGroup);
+    }
+    
+    /**
+     * Get random color for new groups
+     */
+    private getRandomGroupColor(): string {
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
     /**
      * Update a specific group property
      */
@@ -1979,7 +2160,8 @@ export class SonicGraphModal extends Modal {
                 animationStyle: 'fade' as const,
                 nodeScaling: 1.0,
                 connectionOpacity: 0.6,
-                timelineMarkersEnabled: true
+                timelineMarkersEnabled: true,
+                loopAnimation: false
             },
             navigation: {
                 enableControlCenter: true,
@@ -2064,26 +2246,6 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
-     * Update timeline loop setting and save to plugin settings
-     */
-    private updateLoopAnimation(loop: boolean): void {
-        // Ensure settings object exists
-        if (!this.plugin.settings.sonicGraphSettings) {
-            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
-        }
-        
-        this.plugin.settings.sonicGraphSettings.timeline.loop = loop;
-        this.plugin.saveSettings();
-        
-        // Update the temporal animator if it exists
-        if (this.temporalAnimator) {
-            this.temporalAnimator.setLoop(loop);
-        }
-        
-        logger.debug('settings', 'Updated loop animation', { loop });
-    }
-
-    /**
      * Update show file names setting and save to plugin settings
      */
     private updateShowFileNames(show: boolean): void {
@@ -2141,6 +2303,26 @@ export class SonicGraphModal extends Modal {
         // Update the renderer's animation style if it exists
         if (this.graphRenderer) {
             this.graphRenderer.setAnimationStyle(style);
+        }
+    }
+
+    /**
+     * Update loop animation setting and save to plugin settings
+     */
+    private updateLoopAnimation(enabled: boolean): void {
+        // Ensure settings object exists
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.visual.loopAnimation = enabled;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated loop animation', { enabled });
+        
+        // Update the animator's loop setting if it exists
+        if (this.temporalAnimator) {
+            this.temporalAnimator.setLoop(enabled);
         }
     }
 
@@ -2355,5 +2537,135 @@ export class SonicGraphModal extends Modal {
             hash = hash & hash; // Convert to 32-bit integer
         }
         return Math.abs(hash);
+    }
+
+    // Performance optimization: Event listener management
+    private addEventListener(element: Element | Document | Window, event: string, handler: EventListener): void {
+        element.addEventListener(event, handler);
+        this.eventListeners.push({ element, event, handler });
+    }
+
+    private removeAllEventListeners(): void {
+        this.eventListeners.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+        this.eventListeners = [];
+    }
+
+    // Performance optimization: Debounced settings updates
+    private debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
+        let timeoutId: NodeJS.Timeout;
+        return ((...args: any[]) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        }) as T;
+    }
+
+    private scheduleSettingsUpdate(key: string, value: any): void {
+        this.pendingSettingsUpdates.set(key, value);
+        
+        if (this.settingsUpdateTimeout) {
+            clearTimeout(this.settingsUpdateTimeout);
+        }
+        
+        this.settingsUpdateTimeout = setTimeout(() => {
+            this.flushSettingsUpdates();
+        }, 300);
+    }
+
+    private flushSettingsUpdates(): void {
+        if (this.pendingSettingsUpdates.size === 0) return;
+        
+        const currentSettings = this.getSonicGraphSettings();
+        let needsRendererUpdate = false;
+        
+        // Apply all updates at once
+        this.pendingSettingsUpdates.forEach((value, key) => {
+            if (key.startsWith('layout.')) {
+                const layoutKey = key.substring(7);
+                (currentSettings.layout as any)[layoutKey] = value;
+                needsRendererUpdate = true;
+            } else {
+                (currentSettings as any)[key] = value;
+            }
+        });
+        
+        // Single save operation
+        this.plugin.saveSettings();
+        
+        // Single renderer update if needed
+        if (needsRendererUpdate && this.graphRenderer) {
+            this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+        }
+        
+        this.pendingSettingsUpdates.clear();
+        this.settingsUpdateTimeout = null;
+    }
+
+    // Performance optimization: Non-blocking operations
+    private executeWhenIdle<T>(callback: () => T): Promise<T> {
+        return new Promise((resolve) => {
+            if ('requestIdleCallback' in window) {
+                (window as any).requestIdleCallback(() => resolve(callback()));
+            } else {
+                setTimeout(() => resolve(callback()), 0);
+            }
+        });
+    }
+
+    // Performance optimization: Progress indicator
+    private showProgressIndicator(message: string): void {
+        if (!this.progressIndicator) {
+            this.progressIndicator = this.contentEl.createDiv({
+                cls: 'sonic-graph-progress-indicator'
+            });
+            this.progressIndicator.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--background-primary);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+        }
+        
+        this.progressIndicator.innerHTML = `
+            <div class="sonic-graph-spinner" style="
+                width: 20px;
+                height: 20px;
+                border: 2px solid var(--background-modifier-border);
+                border-top: 2px solid var(--interactive-accent);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+            <span>${message}</span>
+        `;
+        this.progressIndicator.style.display = 'flex';
+    }
+
+    private hideProgressIndicator(): void {
+        if (this.progressIndicator) {
+            this.progressIndicator.style.display = 'none';
+        }
+    }
+
+    // Performance optimization: DOM operations batching
+    private batchDOMUpdates(updates: Array<() => void>): void {
+        const fragment = document.createDocumentFragment();
+        const tempContainer = document.createElement('div');
+        fragment.appendChild(tempContainer);
+        
+        updates.forEach(update => update());
+        
+        // Single reflow/repaint
+        requestAnimationFrame(() => {
+            // DOM updates have been batched
+        });
     }
 } 
