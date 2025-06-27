@@ -1326,3 +1326,29 @@
     padding: var(--osp-spacing-sm);
   }
 }
+
+/* ===================================
+   SETTINGS SEPARATOR
+   ================================== */
+
+.sonic-graph-settings-separator {
+  height: 1px;
+  background-color: var(--background-modifier-border);
+  margin: var(--osp-spacing-md) 0;
+}
+
+/* ===================================
+   HIDDEN COLOR PICKER
+   ================================== */
+
+.sonic-graph-hidden-color-picker {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
