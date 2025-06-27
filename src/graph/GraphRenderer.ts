@@ -46,6 +46,14 @@ export class GraphRenderer {
   private visibleLinks: Set<string> = new Set();
   private animationStyle: 'fade' | 'scale' | 'slide' | 'pop' = 'fade';
   
+  // Performance optimization: Viewport culling and batching
+  private viewportBounds: { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 };
+  private cullingMargin: number = 100; // Extra margin around viewport for smoother scrolling
+  private isDenseGraph: boolean = false;
+  private lastUpdateTime: number = 0;
+  private updateDebounceMs: number = 16; // ~60fps
+  private pendingUpdate: number | null = null;
+  
   // Phase 3.8: Settings integration
   private layoutSettings: SonicGraphSettings['layout'] | null = null;
   
@@ -64,16 +72,16 @@ export class GraphRenderer {
     };
     
     this.forceConfig = {
-      centerStrength: 0.15, // Phase 3.8: Slightly reduced for more organic spread
-      linkStrength: 0.6,    // Phase 3.8: Increased for stronger clustering
-      chargeStrength: -120, // Phase 3.8: Increased repulsion for better node spacing
-      collisionRadius: 24,  // Phase 3.8: One node-sized space between nodes (8+8+8)
-      // Phase 3.8: Enhanced clustering parameters (optimized)
-      strongLinkDistance: 30,    // Phase 3.8: Increased for better spacing while maintaining clusters
-      weakLinkDistance: 80,      // Phase 3.8: Increased for more distance for weak connections
-      orphanRepulsion: -30,      // Phase 3.8: Slightly reduced for orphan clustering
-      clusterStrength: 0.15,     // Phase 3.8: Increased for better clustering
-      separationStrength: 0.08   // Phase 3.8: Increased for clearer group boundaries
+      centerStrength: 0.1,  // Reduced for more organic spread
+      linkStrength: 0.5,    // Slightly reduced to prevent rigid connections
+      chargeStrength: -60,  // Much less rigid repulsion for organic clusters
+      collisionRadius: 14,  // Smaller radius for more natural clustering
+      // Enhanced clustering parameters for rounded clusters
+      strongLinkDistance: 25,    // Tighter for strong connections
+      weakLinkDistance: 60,      // Reduced for less spacing
+      orphanRepulsion: -20,      // Gentler orphan repulsion
+      clusterStrength: 0.12,     // Balanced clustering
+      separationStrength: 0.06   // Softer separation for organic shapes
     };
 
     this.initializeSVG();
@@ -103,6 +111,9 @@ export class GraphRenderer {
     // Create groups for links and nodes (order matters for z-index)
     this.g.append('g').attr('class', 'sonigraph-temporal-links');
     this.g.append('g').attr('class', 'sonigraph-temporal-nodes');
+    
+    // Performance optimization: Initialize viewport bounds
+    this.initializeViewportBounds();
 
     // Setup zoom behavior
     if (this.config.enableZoom) {
@@ -110,6 +121,9 @@ export class GraphRenderer {
         .scaleExtent([0.1, 4])
         .on('zoom', (event) => {
           this.g.attr('transform', event.transform);
+          // Performance optimization: Update viewport bounds for culling
+          this.updateViewportBounds(event.transform);
+          this.scheduleViewportUpdate();
         });
 
       // Configure zoom with touch event optimization before applying
@@ -149,25 +163,40 @@ export class GraphRenderer {
         this.config.height / 2
       ).strength(this.forceConfig.centerStrength))
       .force('collision', d3.forceCollide<GraphNode>()
-        .radius(this.forceConfig.collisionRadius)
+        .radius((d: GraphNode) => {
+          // Add randomness to collision radius for organic clustering
+          const baseRadius = this.forceConfig.collisionRadius;
+          const randomFactor = 0.7 + (Math.random() * 0.6); // 0.7 to 1.3 multiplier
+          return baseRadius * randomFactor;
+        })
+        .strength(0.8) // Slightly softer collision for more organic overlap
       )
-      // Phase 3.8: Simplified jitter force (clustering applied once at start)
+      // Enhanced jitter force for organic, rounded clusters
       .force('jitter', (alpha) => {
-        if (alpha < 0.1) return; // Only apply jitter at high alpha
-        const strength = 0.01 * alpha; // Reduced jitter strength
+        if (alpha < 0.05) return; // Apply for longer during simulation
+        const strength = 0.03 * alpha; // Increased jitter strength for more organic movement
         this.nodes.forEach(node => {
           if (node.vx !== undefined && node.vy !== undefined) {
-            node.vx += (Math.random() - 0.5) * strength;
-            node.vy += (Math.random() - 0.5) * strength;
+            // Circular jitter pattern for more organic clustering
+            const angle = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * strength;
+            node.vx += Math.cos(angle) * distance;
+            node.vy += Math.sin(angle) * distance;
           }
         });
       })
       .on('tick', () => {
+        // Performance optimization: Only constrain coordinates occasionally
+        if (this.simulation.alpha() > 0.3 || Math.random() < 0.1) {
+          this.constrainNodeCoordinates();
+        }
+        
         // Optimized position updates
         this.updatePositions();
       })
-      .alphaDecay(0.023) // Standard decay rate
-      .velocityDecay(0.4) // Smooth movement
+      .alphaDecay(0.05) // Faster convergence for better performance
+      .velocityDecay(0.6) // Higher decay for faster settling
+      .alphaMin(0.01)     // Stop simulation earlier
       .on('end', () => this.onSimulationEnd());
   }
 
@@ -181,6 +210,18 @@ export class GraphRenderer {
     
     this.nodes = nodes;
     this.links = links;
+    
+    // Performance optimization: Initialize node coordinates to prevent invalid positions
+    this.initializeNodeCoordinates();
+    
+    // Performance optimization: Detect dense graphs for optimizations
+    this.isDenseGraph = links.length > 500 || (nodes.length > 200 && links.length > nodes.length * 2);
+    if (this.isDenseGraph) {
+      logger.info('renderer', `Dense graph detected: ${links.length} links, enabling performance optimizations`);
+      this.disableTransitionsForDenseGraph();
+    } else {
+      this.enableTransitionsForNormalGraph();
+    }
     
     // Phase 3.8: Apply adaptive performance scaling
     this.applyAdaptiveScaling(nodes.length);
@@ -196,8 +237,8 @@ export class GraphRenderer {
     this.renderLinks();
     this.renderNodes();
     
-    // For static preview, set initial zoom to show full graph
-    this.setInitialView();
+    // Note: Initial view/zoom is now controlled by the calling component (e.g., SonicGraphModal)
+    // this.setInitialView(); // Removed to prevent zoom conflicts
   }
 
   /**
@@ -242,11 +283,48 @@ export class GraphRenderer {
   /**
    * Render links
    * Phase 3.8: Enhanced with link type and strength attributes for CSS styling
+   * Performance optimization: Only render visible links with valid coordinates
    */
   private renderLinks(): void {
+    // Performance optimization: Filter links to only include visible ones with valid endpoints
+    const validLinks = this.links.filter((link, i) => {
+      const linkId = this.getLinkId(link, i);
+      
+      // Check if link is in visible set
+      if (!this.visibleLinks.has(linkId)) {
+        return false;
+      }
+      
+      // Get source and target nodes
+      const sourceNode = typeof link.source === 'string' 
+        ? this.nodes.find(n => n.id === link.source)
+        : link.source;
+      const targetNode = typeof link.target === 'string'
+        ? this.nodes.find(n => n.id === link.target)
+        : link.target;
+      
+      // Only include links where both endpoints exist and have valid coordinates
+      if (!sourceNode || !targetNode) {
+        logger.debug('link-filtering', `Link ${linkId} missing nodes - source: ${!!sourceNode}, target: ${!!targetNode}`);
+        return false;
+      }
+      
+      const sourceValid = this.hasValidCoordinates(sourceNode);
+      const targetValid = this.hasValidCoordinates(targetNode);
+      
+      if (!sourceValid || !targetValid) {
+        logger.debug('link-filtering', `Link ${linkId} invalid coords - source: [${sourceNode.x}, ${sourceNode.y}] valid: ${sourceValid}, target: [${targetNode.x}, ${targetNode.y}] valid: ${targetValid}`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    logger.info('link-filtering', `Rendering ${validLinks.length} valid links out of ${this.links.length} total links (filtered out ${this.links.length - validLinks.length})`);
+    
     const linkSelection = this.g.select('.sonigraph-temporal-links')
       .selectAll('line')
-      .data(this.links, (d: any, i) => this.getLinkId(d, i));
+      .data(validLinks, (d: any, i) => this.getLinkId(d, i));
 
     // Enter new links with Phase 3.8 enhancements
     const linkEnter = linkSelection.enter()
@@ -307,11 +385,20 @@ export class GraphRenderer {
 
   /**
    * Render nodes
+   * Performance optimization: Only render visible nodes with valid coordinates
    */
   private renderNodes(): void {
+    // Performance optimization: Filter nodes to only include visible ones with valid coordinates
+    const validNodes = this.nodes.filter(node => {
+      // Check if node is in visible set and has valid coordinates
+      return this.visibleNodes.has(node.id) && this.hasValidCoordinates(node);
+    });
+    
+    logger.debug('node-filtering', `Rendering ${validNodes.length} valid nodes out of ${this.nodes.length} total nodes`);
+    
     const nodeSelection = this.g.select('.sonigraph-temporal-nodes')
       .selectAll('.sonigraph-temporal-node')
-      .data(this.nodes, (d: any) => d.id);
+      .data(validNodes, (d: any) => d.id);
 
     // Enter new nodes
     const nodeEnter = nodeSelection.enter()
@@ -414,13 +501,86 @@ export class GraphRenderer {
    * Update positions during simulation tick
    */
   private updatePositions(): void {
+    // Performance optimization: Batch position updates for dense graphs
+    if (this.isDenseGraph) {
+      this.updatePositionsBatched();
+    } else {
+      this.updatePositionsStandard();
+    }
+    
+    // Performance optimization: Much less frequent cleanup for better performance
+    if (Math.random() < 0.02) { // Only 2% of the time for much better performance
+      this.forceRemoveInvalidLinks();
+    }
+  }
+  
+  /**
+   * Standard position updates for normal graphs
+   */
+  private updatePositionsStandard(): void {
+    // Update link positions - hide invalid links, update valid ones
+    this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
     this.linkGroup
+      .style('display', (d: any) => {
+        const hasValidCoords = this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target);
+        return hasValidCoords ? 'block' : 'none';
+      })
+      .filter((d: any) => this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target))
       .attr('x1', (d: any) => d.source.x)
       .attr('y1', (d: any) => d.source.y)
       .attr('x2', (d: any) => d.target.x)
       .attr('y2', (d: any) => d.target.y);
 
+    // Update node positions - hide invalid nodes, update valid ones
+    this.nodeGroup = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
     this.nodeGroup
+      .style('display', (d: GraphNode) => this.hasValidCoordinates(d) ? 'block' : 'none')
+      .filter((d: GraphNode) => this.hasValidCoordinates(d))
+      .attr('transform', (d: GraphNode) => `translate(${d.x},${d.y})`);
+  }
+  
+  /**
+   * Batched position updates for dense graphs (only visible elements)
+   */
+  private updatePositionsBatched(): void {
+    const bounds = this.viewportBounds;
+    
+    // Update link positions - hide invalid links, show only valid and visible ones
+    this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
+    this.linkGroup
+      .style('display', (d: any) => {
+        // First check for valid coordinates
+        if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
+          return 'none';
+        }
+        
+        // Then check viewport visibility
+        const sourceVisible = this.isNodeInViewport(d.source, bounds);
+        const targetVisible = this.isNodeInViewport(d.target, bounds);
+        return (sourceVisible || targetVisible) ? 'block' : 'none';
+      })
+      .filter((d: any) => {
+        // Only update positions for valid and visible links
+        if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
+          return false;
+        }
+        
+        const sourceVisible = this.isNodeInViewport(d.source, bounds);
+        const targetVisible = this.isNodeInViewport(d.target, bounds);
+        return sourceVisible || targetVisible;
+      })
+      .attr('x1', (d: any) => d.source.x)
+      .attr('y1', (d: any) => d.source.y)
+      .attr('x2', (d: any) => d.target.x)
+      .attr('y2', (d: any) => d.target.y);
+
+    // Update node positions - hide invalid nodes, show only valid and visible ones
+    this.nodeGroup = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
+    this.nodeGroup
+      .style('display', (d: GraphNode) => {
+        return this.hasValidCoordinates(d) && this.isNodeInViewport(d, bounds) ? 'block' : 'none';
+      })
+      .filter((d: GraphNode) => this.hasValidCoordinates(d) && this.isNodeInViewport(d, bounds))
       .attr('transform', (d: GraphNode) => `translate(${d.x},${d.y})`);
   }
 
@@ -519,31 +679,76 @@ export class GraphRenderer {
   /**
    * Set zoom transform
    */
-  setZoomTransform(transform: d3.ZoomTransform): void {
-    this.svg.call(this.zoom.transform, transform);
+  /**
+   * Public method to set zoom transform (called by SonicGraphModal)
+   */
+  setZoomTransform(transform: any): void {
+    if (this.config.enableZoom && this.zoom) {
+      this.svg.call(this.zoom.transform, transform);
+      logger.info('zoom-set', `Zoom transform set externally: scale=${transform.k}, translate=(${transform.x}, ${transform.y})`);
+    }
   }
 
   /**
-   * Set initial view for static preview
+   * Set initial view for static preview (deprecated - now handled by caller)
    */
   private setInitialView(): void {
-    // Set a comfortable zoom level immediately
-    const initialScale = 0.6;
+    // ULTRA aggressive zoom out - show the full graph at tiny scale
+    const initialScale = 0.05; // Extremely zoomed out
+    const centerX = this.config.width / 2;
+    const centerY = this.config.height / 2;
+    
+    logger.info('zoom-setup', `Setting ULTRA zoom out: scale=${initialScale}, center=(${centerX}, ${centerY})`);
+    
+    // Apply transform using multiple methods to ensure it takes effect
     const initialTransform = d3.zoomIdentity
-      .translate(this.config.width * 0.2, this.config.height * 0.2)
+      .translate(centerX, centerY) 
       .scale(initialScale);
     
     if (this.config.enableZoom && this.zoom) {
+      // Apply the transform immediately
       this.svg.call(this.zoom.transform, initialTransform);
+      logger.info('zoom-applied', 'Ultra zoom transform applied');
+      
+      // Also try setting it on the g element directly
+      this.g.attr('transform', `translate(${centerX}, ${centerY}) scale(${initialScale})`);
+      logger.info('manual-transform', 'Manual transform also applied');
     }
     
-    // Stop simulation after a short time for static preview
-    setTimeout(() => {
-      this.simulation.stop();
-      logger.debug('renderer', 'Simulation stopped for static preview');
-    }, 800); // Reduced from 1.5s to 0.8s for better performance
+    // Alternative approach: Just apply the transform to the g element
+    this.g.attr('transform', `translate(${centerX}, ${centerY}) scale(${initialScale})`);
     
-    logger.debug('renderer', 'Initial view set for static preview');
+    // Performance optimization: Reduce intensive cleanup for better performance
+    let cleanupCount = 0;
+    const cleanupInterval = setInterval(() => {
+      // Less frequent coordinate constraints (now handled in tick)
+      if (Math.random() < 0.3) { // Only 30% of the time
+        this.constrainNodeCoordinates();
+      }
+      
+      // Remove invalid links less aggressively
+      const removed = this.forceRemoveInvalidLinks();
+      if (removed > 0) {
+        cleanupCount++;
+        logger.warn('invalid-links', `Cleanup ${cleanupCount}: Removed ${removed} invalid links`);
+      }
+    }, 200); // Less frequent cleanup - every 200ms for better performance
+    
+    // Stop simulation sooner for better performance
+    setTimeout(() => {
+      clearInterval(cleanupInterval);
+      this.simulation.stop();
+      
+      // Minimal final cleanup
+      const finalRemoved = this.forceRemoveInvalidLinks();
+      if (finalRemoved > 0) {
+        logger.info('post-simulation', `Simulation stopped. Final cleanup removed ${finalRemoved} invalid links`);
+      }
+      
+      logger.debug('renderer', 'Simulation stopped with optimized performance');
+    }, 500); // Reduced from 800ms to 500ms for faster loading
+    
+    logger.debug('renderer', 'Ultra aggressive initial view set with continuous cleanup');
   }
 
   // Tooltip methods removed - using native browser tooltips for better performance
@@ -888,10 +1093,283 @@ export class GraphRenderer {
     logger.debug('renderer', 'Better spacing applied and simulation restarted');
   }
 
+  // Performance optimization: Viewport culling methods
+  
+  /**
+   * Initialize viewport bounds on startup
+   */
+  private initializeViewportBounds(): void {
+    const identity = d3.zoomIdentity;
+    this.updateViewportBounds(identity);
+  }
+  
+  /**
+   * Update viewport bounds based on current zoom transform
+   */
+  private updateViewportBounds(transform: d3.ZoomTransform): void {
+    const containerRect = this.container.getBoundingClientRect();
+    
+    // Calculate the visible area in graph coordinates
+    this.viewportBounds = {
+      x: -transform.x / transform.k - this.cullingMargin,
+      y: -transform.y / transform.k - this.cullingMargin,
+      width: containerRect.width / transform.k + (this.cullingMargin * 2),
+      height: containerRect.height / transform.k + (this.cullingMargin * 2)
+    };
+  }
+  
+  /**
+   * Schedule a viewport update (debounced for performance)
+   */
+  private scheduleViewportUpdate(): void {
+    if (!this.isDenseGraph) return; // Only use culling for dense graphs
+    
+    const now = performance.now();
+    if (now - this.lastUpdateTime < this.updateDebounceMs) {
+      if (this.pendingUpdate) {
+        cancelAnimationFrame(this.pendingUpdate);
+      }
+      this.pendingUpdate = requestAnimationFrame(() => {
+        this.updateVisibleElements();
+        this.lastUpdateTime = performance.now();
+        this.pendingUpdate = null;
+      });
+      return;
+    }
+    
+    this.updateVisibleElements();
+    this.lastUpdateTime = now;
+  }
+  
+  /**
+   * Update which elements are visible based on viewport bounds
+   */
+  private updateVisibleElements(): void {
+    if (!this.isDenseGraph) return;
+    
+    const bounds = this.viewportBounds;
+    let visibleLinksCount = 0;
+    let hiddenLinksCount = 0;
+    
+    // Update visible links based on viewport culling
+    this.linkGroup.selectAll('line')
+      .style('display', (d: any) => {
+        const sourceNode = d.source;
+        const targetNode = d.target;
+        
+        // First check for valid coordinates
+        if (!this.hasValidCoordinates(sourceNode) || !this.hasValidCoordinates(targetNode)) {
+          hiddenLinksCount++;
+          return 'none';
+        }
+        
+        // Check if either endpoint is in viewport
+        const sourceVisible = this.isNodeInViewport(sourceNode, bounds);
+        const targetVisible = this.isNodeInViewport(targetNode, bounds);
+        
+        if (sourceVisible || targetVisible) {
+          visibleLinksCount++;
+          return 'block';
+        } else {
+          hiddenLinksCount++;
+          return 'none';
+        }
+      });
+    
+    // Update visible nodes based on viewport culling
+    this.nodeGroup.selectAll('circle')
+      .style('display', (d: any) => {
+        // Only show nodes with valid coordinates that are in viewport
+        if (!this.hasValidCoordinates(d)) {
+          return 'none';
+        }
+        return this.isNodeInViewport(d, bounds) ? 'block' : 'none';
+      });
+    
+    logger.debug('viewport-culling', `Updated visibility: ${visibleLinksCount} visible, ${hiddenLinksCount} hidden links`);
+  }
+  
+  /**
+   * Initialize node coordinates to prevent invalid positions
+   */
+  private initializeNodeCoordinates(): void {
+    const centerX = this.config.width / 2;
+    const centerY = this.config.height / 2;
+    let invalidCount = 0;
+    
+    this.nodes.forEach((node, index) => {
+      if (!this.hasValidCoordinates(node)) {
+        // Initialize with a slight random offset to prevent overlap
+        const angle = (index / this.nodes.length) * 2 * Math.PI;
+        const radius = 50 + (Math.random() * 100);
+        
+        node.x = centerX + Math.cos(angle) * radius;
+        node.y = centerY + Math.sin(angle) * radius;
+        invalidCount++;
+      }
+    });
+    
+    if (invalidCount > 0) {
+      logger.debug('coordinate-init', `Initialized coordinates for ${invalidCount} nodes with invalid positions`);
+    }
+  }
+  
+  /**
+   * Check if a node has valid coordinates (not NaN or undefined)
+   */
+  private hasValidCoordinates(node: any): boolean {
+    return node && 
+           typeof node.x === 'number' && 
+           typeof node.y === 'number' && 
+           !isNaN(node.x) && 
+           !isNaN(node.y) &&
+           isFinite(node.x) &&
+           isFinite(node.y);
+  }
+  
+  /**
+   * Aggressively constrain all node coordinates to valid values
+   */
+  private constrainNodeCoordinates(): void {
+    const centerX = this.config.width / 2;
+    const centerY = this.config.height / 2;
+    const maxDistance = Math.max(this.config.width, this.config.height); // Reasonable bounds
+    
+    this.nodes.forEach(node => {
+      // Fix invalid x coordinate
+      if (typeof node.x !== 'number' || !isFinite(node.x) || isNaN(node.x)) {
+        node.x = centerX + (Math.random() - 0.5) * 20; // Small random offset from center
+        logger.warn('coordinate-fix', `Fixed invalid x coordinate for node ${node.id}: set to ${node.x}`);
+      } else if (Math.abs(node.x - centerX) > maxDistance) {
+        // Constrain to reasonable bounds
+        node.x = centerX + Math.sign(node.x - centerX) * maxDistance * 0.9;
+      }
+      
+      // Fix invalid y coordinate
+      if (typeof node.y !== 'number' || !isFinite(node.y) || isNaN(node.y)) {
+        node.y = centerY + (Math.random() - 0.5) * 20; // Small random offset from center
+        logger.warn('coordinate-fix', `Fixed invalid y coordinate for node ${node.id}: set to ${node.y}`);
+      } else if (Math.abs(node.y - centerY) > maxDistance) {
+        // Constrain to reasonable bounds
+        node.y = centerY + Math.sign(node.y - centerY) * maxDistance * 0.9;
+      }
+      
+      // Fix velocity coordinates if they exist
+      if (node.vx && (typeof node.vx !== 'number' || !isFinite(node.vx) || isNaN(node.vx))) {
+        node.vx = 0;
+      }
+      if (node.vy && (typeof node.vy !== 'number' || !isFinite(node.vy) || isNaN(node.vy))) {
+        node.vy = 0;
+      }
+    });
+  }
+  
+  /**
+   * Check if a node is within the viewport bounds
+   */
+  private isNodeInViewport(node: any, bounds: { x: number; y: number; width: number; height: number }): boolean {
+    if (!this.hasValidCoordinates(node)) {
+      return false;
+    }
+    
+    return node.x >= bounds.x && 
+           node.x <= bounds.x + bounds.width &&
+           node.y >= bounds.y && 
+           node.y <= bounds.y + bounds.height;
+  }
+  
+  /**
+   * Disable CSS transitions for dense graphs to improve performance
+   */
+  private disableTransitionsForDenseGraph(): void {
+    this.container.classList.add('dense-graph-mode');
+    
+    // Add CSS rule to disable transitions for dense graphs
+    const style = document.createElement('style');
+    style.textContent = `
+      .dense-graph-mode .sonigraph-temporal-svg * {
+        transition: none !important;
+        animation: none !important;
+      }
+    `;
+    
+    // Add to document head if not already present
+    if (!document.querySelector('#dense-graph-performance-style')) {
+      style.id = 'dense-graph-performance-style';
+      document.head.appendChild(style);
+    }
+    
+    logger.debug('performance', 'Disabled CSS transitions for dense graph');
+  }
+  
+  /**
+   * Enable CSS transitions for normal graphs
+   */
+  private enableTransitionsForNormalGraph(): void {
+    this.container.classList.remove('dense-graph-mode');
+    logger.debug('performance', 'Enabled CSS transitions for normal graph');
+  }
+  
+  /**
+   * Force removal of all links with invalid coordinates from the DOM
+   */
+  private forceRemoveInvalidLinks(): number {
+    const allLines = this.g.select('.sonigraph-temporal-links').selectAll('line');
+    let removedCount = 0;
+    
+    allLines.each(function(d: any) {
+      const sourceNode = d.source;
+      const targetNode = d.target;
+      
+      // Check if either endpoint has invalid coordinates
+      const sourceInvalid = !sourceNode || 
+        typeof sourceNode.x !== 'number' || 
+        typeof sourceNode.y !== 'number' || 
+        isNaN(sourceNode.x) || 
+        isNaN(sourceNode.y) ||
+        !isFinite(sourceNode.x) ||
+        !isFinite(sourceNode.y);
+        
+      const targetInvalid = !targetNode || 
+        typeof targetNode.x !== 'number' || 
+        typeof targetNode.y !== 'number' || 
+        isNaN(targetNode.x) || 
+        isNaN(targetNode.y) ||
+        !isFinite(targetNode.x) ||
+        !isFinite(targetNode.y);
+      
+      if (sourceInvalid || targetInvalid) {
+        // Log details about the invalid link for debugging
+        if (removedCount < 5) { // Only log first few to avoid spam
+          logger.warn('invalid-link-detail', 'Removing invalid link', {
+            sourceValid: !sourceInvalid,
+            targetValid: !targetInvalid,
+            sourceCoords: sourceNode ? [sourceNode.x, sourceNode.y] : 'null',
+            targetCoords: targetNode ? [targetNode.x, targetNode.y] : 'null'
+          });
+        }
+        d3.select(this).remove();
+        removedCount++;
+      }
+    });
+    
+    if (removedCount > 0) {
+      logger.info('invalid-link-removal', `Force removed ${removedCount} links with invalid coordinates from DOM`);
+    }
+    
+    return removedCount;
+  }
+
   /**
    * Cleanup resources
    */
   destroy(): void {
+    // Cancel any pending updates
+    if (this.pendingUpdate) {
+      cancelAnimationFrame(this.pendingUpdate);
+      this.pendingUpdate = null;
+    }
+    
     this.simulation.stop();
     
     // No tooltip cleanup needed - using native browser tooltips
