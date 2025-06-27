@@ -697,19 +697,22 @@ export class SonicGraphModal extends Modal {
         // 1. Filters section
         this.createFiltersSettings(settingsContent);
         
-        // 2. Visual section
+        // 2. Groups section
+        this.createGroupsSettings(settingsContent);
+        
+        // 3. Visual section
         this.createVisualSettings(settingsContent);
         
-        // 3. Layout section
+        // 4. Layout section
         this.createLayoutSettings(settingsContent);
         
-        // 4. Timeline section
+        // 5. Timeline section
         this.createTimelineSettings(settingsContent);
         
-        // 5. Audio section
+        // 6. Audio section
         this.createAudioSettings(settingsContent);
         
-        // 6. Navigation section
+        // 7. Navigation section
         this.createNavigationSettings(settingsContent);
     }
 
@@ -783,7 +786,6 @@ export class SonicGraphModal extends Modal {
             toggleSwitch.addClass('active');
         }
         const toggleHandle = toggleSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
-        loopToggle.createEl('span', { text: 'Enable looping' });
         
         toggleSwitch.addEventListener('click', () => {
             const isActive = toggleSwitch.hasClass('active');
@@ -860,7 +862,6 @@ export class SonicGraphModal extends Modal {
             markersSwitch.addClass('active');
         }
         const markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
-        markersToggle.createEl('span', { text: 'Show markers' });
         
         markersSwitch.addEventListener('click', () => {
             const isActive = markersSwitch.hasClass('active');
@@ -938,17 +939,14 @@ export class SonicGraphModal extends Modal {
      */
     private createNavigationSettings(container: HTMLElement): void {
         const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
-        section.createEl('div', { text: 'NAVIGATION', cls: 'sonic-graph-settings-section-title' });
         
-        // Control Center Button
-        const controlCenterItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        controlCenterItem.createEl('label', { text: 'Audio control', cls: 'sonic-graph-setting-label' });
-        controlCenterItem.createEl('div', { 
-            text: 'Open the main audio control interface', 
-            cls: 'sonic-graph-setting-description' 
+        // Control Center Button - centered
+        const controlCenterContainer = section.createDiv({ 
+            cls: 'sonic-graph-setting-item',
+            attr: { style: 'display: flex; justify-content: center; margin-top: 0;' }
         });
         
-        const controlCenterBtn = controlCenterItem.createEl('button', { 
+        const controlCenterBtn = controlCenterContainer.createEl('button', { 
             cls: 'sonic-graph-control-btn sonic-graph-control-btn--secondary',
             text: '🎵 Control Center'
         });
@@ -1068,39 +1066,6 @@ export class SonicGraphModal extends Modal {
             separationValue.textContent = `${Math.round(value * 100)}%`;
             this.updateLayoutSetting('groupSeparation', value);
         });
-        
-        // Path-Based Grouping Section
-        const groupingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        groupingItem.createEl('label', { text: 'Path-based grouping', cls: 'sonic-graph-setting-label' });
-        
-        const groupingToggle = groupingItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
-        const groupingSwitch = groupingToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
-        if (this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
-            groupingSwitch.addClass('active');
-        }
-        const groupingHandle = groupingSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
-        
-        groupingSwitch.addEventListener('click', () => {
-            const isActive = groupingSwitch.hasClass('active');
-            groupingSwitch.toggleClass('active', !isActive);
-            this.updatePathBasedGroupingSetting('enabled', !isActive);
-        });
-        
-        // Groups Configuration Container
-        const groupsContainer = section.createDiv({ cls: 'sonic-graph-groups-container' });
-        groupsContainer.style.marginTop = '10px';
-        groupsContainer.style.marginLeft = '20px';
-        if (!this.getSonicGraphSettings().layout.pathBasedGrouping.enabled) {
-            groupsContainer.style.display = 'none';
-        }
-        
-        // Update container visibility when toggle changes
-        groupingSwitch.addEventListener('click', () => {
-            const isActive = groupingSwitch.hasClass('active');
-            groupsContainer.style.display = !isActive ? 'block' : 'none';
-        });
-        
-        this.createPathGroupsSettings(groupsContainer);
     }
 
     /**
@@ -1119,7 +1084,7 @@ export class SonicGraphModal extends Modal {
         if (this.getSonicGraphSettings().layout.filters.showTags) {
             tagsSwitch.addClass('active');
         }
-        const tagsHandle = tagsSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        tagsSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         tagsSwitch.addEventListener('click', () => {
             const isActive = tagsSwitch.hasClass('active');
@@ -1136,7 +1101,7 @@ export class SonicGraphModal extends Modal {
         if (this.getSonicGraphSettings().layout.filters.showOrphans) {
             orphansSwitch.addClass('active');
         }
-        const orphansHandle = orphansSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        orphansSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         orphansSwitch.addEventListener('click', () => {
             const isActive = orphansSwitch.hasClass('active');
@@ -1155,24 +1120,6 @@ export class SonicGraphModal extends Modal {
         logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${value}`);
     }
 
-    /**
-     * Update path-based grouping setting
-     */
-    private updatePathBasedGroupingSetting(key: keyof SonicGraphSettings['layout']['pathBasedGrouping'], value: any): void {
-        const currentSettings = this.getSonicGraphSettings();
-        (currentSettings.layout.pathBasedGrouping as any)[key] = value;
-        
-        // Save to plugin settings
-        this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
-        // Apply to renderer if available
-        if (this.graphRenderer) {
-            this.graphRenderer.updateLayoutSettings(currentSettings.layout);
-        }
-        
-        logger.debug('path-grouping', `Updated path-based grouping setting: ${String(key)} = ${value}`);
-    }
 
     /**
      * Update filter setting
@@ -1194,18 +1141,19 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
+     * Create groups settings section
+     */
+    private createGroupsSettings(container: HTMLElement): void {
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'GROUPS', cls: 'sonic-graph-settings-section-title' });
+        
+        this.createPathGroupsSettings(section);
+    }
+
+    /**
      * Create path groups settings interface - New design
      */
     private createPathGroupsSettings(container: HTMLElement): void {
-        // Groups header
-        const groupsHeader = container.createEl('div', { 
-            text: 'Groups', 
-            cls: 'sonic-graph-groups-header'
-        });
-        groupsHeader.style.fontSize = '12px';
-        groupsHeader.style.fontWeight = '600';
-        groupsHeader.style.color = 'var(--text-normal)';
-        groupsHeader.style.marginBottom = '8px';
         
         const settings = this.getSonicGraphSettings();
         const groups = settings.layout.pathBasedGrouping.groups;
@@ -1314,12 +1262,26 @@ export class SonicGraphModal extends Modal {
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
         colorInput.value = this.getSonicGraphSettings().layout.pathBasedGrouping.groups[groupIndex].color;
-        colorInput.style.opacity = '0';
-        colorInput.style.position = 'absolute';
-        colorInput.style.pointerEvents = 'none';
-        document.body.appendChild(colorInput);
+        colorInput.className = 'sonic-graph-hidden-color-picker';
         
-        colorInput.click();
+        // Position the input right beneath the color dot
+        const dotRect = colorDot.getBoundingClientRect();
+        const modalRect = this.contentEl.getBoundingClientRect();
+        
+        colorInput.style.position = 'absolute';
+        colorInput.style.left = `${dotRect.left - modalRect.left}px`;
+        colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`; // 4px gap below the dot
+        // Enable pointer events for interaction while keeping it visually hidden
+        colorInput.style.pointerEvents = 'auto';
+        
+        // Find the modal container to append to
+        const modalContainer = this.contentEl;
+        modalContainer.appendChild(colorInput);
+        
+        // Use requestAnimationFrame to ensure positioning is applied before clicking
+        requestAnimationFrame(() => {
+            colorInput.click();
+        });
         
         colorInput.addEventListener('input', () => {
             const newColor = colorInput.value;
@@ -1327,9 +1289,47 @@ export class SonicGraphModal extends Modal {
             colorDot.style.backgroundColor = newColor;
         });
         
+        // Remove color picker when clicking outside
+        const handleClickOutside = (e: MouseEvent) => {
+            // Don't dismiss if clicking on the color input itself or the color dot
+            if (e.target === colorInput || e.target === colorDot) {
+                return;
+            }
+            
+            // Remove the color picker
+            if (modalContainer.contains(colorInput)) {
+                modalContainer.removeChild(colorInput);
+            }
+            
+            // Remove the event listener
+            document.removeEventListener('click', handleClickOutside);
+        };
+        
+        colorInput.addEventListener('change', () => {
+            if (modalContainer.contains(colorInput)) {
+                modalContainer.removeChild(colorInput);
+            }
+            // Also remove the click outside handler when change event fires
+            document.removeEventListener('click', handleClickOutside);
+        });
+        
+        // Prevent the color picker from being dismissed by other click handlers
+        colorInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Add the click outside handler after a brief delay to avoid immediate dismissal
         setTimeout(() => {
-            document.body.removeChild(colorInput);
+            document.addEventListener('click', handleClickOutside);
         }, 100);
+        
+        // Fallback cleanup in case click outside handler fails
+        setTimeout(() => {
+            if (modalContainer.contains(colorInput)) {
+                modalContainer.removeChild(colorInput);
+                document.removeEventListener('click', handleClickOutside);
+            }
+        }, 120000); // 2 minute fallback
     }
     
     /**
@@ -1411,14 +1411,12 @@ export class SonicGraphModal extends Modal {
         
         const currentSettings = this.getSonicGraphSettings();
         
-        // Parse the query to determine type and name
-        let type = 'path';
+        // Parse the query to determine name and path
         let name = query;
         let path = query;
         
         if (query.includes(':')) {
             const parts = query.split(':', 2);
-            type = parts[0].toLowerCase();
             name = parts[1];
             path = parts[1];
         }
@@ -1467,25 +1465,6 @@ export class SonicGraphModal extends Modal {
         logger.debug('path-grouping', `Updated group ${groupIndex} ${property}:`, value);
     }
 
-    /**
-     * Add a new group
-     */
-    private addNewGroup(): void {
-        const currentSettings = this.getSonicGraphSettings();
-        const newGroup = {
-            id: `group-${Date.now()}`,
-            name: 'New Group',
-            path: '',
-            color: '#6366f1'
-        };
-        
-        currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
-        
-        this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
-        logger.debug('path-grouping', 'Added new group:', newGroup);
-    }
 
     /**
      * Remove a group
@@ -1509,10 +1488,10 @@ export class SonicGraphModal extends Modal {
      * Refresh the path groups settings UI
      */
     private refreshPathGroupsSettings(): void {
-        const groupsContainer = document.querySelector('.sonic-graph-groups-container') as HTMLElement;
+        const groupsContainer = document.querySelector('.sonic-graph-groups-list') as HTMLElement;
         if (groupsContainer) {
             groupsContainer.empty();
-            this.createPathGroupsSettings(groupsContainer);
+            this.createPathGroupsSettings(groupsContainer.parentElement as HTMLElement);
         }
     }
 
@@ -1607,13 +1586,13 @@ export class SonicGraphModal extends Modal {
         const errorIcon = createLucideIcon('alert-circle', 48);
         errorContainer.appendChild(errorIcon);
         
-        const errorTitle = errorContainer.createEl('h3', { 
+        errorContainer.createEl('h3', { 
             text: 'Failed to load graph data',
             cls: 'sonic-graph-error-title'
         });
         
         if (errorMessage) {
-            const errorDetails = errorContainer.createEl('p', { 
+            errorContainer.createEl('p', { 
                 text: errorMessage,
                 cls: 'sonic-graph-error-details'
             });
@@ -2552,14 +2531,6 @@ export class SonicGraphModal extends Modal {
         this.eventListeners = [];
     }
 
-    // Performance optimization: Debounced settings updates
-    private debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
-        let timeoutId: NodeJS.Timeout;
-        return ((...args: any[]) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
-        }) as T;
-    }
 
     private scheduleSettingsUpdate(key: string, value: any): void {
         this.pendingSettingsUpdates.set(key, value);
@@ -2653,19 +2624,5 @@ export class SonicGraphModal extends Modal {
         if (this.progressIndicator) {
             this.progressIndicator.style.display = 'none';
         }
-    }
-
-    // Performance optimization: DOM operations batching
-    private batchDOMUpdates(updates: Array<() => void>): void {
-        const fragment = document.createDocumentFragment();
-        const tempContainer = document.createElement('div');
-        fragment.appendChild(tempContainer);
-        
-        updates.forEach(update => update());
-        
-        // Single reflow/repaint
-        requestAnimationFrame(() => {
-            // DOM updates have been batched
-        });
     }
 } 
