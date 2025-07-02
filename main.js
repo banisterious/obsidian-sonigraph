@@ -10257,9 +10257,15 @@ var init_GraphRenderer = __esm({
         // Extra margin around viewport for smoother scrolling
         this.isDenseGraph = false;
         this.lastUpdateTime = 0;
-        this.updateDebounceMs = 16;
-        // ~60fps
+        this.updateDebounceMs = 33;
+        // Reduced to ~30fps for better performance
         this.pendingUpdate = null;
+        // Enhanced performance controls
+        this.performanceMode = "quality";
+        this.isSimulationPaused = false;
+        this.frameSkipCounter = 0;
+        this.maxFrameSkip = 1;
+        // Skip every other frame for dense graphs
         // Phase 3.8: Settings integration
         this.layoutSettings = null;
         this.container = container;
@@ -10346,9 +10352,9 @@ var init_GraphRenderer = __esm({
           }).strength(0.8)
           // Slightly softer collision for more organic overlap
         ).force("jitter", (alpha) => {
-          if (alpha < 0.05)
+          if (this.performanceMode === "performance" || alpha < this.getJitterThreshold())
             return;
-          const strength = 0.03 * alpha;
+          const strength = this.getJitterStrength() * alpha;
           this.nodes.forEach((node) => {
             if (node.vx !== void 0 && node.vy !== void 0) {
               const angle = Math.random() * 2 * Math.PI;
@@ -10358,11 +10364,18 @@ var init_GraphRenderer = __esm({
             }
           });
         }).on("tick", () => {
+          if (this.maxFrameSkip > 0) {
+            this.frameSkipCounter++;
+            if (this.frameSkipCounter <= this.maxFrameSkip) {
+              return;
+            }
+            this.frameSkipCounter = 0;
+          }
           if (this.simulation.alpha() > 0.3 || Math.random() < 0.1) {
             this.constrainNodeCoordinates();
           }
           this.updatePositions();
-        }).alphaDecay(0.05).velocityDecay(0.6).alphaMin(0.01).on("end", () => this.onSimulationEnd());
+        }).alphaDecay(this.getAlphaDecay()).velocityDecay(this.getVelocityDecay()).alphaMin(this.getAlphaMin()).on("end", () => this.onSimulationEnd());
       }
       // Tooltip initialization removed - using native browser tooltips
       /**
@@ -10373,9 +10386,10 @@ var init_GraphRenderer = __esm({
         this.nodes = nodes;
         this.links = links;
         this.initializeNodeCoordinates();
-        this.isDenseGraph = links.length > 500 || nodes.length > 200 && links.length > nodes.length * 2;
+        this.detectPerformanceMode(nodes.length, links.length);
+        this.isDenseGraph = this.performanceMode === "performance";
         if (this.isDenseGraph) {
-          logger6.info("renderer", `Dense graph detected: ${links.length} links, enabling performance optimizations`);
+          logger6.info("renderer", `Performance mode: ${this.performanceMode} (${nodes.length} nodes, ${links.length} links)`);
           this.disableTransitionsForDenseGraph();
         } else {
           this.enableTransitionsForNormalGraph();
@@ -10854,6 +10868,109 @@ var init_GraphRenderer = __esm({
       }
       // Phase 3.8: Clustering methods removed - now using one-time initial positioning
       /**
+       * Get adaptive alpha decay based on performance mode
+       */
+      getAlphaDecay() {
+        switch (this.performanceMode) {
+          case "quality":
+            return 0.03;
+          case "balanced":
+            return 0.05;
+          case "performance":
+            return 0.08;
+          default:
+            return 0.05;
+        }
+      }
+      /**
+       * Get adaptive velocity decay based on performance mode
+       */
+      getVelocityDecay() {
+        switch (this.performanceMode) {
+          case "quality":
+            return 0.4;
+          case "balanced":
+            return 0.6;
+          case "performance":
+            return 0.8;
+          default:
+            return 0.6;
+        }
+      }
+      /**
+       * Get adaptive alpha minimum based on performance mode
+       */
+      getAlphaMin() {
+        switch (this.performanceMode) {
+          case "quality":
+            return 5e-3;
+          case "balanced":
+            return 0.01;
+          case "performance":
+            return 0.02;
+          default:
+            return 0.01;
+        }
+      }
+      /**
+       * Get jitter strength based on performance mode
+       */
+      getJitterStrength() {
+        switch (this.performanceMode) {
+          case "quality":
+            return 0.03;
+          case "balanced":
+            return 0.02;
+          case "performance":
+            return 0;
+          default:
+            return 0.02;
+        }
+      }
+      /**
+       * Get jitter threshold based on performance mode
+       */
+      getJitterThreshold() {
+        switch (this.performanceMode) {
+          case "quality":
+            return 0.03;
+          case "balanced":
+            return 0.05;
+          case "performance":
+            return 0.1;
+          default:
+            return 0.05;
+        }
+      }
+      /**
+       * Detect optimal performance mode based on graph complexity
+       */
+      detectPerformanceMode(nodeCount, linkCount) {
+        const complexityScore = nodeCount + linkCount * 0.5;
+        const linkDensity = nodeCount > 0 ? linkCount / nodeCount : 0;
+        if (nodeCount <= 50 && complexityScore <= 100) {
+          this.performanceMode = "quality";
+          this.updateDebounceMs = 16;
+          this.maxFrameSkip = 0;
+        } else if (nodeCount <= 200 && complexityScore <= 400) {
+          this.performanceMode = "balanced";
+          this.updateDebounceMs = 33;
+          this.maxFrameSkip = 1;
+        } else {
+          this.performanceMode = "performance";
+          this.updateDebounceMs = 50;
+          this.maxFrameSkip = 2;
+        }
+        logger6.info("performance-mode", `Performance mode detected: ${this.performanceMode}`, {
+          nodeCount,
+          linkCount,
+          complexityScore: complexityScore.toFixed(1),
+          linkDensity: linkDensity.toFixed(2),
+          targetFPS: Math.round(1e3 / this.updateDebounceMs),
+          frameSkip: this.maxFrameSkip
+        });
+      }
+      /**
        * Phase 3.8: Adaptive performance scaling based on graph size
        */
       applyAdaptiveScaling(nodeCount) {
@@ -11242,6 +11359,11 @@ var init_TemporalGraphAnimator = __esm({
         this.animationStartTime = 0;
         this.animationId = null;
         this.visibleNodes = /* @__PURE__ */ new Set();
+        // Performance optimization: Adaptive frame rate
+        this.lastAnimationTime = 0;
+        this.animationFrameRate = 30;
+        // Target FPS for animation
+        this.frameInterval = 1e3 / 30;
         this.nodes = nodes;
         this.links = links;
         const now3 = new Date();
@@ -11274,11 +11396,13 @@ var init_TemporalGraphAnimator = __esm({
           }
         }
         this.buildTimeline();
+        this.setAdaptiveFrameRate(this.nodes.length, this.timeline.length);
         logger9.debug("animator", "TemporalGraphAnimator created", {
           nodeCount: this.nodes.length,
           linkCount: this.links.length,
           config: this.config,
-          timelineEvents: this.timeline.length
+          timelineEvents: this.timeline.length,
+          animationFPS: this.animationFrameRate
         });
       }
       /**
@@ -11502,7 +11626,28 @@ var init_TemporalGraphAnimator = __esm({
         logger9.debug("playback", "Loop setting changed", { loop });
       }
       /**
-       * Main animation loop
+       * Set adaptive frame rate based on graph complexity
+       */
+      setAdaptiveFrameRate(nodeCount, timelineEvents) {
+        const complexity = nodeCount + timelineEvents * 0.5;
+        if (complexity <= 100) {
+          this.animationFrameRate = 60;
+        } else if (complexity <= 500) {
+          this.animationFrameRate = 30;
+        } else {
+          this.animationFrameRate = 20;
+        }
+        this.frameInterval = 1e3 / this.animationFrameRate;
+        logger9.debug("animation-performance", "Adaptive frame rate set", {
+          nodeCount,
+          timelineEvents,
+          complexity: complexity.toFixed(1),
+          targetFPS: this.animationFrameRate,
+          frameInterval: this.frameInterval.toFixed(1)
+        });
+      }
+      /**
+       * Main animation loop with frame rate control
        */
       animate() {
         var _a, _b;
@@ -11510,6 +11655,11 @@ var init_TemporalGraphAnimator = __esm({
           return;
         }
         const now3 = performance.now();
+        if (now3 - this.lastAnimationTime < this.frameInterval) {
+          this.animationId = requestAnimationFrame(() => this.animate());
+          return;
+        }
+        this.lastAnimationTime = now3;
         this.currentTime = (now3 - this.animationStartTime) * this.config.speed / 1e3;
         if (this.currentTime >= this.config.duration) {
           this.currentTime = this.config.duration;
@@ -12584,14 +12734,11 @@ var init_SonicGraphModal = __esm({
        */
       createNavigationSettings(container) {
         const section = container.createDiv({ cls: "sonic-graph-settings-section" });
-        section.createEl("div", { text: "NAVIGATION", cls: "sonic-graph-settings-section-title" });
-        const controlCenterItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        controlCenterItem.createEl("label", { text: "Audio control", cls: "sonic-graph-setting-label" });
-        controlCenterItem.createEl("div", {
-          text: "Open the main audio control interface",
-          cls: "sonic-graph-setting-description"
+        const controlCenterContainer = section.createDiv({
+          cls: "sonic-graph-setting-item",
+          attr: { style: "display: flex; justify-content: center; margin-top: 0;" }
         });
-        const controlCenterBtn = controlCenterItem.createEl("button", {
+        const controlCenterBtn = controlCenterContainer.createEl("button", {
           cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary",
           text: "\u{1F3B5} Control Center"
         });
@@ -12705,7 +12852,7 @@ var init_SonicGraphModal = __esm({
         if (this.getSonicGraphSettings().layout.filters.showTags) {
           tagsSwitch.addClass("active");
         }
-        const tagsHandle = tagsSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        tagsSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
         tagsSwitch.addEventListener("click", () => {
           const isActive = tagsSwitch.hasClass("active");
           tagsSwitch.toggleClass("active", !isActive);
@@ -12718,7 +12865,7 @@ var init_SonicGraphModal = __esm({
         if (this.getSonicGraphSettings().layout.filters.showOrphans) {
           orphansSwitch.addClass("active");
         }
-        const orphansHandle = orphansSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        orphansSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
         orphansSwitch.addEventListener("click", () => {
           const isActive = orphansSwitch.hasClass("active");
           orphansSwitch.toggleClass("active", !isActive);
@@ -12731,19 +12878,6 @@ var init_SonicGraphModal = __esm({
       updateLayoutSetting(key, value) {
         this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
         logger11.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
-      }
-      /**
-       * Update path-based grouping setting
-       */
-      updatePathBasedGroupingSetting(key, value) {
-        const currentSettings = this.getSonicGraphSettings();
-        currentSettings.layout.pathBasedGrouping[key] = value;
-        this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        if (this.graphRenderer) {
-          this.graphRenderer.updateLayoutSettings(currentSettings.layout);
-        }
-        logger11.debug("path-grouping", `Updated path-based grouping setting: ${String(key)} = ${value}`);
       }
       /**
        * Update filter setting
@@ -12967,12 +13101,10 @@ var init_SonicGraphModal = __esm({
         if (!query.trim())
           return;
         const currentSettings = this.getSonicGraphSettings();
-        let type2 = "path";
         let name = query;
         let path = query;
         if (query.includes(":")) {
           const parts = query.split(":", 2);
-          type2 = parts[0].toLowerCase();
           name = parts[1];
           path = parts[1];
         }
@@ -13009,22 +13141,6 @@ var init_SonicGraphModal = __esm({
           this.graphRenderer.updateLayoutSettings(currentSettings.layout);
         }
         logger11.debug("path-grouping", `Updated group ${groupIndex} ${property}:`, value);
-      }
-      /**
-       * Add a new group
-       */
-      addNewGroup() {
-        const currentSettings = this.getSonicGraphSettings();
-        const newGroup = {
-          id: `group-${Date.now()}`,
-          name: "New Group",
-          path: "",
-          color: "#6366f1"
-        };
-        currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
-        this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        logger11.debug("path-grouping", "Added new group:", newGroup);
       }
       /**
        * Remove a group
@@ -13124,12 +13240,12 @@ var init_SonicGraphModal = __esm({
         const errorContainer = this.graphContainer.createDiv({ cls: "sonic-graph-error" });
         const errorIcon = createLucideIcon("alert-circle", 48);
         errorContainer.appendChild(errorIcon);
-        const errorTitle = errorContainer.createEl("h3", {
+        errorContainer.createEl("h3", {
           text: "Failed to load graph data",
           cls: "sonic-graph-error-title"
         });
         if (errorMessage) {
-          const errorDetails = errorContainer.createEl("p", {
+          errorContainer.createEl("p", {
             text: errorMessage,
             cls: "sonic-graph-error-details"
           });
@@ -13860,14 +13976,6 @@ var init_SonicGraphModal = __esm({
         });
         this.eventListeners = [];
       }
-      // Performance optimization: Debounced settings updates
-      debounce(func, delay) {
-        let timeoutId;
-        return (...args) => {
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => func.apply(this, args), delay);
-        };
-      }
       scheduleSettingsUpdate(key, value) {
         this.pendingSettingsUpdates.set(key, value);
         if (this.settingsUpdateTimeout) {
@@ -13946,15 +14054,6 @@ var init_SonicGraphModal = __esm({
         if (this.progressIndicator) {
           this.progressIndicator.style.display = "none";
         }
-      }
-      // Performance optimization: DOM operations batching
-      batchDOMUpdates(updates) {
-        const fragment = document.createDocumentFragment();
-        const tempContainer = document.createElement("div");
-        fragment.appendChild(tempContainer);
-        updates.forEach((update) => update());
-        requestAnimationFrame(() => {
-        });
       }
     };
   }
