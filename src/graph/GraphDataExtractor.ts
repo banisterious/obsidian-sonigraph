@@ -149,30 +149,54 @@ export class GraphDataExtractor {
   }
 
   /**
-   * Extract all files as nodes
+   * Extract all files as nodes with optimized metadata access
+   * Phase 3.9: Use batch metadata access and reduce file system calls
    */
   private async extractNodes(): Promise<GraphNode[]> {
     const files = this.vault.getFiles();
     const nodes: GraphNode[] = [];
+    
+    logger.info('node-extraction', `Starting optimized node extraction from ${files.length} files`);
+    const startTime = performance.now();
+
+    // Phase 3.9: Pre-cache metadata for all files to reduce individual lookups
+    const metadataCache = new Map<string, CachedMetadata | null>();
+    let excludedCount = 0;
+    let processedCount = 0;
 
     for (const file of files) {
       // Check if file should be excluded
       if (this.shouldExcludeFile(file)) {
+        excludedCount++;
         logger.debug('extraction', `Excluding file: ${file.path}`);
         continue;
       }
 
       try {
-        const node = await this.createNodeFromFile(file);
+        // Cache metadata lookup result
+        const metadata = this.metadataCache.getFileCache(file);
+        metadataCache.set(file.path, metadata);
+        
+        const node = this.createOptimizedNodeFromFile(file, metadata);
         if (node) {
           nodes.push(node);
+          processedCount++;
         }
       } catch (error) {
         logger.warn('extraction', `Failed to process file: ${file.path}`, { path: file.path, error });
       }
     }
 
-    logger.debug('extraction', `Extracted ${nodes.length} nodes from ${files.length} files`);
+    const extractionTime = performance.now() - startTime;
+
+    logger.info('node-extraction-complete', `Optimized node extraction completed in ${extractionTime.toFixed(1)}ms`, {
+      totalFiles: files.length,
+      processedFiles: processedCount,
+      excludedFiles: excludedCount,
+      extractedNodes: nodes.length,
+      avgTimePerFile: (extractionTime / processedCount).toFixed(2) + 'ms'
+    });
+    
     return nodes;
   }
 
@@ -196,7 +220,28 @@ export class GraphDataExtractor {
   }
 
   /**
-   * Create a node from a TFile
+   * Phase 3.9: Optimized node creation without async file operations
+   */
+  private createOptimizedNodeFromFile(file: TFile, metadata: CachedMetadata | null): GraphNode | null {
+    const stat = file.stat;
+
+    const node: GraphNode = {
+      id: file.path,
+      type: this.getFileType(file),
+      title: this.getDisplayTitle(file, metadata),
+      path: file.path,
+      creationDate: new Date(stat.ctime),
+      modificationDate: new Date(stat.mtime),
+      fileSize: stat.size,
+      connections: [],
+      metadata: this.extractOptimizedFileMetadata(file, metadata)
+    };
+
+    return node;
+  }
+
+  /**
+   * Create a node from a TFile (legacy method)
    */
   private async createNodeFromFile(file: TFile): Promise<GraphNode | null> {
     const metadata = this.metadataCache.getFileCache(file);
@@ -246,7 +291,28 @@ export class GraphDataExtractor {
   }
 
   /**
-   * Extract additional metadata from file
+   * Phase 3.9: Optimized metadata extraction without async operations
+   */
+  private extractOptimizedFileMetadata(file: TFile, metadata: CachedMetadata | null): GraphNode['metadata'] {
+    const result: GraphNode['metadata'] = {};
+
+    // Extract tags from cached metadata
+    if (metadata?.tags) {
+      result.tags = metadata.tags.map(tag => tag.tag);
+    }
+
+    // For images, set placeholder data (real analysis would be too expensive)
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(file.extension.toLowerCase())) {
+      // Lightweight placeholder for future image analysis
+      result.dimensions = { width: 0, height: 0 };
+      result.dominantColors = [];
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }
+
+  /**
+   * Extract additional metadata from file (legacy method)
    */
   private async extractFileMetadata(file: TFile, metadata: CachedMetadata | null): Promise<GraphNode['metadata']> {
     const result: GraphNode['metadata'] = {};
@@ -267,125 +333,73 @@ export class GraphDataExtractor {
   }
 
   /**
-   * Extract links between nodes
-   * Phase 3.8: Enhanced link detection with expanded scope and better consistency
+   * Extract links between nodes using Obsidian's pre-computed resolvedLinks for optimal performance
+   * Phase 3.9: Leverage MetadataCache.resolvedLinks and unresolvedLinks for instant graph data access
    */
   private extractLinks(nodes: GraphNode[]): GraphLink[] {
     const links: GraphLink[] = [];
     const nodeMap = new Map(nodes.map(node => [node.path, node]));
     const linkSet = new Set<string>(); // Prevent duplicate links
 
-    logger.info('graph-extraction-links', `Starting link extraction for ${nodes.length} nodes`);
+    logger.info('graph-extraction-links', `Starting optimized link extraction using MetadataCache for ${nodes.length} nodes`);
+    
+    const startTime = performance.now();
 
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      
-      // Progress logging every 100 nodes
-      if (i % 100 === 0) {
-        logger.info('graph-extraction-links', `Processing node ${i + 1}/${nodes.length}: ${node.path}`);
+    // Phase 3.9: Use pre-computed resolvedLinks from MetadataCache for maximum performance
+    const resolvedLinks = this.metadataCache.resolvedLinks;
+    let processedConnections = 0;
+    let skippedConnections = 0;
+
+    // Process resolved links - these are guaranteed to be valid connections
+    for (const [sourcePath, targets] of Object.entries(resolvedLinks)) {
+      // Only process if source node exists in our graph
+      if (!nodeMap.has(sourcePath)) {
+        continue;
       }
-      
-      const file = this.vault.getAbstractFileByPath(node.path) as TFile;
-      if (!file) continue;
 
-      const metadata = this.metadataCache.getFileCache(file);
-      
-      // Phase 3.8: Expand scope - process files with metadata (primarily markdown)
-      if (metadata) {
-        // Process outgoing links with enhanced debugging
-        if (metadata.links) {
-          logger.debug('link-detection', `Processing ${metadata.links.length} links from ${file.path}`);
-          
-          for (const link of metadata.links) {
-            // Phase 3.8: Improved link resolution using getFirstLinkpathDest
-            const targetFile = this.metadataCache.getFirstLinkpathDest(link.link, file.path);
-            
-            if (targetFile && nodeMap.has(targetFile.path)) {
-              // Phase 3.8: Consistent link ID generation
-              const linkId = this.generateLinkId(node.path, targetFile.path);
-              
-              if (!linkSet.has(linkId)) {
-                linkSet.add(linkId);
-                links.push({
-                  source: node.path, // Use path for consistency
-                  target: targetFile.path,
-                  type: 'reference',
-                  strength: this.calculateLinkStrength(link, 'reference')
-                });
-                logger.debug('link-success', `Link resolved: ${link.link} -> ${targetFile.path}`, {
-                  from: file.path,
-                  to: targetFile.path,
-                  linkText: link.link,
-                  strength: this.calculateLinkStrength(link, 'reference')
-                });
-              }
-            } else {
-              logger.debug('link-fail', `Link not resolved: ${link.link}`, {
-                from: file.path,
-                originalLink: link.link,
-                reason: targetFile ? 'target not in graph' : 'target not found'
-              });
-            }
-          }
+      for (const [targetPath, linkCount] of Object.entries(targets)) {
+        // Only process if target node exists in our graph  
+        if (!nodeMap.has(targetPath)) {
+          skippedConnections++;
+          continue;
         }
 
-        // Process embeds with enhanced debugging  
-        if (metadata.embeds) {
-          logger.debug('embed-detection', `Processing ${metadata.embeds.length} embeds from ${file.path}`);
-          
-          for (const embed of metadata.embeds) {
-            // Phase 3.8: Enhanced embed resolution
-            const targetFile = this.metadataCache.getFirstLinkpathDest(embed.link, file.path);
-            
-            if (targetFile && nodeMap.has(targetFile.path)) {
-              // Phase 3.8: Consistent link ID generation
-              const linkId = this.generateLinkId(node.path, targetFile.path);
-              
-              if (!linkSet.has(linkId)) {
-                linkSet.add(linkId);
-                links.push({
-                  source: node.path, // Use path for consistency
-                  target: targetFile.path,
-                  type: 'attachment',
-                  strength: this.calculateLinkStrength(embed, 'attachment')
-                });
-                logger.debug('embed-success', `Embed resolved: ${embed.link} -> ${targetFile.path}`, {
-                  from: file.path,
-                  to: targetFile.path,
-                  embedText: embed.link,
-                  strength: this.calculateLinkStrength(embed, 'attachment')
-                });
-              }
-            } else {
-              logger.debug('embed-fail', `Embed not resolved: ${embed.link}`, {
-                from: file.path,
-                originalEmbed: embed.link,
-                reason: targetFile ? 'target not in graph' : 'target not found'
-              });
-            }
-          }
+        // Phase 3.9: Generate consistent link ID for deduplication
+        const linkId = this.generateLinkId(sourcePath, targetPath);
+        
+        if (!linkSet.has(linkId)) {
+          linkSet.add(linkId);
+          links.push({
+            source: sourcePath,
+            target: targetPath,
+            type: 'reference',
+            strength: this.calculateLinkStrengthFromCount(linkCount)
+          });
+          processedConnections++;
         }
-
-        // Phase 3.8: Process tags as weak connections (only if showTags is enabled)
-        if (this.filterSettings.showTags && metadata.tags && metadata.tags.length > 0) {
-          const nodeTags = metadata.tags.map(tag => tag.tag);
-          // Limit tag processing to prevent infinite loops and improve performance
-          const limitedTags = nodeTags.slice(0, 10); // Max 10 tags per node for better performance
-          this.createTagBasedLinks(node, limitedTags, nodes, links, linkSet);
-        }
-      }
-      
-      // Phase 3.8: Add folder hierarchy connections for better clustering
-      // Only process every 20th node for hierarchy to reduce complexity for better performance
-      if (i % 20 === 0) {
-        this.createFolderHierarchyLinks(node, nodes, links, linkSet);
       }
     }
 
-    logger.debug('link-extraction-complete', `Extracted ${links.length} unique links`, {
+    // Phase 3.9: Add tag-based connections if enabled (optimized approach)
+    if (this.filterSettings.showTags) {
+      this.createOptimizedTagBasedLinks(nodes, links, linkSet);
+    }
+
+    // Phase 3.9: Add selective folder hierarchy connections for clustering (much more efficient)
+    if (nodes.length < 1000) { // Only for smaller graphs to avoid performance impact
+      this.createOptimizedFolderHierarchyLinks(nodes, links, linkSet);
+    }
+
+    const extractionTime = performance.now() - startTime;
+
+    logger.info('link-extraction-complete', `Optimized link extraction completed in ${extractionTime.toFixed(1)}ms`, {
       totalNodes: nodes.length,
+      extractedLinks: links.length,
+      processedConnections,
+      skippedConnections,
       linksPerNode: (links.length / nodes.length).toFixed(2),
-      linkTypes: this.summarizeLinkTypes(links)
+      linkTypes: this.summarizeLinkTypes(links),
+      performanceGain: 'Using MetadataCache.resolvedLinks for instant access'
     });
     
     return links;
@@ -401,104 +415,121 @@ export class GraphDataExtractor {
   }
 
   /**
-   * Phase 3.8: Calculate link strength based on link type and context
+   * Phase 3.9: Calculate link strength from MetadataCache link count for better relationship weighting
    */
-  private calculateLinkStrength(link: any, type: 'reference' | 'attachment'): number {
-    const baseStrength = type === 'reference' ? 1.0 : 0.8;
-    
-    // Could enhance this based on link context, frequency, etc.
-    // For now, return base strength
-    return baseStrength;
+  private calculateLinkStrengthFromCount(linkCount: number): number {
+    // Scale link strength based on frequency: 1-2 links = 1.0, 3-5 = 1.2, 6+ = 1.5
+    if (linkCount >= 6) return 1.5;
+    if (linkCount >= 3) return 1.2;
+    return 1.0;
   }
 
+
   /**
-   * Phase 3.8: Create weak connections between nodes sharing tags
+   * Phase 3.9: Optimized tag-based link creation using pre-computed tag index
    */
-  private createTagBasedLinks(node: GraphNode, nodeTags: string[], allNodes: GraphNode[], 
-                            links: GraphLink[], linkSet: Set<string>): void {
-    if (nodeTags.length === 0) return;
+  private createOptimizedTagBasedLinks(nodes: GraphNode[], links: GraphLink[], linkSet: Set<string>): void {
+    // Build tag index once for all nodes
+    const tagIndex = new Map<string, GraphNode[]>();
+    
+    for (const node of nodes) {
+      const file = this.vault.getAbstractFileByPath(node.path) as TFile;
+      if (!file) continue;
+      
+      const metadata = this.metadataCache.getFileCache(file);
+      if (!metadata?.tags) continue;
+      
+      const nodeTags = metadata.tags.map(tag => tag.tag);
+      for (const tag of nodeTags) {
+        if (!tagIndex.has(tag)) {
+          tagIndex.set(tag, []);
+        }
+        tagIndex.get(tag)!.push(node);
+      }
+    }
 
-    let connectionsCreated = 0;
-    const MAX_CONNECTIONS_PER_NODE = 25; // Limit connections per node for better performance
-
-    for (const otherNode of allNodes) {
-      if (otherNode.id === node.id) continue;
-      if (connectionsCreated >= MAX_CONNECTIONS_PER_NODE) break;
+    // Create links between nodes sharing tags
+    let tagLinksCreated = 0;
+    const MAX_TAG_LINKS = 500; // Prevent excessive tag links
+    
+    for (const [tag, taggedNodes] of tagIndex) {
+      if (taggedNodes.length < 2) continue; // Need at least 2 nodes to create links
+      if (tagLinksCreated >= MAX_TAG_LINKS) break;
       
-      const otherFile = this.vault.getAbstractFileByPath(otherNode.path) as TFile;
-      if (!otherFile) continue;
+      // Limit connections per tag to prevent performance issues
+      const limitedNodes = taggedNodes.slice(0, 20);
       
-      const otherMetadata = this.metadataCache.getFileCache(otherFile);
-      if (!otherMetadata?.tags) continue;
-      
-      const otherTags = otherMetadata.tags.map(tag => tag.tag);
-      const sharedTags = nodeTags.filter(tag => otherTags.includes(tag));
-      
-      if (sharedTags.length > 0) {
-        const linkId = this.generateLinkId(node.path, otherNode.path);
-        
-        if (!linkSet.has(linkId)) {
-          linkSet.add(linkId);
-          links.push({
-            source: node.path,
-            target: otherNode.path,
-            type: 'tag',
-            strength: Math.min(0.3 * sharedTags.length, 0.6) // Weak connection, max 0.6
-          });
+      for (let i = 0; i < limitedNodes.length && tagLinksCreated < MAX_TAG_LINKS; i++) {
+        for (let j = i + 1; j < limitedNodes.length && tagLinksCreated < MAX_TAG_LINKS; j++) {
+          const linkId = this.generateLinkId(limitedNodes[i].path, limitedNodes[j].path);
           
-          connectionsCreated++;
-          
-          logger.debug('tag-link', `Tag-based link created`, {
-            from: node.path,
-            to: otherNode.path,
-            sharedTags,
-            strength: Math.min(0.3 * sharedTags.length, 0.6)
-          });
+          if (!linkSet.has(linkId)) {
+            linkSet.add(linkId);
+            links.push({
+              source: limitedNodes[i].path,
+              target: limitedNodes[j].path,
+              type: 'tag',
+              strength: 0.3 // Weak connection for tag relationships
+            });
+            tagLinksCreated++;
+          }
         }
       }
     }
+
+    logger.debug('tag-links-optimized', `Created ${tagLinksCreated} tag-based links from ${tagIndex.size} unique tags`);
   }
 
+
   /**
-   * Phase 3.8: Create hierarchy connections based on folder relationships
+   * Phase 3.9: Optimized folder hierarchy link creation using pre-computed folder index
    */
-  private createFolderHierarchyLinks(node: GraphNode, allNodes: GraphNode[], 
-                                   links: GraphLink[], linkSet: Set<string>): void {
-    const nodeFolderPath = node.path.substring(0, node.path.lastIndexOf('/'));
-    if (!nodeFolderPath) return; // Root level file
+  private createOptimizedFolderHierarchyLinks(nodes: GraphNode[], links: GraphLink[], linkSet: Set<string>): void {
+    // Build folder index once for all nodes
+    const folderIndex = new Map<string, GraphNode[]>();
     
-    // Find other files in the same folder
-    const siblingNodes = allNodes.filter(other => {
-      if (other.id === node.id) return false;
-      const otherFolderPath = other.path.substring(0, other.path.lastIndexOf('/'));
-      return otherFolderPath === nodeFolderPath;
-    });
-    
-    // Limit connections to prevent excessive sibling links
-    const limitedSiblings = siblingNodes.slice(0, 10);
-    
-    // Create weak links between siblings (files in same folder)
-    for (const sibling of limitedSiblings) {
-      const linkId = this.generateLinkId(node.path, sibling.path);
+    for (const node of nodes) {
+      const folderPath = node.path.substring(0, node.path.lastIndexOf('/'));
+      if (!folderPath) continue; // Skip root level files
       
-      if (!linkSet.has(linkId)) {
-        linkSet.add(linkId);
-        links.push({
-          source: node.path,
-          target: sibling.path,
-          type: 'reference',
-          strength: 0.2 // Very weak connection for folder siblings
-        });
-        
-        logger.debug('folder-link', `Folder hierarchy link created`, {
-          from: node.path,
-          to: sibling.path,
-          folder: nodeFolderPath,
-          strength: 0.2
-        });
+      if (!folderIndex.has(folderPath)) {
+        folderIndex.set(folderPath, []);
+      }
+      folderIndex.get(folderPath)!.push(node);
+    }
+
+    // Create sibling links within folders (but limit to prevent excessive connections)
+    let folderLinksCreated = 0;
+    const MAX_FOLDER_LINKS = 200;
+    
+    for (const [folderPath, folderNodes] of folderIndex) {
+      if (folderNodes.length < 2) continue; // Need at least 2 nodes
+      if (folderLinksCreated >= MAX_FOLDER_LINKS) break;
+      
+      // Limit connections per folder - create star pattern from first node to others
+      const limitedNodes = folderNodes.slice(0, 8); // Max 8 nodes per folder
+      
+      for (let i = 0; i < limitedNodes.length && folderLinksCreated < MAX_FOLDER_LINKS; i++) {
+        for (let j = i + 1; j < limitedNodes.length && folderLinksCreated < MAX_FOLDER_LINKS; j++) {
+          const linkId = this.generateLinkId(limitedNodes[i].path, limitedNodes[j].path);
+          
+          if (!linkSet.has(linkId)) {
+            linkSet.add(linkId);
+            links.push({
+              source: limitedNodes[i].path,
+              target: limitedNodes[j].path,
+              type: 'reference',
+              strength: 0.2 // Very weak connection for folder siblings
+            });
+            folderLinksCreated++;
+          }
+        }
       }
     }
+
+    logger.debug('folder-links-optimized', `Created ${folderLinksCreated} folder hierarchy links from ${folderIndex.size} folders`);
   }
+
 
   /**
    * Phase 3.8: Summarize link types for debugging

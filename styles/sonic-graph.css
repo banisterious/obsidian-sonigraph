@@ -351,7 +351,7 @@
    Sonic Graph Modal Styles
    ========================================================================== */
 
-/* Large modal for graph visualization */
+/* Large modal for graph visualization - Full viewport */
 .modal.sonic-graph-modal {
   display: flex;
   flex-direction: column;
@@ -360,6 +360,10 @@
   width: var(--modal-width);
   max-height: var(--modal-max-height);
   max-width: var(--modal-max-width);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 0 0 0 0.5em;
   background: var(--background-primary);
   z-index: 1000;
@@ -449,7 +453,7 @@
 .sonic-graph-canvas {
   flex: 1;
   width: 100%;
-  height: 600px !important; /* Force height with !important */
+  height: 100% !important; /* Use full available height */
   min-height: 400px;
   cursor: grab;
 }
@@ -797,55 +801,52 @@
   flex: 0 0 auto;
 }
 
-/* Main Content Layout with Settings Panel */
+/* Main Content Layout with Settings Panel Overlay */
 .sonic-graph-main-content {
-  display: flex;
+  position: relative;
   flex: 1;
   overflow: hidden;
   min-height: 0; /* Ensure flex child can shrink */
   height: 100%; /* Take full available height */
-  align-items: stretch; /* Ensure children fill height */
 }
 
 .sonic-graph-container {
-  flex: 2;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
-  transition: flex 0.3s ease;
   background: var(--background-primary);
-  min-height: 0;
   display: flex;
   flex-direction: column;
   margin: 0;
   padding: 0;
 }
 
-/* When settings panel is open, adjust proportions */
-.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden)) .sonic-graph-container {
-  flex: 4; /* Give graph more space when settings open */
-}
-
-.sonic-graph-main-content:has(.sonic-graph-settings-panel:not(.hidden))
-  .sonic-graph-settings-panel {
-  flex: 2;
-}
-
 .sonic-graph-settings-panel {
-  flex: 1;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 400px;
   background: var(--background-secondary);
   border-left: 1px solid var(--background-modifier-border);
   overflow: hidden;
-  transition: all 0.3s ease;
-  min-height: 0; /* Ensure flex child can shrink */
-  max-height: 100%; /* Constrain to parent height */
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
   display: flex;
   flex-direction: column;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
 .sonic-graph-settings-panel.hidden {
-  flex: 0;
-  border-left: none;
-  overflow: hidden;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Settings Panel Content */

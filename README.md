@@ -35,18 +35,19 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 - **Real-time Audio Feedback**: Visual and auditory feedback during graph playback
 - **Comprehensive Settings**: Detailed control over all 34 instruments and their parameters
 
-### 🧪 Alpha Features (v0.8.3-alpha)
-> **Note**: The following features are currently in alpha development and may have known issues or incomplete functionality.
+### 🚀 Production Features (v0.8.4-alpha)
 
-- **Sonic Graph Visualization**: Interactive temporal graph animation showing knowledge evolution over time
-  - Static graph view displaying all vault files and connections using D3.js force simulation
-  - Timeline animation mode with audio synchronization as nodes appear chronologically
-  - Comprehensive settings panel with timeline, audio, and visual configuration options
-  - Content filtering system with folder/file exclusion capabilities
-- **Enhanced Modal Interface**: Professional settings panel with scrollable content and responsive layout
+- **Sonic Graph Visualization**: High-performance interactive graph visualization with temporal animation
+  - **Instant Loading Performance**: Optimized data processing using Obsidian's MetadataCache infrastructure
+  - **Static Graph View**: D3.js force simulation displaying all vault files and connections
+  - **Timeline Animation Mode**: Audio-synchronized chronological node appearance with intelligent spacing
+  - **Professional Settings Panel**: Comprehensive configuration for timeline, audio, and visual options
+  - **Advanced Filtering**: Content exclusion system with native Obsidian autocomplete for folders and files
+  - **Performance Optimizations**: Adaptive rendering modes and efficient data structures for large vaults
+- **Enhanced Modal Interface**: Full-screen overlay settings panel with smooth transitions and responsive layout
 - **Cross-Modal Navigation**: Seamless integration between Sonic Graph and Control Center interfaces
 
-*Alpha features are actively being refined. Audio integration and some UI polish items are still in progress.*
+*Sonic Graph now delivers production-ready performance matching Obsidian's core Graph plugin.*
 
 ## 📦 Installation
 

@@ -34,7 +34,7 @@ export default class SonigraphPlugin extends Plugin {
 		await this.initializeWhaleIntegration();
 
 		// Add ribbon icon
-		this.addRibbonIcon('music', 'Sonigraph: Open Control Panel', () => {
+		this.addRibbonIcon('keyboard-music', 'Sonigraph: Open Control Panel', () => {
 			this.openControlPanel();
 		});
 
