@@ -366,6 +366,9 @@ private addIntelligentSpacing(events: TimelineEvent[]): TimelineEvent[] {
 
 ### 3.3. Graph Data Extraction
 
+**Phase 3.9 Performance Optimization (July 2025):**
+The graph data extraction system was completely overhauled to leverage Obsidian's built-in MetadataCache infrastructure for performance matching the core Graph plugin.
+
 **GraphDataExtractor Class:**
 ```typescript
 export class GraphDataExtractor {
@@ -383,11 +386,24 @@ export class GraphDataExtractor {
 }
 ```
 
+**Optimized Data Processing:**
+- **MetadataCache Integration**: Uses pre-computed `resolvedLinks` and `unresolvedLinks` for instant link access
+- **Eliminated File Parsing**: No more regex-based content scanning or manual link resolution
+- **Batch Metadata Access**: Pre-caches all metadata lookups to reduce API calls
+- **Optimized Indexing**: Tag and folder relationships built with O(n) complexity
+- **Performance Monitoring**: Detailed timing metrics for each extraction phase
+
 **Node Extraction Process:**
 1. **File Discovery**: Scan all vault files (notes, images, PDFs, audio, video)
-2. **Metadata Extraction**: Creation date, modification date, file size, connections
+2. **Optimized Metadata Extraction**: Batch-cached metadata access with timing metrics
 3. **Exclusion Filtering**: Apply user-defined folder/file exclusions
 4. **Type Classification**: Categorize files for appropriate visual/audio treatment
+
+**Link Extraction Optimization:**
+- **Pre-computed Links**: Direct access to `MetadataCache.resolvedLinks` (instant performance)
+- **Link Strength Calculation**: Uses actual link frequency from MetadataCache
+- **Intelligent Tag Connections**: O(n) tag indexing for shared tag relationships
+- **Selective Folder Hierarchy**: Optimized sibling connections for smaller graphs only
 
 **Supported File Types:**
 ```typescript

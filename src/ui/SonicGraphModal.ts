@@ -38,6 +38,9 @@ export class SonicGraphModal extends Modal {
     // Performance optimization: Progress indicator
     private progressIndicator: HTMLElement | null = null;
     
+    // Responsive sizing: Resize observer for dynamic graph sizing
+    private resizeObserver: ResizeObserver | null = null;
+    
     // UI elements
     private headerContainer: HTMLElement;
     private graphContainer: HTMLElement;
@@ -158,6 +161,12 @@ export class SonicGraphModal extends Modal {
         if (this.graphRenderer) {
             this.graphRenderer.destroy();
             this.graphRenderer = null;
+        }
+        
+        // Cleanup resize observer
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
         }
         
         // Reset animation state
@@ -369,12 +378,27 @@ export class SonicGraphModal extends Modal {
             
             logger.info('sonic-graph-renderer', 'Creating GraphRenderer instance');
             this.graphRenderer = await this.executeWhenIdle(() => {
+                // Use container dimensions instead of fixed 800x600
+                const width = canvasElement.clientWidth || canvasElement.offsetWidth || 800;
+                const height = canvasElement.clientHeight || canvasElement.offsetHeight || 600;
+                
+                logger.info('sonic-graph-responsive', 'Using responsive dimensions', {
+                    width, height,
+                    clientWidth: canvasElement.clientWidth,
+                    clientHeight: canvasElement.clientHeight
+                });
+                
                 return new GraphRenderer(canvasElement, {
+                    width: width,
+                    height: height,
                     enableZoom: true,
                     showLabels: false
                 });
             });
             logger.info('sonic-graph-renderer', 'GraphRenderer created successfully');
+            
+            // Set up responsive resizing
+            this.setupResizeObserver(canvasElement);
             
             // Phase 3.8: Apply layout settings to renderer
             this.showProgressIndicator('Applying layout settings...');
@@ -2531,6 +2555,40 @@ export class SonicGraphModal extends Modal {
         this.eventListeners = [];
     }
 
+    // Responsive sizing: Set up resize observer for dynamic graph sizing
+    private setupResizeObserver(canvasElement: HTMLElement): void {
+        if (!this.graphRenderer) return;
+        
+        // Clean up existing observer
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        
+        // Create new resize observer
+        this.resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const newWidth = entry.contentRect.width;
+                const newHeight = entry.contentRect.height;
+                
+                // Only resize if dimensions actually changed and are valid
+                if (newWidth > 0 && newHeight > 0 && this.graphRenderer) {
+                    logger.debug('responsive-resize', 'Container resized, updating graph', {
+                        newWidth,
+                        newHeight,
+                        previousWidth: this.graphRenderer.getZoomTransform().k,
+                        previousHeight: this.graphRenderer.getZoomTransform().k
+                    });
+                    
+                    this.graphRenderer.resize(newWidth, newHeight);
+                }
+            }
+        });
+        
+        // Start observing the canvas container
+        this.resizeObserver.observe(canvasElement);
+        
+        logger.debug('responsive-setup', 'Resize observer set up for responsive graph sizing');
+    }
 
     private scheduleSettingsUpdate(key: string, value: any): void {
         this.pendingSettingsUpdates.set(key, value);

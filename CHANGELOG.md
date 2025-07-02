@@ -5,6 +5,21 @@ All notable changes to the Obsidian Sonigraph Plugin will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed - Sonic Graph Performance Optimization (2025-07-02)
+- **Major Performance Improvement**: Optimized graph data processing to achieve instant loading performance matching Obsidian's core Graph plugin
+- **MetadataCache Integration**: Replaced manual file parsing with Obsidian's pre-computed `resolvedLinks` and `unresolvedLinks` for instant link access
+- **Eliminated File System Bottlenecks**: Removed regex-based content scanning and manual link resolution
+- **Optimized Data Structures**: Implemented O(n) tag indexing and batch metadata caching for reduced API calls
+- **Enhanced Performance Monitoring**: Added detailed timing metrics for each graph extraction phase
+- **Intelligent Connection Weighting**: Link strength now based on actual connection frequency from MetadataCache
+
+### Technical
+- **Data Processing**: Overhauled GraphDataExtractor with optimized node and link extraction algorithms
+- **Architecture**: Leverages Obsidian's battle-tested graph infrastructure for reliability and performance
+- **Codebase**: Simplified and more maintainable code without redundant parsing logic
+
 ## [0.3.0] - 2024-12-19
 
 ### Added - Phase 8: Complete Orchestral System
