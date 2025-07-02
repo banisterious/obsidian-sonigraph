@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed - Sonic Graph Performance Optimization (2025-07-02)
+## [0.9.0-alpha] - 2025-07-02
+
+### Fixed - Sonic Graph Performance Optimization
 - **Major Performance Improvement**: Optimized graph data processing to achieve instant loading performance matching Obsidian's core Graph plugin
 - **MetadataCache Integration**: Replaced manual file parsing with Obsidian's pre-computed `resolvedLinks` and `unresolvedLinks` for instant link access
 - **Eliminated File System Bottlenecks**: Removed regex-based content scanning and manual link resolution
