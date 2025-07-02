@@ -9887,26 +9887,43 @@ var init_GraphDataExtractor = __esm({
         }
       }
       /**
-       * Extract all files as nodes
+       * Extract all files as nodes with optimized metadata access
+       * Phase 3.9: Use batch metadata access and reduce file system calls
        */
       async extractNodes() {
         const files = this.vault.getFiles();
         const nodes = [];
+        logger5.info("node-extraction", `Starting optimized node extraction from ${files.length} files`);
+        const startTime = performance.now();
+        const metadataCache = /* @__PURE__ */ new Map();
+        let excludedCount = 0;
+        let processedCount = 0;
         for (const file of files) {
           if (this.shouldExcludeFile(file)) {
+            excludedCount++;
             logger5.debug("extraction", `Excluding file: ${file.path}`);
             continue;
           }
           try {
-            const node = await this.createNodeFromFile(file);
+            const metadata = this.metadataCache.getFileCache(file);
+            metadataCache.set(file.path, metadata);
+            const node = this.createOptimizedNodeFromFile(file, metadata);
             if (node) {
               nodes.push(node);
+              processedCount++;
             }
           } catch (error) {
             logger5.warn("extraction", `Failed to process file: ${file.path}`, { path: file.path, error });
           }
         }
-        logger5.debug("extraction", `Extracted ${nodes.length} nodes from ${files.length} files`);
+        const extractionTime = performance.now() - startTime;
+        logger5.info("node-extraction-complete", `Optimized node extraction completed in ${extractionTime.toFixed(1)}ms`, {
+          totalFiles: files.length,
+          processedFiles: processedCount,
+          excludedFiles: excludedCount,
+          extractedNodes: nodes.length,
+          avgTimePerFile: (extractionTime / processedCount).toFixed(2) + "ms"
+        });
         return nodes;
       }
       /**
@@ -9924,7 +9941,25 @@ var init_GraphDataExtractor = __esm({
         return false;
       }
       /**
-       * Create a node from a TFile
+       * Phase 3.9: Optimized node creation without async file operations
+       */
+      createOptimizedNodeFromFile(file, metadata) {
+        const stat = file.stat;
+        const node = {
+          id: file.path,
+          type: this.getFileType(file),
+          title: this.getDisplayTitle(file, metadata),
+          path: file.path,
+          creationDate: new Date(stat.ctime),
+          modificationDate: new Date(stat.mtime),
+          fileSize: stat.size,
+          connections: [],
+          metadata: this.extractOptimizedFileMetadata(file, metadata)
+        };
+        return node;
+      }
+      /**
+       * Create a node from a TFile (legacy method)
        */
       async createNodeFromFile(file) {
         const metadata = this.metadataCache.getFileCache(file);
@@ -9970,7 +10005,21 @@ var init_GraphDataExtractor = __esm({
         return file.basename;
       }
       /**
-       * Extract additional metadata from file
+       * Phase 3.9: Optimized metadata extraction without async operations
+       */
+      extractOptimizedFileMetadata(file, metadata) {
+        const result = {};
+        if (metadata == null ? void 0 : metadata.tags) {
+          result.tags = metadata.tags.map((tag) => tag.tag);
+        }
+        if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(file.extension.toLowerCase())) {
+          result.dimensions = { width: 0, height: 0 };
+          result.dominantColors = [];
+        }
+        return Object.keys(result).length > 0 ? result : void 0;
+      }
+      /**
+       * Extract additional metadata from file (legacy method)
        */
       async extractFileMetadata(file, metadata) {
         const result = {};
@@ -9984,100 +10033,55 @@ var init_GraphDataExtractor = __esm({
         return Object.keys(result).length > 0 ? result : void 0;
       }
       /**
-       * Extract links between nodes
-       * Phase 3.8: Enhanced link detection with expanded scope and better consistency
+       * Extract links between nodes using Obsidian's pre-computed resolvedLinks for optimal performance
+       * Phase 3.9: Leverage MetadataCache.resolvedLinks and unresolvedLinks for instant graph data access
        */
       extractLinks(nodes) {
         const links = [];
         const nodeMap = new Map(nodes.map((node) => [node.path, node]));
         const linkSet = /* @__PURE__ */ new Set();
-        logger5.info("graph-extraction-links", `Starting link extraction for ${nodes.length} nodes`);
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i];
-          if (i % 100 === 0) {
-            logger5.info("graph-extraction-links", `Processing node ${i + 1}/${nodes.length}: ${node.path}`);
-          }
-          const file = this.vault.getAbstractFileByPath(node.path);
-          if (!file)
+        logger5.info("graph-extraction-links", `Starting optimized link extraction using MetadataCache for ${nodes.length} nodes`);
+        const startTime = performance.now();
+        const resolvedLinks = this.metadataCache.resolvedLinks;
+        let processedConnections = 0;
+        let skippedConnections = 0;
+        for (const [sourcePath, targets] of Object.entries(resolvedLinks)) {
+          if (!nodeMap.has(sourcePath)) {
             continue;
-          const metadata = this.metadataCache.getFileCache(file);
-          if (metadata) {
-            if (metadata.links) {
-              logger5.debug("link-detection", `Processing ${metadata.links.length} links from ${file.path}`);
-              for (const link of metadata.links) {
-                const targetFile = this.metadataCache.getFirstLinkpathDest(link.link, file.path);
-                if (targetFile && nodeMap.has(targetFile.path)) {
-                  const linkId = this.generateLinkId(node.path, targetFile.path);
-                  if (!linkSet.has(linkId)) {
-                    linkSet.add(linkId);
-                    links.push({
-                      source: node.path,
-                      // Use path for consistency
-                      target: targetFile.path,
-                      type: "reference",
-                      strength: this.calculateLinkStrength(link, "reference")
-                    });
-                    logger5.debug("link-success", `Link resolved: ${link.link} -> ${targetFile.path}`, {
-                      from: file.path,
-                      to: targetFile.path,
-                      linkText: link.link,
-                      strength: this.calculateLinkStrength(link, "reference")
-                    });
-                  }
-                } else {
-                  logger5.debug("link-fail", `Link not resolved: ${link.link}`, {
-                    from: file.path,
-                    originalLink: link.link,
-                    reason: targetFile ? "target not in graph" : "target not found"
-                  });
-                }
-              }
-            }
-            if (metadata.embeds) {
-              logger5.debug("embed-detection", `Processing ${metadata.embeds.length} embeds from ${file.path}`);
-              for (const embed of metadata.embeds) {
-                const targetFile = this.metadataCache.getFirstLinkpathDest(embed.link, file.path);
-                if (targetFile && nodeMap.has(targetFile.path)) {
-                  const linkId = this.generateLinkId(node.path, targetFile.path);
-                  if (!linkSet.has(linkId)) {
-                    linkSet.add(linkId);
-                    links.push({
-                      source: node.path,
-                      // Use path for consistency
-                      target: targetFile.path,
-                      type: "attachment",
-                      strength: this.calculateLinkStrength(embed, "attachment")
-                    });
-                    logger5.debug("embed-success", `Embed resolved: ${embed.link} -> ${targetFile.path}`, {
-                      from: file.path,
-                      to: targetFile.path,
-                      embedText: embed.link,
-                      strength: this.calculateLinkStrength(embed, "attachment")
-                    });
-                  }
-                } else {
-                  logger5.debug("embed-fail", `Embed not resolved: ${embed.link}`, {
-                    from: file.path,
-                    originalEmbed: embed.link,
-                    reason: targetFile ? "target not in graph" : "target not found"
-                  });
-                }
-              }
-            }
-            if (this.filterSettings.showTags && metadata.tags && metadata.tags.length > 0) {
-              const nodeTags = metadata.tags.map((tag) => tag.tag);
-              const limitedTags = nodeTags.slice(0, 10);
-              this.createTagBasedLinks(node, limitedTags, nodes, links, linkSet);
-            }
           }
-          if (i % 20 === 0) {
-            this.createFolderHierarchyLinks(node, nodes, links, linkSet);
+          for (const [targetPath, linkCount] of Object.entries(targets)) {
+            if (!nodeMap.has(targetPath)) {
+              skippedConnections++;
+              continue;
+            }
+            const linkId = this.generateLinkId(sourcePath, targetPath);
+            if (!linkSet.has(linkId)) {
+              linkSet.add(linkId);
+              links.push({
+                source: sourcePath,
+                target: targetPath,
+                type: "reference",
+                strength: this.calculateLinkStrengthFromCount(linkCount)
+              });
+              processedConnections++;
+            }
           }
         }
-        logger5.debug("link-extraction-complete", `Extracted ${links.length} unique links`, {
+        if (this.filterSettings.showTags) {
+          this.createOptimizedTagBasedLinks(nodes, links, linkSet);
+        }
+        if (nodes.length < 1e3) {
+          this.createOptimizedFolderHierarchyLinks(nodes, links, linkSet);
+        }
+        const extractionTime = performance.now() - startTime;
+        logger5.info("link-extraction-complete", `Optimized link extraction completed in ${extractionTime.toFixed(1)}ms`, {
           totalNodes: nodes.length,
+          extractedLinks: links.length,
+          processedConnections,
+          skippedConnections,
           linksPerNode: (links.length / nodes.length).toFixed(2),
-          linkTypes: this.summarizeLinkTypes(links)
+          linkTypes: this.summarizeLinkTypes(links),
+          performanceGain: "Using MetadataCache.resolvedLinks for instant access"
         });
         return links;
       }
@@ -10089,88 +10093,102 @@ var init_GraphDataExtractor = __esm({
         return `${first}<->${second}`;
       }
       /**
-       * Phase 3.8: Calculate link strength based on link type and context
+       * Phase 3.9: Calculate link strength from MetadataCache link count for better relationship weighting
        */
-      calculateLinkStrength(link, type2) {
-        const baseStrength = type2 === "reference" ? 1 : 0.8;
-        return baseStrength;
+      calculateLinkStrengthFromCount(linkCount) {
+        if (linkCount >= 6)
+          return 1.5;
+        if (linkCount >= 3)
+          return 1.2;
+        return 1;
       }
       /**
-       * Phase 3.8: Create weak connections between nodes sharing tags
+       * Phase 3.9: Optimized tag-based link creation using pre-computed tag index
        */
-      createTagBasedLinks(node, nodeTags, allNodes, links, linkSet) {
-        if (nodeTags.length === 0)
-          return;
-        let connectionsCreated = 0;
-        const MAX_CONNECTIONS_PER_NODE = 25;
-        for (const otherNode of allNodes) {
-          if (otherNode.id === node.id)
+      createOptimizedTagBasedLinks(nodes, links, linkSet) {
+        const tagIndex = /* @__PURE__ */ new Map();
+        for (const node of nodes) {
+          const file = this.vault.getAbstractFileByPath(node.path);
+          if (!file)
             continue;
-          if (connectionsCreated >= MAX_CONNECTIONS_PER_NODE)
+          const metadata = this.metadataCache.getFileCache(file);
+          if (!(metadata == null ? void 0 : metadata.tags))
+            continue;
+          const nodeTags = metadata.tags.map((tag) => tag.tag);
+          for (const tag of nodeTags) {
+            if (!tagIndex.has(tag)) {
+              tagIndex.set(tag, []);
+            }
+            tagIndex.get(tag).push(node);
+          }
+        }
+        let tagLinksCreated = 0;
+        const MAX_TAG_LINKS = 500;
+        for (const [tag, taggedNodes] of tagIndex) {
+          if (taggedNodes.length < 2)
+            continue;
+          if (tagLinksCreated >= MAX_TAG_LINKS)
             break;
-          const otherFile = this.vault.getAbstractFileByPath(otherNode.path);
-          if (!otherFile)
-            continue;
-          const otherMetadata = this.metadataCache.getFileCache(otherFile);
-          if (!(otherMetadata == null ? void 0 : otherMetadata.tags))
-            continue;
-          const otherTags = otherMetadata.tags.map((tag) => tag.tag);
-          const sharedTags = nodeTags.filter((tag) => otherTags.includes(tag));
-          if (sharedTags.length > 0) {
-            const linkId = this.generateLinkId(node.path, otherNode.path);
-            if (!linkSet.has(linkId)) {
-              linkSet.add(linkId);
-              links.push({
-                source: node.path,
-                target: otherNode.path,
-                type: "tag",
-                strength: Math.min(0.3 * sharedTags.length, 0.6)
-                // Weak connection, max 0.6
-              });
-              connectionsCreated++;
-              logger5.debug("tag-link", `Tag-based link created`, {
-                from: node.path,
-                to: otherNode.path,
-                sharedTags,
-                strength: Math.min(0.3 * sharedTags.length, 0.6)
-              });
+          const limitedNodes = taggedNodes.slice(0, 20);
+          for (let i = 0; i < limitedNodes.length && tagLinksCreated < MAX_TAG_LINKS; i++) {
+            for (let j = i + 1; j < limitedNodes.length && tagLinksCreated < MAX_TAG_LINKS; j++) {
+              const linkId = this.generateLinkId(limitedNodes[i].path, limitedNodes[j].path);
+              if (!linkSet.has(linkId)) {
+                linkSet.add(linkId);
+                links.push({
+                  source: limitedNodes[i].path,
+                  target: limitedNodes[j].path,
+                  type: "tag",
+                  strength: 0.3
+                  // Weak connection for tag relationships
+                });
+                tagLinksCreated++;
+              }
             }
           }
         }
+        logger5.debug("tag-links-optimized", `Created ${tagLinksCreated} tag-based links from ${tagIndex.size} unique tags`);
       }
       /**
-       * Phase 3.8: Create hierarchy connections based on folder relationships
+       * Phase 3.9: Optimized folder hierarchy link creation using pre-computed folder index
        */
-      createFolderHierarchyLinks(node, allNodes, links, linkSet) {
-        const nodeFolderPath = node.path.substring(0, node.path.lastIndexOf("/"));
-        if (!nodeFolderPath)
-          return;
-        const siblingNodes = allNodes.filter((other) => {
-          if (other.id === node.id)
-            return false;
-          const otherFolderPath = other.path.substring(0, other.path.lastIndexOf("/"));
-          return otherFolderPath === nodeFolderPath;
-        });
-        const limitedSiblings = siblingNodes.slice(0, 10);
-        for (const sibling of limitedSiblings) {
-          const linkId = this.generateLinkId(node.path, sibling.path);
-          if (!linkSet.has(linkId)) {
-            linkSet.add(linkId);
-            links.push({
-              source: node.path,
-              target: sibling.path,
-              type: "reference",
-              strength: 0.2
-              // Very weak connection for folder siblings
-            });
-            logger5.debug("folder-link", `Folder hierarchy link created`, {
-              from: node.path,
-              to: sibling.path,
-              folder: nodeFolderPath,
-              strength: 0.2
-            });
+      createOptimizedFolderHierarchyLinks(nodes, links, linkSet) {
+        const folderIndex = /* @__PURE__ */ new Map();
+        for (const node of nodes) {
+          const folderPath = node.path.substring(0, node.path.lastIndexOf("/"));
+          if (!folderPath)
+            continue;
+          if (!folderIndex.has(folderPath)) {
+            folderIndex.set(folderPath, []);
+          }
+          folderIndex.get(folderPath).push(node);
+        }
+        let folderLinksCreated = 0;
+        const MAX_FOLDER_LINKS = 200;
+        for (const [folderPath, folderNodes] of folderIndex) {
+          if (folderNodes.length < 2)
+            continue;
+          if (folderLinksCreated >= MAX_FOLDER_LINKS)
+            break;
+          const limitedNodes = folderNodes.slice(0, 8);
+          for (let i = 0; i < limitedNodes.length && folderLinksCreated < MAX_FOLDER_LINKS; i++) {
+            for (let j = i + 1; j < limitedNodes.length && folderLinksCreated < MAX_FOLDER_LINKS; j++) {
+              const linkId = this.generateLinkId(limitedNodes[i].path, limitedNodes[j].path);
+              if (!linkSet.has(linkId)) {
+                linkSet.add(linkId);
+                links.push({
+                  source: limitedNodes[i].path,
+                  target: limitedNodes[j].path,
+                  type: "reference",
+                  strength: 0.2
+                  // Very weak connection for folder siblings
+                });
+                folderLinksCreated++;
+              }
+            }
           }
         }
+        logger5.debug("folder-links-optimized", `Created ${folderLinksCreated} folder hierarchy links from ${folderIndex.size} folders`);
       }
       /**
        * Phase 3.8: Summarize link types for debugging
@@ -12087,6 +12105,8 @@ var init_SonicGraphModal = __esm({
         this.settingsUpdateTimeout = null;
         // Performance optimization: Progress indicator
         this.progressIndicator = null;
+        // Responsive sizing: Resize observer for dynamic graph sizing
+        this.resizeObserver = null;
         this.detectedSpacing = "balanced";
         this.isSettingsVisible = false;
         logger11.debug("ui", "SonicGraphModal constructor started");
@@ -12162,6 +12182,10 @@ var init_SonicGraphModal = __esm({
         if (this.graphRenderer) {
           this.graphRenderer.destroy();
           this.graphRenderer = null;
+        }
+        if (this.resizeObserver) {
+          this.resizeObserver.disconnect();
+          this.resizeObserver = null;
         }
         this.isAnimating = false;
         this.hideProgressIndicator();
@@ -12309,12 +12333,23 @@ var init_SonicGraphModal = __esm({
           this.showProgressIndicator("Initializing renderer...");
           logger11.info("sonic-graph-renderer", "Creating GraphRenderer instance");
           this.graphRenderer = await this.executeWhenIdle(() => {
+            const width = canvasElement.clientWidth || canvasElement.offsetWidth || 800;
+            const height = canvasElement.clientHeight || canvasElement.offsetHeight || 600;
+            logger11.info("sonic-graph-responsive", "Using responsive dimensions", {
+              width,
+              height,
+              clientWidth: canvasElement.clientWidth,
+              clientHeight: canvasElement.clientHeight
+            });
             return new GraphRenderer(canvasElement, {
+              width,
+              height,
               enableZoom: true,
               showLabels: false
             });
           });
           logger11.info("sonic-graph-renderer", "GraphRenderer created successfully");
+          this.setupResizeObserver(canvasElement);
           this.showProgressIndicator("Applying layout settings...");
           try {
             logger11.info("sonic-graph-layout", "Getting layout settings");
@@ -13975,6 +14010,31 @@ var init_SonicGraphModal = __esm({
           element.removeEventListener(event, handler2);
         });
         this.eventListeners = [];
+      }
+      // Responsive sizing: Set up resize observer for dynamic graph sizing
+      setupResizeObserver(canvasElement) {
+        if (!this.graphRenderer)
+          return;
+        if (this.resizeObserver) {
+          this.resizeObserver.disconnect();
+        }
+        this.resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            const newWidth = entry.contentRect.width;
+            const newHeight = entry.contentRect.height;
+            if (newWidth > 0 && newHeight > 0 && this.graphRenderer) {
+              logger11.debug("responsive-resize", "Container resized, updating graph", {
+                newWidth,
+                newHeight,
+                previousWidth: this.graphRenderer.getZoomTransform().k,
+                previousHeight: this.graphRenderer.getZoomTransform().k
+              });
+              this.graphRenderer.resize(newWidth, newHeight);
+            }
+          }
+        });
+        this.resizeObserver.observe(canvasElement);
+        logger11.debug("responsive-setup", "Resize observer set up for responsive graph sizing");
       }
       scheduleSettingsUpdate(key, value) {
         this.pendingSettingsUpdates.set(key, value);
@@ -49995,7 +50055,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
     this.initializeLoggingLevel();
     this.initializeComponents();
     await this.initializeWhaleIntegration();
-    this.addRibbonIcon("music", "Sonigraph: Open Control Panel", () => {
+    this.addRibbonIcon("keyboard-music", "Sonigraph: Open Control Panel", () => {
       this.openControlPanel();
     });
     this.addCommand({
