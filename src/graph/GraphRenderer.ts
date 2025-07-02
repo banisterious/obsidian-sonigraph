@@ -51,8 +51,14 @@ export class GraphRenderer {
   private cullingMargin: number = 100; // Extra margin around viewport for smoother scrolling
   private isDenseGraph: boolean = false;
   private lastUpdateTime: number = 0;
-  private updateDebounceMs: number = 16; // ~60fps
+  private updateDebounceMs: number = 33; // Reduced to ~30fps for better performance
   private pendingUpdate: number | null = null;
+  
+  // Enhanced performance controls
+  private performanceMode: 'quality' | 'balanced' | 'performance' = 'quality';
+  private isSimulationPaused: boolean = false;
+  private frameSkipCounter: number = 0;
+  private maxFrameSkip: number = 1; // Skip every other frame for dense graphs
   
   // Phase 3.8: Settings integration
   private layoutSettings: SonicGraphSettings['layout'] | null = null;
@@ -171,10 +177,12 @@ export class GraphRenderer {
         })
         .strength(0.8) // Slightly softer collision for more organic overlap
       )
-      // Enhanced jitter force for organic, rounded clusters
+      // Enhanced jitter force for organic clusters (performance mode aware)
       .force('jitter', (alpha) => {
-        if (alpha < 0.05) return; // Apply for longer during simulation
-        const strength = 0.03 * alpha; // Increased jitter strength for more organic movement
+        // Skip jitter for performance mode or when alpha is low enough
+        if (this.performanceMode === 'performance' || alpha < this.getJitterThreshold()) return;
+        
+        const strength = this.getJitterStrength() * alpha;
         this.nodes.forEach(node => {
           if (node.vx !== undefined && node.vy !== undefined) {
             // Circular jitter pattern for more organic clustering
@@ -186,6 +194,15 @@ export class GraphRenderer {
         });
       })
       .on('tick', () => {
+        // Performance optimization: Frame skipping for dense graphs
+        if (this.maxFrameSkip > 0) {
+          this.frameSkipCounter++;
+          if (this.frameSkipCounter <= this.maxFrameSkip) {
+            return; // Skip this frame
+          }
+          this.frameSkipCounter = 0; // Reset counter
+        }
+        
         // Performance optimization: Only constrain coordinates occasionally
         if (this.simulation.alpha() > 0.3 || Math.random() < 0.1) {
           this.constrainNodeCoordinates();
@@ -194,9 +211,9 @@ export class GraphRenderer {
         // Optimized position updates
         this.updatePositions();
       })
-      .alphaDecay(0.05) // Faster convergence for better performance
-      .velocityDecay(0.6) // Higher decay for faster settling
-      .alphaMin(0.01)     // Stop simulation earlier
+      .alphaDecay(this.getAlphaDecay()) // Adaptive convergence based on performance mode
+      .velocityDecay(this.getVelocityDecay()) // Adaptive velocity decay
+      .alphaMin(this.getAlphaMin())     // Adaptive stopping threshold
       .on('end', () => this.onSimulationEnd());
   }
 
@@ -214,10 +231,12 @@ export class GraphRenderer {
     // Performance optimization: Initialize node coordinates to prevent invalid positions
     this.initializeNodeCoordinates();
     
-    // Performance optimization: Detect dense graphs for optimizations
-    this.isDenseGraph = links.length > 500 || (nodes.length > 200 && links.length > nodes.length * 2);
+    // Performance optimization: Detect graph complexity and set performance mode
+    this.detectPerformanceMode(nodes.length, links.length);
+    this.isDenseGraph = this.performanceMode === 'performance';
+    
     if (this.isDenseGraph) {
-      logger.info('renderer', `Dense graph detected: ${links.length} links, enabling performance optimizations`);
+      logger.info('renderer', `Performance mode: ${this.performanceMode} (${nodes.length} nodes, ${links.length} links)`);
       this.disableTransitionsForDenseGraph();
     } else {
       this.enableTransitionsForNormalGraph();
@@ -962,6 +981,98 @@ export class GraphRenderer {
   }
 
   // Phase 3.8: Clustering methods removed - now using one-time initial positioning
+
+  /**
+   * Get adaptive alpha decay based on performance mode
+   */
+  private getAlphaDecay(): number {
+    switch (this.performanceMode) {
+      case 'quality': return 0.03; // Slower, smoother convergence
+      case 'balanced': return 0.05; // Balanced convergence
+      case 'performance': return 0.08; // Faster convergence
+      default: return 0.05;
+    }
+  }
+
+  /**
+   * Get adaptive velocity decay based on performance mode
+   */
+  private getVelocityDecay(): number {
+    switch (this.performanceMode) {
+      case 'quality': return 0.4; // Lower decay for smoother motion
+      case 'balanced': return 0.6; // Balanced decay
+      case 'performance': return 0.8; // Higher decay for faster settling
+      default: return 0.6;
+    }
+  }
+
+  /**
+   * Get adaptive alpha minimum based on performance mode
+   */
+  private getAlphaMin(): number {
+    switch (this.performanceMode) {
+      case 'quality': return 0.005; // Run longer for better quality
+      case 'balanced': return 0.01; // Balanced stopping point
+      case 'performance': return 0.02; // Stop earlier for performance
+      default: return 0.01;
+    }
+  }
+
+  /**
+   * Get jitter strength based on performance mode
+   */
+  private getJitterStrength(): number {
+    switch (this.performanceMode) {
+      case 'quality': return 0.03; // Full jitter for organic movement
+      case 'balanced': return 0.02; // Reduced jitter
+      case 'performance': return 0; // No jitter for performance
+      default: return 0.02;
+    }
+  }
+
+  /**
+   * Get jitter threshold based on performance mode
+   */
+  private getJitterThreshold(): number {
+    switch (this.performanceMode) {
+      case 'quality': return 0.03; // Apply jitter longer
+      case 'balanced': return 0.05; // Balanced threshold
+      case 'performance': return 0.1; // Stop jitter early
+      default: return 0.05;
+    }
+  }
+
+  /**
+   * Detect optimal performance mode based on graph complexity
+   */
+  private detectPerformanceMode(nodeCount: number, linkCount: number): void {
+    // Calculate graph complexity score
+    const complexityScore = nodeCount + (linkCount * 0.5);
+    const linkDensity = nodeCount > 0 ? linkCount / nodeCount : 0;
+    
+    if (nodeCount <= 50 && complexityScore <= 100) {
+      this.performanceMode = 'quality';
+      this.updateDebounceMs = 16; // 60fps
+      this.maxFrameSkip = 0;
+    } else if (nodeCount <= 200 && complexityScore <= 400) {
+      this.performanceMode = 'balanced';
+      this.updateDebounceMs = 33; // 30fps
+      this.maxFrameSkip = 1;
+    } else {
+      this.performanceMode = 'performance';
+      this.updateDebounceMs = 50; // 20fps
+      this.maxFrameSkip = 2;
+    }
+    
+    logger.info('performance-mode', `Performance mode detected: ${this.performanceMode}`, {
+      nodeCount,
+      linkCount,
+      complexityScore: complexityScore.toFixed(1),
+      linkDensity: linkDensity.toFixed(2),
+      targetFPS: Math.round(1000 / this.updateDebounceMs),
+      frameSkip: this.maxFrameSkip
+    });
+  }
 
   /**
    * Phase 3.8: Adaptive performance scaling based on graph size
