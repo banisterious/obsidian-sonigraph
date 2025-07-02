@@ -43,6 +43,11 @@ export class TemporalGraphAnimator {
   private animationId: number | null = null;
   private visibleNodes: Set<string> = new Set();
   
+  // Performance optimization: Adaptive frame rate
+  private lastAnimationTime: number = 0;
+  private animationFrameRate: number = 30; // Target FPS for animation
+  private frameInterval: number = 1000 / 30; // 33ms for 30fps
+  
   // Callbacks
   private onVisibilityChange?: (visibleNodeIds: Set<string>) => void;
   private onTimeUpdate?: (currentTime: number, progress: number) => void;
@@ -86,11 +91,15 @@ export class TemporalGraphAnimator {
     
     this.buildTimeline();
     
+    // Performance optimization: Adjust animation frame rate based on graph size
+    this.setAdaptiveFrameRate(this.nodes.length, this.timeline.length);
+    
     logger.debug('animator', 'TemporalGraphAnimator created', {
       nodeCount: this.nodes.length,
       linkCount: this.links.length,
       config: this.config,
-      timelineEvents: this.timeline.length
+      timelineEvents: this.timeline.length,
+      animationFPS: this.animationFrameRate
     });
   }
 
@@ -379,7 +388,32 @@ export class TemporalGraphAnimator {
   }
 
   /**
-   * Main animation loop
+   * Set adaptive frame rate based on graph complexity
+   */
+  private setAdaptiveFrameRate(nodeCount: number, timelineEvents: number): void {
+    const complexity = nodeCount + (timelineEvents * 0.5);
+    
+    if (complexity <= 100) {
+      this.animationFrameRate = 60; // High quality for small graphs
+    } else if (complexity <= 500) {
+      this.animationFrameRate = 30; // Balanced for medium graphs
+    } else {
+      this.animationFrameRate = 20; // Performance mode for large graphs
+    }
+    
+    this.frameInterval = 1000 / this.animationFrameRate;
+    
+    logger.debug('animation-performance', 'Adaptive frame rate set', {
+      nodeCount,
+      timelineEvents,
+      complexity: complexity.toFixed(1),
+      targetFPS: this.animationFrameRate,
+      frameInterval: this.frameInterval.toFixed(1)
+    });
+  }
+
+  /**
+   * Main animation loop with frame rate control
    */
   private animate(): void {
     if (!this.isPlaying || this.isPaused) {
@@ -387,6 +421,14 @@ export class TemporalGraphAnimator {
     }
     
     const now = performance.now();
+    
+    // Performance optimization: Frame rate limiting
+    if (now - this.lastAnimationTime < this.frameInterval) {
+      this.animationId = requestAnimationFrame(() => this.animate());
+      return;
+    }
+    this.lastAnimationTime = now;
+    
     this.currentTime = ((now - this.animationStartTime) * this.config.speed) / 1000;
     
     // Check if animation is complete
