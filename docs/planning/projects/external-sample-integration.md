@@ -154,7 +154,7 @@
 
 ## Related Documentation
 
-- [Audio Engine Architecture](../../architecture.md#2-audio-engine)
+- [Audio Engine Architecture](../../architecture/audio-engine.md)
 - [Development Roadmap](../development-roadmap.md)
 - [Known Issues Registry](../../developer/known-issues-registry.md)
 

@@ -1,4 +1,16 @@
-# Sonigraph CSS Build System
+# Sonigraph CSS Build System (ARCHIVED)
+
+> **⚠️ IMPORTANT: This document has been archived and superseded by the comprehensive CSS System documentation.**
+> 
+> **For current documentation, please visit:**
+> - **[CSS System Architecture](../architecture/css-system.md)** - Complete CSS system documentation including architecture, build system, and development workflow
+> 
+> **Archived Date:** July 3, 2025  
+> **Reason:** Merged with CSS architecture documentation into a single comprehensive guide for better maintainability
+
+---
+
+## Legacy Content (For Historical Reference Only)
 
 This document describes the CSS build system for the Sonigraph Obsidian plugin.
 
