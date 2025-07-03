@@ -4,10 +4,20 @@
 
 Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge graph to rich musical parameters, creating dynamic orchestral compositions with 34 instruments, advanced effects processing, and real-time audio synthesis.
 
-<p align="center">
-  <img src="docs/images/sonigraph-control-center.gif" alt="Animated demonstration of the Sonigraph Control Center" width="600"/>
-</p>
-<p align="center"><em>Sonigraph Control Center</em></p>
+<table align="center">
+<tr>
+<td align="center" width="50%">
+<img src="docs/images/sonigraph-sonic-graph/sonigraph-sonic-graph.png" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="600"/>
+<br/>
+<em>Sonic Graph: Smart Clustering & Visual Enhancement</em>
+</td>
+<td align="center" width="50%">
+<img src="docs/images/sonigraph-control-center.gif" alt="Animated demonstration of the Sonigraph Control Center" width="600"/>
+<br/>
+<em>Control Center: 34-Instrument Orchestra Management</em>
+</td>
+</tr>
+</table>
 
 ## 🎼 Features
 
