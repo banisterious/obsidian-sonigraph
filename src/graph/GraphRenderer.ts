@@ -965,67 +965,6 @@ export class GraphRenderer {
     }
   }
 
-  /**
-   * Set initial view for static preview (deprecated - now handled by caller)
-   */
-  private setInitialView(): void {
-    // ULTRA aggressive zoom out - show the full graph at tiny scale
-    const initialScale = 0.05; // Extremely zoomed out
-    const centerX = this.config.width / 2;
-    const centerY = this.config.height / 2;
-    
-    logger.info('zoom-setup', `Setting ULTRA zoom out: scale=${initialScale}, center=(${centerX}, ${centerY})`);
-    
-    // Apply transform using multiple methods to ensure it takes effect
-    const initialTransform = d3.zoomIdentity
-      .translate(centerX, centerY) 
-      .scale(initialScale);
-    
-    if (this.config.enableZoom && this.zoom) {
-      // Apply the transform immediately
-      this.svg.call(this.zoom.transform, initialTransform);
-      logger.info('zoom-applied', 'Ultra zoom transform applied');
-      
-      // Also try setting it on the g element directly
-      this.g.attr('transform', `translate(${centerX}, ${centerY}) scale(${initialScale})`);
-      logger.info('manual-transform', 'Manual transform also applied');
-    }
-    
-    // Alternative approach: Just apply the transform to the g element
-    this.g.attr('transform', `translate(${centerX}, ${centerY}) scale(${initialScale})`);
-    
-    // Performance optimization: Reduce intensive cleanup for better performance
-    let cleanupCount = 0;
-    const cleanupInterval = setInterval(() => {
-      // Less frequent coordinate constraints (now handled in tick)
-      if (Math.random() < 0.3) { // Only 30% of the time
-        this.constrainNodeCoordinates();
-      }
-      
-      // Remove invalid links less aggressively
-      const removed = this.forceRemoveInvalidLinks();
-      if (removed > 0) {
-        cleanupCount++;
-        logger.warn('invalid-links', `Cleanup ${cleanupCount}: Removed ${removed} invalid links`);
-      }
-    }, 200); // Less frequent cleanup - every 200ms for better performance
-    
-    // Stop simulation sooner for better performance
-    setTimeout(() => {
-      clearInterval(cleanupInterval);
-      this.simulation.stop();
-      
-      // Minimal final cleanup
-      const finalRemoved = this.forceRemoveInvalidLinks();
-      if (finalRemoved > 0) {
-        logger.info('post-simulation', `Simulation stopped. Final cleanup removed ${finalRemoved} invalid links`);
-      }
-      
-      logger.debug('renderer', 'Simulation stopped with optimized performance');
-    }, 500); // Reduced from 800ms to 500ms for faster loading
-    
-    logger.debug('renderer', 'Ultra aggressive initial view set with continuous cleanup');
-  }
 
   // Tooltip methods removed - using native browser tooltips for better performance
 
