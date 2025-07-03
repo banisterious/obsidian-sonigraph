@@ -205,9 +205,9 @@ export class SonicGraphModal extends Modal {
         // Control Center button
         const controlCenterBtn = buttonGroup.createEl('button', { 
             cls: 'sonic-graph-header-btn sonic-graph-control-center-btn',
-            text: '🎵 Control Center'
+            text: 'Control Center'
         });
-        const controlCenterIcon = createLucideIcon('settings', 16);
+        const controlCenterIcon = createLucideIcon('keyboard-music', 16);
         controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
         controlCenterBtn.addEventListener('click', () => this.openControlCenter());
     }
@@ -469,6 +469,7 @@ export class SonicGraphModal extends Modal {
                 await this.executeWhenIdle(() => {
                     this.graphRenderer!.updateLayoutSettings(layoutSettings);
                     this.graphRenderer!.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
+                    this.graphRenderer!.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
                 });
                 logger.info('sonic-graph-layout', 'Layout settings applied successfully');
             } catch (layoutError) {
@@ -822,6 +823,9 @@ export class SonicGraphModal extends Modal {
         // 4.5. Content-Aware Positioning section
         this.createContentAwarePositioningSettings(settingsContent);
         
+        // 4.6. Smart Clustering Algorithms section
+        this.createSmartClusteringSettings(settingsContent);
+        
         // 5. Timeline section
         this.createTimelineSettings(settingsContent);
         
@@ -1118,6 +1122,249 @@ export class SonicGraphModal extends Modal {
             // Save settings with debounce
             this.updateDebugVisualization(!isActive);
         });
+    }
+
+    /**
+     * Create smart clustering settings section
+     */
+    private createSmartClusteringSettings(container: HTMLElement): void {
+        const settings = this.getSonicGraphSettings().smartClustering;
+        
+        // Only show if smart clustering is enabled in main settings
+        if (!settings || !settings.enabled) {
+            return;
+        }
+
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'SMART CLUSTERING', cls: 'sonic-graph-settings-section-title' });
+        
+        // Algorithm Selection
+        const algorithmItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        algorithmItem.createEl('label', { text: 'Clustering algorithm', cls: 'sonic-graph-setting-label' });
+        algorithmItem.createEl('div', { 
+            text: 'Algorithm used for automatic cluster detection', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const algorithmSelect = algorithmItem.createEl('select', {
+            cls: 'sonic-graph-algorithm-select'
+        });
+        
+        ['louvain', 'modularity', 'hybrid'].forEach(algorithm => {
+            const option = algorithmSelect.createEl('option');
+            option.value = algorithm;
+            option.textContent = algorithm === 'louvain' ? 'Louvain (Fast)' : 
+                               algorithm === 'modularity' ? 'Modularity (Quality)' : 
+                               'Hybrid (Recommended)';
+            if (algorithm === settings.algorithm) {
+                option.selected = true;
+            }
+        });
+        
+        algorithmSelect.addEventListener('change', (e) => {
+            const target = e.target as HTMLSelectElement;
+            const algorithm = target.value as 'louvain' | 'modularity' | 'hybrid';
+            this.updateClusteringAlgorithm(algorithm);
+        });
+        
+        // Multi-Factor Weights Section
+        const weightsHeader = section.createDiv({ cls: 'sonic-graph-weights-header' });
+        weightsHeader.createEl('h4', { text: 'Multi-Factor Weights', cls: 'sonic-graph-weights-title' });
+        weightsHeader.createEl('div', { 
+            text: 'Adjust the relative importance of different clustering factors', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        // Link Strength Weight
+        this.createWeightSlider(section, 'Link strength', 
+            'Direct connections between files', 
+            settings.weights.linkStrength, 0, 1, 0.05,
+            (weight) => this.updateClusteringWeight('linkStrength', weight));
+        
+        // Shared Tags Weight
+        this.createWeightSlider(section, 'Shared tags', 
+            'Files with common tags cluster together', 
+            settings.weights.sharedTags, 0, 1, 0.05,
+            (weight) => this.updateClusteringWeight('sharedTags', weight));
+        
+        // Folder Hierarchy Weight
+        this.createWeightSlider(section, 'Folder hierarchy', 
+            'Files in similar folder structures', 
+            settings.weights.folderHierarchy, 0, 1, 0.05,
+            (weight) => this.updateClusteringWeight('folderHierarchy', weight));
+        
+        // Temporal Proximity Weight
+        this.createWeightSlider(section, 'Temporal proximity', 
+            'Files created around the same time', 
+            settings.weights.temporalProximity, 0, 1, 0.05,
+            (weight) => this.updateClusteringWeight('temporalProximity', weight));
+        
+        // Clustering Parameters Section
+        const parametersHeader = section.createDiv({ cls: 'sonic-graph-parameters-header' });
+        parametersHeader.createEl('h4', { text: 'Clustering Parameters', cls: 'sonic-graph-parameters-title' });
+        
+        // Minimum Cluster Size
+        const minSizeItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        minSizeItem.createEl('label', { text: 'Minimum cluster size', cls: 'sonic-graph-setting-label' });
+        minSizeItem.createEl('div', { 
+            text: 'Minimum number of nodes required to form a cluster', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const minSizeContainer = minSizeItem.createDiv({ cls: 'sonic-graph-number-container' });
+        const minSizeInput = minSizeContainer.createEl('input', {
+            type: 'number',
+            cls: 'sonic-graph-number-input'
+        });
+        minSizeInput.min = '2';
+        minSizeInput.max = '10';
+        minSizeInput.value = settings.clustering.minClusterSize.toString();
+        
+        minSizeInput.addEventListener('change', (e) => {
+            const target = e.target as HTMLInputElement;
+            const minSize = parseInt(target.value);
+            this.updateClusteringParameter('minClusterSize', minSize);
+        });
+        
+        // Maximum Clusters
+        const maxClustersItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        maxClustersItem.createEl('label', { text: 'Maximum clusters', cls: 'sonic-graph-setting-label' });
+        maxClustersItem.createEl('div', { 
+            text: 'Maximum number of clusters to create', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const maxClustersContainer = maxClustersItem.createDiv({ cls: 'sonic-graph-number-container' });
+        const maxClustersInput = maxClustersContainer.createEl('input', {
+            type: 'number',
+            cls: 'sonic-graph-number-input'
+        });
+        maxClustersInput.min = '3';
+        maxClustersInput.max = '25';
+        maxClustersInput.value = settings.clustering.maxClusters.toString();
+        
+        maxClustersInput.addEventListener('change', (e) => {
+            const target = e.target as HTMLInputElement;
+            const maxClusters = parseInt(target.value);
+            this.updateClusteringParameter('maxClusters', maxClusters);
+        });
+        
+        // Visualization Options Section
+        const visualizationHeader = section.createDiv({ cls: 'sonic-graph-visualization-header' });
+        visualizationHeader.createEl('h4', { text: 'Visualization', cls: 'sonic-graph-visualization-title' });
+        
+        // Show Cluster Labels Toggle
+        const labelsItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        labelsItem.createEl('label', { text: 'Show cluster labels', cls: 'sonic-graph-setting-label' });
+        labelsItem.createEl('div', { 
+            text: 'Display auto-generated names for each cluster', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const labelsToggle = labelsItem.createEl('button', {
+            cls: `sonic-graph-toggle ${settings.visualization.showClusterLabels ? 'active' : ''}`,
+            text: settings.visualization.showClusterLabels ? 'ON' : 'OFF'
+        });
+        
+        labelsToggle.addEventListener('click', () => {
+            const isActive = labelsToggle.classList.contains('active');
+            labelsToggle.classList.toggle('active');
+            labelsToggle.textContent = isActive ? 'OFF' : 'ON';
+            this.updateClusteringVisualization('showClusterLabels', !isActive);
+        });
+        
+        // Cluster Boundaries Style
+        const boundariesItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        boundariesItem.createEl('label', { text: 'Cluster boundaries', cls: 'sonic-graph-setting-label' });
+        boundariesItem.createEl('div', { 
+            text: 'Visual style for cluster boundaries', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const boundariesSelect = boundariesItem.createEl('select', {
+            cls: 'sonic-graph-boundaries-select'
+        });
+        
+        ['none', 'subtle', 'visible', 'prominent'].forEach(style => {
+            const option = boundariesSelect.createEl('option');
+            option.value = style;
+            option.textContent = style.charAt(0).toUpperCase() + style.slice(1);
+            if (style === settings.visualization.clusterBoundaries) {
+                option.selected = true;
+            }
+        });
+        
+        boundariesSelect.addEventListener('change', (e) => {
+            const target = e.target as HTMLSelectElement;
+            const style = target.value as 'none' | 'subtle' | 'visible' | 'prominent';
+            this.updateClusteringVisualization('clusterBoundaries', style);
+        });
+        
+        // Debug Mode Toggle (if debugging is enabled)
+        if (settings.debugging.debugMode) {
+            const debugItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+            debugItem.createEl('label', { text: 'Show statistics', cls: 'sonic-graph-setting-label' });
+            debugItem.createEl('div', { 
+                text: 'Display clustering quality metrics and debug information', 
+                cls: 'sonic-graph-setting-description' 
+            });
+            
+            const debugToggle = debugItem.createEl('button', {
+                cls: `sonic-graph-toggle ${settings.debugging.showStatistics ? 'active' : ''}`,
+                text: settings.debugging.showStatistics ? 'ON' : 'OFF'
+            });
+            
+            debugToggle.addEventListener('click', () => {
+                const isActive = debugToggle.classList.contains('active');
+                debugToggle.classList.toggle('active');
+                debugToggle.textContent = isActive ? 'OFF' : 'ON';
+                this.updateClusteringDebugging('showStatistics', !isActive);
+            });
+        }
+    }
+
+    /**
+     * Helper method to create weight sliders for clustering factors
+     */
+    private createWeightSlider(container: HTMLElement, name: string, description: string, 
+                              currentValue: number, min: number, max: number, step: number,
+                              onChange: (value: number) => void): void {
+        const weightItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        weightItem.createEl('label', { text: name, cls: 'sonic-graph-setting-label' });
+        weightItem.createEl('div', { 
+            text: description, 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const weightContainer = weightItem.createDiv({ cls: 'sonic-graph-weight-slider-container' });
+        const weightSlider = weightContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-weight-slider'
+        });
+        weightSlider.min = min.toString();
+        weightSlider.max = max.toString();
+        weightSlider.step = step.toString();
+        weightSlider.value = currentValue.toString();
+        
+        // Add value display for the slider
+        const weightValueDisplay = weightContainer.createEl('span', {
+            text: Math.round(currentValue * 100) + '%',
+            cls: 'sonic-graph-weight-value'
+        });
+        
+        // Add event handler with real-time preview
+        weightSlider.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const weight = parseFloat(target.value);
+            weightValueDisplay.textContent = Math.round(weight * 100) + '%';
+            
+            // Call the provided onChange handler
+            onChange(weight);
+        });
+        
+        const weightLabels = weightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
+        weightLabels.createEl('span', { text: 'Low', cls: 'sonic-graph-weight-label' });
+        weightLabels.createEl('span', { text: 'High', cls: 'sonic-graph-weight-label' });
     }
 
     /**
@@ -1527,6 +1774,7 @@ export class SonicGraphModal extends Modal {
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
+            this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
         
         logger.debug('filter-setting', `Updated filter setting: ${String(key)} = ${value}`);
@@ -1854,6 +2102,7 @@ export class SonicGraphModal extends Modal {
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
+            this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
         
         logger.debug('path-grouping', `Updated group ${groupIndex} ${property}:`, value);
@@ -1874,6 +2123,7 @@ export class SonicGraphModal extends Modal {
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
+            this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
         
         logger.debug('path-grouping', `Removed group at index ${groupIndex}`);
@@ -2605,6 +2855,38 @@ export class SonicGraphModal extends Modal {
                     minimumConnections: 5
                 },
                 debugVisualization: false
+            },
+            // Smart Clustering - Default Settings
+            smartClustering: {
+                enabled: false,
+                algorithm: 'hybrid' as const,
+                weights: {
+                    linkStrength: 0.4,
+                    sharedTags: 0.3,
+                    folderHierarchy: 0.2,
+                    temporalProximity: 0.1
+                },
+                clustering: {
+                    minClusterSize: 3,
+                    maxClusters: 12,
+                    resolution: 1.0
+                },
+                visualization: {
+                    enableVisualization: true,
+                    showClusterLabels: true,
+                    clusterBoundaries: 'subtle' as const,
+                    colorScheme: 'type-based' as const
+                },
+                integration: {
+                    respectExistingGroups: true,
+                    hybridMode: true,
+                    overrideThreshold: 0.7
+                },
+                debugging: {
+                    debugMode: false,
+                    showStatistics: false,
+                    logClusteringDetails: false
+                }
             }
         };
         
@@ -2621,7 +2903,8 @@ export class SonicGraphModal extends Modal {
             navigation: { ...defaultSettings.navigation, ...settings.navigation },
             adaptiveDetail: { ...defaultSettings.adaptiveDetail, ...settings.adaptiveDetail },
             layout: { ...defaultSettings.layout, ...settings.layout },
-            contentAwarePositioning: { ...defaultSettings.contentAwarePositioning, ...settings.contentAwarePositioning }
+            contentAwarePositioning: { ...defaultSettings.contentAwarePositioning, ...settings.contentAwarePositioning },
+            smartClustering: { ...defaultSettings.smartClustering, ...settings.smartClustering }
         };
     }
 
@@ -3033,6 +3316,7 @@ export class SonicGraphModal extends Modal {
         if (needsRendererUpdate && this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
+            this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
         
         this.pendingSettingsUpdates.clear();
@@ -3183,5 +3467,45 @@ export class SonicGraphModal extends Modal {
             enabled,
             immediate: true
         });
+    }
+
+    /**
+     * Update clustering algorithm and save to plugin settings
+     */
+    private updateClusteringAlgorithm(algorithm: 'louvain' | 'modularity' | 'hybrid'): void {
+        this.scheduleSettingsUpdate('smartClustering.algorithm', algorithm);
+        logger.debug('smart-clustering', 'Clustering algorithm updated', { algorithm });
+    }
+
+    /**
+     * Update clustering weight and save to plugin settings
+     */
+    private updateClusteringWeight(weightType: 'linkStrength' | 'sharedTags' | 'folderHierarchy' | 'temporalProximity', weight: number): void {
+        this.scheduleSettingsUpdate(`smartClustering.weights.${weightType}`, weight);
+        logger.debug('smart-clustering', 'Clustering weight updated', { weightType, weight });
+    }
+
+    /**
+     * Update clustering parameter and save to plugin settings
+     */
+    private updateClusteringParameter(paramType: 'minClusterSize' | 'maxClusters' | 'resolution', value: number): void {
+        this.scheduleSettingsUpdate(`smartClustering.clustering.${paramType}`, value);
+        logger.debug('smart-clustering', 'Clustering parameter updated', { paramType, value });
+    }
+
+    /**
+     * Update clustering visualization setting and save to plugin settings
+     */
+    private updateClusteringVisualization(vizType: 'showClusterLabels' | 'clusterBoundaries' | 'colorScheme', value: any): void {
+        this.scheduleSettingsUpdate(`smartClustering.visualization.${vizType}`, value);
+        logger.debug('smart-clustering', 'Clustering visualization updated', { vizType, value });
+    }
+
+    /**
+     * Update clustering debugging setting and save to plugin settings
+     */
+    private updateClusteringDebugging(debugType: 'showStatistics' | 'logClusteringDetails', value: boolean): void {
+        this.scheduleSettingsUpdate(`smartClustering.debugging.${debugType}`, value);
+        logger.debug('smart-clustering', 'Clustering debugging updated', { debugType, value });
     }
 } 

@@ -18,7 +18,8 @@
   - [3.3. Graph Data Extraction](#33-graph-data-extraction)
   - [3.4. Dynamic Instrument Selection](#34-dynamic-instrument-selection)
   - [3.5. Content Filtering & Exclusion](#35-content-filtering--exclusion)
-  - [3.6. Visual Rendering](#36-visual-rendering)
+  - [3.6. Smart Clustering System](#36-smart-clustering-system)
+  - [3.7. Visual Rendering](#37-visual-rendering)
 - [4. Logging System](#4-logging-system)
   - [4.1. Architecture](#41-architecture)
   - [4.2. Components](#42-components)
@@ -84,6 +85,8 @@ src/
 │   ├── GraphDataExtractor.ts # Sonic Graph data extraction and filtering
 │   ├── GraphRenderer.ts   # D3.js-based visualization
 │   ├── TemporalGraphAnimator.ts # Timeline animation system
+│   ├── ContentAwarePositioning.ts # Semantic force positioning system
+│   ├── SmartClusteringAlgorithms.ts # Community detection and clustering
 │   └── types.ts           # Graph data interfaces
 ├── audio/
 │   ├── engine.ts          # Main orchestral audio engine
@@ -531,7 +534,86 @@ private shouldExcludeFile(file: TFile): boolean {
 }
 ```
 
-### 3.6. Audio Integration & Timing Synchronization
+### 3.6. Smart Clustering System
+
+**Phase 3 Implementation (July 2025):**
+The Smart Clustering System provides intelligent automatic grouping of related nodes based on content relationships using community detection algorithms and multi-factor clustering weights.
+
+**SmartClusteringAlgorithms Class:**
+```typescript
+export class SmartClusteringAlgorithms {
+  constructor(settings: SmartClusteringSettings) {
+    this.settings = { ...settings };
+  }
+
+  async clusterGraph(nodes: GraphNode[], links: GraphLink[]): Promise<ClusteringResult> {
+    // Choose clustering algorithm based on settings
+    switch (this.settings.algorithm) {
+      case 'louvain':
+        return await this.louvainClustering();
+      case 'modularity':
+        return await this.modularityClustering();
+      case 'hybrid':
+        return await this.hybridClustering();
+    }
+  }
+}
+```
+
+**Community Detection Algorithms:**
+- **Louvain Algorithm**: Fast, high-quality clustering for most use cases with modularity optimization
+- **Modularity Optimization**: Alternative approach for different graph structures
+- **Hybrid Clustering**: Combines multiple approaches for optimal results
+
+**Multi-Factor Clustering Weights:**
+```typescript
+interface ClusteringWeights {
+  linkStrength: number;    // 40% - Direct connections between files
+  sharedTags: number;      // 30% - Files with common tags
+  folderHierarchy: number; // 20% - Folder-based organization
+  temporalProximity: number; // 10% - Recently created/modified files
+}
+```
+
+**Cluster Types and Visual Treatment:**
+- **Tag-based clusters** (Green): Files sharing common tags
+- **Temporal clusters** (Blue): Files created/modified around the same time
+- **Link-dense clusters** (Purple): Areas with high connectivity
+- **Community clusters** (Orange): Natural groupings detected through link analysis
+
+**Visual Implementation:**
+```typescript
+interface Cluster {
+  id: string;
+  nodes: GraphNode[];
+  centroid: { x: number; y: number };
+  radius: number;
+  color: string;
+  type: 'tag-based' | 'folder-based' | 'link-dense' | 'temporal' | 'community';
+  strength: number; // 0-1, how cohesive the cluster is
+  label?: string;
+}
+```
+
+**Real-time Positioning:**
+- **Dynamic Updates**: Clusters recalculate their position during force simulation
+- **Centroid Calculation**: Uses actual node positions for accurate cluster boundaries
+- **Radius Determination**: Based on node spread and cluster density
+- **Layer Ordering**: Clusters render on top of nodes for proper visibility
+
+**Performance Optimizations:**
+- **Efficient Algorithms**: O(n log n) complexity for community detection
+- **Cached Calculations**: Cluster assignments cached until graph changes
+- **Threshold Controls**: Minimum cluster size and maximum cluster count limits
+- **Resolution Parameter**: Controls cluster granularity for fine-tuning
+
+**Settings Integration:**
+- **Main Toggle**: Available in Plugin Settings alongside other core features
+- **Algorithm Selection**: Choose between Louvain, Modularity, or Hybrid approaches
+- **Weight Adjustment**: Fine-tune multi-factor clustering weights
+- **Visualization Controls**: Enable/disable cluster boundaries and debug mode
+
+### 3.7. Audio Integration & Timing Synchronization
 
 **Critical Learnings from Phase 3.7 Implementation:**
 

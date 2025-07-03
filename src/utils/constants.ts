@@ -280,6 +280,38 @@ export interface SonicGraphSettings {
 		layoutPreset: 'loose' | 'balanced' | 'tight' | 'very-tight'; // Quick layout options
 		adaptiveScaling: boolean;           // Enable automatic performance scaling based on graph size
 	};
+	// Smart Clustering Algorithms - Intelligent grouping of related nodes
+	smartClustering: {
+		enabled: boolean;                   // Main toggle for smart clustering functionality
+		algorithm: 'louvain' | 'modularity' | 'hybrid'; // Clustering algorithm selection
+		weights: {
+			linkStrength: number;           // Weight for direct connections (0.0-1.0, default 0.4)
+			sharedTags: number;             // Weight for common tags (0.0-1.0, default 0.3)
+			folderHierarchy: number;        // Weight for folder organization (0.0-1.0, default 0.2)
+			temporalProximity: number;      // Weight for temporal proximity (0.0-1.0, default 0.1)
+		};
+		clustering: {
+			minClusterSize: number;         // Minimum nodes per cluster (default 3)
+			maxClusters: number;            // Maximum number of clusters (default 12)
+			resolution: number;             // Clustering granularity (0.1-2.0, default 1.0)
+		};
+		visualization: {
+			enableVisualization: boolean;   // Show cluster boundaries and colors
+			showClusterLabels: boolean;     // Display auto-generated cluster labels
+			clusterBoundaries: 'none' | 'subtle' | 'visible' | 'prominent'; // Boundary style
+			colorScheme: 'type-based' | 'strength-based' | 'rainbow' | 'monochrome'; // Color coding
+		};
+		integration: {
+			respectExistingGroups: boolean; // Honor manual path-based groups
+			hybridMode: boolean;            // Combine manual and automatic clustering
+			overrideThreshold: number;      // Manual group override strength (0.0-1.0)
+		};
+		debugging: {
+			debugMode: boolean;             // Enable debug information overlay
+			showStatistics: boolean;        // Display clustering quality metrics
+			logClusteringDetails: boolean;  // Log clustering decisions for analysis
+		};
+	};
 }
 
 export interface SonigraphSettings {
@@ -477,6 +509,38 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			journalGravity: 0.3,                // Moderate journal gravity
 			layoutPreset: 'balanced',           // Balanced layout by default
 			adaptiveScaling: true               // Enable automatic scaling
+		},
+		// Smart Clustering Algorithms - Default Settings
+		smartClustering: {
+			enabled: false,                     // Disabled by default for experimentation
+			algorithm: 'hybrid',                // Hybrid algorithm combines best of both worlds
+			weights: {
+				linkStrength: 0.4,              // 40% weight for direct connections
+				sharedTags: 0.3,                // 30% weight for common tags
+				folderHierarchy: 0.2,           // 20% weight for folder organization
+				temporalProximity: 0.1          // 10% weight for temporal proximity
+			},
+			clustering: {
+				minClusterSize: 3,              // Minimum 3 nodes per cluster
+				maxClusters: 12,                // Maximum 12 clusters for manageable visualization
+				resolution: 1.0                 // Standard granularity
+			},
+			visualization: {
+				enableVisualization: true,      // Show cluster boundaries when enabled
+				showClusterLabels: true,        // Show auto-generated labels
+				clusterBoundaries: 'subtle',    // Subtle boundaries by default
+				colorScheme: 'type-based'       // Color by cluster type
+			},
+			integration: {
+				respectExistingGroups: true,    // Honor manual path-based groups
+				hybridMode: true,               // Combine manual and automatic clustering
+				overrideThreshold: 0.7          // Strong manual group preference
+			},
+			debugging: {
+				debugMode: false,               // Debug mode off by default
+				showStatistics: false,          // Statistics off by default
+				logClusteringDetails: false     // Logging off by default
+			}
 		}
 	},
 	effects: {
