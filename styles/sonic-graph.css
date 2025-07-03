@@ -40,62 +40,142 @@
    NODES AND LINKS
    ================================== */
 
-/* Phase 3.8: Enhanced Link Styles with improved visibility */
+/* Phase 3.8: Enhanced Link Styles - Obsidian Graph style */
 .sonigraph-temporal-links line {
-  stroke: var(--text-muted, #666666);
-  stroke-width: 1.5px;
-  stroke-opacity: 0.8; /* Increased from 0.6 for better visibility */
+  stroke: var(--text-faint, #e0e0e0);
+  stroke-width: 0.3px;
+  stroke-opacity: 0.1; /* Much more muted */
   transition: all 0.3s ease;
   fill: none;
+  vector-effect: non-scaling-stroke; /* Keep consistent width when zoomed */
+}
+
+/* ===================================
+   HUB HIGHLIGHTING SYSTEM
+   ================================== */
+
+/* Regular nodes - Obsidian Graph style (minimal) */
+.sonigraph-temporal-nodes .hub-regular-node circle {
+  stroke-width: 0.5px;
+  stroke: var(--text-faint, #999999);
+  stroke-opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+/* Minor hubs (5-9 connections) - subtle distinction */
+.sonigraph-temporal-nodes .hub-minor-hub circle {
+  stroke-width: 1px;
+  stroke: var(--text-muted, #888888);
+  stroke-opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+/* Major hubs (10-19 connections) - more visible */
+.sonigraph-temporal-nodes .hub-major-hub circle {
+  stroke-width: 1.5px;
+  stroke: var(--text-normal, #333333);
+  stroke-opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+/* Mega hubs (20+ connections) - most prominent */
+.sonigraph-temporal-nodes .hub-mega-hub circle {
+  stroke-width: 2px;
+  stroke: var(--text-accent, #007acc);
+  stroke-opacity: 1;
+  transition: all 0.3s ease;
+}
+
+/* Remove pulse animation for cleaner Obsidian-style appearance */
+
+/* Hub hover effects - subtle Obsidian style */
+.sonigraph-temporal-nodes .hub-minor-hub circle:hover,
+.sonigraph-temporal-nodes .hub-major-hub circle:hover,
+.sonigraph-temporal-nodes .hub-mega-hub circle:hover,
+.sonigraph-temporal-nodes .hub-hovered circle {
+  stroke-opacity: 1;
+  stroke-width: 2px;
+  transition: all 0.2s ease;
+}
+
+/* Enhanced hover state for all hub nodes */
+.sonigraph-temporal-nodes .hub-hovered {
+  z-index: 10;
+}
+
+/* Hub connection count tooltip enhancement */
+.sonigraph-temporal-nodes circle[data-connections] {
+  cursor: pointer;
+}
+
+/* Enhanced hub visibility in dark mode */
+.theme-dark .sonigraph-temporal-nodes .hub-minor-hub circle {
+  stroke: #7c3aed;
+}
+
+.theme-dark .sonigraph-temporal-nodes .hub-major-hub circle {
+  stroke: #fbbf24;
+}
+
+.theme-dark .sonigraph-temporal-nodes .hub-mega-hub circle {
+  stroke: #f87171;
 }
 
 /* Phase 3.8: Different stroke styles for different link types */
 .sonigraph-temporal-links line[data-link-type="reference"] {
   stroke: var(--text-normal, #888888);
-  stroke-width: 1.5px;
-  stroke-opacity: 0.8;
+  stroke-width: 0.3px;
+  stroke-opacity: 0.2;
+  vector-effect: non-scaling-stroke;
 }
 
 .sonigraph-temporal-links line[data-link-type="attachment"] {
   stroke: var(--color-orange, #ff9500);
-  stroke-width: 1.2px;
-  stroke-opacity: 0.7;
+  stroke-width: 0.3px;
+  stroke-opacity: 0.15;
   stroke-dasharray: 3, 2; /* Dashed line for attachments */
+  vector-effect: non-scaling-stroke;
 }
 
 .sonigraph-temporal-links line[data-link-type="tag"] {
   stroke: var(--color-cyan, #00c4a7);
-  stroke-width: 1px;
-  stroke-opacity: 0.5;
+  stroke-width: 0.3px;
+  stroke-opacity: 0.15;
   stroke-dasharray: 1, 3; /* Dotted line for tag connections */
+  vector-effect: non-scaling-stroke;
 }
 
-/* Phase 3.8: Link strength visualization */
+/* Phase 3.8: Link strength visualization - simplified Obsidian style */
 .sonigraph-temporal-links line[data-strength="strong"] {
-  stroke-width: 2px;
-  stroke-opacity: 0.9;
+  stroke-width: 0.3px;
+  stroke-opacity: 0.25;
+  vector-effect: non-scaling-stroke;
 }
 
 .sonigraph-temporal-links line[data-strength="medium"] {
-  stroke-width: 1.5px;
-  stroke-opacity: 0.7;
+  stroke-width: 0.3px;
+  stroke-opacity: 0.15;
+  vector-effect: non-scaling-stroke;
 }
 
 .sonigraph-temporal-links line[data-strength="weak"] {
-  stroke-width: 1px;
-  stroke-opacity: 0.5;
+  stroke-width: 0.3px;
+  stroke-opacity: 0.1;
+  vector-effect: non-scaling-stroke;
 }
 
 /* Phase 3.8: Enhanced hover and highlight states */
 .sonigraph-temporal-links line.highlighted {
-  stroke-opacity: 1;
-  stroke-width: 2.5px;
-  filter: drop-shadow(0 0 2px currentColor);
+  stroke-opacity: 0.5;
+  stroke-width: 0.3px;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 1px currentColor);
 }
 
 .sonigraph-temporal-links line:hover {
-  stroke-opacity: 1;
-  stroke-width: 2px;
+  stroke-opacity: 0.3;
+  stroke-width: 0.3px;
+  vector-effect: non-scaling-stroke;
   transition: all 0.15s ease;
 }
 
