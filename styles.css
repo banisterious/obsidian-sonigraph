@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-07-03 03:45:05 UTC
+ * - Generated: 2025-07-03 15:08:12 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6935,7 +6935,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 1436 lines, 32.19 KB */
+/* Component Size: 1501 lines, 33.78 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -7383,7 +7383,7 @@ details.osp-advanced-settings {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 0 0 0 0.5em;
+  padding: 0;
   background: var(--background-primary);
   z-index: 1000;
   backdrop-filter: blur(8px);
@@ -7406,15 +7406,64 @@ details.osp-advanced-settings {
   overflow: hidden;
 }
 
+/* Modal header with Control Center and close buttons */
+.sonic-graph-modal-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  display: flex;
+  justify-content: flex-end; /* Align content to right */
+  align-items: center;
+  padding: 8px 12px;
+  z-index: 1001;
+  pointer-events: none; /* Allow clicks to pass through except on buttons */
+}
+
+.sonic-graph-modal-header > * {
+  pointer-events: auto; /* Re-enable clicks on child elements */
+}
+
+/* Control Center button in header */
+.sonic-graph-header-btn {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sonic-graph-header-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sonic-graph-header-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
 /* Header - Sticky following Control Center pattern */
 .sonic-graph-header {
   position: sticky;
   top: 0;
   z-index: 10;
   display: flex;
-  justify-content: center;
+  justify-content: space-between; /* Title left, button right */
   align-items: center;
-  padding: 8px 16px;
+  padding: 8px 16px 8px;
   padding-right: 48px; /* Make space for close button like Control Center */
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
@@ -7425,13 +7474,15 @@ details.osp-advanced-settings {
 .sonic-graph-title-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 8px; /* Space between icon and title */
 }
 
 .sonic-graph-title {
   margin: 0;
+  font-family: var(--font-interface);
   font-size: var(--osp-font-size-h2);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-normal);
   text-align: center;
 }
@@ -8297,6 +8348,20 @@ details.osp-advanced-settings {
   opacity: 0 !important;
 }
 
+/* Small text styling for adaptive detail stats */
+.sonic-graph-small-text {
+  font-size: var(--osp-font-size-small);
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.adaptive-detail-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .modal:has(.sonic-graph-modal) {
@@ -8945,11 +9010,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-07-03 03:45:05 UTC
+ * Build completed: 2025-07-03 15:08:12 UTC
  * Components processed: 19
- * Total lines: 8748
- * Total size: 185.36 KB
- * Build duration: 0.01 seconds
+ * Total lines: 8813
+ * Total size: 186.95 KB
+ * Build duration: 0.02 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -8967,7 +9032,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - sonic-graph.css: 1436 lines, 32.19 KB
+ * - sonic-graph.css: 1501 lines, 33.78 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB

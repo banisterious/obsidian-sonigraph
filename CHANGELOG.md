@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Enhanced - Sonic Graph Adaptive Detail Levels & Modal Interface
+
+#### Zoom Stability Improvements
+- **Enhanced Stability**: Improved zoom stability during panning operations to reduce twitchy behavior
+- **Increased Debounce Timing**: Extended debounce from 100ms to 250ms for smoother panning experience
+- **Enhanced Hysteresis**: Increased hysteresis margin from 10% to 20% to prevent rapid oscillation between detail levels
+- **Minimum Change Interval**: Added 500ms minimum interval between detail level changes to prevent rapid switching
+- **Improved Thresholds**: Increased large zoom detection threshold from 50% to 75% to better distinguish intentional zoom vs panning drift
+
+#### Modal Interface Enhancements  
+- **Enhanced Header Design**: Added chart-network icon to Sonic Graph title for better visual identification
+- **Improved Layout**: Implemented flexbox-based header with perfect vertical alignment of title and Control Center button
+- **Better Positioning**: Title with icon on left, Control Center button on right, with proper spacing for Obsidian's close button
+- **Visual Polish**: Clean, professional header layout that integrates seamlessly with Obsidian's design language
+
+#### Technical Improvements
+- **AdaptiveDetailManager**: Enhanced stability parameters and intelligent processing logic
+- **UI Architecture**: Simplified modal header structure with better separation of concerns
+- **Performance**: Maintained smooth graph interaction while reducing zoom level switching frequency
+
 ## [0.9.0-alpha] - 2025-07-02
 
 ### Fixed - Sonic Graph Performance Optimization

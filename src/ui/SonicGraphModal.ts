@@ -100,10 +100,7 @@ export class SonicGraphModal extends Modal {
             logger.info('sonic-graph-init', 'Adding modal CSS classes');
             this.modalEl.addClass('sonic-graph-modal');
             
-            // Create close button (positioned outside main container like Control Center)
-            logger.info('sonic-graph-init', 'Creating close button');
-            const closeButton = contentEl.createDiv({ cls: 'modal-close-button' });
-            this.addEventListener(closeButton, 'click', () => this.close());
+            // Let Obsidian handle the close button naturally - no modal header interference
             
             // Create main modal container
             logger.info('sonic-graph-init', 'Creating modal container');
@@ -187,9 +184,20 @@ export class SonicGraphModal extends Modal {
     private createHeader(container: HTMLElement): void {
         this.headerContainer = container.createDiv({ cls: 'sonic-graph-header' });
         
-        // Simple title only
+        // Title on the left with icon
         const titleContainer = this.headerContainer.createDiv({ cls: 'sonic-graph-title-container' });
+        const titleIcon = createLucideIcon('chart-network', 20);
+        titleContainer.appendChild(titleIcon);
         titleContainer.createEl('h1', { text: 'Sonic Graph', cls: 'sonic-graph-title' });
+        
+        // Control Center button on the right
+        const controlCenterBtn = this.headerContainer.createEl('button', { 
+            cls: 'sonic-graph-header-btn sonic-graph-control-center-btn',
+            text: '🎵 Control Center'
+        });
+        const controlCenterIcon = createLucideIcon('settings', 16);
+        controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
+        controlCenterBtn.addEventListener('click', () => this.openControlCenter());
     }
 
     /**
@@ -351,6 +359,18 @@ export class SonicGraphModal extends Modal {
                 throw new Error('No graph data found. Check your exclusion settings.');
             }
             
+            // Initialize adaptive detail manager
+            logger.info('sonic-graph-adaptive', 'Initializing adaptive detail manager');
+            const adaptiveSettings = this.getSonicGraphSettings().adaptiveDetail;
+            this.adaptiveDetailManager = new AdaptiveDetailManager(adaptiveSettings);
+            this.adaptiveDetailManager.setGraphData(graphData.nodes, graphData.links);
+            logger.info('sonic-graph-adaptive', 'Adaptive detail manager initialized', {
+                enabled: adaptiveSettings.enabled,
+                mode: adaptiveSettings.mode,
+                nodeCount: graphData.nodes.length,
+                linkCount: graphData.links.length
+            });
+            
             // Detect temporal clustering for spacing configuration
             logger.info('sonic-graph-clustering', 'Starting temporal clustering detection');
             const detection = this.detectTemporalClustering(graphData.nodes);
@@ -399,6 +419,32 @@ export class SonicGraphModal extends Modal {
             });
             logger.info('sonic-graph-renderer', 'GraphRenderer created successfully');
             
+            // Set up adaptive detail zoom change callback
+            logger.info('sonic-graph-adaptive', 'Setting up zoom change callback for adaptive detail');
+            
+            // Set up callback for debounced detail level changes
+            this.adaptiveDetailManager.setDetailLevelChangedCallback((filteredData) => {
+                this.applyFilteredData(filteredData);
+                logger.debug('sonic-graph-adaptive', 'Detail level changed via callback', {
+                    level: filteredData.level,
+                    visibleNodes: filteredData.nodes.length,
+                    visibleLinks: filteredData.links.length
+                });
+            });
+            
+            this.graphRenderer.setOnZoomChangeCallback((zoomLevel: number) => {
+                if (this.adaptiveDetailManager) {
+                    const filteredData = this.adaptiveDetailManager.handleZoomChange(zoomLevel);
+                    this.applyFilteredData(filteredData);
+                    logger.debug('sonic-graph-adaptive', 'Zoom change processed', {
+                        zoomLevel,
+                        level: filteredData.level,
+                        visibleNodes: filteredData.nodes.length,
+                        visibleLinks: filteredData.links.length
+                    });
+                }
+            });
+            
             // Set up responsive resizing
             this.setupResizeObserver(canvasElement);
             
@@ -418,17 +464,31 @@ export class SonicGraphModal extends Modal {
                 throw new Error(`Layout configuration failed: ${(layoutError as Error).message}`);
             }
             
-            // Render the graph
+            // Apply initial adaptive detail filtering based on initial zoom level
+            logger.info('sonic-graph-adaptive', 'Applying initial adaptive detail filtering');
+            const initialZoom = 0.3; // This matches the zoom level set below
+            const filteredData = this.adaptiveDetailManager.handleZoomChange(initialZoom);
+            logger.info('sonic-graph-adaptive', 'Initial filtering applied', {
+                level: filteredData.level,
+                originalNodes: graphData.nodes.length,
+                filteredNodes: filteredData.nodes.length,
+                originalLinks: graphData.links.length,
+                filteredLinks: filteredData.links.length,
+                filterReason: filteredData.stats.filterReason
+            });
+            
+            // Render the graph with filtered data
             try {
                 logger.info('sonic-graph-render', 'Starting graph render process');
                 logger.info('sonic-graph-render', 'Render data summary', {
-                    nodeCount: graphData.nodes.length,
-                    linkCount: graphData.links.length,
-                    sampleNodes: graphData.nodes.slice(0, 3).map(n => ({ id: n.id, type: n.type })),
-                    sampleLinks: graphData.links.slice(0, 3).map(l => ({ source: l.source, target: l.target, type: l.type }))
+                    nodeCount: filteredData.nodes.length,
+                    linkCount: filteredData.links.length,
+                    detailLevel: filteredData.level,
+                    sampleNodes: filteredData.nodes.slice(0, 3).map(n => ({ id: n.id, type: n.type })),
+                    sampleLinks: filteredData.links.slice(0, 3).map(l => ({ source: l.source, target: l.target, type: l.type }))
                 });
                 
-                this.graphRenderer.render(graphData.nodes, graphData.links);
+                this.graphRenderer.render(filteredData.nodes, filteredData.links);
                 logger.info('sonic-graph-render', 'Graph render completed successfully');
                 
                 // Apply better spacing with delay to avoid blocking UI
@@ -863,9 +923,9 @@ export class SonicGraphModal extends Modal {
         const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
 
         adaptiveStatsEl.innerHTML = `
-            <div class="adaptive-detail-level">Detail: ${filteredData.level}</div>
-            <div class="adaptive-detail-nodes">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
-            <div class="adaptive-detail-links">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
+            <div class="adaptive-detail-level sonic-graph-small-text">Detail: ${filteredData.level}</div>
+            <div class="adaptive-detail-nodes sonic-graph-small-text">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
+            <div class="adaptive-detail-links sonic-graph-small-text">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
         `;
     }
 
@@ -1091,21 +1151,8 @@ export class SonicGraphModal extends Modal {
      * Create navigation settings section
      */
     private createNavigationSettings(container: HTMLElement): void {
-        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
-        
-        // Control Center Button - centered
-        const controlCenterContainer = section.createDiv({ 
-            cls: 'sonic-graph-setting-item',
-            attr: { style: 'display: flex; justify-content: center; margin-top: 0;' }
-        });
-        
-        const controlCenterBtn = controlCenterContainer.createEl('button', { 
-            cls: 'sonic-graph-control-btn sonic-graph-control-btn--secondary',
-            text: '🎵 Control Center'
-        });
-        const controlCenterIcon = createLucideIcon('settings', 16);
-        controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
-        controlCenterBtn.addEventListener('click', () => this.openControlCenter());
+        // Navigation settings section removed - Control Center button moved to header
+        // This method kept for future navigation-related settings if needed
     }
 
     /**
