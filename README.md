@@ -35,7 +35,7 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 - **Real-time Audio Feedback**: Visual and auditory feedback during graph playback
 - **Comprehensive Settings**: Detailed control over all 34 instruments and their parameters
 
-### 🚀 Production Features (v0.8.4-alpha)
+### 🚀 Production Features
 
 - **Sonic Graph Visualization**: High-performance interactive graph visualization with temporal animation
   - **Instant Loading Performance**: Optimized data processing using Obsidian's MetadataCache infrastructure
