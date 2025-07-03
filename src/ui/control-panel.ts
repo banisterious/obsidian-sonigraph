@@ -197,7 +197,14 @@ export class MaterialControlPanelModal extends Modal {
 		pauseBtn.appendText('Pause');
 		pauseBtn.addEventListener('click', () => this.handlePause());
 
-		// Sonic Graph button (fourth)
+		// Plugin Settings button (fourth)
+		const pluginSettingsBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
+		const pluginSettingsIcon = createLucideIcon('cog', 16);
+		pluginSettingsBtn.appendChild(pluginSettingsIcon);
+		pluginSettingsBtn.appendText('Plugin Settings');
+		pluginSettingsBtn.addEventListener('click', () => this.openPluginSettings());
+
+		// Sonic Graph button (fifth)
 		const sonicGraphBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--accent' });
 		const sonicGraphIcon = createLucideIcon('chart-network', 16);
 		sonicGraphBtn.appendChild(sonicGraphIcon);
@@ -1019,6 +1026,20 @@ export class MaterialControlPanelModal extends Modal {
 		} catch (error) {
 			logger.error('ui', 'Failed to update Sonic Graph stats:', error);
 		}
+	}
+
+	/**
+	 * Open Plugin Settings
+	 */
+	private openPluginSettings(): void {
+		logger.debug('ui', 'Opening Plugin Settings');
+		
+		// Close Control Center first for smooth transition
+		this.close();
+		
+		// Open Plugin Settings
+		(this.app as any).setting.open();
+		(this.app as any).setting.openTabById(this.plugin.manifest.id);
 	}
 
 	/**
