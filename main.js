@@ -233,6 +233,29 @@ var init_constants = __esm({
           enableReset: true,
           enableExport: false
         },
+        // Adaptive Detail Levels - Default Settings
+        adaptiveDetail: {
+          enabled: false,
+          // Disabled by default for backward compatibility
+          mode: "automatic",
+          // Automatic mode when enabled
+          thresholds: {
+            overview: 0.5,
+            // Show hubs only when zoomed out < 0.5x
+            standard: 1.5,
+            // Standard view at 0.5x - 1.5x zoom
+            detail: 3
+            // Detail view at 1.5x - 3.0x zoom
+          },
+          overrides: {
+            alwaysShowLabels: false,
+            // Respect zoom-based label visibility
+            minimumVisibleNodes: 10,
+            // Always show at least 10 nodes for orientation
+            maximumVisibleNodes: -1
+            // No maximum limit by default
+          }
+        },
         // Phase 3.8: Graph Layout Optimization Default Settings
         layout: {
           clusteringStrength: 0.15,
@@ -10883,42 +10906,19 @@ var init_GraphRenderer = __esm({
         }
       }
       /**
-       * Set initial view for static preview (deprecated - now handled by caller)
+       * Get current zoom level for adaptive detail levels
        */
-      setInitialView() {
-        const initialScale = 0.05;
-        const centerX = this.config.width / 2;
-        const centerY = this.config.height / 2;
-        logger6.info("zoom-setup", `Setting ULTRA zoom out: scale=${initialScale}, center=(${centerX}, ${centerY})`);
-        const initialTransform = identity2.translate(centerX, centerY).scale(initialScale);
-        if (this.config.enableZoom && this.zoom) {
-          this.svg.call(this.zoom.transform, initialTransform);
-          logger6.info("zoom-applied", "Ultra zoom transform applied");
-          this.g.attr("transform", `translate(${centerX}, ${centerY}) scale(${initialScale})`);
-          logger6.info("manual-transform", "Manual transform also applied");
+      getCurrentZoom() {
+        if (!this.config.enableZoom || !this.zoom || !this.svg) {
+          return 1;
         }
-        this.g.attr("transform", `translate(${centerX}, ${centerY}) scale(${initialScale})`);
-        let cleanupCount = 0;
-        const cleanupInterval = setInterval(() => {
-          if (Math.random() < 0.3) {
-            this.constrainNodeCoordinates();
-          }
-          const removed = this.forceRemoveInvalidLinks();
-          if (removed > 0) {
-            cleanupCount++;
-            logger6.warn("invalid-links", `Cleanup ${cleanupCount}: Removed ${removed} invalid links`);
-          }
-        }, 200);
-        setTimeout(() => {
-          clearInterval(cleanupInterval);
-          this.simulation.stop();
-          const finalRemoved = this.forceRemoveInvalidLinks();
-          if (finalRemoved > 0) {
-            logger6.info("post-simulation", `Simulation stopped. Final cleanup removed ${finalRemoved} invalid links`);
-          }
-          logger6.debug("renderer", "Simulation stopped with optimized performance");
-        }, 500);
-        logger6.debug("renderer", "Ultra aggressive initial view set with continuous cleanup");
+        try {
+          const transform2 = transform(this.svg.node());
+          return transform2.k;
+        } catch (error) {
+          logger6.warn("zoom-get", "Failed to get current zoom transform", { error });
+          return 1;
+        }
       }
       // Tooltip methods removed - using native browser tooltips for better performance
       /**
@@ -12295,6 +12295,7 @@ var init_SonicGraphModal = __esm({
         this.graphRenderer = null;
         this.temporalAnimator = null;
         this.musicalMapper = null;
+        this.adaptiveDetailManager = null;
         this.isAnimating = false;
         this.isTimelineView = false;
         // false = Static View, true = Timeline View
@@ -12781,6 +12782,7 @@ var init_SonicGraphModal = __esm({
         closeButton.textContent = "\xD7";
         closeButton.addEventListener("click", () => this.toggleSettings());
         const settingsContent = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-content" });
+        this.createAdaptiveDetailOverride(settingsContent);
         this.createFiltersSettings(settingsContent);
         this.createGroupsSettings(settingsContent);
         this.createVisualSettings(settingsContent);
@@ -12788,6 +12790,100 @@ var init_SonicGraphModal = __esm({
         this.createTimelineSettings(settingsContent);
         this.createAudioSettings(settingsContent);
         this.createNavigationSettings(settingsContent);
+      }
+      /**
+       * Create adaptive detail override section (Quick Override)
+       */
+      createAdaptiveDetailOverride(container) {
+        const adaptiveSettings = this.getSonicGraphSettings().adaptiveDetail;
+        if (!adaptiveSettings || !adaptiveSettings.enabled) {
+          return;
+        }
+        const section = container.createDiv({ cls: "sonic-graph-settings-section adaptive-detail-override" });
+        section.createEl("div", { text: "ADAPTIVE DETAIL", cls: "sonic-graph-settings-section-title" });
+        const overrideItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        overrideItem.createEl("label", { text: "Disable for this session", cls: "sonic-graph-setting-label" });
+        overrideItem.createEl("div", {
+          text: "Temporarily disable adaptive detail levels to see all nodes/links",
+          cls: "sonic-graph-setting-description"
+        });
+        const overrideControl = overrideItem.createDiv({ cls: "sonic-graph-setting-control" });
+        const overrideCheckbox = overrideControl.createEl("input", {
+          type: "checkbox",
+          cls: "sonic-graph-checkbox"
+        });
+        overrideCheckbox.checked = false;
+        this.addEventListener(overrideCheckbox, "change", () => {
+          const isOverridden = overrideCheckbox.checked;
+          if (this.adaptiveDetailManager) {
+            this.adaptiveDetailManager.setSessionOverride(isOverridden);
+            if (this.graphRenderer) {
+              const currentZoom = this.graphRenderer.getCurrentZoom();
+              const filteredData = this.adaptiveDetailManager.handleZoomChange(currentZoom);
+              this.applyFilteredData(filteredData);
+            }
+          }
+          logger11.info("adaptive-detail-override", "Session override toggled", {
+            overridden: isOverridden,
+            meaning: isOverridden ? "Show all (disabled)" : "Adaptive filtering (enabled)"
+          });
+        });
+        const statusItem = section.createDiv({ cls: "sonic-graph-setting-item adaptive-detail-status" });
+        statusItem.createEl("label", { text: "Current mode", cls: "sonic-graph-setting-label" });
+        const statusText = statusItem.createEl("div", {
+          text: `${adaptiveSettings.mode} (${adaptiveSettings.enabled ? "enabled" : "disabled"})`,
+          cls: "sonic-graph-setting-status"
+        });
+        const noteItem = section.createDiv({ cls: "sonic-graph-setting-item adaptive-detail-note" });
+        noteItem.createEl("div", {
+          text: "Configure adaptive detail settings in Plugin Settings > Sonic Graph Settings",
+          cls: "sonic-graph-setting-note"
+        });
+      }
+      /**
+       * Apply filtered graph data from adaptive detail manager
+       */
+      applyFilteredData(filteredData) {
+        if (!this.graphRenderer) {
+          logger11.warn("adaptive-detail", "Cannot apply filtered data: GraphRenderer not initialized");
+          return;
+        }
+        try {
+          this.graphRenderer.render(filteredData.nodes, filteredData.links);
+          this.updateStatsWithFilteredData(filteredData);
+          logger11.debug("adaptive-detail", "Filtered data applied successfully", {
+            level: filteredData.level,
+            visibleNodes: filteredData.stats.visibleNodes,
+            totalNodes: filteredData.stats.totalNodes,
+            visibleLinks: filteredData.stats.visibleLinks,
+            totalLinks: filteredData.stats.totalLinks,
+            filterReason: filteredData.stats.filterReason
+          });
+        } catch (error) {
+          logger11.error("adaptive-detail", "Failed to apply filtered data", {
+            error: error.message,
+            level: filteredData.level
+          });
+        }
+      }
+      /**
+       * Update stats display with filtered data information
+       */
+      updateStatsWithFilteredData(filteredData) {
+        if (!this.statsContainer)
+          return;
+        let adaptiveStatsEl = this.statsContainer.querySelector(".adaptive-detail-stats");
+        if (!adaptiveStatsEl) {
+          adaptiveStatsEl = this.statsContainer.createDiv({ cls: "adaptive-detail-stats" });
+        }
+        const { stats } = filteredData;
+        const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
+        const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
+        adaptiveStatsEl.innerHTML = `
+            <div class="adaptive-detail-level">Detail: ${filteredData.level}</div>
+            <div class="adaptive-detail-nodes">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
+            <div class="adaptive-detail-links">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
+        `;
       }
       /**
        * Create timeline settings section
@@ -13902,6 +13998,29 @@ var init_SonicGraphModal = __esm({
             enableReset: true,
             enableExport: false
           },
+          // Adaptive Detail Levels - Default Settings
+          adaptiveDetail: {
+            enabled: false,
+            // Disabled by default for backward compatibility
+            mode: "automatic",
+            // Automatic mode when enabled
+            thresholds: {
+              overview: 0.5,
+              // Show hubs only when zoomed out < 0.5x
+              standard: 1.5,
+              // Standard view at 0.5x - 1.5x zoom
+              detail: 3
+              // Detail view at 1.5x - 3.0x zoom
+            },
+            overrides: {
+              alwaysShowLabels: false,
+              // Respect zoom-based label visibility
+              minimumVisibleNodes: 10,
+              // Always show at least 10 nodes for orientation
+              maximumVisibleNodes: -1
+              // No maximum limit by default
+            }
+          },
           // Phase 3.8: Layout settings default
           layout: {
             clusteringStrength: 0.15,
@@ -13941,6 +14060,7 @@ var init_SonicGraphModal = __esm({
           audio: { ...defaultSettings.audio, ...settings.audio },
           visual: { ...defaultSettings.visual, ...settings.visual },
           navigation: { ...defaultSettings.navigation, ...settings.navigation },
+          adaptiveDetail: { ...defaultSettings.adaptiveDetail, ...settings.adaptiveDetail },
           layout: { ...defaultSettings.layout, ...settings.layout }
         };
       }
@@ -18107,6 +18227,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     this.plugin = plugin;
   }
   display() {
+    var _a, _b;
     const { containerEl } = this;
     containerEl.empty();
     logger.debug("rendering", "Rendering settings tab", {
@@ -18131,6 +18252,61 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         logger.info("settings-change", "Animation duration changed", { duration: value });
       })
     );
+    const sonicGraphSection = containerEl.createEl("details", { cls: "osp-sonic-graph-settings" });
+    sonicGraphSection.createEl("summary", { text: "Sonic Graph Settings", cls: "osp-section-summary" });
+    sonicGraphSection.open = false;
+    new import_obsidian.Setting(sonicGraphSection).setName("Enable Adaptive Detail Levels").setDesc("Automatically show/hide elements based on zoom level for better performance and visual clarity. Reduces clutter when zoomed out, shows more detail when zoomed in.").addToggle(
+      (toggle) => {
+        var _a2, _b2;
+        return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.adaptiveDetail) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
+          if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = {
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true },
+              audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
+              visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
+              navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
+              adaptiveDetail: { enabled: false, mode: "automatic", thresholds: { overview: 0.5, standard: 1.5, detail: 3 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
+              layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: "balanced", adaptiveScaling: true }
+            };
+          }
+          if (!this.plugin.settings.sonicGraphSettings.adaptiveDetail) {
+            this.plugin.settings.sonicGraphSettings.adaptiveDetail = {
+              enabled: false,
+              mode: "automatic",
+              thresholds: { overview: 0.5, standard: 1.5, detail: 3 },
+              overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 }
+            };
+          }
+          this.plugin.settings.sonicGraphSettings.adaptiveDetail.enabled = value;
+          await this.plugin.saveSettings();
+          logger.info("settings-change", "Adaptive detail levels toggled", { enabled: value });
+          this.display();
+        });
+      }
+    );
+    if ((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.adaptiveDetail) == null ? void 0 : _b.enabled) {
+      new import_obsidian.Setting(sonicGraphSection).setName("Adaptive Detail Mode").setDesc("Automatic: Changes based on zoom level. Performance: Optimized for large vaults. Manual: User controls via buttons.").addDropdown(
+        (dropdown) => dropdown.addOption("automatic", "Automatic (Recommended)").addOption("performance", "Performance Optimized").addOption("manual", "Manual Control").setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode).onChange(async (value) => {
+          this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode = value;
+          await this.plugin.saveSettings();
+          logger.info("settings-change", "Adaptive detail mode changed", { mode: value });
+        })
+      );
+      new import_obsidian.Setting(sonicGraphSection).setName("Always show labels").setDesc("Override zoom-based label visibility and always show node labels regardless of zoom level.").addToggle(
+        (toggle) => toggle.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels).onChange(async (value) => {
+          this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels = value;
+          await this.plugin.saveSettings();
+          logger.info("settings-change", "Always show labels override changed", { enabled: value });
+        })
+      );
+      new import_obsidian.Setting(sonicGraphSection).setName("Maximum visible nodes").setDesc("Limit the maximum number of nodes shown for performance. Set to 0 for no limit.").addSlider(
+        (slider) => slider.setLimits(0, 2e3, 50).setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes === -1 ? 0 : this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes).setDynamicTooltip().onChange(async (value) => {
+          this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes = value === 0 ? -1 : value;
+          await this.plugin.saveSettings();
+          logger.info("settings-change", "Maximum visible nodes changed", { maxNodes: value === 0 ? "unlimited" : value });
+        })
+      );
+    }
     const advancedSection = containerEl.createEl("details", { cls: "osp-advanced-settings" });
     advancedSection.createEl("summary", { text: "Advanced", cls: "osp-advanced-summary" });
     advancedSection.open = false;
