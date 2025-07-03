@@ -62,6 +62,91 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				})
 			);
 
+		// --- Sonic Graph Settings Section ---
+		const sonicGraphSection = containerEl.createEl('details', { cls: 'osp-sonic-graph-settings' });
+		sonicGraphSection.createEl('summary', { text: 'Sonic Graph Settings', cls: 'osp-section-summary' });
+		sonicGraphSection.open = false;
+
+		// Adaptive Detail Levels - Main Toggle
+		new Setting(sonicGraphSection)
+			.setName('Enable Adaptive Detail Levels')
+			.setDesc('Automatically show/hide elements based on zoom level for better performance and visual clarity. Reduces clutter when zoomed out, shows more detail when zoomed in.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sonicGraphSettings?.adaptiveDetail?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings = {
+							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true },
+							audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: 'auto' },
+							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
+							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
+							adaptiveDetail: { enabled: false, mode: 'automatic', thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
+							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true }
+						};
+					}
+					if (!this.plugin.settings.sonicGraphSettings.adaptiveDetail) {
+						this.plugin.settings.sonicGraphSettings.adaptiveDetail = {
+							enabled: false,
+							mode: 'automatic',
+							thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 },
+							overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 }
+						};
+					}
+					this.plugin.settings.sonicGraphSettings.adaptiveDetail.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('settings-change', 'Adaptive detail levels toggled', { enabled: value });
+					
+					// Refresh the settings display to show/hide sub-options
+					this.display();
+				})
+			);
+
+		// Adaptive Detail Mode (only show when enabled)
+		if (this.plugin.settings.sonicGraphSettings?.adaptiveDetail?.enabled) {
+			new Setting(sonicGraphSection)
+				.setName('Adaptive Detail Mode')
+				.setDesc('Automatic: Changes based on zoom level. Performance: Optimized for large vaults. Manual: User controls via buttons.')
+				.addDropdown(dropdown => dropdown
+					.addOption('automatic', 'Automatic (Recommended)')
+					.addOption('performance', 'Performance Optimized')
+					.addOption('manual', 'Manual Control')
+					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode)
+					.onChange(async (value: 'automatic' | 'performance' | 'manual') => {
+						this.plugin.settings.sonicGraphSettings!.adaptiveDetail.mode = value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Adaptive detail mode changed', { mode: value });
+					})
+				);
+
+			// Always Show Labels Override
+			new Setting(sonicGraphSection)
+				.setName('Always show labels')
+				.setDesc('Override zoom-based label visibility and always show node labels regardless of zoom level.')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels)
+					.onChange(async (value) => {
+						this.plugin.settings.sonicGraphSettings!.adaptiveDetail.overrides.alwaysShowLabels = value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Always show labels override changed', { enabled: value });
+					})
+				);
+
+			// Maximum Visible Nodes
+			new Setting(sonicGraphSection)
+				.setName('Maximum visible nodes')
+				.setDesc('Limit the maximum number of nodes shown for performance. Set to 0 for no limit.')
+				.addSlider(slider => slider
+					.setLimits(0, 2000, 50)
+					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes === -1 ? 0 : this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.sonicGraphSettings!.adaptiveDetail.overrides.maximumVisibleNodes = value === 0 ? -1 : value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Maximum visible nodes changed', { maxNodes: value === 0 ? 'unlimited' : value });
+					})
+				);
+		}
+
 		// --- Advanced Section ---
 		const advancedSection = containerEl.createEl('details', { cls: 'osp-advanced-settings' });
 		advancedSection.createEl('summary', { text: 'Advanced', cls: 'osp-advanced-summary' });
