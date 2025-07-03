@@ -190,8 +190,20 @@ export class SonicGraphModal extends Modal {
         titleContainer.appendChild(titleIcon);
         titleContainer.createEl('h1', { text: 'Sonic Graph', cls: 'sonic-graph-title' });
         
-        // Control Center button on the right
-        const controlCenterBtn = this.headerContainer.createEl('button', { 
+        // Button group container on the right
+        const buttonGroup = this.headerContainer.createDiv({ cls: 'sonic-graph-header-button-group' });
+        
+        // Plugin Settings button
+        const pluginSettingsBtn = buttonGroup.createEl('button', { 
+            cls: 'sonic-graph-header-btn sonic-graph-plugin-settings-btn',
+            text: 'Plugin Settings'
+        });
+        const pluginSettingsIcon = createLucideIcon('cog', 16);
+        pluginSettingsBtn.insertBefore(pluginSettingsIcon, pluginSettingsBtn.firstChild);
+        pluginSettingsBtn.addEventListener('click', () => this.openPluginSettings());
+        
+        // Control Center button
+        const controlCenterBtn = buttonGroup.createEl('button', { 
             cls: 'sonic-graph-header-btn sonic-graph-control-center-btn',
             text: '🎵 Control Center'
         });
@@ -456,6 +468,7 @@ export class SonicGraphModal extends Modal {
                 logger.info('sonic-graph-layout', 'Applying layout settings to renderer', layoutSettings);
                 await this.executeWhenIdle(() => {
                     this.graphRenderer!.updateLayoutSettings(layoutSettings);
+                    this.graphRenderer!.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
                 });
                 logger.info('sonic-graph-layout', 'Layout settings applied successfully');
             } catch (layoutError) {
@@ -761,6 +774,17 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
+     * Open Plugin Settings
+     */
+    private openPluginSettings(): void {
+        this.close(); // Close this modal first
+        
+        // Open Plugin Settings
+        (this.app as any).setting.open();
+        (this.app as any).setting.openTabById(this.plugin.manifest.id);
+    }
+
+    /**
      * Create settings panel content
      */
     private createSettingsContent(): void {
@@ -794,6 +818,9 @@ export class SonicGraphModal extends Modal {
         
         // 4. Layout section
         this.createLayoutSettings(settingsContent);
+        
+        // 4.5. Content-Aware Positioning section
+        this.createContentAwarePositioningSettings(settingsContent);
         
         // 5. Timeline section
         this.createTimelineSettings(settingsContent);
@@ -869,7 +896,7 @@ export class SonicGraphModal extends Modal {
         const noteItem = section.createDiv({ cls: 'sonic-graph-setting-item adaptive-detail-note' });
         noteItem.createEl('div', { 
             text: 'Configure adaptive detail settings in Plugin Settings > Sonic Graph Settings', 
-            cls: 'sonic-graph-setting-note' 
+            cls: 'sonic-graph-setting-note sonic-graph-small-text' 
         });
     }
 
@@ -927,6 +954,170 @@ export class SonicGraphModal extends Modal {
             <div class="adaptive-detail-nodes sonic-graph-small-text">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
             <div class="adaptive-detail-links sonic-graph-small-text">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
         `;
+    }
+
+    /**
+     * Create content-aware positioning settings section
+     */
+    private createContentAwarePositioningSettings(container: HTMLElement): void {
+        const settings = this.getSonicGraphSettings().contentAwarePositioning;
+        
+        // Only show if content-aware positioning is enabled in main settings
+        if (!settings || !settings.enabled) {
+            return;
+        }
+
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
+        section.createEl('div', { text: 'CONTENT-AWARE POSITIONING', cls: 'sonic-graph-settings-section-title' });
+        
+        // Tag Influence Weight
+        const tagWeightItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        tagWeightItem.createEl('label', { text: 'Tag influence weight', cls: 'sonic-graph-setting-label' });
+        tagWeightItem.createEl('div', { 
+            text: 'How strongly shared tags attract nodes together', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const tagWeightContainer = tagWeightItem.createDiv({ cls: 'sonic-graph-weight-slider-container' });
+        const tagWeightSlider = tagWeightContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-weight-slider'
+        });
+        tagWeightSlider.min = '0';
+        tagWeightSlider.max = '1';
+        tagWeightSlider.step = '0.1';
+        tagWeightSlider.value = settings.tagInfluence.weight.toString();
+        
+        // Add value display for the slider
+        const tagWeightValueDisplay = tagWeightContainer.createEl('span', {
+            text: Math.round(settings.tagInfluence.weight * 100) + '%',
+            cls: 'sonic-graph-weight-value'
+        });
+        
+        // Add event handler for tag weight changes with real-time preview
+        tagWeightSlider.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const weight = parseFloat(target.value);
+            tagWeightValueDisplay.textContent = Math.round(weight * 100) + '%';
+            
+            // Real-time preview: Apply immediately to graph
+            this.applyContentAwareWeightPreview('tagInfluence', weight);
+            
+            // Save settings with debounce
+            this.updateTagInfluenceWeight(weight);
+        });
+        
+        const tagWeightLabels = tagWeightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
+        tagWeightLabels.createEl('span', { text: 'Weak', cls: 'sonic-graph-weight-label' });
+        tagWeightLabels.createEl('span', { text: 'Strong', cls: 'sonic-graph-weight-label' });
+        
+        // Temporal Positioning Weight (only if enabled)
+        if (settings.temporalPositioning.enabled) {
+            const temporalWeightItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+            temporalWeightItem.createEl('label', { text: 'Temporal positioning weight', cls: 'sonic-graph-setting-label' });
+            temporalWeightItem.createEl('div', { 
+                text: 'How strongly creation time influences node positioning', 
+                cls: 'sonic-graph-setting-description' 
+            });
+            
+            const temporalWeightContainer = temporalWeightItem.createDiv({ cls: 'sonic-graph-weight-slider-container' });
+            const temporalWeightSlider = temporalWeightContainer.createEl('input', {
+                type: 'range',
+                cls: 'sonic-graph-weight-slider'
+            });
+            temporalWeightSlider.min = '0';
+            temporalWeightSlider.max = '1';
+            temporalWeightSlider.step = '0.05';
+            temporalWeightSlider.value = settings.temporalPositioning.weight.toString();
+            
+            const temporalWeightValueDisplay = temporalWeightContainer.createEl('span', {
+                text: Math.round(settings.temporalPositioning.weight * 100) + '%',
+                cls: 'sonic-graph-weight-value'
+            });
+            
+            temporalWeightSlider.addEventListener('input', (e) => {
+                const target = e.target as HTMLInputElement;
+                const weight = parseFloat(target.value);
+                temporalWeightValueDisplay.textContent = Math.round(weight * 100) + '%';
+                
+                // Real-time preview: Apply immediately to graph
+                this.applyContentAwareWeightPreview('temporalPositioning', weight);
+                
+                // Save settings with debounce
+                this.updateTemporalPositioningWeight(weight);
+            });
+            
+            const temporalWeightLabels = temporalWeightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
+            temporalWeightLabels.createEl('span', { text: 'Weak', cls: 'sonic-graph-weight-label' });
+            temporalWeightLabels.createEl('span', { text: 'Strong', cls: 'sonic-graph-weight-label' });
+        }
+        
+        // Hub Centrality Weight (only if enabled)
+        if (settings.hubCentrality.enabled) {
+            const hubWeightItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+            hubWeightItem.createEl('label', { text: 'Hub centrality weight', cls: 'sonic-graph-setting-label' });
+            hubWeightItem.createEl('div', { 
+                text: 'How strongly highly connected nodes pull toward center', 
+                cls: 'sonic-graph-setting-description' 
+            });
+            
+            const hubWeightContainer = hubWeightItem.createDiv({ cls: 'sonic-graph-weight-slider-container' });
+            const hubWeightSlider = hubWeightContainer.createEl('input', {
+                type: 'range',
+                cls: 'sonic-graph-weight-slider'
+            });
+            hubWeightSlider.min = '0';
+            hubWeightSlider.max = '1';
+            hubWeightSlider.step = '0.05';
+            hubWeightSlider.value = settings.hubCentrality.weight.toString();
+            
+            const hubWeightValueDisplay = hubWeightContainer.createEl('span', {
+                text: Math.round(settings.hubCentrality.weight * 100) + '%',
+                cls: 'sonic-graph-weight-value'
+            });
+            
+            hubWeightSlider.addEventListener('input', (e) => {
+                const target = e.target as HTMLInputElement;
+                const weight = parseFloat(target.value);
+                hubWeightValueDisplay.textContent = Math.round(weight * 100) + '%';
+                
+                // Real-time preview: Apply immediately to graph
+                this.applyContentAwareWeightPreview('hubCentrality', weight);
+                
+                // Save settings with debounce
+                this.updateHubCentralityWeight(weight);
+            });
+            
+            const hubWeightLabels = hubWeightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
+            hubWeightLabels.createEl('span', { text: 'Weak', cls: 'sonic-graph-weight-label' });
+            hubWeightLabels.createEl('span', { text: 'Strong', cls: 'sonic-graph-weight-label' });
+        }
+        
+        // Debug Visualization Toggle
+        const debugItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        debugItem.createEl('label', { text: 'Debug visualization', cls: 'sonic-graph-setting-label' });
+        debugItem.createEl('div', { 
+            text: 'Show visual indicators for force influences', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const debugToggle = debugItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
+        const debugSwitch = debugToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        if (settings.debugVisualization) {
+            debugSwitch.addClass('active');
+        }
+        const debugHandle = debugSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        
+        debugSwitch.addEventListener('click', () => {
+            const isActive = debugSwitch.hasClass('active');
+            debugSwitch.toggleClass('active', !isActive);
+            
+            // Real-time preview: Apply immediately to graph
+            this.applyContentAwareDebugPreview(!isActive);
+            
+            // Save settings with debounce
+            this.updateDebugVisualization(!isActive);
+        });
     }
 
     /**
@@ -1335,6 +1526,7 @@ export class SonicGraphModal extends Modal {
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+            this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
         
         logger.debug('filter-setting', `Updated filter setting: ${String(key)} = ${value}`);
@@ -1634,6 +1826,7 @@ export class SonicGraphModal extends Modal {
         
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+            this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
         
         logger.debug('path-grouping', 'Added new group from search:', newGroup);
@@ -1660,6 +1853,7 @@ export class SonicGraphModal extends Modal {
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+            this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
         
         logger.debug('path-grouping', `Updated group ${groupIndex} ${property}:`, value);
@@ -1679,6 +1873,7 @@ export class SonicGraphModal extends Modal {
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+            this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
         
         logger.debug('path-grouping', `Removed group at index ${groupIndex}`);
@@ -2391,6 +2586,25 @@ export class SonicGraphModal extends Modal {
                 journalGravity: 0.3,
                 layoutPreset: 'balanced' as const,
                 adaptiveScaling: true
+            },
+            // Content-Aware Positioning - Default Settings
+            contentAwarePositioning: {
+                enabled: false,
+                tagInfluence: {
+                    strength: 'moderate' as const,
+                    weight: 0.3
+                },
+                temporalPositioning: {
+                    enabled: true,
+                    weight: 0.1,
+                    recentThresholdDays: 30
+                },
+                hubCentrality: {
+                    enabled: true,
+                    weight: 0.2,
+                    minimumConnections: 5
+                },
+                debugVisualization: false
             }
         };
         
@@ -2406,7 +2620,8 @@ export class SonicGraphModal extends Modal {
             visual: { ...defaultSettings.visual, ...settings.visual },
             navigation: { ...defaultSettings.navigation, ...settings.navigation },
             adaptiveDetail: { ...defaultSettings.adaptiveDetail, ...settings.adaptiveDetail },
-            layout: { ...defaultSettings.layout, ...settings.layout }
+            layout: { ...defaultSettings.layout, ...settings.layout },
+            contentAwarePositioning: { ...defaultSettings.contentAwarePositioning, ...settings.contentAwarePositioning }
         };
     }
 
@@ -2817,6 +3032,7 @@ export class SonicGraphModal extends Modal {
         // Single renderer update if needed
         if (needsRendererUpdate && this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
+            this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
         
         this.pendingSettingsUpdates.clear();
@@ -2874,5 +3090,98 @@ export class SonicGraphModal extends Modal {
         if (this.progressIndicator) {
             this.progressIndicator.style.display = 'none';
         }
+    }
+
+    /**
+     * Update tag influence weight and save to plugin settings
+     */
+    private updateTagInfluenceWeight(weight: number): void {
+        // Performance optimization: Use debounced settings updates
+        this.scheduleSettingsUpdate('contentAwarePositioning.tagInfluence.weight', weight);
+        
+        logger.debug('content-aware-positioning', 'Tag influence weight updated', { weight });
+    }
+
+    /**
+     * Update temporal positioning weight and save to plugin settings
+     */
+    private updateTemporalPositioningWeight(weight: number): void {
+        // Performance optimization: Use debounced settings updates
+        this.scheduleSettingsUpdate('contentAwarePositioning.temporalPositioning.weight', weight);
+        
+        logger.debug('content-aware-positioning', 'Temporal positioning weight updated', { weight });
+    }
+
+    /**
+     * Update hub centrality weight and save to plugin settings
+     */
+    private updateHubCentralityWeight(weight: number): void {
+        // Performance optimization: Use debounced settings updates
+        this.scheduleSettingsUpdate('contentAwarePositioning.hubCentrality.weight', weight);
+        
+        logger.debug('content-aware-positioning', 'Hub centrality weight updated', { weight });
+    }
+
+    /**
+     * Update debug visualization setting and save to plugin settings
+     */
+    private updateDebugVisualization(enabled: boolean): void {
+        // Performance optimization: Use debounced settings updates
+        this.scheduleSettingsUpdate('contentAwarePositioning.debugVisualization', enabled);
+        
+        logger.debug('content-aware-positioning', 'Debug visualization updated', { enabled });
+    }
+
+    /**
+     * Apply content-aware weight changes immediately for real-time preview
+     */
+    private applyContentAwareWeightPreview(weightType: 'tagInfluence' | 'temporalPositioning' | 'hubCentrality', weight: number): void {
+        if (!this.graphRenderer) {
+            return;
+        }
+
+        // Get current settings and apply the preview change
+        const currentSettings = this.getSonicGraphSettings().contentAwarePositioning;
+        const previewSettings = JSON.parse(JSON.stringify(currentSettings)); // Deep clone
+        
+        // Update the specific weight
+        if (weightType === 'tagInfluence') {
+            previewSettings.tagInfluence.weight = weight;
+        } else if (weightType === 'temporalPositioning') {
+            previewSettings.temporalPositioning.weight = weight;
+        } else if (weightType === 'hubCentrality') {
+            previewSettings.hubCentrality.weight = weight;
+        }
+        
+        // Apply the preview settings immediately to the renderer
+        this.graphRenderer.updateContentAwareSettings(previewSettings);
+        
+        logger.debug('content-aware-preview', 'Real-time weight preview applied', {
+            weightType,
+            weight,
+            immediate: true
+        });
+    }
+
+    /**
+     * Apply debug visualization changes immediately for real-time preview
+     */
+    private applyContentAwareDebugPreview(enabled: boolean): void {
+        if (!this.graphRenderer) {
+            return;
+        }
+
+        // Get current settings and apply the preview change
+        const currentSettings = this.getSonicGraphSettings().contentAwarePositioning;
+        const previewSettings = JSON.parse(JSON.stringify(currentSettings)); // Deep clone
+        previewSettings.debugVisualization = enabled;
+        
+        // Apply the preview settings immediately to the renderer
+        this.graphRenderer.updateContentAwareSettings(previewSettings);
+        
+        logger.debug('content-aware-preview', 'Real-time debug visualization preview applied', {
+            enabled,
+            immediate: true
+        });
     }
 } 

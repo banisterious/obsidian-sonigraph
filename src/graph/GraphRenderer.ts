@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
+import { ContentAwarePositioning } from './ContentAwarePositioning';
 
 const logger = getLogger('GraphRenderer');
 
@@ -79,6 +80,10 @@ export class GraphRenderer {
   // Phase 3.8: Settings integration
   private layoutSettings: SonicGraphSettings['layout'] | null = null;
   
+  // Content-Aware Positioning integration
+  private contentAwarePositioning: ContentAwarePositioning | null = null;
+  private contentAwareSettings: SonicGraphSettings['contentAwarePositioning'] | null = null;
+  
   // Tooltip variables removed - using native browser tooltips
 
   constructor(container: HTMLElement, config: Partial<RenderConfig> = {}) {
@@ -105,6 +110,15 @@ export class GraphRenderer {
       clusterStrength: 0.12,     // Balanced clustering
       separationStrength: 0.06   // Softer separation for organic shapes
     };
+
+    // Initialize ContentAwarePositioning with default settings
+    this.contentAwarePositioning = new ContentAwarePositioning({
+      enabled: false, // Will be enabled via settings
+      tagInfluence: { strength: 'moderate', weight: 0.3 },
+      temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 },
+      hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 },
+      debugVisualization: false
+    });
 
     this.initializeSVG();
     this.initializeSimulation();
@@ -214,8 +228,12 @@ export class GraphRenderer {
             node.vy += Math.sin(angle) * distance;
           }
         });
-      })
-      .on('tick', () => {
+      });
+
+    // Apply Content-Aware Positioning forces
+    this.applyContentAwareForces();
+
+    this.simulation.on('tick', () => {
         // Performance optimization: Frame skipping for dense graphs
         if (this.maxFrameSkip > 0) {
           this.frameSkipCounter++;
@@ -1128,6 +1146,28 @@ export class GraphRenderer {
   }
 
   /**
+   * Update Content-Aware Positioning settings
+   */
+  updateContentAwareSettings(settings: SonicGraphSettings['contentAwarePositioning']): void {
+    logger.debug('content-aware-settings', 'Updating content-aware positioning settings', settings);
+    
+    this.contentAwareSettings = settings;
+    
+    // Update ContentAwarePositioning instance if it exists
+    if (this.contentAwarePositioning) {
+      this.contentAwarePositioning.updateSettings(settings);
+    }
+    
+    // Re-apply forces if simulation exists and content-aware positioning is enabled
+    if (this.simulation && settings.enabled) {
+      this.applyContentAwareForces();
+      this.simulation.alpha(0.3).restart(); // Gentle restart to apply changes
+    }
+    
+    logger.debug('content-aware-settings', 'Content-aware positioning settings applied', settings);
+  }
+
+  /**
    * Phase 3.8: Apply predefined layout presets
    */
   private applyLayoutPreset(preset: 'loose' | 'balanced' | 'tight' | 'very-tight'): void {
@@ -1372,6 +1412,33 @@ export class GraphRenderer {
   }
 
   /**
+   * Apply Content-Aware Positioning forces to the simulation
+   */
+  private applyContentAwareForces(): void {
+    if (!this.contentAwarePositioning || !this.contentAwareSettings?.enabled) {
+      return;
+    }
+    
+    logger.debug('content-aware', 'Applying content-aware positioning forces', {
+      hasPositioning: !!this.contentAwarePositioning,
+      enabled: this.contentAwareSettings?.enabled,
+      nodeCount: this.nodes.length,
+      linkCount: this.links.length
+    });
+    
+    // Set graph data for positioning calculations
+    this.contentAwarePositioning.setGraphData(
+      this.nodes, 
+      this.links, 
+      this.config.width, 
+      this.config.height
+    );
+    
+    // Apply content-aware forces to the simulation
+    this.contentAwarePositioning.applyForcesToSimulation(this.simulation);
+  }
+
+  /**
    * Update graph data and restart simulation
    */
   updateData(nodes: GraphNode[], links: GraphLink[]): void {
@@ -1405,6 +1472,9 @@ export class GraphRenderer {
     
     // Update all forces with current configuration
     this.updateSimulationForces();
+    
+    // Apply Content-Aware Positioning forces if enabled
+    this.applyContentAwareForces();
     
     // Restart with medium alpha for visible movement but not chaos
     this.simulation.alpha(0.5).restart();
