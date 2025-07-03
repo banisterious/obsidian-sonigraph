@@ -38,6 +38,17 @@ export class AdaptiveDetailManager {
   private currentState: AdaptiveDetailState;
   private allNodes: GraphNode[] = [];
   private allLinks: GraphLink[] = [];
+  
+  // Stability improvements: debouncing and hysteresis
+  private lastZoomChangeTime: number = 0;
+  private zoomChangeDebounceMs: number = 250; // Wait 250ms before processing zoom change (increased for panning stability)
+  private pendingZoomUpdate: NodeJS.Timeout | null = null;
+  private hysteresisMargin: number = 0.2; // 20% margin to prevent threshold oscillation (increased for panning stability)
+  private lastLevelChangeTime: number = 0;
+  private minimumLevelChangeInterval: number = 500; // Minimum 500ms between level changes
+  
+  // Callback for when detail level changes after debouncing
+  private onDetailLevelChanged: ((filteredData: FilteredGraphData) => void) | null = null;
 
   constructor(settings: SonicGraphSettings['adaptiveDetail']) {
     this.settings = settings;
@@ -82,6 +93,13 @@ export class AdaptiveDetailManager {
   }
 
   /**
+   * Set callback for when detail level changes after debouncing
+   */
+  setDetailLevelChangedCallback(callback: ((filteredData: FilteredGraphData) => void) | null): void {
+    this.onDetailLevelChanged = callback;
+  }
+
+  /**
    * Update graph data (when new data is loaded)
    */
   setGraphData(nodes: GraphNode[], links: GraphLink[]): void {
@@ -110,21 +128,92 @@ export class AdaptiveDetailManager {
       return this.createFilteredData(this.allNodes, this.allLinks, 'ultra-detail', 'Adaptive detail disabled');
     }
 
-    // Determine detail level based on zoom
-    const newLevel = this.calculateDetailLevel(zoomLevel);
+    // Immediate response for initial call or large zoom changes
+    const currentTime = performance.now();
+    const timeSinceLastChange = currentTime - this.lastZoomChangeTime;
+    const zoomDifference = Math.abs(zoomLevel - (this.lastProcessedZoom || zoomLevel));
     
-    // Only update if level changed
-    if (newLevel !== this.currentState.currentLevel) {
+    // For large zoom changes (>75%) or initial calls, respond immediately 
+    // Increased threshold to reduce sensitivity during panning
+    if (timeSinceLastChange > 500 || zoomDifference > 0.75 || !this.lastProcessedZoom) {
+      return this.processZoomChangeImmediately(zoomLevel);
+    }
+
+    // For small changes during panning, use debouncing
+    return this.processZoomChangeDebounced(zoomLevel);
+  }
+  
+  private lastProcessedZoom: number | null = null;
+  
+  /**
+   * Process zoom change immediately (for large changes)
+   */
+  private processZoomChangeImmediately(zoomLevel: number): FilteredGraphData {
+    this.lastZoomChangeTime = performance.now();
+    this.lastProcessedZoom = zoomLevel;
+    
+    // Clear any pending debounced update
+    if (this.pendingZoomUpdate) {
+      clearTimeout(this.pendingZoomUpdate);
+      this.pendingZoomUpdate = null;
+    }
+    
+    const newLevel = this.calculateDetailLevelWithHysteresis(zoomLevel);
+    
+    // Only update if level changed AND enough time has passed since last change
+    const timeSinceLastLevelChange = performance.now() - this.lastLevelChangeTime;
+    if (newLevel !== this.currentState.currentLevel && timeSinceLastLevelChange >= this.minimumLevelChangeInterval) {
       this.currentState.currentLevel = newLevel;
-      logger.debug('adaptive-detail', 'Detail level changed', {
+      this.lastLevelChangeTime = performance.now();
+      logger.debug('adaptive-detail', 'Detail level changed (immediate)', {
         zoomLevel,
         newLevel,
-        mode: this.settings.mode
+        mode: this.settings.mode,
+        timeSinceLastChange: timeSinceLastLevelChange
       });
     }
 
-    // Filter data based on current level
     return this.filterDataForLevel(newLevel);
+  }
+  
+  /**
+   * Process zoom change with debouncing (for small changes during panning)
+   */
+  private processZoomChangeDebounced(zoomLevel: number): FilteredGraphData {
+    // Cancel previous pending update
+    if (this.pendingZoomUpdate) {
+      clearTimeout(this.pendingZoomUpdate);
+    }
+    
+    // Schedule debounced update
+    this.pendingZoomUpdate = setTimeout(() => {
+      this.lastZoomChangeTime = performance.now();
+      this.lastProcessedZoom = zoomLevel;
+      
+      const newLevel = this.calculateDetailLevelWithHysteresis(zoomLevel);
+      
+      // Only update if level changed AND enough time has passed since last change
+      const timeSinceLastLevelChange = performance.now() - this.lastLevelChangeTime;
+      if (newLevel !== this.currentState.currentLevel && timeSinceLastLevelChange >= this.minimumLevelChangeInterval) {
+        this.currentState.currentLevel = newLevel;
+        this.lastLevelChangeTime = performance.now();
+        logger.debug('adaptive-detail', 'Detail level changed (debounced)', {
+          zoomLevel,
+          newLevel,
+          mode: this.settings.mode,
+          timeSinceLastChange: timeSinceLastLevelChange
+        });
+        
+        // Trigger callback to update the graph
+        if (this.onDetailLevelChanged) {
+          const filteredData = this.filterDataForLevel(newLevel);
+          this.onDetailLevelChanged(filteredData);
+        }
+      }
+    }, this.zoomChangeDebounceMs);
+    
+    // Return current level's data while debouncing
+    return this.filterDataForLevel(this.currentState.currentLevel);
   }
 
   /**
@@ -152,6 +241,58 @@ export class AdaptiveDetailManager {
       return 'detail';
     } else {
       return 'ultra-detail';
+    }
+  }
+
+  /**
+   * Calculate detail level with hysteresis to prevent oscillation
+   */
+  private calculateDetailLevelWithHysteresis(zoomLevel: number): DetailLevel {
+    const thresholds = this.settings.thresholds;
+    const currentLevel = this.currentState.currentLevel;
+    const margin = this.hysteresisMargin;
+    
+    // Apply hysteresis based on current level and zoom direction
+    switch (currentLevel) {
+      case 'overview':
+        // Only move up if we're clearly above the threshold
+        if (zoomLevel >= thresholds.overview * (1 + margin)) {
+          return this.calculateDetailLevel(zoomLevel);
+        }
+        return 'overview';
+        
+      case 'standard':
+        // Check if we should move down to overview
+        if (zoomLevel < thresholds.overview * (1 - margin)) {
+          return 'overview';
+        }
+        // Check if we should move up to detail
+        if (zoomLevel >= thresholds.standard * (1 + margin)) {
+          return this.calculateDetailLevel(zoomLevel);
+        }
+        return 'standard';
+        
+      case 'detail':
+        // Check if we should move down to standard
+        if (zoomLevel < thresholds.standard * (1 - margin)) {
+          return this.calculateDetailLevel(zoomLevel);
+        }
+        // Check if we should move up to ultra-detail
+        if (zoomLevel >= thresholds.detail * (1 + margin)) {
+          return 'ultra-detail';
+        }
+        return 'detail';
+        
+      case 'ultra-detail':
+        // Only move down if we're clearly below the threshold
+        if (zoomLevel < thresholds.detail * (1 - margin)) {
+          return this.calculateDetailLevel(zoomLevel);
+        }
+        return 'ultra-detail';
+        
+      default:
+        // Fallback to normal calculation
+        return this.calculateDetailLevel(zoomLevel);
     }
   }
 

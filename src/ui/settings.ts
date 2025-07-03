@@ -63,9 +63,8 @@ export class SonigraphSettingTab extends PluginSettingTab {
 			);
 
 		// --- Sonic Graph Settings Section ---
-		const sonicGraphSection = containerEl.createEl('details', { cls: 'osp-sonic-graph-settings' });
-		sonicGraphSection.createEl('summary', { text: 'Sonic Graph Settings', cls: 'osp-section-summary' });
-		sonicGraphSection.open = false;
+		const sonicGraphSection = containerEl.createEl('div', { cls: 'osp-sonic-graph-settings' });
+		sonicGraphSection.createEl('h3', { text: 'Sonic Graph Settings', cls: 'osp-section-header' });
 
 		// Adaptive Detail Levels - Main Toggle
 		new Setting(sonicGraphSection)
