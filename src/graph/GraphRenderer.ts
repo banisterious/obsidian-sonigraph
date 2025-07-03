@@ -49,6 +49,7 @@ export class GraphRenderer {
   private linkGroup: any;
   private nodeGroup: any;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
+  private onZoomChangeCallback: ((zoomLevel: number) => void) | null = null;
   // Removed tooltip property - using native browser tooltips
   
   private simulation: d3.Simulation<GraphNode, GraphLink>;
@@ -145,6 +146,11 @@ export class GraphRenderer {
           // Performance optimization: Update viewport bounds for culling
           this.updateViewportBounds(event.transform);
           this.scheduleViewportUpdate();
+          
+          // Adaptive detail levels: Notify zoom change callback
+          if (this.onZoomChangeCallback) {
+            this.onZoomChangeCallback(event.transform.k);
+          }
         });
 
       // Configure zoom with touch event optimization before applying
@@ -980,6 +986,14 @@ export class GraphRenderer {
       logger.warn('zoom-get', 'Failed to get current zoom transform', { error });
       return 1.0; // Fallback
     }
+  }
+
+  /**
+   * Set callback for zoom level changes (for adaptive detail levels)
+   */
+  setOnZoomChangeCallback(callback: ((zoomLevel: number) => void) | null): void {
+    this.onZoomChangeCallback = callback;
+    logger.debug('zoom-callback', 'Zoom change callback set', { hasCallback: !!callback });
   }
 
   // Tooltip methods removed - using native browser tooltips for better performance
