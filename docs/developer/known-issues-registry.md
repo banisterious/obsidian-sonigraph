@@ -574,7 +574,7 @@ CRITICAL: No volume control found for whaleSperm during enable/disable
 - **Issue #011**: [CDN Sample Loading Diagnosis](../archive/issues/issue-011-cdn-sample-loading-diagnosis.md) - Investigate current sample loading failures (**IN DEVELOPMENT**)
 - **Future Issues**: Sample loading indicators, CDN fallbacks, caching, user preferences
 
-**Project Documentation**: [External Sample Integration Project](../planning/projects/external-sample-integration.md)
+**Project Documentation**: [External Sample Integration Project](../archive/planning/projects/external-sample-integration.md)
 
 **Timeline**: 6-7 weeks (3 phases)  
 **Expected Impact**: Significant improvement in perceived audio quality and user experience

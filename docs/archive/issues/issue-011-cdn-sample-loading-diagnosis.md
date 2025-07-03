@@ -3,7 +3,7 @@
 **Status**: Open  
 **Priority**: High  
 **Type**: Investigation/Bug Fix  
-**Project**: [External Sample Integration](../../planning/projects/external-sample-integration.md)  
+**Project**: [External Sample Integration](../../archive/planning/projects/external-sample-integration.md)  
 **Phase**: 1 - Diagnosis & Foundation  
 
 ## Problem Statement
