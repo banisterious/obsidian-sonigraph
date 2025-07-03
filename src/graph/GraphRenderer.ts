@@ -965,6 +965,22 @@ export class GraphRenderer {
     }
   }
 
+  /**
+   * Get current zoom level for adaptive detail levels
+   */
+  getCurrentZoom(): number {
+    if (!this.config.enableZoom || !this.zoom || !this.svg) {
+      return 1.0; // Default zoom level
+    }
+    
+    try {
+      const transform = d3.zoomTransform(this.svg.node() as Element);
+      return transform.k;
+    } catch (error) {
+      logger.warn('zoom-get', 'Failed to get current zoom transform', { error });
+      return 1.0; // Fallback
+    }
+  }
 
   // Tooltip methods removed - using native browser tooltips for better performance
 
