@@ -250,6 +250,9 @@ export class GraphRenderer {
         
         // Optimized position updates
         this.updatePositions();
+        
+        // Update debug visualization if enabled (Content-Aware Positioning debug overlay)
+        this.updateDebugVisualization();
       })
       .alphaDecay(this.getAlphaDecay()) // Adaptive convergence based on performance mode
       .velocityDecay(this.getVelocityDecay()) // Adaptive velocity decay
@@ -1436,6 +1439,188 @@ export class GraphRenderer {
     
     // Apply content-aware forces to the simulation
     this.contentAwarePositioning.applyForcesToSimulation(this.simulation);
+    
+    // Update debug visualization if enabled
+    this.updateDebugVisualization();
+  }
+
+  /**
+   * Update debug visualization elements based on content-aware positioning settings
+   */
+  private updateDebugVisualization(): void {
+    if (!this.contentAwarePositioning || !this.contentAwareSettings?.debugVisualization) {
+      this.clearDebugVisualization();
+      return;
+    }
+
+    const debugData = this.contentAwarePositioning.getDebugVisualization();
+    if (!debugData) {
+      this.clearDebugVisualization();
+      return;
+    }
+
+    logger.debug('debug-viz', 'Updating debug visualization', {
+      tagConnections: debugData.tagConnections?.length || 0,
+      temporalZones: debugData.temporalZones?.length || 0,
+      hubNodes: debugData.hubNodes?.length || 0
+    });
+
+    // Create debug group if it doesn't exist
+    let debugGroup = this.g.select('.debug-visualization');
+    if (debugGroup.empty()) {
+      debugGroup = this.g.append('g').attr('class', 'debug-visualization');
+    }
+
+    // Render temporal zones
+    this.renderTemporalZones(debugGroup, debugData.temporalZones || []);
+    
+    // Render tag connections
+    this.renderTagConnections(debugGroup, debugData.tagConnections || []);
+    
+    // Render hub indicators
+    this.renderHubIndicators(debugGroup, debugData.hubNodes || []);
+  }
+
+  /**
+   * Render temporal positioning zones
+   */
+  private renderTemporalZones(debugGroup: any, zones: any[]): void {
+    const zoneSelection = debugGroup.selectAll('.temporal-zone')
+      .data(zones, (d: any) => d.name);
+
+    // Enter new zones
+    const zoneEnter = zoneSelection.enter()
+      .append('circle')
+      .attr('class', 'temporal-zone')
+      .attr('fill', 'none')
+      .attr('stroke-dasharray', '5,5')
+      .attr('stroke-opacity', 0.3)
+      .attr('stroke-width', 2);
+
+    // Update existing zones
+    zoneSelection.merge(zoneEnter)
+      .attr('cx', (d: any) => d.centerX)
+      .attr('cy', (d: any) => d.centerY)
+      .attr('r', (d: any) => d.radius)
+      .attr('stroke', (d: any) => {
+        switch (d.name) {
+          case 'recent': return '#4ade80'; // Green for recent
+          case 'established': return '#3b82f6'; // Blue for established
+          case 'archive': return '#6b7280'; // Gray for archive
+          default: return '#9ca3af';
+        }
+      });
+
+    // Remove old zones
+    zoneSelection.exit().remove();
+
+    // Add zone labels
+    const labelSelection = debugGroup.selectAll('.temporal-zone-label')
+      .data(zones, (d: any) => d.name);
+
+    const labelEnter = labelSelection.enter()
+      .append('text')
+      .attr('class', 'temporal-zone-label')
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '12px')
+      .attr('font-weight', 'bold')
+      .attr('fill-opacity', 0.7);
+
+    labelSelection.merge(labelEnter)
+      .attr('x', (d: any) => d.centerX)
+      .attr('y', (d: any) => d.centerY - d.radius + 20)
+      .attr('fill', (d: any) => {
+        switch (d.name) {
+          case 'recent': return '#22c55e';
+          case 'established': return '#2563eb';
+          case 'archive': return '#4b5563';
+          default: return '#6b7280';
+        }
+      })
+      .text((d: any) => d.name.toUpperCase());
+
+    labelSelection.exit().remove();
+  }
+
+  /**
+   * Render tag connection links
+   */
+  private renderTagConnections(debugGroup: any, connections: any[]): void {
+    const connectionSelection = debugGroup.selectAll('.tag-connection')
+      .data(connections, (d: any) => `${d.sourceId}-${d.targetId}`);
+
+    // Enter new connections
+    const connectionEnter = connectionSelection.enter()
+      .append('line')
+      .attr('class', 'tag-connection')
+      .attr('stroke', '#f59e0b') // Orange for tag connections
+      .attr('stroke-opacity', 0.4)
+      .attr('stroke-dasharray', '3,3');
+
+    // Update existing connections
+    connectionSelection.merge(connectionEnter)
+      .attr('stroke-width', (d: any) => Math.max(1, d.strength * 4))
+      .attr('x1', (d: any) => {
+        const sourceNode = this.nodes.find(n => n.id === d.sourceId);
+        return sourceNode?.x || 0;
+      })
+      .attr('y1', (d: any) => {
+        const sourceNode = this.nodes.find(n => n.id === d.sourceId);
+        return sourceNode?.y || 0;
+      })
+      .attr('x2', (d: any) => {
+        const targetNode = this.nodes.find(n => n.id === d.targetId);
+        return targetNode?.x || 0;
+      })
+      .attr('y2', (d: any) => {
+        const targetNode = this.nodes.find(n => n.id === d.targetId);
+        return targetNode?.y || 0;
+      });
+
+    // Remove old connections
+    connectionSelection.exit().remove();
+  }
+
+  /**
+   * Render hub node indicators
+   */
+  private renderHubIndicators(debugGroup: any, hubs: any[]): void {
+    const hubSelection = debugGroup.selectAll('.hub-indicator')
+      .data(hubs, (d: any) => d.nodeId);
+
+    // Enter new hub indicators
+    const hubEnter = hubSelection.enter()
+      .append('circle')
+      .attr('class', 'hub-indicator')
+      .attr('fill', 'none')
+      .attr('stroke', '#ef4444') // Red for hub indicators
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-width', 3);
+
+    // Update existing hub indicators
+    hubSelection.merge(hubEnter)
+      .attr('cx', (d: any) => {
+        const hubNode = this.nodes.find(n => n.id === d.nodeId);
+        return hubNode?.x || 0;
+      })
+      .attr('cy', (d: any) => {
+        const hubNode = this.nodes.find(n => n.id === d.nodeId);
+        return hubNode?.y || 0;
+      })
+      .attr('r', (d: any) => 15 + (d.centralityScore * 10)); // Scale with centrality
+
+    // Remove old hub indicators
+    hubSelection.exit().remove();
+  }
+
+  /**
+   * Clear all debug visualization elements
+   */
+  private clearDebugVisualization(): void {
+    const debugGroup = this.g.select('.debug-visualization');
+    if (!debugGroup.empty()) {
+      debugGroup.remove();
+    }
   }
 
   /**

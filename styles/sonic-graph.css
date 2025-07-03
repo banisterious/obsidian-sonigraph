@@ -1569,3 +1569,66 @@
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+/* ===================================
+   CONTENT-AWARE POSITIONING DEBUG VISUALIZATION
+   ================================== */
+
+/* Debug visualization group container */
+.debug-visualization {
+  pointer-events: none; /* Don't interfere with graph interactions */
+  z-index: 5; /* Below nodes and links but visible */
+}
+
+/* Temporal zones - circular areas showing time-based clusters */
+.temporal-zone {
+  fill: none;
+  stroke-dasharray: 5, 5;
+  stroke-opacity: 0.3;
+  stroke-width: 2;
+  transition: stroke-opacity 0.3s ease;
+}
+
+/* Temporal zone labels */
+.temporal-zone-label {
+  text-anchor: middle;
+  font-size: 12px;
+  font-weight: bold;
+  fill-opacity: 0.7;
+  pointer-events: none;
+  font-family: var(--font-interface);
+  text-shadow: 0 0 3px var(--background-primary);
+}
+
+/* Tag connections - dashed lines between nodes with shared tags */
+.tag-connection {
+  stroke: #f59e0b; /* Orange for tag connections */
+  stroke-opacity: 0.4;
+  stroke-dasharray: 3, 3;
+  fill: none;
+  transition: stroke-opacity 0.3s ease;
+}
+
+/* Hub indicators - red circles around highly connected nodes */
+.hub-indicator {
+  fill: none;
+  stroke: #ef4444; /* Red for hub indicators */
+  stroke-opacity: 0.6;
+  stroke-width: 3;
+  transition:
+    stroke-opacity 0.3s ease,
+    r 0.3s ease;
+}
+
+/* Debug visualization hover effects */
+.debug-visualization:hover .temporal-zone {
+  stroke-opacity: 0.5;
+}
+
+.debug-visualization:hover .tag-connection {
+  stroke-opacity: 0.6;
+}
+
+.debug-visualization:hover .hub-indicator {
+  stroke-opacity: 0.8;
+}
