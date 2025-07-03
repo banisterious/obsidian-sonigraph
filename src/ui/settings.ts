@@ -81,7 +81,8 @@ export class SonigraphSettingTab extends PluginSettingTab {
 							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
 							adaptiveDetail: { enabled: false, mode: 'automatic', thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
 							contentAwarePositioning: { enabled: false, tagInfluence: { strength: 'moderate', weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
-							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true }
+							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true },
+							smartClustering: { enabled: false, algorithm: 'hybrid', weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 }, clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1.0 }, visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: 'subtle', colorScheme: 'type-based' }, integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 }, debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false } }
 						};
 					}
 					if (!this.plugin.settings.sonicGraphSettings.adaptiveDetail) {
@@ -162,7 +163,8 @@ export class SonigraphSettingTab extends PluginSettingTab {
 							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
 							adaptiveDetail: { enabled: false, mode: 'automatic', thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
 							contentAwarePositioning: { enabled: false, tagInfluence: { strength: 'moderate', weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
-							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true }
+							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true },
+							smartClustering: { enabled: false, algorithm: 'hybrid', weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 }, clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1.0 }, visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: 'subtle', colorScheme: 'type-based' }, integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 }, debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false } }
 						};
 					}
 					if (!this.plugin.settings.sonicGraphSettings.contentAwarePositioning) {
@@ -179,6 +181,106 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					logger.info('settings-change', 'Content-aware positioning toggled', { enabled: value });
 				})
 			);
+
+		// Smart Clustering Algorithms - Main Toggle
+		new Setting(sonicGraphSection)
+			.setName('Enable Smart Clustering Algorithms')
+			.setDesc('Automatically group related nodes using community detection and multi-factor analysis. Combines link strength, shared tags, folder hierarchy, and temporal proximity.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sonicGraphSettings?.smartClustering?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings = {
+							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true },
+							audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: 'auto' },
+							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
+							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
+							adaptiveDetail: { enabled: false, mode: 'automatic', thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
+							contentAwarePositioning: { enabled: false, tagInfluence: { strength: 'moderate', weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
+							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true },
+							smartClustering: { enabled: false, algorithm: 'hybrid', weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 }, clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1.0 }, visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: 'subtle', colorScheme: 'type-based' }, integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 }, debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false } }
+						};
+					}
+
+					if (!this.plugin.settings.sonicGraphSettings.smartClustering) {
+						this.plugin.settings.sonicGraphSettings.smartClustering = {
+							enabled: false,
+							algorithm: 'hybrid',
+							weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 },
+							clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1.0 },
+							visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: 'subtle', colorScheme: 'type-based' },
+							integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 },
+							debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false }
+						};
+					}
+
+					this.plugin.settings.sonicGraphSettings.smartClustering.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('settings-change', 'Smart clustering algorithms toggled', { enabled: value });
+					this.display(); // Refresh to show/hide sub-options
+				})
+			);
+
+		// Smart Clustering Algorithm Selection (only show when enabled)
+		if (this.plugin.settings.sonicGraphSettings?.smartClustering?.enabled) {
+			new Setting(sonicGraphSection)
+				.setName('Clustering Algorithm')
+				.setDesc('Louvain: Fast community detection. Modularity: High-quality academic clustering. Hybrid: Combines both with multi-factor refinement.')
+				.addDropdown(dropdown => dropdown
+					.addOption('louvain', 'Louvain (Fast)')
+					.addOption('modularity', 'Modularity (Quality)')
+					.addOption('hybrid', 'Hybrid (Recommended)')
+					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.algorithm)
+					.onChange(async (value: 'louvain' | 'modularity' | 'hybrid') => {
+						this.plugin.settings.sonicGraphSettings!.smartClustering.algorithm = value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Clustering algorithm changed', { algorithm: value });
+					})
+				);
+
+			// Minimum Cluster Size
+			new Setting(sonicGraphSection)
+				.setName('Minimum cluster size')
+				.setDesc('Minimum number of nodes required to form a cluster. Smaller values create more clusters.')
+				.addSlider(slider => slider
+					.setLimits(2, 10, 1)
+					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.clustering.minClusterSize)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.sonicGraphSettings!.smartClustering.clustering.minClusterSize = value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Minimum cluster size changed', { minSize: value });
+					})
+				);
+
+			// Maximum Number of Clusters
+			new Setting(sonicGraphSection)
+				.setName('Maximum clusters')
+				.setDesc('Maximum number of clusters to create. Prevents over-fragmentation of the graph.')
+				.addSlider(slider => slider
+					.setLimits(5, 25, 1)
+					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.clustering.maxClusters)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.sonicGraphSettings!.smartClustering.clustering.maxClusters = value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Maximum clusters changed', { maxClusters: value });
+					})
+				);
+
+			// Respect Existing Groups
+			new Setting(sonicGraphSection)
+				.setName('Respect manual groups')
+				.setDesc('Honor existing path-based groups when creating automatic clusters.')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.integration.respectExistingGroups)
+					.onChange(async (value) => {
+						this.plugin.settings.sonicGraphSettings!.smartClustering.integration.respectExistingGroups = value;
+						await this.plugin.saveSettings();
+						logger.info('settings-change', 'Respect existing groups changed', { respectGroups: value });
+					})
+				);
+		}
 
 		// --- Advanced Section ---
 		const advancedSection = containerEl.createEl('details', { cls: 'osp-advanced-settings' });

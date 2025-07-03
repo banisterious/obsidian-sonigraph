@@ -24,7 +24,8 @@ export class WhaleAudioManager {
     private lastDiscoveryTime: number = 0;
     private initializationPromise: Promise<void> | null = null;
     private vault: Vault | null = null;
-    private cacheDir: string = '.sonigraph-cache/whale-samples';
+    private cacheDir: string = '.obsidian/plugins/sonigraph/cache/whale-samples';
+    private legacyCacheDir: string = '.sonigraph-cache/whale-samples';
     private fileCache: Map<string, string> = new Map(); // URL -> file path mapping
     
     // Seed collection from our research - Enhanced with NOAA Fisheries MP3s
@@ -124,11 +125,18 @@ export class WhaleAudioManager {
         settings: WhaleIntegrationSettings,
         clientId?: string,
         clientSecret?: string,
-        vault?: Vault
+        vault?: Vault,
+        pluginDir?: string
     ) {
         this.settings = settings;
         this.freesoundClient = new FreesoundAPIClient(clientId, clientSecret);
         this.vault = vault;
+        
+        // Use plugin directory if provided, otherwise default to .obsidian/plugins/sonigraph
+        if (pluginDir) {
+            this.cacheDir = `${pluginDir}/cache/whale-samples`;
+        }
+        
         this.initializeSeedCollection();
         
         // Initialize cache directory if vault is available
@@ -158,6 +166,9 @@ export class WhaleAudioManager {
         if (!this.vault) return;
 
         try {
+            // Check for legacy cache and migrate if needed
+            await this.migrateLegacyCache();
+            
             // Create main cache directory
             if (!await this.vault.adapter.exists(this.cacheDir)) {
                 await this.vault.adapter.mkdir(this.cacheDir);
@@ -185,6 +196,121 @@ export class WhaleAudioManager {
         } catch (error) {
             logger.error('cache-init', 'Failed to initialize cache directory', {
                 error: error instanceof Error ? error.message : String(error)
+            });
+        }
+    }
+
+    /**
+     * Migrate cache from legacy location (.sonigraph-cache) to plugin directory
+     */
+    private async migrateLegacyCache(): Promise<void> {
+        if (!this.vault) return;
+
+        try {
+            // Check if legacy cache exists
+            if (!await this.vault.adapter.exists(this.legacyCacheDir)) {
+                return; // No legacy cache to migrate
+            }
+
+            logger.info('cache-migration', 'Legacy cache found, starting migration', {
+                from: this.legacyCacheDir,
+                to: this.cacheDir
+            });
+
+            // Ensure new cache directory exists
+            const newCacheParent = this.cacheDir.split('/').slice(0, -1).join('/');
+            if (!await this.vault.adapter.exists(newCacheParent)) {
+                await this.vault.adapter.mkdir(newCacheParent);
+            }
+
+            // Get list of files/folders in legacy cache
+            const legacyContents = await this.vault.adapter.list(this.legacyCacheDir);
+            
+            if (legacyContents.files.length > 0 || legacyContents.folders.length > 0) {
+                // Create new cache directory if it doesn't exist
+                if (!await this.vault.adapter.exists(this.cacheDir)) {
+                    await this.vault.adapter.mkdir(this.cacheDir);
+                }
+
+                // Copy files
+                for (const file of legacyContents.files) {
+                    const fileName = file.split('/').pop() || file;
+                    const newPath = `${this.cacheDir}/${fileName}`;
+                    
+                    const content = await this.vault.adapter.readBinary(file);
+                    await this.vault.adapter.writeBinary(newPath, content);
+                    
+                    logger.debug('cache-migration', 'Migrated file', {
+                        from: file,
+                        to: newPath
+                    });
+                }
+
+                // Copy subdirectories and their contents
+                for (const folder of legacyContents.folders) {
+                    const folderName = folder.split('/').pop() || folder;
+                    const newFolderPath = `${this.cacheDir}/${folderName}`;
+                    
+                    await this.vault.adapter.mkdir(newFolderPath);
+                    
+                    // Copy folder contents recursively
+                    await this.migrateFolderContents(folder, newFolderPath);
+                }
+
+                logger.info('cache-migration', 'Cache migration completed successfully', {
+                    filesCount: legacyContents.files.length,
+                    foldersCount: legacyContents.folders.length
+                });
+            }
+
+            // Remove legacy cache directory
+            await this.vault.adapter.rmdir(this.legacyCacheDir, true);
+            
+            logger.info('cache-migration', 'Legacy cache directory removed', {
+                path: this.legacyCacheDir
+            });
+
+        } catch (error) {
+            logger.error('cache-migration', 'Failed to migrate legacy cache', {
+                error: error instanceof Error ? error.message : String(error),
+                from: this.legacyCacheDir,
+                to: this.cacheDir
+            });
+            // Don't throw - continue with normal initialization
+        }
+    }
+
+    /**
+     * Recursively migrate folder contents
+     */
+    private async migrateFolderContents(sourceFolder: string, targetFolder: string): Promise<void> {
+        if (!this.vault) return;
+
+        try {
+            const contents = await this.vault.adapter.list(sourceFolder);
+            
+            // Copy files
+            for (const file of contents.files) {
+                const fileName = file.split('/').pop() || file;
+                const newPath = `${targetFolder}/${fileName}`;
+                
+                const content = await this.vault.adapter.readBinary(file);
+                await this.vault.adapter.writeBinary(newPath, content);
+            }
+
+            // Copy subdirectories recursively
+            for (const folder of contents.folders) {
+                const folderName = folder.split('/').pop() || folder;
+                const newFolderPath = `${targetFolder}/${folderName}`;
+                
+                await this.vault.adapter.mkdir(newFolderPath);
+                await this.migrateFolderContents(folder, newFolderPath);
+            }
+        } catch (error) {
+            logger.error('cache-migration', 'Failed to migrate folder contents', {
+                error: error instanceof Error ? error.message : String(error),
+                sourceFolder,
+                targetFolder
             });
         }
     }

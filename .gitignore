@@ -19,6 +19,9 @@ docs/images/sonigraph-control-center/
 docs/images/sonigraph-control-center/800pxw/
 docs/images/sonigraph-control-center/2880pxw/
 
+# Screenshots directory
+screenshots/
+
 # Build artifacts
 main.js
 styles.css

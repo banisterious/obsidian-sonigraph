@@ -3,6 +3,7 @@ import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
 import { ContentAwarePositioning } from './ContentAwarePositioning';
+import { SmartClusteringAlgorithms, Cluster, ClusteringResult } from './SmartClusteringAlgorithms';
 
 const logger = getLogger('GraphRenderer');
 
@@ -84,6 +85,12 @@ export class GraphRenderer {
   private contentAwarePositioning: ContentAwarePositioning | null = null;
   private contentAwareSettings: SonicGraphSettings['contentAwarePositioning'] | null = null;
   
+  // Smart Clustering integration
+  private smartClustering: SmartClusteringAlgorithms | null = null;
+  private smartClusteringSettings: SonicGraphSettings['smartClustering'] | null = null;
+  private clusteringResult: ClusteringResult | null = null;
+  private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null = null;
+  
   // Tooltip variables removed - using native browser tooltips
 
   constructor(container: HTMLElement, config: Partial<RenderConfig> = {}) {
@@ -118,6 +125,19 @@ export class GraphRenderer {
       temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 },
       hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 },
       debugVisualization: false
+    });
+
+    // Initialize SmartClustering with default settings (flat structure)
+    this.smartClustering = new SmartClusteringAlgorithms({
+      enabled: false, // Will be enabled via settings
+      algorithm: 'hybrid',
+      weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 },
+      minClusterSize: 3,
+      maxClusters: 12,
+      resolution: 1.0,
+      enableVisualization: true,
+      respectExistingGroups: true,
+      debugMode: false
     });
 
     this.initializeSVG();
@@ -299,6 +319,9 @@ export class GraphRenderer {
     
     // Phase 3.8: Apply initial clustering positioning (one-time)
     this.applyInitialClustering();
+    
+    // Apply Smart Clustering analysis and visualization
+    this.applySmartClustering();
     
     // Initialize all nodes as visible for static rendering
     this.visibleNodes = new Set(nodes.map(n => n.id));
@@ -805,6 +828,15 @@ export class GraphRenderer {
       this.updatePositionsStandard();
     }
     
+    // Update cluster positions if clustering is enabled
+    if (this.smartClustering && this.smartClusteringSettings?.enabled) {
+      // Only update occasionally for performance
+      if (Math.random() < 0.1) { // 10% of ticks
+        this.smartClustering.recalculateClusterPositions();
+        this.renderClusterVisualization();
+      }
+    }
+    
     // Performance optimization: Much less frequent cleanup for better performance
     if (Math.random() < 0.02) { // Only 2% of the time for much better performance
       this.forceRemoveInvalidLinks();
@@ -1171,6 +1203,40 @@ export class GraphRenderer {
   }
 
   /**
+   * Update Smart Clustering settings
+   */
+  updateSmartClusteringSettings(settings: SonicGraphSettings['smartClustering']): void {
+    logger.debug('smart-clustering-settings', 'Updating smart clustering settings', settings);
+    
+    this.smartClusteringSettings = settings;
+    
+    // Update SmartClustering instance if it exists - convert to flat structure
+    if (this.smartClustering) {
+      const flatSettings = {
+        enabled: settings.enabled,
+        algorithm: settings.algorithm,
+        weights: settings.weights,
+        minClusterSize: settings.clustering.minClusterSize,
+        maxClusters: settings.clustering.maxClusters,
+        resolution: settings.clustering.resolution,
+        enableVisualization: settings.visualization.enableVisualization,
+        respectExistingGroups: settings.integration.respectExistingGroups,
+        debugMode: settings.debugging.debugMode
+      };
+      this.smartClustering.updateSettings(flatSettings);
+    }
+    
+    // Re-apply clustering if simulation exists and clustering is enabled
+    if (this.simulation && settings.enabled && this.nodes.length > 0) {
+      this.applySmartClustering(); // Async call, no need to await here
+    } else if (!settings.enabled) {
+      this.clearClusterVisualization();
+    }
+    
+    logger.debug('smart-clustering-settings', 'Smart clustering settings applied', settings);
+  }
+
+  /**
    * Phase 3.8: Apply predefined layout presets
    */
   private applyLayoutPreset(preset: 'loose' | 'balanced' | 'tight' | 'very-tight'): void {
@@ -1445,6 +1511,43 @@ export class GraphRenderer {
   }
 
   /**
+   * Apply Smart Clustering and render cluster visualization
+   */
+  private async applySmartClustering(): Promise<void> {
+    if (!this.smartClustering || !this.smartClusteringSettings?.enabled) {
+      this.clearClusterVisualization();
+      return;
+    }
+    
+    logger.debug('smart-clustering', 'Applying smart clustering', {
+      hasClustering: !!this.smartClustering,
+      enabled: this.smartClusteringSettings?.enabled,
+      algorithm: this.smartClusteringSettings?.algorithm,
+      nodeCount: this.nodes.length,
+      linkCount: this.links.length
+    });
+    
+    try {
+      // Run clustering algorithm
+      this.clusteringResult = await this.smartClustering.clusterGraph(this.nodes, this.links);
+      
+      logger.debug('smart-clustering', 'Clustering completed', {
+        clusterCount: this.clusteringResult.clusters.length,
+        coverage: this.clusteringResult.coverage,
+        modularity: this.clusteringResult.modularity,
+        orphanNodes: this.clusteringResult.orphanNodes.length
+      });
+      
+      // Render cluster visualization
+      this.renderClusterVisualization();
+      
+    } catch (error) {
+      logger.error('smart-clustering', 'Failed to apply smart clustering', (error as Error).message);
+      this.clearClusterVisualization();
+    }
+  }
+
+  /**
    * Update debug visualization elements based on content-aware positioning settings
    */
   private updateDebugVisualization(): void {
@@ -1620,6 +1723,107 @@ export class GraphRenderer {
     const debugGroup = this.g.select('.debug-visualization');
     if (!debugGroup.empty()) {
       debugGroup.remove();
+    }
+  }
+
+  /**
+   * Render cluster visualization with boundaries, colors, and labels
+   */
+  private renderClusterVisualization(): void {
+    if (!this.clusteringResult || !this.smartClusteringSettings?.visualization.enableVisualization) {
+      this.clearClusterVisualization();
+      return;
+    }
+
+    logger.debug('cluster-viz', 'Rendering cluster visualization', {
+      clusterCount: this.clusteringResult.clusters.length,
+      showLabels: this.smartClusteringSettings.visualization.showClusterLabels,
+      boundaryStyle: this.smartClusteringSettings.visualization.clusterBoundaries
+    });
+
+    // Create cluster group if it doesn't exist
+    if (!this.clusterGroup) {
+      // Insert cluster group AFTER nodes so it renders on top
+      this.clusterGroup = this.g.append('g')
+        .attr('class', 'cluster-visualization');
+    }
+
+    // Render cluster boundaries
+    this.renderClusterBoundaries();
+    
+    // Render cluster labels if enabled
+    if (this.smartClusteringSettings.visualization.showClusterLabels) {
+      this.renderClusterLabels();
+    }
+  }
+
+  /**
+   * Render cluster boundaries (circles or convex hulls)
+   */
+  private renderClusterBoundaries(): void {
+    if (!this.clusterGroup || !this.clusteringResult) return;
+
+    const boundarySelection = this.clusterGroup.selectAll('.cluster-boundary')
+      .data(this.clusteringResult.clusters, (d: any) => d.id);
+
+    // Remove old boundaries
+    boundarySelection.exit().remove();
+
+    // Enter new boundaries
+    const boundaryEnter = boundarySelection.enter()
+      .append('circle')
+      .attr('class', 'cluster-boundary')
+      .attr('fill', 'none');
+
+    // Update all boundaries (merge enter and update)
+    const boundaryUpdate = boundarySelection.merge(boundaryEnter);
+
+    // Apply boundary style and type based on settings
+    const boundaryStyle = this.smartClusteringSettings?.visualization.clusterBoundaries || 'subtle';
+    
+    boundaryUpdate
+      .attr('cx', (d: any) => d.centroid.x)
+      .attr('cy', (d: any) => d.centroid.y)
+      .attr('r', (d: any) => d.radius) // Use calculated radius without artificial minimum
+      .attr('stroke', (d: any) => d.color)
+      .attr('data-style', boundaryStyle)
+      .attr('data-type', (d: any) => d.type);
+  }
+
+  /**
+   * Render cluster labels
+   */
+  private renderClusterLabels(): void {
+    if (!this.clusterGroup || !this.clusteringResult) return;
+
+    const labelSelection = this.clusterGroup.selectAll('.cluster-label')
+      .data(this.clusteringResult.clusters, (d: any) => d.id);
+
+    // Remove old labels
+    labelSelection.exit().remove();
+
+    // Enter new labels
+    const labelEnter = labelSelection.enter()
+      .append('text')
+      .attr('class', 'cluster-label');
+
+    // Update all labels (merge enter and update)
+    const labelUpdate = labelSelection.merge(labelEnter);
+    
+    labelUpdate
+      .attr('x', (d: any) => d.centroid.x)
+      .attr('y', (d: any) => d.centroid.y - d.radius + 15) // Position above cluster
+      .attr('data-type', (d: any) => d.type)
+      .text((d: any) => d.label || `Cluster ${d.nodes.length}`);
+  }
+
+  /**
+   * Clear cluster visualization elements
+   */
+  private clearClusterVisualization(): void {
+    if (this.clusterGroup) {
+      this.clusterGroup.remove();
+      this.clusterGroup = null;
     }
   }
 
