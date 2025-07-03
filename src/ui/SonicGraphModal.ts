@@ -11,7 +11,7 @@ import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { MusicalMapper } from '../graph/musical-mapper';
-import { AdaptiveDetailManager, type FilteredGraphData } from '../graph/AdaptiveDetailManager';
+import { AdaptiveDetailManager, FilteredGraphData } from '../graph/AdaptiveDetailManager';
 import { createLucideIcon } from './lucide-icons';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
@@ -811,6 +811,62 @@ export class SonicGraphModal extends Modal {
             text: 'Configure adaptive detail settings in Plugin Settings > Sonic Graph Settings', 
             cls: 'sonic-graph-setting-note' 
         });
+    }
+
+    /**
+     * Apply filtered graph data from adaptive detail manager
+     */
+    private applyFilteredData(filteredData: FilteredGraphData): void {
+        if (!this.graphRenderer) {
+            logger.warn('adaptive-detail', 'Cannot apply filtered data: GraphRenderer not initialized');
+            return;
+        }
+
+        try {
+            // Update the graph renderer with filtered nodes and links
+            this.graphRenderer.render(filteredData.nodes, filteredData.links);
+            
+            // Update stats to reflect the filtering
+            this.updateStatsWithFilteredData(filteredData);
+            
+            logger.debug('adaptive-detail', 'Filtered data applied successfully', {
+                level: filteredData.level,
+                visibleNodes: filteredData.stats.visibleNodes,
+                totalNodes: filteredData.stats.totalNodes,
+                visibleLinks: filteredData.stats.visibleLinks,
+                totalLinks: filteredData.stats.totalLinks,
+                filterReason: filteredData.stats.filterReason
+            });
+        } catch (error) {
+            logger.error('adaptive-detail', 'Failed to apply filtered data', { 
+                error: (error as Error).message,
+                level: filteredData.level 
+            });
+        }
+    }
+
+    /**
+     * Update stats display with filtered data information
+     */
+    private updateStatsWithFilteredData(filteredData: FilteredGraphData): void {
+        if (!this.statsContainer) return;
+
+        // Create adaptive detail stats info if it doesn't exist
+        let adaptiveStatsEl = this.statsContainer.querySelector('.adaptive-detail-stats') as HTMLElement;
+        if (!adaptiveStatsEl) {
+            adaptiveStatsEl = this.statsContainer.createDiv({ cls: 'adaptive-detail-stats' });
+        }
+
+        // Update the adaptive detail stats
+        const { stats } = filteredData;
+        const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
+        const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
+
+        adaptiveStatsEl.innerHTML = `
+            <div class="adaptive-detail-level">Detail: ${filteredData.level}</div>
+            <div class="adaptive-detail-nodes">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
+            <div class="adaptive-detail-links">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
+        `;
     }
 
     /**
