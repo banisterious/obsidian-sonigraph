@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-07-03 15:08:12 UTC
+ * - Generated: 2025-07-03 16:50:35 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6935,7 +6935,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 1501 lines, 33.78 KB */
+/* Component Size: 1635 lines, 36.83 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -7476,6 +7476,12 @@ details.osp-advanced-settings {
   align-items: center;
   justify-content: flex-start;
   gap: 8px; /* Space between icon and title */
+}
+
+.sonic-graph-header-button-group {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between buttons */
 }
 
 .sonic-graph-title {
@@ -8073,6 +8079,71 @@ details.osp-advanced-settings {
   color: var(--text-muted);
 }
 
+/* Weight Sliders for Content-Aware Positioning */
+.sonic-graph-weight-slider-container {
+  position: relative;
+  margin: var(--osp-spacing-sm) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-sm);
+}
+
+.sonic-graph-weight-slider {
+  flex: 1;
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sonic-graph-weight-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--interactive-accent);
+  background: var(--background-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.sonic-graph-weight-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-weight-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-weight-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--osp-spacing-xs);
+}
+
+.sonic-graph-weight-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 /* Form Controls - Updated for right-aligned layout */
 .sonic-graph-setting-input {
   width: 120px; /* Fixed width instead of 100% */
@@ -8436,6 +8507,69 @@ details.osp-advanced-settings {
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
   border: 0 !important;
+}
+
+/* ===================================
+   CONTENT-AWARE POSITIONING DEBUG VISUALIZATION
+   ================================== */
+
+/* Debug visualization group container */
+.debug-visualization {
+  pointer-events: none; /* Don't interfere with graph interactions */
+  z-index: 5; /* Below nodes and links but visible */
+}
+
+/* Temporal zones - circular areas showing time-based clusters */
+.temporal-zone {
+  fill: none;
+  stroke-dasharray: 5, 5;
+  stroke-opacity: 0.3;
+  stroke-width: 2;
+  transition: stroke-opacity 0.3s ease;
+}
+
+/* Temporal zone labels */
+.temporal-zone-label {
+  text-anchor: middle;
+  font-size: 12px;
+  font-weight: bold;
+  fill-opacity: 0.7;
+  pointer-events: none;
+  font-family: var(--font-interface);
+  text-shadow: 0 0 3px var(--background-primary);
+}
+
+/* Tag connections - dashed lines between nodes with shared tags */
+.tag-connection {
+  stroke: #f59e0b; /* Orange for tag connections */
+  stroke-opacity: 0.4;
+  stroke-dasharray: 3, 3;
+  fill: none;
+  transition: stroke-opacity 0.3s ease;
+}
+
+/* Hub indicators - red circles around highly connected nodes */
+.hub-indicator {
+  fill: none;
+  stroke: #ef4444; /* Red for hub indicators */
+  stroke-opacity: 0.6;
+  stroke-width: 3;
+  transition:
+    stroke-opacity 0.3s ease,
+    r 0.3s ease;
+}
+
+/* Debug visualization hover effects */
+.debug-visualization:hover .temporal-zone {
+  stroke-opacity: 0.5;
+}
+
+.debug-visualization:hover .tag-connection {
+  stroke-opacity: 0.6;
+}
+
+.debug-visualization:hover .hub-indicator {
+  stroke-opacity: 0.8;
 }
 
 
@@ -9010,11 +9144,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-07-03 15:08:12 UTC
+ * Build completed: 2025-07-03 16:50:35 UTC
  * Components processed: 19
- * Total lines: 8813
- * Total size: 186.95 KB
- * Build duration: 0.02 seconds
+ * Total lines: 8947
+ * Total size: 189.99 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -9032,7 +9166,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 631 lines, 15.9 KB
- * - sonic-graph.css: 1501 lines, 33.78 KB
+ * - sonic-graph.css: 1635 lines, 36.83 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB
