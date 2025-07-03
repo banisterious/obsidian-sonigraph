@@ -34,8 +34,8 @@ export default class SonigraphPlugin extends Plugin {
 		await this.initializeWhaleIntegration();
 
 		// Add ribbon icon
-		this.addRibbonIcon('keyboard-music', 'Sonigraph: Open Control Panel', () => {
-			this.openControlPanel();
+		this.addRibbonIcon('chart-network', 'Sonigraph: Open Sonic Graph', () => {
+			this.openSonicGraph();
 		});
 
 		// Add command
@@ -141,7 +141,10 @@ export default class SonigraphPlugin extends Plugin {
 				maxSamples: 50
 			};
 
-			await initializeWhaleIntegration(whaleSettings, this.app.vault);
+			// Get plugin directory path for cache storage
+			const pluginDir = `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
+			
+			await initializeWhaleIntegration(whaleSettings, this.app.vault, pluginDir);
 			
 			logger.info('whale-integration', 'Whale integration initialized for per-instrument quality control', {
 				enabled: whaleSettings.useWhaleExternal,
@@ -158,6 +161,17 @@ export default class SonigraphPlugin extends Plugin {
 
 		const modal = new MaterialControlPanelModal(this.app, this);
 		modal.open();
+	}
+
+	public openSonicGraph(): void {
+		logger.info('ui', 'Opening Sonic Graph from ribbon');
+
+		import('./ui/SonicGraphModal').then(({ SonicGraphModal }) => {
+			const modal = new SonicGraphModal(this.app, this);
+			modal.open();
+		}).catch(error => {
+			logger.error('ui', 'Failed to open Sonic Graph:', error);
+		});
 	}
 
 	public openTestSuite(): void {
