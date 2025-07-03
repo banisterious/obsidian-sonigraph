@@ -80,6 +80,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
 							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
 							adaptiveDetail: { enabled: false, mode: 'automatic', thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
+							contentAwarePositioning: { enabled: false, tagInfluence: { strength: 'moderate', weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
 							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true }
 						};
 					}
@@ -145,6 +146,39 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					})
 				);
 		}
+
+		// Content-Aware Positioning - Main Toggle
+		new Setting(sonicGraphSection)
+			.setName('Enable Content-Aware Positioning')
+			.setDesc('Use semantic relationships (tags, creation time, connections) to influence graph layout for more meaningful positioning.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sonicGraphSettings?.contentAwarePositioning?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings = {
+							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true },
+							audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: 'auto' },
+							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
+							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
+							adaptiveDetail: { enabled: false, mode: 'automatic', thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
+							contentAwarePositioning: { enabled: false, tagInfluence: { strength: 'moderate', weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
+							layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: 'balanced', adaptiveScaling: true }
+						};
+					}
+					if (!this.plugin.settings.sonicGraphSettings.contentAwarePositioning) {
+						this.plugin.settings.sonicGraphSettings.contentAwarePositioning = {
+							enabled: false,
+							tagInfluence: { strength: 'moderate', weight: 0.3 },
+							temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 },
+							hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 },
+							debugVisualization: false
+						};
+					}
+					this.plugin.settings.sonicGraphSettings.contentAwarePositioning.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('settings-change', 'Content-aware positioning toggled', { enabled: value });
+				})
+			);
 
 		// --- Advanced Section ---
 		const advancedSection = containerEl.createEl('details', { cls: 'osp-advanced-settings' });

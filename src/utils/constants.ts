@@ -239,6 +239,25 @@ export interface SonicGraphSettings {
 			maximumVisibleNodes: number;  // Override: maximum nodes for performance (-1 = no limit)
 		};
 	};
+	// Phase 3.9: Content-Aware Positioning - Semantic layout forces
+	contentAwarePositioning: {
+		enabled: boolean;                   // Main toggle for content-aware positioning
+		tagInfluence: {
+			strength: 'subtle' | 'moderate' | 'strong'; // Preset strength levels
+			weight: number;                 // Fine-tuning weight (0.0-0.5, default 0.3)
+		};
+		temporalPositioning: {
+			enabled: boolean;               // Enable temporal zones
+			weight: number;                 // Temporal influence weight (0.0-0.3, default 0.1)
+			recentThresholdDays: number;    // Days to consider "recent" (default 30)
+		};
+		hubCentrality: {
+			enabled: boolean;               // Pull important nodes to center
+			weight: number;                 // Hub centrality weight (0.0-0.4, default 0.2)
+			minimumConnections: number;     // Minimum connections to be considered a hub (default 5)
+		};
+		debugVisualization: boolean;       // Show force visualization for debugging
+	};
 	// Phase 3.8: Graph Layout Optimization Settings
 	layout: {
 		clusteringStrength: number;         // Slider for link-based attraction intensity (0.0-0.3)
@@ -409,6 +428,25 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				minimumVisibleNodes: 10,    // Always show at least 10 nodes for orientation
 				maximumVisibleNodes: -1     // No maximum limit by default
 			}
+		},
+		// Phase 3.9: Content-Aware Positioning - Default Settings
+		contentAwarePositioning: {
+			enabled: false,                 // Disabled by default for experimentation
+			tagInfluence: {
+				strength: 'moderate',       // Balanced default strength
+				weight: 0.3                 // 30% influence for tag attraction
+			},
+			temporalPositioning: {
+				enabled: true,              // Enabled when content-aware is on
+				weight: 0.1,                // 10% influence for temporal positioning
+				recentThresholdDays: 30     // 30 days considered "recent"
+			},
+			hubCentrality: {
+				enabled: true,              // Enabled when content-aware is on
+				weight: 0.2,                // 20% influence for hub centrality
+				minimumConnections: 5       // 5+ connections makes a hub
+			},
+			debugVisualization: false      // Debug visualization off by default
 		},
 		// Phase 3.8: Graph Layout Optimization Default Settings
 		layout: {

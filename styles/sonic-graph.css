@@ -539,6 +539,12 @@
   gap: 8px; /* Space between icon and title */
 }
 
+.sonic-graph-header-button-group {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between buttons */
+}
+
 .sonic-graph-title {
   margin: 0;
   font-family: var(--font-interface);
@@ -1130,6 +1136,71 @@
 }
 
 .sonic-graph-density-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Weight Sliders for Content-Aware Positioning */
+.sonic-graph-weight-slider-container {
+  position: relative;
+  margin: var(--osp-spacing-sm) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--osp-spacing-sm);
+}
+
+.sonic-graph-weight-slider {
+  flex: 1;
+  height: 4px;
+  background: var(--background-modifier-border);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sonic-graph-weight-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--interactive-accent);
+  background: var(--background-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.sonic-graph-weight-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-weight-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  cursor: pointer;
+  border: 2px solid var(--background-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sonic-graph-weight-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--osp-spacing-xs);
+}
+
+.sonic-graph-weight-label {
   font-size: 10px;
   color: var(--text-muted);
 }
