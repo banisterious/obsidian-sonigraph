@@ -7,12 +7,12 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 <table align="center">
 <tr>
 <td align="center" width="50%">
-<img src="docs/images/sonigraph-sonic-graph/sonigraph-sonic-graph.png" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="600"/>
+<img src="docs/images/sonigraph-sonic-graph/sonigraph-sonic-graph.png" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
 <br/>
 <em>Sonic Graph: Smart Clustering & Visual Enhancement</em>
 </td>
 <td align="center" width="50%">
-<img src="docs/images/sonigraph-control-center.gif" alt="Animated demonstration of the Sonigraph Control Center" width="600"/>
+<img src="docs/images/sonigraph-control-center.gif" alt="Animated demonstration of the Sonigraph Control Center" width="100%" style="max-width: 600px;"/>
 <br/>
 <em>Control Center: 34-Instrument Orchestra Management</em>
 </td>
