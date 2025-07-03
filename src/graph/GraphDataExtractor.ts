@@ -107,8 +107,20 @@ export class GraphDataExtractor {
       logger.info('graph-extraction-nodes', `Node extraction completed: ${nodes.length} nodes`);
       
       logger.info('graph-extraction-links', 'Starting link extraction');
-      const links = this.extractLinks(nodes);
-      logger.info('graph-extraction-links', `Link extraction completed: ${links.length} links`);
+      let links: GraphLink[] = [];
+      try {
+        links = this.extractLinks(nodes);
+        logger.info('graph-extraction-links', `Link extraction completed: ${links.length} links`);
+      } catch (error) {
+        logger.error('graph-extraction-links', 'Link extraction failed:', error);
+        links = []; // Empty links array as fallback
+        logger.info('graph-extraction-links', `Link extraction completed with fallback: ${links.length} links`);
+      }
+      
+      // Always populate node connections for hub highlighting
+      logger.info('graph-extraction-connections', 'Populating node connections for hub highlighting');
+      this.populateNodeConnections(nodes, links);
+      logger.info('graph-extraction-connections', 'Node connections populated');
       
       // Filter orphans if showOrphans is disabled
       let filteredNodes = nodes;
@@ -401,6 +413,16 @@ export class GraphDataExtractor {
       linkTypes: this.summarizeLinkTypes(links),
       performanceGain: 'Using MetadataCache.resolvedLinks for instant access'
     });
+
+    // Debug: Log sample links to understand what's being created
+    if (links.length > 0) {
+      const sampleLinks = links.slice(0, 3);
+      sampleLinks.forEach(link => {
+        logger.debug('sample-link', `Link: ${typeof link.source === 'string' ? link.source : link.source.id} -> ${typeof link.target === 'string' ? link.target : link.target.id} (${link.type})`);
+      });
+    } else {
+      logger.debug('no-links', 'No links were created - this explains why all nodes have 0 connections');
+    }
     
     return links;
   }
@@ -567,30 +589,34 @@ export class GraphDataExtractor {
   }
 
   /**
+   * Populate each node's connections array with actual connection data
+   */
+  private populateNodeConnections(nodes: GraphNode[], links: GraphLink[]): void {
+    // Update each node's connections array with actual connection data
+    for (const node of nodes) {
+      // Create array of connected node IDs
+      node.connections = [];
+      for (const link of links) {
+        const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+        const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+        
+        if (sourceId === node.id && !node.connections.includes(targetId)) {
+          node.connections.push(targetId);
+        } else if (targetId === node.id && !node.connections.includes(sourceId)) {
+          node.connections.push(sourceId);
+        }
+      }
+    }
+  }
+
+  /**
    * Filter out orphan nodes (nodes with few or no connections)
    */
   private filterOrphans(nodes: GraphNode[], links: GraphLink[]): GraphNode[] {
-    // Count connections for each node
-    const connectionCounts = new Map<string, number>();
-    
-    // Initialize all nodes with 0 connections
-    for (const node of nodes) {
-      connectionCounts.set(node.id, 0);
-    }
-    
-    // Count connections from links
-    for (const link of links) {
-      const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
-      const targetId = typeof link.target === 'string' ? link.target : link.target.id;
-      
-      connectionCounts.set(sourceId, (connectionCounts.get(sourceId) || 0) + 1);
-      connectionCounts.set(targetId, (connectionCounts.get(targetId) || 0) + 1);
-    }
-    
     // Filter nodes: keep nodes with 1 or more connections (orphans = 0 connections)
     const ORPHAN_THRESHOLD = 1;
     const filteredNodes = nodes.filter(node => {
-      const connections = connectionCounts.get(node.id) || 0;
+      const connections = node.connections.length;
       return connections >= ORPHAN_THRESHOLD;
     });
     

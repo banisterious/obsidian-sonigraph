@@ -9853,8 +9853,18 @@ var init_GraphDataExtractor = __esm({
           const nodes = await this.extractNodes();
           logger5.info("graph-extraction-nodes", `Node extraction completed: ${nodes.length} nodes`);
           logger5.info("graph-extraction-links", "Starting link extraction");
-          const links = this.extractLinks(nodes);
-          logger5.info("graph-extraction-links", `Link extraction completed: ${links.length} links`);
+          let links = [];
+          try {
+            links = this.extractLinks(nodes);
+            logger5.info("graph-extraction-links", `Link extraction completed: ${links.length} links`);
+          } catch (error) {
+            logger5.error("graph-extraction-links", "Link extraction failed:", error);
+            links = [];
+            logger5.info("graph-extraction-links", `Link extraction completed with fallback: ${links.length} links`);
+          }
+          logger5.info("graph-extraction-connections", "Populating node connections for hub highlighting");
+          this.populateNodeConnections(nodes, links);
+          logger5.info("graph-extraction-connections", "Node connections populated");
           let filteredNodes = nodes;
           if (!this.filterSettings.showOrphans) {
             logger5.info("graph-extraction-orphan-filter", "Filtering orphan nodes");
@@ -10083,6 +10093,14 @@ var init_GraphDataExtractor = __esm({
           linkTypes: this.summarizeLinkTypes(links),
           performanceGain: "Using MetadataCache.resolvedLinks for instant access"
         });
+        if (links.length > 0) {
+          const sampleLinks = links.slice(0, 3);
+          sampleLinks.forEach((link) => {
+            logger5.debug("sample-link", `Link: ${typeof link.source === "string" ? link.source : link.source.id} -> ${typeof link.target === "string" ? link.target : link.target.id} (${link.type})`);
+          });
+        } else {
+          logger5.debug("no-links", "No links were created - this explains why all nodes have 0 connections");
+        }
         return links;
       }
       /**
@@ -10221,22 +10239,29 @@ var init_GraphDataExtractor = __esm({
         return { start: earliest, end: latest };
       }
       /**
+       * Populate each node's connections array with actual connection data
+       */
+      populateNodeConnections(nodes, links) {
+        for (const node of nodes) {
+          node.connections = [];
+          for (const link of links) {
+            const sourceId = typeof link.source === "string" ? link.source : link.source.id;
+            const targetId = typeof link.target === "string" ? link.target : link.target.id;
+            if (sourceId === node.id && !node.connections.includes(targetId)) {
+              node.connections.push(targetId);
+            } else if (targetId === node.id && !node.connections.includes(sourceId)) {
+              node.connections.push(sourceId);
+            }
+          }
+        }
+      }
+      /**
        * Filter out orphan nodes (nodes with few or no connections)
        */
       filterOrphans(nodes, links) {
-        const connectionCounts = /* @__PURE__ */ new Map();
-        for (const node of nodes) {
-          connectionCounts.set(node.id, 0);
-        }
-        for (const link of links) {
-          const sourceId = typeof link.source === "string" ? link.source : link.source.id;
-          const targetId = typeof link.target === "string" ? link.target : link.target.id;
-          connectionCounts.set(sourceId, (connectionCounts.get(sourceId) || 0) + 1);
-          connectionCounts.set(targetId, (connectionCounts.get(targetId) || 0) + 1);
-        }
         const ORPHAN_THRESHOLD = 1;
         const filteredNodes = nodes.filter((node) => {
-          const connections = connectionCounts.get(node.id) || 0;
+          const connections = node.connections.length;
           return connections >= ORPHAN_THRESHOLD;
         });
         logger5.debug("orphan-filter", `Filtered orphans: ${nodes.length} \u2192 ${filteredNodes.length} nodes (orphans = files with 0 connections)`);
@@ -10364,9 +10389,10 @@ var init_GraphRenderer = __esm({
         ).strength(this.forceConfig.centerStrength)).force(
           "collision",
           collide_default().radius((d) => {
-            const baseRadius = this.forceConfig.collisionRadius;
-            const randomFactor = 0.7 + Math.random() * 0.6;
-            return baseRadius * randomFactor;
+            const nodeSize = this.calculateNodeSize(d);
+            const padding = 2;
+            const randomFactor = 0.9 + Math.random() * 0.2;
+            return (nodeSize + padding) * randomFactor;
           }).strength(0.8)
           // Slightly softer collision for more organic overlap
         ).force("jitter", (alpha) => {
@@ -10401,6 +10427,14 @@ var init_GraphRenderer = __esm({
        */
       render(nodes, links) {
         logger6.debug("renderer", `Rendering graph: ${nodes.length} nodes, ${links.length} links`);
+        const sampleNodes = nodes.slice(0, 5);
+        sampleNodes.forEach((node) => {
+          var _a;
+          logger6.debug("node-data", `Sample node: ${node.title}, connections: ${((_a = node.connections) == null ? void 0 : _a.length) || 0}`, {
+            connections: node.connections,
+            type: node.type
+          });
+        });
         this.nodes = nodes;
         this.links = links;
         this.initializeNodeCoordinates();
@@ -10505,8 +10539,137 @@ var init_GraphRenderer = __esm({
         return "weak";
       }
       /**
+       * Hub Highlighting: Calculate node size based on connection count (Obsidian Graph style)
+       */
+      calculateNodeSize(node) {
+        const connections = node.connections.length;
+        const baseSize = 5;
+        const maxSize = 24;
+        if (connections === 0) {
+          logger6.debug("node-sizing", `Node ${node.title} has 0 connections, size: ${baseSize}`);
+          return baseSize;
+        }
+        const sizeMultiplier = Math.sqrt(connections);
+        const finalSize = Math.min(baseSize + sizeMultiplier * 3, maxSize);
+        logger6.debug("node-sizing", `Node ${node.title} has ${connections} connections, multiplier: ${sizeMultiplier.toFixed(2)}, final size: ${finalSize.toFixed(2)}`);
+        return finalSize;
+      }
+      /**
+       * Hub Highlighting: Determine hub tier based on connection count
+       */
+      getHubTier(node) {
+        const connections = node.connections.length;
+        if (connections >= 20) {
+          return {
+            name: "mega-hub",
+            minConnections: 20,
+            visualTreatment: {
+              size: 16,
+              strokeWidth: 3,
+              strokeColor: "#ff6b35",
+              glowEffect: true,
+              animation: "pulse"
+            }
+          };
+        } else if (connections >= 10) {
+          return {
+            name: "major-hub",
+            minConnections: 10,
+            visualTreatment: {
+              size: 12,
+              strokeWidth: 2,
+              strokeColor: "#f7931e",
+              glowEffect: false,
+              animation: "none"
+            }
+          };
+        } else if (connections >= 5) {
+          return {
+            name: "minor-hub",
+            minConnections: 5,
+            visualTreatment: {
+              size: 8,
+              strokeWidth: 1.5,
+              strokeColor: "#4f46e5",
+              glowEffect: false,
+              animation: "none"
+            }
+          };
+        } else {
+          return {
+            name: "regular-node",
+            minConnections: 0,
+            visualTreatment: {
+              size: 4,
+              strokeWidth: 1,
+              strokeColor: "",
+              glowEffect: false,
+              animation: "none"
+            }
+          };
+        }
+      }
+      /**
+       * Hub Highlighting: Get CSS class for hub styling
+       */
+      getHubClass(node) {
+        const tier = this.getHubTier(node);
+        return `hub-${tier.name}`;
+      }
+      /**
+       * Hub Highlighting: Temporarily boost visual prominence of hub on hover
+       */
+      temporaryHubBoost(nodeElement, node) {
+        const hubTier = this.getHubTier(node);
+        const currentSize = this.calculateNodeSize(node);
+        const boostedSize = Math.min(currentSize * 1.2, 20);
+        nodeElement.select("circle").transition().duration(200).attr("r", boostedSize).style("filter", `brightness(1.3) ${hubTier.visualTreatment.glowEffect ? "drop-shadow(0 0 8px currentColor)" : ""}`);
+        nodeElement.select("text").transition().duration(200).attr("dy", boostedSize + 15);
+      }
+      /**
+       * Hub Highlighting: Remove temporary boost effects
+       */
+      removeHubBoost(nodeElement) {
+        nodeElement.select("circle").transition().duration(200).attr("r", (d) => this.calculateNodeSize(d)).style("filter", null);
+        nodeElement.select("text").transition().duration(200).attr("dy", (d) => this.calculateNodeSize(d) + 15);
+      }
+      /**
+       * Hub Highlighting: Show enhanced tooltip for hub nodes
+       */
+      showHubTooltip(node, _event) {
+        const hubTier = this.getHubTier(node);
+        const fileName = node.title.split("/").pop() || node.title;
+        const connections = node.connections.length;
+        logger6.debug("hub-tooltip", `Showing hub tooltip for ${fileName}`, {
+          connections,
+          hubTier: hubTier.name,
+          tierDescription: this.getHubTierDescription(hubTier)
+        });
+      }
+      /**
+       * Hub Highlighting: Hide hub tooltip
+       */
+      hideHubTooltip() {
+      }
+      /**
+       * Hub Highlighting: Get human-readable description of hub tier
+       */
+      getHubTierDescription(hubTier) {
+        switch (hubTier.name) {
+          case "mega-hub":
+            return "Major Knowledge Hub (20+ connections)";
+          case "major-hub":
+            return "Important Hub (10-19 connections)";
+          case "minor-hub":
+            return "Knowledge Connector (5-9 connections)";
+          default:
+            return "Regular Note";
+        }
+      }
+      /**
        * Render nodes
        * Performance optimization: Only render visible nodes with valid coordinates
+       * Hub highlighting: Connection-based sizing and styling
        */
       renderNodes() {
         const validNodes = this.nodes.filter((node) => {
@@ -10515,12 +10678,22 @@ var init_GraphRenderer = __esm({
         logger6.debug("node-filtering", `Rendering ${validNodes.length} valid nodes out of ${this.nodes.length} total nodes`);
         const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node").data(validNodes, (d) => d.id);
         const nodeEnter = nodeSelection.enter().append("g").attr("class", "sonigraph-temporal-node appearing").style("opacity", 0).call(this.setupNodeInteractions.bind(this));
-        nodeEnter.append("circle").attr("r", this.config.nodeRadius).attr("class", (d) => `${d.type}-node`).attr("title", (d) => {
+        nodeEnter.append("circle").attr("r", (d) => this.calculateNodeSize(d)).attr("class", (d) => `${d.type}-node ${this.getHubClass(d)}`).attr("data-connections", (d) => d.connections.length).attr("data-hub-tier", (d) => this.getHubTier(d).name);
+        nodeEnter.append("title").text((d) => {
           const fileName = d.title.split("/").pop() || d.title;
-          return fileName;
+          const connections = d.connections.length;
+          return `${fileName} (${connections} connection${connections !== 1 ? "s" : ""})`;
         });
-        nodeEnter.append("text").attr("dy", this.config.nodeRadius + 15).attr("class", this.config.showLabels ? "labels-visible" : "labels-hidden").text((d) => d.title);
+        nodeEnter.append("text").attr("dy", (d) => this.calculateNodeSize(d) + 15).attr("class", this.config.showLabels ? "labels-visible" : "labels-hidden").text((d) => d.title);
         logger6.debug("renderer", `Node labels created with showLabels: ${this.config.showLabels}`);
+        nodeSelection.selectAll("circle").attr("r", (d) => this.calculateNodeSize(d)).attr("class", (d) => `${d.type}-node ${this.getHubClass(d)}`).attr("data-connections", (d) => d.connections.length).attr("data-hub-tier", (d) => this.getHubTier(d).name);
+        nodeSelection.selectAll("title").text((d) => {
+          const node = d;
+          const fileName = node.title.split("/").pop() || node.title;
+          const connections = node.connections.length;
+          return `${fileName} (${connections} connection${connections !== 1 ? "s" : ""})`;
+        });
+        nodeSelection.selectAll("text").attr("dy", (d) => this.calculateNodeSize(d) + 15);
         nodeEnter.transition().duration(500).style("opacity", 1).on("end", function() {
           select_default2(this).classed("appearing", false);
         });
@@ -10529,14 +10702,33 @@ var init_GraphRenderer = __esm({
       }
       /**
        * Setup node interactions (hover, click, tooltips)
+       * Enhanced with hub highlighting features
        */
       setupNodeInteractions(selection2) {
-        selection2.on("mouseover", (_, d) => {
+        selection2.on("mouseover", (event, d) => {
           this.highlightConnectedLinks(d.id, true);
-        }).on("mouseout", (_, d) => {
+          const hubTier = this.getHubTier(d);
+          const nodeElement = select_default2(event.currentTarget);
+          nodeElement.classed("hub-hovered", true);
+          if (hubTier.name === "major-hub" || hubTier.name === "mega-hub") {
+            this.temporaryHubBoost(nodeElement, d);
+          }
+          if (d.connections.length >= 5) {
+            this.showHubTooltip(d, event);
+          }
+        }).on("mouseout", (event, d) => {
           this.highlightConnectedLinks(d.id, false);
+          const nodeElement = select_default2(event.currentTarget);
+          nodeElement.classed("hub-hovered", false);
+          this.removeHubBoost(nodeElement);
+          this.hideHubTooltip();
         }).on("click", (_, d) => {
-          logger6.debug("renderer", `Node clicked: ${d.title}`, { node: d });
+          const hubTier = this.getHubTier(d);
+          logger6.debug("renderer", `Node clicked: ${d.title}`, {
+            node: d,
+            connections: d.connections.length,
+            hubTier: hubTier.name
+          });
         });
       }
       /**
@@ -10641,7 +10833,7 @@ var init_GraphRenderer = __esm({
         if (newConfig.nodeRadius !== void 0) {
           const nodeSelection = this.g.select(".sonigraph-temporal-nodes").selectAll(".sonigraph-temporal-node");
           if (!nodeSelection.empty()) {
-            nodeSelection.selectAll("circle").attr("r", this.config.nodeRadius);
+            nodeSelection.selectAll("circle").attr("r", (d) => this.calculateNodeSize(d));
           }
         }
         logger6.debug("renderer", "Configuration updated", { config: this.config });
@@ -10651,7 +10843,11 @@ var init_GraphRenderer = __esm({
        */
       updateForces(newForceConfig) {
         this.forceConfig = { ...this.forceConfig, ...newForceConfig };
-        this.simulation.force("charge", manyBody_default().strength(this.forceConfig.chargeStrength)).force("collision", collide_default().radius(this.forceConfig.collisionRadius)).force("center", center_default(this.config.width / 2, this.config.height / 2).strength(this.forceConfig.centerStrength));
+        this.simulation.force("charge", manyBody_default().strength(this.forceConfig.chargeStrength)).force("collision", collide_default().radius((d) => {
+          const nodeSize = this.calculateNodeSize(d);
+          const padding = 2;
+          return nodeSize + padding;
+        })).force("center", center_default(this.config.width / 2, this.config.height / 2).strength(this.forceConfig.centerStrength));
         if (this.simulation.force("link")) {
           this.simulation.force("link").strength(this.forceConfig.linkStrength);
         }
@@ -11026,7 +11222,11 @@ var init_GraphRenderer = __esm({
         (_a = this.simulation.force("charge")) == null ? void 0 : _a.strength((d) => {
           return d.connections.length > 0 ? this.forceConfig.chargeStrength : this.forceConfig.orphanRepulsion;
         });
-        (_b = this.simulation.force("collision")) == null ? void 0 : _b.radius(this.forceConfig.collisionRadius);
+        (_b = this.simulation.force("collision")) == null ? void 0 : _b.radius((d) => {
+          const nodeSize = this.calculateNodeSize(d);
+          const padding = 2;
+          return nodeSize + padding;
+        });
         (_d = (_c = this.simulation.force("link")) == null ? void 0 : _c.distance((d) => {
           return d.strength > 0.7 ? this.forceConfig.strongLinkDistance : this.forceConfig.weakLinkDistance;
         })) == null ? void 0 : _d.strength((d) => d.strength * this.forceConfig.linkStrength * 1.5);
