@@ -299,6 +299,7 @@ src/graph/
 ├── GraphDataExtractor.ts     # Vault data extraction and filtering
 ├── GraphRenderer.ts          # D3.js-based visualization
 ├── TemporalGraphAnimator.ts  # Timeline animation system
+├── ContentAwarePositioning.ts # Semantic force positioning system
 ├── musical-mapper.ts         # Graph-to-audio mapping
 └── types.ts                  # Graph data interfaces
 
@@ -312,6 +313,7 @@ src/ui/
 **Key Features:**
 - **Temporal Animation**: Time-based node appearance with intelligent spacing
 - **Dynamic Audio Mapping**: Respects user's Control Center instrument selections
+- **Content-Aware Positioning**: Semantic forces based on tags, time, and hub centrality
 - **Content Filtering**: Advanced exclusion system with native Obsidian autocomplete
 - **Force-Directed Layout**: D3.js simulation with organic clustering
 - **Real-time Synchronization**: Visual and audio events perfectly synchronized
@@ -664,7 +666,60 @@ export class SonicGraphModal extends Modal {
 }
 ```
 
-### 3.8. Adaptive Detail Levels System
+### 3.8. Content-Aware Positioning System
+
+**Phase 3.8 Implementation (July 2025):**
+The Content-Aware Positioning system enhances the force-directed graph layout by incorporating semantic relationships to create more meaningful node positioning that reflects the actual structure and relationships within your knowledge graph.
+
+**ContentAwarePositioning Class:**
+```typescript
+export class ContentAwarePositioning {
+  constructor(
+    private nodes: GraphNode[],
+    private settings: ContentAwarePositioningSettings
+  ) {}
+
+  applyForcesToSimulation(simulation: d3.Simulation<GraphNode, any>): void {
+    if (!this.settings.enabled) return;
+
+    // Apply semantic forces on top of standard physics
+    this.applyTagInfluenceForce(simulation);     // Pull tagged files together
+    this.applyTemporalPositioningForce(simulation); // Organize by creation time
+    this.applyHubCentralityForce(simulation);    // Hub nodes toward center
+  }
+}
+```
+
+**Three Semantic Force Types:**
+
+1. **Tag Influence Force**: Creates virtual connections between files sharing tags, with strength proportional to tag overlap percentage
+2. **Temporal Positioning Force**: Organizes nodes along temporal axis - recent files gravitate toward center, older files toward periphery
+3. **Hub Centrality Force**: Pulls highly connected nodes toward the graph center, creating natural hub-and-spoke patterns
+
+**Real-time Control Interface:**
+```typescript
+// Fine-tuning sliders in Sonic Graph Modal settings panel
+interface ContentAwareControls {
+  tagInfluenceWeight: number;      // 0.0 - 1.0 (default: 0.3)
+  temporalPositioningWeight: number; // 0.0 - 0.3 (default: 0.1) 
+  hubCentralityWeight: number;     // 0.0 - 0.5 (default: 0.2)
+  debugVisualization: boolean;     // Visual debugging overlay
+}
+```
+
+**Debug Visualization System:**
+When enabled, displays real-time visual indicators of force influences:
+- **Temporal Zones**: Colored circles showing recent/established/archive areas (green/blue/gray)
+- **Tag Connections**: Orange dashed lines between nodes with shared tags
+- **Hub Indicators**: Red circles around highly connected nodes scaled by centrality
+
+**Integration Points:**
+- **Plugin Settings**: Main toggle alongside Adaptive Detail Levels and other core features
+- **Sonic Graph Modal**: Fine-tuning controls with real-time preview in settings panel
+- **GraphRenderer**: Force application and debug visualization rendering during simulation ticks
+- **Performance**: Optimized algorithms that maintain smooth 60fps rendering performance
+
+### 3.9. Adaptive Detail Levels System
 
 **Phase 3.9 Enhancement (July 2025):**
 The Adaptive Detail Levels system automatically adjusts graph complexity based on zoom level to maintain performance and visual clarity.

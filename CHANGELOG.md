@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Content-Aware Positioning System
+
+#### Semantic Graph Layout
+- **Tag Influence Force**: Files with shared tags are pulled together using configurable semantic attraction forces
+- **Temporal Positioning**: Recent files gravitate toward center while older files settle toward archive regions
+- **Hub Centrality Force**: Highly connected nodes are pulled toward graph center creating natural hub-and-spoke patterns
+- **Real-time Weight Adjustment**: Fine-tuning sliders in Sonic Graph settings panel with immediate preview
+- **Debug Visualization**: Optional overlay showing temporal zones (green/blue/gray), tag connections (orange), and hub indicators (red)
+
+#### Integration & Settings
+- **Plugin Settings Toggle**: Main "Enable Content-Aware Positioning" toggle alongside Adaptive Detail Levels
+- **Modal Controls**: Comprehensive fine-tuning interface in Sonic Graph settings panel
+- **Real-time Preview**: All changes apply immediately to graph without restart
+- **Performance Optimized**: Semantic forces maintain smooth 60fps rendering performance
+
+#### Technical Implementation
+- **ContentAwarePositioning Class**: Core semantic force algorithms with D3.js integration
+- **Force Types**: Three configurable force systems working in harmony with physics simulation
+- **Debug System**: Real-time visual debugging with SVG overlays and CSS styling
+- **Settings Architecture**: Extended SonicGraphSettings interface with comprehensive configuration options
+
 ### Enhanced - Sonic Graph Adaptive Detail Levels & Modal Interface
 
 #### Zoom Stability Improvements
