@@ -275,4 +275,4 @@
 
 ---
 
-*For detailed feature specifications, see [Feature Catalog](feature-catalog.md). For system architecture, see [Architecture Documentation](../architecture.md).*
+*For detailed feature specifications, see [Feature Catalog](feature-catalog.md). For system architecture, see [Architecture Documentation](../architecture/overview.md).*
