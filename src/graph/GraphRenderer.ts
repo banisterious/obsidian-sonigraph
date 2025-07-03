@@ -27,6 +27,21 @@ export interface ForceConfig {
   separationStrength: number;    // Force between distinct groups
 }
 
+// Hub Highlighting interfaces
+interface NodeStyling {
+  size: number;
+  strokeWidth: number;
+  strokeColor: string;
+  glowEffect: boolean;
+  animation: 'pulse' | 'none';
+}
+
+interface HubTier {
+  name: string;
+  minConnections: number;
+  visualTreatment: NodeStyling;
+}
+
 export class GraphRenderer {
   private container: HTMLElement;
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
@@ -170,10 +185,11 @@ export class GraphRenderer {
       ).strength(this.forceConfig.centerStrength))
       .force('collision', d3.forceCollide<GraphNode>()
         .radius((d: GraphNode) => {
-          // Add randomness to collision radius for organic clustering
-          const baseRadius = this.forceConfig.collisionRadius;
-          const randomFactor = 0.7 + (Math.random() * 0.6); // 0.7 to 1.3 multiplier
-          return baseRadius * randomFactor;
+          // Hub highlighting: Use actual node size plus padding for collision
+          const nodeSize = this.calculateNodeSize(d);
+          const padding = 2; // Small padding between nodes
+          const randomFactor = 0.9 + (Math.random() * 0.2); // 0.9 to 1.1 multiplier for organic feel
+          return (nodeSize + padding) * randomFactor;
         })
         .strength(0.8) // Slightly softer collision for more organic overlap
       )
@@ -224,6 +240,15 @@ export class GraphRenderer {
    */
   render(nodes: GraphNode[], links: GraphLink[]): void {
     logger.debug('renderer', `Rendering graph: ${nodes.length} nodes, ${links.length} links`);
+    
+    // Debug: Check node connection data
+    const sampleNodes = nodes.slice(0, 5);
+    sampleNodes.forEach(node => {
+      logger.debug('node-data', `Sample node: ${node.title}, connections: ${node.connections?.length || 0}`, { 
+        connections: node.connections,
+        type: node.type 
+      });
+    });
     
     this.nodes = nodes;
     this.links = links;
@@ -403,8 +428,175 @@ export class GraphRenderer {
   }
 
   /**
+   * Hub Highlighting: Calculate node size based on connection count (Obsidian Graph style)
+   */
+  private calculateNodeSize(node: GraphNode): number {
+    const connections = node.connections.length;
+    const baseSize = 5; // Larger minimum for better visibility
+    const maxSize = 24; // Larger maximum for dramatic variation
+    
+    // More dramatic scaling like Obsidian Graph
+    if (connections === 0) {
+      logger.debug('node-sizing', `Node ${node.title} has 0 connections, size: ${baseSize}`);
+      return baseSize;
+    }
+    
+    // Square root scaling for dramatic size differences
+    const sizeMultiplier = Math.sqrt(connections);
+    const finalSize = Math.min(baseSize + (sizeMultiplier * 3), maxSize);
+    
+    logger.debug('node-sizing', `Node ${node.title} has ${connections} connections, multiplier: ${sizeMultiplier.toFixed(2)}, final size: ${finalSize.toFixed(2)}`);
+    return finalSize;
+  }
+
+  /**
+   * Hub Highlighting: Determine hub tier based on connection count
+   */
+  private getHubTier(node: GraphNode): HubTier {
+    const connections = node.connections.length;
+    
+    if (connections >= 20) {
+      return {
+        name: 'mega-hub',
+        minConnections: 20,
+        visualTreatment: {
+          size: 16,
+          strokeWidth: 3,
+          strokeColor: '#ff6b35',
+          glowEffect: true,
+          animation: 'pulse'
+        }
+      };
+    } else if (connections >= 10) {
+      return {
+        name: 'major-hub',
+        minConnections: 10,
+        visualTreatment: {
+          size: 12,
+          strokeWidth: 2,
+          strokeColor: '#f7931e',
+          glowEffect: false,
+          animation: 'none'
+        }
+      };
+    } else if (connections >= 5) {
+      return {
+        name: 'minor-hub',
+        minConnections: 5,
+        visualTreatment: {
+          size: 8,
+          strokeWidth: 1.5,
+          strokeColor: '#4f46e5',
+          glowEffect: false,
+          animation: 'none'
+        }
+      };
+    } else {
+      return {
+        name: 'regular-node',
+        minConnections: 0,
+        visualTreatment: {
+          size: 4,
+          strokeWidth: 1,
+          strokeColor: '',
+          glowEffect: false,
+          animation: 'none'
+        }
+      };
+    }
+  }
+
+  /**
+   * Hub Highlighting: Get CSS class for hub styling
+   */
+  private getHubClass(node: GraphNode): string {
+    const tier = this.getHubTier(node);
+    return `hub-${tier.name}`;
+  }
+
+  /**
+   * Hub Highlighting: Temporarily boost visual prominence of hub on hover
+   */
+  private temporaryHubBoost(nodeElement: d3.Selection<d3.BaseType, unknown, null, undefined>, node: GraphNode): void {
+    const hubTier = this.getHubTier(node);
+    const currentSize = this.calculateNodeSize(node);
+    const boostedSize = Math.min(currentSize * 1.2, 20); // 20% boost, max 20px
+    
+    nodeElement.select('circle')
+      .transition()
+      .duration(200)
+      .attr('r', boostedSize)
+      .style('filter', `brightness(1.3) ${hubTier.visualTreatment.glowEffect ? 'drop-shadow(0 0 8px currentColor)' : ''}`);
+    
+    // Update label position for boosted size
+    nodeElement.select('text')
+      .transition()
+      .duration(200)
+      .attr('dy', boostedSize + 15);
+  }
+
+  /**
+   * Hub Highlighting: Remove temporary boost effects
+   */
+  private removeHubBoost(nodeElement: d3.Selection<d3.BaseType, unknown, null, undefined>): void {
+    nodeElement.select('circle')
+      .transition()
+      .duration(200)
+      .attr('r', (d: any) => this.calculateNodeSize(d as GraphNode))
+      .style('filter', null); // Reset to CSS filter
+    
+    // Reset label position
+    nodeElement.select('text')
+      .transition()
+      .duration(200)
+      .attr('dy', (d: any) => this.calculateNodeSize(d as GraphNode) + 15);
+  }
+
+  /**
+   * Hub Highlighting: Show enhanced tooltip for hub nodes
+   */
+  private showHubTooltip(node: GraphNode, _event: MouseEvent): void {
+    // For now, we'll enhance the native tooltip
+    // In the future, this could create a custom tooltip element
+    const hubTier = this.getHubTier(node);
+    const fileName = node.title.split('/').pop() || node.title;
+    const connections = node.connections.length;
+    
+    logger.debug('hub-tooltip', `Showing hub tooltip for ${fileName}`, {
+      connections,
+      hubTier: hubTier.name,
+      tierDescription: this.getHubTierDescription(hubTier)
+    });
+  }
+
+  /**
+   * Hub Highlighting: Hide hub tooltip
+   */
+  private hideHubTooltip(): void {
+    // For now, this is a no-op since we're using native tooltips
+    // In the future, this would hide custom tooltip elements
+  }
+
+  /**
+   * Hub Highlighting: Get human-readable description of hub tier
+   */
+  private getHubTierDescription(hubTier: HubTier): string {
+    switch (hubTier.name) {
+      case 'mega-hub':
+        return 'Major Knowledge Hub (20+ connections)';
+      case 'major-hub':
+        return 'Important Hub (10-19 connections)';
+      case 'minor-hub':
+        return 'Knowledge Connector (5-9 connections)';
+      default:
+        return 'Regular Note';
+    }
+  }
+
+  /**
    * Render nodes
    * Performance optimization: Only render visible nodes with valid coordinates
+   * Hub highlighting: Connection-based sizing and styling
    */
   private renderNodes(): void {
     // Performance optimization: Filter nodes to only include visible ones with valid coordinates
@@ -426,22 +618,48 @@ export class GraphRenderer {
       .style('opacity', 0)
       .call(this.setupNodeInteractions.bind(this));
 
-    // Add circles to new nodes with tooltips
+    // Add circles to new nodes with connection-based sizing and hub classification
     nodeEnter.append('circle')
-      .attr('r', this.config.nodeRadius)
-      .attr('class', d => `${d.type}-node`)
-      .attr('title', (d: GraphNode) => {
+      .attr('r', (d: GraphNode) => this.calculateNodeSize(d))
+      .attr('class', d => `${d.type}-node ${this.getHubClass(d)}`)
+      .attr('data-connections', (d: GraphNode) => d.connections.length)
+      .attr('data-hub-tier', (d: GraphNode) => this.getHubTier(d).name);
+
+    // Add title element for tooltips (SVG-compatible approach)
+    nodeEnter.append('title')
+      .text((d: GraphNode) => {
         const fileName = d.title.split('/').pop() || d.title;
-        return fileName;
+        const connections = d.connections.length;
+        return `${fileName} (${connections} connection${connections !== 1 ? 's' : ''})`;
       });
 
-    // Add labels to new nodes
+    // Add labels to new nodes with hub-aware positioning
     nodeEnter.append('text')
-      .attr('dy', this.config.nodeRadius + 15)
+      .attr('dy', (d: GraphNode) => this.calculateNodeSize(d) + 15)
       .attr('class', this.config.showLabels ? 'labels-visible' : 'labels-hidden')
       .text(d => d.title);
     
     logger.debug('renderer', `Node labels created with showLabels: ${this.config.showLabels}`);
+
+    // Update existing nodes with new sizing and hub classification
+    nodeSelection.selectAll('circle')
+      .attr('r', (d: any) => this.calculateNodeSize(d as GraphNode))
+      .attr('class', (d: any) => `${(d as GraphNode).type}-node ${this.getHubClass(d as GraphNode)}`)
+      .attr('data-connections', (d: any) => (d as GraphNode).connections.length)
+      .attr('data-hub-tier', (d: any) => this.getHubTier(d as GraphNode).name);
+
+    // Update existing title elements for tooltips
+    nodeSelection.selectAll('title')
+      .text((d: any) => {
+        const node = d as GraphNode;
+        const fileName = node.title.split('/').pop() || node.title;
+        const connections = node.connections.length;
+        return `${fileName} (${connections} connection${connections !== 1 ? 's' : ''})`;
+      });
+
+    // Update existing labels positioning based on new node sizes
+    nodeSelection.selectAll('text')
+      .attr('dy', (d: any) => this.calculateNodeSize(d as GraphNode) + 15);
 
     // Animate new nodes
     nodeEnter.transition()
@@ -464,20 +682,53 @@ export class GraphRenderer {
 
   /**
    * Setup node interactions (hover, click, tooltips)
+   * Enhanced with hub highlighting features
    */
   private setupNodeInteractions(selection: d3.Selection<SVGGElement, GraphNode, SVGGElement, unknown>): void {
     selection
-      .on('mouseover', (_, d) => {
+      .on('mouseover', (event, d) => {
         // Highlight connected links
         this.highlightConnectedLinks(d.id, true);
+        
+        // Hub highlighting: Add special hover effects for hubs
+        const hubTier = this.getHubTier(d);
+        const nodeElement = d3.select(event.currentTarget);
+        
+        // Add hover class for CSS styling
+        nodeElement.classed('hub-hovered', true);
+        
+        // For major and mega hubs, temporarily boost their visual prominence
+        if (hubTier.name === 'major-hub' || hubTier.name === 'mega-hub') {
+          this.temporaryHubBoost(nodeElement, d);
+        }
+        
+        // Enhanced tooltip for hubs
+        if (d.connections.length >= 5) {
+          this.showHubTooltip(d, event);
+        }
       })
-      .on('mouseout', (_, d) => {
+      .on('mouseout', (event, d) => {
         // Remove highlight from connected links
         this.highlightConnectedLinks(d.id, false);
+        
+        // Remove hover effects
+        const nodeElement = d3.select(event.currentTarget);
+        nodeElement.classed('hub-hovered', false);
+        
+        // Remove temporary boost
+        this.removeHubBoost(nodeElement);
+        
+        // Hide hub tooltip
+        this.hideHubTooltip();
       })
       .on('click', (_, d) => {
-        // Could emit event to open file in Obsidian
-        logger.debug('renderer', `Node clicked: ${d.title}`, { node: d });
+        // Enhanced logging for hubs
+        const hubTier = this.getHubTier(d);
+        logger.debug('renderer', `Node clicked: ${d.title}`, { 
+          node: d, 
+          connections: d.connections.length,
+          hubTier: hubTier.name 
+        });
       });
   }
 
@@ -635,12 +886,12 @@ export class GraphRenderer {
       }
     }
     
-    // Update node radius
+    // Update node radius - use dynamic sizing based on connections
     if (newConfig.nodeRadius !== undefined) {
       const nodeSelection = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
       if (!nodeSelection.empty()) {
         nodeSelection.selectAll('circle')
-          .attr('r', this.config.nodeRadius);
+          .attr('r', (d: any) => this.calculateNodeSize(d as GraphNode));
       }
     }
     
@@ -656,7 +907,13 @@ export class GraphRenderer {
     // Update simulation forces
     this.simulation
       .force('charge', d3.forceManyBody<GraphNode>().strength(this.forceConfig.chargeStrength))
-      .force('collision', d3.forceCollide<GraphNode>().radius(this.forceConfig.collisionRadius))
+      .force('collision', d3.forceCollide<GraphNode>()
+        .radius((d: GraphNode) => {
+          // Hub highlighting: Use actual node size plus padding for collision
+          const nodeSize = this.calculateNodeSize(d);
+          const padding = 2; // Small padding between nodes
+          return nodeSize + padding;
+        }))
       .force('center', d3.forceCenter<GraphNode>(this.config.width / 2, this.config.height / 2)
         .strength(this.forceConfig.centerStrength));
     
@@ -1128,7 +1385,12 @@ export class GraphRenderer {
     
     // Update collision force
     (this.simulation.force('collision') as d3.ForceCollide<GraphNode>)
-      ?.radius(this.forceConfig.collisionRadius);
+      ?.radius((d: GraphNode) => {
+        // Hub highlighting: Use actual node size plus padding for collision
+        const nodeSize = this.calculateNodeSize(d);
+        const padding = 2; // Small padding between nodes
+        return nodeSize + padding;
+      });
     
     // Update link force
     (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
