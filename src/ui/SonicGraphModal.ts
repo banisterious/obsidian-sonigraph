@@ -11,6 +11,7 @@ import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { MusicalMapper } from '../graph/musical-mapper';
+import { AdaptiveDetailManager, type FilteredGraphData } from '../graph/AdaptiveDetailManager';
 import { createLucideIcon } from './lucide-icons';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
@@ -25,6 +26,7 @@ export class SonicGraphModal extends Modal {
     private graphRenderer: GraphRenderer | null = null;
     private temporalAnimator: TemporalGraphAnimator | null = null;
     private musicalMapper: MusicalMapper | null = null;
+    private adaptiveDetailManager: AdaptiveDetailManager | null = null;
     private isAnimating: boolean = false;
     private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
@@ -718,6 +720,9 @@ export class SonicGraphModal extends Modal {
         // Settings content (scrollable area)
         const settingsContent = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-content' });
         
+        // 0. Adaptive Detail Override (Quick Override)
+        this.createAdaptiveDetailOverride(settingsContent);
+        
         // 1. Filters section
         this.createFiltersSettings(settingsContent);
         
@@ -738,6 +743,74 @@ export class SonicGraphModal extends Modal {
         
         // 7. Navigation section
         this.createNavigationSettings(settingsContent);
+    }
+
+    /**
+     * Create adaptive detail override section (Quick Override)
+     */
+    private createAdaptiveDetailOverride(container: HTMLElement): void {
+        const adaptiveSettings = this.getSonicGraphSettings().adaptiveDetail;
+        
+        // Only show if adaptive detail is enabled in main settings
+        if (!adaptiveSettings || !adaptiveSettings.enabled) {
+            return;
+        }
+
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section adaptive-detail-override' });
+        section.createEl('div', { text: 'ADAPTIVE DETAIL', cls: 'sonic-graph-settings-section-title' });
+        
+        // Session override toggle
+        const overrideItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        overrideItem.createEl('label', { text: 'Disable for this session', cls: 'sonic-graph-setting-label' });
+        overrideItem.createEl('div', { 
+            text: 'Temporarily disable adaptive detail levels to see all nodes/links', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const overrideControl = overrideItem.createDiv({ cls: 'sonic-graph-setting-control' });
+        const overrideCheckbox = overrideControl.createEl('input', { 
+            type: 'checkbox',
+            cls: 'sonic-graph-checkbox'
+        });
+        
+        // Set initial state (false = adaptive detail enabled, true = disabled/overridden)
+        overrideCheckbox.checked = false; // Start with adaptive detail enabled
+        
+        this.addEventListener(overrideCheckbox, 'change', () => {
+            const isOverridden = overrideCheckbox.checked;
+            
+            // Update adaptive detail manager if it exists
+            if (this.adaptiveDetailManager) {
+                this.adaptiveDetailManager.setSessionOverride(isOverridden);
+                
+                // Immediately apply the change if graph renderer exists
+                if (this.graphRenderer) {
+                    const currentZoom = this.graphRenderer.getCurrentZoom();
+                    const filteredData = this.adaptiveDetailManager.handleZoomChange(currentZoom);
+                    this.applyFilteredData(filteredData);
+                }
+            }
+            
+            logger.info('adaptive-detail-override', 'Session override toggled', { 
+                overridden: isOverridden,
+                meaning: isOverridden ? 'Show all (disabled)' : 'Adaptive filtering (enabled)'
+            });
+        });
+
+        // Status indicator
+        const statusItem = section.createDiv({ cls: 'sonic-graph-setting-item adaptive-detail-status' });
+        statusItem.createEl('label', { text: 'Current mode', cls: 'sonic-graph-setting-label' });
+        const statusText = statusItem.createEl('div', { 
+            text: `${adaptiveSettings.mode} (${adaptiveSettings.enabled ? 'enabled' : 'disabled'})`, 
+            cls: 'sonic-graph-setting-status' 
+        });
+        
+        // Add note about main settings
+        const noteItem = section.createDiv({ cls: 'sonic-graph-setting-item adaptive-detail-note' });
+        noteItem.createEl('div', { 
+            text: 'Configure adaptive detail settings in Plugin Settings > Sonic Graph Settings', 
+            cls: 'sonic-graph-setting-note' 
+        });
     }
 
     /**
@@ -2171,6 +2244,21 @@ export class SonicGraphModal extends Modal {
                 enableReset: true,
                 enableExport: false
             },
+            // Adaptive Detail Levels - Default Settings
+            adaptiveDetail: {
+                enabled: false,                  // Disabled by default for backward compatibility
+                mode: 'automatic' as const,     // Automatic mode when enabled
+                thresholds: {
+                    overview: 0.5,              // Show hubs only when zoomed out < 0.5x
+                    standard: 1.5,              // Standard view at 0.5x - 1.5x zoom
+                    detail: 3.0                 // Detail view at 1.5x - 3.0x zoom
+                },
+                overrides: {
+                    alwaysShowLabels: false,    // Respect zoom-based label visibility
+                    minimumVisibleNodes: 10,    // Always show at least 10 nodes for orientation
+                    maximumVisibleNodes: -1     // No maximum limit by default
+                }
+            },
             // Phase 3.8: Layout settings default
             layout: {
                 clusteringStrength: 0.15,
@@ -2208,12 +2296,13 @@ export class SonicGraphModal extends Modal {
             return defaultSettings;
         }
         
-        // Merge with defaults to ensure all properties exist (especially new Phase 3.8 layout settings)
+        // Merge with defaults to ensure all properties exist (especially new adaptive detail and layout settings)
         return {
             timeline: { ...defaultSettings.timeline, ...settings.timeline },
             audio: { ...defaultSettings.audio, ...settings.audio },
             visual: { ...defaultSettings.visual, ...settings.visual },
             navigation: { ...defaultSettings.navigation, ...settings.navigation },
+            adaptiveDetail: { ...defaultSettings.adaptiveDetail, ...settings.adaptiveDetail },
             layout: { ...defaultSettings.layout, ...settings.layout }
         };
     }

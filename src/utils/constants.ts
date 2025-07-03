@@ -224,6 +224,21 @@ export interface SonicGraphSettings {
 		enableReset: boolean;         // Show Reset View button
 		enableExport: boolean;        // Show Export Timeline button (future)
 	};
+	// Adaptive Detail Levels - Smart zoom-based filtering
+	adaptiveDetail: {
+		enabled: boolean;           // Main toggle for adaptive detail functionality
+		mode: 'automatic' | 'performance' | 'manual'; // How adaptive details work
+		thresholds: {
+			overview: number;       // Zoom level for overview mode (default: 0.5)
+			standard: number;       // Zoom level for standard mode (default: 1.5)
+			detail: number;         // Zoom level for detail mode (default: 3.0)
+		};
+		overrides: {
+			alwaysShowLabels: boolean;    // Override: always show labels regardless of zoom
+			minimumVisibleNodes: number;  // Override: minimum nodes to always show
+			maximumVisibleNodes: number;  // Override: maximum nodes for performance (-1 = no limit)
+		};
+	};
 	// Phase 3.8: Graph Layout Optimization Settings
 	layout: {
 		clusteringStrength: number;         // Slider for link-based attraction intensity (0.0-0.3)
@@ -379,6 +394,21 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enableControlCenter: true,
 			enableReset: true,
 			enableExport: false
+		},
+		// Adaptive Detail Levels - Default Settings
+		adaptiveDetail: {
+			enabled: false,                  // Disabled by default for backward compatibility
+			mode: 'automatic',              // Automatic mode when enabled
+			thresholds: {
+				overview: 0.5,              // Show hubs only when zoomed out < 0.5x
+				standard: 1.5,              // Standard view at 0.5x - 1.5x zoom
+				detail: 3.0                 // Detail view at 1.5x - 3.0x zoom
+			},
+			overrides: {
+				alwaysShowLabels: false,    // Respect zoom-based label visibility
+				minimumVisibleNodes: 10,    // Always show at least 10 nodes for orientation
+				maximumVisibleNodes: -1     // No maximum limit by default
+			}
 		},
 		// Phase 3.8: Graph Layout Optimization Default Settings
 		layout: {
