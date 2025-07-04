@@ -7,6 +7,7 @@
 
 import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
+import { SonicGraphSettings } from '../utils/constants';
 
 const logger = getLogger('TemporalGraphAnimator');
 
@@ -23,7 +24,21 @@ export interface AnimationConfig {
   speed: number; // Playback speed multiplier (1.0 = normal)
   loop?: boolean; // Whether to loop the animation automatically
   
-  // Intelligent spacing options
+  // Time window filtering
+  timeWindow?: 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour';
+  
+  // Timeline granularity settings
+  granularity?: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom';
+  customRange?: {
+    value: number;
+    unit: 'years' | 'months' | 'weeks' | 'days' | 'hours';
+  };
+  eventSpreadingMode?: 'none' | 'gentle' | 'aggressive';
+  maxEventSpacing?: number;
+  simultaneousEventLimit?: number;
+  eventBatchSize?: number;
+  
+  // Legacy intelligent spacing options (deprecated, use eventSpreadingMode)
   enableIntelligentSpacing?: boolean; // Whether to space out simultaneous events
   simultaneousThreshold?: number; // Time threshold for considering events simultaneous (seconds)
   maxSpacingWindow?: number; // Maximum time window to spread events over (seconds)
@@ -67,27 +82,23 @@ export class TemporalGraphAnimator {
       endDate: now,
       duration: 60, // 60 seconds default for more contemplative pacing
       speed: 1.0,
-      enableIntelligentSpacing: true, // Enable spacing by default
-      simultaneousThreshold: 0.01, // 10ms threshold for truly simultaneous events
-      maxSpacingWindow: 10.0, // Spread over max 10 seconds for large clusters
-      minEventSpacing: 0.2, // Minimum 200ms between events for clear separation
+      timeWindow: 'all-time', // Default to showing all files
+      granularity: 'year',
+      customRange: { value: 1, unit: 'years' },
+      eventSpreadingMode: 'gentle',
+      maxEventSpacing: 5.0,
+      simultaneousEventLimit: 3,
+      eventBatchSize: 5,
+      // Legacy options for backward compatibility
+      enableIntelligentSpacing: true,
+      simultaneousThreshold: 0.01,
+      maxSpacingWindow: 10.0,
+      minEventSpacing: 0.2,
       ...config
     };
     
-    // Calculate actual date range from nodes if not provided
-    if (this.nodes.length > 0) {
-      const dates = this.nodes
-        .map(n => n.creationDate)
-        .filter(d => d !== undefined) as Date[];
-      
-      if (dates.length > 0) {
-        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-        const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-        
-        if (!config?.startDate) this.config.startDate = minDate;
-        if (!config?.endDate) this.config.endDate = maxDate;
-      }
-    }
+    // Calculate date range based on granularity settings
+    this.calculateDateRangeFromGranularity();
     
     this.buildTimeline();
     
@@ -100,6 +111,103 @@ export class TemporalGraphAnimator {
       config: this.config,
       timelineEvents: this.timeline.length,
       animationFPS: this.animationFrameRate
+    });
+  }
+
+  /**
+   * Calculate date range based on time window filtering and actual file dates
+   */
+  private calculateDateRangeFromGranularity(): void {
+    if (this.nodes.length === 0) {
+      // No nodes, fall back to default range
+      const now = new Date();
+      this.config.startDate = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+      this.config.endDate = now;
+      return;
+    }
+
+    const dates = this.nodes
+      .map(n => n.creationDate)
+      .filter(d => d !== undefined) as Date[];
+    
+    if (dates.length === 0) {
+      // No valid dates, fall back to default range
+      const now = new Date();
+      this.config.startDate = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+      this.config.endDate = now;
+      return;
+    }
+
+    const actualMinDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const actualMaxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    
+    // Calculate date range based on time window setting
+    let startDate: Date;
+    let endDate: Date;
+    
+    const now = new Date();
+    
+    switch (this.config.timeWindow) {
+      case 'past-hour':
+        startDate = new Date(now.getTime() - (60 * 60 * 1000));
+        endDate = now;
+        break;
+      case 'past-day':
+        startDate = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+        endDate = now;
+        break;
+      case 'past-week':
+        startDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        endDate = now;
+        break;
+      case 'past-month':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        endDate = now;
+        break;
+      case 'past-year':
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+        endDate = now;
+        break;
+      case 'all-time':
+      default:
+        // Use the full range of actual file dates
+        startDate = actualMinDate;
+        endDate = actualMaxDate;
+        break;
+    }
+    
+    // Ensure we don't go earlier than the earliest file or later than the latest file
+    if (startDate.getTime() < actualMinDate.getTime()) {
+      startDate = actualMinDate;
+    }
+    if (endDate.getTime() > actualMaxDate.getTime()) {
+      endDate = actualMaxDate;
+    }
+    
+    // Always update the date range based on time window and granularity settings
+    // This ensures the timeline properly reflects the current configuration
+    this.config.startDate = startDate;
+    this.config.endDate = endDate;
+    
+    // Count files that will be included in the timeline
+    const filesInRange = dates.filter(d => 
+      d.getTime() >= this.config.startDate.getTime() && 
+      d.getTime() <= this.config.endDate.getTime()
+    ).length;
+    
+    logger.debug('time-window', 'Date range calculated from time window and file dates', {
+      timeWindow: this.config.timeWindow,
+      granularity: this.config.granularity,
+      customRange: this.config.customRange,
+      actualMinDate: actualMinDate.toISOString(),
+      actualMaxDate: actualMaxDate.toISOString(),
+      calculatedStartDate: startDate.toISOString(),
+      calculatedEndDate: endDate.toISOString(),
+      finalStartDate: this.config.startDate.toISOString(),
+      finalEndDate: this.config.endDate.toISOString(),
+      timeSpan: this.config.endDate.getTime() - this.config.startDate.getTime(),
+      totalFiles: dates.length,
+      filesInRange
     });
   }
 
@@ -140,19 +248,170 @@ export class TemporalGraphAnimator {
     // Sort by timestamp to identify clusters
     initialEvents.sort((a, b) => a.timestamp - b.timestamp);
     
-    // Second pass: Add intelligent spacing for simultaneous events
-    this.timeline = this.addIntelligentSpacing(initialEvents);
+    // Second pass: Apply event spreading based on mode
+    this.timeline = this.applyEventSpreading(initialEvents);
     
-    logger.debug('timeline', 'Timeline built with intelligent spacing', {
+    logger.debug('timeline', 'Timeline built with event spreading', {
       originalEvents: initialEvents.length,
       finalEvents: this.timeline.length,
       firstEvent: this.timeline[0]?.timestamp || 0,
-      lastEvent: this.timeline[this.timeline.length - 1]?.timestamp || 0
+      lastEvent: this.timeline[this.timeline.length - 1]?.timestamp || 0,
+      eventSpreadingMode: this.config.eventSpreadingMode,
+      granularity: this.config.granularity
     });
   }
 
   /**
-   * Add intelligent spacing to events that would appear simultaneously
+   * Apply event spreading to prevent audio crackling from simultaneous events
+   */
+  private applyEventSpreading(events: TimelineEvent[]): TimelineEvent[] {
+    if (events.length === 0) return events;
+    
+    // Handle 'none' mode - no spreading
+    if (this.config.eventSpreadingMode === 'none') {
+      return events;
+    }
+    
+    // Use new spreading algorithm or fall back to legacy intelligent spacing
+    if (this.config.eventSpreadingMode === 'gentle' || this.config.eventSpreadingMode === 'aggressive') {
+      return this.addAdvancedEventSpreading(events);
+    } else {
+      // Fallback to legacy algorithm for backward compatibility
+      return this.addIntelligentSpacing(events);
+    }
+  }
+
+  /**
+   * Advanced event spreading algorithm with batch processing
+   */
+  private addAdvancedEventSpreading(events: TimelineEvent[]): TimelineEvent[] {
+    if (events.length === 0) return events;
+    
+    const mode = this.config.eventSpreadingMode!;
+    const maxEventSpacing = this.config.maxEventSpacing || 5.0;
+    const simultaneousEventLimit = this.config.simultaneousEventLimit || 3;
+    const eventBatchSize = this.config.eventBatchSize || 5;
+    
+    // Configure parameters based on mode
+    const modeConfig = mode === 'gentle' ? {
+      simultaneousThreshold: 0.1, // 100ms threshold
+      maxSpacingWindow: Math.min(maxEventSpacing, 2.0), // Gentler spreading
+      minEventSpacing: 0.1, // 100ms minimum spacing
+      batchProcessing: true
+    } : {
+      simultaneousThreshold: 0.05, // 50ms threshold (more aggressive)
+      maxSpacingWindow: maxEventSpacing, // Use full spacing window
+      minEventSpacing: 0.05, // 50ms minimum spacing
+      batchProcessing: true
+    };
+    
+    const spacedEvents: TimelineEvent[] = [];
+    let i = 0;
+    
+    while (i < events.length) {
+      const currentTime = events[i].timestamp;
+      const simultaneousEvents: TimelineEvent[] = [];
+      
+      // Collect simultaneous events within threshold
+      while (i < events.length && Math.abs(events[i].timestamp - currentTime) <= modeConfig.simultaneousThreshold) {
+        simultaneousEvents.push(events[i]);
+        i++;
+      }
+      
+      if (simultaneousEvents.length === 1) {
+        // Single event, no spreading needed
+        spacedEvents.push(simultaneousEvents[0]);
+      } else if (simultaneousEvents.length <= simultaneousEventLimit) {
+        // Small cluster - spread all events
+        spacedEvents.push(...this.spreadEventCluster(simultaneousEvents, currentTime, modeConfig));
+      } else {
+        // Large cluster - use batch processing
+        spacedEvents.push(...this.processBatchedEvents(simultaneousEvents, currentTime, modeConfig, eventBatchSize));
+      }
+    }
+    
+    // Final sort and minimum spacing enforcement
+    spacedEvents.sort((a, b) => a.timestamp - b.timestamp);
+    return this.enforceMinimumSpacing(spacedEvents, modeConfig.minEventSpacing);
+  }
+
+  /**
+   * Spread a cluster of simultaneous events
+   */
+  private spreadEventCluster(events: TimelineEvent[], baseTime: number, config: any): TimelineEvent[] {
+    const spacingWindow = Math.min(config.maxSpacingWindow, events.length * config.minEventSpacing * 1.5);
+    const spacing = events.length > 1 ? spacingWindow / (events.length - 1) : 0;
+    
+    // Sort by node ID for consistent ordering
+    events.sort((a, b) => this.hashString(a.nodeId) - this.hashString(b.nodeId));
+    
+    return events.map((event, index) => ({
+      ...event,
+      timestamp: baseTime + (spacing * index)
+    }));
+  }
+
+  /**
+   * Process large clusters using batch approach
+   */
+  private processBatchedEvents(events: TimelineEvent[], baseTime: number, config: any, batchSize: number): TimelineEvent[] {
+    const result: TimelineEvent[] = [];
+    const batches = this.createEventBatches(events, batchSize);
+    
+    batches.forEach((batch, batchIndex) => {
+      const batchBaseTime = baseTime + (batchIndex * config.maxSpacingWindow * 0.2); // 20% of max spacing between batches
+      result.push(...this.spreadEventCluster(batch, batchBaseTime, {
+        ...config,
+        maxSpacingWindow: config.maxSpacingWindow * 0.15 // Tighter spacing within batches
+      }));
+    });
+    
+    return result;
+  }
+
+  /**
+   * Create event batches for large simultaneous event clusters
+   */
+  private createEventBatches(events: TimelineEvent[], batchSize: number): TimelineEvent[][] {
+    const batches: TimelineEvent[][] = [];
+    
+    for (let i = 0; i < events.length; i += batchSize) {
+      batches.push(events.slice(i, i + batchSize));
+    }
+    
+    return batches;
+  }
+
+  /**
+   * Enforce minimum spacing between consecutive events
+   */
+  private enforceMinimumSpacing(events: TimelineEvent[], minSpacing: number): TimelineEvent[] {
+    const result: TimelineEvent[] = [];
+    
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i];
+      
+      if (result.length === 0) {
+        result.push(event);
+      } else {
+        const lastEvent = result[result.length - 1];
+        const timeDiff = event.timestamp - lastEvent.timestamp;
+        
+        if (timeDiff < minSpacing) {
+          const adjustedEvent = { ...event };
+          adjustedEvent.timestamp = lastEvent.timestamp + minSpacing;
+          result.push(adjustedEvent);
+        } else {
+          result.push(event);
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Legacy intelligent spacing algorithm for backward compatibility
    */
   private addIntelligentSpacing(events: TimelineEvent[]): TimelineEvent[] {
     if (events.length === 0) return events;
@@ -585,7 +844,7 @@ export class TemporalGraphAnimator {
   }
 
   /**
-   * Update configuration
+   * Update configuration and rebuild timeline if necessary
    */
   updateConfig(newConfig: Partial<AnimationConfig>): void {
     const wasPlaying = this.isPlaying && !this.isPaused;
@@ -594,14 +853,62 @@ export class TemporalGraphAnimator {
       this.pause();
     }
     
+    // Check if granularity or time window settings changed
+    const granularityChanged = 
+      newConfig.timeWindow !== this.config.timeWindow ||
+      newConfig.granularity !== this.config.granularity ||
+      (newConfig.customRange && (
+        newConfig.customRange.value !== this.config.customRange?.value ||
+        newConfig.customRange.unit !== this.config.customRange?.unit
+      )) ||
+      newConfig.eventSpreadingMode !== this.config.eventSpreadingMode ||
+      newConfig.maxEventSpacing !== this.config.maxEventSpacing ||
+      newConfig.simultaneousEventLimit !== this.config.simultaneousEventLimit ||
+      newConfig.eventBatchSize !== this.config.eventBatchSize;
+    
     this.config = { ...this.config, ...newConfig };
+    
+    // Recalculate date range if granularity or time window changed
+    if (granularityChanged && (newConfig.timeWindow || newConfig.granularity || newConfig.customRange)) {
+      this.calculateDateRangeFromGranularity();
+    }
+    
     this.buildTimeline();
     
     if (wasPlaying) {
       this.play();
     }
     
-    logger.debug('config', 'Animation config updated', this.config);
+    logger.debug('config', 'Animation config updated', {
+      ...this.config,
+      granularityChanged,
+      timelineEvents: this.timeline.length
+    });
+  }
+
+  /**
+   * Update timeline granularity settings from SonicGraphSettings
+   */
+  updateTimelineSettings(settings: SonicGraphSettings['timeline']): void {
+    this.updateConfig({
+      timeWindow: settings.timeWindow,  // Add missing timeWindow parameter
+      granularity: settings.granularity,
+      customRange: settings.customRange,
+      eventSpreadingMode: settings.eventSpreadingMode,
+      maxEventSpacing: settings.maxEventSpacing,
+      simultaneousEventLimit: settings.simultaneousEventLimit,
+      eventBatchSize: settings.eventBatchSize,
+      duration: settings.duration,
+      loop: settings.loop
+    });
+    
+    logger.info('timeline-settings', 'Timeline settings updated from SonicGraphSettings', {
+      timeWindow: settings.timeWindow,
+      granularity: settings.granularity,
+      customRange: settings.customRange,
+      eventSpreadingMode: settings.eventSpreadingMode,
+      newTimelineEvents: this.timeline.length
+    });
   }
 
   /**
