@@ -14601,11 +14601,11 @@ var init_SonicGraphModal = __esm({
         closeButton.textContent = "\xD7";
         closeButton.addEventListener("click", () => this.toggleSettings());
         const settingsContent = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-content" });
-        this.createAdaptiveDetailOverride(settingsContent);
         this.createFiltersSettings(settingsContent);
         this.createGroupsSettings(settingsContent);
         this.createVisualSettings(settingsContent);
         this.createLayoutSettings(settingsContent);
+        this.createAdaptiveDetailOverride(settingsContent);
         this.createContentAwarePositioningSettings(settingsContent);
         this.createSmartClusteringSettings(settingsContent);
         this.createTimelineSettings(settingsContent);
