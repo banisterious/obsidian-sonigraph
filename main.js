@@ -212,6 +212,8 @@ var init_constants = __esm({
           spacing: "auto",
           loop: false,
           showMarkers: true,
+          // Time window default
+          timeWindow: "all-time",
           // Timeline granularity defaults
           granularity: "year",
           customRange: {
@@ -12998,27 +13000,22 @@ var init_TemporalGraphAnimator = __esm({
           duration: 60,
           // 60 seconds default for more contemplative pacing
           speed: 1,
+          timeWindow: "all-time",
+          // Default to showing all files
+          granularity: "year",
+          customRange: { value: 1, unit: "years" },
+          eventSpreadingMode: "gentle",
+          maxEventSpacing: 5,
+          simultaneousEventLimit: 3,
+          eventBatchSize: 5,
+          // Legacy options for backward compatibility
           enableIntelligentSpacing: true,
-          // Enable spacing by default
           simultaneousThreshold: 0.01,
-          // 10ms threshold for truly simultaneous events
           maxSpacingWindow: 10,
-          // Spread over max 10 seconds for large clusters
           minEventSpacing: 0.2,
-          // Minimum 200ms between events for clear separation
           ...config
         };
-        if (this.nodes.length > 0) {
-          const dates = this.nodes.map((n) => n.creationDate).filter((d) => d !== void 0);
-          if (dates.length > 0) {
-            const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
-            const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
-            if (!(config == null ? void 0 : config.startDate))
-              this.config.startDate = minDate;
-            if (!(config == null ? void 0 : config.endDate))
-              this.config.endDate = maxDate;
-          }
-        }
+        this.calculateDateRangeFromGranularity();
         this.buildTimeline();
         this.setAdaptiveFrameRate(this.nodes.length, this.timeline.length);
         logger11.debug("animator", "TemporalGraphAnimator created", {
@@ -13027,6 +13024,81 @@ var init_TemporalGraphAnimator = __esm({
           config: this.config,
           timelineEvents: this.timeline.length,
           animationFPS: this.animationFrameRate
+        });
+      }
+      /**
+       * Calculate date range based on time window filtering and actual file dates
+       */
+      calculateDateRangeFromGranularity() {
+        if (this.nodes.length === 0) {
+          const now4 = new Date();
+          this.config.startDate = new Date(now4.getTime() - 365 * 24 * 60 * 60 * 1e3);
+          this.config.endDate = now4;
+          return;
+        }
+        const dates = this.nodes.map((n) => n.creationDate).filter((d) => d !== void 0);
+        if (dates.length === 0) {
+          const now4 = new Date();
+          this.config.startDate = new Date(now4.getTime() - 365 * 24 * 60 * 60 * 1e3);
+          this.config.endDate = now4;
+          return;
+        }
+        const actualMinDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+        const actualMaxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+        let startDate;
+        let endDate;
+        const now3 = new Date();
+        switch (this.config.timeWindow) {
+          case "past-hour":
+            startDate = new Date(now3.getTime() - 60 * 60 * 1e3);
+            endDate = now3;
+            break;
+          case "past-day":
+            startDate = new Date(now3.getTime() - 24 * 60 * 60 * 1e3);
+            endDate = now3;
+            break;
+          case "past-week":
+            startDate = new Date(now3.getTime() - 7 * 24 * 60 * 60 * 1e3);
+            endDate = now3;
+            break;
+          case "past-month":
+            startDate = new Date(now3.getFullYear(), now3.getMonth() - 1, now3.getDate());
+            endDate = now3;
+            break;
+          case "past-year":
+            startDate = new Date(now3.getFullYear() - 1, now3.getMonth(), now3.getDate());
+            endDate = now3;
+            break;
+          case "all-time":
+          default:
+            startDate = actualMinDate;
+            endDate = actualMaxDate;
+            break;
+        }
+        if (startDate.getTime() < actualMinDate.getTime()) {
+          startDate = actualMinDate;
+        }
+        if (endDate.getTime() > actualMaxDate.getTime()) {
+          endDate = actualMaxDate;
+        }
+        this.config.startDate = startDate;
+        this.config.endDate = endDate;
+        const filesInRange = dates.filter(
+          (d) => d.getTime() >= this.config.startDate.getTime() && d.getTime() <= this.config.endDate.getTime()
+        ).length;
+        logger11.debug("time-window", "Date range calculated from time window and file dates", {
+          timeWindow: this.config.timeWindow,
+          granularity: this.config.granularity,
+          customRange: this.config.customRange,
+          actualMinDate: actualMinDate.toISOString(),
+          actualMaxDate: actualMaxDate.toISOString(),
+          calculatedStartDate: startDate.toISOString(),
+          calculatedEndDate: endDate.toISOString(),
+          finalStartDate: this.config.startDate.toISOString(),
+          finalEndDate: this.config.endDate.toISOString(),
+          timeSpan: this.config.endDate.getTime() - this.config.startDate.getTime(),
+          totalFiles: dates.length,
+          filesInRange
         });
       }
       /**
@@ -13058,16 +13130,141 @@ var init_TemporalGraphAnimator = __esm({
           }
         });
         initialEvents.sort((a2, b) => a2.timestamp - b.timestamp);
-        this.timeline = this.addIntelligentSpacing(initialEvents);
-        logger11.debug("timeline", "Timeline built with intelligent spacing", {
+        this.timeline = this.applyEventSpreading(initialEvents);
+        logger11.debug("timeline", "Timeline built with event spreading", {
           originalEvents: initialEvents.length,
           finalEvents: this.timeline.length,
           firstEvent: ((_a = this.timeline[0]) == null ? void 0 : _a.timestamp) || 0,
-          lastEvent: ((_b = this.timeline[this.timeline.length - 1]) == null ? void 0 : _b.timestamp) || 0
+          lastEvent: ((_b = this.timeline[this.timeline.length - 1]) == null ? void 0 : _b.timestamp) || 0,
+          eventSpreadingMode: this.config.eventSpreadingMode,
+          granularity: this.config.granularity
         });
       }
       /**
-       * Add intelligent spacing to events that would appear simultaneously
+       * Apply event spreading to prevent audio crackling from simultaneous events
+       */
+      applyEventSpreading(events) {
+        if (events.length === 0)
+          return events;
+        if (this.config.eventSpreadingMode === "none") {
+          return events;
+        }
+        if (this.config.eventSpreadingMode === "gentle" || this.config.eventSpreadingMode === "aggressive") {
+          return this.addAdvancedEventSpreading(events);
+        } else {
+          return this.addIntelligentSpacing(events);
+        }
+      }
+      /**
+       * Advanced event spreading algorithm with batch processing
+       */
+      addAdvancedEventSpreading(events) {
+        if (events.length === 0)
+          return events;
+        const mode = this.config.eventSpreadingMode;
+        const maxEventSpacing = this.config.maxEventSpacing || 5;
+        const simultaneousEventLimit = this.config.simultaneousEventLimit || 3;
+        const eventBatchSize = this.config.eventBatchSize || 5;
+        const modeConfig = mode === "gentle" ? {
+          simultaneousThreshold: 0.1,
+          // 100ms threshold
+          maxSpacingWindow: Math.min(maxEventSpacing, 2),
+          // Gentler spreading
+          minEventSpacing: 0.1,
+          // 100ms minimum spacing
+          batchProcessing: true
+        } : {
+          simultaneousThreshold: 0.05,
+          // 50ms threshold (more aggressive)
+          maxSpacingWindow: maxEventSpacing,
+          // Use full spacing window
+          minEventSpacing: 0.05,
+          // 50ms minimum spacing
+          batchProcessing: true
+        };
+        const spacedEvents = [];
+        let i = 0;
+        while (i < events.length) {
+          const currentTime = events[i].timestamp;
+          const simultaneousEvents = [];
+          while (i < events.length && Math.abs(events[i].timestamp - currentTime) <= modeConfig.simultaneousThreshold) {
+            simultaneousEvents.push(events[i]);
+            i++;
+          }
+          if (simultaneousEvents.length === 1) {
+            spacedEvents.push(simultaneousEvents[0]);
+          } else if (simultaneousEvents.length <= simultaneousEventLimit) {
+            spacedEvents.push(...this.spreadEventCluster(simultaneousEvents, currentTime, modeConfig));
+          } else {
+            spacedEvents.push(...this.processBatchedEvents(simultaneousEvents, currentTime, modeConfig, eventBatchSize));
+          }
+        }
+        spacedEvents.sort((a2, b) => a2.timestamp - b.timestamp);
+        return this.enforceMinimumSpacing(spacedEvents, modeConfig.minEventSpacing);
+      }
+      /**
+       * Spread a cluster of simultaneous events
+       */
+      spreadEventCluster(events, baseTime, config) {
+        const spacingWindow = Math.min(config.maxSpacingWindow, events.length * config.minEventSpacing * 1.5);
+        const spacing = events.length > 1 ? spacingWindow / (events.length - 1) : 0;
+        events.sort((a2, b) => this.hashString(a2.nodeId) - this.hashString(b.nodeId));
+        return events.map((event, index2) => ({
+          ...event,
+          timestamp: baseTime + spacing * index2
+        }));
+      }
+      /**
+       * Process large clusters using batch approach
+       */
+      processBatchedEvents(events, baseTime, config, batchSize) {
+        const result = [];
+        const batches = this.createEventBatches(events, batchSize);
+        batches.forEach((batch, batchIndex) => {
+          const batchBaseTime = baseTime + batchIndex * config.maxSpacingWindow * 0.2;
+          result.push(...this.spreadEventCluster(batch, batchBaseTime, {
+            ...config,
+            maxSpacingWindow: config.maxSpacingWindow * 0.15
+            // Tighter spacing within batches
+          }));
+        });
+        return result;
+      }
+      /**
+       * Create event batches for large simultaneous event clusters
+       */
+      createEventBatches(events, batchSize) {
+        const batches = [];
+        for (let i = 0; i < events.length; i += batchSize) {
+          batches.push(events.slice(i, i + batchSize));
+        }
+        return batches;
+      }
+      /**
+       * Enforce minimum spacing between consecutive events
+       */
+      enforceMinimumSpacing(events, minSpacing) {
+        const result = [];
+        for (let i = 0; i < events.length; i++) {
+          const event = events[i];
+          if (result.length === 0) {
+            result.push(event);
+          } else {
+            const lastEvent = result[result.length - 1];
+            const timeDiff = event.timestamp - lastEvent.timestamp;
+            if (timeDiff < minSpacing) {
+              const adjustedEvent = { ...event };
+              adjustedEvent.timestamp = lastEvent.timestamp + minSpacing;
+              result.push(adjustedEvent);
+            } else {
+              result.push(event);
+            }
+          }
+        }
+        return result;
+      }
+      /**
+       * Legacy intelligent spacing algorithm for backward compatibility
        */
       addIntelligentSpacing(events) {
         if (events.length === 0)
@@ -13395,19 +13592,52 @@ var init_TemporalGraphAnimator = __esm({
         };
       }
       /**
-       * Update configuration
+       * Update configuration and rebuild timeline if necessary
        */
       updateConfig(newConfig) {
+        var _a, _b;
         const wasPlaying = this.isPlaying && !this.isPaused;
         if (wasPlaying) {
           this.pause();
         }
+        const granularityChanged = newConfig.timeWindow !== this.config.timeWindow || newConfig.granularity !== this.config.granularity || newConfig.customRange && (newConfig.customRange.value !== ((_a = this.config.customRange) == null ? void 0 : _a.value) || newConfig.customRange.unit !== ((_b = this.config.customRange) == null ? void 0 : _b.unit)) || newConfig.eventSpreadingMode !== this.config.eventSpreadingMode || newConfig.maxEventSpacing !== this.config.maxEventSpacing || newConfig.simultaneousEventLimit !== this.config.simultaneousEventLimit || newConfig.eventBatchSize !== this.config.eventBatchSize;
         this.config = { ...this.config, ...newConfig };
+        if (granularityChanged && (newConfig.timeWindow || newConfig.granularity || newConfig.customRange)) {
+          this.calculateDateRangeFromGranularity();
+        }
         this.buildTimeline();
         if (wasPlaying) {
           this.play();
         }
-        logger11.debug("config", "Animation config updated", this.config);
+        logger11.debug("config", "Animation config updated", {
+          ...this.config,
+          granularityChanged,
+          timelineEvents: this.timeline.length
+        });
+      }
+      /**
+       * Update timeline granularity settings from SonicGraphSettings
+       */
+      updateTimelineSettings(settings) {
+        this.updateConfig({
+          timeWindow: settings.timeWindow,
+          // Add missing timeWindow parameter
+          granularity: settings.granularity,
+          customRange: settings.customRange,
+          eventSpreadingMode: settings.eventSpreadingMode,
+          maxEventSpacing: settings.maxEventSpacing,
+          simultaneousEventLimit: settings.simultaneousEventLimit,
+          eventBatchSize: settings.eventBatchSize,
+          duration: settings.duration,
+          loop: settings.loop
+        });
+        logger11.info("timeline-settings", "Timeline settings updated from SonicGraphSettings", {
+          timeWindow: settings.timeWindow,
+          granularity: settings.granularity,
+          customRange: settings.customRange,
+          eventSpreadingMode: settings.eventSpreadingMode,
+          newTimelineEvents: this.timeline.length
+        });
       }
       /**
        * Cleanup resources
@@ -14622,33 +14852,22 @@ var init_SonicGraphModal = __esm({
         }
         const section = container.createDiv({ cls: "sonic-graph-settings-section adaptive-detail-override" });
         section.createEl("div", { text: "ADAPTIVE DETAIL", cls: "sonic-graph-settings-section-title" });
-        const overrideItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        overrideItem.createEl("label", { text: "Disable for this session", cls: "sonic-graph-setting-label" });
-        overrideItem.createEl("div", {
-          text: "Temporarily disable adaptive detail levels to see all nodes/links",
-          cls: "sonic-graph-setting-description"
-        });
-        const overrideControl = overrideItem.createDiv({ cls: "sonic-graph-setting-control" });
-        const overrideCheckbox = overrideControl.createEl("input", {
-          type: "checkbox",
-          cls: "sonic-graph-checkbox"
-        });
-        overrideCheckbox.checked = false;
-        this.addEventListener(overrideCheckbox, "change", () => {
-          const isOverridden = overrideCheckbox.checked;
-          if (this.adaptiveDetailManager) {
-            this.adaptiveDetailManager.setSessionOverride(isOverridden);
-            if (this.graphRenderer) {
-              const currentZoom = this.graphRenderer.getCurrentZoom();
-              const filteredData = this.adaptiveDetailManager.handleZoomChange(currentZoom);
-              this.applyFilteredData(filteredData);
+        new import_obsidian6.Setting(section).setName("Disable for this session").setDesc("The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
+          (toggle) => toggle.setValue(false).onChange((isOverridden) => {
+            if (this.adaptiveDetailManager) {
+              this.adaptiveDetailManager.setSessionOverride(isOverridden);
+              if (this.graphRenderer) {
+                const currentZoom = this.graphRenderer.getCurrentZoom();
+                const filteredData = this.adaptiveDetailManager.handleZoomChange(currentZoom);
+                this.applyFilteredData(filteredData);
+              }
             }
-          }
-          logger14.info("adaptive-detail-override", "Session override toggled", {
-            overridden: isOverridden,
-            meaning: isOverridden ? "Show all (disabled)" : "Adaptive filtering (enabled)"
-          });
-        });
+            logger14.info("adaptive-detail-override", "Session override toggled", {
+              overridden: isOverridden,
+              meaning: isOverridden ? "Show all (disabled)" : "Adaptive filtering (enabled)"
+            });
+          })
+        );
         const statusItem = section.createDiv({ cls: "sonic-graph-setting-item adaptive-detail-status" });
         statusItem.createEl("label", { text: "Current mode", cls: "sonic-graph-setting-label" });
         const statusText = statusItem.createEl("div", {
@@ -14735,6 +14954,9 @@ var init_SonicGraphModal = __esm({
           text: Math.round(settings.tagInfluence.weight * 100) + "%",
           cls: "sonic-graph-weight-value"
         });
+        (0, import_obsidian6.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
+          placement: "top"
+        });
         tagWeightSlider.addEventListener("input", (e) => {
           const target = e.target;
           const weight = parseFloat(target.value);
@@ -14764,6 +14986,9 @@ var init_SonicGraphModal = __esm({
           const temporalWeightValueDisplay = temporalWeightContainer.createEl("span", {
             text: Math.round(settings.temporalPositioning.weight * 100) + "%",
             cls: "sonic-graph-weight-value"
+          });
+          (0, import_obsidian6.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
+            placement: "top"
           });
           temporalWeightSlider.addEventListener("input", (e) => {
             const target = e.target;
@@ -14796,6 +15021,9 @@ var init_SonicGraphModal = __esm({
             text: Math.round(settings.hubCentrality.weight * 100) + "%",
             cls: "sonic-graph-weight-value"
           });
+          (0, import_obsidian6.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
+            placement: "top"
+          });
           hubWeightSlider.addEventListener("input", (e) => {
             const target = e.target;
             const weight = parseFloat(target.value);
@@ -14819,6 +15047,9 @@ var init_SonicGraphModal = __esm({
           debugSwitch.addClass("active");
         }
         const debugHandle = debugSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        (0, import_obsidian6.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
+          placement: "left"
+        });
         debugSwitch.addEventListener("click", () => {
           const isActive = debugSwitch.hasClass("active");
           debugSwitch.toggleClass("active", !isActive);
@@ -14853,6 +15084,9 @@ var init_SonicGraphModal = __esm({
             option.selected = true;
           }
         });
+        (0, import_obsidian6.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.", {
+          placement: "top"
+        });
         algorithmSelect.addEventListener("change", (e) => {
           const target = e.target;
           const algorithm = target.value;
@@ -14872,7 +15106,8 @@ var init_SonicGraphModal = __esm({
           0,
           1,
           0.05,
-          (weight) => this.updateClusteringWeight("linkStrength", weight)
+          (weight) => this.updateClusteringWeight("linkStrength", weight),
+          "Controls how much direct wikilinks and references between files influence clustering. Higher values group strongly linked files together more aggressively."
         );
         this.createWeightSlider(
           section,
@@ -14882,7 +15117,8 @@ var init_SonicGraphModal = __esm({
           0,
           1,
           0.05,
-          (weight) => this.updateClusteringWeight("sharedTags", weight)
+          (weight) => this.updateClusteringWeight("sharedTags", weight),
+          "Controls how much shared tags between files influence clustering. Higher values group files with similar tags more strongly, creating topic-based clusters."
         );
         this.createWeightSlider(
           section,
@@ -14892,7 +15128,8 @@ var init_SonicGraphModal = __esm({
           0,
           1,
           0.05,
-          (weight) => this.updateClusteringWeight("folderHierarchy", weight)
+          (weight) => this.updateClusteringWeight("folderHierarchy", weight),
+          "Controls how much folder organization influences clustering. Higher values group files from the same or related folders together, respecting your existing folder structure."
         );
         this.createWeightSlider(
           section,
@@ -14902,7 +15139,8 @@ var init_SonicGraphModal = __esm({
           0,
           1,
           0.05,
-          (weight) => this.updateClusteringWeight("temporalProximity", weight)
+          (weight) => this.updateClusteringWeight("temporalProximity", weight),
+          "Controls how much creation and modification dates influence clustering. Higher values group files created or modified around the same time periods together."
         );
         const parametersHeader = section.createDiv({ cls: "sonic-graph-parameters-header" });
         parametersHeader.createEl("h4", { text: "Clustering Parameters", cls: "sonic-graph-parameters-title" });
@@ -14925,6 +15163,10 @@ var init_SonicGraphModal = __esm({
           const minSize = parseInt(target.value);
           this.updateClusteringParameter("minClusterSize", minSize);
         });
+        (0, import_obsidian6.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
+          placement: "top",
+          delay: 500
+        });
         const maxClustersItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         maxClustersItem.createEl("label", { text: "Maximum clusters", cls: "sonic-graph-setting-label" });
         maxClustersItem.createEl("div", {
@@ -14944,24 +15186,17 @@ var init_SonicGraphModal = __esm({
           const maxClusters = parseInt(target.value);
           this.updateClusteringParameter("maxClusters", maxClusters);
         });
+        (0, import_obsidian6.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
+          placement: "top",
+          delay: 500
+        });
         const visualizationHeader = section.createDiv({ cls: "sonic-graph-visualization-header" });
         visualizationHeader.createEl("h4", { text: "Visualization", cls: "sonic-graph-visualization-title" });
-        const labelsItem = section.createDiv({ cls: "sonic-graph-setting-item" });
-        labelsItem.createEl("label", { text: "Show cluster labels", cls: "sonic-graph-setting-label" });
-        labelsItem.createEl("div", {
-          text: "Display auto-generated names for each cluster",
-          cls: "sonic-graph-setting-description"
-        });
-        const labelsToggle = labelsItem.createEl("button", {
-          cls: `sonic-graph-toggle ${settings.visualization.showClusterLabels ? "active" : ""}`,
-          text: settings.visualization.showClusterLabels ? "ON" : "OFF"
-        });
-        labelsToggle.addEventListener("click", () => {
-          const isActive = labelsToggle.classList.contains("active");
-          labelsToggle.classList.toggle("active");
-          labelsToggle.textContent = isActive ? "OFF" : "ON";
-          this.updateClusteringVisualization("showClusterLabels", !isActive);
-        });
+        new import_obsidian6.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.').addToggle(
+          (toggle) => toggle.setValue(settings.visualization.showClusterLabels).onChange((value) => {
+            this.updateClusteringVisualization("showClusterLabels", value);
+          })
+        );
         const boundariesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         boundariesItem.createEl("label", { text: "Cluster boundaries", cls: "sonic-graph-setting-label" });
         boundariesItem.createEl("div", {
@@ -15006,7 +15241,7 @@ var init_SonicGraphModal = __esm({
       /**
        * Helper method to create weight sliders for clustering factors
        */
-      createWeightSlider(container, name, description, currentValue, min2, max2, step, onChange) {
+      createWeightSlider(container, name, description, currentValue, min2, max2, step, onChange, tooltipText) {
         const weightItem = container.createDiv({ cls: "sonic-graph-setting-item" });
         weightItem.createEl("label", { text: name, cls: "sonic-graph-setting-label" });
         weightItem.createEl("div", {
@@ -15026,6 +15261,11 @@ var init_SonicGraphModal = __esm({
           text: Math.round(currentValue * 100) + "%",
           cls: "sonic-graph-weight-value"
         });
+        if (tooltipText) {
+          (0, import_obsidian6.setTooltip)(weightSlider, tooltipText, {
+            placement: "top"
+          });
+        }
         weightSlider.addEventListener("input", (e) => {
           const target = e.target;
           const weight = parseFloat(target.value);
@@ -15066,20 +15306,43 @@ var init_SonicGraphModal = __esm({
           densityValueDisplay.textContent = density + "%";
           this.updateAudioDensity(density);
         });
+        (0, import_obsidian6.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
+          placement: "top"
+        });
         const densityLabels = densityContainer.createDiv({ cls: "sonic-graph-density-labels" });
         densityLabels.createEl("span", { text: "Sparse", cls: "sonic-graph-density-label" });
         densityLabels.createEl("span", { text: "Dense", cls: "sonic-graph-density-label" });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         durationItem.createEl("label", { text: "Animation duration", cls: "sonic-graph-setting-label" });
-        const durationDisplay = durationItem.createEl("span", {
-          text: "60 seconds",
-          cls: "sonic-graph-setting-value"
+        durationItem.createEl("div", {
+          text: "Control how long the timeline animation lasts",
+          cls: "sonic-graph-setting-description"
         });
-        durationDisplay.style.fontSize = "12px";
-        durationDisplay.style.color = "var(--text-muted)";
-        durationDisplay.style.padding = "4px 8px";
-        durationDisplay.style.backgroundColor = "var(--background-secondary)";
-        durationDisplay.style.borderRadius = "4px";
+        const durationContainer = durationItem.createDiv({ cls: "sonic-graph-density-slider-container" });
+        const durationSlider = durationContainer.createEl("input", {
+          type: "range",
+          cls: "sonic-graph-density-slider"
+        });
+        durationSlider.min = "10";
+        durationSlider.max = "300";
+        durationSlider.step = "5";
+        durationSlider.value = (this.plugin.settings.sonicGraphAnimationDuration || 60).toString();
+        const durationValueDisplay = durationContainer.createEl("span", {
+          text: (this.plugin.settings.sonicGraphAnimationDuration || 60) + " seconds",
+          cls: "sonic-graph-density-value"
+        });
+        durationSlider.addEventListener("input", (e) => {
+          const target = e.target;
+          const duration = parseInt(target.value);
+          durationValueDisplay.textContent = duration + " seconds";
+          this.updateAnimationDuration(duration);
+        });
+        (0, import_obsidian6.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
+          placement: "top"
+        });
+        const durationLabels = durationContainer.createDiv({ cls: "sonic-graph-density-labels" });
+        durationLabels.createEl("span", { text: "Fast", cls: "sonic-graph-density-label" });
+        durationLabels.createEl("span", { text: "Slow", cls: "sonic-graph-density-label" });
         const loopItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         loopItem.createEl("label", { text: "Loop animation", cls: "sonic-graph-setting-label" });
         loopItem.createEl("div", {
@@ -15096,6 +15359,40 @@ var init_SonicGraphModal = __esm({
           const isActive = toggleSwitch.hasClass("active");
           toggleSwitch.toggleClass("active", !isActive);
           this.updateLoopAnimation(!isActive);
+        });
+        (0, import_obsidian6.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
+          placement: "left"
+        });
+        const timeWindowItem = section.createDiv({ cls: "sonic-graph-setting-item" });
+        const timeWindowLabel = timeWindowItem.createDiv({ cls: "sonic-graph-setting-label", text: "Time window" });
+        const timeWindowDesc = timeWindowItem.createDiv({
+          cls: "sonic-graph-setting-description",
+          text: "Choose which files to include in the timeline"
+        });
+        const timeWindowControl = timeWindowItem.createDiv({ cls: "sonic-graph-setting-control" });
+        const timeWindowSelect = timeWindowControl.createEl("select", { cls: "sonic-graph-select" });
+        const timeWindowOptions = [
+          { value: "all-time", text: "All time" },
+          { value: "past-year", text: "Past year" },
+          { value: "past-month", text: "Past month" },
+          { value: "past-week", text: "Past week" },
+          { value: "past-day", text: "Past day" },
+          { value: "past-hour", text: "Past hour" }
+        ];
+        timeWindowOptions.forEach((option) => {
+          const optionElement = timeWindowSelect.createEl("option", {
+            value: option.value,
+            text: option.text
+          });
+          if (option.value === this.getSonicGraphSettings().timeline.timeWindow) {
+            optionElement.selected = true;
+          }
+        });
+        timeWindowSelect.addEventListener("change", () => {
+          this.updateTimeWindow(timeWindowSelect.value);
+        });
+        (0, import_obsidian6.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
+          placement: "top"
         });
         const granularityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         const granularityLabel = granularityItem.createDiv({ cls: "sonic-graph-setting-label", text: "Timeline granularity" });
@@ -15124,6 +15421,9 @@ var init_SonicGraphModal = __esm({
         });
         granularitySelect.addEventListener("change", () => {
           this.updateTimelineGranularity(granularitySelect.value);
+        });
+        (0, import_obsidian6.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
+          placement: "top"
         });
         const customRangeItem = section.createDiv({
           cls: "sonic-graph-setting-item sonic-graph-custom-range",
@@ -15171,6 +15471,12 @@ var init_SonicGraphModal = __esm({
         customUnitSelect.addEventListener("change", () => {
           this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value);
         });
+        (0, import_obsidian6.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
+          placement: "top"
+        });
+        (0, import_obsidian6.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
+          placement: "top"
+        });
         const spreadingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         const spreadingLabel = spreadingItem.createDiv({ cls: "sonic-graph-setting-label", text: "Event spreading" });
         const spreadingDesc = spreadingItem.createDiv({
@@ -15178,35 +15484,28 @@ var init_SonicGraphModal = __esm({
           text: "How to handle clustered events to prevent audio crackling"
         });
         const spreadingControl = spreadingItem.createDiv({ cls: "sonic-graph-setting-control" });
-        const spreadingContainer = spreadingControl.createDiv({ cls: "sonic-graph-radio-group" });
+        const spreadingSelect = spreadingControl.createEl("select", {
+          cls: "sonic-graph-select"
+        });
         const spreadingModes = [
-          { value: "none", text: "None", desc: "No spreading" },
-          { value: "gentle", text: "Gentle", desc: "Light spreading" },
-          { value: "aggressive", text: "Aggressive", desc: "Strong spreading" }
+          { value: "none", text: "None - No spreading", desc: "Events play exactly when files were created. May cause audio crackling if many files were created simultaneously." },
+          { value: "gentle", text: "Gentle - Light spreading", desc: "Slightly separates clustered events over a small time window. Recommended for most users." },
+          { value: "aggressive", text: "Aggressive - Strong spreading", desc: "Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations." }
         ];
         spreadingModes.forEach((mode) => {
-          const radioItem = spreadingContainer.createDiv({ cls: "sonic-graph-radio-item" });
-          const radio = radioItem.createEl("input", {
-            type: "radio",
-            attr: {
-              name: "event-spreading-mode",
-              value: mode.value,
-              id: `spreading-${mode.value}`
-            }
+          const option = spreadingSelect.createEl("option", {
+            value: mode.value,
+            text: mode.text
           });
           if (this.getSonicGraphSettings().timeline.eventSpreadingMode === mode.value) {
-            radio.checked = true;
+            option.selected = true;
           }
-          const radioLabel = radioItem.createEl("label", {
-            cls: "sonic-graph-radio-label",
-            text: mode.text,
-            attr: { for: `spreading-${mode.value}` }
-          });
-          radio.addEventListener("change", () => {
-            if (radio.checked) {
-              this.updateEventSpreadingMode(mode.value);
-            }
-          });
+        });
+        spreadingSelect.addEventListener("change", () => {
+          this.updateEventSpreadingMode(spreadingSelect.value);
+        });
+        (0, import_obsidian6.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
+          placement: "left"
         });
       }
       /**
@@ -15227,6 +15526,9 @@ var init_SonicGraphModal = __esm({
           if (option.includes("Auto"))
             optionEl.selected = true;
         });
+        (0, import_obsidian6.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
+          placement: "top"
+        });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         durationItem.createEl("label", { text: "Note duration", cls: "sonic-graph-setting-label" });
         const durationContainer = durationItem.createDiv({ cls: "sonic-graph-slider-container" });
@@ -15241,6 +15543,9 @@ var init_SonicGraphModal = __esm({
         const durationValue = durationContainer.createEl("span", {
           text: `${this.getSonicGraphSettings().audio.noteDuration.toFixed(1)}s`,
           cls: "sonic-graph-slider-value"
+        });
+        (0, import_obsidian6.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
+          placement: "top"
         });
         durationSlider.addEventListener("input", () => {
           const value = parseInt(durationSlider.value) / 10;
@@ -15271,6 +15576,9 @@ var init_SonicGraphModal = __esm({
           markersSwitch.toggleClass("active", !isActive);
           this.updateTimelineMarkersVisibility(!isActive);
         });
+        (0, import_obsidian6.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
+          placement: "left"
+        });
         const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         styleItem.createEl("label", { text: "Animation style", cls: "sonic-graph-setting-label" });
         const styleSelect = styleItem.createEl("select", { cls: "sonic-graph-setting-select" });
@@ -15290,6 +15598,9 @@ var init_SonicGraphModal = __esm({
             optionEl.selected = true;
           }
         });
+        (0, import_obsidian6.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
+          placement: "top"
+        });
         styleSelect.addEventListener("change", (e) => {
           const target = e.target;
           const style = target.value;
@@ -15308,6 +15619,9 @@ var init_SonicGraphModal = __esm({
           loopSwitch.toggleClass("active", !isActive);
           this.updateLoopAnimation(!isActive);
         });
+        (0, import_obsidian6.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
+          placement: "left"
+        });
         const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         fileNamesItem.createEl("label", { text: "Show file names", cls: "sonic-graph-setting-label" });
         const fileNamesToggle = fileNamesItem.createDiv({ cls: "sonic-graph-setting-toggle" });
@@ -15316,6 +15630,9 @@ var init_SonicGraphModal = __esm({
           fileNamesSwitch.addClass("active");
         }
         const fileNamesHandle = fileNamesSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
+        (0, import_obsidian6.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
+          placement: "left"
+        });
         fileNamesSwitch.addEventListener("click", () => {
           const isActive = fileNamesSwitch.hasClass("active");
           fileNamesSwitch.toggleClass("active", !isActive);
@@ -15371,6 +15688,9 @@ var init_SonicGraphModal = __esm({
           };
           this.updateLayoutSetting("layoutPreset", densityToPreset[value]);
         });
+        (0, import_obsidian6.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
+          placement: "top"
+        });
         const clusteringItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         clusteringItem.createEl("label", { text: "Clustering strength", cls: "sonic-graph-setting-label" });
         clusteringItem.createEl("div", {
@@ -15394,6 +15714,9 @@ var init_SonicGraphModal = __esm({
           const value = parseInt(clusteringSlider.value) / 100;
           clusteringValue.textContent = `${Math.round(value * 100)}%`;
           this.updateLayoutSetting("clusteringStrength", value);
+        });
+        (0, import_obsidian6.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
+          placement: "top"
         });
         const separationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         separationItem.createEl("label", { text: "Group separation", cls: "sonic-graph-setting-label" });
@@ -15419,6 +15742,9 @@ var init_SonicGraphModal = __esm({
           separationValue.textContent = `${Math.round(value * 100)}%`;
           this.updateLayoutSetting("groupSeparation", value);
         });
+        (0, import_obsidian6.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
+          placement: "top"
+        });
       }
       /**
        * Create filters settings section (new section for show tags and show orphans)
@@ -15439,10 +15765,16 @@ var init_SonicGraphModal = __esm({
           tagsSwitch.toggleClass("active", !isActive);
           this.updateFilterSetting("showTags", !isActive);
         });
+        (0, import_obsidian6.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
+          placement: "left"
+        });
         const orphansItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         orphansItem.createEl("label", { text: "Show orphans", cls: "sonic-graph-setting-label" });
         const orphansToggle = orphansItem.createDiv({ cls: "sonic-graph-setting-toggle" });
         const orphansSwitch = orphansToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
+        (0, import_obsidian6.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
+          placement: "left"
+        });
         if (this.getSonicGraphSettings().layout.filters.showOrphans) {
           orphansSwitch.addClass("active");
         }
@@ -15543,6 +15875,9 @@ var init_SonicGraphModal = __esm({
         searchInput.style.borderRadius = "4px";
         searchInput.style.backgroundColor = "#fef3c7";
         searchInput.style.fontSize = "12px";
+        (0, import_obsidian6.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
+          placement: "top"
+        });
         searchInput.addEventListener("focus", () => {
           this.showSearchOptionsOverlay(searchInput);
         });
@@ -16234,6 +16569,7 @@ var init_SonicGraphModal = __esm({
             spacing: "auto",
             loop: false,
             showMarkers: true,
+            timeWindow: "all-time",
             granularity: "year",
             customRange: {
               value: 1,
@@ -16464,6 +16800,28 @@ var init_SonicGraphModal = __esm({
         }
       }
       /**
+       * Update animation duration setting and save to plugin settings
+       */
+      updateAnimationDuration(duration) {
+        this.plugin.settings.sonicGraphAnimationDuration = duration;
+        this.plugin.saveSettings();
+        logger14.debug("settings", "Updated animation duration", { duration });
+      }
+      /**
+       * Update time window setting
+       */
+      updateTimeWindow(timeWindow) {
+        if (!this.plugin.settings.sonicGraphSettings) {
+          this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        this.plugin.settings.sonicGraphSettings.timeline.timeWindow = timeWindow;
+        this.plugin.saveSettings();
+        logger14.debug("settings", "Updated time window", { timeWindow });
+        if (this.temporalAnimator) {
+          this.applyTimeWindowChange(timeWindow);
+        }
+      }
+      /**
        * Update timeline granularity setting
        */
       updateTimelineGranularity(granularity) {
@@ -16511,16 +16869,53 @@ var init_SonicGraphModal = __esm({
         }
       }
       /**
+       * Apply time window changes to temporal animator
+       */
+      applyTimeWindowChange(timeWindow) {
+        if (!this.temporalAnimator) {
+          logger14.debug("timeline", "No temporal animator available for time window change", { timeWindow });
+          return;
+        }
+        const settings = this.getSonicGraphSettings();
+        this.temporalAnimator.updateTimelineSettings(settings.timeline);
+        logger14.info("timeline", "Time window change applied to temporal animator", {
+          timeWindow,
+          granularity: settings.timeline.granularity,
+          eventSpreadingMode: settings.timeline.eventSpreadingMode
+        });
+      }
+      /**
        * Apply timeline granularity changes to temporal animator
        */
       applyTimelineGranularityChange(granularity) {
-        logger14.debug("timeline", "Timeline granularity change applied", { granularity });
+        if (!this.temporalAnimator) {
+          logger14.debug("timeline", "No temporal animator available for granularity change", { granularity });
+          return;
+        }
+        const settings = this.getSonicGraphSettings();
+        this.temporalAnimator.updateTimelineSettings(settings.timeline);
+        logger14.info("timeline", "Timeline granularity change applied to temporal animator", {
+          granularity,
+          customRange: settings.timeline.customRange,
+          eventSpreadingMode: settings.timeline.eventSpreadingMode
+        });
       }
       /**
        * Apply event spreading changes to temporal animator
        */
       applyEventSpreadingChange(mode) {
-        logger14.debug("timeline", "Event spreading mode change applied", { mode });
+        if (!this.temporalAnimator) {
+          logger14.debug("timeline", "No temporal animator available for event spreading change", { mode });
+          return;
+        }
+        const settings = this.getSonicGraphSettings();
+        this.temporalAnimator.updateTimelineSettings(settings.timeline);
+        logger14.info("timeline", "Event spreading mode change applied to temporal animator", {
+          mode,
+          maxEventSpacing: settings.timeline.maxEventSpacing,
+          simultaneousEventLimit: settings.timeline.simultaneousEventLimit,
+          eventBatchSize: settings.timeline.eventBatchSize
+        });
       }
       /**
        * Get list of currently enabled instruments from settings
@@ -20848,7 +21243,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.adaptiveDetail) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
           if (!this.plugin.settings.sonicGraphSettings) {
             this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, timeWindow: "all-time", granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
               audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
               visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
               navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
@@ -20902,7 +21297,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.contentAwarePositioning) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
           if (!this.plugin.settings.sonicGraphSettings) {
             this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, timeWindow: "all-time", granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
               audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
               visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
               navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
@@ -20933,7 +21328,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.smartClustering) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
           if (!this.plugin.settings.sonicGraphSettings) {
             this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, timeWindow: "all-time", granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
               audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
               visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
               navigation: { enableControlCenter: true, enableReset: true, enableExport: false },

@@ -6,7 +6,7 @@
  * Includes timeline controls, settings panel, and cross-navigation to Control Center.
  */
 
-import { App, Modal, ButtonComponent, Notice } from 'obsidian';
+import { App, Modal, ButtonComponent, Notice, setTooltip } from 'obsidian';
 import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
@@ -863,6 +863,11 @@ export class SonicGraphModal extends Modal {
             type: 'checkbox',
             cls: 'sonic-graph-checkbox'
         });
+
+        // Add tooltip to adaptive detail checkbox
+        setTooltip(overrideCheckbox, 'The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.', {
+            placement: 'left'
+        });
         
         // Set initial state (false = adaptive detail enabled, true = disabled/overridden)
         overrideCheckbox.checked = false; // Start with adaptive detail enabled
@@ -997,6 +1002,11 @@ export class SonicGraphModal extends Modal {
             text: Math.round(settings.tagInfluence.weight * 100) + '%',
             cls: 'sonic-graph-weight-value'
         });
+
+        // Add tooltip to tag influence slider
+        setTooltip(tagWeightSlider, 'Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.', {
+            placement: 'top'
+        });
         
         // Add event handler for tag weight changes with real-time preview
         tagWeightSlider.addEventListener('input', (e) => {
@@ -1037,6 +1047,11 @@ export class SonicGraphModal extends Modal {
             const temporalWeightValueDisplay = temporalWeightContainer.createEl('span', {
                 text: Math.round(settings.temporalPositioning.weight * 100) + '%',
                 cls: 'sonic-graph-weight-value'
+            });
+
+            // Add tooltip to temporal positioning slider
+            setTooltip(temporalWeightSlider, 'Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.', {
+                placement: 'top'
             });
             
             temporalWeightSlider.addEventListener('input', (e) => {
@@ -1079,6 +1094,11 @@ export class SonicGraphModal extends Modal {
                 text: Math.round(settings.hubCentrality.weight * 100) + '%',
                 cls: 'sonic-graph-weight-value'
             });
+
+            // Add tooltip to hub centrality slider
+            setTooltip(hubWeightSlider, 'Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.', {
+                placement: 'top'
+            });
             
             hubWeightSlider.addEventListener('input', (e) => {
                 const target = e.target as HTMLInputElement;
@@ -1111,6 +1131,11 @@ export class SonicGraphModal extends Modal {
             debugSwitch.addClass('active');
         }
         const debugHandle = debugSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+
+        // Add tooltip to debug visualization toggle
+        setTooltip(debugSwitch, 'Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.', {
+            placement: 'left'
+        });
         
         debugSwitch.addEventListener('click', () => {
             const isActive = debugSwitch.hasClass('active');
@@ -1404,6 +1429,11 @@ export class SonicGraphModal extends Modal {
             densityValueDisplay.textContent = density + '%';
             this.updateAudioDensity(density);
         });
+
+        // Add tooltip to audio density slider
+        setTooltip(densitySlider, 'Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.', {
+            placement: 'top'
+        });
         
         const densityLabels = densityContainer.createDiv({ cls: 'sonic-graph-density-labels' });
         densityLabels.createEl('span', { text: 'Sparse', cls: 'sonic-graph-density-label' });
@@ -1444,6 +1474,11 @@ export class SonicGraphModal extends Modal {
             this.updateLoopAnimation(!isActive);
         });
 
+        // Add tooltip to loop animation toggle
+        setTooltip(toggleSwitch, 'When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.', {
+            placement: 'left'
+        });
+
         // Timeline Granularity Setting
         const granularityItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         const granularityLabel = granularityItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Timeline granularity' });
@@ -1477,6 +1512,11 @@ export class SonicGraphModal extends Modal {
 
         granularitySelect.addEventListener('change', () => {
             this.updateTimelineGranularity(granularitySelect.value as any);
+        });
+
+        // Add tooltip to granularity select
+        setTooltip(granularitySelect, 'Select time window for organizing timeline events. Year shows broad overview, Day/Hour for detailed analysis. Affects how files are grouped on the timeline.', {
+            placement: 'top'
         });
 
         // Custom Range Controls (initially hidden)
@@ -1533,6 +1573,14 @@ export class SonicGraphModal extends Modal {
             this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as any);
         });
 
+        // Add tooltips to custom range controls
+        setTooltip(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
+            placement: 'top'
+        });
+        setTooltip(customUnitSelect, 'Select the time unit for your custom range (years, months, weeks, days, or hours).', {
+            placement: 'top'
+        });
+
         // Event Spreading Mode Setting
         const spreadingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         const spreadingLabel = spreadingItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Event spreading' });
@@ -1575,6 +1623,17 @@ export class SonicGraphModal extends Modal {
                     this.updateEventSpreadingMode(mode.value as any);
                 }
             });
+
+            // Add tooltips to event spreading options
+            const tooltipText = mode.value === 'none' 
+                ? 'No spreading - events play exactly when files were created. May cause audio crackling if many files were created simultaneously.'
+                : mode.value === 'gentle'
+                ? 'Light spreading - slightly separates clustered events over a small time window. Recommended for most users.'
+                : 'Strong spreading - spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.';
+            
+            setTooltip(radioItem, tooltipText, {
+                placement: 'right'
+            });
         });
     }
 
@@ -1598,6 +1657,11 @@ export class SonicGraphModal extends Modal {
             const optionEl = detectionSelect.createEl('option', { text: option });
             if (option.includes('Auto')) optionEl.selected = true;
         });
+
+        // Add tooltip to auto-detection dropdown
+        setTooltip(detectionSelect, 'The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.', {
+            placement: 'top'
+        });
         
         // Note Duration Slider
         const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -1618,6 +1682,11 @@ export class SonicGraphModal extends Modal {
             cls: 'sonic-graph-slider-value' 
         });
         
+        // Add tooltip to note duration slider
+        setTooltip(durationSlider, 'Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.', {
+            placement: 'top'
+        });
+
         durationSlider.addEventListener('input', () => {
             const value = parseInt(durationSlider.value) / 10;
             durationValue.textContent = `${value.toFixed(1)}s`;
@@ -1652,6 +1721,11 @@ export class SonicGraphModal extends Modal {
             markersSwitch.toggleClass('active', !isActive);
             this.updateTimelineMarkersVisibility(!isActive);
         });
+
+        // Add tooltip to timeline markers toggle
+        setTooltip(markersSwitch, 'Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.', {
+            placement: 'left'
+        });
         
         // Animation Style
         const styleItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -1676,6 +1750,11 @@ export class SonicGraphModal extends Modal {
             }
         });
         
+        // Add tooltip to animation style dropdown
+        setTooltip(styleSelect, 'Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.', {
+            placement: 'top'
+        });
+
         // Add event handler for animation style changes
         styleSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
@@ -1711,6 +1790,11 @@ export class SonicGraphModal extends Modal {
         }
         const fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
+        // Add tooltip to show file names toggle
+        setTooltip(fileNamesSwitch, 'Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.', {
+            placement: 'left'
+        });
+
         fileNamesSwitch.addEventListener('click', () => {
             const isActive = fileNamesSwitch.hasClass('active');
             fileNamesSwitch.toggleClass('active', !isActive);
