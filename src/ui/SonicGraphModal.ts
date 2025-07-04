@@ -805,9 +805,6 @@ export class SonicGraphModal extends Modal {
         // Settings content (scrollable area)
         const settingsContent = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-content' });
         
-        // 0. Adaptive Detail Override (Quick Override)
-        this.createAdaptiveDetailOverride(settingsContent);
-        
         // 1. Filters section
         this.createFiltersSettings(settingsContent);
         
@@ -820,10 +817,13 @@ export class SonicGraphModal extends Modal {
         // 4. Layout section
         this.createLayoutSettings(settingsContent);
         
-        // 4.5. Content-Aware Positioning section
+        // 4.5. Adaptive Detail Override (Quick Override)
+        this.createAdaptiveDetailOverride(settingsContent);
+        
+        // 4.6. Content-Aware Positioning section
         this.createContentAwarePositioningSettings(settingsContent);
         
-        // 4.6. Smart Clustering Algorithms section
+        // 4.7. Smart Clustering Algorithms section
         this.createSmartClusteringSettings(settingsContent);
         
         // 5. Timeline section
