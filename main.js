@@ -15324,7 +15324,7 @@ var init_SonicGraphModal = __esm({
           cls: "sonic-graph-density-slider"
         });
         durationSlider.min = "10";
-        durationSlider.max = "300";
+        durationSlider.max = "420";
         durationSlider.step = "5";
         durationSlider.value = (this.plugin.settings.sonicGraphAnimationDuration || 60).toString();
         const durationValueDisplay = durationContainer.createEl("span", {
@@ -21229,7 +21229,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
       this.plugin.openControlPanel();
     }));
     new import_obsidian.Setting(containerEl).setName("Sonic Graph animation duration").setDesc("Base duration for temporal graph animations in seconds. Higher values create more contemplative pacing.").addSlider(
-      (slider) => slider.setLimits(15, 300, 15).setValue(this.plugin.settings.sonicGraphAnimationDuration || 60).setDynamicTooltip().onChange(async (value) => {
+      (slider) => slider.setLimits(15, 420, 15).setValue(this.plugin.settings.sonicGraphAnimationDuration || 60).setDynamicTooltip().onChange(async (value) => {
         this.plugin.settings.sonicGraphAnimationDuration = value;
         await this.plugin.saveSettings();
         logger.info("settings-change", "Animation duration changed", { duration: value });

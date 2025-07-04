@@ -6,7 +6,7 @@
  * Includes timeline controls, settings panel, and cross-navigation to Control Center.
  */
 
-import { App, Modal, ButtonComponent, Notice, setTooltip } from 'obsidian';
+import { App, Modal, ButtonComponent, Notice, setTooltip, Setting } from 'obsidian';
 import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
@@ -850,30 +850,13 @@ export class SonicGraphModal extends Modal {
         const section = container.createDiv({ cls: 'sonic-graph-settings-section adaptive-detail-override' });
         section.createEl('div', { text: 'ADAPTIVE DETAIL', cls: 'sonic-graph-settings-section-title' });
         
-        // Session override toggle
-        const overrideItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        overrideItem.createEl('label', { text: 'Disable for this session', cls: 'sonic-graph-setting-label' });
-        overrideItem.createEl('div', { 
-            text: 'Temporarily disable adaptive detail levels to see all nodes/links', 
-            cls: 'sonic-graph-setting-description' 
-        });
-        
-        const overrideControl = overrideItem.createDiv({ cls: 'sonic-graph-setting-control' });
-        const overrideCheckbox = overrideControl.createEl('input', { 
-            type: 'checkbox',
-            cls: 'sonic-graph-checkbox'
-        });
-
-        // Add tooltip to adaptive detail checkbox
-        setTooltip(overrideCheckbox, 'The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.', {
-            placement: 'left'
-        });
-        
-        // Set initial state (false = adaptive detail enabled, true = disabled/overridden)
-        overrideCheckbox.checked = false; // Start with adaptive detail enabled
-        
-        this.addEventListener(overrideCheckbox, 'change', () => {
-            const isOverridden = overrideCheckbox.checked;
+        // Session override toggle using Obsidian Setting API
+        new Setting(section)
+            .setName('Disable for this session')
+            .setDesc('The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.')
+            .addToggle(toggle => toggle
+                .setValue(false) // Start with adaptive detail enabled
+                .onChange((isOverridden) => {
             
             // Update adaptive detail manager if it exists
             if (this.adaptiveDetailManager) {
@@ -891,7 +874,8 @@ export class SonicGraphModal extends Modal {
                 overridden: isOverridden,
                 meaning: isOverridden ? 'Show all (disabled)' : 'Adaptive filtering (enabled)'
             });
-        });
+                })
+            );
 
         // Status indicator
         const statusItem = section.createDiv({ cls: 'sonic-graph-setting-item adaptive-detail-status' });
@@ -1186,6 +1170,11 @@ export class SonicGraphModal extends Modal {
             }
         });
         
+        // Add tooltip to clustering algorithm dropdown
+        setTooltip(algorithmSelect, 'Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.', {
+            placement: 'top'
+        });
+        
         algorithmSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
             const algorithm = target.value as 'louvain' | 'modularity' | 'hybrid';
@@ -1204,25 +1193,29 @@ export class SonicGraphModal extends Modal {
         this.createWeightSlider(section, 'Link strength', 
             'Direct connections between files', 
             settings.weights.linkStrength, 0, 1, 0.05,
-            (weight) => this.updateClusteringWeight('linkStrength', weight));
+            (weight) => this.updateClusteringWeight('linkStrength', weight),
+            'Controls how much direct wikilinks and references between files influence clustering. Higher values group strongly linked files together more aggressively.');
         
         // Shared Tags Weight
         this.createWeightSlider(section, 'Shared tags', 
             'Files with common tags cluster together', 
             settings.weights.sharedTags, 0, 1, 0.05,
-            (weight) => this.updateClusteringWeight('sharedTags', weight));
+            (weight) => this.updateClusteringWeight('sharedTags', weight),
+            'Controls how much shared tags between files influence clustering. Higher values group files with similar tags more strongly, creating topic-based clusters.');
         
         // Folder Hierarchy Weight
         this.createWeightSlider(section, 'Folder hierarchy', 
             'Files in similar folder structures', 
             settings.weights.folderHierarchy, 0, 1, 0.05,
-            (weight) => this.updateClusteringWeight('folderHierarchy', weight));
+            (weight) => this.updateClusteringWeight('folderHierarchy', weight),
+            'Controls how much folder organization influences clustering. Higher values group files from the same or related folders together, respecting your existing folder structure.');
         
         // Temporal Proximity Weight
         this.createWeightSlider(section, 'Temporal proximity', 
             'Files created around the same time', 
             settings.weights.temporalProximity, 0, 1, 0.05,
-            (weight) => this.updateClusteringWeight('temporalProximity', weight));
+            (weight) => this.updateClusteringWeight('temporalProximity', weight),
+            'Controls how much creation and modification dates influence clustering. Higher values group files created or modified around the same time periods together.');
         
         // Clustering Parameters Section
         const parametersHeader = section.createDiv({ cls: 'sonic-graph-parameters-header' });
@@ -1250,6 +1243,12 @@ export class SonicGraphModal extends Modal {
             const minSize = parseInt(target.value);
             this.updateClusteringParameter('minClusterSize', minSize);
         });
+
+        // Add tooltip to minimum cluster size input
+        setTooltip(minSizeInput, 'Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.', {
+            placement: 'top',
+            delay: 500
+        });
         
         // Maximum Clusters
         const maxClustersItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -1273,30 +1272,27 @@ export class SonicGraphModal extends Modal {
             const maxClusters = parseInt(target.value);
             this.updateClusteringParameter('maxClusters', maxClusters);
         });
+
+        // Add tooltip to maximum clusters input
+        setTooltip(maxClustersInput, 'Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.', {
+            placement: 'top',
+            delay: 500
+        });
         
         // Visualization Options Section
         const visualizationHeader = section.createDiv({ cls: 'sonic-graph-visualization-header' });
         visualizationHeader.createEl('h4', { text: 'Visualization', cls: 'sonic-graph-visualization-title' });
         
-        // Show Cluster Labels Toggle
-        const labelsItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        labelsItem.createEl('label', { text: 'Show cluster labels', cls: 'sonic-graph-setting-label' });
-        labelsItem.createEl('div', { 
-            text: 'Display auto-generated names for each cluster', 
-            cls: 'sonic-graph-setting-description' 
-        });
-        
-        const labelsToggle = labelsItem.createEl('button', {
-            cls: `sonic-graph-toggle ${settings.visualization.showClusterLabels ? 'active' : ''}`,
-            text: settings.visualization.showClusterLabels ? 'ON' : 'OFF'
-        });
-        
-        labelsToggle.addEventListener('click', () => {
-            const isActive = labelsToggle.classList.contains('active');
-            labelsToggle.classList.toggle('active');
-            labelsToggle.textContent = isActive ? 'OFF' : 'ON';
-            this.updateClusteringVisualization('showClusterLabels', !isActive);
-        });
+        // Show Cluster Labels Toggle using Obsidian Setting API
+        new Setting(section)
+            .setName('Show cluster labels')
+            .setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.')
+            .addToggle(toggle => toggle
+                .setValue(settings.visualization.showClusterLabels)
+                .onChange((value) => {
+                    this.updateClusteringVisualization('showClusterLabels', value);
+                })
+            );
         
         // Cluster Boundaries Style
         const boundariesItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -1353,7 +1349,7 @@ export class SonicGraphModal extends Modal {
      */
     private createWeightSlider(container: HTMLElement, name: string, description: string, 
                               currentValue: number, min: number, max: number, step: number,
-                              onChange: (value: number) => void): void {
+                              onChange: (value: number) => void, tooltipText?: string): void {
         const weightItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         weightItem.createEl('label', { text: name, cls: 'sonic-graph-setting-label' });
         weightItem.createEl('div', { 
@@ -1376,6 +1372,13 @@ export class SonicGraphModal extends Modal {
             text: Math.round(currentValue * 100) + '%',
             cls: 'sonic-graph-weight-value'
         });
+        
+        // Add tooltip if provided
+        if (tooltipText) {
+            setTooltip(weightSlider, tooltipText, {
+                placement: 'top'
+            });
+        }
         
         // Add event handler with real-time preview
         weightSlider.addEventListener('input', (e) => {
@@ -1442,16 +1445,43 @@ export class SonicGraphModal extends Modal {
         // Animation Duration
         const durationItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         durationItem.createEl('label', { text: 'Animation duration', cls: 'sonic-graph-setting-label' });
-        
-        const durationDisplay = durationItem.createEl('span', { 
-            text: '60 seconds',
-            cls: 'sonic-graph-setting-value'
+        durationItem.createEl('div', { 
+            text: 'Control how long the timeline animation lasts', 
+            cls: 'sonic-graph-setting-description' 
         });
-        durationDisplay.style.fontSize = '12px';
-        durationDisplay.style.color = 'var(--text-muted)';
-        durationDisplay.style.padding = '4px 8px';
-        durationDisplay.style.backgroundColor = 'var(--background-secondary)';
-        durationDisplay.style.borderRadius = '4px';
+        
+        const durationContainer = durationItem.createDiv({ cls: 'sonic-graph-density-slider-container' });
+        const durationSlider = durationContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-density-slider'
+        });
+        durationSlider.min = '10';
+        durationSlider.max = '420';
+        durationSlider.step = '5';
+        durationSlider.value = (this.plugin.settings.sonicGraphAnimationDuration || 60).toString();
+        
+        // Add value display for the slider
+        const durationValueDisplay = durationContainer.createEl('span', {
+            text: (this.plugin.settings.sonicGraphAnimationDuration || 60) + ' seconds',
+            cls: 'sonic-graph-density-value'
+        });
+        
+        // Add event handler for animation duration changes
+        durationSlider.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const duration = parseInt(target.value);
+            durationValueDisplay.textContent = duration + ' seconds';
+            this.updateAnimationDuration(duration);
+        });
+
+        // Add tooltip to animation duration slider
+        setTooltip(durationSlider, 'Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.', {
+            placement: 'top'
+        });
+        
+        const durationLabels = durationContainer.createDiv({ cls: 'sonic-graph-density-labels' });
+        durationLabels.createEl('span', { text: 'Fast', cls: 'sonic-graph-density-label' });
+        durationLabels.createEl('span', { text: 'Slow', cls: 'sonic-graph-density-label' });
         
         // Loop Animation
         const loopItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -1477,6 +1507,46 @@ export class SonicGraphModal extends Modal {
         // Add tooltip to loop animation toggle
         setTooltip(toggleSwitch, 'When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.', {
             placement: 'left'
+        });
+
+        // Time Window Setting
+        const timeWindowItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        const timeWindowLabel = timeWindowItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Time window' });
+        const timeWindowDesc = timeWindowItem.createDiv({ 
+            cls: 'sonic-graph-setting-description', 
+            text: 'Choose which files to include in the timeline'
+        });
+
+        const timeWindowControl = timeWindowItem.createDiv({ cls: 'sonic-graph-setting-control' });
+        const timeWindowSelect = timeWindowControl.createEl('select', { cls: 'sonic-graph-select' });
+        
+        // Add time window options
+        const timeWindowOptions = [
+            { value: 'all-time', text: 'All time' },
+            { value: 'past-year', text: 'Past year' },
+            { value: 'past-month', text: 'Past month' },
+            { value: 'past-week', text: 'Past week' },
+            { value: 'past-day', text: 'Past day' },
+            { value: 'past-hour', text: 'Past hour' }
+        ];
+        
+        timeWindowOptions.forEach(option => {
+            const optionElement = timeWindowSelect.createEl('option', {
+                value: option.value,
+                text: option.text
+            });
+            if (option.value === this.getSonicGraphSettings().timeline.timeWindow) {
+                optionElement.selected = true;
+            }
+        });
+        
+        timeWindowSelect.addEventListener('change', () => {
+            this.updateTimeWindow(timeWindowSelect.value as any);
+        });
+
+        // Add tooltip to time window select
+        setTooltip(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
+            placement: 'top'
         });
 
         // Timeline Granularity Setting
@@ -1515,7 +1585,7 @@ export class SonicGraphModal extends Modal {
         });
 
         // Add tooltip to granularity select
-        setTooltip(granularitySelect, 'Select time window for organizing timeline events. Year shows broad overview, Day/Hour for detailed analysis. Affects how files are grouped on the timeline.', {
+        setTooltip(granularitySelect, 'Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.', {
             placement: 'top'
         });
 
@@ -1590,50 +1660,33 @@ export class SonicGraphModal extends Modal {
         });
 
         const spreadingControl = spreadingItem.createDiv({ cls: 'sonic-graph-setting-control' });
-        const spreadingContainer = spreadingControl.createDiv({ cls: 'sonic-graph-radio-group' });
+        const spreadingSelect = spreadingControl.createEl('select', {
+            cls: 'sonic-graph-select'
+        });
 
         const spreadingModes = [
-            { value: 'none', text: 'None', desc: 'No spreading' },
-            { value: 'gentle', text: 'Gentle', desc: 'Light spreading' },
-            { value: 'aggressive', text: 'Aggressive', desc: 'Strong spreading' }
+            { value: 'none', text: 'None - No spreading', desc: 'Events play exactly when files were created. May cause audio crackling if many files were created simultaneously.' },
+            { value: 'gentle', text: 'Gentle - Light spreading', desc: 'Slightly separates clustered events over a small time window. Recommended for most users.' },
+            { value: 'aggressive', text: 'Aggressive - Strong spreading', desc: 'Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.' }
         ];
 
         spreadingModes.forEach(mode => {
-            const radioItem = spreadingContainer.createDiv({ cls: 'sonic-graph-radio-item' });
-            const radio = radioItem.createEl('input', {
-                type: 'radio',
-                attr: { 
-                    name: 'event-spreading-mode',
-                    value: mode.value,
-                    id: `spreading-${mode.value}`
-                }
+            const option = spreadingSelect.createEl('option', {
+                value: mode.value,
+                text: mode.text
             });
             if (this.getSonicGraphSettings().timeline.eventSpreadingMode === mode.value) {
-                radio.checked = true;
+                option.selected = true;
             }
+        });
 
-            const radioLabel = radioItem.createEl('label', {
-                cls: 'sonic-graph-radio-label',
-                text: mode.text,
-                attr: { for: `spreading-${mode.value}` }
-            });
+        spreadingSelect.addEventListener('change', () => {
+            this.updateEventSpreadingMode(spreadingSelect.value as any);
+        });
 
-            radio.addEventListener('change', () => {
-                if (radio.checked) {
-                    this.updateEventSpreadingMode(mode.value as any);
-                }
-            });
-
-            // Add tooltips to event spreading options
-            const tooltipText = mode.value === 'none' 
-                ? 'No spreading - events play exactly when files were created. May cause audio crackling if many files were created simultaneously.'
-                : mode.value === 'gentle'
-                ? 'Light spreading - slightly separates clustered events over a small time window. Recommended for most users.'
-                : 'Strong spreading - spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.';
-            
-            setTooltip(radioItem, tooltipText, {
-                placement: 'right'
-            });
+        // Add tooltip to event spreading dropdown (moved to left as requested)
+        setTooltip(spreadingSelect, 'Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.', {
+            placement: 'left'
         });
     }
 
@@ -1779,6 +1832,11 @@ export class SonicGraphModal extends Modal {
             this.updateLoopAnimation(!isActive);
         });
         
+        // Add tooltip to loop animation toggle
+        setTooltip(loopSwitch, 'Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.', {
+            placement: 'left'
+        });
+        
         // Show File Names Toggle
         const fileNamesItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         fileNamesItem.createEl('label', { text: 'Show file names', cls: 'sonic-graph-setting-label' });
@@ -1864,6 +1922,11 @@ export class SonicGraphModal extends Modal {
             this.updateLayoutSetting('layoutPreset', densityToPreset[value]);
         });
         
+        // Add tooltip to layout density slider
+        setTooltip(densitySlider, 'Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.', {
+            placement: 'top'
+        });
+        
         // Clustering Strength Slider
         const clusteringItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         clusteringItem.createEl('label', { text: 'Clustering strength', cls: 'sonic-graph-setting-label' });
@@ -1891,6 +1954,11 @@ export class SonicGraphModal extends Modal {
             const value = parseInt(clusteringSlider.value) / 100;
             clusteringValue.textContent = `${Math.round(value * 100)}%`;
             this.updateLayoutSetting('clusteringStrength', value);
+        });
+        
+        // Add tooltip to clustering strength slider
+        setTooltip(clusteringSlider, 'Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.', {
+            placement: 'top'
         });
         
         // Group Separation Slider
@@ -1921,6 +1989,11 @@ export class SonicGraphModal extends Modal {
             separationValue.textContent = `${Math.round(value * 100)}%`;
             this.updateLayoutSetting('groupSeparation', value);
         });
+        
+        // Add tooltip to group separation slider
+        setTooltip(separationSlider, 'Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.', {
+            placement: 'top'
+        });
     }
 
     /**
@@ -1946,6 +2019,11 @@ export class SonicGraphModal extends Modal {
             tagsSwitch.toggleClass('active', !isActive);
             this.updateFilterSetting('showTags', !isActive);
         });
+
+        // Add tooltip to show tags toggle
+        setTooltip(tagsSwitch, 'Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.', {
+            placement: 'left'
+        });
         
         // Show Orphans Toggle
         const orphansItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -1953,6 +2031,11 @@ export class SonicGraphModal extends Modal {
         
         const orphansToggle = orphansItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const orphansSwitch = orphansToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
+        
+        // Add tooltip to show orphans toggle
+        setTooltip(orphansSwitch, 'Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn\'t been linked yet.', {
+            placement: 'left'
+        });
         if (this.getSonicGraphSettings().layout.filters.showOrphans) {
             orphansSwitch.addClass('active');
         }
@@ -2082,6 +2165,11 @@ export class SonicGraphModal extends Modal {
         searchInput.style.borderRadius = '4px';
         searchInput.style.backgroundColor = '#fef3c7'; // Light yellow background
         searchInput.style.fontSize = '12px';
+        
+        // Add tooltip to groups search input
+        setTooltip(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
+            placement: 'top'
+        });
         
         // Show search options overlay on focus
         searchInput.addEventListener('focus', () => {
@@ -2988,6 +3076,7 @@ export class SonicGraphModal extends Modal {
                 spacing: 'auto' as const,
                 loop: false,
                 showMarkers: true,
+                timeWindow: 'all-time' as const,
                 granularity: 'year' as const,
                 customRange: {
                     value: 1,
@@ -3246,6 +3335,38 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
+     * Update animation duration setting and save to plugin settings
+     */
+    private updateAnimationDuration(duration: number): void {
+        // Save to plugin settings
+        this.plugin.settings.sonicGraphAnimationDuration = duration;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated animation duration', { duration });
+        
+        // The animator will pick up the new duration from settings when it runs
+    }
+
+    /**
+     * Update time window setting
+     */
+    private updateTimeWindow(timeWindow: 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour'): void {
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.timeline.timeWindow = timeWindow;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated time window', { timeWindow });
+        
+        // Update temporal animator with new time window
+        if (this.temporalAnimator) {
+            this.applyTimeWindowChange(timeWindow);
+        }
+    }
+
+    /**
      * Update timeline granularity setting
      */
     private updateTimelineGranularity(granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'): void {
@@ -3309,21 +3430,61 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
+     * Apply time window changes to temporal animator
+     */
+    private applyTimeWindowChange(timeWindow: 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour'): void {
+        if (!this.temporalAnimator) {
+            logger.debug('timeline', 'No temporal animator available for time window change', { timeWindow });
+            return;
+        }
+
+        const settings = this.getSonicGraphSettings();
+        this.temporalAnimator.updateTimelineSettings(settings.timeline);
+
+        logger.info('timeline', 'Time window change applied to temporal animator', { 
+            timeWindow,
+            granularity: settings.timeline.granularity,
+            eventSpreadingMode: settings.timeline.eventSpreadingMode
+        });
+    }
+
+    /**
      * Apply timeline granularity changes to temporal animator
      */
     private applyTimelineGranularityChange(granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'): void {
-        // This method will be implemented when we update TemporalGraphAnimator
-        // For now, it's a placeholder to prevent runtime errors
-        logger.debug('timeline', 'Timeline granularity change applied', { granularity });
+        if (!this.temporalAnimator) {
+            logger.debug('timeline', 'No temporal animator available for granularity change', { granularity });
+            return;
+        }
+
+        const settings = this.getSonicGraphSettings();
+        this.temporalAnimator.updateTimelineSettings(settings.timeline);
+
+        logger.info('timeline', 'Timeline granularity change applied to temporal animator', { 
+            granularity,
+            customRange: settings.timeline.customRange,
+            eventSpreadingMode: settings.timeline.eventSpreadingMode
+        });
     }
 
     /**
      * Apply event spreading changes to temporal animator
      */
     private applyEventSpreadingChange(mode: 'none' | 'gentle' | 'aggressive'): void {
-        // This method will be implemented when we update TemporalGraphAnimator
-        // For now, it's a placeholder to prevent runtime errors
-        logger.debug('timeline', 'Event spreading mode change applied', { mode });
+        if (!this.temporalAnimator) {
+            logger.debug('timeline', 'No temporal animator available for event spreading change', { mode });
+            return;
+        }
+
+        const settings = this.getSonicGraphSettings();
+        this.temporalAnimator.updateTimelineSettings(settings.timeline);
+
+        logger.info('timeline', 'Event spreading mode change applied to temporal animator', { 
+            mode,
+            maxEventSpacing: settings.timeline.maxEventSpacing,
+            simultaneousEventLimit: settings.timeline.simultaneousEventLimit,
+            eventBatchSize: settings.timeline.eventBatchSize
+        });
     }
 
     /**
