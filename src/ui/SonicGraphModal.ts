@@ -2770,7 +2770,16 @@ export class SonicGraphModal extends Modal {
                 duration: 60,
                 spacing: 'auto' as const,
                 loop: false,
-                showMarkers: true
+                showMarkers: true,
+                granularity: 'year' as const,
+                customRange: {
+                    value: 1,
+                    unit: 'years' as const
+                },
+                eventSpreadingMode: 'gentle' as const,
+                maxEventSpacing: 5.0,
+                simultaneousEventLimit: 3,
+                eventBatchSize: 5
             },
             audio: {
                 density: 100,
