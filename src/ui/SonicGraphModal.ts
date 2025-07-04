@@ -1443,6 +1443,139 @@ export class SonicGraphModal extends Modal {
             toggleSwitch.toggleClass('active', !isActive);
             this.updateLoopAnimation(!isActive);
         });
+
+        // Timeline Granularity Setting
+        const granularityItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        const granularityLabel = granularityItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Timeline granularity' });
+        const granularityDesc = granularityItem.createDiv({ 
+            cls: 'sonic-graph-setting-description', 
+            text: 'Choose the time range for timeline animation'
+        });
+
+        const granularityControl = granularityItem.createDiv({ cls: 'sonic-graph-setting-control' });
+        const granularitySelect = granularityControl.createEl('select', { cls: 'sonic-graph-select' });
+        
+        // Add granularity options
+        const granularityOptions = [
+            { value: 'year', text: 'Year' },
+            { value: 'month', text: 'Month' },
+            { value: 'week', text: 'Week' },
+            { value: 'day', text: 'Day' },
+            { value: 'hour', text: 'Hour' },
+            { value: 'custom', text: 'Custom Range' }
+        ];
+
+        granularityOptions.forEach(option => {
+            const optionEl = granularitySelect.createEl('option', { 
+                value: option.value, 
+                text: option.text 
+            });
+            if (this.getSonicGraphSettings().timeline.granularity === option.value) {
+                optionEl.selected = true;
+            }
+        });
+
+        granularitySelect.addEventListener('change', () => {
+            this.updateTimelineGranularity(granularitySelect.value as any);
+        });
+
+        // Custom Range Controls (initially hidden)
+        const customRangeItem = section.createDiv({ 
+            cls: 'sonic-graph-setting-item sonic-graph-custom-range',
+            attr: { style: this.getSonicGraphSettings().timeline.granularity === 'custom' ? '' : 'display: none;' }
+        });
+        const customRangeLabel = customRangeItem.createDiv({ 
+            cls: 'sonic-graph-setting-label', 
+            text: 'Custom range' 
+        });
+        const customRangeDesc = customRangeItem.createDiv({ 
+            cls: 'sonic-graph-setting-description', 
+            text: 'Specify custom time range value and unit'
+        });
+
+        const customRangeControl = customRangeItem.createDiv({ cls: 'sonic-graph-setting-control' });
+        const customRangeContainer = customRangeControl.createDiv({ cls: 'sonic-graph-custom-range-container' });
+        
+        const customValueInput = customRangeContainer.createEl('input', {
+            type: 'number',
+            cls: 'sonic-graph-number-input',
+            attr: { 
+                min: '1', 
+                max: '999', 
+                value: this.getSonicGraphSettings().timeline.customRange.value.toString() 
+            }
+        });
+
+        const customUnitSelect = customRangeContainer.createEl('select', { cls: 'sonic-graph-select' });
+        const unitOptions = [
+            { value: 'years', text: 'Years' },
+            { value: 'months', text: 'Months' },
+            { value: 'weeks', text: 'Weeks' },
+            { value: 'days', text: 'Days' },
+            { value: 'hours', text: 'Hours' }
+        ];
+
+        unitOptions.forEach(option => {
+            const optionEl = customUnitSelect.createEl('option', { 
+                value: option.value, 
+                text: option.text 
+            });
+            if (this.getSonicGraphSettings().timeline.customRange.unit === option.value) {
+                optionEl.selected = true;
+            }
+        });
+
+        customValueInput.addEventListener('input', () => {
+            this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as any);
+        });
+
+        customUnitSelect.addEventListener('change', () => {
+            this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as any);
+        });
+
+        // Event Spreading Mode Setting
+        const spreadingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        const spreadingLabel = spreadingItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Event spreading' });
+        const spreadingDesc = spreadingItem.createDiv({ 
+            cls: 'sonic-graph-setting-description', 
+            text: 'How to handle clustered events to prevent audio crackling'
+        });
+
+        const spreadingControl = spreadingItem.createDiv({ cls: 'sonic-graph-setting-control' });
+        const spreadingContainer = spreadingControl.createDiv({ cls: 'sonic-graph-radio-group' });
+
+        const spreadingModes = [
+            { value: 'none', text: 'None', desc: 'No spreading' },
+            { value: 'gentle', text: 'Gentle', desc: 'Light spreading' },
+            { value: 'aggressive', text: 'Aggressive', desc: 'Strong spreading' }
+        ];
+
+        spreadingModes.forEach(mode => {
+            const radioItem = spreadingContainer.createDiv({ cls: 'sonic-graph-radio-item' });
+            const radio = radioItem.createEl('input', {
+                type: 'radio',
+                attr: { 
+                    name: 'event-spreading-mode',
+                    value: mode.value,
+                    id: `spreading-${mode.value}`
+                }
+            });
+            if (this.getSonicGraphSettings().timeline.eventSpreadingMode === mode.value) {
+                radio.checked = true;
+            }
+
+            const radioLabel = radioItem.createEl('label', {
+                cls: 'sonic-graph-radio-label',
+                text: mode.text,
+                attr: { for: `spreading-${mode.value}` }
+            });
+
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    this.updateEventSpreadingMode(mode.value as any);
+                }
+            });
+        });
     }
 
     /**
@@ -3026,6 +3159,87 @@ export class SonicGraphModal extends Modal {
         if (this.temporalAnimator) {
             this.temporalAnimator.setLoop(enabled);
         }
+    }
+
+    /**
+     * Update timeline granularity setting
+     */
+    private updateTimelineGranularity(granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'): void {
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.timeline.granularity = granularity;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated timeline granularity', { granularity });
+        
+        // Show/hide custom range controls based on selection
+        const customRangeElement = this.settingsPanel?.querySelector('.sonic-graph-custom-range') as HTMLElement;
+        if (customRangeElement) {
+            customRangeElement.style.display = granularity === 'custom' ? '' : 'none';
+        }
+        
+        // Update temporal animator if available
+        if (this.temporalAnimator) {
+            this.applyTimelineGranularityChange(granularity);
+        }
+    }
+
+    /**
+     * Update custom range setting
+     */
+    private updateCustomRange(value: number, unit: 'years' | 'months' | 'weeks' | 'days' | 'hours'): void {
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.timeline.customRange = { value, unit };
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated custom range', { value, unit });
+        
+        // Update temporal animator if using custom granularity
+        if (this.temporalAnimator && this.plugin.settings.sonicGraphSettings.timeline.granularity === 'custom') {
+            this.applyTimelineGranularityChange('custom');
+        }
+    }
+
+    /**
+     * Update event spreading mode setting
+     */
+    private updateEventSpreadingMode(mode: 'none' | 'gentle' | 'aggressive'): void {
+        if (!this.plugin.settings.sonicGraphSettings) {
+            this.plugin.settings.sonicGraphSettings = this.getSonicGraphSettings();
+        }
+        
+        this.plugin.settings.sonicGraphSettings.timeline.eventSpreadingMode = mode;
+        this.plugin.saveSettings();
+        
+        logger.debug('settings', 'Updated event spreading mode', { mode });
+        
+        // Update temporal animator with new spreading mode
+        if (this.temporalAnimator) {
+            this.applyEventSpreadingChange(mode);
+        }
+    }
+
+    /**
+     * Apply timeline granularity changes to temporal animator
+     */
+    private applyTimelineGranularityChange(granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'): void {
+        // This method will be implemented when we update TemporalGraphAnimator
+        // For now, it's a placeholder to prevent runtime errors
+        logger.debug('timeline', 'Timeline granularity change applied', { granularity });
+    }
+
+    /**
+     * Apply event spreading changes to temporal animator
+     */
+    private applyEventSpreadingChange(mode: 'none' | 'gentle' | 'aggressive'): void {
+        // This method will be implemented when we update TemporalGraphAnimator
+        // For now, it's a placeholder to prevent runtime errors
+        logger.debug('timeline', 'Event spreading mode change applied', { mode });
     }
 
     /**
