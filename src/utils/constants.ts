@@ -203,8 +203,10 @@ export interface SonicGraphSettings {
 		spacing: 'auto' | 'dense' | 'even' | 'custom'; // Timeline spacing mode
 		loop: boolean;              // Automatically restart animation when complete
 		showMarkers: boolean;       // Show year markers on timeline
+		// Time window filtering
+		timeWindow: 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour'; // Which files to include
 		// Timeline granularity controls
-		granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'; // Time range granularity
+		granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'; // Animation pacing granularity
 		customRange: {
 			value: number;          // Custom range value (e.g., 3 for "3 months")
 			unit: 'years' | 'months' | 'weeks' | 'days' | 'hours'; // Custom range unit
@@ -437,6 +439,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			spacing: 'auto',
 			loop: false,
 			showMarkers: true,
+			// Time window default
+			timeWindow: 'all-time',
 			// Timeline granularity defaults
 			granularity: 'year',
 			customRange: {

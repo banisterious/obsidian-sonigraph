@@ -51,7 +51,10 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
   - **Instant Loading Performance**: Optimized data processing using Obsidian's MetadataCache infrastructure
   - **Static Graph View**: D3.js force simulation displaying all vault files and connections
   - **Timeline Animation Mode**: Audio-synchronized chronological node appearance with intelligent spacing
-  - **Professional Settings Panel**: Comprehensive configuration for timeline, audio, and visual options
+  - **Timeline Granularity Controls**: Multi-level time granularity (Year, Month, Week, Day, Hour) with custom ranges
+  - **Time Window Filtering**: Focus on specific time periods (All time, Past year, Past month, etc.)
+  - **Smart Event Spreading**: Intelligent audio event distribution to prevent crackling from simultaneous triggers
+  - **Professional Settings Panel**: Comprehensive configuration with 21+ settings, each with detailed tooltips
   - **Advanced Filtering**: Content exclusion system with native Obsidian autocomplete for folders and files
   - **Performance Optimizations**: Adaptive rendering modes and efficient data structures for large vaults
 - **Enhanced Modal Interface**: Full-screen overlay settings panel with smooth transitions and responsive layout

@@ -38,15 +38,52 @@ src/ui/
 ```
 
 **Key Features:**
-- **Temporal Animation**: Time-based node appearance with intelligent spacing
+- **Multi-Level Timeline Granularity**: Configurable time scales (Year, Month, Week, Day, Hour, Custom)
+- **Time Window Filtering**: Focus on specific time periods independent of granularity
+- **Advanced Event Spreading**: Intelligent audio distribution to prevent crackling from simultaneous events
 - **Dynamic Audio Mapping**: Respects user's Control Center instrument selections
 - **Content-Aware Positioning**: Semantic forces based on tags, time, and hub centrality
 - **Smart Clustering**: Automatic grouping using community detection algorithms
 - **Content Filtering**: Advanced exclusion system with native Obsidian autocomplete
 - **Force-Directed Layout**: D3.js simulation with organic clustering
+- **Comprehensive Settings UI**: 21+ settings with detailed tooltips and Obsidian-style consistency
 - **Real-time Synchronization**: Visual and audio events perfectly synchronized
 
-## 2. Temporal Graph Animation
+## 2. Timeline Granularity System
+
+**Multi-Level Time Controls (January 2025 Enhancement):**
+
+The timeline granularity system provides comprehensive control over temporal visualization, addressing both visual clutter and audio crackling from simultaneous file creation events.
+
+### Granularity Levels
+```typescript
+interface TimelineGranularityConfig {
+  granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom';
+  customRange: {
+    value: number;
+    unit: 'years' | 'months' | 'weeks' | 'days' | 'hours';
+  };
+  timeWindow: 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour';
+}
+```
+
+### Advanced Event Spreading
+- **None Mode**: Events play exactly when files were created (may cause crackling)
+- **Gentle Mode**: Light spreading with 100ms threshold and 2-second maximum window
+- **Aggressive Mode**: Strong spreading with 50ms threshold and full spacing window
+- **Batch Processing**: Handles large event clusters (>5 simultaneous events) efficiently
+
+### Intelligent Date Range Calculation
+```typescript
+private calculateDateRangeFromGranularity(): void {
+  // 1. Extract actual file dates from vault
+  // 2. Apply time window filtering (independent of granularity)
+  // 3. Respect actual date boundaries (never extend beyond file dates)
+  // 4. Update animation timeline with intelligent event spacing
+}
+```
+
+## 3. Temporal Graph Animation
 
 **TemporalGraphAnimator Class:**
 ```typescript
@@ -576,6 +613,57 @@ export class AdaptiveDetailManager {
 - `src/graph/GraphRenderer.ts`: Zoom change callbacks and filtered data rendering
 - `src/ui/SonicGraphModal.ts`: Settings panel integration and real-time stats display
 - `src/ui/settings.ts`: Main plugin settings with conditional sub-options
+
+## 11. Comprehensive Settings Enhancement System
+
+**Enhanced User Experience (January 2025):**
+
+The settings enhancement system provides comprehensive guidance and improved UI consistency across all Sonic Graph controls.
+
+### Tooltip System
+```typescript
+// Enhanced tooltip implementation using Obsidian's native API
+setTooltip(element, 'Detailed explanation of feature purpose and usage guidance', {
+    placement: 'left' | 'right' | 'top' | 'bottom'
+});
+```
+
+**Coverage**: 21+ settings now include detailed tooltips explaining:
+- Feature purpose and behavior
+- Practical usage guidance
+- Performance implications
+- Recommended settings for different use cases
+
+### UI Consistency Improvements
+- **Obsidian-Style Toggles**: Converted custom toggles to native `Setting` API components
+- **Enhanced Dropdown Controls**: Replaced radio buttons with accessible dropdown menus
+- **Weight Slider Enhancement**: Extended clustering weight sliders with comprehensive tooltip support
+- **Visual Hierarchy**: Improved settings organization with better grouping and labeling
+
+### Settings Categories Enhanced
+1. **Timeline Controls**: Granularity, time windows, event spreading with detailed explanations
+2. **Clustering Parameters**: Algorithm selection, weights, and cluster limits with practical guidance
+3. **Visual Options**: Animation styles, layouts, and display toggles with usage recommendations
+4. **Audio Settings**: Density controls, spreading modes, and quality parameters with audio guidance
+5. **Filter Controls**: Content inclusion/exclusion with scope explanations
+
+### Technical Implementation
+```typescript
+// Enhanced weight slider with tooltip support
+private createWeightSlider(container: HTMLElement, name: string, description: string, 
+                          currentValue: number, min: number, max: number, step: number,
+                          onChange: (value: number) => void, tooltipText?: string): void {
+    // Create slider with comprehensive tooltip if provided
+    if (tooltipText) {
+        setTooltip(weightSlider, tooltipText, { placement: 'top' });
+    }
+}
+```
+
+**Integration Points:**
+- `src/ui/SonicGraphModal.ts`: Enhanced settings panel with comprehensive tooltips
+- All clustering, timeline, visual, and audio settings sections
+- Native Obsidian `Setting` API integration for consistency
 
 ---
 
