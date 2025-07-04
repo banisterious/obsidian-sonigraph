@@ -211,7 +211,19 @@ var init_constants = __esm({
           duration: 60,
           spacing: "auto",
           loop: false,
-          showMarkers: true
+          showMarkers: true,
+          // Timeline granularity defaults
+          granularity: "year",
+          customRange: {
+            value: 1,
+            unit: "years"
+          },
+          // Event spreading defaults
+          eventSpreadingMode: "gentle",
+          maxEventSpacing: 5,
+          // Audio crackling prevention defaults
+          simultaneousEventLimit: 3,
+          eventBatchSize: 5
         },
         audio: {
           density: 30,
@@ -16110,7 +16122,16 @@ var init_SonicGraphModal = __esm({
             duration: 60,
             spacing: "auto",
             loop: false,
-            showMarkers: true
+            showMarkers: true,
+            granularity: "year",
+            customRange: {
+              value: 1,
+              unit: "years"
+            },
+            eventSpreadingMode: "gentle",
+            maxEventSpacing: 5,
+            simultaneousEventLimit: 3,
+            eventBatchSize: 5
           },
           audio: {
             density: 100,
@@ -20657,7 +20678,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.adaptiveDetail) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
           if (!this.plugin.settings.sonicGraphSettings) {
             this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true },
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
               audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
               visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
               navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
@@ -20711,7 +20732,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.contentAwarePositioning) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
           if (!this.plugin.settings.sonicGraphSettings) {
             this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true },
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
               audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
               visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
               navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
@@ -20742,7 +20763,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.smartClustering) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
           if (!this.plugin.settings.sonicGraphSettings) {
             this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true },
+              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
               audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
               visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
               navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
