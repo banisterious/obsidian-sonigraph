@@ -203,6 +203,18 @@ export interface SonicGraphSettings {
 		spacing: 'auto' | 'dense' | 'even' | 'custom'; // Timeline spacing mode
 		loop: boolean;              // Automatically restart animation when complete
 		showMarkers: boolean;       // Show year markers on timeline
+		// Timeline granularity controls
+		granularity: 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom'; // Time range granularity
+		customRange: {
+			value: number;          // Custom range value (e.g., 3 for "3 months")
+			unit: 'years' | 'months' | 'weeks' | 'days' | 'hours'; // Custom range unit
+		};
+		// Smart event spreading for clustered events
+		eventSpreadingMode: 'none' | 'gentle' | 'aggressive'; // How to handle clustered events
+		maxEventSpacing: number;    // Maximum time window for spreading events (seconds)
+		// Audio crackling prevention
+		simultaneousEventLimit: number; // Maximum concurrent audio events
+		eventBatchSize: number;     // Events to process per animation frame
 	};
 	audio: {
 		density: number;            // Audio density (0-100, controls note frequency)
@@ -424,7 +436,19 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			duration: 60,
 			spacing: 'auto',
 			loop: false,
-			showMarkers: true
+			showMarkers: true,
+			// Timeline granularity defaults
+			granularity: 'year',
+			customRange: {
+				value: 1,
+				unit: 'years'
+			},
+			// Event spreading defaults
+			eventSpreadingMode: 'gentle',
+			maxEventSpacing: 5.0,
+			// Audio crackling prevention defaults
+			simultaneousEventLimit: 3,
+			eventBatchSize: 5
 		},
 		audio: {
 			density: 30,
