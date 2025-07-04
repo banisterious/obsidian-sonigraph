@@ -83,7 +83,7 @@ If you find this plugin useful, please consider supporting its development!
 
 ## 🎯 Current Status
 
-**Current Version**: 0.6.0 (Production Ready)
+**Current Version**: 0.11.0 (Production Ready)
 
 ✅ **Complete Orchestral Implementation**
 - 34 instruments across all orchestral families
