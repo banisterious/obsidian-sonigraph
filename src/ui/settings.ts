@@ -52,7 +52,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 			.setName('Sonic Graph animation duration')
 			.setDesc('Base duration for temporal graph animations in seconds. Higher values create more contemplative pacing.')
 			.addSlider(slider => slider
-				.setLimits(15, 300, 15) // 15 seconds to 5 minutes, in 15-second increments
+				.setLimits(15, 420, 15) // 15 seconds to 7 minutes, in 15-second increments
 				.setValue(this.plugin.settings.sonicGraphAnimationDuration || 60)
 				.setDynamicTooltip()
 				.onChange(async (value) => {
@@ -75,7 +75,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) {
 						this.plugin.settings.sonicGraphSettings = {
-							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true, granularity: 'year', customRange: { value: 1, unit: 'years' }, eventSpreadingMode: 'gentle', maxEventSpacing: 5.0, simultaneousEventLimit: 3, eventBatchSize: 5 },
+							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true, timeWindow: 'all-time', granularity: 'year', customRange: { value: 1, unit: 'years' }, eventSpreadingMode: 'gentle', maxEventSpacing: 5.0, simultaneousEventLimit: 3, eventBatchSize: 5 },
 							audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: 'auto' },
 							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
 							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
@@ -157,7 +157,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) {
 						this.plugin.settings.sonicGraphSettings = {
-							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true, granularity: 'year', customRange: { value: 1, unit: 'years' }, eventSpreadingMode: 'gentle', maxEventSpacing: 5.0, simultaneousEventLimit: 3, eventBatchSize: 5 },
+							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true, timeWindow: 'all-time', granularity: 'year', customRange: { value: 1, unit: 'years' }, eventSpreadingMode: 'gentle', maxEventSpacing: 5.0, simultaneousEventLimit: 3, eventBatchSize: 5 },
 							audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: 'auto' },
 							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
 							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
@@ -191,7 +191,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) {
 						this.plugin.settings.sonicGraphSettings = {
-							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true, granularity: 'year', customRange: { value: 1, unit: 'years' }, eventSpreadingMode: 'gentle', maxEventSpacing: 5.0, simultaneousEventLimit: 3, eventBatchSize: 5 },
+							timeline: { duration: 60, spacing: 'auto', loop: false, showMarkers: true, timeWindow: 'all-time', granularity: 'year', customRange: { value: 1, unit: 'years' }, eventSpreadingMode: 'gentle', maxEventSpacing: 5.0, simultaneousEventLimit: 3, eventBatchSize: 5 },
 							audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: 'auto' },
 							visual: { showLabels: false, showFileNames: false, animationStyle: 'fade', nodeScaling: 1.0, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
 							navigation: { enableControlCenter: true, enableReset: true, enableExport: false },

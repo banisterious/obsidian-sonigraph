@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Timeline Granularity & UI Enhancement System
+
+#### Comprehensive Timeline Controls
+- **Multi-Level Granularity**: Choose from Year, Month, Week, Day, Hour, or Custom time ranges for timeline animation
+- **Time Window Filtering**: Focus on specific periods (All time, Past year, Past month, Past week, Past day, Past hour)
+- **Smart Event Spreading**: Intelligent audio event distribution with None, Gentle, and Aggressive modes to prevent crackling
+- **Custom Range Support**: Precise control with configurable value and time unit combinations
+- **Intelligent Date Range Calculation**: Respects actual file dates while applying user-selected time windows
+
+#### Audio Quality Improvements
+- **Advanced Event Spreading Algorithms**: Sophisticated batch processing for large simultaneous event clusters
+- **Simultaneous Event Limiting**: Configurable thresholds to prevent audio system overload
+- **Adaptive Frame Rate**: Dynamic animation performance based on graph complexity
+- **Crackling Prevention**: Intelligent spacing algorithms eliminate audio distortion from clustered events
+
+#### Comprehensive Settings Enhancement
+- **21 Enhanced Tooltips**: Added detailed, helpful tooltips to all Sonic Graph settings explaining features and usage
+- **Obsidian-Style UI Consistency**: Converted Adaptive Detail and Show Cluster Labels to native Obsidian Setting API toggles
+- **Enhanced Weight Sliders**: Improved clustering weight controls with detailed tooltips for Link Strength, Shared Tags, Folder Hierarchy, and Temporal Proximity
+- **Settings Organization**: Better visual hierarchy with comprehensive user guidance throughout the interface
+
+#### User Experience Improvements
+- **Event Spreading Dropdown**: Converted radio buttons to dropdown with improved tooltip placement
+- **Real-time Setting Updates**: Immediate visual feedback for all timeline and granularity changes
+- **Smart Default Values**: Intelligent default settings that work well for most use cases
+- **Performance Monitoring**: Enhanced logging system for debugging timeline and audio issues
+
 ## [0.10.0] - 2025-07-03
 
 ### Major Features Added
