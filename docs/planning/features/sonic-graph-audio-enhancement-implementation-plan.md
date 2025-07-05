@@ -1,9 +1,12 @@
 # Sonic Graph Audio Enhancement Implementation Plan
 
-**Document Version:** 1.0  
-**Date:** January 5, 2025  
+**Document Version:** 1.1  
+**Date:** July 4, 2025  
 **Based on:** Sonic Graph Audio Enhancement Specification v1.1  
-**Author:** Implementation Planning  
+**Author:** Implementation Planning
+
+**Related Documents:**
+- **Audio Sample Library:** [Freesound Audio Library for Continuous Layers](freesound-audio-library.md) - Curated collection of atmospheric samples for implementation  
 
 ---
 
@@ -183,12 +186,16 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
      private filterChain: Tone.Filter;
      private volumeControl: Tone.Volume;
      private currentGenre: MusicalGenre;
+     private fadeController: AudioFadeController;
+     private sampleLoader: FreesoundSampleLoader;
      
      initializeContinuousLayer(config: ContinuousLayerConfig): void;
      setMusicalGenre(genre: MusicalGenre): void;
      updateVaultDensity(nodeCount: number, maxNodes: number): void;
      updateAnimationProgress(progress: number): void;
      updateActivityLevel(recentEventCount: number): void;
+     crossfadeToNewSample(newSample: AudioSample, fadeDuration?: number): void;
+     handleSampleTransition(fromSample: AudioSample, toSample: AudioSample): void;
    }
    
    interface ContinuousLayerConfig {
@@ -197,17 +204,26 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
      intensity: number;
      evolutionRate: number;
      baseVolume: number;
+     fadeSettings: {
+       defaultFadeInDuration: number;    // milliseconds
+       defaultFadeOutDuration: number;   // milliseconds
+       crossfadeDuration: number;        // overlap time between samples
+       fadeInCurve: 'linear' | 'exponential' | 'logarithmic';
+       fadeOutCurve: 'linear' | 'exponential' | 'logarithmic';
+       preventAudioPops: boolean;        // anti-click protection
+       intelligentCrossfade: boolean;    // automatic fade point detection
+     };
    }
    ```
 
 2. **Musical Genre Implementations**
-   - **Drone**: Sustained tones, minimal harmonic changes, deep atmospheric presence
+   - **Drone**: Sustained tones, minimal harmonic changes, deep atmospheric presence. Utilize [curated drone samples](freesound-audio-library.md#drone-genre) including Electronic Minute series (5-10+ minutes), modular synth drones, and equipment-generated atmospheric textures.
    - **Ambient**: Gentle evolving textures with subtle movement and filtering
    - **Orchestral**: Classical instruments in sustained arrangements (strings, brass pads)
    - **Electronic**: Synthesized pads and evolving electronic textures
    - **Minimal**: Sparse, contemplative sustained elements with long decay
-   - **Oceanic**: Whale songs and ocean sounds, organic evolving textures
-   - **Sci-Fi**: Futuristic atmospheric sounds, space ambience, technological textures
+   - **Oceanic**: Whale songs and ocean sounds, organic evolving textures (placeholder - awaiting [Freesound samples](freesound-audio-library.md#oceanic-genre))
+   - **Sci-Fi**: Futuristic atmospheric sounds, space ambience, technological textures. Implement [sci-fi samples](freesound-audio-library.md#sci-fi-genre) including Dark Texture square wave synthesis and laser effects.
 
 3. **Dynamic Parameter Modulation**
    - **Vault Size/Density → Volume/Brightness**: More nodes = higher volume and filter cutoff
@@ -216,17 +232,19 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    - **Genre-Specific Evolution**: Each genre has unique response patterns
 
 4. **Instrument Integration**
-   - **Drone**: Deep bass synths, organ-like sustained tones
+   - **Drone**: Deep bass synths, organ-like sustained tones. Integrate [21 curated drone samples](freesound-audio-library.md#atmospheric-drones) ranging from 10 seconds to 10+ minutes with automatic looping and crossfading support.
    - **Ambient**: Electronic pads, vocal pads, ethereal textures
    - **Orchestral**: String sections, brass pads, woodwind sustains
    - **Electronic**: Lead synths, bass synths, arp synths in sustained mode
    - **Minimal**: Single instruments with long releases, sparse textures
-   - **Oceanic**: Existing whale sound collection, ocean ambience, organic pitch modulation
-   - **Sci-Fi**: Noise synthesizers, metallic resonances, space-like reverbs, technological bleeps and sweeps
+   - **Oceanic**: Existing whale sound collection, ocean ambience, organic pitch modulation (expanding with [future Freesound samples](freesound-audio-library.md#oceanic-genre))
+   - **Sci-Fi**: Noise synthesizers, metallic resonances, space-like reverbs, technological bleeps and sweeps. Complement with [sci-fi samples](freesound-audio-library.md#sci-fi-genre) for authentic space atmosphere.
 
 **Files to Create:**
 - `src/audio/layers/ContinuousLayerManager.ts`
 - `src/audio/layers/MusicalGenreEngine.ts`
+- `src/audio/layers/FreesoundSampleLoader.ts` - Implementation for loading and managing [curated audio samples](freesound-audio-library.md)
+- `src/audio/layers/AudioFadeController.ts` - Fade-in, fade-out, and crossfade management for seamless transitions
 - `src/audio/layers/types.ts`
 
 **Files to Modify:**
@@ -615,11 +633,15 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    ```
 
 2. **Continuous Layers Controls**
-   - **Genre Selection**: Dropdown with options (Ambient, Drone, Orchestral, Electronic, Minimal, Oceanic, Sci-Fi)
+   - **Genre Selection**: Dropdown with options (Ambient, Drone, Orchestral, Electronic, Minimal, Oceanic, Sci-Fi) mapped to [curated sample collections](freesound-audio-library.md)
+   - **Sample Source Toggle**: Choose between synthesized instruments and Freesound samples
    - **Layer Enable/Disable**: Toggle for each continuous layer type
    - **Intensity Slider**: Control layer prominence (0-100%)
    - **Evolution Rate**: How quickly layers respond to vault changes
    - **Volume Controls**: Individual volume sliders for each layer type
+   - **Fade Controls**: Fade-in/fade-out duration sliders (0.5-10 seconds)
+   - **Crossfade Settings**: Overlap duration and curve type selection
+   - **Attribution Display**: Automatic display of Creative Commons attributions for samples requiring it
 
 3. **Mapping Rules Configuration**
    - Tag-to-instrument mapping table
@@ -663,11 +685,11 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
 2. **Default Theme Presets**
    - **"Orchestral Journey"**: Full orchestral arrangement with classical instruments + Orchestral genre
    - **"Ambient Flow"**: Subtle ambient layers with gentle electronic textures + Ambient genre
-   - **"Drone Meditation"**: Deep, sustained atmospheric tones + Drone genre
+   - **"Drone Meditation"**: Deep, sustained atmospheric tones using [curated drone samples](freesound-audio-library.md#drone-genre) + Drone genre
    - **"Electronic Explorer"**: Synthesized textures and evolving electronic sounds + Electronic genre
    - **"Minimalist Zen"**: Sparse, contemplative audio with simple mappings + Minimal genre
-   - **"Ocean Depths"**: Whale songs and oceanic ambience with organic evolution + Oceanic genre
-   - **"Space Station"**: Futuristic atmospheric sounds with technological textures + Sci-Fi genre
+   - **"Ocean Depths"**: Whale songs and oceanic ambience with organic evolution + Oceanic genre ([expanding with Freesound samples](freesound-audio-library.md#oceanic-genre))
+   - **"Space Station"**: Futuristic atmospheric sounds with technological textures using [sci-fi samples](freesound-audio-library.md#sci-fi-genre) + Sci-Fi genre
    - **"Percussive Drive"**: Rhythmic emphasis with strong percussion elements + Electronic genre
 
 3. **Custom Preset Creation**

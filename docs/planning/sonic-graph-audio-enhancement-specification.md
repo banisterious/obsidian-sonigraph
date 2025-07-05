@@ -1,8 +1,11 @@
 ## Sonic Graph Audio Enhancement Specification
 
-**Document Version:** 1.1
+**Document Version:** 1.2
 **Date:** July 4, 2025
 **Author:** John Banister
+
+**Related Documents:**
+- **Audio Sample Library:** [Freesound Audio Library for Continuous Layers](features/freesound-audio-library.md) - Curated collection of atmospheric drones and ambient samples
 
 ---
 
@@ -44,10 +47,12 @@ This specification covers new musical mapping rules, instrument assignment logic
     * **Arpeggiator Speed:** Faster arpeggios for periods of high event frequency.
     * **Rhythmic Density:** Control of subtle background percussion patterns.
 
-**Instruments:** Utilize existing `Electronic` (Pad, Lead Synth, Bass Synth, Arp Synth) or `Brass` instruments from the `AudioEngine`, or experiment with `Vocal Pads`.
+**Instruments:** Utilize existing `Electronic` (Pad, Lead Synth, Bass Synth, Arp Synth) or `Brass` instruments from the `AudioEngine`, or experiment with `Vocal Pads`. Additionally, integrate curated atmospheric samples from the [Freesound Audio Library](features/freesound-audio-library.md) including long-form drones (5-10+ minutes), tonal drones in specific keys, atmospheric textures, and purpose-built seamless loops.
 
 **User Exposure:**
 * **Toggle:** Enable/disable continuous ambient layers (e.g., "Enable Ambient Drone").
+* **Sample Source Selection:** Choose between synthesized instruments and curated samples from the [audio library](features/freesound-audio-library.md)
+* **Genre Selection:** Dropdown for ambient genres (Drone, Sci-Fi, Oceanic, etc.)
 * **Default:** Recommend enabling a subtle ambient layer by default to enrich the soundscape.
 * **Controls:** Sliders or dropdowns for adjusting parameters like base volume, initial pitch, and mapping intensity to vault metrics.
 
@@ -117,7 +122,7 @@ Expand the `musical-mapper.ts` to utilize more granular data from `GraphNode` me
 **User Exposure:**
 * **Musical Scale/Mode Selection:** Dropdown for choosing the musical scale/mode.
 * **Tempo Modulation Toggle:** Enable/disable mapping vault activity to tempo.
-* **Thematic Presets:** Offer pre-configured "musical themes" (e.g., "Orchestral Journey," "Ambient Flow," "Percussive Drive") that combine various settings for instrument mappings, continuous layers, and rhythmic elements. One or two themes could be active by default, providing a rich starting experience.
+* **Thematic Presets:** Offer pre-configured "musical themes" (e.g., "Orchestral Journey," "Ambient Flow," "Percussive Drive," "Sci-Fi Exploration," "Deep Focus") that combine various settings for instrument mappings, continuous layers, and rhythmic elements. These themes can incorporate both synthesized instruments and curated samples from the [Freesound Audio Library](features/freesound-audio-library.md). One or two themes could be active by default, providing a rich starting experience.
 
 ### 5. Technical Implementation Details
 
@@ -140,11 +145,42 @@ Expand the `musical-mapper.ts` to utilize more granular data from `GraphNode` me
     * Expand the "Comprehensive Settings Enhancement System" to expose new controls for these mappings.
     * **Mapping Rules UI:** A section where users can define rules (e.g., "If Tag = #idea, Instrument = Flute"). This could be a list of configurable conditions and assigned instruments/musical properties.
     * **Continuous Layer Controls:** Toggles and sliders for activating ambient layers and controlling their base parameters.
-    * **Musical Theme Presets:** Allow users to select pre-defined musical themes (e.g., "Orchestral," "Ambient," "Percussive") that apply a set of these mapping rules and continuous layer configurations.
+    * **Sample Library Integration:** Interface for browsing and selecting samples from the [Freesound Audio Library](features/freesound-audio-library.md) with preview functionality
+    * **Attribution Display:** Automatic display of required Creative Commons attributions for samples that require it
+    * **Musical Theme Presets:** Allow users to select pre-defined musical themes (e.g., "Orchestral," "Ambient," "Percussive," "Sci-Fi," "Deep Drone") that apply a set of these mapping rules and continuous layer configurations.
 
-### 6. Future Considerations
+### 6. Audio Sample Library Integration
+
+**Implementation Details for Freesound Samples:**
+
+* **Sample Loading System:**
+    * Implement audio file caching and streaming for large samples (10+ minute drones)
+    * Support for seamless looping of purpose-built loop samples
+    * Dynamic loading based on user theme selection and vault activity
+
+* **License Compliance:**
+    * Automatic attribution display for CC BY licensed samples
+    * License filtering (e.g., exclude CC BY-NC for commercial use)
+    * Integration with plugin settings for attribution preferences
+
+* **Genre-Based Selection:**
+    * **Drone Genre:** 21 atmospheric samples ranging from 10 seconds to 10+ minutes
+    * **Sci-Fi Genre:** Space atmospheres and technological effects
+    * **Future Genres:** Oceanic, Ambient, Orchestral, Electronic, Minimal (placeholder sections)
+
+* **Technical Integration:**
+    * Extend `AudioEngine` to support external audio file playback alongside Tone.js synthesis
+    * Implement sample crossfading for smooth transitions between vault states
+    * Memory-efficient streaming for long-form content
+
+See [Freesound Audio Library](features/freesound-audio-library.md) for complete sample catalog and implementation reference.
+
+### 7. Future Considerations
 
 * **User-Defined Scales/Modes:** Allow users to select the musical scale or key the Sonic Graph operates within.
 * **MIDI Export:** Export the generated musical sequence as a MIDI file, allowing users to import it into a DAW.
 * **Semantic Content Analysis (Deeper):** Integration with more advanced text analysis (beyond just tags/keywords) to infer mood or topic and influence musical parameters accordingly.
 * **External Data Sources:** Allow mapping of external data (e.g., task management, calendar events) that are linked to notes, to influence the graph and music.
+* **Community Sample Contribution:** Framework for users to contribute and share their own curated sample collections
+* **Real-time Sample Processing:** Dynamic effects processing of Freesound samples based on vault metrics (filtering, reverb, modulation)
+* **AI-Generated Samples:** Integration with AI audio generation for procedural ambient content
