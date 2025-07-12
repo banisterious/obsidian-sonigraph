@@ -19472,11 +19472,11 @@ var init_types = __esm({
 });
 
 // src/external/freesound/client.ts
-var logger24, _FreesoundAPIClient, FreesoundAPIClient;
+var logger25, _FreesoundAPIClient, FreesoundAPIClient;
 var init_client = __esm({
   "src/external/freesound/client.ts"() {
     init_logging();
-    logger24 = getLogger("freesound-client");
+    logger25 = getLogger("freesound-client");
     _FreesoundAPIClient = class {
       constructor(clientId = _FreesoundAPIClient.CLIENT_ID, clientSecret) {
         this.clientId = clientId;
@@ -19498,10 +19498,10 @@ var init_client = __esm({
             allResults.push(...results.results);
             await this.respectRateLimit();
           }
-          logger24.info("search", `Found ${allResults.length} potential whale samples`);
+          logger25.info("search", `Found ${allResults.length} potential whale samples`);
           return this.processSamples(allResults, query);
         } catch (error) {
-          logger24.error("search", "Whale sample search failed:", error);
+          logger25.error("search", "Whale sample search failed:", error);
           throw new Error(`Freesound search failed: ${error}`);
         }
       }
@@ -19708,7 +19708,7 @@ var init_client = __esm({
             rejected.push(sample);
           }
         }
-        logger24.info("validation", `Validation results: ${validated.length} valid, ${rejected.length} rejected`);
+        logger25.info("validation", `Validation results: ${validated.length} valid, ${rejected.length} rejected`);
         return {
           samples: uniqueSamples,
           validated,
@@ -19844,7 +19844,7 @@ var init_client = __esm({
       async respectRateLimit() {
         if (this.rateLimitRemaining < 5) {
           const waitTime = Math.max(1e3, (this.rateLimitReset - Date.now()) / 1e3);
-          logger24.info("rate-limit", `Rate limit low, waiting ${waitTime}ms`);
+          logger25.info("rate-limit", `Rate limit low, waiting ${waitTime}ms`);
           await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
@@ -19870,7 +19870,7 @@ var init_client = __esm({
         }
         const auth = await response.json();
         this.accessToken = auth.access_token;
-        logger24.info("auth", "Freesound authentication successful");
+        logger25.info("auth", "Freesound authentication successful");
       }
       /**
        * Download sample audio data
@@ -19897,12 +19897,12 @@ var init_client = __esm({
 });
 
 // src/external/freesound/whale-audio-manager.ts
-var logger25, WhaleAudioManager;
+var logger26, WhaleAudioManager;
 var init_whale_audio_manager = __esm({
   "src/external/freesound/whale-audio-manager.ts"() {
     init_client();
     init_logging();
-    logger25 = getLogger("whale-audio-manager");
+    logger26 = getLogger("whale-audio-manager");
     WhaleAudioManager = class {
       constructor(settings, clientId, clientSecret, vault, pluginDir) {
         this.sampleUrls = /* @__PURE__ */ new Map();
@@ -20025,7 +20025,7 @@ var init_whale_audio_manager = __esm({
         Object.entries(this.SEED_COLLECTION).forEach(([species, urls]) => {
           this.sampleUrls.set(species, urls);
         });
-        logger25.info("init", "Initialized whale audio manager with seed collection");
+        logger26.info("init", "Initialized whale audio manager with seed collection");
       }
       /**
        * Initialize cache directory structure in the user's vault
@@ -20037,7 +20037,7 @@ var init_whale_audio_manager = __esm({
           await this.migrateLegacyCache();
           if (!await this.vault.adapter.exists(this.cacheDir)) {
             await this.vault.adapter.mkdir(this.cacheDir);
-            logger25.info("cache-init", "Created whale sample cache directory", {
+            logger26.info("cache-init", "Created whale sample cache directory", {
               path: this.cacheDir
             });
           }
@@ -20049,12 +20049,12 @@ var init_whale_audio_manager = __esm({
             }
           }
           await this.loadCacheIndex();
-          logger25.info("cache-init", "Cache directory structure initialized", {
+          logger26.info("cache-init", "Cache directory structure initialized", {
             cacheDir: this.cacheDir,
             speciesDirectories: species.length
           });
         } catch (error) {
-          logger25.error("cache-init", "Failed to initialize cache directory", {
+          logger26.error("cache-init", "Failed to initialize cache directory", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -20069,7 +20069,7 @@ var init_whale_audio_manager = __esm({
           if (!await this.vault.adapter.exists(this.legacyCacheDir)) {
             return;
           }
-          logger25.info("cache-migration", "Legacy cache found, starting migration", {
+          logger26.info("cache-migration", "Legacy cache found, starting migration", {
             from: this.legacyCacheDir,
             to: this.cacheDir
           });
@@ -20087,7 +20087,7 @@ var init_whale_audio_manager = __esm({
               const newPath = `${this.cacheDir}/${fileName}`;
               const content = await this.vault.adapter.readBinary(file);
               await this.vault.adapter.writeBinary(newPath, content);
-              logger25.debug("cache-migration", "Migrated file", {
+              logger26.debug("cache-migration", "Migrated file", {
                 from: file,
                 to: newPath
               });
@@ -20098,17 +20098,17 @@ var init_whale_audio_manager = __esm({
               await this.vault.adapter.mkdir(newFolderPath);
               await this.migrateFolderContents(folder, newFolderPath);
             }
-            logger25.info("cache-migration", "Cache migration completed successfully", {
+            logger26.info("cache-migration", "Cache migration completed successfully", {
               filesCount: legacyContents.files.length,
               foldersCount: legacyContents.folders.length
             });
           }
           await this.vault.adapter.rmdir(this.legacyCacheDir, true);
-          logger25.info("cache-migration", "Legacy cache directory removed", {
+          logger26.info("cache-migration", "Legacy cache directory removed", {
             path: this.legacyCacheDir
           });
         } catch (error) {
-          logger25.error("cache-migration", "Failed to migrate legacy cache", {
+          logger26.error("cache-migration", "Failed to migrate legacy cache", {
             error: error instanceof Error ? error.message : String(error),
             from: this.legacyCacheDir,
             to: this.cacheDir
@@ -20136,7 +20136,7 @@ var init_whale_audio_manager = __esm({
             await this.migrateFolderContents(folder, newFolderPath);
           }
         } catch (error) {
-          logger25.error("cache-migration", "Failed to migrate folder contents", {
+          logger26.error("cache-migration", "Failed to migrate folder contents", {
             error: error instanceof Error ? error.message : String(error),
             sourceFolder,
             targetFolder
@@ -20158,13 +20158,13 @@ var init_whale_audio_manager = __esm({
             Object.entries(cacheIndex.urlToFile || {}).forEach(([url, filePath]) => {
               this.fileCache.set(url, filePath);
             });
-            logger25.info("cache-index", "Loaded cache index", {
+            logger26.info("cache-index", "Loaded cache index", {
               cachedFiles: this.fileCache.size,
               indexPath
             });
           }
         } catch (error) {
-          logger25.warn("cache-index", "Failed to load cache index, starting fresh", {
+          logger26.warn("cache-index", "Failed to load cache index, starting fresh", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -20184,12 +20184,12 @@ var init_whale_audio_manager = __esm({
             totalFiles: this.fileCache.size
           };
           await this.vault.adapter.write(indexPath, JSON.stringify(cacheIndex, null, 2));
-          logger25.debug("cache-index", "Saved cache index", {
+          logger26.debug("cache-index", "Saved cache index", {
             totalFiles: this.fileCache.size,
             indexPath
           });
         } catch (error) {
-          logger25.error("cache-index", "Failed to save cache index", {
+          logger26.error("cache-index", "Failed to save cache index", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -20217,7 +20217,7 @@ var init_whale_audio_manager = __esm({
             return await audioContext.decodeAudioData(arrayBuffer);
           }
         } catch (error) {
-          logger25.warn("cache-load", "Failed to load cached sample", {
+          logger26.warn("cache-load", "Failed to load cached sample", {
             url: url.substring(0, 60) + "...",
             filePath,
             error: error instanceof Error ? error.message : String(error)
@@ -20239,14 +20239,14 @@ var init_whale_audio_manager = __esm({
           await this.vault.adapter.writeBinary(filePath, arrayBuffer);
           this.fileCache.set(url, filePath);
           await this.saveCacheIndex();
-          logger25.info("cache-save", "Sample cached to disk", {
+          logger26.info("cache-save", "Sample cached to disk", {
             species,
             fileName,
             filePath,
             size: `${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`
           });
         } catch (error) {
-          logger25.error("cache-save", "Failed to cache sample to disk", {
+          logger26.error("cache-save", "Failed to cache sample to disk", {
             url: url.substring(0, 60) + "...",
             species,
             error: error instanceof Error ? error.message : String(error)
@@ -20281,14 +20281,14 @@ var init_whale_audio_manager = __esm({
         try {
           const cacheStats = await this.getCacheStats();
           if (cacheStats.totalSizeGB > maxSizeGB) {
-            logger25.info("cache-cleanup", "Starting cache cleanup", {
+            logger26.info("cache-cleanup", "Starting cache cleanup", {
               currentSize: `${cacheStats.totalSizeGB.toFixed(2)}GB`,
               maxSize: `${maxSizeGB}GB`,
               totalFiles: cacheStats.totalFiles
             });
           }
         } catch (error) {
-          logger25.error("cache-cleanup", "Failed to cleanup cache", {
+          logger26.error("cache-cleanup", "Failed to cleanup cache", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -20311,7 +20311,7 @@ var init_whale_audio_manager = __esm({
        * Download and cache whale samples locally for better performance
        */
       async downloadAndCacheSamples() {
-        logger25.info("cache-init", "Starting whale sample caching process", {
+        logger26.info("cache-init", "Starting whale sample caching process", {
           totalSpecies: this.sampleUrls.size,
           totalUrls: Array.from(this.sampleUrls.values()).reduce((sum, urls) => sum + urls.length, 0)
         });
@@ -20321,7 +20321,7 @@ var init_whale_audio_manager = __esm({
             (url) => url.includes(".wav") || url.includes(".mp3") || url.includes(".ogg")
           );
           if (directUrls.length === 0) {
-            logger25.debug("cache-init", "No direct audio URLs found for species", {
+            logger26.debug("cache-init", "No direct audio URLs found for species", {
               species,
               totalUrls: urls.length
             });
@@ -20333,7 +20333,7 @@ var init_whale_audio_manager = __esm({
         try {
           await Promise.allSettled(downloadPromises);
           const totalCached = Array.from(this.cachedSamples.values()).reduce((sum, buffers) => sum + buffers.length, 0);
-          logger25.info("cache-init", "Whale sample caching completed", {
+          logger26.info("cache-init", "Whale sample caching completed", {
             totalCached,
             speciesCached: this.cachedSamples.size,
             cacheStatus: Object.fromEntries(
@@ -20341,7 +20341,7 @@ var init_whale_audio_manager = __esm({
             )
           });
         } catch (error) {
-          logger25.error("cache-init", "Error during sample caching", {
+          logger26.error("cache-init", "Error during sample caching", {
             error: error instanceof Error ? error.message : String(error)
           });
         }
@@ -20351,27 +20351,27 @@ var init_whale_audio_manager = __esm({
        */
       async downloadSpeciesSamples(species, urls) {
         const buffers = [];
-        logger25.debug("cache-download", "Downloading samples for species", {
+        logger26.debug("cache-download", "Downloading samples for species", {
           species,
           urlCount: urls.length
         });
         for (let i = 0; i < urls.length; i++) {
           const url = urls[i];
           try {
-            logger25.debug("cache-download", "Processing sample", {
+            logger26.debug("cache-download", "Processing sample", {
               species,
               url: url.substring(0, 60) + "...",
               progress: `${i + 1}/${urls.length}`
             });
             if (await this.isSampleCached(url)) {
-              logger25.debug("cache-download", "Loading from disk cache", {
+              logger26.debug("cache-download", "Loading from disk cache", {
                 species,
                 url: url.substring(0, 60) + "..."
               });
               const cachedBuffer = await this.loadCachedSample(url);
               if (cachedBuffer) {
                 buffers.push(cachedBuffer);
-                logger25.debug("cache-download", "Successfully loaded from disk cache", {
+                logger26.debug("cache-download", "Successfully loaded from disk cache", {
                   species,
                   bufferLength: cachedBuffer.length,
                   sampleRate: cachedBuffer.sampleRate
@@ -20382,7 +20382,7 @@ var init_whale_audio_manager = __esm({
             const audioBuffer = await this.downloadAndDecodeAudio(url, species);
             if (audioBuffer) {
               buffers.push(audioBuffer);
-              logger25.debug("cache-download", "Successfully downloaded and cached sample", {
+              logger26.debug("cache-download", "Successfully downloaded and cached sample", {
                 species,
                 bufferLength: audioBuffer.length,
                 sampleRate: audioBuffer.sampleRate,
@@ -20391,14 +20391,14 @@ var init_whale_audio_manager = __esm({
             }
             if (i < urls.length - 1) {
               const delayMs = url.includes("archive.org") ? 3e3 : 1500;
-              logger25.debug("cache-download", "Adding delay between downloads", {
+              logger26.debug("cache-download", "Adding delay between downloads", {
                 delayMs,
                 remaining: urls.length - i - 1
               });
               await this.delay(delayMs);
             }
           } catch (error) {
-            logger25.warn("cache-download", "Failed to download sample", {
+            logger26.warn("cache-download", "Failed to download sample", {
               species,
               url: url.substring(0, 60) + "...",
               error: error instanceof Error ? error.message : String(error)
@@ -20407,13 +20407,13 @@ var init_whale_audio_manager = __esm({
         }
         if (buffers.length > 0) {
           this.cachedSamples.set(species, buffers);
-          logger25.info("cache-download", "Cached samples for species", {
+          logger26.info("cache-download", "Cached samples for species", {
             species,
             sampleCount: buffers.length,
             requestedCount: urls.length
           });
         } else {
-          logger25.warn("cache-download", "No samples successfully cached for species", {
+          logger26.warn("cache-download", "No samples successfully cached for species", {
             species,
             attemptedUrls: urls.length
           });
@@ -20429,7 +20429,7 @@ var init_whale_audio_manager = __esm({
        * Download and decode audio from URL with proper error handling and CORS bypass
        */
       async downloadAndDecodeAudio(url, species) {
-        logger25.debug("download", "Starting download attempt", {
+        logger26.debug("download", "Starting download attempt", {
           url: url.substring(0, 60) + "..."
         });
         if (url.includes("web.archive.org") || url.includes("archive.org")) {
@@ -20448,7 +20448,7 @@ var init_whale_audio_manager = __esm({
           const arrayBuffer = await response.arrayBuffer();
           return await this.validateAndDecodeAudio(arrayBuffer, url);
         } catch (error) {
-          logger25.debug("download", "Direct fetch failed, trying CORS proxy fallback", {
+          logger26.debug("download", "Direct fetch failed, trying CORS proxy fallback", {
             url: url.substring(0, 60) + "...",
             error: error instanceof Error ? error.message : String(error)
           });
@@ -20459,7 +20459,7 @@ var init_whale_audio_manager = __esm({
        * Download URLs using CORS proxy services with retry logic
        */
       async downloadWithCorsProxy(url, species) {
-        logger25.debug("download", "Using CORS proxy approach", {
+        logger26.debug("download", "Using CORS proxy approach", {
           url: url.substring(0, 60) + "..."
         });
         const corsProxies = [
@@ -20481,7 +20481,7 @@ var init_whale_audio_manager = __esm({
         ];
         for (let i = 0; i < corsProxies.length; i++) {
           const proxy = corsProxies[i];
-          logger25.debug("download", `Trying CORS proxy ${i + 1}/${corsProxies.length}`, {
+          logger26.debug("download", `Trying CORS proxy ${i + 1}/${corsProxies.length}`, {
             originalUrl: url.substring(0, 60) + "...",
             proxyService: proxy.name,
             attempt: i + 1
@@ -20494,7 +20494,7 @@ var init_whale_audio_manager = __esm({
             await this.delay(2e3);
           }
         }
-        logger25.warn("download", "All CORS proxy attempts failed", {
+        logger26.warn("download", "All CORS proxy attempts failed", {
           url: url.substring(0, 60) + "...",
           attemptedProxies: corsProxies.length
         });
@@ -20507,7 +20507,7 @@ var init_whale_audio_manager = __esm({
         const proxyService = proxyUrl.split("?")[0];
         for (let retry = 0; retry < maxRetries; retry++) {
           try {
-            logger25.debug("download", `Trying CORS proxy ${proxyIndex}/${totalProxies}`, {
+            logger26.debug("download", `Trying CORS proxy ${proxyIndex}/${totalProxies}`, {
               originalUrl: originalUrl.substring(0, 60) + "...",
               proxyService,
               attempt: proxyIndex,
@@ -20519,7 +20519,7 @@ var init_whale_audio_manager = __esm({
             });
             if (proxyResponse.ok) {
               const arrayBuffer = await proxyResponse.arrayBuffer();
-              logger25.debug("download", "CORS proxy response received", {
+              logger26.debug("download", "CORS proxy response received", {
                 proxy: proxyService,
                 size: arrayBuffer.byteLength,
                 status: proxyResponse.status
@@ -20529,7 +20529,7 @@ var init_whale_audio_manager = __esm({
                 if (species) {
                   await this.cacheSampleToDisk(originalUrl, arrayBuffer, species);
                 }
-                logger25.info("download", "CORS proxy successful", {
+                logger26.info("download", "CORS proxy successful", {
                   proxy: proxyService,
                   size: arrayBuffer.byteLength,
                   duration: audioBuffer.length / audioBuffer.sampleRate,
@@ -20543,7 +20543,7 @@ var init_whale_audio_manager = __esm({
               const baseBackoff = Math.pow(2, retry) * 1e3;
               const jitter = Math.random() * 500;
               const backoffMs = Math.min(baseBackoff + jitter, 3e4);
-              logger25.warn("download", "CORS proxy rate limited, retrying with backoff", {
+              logger26.warn("download", "CORS proxy rate limited, retrying with backoff", {
                 proxy: proxyService,
                 status: proxyResponse.status,
                 retryAfter: `${Math.round(backoffMs)}ms`,
@@ -20556,13 +20556,13 @@ var init_whale_audio_manager = __esm({
                 await this.delay(backoffMs);
                 continue;
               } else {
-                logger25.warn("download", "Max retries reached for rate limited proxy", {
+                logger26.warn("download", "Max retries reached for rate limited proxy", {
                   proxy: proxyService,
                   maxRetries
                 });
               }
             } else {
-              logger25.debug("download", "CORS proxy returned error status", {
+              logger26.debug("download", "CORS proxy returned error status", {
                 proxy: proxyService,
                 status: proxyResponse.status,
                 statusText: proxyResponse.statusText
@@ -20570,7 +20570,7 @@ var init_whale_audio_manager = __esm({
               break;
             }
           } catch (proxyError) {
-            logger25.debug("download", "CORS proxy failed with exception", {
+            logger26.debug("download", "CORS proxy failed with exception", {
               proxy: proxyService,
               error: proxyError instanceof Error ? proxyError.message : String(proxyError),
               retry: retry + 1,
@@ -20579,7 +20579,7 @@ var init_whale_audio_manager = __esm({
             break;
           }
         }
-        logger25.debug("download", "CORS proxy exhausted all retries", {
+        logger26.debug("download", "CORS proxy exhausted all retries", {
           proxy: proxyService,
           maxRetries,
           remaining: totalProxies - proxyIndex
@@ -20592,7 +20592,7 @@ var init_whale_audio_manager = __esm({
       async validateAndDecodeAudio(arrayBuffer, originalUrl) {
         try {
           if (arrayBuffer.byteLength < 1e3) {
-            logger25.debug("download", "Response too small, likely not audio data", {
+            logger26.debug("download", "Response too small, likely not audio data", {
               size: arrayBuffer.byteLength,
               url: originalUrl.substring(0, 60) + "..."
             });
@@ -20602,7 +20602,7 @@ var init_whale_audio_manager = __esm({
           const textDecoder = new TextDecoder();
           const preview = textDecoder.decode(firstBytes).toLowerCase();
           if (preview.includes("<html") || preview.includes("<!doctype")) {
-            logger25.debug("download", "Received HTML instead of audio data", {
+            logger26.debug("download", "Received HTML instead of audio data", {
               preview: preview.substring(0, 50) + "...",
               url: originalUrl.substring(0, 60) + "..."
             });
@@ -20610,7 +20610,7 @@ var init_whale_audio_manager = __esm({
           }
           const audioContext = new (window.AudioContext || window.webkitAudioContext)();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-          logger25.debug("download", "Audio validation and decode successful", {
+          logger26.debug("download", "Audio validation and decode successful", {
             url: originalUrl.substring(0, 60) + "...",
             size: arrayBuffer.byteLength,
             duration: audioBuffer.length / audioBuffer.sampleRate,
@@ -20619,7 +20619,7 @@ var init_whale_audio_manager = __esm({
           });
           return audioBuffer;
         } catch (decodeError) {
-          logger25.debug("download", "Audio decode failed", {
+          logger26.debug("download", "Audio decode failed", {
             url: originalUrl.substring(0, 60) + "...",
             error: decodeError instanceof Error ? decodeError.message : String(decodeError),
             size: arrayBuffer.byteLength
@@ -20633,7 +20633,7 @@ var init_whale_audio_manager = __esm({
        */
       async loadWhaleSample(frequency, species) {
         const targetSpecies = species || this.mapFrequencyToSpecies(frequency);
-        logger25.info("whale-manager", "Loading whale sample from cache", {
+        logger26.info("whale-manager", "Loading whale sample from cache", {
           requestedSpecies: species,
           frequency,
           targetSpecies,
@@ -20643,7 +20643,7 @@ var init_whale_audio_manager = __esm({
           try {
             await this.initializationPromise;
           } catch (error) {
-            logger25.warn("whale-manager", "Initialization not complete, proceeding with available cache", {
+            logger26.warn("whale-manager", "Initialization not complete, proceeding with available cache", {
               error: error instanceof Error ? error.message : String(error)
             });
           }
@@ -20651,7 +20651,7 @@ var init_whale_audio_manager = __esm({
         try {
           const cachedBuffers = this.cachedSamples.get(targetSpecies) || [];
           if (cachedBuffers.length === 0) {
-            logger25.warn("whale-manager", "No cached samples available for species", {
+            logger26.warn("whale-manager", "No cached samples available for species", {
               species: targetSpecies,
               availableSpecies: Array.from(this.cachedSamples.keys()),
               totalCached: Array.from(this.cachedSamples.values()).reduce((sum, arr) => sum + arr.length, 0)
@@ -20660,7 +20660,7 @@ var init_whale_audio_manager = __esm({
           }
           const selectedIndex = Math.floor(Math.random() * cachedBuffers.length);
           const selectedBuffer = cachedBuffers[selectedIndex];
-          logger25.info("whale-manager", "Successfully loaded whale sample from cache", {
+          logger26.info("whale-manager", "Successfully loaded whale sample from cache", {
             species: targetSpecies,
             selectedIndex,
             totalCached: cachedBuffers.length,
@@ -20671,7 +20671,7 @@ var init_whale_audio_manager = __esm({
           });
           return selectedBuffer;
         } catch (error) {
-          logger25.error("whale-manager", "Failed to load whale sample from cache", {
+          logger26.error("whale-manager", "Failed to load whale sample from cache", {
             species: targetSpecies,
             frequency,
             error: error instanceof Error ? error.message : String(error)
@@ -20753,7 +20753,7 @@ var init_whale_audio_manager = __esm({
           throw new Error("Automated discovery is disabled in settings");
         }
         if (!manual && !this.shouldRunDiscovery()) {
-          logger25.info("discovery", "Skipping discovery due to frequency limits");
+          logger26.info("discovery", "Skipping discovery due to frequency limits");
           return {
             samples: [],
             validated: [],
@@ -20769,7 +20769,7 @@ var init_whale_audio_manager = __esm({
           licenseFilter: "cc",
           trustedSources: true
         };
-        logger25.info("discovery", `Starting ${manual ? "manual" : "automatic"} discovery for ${species}`);
+        logger26.info("discovery", `Starting ${manual ? "manual" : "automatic"} discovery for ${species}`);
         const result = await this.freesoundClient.searchWhaleContent(query);
         this.lastDiscoveryTime = Date.now();
         return result;
@@ -20801,7 +20801,7 @@ var init_whale_audio_manager = __esm({
         const allUrls = [...currentUrls, ...newUrls];
         const limitedUrls = allUrls.slice(0, maxSamples);
         this.sampleUrls.set(species, limitedUrls);
-        logger25.info("samples", `Added ${newUrls.length} new samples for ${species}, total: ${limitedUrls.length}`);
+        logger26.info("samples", `Added ${newUrls.length} new samples for ${species}, total: ${limitedUrls.length}`);
       }
       /**
        * Get current sample collection statistics (cached samples)
@@ -20835,7 +20835,7 @@ var init_whale_audio_manager = __esm({
        */
       clearSpeciesSamples(species) {
         this.sampleUrls.delete(species);
-        logger25.info("samples", `Cleared samples for ${species}`);
+        logger26.info("samples", `Cleared samples for ${species}`);
       }
       /**
        * Reset to seed collection
@@ -20843,7 +20843,7 @@ var init_whale_audio_manager = __esm({
       resetToSeedCollection() {
         this.sampleUrls.clear();
         this.initializeSeedCollection();
-        logger25.info("samples", "Reset to seed collection");
+        logger26.info("samples", "Reset to seed collection");
       }
       /**
        * Export sample URLs for storage in plugin settings
@@ -20863,7 +20863,7 @@ var init_whale_audio_manager = __esm({
         Object.entries(data).forEach(([species, urls]) => {
           this.sampleUrls.set(species, urls);
         });
-        logger25.info("settings", "Imported sample URLs from settings");
+        logger26.info("settings", "Imported sample URLs from settings");
       }
       /**
        * Update settings
@@ -20916,14 +20916,14 @@ __export(whale_integration_exports, {
   tryLoadExternalWhaleSample: () => tryLoadExternalWhaleSample
 });
 async function initializeWhaleIntegration(settings, vault, pluginDir) {
-  logger26.info("global-init", "Initializing global whale integration", {
+  logger27.info("global-init", "Initializing global whale integration", {
     hasSettings: !!settings,
     settingsKeys: settings ? Object.keys(settings) : [],
     pluginDir
   });
   whaleIntegration = new WhaleIntegration(settings, vault, pluginDir);
   await whaleIntegration.initialize();
-  logger26.info("global-init", "Global whale integration initialization complete", {
+  logger27.info("global-init", "Global whale integration initialization complete", {
     isAvailable: whaleIntegration.isAvailable(),
     settings: whaleIntegration.getSettings()
   });
@@ -20932,24 +20932,24 @@ function getWhaleIntegration() {
   return whaleIntegration;
 }
 async function tryLoadExternalWhaleSample(instrumentName, note, frequency) {
-  logger26.debug("external-loading", "tryLoadExternalWhaleSample called", {
+  logger27.debug("external-loading", "tryLoadExternalWhaleSample called", {
     instrumentName,
     note,
     frequency,
     hasIntegration: !!whaleIntegration
   });
   if (!whaleIntegration) {
-    logger26.warn("external-loading", "No whale integration available");
+    logger27.warn("external-loading", "No whale integration available");
     return null;
   }
   return await whaleIntegration.loadInstrumentSample(instrumentName, note, frequency);
 }
-var logger26, _WhaleIntegration, WhaleIntegration, whaleIntegration;
+var logger27, _WhaleIntegration, WhaleIntegration, whaleIntegration;
 var init_whale_integration = __esm({
   "src/external/whale-integration.ts"() {
     init_freesound();
     init_logging();
-    logger26 = getLogger("whale-integration");
+    logger27 = getLogger("whale-integration");
     _WhaleIntegration = class {
       constructor(userSettings, vault, pluginDir) {
         this.whaleManager = null;
@@ -20967,23 +20967,23 @@ var init_whale_integration = __esm({
        * Initialize whale integration (Phase 1: Seed Collection)
        */
       async initialize() {
-        logger26.info("init", "Starting whale integration initialization", {
+        logger27.info("init", "Starting whale integration initialization", {
           useWhaleExternal: this.settings.useWhaleExternal,
           settings: this.settings
         });
         if (!this.settings.useWhaleExternal) {
-          logger26.info("init", "Whale external samples disabled in settings");
+          logger27.info("init", "Whale external samples disabled in settings");
           return;
         }
         try {
           this.whaleManager = new WhaleAudioManager(this.settings, void 0, void 0, this.vault, this.pluginDir);
           this.isEnabled = true;
-          logger26.info("init", "Whale integration initialized with seed collection", {
+          logger27.info("init", "Whale integration initialized with seed collection", {
             isEnabled: this.isEnabled,
             hasManager: !!this.whaleManager
           });
         } catch (error) {
-          logger26.error("init", "Failed to initialize whale integration:", error);
+          logger27.error("init", "Failed to initialize whale integration:", error);
           this.isEnabled = false;
         }
       }
@@ -20991,7 +20991,7 @@ var init_whale_integration = __esm({
        * Enhanced instrument loader that handles external whale samples
        */
       async loadInstrumentSample(instrumentName, note, frequency) {
-        logger26.debug("sample-loading", "loadInstrumentSample called", {
+        logger27.debug("sample-loading", "loadInstrumentSample called", {
           instrumentName,
           note,
           frequency,
@@ -20999,20 +20999,20 @@ var init_whale_integration = __esm({
           hasManager: !!this.whaleManager
         });
         if (!this.isEnabled || !this.whaleManager) {
-          logger26.debug("sample-loading", "Whale integration not available", {
+          logger27.debug("sample-loading", "Whale integration not available", {
             isEnabled: this.isEnabled,
             hasManager: !!this.whaleManager
           });
           return null;
         }
         const isWhaleInst = this.isWhaleInstrument(instrumentName);
-        logger26.debug("sample-loading", "Checking if whale instrument", {
+        logger27.debug("sample-loading", "Checking if whale instrument", {
           instrumentName,
           isWhaleInstrument: isWhaleInst
         });
         if (isWhaleInst) {
           const species = this.extractWhaleSpecies(instrumentName);
-          logger26.info("sample-loading", "Loading external whale sample", {
+          logger27.info("sample-loading", "Loading external whale sample", {
             instrumentName,
             species,
             frequency,
@@ -21021,7 +21021,7 @@ var init_whale_integration = __esm({
           try {
             const audioBuffer = await this.whaleManager.loadWhaleSample(frequency, species);
             if (audioBuffer) {
-              logger26.info("sample-loading", "Successfully loaded external whale sample", {
+              logger27.info("sample-loading", "Successfully loaded external whale sample", {
                 instrumentName,
                 species,
                 bufferLength: audioBuffer.length,
@@ -21030,14 +21030,14 @@ var init_whale_integration = __esm({
               });
               return audioBuffer;
             } else {
-              logger26.warn("sample-loading", "No whale sample returned from manager", {
+              logger27.warn("sample-loading", "No whale sample returned from manager", {
                 instrumentName,
                 species,
                 frequency
               });
             }
           } catch (error) {
-            logger26.error("sample-loading", "Failed to load external whale sample", {
+            logger27.error("sample-loading", "Failed to load external whale sample", {
               instrumentName,
               species,
               frequency,
@@ -21045,7 +21045,7 @@ var init_whale_integration = __esm({
             });
           }
         }
-        logger26.debug("sample-loading", "Falling back to regular instrument loading", {
+        logger27.debug("sample-loading", "Falling back to regular instrument loading", {
           instrumentName,
           reason: isWhaleInst ? "whale_sample_failed" : "not_whale_instrument"
         });
@@ -21158,7 +21158,7 @@ var init_whale_integration = __esm({
       cleanup() {
         this.isEnabled = false;
         this.whaleManager = null;
-        logger26.info("cleanup", "Whale integration cleaned up");
+        logger27.info("cleanup", "Whale integration cleaned up");
       }
       /**
        * Check if whale integration is available and enabled
@@ -49625,8 +49625,101 @@ var MemoryMonitor = class {
   }
 };
 
+// src/audio/optimizations/AudioGraphCleaner.ts
+init_logging();
+var logger24 = getLogger("audio-graph-cleaner");
+var AudioGraphCleaner = class {
+  constructor() {
+    this.scheduledCleanups = /* @__PURE__ */ new Map();
+    this.cleanupBatchTimer = null;
+    this.pendingCleanups = /* @__PURE__ */ new Set();
+  }
+  /**
+   * Schedule cleanup after a note finishes playing
+   */
+  scheduleNoteCleanup(noteId, duration) {
+    const cleanupDelay = (duration + 0.5) * 1e3;
+    const timeoutId = window.setTimeout(() => {
+      this.pendingCleanups.add(noteId);
+      this.scheduleBatchCleanup();
+    }, cleanupDelay);
+    this.scheduledCleanups.set(noteId, {
+      noteId,
+      timeoutId,
+      startTime: Date.now(),
+      duration
+    });
+  }
+  /**
+   * Batch cleanup operations to reduce overhead
+   */
+  scheduleBatchCleanup() {
+    if (this.cleanupBatchTimer !== null) {
+      return;
+    }
+    this.cleanupBatchTimer = window.setTimeout(() => {
+      this.performBatchCleanup();
+      this.cleanupBatchTimer = null;
+    }, 100);
+  }
+  /**
+   * Perform batched cleanup of finished notes
+   */
+  performBatchCleanup() {
+    const cleanupCount = this.pendingCleanups.size;
+    if (cleanupCount === 0)
+      return;
+    logger24.debug("batch-cleanup", `Cleaning up ${cleanupCount} finished notes`);
+    this.pendingCleanups.forEach((noteId) => {
+      this.scheduledCleanups.delete(noteId);
+    });
+    this.pendingCleanups.clear();
+    this.requestIdleGC();
+  }
+  /**
+   * Request garbage collection during idle time
+   */
+  requestIdleGC() {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => {
+        logger24.debug("gc-hint", "Idle callback triggered for potential GC");
+      }, { timeout: 1e3 });
+    }
+  }
+  /**
+   * Cancel all scheduled cleanups
+   */
+  cancelAll() {
+    this.scheduledCleanups.forEach((cleanup) => {
+      clearTimeout(cleanup.timeoutId);
+    });
+    this.scheduledCleanups.clear();
+    this.pendingCleanups.clear();
+    if (this.cleanupBatchTimer !== null) {
+      clearTimeout(this.cleanupBatchTimer);
+      this.cleanupBatchTimer = null;
+    }
+  }
+  /**
+   * Get statistics about pending cleanups
+   */
+  getStats() {
+    return {
+      scheduled: this.scheduledCleanups.size,
+      pending: this.pendingCleanups.size
+    };
+  }
+  /**
+   * Clean up all resources
+   */
+  dispose() {
+    this.cancelAll();
+    logger24.debug("dispose", "AudioGraphCleaner disposed");
+  }
+};
+
 // src/audio/engine.ts
-var logger27 = getLogger("audio-engine");
+var logger28 = getLogger("audio-engine");
 var AudioEngine = class {
   // Master Effects Processing - moved to EffectBusManager
   constructor(settings) {
@@ -49662,6 +49755,8 @@ var AudioEngine = class {
     this.PROGRESS_THROTTLE_INTERVAL = 5;
     // Emit progress every 5th tick
     this.performanceMonitoringInterval = null;
+    this.noteCounter = 0;
+    // For generating unique note IDs
     // Phase 8: Advanced Synthesis Engines
     this.percussionEngine = null;
     // Phase 3: Frequency detuning for phase conflict resolution
@@ -49672,7 +49767,7 @@ var AudioEngine = class {
     this.eventEmitter = new PlaybackEventEmitter();
     this.sequenceStartTime = 0;
     this.sequenceProgressTimer = null;
-    logger27.debug("initialization", "AudioEngine created");
+    logger28.debug("initialization", "AudioEngine created");
     this.voiceManager = new VoiceManager(true);
     this.effectBusManager = new EffectBusManager();
     this.instrumentConfigLoader = new InstrumentConfigLoader({
@@ -49683,6 +49778,7 @@ var AudioEngine = class {
     this.instrumentCacheValid = false;
     this.playbackOptimizer = new PlaybackOptimizer();
     this.memoryMonitor = new MemoryMonitor();
+    this.audioGraphCleaner = new AudioGraphCleaner();
   }
   // === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
   /**
@@ -49822,11 +49918,11 @@ var AudioEngine = class {
     }
     this.generateCDNDiagnosticReport();
     try {
-      logger27.debug("audio", "Initializing AudioEngine");
+      logger28.debug("audio", "Initializing AudioEngine");
       await start2();
-      logger27.debug("audio", "Tone.js started successfully");
+      logger28.debug("audio", "Tone.js started successfully");
       this.volume = new Volume(this.settings.volume).toDestination();
-      logger27.debug("audio", "Master volume created");
+      logger28.debug("audio", "Master volume created");
       await this.initializeEffects();
       await this.initializeInstruments();
       await this.initializeAdvancedSynthesis();
@@ -49837,9 +49933,9 @@ var AudioEngine = class {
       }
       this.isInitialized = true;
       this.generateInitializationReport();
-      logger27.info("audio", "AudioEngine initialized successfully");
+      logger28.info("audio", "AudioEngine initialized successfully");
     } catch (error) {
-      logger27.error("audio", "Failed to initialize AudioEngine", error);
+      logger28.error("audio", "Failed to initialize AudioEngine", error);
       throw error;
     }
   }
@@ -49870,7 +49966,7 @@ var AudioEngine = class {
     }
     const status = configurationGaps.length === 0 ? "Optimal" : "Minor Issues";
     const quality = report.percussionEngine && report.electronicEngine ? "Full Advanced Synthesis" : "Standard Synthesis";
-    logger27.info("initialization-report", "Audio Engine Initialization Summary", {
+    logger28.info("initialization-report", "Audio Engine Initialization Summary", {
       status,
       quality,
       instruments: {
@@ -49893,17 +49989,17 @@ var AudioEngine = class {
       }
     });
     if (configurationGaps.length > 0) {
-      logger27.warn("initialization-report", "Configuration gaps detected", {
+      logger28.warn("initialization-report", "Configuration gaps detected", {
         issues: configurationGaps,
         impact: "Some instruments may not have proper volume/effects control"
       });
     }
   }
   async initializeAdvancedSynthesis() {
-    logger27.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
+    logger28.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
     try {
       const hasPercussionEnabled = this.hasPercussionInstrumentsEnabled();
-      logger27.debug("percussion", "\u{1F680} ISSUE #010 DEBUG: Percussion initialization check", {
+      logger28.debug("percussion", "\u{1F680} ISSUE #010 DEBUG: Percussion initialization check", {
         hasPercussionEnabled,
         enabledInstruments: Object.keys(this.settings.instruments).filter(
           (name) => {
@@ -49919,27 +50015,27 @@ var AudioEngine = class {
         )
       });
       if (this.volume && hasPercussionEnabled) {
-        logger27.debug("percussion", "Percussion instruments enabled, initializing percussion engine");
+        logger28.debug("percussion", "Percussion instruments enabled, initializing percussion engine");
         this.percussionEngine = new PercussionEngine(this.volume, "ogg");
         await this.percussionEngine.initializePercussion();
-        logger27.debug("percussion", "Advanced percussion synthesis initialized");
+        logger28.debug("percussion", "Advanced percussion synthesis initialized");
       } else {
-        logger27.info("percussion", "\u{1F680} ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)");
+        logger28.info("percussion", "\u{1F680} ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)");
       }
       const hasElectronicEnabled = this.hasElectronicInstrumentsEnabled();
       if (this.volume && hasElectronicEnabled) {
-        logger27.debug("electronic", "Electronic instruments enabled, initializing electronic engine");
+        logger28.debug("electronic", "Electronic instruments enabled, initializing electronic engine");
         this.electronicEngine = new ElectronicEngine(this.volume);
         await this.electronicEngine.initializeElectronic();
-        logger27.debug("electronic", "Advanced electronic synthesis initialized");
+        logger28.debug("electronic", "Advanced electronic synthesis initialized");
       } else {
-        logger27.info("electronic", "Skipping electronic engine initialization (no electronic instruments enabled)");
+        logger28.info("electronic", "Skipping electronic engine initialization (no electronic instruments enabled)");
       }
       await this.initializeMasterEffects();
       this.initializePerformanceOptimization();
-      logger27.info("advanced-synthesis", "Advanced synthesis engines ready");
+      logger28.info("advanced-synthesis", "Advanced synthesis engines ready");
     } catch (error) {
-      logger27.error("advanced-synthesis", "Failed to initialize advanced synthesis", error);
+      logger28.error("advanced-synthesis", "Failed to initialize advanced synthesis", error);
     }
   }
   async initializeEffects() {
@@ -49981,7 +50077,7 @@ var AudioEngine = class {
       this.instrumentEffects.set(instrumentName, effectMap);
     }
     this.validateInstrumentConfigurations(instruments);
-    logger27.info("initialization", "Per-instrument volume controls and effects initialized", {
+    logger28.info("initialization", "Per-instrument volume controls and effects initialized", {
       instrumentCount: instruments.length,
       effectsPerInstrument: 3,
       volumeControlsCreated: instruments.length
@@ -50006,18 +50102,18 @@ var AudioEngine = class {
       }
     }
     if (missingConfigurations.length > 0) {
-      logger27.error("configuration", "Instruments missing volume or effects configuration", {
+      logger28.error("configuration", "Instruments missing volume or effects configuration", {
         instruments: missingConfigurations,
         count: missingConfigurations.length
       });
     }
     if (defaultsApplied.length > 0) {
-      logger27.debug("configuration", "Applied default configuration for instruments", {
+      logger28.debug("configuration", "Applied default configuration for instruments", {
         instruments: defaultsApplied,
         count: defaultsApplied.length
       });
     }
-    logger27.info("configuration", "Configuration validation completed", {
+    logger28.info("configuration", "Configuration validation completed", {
       totalInstruments: instruments.length,
       fullyConfigured: instruments.length - missingConfigurations.length,
       missingConfiguration: missingConfigurations.length,
@@ -50026,7 +50122,7 @@ var AudioEngine = class {
   }
   // Phase 3.5: Enhanced Effect Routing initialization
   async initializeEnhancedRouting() {
-    logger27.debug("enhanced-routing", "Initializing enhanced effect routing");
+    logger28.debug("enhanced-routing", "Initializing enhanced effect routing");
     this.enhancedRouting = true;
     if (!this.settings.enhancedRouting) {
       this.settings = migrateToEnhancedRouting(this.settings);
@@ -50037,7 +50133,7 @@ var AudioEngine = class {
     }
     this.initializeSendReturnBuses();
     this.connectInstrumentsEnhanced();
-    logger27.info("enhanced-routing", "Enhanced effect routing initialized", {
+    logger28.info("enhanced-routing", "Enhanced effect routing initialized", {
       instrumentCount: instruments.length,
       enhancedRouting: true
     });
@@ -50046,7 +50142,7 @@ var AudioEngine = class {
     var _a;
     const effectChain = (_a = this.settings.enhancedRouting) == null ? void 0 : _a.effectChains.get(instrumentName);
     if (!effectChain) {
-      logger27.warn("enhanced-routing", `No effect chain found for ${instrumentName}`);
+      logger28.warn("enhanced-routing", `No effect chain found for ${instrumentName}`);
       return;
     }
     const effectNodes = [];
@@ -50058,7 +50154,7 @@ var AudioEngine = class {
       }
     }
     this.effectChains.set(instrumentName, effectNodes);
-    logger27.debug("enhanced-routing", `Effect chain initialized for ${instrumentName}`, {
+    logger28.debug("enhanced-routing", `Effect chain initialized for ${instrumentName}`, {
       nodeCount: effectNodes.length
     });
   }
@@ -50092,11 +50188,11 @@ var AudioEngine = class {
           const compressor = new Compressor(compressorSettings.params);
           return compressor;
         default:
-          logger27.warn("enhanced-routing", `Unknown effect type: ${node.type}`);
+          logger28.warn("enhanced-routing", `Unknown effect type: ${node.type}`);
           return null;
       }
     } catch (error) {
-      logger27.error("enhanced-routing", `Failed to create effect ${node.type}`, error);
+      logger28.error("enhanced-routing", `Failed to create effect ${node.type}`, error);
       return null;
     }
   }
@@ -50113,7 +50209,7 @@ var AudioEngine = class {
     for (const [busId, returnBus] of routingMatrix.returns) {
       this.returnBuses.set(busId, returnBus);
     }
-    logger27.debug("enhanced-routing", "Send/return buses initialized", {
+    logger28.debug("enhanced-routing", "Send/return buses initialized", {
       sendBuses: this.sendBuses.size,
       returnBuses: this.returnBuses.size
     });
@@ -50136,7 +50232,7 @@ var AudioEngine = class {
       }
       this.connectToMasterChain(output);
     }
-    logger27.debug("enhanced-routing", "Enhanced instrument connections established");
+    logger28.debug("enhanced-routing", "Enhanced instrument connections established");
   }
   connectToMasterChain(instrumentOutput) {
     let output = instrumentOutput;
@@ -50154,25 +50250,25 @@ var AudioEngine = class {
     }
   }
   connectSynthesisInstruments() {
-    logger27.debug("synthesis", "Connecting synthesis instruments to master output");
+    logger28.debug("synthesis", "Connecting synthesis instruments to master output");
     for (const [instrumentName, instrument] of this.instruments) {
       const volume = this.instrumentVolumes.get(instrumentName);
       if (!volume) {
-        logger27.error("synthesis", `Missing volume for instrument: ${instrumentName} - this indicates an initialization order problem`);
+        logger28.error("synthesis", `Missing volume for instrument: ${instrumentName} - this indicates an initialization order problem`);
         continue;
       }
       if (this.volume) {
         volume.connect(this.volume);
-        logger27.debug("synthesis", `Connected ${instrumentName} directly to master output (synthesis mode)`);
+        logger28.debug("synthesis", `Connected ${instrumentName} directly to master output (synthesis mode)`);
       } else {
-        logger27.error("synthesis", `Master volume not available when connecting ${instrumentName}`);
+        logger28.error("synthesis", `Master volume not available when connecting ${instrumentName}`);
       }
     }
   }
   async initializeInstruments() {
     var _a;
     const configs = this.getSamplerConfigs();
-    logger27.info("instruments", "Initializing instruments with per-instrument quality control");
+    logger28.info("instruments", "Initializing instruments with per-instrument quality control");
     const allInstruments = [
       "piano",
       "organ",
@@ -50211,7 +50307,7 @@ var AudioEngine = class {
       const instrumentSettings = this.settings.instruments[instrumentName];
       return (instrumentSettings == null ? void 0 : instrumentSettings.enabled) === true;
     });
-    logger27.info("instruments", `Initializing ${enabledInstruments.length} enabled instruments with individual quality control`);
+    logger28.info("instruments", `Initializing ${enabledInstruments.length} enabled instruments with individual quality control`);
     for (const instrumentName of enabledInstruments) {
       const instrumentSettings = this.settings.instruments[instrumentName];
       const useHighQuality = (_a = instrumentSettings == null ? void 0 : instrumentSettings.useHighQuality) != null ? _a : false;
@@ -50221,27 +50317,27 @@ var AudioEngine = class {
         await this.initializeInstrumentWithSamples(instrumentName, config);
       } else {
         if (useHighQuality && !hasSamples) {
-          logger27.warn("instruments", `${instrumentName} requested high-quality samples but none available, using synthesis`);
+          logger28.warn("instruments", `${instrumentName} requested high-quality samples but none available, using synthesis`);
         }
         this.initializeInstrumentWithSynthesis(instrumentName);
       }
     }
     this.applyInstrumentSettings();
-    logger27.info("instruments", `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
+    logger28.info("instruments", `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
   }
   async initializeInstrumentWithSamples(instrumentName, config) {
     var _a, _b, _c;
     try {
-      logger27.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
+      logger28.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
       const sampler = await new Promise((resolve, reject) => {
         const samplerInstance = new Sampler({
           ...config,
           onload: () => {
-            logger27.debug("samples", `${instrumentName} samples loaded successfully`);
+            logger28.debug("samples", `${instrumentName} samples loaded successfully`);
             resolve(samplerInstance);
           },
           onerror: (error) => {
-            logger27.error("samples", `${instrumentName} samples failed to load`, {
+            logger28.error("samples", `${instrumentName} samples failed to load`, {
               error: (error == null ? void 0 : error.message) || error,
               config: {
                 baseUrl: config.baseUrl,
@@ -50279,15 +50375,15 @@ var AudioEngine = class {
       }
       output.connect(this.volume);
       this.instruments.set(instrumentName, sampler);
-      logger27.info("instruments", `Successfully initialized ${instrumentName} with samples`);
+      logger28.info("instruments", `Successfully initialized ${instrumentName} with samples`);
     } catch (error) {
-      logger27.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
+      logger28.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
       this.initializeInstrumentWithSynthesis(instrumentName);
     }
   }
   initializeInstrumentWithSynthesis(instrumentName) {
     var _a, _b, _c;
-    logger27.debug("instruments", `Initializing ${instrumentName} with synthesis`);
+    logger28.debug("instruments", `Initializing ${instrumentName} with synthesis`);
     let synth;
     const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
     switch (instrumentName) {
@@ -50480,7 +50576,7 @@ var AudioEngine = class {
    * Enhanced whale initialization to handle all whale instruments consistently
    */
   initializeWhaleSynthesizer() {
-    logger27.debug("environmental", "Initializing whale synthesizers for all species");
+    logger28.debug("environmental", "Initializing whale synthesizers for all species");
     const whaleInstruments = [
       "whaleHumpback",
       "whaleBlue",
@@ -50497,10 +50593,10 @@ var AudioEngine = class {
     whaleInstruments.forEach((whaleType) => {
       const instrumentSettings = this.settings.instruments[whaleType];
       if (!(instrumentSettings == null ? void 0 : instrumentSettings.enabled)) {
-        logger27.debug("environmental", `Skipping disabled whale instrument: ${whaleType}`);
+        logger28.debug("environmental", `Skipping disabled whale instrument: ${whaleType}`);
         return;
       }
-      logger27.info("issue-015-fix", `\u{1F40B} WHALE SYNTHESIS: Initializing ${whaleType}`, {
+      logger28.info("issue-015-fix", `\u{1F40B} WHALE SYNTHESIS: Initializing ${whaleType}`, {
         whaleType,
         enabled: instrumentSettings.enabled,
         action: "whale-initialization"
@@ -50523,9 +50619,9 @@ var AudioEngine = class {
         });
         whaleReverb.generate().then(() => {
           whaleSynth.connect(whaleReverb).connect(whaleChorus).connect(whaleVolume).connect(this.volume);
-          logger27.debug("environmental", `${whaleType} synthesizer effects chain connected`);
+          logger28.debug("environmental", `${whaleType} synthesizer effects chain connected`);
         }).catch((error) => {
-          logger27.warn("environmental", `Failed to generate ${whaleType} reverb, using fallback`, error);
+          logger28.warn("environmental", `Failed to generate ${whaleType} reverb, using fallback`, error);
           whaleSynth.connect(whaleChorus).connect(whaleVolume).connect(this.volume);
         });
         this.instruments.set(whaleType, whaleSynth);
@@ -50538,21 +50634,21 @@ var AudioEngine = class {
           whaleEffects.set("chorus", whaleChorus);
         }
         initializedWhales++;
-        logger27.info("issue-015-fix", `\u2705 Successfully initialized ${whaleType}`, {
+        logger28.info("issue-015-fix", `\u2705 Successfully initialized ${whaleType}`, {
           whaleType,
           hasVolumeControl: this.instrumentVolumes.has(whaleType),
           hasSynthesizer: this.instruments.has(whaleType),
           action: "whale-initialization-success"
         });
       } catch (error) {
-        logger27.error("issue-015-fix", `\u274C Failed to initialize ${whaleType}`, {
+        logger28.error("issue-015-fix", `\u274C Failed to initialize ${whaleType}`, {
           whaleType,
           error: error.message,
           action: "whale-initialization-failure"
         });
       }
     });
-    logger27.info("environmental", `Whale synthesizers initialized successfully`, {
+    logger28.info("environmental", `Whale synthesizers initialized successfully`, {
       totalWhaleTypes: whaleInstruments.length,
       initializedWhales,
       skippedDisabled: whaleInstruments.length - initializedWhales
@@ -50675,7 +50771,7 @@ var AudioEngine = class {
       maxPolyphony: maxVoices,
       options: config
     });
-    logger27.debug("environmental", `Created ${whaleType} synthesizer with specific characteristics`, {
+    logger28.debug("environmental", `Created ${whaleType} synthesizer with specific characteristics`, {
       whaleType,
       maxVoices,
       harmonicity: config.harmonicity,
@@ -50691,30 +50787,30 @@ var AudioEngine = class {
     const configKeys = Object.keys(configs);
     const initializedKeys = Array.from(this.instruments.keys());
     const missingKeys = configKeys.filter((key) => !initializedKeys.includes(key));
-    logger27.debug("instruments", "Initializing missing instruments", {
+    logger28.debug("instruments", "Initializing missing instruments", {
       totalConfigs: configKeys.length,
       alreadyInitialized: initializedKeys.length,
       missing: missingKeys.length,
       missingInstruments: missingKeys,
       perInstrumentQuality: "Individual instrument control"
     });
-    logger27.info("instruments", "Creating synthesizers for missing instruments");
+    logger28.info("instruments", "Creating synthesizers for missing instruments");
     const settings = this.settings;
-    logger27.info("issue-014-fix", "\u{1F527} FAST-PATH SYNTHESIS: Applying enabled instrument filter", {
+    logger28.info("issue-014-fix", "\u{1F527} FAST-PATH SYNTHESIS: Applying enabled instrument filter", {
       totalMissingInstruments: missingKeys.length,
       missingInstruments: missingKeys
     });
     missingKeys.forEach((instrumentName) => {
       var _a, _b, _c, _d;
       if (((_a = settings.instruments[instrumentName]) == null ? void 0 : _a.enabled) !== true) {
-        logger27.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
+        logger28.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Skipping disabled instrument: ${instrumentName}`, {
           instrumentName,
           enabled: (_b = settings.instruments[instrumentName]) == null ? void 0 : _b.enabled,
           reason: "disabled-in-family-settings"
         });
         return;
       }
-      logger27.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
+      logger28.info("issue-014-fix", `\u{1F527} FAST-PATH SYNTHESIS: Initializing enabled instrument: ${instrumentName}`, {
         instrumentName,
         enabled: (_c = settings.instruments[instrumentName]) == null ? void 0 : _c.enabled
       });
@@ -50726,10 +50822,10 @@ var AudioEngine = class {
           const sampler = new Sampler({
             ...config,
             onload: () => {
-              logger27.debug("samples", `${instrumentName} samples loaded successfully`);
+              logger28.debug("samples", `${instrumentName} samples loaded successfully`);
             },
             onerror: (error) => {
-              logger27.warn("samples", `${instrumentName} samples failed to load, falling back to synthesis`, { error });
+              logger28.warn("samples", `${instrumentName} samples failed to load, falling back to synthesis`, { error });
             }
           });
           const volume2 = new Volume(-6);
@@ -50739,10 +50835,10 @@ var AudioEngine = class {
             volume2.connect(this.volume);
           }
           this.instruments.set(instrumentName, sampler);
-          logger27.debug("instruments", `Created sample-based instrument: ${instrumentName}`);
+          logger28.debug("instruments", `Created sample-based instrument: ${instrumentName}`);
           return;
         } catch (error) {
-          logger27.warn("instruments", `Failed to create sampler for ${instrumentName}, using synthesis`, { error });
+          logger28.warn("instruments", `Failed to create sampler for ${instrumentName}, using synthesis`, { error });
         }
       }
       const maxVoices = this.getInstrumentPolyphonyLimit(instrumentName);
@@ -50761,7 +50857,7 @@ var AudioEngine = class {
         volume.connect(this.volume);
       }
       this.instruments.set(instrumentName, synth);
-      logger27.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
+      logger28.debug("instruments", `Created synthesis instrument: ${instrumentName}`);
     });
   }
   /**
@@ -50769,7 +50865,7 @@ var AudioEngine = class {
    * Issue #006 Fix: Targeted re-initialization to avoid affecting healthy instruments
    */
   async reinitializeSpecificInstruments(instrumentNames) {
-    logger27.info("issue-006-debug", "Starting targeted instrument re-initialization", {
+    logger28.info("issue-006-debug", "Starting targeted instrument re-initialization", {
       instrumentCount: instrumentNames.length,
       instruments: instrumentNames,
       action: "targeted-reinit-start"
@@ -50777,7 +50873,7 @@ var AudioEngine = class {
     const configs = this.getSamplerConfigs();
     for (const instrumentName of instrumentNames) {
       try {
-        logger27.info("issue-006-debug", `Re-initializing ${instrumentName}`, {
+        logger28.info("issue-006-debug", `Re-initializing ${instrumentName}`, {
           instrumentName,
           configExists: !!configs[instrumentName],
           action: "individual-reinit-start"
@@ -50790,7 +50886,7 @@ var AudioEngine = class {
         if (this.instrumentVolumes.has(instrumentName)) {
           this.instrumentVolumes.delete(instrumentName);
         }
-        logger27.info("issue-006-debug", `Re-creating synthesizer for ${instrumentName}`, {
+        logger28.info("issue-006-debug", `Re-creating synthesizer for ${instrumentName}`, {
           instrumentName,
           mode: "synthesis",
           action: "synth-reinit-start"
@@ -50828,7 +50924,7 @@ var AudioEngine = class {
         volume.connect(this.volume);
         this.instruments.set(instrumentName, synth);
         this.instrumentVolumes.set(instrumentName, volume);
-        logger27.info("issue-006-debug", `Successfully re-initialized synthesizer for ${instrumentName}`, {
+        logger28.info("issue-006-debug", `Successfully re-initialized synthesizer for ${instrumentName}`, {
           instrumentName,
           synthType: "PolySynth",
           finalVolumeValue: volume.volume.value,
@@ -50838,7 +50934,7 @@ var AudioEngine = class {
           action: "synth-reinit-success"
         });
         if (false) {
-          logger27.info("issue-006-debug", `Re-creating sampler for ${instrumentName}`, {
+          logger28.info("issue-006-debug", `Re-creating sampler for ${instrumentName}`, {
             instrumentName,
             mode: "samples",
             action: "sampler-reinit-start"
@@ -50849,7 +50945,7 @@ var AudioEngine = class {
           volume2.connect(this.volume);
           this.instruments.set(instrumentName, sampler);
           this.instrumentVolumes.set(instrumentName, volume2);
-          logger27.info("issue-006-debug", `Successfully re-initialized sampler for ${instrumentName}`, {
+          logger28.info("issue-006-debug", `Successfully re-initialized sampler for ${instrumentName}`, {
             instrumentName,
             finalVolumeValue: volume2.volume.value,
             finalVolumeMuted: volume2.mute,
@@ -50858,7 +50954,7 @@ var AudioEngine = class {
             action: "sampler-reinit-success"
           });
         } else {
-          logger27.error("issue-006-debug", `No valid initialization method for ${instrumentName}`, {
+          logger28.error("issue-006-debug", `No valid initialization method for ${instrumentName}`, {
             instrumentName,
             hasSamplerConfig: !!configs[instrumentName],
             perInstrumentQuality: "Individual instrument control",
@@ -50866,7 +50962,7 @@ var AudioEngine = class {
           });
         }
       } catch (error) {
-        logger27.error("issue-006-debug", `Failed to re-initialize ${instrumentName}`, {
+        logger28.error("issue-006-debug", `Failed to re-initialize ${instrumentName}`, {
           instrumentName,
           error: error.message,
           action: "individual-reinit-error"
@@ -50880,7 +50976,7 @@ var AudioEngine = class {
         this.setInstrumentEnabled(instrumentName, instrumentSettings.enabled);
       }
     });
-    logger27.info("issue-006-debug", "Targeted instrument re-initialization completed", {
+    logger28.info("issue-006-debug", "Targeted instrument re-initialization completed", {
       instrumentCount: instrumentNames.length,
       instruments: instrumentNames,
       action: "targeted-reinit-complete"
@@ -50890,7 +50986,7 @@ var AudioEngine = class {
     var _a, _b;
     try {
       const enabledInstrumentsList = this.getEnabledInstruments();
-      logger27.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
+      logger28.info("issue-006-debug", "PlaySequence initiated - complete state snapshot", {
         sequenceLength: sequence.length,
         isInitialized: this.isInitialized,
         isPlaying: this.isPlaying,
@@ -50904,36 +51000,36 @@ var AudioEngine = class {
         // No longer tracking this way
         action: "play-sequence-init"
       });
-      logger27.info("debug", "Step 1: Checking initialization state", {
+      logger28.info("debug", "Step 1: Checking initialization state", {
         isInitialized: this.isInitialized,
         instrumentsSize: this.instruments.size
       });
       if (!this.isInitialized || !this.instruments.size) {
-        logger27.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
+        logger28.warn("playback", "\u{1F680} ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!");
         await this.initializeEssentials();
-        logger27.info("debug", "Step 2: FAST-PATH initialization completed", {
+        logger28.info("debug", "Step 2: FAST-PATH initialization completed", {
           isInitialized: this.isInitialized,
           isMinimalMode: this.isMinimalMode,
           instrumentsSize: this.instruments.size
         });
       }
-      logger27.info("debug", "Step 3: Checking upgrade conditions", {
+      logger28.info("debug", "Step 3: Checking upgrade conditions", {
         isMinimalMode: this.isMinimalMode,
         shouldUpgrade: this.isMinimalMode
       });
-      logger27.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
+      logger28.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Checking upgrade conditions", {
         isMinimalMode: this.isMinimalMode,
         instrumentsSize: this.instruments.size,
         hasPiano: this.instruments.has("piano"),
         instrumentsList: Array.from(this.instruments.keys())
       });
       if (this.isMinimalMode) {
-        logger27.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
+        logger28.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback");
         const requiresSamples = enabledInstrumentsList.some((instrumentName) => {
           const settings = this.settings.instruments[instrumentName];
           return (settings == null ? void 0 : settings.useHighQuality) === true;
         });
-        logger27.info("debug", "Step 4: Sample requirements analysis", {
+        logger28.info("debug", "Step 4: Sample requirements analysis", {
           enabledInstruments: enabledInstrumentsList,
           requiresSamples,
           pianoUseHighQuality: (_a = this.settings.instruments.piano) == null ? void 0 : _a.useHighQuality,
@@ -50942,7 +51038,7 @@ var AudioEngine = class {
         const hasPercussion = this.hasPercussionInstrumentsEnabled();
         const hasElectronic = this.hasElectronicInstrumentsEnabled();
         const isSynthesisMode = false;
-        logger27.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
+        logger28.debug("playback", "\u{1F680} ISSUE #010 DEBUG: Upgrade analysis", {
           currentInstrumentCount: this.instruments.size,
           currentInstruments: Array.from(this.instruments.keys()),
           hasPercussionEnabled: hasPercussion,
@@ -50960,12 +51056,12 @@ var AudioEngine = class {
           )
         });
         if (isSynthesisMode) {
-          logger27.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
+          logger28.warn("playbook", "\u{1F680} ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments");
           if (!this.volume) {
-            logger27.debug("playbook", "Creating master volume for synthesis mode");
+            logger28.debug("playbook", "Creating master volume for synthesis mode");
             this.volume = new Volume(this.settings.volume).toDestination();
           }
-          logger27.debug("playbook", "Clearing minimal mode instruments before full initialization", {
+          logger28.debug("playbook", "Clearing minimal mode instruments before full initialization", {
             instrumentsToDispose: Array.from(this.instruments.keys())
           });
           this.instruments.forEach((instrument) => instrument.dispose());
@@ -50975,38 +51071,38 @@ var AudioEngine = class {
           await this.initializeAdvancedSynthesis();
           this.isMinimalMode = false;
           this.isInitialized = true;
-          logger27.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
+          logger28.info("playbook", "\u{1F680} ISSUE #010 FIX: Full synthesis initialization completed", {
             instrumentsCreated: this.instruments.size,
             instrumentsList: Array.from(this.instruments.keys())
           });
         } else {
-          logger27.info("debug", "Step 5: Upgrading to full initialization with samples");
+          logger28.info("debug", "Step 5: Upgrading to full initialization with samples");
           await this.forceFullInitialization();
-          logger27.info("debug", "Step 6: Full initialization completed");
+          logger28.info("debug", "Step 6: Full initialization completed");
         }
-        logger27.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
+        logger28.info("playback", "\u{1F680} ISSUE #010 FIX: Upgrade completed - verifying instruments", {
           instrumentsAfterUpgrade: this.instruments.size,
           instrumentsList: Array.from(this.instruments.keys()),
           isInitialized: this.isInitialized,
           isMinimalMode: this.isMinimalMode
         });
       } else {
-        logger27.info("debug", "Step 3: No upgrade needed - not in minimal mode");
+        logger28.info("debug", "Step 3: No upgrade needed - not in minimal mode");
       }
       const sequenceInstruments = [...new Set(sequence.map((note) => note.instrument))];
-      logger27.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
+      logger28.info("playback", "\u{1F680} ISSUE #010 DEBUG: Sequence instrument analysis", {
         sequenceInstruments,
         availableInstruments: Array.from(this.instruments.keys()),
         enabledInstruments: enabledInstrumentsList,
         sequenceLength: sequence.length,
         instrumentMapSize: this.instruments.size
       });
-      logger27.info("debug", "Step 7: Starting volume node inspection");
+      logger28.info("debug", "Step 7: Starting volume node inspection");
       const corruptedVolumeInstruments = enabledInstrumentsList.filter((instrumentName) => {
         var _a2, _b2, _c, _d;
         const hasInstrument = this.instruments.has(instrumentName);
         const volumeNode = this.instrumentVolumes.get(instrumentName);
-        logger27.info("issue-006-debug", "Volume node inspection for enabled instrument", {
+        logger28.info("issue-006-debug", "Volume node inspection for enabled instrument", {
           instrumentName,
           hasInstrument,
           volumeNodeExists: !!volumeNode,
@@ -51016,14 +51112,14 @@ var AudioEngine = class {
           action: "volume-node-inspection"
         });
         if (hasInstrument && !volumeNode) {
-          logger27.warn("issue-006-debug", "Missing volume node detected", {
+          logger28.warn("issue-006-debug", "Missing volume node detected", {
             instrumentName,
             action: "missing-volume-node"
           });
           return true;
         }
         if (volumeNode && volumeNode.volume.value === null) {
-          logger27.error("issue-006-debug", "Corrupted volume node detected (null value)", {
+          logger28.error("issue-006-debug", "Corrupted volume node detected (null value)", {
             instrumentName,
             volumeValue: volumeNode.volume.value,
             volumeMuted: volumeNode.mute,
@@ -51033,7 +51129,7 @@ var AudioEngine = class {
         }
         const instrumentSettings = this.settings.instruments[instrumentName];
         if (hasInstrument && volumeNode && (instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-          logger27.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
+          logger28.debug("issue-006-debug", "Enabled instrument is muted - potential state inconsistency", {
             instrumentName,
             instrumentEnabled: instrumentSettings.enabled,
             volumeMuted: volumeNode.mute,
@@ -51043,21 +51139,21 @@ var AudioEngine = class {
         }
         return false;
       });
-      logger27.info("debug", "Step 8: Volume node inspection completed", {
+      logger28.info("debug", "Step 8: Volume node inspection completed", {
         corruptedCount: corruptedVolumeInstruments.length,
         corruptedInstruments: corruptedVolumeInstruments
       });
       if (corruptedVolumeInstruments.length > 0) {
         const currentLogLevel = LoggerFactory.getLogLevel();
         if (currentLogLevel === "debug") {
-          logger27.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
+          logger28.error("issue-006-debug", "CRITICAL: Found enabled instruments with corrupted volume nodes - attempting re-initialization", {
             corruptedVolumeInstruments,
             corruptedCount: corruptedVolumeInstruments.length,
             totalEnabledCount: enabledInstrumentsList.length,
             action: "corrupted-volume-nodes-detected"
           });
         } else {
-          logger27.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
+          logger28.debug("issue-006-debug", "Found enabled instruments with muted volume nodes - attempting re-initialization", {
             corruptedVolumeInstruments,
             corruptedCount: corruptedVolumeInstruments.length,
             totalEnabledCount: enabledInstrumentsList.length,
@@ -51065,13 +51161,13 @@ var AudioEngine = class {
           });
         }
         corruptedVolumeInstruments.forEach((instrumentName) => {
-          logger27.info("issue-006-debug", "Clearing corrupted volume node", {
+          logger28.info("issue-006-debug", "Clearing corrupted volume node", {
             instrumentName,
             action: "clear-corrupted-volume"
           });
           this.instrumentVolumes.delete(instrumentName);
         });
-        logger27.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
+        logger28.info("issue-006-debug", "Starting targeted re-initialization for corrupted instruments", {
           corruptedInstruments: corruptedVolumeInstruments,
           action: "start-targeted-reinitialization"
         });
@@ -51083,7 +51179,7 @@ var AudioEngine = class {
             return true;
           }
           if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && volumeNode.mute === true) {
-            logger27.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
+            logger28.debug("issue-006-debug", `Enabled instrument ${instrumentName} is unexpectedly muted`, {
               instrumentName,
               shouldBeEnabled: instrumentSettings.enabled,
               actuallyMuted: volumeNode.mute,
@@ -51095,42 +51191,42 @@ var AudioEngine = class {
         });
         if (stillCorrupted.length > 0) {
           if (currentLogLevel === "debug") {
-            logger27.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
+            logger28.error("issue-006-debug", "CRITICAL: Re-initialization failed to fix corrupted volume nodes", {
               stillCorrupted,
               action: "reinitialization-failed"
             });
           } else {
-            logger27.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
+            logger28.debug("issue-006-debug", "Re-initialization could not unmute some volume nodes", {
               stillCorrupted,
               action: "reinitialization-incomplete"
             });
           }
         } else {
-          logger27.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
+          logger28.info("issue-006-debug", "Re-initialization successfully fixed all corrupted volume nodes", {
             fixedInstruments: corruptedVolumeInstruments,
             action: "reinitialization-success"
           });
         }
       }
-      logger27.info("debug", "Step 9: Continuing with playback logic...");
+      logger28.info("debug", "Step 9: Continuing with playback logic...");
       if (this.isPlaying) {
-        logger27.info("playback", "Stopping current sequence before starting new one");
+        logger28.info("playback", "Stopping current sequence before starting new one");
         this.stop();
       }
       if (sequence.length === 0) {
-        logger27.error("playback", "Empty sequence provided");
+        logger28.error("playback", "Empty sequence provided");
         throw new Error("No musical sequence to play");
       }
       const invalidNotes = sequence.filter(
         (note) => !note.pitch || !note.duration || note.pitch <= 0 || note.duration <= 0
       );
       if (invalidNotes.length > 0) {
-        logger27.error("playback", "Invalid notes in sequence", {
+        logger28.error("playback", "Invalid notes in sequence", {
           invalidCount: invalidNotes.length,
           examples: invalidNotes.slice(0, 3)
         });
       }
-      logger27.info("playback", "Starting sequence playback", {
+      logger28.info("playback", "Starting sequence playback", {
         noteCount: sequence.length,
         totalDuration: this.getSequenceDuration(sequence),
         pitchRange: {
@@ -51143,9 +51239,9 @@ var AudioEngine = class {
         }
       });
       try {
-        logger27.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
+        logger28.debug("playback", "Processing musical sequence", { noteCount: sequence.length });
         const processedSequence = sequence;
-        logger27.debug("playback", "Preparing sequence for playback", {
+        logger28.debug("playback", "Preparing sequence for playback", {
           noteCount: processedSequence.length
         });
         this.currentSequence = processedSequence;
@@ -51153,7 +51249,7 @@ var AudioEngine = class {
         this.scheduledEvents = [];
         this.sequenceStartTime = Date.now();
         this.eventEmitter.emit("playback-started", null);
-        logger27.info("issue-006-debug", "Transport state before reset", {
+        logger28.info("issue-006-debug", "Transport state before reset", {
           state: getTransport().state,
           position: getTransport().position,
           seconds: getTransport().seconds,
@@ -51163,11 +51259,11 @@ var AudioEngine = class {
         if (getTransport().state === "started") {
           getTransport().stop();
           getTransport().cancel();
-          logger27.info("issue-006-debug", "Transport stopped and cancelled", {
+          logger28.info("issue-006-debug", "Transport stopped and cancelled", {
             action: "transport-stop-cancel"
           });
         }
-        logger27.info("issue-006-debug", "Transport state after reset", {
+        logger28.info("issue-006-debug", "Transport state after reset", {
           state: getTransport().state,
           position: getTransport().position,
           seconds: getTransport().seconds,
@@ -51175,19 +51271,19 @@ var AudioEngine = class {
         });
         const sequenceDuration = this.getSequenceDuration(processedSequence);
         getTransport().loopEnd = sequenceDuration + 2;
-        logger27.info("debug", "Starting sequence playback", {
+        logger28.info("debug", "Starting sequence playback", {
           sequenceDuration: sequenceDuration.toFixed(2),
           transportState: getTransport().state,
           currentTime: getContext().currentTime.toFixed(3)
         });
         this.startRealtimePlayback(processedSequence);
-        logger27.info("playback", "Real-time playback system started", {
+        logger28.info("playback", "Real-time playback system started", {
           noteCount: processedSequence.length,
           sequenceDuration: sequenceDuration.toFixed(2),
           audioContextState: getContext().state
         });
       } catch (error) {
-        logger27.error("playback", "Error processing sequence", {
+        logger28.error("playback", "Error processing sequence", {
           error: error instanceof Error ? {
             name: error.name,
             message: error.message,
@@ -51206,7 +51302,7 @@ var AudioEngine = class {
         throw error;
       }
     } catch (error) {
-      logger27.error("playback", "CRITICAL: Exception in playSequence method", {
+      logger28.error("playback", "CRITICAL: Exception in playSequence method", {
         error: error.message,
         stack: error.stack,
         sequenceLength: sequence == null ? void 0 : sequence.length,
@@ -51218,7 +51314,7 @@ var AudioEngine = class {
     }
   }
   startRealtimePlayback(sequence) {
-    logger27.info("playback", "Starting real-time playback system", {
+    logger28.info("playback", "Starting real-time playback system", {
       noteCount: sequence.length,
       maxDuration: Math.max(...sequence.map((n) => n.timing + n.duration))
     });
@@ -51231,11 +51327,11 @@ var AudioEngine = class {
     this.lastTriggerTime = 0;
     if (getContext().state === "suspended") {
       getContext().resume();
-      logger27.debug("context", "Resumed suspended audio context for real-time playback");
+      logger28.debug("context", "Resumed suspended audio context for real-time playback");
     }
     try {
       if (getContext().latencyHint !== "playback") {
-        logger27.debug("context", "Optimizing audio context for playback latency");
+        logger28.debug("context", "Optimizing audio context for playback latency");
       }
     } catch (e) {
     }
@@ -51250,7 +51346,7 @@ var AudioEngine = class {
       }
       const currentTime = getContext().currentTime;
       const elapsedTime = currentTime - this.realtimeStartTime;
-      logger27.debug("issue-006-debug", "Realtime timer tick", {
+      logger28.debug("issue-006-debug", "Realtime timer tick", {
         elapsedTime: elapsedTime.toFixed(3),
         contextTime: currentTime.toFixed(3),
         contextState: getContext().state,
@@ -51262,7 +51358,7 @@ var AudioEngine = class {
       if (notesToPlay.length > 0 || elapsedTime < 5) {
         const stats = this.playbackOptimizer.getStats();
         const progress = this.playbackOptimizer.getProgress(elapsedTime);
-        logger27.debug("issue-006-debug", "Note filtering completed", {
+        logger28.debug("issue-006-debug", "Note filtering completed", {
           totalNotes: stats.totalNotes,
           triggeredNotes: progress.currentIndex,
           notesToPlay: notesToPlay.length,
@@ -51273,7 +51369,7 @@ var AudioEngine = class {
       }
       const timeSinceLastTrigger = elapsedTime - this.lastTriggerTime;
       if (timeSinceLastTrigger < 0.05 && notesToPlay.length > 0) {
-        logger27.debug("issue-006-debug", "Note skipped due to spacing constraint", {
+        logger28.debug("issue-006-debug", "Note skipped due to spacing constraint", {
           timeSinceLastTrigger: timeSinceLastTrigger.toFixed(3),
           notesToPlay: notesToPlay.length,
           action: "skip-spacing"
@@ -51288,23 +51384,23 @@ var AudioEngine = class {
       const frequency = mapping.pitch;
       const duration = mapping.duration;
       const velocity = mapping.velocity;
-      logger27.debug("issue-006-debug", "About to trigger note - extracting instrument", {
+      logger28.debug("issue-006-debug", "About to trigger note - extracting instrument", {
         elapsedTime: elapsedTime.toFixed(3),
         frequency: frequency.toFixed(1),
         duration: duration.toFixed(2),
         mappingInstrument: mapping.instrument || "none",
         action: "before-instrument-extraction"
       });
-      logger27.debug("trigger", `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
+      logger28.debug("trigger", `Real-time trigger at ${elapsedTime.toFixed(3)}s: ${frequency.toFixed(1)}Hz for ${duration.toFixed(2)}s`);
       let instrumentName;
       try {
         instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
-        logger27.debug("issue-006-debug", "Instrument determined successfully", {
+        logger28.debug("issue-006-debug", "Instrument determined successfully", {
           instrumentName,
           action: "instrument-determined"
         });
       } catch (error) {
-        logger27.error("issue-006-debug", "Failed to determine instrument", {
+        logger28.error("issue-006-debug", "Failed to determine instrument", {
           error: error.message,
           mapping,
           action: "instrument-determination-failed"
@@ -51322,7 +51418,7 @@ var AudioEngine = class {
         this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
       } else if (this.isEnvironmentalInstrument(instrumentName)) {
         this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch((error) => {
-          logger27.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, error);
+          logger28.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, error);
         });
       } else {
         const synth = this.instruments.get(instrumentName);
@@ -51331,7 +51427,9 @@ var AudioEngine = class {
             const detunedFrequency = this.applyFrequencyDetuning(frequency);
             const audioContext = getContext();
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
-            logger27.info("issue-006-debug", "triggerAttackRelease completed - verifying audio output", {
+            const noteId = `note-${this.noteCounter++}`;
+            this.audioGraphCleaner.scheduleNoteCleanup(noteId, duration);
+            logger28.info("issue-006-debug", "triggerAttackRelease completed - verifying audio output", {
               instrumentName,
               synthConnected: synth.disposed === false,
               synthLoaded: synth instanceof Sampler ? synth.loaded || false : "not-sampler",
@@ -51341,7 +51439,7 @@ var AudioEngine = class {
             });
             const volumeNode = this.instrumentVolumes.get(instrumentName);
             const effectsMap = this.instrumentEffects.get(instrumentName);
-            logger27.info("issue-006-debug", "Audio pipeline verification", {
+            logger28.info("issue-006-debug", "Audio pipeline verification", {
               instrumentName,
               volumeNodeExists: !!volumeNode,
               volumeValue: (_b = (_a = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-value",
@@ -51354,7 +51452,7 @@ var AudioEngine = class {
               masterVolumeExists: !!this.volume,
               action: "audio-pipeline-verification"
             });
-            logger27.info("issue-006-debug", "Audio routing verification", {
+            logger28.info("issue-006-debug", "Audio routing verification", {
               instrumentName,
               synthToVolumeConnected: volumeNode ? "unknown" : "no-volume-node",
               volumeToDestination: this.volume ? "unknown" : "no-master-volume",
@@ -51362,7 +51460,7 @@ var AudioEngine = class {
               action: "audio-routing-verification"
             });
           } catch (error) {
-            logger27.error("issue-006-debug", "triggerAttackRelease failed with error", {
+            logger28.error("issue-006-debug", "triggerAttackRelease failed with error", {
               instrumentName,
               error: error.message,
               stack: error.stack,
@@ -51370,7 +51468,7 @@ var AudioEngine = class {
             });
           }
         } else {
-          logger27.warn("issue-006-debug", "Instrument not found in instruments map", {
+          logger28.warn("issue-006-debug", "Instrument not found in instruments map", {
             instrumentName,
             availableInstruments: Array.from(this.instruments.keys()),
             mapSize: this.instruments.size,
@@ -51389,7 +51487,7 @@ var AudioEngine = class {
       }
       const maxEndTime = this.playbackOptimizer.getProgress(elapsedTime).estimatedTotalTime;
       if (elapsedTime > maxEndTime + 1) {
-        logger27.info("playback", "Real-time sequence completed");
+        logger28.info("playback", "Real-time sequence completed");
         this.eventEmitter.emit("playback-ended", null);
         this.stop();
       }
@@ -51397,10 +51495,10 @@ var AudioEngine = class {
   }
   stop() {
     if (!this.isPlaying) {
-      logger27.debug("playback", "Stop called but no sequence is playing");
+      logger28.debug("playback", "Stop called but no sequence is playing");
       return;
     }
-    logger27.info("playback", "Stopping sequence playback");
+    logger28.info("playback", "Stopping sequence playback");
     this.isPlaying = false;
     this.eventEmitter.emit("playback-stopped", null);
     if (this.realtimeTimer !== null) {
@@ -51417,11 +51515,15 @@ var AudioEngine = class {
     this.scheduledEvents = [];
     this.instruments.forEach((synth, instrumentName) => {
       synth.releaseAll();
+      synth.disconnect();
     });
     this.currentSequence = [];
+    this.frequencyHistory.clear();
     this.playbackOptimizer.dispose();
+    this.audioGraphCleaner.cancelAll();
+    this.reconnectInstruments();
     this.memoryMonitor.logStats();
-    logger27.info("playback", "Sequence stopped and Transport reset");
+    logger28.info("playback", "Sequence stopped and Transport reset");
   }
   updateSettings(settings) {
     this.settings = settings;
@@ -51435,7 +51537,7 @@ var AudioEngine = class {
     if (this.isInitialized) {
       this.applyEffectSettings();
     }
-    logger27.debug("settings", "Audio settings updated", {
+    logger28.debug("settings", "Audio settings updated", {
       volume: settings.volume,
       tempo: settings.tempo,
       effectsApplied: this.isInitialized
@@ -51457,9 +51559,9 @@ var AudioEngine = class {
       if (settings.wet !== void 0) {
         reverb.wet.value = settings.wet;
       }
-      logger27.debug("effects", `Reverb settings updated for ${instrument}`, settings);
+      logger28.debug("effects", `Reverb settings updated for ${instrument}`, settings);
     } else {
-      logger27.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
+      logger28.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -51484,9 +51586,9 @@ var AudioEngine = class {
       if (settings.spread !== void 0) {
         chorus.spread = settings.spread;
       }
-      logger27.debug("effects", `Chorus settings updated for ${instrument}`, settings);
+      logger28.debug("effects", `Chorus settings updated for ${instrument}`, settings);
     } else {
-      logger27.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
+      logger28.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -51505,9 +51607,9 @@ var AudioEngine = class {
       if (settings.type !== void 0) {
         filter2.type = settings.type;
       }
-      logger27.debug("effects", `Filter settings updated for ${instrument}`, settings);
+      logger28.debug("effects", `Filter settings updated for ${instrument}`, settings);
     } else {
-      logger27.warn("effects", `Filter effect not found for instrument: ${instrument}`);
+      logger28.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -51521,9 +51623,9 @@ var AudioEngine = class {
       const instrumentSettings = this.settings.instruments[instrument];
       const wetLevel = ((_c = (_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.params) == null ? void 0 : _c.wet) || 0.25;
       reverb.wet.value = enabled ? wetLevel : 0;
-      logger27.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger28.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger27.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
+      logger28.warn("effects", `Reverb effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -51534,9 +51636,9 @@ var AudioEngine = class {
     const chorus = instrumentEffects == null ? void 0 : instrumentEffects.get("chorus");
     if (chorus) {
       chorus.wet.value = enabled ? 1 : 0;
-      logger27.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger28.debug("effects", `Chorus ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger27.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
+      logger28.warn("effects", `Chorus effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -51554,9 +51656,9 @@ var AudioEngine = class {
       } else {
         filter2.frequency.value = 2e4;
       }
-      logger27.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
+      logger28.debug("effects", `Filter ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
-      logger27.warn("effects", `Filter effect not found for instrument: ${instrument}`);
+      logger28.warn("effects", `Filter effect not found for instrument: ${instrument}`);
     }
   }
   /**
@@ -51583,7 +51685,7 @@ var AudioEngine = class {
   updateInstrumentVolume(instrumentKey, volume) {
     var _a, _b, _c, _d;
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
-    logger27.info("issue-006-debug", "updateInstrumentVolume called", {
+    logger28.info("issue-006-debug", "updateInstrumentVolume called", {
       instrumentKey,
       volume,
       volumeNodeExists: !!instrumentVolume,
@@ -51594,7 +51696,7 @@ var AudioEngine = class {
     if (instrumentVolume) {
       const previousVolume = instrumentVolume.volume.value;
       const dbVolume = Math.log10(Math.max(0.01, volume)) * 20;
-      logger27.info("issue-006-debug", "About to set volume value", {
+      logger28.info("issue-006-debug", "About to set volume value", {
         instrumentKey,
         inputVolume: volume,
         calculatedDbVolume: dbVolume,
@@ -51602,7 +51704,7 @@ var AudioEngine = class {
         action: "before-volume-assignment"
       });
       instrumentVolume.volume.value = dbVolume;
-      logger27.info("issue-006-debug", "Volume value set", {
+      logger28.info("issue-006-debug", "Volume value set", {
         instrumentKey,
         newVolumeValue: instrumentVolume.volume.value,
         dbVolume,
@@ -51610,9 +51712,9 @@ var AudioEngine = class {
         volumeNodeConstructor: (_d = instrumentVolume.constructor) == null ? void 0 : _d.name,
         action: "after-volume-assignment"
       });
-      logger27.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume == null ? void 0 : previousVolume.toFixed(1)}dB`);
+      logger28.debug("instrument-control", `Updated ${instrumentKey} volume: ${volume} (${dbVolume.toFixed(1)}dB), previous: ${previousVolume == null ? void 0 : previousVolume.toFixed(1)}dB`);
     } else {
-      logger27.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} in updateInstrumentVolume`, {
+      logger28.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} in updateInstrumentVolume`, {
         instrumentKey,
         volume,
         volumeMapSize: this.instrumentVolumes.size,
@@ -51629,9 +51731,9 @@ var AudioEngine = class {
     if (instrument) {
       if ("maxPolyphony" in instrument) {
         instrument.maxPolyphony = maxVoices;
-        logger27.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
+        logger28.debug("instrument-control", `Updated ${instrumentKey} max voices to ${maxVoices}`);
       } else {
-        logger27.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
+        logger28.debug("instrument-control", `${instrumentKey} is a Sampler - polyphony handled internally`);
       }
     }
   }
@@ -51642,11 +51744,11 @@ var AudioEngine = class {
     var _a, _b, _c;
     const { isValidInstrumentKey: isValidInstrumentKey2 } = (init_constants(), __toCommonJS(constants_exports));
     if (!isValidInstrumentKey2(instrumentKey)) {
-      logger27.error("instrument-control", `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
+      logger28.error("instrument-control", `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
       return;
     }
     const instrumentVolume = this.instrumentVolumes.get(instrumentKey);
-    logger27.info("issue-006-debug", "setInstrumentEnabled called", {
+    logger28.info("issue-006-debug", "setInstrumentEnabled called", {
       instrumentKey,
       enabled,
       volumeNodeExists: !!instrumentVolume,
@@ -51656,7 +51758,7 @@ var AudioEngine = class {
     });
     if (instrumentVolume) {
       if (enabled) {
-        logger27.info("issue-006-debug", `Re-enabling ${instrumentKey}`, {
+        logger28.info("issue-006-debug", `Re-enabling ${instrumentKey}`, {
           previousMute: instrumentVolume.mute,
           previousVolume: instrumentVolume.volume.value,
           action: "before-re-enable"
@@ -51665,31 +51767,31 @@ var AudioEngine = class {
         const instrumentSettings = this.settings.instruments[instrumentKey];
         if (instrumentSettings) {
           this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
-          logger27.info("issue-006-debug", `${instrumentKey} re-enabled successfully`, {
+          logger28.info("issue-006-debug", `${instrumentKey} re-enabled successfully`, {
             newMute: instrumentVolume.mute,
             newVolume: instrumentVolume.volume.value,
             targetVolume: instrumentSettings.volume,
             action: "after-re-enable"
           });
         } else {
-          logger27.warn("instrument-control", `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
+          logger28.warn("instrument-control", `No settings found for ${instrumentKey} - this indicates a settings/typing mismatch`);
         }
       } else {
-        logger27.info("issue-006-debug", `Disabling ${instrumentKey} using mute`, {
+        logger28.info("issue-006-debug", `Disabling ${instrumentKey} using mute`, {
           previousMute: instrumentVolume.mute,
           previousVolume: instrumentVolume.volume.value,
           action: "before-disable"
         });
         instrumentVolume.mute = true;
-        logger27.info("issue-006-debug", `${instrumentKey} disabled successfully`, {
+        logger28.info("issue-006-debug", `${instrumentKey} disabled successfully`, {
           newMute: instrumentVolume.mute,
           newVolume: instrumentVolume.volume.value,
           action: "after-disable"
         });
       }
-      logger27.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
+      logger28.debug("instrument-control", `${enabled ? "Enabled" : "Disabled"} ${instrumentKey}`);
     } else {
-      logger27.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} during enable/disable`, {
+      logger28.error("issue-006-debug", `CRITICAL: No volume control found for ${instrumentKey} during enable/disable`, {
         instrumentKey,
         enabled,
         instrumentExists: this.instruments.has(instrumentKey),
@@ -51704,14 +51806,14 @@ var AudioEngine = class {
    * Apply initial instrument settings from plugin configuration
    */
   applyInstrumentSettings() {
-    logger27.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
+    logger28.debug("instrument-settings", "Applying initial instrument settings", this.settings.instruments);
     Object.entries(this.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
-      logger27.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
+      logger28.debug("instrument-settings", `Processing ${instrumentKey}:`, instrumentSettings);
       this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
       this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
       this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
     });
-    logger27.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
+    logger28.debug("instrument-settings", "Applied initial instrument settings", this.settings.instruments);
   }
   /**
    * Update volume setting
@@ -51720,7 +51822,7 @@ var AudioEngine = class {
     if (this.isInitialized && this.volume) {
       const dbValue = this.settings.volume === 0 ? -Infinity : 20 * Math.log10(this.settings.volume);
       this.volume.volume.value = dbValue;
-      logger27.debug("audio", "Master volume updated", {
+      logger28.debug("audio", "Master volume updated", {
         rawValue: this.settings.volume,
         dbValue
       });
@@ -51732,7 +51834,7 @@ var AudioEngine = class {
     return Math.max(...sequence.map((mapping) => mapping.timing + mapping.duration));
   }
   handleSequenceComplete() {
-    logger27.info("playback", "Sequence playback completed");
+    logger28.info("playback", "Sequence playback completed");
     this.isPlaying = false;
     this.currentSequence = [];
     this.scheduledEvents = [];
@@ -51760,7 +51862,7 @@ var AudioEngine = class {
     if (this.instrumentCacheValid) {
       return this.cachedEnabledInstruments;
     }
-    logger27.debug("optimization", "Building enabled instruments cache - should be rare after first call");
+    logger28.debug("optimization", "Building enabled instruments cache - should be rare after first call");
     const enabled = [];
     Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
       if (settings.enabled) {
@@ -51769,7 +51871,7 @@ var AudioEngine = class {
     });
     this.cachedEnabledInstruments = enabled;
     this.instrumentCacheValid = true;
-    logger27.debug("optimization", `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
+    logger28.debug("optimization", `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
     return enabled;
   }
   /**
@@ -51785,16 +51887,16 @@ var AudioEngine = class {
    */
   onInstrumentSettingsChanged() {
     this.invalidateInstrumentCache();
-    logger27.debug("optimization", "Instrument cache invalidated due to settings change");
+    logger28.debug("optimization", "Instrument cache invalidated due to settings change");
   }
   /**
    * Public method for testing Phase 2.2 cached enabled instruments optimization
    * This allows tests to exercise the getEnabledInstruments() optimization path
    */
   getEnabledInstrumentsForTesting() {
-    logger27.debug("test", "getEnabledInstrumentsForTesting() called");
+    logger28.debug("test", "getEnabledInstrumentsForTesting() called");
     const result = this.getEnabledInstruments();
-    logger27.debug("test", `getEnabledInstrumentsForTesting() returning ${result.length} instruments`, result);
+    logger28.debug("test", `getEnabledInstrumentsForTesting() returning ${result.length} instruments`, result);
     return result;
   }
   /**
@@ -51802,7 +51904,7 @@ var AudioEngine = class {
    * This simulates the actual code path that calls getDefaultInstrument -> getEnabledInstruments
    */
   getDefaultInstrumentForTesting(frequency) {
-    logger27.debug("test", `getDefaultInstrumentForTesting() called with frequency ${frequency}`);
+    logger28.debug("test", `getDefaultInstrumentForTesting() called with frequency ${frequency}`);
     const mockMapping = {
       nodeId: "test-node",
       pitch: frequency,
@@ -51811,7 +51913,7 @@ var AudioEngine = class {
       timing: 0
     };
     const result = this.getDefaultInstrument(mockMapping);
-    logger27.debug("test", `getDefaultInstrumentForTesting() returning instrument: ${result}`);
+    logger28.debug("test", `getDefaultInstrumentForTesting() returning instrument: ${result}`);
     return result;
   }
   assignByFrequency(mapping, enabledInstruments) {
@@ -51942,12 +52044,12 @@ var AudioEngine = class {
    */
   async playNoteImmediate(mapping) {
     if (!this.isInitialized) {
-      logger27.warn("audio", "Audio engine not initialized for immediate note playback");
+      logger28.warn("audio", "Audio engine not initialized for immediate note playback");
       await this.initialize();
     }
     try {
       const { pitch, duration, velocity, instrument } = mapping;
-      logger27.debug("immediate-playback", "Playing note immediately", {
+      logger28.debug("immediate-playback", "Playing note immediately", {
         instrument,
         pitch: pitch.toFixed(2),
         duration,
@@ -51955,7 +52057,7 @@ var AudioEngine = class {
       });
       const synth = this.instruments.get(instrument);
       if (!synth) {
-        logger27.warn("immediate-playback", `Instrument not found: ${instrument}`, {
+        logger28.warn("immediate-playback", `Instrument not found: ${instrument}`, {
           availableInstruments: Array.from(this.instruments.keys())
         });
         const pianoSynth = this.instruments.get("piano");
@@ -51967,13 +52069,13 @@ var AudioEngine = class {
       }
       const detunedFrequency = this.applyFrequencyDetuning(pitch);
       synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
-      logger27.debug("immediate-playback", "Note triggered successfully", {
+      logger28.debug("immediate-playback", "Note triggered successfully", {
         instrument,
         detunedFrequency: detunedFrequency.toFixed(2),
         originalFrequency: pitch.toFixed(2)
       });
     } catch (error) {
-      logger27.error("Failed to play immediate note", error.message);
+      logger28.error("Failed to play immediate note", error.message);
       throw error;
     }
   }
@@ -51985,7 +52087,7 @@ var AudioEngine = class {
       await this.initializeEssentials();
     }
     if (this.instruments.size > 0) {
-      logger27.debug("test", "Playing test note", { frequency });
+      logger28.debug("test", "Playing test note", { frequency });
       this.instruments.forEach((synth, instrumentName) => {
         if (instrumentName === "piano") {
           synth.triggerAttackRelease(frequency, "4n");
@@ -52003,7 +52105,7 @@ var AudioEngine = class {
       return;
     }
     try {
-      logger27.debug("audio", "Fast-path initialization for test notes");
+      logger28.debug("audio", "Fast-path initialization for test notes");
       await start2();
       this.volume = new Volume(this.settings.volume).toDestination();
       const enabledInstruments = this.getEnabledInstruments();
@@ -52011,7 +52113,7 @@ var AudioEngine = class {
         const settings = this.settings.instruments[instrumentName];
         return (settings == null ? void 0 : settings.useHighQuality) === true;
       });
-      logger27.info("audio", "Essential initialization - checking sample requirements", {
+      logger28.info("audio", "Essential initialization - checking sample requirements", {
         enabledInstruments,
         requiresSamples,
         instrumentsRequiringSamples: enabledInstruments.filter((instrumentName) => {
@@ -52020,7 +52122,7 @@ var AudioEngine = class {
         })
       });
       if (requiresSamples) {
-        logger27.info("audio", "\u{1F3B5} SAMPLE MODE: High-quality samples required - upgrading to full initialization");
+        logger28.info("audio", "\u{1F3B5} SAMPLE MODE: High-quality samples required - upgrading to full initialization");
         await this.initializeEffects();
         await this.initializeInstruments();
         await this.initializeAdvancedSynthesis();
@@ -52032,21 +52134,21 @@ var AudioEngine = class {
         this.generateInitializationReport();
         this.isInitialized = true;
         this.isMinimalMode = false;
-        logger27.info("audio", "\u{1F3B5} SAMPLE MODE: Full initialization completed with samples", {
+        logger28.info("audio", "\u{1F3B5} SAMPLE MODE: Full initialization completed with samples", {
           totalInstruments: this.instruments.size,
           instrumentsList: Array.from(this.instruments.keys()),
           samplesEnabled: true
         });
       } else {
-        logger27.info("audio", "\u{1F3B9} SYNTHESIS MODE: No samples required - using minimal initialization");
+        logger28.info("audio", "\u{1F3B9} SYNTHESIS MODE: No samples required - using minimal initialization");
         await this.initializeBasicPiano();
         await this.initializeLightweightSynthesis();
         this.isInitialized = true;
         this.isMinimalMode = true;
-        logger27.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
+        logger28.warn("audio", "\u{1F680} ISSUE #010 FIX: Essential components initialized (minimal mode) with lightweight percussion");
       }
     } catch (error) {
-      logger27.error("audio", "Failed to initialize essential components", error);
+      logger28.error("audio", "Failed to initialize essential components", error);
       throw error;
     }
   }
@@ -52057,10 +52159,10 @@ var AudioEngine = class {
   async forceFullInitialization() {
     var _a;
     try {
-      logger27.debug("audio", "Upgrading to full initialization");
+      logger28.debug("audio", "Upgrading to full initialization");
       const existingInstruments = new Map(this.instruments);
       const existingVolumes = new Map(this.instrumentVolumes);
-      logger27.info("audio", "\u{1F680} ISSUE #010 FIX: Preserving existing instruments during upgrade", {
+      logger28.info("audio", "\u{1F680} ISSUE #010 FIX: Preserving existing instruments during upgrade", {
         existingInstruments: Array.from(existingInstruments.keys()),
         existingVolumes: Array.from(existingVolumes.keys())
       });
@@ -52068,7 +52170,7 @@ var AudioEngine = class {
       await this.initializeInstruments();
       existingInstruments.forEach((instrument, instrumentName) => {
         if (instrumentName === "piano") {
-          logger27.info("audio", "\u{1F680} ISSUE #010 FIX: Restoring working piano from minimal mode");
+          logger28.info("audio", "\u{1F680} ISSUE #010 FIX: Restoring working piano from minimal mode");
           this.instruments.set(instrumentName, instrument);
           const existingVolume = existingVolumes.get(instrumentName);
           if (existingVolume) {
@@ -52084,14 +52186,14 @@ var AudioEngine = class {
       }
       this.generateInitializationReport();
       this.isMinimalMode = false;
-      logger27.info("audio", "Full AudioEngine initialization completed", {
+      logger28.info("audio", "Full AudioEngine initialization completed", {
         totalInstruments: this.instruments.size,
         preservedInstruments: Array.from(existingInstruments.keys()),
         finalInstruments: Array.from(this.instruments.keys()),
         instrumentMapSize: this.instruments.size
       });
     } catch (error) {
-      logger27.error("audio", "Failed to upgrade to full initialization", error);
+      logger28.error("audio", "Failed to upgrade to full initialization", error);
       throw error;
     }
   }
@@ -52118,9 +52220,9 @@ var AudioEngine = class {
       pianoPoly.connect(pianoVolume);
       pianoVolume.connect(this.volume);
       this.instruments.set("piano", pianoPoly);
-      logger27.debug("audio", "Basic piano synthesizer initialized");
+      logger28.debug("audio", "Basic piano synthesizer initialized");
     } catch (error) {
-      logger27.error("audio", "Failed to initialize basic piano", error);
+      logger28.error("audio", "Failed to initialize basic piano", error);
       throw error;
     }
   }
@@ -52317,12 +52419,12 @@ var AudioEngine = class {
         guitarNylonVolume.connect(this.volume);
         this.instruments.set("guitarNylon", guitarNylonPoly);
       }
-      logger27.debug("audio", "Lightweight synthesis initialized", {
+      logger28.debug("audio", "Lightweight synthesis initialized", {
         instrumentsCreated: this.instruments.size,
         synthesisMode: true
       });
     } catch (error) {
-      logger27.error("audio", "Failed to initialize lightweight percussion", error);
+      logger28.error("audio", "Failed to initialize lightweight percussion", error);
       throw error;
     }
   }
@@ -52343,7 +52445,7 @@ var AudioEngine = class {
       }
       return false;
     });
-    logger27.debug("family-check", `\u{1F680} ISSUE #010 DEBUG: Family check for ${familyType}`, {
+    logger28.debug("family-check", `\u{1F680} ISSUE #010 DEBUG: Family check for ${familyType}`, {
       enabledInstruments,
       familyInstruments,
       hasFamilyInstruments: familyInstruments.length > 0
@@ -52366,7 +52468,7 @@ var AudioEngine = class {
    * Clean up resources
    */
   dispose() {
-    logger27.info("cleanup", "Disposing AudioEngine");
+    logger28.info("cleanup", "Disposing AudioEngine");
     this.stop();
     this.instruments.forEach((synth, instrumentName) => {
       synth.dispose();
@@ -52389,6 +52491,7 @@ var AudioEngine = class {
     this.eventEmitter.dispose();
     this.playbackOptimizer.dispose();
     this.memoryMonitor.clearHistory();
+    this.audioGraphCleaner.dispose();
     this.frequencyHistory.clear();
     if (this.performanceMonitoringInterval) {
       clearInterval(this.performanceMonitoringInterval);
@@ -52399,7 +52502,7 @@ var AudioEngine = class {
     });
     this.previewTimeouts.clear();
     this.isInitialized = false;
-    logger27.info("cleanup", "AudioEngine disposed");
+    logger28.info("cleanup", "AudioEngine disposed");
   }
   applyEffectSettings() {
     if (!this.settings.instruments || !this.isInitialized)
@@ -52411,7 +52514,7 @@ var AudioEngine = class {
           return;
         const instrumentEffects = this.instrumentEffects.get(instrumentName);
         if (!instrumentEffects) {
-          logger27.debug("effects", `Skipping effect settings for ${instrumentName} - no effects initialized`);
+          logger28.debug("effects", `Skipping effect settings for ${instrumentName} - no effects initialized`);
           return;
         }
         const reverbSettings = instrumentSettings.effects.reverb;
@@ -52457,11 +52560,11 @@ var AudioEngine = class {
           }
         }
       });
-      logger27.debug("effects", "Applied per-instrument effect settings from plugin settings", {
+      logger28.debug("effects", "Applied per-instrument effect settings from plugin settings", {
         instruments: Object.keys(this.settings.instruments)
       });
     } catch (error) {
-      logger27.error("effects", "Failed to apply effect settings", error);
+      logger28.error("effects", "Failed to apply effect settings", error);
     }
   }
   /**
@@ -52796,20 +52899,20 @@ var AudioEngine = class {
    */
   async enableEnhancedRouting() {
     if (this.enhancedRouting) {
-      logger27.warn("enhanced-routing", "Enhanced routing already enabled");
+      logger28.warn("enhanced-routing", "Enhanced routing already enabled");
       return;
     }
     this.settings = migrateToEnhancedRouting(this.settings);
     this.settings.enhancedRouting.enabled = true;
     await this.initializeEnhancedRouting();
-    logger27.info("enhanced-routing", "Enhanced routing enabled successfully");
+    logger28.info("enhanced-routing", "Enhanced routing enabled successfully");
   }
   /**
    * Disable enhanced effect routing and revert to classic mode
    */
   async disableEnhancedRouting() {
     if (!this.enhancedRouting) {
-      logger27.warn("enhanced-routing", "Enhanced routing already disabled");
+      logger28.warn("enhanced-routing", "Enhanced routing already disabled");
       return;
     }
     this.enhancedRouting = false;
@@ -52821,7 +52924,7 @@ var AudioEngine = class {
     this.effectNodeInstances.clear();
     await this.initializeEffects();
     this.applyEffectSettings();
-    logger27.info("enhanced-routing", "Enhanced routing disabled, reverted to classic mode");
+    logger28.info("enhanced-routing", "Enhanced routing disabled, reverted to classic mode");
   }
   // Legacy getEffectChain method removed - now delegated to EffectBusManager
   // Legacy reorderEffectChain method removed - functionality moved to EffectBusManager
@@ -52877,7 +52980,7 @@ var AudioEngine = class {
     const volume = this.instrumentVolumes.get(instrumentName);
     const effectNodes = this.effectChains.get(instrumentName);
     if (!instrument || !volume || !effectNodes) {
-      logger27.warn("enhanced-routing", `Cannot reconnect ${instrumentName}: missing components`);
+      logger28.warn("enhanced-routing", `Cannot reconnect ${instrumentName}: missing components`);
       return;
     }
     instrument.disconnect();
@@ -52892,7 +52995,7 @@ var AudioEngine = class {
       }
     }
     this.connectToMasterChain(output);
-    logger27.debug("enhanced-routing", `Reconnected ${instrumentName} with updated effect chain`);
+    logger28.debug("enhanced-routing", `Reconnected ${instrumentName} with updated effect chain`);
   }
   // Legacy isEnhancedRoutingEnabled, getSendBuses, getReturnBuses methods removed - now delegated to EffectBusManager
   // Phase 8: Advanced Percussion Methods
@@ -52985,7 +53088,7 @@ var AudioEngine = class {
           }
         }
         if (!hasValidBuffers) {
-          logger27.warn("sample-fallback", `CDN samples failed to load for ${instrumentName}, creating synthesis fallback`, {
+          logger28.warn("sample-fallback", `CDN samples failed to load for ${instrumentName}, creating synthesis fallback`, {
             instrument: instrumentName,
             cdnPath: config.baseUrl,
             issue: "Issue #012 - Vocal Instrument Silence"
@@ -53002,7 +53105,7 @@ var AudioEngine = class {
       }, 5e3);
       return sampler;
     } catch (error) {
-      logger27.error("sample-fallback", `Failed to create Sampler for ${instrumentName}, using synthesis fallback`, error);
+      logger28.error("sample-fallback", `Failed to create Sampler for ${instrumentName}, using synthesis fallback`, error);
       return this.createVocalSynthesis(instrumentName);
     }
   }
@@ -53052,12 +53155,12 @@ var AudioEngine = class {
    */
   triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, time) {
     if (!this.percussionEngine) {
-      logger27.debug("advanced-percussion", `Percussion engine not initialized, falling back to standard synthesis for ${instrumentName}`);
+      logger28.debug("advanced-percussion", `Percussion engine not initialized, falling back to standard synthesis for ${instrumentName}`);
       this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
       return;
     }
     if (!this.isValidPercussionParams(frequency, duration, velocity)) {
-      logger27.debug("advanced-percussion", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
+      logger28.debug("advanced-percussion", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
         frequency,
         duration,
         velocity
@@ -53089,9 +53192,9 @@ var AudioEngine = class {
           this.percussionEngine.triggerGong(note, velocity, duration, resonance);
           break;
       }
-      logger27.debug("advanced-percussion", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
+      logger28.debug("advanced-percussion", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger27.debug("advanced-percussion", `Falling back to standard synthesis for ${instrumentName}`, {
+      logger28.debug("advanced-percussion", `Falling back to standard synthesis for ${instrumentName}`, {
         error: error instanceof Error ? error.message : String(error),
         frequency: detunedFrequency,
         note
@@ -53114,12 +53217,12 @@ var AudioEngine = class {
       try {
         synth.triggerAttackRelease(frequency, duration, time, velocity);
       } catch (fallbackError) {
-        logger27.warn("synthesis-fallback", `Even standard synthesis failed for ${instrumentName}`, {
+        logger28.warn("synthesis-fallback", `Even standard synthesis failed for ${instrumentName}`, {
           error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
         });
       }
     } else {
-      logger27.warn("synthesis-fallback", `No synthesizer found for ${instrumentName}`);
+      logger28.warn("synthesis-fallback", `No synthesizer found for ${instrumentName}`);
     }
   }
   /**
@@ -53127,12 +53230,12 @@ var AudioEngine = class {
    */
   triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, time) {
     if (!this.electronicEngine) {
-      logger27.debug("advanced-electronic", `Electronic engine not initialized, falling back to standard synthesis for ${instrumentName}`);
+      logger28.debug("advanced-electronic", `Electronic engine not initialized, falling back to standard synthesis for ${instrumentName}`);
       this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
       return;
     }
     if (!this.isValidPercussionParams(frequency, duration, velocity)) {
-      logger27.debug("advanced-electronic", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
+      logger28.debug("advanced-electronic", `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
         frequency,
         duration,
         velocity
@@ -53158,9 +53261,9 @@ var AudioEngine = class {
           this.electronicEngine.triggerArpSynth(note, velocity, duration, patterns[patternIndex]);
           break;
       }
-      logger27.debug("advanced-electronic", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
+      logger28.debug("advanced-electronic", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger27.debug("advanced-electronic", `Falling back to standard synthesis for ${instrumentName}`, {
+      logger28.debug("advanced-electronic", `Falling back to standard synthesis for ${instrumentName}`, {
         error: error instanceof Error ? error.message : String(error),
         frequency: detunedFrequency,
         note
@@ -53179,23 +53282,23 @@ var AudioEngine = class {
           if (whaleSettings == null ? void 0 : whaleSettings.useHighQuality) {
             const externalSample = await this.tryLoadExternalWhaleSample(instrumentName, frequency, duration, velocity, time);
             if (externalSample) {
-              logger27.debug("environmental-sound", `External whale sample triggered: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration.toFixed(3)}`);
+              logger28.debug("environmental-sound", `External whale sample triggered: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration.toFixed(3)}`);
               return;
             }
           }
           const whaleSynth = this.instruments.get("whaleHumpback");
           if (!whaleSynth) {
-            logger27.warn("environmental-sound", "Persistent whale synthesizer not found");
+            logger28.warn("environmental-sound", "Persistent whale synthesizer not found");
             return;
           }
           const whaleFreq = Math.max(frequency * 0.5, 40);
           whaleSynth.triggerAttackRelease(whaleFreq, duration, time, velocity * 0.8);
-          logger27.debug("environmental-sound", `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
+          logger28.debug("environmental-sound", `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
           break;
       }
-      logger27.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
+      logger28.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);
     } catch (error) {
-      logger27.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, {
+      logger28.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, {
         error: error instanceof Error ? error.message : String(error),
         frequency
       });
@@ -53219,12 +53322,12 @@ var AudioEngine = class {
           player.dispose();
           volume.dispose();
         }, (duration + 1) * 1e3);
-        logger27.debug("whale-external", `External whale sample played: ${instrumentName}, freq: ${frequency.toFixed(1)}Hz`);
+        logger28.debug("whale-external", `External whale sample played: ${instrumentName}, freq: ${frequency.toFixed(1)}Hz`);
         return true;
       }
       return false;
     } catch (error) {
-      logger27.debug("whale-external", `Failed to load external whale sample for ${instrumentName}`, error);
+      logger28.debug("whale-external", `Failed to load external whale sample for ${instrumentName}`, error);
       return false;
     }
   }
@@ -53257,7 +53360,7 @@ var AudioEngine = class {
       const detuneAmount = (Math.random() - 0.5) * 2e-3;
       const detunedFrequency = frequency * (1 + detuneAmount);
       if (typeof window !== "undefined" && !((_c = (_b = window.location) == null ? void 0 : _b.href) == null ? void 0 : _c.includes("test"))) {
-        logger27.debug("detuning", `Phase conflict resolved: ${frequency.toFixed(2)}Hz \u2192 ${detunedFrequency.toFixed(2)}Hz`);
+        logger28.debug("detuning", `Phase conflict resolved: ${frequency.toFixed(2)}Hz \u2192 ${detunedFrequency.toFixed(2)}Hz`);
       }
       this.frequencyHistory.set(Math.round(detunedFrequency * 10) / 10, currentTime);
       return detunedFrequency;
@@ -53291,7 +53394,7 @@ var AudioEngine = class {
    * Master effects controls for orchestral processing
    */
   setMasterReverbDecay(decay) {
-    logger27.debug("master-effects", `Setting master reverb decay: ${decay}s`);
+    logger28.debug("master-effects", `Setting master reverb decay: ${decay}s`);
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
       const instrumentSettings = this.settings.instruments[instrumentName];
       if ((instrumentSettings == null ? void 0 : instrumentSettings.enabled) && instrumentSettings.effects.reverb.enabled) {
@@ -53301,31 +53404,31 @@ var AudioEngine = class {
     });
   }
   setMasterBassBoost(boost) {
-    logger27.debug("master-effects", `Setting master bass boost: ${boost}dB`);
+    logger28.debug("master-effects", `Setting master bass boost: ${boost}dB`);
     if (this.masterEQ) {
       this.masterEQ.low.value = boost;
     }
   }
   setMasterTrebleBoost(boost) {
-    logger27.debug("master-effects", `Setting master treble boost: ${boost}dB`);
+    logger28.debug("master-effects", `Setting master treble boost: ${boost}dB`);
     if (this.masterEQ) {
       this.masterEQ.high.value = boost;
     }
   }
   setMasterCompression(ratio) {
-    logger27.debug("master-effects", `Setting master compression: ${ratio}`);
+    logger28.debug("master-effects", `Setting master compression: ${ratio}`);
     if (this.masterCompressor) {
       this.masterCompressor.threshold.value = -20 + ratio * 15;
       this.masterCompressor.ratio.value = 2 + ratio * 8;
     }
   }
   async initializeMasterEffects() {
-    logger27.debug("master-effects", "Initializing master effects chain via EffectBusManager");
+    logger28.debug("master-effects", "Initializing master effects chain via EffectBusManager");
     try {
       await this.effectBusManager.enableEnhancedRouting();
-      logger27.info("master-effects", "Master effects chain initialized via EffectBusManager");
+      logger28.info("master-effects", "Master effects chain initialized via EffectBusManager");
     } catch (error) {
-      logger27.error("master-effects", "Failed to initialize master effects", { error });
+      logger28.error("master-effects", "Failed to initialize master effects", { error });
     }
   }
   routeInstrumentsThroughMasterEffects() {
@@ -53335,9 +53438,9 @@ var AudioEngine = class {
       try {
         instrument.disconnect();
         instrument.connect(this.masterEQ);
-        logger27.debug("master-effects", `Routed ${instrumentName} through master effects`);
+        logger28.debug("master-effects", `Routed ${instrumentName} through master effects`);
       } catch (error) {
-        logger27.warn("master-effects", `Failed to route ${instrumentName} through master effects`, error);
+        logger28.warn("master-effects", `Failed to route ${instrumentName} through master effects`, error);
       }
     });
   }
@@ -53354,13 +53457,13 @@ var AudioEngine = class {
       this.masterCompressor.dispose();
       this.masterCompressor = null;
     }
-    logger27.debug("master-effects", "Master effects disposed");
+    logger28.debug("master-effects", "Master effects disposed");
   }
   /**
    * Performance optimization methods for 34-instrument orchestral load
    */
   initializePerformanceOptimization() {
-    logger27.debug("performance", "Initializing performance optimization systems");
+    logger28.debug("performance", "Initializing performance optimization systems");
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
       const instrumentSettings = this.settings.instruments[instrumentName];
       if (instrumentSettings == null ? void 0 : instrumentSettings.enabled) {
@@ -53368,7 +53471,7 @@ var AudioEngine = class {
       }
     });
     this.startPerformanceMonitoring();
-    logger27.info("performance", "Performance optimization initialized");
+    logger28.info("performance", "Performance optimization initialized");
   }
   createVoicePool(instrumentName, poolSize) {
     const pool = [];
@@ -53376,7 +53479,7 @@ var AudioEngine = class {
       pool.push({ available: true, lastUsed: 0 });
     }
     this.voicePool.set(instrumentName, pool);
-    logger27.debug("performance", `Created voice pool for ${instrumentName}: ${poolSize} voices`);
+    logger28.debug("performance", `Created voice pool for ${instrumentName}: ${poolSize} voices`);
   }
   startPerformanceMonitoring() {
     if (this.performanceMonitoringInterval) {
@@ -53399,7 +53502,7 @@ var AudioEngine = class {
       this.increaseQuality();
     }
     this.lastCPUCheck = now3;
-    logger27.debug("performance", `CPU: ${cpuUsage.toFixed(1)}%, Latency: ${latency.toFixed(1)}ms, Quality: ${this.currentQualityLevel}`);
+    logger28.debug("performance", `CPU: ${cpuUsage.toFixed(1)}%, Latency: ${latency.toFixed(1)}ms, Quality: ${this.currentQualityLevel}`);
   }
   estimateCPUUsage() {
     let activeVoices = 0;
@@ -53432,7 +53535,7 @@ var AudioEngine = class {
         this.applyLowQuality();
         break;
     }
-    logger27.info("performance", `Reduced quality to ${this.currentQualityLevel} due to high CPU usage`);
+    logger28.info("performance", `Reduced quality to ${this.currentQualityLevel} due to high CPU usage`);
   }
   increaseQuality() {
     switch (this.currentQualityLevel) {
@@ -53445,7 +53548,7 @@ var AudioEngine = class {
         this.applyHighQuality();
         break;
     }
-    logger27.info("performance", `Increased quality to ${this.currentQualityLevel} due to low CPU usage`);
+    logger28.info("performance", `Increased quality to ${this.currentQualityLevel} due to low CPU usage`);
   }
   applyHighQuality() {
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
@@ -53492,11 +53595,26 @@ var AudioEngine = class {
   adaptToMemoryPressure() {
     const pressure = this.memoryMonitor.getMemoryPressure();
     const limits = this.memoryMonitor.getRecommendedLimits();
-    logger27.info("memory-pressure", "Adapting to memory pressure", {
+    logger28.info("memory-pressure", "Adapting to memory pressure", {
       pressure,
       recommendedLimits: limits
     });
     this.voiceManager.setAdaptiveLimits(limits.maxVoices);
+    if (pressure === "high" || pressure === "critical") {
+      const currentTime = Date.now();
+      const staleEntries = [];
+      for (const [freq, time] of this.frequencyHistory.entries()) {
+        if (currentTime - time > 100) {
+          staleEntries.push(freq);
+        }
+      }
+      staleEntries.forEach((freq) => this.frequencyHistory.delete(freq));
+      this.voiceManager.performPeriodicCleanup();
+      logger28.info("memory-pressure", "Performed aggressive cleanup", {
+        frequencyEntriesRemoved: staleEntries.length,
+        remainingEntries: this.frequencyHistory.size
+      });
+    }
     this.memoryMonitor.logStats();
     this.memoryMonitor.forceGarbageCollection();
   }
@@ -53517,7 +53635,7 @@ var AudioEngine = class {
       window.gc();
     }
     const memoryStats = this.voiceManager.getMemoryStats();
-    logger27.debug("performance", "Memory optimization completed", { voiceManagerStats: memoryStats });
+    logger28.debug("performance", "Memory optimization completed", { voiceManagerStats: memoryStats });
   }
   /**
    * Public performance monitoring API
@@ -53557,10 +53675,25 @@ var AudioEngine = class {
     return `~${estimatedMB}MB`;
   }
   /**
+   * Reconnect instruments to their volume nodes after cleanup
+   */
+  reconnectInstruments() {
+    this.instruments.forEach((synth, instrumentName) => {
+      const volume = this.instrumentVolumes.get(instrumentName);
+      if (volume && !synth.disposed) {
+        try {
+          synth.connect(volume);
+        } catch (error) {
+          logger28.debug("reconnect", `Failed to reconnect ${instrumentName}:`, error);
+        }
+      }
+    });
+  }
+  /**
    * Emergency performance recovery
    */
   enablePerformanceEmergencyMode() {
-    logger27.warn("performance", "Activating emergency performance mode");
+    logger28.warn("performance", "Activating emergency performance mode");
     const essentialInstruments = ["piano", "strings", "flute", "clarinet", "saxophone"];
     Object.keys(this.settings.instruments).forEach((instrumentName) => {
       const instrumentSettings = this.settings.instruments[instrumentName];
@@ -53571,13 +53704,13 @@ var AudioEngine = class {
     this.currentQualityLevel = "low";
     this.applyLowQuality();
     this.adaptiveQuality = false;
-    logger27.info("performance", "Emergency performance mode activated - disabled non-essential instruments");
+    logger28.info("performance", "Emergency performance mode activated - disabled non-essential instruments");
   }
   disablePerformanceEmergencyMode() {
     this.adaptiveQuality = true;
     this.currentQualityLevel = "high";
     this.applyHighQuality();
-    logger27.info("performance", "Emergency performance mode deactivated");
+    logger28.info("performance", "Emergency performance mode deactivated");
   }
   // Public getters for test suite
   get testIsInitialized() {
@@ -53594,7 +53727,7 @@ var AudioEngine = class {
    * This provides a complete overview of sample loading status across all 34 instruments
    */
   generateCDNDiagnosticReport() {
-    const logger30 = getLogger("AudioEngine");
+    const logger31 = getLogger("AudioEngine");
     const cdnStatus = {
       // Working CDN sources (confirmed in external-sample-sources-guide.md)
       availableInstruments: {
@@ -53648,7 +53781,7 @@ var AudioEngine = class {
     const availableCount = Object.keys(cdnStatus.availableInstruments).length;
     const missingCount = Object.keys(cdnStatus.missingInstruments).length;
     const coveragePercentage = Math.round(availableCount / totalInstruments * 100);
-    logger30.error("cdn-diagnosis", "\u{1F50D} ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report", {
+    logger31.error("cdn-diagnosis", "\u{1F50D} ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report", {
       summary: {
         totalInstruments,
         availableInstruments: availableCount,
@@ -53691,15 +53824,15 @@ var AudioEngine = class {
 
 // src/graph/parser.ts
 init_logging();
-var logger28 = getLogger("graph-parser");
+var logger29 = getLogger("graph-parser");
 var GraphParser = class {
   constructor(vault, metadataCache) {
     this.vault = vault;
     this.metadataCache = metadataCache;
   }
   async parseVault() {
-    const startTime = logger28.time("vault-parsing");
-    logger28.info("parsing", "Starting vault parsing", {
+    const startTime = logger29.time("vault-parsing");
+    logger29.info("parsing", "Starting vault parsing", {
       totalFiles: this.vault.getMarkdownFiles().length
     });
     const nodes = /* @__PURE__ */ new Map();
@@ -53711,7 +53844,7 @@ var GraphParser = class {
         nodes.set(file.path, node);
       }
     }
-    logger28.debug("parsing", "Created nodes", { nodeCount: nodes.size });
+    logger29.debug("parsing", "Created nodes", { nodeCount: nodes.size });
     for (const file of markdownFiles) {
       const connections = await this.extractConnectionsFromFile(file);
       const sourceNode = nodes.get(file.path);
@@ -53730,7 +53863,7 @@ var GraphParser = class {
       }
     }
     startTime();
-    logger28.info("parsing", "Vault parsing complete", {
+    logger29.info("parsing", "Vault parsing complete", {
       nodeCount: nodes.size,
       edgeCount: edges.length,
       avgConnectionsPerNode: edges.length / nodes.size
@@ -53759,7 +53892,7 @@ var GraphParser = class {
         modified: file.stat.mtime
       };
     } catch (error) {
-      logger28.error("file-parsing", `Failed to create node for file: ${file.path}`, error);
+      logger29.error("file-parsing", `Failed to create node for file: ${file.path}`, error);
       return null;
     }
   }
@@ -53776,7 +53909,7 @@ var GraphParser = class {
       }
       return [...new Set(connections)].filter((link) => link.trim().length > 0);
     } catch (error) {
-      logger28.error("connection-extraction", `Failed to extract connections from: ${file.path}`, error);
+      logger29.error("connection-extraction", `Failed to extract connections from: ${file.path}`, error);
       return [];
     }
   }
@@ -53830,7 +53963,7 @@ var GraphParser = class {
     const maxConnections = Math.max(...connectionCounts, 0);
     const minConnections = Math.min(...connectionCounts, 0);
     const isolatedNodes = connectionCounts.filter((count) => count === 0).length;
-    logger28.debug("graph-stats", "Calculated graph statistics", {
+    logger29.debug("graph-stats", "Calculated graph statistics", {
       nodeCount,
       edgeCount,
       avgConnections,
@@ -53855,7 +53988,7 @@ var GraphParser = class {
 init_musical_mapper();
 init_logging();
 init_whale_integration();
-var logger29 = getLogger("main");
+var logger30 = getLogger("main");
 var SonigraphPlugin = class extends import_obsidian9.Plugin {
   constructor() {
     super(...arguments);
@@ -53865,7 +53998,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
     this.currentGraphData = null;
   }
   async onload() {
-    logger29.info("lifecycle", "Sonigraph plugin loading...");
+    logger30.info("lifecycle", "Sonigraph plugin loading...");
     await this.loadSettings();
     this.initializeLoggingLevel();
     this.initializeComponents();
@@ -53888,14 +54021,14 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       }
     });
     this.addSettingTab(new SonigraphSettingTab(this.app, this));
-    logger29.info("lifecycle", "Sonigraph plugin loaded successfully", {
+    logger30.info("lifecycle", "Sonigraph plugin loaded successfully", {
       settingsLoaded: true,
       componentsInitialized: true,
       whaleIntegrationEnabled: !!getWhaleIntegration()
     });
   }
   async onunload() {
-    logger29.info("lifecycle", "Sonigraph plugin unloading...");
+    logger30.info("lifecycle", "Sonigraph plugin unloading...");
     const whaleIntegration2 = getWhaleIntegration();
     if (whaleIntegration2) {
       whaleIntegration2.cleanup();
@@ -53907,7 +54040,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
     this.graphParser = null;
     this.musicalMapper = null;
     this.currentGraphData = null;
-    logger29.info("lifecycle", "Sonigraph plugin unloaded");
+    logger30.info("lifecycle", "Sonigraph plugin unloaded");
   }
   /**
    * Initialize logging level from saved settings
@@ -53915,23 +54048,23 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
   initializeLoggingLevel() {
     if (this.settings.logLevel) {
       LoggerFactory.setLogLevel(this.settings.logLevel);
-      logger29.info("initialization", "Logging level initialized from settings", {
+      logger30.info("initialization", "Logging level initialized from settings", {
         level: this.settings.logLevel
       });
     } else {
       const defaultLevel = "warn";
       LoggerFactory.setLogLevel(defaultLevel);
-      logger29.info("initialization", "Using default logging level", {
+      logger30.info("initialization", "Using default logging level", {
         level: defaultLevel
       });
     }
   }
   initializeComponents() {
-    logger29.debug("initialization", "Initializing plugin components");
+    logger30.debug("initialization", "Initializing plugin components");
     this.audioEngine = new AudioEngine(this.settings);
     this.graphParser = new GraphParser(this.app.vault, this.app.metadataCache);
     this.musicalMapper = new MusicalMapper(this.settings);
-    logger29.debug("initialization", "All components initialized");
+    logger30.debug("initialization", "All components initialized");
   }
   /**
    * Initialize whale integration for high-quality external samples
@@ -53954,33 +54087,33 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
       const pluginDir = `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
       await initializeWhaleIntegration(whaleSettings, this.app.vault, pluginDir);
-      logger29.info("whale-integration", "Whale integration initialized for per-instrument quality control", {
+      logger30.info("whale-integration", "Whale integration initialized for per-instrument quality control", {
         enabled: whaleSettings.useWhaleExternal,
         whaleUseHighQuality: (_c = this.settings.instruments.whaleHumpback) == null ? void 0 : _c.useHighQuality,
         whaleEnabled: (_d = this.settings.instruments.whaleHumpback) == null ? void 0 : _d.enabled
       });
     } catch (error) {
-      logger29.warn("whale-integration", "Failed to initialize whale integration", error);
+      logger30.warn("whale-integration", "Failed to initialize whale integration", error);
     }
   }
   openControlPanel() {
-    logger29.info("ui", "Opening Sonigraph Control Center");
+    logger30.info("ui", "Opening Sonigraph Control Center");
     const modal = new MaterialControlPanelModal(this.app, this);
     modal.open();
   }
   openSonicGraph() {
-    logger29.info("ui", "Opening Sonic Graph from ribbon");
+    logger30.info("ui", "Opening Sonic Graph from ribbon");
     Promise.resolve().then(() => (init_SonicGraphModal(), SonicGraphModal_exports)).then(({ SonicGraphModal: SonicGraphModal2 }) => {
       const modal = new SonicGraphModal2(this.app, this);
       modal.open();
     }).catch((error) => {
-      logger29.error("ui", "Failed to open Sonic Graph:", error);
+      logger30.error("ui", "Failed to open Sonic Graph:", error);
     });
   }
   openTestSuite() {
-    logger29.info("ui", "Opening Audio Engine Test Suite");
+    logger30.info("ui", "Opening Audio Engine Test Suite");
     if (!this.audioEngine) {
-      logger29.error("ui", "Cannot open test suite: Audio engine not initialized");
+      logger30.error("ui", "Cannot open test suite: Audio engine not initialized");
       return;
     }
     const modal = new TestSuiteModal(this.app, this.audioEngine);
@@ -53991,10 +54124,10 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
    */
   async processVault() {
     if (!this.graphParser || !this.musicalMapper) {
-      logger29.error("processing", "Components not initialized");
+      logger30.error("processing", "Components not initialized");
       throw new Error("Plugin components not initialized");
     }
-    logger29.info("processing", "Starting vault processing");
+    logger30.info("processing", "Starting vault processing");
     try {
       const graphData = await this.graphParser.parseVault();
       const stats = this.graphParser.getGraphStats(graphData);
@@ -54006,14 +54139,14 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
         mappings,
         sequence
       };
-      logger29.info("processing", "Vault processing complete", {
+      logger30.info("processing", "Vault processing complete", {
         nodes: stats.totalNodes,
         edges: stats.totalEdges,
         mappings: mappings.length,
         sequenceLength: sequence.length
       });
     } catch (error) {
-      logger29.error("processing", "Failed to process vault", error);
+      logger30.error("processing", "Failed to process vault", error);
       throw error;
     }
   }
@@ -54023,23 +54156,23 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
   async playSequence() {
     var _a, _b;
     if (!this.audioEngine) {
-      logger29.error("playback", "Audio engine not initialized");
+      logger30.error("playback", "Audio engine not initialized");
       throw new Error("Audio engine not initialized");
     }
     if (!((_a = this.currentGraphData) == null ? void 0 : _a.sequence)) {
-      logger29.info("playback", "No sequence available, processing vault first");
+      logger30.info("playback", "No sequence available, processing vault first");
       await this.processVault();
     }
     if (!((_b = this.currentGraphData) == null ? void 0 : _b.sequence)) {
-      logger29.error("playback", "Failed to generate sequence");
+      logger30.error("playback", "Failed to generate sequence");
       throw new Error("No musical sequence available");
     }
-    logger29.info("playback", "Starting sequence playback", {
+    logger30.info("playback", "Starting sequence playback", {
       sequenceLength: this.currentGraphData.sequence.length,
       firstNote: this.currentGraphData.sequence[0],
       lastNote: this.currentGraphData.sequence[this.currentGraphData.sequence.length - 1]
     });
-    logger29.info("debug", "Sequence details", {
+    logger30.info("debug", "Sequence details", {
       totalNotes: this.currentGraphData.sequence.length,
       sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note) => ({
         pitch: note.pitch,
@@ -54049,11 +54182,11 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       }))
     });
     this.audioEngine.updateSettings(this.settings);
-    logger29.debug("playback", "Audio engine settings updated before playback");
+    logger30.debug("playback", "Audio engine settings updated before playback");
     try {
       await this.audioEngine.playSequence(this.currentGraphData.sequence);
     } catch (error) {
-      logger29.error("playback", "Failed to play sequence", error);
+      logger30.error("playback", "Failed to play sequence", error);
       throw error;
     }
   }
@@ -54063,7 +54196,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
   stopPlayback() {
     if (this.audioEngine) {
       this.audioEngine.stop();
-      logger29.info("playback", "Playback stopped");
+      logger30.info("playback", "Playback stopped");
     }
   }
   /**
@@ -54097,7 +54230,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
    * Update settings and refresh components
    */
   async updateSettings(newSettings) {
-    logger29.debug("settings", "Updating plugin settings", newSettings);
+    logger30.debug("settings", "Updating plugin settings", newSettings);
     this.settings = { ...this.settings, ...newSettings };
     if (this.audioEngine) {
       this.audioEngine.updateSettings(this.settings);
@@ -54109,7 +54242,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       await this.updateWhaleIntegration();
     }
     await this.saveSettings();
-    logger29.info("settings", "Settings updated successfully", {
+    logger30.info("settings", "Settings updated successfully", {
       whaleIntegrationUpdated: "useHighQualitySamples" in newSettings || newSettings.instruments && "whaleHumpback" in newSettings.instruments
     });
   }
@@ -54133,21 +54266,21 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
           maxSamples: 50
         };
         whaleIntegration2.updateSettings(whaleSettings);
-        logger29.info("whale-integration", "Whale integration settings updated", {
+        logger30.info("whale-integration", "Whale integration settings updated", {
           enabled: whaleSettings.useWhaleExternal,
           whaleUseHighQuality: (_c = this.settings.instruments.whaleHumpback) == null ? void 0 : _c.useHighQuality,
           whaleEnabled: (_d = this.settings.instruments.whaleHumpback) == null ? void 0 : _d.enabled
         });
       }
     } catch (error) {
-      logger29.warn("whale-integration", "Failed to update whale integration settings", error);
+      logger30.warn("whale-integration", "Failed to update whale integration settings", error);
     }
   }
   async loadSettings() {
     const data = await this.loadData();
     this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
     this.migrateSettings();
-    logger29.debug("settings", "Settings loaded", { settings: this.settings });
+    logger30.debug("settings", "Settings loaded", { settings: this.settings });
   }
   /**
    * Deep merge settings to preserve user configurations while adding new defaults
@@ -54172,7 +54305,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
                 ...userInstrument.effects || {}
               }
             };
-            logger29.debug("settings-merge", `Merged instrument ${instrumentKey}`, {
+            logger30.debug("settings-merge", `Merged instrument ${instrumentKey}`, {
               defaultEnabled: defaultInstrument.enabled,
               userEnabled: userInstrument.enabled,
               finalEnabled: merged.instruments[instrumentKey].enabled
@@ -54192,7 +54325,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     let migrationNeeded = false;
     if ("effects" in this.settings && !((_a = this.settings.effects) == null ? void 0 : _a.piano)) {
-      logger29.info("settings", "Migrating old effects structure to per-instrument structure");
+      logger30.info("settings", "Migrating old effects structure to per-instrument structure");
       migrationNeeded = true;
       const oldEffects = this.settings.effects;
       delete this.settings.effects;
@@ -54246,7 +54379,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       }
     }
     if (!this.settings.instruments.piano) {
-      logger29.info("settings", "Adding missing Piano instrument (core keyboard)");
+      logger30.info("settings", "Adding missing Piano instrument (core keyboard)");
       migrationNeeded = true;
       this.settings.instruments.piano = {
         enabled: true,
@@ -54262,7 +54395,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.organ) {
-      logger29.info("settings", "Adding missing Organ instrument (core keyboard)");
+      logger30.info("settings", "Adding missing Organ instrument (core keyboard)");
       migrationNeeded = true;
       this.settings.instruments.organ = {
         enabled: true,
@@ -54278,7 +54411,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.flute) {
-      logger29.info("settings", "Adding missing Flute instrument");
+      logger30.info("settings", "Adding missing Flute instrument");
       migrationNeeded = true;
       this.settings.instruments.flute = {
         enabled: true,
@@ -54292,7 +54425,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.clarinet) {
-      logger29.info("settings", "Adding missing Clarinet instrument");
+      logger30.info("settings", "Adding missing Clarinet instrument");
       migrationNeeded = true;
       this.settings.instruments.clarinet = {
         enabled: true,
@@ -54306,7 +54439,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.saxophone) {
-      logger29.info("settings", "Adding missing Saxophone instrument");
+      logger30.info("settings", "Adding missing Saxophone instrument");
       migrationNeeded = true;
       this.settings.instruments.saxophone = {
         enabled: true,
@@ -54320,7 +54453,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.contrabass) {
-      logger29.info("settings", "Adding missing Contrabass instrument (new string instrument)");
+      logger30.info("settings", "Adding missing Contrabass instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.contrabass = {
         enabled: false,
@@ -54337,7 +54470,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.guitarElectric) {
-      logger29.info("settings", "Adding missing Electric Guitar instrument (new string instrument)");
+      logger30.info("settings", "Adding missing Electric Guitar instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.guitarElectric = {
         enabled: false,
@@ -54354,7 +54487,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.guitarNylon) {
-      logger29.info("settings", "Adding missing Nylon Guitar instrument (new string instrument)");
+      logger30.info("settings", "Adding missing Nylon Guitar instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.guitarNylon = {
         enabled: false,
@@ -54371,7 +54504,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.bassElectric) {
-      logger29.info("settings", "Adding missing Electric Bass instrument (new string instrument)");
+      logger30.info("settings", "Adding missing Electric Bass instrument (new string instrument)");
       migrationNeeded = true;
       this.settings.instruments.bassElectric = {
         enabled: false,
@@ -54388,7 +54521,7 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
       };
     }
     if (!this.settings.instruments.bassoon) {
-      logger29.info("settings", "Adding missing Bassoon instrument (new woodwind instrument)");
+      logger30.info("settings", "Adding missing Bassoon instrument (new woodwind instrument)");
       migrationNeeded = true;
       this.settings.instruments.bassoon = {
         enabled: false,
@@ -54406,12 +54539,12 @@ var SonigraphPlugin = class extends import_obsidian9.Plugin {
     }
     if (migrationNeeded) {
       this.saveSettings();
-      logger29.info("settings", "Settings migration completed");
+      logger30.info("settings", "Settings migration completed");
     }
   }
   async saveSettings() {
     await this.saveData(this.settings);
-    logger29.debug("settings", "Settings saved");
+    logger30.debug("settings", "Settings saved");
   }
   getLogs() {
     return LoggerFactory.getLogs();

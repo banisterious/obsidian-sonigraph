@@ -11,6 +11,7 @@ import { getLogger, LoggerFactory } from '../logging';
 import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from './playback-events';
 import { PlaybackOptimizer } from './optimizations/PlaybackOptimizer';
 import { MemoryMonitor } from './optimizations/MemoryMonitor';
+import { AudioGraphCleaner } from './optimizations/AudioGraphCleaner';
 
 const logger = getLogger('audio-engine');
 
@@ -53,9 +54,11 @@ export class AudioEngine {
 	// Memory optimization properties
 	private playbackOptimizer: PlaybackOptimizer;
 	private memoryMonitor: MemoryMonitor;
+	private audioGraphCleaner: AudioGraphCleaner;
 	private progressThrottleCounter: number = 0;
 	private readonly PROGRESS_THROTTLE_INTERVAL = 5; // Emit progress every 5th tick
 	private performanceMonitoringInterval: ReturnType<typeof setInterval> | null = null;
+	private noteCounter: number = 0; // For generating unique note IDs
 
 	// Phase 8: Advanced Synthesis Engines
 	private percussionEngine: PercussionEngine | null = null;
@@ -86,6 +89,7 @@ export class AudioEngine {
 		// Initialize memory optimization tools
 		this.playbackOptimizer = new PlaybackOptimizer();
 		this.memoryMonitor = new MemoryMonitor();
+		this.audioGraphCleaner = new AudioGraphCleaner();
 	}
 
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
@@ -2133,6 +2137,10 @@ export class AudioEngine {
 						
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 						
+						// Schedule cleanup for this note
+						const noteId = `note-${this.noteCounter++}`;
+						this.audioGraphCleaner.scheduleNoteCleanup(noteId, duration);
+						
 						// Add post-trigger verification logging
 						logger.info('issue-006-debug', 'triggerAttackRelease completed - verifying audio output', {
 							instrumentName,
@@ -2242,15 +2250,26 @@ export class AudioEngine {
 		});
 		this.scheduledEvents = [];
 
-		// Release all synth voices
+		// Release all synth voices and disconnect from audio graph
 		this.instruments.forEach((synth, instrumentName) => {
 			synth.releaseAll();
+			// Temporarily disconnect to clean up audio graph
+			synth.disconnect();
 		});
 
 		this.currentSequence = [];
 		
+		// Clear frequency history to prevent memory accumulation
+		this.frequencyHistory.clear();
+		
 		// Properly dispose of playback optimizer to release all references
 		this.playbackOptimizer.dispose();
+		
+		// Cancel any pending audio graph cleanups
+		this.audioGraphCleaner.cancelAll();
+		
+		// Reconnect instruments to their volume nodes for future playback
+		this.reconnectInstruments();
 		
 		// Log final memory stats
 		this.memoryMonitor.logStats();
@@ -3402,6 +3421,7 @@ export class AudioEngine {
 		// Clean up memory optimization tools
 		this.playbackOptimizer.dispose();
 		this.memoryMonitor.clearHistory();
+		this.audioGraphCleaner.dispose();
 		
 		// Clear frequency history
 		this.frequencyHistory.clear();
@@ -4800,6 +4820,27 @@ export class AudioEngine {
 		// Update voice manager limits
 		this.voiceManager.setAdaptiveLimits(limits.maxVoices);
 		
+		// If pressure is high or critical, do more aggressive cleanup
+		if (pressure === 'high' || pressure === 'critical') {
+			// Clean frequency history more aggressively
+			const currentTime = Date.now();
+			const staleEntries: number[] = [];
+			for (const [freq, time] of this.frequencyHistory.entries()) {
+				if (currentTime - time > 100) { // More aggressive - 100ms instead of 200ms
+					staleEntries.push(freq);
+				}
+			}
+			staleEntries.forEach(freq => this.frequencyHistory.delete(freq));
+			
+			// Force voice cleanup
+			this.voiceManager.performPeriodicCleanup();
+			
+			logger.info('memory-pressure', 'Performed aggressive cleanup', {
+				frequencyEntriesRemoved: staleEntries.length,
+				remainingEntries: this.frequencyHistory.size
+			});
+		}
+		
 		// Log memory stats
 		this.memoryMonitor.logStats();
 		
@@ -4881,6 +4922,22 @@ export class AudioEngine {
 		const enabledInstruments = Object.values(this.settings.instruments).filter(i => i?.enabled).length;
 		const estimatedMB = enabledInstruments * 2 + 10; // ~2MB per instrument + 10MB base
 		return `~${estimatedMB}MB`;
+	}
+
+	/**
+	 * Reconnect instruments to their volume nodes after cleanup
+	 */
+	private reconnectInstruments(): void {
+		this.instruments.forEach((synth, instrumentName) => {
+			const volume = this.instrumentVolumes.get(instrumentName);
+			if (volume && !synth.disposed) {
+				try {
+					synth.connect(volume);
+				} catch (error) {
+					logger.debug('reconnect', `Failed to reconnect ${instrumentName}:`, error);
+				}
+			}
+		});
 	}
 
 	/**
