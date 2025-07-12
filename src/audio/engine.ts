@@ -9,6 +9,8 @@ import { EffectBusManager } from './effects';
 import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
 import { getLogger, LoggerFactory } from '../logging';
 import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from './playback-events';
+import { PlaybackOptimizer } from './optimizations/PlaybackOptimizer';
+import { MemoryMonitor } from './optimizations/MemoryMonitor';
 
 const logger = getLogger('audio-engine');
 
@@ -47,6 +49,13 @@ export class AudioEngine {
 	// Phase 2.2: Integration layer optimization - cached enabled instruments
 	private cachedEnabledInstruments: string[] = [];
 	private instrumentCacheValid: boolean = false;
+	
+	// Memory optimization properties
+	private playbackOptimizer: PlaybackOptimizer;
+	private memoryMonitor: MemoryMonitor;
+	private progressThrottleCounter: number = 0;
+	private readonly PROGRESS_THROTTLE_INTERVAL = 5; // Emit progress every 5th tick
+	private performanceMonitoringInterval: ReturnType<typeof setInterval> | null = null;
 
 	// Phase 8: Advanced Synthesis Engines
 	private percussionEngine: PercussionEngine | null = null;
@@ -73,6 +82,10 @@ export class AudioEngine {
 		
 		// Phase 2.2: Initialize enabled instruments cache - start valid for immediate use
 		this.instrumentCacheValid = false; // Will be built on first access
+		
+		// Initialize memory optimization tools
+		this.playbackOptimizer = new PlaybackOptimizer();
+		this.memoryMonitor = new MemoryMonitor();
 	}
 
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
@@ -1544,7 +1557,7 @@ export class AudioEngine {
 				audioContextState: getContext().state,
 				transportState: getTransport().state,
 				currentTime: getContext().currentTime.toFixed(3),
-				hasBeenTriggeredCount: sequence.filter(n => n.hasBeenTriggered).length,
+				hasBeenTriggeredCount: 0, // No longer tracking this way
 				action: 'play-sequence-init'
 			});
 			
@@ -1862,13 +1875,8 @@ export class AudioEngine {
 				// Process sequence directly without harmonic engine for now
 				const processedSequence = sequence;
 
-				// Issue #006 Fix: Reset hasBeenTriggered flags for all notes to allow replay
-				processedSequence.forEach(note => {
-					if (note.hasBeenTriggered) {
-						delete note.hasBeenTriggered;
-					}
-				});
-				logger.debug('playback', 'Reset note trigger flags for replay', {
+				// Notes are now tracked in PlaybackOptimizer without modifying original objects
+				logger.debug('playback', 'Preparing sequence for playback', {
 					noteCount: processedSequence.length
 				});
 
@@ -1972,6 +1980,10 @@ export class AudioEngine {
 		if (this.realtimeTimer !== null) {
 			clearInterval(this.realtimeTimer);
 		}
+		
+		// Preprocess sequence for efficient lookup
+		this.playbackOptimizer.preprocessSequence(sequence);
+		this.progressThrottleCounter = 0;
 
 		// Record start time
 		this.realtimeStartTime = getContext().currentTime;
@@ -2015,20 +2027,16 @@ export class AudioEngine {
 				action: 'timer-tick'
 			});
 
-			// Find notes that should play now (within the next 600ms for 400ms timer)
-			const notesToPlay = sequence.filter(note => 
-				note.timing <= elapsedTime + 0.6 && 
-				note.timing > elapsedTime - 0.4 && 
-				!note.hasBeenTriggered
-			);
+			// Find notes that should play now using optimized lookup
+			const notesToPlay = this.playbackOptimizer.getNotesToPlay(elapsedTime);
 
 			// Issue #006 Debug: Log note filtering results
 			if (notesToPlay.length > 0 || elapsedTime < 5) { // Log for first 5 seconds or when notes found
-				const totalNotes = sequence.length;
-				const triggeredNotes = sequence.filter(n => n.hasBeenTriggered).length;
+				const stats = this.playbackOptimizer.getStats();
+				const progress = this.playbackOptimizer.getProgress(elapsedTime);
 				logger.debug('issue-006-debug', 'Note filtering completed', {
-					totalNotes,
-					triggeredNotes,
+					totalNotes: stats.totalNotes,
+					triggeredNotes: progress.currentIndex,
 					notesToPlay: notesToPlay.length,
 					sampleTiming: notesToPlay.length > 0 ? notesToPlay[0].timing : 'none',
 					elapsedTime: elapsedTime.toFixed(3),
@@ -2054,7 +2062,7 @@ export class AudioEngine {
 			this.lastTriggerTime = elapsedTime;
 			
 			// Mark as triggered to prevent re-triggering
-			mapping.hasBeenTriggered = true;
+			this.playbackOptimizer.markNoteTriggered(mapping);
 
 			const frequency = mapping.pitch;
 			const duration = mapping.duration;
@@ -2178,18 +2186,21 @@ export class AudioEngine {
 				}
 			}
 
-			// Enhanced Play Button: Emit progress update
-			const maxEndTime = Math.max(...sequence.map(n => n.timing + n.duration));
-			const progressData: PlaybackProgressData = {
-				currentIndex: sequence.filter(n => n.timing <= elapsedTime).length,
-				totalNotes: sequence.length,
-				elapsedTime: elapsedTime,
-				estimatedTotalTime: maxEndTime,
-				percentComplete: Math.min((elapsedTime / maxEndTime) * 100, 100)
-			};
-			this.eventEmitter.emit('sequence-progress', progressData);
+			// Enhanced Play Button: Emit progress update (throttled)
+			this.progressThrottleCounter++;
+			if (this.progressThrottleCounter >= this.PROGRESS_THROTTLE_INTERVAL) {
+				this.progressThrottleCounter = 0;
+				const progressData = this.playbackOptimizer.getProgress(elapsedTime);
+				this.eventEmitter.emit('sequence-progress', progressData);
+				
+				// Check memory pressure and adapt if needed
+				if (this.memoryMonitor.shouldTriggerGC()) {
+					this.adaptToMemoryPressure();
+				}
+			}
 
 			// Check if sequence is complete
+			const maxEndTime = this.playbackOptimizer.getProgress(elapsedTime).estimatedTotalTime;
 			if (elapsedTime > maxEndTime + 1.0) { // Add 1 second buffer
 				logger.info('playback', 'Real-time sequence completed');
 				
@@ -2237,6 +2248,12 @@ export class AudioEngine {
 		});
 
 		this.currentSequence = [];
+		
+		// Properly dispose of playback optimizer to release all references
+		this.playbackOptimizer.dispose();
+		
+		// Log final memory stats
+		this.memoryMonitor.logStats();
 
 		logger.info('playback', 'Sequence stopped and Transport reset');
 	}
@@ -3381,6 +3398,25 @@ export class AudioEngine {
 
 		// Enhanced Play Button: Cleanup event emitter
 		this.eventEmitter.dispose();
+		
+		// Clean up memory optimization tools
+		this.playbackOptimizer.dispose();
+		this.memoryMonitor.clearHistory();
+		
+		// Clear frequency history
+		this.frequencyHistory.clear();
+		
+		// Clear performance monitoring interval
+		if (this.performanceMonitoringInterval) {
+			clearInterval(this.performanceMonitoringInterval);
+			this.performanceMonitoringInterval = null;
+		}
+		
+		// Clear any pending preview timeouts
+		this.previewTimeouts.forEach((timeout) => {
+			clearTimeout(timeout);
+		});
+		this.previewTimeouts.clear();
 
 		this.isInitialized = false;
 
@@ -4614,8 +4650,13 @@ export class AudioEngine {
 	}
 
 	private startPerformanceMonitoring(): void {
+		// Clear any existing interval
+		if (this.performanceMonitoringInterval) {
+			clearInterval(this.performanceMonitoringInterval);
+		}
+		
 		// Monitor performance every 5 seconds
-		setInterval(() => {
+		this.performanceMonitoringInterval = setInterval(() => {
 			this.checkPerformanceAndAdapt();
 		}, 5000);
 	}
@@ -4742,6 +4783,28 @@ export class AudioEngine {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Adapt to memory pressure by reducing quality settings
+	 */
+	private adaptToMemoryPressure(): void {
+		const pressure = this.memoryMonitor.getMemoryPressure();
+		const limits = this.memoryMonitor.getRecommendedLimits();
+		
+		logger.info('memory-pressure', 'Adapting to memory pressure', {
+			pressure,
+			recommendedLimits: limits
+		});
+		
+		// Update voice manager limits
+		this.voiceManager.setAdaptiveLimits(limits.maxVoices);
+		
+		// Log memory stats
+		this.memoryMonitor.logStats();
+		
+		// Try manual garbage collection
+		this.memoryMonitor.forceGarbageCollection();
 	}
 
 	/**

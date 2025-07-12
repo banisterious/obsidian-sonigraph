@@ -6,6 +6,7 @@
  */
 
 import { PerformanceMetrics } from '../utils/MetricsCollector';
+import { getContext } from 'tone';
 
 export class PerformanceMonitor {
     private isMonitoring = false;
@@ -136,7 +137,8 @@ export class PerformanceMonitor {
      */
     private getAudioMetrics(): PerformanceMetrics['audio'] {
         try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            // Use existing audio context from Tone.js instead of creating new one
+            const audioContext = getContext().rawContext as AudioContext;
             
             return {
                 cpuUsage: this.estimateCPUUsage(),
