@@ -8,6 +8,9 @@ import {
     VoiceAssignmentStrategy,
     MusicalMapping
 } from './types';
+import { getLogger } from '../../logging';
+
+const logger = getLogger('voice-manager');
 
 export class VoiceManager {
     private voiceAssignments: Map<string, VoiceAssignment> = new Map();
@@ -291,6 +294,34 @@ export class VoiceManager {
         }
 
         this.voiceAssignments.delete(nodeId);
+    }
+
+    /**
+     * Set adaptive limits based on memory pressure
+     */
+    setAdaptiveLimits(maxVoices: number): void {
+        this.maxVoicesPerInstrument = maxVoices;
+        
+        // Update existing voice pools if they exceed new limit
+        this.voicePool.forEach((pool, instrumentName) => {
+            if (pool.length > maxVoices) {
+                // Trim pool to new size
+                pool.length = maxVoices;
+                
+                // Update available indices
+                const availableIndices = this.availableVoiceIndices.get(instrumentName);
+                if (availableIndices) {
+                    availableIndices.clear();
+                    for (let i = 0; i < maxVoices; i++) {
+                        if (pool[i] && pool[i].available) {
+                            availableIndices.add(i);
+                        }
+                    }
+                }
+            }
+        });
+        
+        logger.debug('voice-management', 'Updated adaptive voice limits', { maxVoices });
     }
 
     /**
