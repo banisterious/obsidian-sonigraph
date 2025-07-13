@@ -58,6 +58,10 @@ export class SonicGraphModal extends Modal {
     private settingsPanel: HTMLElement;
     private settingsButton: HTMLButtonElement;
     private isSettingsVisible: boolean = false;
+    
+    // Audio density tracking for even distribution
+    private nodeAppearanceCounter: number = 0;
+    private lastAudioNodeIndex: number = -1;
 
     constructor(app: App, plugin: SonigraphPlugin) {
         super(app);
@@ -621,6 +625,10 @@ export class SonicGraphModal extends Modal {
                 this.isAnimating = false;
                 return;
             }
+            
+            // Reset audio density counters for even distribution
+            this.nodeAppearanceCounter = 0;
+            this.lastAudioNodeIndex = -1;
             
             // Start animation
             this.playButton.setButtonText('Pause Animation');
@@ -2710,6 +2718,9 @@ export class SonicGraphModal extends Modal {
                 }
             );
             
+            // Set logging context for comprehensive timelapse analytics
+            this.setAnimatorLoggingContext();
+            
             // Set up callbacks
             this.temporalAnimator.onVisibilityChanged((visibleNodeIds) => {
                 if (this.graphRenderer) {
@@ -3055,27 +3066,47 @@ export class SonicGraphModal extends Modal {
         // Get settings for audio customization
         const settings = this.getSonicGraphSettings();
         
-        // Audio density affects the probability of playing a note (0-100)
-        const densityProbability = settings.audio.density / 100;
-        const randomValue = Math.random();
+        // Increment the node appearance counter
+        this.nodeAppearanceCounter++;
         
-        logger.debug('audio-density', 'Audio density filtering', {
+        // Audio density with even spacing (0-100)
+        const density = settings.audio.density;
+        
+        // Calculate interval between audio events based on density
+        // At 100% density, every node plays (interval = 1)
+        // At 50% density, every 2nd node plays (interval = 2)
+        // At 25% density, every 4th node plays (interval = 4)
+        // At 10% density, every 10th node plays (interval = 10)
+        const interval = Math.max(1, Math.round(100 / density));
+        
+        // Calculate nodes since last audio
+        const nodesSinceLastAudio = this.nodeAppearanceCounter - this.lastAudioNodeIndex - 1;
+        
+        // Determine if this node should play audio
+        const shouldPlay = nodesSinceLastAudio >= interval || this.lastAudioNodeIndex === -1;
+        
+        logger.debug('audio-density', 'Audio density filtering (even spacing)', {
             nodeId: node.id,
-            densitySetting: settings.audio.density,
-            densityProbability,
-            randomValue,
-            shouldPlay: randomValue <= densityProbability
+            densitySetting: density,
+            interval,
+            nodeAppearanceCounter: this.nodeAppearanceCounter,
+            lastAudioNodeIndex: this.lastAudioNodeIndex,
+            nodesSinceLastAudio,
+            shouldPlay
         });
         
-        if (randomValue > densityProbability) {
-            // Skip this note based on density setting
+        if (!shouldPlay) {
+            // Skip this note to maintain even spacing
             logger.debug('audio-density', 'Note skipped due to audio density', {
                 nodeId: node.id,
-                randomValue,
-                densityProbability
+                nodesSinceLastAudio,
+                requiredInterval: interval
             });
             return null;
         }
+        
+        // Update last audio node index
+        this.lastAudioNodeIndex = this.nodeAppearanceCounter;
 
         // Get enabled instruments from user's settings
         const enabledInstruments = this.getEnabledInstruments();
@@ -3090,7 +3121,8 @@ export class SonicGraphModal extends Modal {
         const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
         
         // Check if selected instrument has proper configuration
-        const instrumentConfig = this.plugin.settings.instruments[selectedInstrument as keyof typeof this.plugin.settings.instruments];
+        const instruments = this.plugin.settings.instruments;
+        const instrumentConfig = instruments[selectedInstrument as keyof typeof instruments];
         logger.debug('instrument-selection', 'Instrument selected for node', {
             nodeId: node.id,
             nodeType: node.type,
@@ -3523,12 +3555,19 @@ export class SonicGraphModal extends Modal {
 
         const settings = this.getSonicGraphSettings();
         this.temporalAnimator.updateTimelineSettings(settings.timeline);
+        
+        // Update logging context with new settings
+        this.setAnimatorLoggingContext();
 
-        logger.info('timeline', 'Time window change applied to temporal animator', { 
-            timeWindow,
-            granularity: settings.timeline.granularity,
-            eventSpreadingMode: settings.timeline.eventSpreadingMode
-        });
+        // Log the setting change during playback
+        if (this.isAnimating) {
+            logger.info('timelapse-interaction', 'Settings modified during playback', {
+                setting: 'timeWindow',
+                from: 'previous',
+                to: timeWindow,
+                reason: 'User adjusted time window filter'
+            });
+        }
     }
 
     /**
@@ -3559,15 +3598,76 @@ export class SonicGraphModal extends Modal {
             return;
         }
 
+        const previousMode = this.getSonicGraphSettings().timeline.eventSpreadingMode;
         const settings = this.getSonicGraphSettings();
         this.temporalAnimator.updateTimelineSettings(settings.timeline);
+        
+        // Update logging context with new settings
+        this.setAnimatorLoggingContext();
 
-        logger.info('timeline', 'Event spreading mode change applied to temporal animator', { 
-            mode,
-            maxEventSpacing: settings.timeline.maxEventSpacing,
-            simultaneousEventLimit: settings.timeline.simultaneousEventLimit,
-            eventBatchSize: settings.timeline.eventBatchSize
+        // Log the setting change during playback
+        if (this.isAnimating) {
+            logger.info('timelapse-interaction', 'Settings modified during playback', {
+                setting: 'eventSpreadingMode',
+                from: previousMode,
+                to: mode,
+                reason: 'User adjusted for better audio clarity'
+            });
+        }
+    }
+
+    /**
+     * Gather and set comprehensive logging context for the temporal animator
+     */
+    private setAnimatorLoggingContext(): void {
+        if (!this.temporalAnimator) return;
+
+        const sonicGraphSettings = this.getSonicGraphSettings();
+        
+        // Gather audio settings from Control Center (via plugin settings)
+        const audioSettings = {
+            density: sonicGraphSettings.audio.density,
+            effectsEnabled: sonicGraphSettings.audio.enableEffects,
+            masterVolume: this.plugin.settings.volume || 0.3,
+            activeInstruments: this.getActiveInstruments()
+        };
+
+        // Gather visual and performance settings
+        const visualSettings = {
+            adaptiveDetail: sonicGraphSettings.adaptiveDetail,
+            temporalClustering: sonicGraphSettings.layout.temporalClustering,
+            showLabels: sonicGraphSettings.visual.showLabels,
+            animationStyle: sonicGraphSettings.visual.animationStyle
+        };
+
+        // Set the logging context
+        this.temporalAnimator.setLoggingContext({
+            pluginSettings: {
+                animationDuration: this.plugin.settings.sonicGraphAnimationDuration,
+                excludeFolders: this.plugin.settings.sonicGraphExcludeFolders,
+                excludeFiles: this.plugin.settings.sonicGraphExcludeFiles
+            },
+            audioSettings,
+            visualSettings
         });
+    }
+
+    /**
+     * Get list of active instruments from plugin settings
+     */
+    private getActiveInstruments(): string[] {
+        try {
+            // Get enabled instruments from plugin settings
+            const instruments = this.plugin.settings.instruments;
+            if (instruments) {
+                return Object.entries(instruments)
+                    .filter(([_, config]: [string, any]) => config.enabled)
+                    .map(([name, _]) => name);
+            }
+        } catch (error) {
+            logger.debug('ui', 'Could not get active instruments', error);
+        }
+        return ['unknown'];
     }
 
     /**
