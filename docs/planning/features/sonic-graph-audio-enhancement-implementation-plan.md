@@ -1,10 +1,12 @@
 # Sonic Graph Audio Enhancement Implementation Plan
 
-**Document Version:** 1.1  
+**Document Version:** 1.2  
 **Date:** July 5, 2025  
 **Last Updated:** July 13, 2025  
 **Based on:** Sonic Graph Audio Enhancement Specification v1.1  
 **Author:** Implementation Planning  
+
+**Major Revision Note:** Phase 2 has been completely redesigned to leverage Obsidian's metadata architecture (TFile + MetadataCache) for zero-latency vault analysis. All subsequent phases have been renumbered.  
 
 **Related Documents:**
 - **Main Specification:** [Sonic Graph Audio Enhancement Specification](../sonic-graph-audio-enhancement-specification.md) - Overall enhancement design and technical requirements
@@ -19,35 +21,40 @@
 - **Phase 1.2:** GraphDataExtractor Enhancement ✅  
 - **Phase 1.3:** Settings Architecture Extension ✅
 
-### ⏳ Phase 2: Content-Aware Mapping
-- **Phase 2.1:** Rule-Based Mapping Engine ❌
+### ⏳ Phase 2: Content-Aware Mapping Foundation (REVISED)
+- **Phase 2.1:** Metadata-Driven Mapping Engine ❌
 - **Phase 2.2:** Vault-Wide Mapping Optimization ❌
-- **Phase 2.3:** Real-Time Mapping Updates ❌
 
-### ⏳ Phase 3: Continuous Layer Implementation
+### ⏳ Phase 3: Continuous Audio Layers
 - **Phase 3.1:** Ambient Layer Architecture ❌
 - **Phase 3.2:** Rhythmic Layer System ❌
 - **Phase 3.3:** Harmonic Pad Layer ❌
 
-### ⏳ Phase 4: Musical Theory Integration
-- **Phase 4.1:** Scale/Key Constraint System ❌
-- **Phase 4.2:** Harmonic Progression Engine ❌
-- **Phase 4.3:** Dynamic Key Modulation ❌
+### ⏳ Phase 4: Enhanced Content-Aware Mapping
+- **Phase 4.1:** Advanced File Type Mapping ❌
+- **Phase 4.2:** Tag-Based Musical Semantics ❌
+- **Phase 4.3:** Folder Hierarchy Mapping ❌
+- **Phase 4.4:** Connection Type Audio ❌
 
-### ⏳ Phase 5: Performance Optimization
-- **Phase 5.1:** Audio Engine Optimization ❌
-- **Phase 5.2:** Resource Management ❌
-- **Phase 5.3:** Quality Adaptation ❌
+### ⏳ Phase 5: Smart Clustering Audio Integration
+- **Phase 5.1:** Cluster-Based Musical Themes ❌
+- **Phase 5.2:** Hub Node Orchestration ❌
+- **Phase 5.3:** Community Detection Audio ❌
 
-### ⏳ Phase 6: Freesound Integration
-- **Phase 6.1:** OAuth Implementation ❌
-- **Phase 6.2:** Sample Management System ❌
-- **Phase 6.3:** Caching and Preloading ❌
+### ⏳ Phase 6: Musical Theory & Performance
+- **Phase 6.1:** Musical Theory Integration ❌
+- **Phase 6.2:** Dynamic Orchestration ❌
+- **Phase 6.3:** Spatial Audio and Panning ❌
 
-### ⏳ Phase 7: Polish and Documentation
-- **Phase 7.1:** User Documentation ❌
-- **Phase 7.2:** Tutorial System ❌
-- **Phase 7.3:** Preset Library ❌
+### ⏳ Phase 7: Freesound Integration
+- **Phase 7.1:** OAuth Implementation ❌
+- **Phase 7.2:** Sample Management System ❌
+- **Phase 7.3:** Caching and Preloading ❌
+
+### ⏳ Phase 8: Polish and Documentation
+- **Phase 8.1:** User Documentation ❌
+- **Phase 8.2:** Tutorial System ❌
+- **Phase 8.3:** Preset Library ❌
 
 ---
 
@@ -242,12 +249,119 @@ All Phase 1 objectives have been successfully implemented:
 
 ---
 
-### Phase 2: Continuous Audio Layers (Weeks 4-6)
+### Phase 2: Content-Aware Mapping Foundation (Weeks 4-5) - REVISED
+**Goal**: Implement efficient content-aware mapping leveraging Obsidian's metadata architecture
+
+**Key Revision**: This phase has been redesigned to properly utilize Obsidian's two-tier metadata system (TFile properties and MetadataCache) for zero-latency vault analysis without file I/O.
+
+#### Phase 2.1: Metadata-Driven Mapping Engine
+- **Objective**: Create efficient mapping system using cached metadata
+
+**Implementation Tasks:**
+1. **Obsidian Metadata Integration**
+   ```typescript
+   class ObsidianMetadataMapper {
+     // Leverage TFile for file system metadata
+     analyzeFileMetadata(file: TFile): FileMetadataMapping {
+       return {
+         age: this.mapAgeToInstrument(file.stat.ctime, file.stat.mtime),
+         size: this.mapSizeToComplexity(file.stat.size),
+         depth: this.mapPathDepthToDistance(file.path),
+         extension: this.mapExtensionToFamily(file.extension)
+       };
+     }
+     
+     // Leverage MetadataCache for content metadata
+     analyzeContentMetadata(cache: CachedMetadata): ContentMetadataMapping {
+       return {
+         frontmatterInstrument: cache?.frontmatter?.instrument,
+         frontmatterMood: cache?.frontmatter?.['musical-mood'],
+         tagMappings: this.mapTagsToInstruments(cache?.tags),
+         linkDensity: this.mapLinkDensityToHarmony(cache?.links),
+         structure: this.mapHeadingsToRhythm(cache?.headings)
+       };
+     }
+   }
+   ```
+
+2. **Real-Time Metadata Listening**
+   ```typescript
+   // Listen to metadata changes without polling
+   this.registerEvent(
+     this.app.metadataCache.on('changed', (file) => {
+       const cache = this.app.metadataCache.getFileCache(file);
+       this.updateMappingForFile(file, cache);
+     })
+   );
+   ```
+
+3. **User-Defined Properties Support**
+   Users can add custom frontmatter properties:
+   ```yaml
+   ---
+   instrument: piano
+   musical-mood: contemplative
+   audio-priority: high
+   instrument-family: strings
+   ---
+   ```
+
+**Files to Create:**
+- `src/audio/mapping/ObsidianMetadataMapper.ts`
+- `src/audio/mapping/MetadataMappingRules.ts`
+
+#### Phase 2.2: Vault-Wide Mapping Optimization
+- **Objective**: Instant vault-wide analysis using cached data only
+
+**Implementation Tasks:**
+1. **Zero-Latency Vault Analysis**
+   ```typescript
+   class VaultMappingOptimizer {
+     async analyzeVault(): Promise<VaultMappingAnalysis> {
+       const files = this.app.vault.getMarkdownFiles();
+       const analysis = new Map<string, InstrumentDistribution>();
+       
+       // All data comes from cache - no file reads!
+       for (const file of files) {
+         const cache = this.app.metadataCache.getFileCache(file);
+         const fileData = {
+           metadata: cache,
+           file: file,
+           stat: file.stat
+         };
+         
+         // Instant access to all needed data
+         this.analyzeFileWithoutIO(fileData, analysis);
+       }
+       
+       return this.optimizeDistribution(analysis);
+     }
+   }
+   ```
+
+2. **Intelligent Distribution Algorithm**
+   - Prevent instrument clustering using spatial distribution
+   - Ensure variety across similar content types
+   - Create "instrument neighborhoods" for related files
+   - Balance based on actual vault composition
+
+3. **Performance Metrics**
+   - Target: <100ms for 10,000 file vault analysis
+   - Zero file I/O operations
+   - Minimal memory footprint using iterative processing
+
+**Files to Create:**
+- `src/audio/mapping/VaultMappingOptimizer.ts`
+- `src/audio/mapping/InstrumentDistributor.ts`
+
+---
+
+### Phase 3: Continuous Audio Layers (Weeks 6-8)
 **Goal**: Implement ambient, rhythmic, and harmonic background layers
 
 **Note**: This phase leverages the curated audio samples documented in the [Freesound Audio Library](freesound-audio-library.md), which provides high-quality samples for all 13 supported genres.
 
-#### Phase 2.1: Continuous Background Layer System
+#### Phase 3.1: Continuous Background Layer System
 - **Objective**: Genre-based continuous layers that evolve with vault state
 
 **Implementation Tasks:**
@@ -328,7 +442,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/graph/TemporalGraphAnimator.ts`: Progress callbacks
 - `src/ui/SonicGraphModal.ts`: Genre selection and layer controls
 
-#### Phase 2.2: Rhythmic Background Layer
+#### Phase 3.2: Rhythmic Background Layer
 - **Objective**: Subtle percussion/arpeggiator responding to vault activity
 
 **Implementation Tasks:**
@@ -362,7 +476,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/graph/TemporalGraphAnimator.ts`: Activity tracking
 - `src/audio/layers/AmbientLayerManager.ts`: Layer coordination
 
-#### Phase 2.3: Harmonic Pad Layer
+#### Phase 3.3: Harmonic Pad Layer
 - **Objective**: Evolving harmonic progressions based on vault structure
 
 **Implementation Tasks:**
@@ -396,10 +510,10 @@ All Phase 1 objectives have been successfully implemented:
 
 ---
 
-### Phase 3: Enhanced Content-Aware Mapping (Weeks 7-10)
+### Phase 4: Enhanced Content-Aware Mapping (Weeks 9-12) - RENUMBERED
 **Goal**: Sophisticated mapping based on content analysis and relationships
 
-#### Phase 3.1: Advanced File Type Mapping
+#### Phase 4.1: Advanced File Type Mapping
 - **Objective**: Nuanced instrument selection based on file characteristics
 
 **Implementation Tasks:**
@@ -431,7 +545,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/audio/mapping/FileTypeAnalyzer.ts`
 - `src/audio/mapping/InstrumentSelector.ts`
 
-#### Phase 3.2: Tag-Based Musical Semantics
+#### Phase 4.2: Tag-Based Musical Semantics
 - **Objective**: Map semantic tags to musical characteristics
 
 **Implementation Tasks:**
@@ -467,7 +581,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/audio/mapping/TagSemanticMapper.ts`
 - `src/audio/mapping/SemanticMappingConfig.ts`
 
-#### Phase 3.3: Folder Hierarchy and Path Mapping
+#### Phase 4.3: Folder Hierarchy and Path Mapping
 - **Objective**: Use vault organization for musical structure
 
 **Implementation Tasks:**
@@ -499,7 +613,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/audio/mapping/FolderHierarchyMapper.ts`
 - `src/audio/mapping/PathAnalyzer.ts`
 
-#### Phase 3.4: Connection Type Audio Differentiation
+#### Phase 4.4: Connection Type Audio Differentiation
 - **Objective**: Distinct audio for different relationship types
 
 **Implementation Tasks:**
@@ -529,10 +643,10 @@ All Phase 1 objectives have been successfully implemented:
 
 ---
 
-### Phase 4: Smart Clustering Audio Integration (Weeks 11-13)
+### Phase 5: Smart Clustering Audio Integration (Weeks 13-15) - RENUMBERED
 **Goal**: Integrate cluster analysis with musical representation
 
-#### Phase 4.1: Cluster-Based Musical Themes
+#### Phase 5.1: Cluster-Based Musical Themes
 - **Objective**: Unique sonic characteristics for cluster types
 
 **Implementation Tasks:**
@@ -564,7 +678,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/audio/clustering/ClusterAudioMapper.ts`
 - `src/audio/clustering/ClusterThemeGenerator.ts`
 
-#### Phase 4.2: Cluster Strength Modulation
+#### Phase 5.2: Cluster Strength Modulation
 - **Objective**: Audio intensity based on cluster cohesion
 
 **Implementation Tasks:**
@@ -585,10 +699,10 @@ All Phase 1 objectives have been successfully implemented:
 
 ---
 
-### Phase 5: Advanced Musicality Features (Weeks 14-17)
+### Phase 6: Musical Theory & Performance (Weeks 16-19) - RENUMBERED
 **Goal**: Sophisticated musical theory and orchestration
 
-#### Phase 5.1: Musical Theory Integration
+#### Phase 6.1: Musical Theory Integration
 - **Objective**: Constrain audio to musical scales and harmonic principles
 
 **Implementation Tasks:**
@@ -622,7 +736,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/audio/theory/ScaleDefinitions.ts`
 - `src/audio/theory/HarmonicRules.ts`
 
-#### Phase 5.2: Dynamic Orchestration
+#### Phase 6.2: Dynamic Orchestration
 - **Objective**: Evolving instrumentation based on vault complexity
 
 **Implementation Tasks:**
@@ -656,7 +770,7 @@ All Phase 1 objectives have been successfully implemented:
 - `src/audio/orchestration/ComplexityAnalyzer.ts`
 - `src/audio/orchestration/TemporalInfluence.ts`
 
-#### Phase 5.3: Spatial Audio and Panning
+#### Phase 6.3: Spatial Audio and Panning
 - **Objective**: Map graph position to stereo field
 
 **Implementation Tasks:**
@@ -690,157 +804,202 @@ All Phase 1 objectives have been successfully implemented:
 
 ---
 
-### Phase 6: User Interface and Presets (Weeks 18-20)
-**Goal**: Comprehensive UI for all new audio features
+### Phase 7: Freesound Integration (Weeks 20-22) - RENUMBERED
+**Goal**: Integrate Freesound API for high-quality continuous layer samples
 
-#### Phase 6.1: Advanced Audio Settings Panel
-- **Objective**: Intuitive controls for all audio enhancement features
+#### Phase 7.1: OAuth Implementation
+- **Objective**: Implement Freesound API authentication and sample retrieval
 
 **Implementation Tasks:**
-1. **Audio Enhancement Settings Section**
+1. **API Authentication System**
    ```typescript
-   // In SonicGraphModal.ts
-   private createAudioEnhancementSettings(container: HTMLElement): void {
-     // Continuous layers section
-     // Content-aware mapping section
-     // Musical theory section
-     // Orchestration settings section
-     // Spatial audio controls
+   class FreesoundAuthManager {
+     private apiKey: string;
+     private baseUrl: string = 'https://freesound.org/apiv2';
+     
+     async authenticateWithApiKey(key: string): Promise<boolean>;
+     async testConnection(): Promise<boolean>;
+     getAuthHeaders(): Record<string, string>;
    }
    ```
 
-2. **Continuous Layers Controls**
-   - **Freesound API Key**: Text input with validation and secure storage
-   - **Genre Selection**: Dropdown with options (Ambient, Drone, Orchestral, Electronic, Minimal, Oceanic, Sci-Fi, Experimental, Industrial, Urban, Nature, Mechanical, Organic)
-   - **Layer Enable/Disable**: Toggle for each continuous layer type
-   - **Intensity Slider**: Control layer prominence (0-100%)
-   - **Evolution Rate**: How quickly layers respond to vault changes
-   - **Volume Controls**: Individual volume sliders for each layer type
+2. **API Key Management**
+   - Secure storage in plugin settings
+   - Validation on entry
+   - Connection testing UI
+   - Error handling for invalid keys
 
-3. **Mapping Rules Configuration**
-   - Tag-to-instrument mapping table
-   - Folder theme assignments
-   - Connection type preferences
-   - Custom rule builder interface
+3. **Preview URL Strategy**
+   - Use preview-hq-mp3 URLs (128kbps)
+   - No OAuth2 flow required
+   - Token-based authentication only
+   - Fallback to synthesized sounds if unavailable
 
-4. **Musical Theory Settings**
-   - Scale/mode selection dropdown
-   - Key selection
-   - Harmonic constraint toggle
-   - Orchestration complexity thresholds
+**Files to Create:**
+- `src/audio/freesound/FreesoundAuthManager.ts`
+- `src/audio/freesound/FreesoundAPI.ts`
 
 **Files to Modify:**
-- `src/ui/SonicGraphModal.ts`: New settings sections
-- `src/ui/settings.ts`: Plugin-level audio settings
+- `src/ui/ControlCenter.ts`: API key input field
+- `src/utils/constants.ts`: Freesound configuration
 
-#### Phase 6.2: Musical Theme Presets System
-- **Objective**: Pre-configured audio themes for different use cases
+#### Phase 7.2: Sample Management System
+- **Objective**: Download, cache, and manage Freesound samples efficiently
 
 **Implementation Tasks:**
-1. **Theme Preset Manager**
+1. **Sample Download Manager**
    ```typescript
-   class AudioThemePresetManager {
-     private presets: Map<string, AudioThemePreset>;
+   class FreesoundSampleManager {
+     private sampleCache: Map<string, AudioBuffer>;
+     private downloadQueue: SampleDownloadQueue;
      
-     loadPreset(presetName: string): AudioThemePreset;
-     saveCustomPreset(name: string, config: AudioMappingConfig): void;
-     getAvailablePresets(): string[];
-   }
-   
-   interface AudioThemePreset {
-     name: string;
-     description: string;
-     mappingConfig: AudioMappingConfig;
-     continuousLayers: ContinuousLayerConfig;
-     musicalTheory: MusicalTheoryConfig;
+     async downloadSample(soundId: number): Promise<AudioBuffer>;
+     async preloadGenreSamples(genre: MusicalGenre): Promise<void>;
+     getCachedSample(soundId: number): AudioBuffer | null;
    }
    ```
 
-2. **Default Theme Presets**
-   - **"Orchestral Journey"**: Full orchestral arrangement with classical instruments + Orchestral genre
-   - **"Ambient Flow"**: Subtle ambient layers with gentle electronic textures + Ambient genre
-   - **"Drone Meditation"**: Deep, sustained atmospheric tones + Drone genre
-   - **"Electronic Explorer"**: Synthesized textures and evolving electronic sounds + Electronic genre
-   - **"Minimalist Zen"**: Sparse, contemplative audio with simple mappings + Minimal genre
-   - **"Ocean Depths"**: Whale songs and oceanic ambience with organic evolution + Oceanic genre
-   - **"Space Station"**: Futuristic atmospheric sounds with technological textures + Sci-Fi genre
-   - **"Percussive Drive"**: Rhythmic emphasis with strong percussion elements + Electronic genre
-   - **"Experimental Lab"**: Unconventional sound design with glitch and chaos elements + Experimental genre
-   - **"Industrial Complex"**: Mechanical drones and factory ambience + Industrial genre
-   - **"City Life"**: Urban soundscapes with human activity layers + Urban genre
-   - **"Forest Walk"**: Natural environments with bird songs and nature sounds + Nature genre
-   - **"Machine Room"**: Rhythmic mechanical patterns and motor drones + Mechanical genre
-   - **"Acoustic Garden"**: Organic instruments and natural acoustic textures + Organic genre
+2. **Sample Caching System**
+   - Local IndexedDB storage for downloaded samples
+   - Memory cache for active samples
+   - LRU eviction for cache management
+   - Progress tracking for bulk downloads
 
-3. **Custom Preset Creation**
-   - Save current settings as custom preset
-   - Import/export preset configurations
-   - Preset sharing between users
+3. **Genre Sample Collections**
+   - Reference Freesound Audio Library document
+   - Download samples for selected genres
+   - Handle missing samples gracefully
+   - Background preloading support
 
 **Files to Create:**
-- `src/audio/presets/AudioThemePresetManager.ts`
-- `src/audio/presets/DefaultPresets.ts`
+- `src/audio/freesound/FreesoundSampleManager.ts`
+- `src/audio/freesound/SampleCache.ts`
+- `src/audio/freesound/DownloadQueue.ts`
 
-#### Phase 6.3: Real-Time Audio Visualization
-- **Objective**: Visual feedback for audio enhancement features
+#### Phase 7.3: Caching and Preloading
+- **Objective**: Optimize sample loading and playback performance
 
 **Implementation Tasks:**
-1. **Audio Activity Visualizer**
-   - Real-time display of active continuous layers
-   - Visual representation of current mappings
-   - Cluster audio activity indicators
-   - Musical theory information display
+1. **Intelligent Preloading System**
+   ```typescript
+   class SamplePreloader {
+     private preloadStrategy: PreloadStrategy;
+     private audioContext: AudioContext;
+     
+     async preloadForGenre(genre: MusicalGenre): Promise<void>;
+     async preloadCriticalSamples(): Promise<void>;
+     updatePreloadPriority(usage: UsageMetrics): void;
+   }
+   ```
 
-2. **Layer Activity Indicators**
-   - Ambient drone level meter
-   - Rhythmic layer activity
-   - Harmonic complexity indicator
-   - Spatial panning visualization
+2. **Cache Optimization**
+   - Predictive preloading based on genre selection
+   - Priority loading for frequently used samples
+   - Background loading during idle time
+   - Network usage throttling
+
+3. **Offline Support**
+   - Work with cached samples when offline
+   - Graceful degradation to synthesized sounds
+   - Cache persistence across sessions
+   - Storage quota management
 
 **Files to Create:**
-- `src/ui/audio/AudioVisualizationPanel.ts`
-- `src/ui/audio/LayerActivityIndicator.ts`
+- `src/audio/freesound/SamplePreloader.ts`
+- `src/audio/freesound/CacheStrategy.ts`
+
+**Files to Modify:**
+- `src/audio/layers/FreesoundSampleLoader.ts`: Integration with cache
 
 ---
 
-### Phase 7: Performance Optimization and Integration (Weeks 21-22)
-**Goal**: Ensure smooth performance with new audio features
+### Phase 8: Polish and Documentation (Weeks 23-24) - RENUMBERED
+**Goal**: Complete documentation, tutorials, and final polish
 
-#### Phase 7.1: Performance Optimization
-- **Objective**: Maintain performance with enhanced audio complexity
-
-**Implementation Tasks:**
-1. **Audio Layer Management**
-   - Efficient continuous layer processing
-   - Smart instrument pooling for complex mappings
-   - Memory management for large vaults
-   - CPU usage monitoring and adaptive quality
-
-2. **Caching and Preprocessing**
-   - Cache cluster audio themes
-   - Preprocess folder mappings
-   - Optimize tag analysis performance
-   - Batch audio parameter updates
-
-**Files to Modify:**
-- `src/audio/engine.ts`: Performance monitoring integration
-- All new audio components: Optimization passes
-
-#### Phase 7.2: Integration Testing
-- **Objective**: Comprehensive testing of all audio enhancement features
+#### Phase 8.1: User Documentation
+- **Objective**: Create comprehensive documentation for audio enhancement features
 
 **Implementation Tasks:**
-1. **Test Suite Integration**
-   - Add audio enhancement tests to `TestSuiteModal`
-   - Performance benchmarking for large vaults
-   - Audio quality verification tests
-   - User experience testing scenarios
+1. **Feature Documentation**
+   - Continuous layers user guide
+   - Content-aware mapping explanation
+   - Musical theory settings guide
+   - Freesound integration setup
 
-2. **Edge Case Handling**
-   - Large vault performance
-   - Rapid animation speed handling
-   - Complex cluster configurations
-   - Memory usage optimization
+2. **Quick Start Guides**
+   - Getting started with audio enhancements
+   - Setting up your first musical theme
+   - Customizing mappings for your vault
+   - Troubleshooting common issues
+
+3. **Advanced Documentation**
+   - Creating custom presets
+   - Advanced mapping rules
+   - Performance optimization tips
+   - API integration guide
+
+**Files to Create:**
+- `docs/user-guide/audio-enhancements.md`
+- `docs/user-guide/freesound-setup.md`
+- `docs/user-guide/custom-mappings.md`
+
+#### Phase 8.2: Tutorial System
+- **Objective**: Interactive tutorials for new users
+
+**Implementation Tasks:**
+1. **In-App Tutorial System**
+   ```typescript
+   class AudioTutorialManager {
+     private tutorialSteps: TutorialStep[];
+     private currentStep: number;
+     
+     startTutorial(tutorialName: string): void;
+     showNextStep(): void;
+     skipTutorial(): void;
+   }
+   ```
+
+2. **Tutorial Content**
+   - First-time setup walkthrough
+   - Musical theme selection guide
+   - Mapping customization tutorial
+   - Performance optimization tips
+
+3. **Interactive Elements**
+   - Highlight relevant UI elements
+   - Step-by-step guidance
+   - Example configurations
+   - Progress tracking
+
+**Files to Create:**
+- `src/ui/tutorials/AudioTutorialManager.ts`
+- `src/ui/tutorials/TutorialSteps.ts`
+
+#### Phase 8.3: Preset Library
+- **Objective**: Expand and polish the preset system
+
+**Implementation Tasks:**
+1. **Expanded Preset Collection**
+   - Genre-specific preset packs
+   - Use-case based presets (research, creative writing, journaling)
+   - Community-contributed presets
+   - Seasonal/mood-based themes
+
+2. **Preset Management UI**
+   - Visual preset browser
+   - Preview functionality
+   - Import/export system
+   - Favorite presets
+
+3. **Final Polish**
+   - Performance optimization
+   - Bug fixes and edge cases
+   - UI/UX refinements
+   - Final testing pass
+
+**Files to Create:**
+- `src/audio/presets/PresetLibrary.ts`
+- `src/ui/audio/PresetBrowser.ts`
 
 **Files to Modify:**
 - `src/testing/TestSuiteModal.ts`: New test categories
