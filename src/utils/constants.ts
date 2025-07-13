@@ -1,3 +1,5 @@
+import { AudioMappingConfig } from '../graph/types';
+
 export interface InstrumentSettings {
 	enabled: boolean;
 	volume: number;
@@ -344,6 +346,7 @@ export interface SonigraphSettings {
 	sonicGraphAnimationDuration?: number; // Base animation duration in seconds (default 60)
 	sonicGraphAnimationSpeed?: number; // Animation speed multiplier (default 1.0)
 	sonicGraphSettings?: SonicGraphSettings; // Phase 3.7: Comprehensive settings panel controls
+	audioEnhancement?: AudioMappingConfig; // Phase 1: Audio enhancement settings
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
