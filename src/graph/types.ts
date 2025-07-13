@@ -39,4 +39,77 @@ export interface GraphStats {
 	minConnections: number;
 	isolatedNodes: number;
 	clusters: number;
+}
+
+// Enhanced GraphNode interface for Phase 1 audio enhancement
+export interface EnhancedGraphNode extends GraphNode {
+	metadata: {
+		tags: string[];
+		frontmatter: Record<string, any>;
+		wordCount?: number;
+		headingCount?: number;
+	};
+	connectionDetails: {
+		wikilinks: string[];
+		markdownLinks: string[];
+		embeds: string[];
+		tagConnections: string[];
+		totalCount: number;
+	};
+	clusterInfo?: {
+		clusterId: string;
+		clusterType: 'tag-based' | 'temporal' | 'link-dense' | 'community';
+		clusterStrength: number;
+	};
+	hubCentrality?: number;
+	folderDepth: number;
+	pathComponents: string[];
+}
+
+// Musical context for audio mapping decisions
+export interface MusicalContext {
+	totalNodes: number;
+	maxNodes: number;
+	currentAnimationProgress: number; // 0-1
+	vaultActivityLevel: number; // Recent event frequency
+	timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+	seasonalContext?: 'spring' | 'summer' | 'autumn' | 'winter';
+}
+
+// Audio mapping configuration interfaces
+export interface InstrumentMapping {
+	instrument: string;
+	priority: number;
+	conditions?: {
+		minConnections?: number;
+		maxConnections?: number;
+		requiredTags?: string[];
+		excludedTags?: string[];
+	};
+}
+
+export interface AudioMappingConfig {
+	contentAwareMapping: {
+		enabled: boolean;
+		fileTypePreferences: Record<string, string[]>;
+		tagMappings: Record<string, InstrumentMapping>;
+		folderMappings: Record<string, InstrumentMapping>;
+		connectionTypeMappings: Record<string, InstrumentMapping>;
+	};
+	continuousLayers: {
+		enabled: boolean;
+		ambientDrone: any; // Will be defined when implementing layers
+		rhythmicLayer: any;
+		harmonicPad: any;
+	};
+	musicalTheory: {
+		scale: string; // Will be enhanced with MusicalScale type later
+		key: string;
+		mode: string;
+		constrainToScale: boolean;
+	};
+	externalServices: {
+		freesoundApiKey: string;
+		enableFreesoundSamples: boolean;
+	};
 } 
