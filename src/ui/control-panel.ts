@@ -949,6 +949,55 @@ export class MaterialControlPanelModal extends Modal {
 		);
 		logger.debug('ui', 'Show file names toggle created');
 
+		// Freesound API Key field  
+		const apiKeySection = settingsSection.createDiv({ cls: 'osp-settings-item' });
+		
+		new Setting(apiKeySection)
+			.setName('Freesound API Key')
+			.setDesc('Required for downloading ambient audio samples from Freesound.org')
+			.addText(text => text
+				.setPlaceholder('Enter your Freesound.org API key')
+				.setValue(this.plugin.settings.audioEnhancement?.externalServices?.freesoundApiKey || '')
+				.onChange(async (value) => {
+					// Initialize audio enhancement settings if needed
+					if (!this.plugin.settings.audioEnhancement) {
+						this.plugin.settings.audioEnhancement = {
+							contentAwareMapping: {
+								enabled: false,
+								fileTypePreferences: {},
+								tagMappings: {},
+								folderMappings: {},
+								connectionTypeMappings: {}
+							},
+							continuousLayers: {
+								enabled: false,
+								ambientDrone: {},
+								rhythmicLayer: {},
+								harmonicPad: {}
+							},
+							musicalTheory: {
+								scale: 'major',
+								key: 'C',
+								mode: 'ionian',
+								constrainToScale: false
+							},
+							externalServices: {
+								freesoundApiKey: '',
+								enableFreesoundSamples: false
+							}
+						};
+					}
+					
+					this.plugin.settings.audioEnhancement.externalServices.freesoundApiKey = value;
+					await this.plugin.saveSettings();
+					
+					logger.info('audio-enhancement', 'Freesound API key updated');
+				})
+			);
+		
+		// Add some spacing before exclusion settings
+		settingsSection.createDiv({ cls: 'osp-settings-spacer' });
+
 		// Exclusion settings
 		this.createExclusionFields(settingsSection);
 

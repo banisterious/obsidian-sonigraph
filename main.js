@@ -10398,6 +10398,150 @@ var init_GraphDataExtractor = __esm({
         this.lastCacheTime = 0;
         logger5.debug("extraction", "Graph data cache cleared");
       }
+      /**
+       * Phase 1.2: Extract enhanced metadata for advanced audio mapping
+       */
+      async extractEnhancedNodes() {
+        const files = this.vault.getFiles();
+        const enhancedNodes = [];
+        logger5.info("enhanced-extraction", `Starting enhanced node extraction from ${files.length} files`);
+        const startTime = performance.now();
+        for (const file of files) {
+          if (this.shouldExcludeFile(file)) {
+            continue;
+          }
+          try {
+            const metadata = this.metadataCache.getFileCache(file);
+            const enhancedNode = this.createEnhancedNodeFromFile(file, metadata);
+            if (enhancedNode) {
+              enhancedNodes.push(enhancedNode);
+            }
+          } catch (error) {
+            logger5.warn("enhanced-extraction", `Failed to process file: ${file.path}`, { path: file.path, error });
+          }
+        }
+        const extractionTime = performance.now() - startTime;
+        logger5.info("enhanced-extraction-complete", `Enhanced extraction completed in ${extractionTime.toFixed(1)}ms`, {
+          totalFiles: files.length,
+          extractedNodes: enhancedNodes.length
+        });
+        return enhancedNodes;
+      }
+      /**
+       * Phase 1.2: Create enhanced node with detailed metadata
+       */
+      createEnhancedNodeFromFile(file, metadata) {
+        const stat = file.stat;
+        const baseNode = this.createOptimizedNodeFromFile(file, metadata);
+        if (!baseNode)
+          return null;
+        const enhancedMetadata = this.extractEnhancedMetadata(file, metadata);
+        const connectionDetails = this.analyzeConnectionTypes(file, metadata);
+        const folderAnalysis = this.analyzeFolderHierarchy(file.path);
+        const enhancedNode = {
+          ...baseNode,
+          name: baseNode.title,
+          connections: [],
+          // Will be populated later
+          connectionCount: 0,
+          wordCount: enhancedMetadata.wordCount || 0,
+          tags: enhancedMetadata.tags,
+          headings: [],
+          // Extract headings separately if needed
+          created: stat.ctime,
+          modified: stat.mtime,
+          metadata: enhancedMetadata,
+          connectionDetails,
+          folderDepth: folderAnalysis.depth,
+          pathComponents: folderAnalysis.components
+        };
+        return enhancedNode;
+      }
+      /**
+       * Phase 1.2: Extract comprehensive metadata for enhanced mapping
+       */
+      extractEnhancedMetadata(file, metadata) {
+        const result = {
+          tags: [],
+          frontmatter: {},
+          wordCount: void 0,
+          headingCount: void 0
+        };
+        if (metadata) {
+          if (metadata.tags) {
+            result.tags = metadata.tags.map((tag) => tag.tag);
+          }
+          if (metadata.frontmatter) {
+            result.frontmatter = { ...metadata.frontmatter };
+          }
+          if (metadata.headings) {
+            result.headingCount = metadata.headings.length;
+          }
+        }
+        if (file.extension === "md") {
+          result.wordCount = Math.round(file.stat.size / 5);
+        }
+        return result;
+      }
+      /**
+       * Phase 1.2: Analyze different connection types for a file
+       */
+      analyzeConnectionTypes(file, metadata) {
+        var _a;
+        const result = {
+          wikilinks: [],
+          markdownLinks: [],
+          embeds: [],
+          tagConnections: [],
+          totalCount: 0
+        };
+        if (!metadata)
+          return result;
+        if (metadata.links) {
+          result.wikilinks = metadata.links.filter((link) => !link.original.startsWith("!")).map((link) => link.link);
+        }
+        if (metadata.embeds) {
+          result.embeds = metadata.embeds.map((embed) => embed.link);
+        }
+        if ((_a = metadata.frontmatter) == null ? void 0 : _a.links) {
+          result.markdownLinks = Array.isArray(metadata.frontmatter.links) ? metadata.frontmatter.links : [];
+        }
+        result.tagConnections = [];
+        result.totalCount = result.wikilinks.length + result.markdownLinks.length + result.embeds.length;
+        return result;
+      }
+      /**
+       * Phase 1.2: Analyze folder hierarchy for a file path
+       */
+      analyzeFolderHierarchy(filePath) {
+        const components = filePath.split("/").filter((comp) => comp !== "");
+        if (components.length > 0) {
+          components.pop();
+        }
+        return {
+          depth: components.length,
+          components
+        };
+      }
+      /**
+       * Phase 1.2: Calculate hub centrality for nodes based on connections
+       */
+      calculateHubCentrality(nodes) {
+        const avgConnections = nodes.reduce((sum, node) => sum + node.connectionCount, 0) / nodes.length;
+        const variance = nodes.reduce((sum, node) => sum + Math.pow(node.connectionCount - avgConnections, 2), 0) / nodes.length;
+        const stdDev = Math.sqrt(variance);
+        for (const node of nodes) {
+          if (node.connectionCount > avgConnections + 2 * stdDev) {
+            node.hubCentrality = 1;
+          } else if (node.connectionCount > avgConnections + stdDev) {
+            node.hubCentrality = 0.7;
+          } else if (node.connectionCount > avgConnections) {
+            node.hubCentrality = 0.4;
+          } else {
+            node.hubCentrality = 0.1;
+          }
+        }
+      }
     };
   }
 });
@@ -15623,6 +15767,73 @@ var init_SonicGraphModal = __esm({
           durationValue.textContent = `${value.toFixed(1)}s`;
           this.updateNoteDuration(value);
         });
+        this.createAudioEnhancementSettings(section);
+      }
+      /**
+       * Phase 1.3: Create audio enhancement settings
+       */
+      createAudioEnhancementSettings(container) {
+        container.createEl("hr", { cls: "sonic-graph-settings-divider" });
+        const enhancementHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
+        enhancementHeader.createEl("label", {
+          text: "Audio Enhancement (Phase 1)",
+          cls: "sonic-graph-setting-label sonic-graph-setting-header"
+        });
+        enhancementHeader.createEl("div", {
+          text: "Advanced audio mapping features for richer soundscapes",
+          cls: "sonic-graph-setting-description"
+        });
+        new import_obsidian6.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
+          (toggle) => {
+            var _a, _b;
+            return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.contentAwareMapping) == null ? void 0 : _b.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = this.getDefaultAudioEnhancementSettings();
+              }
+              this.plugin.settings.audioEnhancement.contentAwareMapping.enabled = value;
+              await this.plugin.saveSettings();
+              logger14.info("audio-enhancement", "Content-aware mapping toggled", {
+                enabled: value
+              });
+            });
+          }
+        );
+        const continuousSetting = new import_obsidian6.Setting(container).setName("Enable continuous layers (Phase 2)").setDesc("Ambient background layers that evolve with your vault").addToggle(
+          (toggle) => toggle.setValue(false).setDisabled(true)
+        );
+        continuousSetting.settingEl.addClass("sonic-graph-disabled");
+        const theorySetting = new import_obsidian6.Setting(container).setName("Musical Theory (Phase 5)").setDesc("Scale, key, and harmonic constraints coming soon");
+        theorySetting.settingEl.addClass("sonic-graph-disabled");
+      }
+      /**
+       * Get default audio enhancement settings
+       */
+      getDefaultAudioEnhancementSettings() {
+        return {
+          contentAwareMapping: {
+            enabled: false,
+            fileTypePreferences: {},
+            tagMappings: {},
+            folderMappings: {},
+            connectionTypeMappings: {}
+          },
+          continuousLayers: {
+            enabled: false,
+            ambientDrone: {},
+            rhythmicLayer: {},
+            harmonicPad: {}
+          },
+          musicalTheory: {
+            scale: "major",
+            key: "C",
+            mode: "ionian",
+            constrainToScale: false
+          },
+          externalServices: {
+            freesoundApiKey: "",
+            enableFreesoundSamples: false
+          }
+        };
       }
       /**
        * Create visual settings section
@@ -18222,6 +18433,45 @@ var init_control_panel = __esm({
           }
         );
         logger15.debug("ui", "Show file names toggle created");
+        const apiKeySection = settingsSection.createDiv({ cls: "osp-settings-item" });
+        new import_obsidian7.Setting(apiKeySection).setName("Freesound API Key").setDesc("Required for downloading ambient audio samples from Freesound.org").addText(
+          (text) => {
+            var _a, _b;
+            return text.setPlaceholder("Enter your Freesound.org API key").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.externalServices) == null ? void 0 : _b.freesoundApiKey) || "").onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {
+                  contentAwareMapping: {
+                    enabled: false,
+                    fileTypePreferences: {},
+                    tagMappings: {},
+                    folderMappings: {},
+                    connectionTypeMappings: {}
+                  },
+                  continuousLayers: {
+                    enabled: false,
+                    ambientDrone: {},
+                    rhythmicLayer: {},
+                    harmonicPad: {}
+                  },
+                  musicalTheory: {
+                    scale: "major",
+                    key: "C",
+                    mode: "ionian",
+                    constrainToScale: false
+                  },
+                  externalServices: {
+                    freesoundApiKey: "",
+                    enableFreesoundSamples: false
+                  }
+                };
+              }
+              this.plugin.settings.audioEnhancement.externalServices.freesoundApiKey = value;
+              await this.plugin.saveSettings();
+              logger15.info("audio-enhancement", "Freesound API key updated");
+            });
+          }
+        );
+        settingsSection.createDiv({ cls: "osp-settings-spacer" });
         this.createExclusionFields(settingsSection);
         const statsContainer = content.createDiv({ cls: "osp-stats-row" });
         const filesStat = statsContainer.createDiv({ cls: "osp-stat-compact" });

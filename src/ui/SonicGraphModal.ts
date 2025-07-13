@@ -1756,6 +1756,101 @@ export class SonicGraphModal extends Modal {
             durationValue.textContent = `${value.toFixed(1)}s`;
             this.updateNoteDuration(value);
         });
+
+        // Phase 1.3: Audio Enhancement Settings
+        this.createAudioEnhancementSettings(section);
+    }
+
+    /**
+     * Phase 1.3: Create audio enhancement settings
+     */
+    private createAudioEnhancementSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+        
+        // Audio Enhancement Header
+        const enhancementHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        enhancementHeader.createEl('label', { 
+            text: 'Audio Enhancement (Phase 1)', 
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header' 
+        });
+        enhancementHeader.createEl('div', { 
+            text: 'Advanced audio mapping features for richer soundscapes', 
+            cls: 'sonic-graph-setting-description' 
+        });
+
+        // Note: Freesound API Key has been moved to Control Center > Sonic Graph settings
+
+        // Content-Aware Mapping Toggle
+        new Setting(container)
+            .setName('Enable content-aware mapping')
+            .setDesc('Use file types, tags, and folder structure to select instruments')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement) {
+                        this.plugin.settings.audioEnhancement = this.getDefaultAudioEnhancementSettings();
+                    }
+                    
+                    this.plugin.settings.audioEnhancement.contentAwareMapping.enabled = value;
+                    await this.plugin.saveSettings();
+                    
+                    logger.info('audio-enhancement', 'Content-aware mapping toggled', { 
+                        enabled: value 
+                    });
+                })
+            );
+
+        // Continuous Layers Toggle (Coming in Phase 2)
+        const continuousSetting = new Setting(container)
+            .setName('Enable continuous layers (Phase 2)')
+            .setDesc('Ambient background layers that evolve with your vault')
+            .addToggle(toggle => toggle
+                .setValue(false)
+                .setDisabled(true)
+            );
+        
+        // Add disabled styling to the entire setting
+        continuousSetting.settingEl.addClass('sonic-graph-disabled');
+
+        // Musical Theory Settings (Coming in Phase 5)
+        const theorySetting = new Setting(container)
+            .setName('Musical Theory (Phase 5)')
+            .setDesc('Scale, key, and harmonic constraints coming soon');
+        
+        // Add disabled styling to indicate it's not yet available
+        theorySetting.settingEl.addClass('sonic-graph-disabled');
+    }
+
+    /**
+     * Get default audio enhancement settings
+     */
+    private getDefaultAudioEnhancementSettings(): any {
+        return {
+            contentAwareMapping: {
+                enabled: false,
+                fileTypePreferences: {},
+                tagMappings: {},
+                folderMappings: {},
+                connectionTypeMappings: {}
+            },
+            continuousLayers: {
+                enabled: false,
+                ambientDrone: {},
+                rhythmicLayer: {},
+                harmonicPad: {}
+            },
+            musicalTheory: {
+                scale: 'major',
+                key: 'C',
+                mode: 'ionian',
+                constrainToScale: false
+            },
+            externalServices: {
+                freesoundApiKey: '',
+                enableFreesoundSamples: false
+            }
+        };
     }
 
     /**
