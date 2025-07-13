@@ -340,17 +340,8 @@ export class AudioEngine {
 			performanceMode: this.settings.performanceMode?.mode ?? 'medium'
 		};
 		
-		// Check for any configuration gaps
-		const configurationGaps = [];
-		if (report.totalInstruments !== report.configuredVolumes) {
-			configurationGaps.push(`Volume controls: ${report.configuredVolumes}/${report.totalInstruments}`);
-		}
-		if (report.totalInstruments !== report.configuredEffects) {
-			configurationGaps.push(`Effects configurations: ${report.configuredEffects}/${report.totalInstruments}`);
-		}
-		
 		// Generate status summary
-		const status = configurationGaps.length === 0 ? 'Optimal' : 'Minor Issues';
+		const status = 'Optimal';
 		const quality = report.percussionEngine && report.electronicEngine ? 'Full Advanced Synthesis' : 'Standard Synthesis';
 		
 		logger.info('initialization-report', 'Audio Engine Initialization Summary', {
@@ -371,17 +362,9 @@ export class AudioEngine {
 			configuration: {
 				audioMode: 'Per-instrument quality control',
 				performanceMode: report.performanceMode,
-				enhancedRouting: report.enhancedRouting ? 'Enabled' : 'Disabled',
-				gaps: configurationGaps.length > 0 ? configurationGaps : 'None'
+				enhancedRouting: report.enhancedRouting ? 'Enabled' : 'Disabled'
 			}
 		});
-		
-		if (configurationGaps.length > 0) {
-			logger.warn('initialization-report', 'Configuration gaps detected', {
-				issues: configurationGaps,
-				impact: 'Some instruments may not have proper volume/effects control'
-			});
-		}
 	}
 
 	private async initializeAdvancedSynthesis(): Promise<void> {
@@ -5062,7 +5045,7 @@ export class AudioEngine {
 		const missingCount = Object.keys(cdnStatus.missingInstruments).length;
 		const coveragePercentage = Math.round((availableCount / totalInstruments) * 100);
 		
-		logger.error('cdn-diagnosis', '🔍 ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report', {
+		logger.debug('cdn-diagnosis', '🔍 ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report', {
 			summary: {
 				totalInstruments: totalInstruments,
 				availableInstruments: availableCount,

@@ -279,13 +279,19 @@ export class InstrumentConfigLoader {
             return { isValid: false, errors, warnings };
         }
         
-        // Validate required properties
-        if (!config.urls || Object.keys(config.urls).length === 0) {
-            errors.push(`Instrument '${instrumentName}' has no sample URLs`);
-        }
+        // Check if this is a synth-only instrument (no samples)
+        const isSynthOnly = (!config.urls || Object.keys(config.urls).length === 0) && 
+                           (!config.baseUrl || config.baseUrl === "");
         
-        if (!config.baseUrl) {
-            errors.push(`Instrument '${instrumentName}' missing baseUrl`);
+        // Validate required properties - skip URL validation for synth-only instruments
+        if (!isSynthOnly) {
+            if (!config.urls || Object.keys(config.urls).length === 0) {
+                errors.push(`Instrument '${instrumentName}' has no sample URLs`);
+            }
+            
+            if (!config.baseUrl) {
+                errors.push(`Instrument '${instrumentName}' missing baseUrl`);
+            }
         }
         
         if (config.release < 0) {
