@@ -1370,6 +1370,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: true,
 			volume: 0.9,
 			maxVoices: 2,
+			useHighQuality: false, // Synth-only - no samples available
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1435,6 +1436,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
+			useHighQuality: false, // Synth-only - no samples available
 			effects: {
 				reverb: {
 					enabled: true,
@@ -1467,6 +1469,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.9,
 			maxVoices: 2,
+			useHighQuality: false, // Synth-only - no samples available
 			effects: {
 				reverb: {
 					enabled: true,

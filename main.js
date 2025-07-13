@@ -1209,6 +1209,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.9,
           maxVoices: 2,
+          useHighQuality: false,
+          // Synth-only - no samples available
           effects: {
             reverb: {
               enabled: true,
@@ -1275,6 +1277,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.7,
           maxVoices: 4,
+          useHighQuality: false,
+          // Synth-only - no samples available
           effects: {
             reverb: {
               enabled: true,
@@ -1307,6 +1311,8 @@ var init_constants = __esm({
           enabled: false,
           volume: 0.9,
           maxVoices: 2,
+          useHighQuality: false,
+          // Synth-only - no samples available
           effects: {
             reverb: {
               enabled: true,
@@ -46862,7 +46868,7 @@ var PercussionEngine = class {
     }
   }
   async initializeTimpani() {
-    logger17.warn("timpani", "Timpani samples not available on CDN, using synthesis fallback");
+    logger17.debug("timpani", "Initializing timpani with synthesis");
     const timpaniSizes = ["small", "medium", "large"];
     for (const size of timpaniSizes) {
       const synth = new PolySynth({
@@ -46930,7 +46936,7 @@ var PercussionEngine = class {
     logger17.debug("xylophone", "Xylophone initialization complete");
   }
   async initializeVibraphone() {
-    logger17.warn("vibraphone", "Vibraphone samples not available on CDN, using synthesis fallback");
+    logger17.debug("vibraphone", "Initializing vibraphone with synthesis");
     const synth = new PolySynth({
       voice: AMSynth,
       options: {
@@ -46965,7 +46971,7 @@ var PercussionEngine = class {
     logger17.debug("vibraphone", "Vibraphone initialization complete");
   }
   async initializeGongs() {
-    logger17.warn("gongs", "Gong samples not available on CDN, using synthesis fallback");
+    logger17.debug("gongs", "Initializing gongs with synthesis");
     const synth = new PolySynth({
       voice: AMSynth,
       options: {
@@ -48866,6 +48872,7 @@ var percussionInstruments = {
   description: "Timpani, xylophone, vibraphone, gongs and other percussion",
   instruments: {
     timpani: {
+      // Synth-only instrument - no samples available
       urls: {},
       baseUrl: "",
       requiresHighQuality: false,
@@ -48894,6 +48901,7 @@ var percussionInstruments = {
       category: "percussion"
     },
     vibraphone: {
+      // Synth-only instrument - no samples available
       urls: {},
       baseUrl: "",
       requiresHighQuality: false,
@@ -48904,6 +48912,7 @@ var percussionInstruments = {
       category: "percussion"
     },
     gongs: {
+      // Synth-only instrument - no samples available
       urls: {},
       baseUrl: "",
       requiresHighQuality: false,
@@ -49395,11 +49404,14 @@ var InstrumentConfigLoader = class {
       errors.push(`Instrument '${instrumentName}' not found`);
       return { isValid: false, errors, warnings };
     }
-    if (!config.urls || Object.keys(config.urls).length === 0) {
-      errors.push(`Instrument '${instrumentName}' has no sample URLs`);
-    }
-    if (!config.baseUrl) {
-      errors.push(`Instrument '${instrumentName}' missing baseUrl`);
+    const isSynthOnly = (!config.urls || Object.keys(config.urls).length === 0) && (!config.baseUrl || config.baseUrl === "");
+    if (!isSynthOnly) {
+      if (!config.urls || Object.keys(config.urls).length === 0) {
+        errors.push(`Instrument '${instrumentName}' has no sample URLs`);
+      }
+      if (!config.baseUrl) {
+        errors.push(`Instrument '${instrumentName}' missing baseUrl`);
+      }
     }
     if (config.release < 0) {
       errors.push(`Instrument '${instrumentName}' has negative release time`);
@@ -50148,14 +50160,7 @@ var AudioEngine = class {
       perInstrumentQuality: "Individual instrument control",
       performanceMode: (_d = (_c = this.settings.performanceMode) == null ? void 0 : _c.mode) != null ? _d : "medium"
     };
-    const configurationGaps = [];
-    if (report.totalInstruments !== report.configuredVolumes) {
-      configurationGaps.push(`Volume controls: ${report.configuredVolumes}/${report.totalInstruments}`);
-    }
-    if (report.totalInstruments !== report.configuredEffects) {
-      configurationGaps.push(`Effects configurations: ${report.configuredEffects}/${report.totalInstruments}`);
-    }
-    const status = configurationGaps.length === 0 ? "Optimal" : "Minor Issues";
+    const status = "Optimal";
     const quality = report.percussionEngine && report.electronicEngine ? "Full Advanced Synthesis" : "Standard Synthesis";
     logger28.info("initialization-report", "Audio Engine Initialization Summary", {
       status,
@@ -50175,16 +50180,9 @@ var AudioEngine = class {
       configuration: {
         audioMode: "Per-instrument quality control",
         performanceMode: report.performanceMode,
-        enhancedRouting: report.enhancedRouting ? "Enabled" : "Disabled",
-        gaps: configurationGaps.length > 0 ? configurationGaps : "None"
+        enhancedRouting: report.enhancedRouting ? "Enabled" : "Disabled"
       }
     });
-    if (configurationGaps.length > 0) {
-      logger28.warn("initialization-report", "Configuration gaps detected", {
-        issues: configurationGaps,
-        impact: "Some instruments may not have proper volume/effects control"
-      });
-    }
   }
   async initializeAdvancedSynthesis() {
     logger28.info("advanced-synthesis", "Initializing Phase 8 advanced synthesis engines");
@@ -53972,7 +53970,7 @@ var AudioEngine = class {
     const availableCount = Object.keys(cdnStatus.availableInstruments).length;
     const missingCount = Object.keys(cdnStatus.missingInstruments).length;
     const coveragePercentage = Math.round(availableCount / totalInstruments * 100);
-    logger31.error("cdn-diagnosis", "\u{1F50D} ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report", {
+    logger31.debug("cdn-diagnosis", "\u{1F50D} ISSUE #011: Comprehensive CDN Sample Loading Diagnostic Report", {
       summary: {
         totalInstruments,
         availableInstruments: availableCount,

@@ -5,6 +5,7 @@ export const percussionInstruments: InstrumentFamily = {
     description: 'Timpani, xylophone, vibraphone, gongs and other percussion',
     instruments: {
         timpani: {
+            // Synth-only instrument - no samples available
             urls: {},
             baseUrl: "",
             requiresHighQuality: false,
@@ -30,6 +31,7 @@ export const percussionInstruments: InstrumentFamily = {
         },
 
         vibraphone: {
+            // Synth-only instrument - no samples available
             urls: {},
             baseUrl: "",
             requiresHighQuality: false,
@@ -41,6 +43,7 @@ export const percussionInstruments: InstrumentFamily = {
         },
 
         gongs: {
+            // Synth-only instrument - no samples available
             urls: {},
             baseUrl: "",
             requiresHighQuality: false,
