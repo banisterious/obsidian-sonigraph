@@ -1822,3 +1822,23 @@
     0 0 6px var(--background-primary),
     0 0 9px rgba(0, 0, 0, 0.8);
 }
+
+/* Advanced Settings Section */
+.sonic-graph-advanced-settings {
+  margin-top: var(--osp-spacing-md);
+}
+
+.sonic-graph-advanced-settings summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sonic-graph-advanced-settings summary:hover {
+  color: var(--text-normal);
+}
+
+.sonic-graph-export-logs-btn {
+  padding: 4px 12px;
+  font-size: var(--osp-font-size-small);
+  cursor: pointer;
+}

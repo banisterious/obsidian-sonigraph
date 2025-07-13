@@ -13,7 +13,7 @@ import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { MusicalMapper } from '../graph/musical-mapper';
 import { AdaptiveDetailManager, FilteredGraphData } from '../graph/AdaptiveDetailManager';
 import { createLucideIcon } from './lucide-icons';
-import { getLogger } from '../logging';
+import { getLogger, LoggerFactory } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
 import * as d3 from 'd3';
 import type SonigraphPlugin from '../main';
@@ -834,6 +834,9 @@ export class SonicGraphModal extends Modal {
         
         // 7. Navigation section
         this.createNavigationSettings(settingsContent);
+        
+        // 8. Advanced section
+        this.createAdvancedSettings(settingsContent);
     }
 
     /**
@@ -1866,6 +1869,86 @@ export class SonicGraphModal extends Modal {
     private createNavigationSettings(container: HTMLElement): void {
         // Navigation settings section removed - Control Center button moved to header
         // This method kept for future navigation-related settings if needed
+    }
+
+    /**
+     * Create advanced settings section with logging controls
+     */
+    private createAdvancedSettings(container: HTMLElement): void {
+        // Create collapsible Advanced section
+        const advancedSection = container.createEl('details', { cls: 'sonic-graph-advanced-settings' });
+        const summary = advancedSection.createEl('summary', { 
+            text: 'ADVANCED', 
+            cls: 'sonic-graph-settings-section-title sonic-graph-advanced-summary' 
+        });
+        
+        // Create the content container
+        const section = advancedSection.createDiv({ cls: 'sonic-graph-settings-section' });
+
+        // Logging Level Setting
+        const loggingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        loggingItem.createEl('label', { text: 'Logging level', cls: 'sonic-graph-setting-label' });
+        loggingItem.createEl('div', { 
+            text: 'Control the verbosity of plugin logs. Default is "Warnings".', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const loggingSelect = loggingItem.createEl('select', { cls: 'sonic-graph-setting-select' });
+        const logLevels = [
+            { value: 'off', text: 'Off' },
+            { value: 'error', text: 'Errors Only' },
+            { value: 'warn', text: 'Warnings' },
+            { value: 'info', text: 'Info' },
+            { value: 'debug', text: 'Debug' }
+        ];
+        
+        const currentLevel = LoggerFactory.getLogLevel();
+        logLevels.forEach(level => {
+            const option = loggingSelect.createEl('option', { 
+                text: level.text, 
+                value: level.value 
+            });
+            if (level.value === currentLevel) {
+                option.selected = true;
+            }
+        });
+        
+        loggingSelect.addEventListener('change', (e) => {
+            const target = e.target as HTMLSelectElement;
+            const value = target.value as 'off' | 'error' | 'warn' | 'info' | 'debug';
+            LoggerFactory.setLogLevel(value);
+            logger.info('settings-change', 'Log level changed', { level: value });
+        });
+
+        // Export Logs Button
+        const exportItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
+        exportItem.createEl('label', { text: 'Export logs', cls: 'sonic-graph-setting-label' });
+        exportItem.createEl('div', { 
+            text: 'Download all plugin logs as a JSON file for support or debugging.', 
+            cls: 'sonic-graph-setting-description' 
+        });
+        
+        const exportButton = exportItem.createEl('button', { 
+            text: 'Export Logs',
+            cls: 'sonic-graph-export-logs-btn' 
+        });
+        
+        exportButton.addEventListener('click', async () => {
+            const now = new Date();
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+            const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
+            const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            logger.info('export', 'Logs exported', { filename });
+        });
     }
 
     /**
