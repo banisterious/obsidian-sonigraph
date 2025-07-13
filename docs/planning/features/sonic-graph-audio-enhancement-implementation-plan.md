@@ -5,6 +5,10 @@
 **Based on:** Sonic Graph Audio Enhancement Specification v1.1  
 **Author:** Implementation Planning  
 
+**Related Documents:**
+- **Main Specification:** [Sonic Graph Audio Enhancement Specification](../sonic-graph-audio-enhancement-specification.md) - Overall enhancement design and technical requirements
+- **Audio Library:** [Freesound Audio Library](freesound-audio-library.md) - Curated collection of audio samples for continuous layer genres
+
 ---
 
 ## 1. Project Overview
@@ -100,6 +104,10 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
        mode: string;
        constrainToScale: boolean;
      };
+     externalServices: {
+       freesoundApiKey: string;
+       enableFreesoundSamples: boolean;
+     };
    }
    ```
 
@@ -155,6 +163,7 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    - Content-aware mapping rules configuration
    - Musical theory settings (scale, key, mode)
    - Mapping preset selection
+   - Freesound API key input field (required for sample downloads)
 
 2. **Advanced Mapping Rules UI**
    - Tag-to-instrument mapping table
@@ -171,6 +180,8 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
 
 ### Phase 2: Continuous Audio Layers (Weeks 4-6)
 **Goal**: Implement ambient, rhythmic, and harmonic background layers
+
+**Note**: This phase leverages the curated audio samples documented in the [Freesound Audio Library](freesound-audio-library.md), which provides high-quality samples for all 13 supported genres.
 
 #### Phase 2.1: Continuous Background Layer System
 - **Objective**: Genre-based continuous layers that evolve with vault state
@@ -193,7 +204,7 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    
    interface ContinuousLayerConfig {
      enabled: boolean;
-     genre: 'ambient' | 'drone' | 'orchestral' | 'electronic' | 'minimal' | 'oceanic' | 'sci-fi';
+     genre: 'ambient' | 'drone' | 'orchestral' | 'electronic' | 'minimal' | 'oceanic' | 'sci-fi' | 'experimental' | 'industrial' | 'urban' | 'nature' | 'mechanical' | 'organic';
      intensity: number;
      evolutionRate: number;
      baseVolume: number;
@@ -208,6 +219,12 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    - **Minimal**: Sparse, contemplative sustained elements with long decay
    - **Oceanic**: Whale songs and ocean sounds, organic evolving textures
    - **Sci-Fi**: Futuristic atmospheric sounds, space ambience, technological textures
+   - **Experimental**: Unconventional sound design, chaos modulation, glitch elements
+   - **Industrial**: Mechanical drones, factory ambience, metallic resonances
+   - **Urban**: City soundscapes, traffic ambience, human activity layers
+   - **Nature**: Forest ambience, bird songs, rain, wind, natural environments
+   - **Mechanical**: Machine hums, motor drones, rhythmic mechanical patterns
+   - **Organic**: Acoustic instruments, natural processing, breathing textures
 
 3. **Dynamic Parameter Modulation**
    - **Vault Size/Density → Volume/Brightness**: More nodes = higher volume and filter cutoff
@@ -223,11 +240,25 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    - **Minimal**: Single instruments with long releases, sparse textures
    - **Oceanic**: Existing whale sound collection, ocean ambience, organic pitch modulation
    - **Sci-Fi**: Noise synthesizers, metallic resonances, space-like reverbs, technological bleeps and sweeps
+   - **Experimental**: Ring modulators, granular synths, glitch processors, chaos generators
+   - **Industrial**: Metallic percussion, factory samples, mechanical loops, distorted synths
+   - **Urban**: Field recordings, traffic sounds, crowd ambience, city atmospheres
+   - **Nature**: Bird samples, rain sounds, wind textures, forest recordings
+   - **Mechanical**: Motor samples, gear sounds, rhythmic machinery, mechanical drones
+   - **Organic**: Acoustic piano, breath sounds, wood instruments, natural reverbs
 
 **Files to Create:**
 - `src/audio/layers/ContinuousLayerManager.ts`
 - `src/audio/layers/MusicalGenreEngine.ts`
 - `src/audio/layers/types.ts`
+- `src/audio/layers/FreesoundSampleLoader.ts` - Integration with Freesound library samples
+
+**Important Technical Note - Freesound API Authentication:**
+- **OAuth2 Required**: Full-quality downloads require OAuth2 authentication flow
+- **Implementation Strategy**: Use preview URLs (preview-hq-mp3) which require no authentication
+- **Quality Trade-off**: Preview files are 128kbps MP3s, sufficient for ambient backgrounds
+- **Future Enhancement**: OAuth2 support could be added for users needing original quality
+- See [Freesound Audio Library](freesound-audio-library.md#api-integration-and-authentication-findings) for detailed authentication findings
 
 **Files to Modify:**
 - `src/graph/TemporalGraphAnimator.ts`: Progress callbacks
@@ -615,7 +646,8 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    ```
 
 2. **Continuous Layers Controls**
-   - **Genre Selection**: Dropdown with options (Ambient, Drone, Orchestral, Electronic, Minimal, Oceanic, Sci-Fi)
+   - **Freesound API Key**: Text input with validation and secure storage
+   - **Genre Selection**: Dropdown with options (Ambient, Drone, Orchestral, Electronic, Minimal, Oceanic, Sci-Fi, Experimental, Industrial, Urban, Nature, Mechanical, Organic)
    - **Layer Enable/Disable**: Toggle for each continuous layer type
    - **Intensity Slider**: Control layer prominence (0-100%)
    - **Evolution Rate**: How quickly layers respond to vault changes
@@ -669,6 +701,12 @@ Transform the Sonic Graph from discrete event-based audio to a rich, continuous 
    - **"Ocean Depths"**: Whale songs and oceanic ambience with organic evolution + Oceanic genre
    - **"Space Station"**: Futuristic atmospheric sounds with technological textures + Sci-Fi genre
    - **"Percussive Drive"**: Rhythmic emphasis with strong percussion elements + Electronic genre
+   - **"Experimental Lab"**: Unconventional sound design with glitch and chaos elements + Experimental genre
+   - **"Industrial Complex"**: Mechanical drones and factory ambience + Industrial genre
+   - **"City Life"**: Urban soundscapes with human activity layers + Urban genre
+   - **"Forest Walk"**: Natural environments with bird songs and nature sounds + Nature genre
+   - **"Machine Room"**: Rhythmic mechanical patterns and motor drones + Mechanical genre
+   - **"Acoustic Garden"**: Organic instruments and natural acoustic textures + Organic genre
 
 3. **Custom Preset Creation**
    - Save current settings as custom preset
@@ -756,6 +794,7 @@ src/audio/
 │   ├── AmbientLayerManager.ts
 │   ├── RhythmicLayerManager.ts
 │   ├── HarmonicLayerManager.ts
+│   ├── FreesoundSampleLoader.ts
 │   └── types.ts
 ├── mapping/
 │   ├── ContentAwareMapper.ts
@@ -809,6 +848,22 @@ AudioEngine → Final Audio Output
 Parallel:
 TemporalGraphAnimator → Continuous Layer Managers → Background Audio
 ```
+
+### 3.4 External Dependencies and Authentication
+
+1. **Freesound.org API Integration**
+   - **API Key Required**: Users must obtain a free API key from Freesound.org
+   - **Settings Storage**: API key stored in plugin settings (encrypted/secure)
+   - **Challenge**: Full-quality audio downloads require OAuth2 authentication
+   - **Solution**: Use preview URLs (128kbps MP3) with API token authentication
+   - **Implementation**: FreesoundSampleLoader handles preview URL downloads with token
+   - **Caching**: Local cache of downloaded samples to minimize API calls
+   - **Future**: Optional OAuth2 flow for users wanting original quality
+
+2. **Network Considerations**
+   - Graceful fallback to synthesized sounds if samples unavailable
+   - Progress indicators during initial sample downloads
+   - Offline mode support with cached samples
 
 ---
 
