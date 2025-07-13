@@ -1,5 +1,6 @@
 import { TFile, TFolder, Vault, MetadataCache, CachedMetadata } from 'obsidian';
 import { getLogger } from '../logging';
+import { EnhancedGraphNode } from './types';
 
 const logger = getLogger('GraphDataExtractor');
 
@@ -632,5 +633,199 @@ export class GraphDataExtractor {
     this.cachedData = null;
     this.lastCacheTime = 0;
     logger.debug('extraction', 'Graph data cache cleared');
+  }
+
+  /**
+   * Phase 1.2: Extract enhanced metadata for advanced audio mapping
+   */
+  async extractEnhancedNodes(): Promise<EnhancedGraphNode[]> {
+    const files = this.vault.getFiles();
+    const enhancedNodes: EnhancedGraphNode[] = [];
+    
+    logger.info('enhanced-extraction', `Starting enhanced node extraction from ${files.length} files`);
+    const startTime = performance.now();
+
+    for (const file of files) {
+      if (this.shouldExcludeFile(file)) {
+        continue;
+      }
+
+      try {
+        const metadata = this.metadataCache.getFileCache(file);
+        const enhancedNode = this.createEnhancedNodeFromFile(file, metadata);
+        if (enhancedNode) {
+          enhancedNodes.push(enhancedNode);
+        }
+      } catch (error) {
+        logger.warn('enhanced-extraction', `Failed to process file: ${file.path}`, { path: file.path, error });
+      }
+    }
+
+    const extractionTime = performance.now() - startTime;
+    logger.info('enhanced-extraction-complete', `Enhanced extraction completed in ${extractionTime.toFixed(1)}ms`, {
+      totalFiles: files.length,
+      extractedNodes: enhancedNodes.length
+    });
+    
+    return enhancedNodes;
+  }
+
+  /**
+   * Phase 1.2: Create enhanced node with detailed metadata
+   */
+  private createEnhancedNodeFromFile(file: TFile, metadata: CachedMetadata | null): EnhancedGraphNode | null {
+    const stat = file.stat;
+    const baseNode = this.createOptimizedNodeFromFile(file, metadata);
+    if (!baseNode) return null;
+
+    // Extract enhanced metadata
+    const enhancedMetadata = this.extractEnhancedMetadata(file, metadata);
+    
+    // Analyze connection types
+    const connectionDetails = this.analyzeConnectionTypes(file, metadata);
+    
+    // Analyze folder hierarchy
+    const folderAnalysis = this.analyzeFolderHierarchy(file.path);
+
+    const enhancedNode: EnhancedGraphNode = {
+      ...baseNode,
+      name: baseNode.title,
+      connections: [], // Will be populated later
+      connectionCount: 0,
+      wordCount: enhancedMetadata.wordCount || 0,
+      tags: enhancedMetadata.tags,
+      headings: [], // Extract headings separately if needed
+      created: stat.ctime,
+      modified: stat.mtime,
+      metadata: enhancedMetadata,
+      connectionDetails: connectionDetails,
+      folderDepth: folderAnalysis.depth,
+      pathComponents: folderAnalysis.components
+    };
+
+    return enhancedNode;
+  }
+
+  /**
+   * Phase 1.2: Extract comprehensive metadata for enhanced mapping
+   */
+  private extractEnhancedMetadata(file: TFile, metadata: CachedMetadata | null): EnhancedGraphNode['metadata'] {
+    const result: EnhancedGraphNode['metadata'] = {
+      tags: [],
+      frontmatter: {},
+      wordCount: undefined,
+      headingCount: undefined
+    };
+
+    if (metadata) {
+      // Extract tags
+      if (metadata.tags) {
+        result.tags = metadata.tags.map(tag => tag.tag);
+      }
+
+      // Extract frontmatter
+      if (metadata.frontmatter) {
+        result.frontmatter = { ...metadata.frontmatter };
+      }
+
+      // Extract headings count
+      if (metadata.headings) {
+        result.headingCount = metadata.headings.length;
+      }
+    }
+
+    // For markdown files, estimate word count from file size
+    if (file.extension === 'md') {
+      // Rough estimation: average 5 characters per word
+      result.wordCount = Math.round(file.stat.size / 5);
+    }
+
+    return result;
+  }
+
+  /**
+   * Phase 1.2: Analyze different connection types for a file
+   */
+  private analyzeConnectionTypes(file: TFile, metadata: CachedMetadata | null): EnhancedGraphNode['connectionDetails'] {
+    const result: EnhancedGraphNode['connectionDetails'] = {
+      wikilinks: [],
+      markdownLinks: [],
+      embeds: [],
+      tagConnections: [],
+      totalCount: 0
+    };
+
+    if (!metadata) return result;
+
+    // Extract wikilinks
+    if (metadata.links) {
+      result.wikilinks = metadata.links
+        .filter(link => !link.original.startsWith('!'))
+        .map(link => link.link);
+    }
+
+    // Extract embeds
+    if (metadata.embeds) {
+      result.embeds = metadata.embeds.map(embed => embed.link);
+    }
+
+    // Extract markdown links (from frontmatter or content)
+    if (metadata.frontmatter?.links) {
+      result.markdownLinks = Array.isArray(metadata.frontmatter.links) 
+        ? metadata.frontmatter.links 
+        : [];
+    }
+
+    // Tag connections will be populated during link extraction
+    result.tagConnections = [];
+
+    result.totalCount = result.wikilinks.length + 
+                       result.markdownLinks.length + 
+                       result.embeds.length;
+
+    return result;
+  }
+
+  /**
+   * Phase 1.2: Analyze folder hierarchy for a file path
+   */
+  private analyzeFolderHierarchy(filePath: string): { depth: number; components: string[] } {
+    const components = filePath.split('/').filter(comp => comp !== '');
+    
+    // Remove filename to get folder components only
+    if (components.length > 0) {
+      components.pop();
+    }
+
+    return {
+      depth: components.length,
+      components: components
+    };
+  }
+
+  /**
+   * Phase 1.2: Calculate hub centrality for nodes based on connections
+   */
+  calculateHubCentrality(nodes: EnhancedGraphNode[]): void {
+    // Calculate average connections
+    const avgConnections = nodes.reduce((sum, node) => sum + node.connectionCount, 0) / nodes.length;
+    
+    // Calculate standard deviation
+    const variance = nodes.reduce((sum, node) => 
+      sum + Math.pow(node.connectionCount - avgConnections, 2), 0) / nodes.length;
+    const stdDev = Math.sqrt(variance);
+
+    // Assign hub centrality scores
+    for (const node of nodes) {
+      if (node.connectionCount > avgConnections + 2 * stdDev) {
+        node.hubCentrality = 1.0; // Major hub
+      } else if (node.connectionCount > avgConnections + stdDev) {
+        node.hubCentrality = 0.7; // Moderate hub
+      } else if (node.connectionCount > avgConnections) {
+        node.hubCentrality = 0.4; // Minor hub
+      } else {
+        node.hubCentrality = 0.1; // Not a hub
+      }
+    }
   }
 } 
