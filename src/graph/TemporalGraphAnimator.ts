@@ -56,6 +56,13 @@ export class TemporalGraphAnimator {
   private currentTime: number = 0;
   private animationStartTime: number = 0;
   private animationId: number | null = null;
+  
+  // Additional context for comprehensive logging
+  private loggingContext: {
+    pluginSettings?: any;
+    audioSettings?: any;
+    visualSettings?: any;
+  } = {};
   private visibleNodes: Set<string> = new Set();
   
   // Performance optimization: Adaptive frame rate
@@ -528,44 +535,71 @@ export class TemporalGraphAnimator {
    * Start animation playback
    */
   play(): void {
-    logger.info('playback', 'Temporal animator play called', { 
-      timelineEvents: this.timeline.length,
-      duration: this.config.duration,
-      isPlaying: this.isPlaying,
-      isPaused: this.isPaused
-    });
-    
-    // Debug: Log sample of timeline events to understand the issue
-    if (this.timeline.length > 0) {
-      const sampleEvents = this.timeline.slice(0, 10);
-      logger.info('playback', 'Sample timeline events (first 10)', {
-        events: sampleEvents.map(e => ({
-          timestamp: e.timestamp.toFixed(3),
-          nodeId: e.nodeId,
-          type: e.type
-        })),
-        totalEvents: this.timeline.length,
-        dateRange: {
-          start: this.config.startDate.toISOString(),
-          end: this.config.endDate.toISOString()
-        }
-      });
-    }
-    
     if (this.isPlaying && !this.isPaused) {
       logger.debug('playback', 'Animation already playing');
       return;
     }
     
+    // Calculate time span for context
+    const timeSpanMs = this.config.endDate.getTime() - this.config.startDate.getTime();
+    const timeSpanDays = timeSpanMs / (1000 * 60 * 60 * 24);
+    const timeSpanYears = timeSpanDays / 365;
+    const timeSpanFormatted = timeSpanYears >= 1 
+      ? `${timeSpanYears.toFixed(1)} years`
+      : `${Math.round(timeSpanDays)} days`;
+    
+    // Count nodes that will actually appear in the animation
+    const nodesInTimeRange = this.nodes.filter(node => {
+      const nodeTime = node.creationDate.getTime();
+      return nodeTime >= this.config.startDate.getTime() && 
+             nodeTime <= this.config.endDate.getTime();
+    }).length;
+    
+    // Log comprehensive timelapse start information
+    logger.info('timelapse-start', 'Temporal animation started', {
+      // Core timing
+      duration: this.config.duration,
+      
+      // Timeline configuration
+      timeline: {
+        window: this.config.timeWindow || 'all-time',
+        granularity: this.config.granularity || 'year',
+        spreading: this.config.eventSpreadingMode || 'none',
+        customRange: this.config.customRange
+      },
+      
+      // Audio settings (from logging context if available)
+      audio: {
+        density: this.loggingContext.audioSettings?.density || 'unknown',
+        activeInstruments: this.loggingContext.audioSettings?.activeInstruments || 'unknown',
+        masterVolume: this.loggingContext.audioSettings?.masterVolume || 'unknown',
+        simultaneousLimit: this.config.simultaneousEventLimit || 3,
+        effectsEnabled: this.loggingContext.audioSettings?.effectsEnabled || 'unknown'
+      },
+      
+      // Performance settings
+      performance: {
+        adaptiveDetail: this.loggingContext.visualSettings?.adaptiveDetail?.enabled || false,
+        maxNodes: this.loggingContext.visualSettings?.adaptiveDetail?.overrides?.maximumVisibleNodes || -1,
+        temporalClustering: this.loggingContext.visualSettings?.temporalClustering || false
+      },
+      
+      // Context information
+      context: {
+        totalNotes: this.nodes.length,
+        filteredNotes: nodesInTimeRange,
+        timeSpan: timeSpanFormatted,
+        dateRange: {
+          start: this.config.startDate.toISOString(),
+          end: this.config.endDate.toISOString()
+        },
+        eventCount: this.timeline.length
+      }
+    });
+    
     this.isPlaying = true;
     this.isPaused = false;
     this.animationStartTime = performance.now() - (this.currentTime * 1000 / this.config.speed);
-    
-    logger.info('playback', 'Starting temporal animation', {
-      currentTime: this.currentTime,
-      speed: this.config.speed,
-      duration: this.config.duration
-    });
     
     this.animate();
   }
@@ -593,6 +627,9 @@ export class TemporalGraphAnimator {
    * Stop animation and reset to beginning
    */
   stop(): void {
+    const wasPlaying = this.isPlaying;
+    const currentProgress = this.currentTime / this.config.duration;
+    
     this.isPlaying = false;
     this.isPaused = false;
     this.currentTime = 0;
@@ -602,7 +639,16 @@ export class TemporalGraphAnimator {
       this.animationId = null;
     }
     
-    logger.info('playback', 'Animation stopped and reset');
+    // Log completion if animation was actually playing
+    if (wasPlaying && currentProgress > 0 && currentProgress < 1) {
+      logger.info('timelapse-complete', 'Animation stopped', {
+        duration: `${this.config.duration}s`,
+        nodesAnimated: this.visibleNodes.size,
+        audioEventsPlayed: this.visibleNodes.size, // Approximation
+        completionType: 'interrupted',
+        stoppedAt: `${Math.round(currentProgress * 100)}%`
+      });
+    }
     
     // Reset to initial state (no nodes visible)
     this.updateVisibility();
@@ -612,6 +658,7 @@ export class TemporalGraphAnimator {
    * Seek to specific time in animation
    */
   seekTo(time: number): void {
+    const previousTime = this.currentTime;
     this.currentTime = Math.max(0, Math.min(time, this.config.duration));
     this.updateVisibility();
     
@@ -620,7 +667,12 @@ export class TemporalGraphAnimator {
       this.animationStartTime = performance.now() - (this.currentTime * 1000 / this.config.speed);
     }
     
-    logger.debug('playback', 'Seeked to time', { time: this.currentTime });
+    // Log user interaction for timelapse analytics
+    logger.info('timelapse-interaction', 'Timeline scrubbed', {
+      from: `${Math.round((previousTime / this.config.duration) * 100)}%`,
+      to: `${Math.round((this.currentTime / this.config.duration) * 100)}%`,
+      direction: time > previousTime ? 'forward' : 'backward'
+    });
   }
 
   /**
@@ -628,6 +680,7 @@ export class TemporalGraphAnimator {
    */
   setSpeed(speed: number): void {
     const wasPlaying = this.isPlaying && !this.isPaused;
+    const previousSpeed = this.config.speed;
     
     if (wasPlaying) {
       // Update animation start time to maintain current position
@@ -635,7 +688,13 @@ export class TemporalGraphAnimator {
     }
     
     this.config.speed = speed;
-    logger.debug('playback', 'Speed changed', { speed });
+    
+    // Log user interaction for timelapse analytics
+    logger.info('timelapse-interaction', 'Speed changed', {
+      from: `${previousSpeed}x`,
+      to: `${speed}x`,
+      currentProgress: `${Math.round((this.currentTime / this.config.duration) * 100)}%`
+    });
   }
 
   /**
@@ -712,9 +771,16 @@ export class TemporalGraphAnimator {
       } else {
         // Animation complete, no loop
         this.isPlaying = false;
-        this.onAnimationEnd?.();
         
-        logger.info('playback', 'Animation completed');
+        // Log animation completion summary
+        logger.info('timelapse-complete', 'Animation finished', {
+          duration: `${this.config.duration}s`,
+          nodesAnimated: this.visibleNodes.size,
+          audioEventsPlayed: this.visibleNodes.size, // Actual nodes that played audio
+          completionType: 'natural'
+        });
+        
+        this.onAnimationEnd?.();
         return;
       }
     }
@@ -841,6 +907,22 @@ export class TemporalGraphAnimator {
       eventCount: this.timeline.length,
       duration: this.config.duration
     };
+  }
+
+  /**
+   * Set additional context for comprehensive logging
+   */
+  setLoggingContext(context: {
+    pluginSettings?: any;
+    audioSettings?: any;
+    visualSettings?: any;
+  }): void {
+    this.loggingContext = { ...this.loggingContext, ...context };
+    logger.debug('context', 'Logging context updated', { 
+      hasPluginSettings: !!context.pluginSettings,
+      hasAudioSettings: !!context.audioSettings,
+      hasVisualSettings: !!context.visualSettings
+    });
   }
 
   /**
