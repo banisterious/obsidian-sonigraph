@@ -12984,6 +12984,8 @@ var init_TemporalGraphAnimator = __esm({
         this.currentTime = 0;
         this.animationStartTime = 0;
         this.animationId = null;
+        // Additional context for comprehensive logging
+        this.loggingContext = {};
         this.visibleNodes = /* @__PURE__ */ new Set();
         // Performance optimization: Adaptive frame rate
         this.lastAnimationTime = 0;
@@ -13353,39 +13355,58 @@ var init_TemporalGraphAnimator = __esm({
        * Start animation playback
        */
       play() {
-        logger11.info("playback", "Temporal animator play called", {
-          timelineEvents: this.timeline.length,
-          duration: this.config.duration,
-          isPlaying: this.isPlaying,
-          isPaused: this.isPaused
-        });
-        if (this.timeline.length > 0) {
-          const sampleEvents = this.timeline.slice(0, 10);
-          logger11.info("playback", "Sample timeline events (first 10)", {
-            events: sampleEvents.map((e) => ({
-              timestamp: e.timestamp.toFixed(3),
-              nodeId: e.nodeId,
-              type: e.type
-            })),
-            totalEvents: this.timeline.length,
-            dateRange: {
-              start: this.config.startDate.toISOString(),
-              end: this.config.endDate.toISOString()
-            }
-          });
-        }
+        var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
         if (this.isPlaying && !this.isPaused) {
           logger11.debug("playback", "Animation already playing");
           return;
         }
+        const timeSpanMs = this.config.endDate.getTime() - this.config.startDate.getTime();
+        const timeSpanDays = timeSpanMs / (1e3 * 60 * 60 * 24);
+        const timeSpanYears = timeSpanDays / 365;
+        const timeSpanFormatted = timeSpanYears >= 1 ? `${timeSpanYears.toFixed(1)} years` : `${Math.round(timeSpanDays)} days`;
+        const nodesInTimeRange = this.nodes.filter((node) => {
+          const nodeTime = node.creationDate.getTime();
+          return nodeTime >= this.config.startDate.getTime() && nodeTime <= this.config.endDate.getTime();
+        }).length;
+        logger11.info("timelapse-start", "Temporal animation started", {
+          // Core timing
+          duration: this.config.duration,
+          // Timeline configuration
+          timeline: {
+            window: this.config.timeWindow || "all-time",
+            granularity: this.config.granularity || "year",
+            spreading: this.config.eventSpreadingMode || "none",
+            customRange: this.config.customRange
+          },
+          // Audio settings (from logging context if available)
+          audio: {
+            density: ((_a = this.loggingContext.audioSettings) == null ? void 0 : _a.density) || "unknown",
+            activeInstruments: ((_b = this.loggingContext.audioSettings) == null ? void 0 : _b.activeInstruments) || "unknown",
+            masterVolume: ((_c = this.loggingContext.audioSettings) == null ? void 0 : _c.masterVolume) || "unknown",
+            simultaneousLimit: this.config.simultaneousEventLimit || 3,
+            effectsEnabled: ((_d = this.loggingContext.audioSettings) == null ? void 0 : _d.effectsEnabled) || "unknown"
+          },
+          // Performance settings
+          performance: {
+            adaptiveDetail: ((_f = (_e = this.loggingContext.visualSettings) == null ? void 0 : _e.adaptiveDetail) == null ? void 0 : _f.enabled) || false,
+            maxNodes: ((_i = (_h = (_g = this.loggingContext.visualSettings) == null ? void 0 : _g.adaptiveDetail) == null ? void 0 : _h.overrides) == null ? void 0 : _i.maximumVisibleNodes) || -1,
+            temporalClustering: ((_j = this.loggingContext.visualSettings) == null ? void 0 : _j.temporalClustering) || false
+          },
+          // Context information
+          context: {
+            totalNotes: this.nodes.length,
+            filteredNotes: nodesInTimeRange,
+            timeSpan: timeSpanFormatted,
+            dateRange: {
+              start: this.config.startDate.toISOString(),
+              end: this.config.endDate.toISOString()
+            },
+            eventCount: this.timeline.length
+          }
+        });
         this.isPlaying = true;
         this.isPaused = false;
         this.animationStartTime = performance.now() - this.currentTime * 1e3 / this.config.speed;
-        logger11.info("playback", "Starting temporal animation", {
-          currentTime: this.currentTime,
-          speed: this.config.speed,
-          duration: this.config.duration
-        });
         this.animate();
       }
       /**
@@ -13407,6 +13428,8 @@ var init_TemporalGraphAnimator = __esm({
        * Stop animation and reset to beginning
        */
       stop() {
+        const wasPlaying = this.isPlaying;
+        const currentProgress = this.currentTime / this.config.duration;
         this.isPlaying = false;
         this.isPaused = false;
         this.currentTime = 0;
@@ -13414,30 +13437,49 @@ var init_TemporalGraphAnimator = __esm({
           cancelAnimationFrame(this.animationId);
           this.animationId = null;
         }
-        logger11.info("playback", "Animation stopped and reset");
+        if (wasPlaying && currentProgress > 0 && currentProgress < 1) {
+          logger11.info("timelapse-complete", "Animation stopped", {
+            duration: `${this.config.duration}s`,
+            nodesAnimated: this.visibleNodes.size,
+            audioEventsPlayed: this.visibleNodes.size,
+            // Approximation
+            completionType: "interrupted",
+            stoppedAt: `${Math.round(currentProgress * 100)}%`
+          });
+        }
         this.updateVisibility();
       }
       /**
        * Seek to specific time in animation
        */
       seekTo(time) {
+        const previousTime = this.currentTime;
         this.currentTime = Math.max(0, Math.min(time, this.config.duration));
         this.updateVisibility();
         if (this.isPlaying && !this.isPaused) {
           this.animationStartTime = performance.now() - this.currentTime * 1e3 / this.config.speed;
         }
-        logger11.debug("playback", "Seeked to time", { time: this.currentTime });
+        logger11.info("timelapse-interaction", "Timeline scrubbed", {
+          from: `${Math.round(previousTime / this.config.duration * 100)}%`,
+          to: `${Math.round(this.currentTime / this.config.duration * 100)}%`,
+          direction: time > previousTime ? "forward" : "backward"
+        });
       }
       /**
        * Set animation speed
        */
       setSpeed(speed) {
         const wasPlaying = this.isPlaying && !this.isPaused;
+        const previousSpeed = this.config.speed;
         if (wasPlaying) {
           this.animationStartTime = performance.now() - this.currentTime * 1e3 / speed;
         }
         this.config.speed = speed;
-        logger11.debug("playback", "Speed changed", { speed });
+        logger11.info("timelapse-interaction", "Speed changed", {
+          from: `${previousSpeed}x`,
+          to: `${speed}x`,
+          currentProgress: `${Math.round(this.currentTime / this.config.duration * 100)}%`
+        });
       }
       /**
        * Enable or disable animation looping
@@ -13495,8 +13537,14 @@ var init_TemporalGraphAnimator = __esm({
             return;
           } else {
             this.isPlaying = false;
+            logger11.info("timelapse-complete", "Animation finished", {
+              duration: `${this.config.duration}s`,
+              nodesAnimated: this.visibleNodes.size,
+              audioEventsPlayed: this.visibleNodes.size,
+              // Actual nodes that played audio
+              completionType: "natural"
+            });
             (_b = this.onAnimationEnd) == null ? void 0 : _b.call(this);
-            logger11.info("playback", "Animation completed");
             return;
           }
         }
@@ -13590,6 +13638,17 @@ var init_TemporalGraphAnimator = __esm({
           eventCount: this.timeline.length,
           duration: this.config.duration
         };
+      }
+      /**
+       * Set additional context for comprehensive logging
+       */
+      setLoggingContext(context2) {
+        this.loggingContext = { ...this.loggingContext, ...context2 };
+        logger11.debug("context", "Logging context updated", {
+          hasPluginSettings: !!context2.pluginSettings,
+          hasAudioSettings: !!context2.audioSettings,
+          hasVisualSettings: !!context2.visualSettings
+        });
       }
       /**
        * Update configuration and rebuild timeline if necessary
@@ -14292,6 +14351,9 @@ var init_SonicGraphModal = __esm({
         this.resizeObserver = null;
         this.detectedSpacing = "balanced";
         this.isSettingsVisible = false;
+        // Audio density tracking for even distribution
+        this.nodeAppearanceCounter = 0;
+        this.lastAudioNodeIndex = -1;
         logger14.debug("ui", "SonicGraphModal constructor started");
         this.plugin = plugin;
         logger14.debug("ui", "Plugin assigned");
@@ -14698,6 +14760,8 @@ var init_SonicGraphModal = __esm({
             this.isAnimating = false;
             return;
           }
+          this.nodeAppearanceCounter = 0;
+          this.lastAudioNodeIndex = -1;
           this.playButton.setButtonText("Pause Animation");
           this.timelineContainer.classList.remove("timeline-hidden");
           this.timelineContainer.classList.add("timeline-visible");
@@ -16296,6 +16360,7 @@ var init_SonicGraphModal = __esm({
               ...spacingConfig
             }
           );
+          this.setAnimatorLoggingContext();
           this.temporalAnimator.onVisibilityChanged((visibleNodeIds) => {
             if (this.graphRenderer) {
               this.graphRenderer.updateVisibleNodes(visibleNodeIds);
@@ -16558,30 +16623,37 @@ var init_SonicGraphModal = __esm({
        */
       createMusicalMappingForNode(node) {
         const settings = this.getSonicGraphSettings();
-        const densityProbability = settings.audio.density / 100;
-        const randomValue = Math.random();
-        logger14.debug("audio-density", "Audio density filtering", {
+        this.nodeAppearanceCounter++;
+        const density = settings.audio.density;
+        const interval2 = Math.max(1, Math.round(100 / density));
+        const nodesSinceLastAudio = this.nodeAppearanceCounter - this.lastAudioNodeIndex - 1;
+        const shouldPlay = nodesSinceLastAudio >= interval2 || this.lastAudioNodeIndex === -1;
+        logger14.debug("audio-density", "Audio density filtering (even spacing)", {
           nodeId: node.id,
-          densitySetting: settings.audio.density,
-          densityProbability,
-          randomValue,
-          shouldPlay: randomValue <= densityProbability
+          densitySetting: density,
+          interval: interval2,
+          nodeAppearanceCounter: this.nodeAppearanceCounter,
+          lastAudioNodeIndex: this.lastAudioNodeIndex,
+          nodesSinceLastAudio,
+          shouldPlay
         });
-        if (randomValue > densityProbability) {
+        if (!shouldPlay) {
           logger14.debug("audio-density", "Note skipped due to audio density", {
             nodeId: node.id,
-            randomValue,
-            densityProbability
+            nodesSinceLastAudio,
+            requiredInterval: interval2
           });
           return null;
         }
+        this.lastAudioNodeIndex = this.nodeAppearanceCounter;
         const enabledInstruments = this.getEnabledInstruments();
         if (enabledInstruments.length === 0) {
           logger14.warn("audio", "No instruments enabled for temporal animation");
           return this.createFallbackMapping(node, "piano");
         }
         const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
-        const instrumentConfig = this.plugin.settings.instruments[selectedInstrument];
+        const instruments = this.plugin.settings.instruments;
+        const instrumentConfig = instruments[selectedInstrument];
         logger14.debug("instrument-selection", "Instrument selected for node", {
           nodeId: node.id,
           nodeType: node.type,
@@ -16946,11 +17018,15 @@ var init_SonicGraphModal = __esm({
         }
         const settings = this.getSonicGraphSettings();
         this.temporalAnimator.updateTimelineSettings(settings.timeline);
-        logger14.info("timeline", "Time window change applied to temporal animator", {
-          timeWindow,
-          granularity: settings.timeline.granularity,
-          eventSpreadingMode: settings.timeline.eventSpreadingMode
-        });
+        this.setAnimatorLoggingContext();
+        if (this.isAnimating) {
+          logger14.info("timelapse-interaction", "Settings modified during playback", {
+            setting: "timeWindow",
+            from: "previous",
+            to: timeWindow,
+            reason: "User adjusted time window filter"
+          });
+        }
       }
       /**
        * Apply timeline granularity changes to temporal animator
@@ -16976,14 +17052,61 @@ var init_SonicGraphModal = __esm({
           logger14.debug("timeline", "No temporal animator available for event spreading change", { mode });
           return;
         }
+        const previousMode = this.getSonicGraphSettings().timeline.eventSpreadingMode;
         const settings = this.getSonicGraphSettings();
         this.temporalAnimator.updateTimelineSettings(settings.timeline);
-        logger14.info("timeline", "Event spreading mode change applied to temporal animator", {
-          mode,
-          maxEventSpacing: settings.timeline.maxEventSpacing,
-          simultaneousEventLimit: settings.timeline.simultaneousEventLimit,
-          eventBatchSize: settings.timeline.eventBatchSize
+        this.setAnimatorLoggingContext();
+        if (this.isAnimating) {
+          logger14.info("timelapse-interaction", "Settings modified during playback", {
+            setting: "eventSpreadingMode",
+            from: previousMode,
+            to: mode,
+            reason: "User adjusted for better audio clarity"
+          });
+        }
+      }
+      /**
+       * Gather and set comprehensive logging context for the temporal animator
+       */
+      setAnimatorLoggingContext() {
+        if (!this.temporalAnimator)
+          return;
+        const sonicGraphSettings = this.getSonicGraphSettings();
+        const audioSettings = {
+          density: sonicGraphSettings.audio.density,
+          effectsEnabled: sonicGraphSettings.audio.enableEffects,
+          masterVolume: this.plugin.settings.volume || 0.3,
+          activeInstruments: this.getActiveInstruments()
+        };
+        const visualSettings = {
+          adaptiveDetail: sonicGraphSettings.adaptiveDetail,
+          temporalClustering: sonicGraphSettings.layout.temporalClustering,
+          showLabels: sonicGraphSettings.visual.showLabels,
+          animationStyle: sonicGraphSettings.visual.animationStyle
+        };
+        this.temporalAnimator.setLoggingContext({
+          pluginSettings: {
+            animationDuration: this.plugin.settings.sonicGraphAnimationDuration,
+            excludeFolders: this.plugin.settings.sonicGraphExcludeFolders,
+            excludeFiles: this.plugin.settings.sonicGraphExcludeFiles
+          },
+          audioSettings,
+          visualSettings
         });
+      }
+      /**
+       * Get list of active instruments from plugin settings
+       */
+      getActiveInstruments() {
+        try {
+          const instruments = this.plugin.settings.instruments;
+          if (instruments) {
+            return Object.entries(instruments).filter(([_, config]) => config.enabled).map(([name, _]) => name);
+          }
+        } catch (error) {
+          logger14.debug("ui", "Could not get active instruments", error);
+        }
+        return ["unknown"];
       }
       /**
        * Get list of currently enabled instruments from settings
