@@ -70,8 +70,8 @@ export class PercussionEngine {
 	}
 
 	private async initializeTimpani(): Promise<void> {
-		// NOTE: Timpani samples don't exist on nbrosowsky CDN - using synthesis fallback
-		logger.warn('timpani', 'Timpani samples not available on CDN, using synthesis fallback');
+		// NOTE: Timpani is a synth-only instrument (no samples in nbrosowsky collection)
+		logger.debug('timpani', 'Initializing timpani with synthesis');
 		
 		// Create synthetic timpani using FMSynth for deep, resonant tones
 		const timpaniSizes = ['small', 'medium', 'large'];
@@ -156,8 +156,8 @@ export class PercussionEngine {
 	}
 
 	private async initializeVibraphone(): Promise<void> {
-		// NOTE: Vibraphone samples don't exist on nbrosowsky CDN - using synthesis fallback
-		logger.warn('vibraphone', 'Vibraphone samples not available on CDN, using synthesis fallback');
+		// NOTE: Vibraphone is a synth-only instrument (no samples in nbrosowsky collection)
+		logger.debug('vibraphone', 'Initializing vibraphone with synthesis');
 		
 		// Create synthetic vibraphone using metallic synthesis
 		const synth = new PolySynth({
@@ -205,8 +205,8 @@ export class PercussionEngine {
 	}
 
 	private async initializeGongs(): Promise<void> {
-		// NOTE: Gong samples don't exist on nbrosowsky CDN - using synthesis fallback  
-		logger.warn('gongs', 'Gong samples not available on CDN, using synthesis fallback');
+		// NOTE: Gongs is a synth-only instrument (no samples in nbrosowsky collection)
+		logger.debug('gongs', 'Initializing gongs with synthesis');
 		
 		// Create synthetic gongs using complex metallic synthesis
 		const synth = new PolySynth({
