@@ -8,6 +8,7 @@
 import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
+import { VaultState, ActivityMetrics } from '../audio/layers/types';
 
 const logger = getLogger('TemporalGraphAnimator');
 
@@ -75,6 +76,10 @@ export class TemporalGraphAnimator {
   private onTimeUpdate?: (currentTime: number, progress: number) => void;
   private onAnimationEnd?: () => void;
   private onNodeAppear?: (node: GraphNode) => void;
+  
+  // Phase 3: Continuous layer integration callbacks
+  private onVaultStateChange?: (vaultState: VaultState) => void;
+  private onActivityChange?: (metrics: ActivityMetrics) => void;
 
   constructor(nodes: GraphNode[], links: GraphLink[], config?: Partial<AnimationConfig>) {
     this.nodes = nodes;
@@ -841,6 +846,17 @@ export class TemporalGraphAnimator {
     // Update time progress
     const progress = this.config.duration > 0 ? this.currentTime / this.config.duration : 0;
     this.onTimeUpdate?.(this.currentTime, progress);
+    
+    // Phase 3: Update continuous layers with vault state and activity metrics
+    if (this.onVaultStateChange) {
+      const vaultState = this.generateVaultState();
+      this.onVaultStateChange(vaultState);
+    }
+    
+    if (this.onActivityChange) {
+      const activityMetrics = this.generateActivityMetrics();
+      this.onActivityChange(activityMetrics);
+    }
   }
 
   /**
@@ -994,6 +1010,79 @@ export class TemporalGraphAnimator {
   }
 
   /**
+   * Phase 3: Set vault state change callback for continuous layers
+   */
+  setVaultStateCallback(callback: (vaultState: VaultState) => void): void {
+    this.onVaultStateChange = callback;
+    logger.debug('callback', 'Vault state callback registered');
+  }
+
+  /**
+   * Phase 3: Set activity change callback for continuous layers
+   */
+  setActivityCallback(callback: (metrics: ActivityMetrics) => void): void {
+    this.onActivityChange = callback;
+    logger.debug('callback', 'Activity callback registered');
+  }
+
+  /**
+   * Phase 3: Generate vault state for continuous layers
+   */
+  private generateVaultState(): VaultState {
+    return {
+      totalNodes: this.nodes.length,
+      maxNodes: Math.max(this.nodes.length, 1000), // Reasonable maximum
+      currentAnimationProgress: this.currentTime / (this.config.endDate.getTime() - this.config.startDate.getTime()),
+      vaultActivityLevel: this.calculateActivityLevel(),
+      visibleNodes: this.visibleNodes,
+      clusters: [] // Would be populated by cluster analysis
+    };
+  }
+
+  /**
+   * Phase 3: Calculate current activity level
+   */
+  private calculateActivityLevel(): number {
+    // Count events in the last 5 seconds of animation time
+    const lookbackTime = 5000; // 5 seconds in ms
+    const recentEvents = this.timeline.filter(event => 
+      event.timestamp >= this.currentTime - lookbackTime && 
+      event.timestamp <= this.currentTime
+    );
+    
+    return recentEvents.length;
+  }
+
+  /**
+   * Phase 3: Generate activity metrics
+   */
+  private generateActivityMetrics(): ActivityMetrics {
+    const recentEvents = this.timeline.filter(event => 
+      event.timestamp >= this.currentTime - 5000 && 
+      event.timestamp <= this.currentTime
+    );
+    
+    const eventRate = recentEvents.length / 5; // Events per second
+    const intensitySpikes = recentEvents.length > 5;
+    
+    // Calculate average spacing between events
+    let averageSpacing = 0;
+    if (recentEvents.length > 1) {
+      const spacings = recentEvents.slice(1).map((event, i) => 
+        event.timestamp - recentEvents[i].timestamp
+      );
+      averageSpacing = spacings.reduce((sum, spacing) => sum + spacing, 0) / spacings.length;
+    }
+    
+    return {
+      recentEventCount: recentEvents.length,
+      eventRate,
+      intensitySpikes,
+      averageEventSpacing: averageSpacing / 1000 // Convert to seconds
+    };
+  }
+
+  /**
    * Cleanup resources
    */
   destroy(): void {
@@ -1003,6 +1092,8 @@ export class TemporalGraphAnimator {
     this.onTimeUpdate = undefined;
     this.onAnimationEnd = undefined;
     this.onNodeAppear = undefined;
+    this.onVaultStateChange = undefined;
+    this.onActivityChange = undefined;
     
     logger.debug('cleanup', 'TemporalGraphAnimator destroyed');
   }
