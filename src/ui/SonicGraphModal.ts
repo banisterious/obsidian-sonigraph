@@ -17,6 +17,7 @@ import { getLogger, LoggerFactory } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
 import * as d3 from 'd3';
 import type SonigraphPlugin from '../main';
+import { ContinuousLayerManager } from '../audio/layers/ContinuousLayerManager';
 
 const logger = getLogger('SonicGraphModal');
 
@@ -27,6 +28,7 @@ export class SonicGraphModal extends Modal {
     private temporalAnimator: TemporalGraphAnimator | null = null;
     private musicalMapper: MusicalMapper | null = null;
     private adaptiveDetailManager: AdaptiveDetailManager | null = null;
+    private continuousLayerManager: ContinuousLayerManager | null = null;
     private isAnimating: boolean = false;
     private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
@@ -141,6 +143,40 @@ export class SonicGraphModal extends Modal {
         }
     }
 
+    /**
+     * Initialize continuous layers for Phase 3
+     */
+    private async initializeContinuousLayers(): Promise<void> {
+        try {
+            logger.info('continuous-layers', 'Initializing continuous layers');
+            
+            if (!this.continuousLayerManager) {
+                this.continuousLayerManager = new ContinuousLayerManager(
+                    this.plugin.settings
+                );
+            }
+            
+            // Initialize and start the continuous layers
+            await this.continuousLayerManager.initialize();
+            await this.continuousLayerManager.start();
+            
+            // Update vault state with initial values
+            const totalNodes = this.app.vault.getMarkdownFiles().length;
+            this.continuousLayerManager.updateVaultState({
+                totalNodes,
+                visibleNodes: new Set<string>(),
+                maxNodes: totalNodes,
+                currentAnimationProgress: 0,
+                vaultActivityLevel: 0
+            });
+            
+            logger.info('continuous-layers', 'Continuous layers initialized successfully');
+        } catch (error) {
+            logger.error('continuous-layers', 'Failed to initialize continuous layers', error);
+            new Notice('Failed to initialize continuous audio layers');
+        }
+    }
+
     onClose() {
         logger.debug('ui', 'Closing Sonic Graph modal');
         
@@ -153,6 +189,12 @@ export class SonicGraphModal extends Modal {
             this.settingsUpdateTimeout = null;
         }
         this.pendingSettingsUpdates.clear();
+        
+        // Cleanup continuous layers
+        if (this.continuousLayerManager) {
+            this.continuousLayerManager.stop();
+            this.continuousLayerManager = null;
+        }
         
         // Cleanup temporal animator
         if (this.temporalAnimator) {
@@ -641,6 +683,11 @@ export class SonicGraphModal extends Modal {
                 currentIndicator.style.display = 'block';
             }
             
+            // Initialize and start continuous layers if enabled
+            if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
+                await this.initializeContinuousLayers();
+            }
+            
             // Start temporal animation
             logger.info('ui', 'About to call temporalAnimator.play()', {
                 hasTemporalAnimator: !!this.temporalAnimator,
@@ -664,6 +711,11 @@ export class SonicGraphModal extends Modal {
             
             if (this.temporalAnimator) {
                 this.temporalAnimator.pause();
+            }
+            
+            // Stop continuous layers if running
+            if (this.continuousLayerManager) {
+                this.continuousLayerManager.stop();
             }
             
             logger.info('ui', 'Pausing Sonic Graph animation');
@@ -1859,25 +1911,240 @@ export class SonicGraphModal extends Modal {
             });
         }
 
-        // Continuous Layers Toggle (Coming in Phase 3)
-        const continuousSetting = new Setting(container)
-            .setName('Enable continuous layers (Phase 3)')
-            .setDesc('Ambient background layers that evolve with your vault')
-            .addToggle(toggle => toggle
-                .setValue(false)
-                .setDisabled(true)
-            );
-        
-        // Add disabled styling to the entire setting
-        continuousSetting.settingEl.addClass('sonic-graph-disabled');
+        // Phase 3: Continuous Layers Settings
+        this.createContinuousLayersSettings(container);
+    }
 
-        // Musical Theory Settings (Coming in Phase 6)
-        const theorySetting = new Setting(container)
-            .setName('Musical Theory (Phase 6)')
-            .setDesc('Scale, key, and harmonic constraints coming soon');
+    /**
+     * Phase 3: Create continuous layers settings
+     */
+    private createContinuousLayersSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
         
-        // Add disabled styling to indicate it's not yet available
-        theorySetting.settingEl.addClass('sonic-graph-disabled');
+        // Continuous Layers Header
+        const layersHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        layersHeader.createEl('label', { 
+            text: 'Continuous Audio Layers (Phase 3)', 
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header' 
+        });
+        layersHeader.createEl('div', { 
+            text: 'Ambient background layers that evolve with your vault structure and activity', 
+            cls: 'sonic-graph-setting-description' 
+        });
+
+        // Enable Continuous Layers Toggle
+        new Setting(container)
+            .setName('Enable continuous layers')
+            .setDesc('Add ambient background audio that responds to vault size, activity, and animation progress')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.enabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement) {
+                        this.plugin.settings.audioEnhancement = this.getDefaultAudioEnhancementSettings();
+                    }
+                    
+                    this.plugin.settings.audioEnhancement.continuousLayers.enabled = value;
+                    await this.plugin.saveSettings();
+                    
+                    logger.info('continuous-layers', 'Continuous layers toggled', { enabled: value });
+                    
+                    // Refresh the settings panel to show/hide dependent controls
+                    this.refreshContinuousLayerSettings();
+                })
+            );
+
+        // Only show additional controls if continuous layers are enabled
+        if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
+            this.createContinuousLayerControls(container);
+        }
+    }
+
+    /**
+     * Phase 3: Create continuous layer control settings
+     */
+    private createContinuousLayerControls(container: HTMLElement): void {
+        // Musical Genre Selection
+        new Setting(container)
+            .setName('Musical genre')
+            .setDesc('Choose the ambient genre for continuous layers')
+            .addDropdown(dropdown => dropdown
+                .addOption('ambient', 'Ambient - Gentle evolving textures')
+                .addOption('drone', 'Drone - Sustained atmospheric tones')
+                .addOption('orchestral', 'Orchestral - Classical instruments in sustained arrangements')
+                .addOption('electronic', 'Electronic - Synthesized pads and evolving textures')
+                .addOption('minimal', 'Minimal - Sparse, contemplative elements')
+                .addOption('oceanic', 'Oceanic - Whale songs and ocean sounds')
+                .addOption('sci-fi', 'Sci-Fi - Futuristic atmospheric sounds')
+                .addOption('experimental', 'Experimental - Unconventional sound design')
+                .addOption('industrial', 'Industrial - Mechanical drones and factory ambience')
+                .addOption('urban', 'Urban - City soundscapes and human activity')
+                .addOption('nature', 'Nature - Forest ambience, rain, wind')
+                .addOption('mechanical', 'Mechanical - Machine hums and motor drones')
+                .addOption('organic', 'Organic - Acoustic instruments with natural processing')
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient')
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                        return;
+                    }
+                    this.plugin.settings.audioEnhancement.continuousLayers.genre = value;
+                    await this.plugin.saveSettings();
+                    logger.info('continuous-layers', 'Genre changed', { genre: value });
+                })
+            );
+
+        // Layer Intensity Slider
+        new Setting(container)
+            .setName('Layer intensity')
+            .setDesc('Control the volume and prominence of continuous layers')
+            .addSlider(slider => slider
+                .setLimits(0, 1, 0.1)
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.intensity || 0.5)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                        return;
+                    }
+                    this.plugin.settings.audioEnhancement.continuousLayers.intensity = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Adaptive Intensity Toggle
+        new Setting(container)
+            .setName('Adaptive intensity')
+            .setDesc('Layer intensity responds to vault size and activity level')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.adaptiveIntensity || true)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                        return;
+                    }
+                    this.plugin.settings.audioEnhancement.continuousLayers.adaptiveIntensity = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Evolution Rate Slider
+        new Setting(container)
+            .setName('Evolution rate')
+            .setDesc('How quickly the ambient layers change and evolve')
+            .addSlider(slider => slider
+                .setLimits(0.1, 1.0, 0.1)
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.evolutionRate || 0.3)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                        return;
+                    }
+                    this.plugin.settings.audioEnhancement.continuousLayers.evolutionRate = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Rhythmic Layer Toggle
+        new Setting(container)
+            .setName('Enable rhythmic layer')
+            .setDesc('Add subtle percussion that responds to vault activity')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicEnabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                        return;
+                    }
+                    this.plugin.settings.audioEnhancement.continuousLayers.rhythmicEnabled = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Harmonic Layer Toggle
+        new Setting(container)
+            .setName('Enable harmonic layer')
+            .setDesc('Add evolving chord progressions based on vault structure')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicEnabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                        return;
+                    }
+                    this.plugin.settings.audioEnhancement.continuousLayers.harmonicEnabled = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Musical Scale Selection (for harmonic layer)
+        if (this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicEnabled) {
+            new Setting(container)
+                .setName('Musical scale')
+                .setDesc('Scale for harmonic progressions')
+                .addDropdown(dropdown => dropdown
+                    .addOption('major', 'Major - Bright and uplifting')
+                    .addOption('minor', 'Minor - Contemplative and introspective') 
+                    .addOption('dorian', 'Dorian - Medieval and mysterious')
+                    .addOption('pentatonic_major', 'Pentatonic Major - Simple and peaceful')
+                    .addOption('pentatonic_minor', 'Pentatonic Minor - Eastern and meditative')
+                    .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.scale || 'major')
+                    .onChange(async (value) => {
+                        if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                            return;
+                        }
+                        this.plugin.settings.audioEnhancement.continuousLayers.scale = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+
+            new Setting(container)
+                .setName('Musical key')
+                .setDesc('Root key for harmonic progressions')
+                .addDropdown(dropdown => dropdown
+                    .addOption('C', 'C')
+                    .addOption('C#', 'C#')
+                    .addOption('D', 'D')
+                    .addOption('D#', 'D#')
+                    .addOption('E', 'E')
+                    .addOption('F', 'F')
+                    .addOption('F#', 'F#')
+                    .addOption('G', 'G')
+                    .addOption('G#', 'G#')
+                    .addOption('A', 'A')
+                    .addOption('A#', 'A#')
+                    .addOption('B', 'B')
+                    .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.key || 'C')
+                    .onChange(async (value) => {
+                        if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
+                            return;
+                        }
+                        this.plugin.settings.audioEnhancement.continuousLayers.key = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+
+        // Performance note
+        const performanceNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        performanceNote.createEl('div', { 
+            text: 'Continuous layers target <5% additional CPU usage and work alongside existing node-based audio', 
+            cls: 'sonic-graph-setting-description sonic-graph-info' 
+        });
+    }
+
+    /**
+     * Phase 3: Refresh continuous layer settings when enabled/disabled
+     */
+    private refreshContinuousLayerSettings(): void {
+        // Find the settings panel and recreate the continuous layers section
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find the audio section and recreate it
+        const audioSection = settingsContent.querySelector('.sonic-graph-settings-section:has(.sonic-graph-settings-section-title:contains("AUDIO"))');
+        if (audioSection) {
+            // Clear and recreate the audio section
+            audioSection.empty();
+            this.createAudioSettings(audioSection as HTMLElement);
+        }
     }
 
     /**
@@ -1897,9 +2164,14 @@ export class SonicGraphModal extends Modal {
             },
             continuousLayers: {
                 enabled: false,
-                ambientDrone: {},
-                rhythmicLayer: {},
-                harmonicPad: {}
+                genre: 'ambient',
+                intensity: 0.5,
+                evolutionRate: 0.3,
+                adaptiveIntensity: true,
+                rhythmicEnabled: false,
+                harmonicEnabled: false,
+                scale: 'major',
+                key: 'C'
             },
             musicalTheory: {
                 scale: 'major',

@@ -593,7 +593,23 @@ export class MusicalMapper {
 		};
 		listenerStats?: any;
 	} {
-		const status = {
+		const status: {
+			enabled: boolean;
+			components: {
+				metadataMapper: boolean;
+				mappingRules: boolean;
+				vaultOptimizer: boolean;
+				instrumentDistributor: boolean;
+				metadataListener: boolean;
+			};
+			lastAnalysis: {
+				available: boolean;
+				filesAnalyzed: number;
+				analysisTime: string;
+				uniqueInstruments: number;
+			};
+			listenerStats?: any;
+		} = {
 			enabled: this.isPhase2Enabled,
 			components: {
 				metadataMapper: this.metadataMapper !== null,
