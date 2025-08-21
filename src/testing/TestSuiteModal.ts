@@ -25,6 +25,10 @@ export interface TestSuiteConfig {
         integration: boolean;
         issueValidation: boolean;
         audioCrackling: boolean;
+        continuousLayers: boolean;
+        genreEngines: boolean;
+        rhythmicLayer: boolean;
+        harmonicLayer: boolean;
     };
     exportFormat: 'markdown' | 'json' | 'csv';
     realTimeMetrics: boolean;
@@ -48,7 +52,11 @@ export class TestSuiteModal extends Modal {
             configLoader: true,
             integration: false,
             issueValidation: true,  // Enable by default to test Phase 2.2 optimization
-            audioCrackling: false   // Enable manually for Issue #010 audio quality testing
+            audioCrackling: false,   // Enable manually for Issue #010 audio quality testing
+            continuousLayers: true,  // Enable by default to test Phase 3 implementation
+            genreEngines: false,     // Enable manually for comprehensive genre testing
+            rhythmicLayer: false,    // Enable manually for rhythmic layer testing
+            harmonicLayer: false     // Enable manually for harmonic layer testing
         },
         exportFormat: 'markdown',
         realTimeMetrics: true,
@@ -139,6 +147,19 @@ export class TestSuiteModal extends Modal {
         // Audio Quality Testing
         this.createTestCheckbox(grid, 'audioCrackling', 'Issue #010: Audio Crackling Analysis', 
             'Comprehensive audio quality testing with crackling detection, performance correlation, and detailed audio metrics');
+
+        // Phase 3: Continuous Layers Testing
+        this.createTestCheckbox(grid, 'continuousLayers', 'Phase 3: Continuous Layers', 
+            'Test continuous layer manager, vault state integration, and dynamic parameter modulation');
+
+        this.createTestCheckbox(grid, 'genreEngines', 'Phase 3: Musical Genre Engines', 
+            'Test all 13 musical genres with synthesis parameters and Freesound sample integration');
+
+        this.createTestCheckbox(grid, 'rhythmicLayer', 'Phase 3: Rhythmic Layer', 
+            'Test activity-based tempo mapping, percussion patterns, and vault activity response');
+
+        this.createTestCheckbox(grid, 'harmonicLayer', 'Phase 3: Harmonic Layer', 
+            'Test cluster-based harmony, chord progressions, and musical theory integration');
     }
 
     private createTestCheckbox(container: HTMLElement, key: keyof TestSuiteConfig['selectedTests'], 
@@ -336,7 +357,11 @@ export class TestSuiteModal extends Modal {
             configLoader: true,
             integration: false,
             issueValidation: false,
-            audioCrackling: false
+            audioCrackling: false,
+            continuousLayers: true,  // Include basic continuous layer testing
+            genreEngines: false,
+            rhythmicLayer: false,
+            harmonicLayer: false
         };
 
         const originalConfig = { ...this.config.selectedTests };

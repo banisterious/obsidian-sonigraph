@@ -419,6 +419,21 @@ export interface SonigraphSettings {
 		routingMatrix: RoutingMatrix;
 		version: string; // For migration compatibility
 	};
+	
+	// Phase 3: Add freesoundApiKey for continuous layers
+	freesoundApiKey?: string;
+	
+	// Phase 2: Content-aware mapping settings
+	contentAwareMapping?: {
+		enabled: boolean;
+		fileTypePreferences: Record<string, string[]>;
+		tagMappings: Record<string, any>;
+		folderMappings: Record<string, any>;
+		connectionTypeMappings: Record<string, any>;
+		frontmatterPropertyName?: string;
+		moodPropertyName?: string;
+		distributionStrategy?: string;
+	};
 }
 
 export const DEFAULT_SETTINGS: SonigraphSettings = {

@@ -95,9 +95,20 @@ export interface AudioMappingConfig {
 		tagMappings: Record<string, InstrumentMapping>;
 		folderMappings: Record<string, InstrumentMapping>;
 		connectionTypeMappings: Record<string, InstrumentMapping>;
+		frontmatterPropertyName?: string;
+		moodPropertyName?: string;
+		distributionStrategy?: string;
 	};
 	continuousLayers: {
 		enabled: boolean;
+		genre?: string;
+		intensity?: number;
+		evolutionRate?: number;
+		adaptiveIntensity?: boolean;
+		rhythmicEnabled?: boolean;
+		harmonicEnabled?: boolean;
+		scale?: string;
+		key?: string;
 		ambientDrone: any; // Will be defined when implementing layers
 		rhythmicLayer: any;
 		harmonicPad: any;
