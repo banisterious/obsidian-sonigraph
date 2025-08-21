@@ -1771,7 +1771,7 @@ export class SonicGraphModal extends Modal {
         // Audio Enhancement Header
         const enhancementHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enhancementHeader.createEl('label', { 
-            text: 'Audio Enhancement (Phase 1)', 
+            text: 'Audio Enhancement (Phase 1 & 2)', 
             cls: 'sonic-graph-setting-label sonic-graph-setting-header' 
         });
         enhancementHeader.createEl('div', { 
@@ -1801,9 +1801,67 @@ export class SonicGraphModal extends Modal {
                 })
             );
 
-        // Continuous Layers Toggle (Coming in Phase 2)
+        // Phase 2: Metadata-Driven Mapping Settings
+        if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
+            // Frontmatter Property Name
+            new Setting(container)
+                .setName('Instrument frontmatter property')
+                .setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")')
+                .addText(text => text
+                    .setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.frontmatterPropertyName || 'instrument')
+                    .onChange(async (value) => {
+                        if (!this.plugin.settings.audioEnhancement.contentAwareMapping.frontmatterPropertyName) {
+                            this.plugin.settings.audioEnhancement.contentAwareMapping.frontmatterPropertyName = 'instrument';
+                        }
+                        this.plugin.settings.audioEnhancement.contentAwareMapping.frontmatterPropertyName = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+
+            // Musical Mood Property
+            new Setting(container)
+                .setName('Musical mood property')
+                .setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")')
+                .addText(text => text
+                    .setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.moodPropertyName || 'musical-mood')
+                    .onChange(async (value) => {
+                        if (!this.plugin.settings.audioEnhancement.contentAwareMapping.moodPropertyName) {
+                            this.plugin.settings.audioEnhancement.contentAwareMapping.moodPropertyName = 'musical-mood';
+                        }
+                        this.plugin.settings.audioEnhancement.contentAwareMapping.moodPropertyName = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+
+            // Instrument Distribution Strategy
+            new Setting(container)
+                .setName('Instrument distribution')
+                .setDesc('How to distribute instruments across similar files')
+                .addDropdown(dropdown => dropdown
+                    .addOption('balanced', 'Balanced - Prevent clustering')
+                    .addOption('random', 'Random - Natural variation')
+                    .addOption('semantic', 'Semantic - Based on content')
+                    .setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.distributionStrategy || 'balanced')
+                    .onChange(async (value) => {
+                        if (!this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy) {
+                            this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy = 'balanced';
+                        }
+                        this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+
+            // Performance Info
+            const performanceInfo = container.createDiv({ cls: 'sonic-graph-setting-item' });
+            performanceInfo.createEl('div', { 
+                text: 'Phase 2 uses Obsidian\'s metadata cache for zero-latency analysis', 
+                cls: 'sonic-graph-setting-description sonic-graph-info' 
+            });
+        }
+
+        // Continuous Layers Toggle (Coming in Phase 3)
         const continuousSetting = new Setting(container)
-            .setName('Enable continuous layers (Phase 2)')
+            .setName('Enable continuous layers (Phase 3)')
             .setDesc('Ambient background layers that evolve with your vault')
             .addToggle(toggle => toggle
                 .setValue(false)
@@ -1813,9 +1871,9 @@ export class SonicGraphModal extends Modal {
         // Add disabled styling to the entire setting
         continuousSetting.settingEl.addClass('sonic-graph-disabled');
 
-        // Musical Theory Settings (Coming in Phase 5)
+        // Musical Theory Settings (Coming in Phase 6)
         const theorySetting = new Setting(container)
-            .setName('Musical Theory (Phase 5)')
+            .setName('Musical Theory (Phase 6)')
             .setDesc('Scale, key, and harmonic constraints coming soon');
         
         // Add disabled styling to indicate it's not yet available
@@ -1832,7 +1890,10 @@ export class SonicGraphModal extends Modal {
                 fileTypePreferences: {},
                 tagMappings: {},
                 folderMappings: {},
-                connectionTypeMappings: {}
+                connectionTypeMappings: {},
+                frontmatterPropertyName: 'instrument',
+                moodPropertyName: 'musical-mood',
+                distributionStrategy: 'balanced'
             },
             continuousLayers: {
                 enabled: false,
@@ -2856,8 +2917,8 @@ export class SonicGraphModal extends Modal {
                 endDate: timelineInfo.endDate.toISOString()
             });
             
-            // Initialize musical mapper for audio
-            this.musicalMapper = new MusicalMapper(this.plugin.settings);
+            // Initialize musical mapper for audio with app instance for Phase 2
+            this.musicalMapper = new MusicalMapper(this.plugin.settings, this.plugin.app);
             
             logger.info('ui', 'Temporal animator initialized successfully');
             

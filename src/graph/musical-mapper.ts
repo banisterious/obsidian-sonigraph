@@ -1,7 +1,17 @@
-import { GraphData, GraphNode, MusicalMapping, GraphStats } from './types';
+import { GraphData, GraphNode, MusicalMapping, GraphStats, EnhancedGraphNode, AudioMappingConfig } from './types';
 import { SonigraphSettings } from '../utils/constants';
 import { MUSICAL_SCALES } from '../utils/constants';
 import { getLogger } from '../logging';
+import { App, TFile } from 'obsidian';
+import { 
+    ObsidianMetadataMapper, 
+    MetadataMappingRules, 
+    VaultMappingOptimizer, 
+    InstrumentDistributor,
+    MetadataListener,
+    MetadataAnalysisResult,
+    VaultMappingAnalysis
+} from '../audio/mapping';
 
 const logger = getLogger('musical-mapper');
 
@@ -10,14 +20,178 @@ export class MusicalMapper {
 	private scale: number[] = [];
 	private rootNoteFreq: number = 261.63; // C4 in Hz
 
-	constructor(settings: SonigraphSettings) {
+	// Phase 2: Metadata-driven mapping components
+	private app: App | null = null;
+	private metadataMapper: ObsidianMetadataMapper | null = null;
+	private mappingRules: MetadataMappingRules | null = null;
+	private vaultOptimizer: VaultMappingOptimizer | null = null;
+	private instrumentDistributor: InstrumentDistributor | null = null;
+	private metadataListener: MetadataListener | null = null;
+	private isPhase2Enabled = false;
+	private lastVaultAnalysis: VaultMappingAnalysis | null = null;
+
+	constructor(settings: SonigraphSettings, app?: App) {
 		this.settings = settings;
+		this.app = app || null;
 		this.updateMusicalParams();
+		
+		// Initialize Phase 2 components if app is provided
+		if (this.app && this.settings.contentAwareMapping?.enabled) {
+			this.initializePhase2Components();
+		}
 	}
 
 	updateSettings(settings: SonigraphSettings): void {
 		this.settings = settings;
 		this.updateMusicalParams();
+		
+		// Phase 2: Update metadata mapping components if enabled
+		if (this.app && this.settings.contentAwareMapping?.enabled) {
+			if (!this.isPhase2Enabled) {
+				this.initializePhase2Components();
+			} else {
+				this.updatePhase2Components();
+			}
+		} else if (this.isPhase2Enabled) {
+			this.disablePhase2Components();
+		}
+	}
+
+	/**
+	 * Phase 2: Initialize metadata-driven mapping components
+	 */
+	private initializePhase2Components(): void {
+		if (!this.app || this.isPhase2Enabled) return;
+
+		logger.info('phase2-init', 'Initializing Phase 2 metadata-driven mapping components');
+
+		try {
+			// Initialize metadata mapper with audio mapping config
+			const audioConfig: AudioMappingConfig = this.getAudioMappingConfig();
+			this.metadataMapper = new ObsidianMetadataMapper(this.app, audioConfig);
+
+			// Initialize mapping rules
+			this.mappingRules = new MetadataMappingRules();
+
+			// Initialize vault optimizer
+			this.vaultOptimizer = new VaultMappingOptimizer(
+				this.app, 
+				this.metadataMapper, 
+				this.mappingRules, 
+				audioConfig
+			);
+
+			// Initialize instrument distributor
+			this.instrumentDistributor = new InstrumentDistributor({
+				maxClusterSize: 8,
+				diversityWeight: 0.3,
+				enableSpatialDistribution: true
+			});
+
+			// Initialize metadata listener
+			this.metadataListener = new MetadataListener(
+				this.app,
+				this.metadataMapper,
+				this.mappingRules,
+				this.vaultOptimizer,
+				{
+					enableMetadataChanges: true,
+					debounceDelay: 500,
+					batchUpdateThreshold: 5
+				}
+			);
+
+			// Start listening for metadata changes
+			this.metadataListener.startListening();
+
+			this.isPhase2Enabled = true;
+			logger.info('phase2-enabled', 'Phase 2 metadata-driven mapping enabled successfully');
+
+		} catch (error) {
+			logger.error('phase2-init-error', 'Failed to initialize Phase 2 components', error as Error);
+			this.disablePhase2Components();
+		}
+	}
+
+	/**
+	 * Phase 2: Update existing components with new settings
+	 */
+	private updatePhase2Components(): void {
+		if (!this.isPhase2Enabled) return;
+
+		logger.debug('phase2-update', 'Updating Phase 2 component configurations');
+
+		try {
+			const audioConfig = this.getAudioMappingConfig();
+
+			// Update configurations
+			this.metadataMapper?.updateConfig(audioConfig);
+			this.vaultOptimizer?.updateConfig(audioConfig);
+
+			logger.debug('phase2-updated', 'Phase 2 components updated successfully');
+
+		} catch (error) {
+			logger.error('phase2-update-error', 'Failed to update Phase 2 components', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 2: Disable and cleanup metadata-driven mapping
+	 */
+	private disablePhase2Components(): void {
+		if (!this.isPhase2Enabled) return;
+
+		logger.info('phase2-disable', 'Disabling Phase 2 metadata-driven mapping');
+
+		try {
+			// Stop metadata listener
+			this.metadataListener?.stopListening();
+
+			// Clear references
+			this.metadataMapper = null;
+			this.mappingRules = null;
+			this.vaultOptimizer = null;
+			this.instrumentDistributor = null;
+			this.metadataListener = null;
+			this.lastVaultAnalysis = null;
+
+			this.isPhase2Enabled = false;
+			logger.info('phase2-disabled', 'Phase 2 components disabled and cleaned up');
+
+		} catch (error) {
+			logger.error('phase2-disable-error', 'Error during Phase 2 cleanup', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 2: Extract audio mapping config from settings
+	 */
+	private getAudioMappingConfig(): AudioMappingConfig {
+		return {
+			contentAwareMapping: {
+				enabled: this.settings.contentAwareMapping?.enabled || false,
+				fileTypePreferences: this.settings.contentAwareMapping?.fileTypePreferences || {},
+				tagMappings: this.settings.contentAwareMapping?.tagMappings || {},
+				folderMappings: this.settings.contentAwareMapping?.folderMappings || {},
+				connectionTypeMappings: this.settings.contentAwareMapping?.connectionTypeMappings || {}
+			},
+			continuousLayers: {
+				enabled: false, // Phase 3 feature
+				ambientDrone: null,
+				rhythmicLayer: null,
+				harmonicPad: null
+			},
+			musicalTheory: {
+				scale: this.settings.scale,
+				key: this.settings.rootNote,
+				mode: 'major', // Default mode
+				constrainToScale: true
+			},
+			externalServices: {
+				freesoundApiKey: this.settings.freesoundApiKey || '',
+				enableFreesoundSamples: false // Phase 7 feature
+			}
+		};
 	}
 
 	private updateMusicalParams(): void {
@@ -37,18 +211,28 @@ export class MusicalMapper {
 
 	/**
 	 * Map graph nodes to musical parameters
+	 * Phase 2: Enhanced with metadata-driven mapping
 	 */
 	mapGraphToMusic(graphData: GraphData, stats: GraphStats): MusicalMapping[] {
 		const startTime = logger.time('musical-mapping');
 		
 		logger.info('mapping', 'Starting musical mapping', {
 			nodeCount: stats.totalNodes,
-			edgeCount: stats.totalEdges
+			edgeCount: stats.totalEdges,
+			phase2Enabled: this.isPhase2Enabled
 		});
 
 		const mappings: MusicalMapping[] = [];
 		const nodes = Array.from(graphData.nodes.values());
 
+		// Phase 2: Use metadata-driven mapping if enabled
+		if (this.isPhase2Enabled && this.app) {
+			const enhancedMappings = this.createEnhancedMappings(nodes, stats);
+			startTime();
+			return enhancedMappings;
+		}
+
+		// Legacy mapping (Phase 1)
 		// Sort nodes by connection count for consistent mapping
 		nodes.sort((a, b) => b.connectionCount - a.connectionCount);
 
@@ -67,6 +251,393 @@ export class MusicalMapper {
 		});
 
 		return mappings;
+	}
+
+	/**
+	 * Phase 2: Create enhanced mappings using metadata-driven analysis
+	 */
+	private createEnhancedMappings(nodes: GraphNode[], stats: GraphStats): MusicalMapping[] {
+		if (!this.app || !this.metadataMapper || !this.vaultOptimizer) {
+			logger.warn('enhanced-mapping-unavailable', 'Phase 2 components not available, falling back to legacy mapping');
+			return this.createLegacyMappings(nodes, stats);
+		}
+
+		const startTime = performance.now();
+		const mappings: MusicalMapping[] = [];
+
+		try {
+			// Get vault-wide analysis for intelligent distribution (use cached if available)
+			let vaultAnalysis = this.lastVaultAnalysis;
+			if (!vaultAnalysis) {
+				// If no cached analysis, start async analysis but don't wait for it
+				this.vaultOptimizer.analyzeVault().then(analysis => {
+					this.lastVaultAnalysis = analysis;
+					logger.debug('vault-analysis-cached', 'Vault analysis cached for future use');
+				}).catch(error => {
+					logger.warn('vault-analysis-background-error', 'Background vault analysis failed', error as Error);
+				});
+				
+				// Use simplified analysis for immediate mapping
+				vaultAnalysis = this.createSimplifiedVaultAnalysis(nodes);
+			}
+
+			// Convert nodes to files for analysis
+			const files: TFile[] = [];
+			const analysisResults: MetadataAnalysisResult[] = [];
+
+			for (const node of nodes) {
+				const file = this.app.vault.getAbstractFileByPath(node.path) as TFile;
+				if (file && file instanceof TFile) {
+					files.push(file);
+					
+					// Analyze file metadata
+					const analysis = this.metadataMapper.analyzeFile(file);
+					analysisResults.push(analysis);
+				}
+			}
+
+			// Apply intelligent distribution if enabled
+			if (this.instrumentDistributor && files.length > 10) {
+				const distributionAnalysis = this.instrumentDistributor.optimizeDistribution(
+					files, 
+					analysisResults, 
+					vaultAnalysis
+				);
+
+				logger.info('distribution-applied', 'Applied intelligent instrument distribution', {
+					adjustedFiles: distributionAnalysis.adjustedFiles,
+					clusteringReduction: distributionAnalysis.clusteringReduction.toFixed(1) + '%',
+					diversityImprovement: distributionAnalysis.diversityImprovement.toFixed(1) + '%'
+				});
+			}
+
+			// Create mappings with enhanced metadata
+			for (let i = 0; i < nodes.length; i++) {
+				const node = nodes[i];
+				const analysisResult = analysisResults.find(r => r.analysisTime !== undefined); // Simplified matching
+				
+				const mapping = this.createEnhancedNodeMapping(node, analysisResult, i, nodes.length, stats);
+				mappings.push(mapping);
+			}
+
+			const enhancedTime = performance.now() - startTime;
+			
+			logger.info('enhanced-mapping-complete', 'Enhanced metadata-driven mapping complete', {
+				mappingsCreated: mappings.length,
+				analysisTime: enhancedTime.toFixed(1) + 'ms',
+				avgConfidence: analysisResults.reduce((sum, r) => sum + r.confidence, 0) / analysisResults.length,
+				uniqueInstruments: new Set(mappings.map(m => m.instrument)).size
+			});
+
+			return mappings;
+
+		} catch (error) {
+			logger.error('enhanced-mapping-error', 'Enhanced mapping failed, falling back to legacy', error as Error);
+			return this.createLegacyMappings(nodes, stats);
+		}
+	}
+
+	/**
+	 * Phase 2: Create legacy mappings (fallback method)
+	 */
+	private createLegacyMappings(nodes: GraphNode[], stats: GraphStats): MusicalMapping[] {
+		const mappings: MusicalMapping[] = [];
+		
+		// Sort nodes by connection count for consistent mapping
+		nodes.sort((a, b) => b.connectionCount - a.connectionCount);
+
+		for (let i = 0; i < nodes.length; i++) {
+			const node = nodes[i];
+			const mapping = this.createNodeMapping(node, i, nodes.length, stats);
+			mappings.push(mapping);
+		}
+
+		return mappings;
+	}
+
+	/**
+	 * Phase 2: Create enhanced node mapping using metadata analysis
+	 */
+	private createEnhancedNodeMapping(
+		node: GraphNode, 
+		analysis: MetadataAnalysisResult | undefined, 
+		index: number, 
+		totalNodes: number, 
+		stats: GraphStats
+	): MusicalMapping {
+		// If we have metadata analysis, use enhanced mapping
+		if (analysis) {
+			return this.createMetadataDrivenMapping(node, analysis, index, totalNodes, stats);
+		}
+
+		// Fall back to legacy mapping
+		return this.createNodeMapping(node, index, totalNodes, stats);
+	}
+
+	/**
+	 * Phase 2: Create metadata-driven musical mapping
+	 */
+	private createMetadataDrivenMapping(
+		node: GraphNode, 
+		analysis: MetadataAnalysisResult, 
+		index: number, 
+		totalNodes: number, 
+		stats: GraphStats
+	): MusicalMapping {
+		// Use metadata-driven pitch calculation
+		const pitch = this.calculateMetadataDrivenPitch(node, analysis, stats);
+		
+		// Use enhanced duration calculation
+		const duration = this.calculateEnhancedDuration(node, analysis);
+		
+		// Use confidence-based velocity
+		const velocity = this.calculateConfidenceBasedVelocity(analysis, index, totalNodes);
+		
+		// Use spatial-aware timing
+		const timing = this.calculateSpatialTiming(node, analysis);
+
+		// Use metadata-suggested instrument
+		const instrument = analysis.finalInstrument;
+
+		logger.debug('metadata-mapping', `Enhanced mapping for node: ${node.name}`, {
+			instrument,
+			confidence: analysis.confidence.toFixed(2),
+			pitch: pitch.toFixed(1),
+			duration: duration.toFixed(2),
+			velocity: velocity.toFixed(2),
+			analysisTime: analysis.analysisTime.toFixed(2) + 'ms'
+		});
+
+		return {
+			nodeId: node.id,
+			pitch,
+			duration,
+			velocity,
+			timing,
+			instrument
+		};
+	}
+
+	/**
+	 * Phase 2: Calculate pitch using metadata-driven factors
+	 */
+	private calculateMetadataDrivenPitch(
+		node: GraphNode, 
+		analysis: MetadataAnalysisResult, 
+		stats: GraphStats
+	): number {
+		// Base frequency from distance mapping (folder depth affects pitch)
+		const baseFrequency = this.rootNoteFreq * Math.pow(2, analysis.fileMetadata.depth.pitch);
+		
+		// Adjust for complexity (file size affects pitch range)
+		const complexityFactor = 1 + (analysis.fileMetadata.size.richness - 0.5) * 0.5;
+		
+		// Constrain to musical scale
+		const scaleConstrainedFreq = this.constrainToScale(baseFrequency * complexityFactor);
+		
+		// Add micro-detuning for phase interference prevention
+		const nodeHash = this.hashString(`${node.id}-${analysis.finalInstrument}`);
+		const detuningAmount = this.settings.antiCracklingDetuning || 2.0;
+		const detuningCents = ((nodeHash % 100) / 100 - 0.5) * detuningAmount;
+		
+		return scaleConstrainedFreq * Math.pow(2, detuningCents / 1200);
+	}
+
+	/**
+	 * Phase 2: Calculate duration using enhanced metadata factors
+	 */
+	private calculateEnhancedDuration(node: GraphNode, analysis: MetadataAnalysisResult): number {
+		// Base duration from size mapping
+		const baseDuration = analysis.fileMetadata.size.duration;
+		
+		// Adjust for content structure
+		const structureModifier = 1 + (analysis.contentMetadata.structure.emphasis * 0.3);
+		
+		// Adjust for link density (more connected files get slightly longer notes)
+		const linkModifier = 1 + (analysis.contentMetadata.linkDensity.density * 0.2);
+		
+		const finalDuration = baseDuration * structureModifier * linkModifier;
+		
+		// Ensure reasonable bounds
+		return Math.max(0.1, Math.min(1.0, finalDuration));
+	}
+
+	/**
+	 * Phase 2: Calculate velocity based on analysis confidence and importance
+	 */
+	private calculateConfidenceBasedVelocity(
+		analysis: MetadataAnalysisResult, 
+		index: number, 
+		totalNodes: number
+	): number {
+		// Base velocity from position importance
+		const positionVelocity = 1 - (index / Math.max(totalNodes - 1, 1));
+		
+		// Weight by analysis confidence
+		const confidenceWeight = analysis.confidence;
+		
+		// Combine factors
+		const combinedVelocity = (positionVelocity * 0.7) + (confidenceWeight * 0.3);
+		
+		// Map to MIDI velocity range
+		return 0.3 + (combinedVelocity * 0.7);
+	}
+
+	/**
+	 * Phase 2: Calculate timing with spatial awareness
+	 */
+	private calculateSpatialTiming(node: GraphNode, analysis: MetadataAnalysisResult): number {
+		// Base timing from file age
+		const now = Date.now();
+		const daysSinceModified = (now - node.modified) / (1000 * 60 * 60 * 24);
+		const ageNormalized = Math.min(daysSinceModified / 365, 1); // 1 year = max
+		
+		// Adjust for folder depth (deeper files play slightly later)
+		const depthDelay = analysis.fileMetadata.depth.reverb * 0.5;
+		
+		// Combine timing factors
+		const totalTiming = (ageNormalized * 3.0) + depthDelay;
+		
+		return Math.max(0, Math.min(5.0, totalTiming));
+	}
+
+	/**
+	 * Phase 2: Constrain frequency to musical scale
+	 */
+	private constrainToScale(frequency: number): number {
+		if (this.scale.length === 0) return frequency;
+		
+		// Convert frequency to MIDI note number
+		const midiNote = 12 * Math.log2(frequency / this.rootNoteFreq);
+		
+		// Find closest scale note
+		const octave = Math.floor(midiNote / 12);
+		const noteInOctave = midiNote % 12;
+		
+		// Find closest scale degree
+		let closestScaleDegree = this.scale[0];
+		let minDistance = Math.abs(noteInOctave - this.scale[0]);
+		
+		for (const scaleDegree of this.scale) {
+			const distance = Math.abs(noteInOctave - scaleDegree);
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestScaleDegree = scaleDegree;
+			}
+		}
+		
+		// Convert back to frequency
+		const constrainedMidi = (octave * 12) + closestScaleDegree;
+		return this.rootNoteFreq * Math.pow(2, constrainedMidi / 12);
+	}
+
+	/**
+	 * Phase 2: Create simplified vault analysis for immediate use
+	 */
+	private createSimplifiedVaultAnalysis(nodes: GraphNode[]): VaultMappingAnalysis {
+		const instrumentCounts = new Map<string, number>();
+		
+		// Simple instrument counting based on legacy assignment
+		for (let i = 0; i < nodes.length; i++) {
+			const instrument = this.assignInstrumentToNode(nodes[i], i, nodes.length);
+			instrumentCounts.set(instrument, (instrumentCounts.get(instrument) || 0) + 1);
+		}
+
+		const instrumentDistribution = new Map();
+		for (const [instrument, count] of instrumentCounts) {
+			instrumentDistribution.set(instrument, {
+				instrument,
+				count,
+				percentage: (count / nodes.length) * 100,
+				avgConfidence: 0.5,
+				files: [],
+				clusters: []
+			});
+		}
+
+		return {
+			totalFiles: nodes.length,
+			processedFiles: nodes.length,
+			instrumentDistribution,
+			familyDistribution: new Map(),
+			averageConfidence: 0.5,
+			analysisTime: 0,
+			performanceMetrics: {
+				filesPerSecond: 1000,
+				avgAnalysisTimePerFile: 0,
+				cacheHitRate: 0,
+				memoryUsage: 0,
+				bottlenecks: []
+			},
+			recommendations: []
+		};
+	}
+
+	/**
+	 * Phase 2: Get Phase 2 status and statistics
+	 */
+	getPhase2Status(): {
+		enabled: boolean;
+		components: {
+			metadataMapper: boolean;
+			mappingRules: boolean;
+			vaultOptimizer: boolean;
+			instrumentDistributor: boolean;
+			metadataListener: boolean;
+		};
+		lastAnalysis: {
+			available: boolean;
+			filesAnalyzed: number;
+			analysisTime: string;
+			uniqueInstruments: number;
+		};
+		listenerStats?: any;
+	} {
+		const status = {
+			enabled: this.isPhase2Enabled,
+			components: {
+				metadataMapper: this.metadataMapper !== null,
+				mappingRules: this.mappingRules !== null,
+				vaultOptimizer: this.vaultOptimizer !== null,
+				instrumentDistributor: this.instrumentDistributor !== null,
+				metadataListener: this.metadataListener !== null
+			},
+			lastAnalysis: {
+				available: this.lastVaultAnalysis !== null,
+				filesAnalyzed: this.lastVaultAnalysis?.processedFiles || 0,
+				analysisTime: this.lastVaultAnalysis?.analysisTime.toFixed(1) + 'ms' || 'N/A',
+				uniqueInstruments: this.lastVaultAnalysis?.instrumentDistribution.size || 0
+			}
+		};
+
+		if (this.metadataListener) {
+			status.listenerStats = this.metadataListener.getStats();
+		}
+
+		return status;
+	}
+
+	/**
+	 * Phase 2: Force refresh of vault analysis
+	 */
+	async refreshVaultAnalysis(): Promise<void> {
+		if (!this.isPhase2Enabled || !this.vaultOptimizer) {
+			throw new Error('Phase 2 components not enabled');
+		}
+
+		logger.info('vault-analysis-refresh', 'Manually refreshing vault analysis');
+		this.lastVaultAnalysis = await this.vaultOptimizer.refreshAnalysis();
+		logger.info('vault-analysis-refreshed', 'Vault analysis refreshed successfully');
+	}
+
+	/**
+	 * Phase 2: Cleanup method for proper disposal
+	 */
+	dispose(): void {
+		if (this.isPhase2Enabled) {
+			this.disablePhase2Components();
+		}
+		logger.debug('musical-mapper-disposed', 'MusicalMapper disposed');
 	}
 
 	private createNodeMapping(
@@ -164,7 +735,7 @@ export class MusicalMapper {
 		return minVelocity + (normalizedPosition * (maxVelocity - minVelocity));
 	}
 
-	private mapTimestampToTiming(created: number, modified: number): number {
+	private mapTimestampToTiming(_created: number, modified: number): number {
 		// Use recency of modification for timing offset
 		const now = Date.now();
 		const daysSinceModified = (now - modified) / (1000 * 60 * 60 * 24);
@@ -200,7 +771,7 @@ export class MusicalMapper {
 	/**
 	 * Generate sequence timing based on graph structure
 	 */
-	generateSequence(mappings: MusicalMapping[], graphData: GraphData): MusicalMapping[] {
+	generateSequence(mappings: MusicalMapping[], _graphData: GraphData): MusicalMapping[] {
 		logger.debug('sequence', 'Generating playback sequence', {
 			totalMappings: mappings.length
 		});
@@ -281,7 +852,7 @@ export class MusicalMapper {
 	 * This prevents all notes from defaulting to the same instrument and causing crackling
 	 * Only suggests enabled instruments to prevent fallback to default
 	 */
-	private assignInstrumentToNode(node: GraphNode, index: number, totalNodes: number): string {
+	private assignInstrumentToNode(node: GraphNode, _index: number, totalNodes: number): string {
 		// Get enabled instruments from settings
 		const enabledInstruments = Object.keys(this.settings.instruments).filter(instrumentName => 
 			this.settings.instruments[instrumentName as keyof typeof this.settings.instruments]?.enabled

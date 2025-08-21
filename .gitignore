@@ -12,7 +12,7 @@ logs/
 
 # Project-specific files
 CLAUDE.md
-obsidian-developer-docs/
+docs/developer/obsidian-developer-docs/
 
 # Documentation images - generated content
 docs/images/sonigraph-control-center/
@@ -20,7 +20,10 @@ docs/images/sonigraph-control-center/800pxw/
 docs/images/sonigraph-control-center/2880pxw/
 
 # Screenshots directory
-screenshots/
+docs/images/example-screenshots/
+
+# Misc
+marketing
 
 # Build artifacts
 main.js
