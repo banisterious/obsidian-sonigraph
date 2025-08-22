@@ -624,6 +624,8 @@ Phase 3 has been successfully implemented with full continuous audio layer capab
 ### Phase 4: Enhanced Content-Aware Mapping (Weeks 9-12) - RENUMBERED
 **Goal**: Sophisticated mapping based on content analysis and relationships
 
+**Implementation Note**: Some instruments referenced in the original design (choir, vocalPad, padSynth, viola, marimba) are not currently available in the system. These have been substituted with existing instruments for now, with a plan to add them to the system in a future update.
+
 #### Phase 4.1: Advanced File Type Mapping
 - **Objective**: Nuanced instrument selection based on file characteristics
 
