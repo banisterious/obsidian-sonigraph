@@ -1,14 +1,29 @@
 /**
- * Audio Mapping Module - Phase 2: Content-Aware Mapping Foundation
+ * Audio Mapping Module - Phase 2-4: Content-Aware Mapping Foundation & Enhanced File Type Mapping
  * 
- * Exports all components of the metadata-driven mapping system.
+ * Exports all components of the metadata-driven mapping system, including
+ * Phase 4.1 advanced file type mapping with sophisticated characteristics analysis.
  */
 
+// Phase 2: Content-Aware Mapping Foundation
 export { ObsidianMetadataMapper } from './ObsidianMetadataMapper';
 export { MetadataMappingRules } from './MetadataMappingRules';
 export { VaultMappingOptimizer } from './VaultMappingOptimizer';
 export { InstrumentDistributor } from './InstrumentDistributor';
 export { MetadataListener } from './MetadataListener';
+
+// Phase 4.1: Advanced File Type Mapping
+export { ContentAwareMapper } from './ContentAwareMapper';
+export { FileTypeAnalyzer } from './FileTypeAnalyzer';
+export { InstrumentSelector } from './InstrumentSelector';
+
+// Phase 4.2: Tag-Based Musical Semantics
+export { TagSemanticMapper } from './TagSemanticMapper';
+export { DEFAULT_TAG_MAPPINGS } from './SemanticMappingConfig';
+
+// Phase 4.3: Folder Hierarchy and Path Mapping
+export { FolderHierarchyMapper } from './FolderHierarchyMapper';
+export { PathAnalyzer } from './PathAnalyzer';
 
 // Re-export types for external use
 export type {
@@ -56,3 +71,47 @@ export type {
     ListenerConfig,
     ChangeStats
 } from './MetadataListener';
+
+// Phase 4.1: Advanced File Type Mapping Types
+export type {
+    ContentAwareMappingResult,
+    ContentAwareMappingConfig,
+    MusicalProperties
+} from './ContentAwareMapper';
+
+export type {
+    FileCharacteristics,
+    FileTypeAnalysisConfig
+} from './FileTypeAnalyzer';
+
+export type {
+    InstrumentSelectionCriteria,
+    InstrumentSelectionResult
+} from './InstrumentSelector';
+
+// Phase 4.2: Tag-Based Musical Semantics Types
+export type {
+    TagMappingConfig,
+    TagSemanticAnalysis,
+    EmotionalMapping,
+    FunctionalMapping,
+    TopicalMapping,
+    TagComplexityConfig
+} from './SemanticMappingConfig';
+
+export type {
+    SemanticMappingResult,
+    TagSemanticMapperConfig
+} from './TagSemanticMapper';
+
+// Phase 4.3: Folder Hierarchy and Path Mapping Types
+export type {
+    FolderCharacteristics,
+    InstrumentFamily,
+    PitchModification
+} from './FolderHierarchyMapper';
+
+export type {
+    PathAnalysis,
+    FolderMetrics
+} from './PathAnalyzer';
