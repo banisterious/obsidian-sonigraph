@@ -41,7 +41,7 @@ async function testPathAnalysis() {
     console.log('PHASE 4.3 PATH ANALYSIS TEST');
     console.log('='.repeat(60));
     
-    const pathAnalyzer = new PathAnalyzer(mockApp);
+    const pathAnalyzer = new PathAnalyzer();
     
     const testPaths = [
         'Projects/Work/Current-Tasks.md',
@@ -58,14 +58,14 @@ async function testPathAnalysis() {
             console.log(`\nAnalyzing path: ${testPath}`);
             console.log('-'.repeat(40));
             
-            const analysis = await pathAnalyzer.analyzePath(testPath);
+            const analysis = pathAnalyzer.analyzePath(testPath);
             
-            console.log(`  Path Components: [${analysis.pathComponents.join(' → ')}]`);
+            console.log(`  Path Components: [${analysis.components.join(' → ')}]`);
             console.log(`  Depth: ${analysis.depth}`);
             console.log(`  Root Folder: ${analysis.rootFolder}`);
             console.log(`  Parent Folder: ${analysis.parentFolder}`);
-            console.log(`  Complexity: ${analysis.pathComplexity.toFixed(2)}`);
-            console.log(`  Folder Types: [${analysis.folderCharacteristics.map(f => f.folderType).join(', ')}]`);
+            console.log(`  Complexity: ${analysis.complexity.toFixed(2)}`);
+            console.log(`  Has Numbers: ${analysis.hasNumbers}`);
             
         } catch (error) {
             console.log(`  Error: ${error.message}`);
@@ -78,7 +78,7 @@ async function testFolderHierarchyMapping() {
     console.log('PHASE 4.3 FOLDER HIERARCHY MAPPING TEST');
     console.log('='.repeat(60));
     
-    const folderHierarchyMapper = new FolderHierarchyMapper(mockApp, {
+    const folderHierarchyMapper = new FolderHierarchyMapper(); const unusedConfig = {
         enableDepthMapping: true,
         enableThematicMapping: true,
         depthInfluenceWeight: 0.7,
@@ -87,7 +87,7 @@ async function testFolderHierarchyMapping() {
         customFolderMappings: {},
         pitchDepthSensitivity: 1.0,
         timbreDepthSensitivity: 1.0
-    });
+    };
     
     const testPaths = [
         'Projects/Work/Sprint-Planning.md',
@@ -102,26 +102,19 @@ async function testFolderHierarchyMapping() {
             console.log(`\nMapping path: ${testPath}`);
             console.log('-'.repeat(40));
             
-            const characteristics = await folderHierarchyMapper.analyzeFolderPath(testPath);
+            const characteristics = folderHierarchyMapper.analyzeFolderPath(testPath);
             
-            console.log(`  Dominant Theme: ${characteristics.dominantTheme.primary}`);
-            console.log(`  Instrument Family: ${characteristics.instrumentFamily}`);
-            console.log(`  Musical Character:`);
-            console.log(`    Energy: ${characteristics.dominantTheme.musicalCharacter.energy.toFixed(2)}`);
-            console.log(`    Formality: ${characteristics.dominantTheme.musicalCharacter.formality.toFixed(2)}`);
-            console.log(`    Complexity: ${characteristics.dominantTheme.musicalCharacter.complexity.toFixed(2)}`);
-            console.log(`    Emotional Tone: ${characteristics.dominantTheme.musicalCharacter.emotionalTone}`);
+            console.log(`  Primary Family: ${characteristics.primaryFamily.name}`);
+            console.log(`  Secondary Family: ${characteristics.secondaryFamily?.name || 'None'}`);
+            console.log(`  Semantic Category: ${characteristics.semanticCategory}`);
+            console.log(`  Complexity: ${characteristics.complexity.toFixed(2)}`);
             
-            console.log(`  Pitch Modifications:`);
-            console.log(`    Base Note Offset: ${characteristics.pitchModification.baseNoteOffset.toFixed(1)} semitones`);
-            console.log(`    Pitch Range Multiplier: ${characteristics.pitchModification.pitchRangeMultiplier.toFixed(2)}`);
-            console.log(`    Scale Mode: ${characteristics.pitchModification.scaleMode}`);
-            
-            console.log(`  Timbre Modifications:`);
-            console.log(`    Brightness: ${characteristics.timbreModification.brightnessAdjustment.toFixed(2)}`);
-            console.log(`    Richness: ${characteristics.timbreModification.richnessMultiplier.toFixed(2)}`);
-            
-            console.log(`  Confidence: ${characteristics.confidence.toFixed(2)}`);
+            console.log(`  Musical Properties:`);
+            console.log(`    Pitch Modifier: ${characteristics.musicalProperties.pitchModifier.toFixed(2)}`);
+            console.log(`    Timbre Richness: ${characteristics.musicalProperties.timbreRichness.toFixed(2)}`);
+            console.log(`    Note Duration: ${characteristics.musicalProperties.noteDurationMultiplier.toFixed(2)}x`);
+            console.log(`    Velocity: ${characteristics.musicalProperties.velocityModifier.toFixed(2)}`);
+            console.log(`    Spatial Depth: ${characteristics.musicalProperties.spatialDepth.toFixed(2)}`);
             
         } catch (error) {
             console.log(`  Error: ${error.message}`);
@@ -134,7 +127,7 @@ async function testInstrumentFamilyMappings() {
     console.log('PHASE 4.3 INSTRUMENT FAMILY MAPPINGS TEST');
     console.log('='.repeat(60));
     
-    const folderHierarchyMapper = new FolderHierarchyMapper(mockApp);
+    const folderHierarchyMapper = new FolderHierarchyMapper();
     
     const folderThemes = [
         ['Projects', 'Work'],
@@ -154,14 +147,10 @@ async function testInstrumentFamilyMappings() {
     console.log('-'.repeat(50));
     
     for (const pathComponents of folderThemes) {
-        const instrumentFamily = folderHierarchyMapper.mapPathToInstrumentFamily(pathComponents);
+        const result = folderHierarchyMapper.mapPathToInstrumentFamily(pathComponents);
         const pathString = pathComponents.join('/');
-        console.log(`  ${pathString.padEnd(30)} → ${instrumentFamily}`);
+        console.log(`  ${pathString.padEnd(30)} → ${result.primary.name}`);
     }
-    
-    console.log('\nSupported Instrument Families:');
-    const supportedFamilies = folderHierarchyMapper.getSupportedInstrumentFamilies();
-    console.log(`  [${supportedFamilies.join(', ')}]`);
 }
 
 async function testDepthInfluence() {
@@ -169,7 +158,7 @@ async function testDepthInfluence() {
     console.log('PHASE 4.3 DEPTH INFLUENCE TEST');
     console.log('='.repeat(60));
     
-    const folderHierarchyMapper = new FolderHierarchyMapper(mockApp);
+    const folderHierarchyMapper = new FolderHierarchyMapper();
     
     console.log('Depth → Pitch Modifications:');
     console.log('-'.repeat(40));
@@ -177,20 +166,19 @@ async function testDepthInfluence() {
     for (let depth = 0; depth <= 6; depth++) {
         const pitchMod = folderHierarchyMapper.calculateDepthInfluence(depth);
         console.log(`  Depth ${depth}:`);
-        console.log(`    Base Note Offset: ${pitchMod.baseNoteOffset.toFixed(1)} semitones`);
-        console.log(`    Range Multiplier: ${pitchMod.pitchRangeMultiplier.toFixed(2)}`);
-        console.log(`    Scale Mode: ${pitchMod.scaleMode}`);
-        console.log(`    Intervals: [${pitchMod.intervalPattern.join(', ')}]`);
+        console.log(`    Octave Shift: ${pitchMod.octaveShift}`);
+        console.log(`    Pitch Bend Range: ${pitchMod.pitchBendRange} semitones`);
+        console.log(`    Base Note: ${pitchMod.baseNote} (MIDI)`);
         console.log('');
     }
 }
 
 async function runAllTests() {
     try {
-        await testPathAnalysis();
-        await testFolderHierarchyMapping();
-        await testInstrumentFamilyMappings();
-        await testDepthInfluence();
+        testPathAnalysis();
+        testFolderHierarchyMapping();
+        testInstrumentFamilyMappings();
+        testDepthInfluence();
         
         console.log('\n' + '='.repeat(60));
         console.log('PHASE 4.3 TESTS COMPLETED SUCCESSFULLY!');

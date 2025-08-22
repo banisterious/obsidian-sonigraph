@@ -4,19 +4,20 @@
  * Quick test to verify the TagSemanticMapper integration
  */
 
-import { TagSemanticMapper, DEFAULT_TAG_MAPPINGS } from './src/audio/mapping/TagSemanticMapper';
+import { TagSemanticMapper } from './src/audio/mapping/TagSemanticMapper';
+import { DEFAULT_TAG_MAPPINGS } from './src/audio/mapping/SemanticMappingConfig';
 import { ContentAwareMapper } from './src/audio/mapping/ContentAwareMapper';
 import { EnhancedGraphNode } from './src/graph/types';
 
 // Mock App for testing
 const mockApp = {
     vault: {
-        getAbstractFileByPath: () => null
+        getAbstractFileByPath: (): any => null
     }
 } as any;
 
 // Test configuration
-const testConfig = {
+const testConfig: any = {
     contentAwareMapping: {
         enabled: true,
         fileTypePreferences: {},
@@ -51,6 +52,32 @@ const testConfig = {
         },
         enableComplexityMapping: true,
         enableTemporalAnalysis: true
+    },
+    folderHierarchy: {
+        enabled: false,
+        weightings: {
+            pathDepth: 0.3,
+            thematicMapping: 0.3,
+            instrumentFamily: 0.2,
+            pitchModulation: 0.1,
+            timbreModulation: 0.1
+        }
+    },
+    continuousLayers: {
+        enabled: false,
+        ambientDrone: { enabled: false },
+        rhythmicLayer: { enabled: false },
+        harmonicPad: { enabled: false }
+    },
+    musicalTheory: {
+        scale: 'major',
+        key: 'C',
+        mode: 'ionian',
+        constrainToScale: false
+    },
+    externalServices: {
+        freesoundApiKey: '',
+        enableFreesoundSamples: false
     }
 };
 
