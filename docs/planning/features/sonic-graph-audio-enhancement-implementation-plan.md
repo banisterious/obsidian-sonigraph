@@ -727,32 +727,129 @@ Phase 3 has been successfully implemented with full continuous audio layer capab
 - `src/audio/mapping/PathAnalyzer.ts`
 
 #### Phase 4.4: Connection Type Audio Differentiation
-- **Objective**: Distinct audio for different relationship types
+- **Objective**: Distinct audio for different relationship types with full user configurability
 
 **Implementation Tasks:**
 1. **Connection Type Analyzer**
    ```typescript
    class ConnectionTypeMapper {
+     private config: ConnectionTypeMappingConfig;
+
      mapWikilinks(connections: string[]): AudioMapping;
      mapMarkdownLinks(connections: string[]): AudioMapping;
      mapEmbeds(connections: string[]): AudioMapping;
      mapTagConnections(connections: string[]): AudioMapping;
+     updateMappingConfig(config: ConnectionTypeMappingConfig): void;
    }
    ```
 
-2. **Connection-Specific Audio**
-   - **Wikilinks** → String instruments (Violin, Cello, Guitar, Harp)
-   - **Embeds** → Percussive sounds (MetalSynth, MembraneSynth)
-   - **Markdown Links** → Woodwind sounds (transitional, flowing)
-   - **Tag Connections** → Subtle Celesta/ethereal sounds
+2. **Configuration Interface**
+   ```typescript
+   interface ConnectionTypeMappingConfig {
+     enabled: boolean;
+     mappings: {
+       wikilinks: {
+         instrumentFamily: InstrumentFamily;
+         instruments: string[];
+         intensityMultiplier: number; // 0.1 - 3.0
+       };
+       embeds: {
+         instrumentFamily: InstrumentFamily;
+         instruments: string[];
+         intensityMultiplier: number;
+       };
+       markdownLinks: {
+         instrumentFamily: InstrumentFamily;
+         instruments: string[];
+         intensityMultiplier: number;
+       };
+       tagConnections: {
+         instrumentFamily: InstrumentFamily;
+         instruments: string[];
+         intensityMultiplier: number;
+       };
+     };
+     linkStrengthMapping: {
+       enabled: boolean;
+       connectionFrequencyToVolume: boolean;
+       bidirectionalHarmony: boolean;
+       brokenLinkDissonance: boolean;
+       sensitivityLevel: 'low' | 'medium' | 'high'; // How responsive to connection changes
+     };
+   }
+   ```
 
-3. **Link Strength Modulation**
-   - Connection frequency → volume/intensity
-   - Bidirectional links → harmonic intervals
-   - Broken links → dissonant intervals
+3. **Default Connection-Specific Audio Mappings**
+   - **Wikilinks** → Strings family (Violin, Cello, Guitar, Harp) - *User configurable*
+   - **Embeds** → Percussion family (MetalSynth, MembraneSynth) - *User configurable*
+   - **Markdown Links** → Woodwinds family (transitional, flowing) - *User configurable*
+   - **Tag Connections** → Ethereal family (Celesta, subtle synths) - *User configurable*
+
+4. **Advanced Link Strength Modulation** *(All configurable)*
+   - Connection frequency → volume/intensity scaling (with sensitivity control)
+   - Bidirectional links → harmonic intervals (configurable consonance)
+   - Broken links → subtle dissonant intervals (configurable severity)
+   - Connection age → timbre filtering (newer = brighter, older = warmer)
+
+5. **UI Integration - Connection Type Mapping Panel**
+   ```typescript
+   interface ConnectionTypeMappingUI {
+     // Main toggle (independent of Content-Aware Mapping toggle)
+     enableConnectionTypeMapping: boolean;
+
+     // Per-connection-type configuration
+     connectionTypeMappings: {
+       [connectionType: string]: {
+         instrumentFamilyDropdown: InstrumentFamily;
+         instrumentSelectionList: string[];
+         intensitySlider: number; // 0.1 - 3.0
+         previewButton: () => void;
+       };
+     };
+
+     // Advanced settings collapsible section
+     linkStrengthSettings: {
+       enableLinkStrengthMapping: boolean;
+       connectionFrequencyScaling: boolean;
+       bidirectionalHarmonyToggle: boolean;
+       brokenLinkDissonanceToggle: boolean;
+       sensitivityLevelDropdown: 'low' | 'medium' | 'high';
+     };
+
+     // Quick actions
+     resetToDefaultsButton: () => void;
+     previewAllConnectionTypesButton: () => void;
+   }
+   ```
+
+6. **Settings Integration Strategy**
+   - **Location**: New collapsible section "Connection Type Audio" in SonicGraphModal
+   - **Position**: After "Tag-Based Semantics" section, before any Advanced sections
+   - **Independence**: Own toggle separate from main "Content-Aware Mapping" toggle
+   - **Preset Support**: Connection type mappings saved/loaded with audio theme presets
+
+7. **User Experience Design**
+   - **Default State**: Disabled by default (opt-in advanced feature)
+   - **Progressive Disclosure**: Basic mappings visible, advanced link strength controls in collapsible section
+   - **Validation**: Prevent mapping multiple connection types to identical instrument sets
+   - **Preview**: Individual connection type preview buttons for immediate audio feedback
+   - **Help Text**: Tooltips explaining each connection type and its typical usage
+
+8. **Performance Considerations**
+   - **Caching**: Cache connection type analysis results to avoid re-computation
+   - **Selective Processing**: Only analyze connection types when feature is enabled
+   - **Throttling**: Limit connection strength updates to prevent audio crackling
+   - **Memory**: Use efficient data structures for connection frequency tracking
 
 **Files to Create:**
 - `src/audio/mapping/ConnectionTypeMapper.ts`
+- `src/audio/mapping/ConnectionTypeMappingConfig.ts`
+- `src/ui/settings/ConnectionTypeMappingPanel.ts`
+
+**Files to Modify:**
+- `src/ui/SonicGraphModal.ts`: Add connection type mapping panel
+- `src/utils/constants.ts`: Add ConnectionTypeMappingConfig to SonigraphSettings
+- `src/audio/presets/AudioThemePresetManager.ts`: Include connection type mappings in presets
 
 ---
 
