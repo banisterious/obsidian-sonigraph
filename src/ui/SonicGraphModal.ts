@@ -2050,6 +2050,44 @@ export class SonicGraphModal extends Modal {
                 })
             );
 
+        // Connection Type Audio Differentiation Toggle (Phase 4.4)
+        new Setting(container)
+            .setName('Enable connection type audio differentiation')
+            .setDesc('Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics')
+            .addToggle(toggle => toggle
+                .setValue(this.getSonicGraphSettings().connectionTypeMapping?.enabled || false)
+                .onChange(async (value) => {
+                    try {
+                        const settings = this.getSonicGraphSettings();
+                        if (!settings.connectionTypeMapping) {
+                            // Initialize with the default config from constants
+                            const { DEFAULT_SETTINGS } = await import('../utils/constants');
+                            settings.connectionTypeMapping = {
+                                ...DEFAULT_SETTINGS.sonicGraphSettings.connectionTypeMapping,
+                                enabled: value // Set to the actual toggle value
+                            };
+                        }
+
+                        settings.connectionTypeMapping.enabled = value;
+                        await this.plugin.saveSettings();
+
+                        logger.info('connection-type-mapping', 'Connection type mapping toggled', {
+                            enabled: value
+                        });
+
+                        // Simple notification instead of full refresh
+                        if (value) {
+                            new Notice('Connection Type Audio Differentiation enabled. Detailed settings will appear below.', 3000);
+                        } else {
+                            new Notice('Connection Type Audio Differentiation disabled.', 2000);
+                        }
+                    } catch (error) {
+                        logger.error('connection-type-mapping', 'Failed to toggle connection type mapping', error);
+                        new Notice('Error enabling Connection Type Audio Differentiation. Check console for details.', 5000);
+                    }
+                })
+            );
+
         // Phase 2: Metadata-Driven Mapping Settings
         if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
             // Frontmatter Property Name
