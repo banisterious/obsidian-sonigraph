@@ -328,6 +328,184 @@ export interface SonicGraphSettings {
 			logClusteringDetails: boolean;  // Log clustering decisions for analysis
 		};
 	};
+	// Phase 4.4: Connection Type Audio Differentiation
+	connectionTypeMapping: {
+		enabled: boolean;                   // Master toggle for connection type mapping
+		independentFromContentAware: boolean; // Independent of Phase 4.1 content-aware mapping
+
+		// Connection type mappings
+		mappings: {
+			wikilink: {
+				enabled: boolean;
+				instrumentFamily: string;
+				intensity: number;
+				audioCharacteristics: {
+					baseVolume: number;
+					volumeVariation: number;
+					noteDuration: number;
+					attackTime: number;
+					releaseTime: number;
+					spatialSpread: number;
+					reverbAmount: number;
+					delayAmount: number;
+					harmonicRichness: number;
+					dissonanceLevel: number;
+					chordsEnabled: boolean;
+					strengthToVolumeEnabled: boolean;
+					strengthToVolumeAmount: number;
+					bidirectionalHarmony: boolean;
+					brokenLinkDissonance: boolean;
+				};
+				linkStrengthAnalysis: {
+					enabled: boolean;
+					frequencyThreshold: number;
+					volumeBoost: number;
+					harmonicBoost: number;
+				};
+				contextualModifiers: {
+					sameFolderBoost: number;
+					crossFolderReduction: number;
+					recentConnectionBoost: number;
+					timeDecayDays: number;
+				};
+			};
+			embed: {
+				enabled: boolean;
+				instrumentFamily: string;
+				intensity: number;
+				audioCharacteristics: {
+					baseVolume: number;
+					volumeVariation: number;
+					noteDuration: number;
+					attackTime: number;
+					releaseTime: number;
+					spatialSpread: number;
+					reverbAmount: number;
+					delayAmount: number;
+					harmonicRichness: number;
+					dissonanceLevel: number;
+					chordsEnabled: boolean;
+					strengthToVolumeEnabled: boolean;
+					strengthToVolumeAmount: number;
+					bidirectionalHarmony: boolean;
+					brokenLinkDissonance: boolean;
+				};
+				linkStrengthAnalysis: {
+					enabled: boolean;
+					frequencyThreshold: number;
+					volumeBoost: number;
+					harmonicBoost: number;
+				};
+				contextualModifiers: {
+					sameFolderBoost: number;
+					crossFolderReduction: number;
+					recentConnectionBoost: number;
+					timeDecayDays: number;
+				};
+			};
+			markdown: {
+				enabled: boolean;
+				instrumentFamily: string;
+				intensity: number;
+				audioCharacteristics: {
+					baseVolume: number;
+					volumeVariation: number;
+					noteDuration: number;
+					attackTime: number;
+					releaseTime: number;
+					spatialSpread: number;
+					reverbAmount: number;
+					delayAmount: number;
+					harmonicRichness: number;
+					dissonanceLevel: number;
+					chordsEnabled: boolean;
+					strengthToVolumeEnabled: boolean;
+					strengthToVolumeAmount: number;
+					bidirectionalHarmony: boolean;
+					brokenLinkDissonance: boolean;
+				};
+				linkStrengthAnalysis: {
+					enabled: boolean;
+					frequencyThreshold: number;
+					volumeBoost: number;
+					harmonicBoost: number;
+				};
+				contextualModifiers: {
+					sameFolderBoost: number;
+					crossFolderReduction: number;
+					recentConnectionBoost: number;
+					timeDecayDays: number;
+				};
+			};
+			tag: {
+				enabled: boolean;
+				instrumentFamily: string;
+				intensity: number;
+				audioCharacteristics: {
+					baseVolume: number;
+					volumeVariation: number;
+					noteDuration: number;
+					attackTime: number;
+					releaseTime: number;
+					spatialSpread: number;
+					reverbAmount: number;
+					delayAmount: number;
+					harmonicRichness: number;
+					dissonanceLevel: number;
+					chordsEnabled: boolean;
+					strengthToVolumeEnabled: boolean;
+					strengthToVolumeAmount: number;
+					bidirectionalHarmony: boolean;
+					brokenLinkDissonance: boolean;
+				};
+				linkStrengthAnalysis: {
+					enabled: boolean;
+					frequencyThreshold: number;
+					volumeBoost: number;
+					harmonicBoost: number;
+				};
+				contextualModifiers: {
+					sameFolderBoost: number;
+					crossFolderReduction: number;
+					recentConnectionBoost: number;
+					timeDecayDays: number;
+				};
+			};
+		};
+
+		// Global settings
+		globalSettings: {
+			connectionVolumeMix: number;    // Overall volume for connection audio (0.0-1.0)
+			maxSimultaneousConnections: number; // Max concurrent connection sounds (5-50)
+			connectionAudioFadeTime: number;    // Fade in/out time in seconds (0.1-2.0)
+			enableCaching: boolean;         // Cache connection analysis results
+			maxCacheSize: number;          // Max cache entries (100-5000)
+			selectiveProcessing: boolean;  // Only process visible connections
+			highQualityMode: boolean;       // Use high-quality synthesis
+			antiAliasingEnabled: boolean;   // Enable audio anti-aliasing
+			compressionEnabled: boolean;    // Enable dynamic compression
+		};
+
+		// Preset management
+		currentPreset: string | null;       // Currently active preset name
+		customPresets: Array<{
+			name: string;
+			description: string;
+			author?: string;
+			version?: string;
+			mappings: Record<string, any>;
+		}>;
+
+		// Advanced features
+		advancedFeatures: {
+			connectionChords: boolean;      // Enable chord progressions for connections
+			contextualHarmony: boolean;     // Harmonize based on connected content
+			dynamicInstrumentation: boolean; // Change instruments based on context
+			velocityModulation: boolean;    // Modulate velocity based on connection strength
+			temporalSpacing: boolean;       // Space connection sounds temporally
+			crossfadeConnections: boolean;  // Crossfade between connection types
+		};
+	};
 }
 
 export interface SonigraphSettings {
@@ -586,6 +764,178 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				debugMode: false,               // Debug mode off by default
 				showStatistics: false,          // Statistics off by default
 				logClusteringDetails: false     // Logging off by default
+			}
+		},
+		// Phase 4.4: Connection Type Audio Differentiation - Default Settings
+		connectionTypeMapping: {
+			enabled: false,                     // Disabled by default for optional feature
+			independentFromContentAware: true, // Independent operation by default
+
+			// Connection type mappings with defaults from Phase 4.4 config
+			mappings: {
+				wikilink: {
+					enabled: true,              // Enable core wikilinks by default
+					instrumentFamily: 'strings',
+					intensity: 0.7,
+					audioCharacteristics: {
+						baseVolume: 0.7,
+						volumeVariation: 0.1,
+						noteDuration: 1.0,
+						attackTime: 0.05,
+						releaseTime: 0.8,
+						spatialSpread: 0.3,
+						reverbAmount: 0.2,
+						delayAmount: 0.1,
+						harmonicRichness: 0.6,
+						dissonanceLevel: 0.0,
+						chordsEnabled: false,
+						strengthToVolumeEnabled: true,
+						strengthToVolumeAmount: 0.3,
+						bidirectionalHarmony: true,
+						brokenLinkDissonance: false
+					},
+					linkStrengthAnalysis: {
+						enabled: true,
+						frequencyThreshold: 3,
+						volumeBoost: 1.3,
+						harmonicBoost: 1.2
+					},
+					contextualModifiers: {
+						sameFolderBoost: 1.1,
+						crossFolderReduction: 0.9,
+						recentConnectionBoost: 1.15,
+						timeDecayDays: 30
+					}
+				},
+				embed: {
+					enabled: true,              // Enable core embeds by default
+					instrumentFamily: 'keyboards',
+					intensity: 0.7,
+					audioCharacteristics: {
+						baseVolume: 0.8,
+						volumeVariation: 0.15,
+						noteDuration: 1.2,
+						attackTime: 0.08,
+						releaseTime: 1.2,
+						spatialSpread: 0.5,
+						reverbAmount: 0.3,
+						delayAmount: 0.2,
+						harmonicRichness: 0.8,
+						dissonanceLevel: 0.0,
+						chordsEnabled: true,
+						strengthToVolumeEnabled: true,
+						strengthToVolumeAmount: 0.4,
+						bidirectionalHarmony: true,
+						brokenLinkDissonance: false
+					},
+					linkStrengthAnalysis: {
+						enabled: true,
+						frequencyThreshold: 3,
+						volumeBoost: 1.3,
+						harmonicBoost: 1.2
+					},
+					contextualModifiers: {
+						sameFolderBoost: 1.1,
+						crossFolderReduction: 0.9,
+						recentConnectionBoost: 1.15,
+						timeDecayDays: 30
+					}
+				},
+				markdown: {
+					enabled: false,             // Disabled by default for minimal setup
+					instrumentFamily: 'woodwinds',
+					intensity: 0.7,
+					audioCharacteristics: {
+						baseVolume: 0.6,
+						volumeVariation: 0.1,
+						noteDuration: 0.8,
+						attackTime: 0.03,
+						releaseTime: 0.6,
+						spatialSpread: 0.2,
+						reverbAmount: 0.15,
+						delayAmount: 0.05,
+						harmonicRichness: 0.4,
+						dissonanceLevel: 0.0,
+						chordsEnabled: false,
+						strengthToVolumeEnabled: true,
+						strengthToVolumeAmount: 0.2,
+						bidirectionalHarmony: false,
+						brokenLinkDissonance: false
+					},
+					linkStrengthAnalysis: {
+						enabled: true,
+						frequencyThreshold: 3,
+						volumeBoost: 1.3,
+						harmonicBoost: 1.2
+					},
+					contextualModifiers: {
+						sameFolderBoost: 1.1,
+						crossFolderReduction: 0.9,
+						recentConnectionBoost: 1.15,
+						timeDecayDays: 30
+					}
+				},
+				tag: {
+					enabled: false,             // Disabled by default for minimal setup
+					instrumentFamily: 'ambient',
+					intensity: 0.7,
+					audioCharacteristics: {
+						baseVolume: 0.5,
+						volumeVariation: 0.2,
+						noteDuration: 1.5,
+						attackTime: 0.1,
+						releaseTime: 2.0,
+						spatialSpread: 0.7,
+						reverbAmount: 0.4,
+						delayAmount: 0.3,
+						harmonicRichness: 0.9,
+						dissonanceLevel: 0.0,
+						chordsEnabled: true,
+						strengthToVolumeEnabled: false,
+						strengthToVolumeAmount: 0.0,
+						bidirectionalHarmony: true,
+						brokenLinkDissonance: false
+					},
+					linkStrengthAnalysis: {
+						enabled: false,         // Disabled for tags by default
+						frequencyThreshold: 3,
+						volumeBoost: 1.0,
+						harmonicBoost: 1.0
+					},
+					contextualModifiers: {
+						sameFolderBoost: 1.0,
+						crossFolderReduction: 1.0,
+						recentConnectionBoost: 1.0,
+						timeDecayDays: 30
+					}
+				}
+			},
+
+			// Global settings - Conservative defaults for performance
+			globalSettings: {
+				connectionVolumeMix: 0.6,
+				maxSimultaneousConnections: 15,    // Conservative default for performance
+				connectionAudioFadeTime: 0.3,
+				enableCaching: true,
+				maxCacheSize: 500,                 // Moderate cache size
+				selectiveProcessing: true,         // Performance optimization enabled
+				highQualityMode: false,            // Standard quality by default
+				antiAliasingEnabled: true,
+				compressionEnabled: true
+			},
+
+			// Preset management
+			currentPreset: 'Default',
+			customPresets: [],                     // No custom presets by default
+
+			// Advanced features - All disabled by default for stability
+			advancedFeatures: {
+				connectionChords: false,
+				contextualHarmony: false,
+				dynamicInstrumentation: false,
+				velocityModulation: true,          // Only velocity modulation enabled by default
+				temporalSpacing: false,
+				crossfadeConnections: false
 			}
 		}
 	},

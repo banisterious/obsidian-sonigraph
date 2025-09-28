@@ -25,6 +25,17 @@ export { DEFAULT_TAG_MAPPINGS } from './SemanticMappingConfig';
 export { FolderHierarchyMapper } from './FolderHierarchyMapper';
 export { PathAnalyzer } from './PathAnalyzer';
 
+// Phase 4.4: Connection Type Audio Differentiation
+export { ConnectionTypeMapper } from './ConnectionTypeMapper';
+export { ConnectionTypeMappingPanel } from './ConnectionTypeMappingPanel';
+export { ConnectionTypePresetManager } from './ConnectionTypePresetManager';
+export {
+    DEFAULT_CONNECTION_TYPE_MAPPING_CONFIG,
+    DEFAULT_CONNECTION_CHARACTERISTICS,
+    DEFAULT_CONNECTION_INSTRUMENTS,
+    BUILT_IN_PRESETS
+} from './ConnectionTypeMappingConfig';
+
 // Re-export types for external use
 export type {
     FileMetadataMapping,
@@ -115,3 +126,23 @@ export type {
     PathAnalysis,
     FolderMetrics
 } from './PathAnalyzer';
+
+// Phase 4.4: Connection Type Audio Differentiation Types
+export type {
+    ConnectionType,
+    ConnectionTypeMappingConfig,
+    ConnectionTypeMapping,
+    ConnectionTypeMappingResult,
+    ConnectionTypeMappingMetrics,
+    ConnectionAudioCharacteristics,
+    ConnectionTypePreset
+} from './ConnectionTypeMappingConfig';
+
+export type {
+    ConnectionTypeMappingPanelCallbacks
+} from './ConnectionTypeMappingPanel';
+
+export type {
+    PresetOperationResult,
+    PresetValidationResult
+} from './ConnectionTypePresetManager';
