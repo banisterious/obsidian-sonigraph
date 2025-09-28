@@ -885,7 +885,10 @@ export class SonicGraphModal extends Modal {
         
         // 4.7. Smart Clustering Algorithms section
         this.createSmartClusteringSettings(settingsContent);
-        
+
+        // 4.8. Connection Type Audio Differentiation section (Phase 4.4)
+        this.createConnectionTypeMappingSettings(settingsContent);
+
         // 5. Timeline section
         this.createTimelineSettings(settingsContent);
         
@@ -1405,6 +1408,200 @@ export class SonicGraphModal extends Modal {
                 this.updateClusteringDebugging('showStatistics', !isActive);
             });
         }
+    }
+
+    /**
+     * Create connection type audio differentiation settings section (Phase 4.4)
+     */
+    private createConnectionTypeMappingSettings(container: HTMLElement): void {
+        const settings = this.getSonicGraphSettings().connectionTypeMapping;
+
+        // Only show if connection type mapping is enabled in main settings
+        if (!settings || !settings.enabled) {
+            return;
+        }
+
+        const section = container.createDiv({ cls: 'sonic-graph-settings-section connection-type-mapping-section' });
+        section.createEl('div', { text: 'CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)', cls: 'sonic-graph-settings-section-title' });
+
+        // Status indicator
+        const statusItem = section.createDiv({ cls: 'sonic-graph-setting-item connection-type-status' });
+        statusItem.createEl('label', { text: 'Current status', cls: 'sonic-graph-setting-label' });
+        const statusText = statusItem.createEl('div', {
+            text: `${settings.enabled ? 'ENABLED' : 'DISABLED'} - ${settings.currentPreset || 'No preset'}`,
+            cls: 'sonic-graph-setting-status'
+        });
+
+        // Independence toggle
+        new Setting(section)
+            .setName('Independent from Content-Aware Mapping')
+            .setDesc('Operate independently of Phase 4.1 content-aware mapping system')
+            .addToggle(toggle => toggle
+                .setValue(settings.independentFromContentAware)
+                .onChange(value => {
+                    this.updateConnectionTypeMappingConfig('independentFromContentAware', value);
+                })
+            );
+
+        // Global volume mix
+        new Setting(section)
+            .setName('Connection Volume Mix')
+            .setDesc('Overall volume level for connection audio')
+            .addSlider(slider => slider
+                .setLimits(0, 100, 5)
+                .setValue(settings.globalSettings.connectionVolumeMix * 100)
+                .setDynamicTooltip()
+                .onChange(value => {
+                    this.updateConnectionTypeMappingGlobalSetting('connectionVolumeMix', value / 100);
+                })
+            );
+
+        // Max simultaneous connections
+        new Setting(section)
+            .setName('Maximum Simultaneous Connections')
+            .setDesc('Limit concurrent connection sounds for performance')
+            .addSlider(slider => slider
+                .setLimits(5, 50, 1)
+                .setValue(settings.globalSettings.maxSimultaneousConnections)
+                .setDynamicTooltip()
+                .onChange(value => {
+                    this.updateConnectionTypeMappingGlobalSetting('maxSimultaneousConnections', value);
+                })
+            );
+
+        // Connection type toggles
+        const connectionTypesSection = section.createDiv({ cls: 'connection-types-toggles' });
+        connectionTypesSection.createEl('h5', { text: 'Connection Types', cls: 'connection-type-subsection-title' });
+
+        // Wikilinks
+        new Setting(connectionTypesSection)
+            .setName('Wikilinks ([[internal links]])')
+            .setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? 'ENABLED' : 'DISABLED'}`)
+            .addToggle(toggle => toggle
+                .setValue(settings.mappings.wikilink.enabled)
+                .onChange(value => {
+                    this.updateConnectionTypeMapping('wikilink', 'enabled', value);
+                })
+            );
+
+        // Embeds
+        new Setting(connectionTypesSection)
+            .setName('Embeds (![[embedded content]])')
+            .setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? 'ENABLED' : 'DISABLED'}`)
+            .addToggle(toggle => toggle
+                .setValue(settings.mappings.embed.enabled)
+                .onChange(value => {
+                    this.updateConnectionTypeMapping('embed', 'enabled', value);
+                })
+            );
+
+        // Markdown links (if enabled)
+        if (settings.mappings.markdown) {
+            new Setting(connectionTypesSection)
+                .setName('Markdown Links ([link](path))')
+                .setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? 'ENABLED' : 'DISABLED'}`)
+                .addToggle(toggle => toggle
+                    .setValue(settings.mappings.markdown.enabled)
+                    .onChange(value => {
+                        this.updateConnectionTypeMapping('markdown', 'enabled', value);
+                    })
+                );
+        }
+
+        // Tag connections (if enabled)
+        if (settings.mappings.tag) {
+            new Setting(connectionTypesSection)
+                .setName('Tag Connections (shared tags)')
+                .setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? 'ENABLED' : 'DISABLED'}`)
+                .addToggle(toggle => toggle
+                    .setValue(settings.mappings.tag.enabled)
+                    .onChange(value => {
+                        this.updateConnectionTypeMapping('tag', 'enabled', value);
+                    })
+                );
+        }
+
+        // Performance settings
+        const performanceSection = section.createDiv({ cls: 'connection-type-performance' });
+        performanceSection.createEl('h5', { text: 'Performance', cls: 'connection-type-subsection-title' });
+
+        new Setting(performanceSection)
+            .setName('Enable Caching')
+            .setDesc('Cache connection analysis results for better performance')
+            .addToggle(toggle => toggle
+                .setValue(settings.globalSettings.enableCaching)
+                .onChange(value => {
+                    this.updateConnectionTypeMappingGlobalSetting('enableCaching', value);
+                })
+            );
+
+        new Setting(performanceSection)
+            .setName('Selective Processing')
+            .setDesc('Only process visible connections to improve performance')
+            .addToggle(toggle => toggle
+                .setValue(settings.globalSettings.selectiveProcessing)
+                .onChange(value => {
+                    this.updateConnectionTypeMappingGlobalSetting('selectiveProcessing', value);
+                })
+            );
+
+        // Note about full configuration
+        const noteSection = section.createDiv({ cls: 'connection-type-note' });
+        noteSection.createEl('div', {
+            text: 'For detailed connection type configuration, audio characteristics, and preset management, use the Plugin Settings > Sonic Graph Settings panel.',
+            cls: 'sonic-graph-setting-note sonic-graph-small-text'
+        });
+    }
+
+    /**
+     * Update connection type mapping configuration
+     */
+    private updateConnectionTypeMappingConfig(key: string, value: any): void {
+        const settings = this.getSonicGraphSettings();
+        if (!settings.connectionTypeMapping) return;
+
+        (settings.connectionTypeMapping as any)[key] = value;
+
+        // Save to plugin settings
+        this.plugin.settings.sonicGraphSettings = settings;
+        this.plugin.saveSettings();
+
+        logger.debug('connection-type-mapping', `Updated config: ${key} = ${value}`);
+    }
+
+    /**
+     * Update connection type mapping global setting
+     */
+    private updateConnectionTypeMappingGlobalSetting(key: string, value: any): void {
+        const settings = this.getSonicGraphSettings();
+        if (!settings.connectionTypeMapping?.globalSettings) return;
+
+        (settings.connectionTypeMapping.globalSettings as any)[key] = value;
+
+        // Save to plugin settings
+        this.plugin.settings.sonicGraphSettings = settings;
+        this.plugin.saveSettings();
+
+        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${value}`);
+    }
+
+    /**
+     * Update specific connection type mapping
+     */
+    private updateConnectionTypeMapping(connectionType: string, key: string, value: any): void {
+        const settings = this.getSonicGraphSettings();
+        if (!settings.connectionTypeMapping?.mappings) return;
+
+        const mapping = (settings.connectionTypeMapping.mappings as any)[connectionType];
+        if (!mapping) return;
+
+        mapping[key] = value;
+
+        // Save to plugin settings
+        this.plugin.settings.sonicGraphSettings = settings;
+        this.plugin.saveSettings();
+
+        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${value}`);
     }
 
     /**
@@ -3745,6 +3942,170 @@ export class SonicGraphModal extends Modal {
                     showStatistics: false,
                     logClusteringDetails: false
                 }
+            },
+            // Phase 4.4: Connection Type Audio Differentiation - Default Settings
+            connectionTypeMapping: {
+                enabled: false,
+                independentFromContentAware: true,
+                mappings: {
+                    wikilink: {
+                        enabled: true,
+                        instrumentFamily: 'strings',
+                        intensity: 0.7,
+                        audioCharacteristics: {
+                            baseVolume: 0.7,
+                            volumeVariation: 0.1,
+                            noteDuration: 1.0,
+                            attackTime: 0.05,
+                            releaseTime: 0.8,
+                            spatialSpread: 0.3,
+                            reverbAmount: 0.2,
+                            delayAmount: 0.1,
+                            harmonicRichness: 0.6,
+                            dissonanceLevel: 0.0,
+                            chordsEnabled: false,
+                            strengthToVolumeEnabled: true,
+                            strengthToVolumeAmount: 0.3,
+                            bidirectionalHarmony: true,
+                            brokenLinkDissonance: false
+                        },
+                        linkStrengthAnalysis: {
+                            enabled: true,
+                            frequencyThreshold: 3,
+                            volumeBoost: 1.3,
+                            harmonicBoost: 1.2
+                        },
+                        contextualModifiers: {
+                            sameFolderBoost: 1.1,
+                            crossFolderReduction: 0.9,
+                            recentConnectionBoost: 1.15,
+                            timeDecayDays: 30
+                        }
+                    },
+                    embed: {
+                        enabled: true,
+                        instrumentFamily: 'keyboards',
+                        intensity: 0.7,
+                        audioCharacteristics: {
+                            baseVolume: 0.8,
+                            volumeVariation: 0.15,
+                            noteDuration: 1.2,
+                            attackTime: 0.08,
+                            releaseTime: 1.2,
+                            spatialSpread: 0.5,
+                            reverbAmount: 0.3,
+                            delayAmount: 0.2,
+                            harmonicRichness: 0.8,
+                            dissonanceLevel: 0.0,
+                            chordsEnabled: true,
+                            strengthToVolumeEnabled: true,
+                            strengthToVolumeAmount: 0.4,
+                            bidirectionalHarmony: true,
+                            brokenLinkDissonance: false
+                        },
+                        linkStrengthAnalysis: {
+                            enabled: true,
+                            frequencyThreshold: 3,
+                            volumeBoost: 1.3,
+                            harmonicBoost: 1.2
+                        },
+                        contextualModifiers: {
+                            sameFolderBoost: 1.1,
+                            crossFolderReduction: 0.9,
+                            recentConnectionBoost: 1.15,
+                            timeDecayDays: 30
+                        }
+                    },
+                    markdown: {
+                        enabled: false,
+                        instrumentFamily: 'woodwinds',
+                        intensity: 0.7,
+                        audioCharacteristics: {
+                            baseVolume: 0.6,
+                            volumeVariation: 0.1,
+                            noteDuration: 0.8,
+                            attackTime: 0.03,
+                            releaseTime: 0.6,
+                            spatialSpread: 0.2,
+                            reverbAmount: 0.15,
+                            delayAmount: 0.05,
+                            harmonicRichness: 0.4,
+                            dissonanceLevel: 0.0,
+                            chordsEnabled: false,
+                            strengthToVolumeEnabled: true,
+                            strengthToVolumeAmount: 0.2,
+                            bidirectionalHarmony: false,
+                            brokenLinkDissonance: false
+                        },
+                        linkStrengthAnalysis: {
+                            enabled: true,
+                            frequencyThreshold: 3,
+                            volumeBoost: 1.3,
+                            harmonicBoost: 1.2
+                        },
+                        contextualModifiers: {
+                            sameFolderBoost: 1.1,
+                            crossFolderReduction: 0.9,
+                            recentConnectionBoost: 1.15,
+                            timeDecayDays: 30
+                        }
+                    },
+                    tag: {
+                        enabled: false,
+                        instrumentFamily: 'ambient',
+                        intensity: 0.7,
+                        audioCharacteristics: {
+                            baseVolume: 0.5,
+                            volumeVariation: 0.2,
+                            noteDuration: 1.5,
+                            attackTime: 0.1,
+                            releaseTime: 2.0,
+                            spatialSpread: 0.7,
+                            reverbAmount: 0.4,
+                            delayAmount: 0.3,
+                            harmonicRichness: 0.9,
+                            dissonanceLevel: 0.0,
+                            chordsEnabled: true,
+                            strengthToVolumeEnabled: false,
+                            strengthToVolumeAmount: 0.0,
+                            bidirectionalHarmony: true,
+                            brokenLinkDissonance: false
+                        },
+                        linkStrengthAnalysis: {
+                            enabled: false,
+                            frequencyThreshold: 3,
+                            volumeBoost: 1.0,
+                            harmonicBoost: 1.0
+                        },
+                        contextualModifiers: {
+                            sameFolderBoost: 1.0,
+                            crossFolderReduction: 1.0,
+                            recentConnectionBoost: 1.0,
+                            timeDecayDays: 30
+                        }
+                    }
+                },
+                globalSettings: {
+                    connectionVolumeMix: 0.6,
+                    maxSimultaneousConnections: 15,
+                    connectionAudioFadeTime: 0.3,
+                    enableCaching: true,
+                    maxCacheSize: 500,
+                    selectiveProcessing: true,
+                    highQualityMode: false,
+                    antiAliasingEnabled: true,
+                    compressionEnabled: true
+                },
+                currentPreset: 'Default',
+                customPresets: [] as any[],
+                advancedFeatures: {
+                    connectionChords: false,
+                    contextualHarmony: false,
+                    dynamicInstrumentation: false,
+                    velocityModulation: true,
+                    temporalSpacing: false,
+                    crossfadeConnections: false
+                }
             }
         };
         
@@ -3762,7 +4123,8 @@ export class SonicGraphModal extends Modal {
             adaptiveDetail: { ...defaultSettings.adaptiveDetail, ...settings.adaptiveDetail },
             layout: { ...defaultSettings.layout, ...settings.layout },
             contentAwarePositioning: { ...defaultSettings.contentAwarePositioning, ...settings.contentAwarePositioning },
-            smartClustering: { ...defaultSettings.smartClustering, ...settings.smartClustering }
+            smartClustering: { ...defaultSettings.smartClustering, ...settings.smartClustering },
+            connectionTypeMapping: { ...defaultSettings.connectionTypeMapping, ...settings.connectionTypeMapping }
         };
     }
 
