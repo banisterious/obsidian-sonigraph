@@ -2462,6 +2462,9 @@ export class SonicGraphView extends ItemView {
 
         // Phase 6.1: Musical Theory Settings
         this.createMusicalTheorySettings(section);
+
+        // Phase 6.2: Dynamic Orchestration Settings
+        this.createDynamicOrchestrationSettings(section);
     }
 
     /**
@@ -4008,6 +4011,222 @@ export class SonicGraphView extends ItemView {
 
         // Recreate musical theory section
         this.createMusicalTheorySettings(settingsContent as HTMLElement);
+    }
+
+    /**
+     * Phase 6.2: Create dynamic orchestration settings
+     */
+    private createDynamicOrchestrationSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Header
+        const headerItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        headerItem.createEl('label', {
+            text: 'Phase 6.2: Dynamic Orchestration',
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header'
+        });
+        headerItem.createEl('div', {
+            text: 'Complexity-based and temporal orchestration that evolves with your vault',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Enable toggle
+        const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        enabledItem.createEl('label', {
+            text: 'Enable Dynamic Orchestration',
+            cls: 'sonic-graph-setting-label'
+        });
+        enabledItem.createEl('div', {
+            text: 'Automatically adjust instrumentation based on vault complexity and time of day',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const enabledToggle = enabledItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        enabledToggle.checked = this.plugin.settings.dynamicOrchestration?.enabled || false;
+        enabledToggle.addEventListener('change', async () => {
+            if (!this.plugin.settings.dynamicOrchestration) {
+                this.plugin.settings.dynamicOrchestration = {
+                    enabled: enabledToggle.checked,
+                    customThresholds: false,
+                    temporalInfluenceEnabled: true,
+                    timeOfDayInfluence: 0.5,
+                    seasonalInfluence: 0.3,
+                    transitionDuration: 3.0,
+                    autoAdjust: true
+                };
+            } else {
+                this.plugin.settings.dynamicOrchestration.enabled = enabledToggle.checked;
+            }
+            await this.plugin.saveSettings();
+            this.refreshDynamicOrchestrationSettings();
+        });
+
+        // Show detailed settings if enabled
+        if (this.plugin.settings.dynamicOrchestration?.enabled) {
+            this.createDynamicOrchestrationDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 6.2: Create detailed dynamic orchestration settings
+     */
+    private createDynamicOrchestrationDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.dynamicOrchestration!;
+
+        // Temporal Influence Enable
+        const temporalItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        temporalItem.createEl('label', {
+            text: 'Temporal Influence',
+            cls: 'sonic-graph-setting-label'
+        });
+        temporalItem.createEl('div', {
+            text: 'Adjust instrumentation based on time of day and season',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const temporalToggle = temporalItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        temporalToggle.checked = settings.temporalInfluenceEnabled;
+        temporalToggle.addEventListener('change', async () => {
+            settings.temporalInfluenceEnabled = temporalToggle.checked;
+            await this.plugin.saveSettings();
+        });
+
+        // Time of Day Influence Slider
+        const timeOfDayItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        timeOfDayItem.createEl('label', {
+            text: 'Time of Day Influence',
+            cls: 'sonic-graph-setting-label'
+        });
+        timeOfDayItem.createEl('div', {
+            text: `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`,
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const timeSlider = timeOfDayItem.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider',
+            attr: {
+                min: '0',
+                max: '1',
+                step: '0.1'
+            }
+        });
+        timeSlider.value = settings.timeOfDayInfluence.toString();
+        timeSlider.addEventListener('input', async () => {
+            settings.timeOfDayInfluence = parseFloat(timeSlider.value);
+            timeOfDayItem.querySelector('.sonic-graph-setting-description')!.textContent =
+                `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+            await this.plugin.saveSettings();
+        });
+
+        // Seasonal Influence Slider
+        const seasonalItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        seasonalItem.createEl('label', {
+            text: 'Seasonal Influence',
+            cls: 'sonic-graph-setting-label'
+        });
+        seasonalItem.createEl('div', {
+            text: `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`,
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const seasonSlider = seasonalItem.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider',
+            attr: {
+                min: '0',
+                max: '1',
+                step: '0.1'
+            }
+        });
+        seasonSlider.value = settings.seasonalInfluence.toString();
+        seasonSlider.addEventListener('input', async () => {
+            settings.seasonalInfluence = parseFloat(seasonSlider.value);
+            seasonalItem.querySelector('.sonic-graph-setting-description')!.textContent =
+                `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+            await this.plugin.saveSettings();
+        });
+
+        // Transition Duration Slider
+        const transitionItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        transitionItem.createEl('label', {
+            text: 'Transition Duration',
+            cls: 'sonic-graph-setting-label'
+        });
+        transitionItem.createEl('div', {
+            text: `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`,
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const transitionSlider = transitionItem.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider',
+            attr: {
+                min: '1',
+                max: '10',
+                step: '0.5'
+            }
+        });
+        transitionSlider.value = settings.transitionDuration.toString();
+        transitionSlider.addEventListener('input', async () => {
+            settings.transitionDuration = parseFloat(transitionSlider.value);
+            transitionItem.querySelector('.sonic-graph-setting-description')!.textContent =
+                `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+            await this.plugin.saveSettings();
+        });
+
+        // Auto Adjust Toggle
+        const autoAdjustItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        autoAdjustItem.createEl('label', {
+            text: 'Auto-Adjust',
+            cls: 'sonic-graph-setting-label'
+        });
+        autoAdjustItem.createEl('div', {
+            text: 'Automatically update orchestration as vault changes',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const autoAdjustToggle = autoAdjustItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        autoAdjustToggle.checked = settings.autoAdjust;
+        autoAdjustToggle.addEventListener('change', async () => {
+            settings.autoAdjust = autoAdjustToggle.checked;
+            await this.plugin.saveSettings();
+        });
+    }
+
+    /**
+     * Phase 6.2: Refresh dynamic orchestration settings display
+     */
+    private refreshDynamicOrchestrationSettings(): void {
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find and remove existing dynamic orchestration settings
+        const sections = settingsContent.querySelectorAll('.sonic-graph-setting-item, .sonic-graph-settings-divider');
+        let removeNext = false;
+        for (const section of Array.from(sections)) {
+            if (section.textContent?.includes('Phase 6.2: Dynamic Orchestration')) {
+                removeNext = true;
+            }
+            if (removeNext) {
+                section.remove();
+            }
+        }
+
+        // Recreate dynamic orchestration section
+        this.createDynamicOrchestrationSettings(settingsContent as HTMLElement);
     }
 
     /**
