@@ -671,6 +671,17 @@ export interface SonigraphSettings {
 		dynamicScaleModulation: boolean; // Change scale based on vault state
 	};
 
+	// Phase 6.2: Dynamic Orchestration
+	dynamicOrchestration?: {
+		enabled: boolean;
+		customThresholds: boolean; // Use custom complexity thresholds
+		temporalInfluenceEnabled: boolean; // Enable time-of-day and seasonal effects
+		timeOfDayInfluence: number; // 0-1, strength of time-of-day effect
+		seasonalInfluence: number; // 0-1, strength of seasonal effect
+		transitionDuration: number; // Seconds, duration of tier transitions
+		autoAdjust: boolean; // Auto-adjust based on vault changes
+	};
+
 	// Phase 5.3: Community Detection Audio
 	communityDetection?: {
 		enabled: boolean;
@@ -2527,6 +2538,17 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		quantizationStrength: 0.8, // Strong quantization to scale
 		preferredChordProgression: 'I-IV-V-I', // Classic progression
 		dynamicScaleModulation: false // Static scale by default
+	},
+
+	// Phase 6.2: Default dynamic orchestration settings (disabled by default)
+	dynamicOrchestration: {
+		enabled: false,
+		customThresholds: false, // Use default thresholds
+		temporalInfluenceEnabled: true, // Time-of-day and seasonal effects
+		timeOfDayInfluence: 0.5, // Moderate time-of-day influence
+		seasonalInfluence: 0.3, // Subtle seasonal influence
+		transitionDuration: 3.0, // 3 second transitions
+		autoAdjust: true // Automatically adjust to vault changes
 	},
 
 	// Phase 5.3: Default community detection audio settings (disabled by default)
