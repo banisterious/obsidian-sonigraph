@@ -23,6 +23,9 @@ import {
 import { ClusterThemeGenerator } from './ClusterThemeGenerator';
 import { CommunityAudioAnalyzer } from './CommunityAudioAnalyzer';
 import { CommunityEvolutionTracker } from './CommunityEvolutionTracker';
+import { HubOrchestrationManager } from '../orchestration/HubOrchestrationManager';
+import { HubTransitionHandler } from '../orchestration/HubTransitionHandler';
+import type { HubOrchestrationSettings, OrchestrationDecisions, HubMetrics } from '../orchestration/types';
 import * as Tone from 'tone';
 
 const logger = getLogger('cluster-audio');
@@ -46,11 +49,19 @@ export class ClusterAudioMapper {
   private communityEvolutionSettings: CommunityEvolutionSettings | null = null;
   private clusteringAlgorithms: SmartClusteringAlgorithms | null = null;
 
+  // Phase 5.2: Hub orchestration integration
+  private hubOrchestrationManager: HubOrchestrationManager | null = null;
+  private hubTransitionHandler: HubTransitionHandler | null = null;
+  private hubOrchestrationSettings: HubOrchestrationSettings | null = null;
+  private allNodes: GraphNode[] = [];
+  private allLinks: GraphLink[] = [];
+
   constructor(
     settings: ClusterAudioSettings,
     communityDetectionSettings?: CommunityDetectionSettings,
     communityEvolutionSettings?: CommunityEvolutionSettings,
-    clusteringAlgorithms?: SmartClusteringAlgorithms
+    clusteringAlgorithms?: SmartClusteringAlgorithms,
+    hubOrchestrationSettings?: HubOrchestrationSettings
   ) {
     logger.debug('initialization', 'ClusterAudioMapper created');
 
@@ -79,6 +90,19 @@ export class ClusterAudioMapper {
         communityEvolutionSettings,
         this.masterVolume
       );
+    }
+
+    // Phase 5.2: Initialize hub orchestration if settings provided
+    if (hubOrchestrationSettings) {
+      this.hubOrchestrationSettings = hubOrchestrationSettings;
+      if (hubOrchestrationSettings.enabled) {
+        this.hubOrchestrationManager = new HubOrchestrationManager(hubOrchestrationSettings);
+        this.hubTransitionHandler = new HubTransitionHandler(
+          this.masterVolume,
+          hubOrchestrationSettings.transitionsEnabled
+        );
+        logger.debug('initialization', 'Hub orchestration initialized');
+      }
     }
 
     // Connect master volume to destination
@@ -116,6 +140,25 @@ export class ClusterAudioMapper {
     } catch (error) {
       logger.error('initialization', 'Failed to initialize cluster audio system', { error });
       throw error;
+    }
+  }
+
+  /**
+   * Phase 5.2: Update graph data for hub orchestration
+   */
+  public updateGraphData(nodes: GraphNode[], links: GraphLink[]): void {
+    this.allNodes = nodes;
+    this.allLinks = links;
+
+    // Update hub metrics if orchestration is enabled
+    if (this.hubOrchestrationManager && this.hubOrchestrationSettings?.enabled) {
+      this.hubOrchestrationManager.updateHubMetrics(nodes, links);
+
+      // Detect and trigger hub transitions
+      if (this.hubTransitionHandler && this.hubOrchestrationSettings.transitionsEnabled) {
+        // This will be called from the orchestration manager when metrics are updated
+        logger.debug('hub-transitions', 'Hub metrics updated, transitions will be detected on next orchestration');
+      }
     }
   }
 
@@ -583,8 +626,25 @@ export class ClusterAudioMapper {
     });
 
     try {
+      // Phase 5.2: Apply hub orchestration if enabled
+      let orchestrationDecisions: OrchestrationDecisions | null = null;
+      if (this.hubOrchestrationManager && this.hubOrchestrationSettings?.enabled) {
+        orchestrationDecisions = this.hubOrchestrationManager.orchestrateClusterFromHub(
+          cluster,
+          this.allNodes,
+          this.allLinks
+        );
+        logger.debug('cluster-start', 'Hub orchestration applied', {
+          clusterId: cluster.id,
+          hubNodeId: orchestrationDecisions.hubNodeId,
+          harmonyComplexity: orchestrationDecisions.harmonyComplexity
+        });
+      }
+
       const theme = this.themeGenerator.getThemeForClusterType(cluster.type);
-      const volume = this.settings.clusterTypeVolumes[cluster.type] || 0.5;
+      const volume = orchestrationDecisions
+        ? (orchestrationDecisions.volumeDistribution.get(cluster.nodes[0]?.id) || 0.5)
+        : (this.settings.clusterTypeVolumes[cluster.type] || 0.5);
 
       // Create audio source for cluster
       const audioSource = this.createClusterAudioSource(theme);
@@ -991,6 +1051,45 @@ export class ClusterAudioMapper {
   }
 
   /**
+   * Phase 5.2: Update hub orchestration settings
+   */
+  public updateHubOrchestrationSettings(settings: HubOrchestrationSettings): void {
+    this.hubOrchestrationSettings = settings;
+
+    if (settings.enabled) {
+      if (!this.hubOrchestrationManager) {
+        this.hubOrchestrationManager = new HubOrchestrationManager(settings);
+        logger.debug('settings', 'Hub orchestration manager created');
+      } else {
+        this.hubOrchestrationManager.updateSettings(settings);
+        logger.debug('settings', 'Hub orchestration settings updated');
+      }
+
+      if (!this.hubTransitionHandler) {
+        this.hubTransitionHandler = new HubTransitionHandler(
+          this.masterVolume,
+          settings.transitionsEnabled
+        );
+        logger.debug('settings', 'Hub transition handler created');
+      } else {
+        this.hubTransitionHandler.updateSettings(settings.transitionsEnabled);
+        logger.debug('settings', 'Hub transition settings updated');
+      }
+    } else {
+      // Dispose if disabled
+      if (this.hubOrchestrationManager) {
+        this.hubOrchestrationManager.dispose();
+        this.hubOrchestrationManager = null;
+      }
+      if (this.hubTransitionHandler) {
+        this.hubTransitionHandler.dispose();
+        this.hubTransitionHandler = null;
+      }
+      logger.debug('settings', 'Hub orchestration disabled and disposed');
+    }
+  }
+
+  /**
    * Dispose of all resources
    */
   public dispose(): void {
@@ -1009,6 +1108,15 @@ export class ClusterAudioMapper {
 
     if (this.communityEvolutionTracker) {
       this.communityEvolutionTracker.dispose();
+    }
+
+    // Phase 5.2: Dispose hub orchestration components
+    if (this.hubOrchestrationManager) {
+      this.hubOrchestrationManager.dispose();
+    }
+
+    if (this.hubTransitionHandler) {
+      this.hubTransitionHandler.dispose();
     }
 
     this.masterVolume.dispose();

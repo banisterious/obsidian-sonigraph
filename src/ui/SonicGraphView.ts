@@ -2451,6 +2451,9 @@ export class SonicGraphView extends ItemView {
         // Phase 5.1: Cluster Audio Settings
         this.createClusterAudioSettings(section);
 
+        // Phase 5.2: Hub Orchestration Settings
+        this.createHubOrchestrationSettings(section);
+
         // Phase 5.3: Community Detection Audio Settings
         this.createCommunityDetectionSettings(section);
 
@@ -3044,6 +3047,278 @@ export class SonicGraphView extends ItemView {
             text: 'Cluster audio uses efficient synthesis and automatic voice management to minimize performance impact',
             cls: 'sonic-graph-setting-description sonic-graph-info'
         });
+    }
+
+    /**
+     * Phase 5.2: Create hub orchestration settings section
+     */
+    private createHubOrchestrationSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Hub Orchestration Header
+        const headerContainer = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        headerContainer.createEl('h3', {
+            text: 'Phase 5.2: Hub Node Orchestration',
+            cls: 'sonic-graph-section-header'
+        });
+        headerContainer.createEl('div', {
+            text: 'Hub nodes act as "conductors" to drive orchestration decisions based on centrality metrics',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Enable Hub Orchestration Toggle
+        const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        enabledItem.createEl('label', {
+            text: 'Enable Hub Orchestration',
+            cls: 'sonic-graph-setting-label'
+        });
+        enabledItem.createEl('div', {
+            text: 'Hub nodes with high centrality get prominent lead instruments while peripheral nodes provide accompaniment',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const enabledToggle = enabledItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        enabledToggle.checked = this.plugin.settings.hubOrchestration?.enabled || false;
+        enabledToggle.addEventListener('change', async () => {
+            if (!this.plugin.settings.hubOrchestration) {
+                this.plugin.settings.hubOrchestration = {
+                    enabled: enabledToggle.checked,
+                    hubThreshold: 0.6,
+                    prominenceMultiplier: 2.0,
+                    orchestrationMode: 'balanced',
+                    transitionsEnabled: true,
+                    centralityWeights: {
+                        degree: 0.3,
+                        betweenness: 0.3,
+                        eigenvector: 0.2,
+                        pageRank: 0.2
+                    },
+                    hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
+                };
+            } else {
+                this.plugin.settings.hubOrchestration.enabled = enabledToggle.checked;
+            }
+            await this.plugin.saveSettings();
+            this.refreshHubOrchestrationSettings();
+        });
+
+        // Show detailed settings if enabled
+        if (this.plugin.settings.hubOrchestration?.enabled) {
+            this.createHubOrchestrationDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 5.2: Create detailed hub orchestration settings
+     */
+    private createHubOrchestrationDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.hubOrchestration!;
+
+        // Orchestration Mode Dropdown
+        const modeItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        modeItem.createEl('label', {
+            text: 'Orchestration Mode',
+            cls: 'sonic-graph-setting-label'
+        });
+        modeItem.createEl('div', {
+            text: 'Controls how hub prominence affects audio mixing',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const modeSelect = modeItem.createEl('select', {
+            cls: 'sonic-graph-select'
+        });
+        ['hub-led', 'democratic', 'balanced'].forEach(mode => {
+            const option = modeSelect.createEl('option', {
+                text: mode.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                value: mode
+            });
+            if (mode === settings.orchestrationMode) {
+                option.selected = true;
+            }
+        });
+        modeSelect.addEventListener('change', async () => {
+            settings.orchestrationMode = modeSelect.value as any;
+            await this.plugin.saveSettings();
+        });
+
+        // Hub Threshold Slider
+        const thresholdItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        thresholdItem.createEl('label', {
+            text: 'Hub Threshold',
+            cls: 'sonic-graph-setting-label'
+        });
+        thresholdItem.createEl('div', {
+            text: 'Minimum centrality score for a node to be considered a hub',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const thresholdContainer = thresholdItem.createDiv({ cls: 'sonic-graph-slider-container' });
+        const thresholdSlider = thresholdContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider'
+        });
+        thresholdSlider.min = '0.4';
+        thresholdSlider.max = '0.9';
+        thresholdSlider.step = '0.05';
+        thresholdSlider.value = settings.hubThreshold.toString();
+
+        const thresholdValue = thresholdContainer.createEl('span', {
+            text: `${(settings.hubThreshold * 100).toFixed(0)}%`,
+            cls: 'sonic-graph-slider-value'
+        });
+
+        thresholdSlider.addEventListener('input', async () => {
+            const value = parseFloat(thresholdSlider.value);
+            thresholdValue.textContent = `${(value * 100).toFixed(0)}%`;
+            settings.hubThreshold = value;
+            await this.plugin.saveSettings();
+        });
+
+        // Prominence Multiplier Slider
+        const prominenceItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        prominenceItem.createEl('label', {
+            text: 'Hub Prominence',
+            cls: 'sonic-graph-setting-label'
+        });
+        prominenceItem.createEl('div', {
+            text: 'How much louder hubs are compared to peripheral nodes',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const prominenceContainer = prominenceItem.createDiv({ cls: 'sonic-graph-slider-container' });
+        const prominenceSlider = prominenceContainer.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider'
+        });
+        prominenceSlider.min = '1.0';
+        prominenceSlider.max = '5.0';
+        prominenceSlider.step = '0.5';
+        prominenceSlider.value = settings.prominenceMultiplier.toString();
+
+        const prominenceValue = prominenceContainer.createEl('span', {
+            text: `${settings.prominenceMultiplier.toFixed(1)}x`,
+            cls: 'sonic-graph-slider-value'
+        });
+
+        prominenceSlider.addEventListener('input', async () => {
+            const value = parseFloat(prominenceSlider.value);
+            prominenceValue.textContent = `${value.toFixed(1)}x`;
+            settings.prominenceMultiplier = value;
+            await this.plugin.saveSettings();
+        });
+
+        // Centrality Weights Header
+        const weightsHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        weightsHeader.createEl('h4', {
+            text: 'Centrality Algorithm Weights',
+            cls: 'sonic-graph-subsection-header'
+        });
+        weightsHeader.createEl('div', {
+            text: 'Adjust how different centrality metrics contribute to hub scoring',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Degree Centrality Weight
+        this.createWeightSlider(container, 'Degree Centrality',
+            'Based on direct connection count',
+            settings.centralityWeights.degree, 0, 1, 0.05,
+            async (value) => {
+                settings.centralityWeights.degree = value;
+                await this.plugin.saveSettings();
+            }
+        );
+
+        // Betweenness Centrality Weight
+        this.createWeightSlider(container, 'Betweenness Centrality',
+            'Based on how often node appears on shortest paths',
+            settings.centralityWeights.betweenness, 0, 1, 0.05,
+            async (value) => {
+                settings.centralityWeights.betweenness = value;
+                await this.plugin.saveSettings();
+            }
+        );
+
+        // Eigenvector Centrality Weight
+        this.createWeightSlider(container, 'Eigenvector Centrality',
+            'Based on connections to well-connected nodes',
+            settings.centralityWeights.eigenvector, 0, 1, 0.05,
+            async (value) => {
+                settings.centralityWeights.eigenvector = value;
+                await this.plugin.saveSettings();
+            }
+        );
+
+        // PageRank Weight
+        this.createWeightSlider(container, 'PageRank',
+            'Based on Google\'s authority algorithm',
+            settings.centralityWeights.pageRank, 0, 1, 0.05,
+            async (value) => {
+                settings.centralityWeights.pageRank = value;
+                await this.plugin.saveSettings();
+            }
+        );
+
+        // Hub Transitions Toggle
+        const transitionsItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        transitionsItem.createEl('label', {
+            text: 'Hub Transition Audio',
+            cls: 'sonic-graph-setting-label'
+        });
+        transitionsItem.createEl('div', {
+            text: 'Play audio effects when nodes become or lose hub status',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const transitionsToggle = transitionsItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        transitionsToggle.checked = settings.transitionsEnabled;
+        transitionsToggle.addEventListener('change', async () => {
+            settings.transitionsEnabled = transitionsToggle.checked;
+            await this.plugin.saveSettings();
+        });
+
+        // Performance note
+        const performanceNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        performanceNote.createEl('div', {
+            text: 'Hub orchestration uses efficient centrality caching and audio pooling for optimal performance',
+            cls: 'sonic-graph-setting-description sonic-graph-info'
+        });
+    }
+
+    /**
+     * Phase 5.2: Refresh hub orchestration settings when enabled/disabled
+     */
+    private refreshHubOrchestrationSettings(): void {
+        // Find the settings panel and recreate the audio section
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find and remove existing audio sections
+        const sections = settingsContent.querySelectorAll('.sonic-graph-setting-item, .sonic-graph-settings-divider');
+        let removeNext = false;
+        for (const section of Array.from(sections)) {
+            if (section.textContent?.includes('Phase 5.2: Hub Node Orchestration')) {
+                removeNext = true;
+            }
+            if (removeNext) {
+                section.remove();
+                if (section.textContent?.includes('Phase 5.3: Community Detection')) {
+                    break;
+                }
+            }
+        }
+
+        // Recreate hub orchestration section
+        this.createHubOrchestrationSettings(settingsContent as HTMLElement);
     }
 
     /**
