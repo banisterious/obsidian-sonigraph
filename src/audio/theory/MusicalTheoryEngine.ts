@@ -1,342 +1,489 @@
 /**
- * MusicalTheoryEngine
- * 
- * Provides musical theory integration for continuous layers including
- * scale constraints, chord progressions, and harmonic rules.
+ * Musical Theory Engine
+ *
+ * Core engine for musical theory integration. Provides pitch quantization,
+ * harmonic constraint enforcement, chord progression, and scale modulation.
  */
 
-import { MusicalScale, ChordProgression } from '../layers/types';
+import {
+    MusicalScale,
+    NoteName,
+    ScaleType,
+    ModalScale,
+    MusicalTheoryConfig,
+    QuantizedPitch,
+    Chord,
+    ChordDefinition,
+    ChordProgression,
+    MusicalContext,
+    HarmonicConstraints,
+    ScaleModulationRule,
+    Note,
+    HarmonicAnalysis
+} from './types';
+
+import {
+    SCALE_DEFINITIONS,
+    NOTE_FREQUENCIES,
+    NOTE_NAMES,
+    CHORD_DEFINITIONS,
+    CHORD_PROGRESSIONS,
+    calculateFrequency,
+    generateScaleFrequencies,
+    generateScaleNotes,
+    getClosestNoteName
+} from './ScaleDefinitions';
+
+import {
+    DEFAULT_HARMONIC_CONSTRAINTS,
+    VOICE_LEADING_RULES,
+    calculateDissonance,
+    calculateHarmonicTension,
+    validateVoiceLeading,
+    applyHarmonicConstraints,
+    getSuggestedIntervals
+} from './HarmonicRules';
+
 import { getLogger } from '../../logging';
 
 const logger = getLogger('MusicalTheoryEngine');
 
-// Note constants
-const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const INTERVAL_NAMES = ['unison', 'minor2nd', 'major2nd', 'minor3rd', 'major3rd', 'perfect4th', 'tritone', 'perfect5th', 'minor6th', 'major6th', 'minor7th', 'major7th'];
-
-// Scale definitions
-const SCALE_PATTERNS: Record<string, number[]> = {
-  'major': [0, 2, 4, 5, 7, 9, 11],
-  'minor': [0, 2, 3, 5, 7, 8, 10],
-  'dorian': [0, 2, 3, 5, 7, 9, 10],
-  'phrygian': [0, 1, 3, 5, 7, 8, 10],
-  'lydian': [0, 2, 4, 6, 7, 9, 11],
-  'mixolydian': [0, 2, 4, 5, 7, 9, 10],
-  'locrian': [0, 1, 3, 5, 6, 8, 10],
-  'pentatonic_major': [0, 2, 4, 7, 9],
-  'pentatonic_minor': [0, 3, 5, 7, 10],
-  'blues': [0, 3, 5, 6, 7, 10],
-  'whole_tone': [0, 2, 4, 6, 8, 10],
-  'chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-};
-
-// Chord quality patterns (intervals from root)
-const CHORD_PATTERNS: Record<string, number[]> = {
-  'major': [0, 4, 7],
-  'minor': [0, 3, 7],
-  'diminished': [0, 3, 6],
-  'augmented': [0, 4, 8],
-  'sus2': [0, 2, 7],
-  'sus4': [0, 5, 7],
-  'major7': [0, 4, 7, 11],
-  'minor7': [0, 3, 7, 10],
-  'dominant7': [0, 4, 7, 10],
-  'diminished7': [0, 3, 6, 9],
-  'major9': [0, 4, 7, 11, 14],
-  'minor9': [0, 3, 7, 10, 14]
-};
-
 export class MusicalTheoryEngine {
-  private currentScale: MusicalScale;
-  private chordProgressions: Map<string, ChordProgression> = new Map();
-  
-  constructor(initialScale?: MusicalScale) {
-    this.currentScale = initialScale || {
-      name: 'major',
-      intervals: SCALE_PATTERNS.major,
-      key: 'C'
-    };
-    
-    this.generateChordProgressions();
-    
-    logger.debug('initialization', `MusicalTheoryEngine created with ${this.currentScale.key} ${this.currentScale.name}`);
-  }
-  
-  /**
-   * Set the current musical scale
-   */
-  setScale(scale: MusicalScale): void {
-    this.currentScale = scale;
-    this.generateChordProgressions();
-    
-    logger.info('scale', `Scale changed to ${scale.key} ${scale.name}`);
-  }
-  
-  /**
-   * Get the current scale
-   */
-  getScale(): MusicalScale {
-    return { ...this.currentScale };
-  }
-  
-  /**
-   * Constrain a frequency to the current scale
-   */
-  constrainFrequencyToScale(frequency: number): number {
-    // Convert frequency to MIDI note number
-    const midiNote = this.frequencyToMidi(frequency);
-    
-    // Constrain to scale
-    const constrainedMidi = this.constrainMidiToScale(midiNote);
-    
-    // Convert back to frequency
-    return this.midiToFrequency(constrainedMidi);
-  }
-  
-  /**
-   * Constrain a MIDI note to the current scale
-   */
-  constrainMidiToScale(midiNote: number): number {
-    const rootMidi = this.noteNameToMidi(this.currentScale.key + '4'); // Use octave 4 as reference
-    const octave = Math.floor((midiNote - rootMidi) / 12);
-    const chromaticNote = ((midiNote - rootMidi) % 12 + 12) % 12; // Ensure positive
-    
-    // Find closest scale degree
-    let closestInterval = this.currentScale.intervals[0];
-    let minDistance = Math.abs(chromaticNote - closestInterval);
-    
-    for (const interval of this.currentScale.intervals) {
-      const distance = Math.abs(chromaticNote - interval);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestInterval = interval;
-      }
+    private config: MusicalTheoryConfig;
+    private currentScale: MusicalScale;
+    private currentContext: MusicalContext;
+    private harmonicConstraints: HarmonicConstraints;
+    private scaleModulationRules: ScaleModulationRule[];
+
+    constructor(config: MusicalTheoryConfig) {
+        this.config = config;
+        this.harmonicConstraints = {
+            ...DEFAULT_HARMONIC_CONSTRAINTS,
+            enforceScale: config.enforceHarmony,
+            allowChromatic: config.allowChromaticPassing,
+            maxDissonance: config.dissonanceThreshold
+        };
+        this.scaleModulationRules = [];
+
+        // Initialize current scale
+        this.currentScale = this.createScale(config.rootNote, config.scale);
+
+        // Initialize musical context
+        this.currentContext = {
+            currentScale: this.currentScale,
+            recentNotes: [],
+            harmonicTension: 0,
+            timeInProgression: 0
+        };
+
+        logger.info('initialization', `Musical Theory Engine created with ${config.rootNote} ${config.scale}`);
     }
-    
-    // Return constrained MIDI note
-    return rootMidi + (octave * 12) + closestInterval;
-  }
-  
-  /**
-   * Generate a chord from a root note and quality
-   */
-  generateChord(rootNote: string, quality: string = 'major', octave: number = 3): string[] {
-    const pattern = CHORD_PATTERNS[quality];
-    if (!pattern) {
-      logger.warn('chord', `Unknown chord quality: ${quality}, using major`);
-      return this.generateChord(rootNote, 'major', octave);
+
+    /**
+     * Create a musical scale from root note and scale type
+     */
+    public createScale(root: NoteName, type: ScaleType | ModalScale): MusicalScale {
+        const definition = SCALE_DEFINITIONS[type];
+        const frequencies = generateScaleFrequencies(root, type);
+        const notes = generateScaleNotes(root, type);
+
+        return {
+            root,
+            type,
+            definition,
+            frequencies,
+            notes
+        };
     }
-    
-    const rootMidi = this.noteNameToMidi(rootNote + octave);
-    
-    return pattern.map(interval => {
-      const noteMidi = rootMidi + interval;
-      return this.midiToNoteName(noteMidi);
-    });
-  }
-  
-  /**
-   * Generate a chord progression in the current key
-   */
-  generateProgressionInKey(progressionName: string = 'basic'): ChordProgression {
-    const cached = this.chordProgressions.get(progressionName);
-    if (cached) {
-      return cached;
+
+    /**
+     * Constrain a frequency to the current scale
+     */
+    public constrainPitchToScale(frequency: number): number {
+        if (!this.config.enabled || !this.config.enforceHarmony) {
+            return frequency;
+        }
+
+        const quantized = this.quantizePitch(frequency);
+        return quantized.quantized;
     }
-    
-    // Generate basic I-V-vi-IV progression
-    const scaleChords = this.getScaleChords();
-    
-    let chordSequence: string[];
-    let durations: number[];
-    
-    switch (progressionName) {
-      case 'basic':
-        chordSequence = [
-          scaleChords[0], // I
-          scaleChords[4], // V
-          scaleChords[5], // vi
-          scaleChords[3]  // IV
-        ];
-        durations = [4, 4, 4, 4]; // Whole notes
-        break;
-        
-      case 'jazz':
-        chordSequence = [
-          scaleChords[0] + '7', // Imaj7
-          scaleChords[5] + '7', // vi7
-          scaleChords[1] + '7', // ii7
-          scaleChords[4] + '7'  // V7
-        ];
-        durations = [2, 2, 2, 2]; // Half notes
-        break;
-        
-      case 'melancholy':
-        chordSequence = [
-          scaleChords[5], // vi (relative minor)
-          scaleChords[3], // IV
-          scaleChords[0], // I
-          scaleChords[4]  // V
-        ];
-        durations = [8, 4, 4, 4]; // Longer on the minor chord
-        break;
-        
-      default:
-        chordSequence = [scaleChords[0]];
-        durations = [4];
+
+    /**
+     * Quantize a pitch to the nearest scale degree
+     */
+    public quantizePitch(frequency: number): QuantizedPitch {
+        const scaleFreqs = this.currentScale.frequencies;
+        let closestFreq = scaleFreqs[0];
+        let closestIndex = 0;
+        let minCents = Infinity;
+
+        // Find closest scale frequency
+        for (let i = 0; i < scaleFreqs.length; i++) {
+            const scaleFreq = scaleFreqs[i];
+            const cents = 1200 * Math.log2(frequency / scaleFreq);
+            const absCents = Math.abs(cents);
+
+            if (absCents < minCents) {
+                minCents = absCents;
+                closestFreq = scaleFreq;
+                closestIndex = i;
+            }
+        }
+
+        // Apply quantization strength
+        const quantizationStrength = this.config.quantizationStrength;
+        const quantizedFreq = frequency * Math.pow(closestFreq / frequency, quantizationStrength);
+
+        const noteInfo = getClosestNoteName(quantizedFreq);
+
+        return {
+            original: frequency,
+            quantized: quantizedFreq,
+            noteName: noteInfo.note,
+            cents: minCents,
+            scaleIndex: closestIndex
+        };
     }
-    
-    const progression: ChordProgression = {
-      chords: chordSequence,
-      durations,
-      key: this.currentScale.key,
-      scale: this.currentScale
-    };
-    
-    this.chordProgressions.set(progressionName, progression);
-    return progression;
-  }
-  
-  /**
-   * Get harmonic interval between two notes
-   */
-  getHarmonicInterval(note1: string, note2: string): number {
-    const midi1 = this.noteNameToMidi(note1);
-    const midi2 = this.noteNameToMidi(note2);
-    
-    return Math.abs(midi2 - midi1) % 12;
-  }
-  
-  /**
-   * Check if an interval is consonant
-   */
-  isConsonant(interval: number): boolean {
-    const consonantIntervals = [0, 3, 4, 5, 7, 8, 9]; // Unison, minor 3rd, major 3rd, perfect 4th, perfect 5th, minor 6th, major 6th
-    return consonantIntervals.includes(interval % 12);
-  }
-  
-  /**
-   * Generate scale degrees as note names
-   */
-  getScaleNotes(octave: number = 3): string[] {
-    const rootMidi = this.noteNameToMidi(this.currentScale.key + octave);
-    
-    return this.currentScale.intervals.map(interval => {
-      return this.midiToNoteName(rootMidi + interval);
-    });
-  }
-  
-  /**
-   * Get available chord progressions
-   */
-  getAvailableProgressions(): string[] {
-    return ['basic', 'jazz', 'melancholy'];
-  }
-  
-  /**
-   * Get available scales
-   */
-  getAvailableScales(): string[] {
-    return Object.keys(SCALE_PATTERNS);
-  }
-  
-  /**
-   * Create a scale from name and key
-   */
-  createScale(scaleName: string, key: string, mode?: string): MusicalScale {
-    const intervals = SCALE_PATTERNS[scaleName];
-    if (!intervals) {
-      logger.warn('scale', `Unknown scale: ${scaleName}, using major`);
-      return this.createScale('major', key, mode);
+
+    /**
+     * Generate harmonic interval from root note
+     */
+    public generateHarmonicInterval(
+        rootFrequency: number,
+        intervalSemitones: number
+    ): number {
+        if (!this.config.enabled) {
+            return calculateFrequency(rootFrequency, intervalSemitones);
+        }
+
+        const targetFrequency = calculateFrequency(rootFrequency, intervalSemitones);
+        return this.constrainPitchToScale(targetFrequency);
     }
-    
-    return {
-      name: scaleName,
-      intervals,
-      key,
-      mode
-    };
-  }
-  
-  // === PRIVATE METHODS ===
-  
-  private frequencyToMidi(frequency: number): number {
-    return 69 + 12 * Math.log2(frequency / 440);
-  }
-  
-  private midiToFrequency(midiNote: number): number {
-    return 440 * Math.pow(2, (midiNote - 69) / 12);
-  }
-  
-  private noteNameToMidi(noteName: string): number {
-    const match = noteName.match(/^([A-G])(#|b)?(\d+)$/);
-    if (!match) {
-      logger.error('note-conversion', `Invalid note name: ${noteName}`);
-      return 60; // Middle C fallback
+
+    /**
+     * Generate chord from root frequency and chord quality
+     */
+    public generateChord(
+        rootFrequency: number,
+        chordDefinition: ChordDefinition
+    ): Chord {
+        const rootNote = getClosestNoteName(rootFrequency);
+        const frequencies: number[] = [];
+        const notes: NoteName[] = [];
+
+        for (const interval of chordDefinition.intervals) {
+            const freq = this.generateHarmonicInterval(rootFrequency, interval);
+            const note = getClosestNoteName(freq);
+            frequencies.push(freq);
+            notes.push(note.note);
+        }
+
+        return {
+            root: rootNote.note,
+            rootFrequency,
+            definition: chordDefinition,
+            frequencies,
+            notes
+        };
     }
-    
-    const [, noteLetter, accidental = '', octaveStr] = match;
-    const octave = parseInt(octaveStr);
-    
-    let noteIndex = NOTES.indexOf(noteLetter);
-    if (noteIndex === -1) {
-      logger.error('note-conversion', `Invalid note letter: ${noteLetter}`);
-      return 60;
+
+    /**
+     * Generate chord progression
+     */
+    public generateChordProgression(
+        rootFrequency: number,
+        progressionName: string
+    ): Chord[] {
+        const progression = CHORD_PROGRESSIONS[progressionName];
+        if (!progression) {
+            logger.warn('chord-progression', `Unknown progression: ${progressionName}, using I-IV-V-I`);
+            return this.generateChordProgression(rootFrequency, 'I-IV-V-I');
+        }
+
+        const chords: Chord[] = [];
+        const scaleDegrees = [0, 2, 4, 5, 7, 9, 11]; // Major scale degrees
+
+        for (let i = 0; i < progression.chords.length; i++) {
+            const chordDef = progression.chords[i];
+            const degreeOffset = scaleDegrees[i % scaleDegrees.length];
+            const chordRoot = calculateFrequency(rootFrequency, degreeOffset);
+            chords.push(this.generateChord(chordRoot, chordDef));
+        }
+
+        return chords;
     }
-    
-    // Apply accidental
-    if (accidental === '#') {
-      noteIndex = (noteIndex + 1) % 12;
-    } else if (accidental === 'b') {
-      noteIndex = (noteIndex - 1 + 12) % 12;
+
+    /**
+     * Harmonize a melody note with accompanying voices
+     */
+    public harmonizeMelody(
+        melodyFrequency: number,
+        numVoices: number = 3
+    ): number[] {
+        if (!this.config.enabled || numVoices < 1) {
+            return [melodyFrequency];
+        }
+
+        const voices: number[] = [melodyFrequency];
+        const suggestedIntervals = getSuggestedIntervals(this.harmonicConstraints);
+
+        // Add harmony voices below melody
+        for (let i = 0; i < numVoices - 1; i++) {
+            const intervalIndex = i % suggestedIntervals.length;
+            const interval = suggestedIntervals[intervalIndex];
+
+            // Generate voice below by going down an octave then up by interval
+            const harmonyFreq = melodyFrequency * 0.5 * Math.pow(2, interval / 12);
+            const quantized = this.constrainPitchToScale(harmonyFreq);
+            voices.push(quantized);
+        }
+
+        return voices;
     }
-    
-    return (octave * 12) + noteIndex + 12; // +12 because C0 is MIDI note 12
-  }
-  
-  private midiToNoteName(midiNote: number): string {
-    const octave = Math.floor(midiNote / 12) - 1;
-    const noteIndex = midiNote % 12;
-    
-    return NOTES[noteIndex] + octave;
-  }
-  
-  private generateChordProgressions(): void {
-    this.chordProgressions.clear();
-    
-    // Pre-generate common progressions for the current scale
-    const progressions = ['basic', 'jazz', 'melancholy'];
-    
-    progressions.forEach(name => {
-      this.generateProgressionInKey(name);
-    });
-    
-    logger.debug('progressions', `Generated ${progressions.length} chord progressions for ${this.currentScale.key} ${this.currentScale.name}`);
-  }
-  
-  private getScaleChords(): string[] {
-    const scaleNotes = this.getScaleNotes(3);
-    
-    // Generate triads for each scale degree
-    return scaleNotes.map((note, index) => {
-      // Determine chord quality based on scale degree intervals
-      const third = this.currentScale.intervals[(index + 2) % this.currentScale.intervals.length];
-      const fifth = this.currentScale.intervals[(index + 4) % this.currentScale.intervals.length];
-      
-      // Calculate intervals to determine quality
-      const thirdInterval = (third - this.currentScale.intervals[index] + 12) % 12;
-      const fifthInterval = (fifth - this.currentScale.intervals[index] + 12) % 12;
-      
-      let quality = 'major';
-      if (thirdInterval === 3 && fifthInterval === 7) {
-        quality = 'minor';
-      } else if (thirdInterval === 3 && fifthInterval === 6) {
-        quality = 'diminished';
-      } else if (thirdInterval === 4 && fifthInterval === 8) {
-        quality = 'augmented';
-      }
-      
-      return note.replace(/\d+$/, '') + quality; // Remove octave number
-    });
-  }
+
+    /**
+     * Validate harmonic content
+     */
+    public validateHarmony(frequencies: number[]): {
+        valid: boolean;
+        dissonance: number;
+        tension: number;
+        suggestions: string[];
+    } {
+        const dissonance = calculateDissonance(frequencies);
+        const tension = calculateHarmonicTension(frequencies, frequencies[0]);
+        const suggestions: string[] = [];
+
+        let valid = true;
+
+        if (dissonance > this.harmonicConstraints.maxDissonance) {
+            valid = false;
+            suggestions.push(`High dissonance: ${dissonance.toFixed(2)} > ${this.harmonicConstraints.maxDissonance}`);
+        }
+
+        // Check if frequencies are in scale
+        if (this.harmonicConstraints.enforceScale) {
+            for (const freq of frequencies) {
+                const quantized = this.quantizePitch(freq);
+                if (Math.abs(quantized.cents) > 50) {
+                    valid = false;
+                    suggestions.push(`Frequency ${freq.toFixed(2)}Hz is ${quantized.cents.toFixed(0)} cents from scale`);
+                }
+            }
+        }
+
+        return { valid, dissonance, tension, suggestions };
+    }
+
+    /**
+     * Update musical context based on recent events
+     */
+    public updateContext(recentFrequencies: number[]): void {
+        this.currentContext.recentNotes = recentFrequencies.slice(-10);
+
+        if (recentFrequencies.length > 0) {
+            const tension = calculateHarmonicTension(
+                recentFrequencies,
+                this.currentScale.frequencies[0]
+            );
+            this.currentContext.harmonicTension = tension;
+        }
+
+        this.currentContext.timeInProgression += 1;
+
+        // Check for scale modulation
+        if (this.config.dynamicScaleModulation) {
+            this.checkScaleModulation();
+        }
+    }
+
+    /**
+     * Check if scale should be modulated based on context
+     */
+    private checkScaleModulation(): void {
+        for (const rule of this.scaleModulationRules) {
+            if (rule.condition(this.currentContext)) {
+                const newRoot = rule.targetRoot || this.config.rootNote;
+                this.currentScale = this.createScale(newRoot, rule.targetScale);
+                this.currentContext.currentScale = this.currentScale;
+                logger.info('scale-modulation', `Scale modulated to ${newRoot} ${rule.targetScale}`);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Add scale modulation rule
+     */
+    public addScaleModulationRule(rule: ScaleModulationRule): void {
+        this.scaleModulationRules.push(rule);
+        logger.debug('scale-modulation', `Added modulation rule: ${rule.name}`);
+    }
+
+    /**
+     * Get current scale
+     */
+    public getCurrentScale(): MusicalScale {
+        return this.currentScale;
+    }
+
+    /**
+     * Set current scale
+     */
+    public setScale(root: NoteName, type: ScaleType | ModalScale): void {
+        this.currentScale = this.createScale(root, type);
+        this.currentContext.currentScale = this.currentScale;
+        this.config.rootNote = root;
+        this.config.scale = type;
+        logger.info('scale-change', `Scale changed to ${root} ${type}`);
+    }
+
+    /**
+     * Get current musical context
+     */
+    public getContext(): MusicalContext {
+        return this.currentContext;
+    }
+
+    /**
+     * Update configuration
+     */
+    public updateConfig(config: Partial<MusicalTheoryConfig>): void {
+        this.config = { ...this.config, ...config };
+
+        if (config.rootNote || config.scale) {
+            this.currentScale = this.createScale(
+                this.config.rootNote,
+                this.config.scale
+            );
+            this.currentContext.currentScale = this.currentScale;
+        }
+
+        if (config.enforceHarmony !== undefined ||
+            config.allowChromaticPassing !== undefined ||
+            config.dissonanceThreshold !== undefined) {
+            this.harmonicConstraints = {
+                ...this.harmonicConstraints,
+                enforceScale: this.config.enforceHarmony,
+                allowChromatic: this.config.allowChromaticPassing,
+                maxDissonance: this.config.dissonanceThreshold
+            };
+        }
+
+        logger.debug('config-update', 'Configuration updated');
+    }
+
+    /**
+     * Analyze harmonic content of frequencies
+     */
+    public analyzeHarmony(frequencies: number[]): HarmonicAnalysis {
+        if (frequencies.length === 0) {
+            return {
+                fundamentalFrequency: 0,
+                harmonics: [],
+                inharmonicity: 0,
+                spectralCentroid: 0,
+                dissonanceLevel: 0
+            };
+        }
+
+        const fundamental = frequencies[0];
+        const harmonics: number[] = [];
+
+        // Detect harmonic series
+        for (let i = 1; i <= 8; i++) {
+            const expectedHarmonic = fundamental * i;
+            const closest = frequencies.reduce((prev, curr) =>
+                Math.abs(curr - expectedHarmonic) < Math.abs(prev - expectedHarmonic) ? curr : prev
+            );
+
+            if (Math.abs(closest - expectedHarmonic) < expectedHarmonic * 0.1) {
+                harmonics.push(closest);
+            }
+        }
+
+        // Calculate inharmonicity (deviation from perfect harmonic series)
+        let inharmonicity = 0;
+        for (let i = 0; i < harmonics.length; i++) {
+            const expected = fundamental * (i + 2);
+            const actual = harmonics[i];
+            inharmonicity += Math.abs(actual - expected) / expected;
+        }
+        inharmonicity = inharmonicity / (harmonics.length || 1);
+
+        // Calculate spectral centroid (brightness)
+        const totalEnergy = frequencies.reduce((sum, f) => sum + f, 0);
+        const spectralCentroid = totalEnergy / frequencies.length;
+
+        // Calculate dissonance
+        const dissonanceLevel = calculateDissonance(frequencies);
+
+        return {
+            fundamentalFrequency: fundamental,
+            harmonics,
+            inharmonicity,
+            spectralCentroid,
+            dissonanceLevel
+        };
+    }
+
+    /**
+     * Get scale degree for a frequency
+     */
+    public getScaleDegree(frequency: number): number {
+        const quantized = this.quantizePitch(frequency);
+        return quantized.scaleIndex;
+    }
+
+    /**
+     * Get note object from frequency
+     */
+    public frequencyToNote(frequency: number): Note {
+        const noteInfo = getClosestNoteName(frequency);
+        const midiNote = 69 + 12 * Math.log2(frequency / 440);
+
+        return {
+            frequency,
+            name: noteInfo.note,
+            octave: noteInfo.octave,
+            midiNote: Math.round(midiNote)
+        };
+    }
+
+    /**
+     * Convert MIDI note number to frequency
+     */
+    public midiToFrequency(midiNote: number): number {
+        return 440 * Math.pow(2, (midiNote - 69) / 12);
+    }
+
+    /**
+     * Get configuration
+     */
+    public getConfig(): MusicalTheoryConfig {
+        return { ...this.config };
+    }
+
+    /**
+     * Reset to default state
+     */
+    public reset(): void {
+        this.currentScale = this.createScale(this.config.rootNote, this.config.scale);
+        this.currentContext = {
+            currentScale: this.currentScale,
+            recentNotes: [],
+            harmonicTension: 0,
+            timeInProgression: 0
+        };
+        logger.info('reset', 'Musical Theory Engine reset');
+    }
+
+    /**
+     * Dispose resources
+     */
+    public dispose(): void {
+        this.scaleModulationRules = [];
+        this.currentContext.recentNotes = [];
+        logger.info('dispose', 'Musical Theory Engine disposed');
+    }
 }

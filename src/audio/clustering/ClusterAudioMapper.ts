@@ -26,6 +26,8 @@ import { CommunityEvolutionTracker } from './CommunityEvolutionTracker';
 import { HubOrchestrationManager } from '../orchestration/HubOrchestrationManager';
 import { HubTransitionHandler } from '../orchestration/HubTransitionHandler';
 import type { HubOrchestrationSettings, OrchestrationDecisions, HubMetrics } from '../orchestration/types';
+import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
+import type { MusicalTheoryConfig, NoteName, ScaleType, ModalScale } from '../theory/types';
 import * as Tone from 'tone';
 
 const logger = getLogger('cluster-audio');
@@ -56,12 +58,17 @@ export class ClusterAudioMapper {
   private allNodes: GraphNode[] = [];
   private allLinks: GraphLink[] = [];
 
+  // Phase 6.1: Musical theory integration
+  private musicalTheoryEngine: MusicalTheoryEngine | null = null;
+  private musicalTheoryConfig: MusicalTheoryConfig | null = null;
+
   constructor(
     settings: ClusterAudioSettings,
     communityDetectionSettings?: CommunityDetectionSettings,
     communityEvolutionSettings?: CommunityEvolutionSettings,
     clusteringAlgorithms?: SmartClusteringAlgorithms,
-    hubOrchestrationSettings?: HubOrchestrationSettings
+    hubOrchestrationSettings?: HubOrchestrationSettings,
+    musicalTheoryConfig?: MusicalTheoryConfig
   ) {
     logger.debug('initialization', 'ClusterAudioMapper created');
 
@@ -102,6 +109,15 @@ export class ClusterAudioMapper {
           hubOrchestrationSettings.transitionsEnabled
         );
         logger.debug('initialization', 'Hub orchestration initialized');
+      }
+    }
+
+    // Phase 6.1: Initialize musical theory if config provided
+    if (musicalTheoryConfig) {
+      this.musicalTheoryConfig = musicalTheoryConfig;
+      if (musicalTheoryConfig.enabled) {
+        this.musicalTheoryEngine = new MusicalTheoryEngine(musicalTheoryConfig);
+        logger.debug('initialization', `Musical theory initialized: ${musicalTheoryConfig.rootNote} ${musicalTheoryConfig.scale}`);
       }
     }
 
@@ -742,7 +758,14 @@ export class ClusterAudioMapper {
     const strengthMod = 1 + (cluster.strength - 0.5) * 0.2; // ±10% based on strength
     const sizeMod = 1 + (cluster.nodes.length - 5) * 0.01; // Slight increase for larger clusters
 
-    return theme.baseFrequency * strengthMod * sizeMod;
+    let frequency = theme.baseFrequency * strengthMod * sizeMod;
+
+    // Phase 6.1: Apply musical theory constraints
+    if (this.musicalTheoryEngine && this.musicalTheoryConfig?.enabled) {
+      frequency = this.musicalTheoryEngine.constrainPitchToScale(frequency);
+    }
+
+    return frequency;
   }
 
   /**
@@ -1090,6 +1113,30 @@ export class ClusterAudioMapper {
   }
 
   /**
+   * Update musical theory settings
+   */
+  public updateMusicalTheorySettings(config: MusicalTheoryConfig): void {
+    this.musicalTheoryConfig = config;
+
+    if (config.enabled) {
+      if (!this.musicalTheoryEngine) {
+        this.musicalTheoryEngine = new MusicalTheoryEngine(config);
+        logger.debug('settings', `Musical theory engine created: ${config.rootNote} ${config.scale}`);
+      } else {
+        this.musicalTheoryEngine.updateConfig(config);
+        logger.debug('settings', 'Musical theory settings updated');
+      }
+    } else {
+      // Dispose if disabled
+      if (this.musicalTheoryEngine) {
+        this.musicalTheoryEngine.dispose();
+        this.musicalTheoryEngine = null;
+      }
+      logger.debug('settings', 'Musical theory disabled and disposed');
+    }
+  }
+
+  /**
    * Dispose of all resources
    */
   public dispose(): void {
@@ -1117,6 +1164,11 @@ export class ClusterAudioMapper {
 
     if (this.hubTransitionHandler) {
       this.hubTransitionHandler.dispose();
+    }
+
+    // Phase 6.1: Dispose musical theory engine
+    if (this.musicalTheoryEngine) {
+      this.musicalTheoryEngine.dispose();
     }
 
     this.masterVolume.dispose();

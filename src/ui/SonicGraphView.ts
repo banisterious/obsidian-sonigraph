@@ -2459,6 +2459,9 @@ export class SonicGraphView extends ItemView {
 
         // Phase 5.3: Community Evolution Audio Settings
         this.createCommunityEvolutionSettings(section);
+
+        // Phase 6.1: Musical Theory Settings
+        this.createMusicalTheorySettings(section);
     }
 
     /**
@@ -3705,6 +3708,306 @@ export class SonicGraphView extends ItemView {
             text: 'Evolution events track changes over time to provide real-time audio feedback as your vault structure evolves',
             cls: 'sonic-graph-setting-description sonic-graph-info'
         });
+    }
+
+    /**
+     * Phase 6.1: Create musical theory settings section
+     */
+    private createMusicalTheorySettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Musical Theory Header
+        const headerContainer = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        headerContainer.createEl('h3', {
+            text: 'Phase 6.1: Musical Theory Integration',
+            cls: 'sonic-graph-section-header'
+        });
+        headerContainer.createEl('div', {
+            text: 'Constrain audio to musical scales and harmonic principles for musically coherent soundscapes',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Enable Musical Theory Toggle
+        const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        enabledItem.createEl('label', {
+            text: 'Enable Musical Theory',
+            cls: 'sonic-graph-setting-label'
+        });
+        enabledItem.createEl('div', {
+            text: 'All generated frequencies will be quantized to the selected musical scale',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const enabledToggle = enabledItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        enabledToggle.checked = this.plugin.settings.musicalTheory?.enabled || false;
+        enabledToggle.addEventListener('change', async () => {
+            if (!this.plugin.settings.musicalTheory) {
+                this.plugin.settings.musicalTheory = {
+                    enabled: enabledToggle.checked,
+                    scale: 'major',
+                    rootNote: 'C',
+                    enforceHarmony: true,
+                    allowChromaticPassing: false,
+                    dissonanceThreshold: 0.3,
+                    quantizationStrength: 0.8,
+                    preferredChordProgression: 'I-IV-V-I',
+                    dynamicScaleModulation: false
+                };
+            } else {
+                this.plugin.settings.musicalTheory.enabled = enabledToggle.checked;
+            }
+            await this.plugin.saveSettings();
+            this.refreshMusicalTheorySettings();
+        });
+
+        // Show detailed settings if enabled
+        if (this.plugin.settings.musicalTheory?.enabled) {
+            this.createMusicalTheoryDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 6.1: Create detailed musical theory settings
+     */
+    private createMusicalTheoryDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.musicalTheory!;
+
+        // Root Note Dropdown
+        const rootNoteItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        rootNoteItem.createEl('label', {
+            text: 'Root Note',
+            cls: 'sonic-graph-setting-label'
+        });
+        rootNoteItem.createEl('div', {
+            text: 'The root note of the musical scale',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const rootNoteSelect = rootNoteItem.createEl('select', {
+            cls: 'sonic-graph-select'
+        });
+        ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(note => {
+            const option = rootNoteSelect.createEl('option', {
+                text: note,
+                value: note
+            });
+            if (note === settings.rootNote) {
+                option.selected = true;
+            }
+        });
+        rootNoteSelect.addEventListener('change', async () => {
+            settings.rootNote = rootNoteSelect.value;
+            await this.plugin.saveSettings();
+        });
+
+        // Scale Type Dropdown
+        const scaleItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        scaleItem.createEl('label', {
+            text: 'Scale Type',
+            cls: 'sonic-graph-setting-label'
+        });
+        scaleItem.createEl('div', {
+            text: 'The musical scale or mode to use for quantization',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const scaleSelect = scaleItem.createEl('select', {
+            cls: 'sonic-graph-select'
+        });
+        const scales = [
+            { value: 'major', label: 'Major' },
+            { value: 'minor', label: 'Natural Minor' },
+            { value: 'harmonic-minor', label: 'Harmonic Minor' },
+            { value: 'melodic-minor', label: 'Melodic Minor' },
+            { value: 'pentatonic-major', label: 'Pentatonic Major' },
+            { value: 'pentatonic-minor', label: 'Pentatonic Minor' },
+            { value: 'blues', label: 'Blues' },
+            { value: 'dorian', label: 'Dorian' },
+            { value: 'phrygian', label: 'Phrygian' },
+            { value: 'lydian', label: 'Lydian' },
+            { value: 'mixolydian', label: 'Mixolydian' },
+            { value: 'whole-tone', label: 'Whole Tone' },
+            { value: 'diminished', label: 'Diminished' }
+        ];
+        scales.forEach(scale => {
+            const option = scaleSelect.createEl('option', {
+                text: scale.label,
+                value: scale.value
+            });
+            if (scale.value === settings.scale) {
+                option.selected = true;
+            }
+        });
+        scaleSelect.addEventListener('change', async () => {
+            settings.scale = scaleSelect.value;
+            await this.plugin.saveSettings();
+        });
+
+        // Quantization Strength Slider
+        const quantStrengthItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        quantStrengthItem.createEl('label', {
+            text: 'Quantization Strength',
+            cls: 'sonic-graph-setting-label'
+        });
+        quantStrengthItem.createEl('div', {
+            text: 'How strongly to snap pitches to scale notes (0 = free, 1 = strict)',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const quantStrengthValue = quantStrengthItem.createEl('span', {
+            text: settings.quantizationStrength.toFixed(2),
+            cls: 'sonic-graph-slider-value'
+        });
+
+        const quantStrengthSlider = quantStrengthItem.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider',
+            attr: {
+                min: '0',
+                max: '1',
+                step: '0.05',
+                value: settings.quantizationStrength.toString()
+            }
+        });
+
+        quantStrengthSlider.addEventListener('input', () => {
+            const value = parseFloat(quantStrengthSlider.value);
+            quantStrengthValue.textContent = value.toFixed(2);
+        });
+
+        quantStrengthSlider.addEventListener('change', async () => {
+            settings.quantizationStrength = parseFloat(quantStrengthSlider.value);
+            await this.plugin.saveSettings();
+        });
+
+        // Dissonance Threshold Slider
+        const dissonanceItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        dissonanceItem.createEl('label', {
+            text: 'Dissonance Threshold',
+            cls: 'sonic-graph-setting-label'
+        });
+        dissonanceItem.createEl('div', {
+            text: 'Maximum allowed dissonance level (0 = consonant only, 1 = allow all)',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const dissonanceValue = dissonanceItem.createEl('span', {
+            text: settings.dissonanceThreshold.toFixed(2),
+            cls: 'sonic-graph-slider-value'
+        });
+
+        const dissonanceSlider = dissonanceItem.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider',
+            attr: {
+                min: '0',
+                max: '1',
+                step: '0.05',
+                value: settings.dissonanceThreshold.toString()
+            }
+        });
+
+        dissonanceSlider.addEventListener('input', () => {
+            const value = parseFloat(dissonanceSlider.value);
+            dissonanceValue.textContent = value.toFixed(2);
+        });
+
+        dissonanceSlider.addEventListener('change', async () => {
+            settings.dissonanceThreshold = parseFloat(dissonanceSlider.value);
+            await this.plugin.saveSettings();
+        });
+
+        // Enforce Harmony Toggle
+        const enforceHarmonyItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        enforceHarmonyItem.createEl('label', {
+            text: 'Enforce Scale Harmony',
+            cls: 'sonic-graph-setting-label'
+        });
+        enforceHarmonyItem.createEl('div', {
+            text: 'Strictly constrain all notes to the selected scale',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const enforceHarmonyToggle = enforceHarmonyItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        enforceHarmonyToggle.checked = settings.enforceHarmony;
+        enforceHarmonyToggle.addEventListener('change', async () => {
+            settings.enforceHarmony = enforceHarmonyToggle.checked;
+            await this.plugin.saveSettings();
+        });
+
+        // Allow Chromatic Passing Toggle
+        const chromaticItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        chromaticItem.createEl('label', {
+            text: 'Allow Chromatic Passing Tones',
+            cls: 'sonic-graph-setting-label'
+        });
+        chromaticItem.createEl('div', {
+            text: 'Allow notes outside the scale as passing tones',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const chromaticToggle = chromaticItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        chromaticToggle.checked = settings.allowChromaticPassing;
+        chromaticToggle.addEventListener('change', async () => {
+            settings.allowChromaticPassing = chromaticToggle.checked;
+            await this.plugin.saveSettings();
+        });
+
+        // Dynamic Scale Modulation Toggle
+        const modulationItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        modulationItem.createEl('label', {
+            text: 'Dynamic Scale Modulation',
+            cls: 'sonic-graph-setting-label'
+        });
+        modulationItem.createEl('div', {
+            text: 'Automatically change scales based on vault state (experimental)',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const modulationToggle = modulationItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        modulationToggle.checked = settings.dynamicScaleModulation;
+        modulationToggle.addEventListener('change', async () => {
+            settings.dynamicScaleModulation = modulationToggle.checked;
+            await this.plugin.saveSettings();
+        });
+    }
+
+    /**
+     * Phase 6.1: Refresh musical theory settings display
+     */
+    private refreshMusicalTheorySettings(): void {
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find and remove existing musical theory settings (last section, so remove to end)
+        const sections = settingsContent.querySelectorAll('.sonic-graph-setting-item, .sonic-graph-settings-divider');
+        let removeNext = false;
+        for (const section of Array.from(sections)) {
+            if (section.textContent?.includes('Phase 6.1: Musical Theory')) {
+                removeNext = true;
+            }
+            if (removeNext) {
+                section.remove();
+            }
+        }
+
+        // Recreate musical theory section
+        this.createMusicalTheorySettings(settingsContent as HTMLElement);
     }
 
     /**
