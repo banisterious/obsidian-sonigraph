@@ -67201,6 +67201,9 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     this.progressIndicator = null;
     // Responsive sizing: Resize observer for dynamic graph sizing
     this.resizeObserver = null;
+    // Background state handling: Track if view is in foreground
+    this.isViewActive = true;
+    this.wasAnimatingBeforeBackground = false;
     this.detectedSpacing = "balanced";
     this.isSettingsVisible = false;
     // Audio density tracking for even distribution
@@ -67331,11 +67334,60 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
         logger39.error("sonic-graph-init", "Graph initialization failed:", error);
         new import_obsidian13.Notice("Failed to initialize Sonic Graph: " + error.message);
       });
+      this.registerWorkspaceListener();
     } catch (error) {
       logger39.error("ui", "Error opening Sonic Graph view:", error.message);
       logger39.error("ui", "Error stack:", error.stack);
       new import_obsidian13.Notice("Failed to open Sonic Graph view: " + error.message);
     }
+  }
+  /**
+   * Register workspace event listener to detect when view becomes active/inactive
+   */
+  registerWorkspaceListener() {
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", (leaf) => {
+        if ((leaf == null ? void 0 : leaf.view) === this) {
+          this.handleViewActivated();
+        } else if (this.isViewActive) {
+          this.handleViewDeactivated();
+        }
+      })
+    );
+    logger39.debug("background-state", "Workspace listener registered for background state handling");
+  }
+  /**
+   * Handle view becoming active (brought to foreground)
+   */
+  handleViewActivated() {
+    if (this.isViewActive) {
+      return;
+    }
+    logger39.info("background-state", "View activated - resuming operations");
+    this.isViewActive = true;
+    if (this.wasAnimatingBeforeBackground && this.temporalAnimator) {
+      logger39.debug("background-state", "Resuming animation");
+      this.temporalAnimator.play();
+      this.isAnimating = true;
+      this.wasAnimatingBeforeBackground = false;
+    }
+    logger39.debug("background-state", "View activation complete");
+  }
+  /**
+   * Handle view becoming inactive (moved to background)
+   */
+  handleViewDeactivated() {
+    if (!this.isViewActive) {
+      return;
+    }
+    logger39.info("background-state", "View deactivated - pausing operations for performance");
+    this.isViewActive = false;
+    if (this.isAnimating && this.temporalAnimator) {
+      logger39.debug("background-state", "Pausing animation");
+      this.temporalAnimator.pause();
+      this.wasAnimatingBeforeBackground = true;
+    }
+    logger39.debug("background-state", "View deactivation complete (audio continues)");
   }
   /**
    * Apply pending state after view initialization
