@@ -1391,6 +1391,94 @@ Phase 5.3: Community Detection Audio has been successfully implemented with comp
 - `src/audio/theory/ScaleDefinitions.ts`
 - `src/audio/theory/HarmonicRules.ts`
 
+---
+
+### ✅ Phase 6.1 Implementation Complete (September 29, 2025)
+
+**Status:** ✅ **FULLY IMPLEMENTED** (3 commits, ~1,900 lines)
+
+**Files Created:**
+1. `src/audio/theory/types.ts` (232 lines)
+   - Complete type system for musical theory
+   - 27 interfaces and type definitions
+   - Covers scales, modes, intervals, chords, harmonic constraints
+
+2. `src/audio/theory/ScaleDefinitions.ts` (467 lines)
+   - 17 scale and mode definitions (major, minor, pentatonic, dorian, etc.)
+   - Note frequency calculations for A440 tuning
+   - Chord definitions (10 chord qualities)
+   - 5 common chord progressions
+   - Helper functions for frequency/note conversions
+
+3. `src/audio/theory/HarmonicRules.ts` (365 lines)
+   - Consonance ratings for all interval types
+   - 5 classical voice leading rules
+   - Dissonance calculation using Plomp-Levelt model
+   - Harmonic tension analysis
+   - Voice leading validation
+
+4. `src/audio/theory/MusicalTheoryEngine.ts` (489 lines)
+   - Core pitch quantization engine
+   - Scale constraint enforcement
+   - Chord generation and progression
+   - Harmonic validation and analysis
+   - Dynamic scale modulation support
+   - Full logging integration
+
+5. `src/audio/theory/index.ts` (64 lines)
+   - Module exports for all theory components
+
+**Files Modified:**
+1. `src/audio/clustering/ClusterAudioMapper.ts` (+56 lines)
+   - Musical theory engine integration
+   - Frequency constraint in `calculateClusterFrequency()`
+   - `updateMusicalTheorySettings()` method
+   - Proper disposal in `dispose()` method
+
+2. `src/utils/constants.ts` (+26 lines)
+   - Musical theory settings interface
+   - Default values (disabled by default, C major, strong quantization)
+
+3. `src/ui/SonicGraphView.ts` (+303 lines)
+   - Complete settings UI panel with 8 controls
+   - Dynamic show/hide on toggle
+   - Real-time settings updates
+
+**Key Features Delivered:**
+- ✅ 17 scales/modes (major, minor, harmonic minor, melodic minor, pentatonic major/minor, blues, dorian, phrygian, lydian, mixolydian, aeolian, locrian, whole-tone, diminished)
+- ✅ Pitch quantization with configurable strength (0-1)
+- ✅ Harmonic constraint enforcement
+- ✅ Dissonance threshold control (0-1)
+- ✅ Chromatic passing tones option
+- ✅ 10 chord quality definitions
+- ✅ 5 chord progressions (I-IV-V-I, ii-V-I, etc.)
+- ✅ Voice leading rules (parallel fifths/octaves, contrary motion)
+- ✅ Dynamic scale modulation (experimental)
+- ✅ Complete UI with root note and scale selection
+- ✅ Full integration with cluster audio system
+- ✅ Build passing with no errors
+
+**Musical Scales Supported:**
+- **Major Family**: Major (Ionian)
+- **Minor Family**: Natural Minor (Aeolian), Harmonic Minor, Melodic Minor
+- **Pentatonic**: Major, Minor
+- **Blues**: Blues scale with blue notes
+- **Church Modes**: Dorian, Phrygian, Lydian, Mixolydian, Locrian
+- **Exotic**: Whole Tone, Diminished, Chromatic
+
+**Performance:**
+- Pitch quantization: O(n) where n = scale degrees (typically 5-12)
+- Frequency calculation: O(1) using logarithmic formulas
+- Minimal overhead when disabled
+
+**Testing:**
+- ✅ TypeScript compilation successful
+- ✅ Build passing with no errors
+- ✅ UI settings functional with dynamic updates
+- Ready for user testing
+
+---
+
 #### Phase 6.2: Dynamic Orchestration
 - **Objective**: Evolving instrumentation based on vault complexity
 
