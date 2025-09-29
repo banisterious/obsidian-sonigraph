@@ -7,6 +7,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Phase 6.3: Spatial Audio and Panning ✅
+
+#### Overview
+Comprehensive spatial audio system that maps graph node positions to stereo field for immersive audio experience. Features 5 panning modes, 4 mathematical curves, velocity damping, and hybrid weighted combination of graph position, folder hierarchy, and cluster membership.
+
+#### Core Components (1,065 lines, 4 files)
+
+**PanningSystem** (`src/audio/spatial/PanningSystem.ts` - 364 lines)
+- **4 Panning Curves**: Linear (direct proportion), Exponential (emphasizes extremes), Sigmoid (smooth S-curve with center bias, recommended), Logarithmic (compresses extremes)
+- **Velocity Damping**: Smooth position changes during force simulation with configurable damping factor (0-1)
+- **Boundary Padding**: Keeps pan away from extremes with configurable padding (0-1)
+- **Position Normalization**: Converts graph coordinates to 0-1 range for consistent panning
+- **Folder-Based Panning**: Calculates pan from folder path with priority system and spread factor
+- **Cluster Panning**: Blends cluster center pan with individual node position based on spread setting
+- **Hybrid Weighted Calculation**: Combines graph position, folder, and cluster pan with configurable weights
+- **Depth Volume Calculation**: Future-ready volume adjustment based on Y-position for surround sound
+- **Path Hash Variation**: Consistent variation from folder/file path for natural spread
+- **State Management**: Per-node velocity state tracking for smooth transitions
+
+**SpatialAudioManager** (`src/audio/spatial/SpatialAudioManager.ts` - 437 lines)
+- **5 Panning Modes**: Graph Position (direct X-mapping), Folder Based (hierarchy-driven), Cluster Based (centroid positioning), Hybrid (weighted combination, recommended), Disabled (centered audio)
+- **Node Tracking**: Complete node state management with position, pan, and update timestamps
+- **Tone.js Integration**: Creates and manages Panner nodes for each tracked node
+- **Real-Time Updates**: Position updates with configurable throttling (default 100ms)
+- **Graph Bounds Management**: Automatic bounds updates for position normalization
+- **Cluster Configuration**: Per-cluster spatial config with centroid position and spread
+- **Event System**: Emits events for position updates, pan changes, mode changes, bounds updates
+- **Statistics Tracking**: Total nodes, tracked nodes, average pan, distribution (left/center/right), update frequency
+- **Performance Optimization**: Throttled updates, efficient state caching, minimal overhead when disabled
+- **Lifecycle Management**: Proper initialization, update, enable/disable, and disposal with cleanup
+
+**Type System** (`src/audio/spatial/types.ts` - 237 lines)
+- **PanningMode Enum**: 5 modes (GraphPosition, FolderBased, ClusterBased, Hybrid, Disabled)
+- **PanningCurve Enum**: 4 curves (Linear, Exponential, Sigmoid, Logarithmic)
+- **Comprehensive Interfaces**: PanPosition, NormalizedPosition, GraphPosition, GraphBounds, NodeSpatialState, FolderPanMapping, ClusterSpatialConfig, SpatialAudioConfig, SpatialAudioEvent, SpatialAudioStats
+- **Default Folder Mappings**: Projects (+0.5), Journal (-0.5), Archive (-0.8), Research (+0.3), Ideas (-0.3), Notes (0.0)
+- **Default Configuration**: Disabled by default, Hybrid mode, Sigmoid curve, 70% intensity, 50% smoothing, 100ms throttle
+- **Advanced Settings**: Depth mapping (future surround sound), velocity damping, boundary padding, hybrid weights
+
+**Module Exports** (`src/audio/spatial/index.ts` - 27 lines)
+- Clean module interface with all components and types exported
+
+#### Integration (504 lines added)
+
+**MusicalMapper** (`src/graph/musical-mapper.ts` +182 lines)
+- **Phase 6.3 Lifecycle**: Full initialization, update, disable, and disposal methods
+- **Public API**: `updateSpatialAudio()`, `registerNodeForSpatialAudio()`, `unregisterNodeFromSpatialAudio()`, `getPannerForNode()`
+- **Configuration Management**: Settings integration with proper enum types
+- **Error Handling**: Comprehensive try-catch with detailed logging
+- **Backward Compatibility**: Graceful degradation when disabled
+
+**Settings Interface** (`src/utils/constants.ts` +84 lines)
+- **SonigraphSettings Extension**: Full `spatialAudio` configuration object
+- **Enum Integration**: PanningMode and PanningCurve enums properly imported
+- **Default Values**: Complete default configuration with all settings
+- **Type Safety**: Proper TypeScript typing throughout
+
+**UI Settings Panel** (`src/ui/SonicGraphView.ts` +238 lines)
+- **Enable Toggle**: Main on/off switch with settings initialization
+- **Panning Mode Dropdown**: 5 modes with descriptions (Graph Position, Folder Based, Cluster Based, Hybrid recommended, Disabled)
+- **Pan Intensity Slider**: 0-100% control over panning extremeness with real-time feedback
+- **Panning Curve Dropdown**: 4 mathematical curves (Linear, Exponential, Sigmoid recommended, Logarithmic)
+- **Velocity Damping Toggle**: Enable/disable smooth position change damping
+- **Dynamic Settings Display**: Settings panel shows/hides based on enable state
+- **Real-Time Updates**: All changes immediately saved and applied
+- **Settings Refresh**: Proper section recreation on toggle changes
+
+#### Key Features
+
+**5 Panning Modes:**
+- **Graph Position**: Node X-position directly maps to stereo pan (-1 to 1)
+- **Folder Based**: Pan determined by folder hierarchy with priority system
+- **Cluster Based**: Pan calculated from cluster centroid position with configurable spread
+- **Hybrid** (Recommended): Weighted combination (50% graph position, 30% folder, 20% cluster)
+- **Disabled**: All audio centered (mono)
+
+**4 Panning Curves:**
+- **Linear**: Direct proportion from position to pan
+- **Exponential**: Emphasizes extremes (y = sign(x) * |x|^2)
+- **Sigmoid** (Recommended): Smooth S-curve with center bias for natural positioning
+- **Logarithmic**: Compresses extremes for subtle panning
+
+**Advanced Features:**
+- **Velocity Damping**: Smooths rapid position changes during force simulation
+- **Boundary Padding**: Prevents extreme left/right panning (configurable 0-1)
+- **Update Throttling**: Limits position updates to prevent performance issues (default 100ms)
+- **Folder Spread**: Nested files vary from folder pan by configurable factor (default 30%)
+- **Cluster Spread**: Individual nodes vary from cluster center (default 20%)
+- **Future Surround Sound**: Depth mapping infrastructure for Y-axis volume control
+
+**Default Folder Mappings:**
+- Projects → +0.5 (center-right)
+- Journal → -0.5 (center-left)
+- Archive → -0.8 (far left)
+- Research → +0.3 (slightly right)
+- Ideas → -0.3 (slightly left)
+- Notes → 0.0 (center)
+
+#### Performance
+
+- **Update Throttle**: 100ms minimum between position updates per node
+- **Velocity State Caching**: Efficient per-node state management
+- **Minimal Overhead**: Zero performance impact when disabled
+- **Smooth Integration**: Works seamlessly with force simulation
+- **Build Performance**: TypeScript compilation successful, no errors
+
+#### User Experience
+
+- **Opt-In Feature**: Disabled by default to avoid surprising users
+- **Intuitive Settings**: Clear labels, descriptions, and recommended options
+- **Real-Time Feedback**: Pan intensity slider shows percentage value
+- **Hybrid Mode Recommended**: Best balance of all positioning methods
+- **Sigmoid Curve Recommended**: Most natural-sounding stereo positioning
+
+---
+
 ### Added - Phase 6.2: Dynamic Orchestration ✅
 
 #### Overview
