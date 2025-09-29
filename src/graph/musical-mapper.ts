@@ -3,15 +3,17 @@ import { SonigraphSettings } from '../utils/constants';
 import { MUSICAL_SCALES } from '../utils/constants';
 import { getLogger } from '../logging';
 import { App, TFile } from 'obsidian';
-import { 
-    ObsidianMetadataMapper, 
-    MetadataMappingRules, 
-    VaultMappingOptimizer, 
+import {
+    ObsidianMetadataMapper,
+    MetadataMappingRules,
+    VaultMappingOptimizer,
     InstrumentDistributor,
     MetadataListener,
     MetadataAnalysisResult,
     VaultMappingAnalysis
 } from '../audio/mapping';
+import { ClusterAudioMapper, ClusterAudioSettings } from '../audio/clustering';
+import { Cluster, SmartClusteringAlgorithms } from './SmartClusteringAlgorithms';
 
 const logger = getLogger('musical-mapper');
 
@@ -30,6 +32,10 @@ export class MusicalMapper {
 	private isPhase2Enabled = false;
 	private lastVaultAnalysis: VaultMappingAnalysis | null = null;
 
+	// Phase 5: Cluster-based audio mapping
+	private clusterAudioMapper: ClusterAudioMapper | null = null;
+	private isClusterAudioEnabled = false;
+
 	constructor(settings: SonigraphSettings, app?: App) {
 		this.settings = settings;
 		this.app = app || null;
@@ -38,6 +44,11 @@ export class MusicalMapper {
 		// Initialize Phase 2 components if app is provided
 		if (this.app && this.settings.contentAwareMapping?.enabled) {
 			this.initializePhase2Components();
+		}
+
+		// Initialize Phase 5 cluster audio if enabled
+		if (this.settings.clusterAudio?.enabled) {
+			this.initializeClusterAudio();
 		}
 	}
 
@@ -54,6 +65,17 @@ export class MusicalMapper {
 			}
 		} else if (this.isPhase2Enabled) {
 			this.disablePhase2Components();
+		}
+
+		// Phase 5: Update cluster audio components if enabled
+		if (this.settings.clusterAudio?.enabled) {
+			if (!this.isClusterAudioEnabled) {
+				this.initializeClusterAudio();
+			} else {
+				this.updateClusterAudioSettings();
+			}
+		} else if (this.isClusterAudioEnabled) {
+			this.disableClusterAudio();
 		}
 	}
 
@@ -207,6 +229,103 @@ export class MusicalMapper {
 			rootFreq: this.rootNoteFreq,
 			scaleNotes: this.scale.length
 		});
+	}
+
+	/**
+	 * Phase 5: Initialize cluster audio mapping components
+	 */
+	private async initializeClusterAudio(): Promise<void> {
+		if (!this.settings.clusterAudio || this.isClusterAudioEnabled) return;
+
+		logger.info('phase5-init', 'Initializing Phase 5 cluster audio mapping components');
+
+		try {
+			// Convert settings to ClusterAudioSettings
+			const clusterAudioSettings: ClusterAudioSettings = {
+				enabled: this.settings.clusterAudio.enabled,
+				globalVolume: this.settings.clusterAudio.globalVolume,
+				clusterTypeEnabled: this.settings.clusterAudio.clusterTypeEnabled,
+				clusterTypeVolumes: this.settings.clusterAudio.clusterTypeVolumes,
+				transitionsEnabled: this.settings.clusterAudio.transitionsEnabled,
+				transitionVolume: this.settings.clusterAudio.transitionVolume,
+				transitionSpeed: this.settings.clusterAudio.transitionSpeed,
+				realTimeUpdates: this.settings.clusterAudio.realTimeUpdates,
+				strengthModulation: this.settings.clusterAudio.strengthModulation,
+				strengthSensitivity: this.settings.clusterAudio.strengthSensitivity,
+				spatialAudio: this.settings.clusterAudio.spatialAudio,
+				maxSimultaneousClusters: this.settings.clusterAudio.maxSimultaneousClusters,
+				updateThrottleMs: this.settings.clusterAudio.updateThrottleMs
+			};
+
+			// Initialize cluster audio mapper
+			this.clusterAudioMapper = new ClusterAudioMapper(clusterAudioSettings);
+			await this.clusterAudioMapper.initialize();
+
+			this.isClusterAudioEnabled = true;
+			logger.info('phase5-init', 'Phase 5 cluster audio components initialized successfully');
+
+		} catch (error) {
+			logger.error('phase5-init-error', 'Error initializing Phase 5 cluster audio', error as Error);
+			this.isClusterAudioEnabled = false;
+		}
+	}
+
+	/**
+	 * Phase 5: Update cluster audio settings
+	 */
+	private updateClusterAudioSettings(): void {
+		if (!this.clusterAudioMapper || !this.settings.clusterAudio) return;
+
+		logger.debug('phase5-update', 'Updating cluster audio settings');
+
+		const clusterAudioSettings: ClusterAudioSettings = {
+			enabled: this.settings.clusterAudio.enabled,
+			globalVolume: this.settings.clusterAudio.globalVolume,
+			clusterTypeEnabled: this.settings.clusterAudio.clusterTypeEnabled,
+			clusterTypeVolumes: this.settings.clusterAudio.clusterTypeVolumes,
+			transitionsEnabled: this.settings.clusterAudio.transitionsEnabled,
+			transitionVolume: this.settings.clusterAudio.transitionVolume,
+			transitionSpeed: this.settings.clusterAudio.transitionSpeed,
+			realTimeUpdates: this.settings.clusterAudio.realTimeUpdates,
+			strengthModulation: this.settings.clusterAudio.strengthModulation,
+			strengthSensitivity: this.settings.clusterAudio.strengthSensitivity,
+			spatialAudio: this.settings.clusterAudio.spatialAudio,
+			maxSimultaneousClusters: this.settings.clusterAudio.maxSimultaneousClusters,
+			updateThrottleMs: this.settings.clusterAudio.updateThrottleMs
+		};
+
+		this.clusterAudioMapper.updateSettings(clusterAudioSettings);
+	}
+
+	/**
+	 * Phase 5: Disable cluster audio and clean up
+	 */
+	private disableClusterAudio(): void {
+		if (!this.isClusterAudioEnabled) return;
+
+		logger.info('phase5-cleanup', 'Disabling Phase 5 cluster audio components');
+
+		try {
+			if (this.clusterAudioMapper) {
+				this.clusterAudioMapper.dispose();
+				this.clusterAudioMapper = null;
+			}
+
+			this.isClusterAudioEnabled = false;
+			logger.info('phase5-disabled', 'Phase 5 cluster audio components disabled and cleaned up');
+
+		} catch (error) {
+			logger.error('phase5-disable-error', 'Error during Phase 5 cleanup', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 5: Process clusters for audio mapping
+	 */
+	public async processClustersForAudio(clusters: Cluster[]): Promise<void> {
+		if (!this.isClusterAudioEnabled || !this.clusterAudioMapper) return;
+
+		await this.clusterAudioMapper.processClusters(clusters);
 	}
 
 	/**

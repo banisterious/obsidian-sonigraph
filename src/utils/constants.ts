@@ -612,6 +612,35 @@ export interface SonigraphSettings {
 		moodPropertyName?: string;
 		distributionStrategy?: string;
 	};
+
+	// Phase 5: Smart clustering audio integration
+	clusterAudio?: {
+		enabled: boolean;
+		globalVolume: number;
+		clusterTypeEnabled: {
+			'tag-based': boolean;
+			'folder-based': boolean;
+			'link-dense': boolean;
+			'temporal': boolean;
+			'community': boolean;
+		};
+		clusterTypeVolumes: {
+			'tag-based': number;
+			'folder-based': number;
+			'link-dense': number;
+			'temporal': number;
+			'community': number;
+		};
+		transitionsEnabled: boolean;
+		transitionVolume: number;
+		transitionSpeed: number;
+		realTimeUpdates: boolean;
+		strengthModulation: boolean;
+		strengthSensitivity: number;
+		spatialAudio: boolean;
+		maxSimultaneousClusters: number;
+		updateThrottleMs: number;
+	};
 }
 
 export const DEFAULT_SETTINGS: SonigraphSettings = {
@@ -2359,6 +2388,35 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			automations: []
 		},
 		version: '3.5.0'
+	},
+
+	// Phase 5: Default cluster audio settings (disabled by default)
+	clusterAudio: {
+		enabled: false,
+		globalVolume: 0.3,
+		clusterTypeEnabled: {
+			'tag-based': true,
+			'folder-based': true,
+			'link-dense': true,
+			'temporal': true,
+			'community': true
+		},
+		clusterTypeVolumes: {
+			'tag-based': 0.6,
+			'folder-based': 0.7,
+			'link-dense': 0.5,
+			'temporal': 0.6,
+			'community': 0.8
+		},
+		transitionsEnabled: true,
+		transitionVolume: 0.4,
+		transitionSpeed: 1.0,
+		realTimeUpdates: true,
+		strengthModulation: true,
+		strengthSensitivity: 1.0,
+		spatialAudio: true,
+		maxSimultaneousClusters: 5,
+		updateThrottleMs: 200
 	}
 };
 
