@@ -67426,37 +67426,72 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     }
   }
   async onClose() {
-    logger39.debug("ui", "Closing Sonic Graph view");
-    this.removeAllEventListeners();
-    if (this.settingsUpdateTimeout) {
-      clearTimeout(this.settingsUpdateTimeout);
-      this.settingsUpdateTimeout = null;
+    logger39.info("ui", "Closing Sonic Graph view - starting cleanup");
+    try {
+      logger39.debug("ui", "Removing event listeners");
+      this.removeAllEventListeners();
+    } catch (error) {
+      logger39.error("ui", "Error removing event listeners:", error);
     }
-    if (this.scrubSaveTimeout) {
-      clearTimeout(this.scrubSaveTimeout);
-      this.scrubSaveTimeout = null;
+    try {
+      logger39.debug("ui", "Clearing timeouts");
+      if (this.settingsUpdateTimeout) {
+        clearTimeout(this.settingsUpdateTimeout);
+        this.settingsUpdateTimeout = null;
+      }
+      if (this.scrubSaveTimeout) {
+        clearTimeout(this.scrubSaveTimeout);
+        this.scrubSaveTimeout = null;
+      }
+      this.pendingSettingsUpdates.clear();
+    } catch (error) {
+      logger39.error("ui", "Error clearing timeouts:", error);
     }
-    this.pendingSettingsUpdates.clear();
-    if (this.continuousLayerManager) {
-      this.continuousLayerManager.stop();
-      this.continuousLayerManager = null;
+    try {
+      logger39.debug("ui", "Stopping continuous layers");
+      if (this.continuousLayerManager) {
+        this.continuousLayerManager.stop();
+        this.continuousLayerManager = null;
+      }
+    } catch (error) {
+      logger39.error("ui", "Error stopping continuous layers:", error);
     }
-    if (this.temporalAnimator) {
-      this.temporalAnimator.destroy();
-      this.temporalAnimator = null;
+    try {
+      logger39.debug("ui", "Destroying temporal animator");
+      if (this.temporalAnimator) {
+        this.temporalAnimator.destroy();
+        this.temporalAnimator = null;
+      }
+    } catch (error) {
+      logger39.error("ui", "Error destroying temporal animator:", error);
     }
-    if (this.graphRenderer) {
-      this.graphRenderer.destroy();
-      this.graphRenderer = null;
+    try {
+      logger39.debug("ui", "Destroying graph renderer");
+      if (this.graphRenderer) {
+        this.graphRenderer.destroy();
+        this.graphRenderer = null;
+      }
+    } catch (error) {
+      logger39.error("ui", "Error destroying graph renderer:", error);
     }
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
+    try {
+      logger39.debug("ui", "Disconnecting resize observer");
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+        this.resizeObserver = null;
+      }
+    } catch (error) {
+      logger39.error("ui", "Error disconnecting resize observer:", error);
     }
-    this.isAnimating = false;
-    this.hideProgressIndicator();
-    const { contentEl } = this;
-    contentEl.empty();
+    try {
+      this.isAnimating = false;
+      this.hideProgressIndicator();
+      const { contentEl } = this;
+      contentEl.empty();
+    } catch (error) {
+      logger39.error("ui", "Error clearing content:", error);
+    }
+    logger39.info("ui", "Sonic Graph view closed successfully");
   }
   /**
    * Create view header with title only (sticky)
@@ -78372,18 +78407,37 @@ var SonigraphPlugin = class extends import_obsidian14.Plugin {
   }
   async onunload() {
     logger53.info("lifecycle", "Sonigraph plugin unloading...");
-    const whaleIntegration2 = getWhaleIntegration();
-    if (whaleIntegration2) {
-      whaleIntegration2.cleanup();
+    try {
+      logger53.debug("lifecycle", "Detaching Sonic Graph views...");
+      this.app.workspace.detachLeavesOfType(VIEW_TYPE_SONIC_GRAPH);
+      logger53.debug("lifecycle", "Sonic Graph views detached");
+    } catch (error) {
+      logger53.error("lifecycle", "Error detaching views:", error);
     }
-    if (this.audioEngine) {
-      this.audioEngine.dispose();
-      this.audioEngine = null;
+    try {
+      logger53.debug("lifecycle", "Cleaning up whale integration...");
+      const whaleIntegration2 = getWhaleIntegration();
+      if (whaleIntegration2) {
+        whaleIntegration2.cleanup();
+      }
+      logger53.debug("lifecycle", "Whale integration cleaned up");
+    } catch (error) {
+      logger53.error("lifecycle", "Error cleaning up whale integration:", error);
+    }
+    try {
+      logger53.debug("lifecycle", "Disposing audio engine...");
+      if (this.audioEngine) {
+        this.audioEngine.dispose();
+        this.audioEngine = null;
+      }
+      logger53.debug("lifecycle", "Audio engine disposed");
+    } catch (error) {
+      logger53.error("lifecycle", "Error disposing audio engine:", error);
     }
     this.graphParser = null;
     this.musicalMapper = null;
     this.currentGraphData = null;
-    logger53.info("lifecycle", "Sonigraph plugin unloaded");
+    logger53.info("lifecycle", "Sonigraph plugin unloaded successfully");
   }
   /**
    * Initialize logging level from saved settings

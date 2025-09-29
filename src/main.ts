@@ -94,16 +94,37 @@ export default class SonigraphPlugin extends Plugin {
 	async onunload() {
 		logger.info('lifecycle', 'Sonigraph plugin unloading...');
 
-		// Clean up whale integration
-		const whaleIntegration = getWhaleIntegration();
-		if (whaleIntegration) {
-			whaleIntegration.cleanup();
+		try {
+			// Close all Sonic Graph views
+			logger.debug('lifecycle', 'Detaching Sonic Graph views...');
+			this.app.workspace.detachLeavesOfType(VIEW_TYPE_SONIC_GRAPH);
+			logger.debug('lifecycle', 'Sonic Graph views detached');
+		} catch (error) {
+			logger.error('lifecycle', 'Error detaching views:', error);
 		}
 
-		// Clean up audio engine
-		if (this.audioEngine) {
-			this.audioEngine.dispose();
-			this.audioEngine = null;
+		try {
+			// Clean up whale integration
+			logger.debug('lifecycle', 'Cleaning up whale integration...');
+			const whaleIntegration = getWhaleIntegration();
+			if (whaleIntegration) {
+				whaleIntegration.cleanup();
+			}
+			logger.debug('lifecycle', 'Whale integration cleaned up');
+		} catch (error) {
+			logger.error('lifecycle', 'Error cleaning up whale integration:', error);
+		}
+
+		try {
+			// Clean up audio engine
+			logger.debug('lifecycle', 'Disposing audio engine...');
+			if (this.audioEngine) {
+				this.audioEngine.dispose();
+				this.audioEngine = null;
+			}
+			logger.debug('lifecycle', 'Audio engine disposed');
+		} catch (error) {
+			logger.error('lifecycle', 'Error disposing audio engine:', error);
 		}
 
 		// Clean up other components
@@ -111,7 +132,7 @@ export default class SonigraphPlugin extends Plugin {
 		this.musicalMapper = null;
 		this.currentGraphData = null;
 
-		logger.info('lifecycle', 'Sonigraph plugin unloaded');
+		logger.info('lifecycle', 'Sonigraph plugin unloaded successfully');
 	}
 
 	/**
