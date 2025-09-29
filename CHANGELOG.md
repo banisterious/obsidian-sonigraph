@@ -7,6 +7,130 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Phase 6.1: Musical Theory Integration ✅
+
+#### Overview
+Comprehensive musical theory system constraining audio output to proper musical scales and harmonies. Supports 17 scales/modes with pitch quantization, harmonic validation, and configurable constraints for musically coherent sonification.
+
+#### Core Components (1,553 lines, 3 commits)
+
+**Musical Type System** (`src/audio/theory/types.ts` - 232 lines)
+- **27 Interfaces and Types**: Complete type definitions for all musical concepts
+- **Scale Types**: Major, minor (natural/harmonic/melodic), pentatonic (major/minor), blues, chromatic, whole-tone, diminished
+- **Modal Scales**: 7 church modes (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian)
+- **Interval Types**: 13 intervals from unison to octave with frequency ratios
+- **Chord Qualities**: 10 chord types (major, minor, diminished, augmented, 7ths, suspended)
+- **Configuration Types**: MusicalTheoryConfig, HarmonicConstraints, QuantizedPitch, MusicalContext
+
+**Scale Definitions** (`src/audio/theory/ScaleDefinitions.ts` - 467 lines)
+- **17 Complete Scales**: Semitone intervals and characteristics for all scales/modes
+- **A440 Tuning**: Standard concert pitch frequencies for all 12 notes
+- **Interval Definitions**: Just intonation frequency ratios for all intervals
+- **Chord Definitions**: 10 chord qualities with semitone interval formulas
+- **5 Chord Progressions**: Common progressions (I-IV-V-I, ii-V-I, I-V-vi-IV, etc.)
+- **Helper Functions**: calculateFrequency, getClosestNoteName, generateScaleFrequencies/Notes
+
+**Harmonic Rules** (`src/audio/theory/HarmonicRules.ts` - 365 lines)
+- **Consonance Ratings**: 0-1 ratings for all intervals (perfect fifth: 0.95, tritone: 0.1)
+- **5 Voice Leading Rules**: Classical harmony rules (no parallel 5ths/8ves, contrary motion, voice crossing, leading tone resolution)
+- **Plomp-Levelt Model**: Psychoacoustic dissonance calculation
+- **Harmonic Analysis**: calculateDissonance, calculateHarmonicTension, validateVoiceLeading
+- **Chord Functions**: Harmonic function detection (tonic, dominant, subdominant, predominant)
+- **Constraint Enforcement**: applyHarmonicConstraints, isIntervalAvoided, getSuggestedIntervals
+
+**Musical Theory Engine** (`src/audio/theory/MusicalTheoryEngine.ts` - 489 lines)
+- **Pitch Quantization**: Constrain frequencies to scale with configurable strength (0-1)
+- **Scale Management**: Create, switch, and modulate between any supported scale
+- **Chord Generation**: Generate chords and progressions with proper voice leading
+- **Melody Harmonization**: Add harmony voices below melody using preferred intervals
+- **Harmonic Validation**: Check dissonance, tension, and scale conformance
+- **Musical Context**: Track recent notes, tension, and progression state
+- **Dynamic Modulation**: Optional scale changes based on musical context
+- **Performance**: Integrated logging, caching, and efficient algorithms
+
+#### Integration (56 lines added)
+
+**ClusterAudioMapper** (`src/audio/clustering/ClusterAudioMapper.ts`)
+- **Musical Theory Engine**: Initialized with user configuration
+- **Pitch Constraint**: calculateClusterFrequency applies scale constraints when enabled
+- **Settings Updates**: updateMusicalTheorySettings method for runtime configuration
+- **Proper Disposal**: Engine cleanup on mapper disposal
+
+**Settings & Constants** (`src/utils/constants.ts`)
+- **Configuration Interface**: musicalTheory settings with all 9 parameters
+- **Sensible Defaults**: Disabled by default, C major scale, 0.8 quantization strength
+- **Full Customization**: All scales, root notes, thresholds, and behaviors configurable
+
+#### User Interface (303 lines)
+
+**Settings Panel** (`src/ui/SonicGraphView.ts`)
+- **Enable Toggle**: Master switch for musical theory system
+- **Root Note Dropdown**: All 12 chromatic notes (C through B)
+- **Scale Type Dropdown**: 13 scales organized by family (major, minor, pentatonic, exotic, modal)
+- **Quantization Strength**: Slider (0-100%) controlling how strictly frequencies snap to scale
+- **Dissonance Threshold**: Slider (0-100%) setting maximum allowed dissonance
+- **Enforce Scale Harmony**: Toggle to constrain all pitches to selected scale
+- **Allow Chromatic Passing**: Toggle to permit brief chromatic notes
+- **Dynamic Scale Modulation**: Toggle for automatic scale changes based on context
+- **Real-Time Updates**: All settings apply immediately to audio engine
+- **Collapsible Details**: Settings expand/collapse for clean interface
+
+#### Musical Scales Supported
+
+**Major Family**
+- Major (Ionian): Bright, happy, stable [0,2,4,5,7,9,11]
+
+**Minor Family**
+- Natural Minor (Aeolian): Dark, sad, melancholic [0,2,3,5,7,8,10]
+- Harmonic Minor: Exotic, dramatic, Middle Eastern [0,2,3,5,7,8,11]
+- Melodic Minor: Bright minor, versatile [0,2,3,5,7,9,11]
+
+**Pentatonic Family**
+- Pentatonic Major: Simple, folk, universal [0,2,4,7,9]
+- Pentatonic Minor: Blues, rock, melancholic [0,3,5,7,10]
+
+**Exotic Scales**
+- Blues: Bluesy, soulful, expressive [0,3,5,6,7,10]
+- Chromatic: All 12 notes - dissonant, atonal, free [0-11]
+- Whole Tone: Dreamy, ambiguous, impressionistic [0,2,4,6,8,10]
+- Diminished: Tense, symmetrical, jazzy [0,2,3,5,6,8,9,11]
+
+**Church Modes**
+- Dorian: Jazzy, sophisticated, versatile [0,2,3,5,7,9,10]
+- Phrygian: Spanish, dark, exotic [0,1,3,5,7,8,10]
+- Lydian: Dreamy, ethereal, floating [0,2,4,6,7,9,11]
+- Mixolydian: Blues-rock, dominant, strong [0,2,4,5,7,9,10]
+- Locrian: Unstable, dissonant, theoretical [0,1,3,5,6,8,10]
+
+#### Performance
+- **Efficient Algorithms**: O(n) pitch quantization, O(n²) dissonance calculation
+- **Minimal Overhead**: Theory engine only processes when enabled
+- **Real-Time Safe**: All operations suitable for audio thread
+- **Memory Efficient**: Scale data cached, no dynamic allocations in hot paths
+
+#### Configuration Options
+- **enabled**: Master toggle (default: false)
+- **scale**: Major/minor/pentatonic/exotic/modal (default: 'major')
+- **rootNote**: C, C#, D, D#, E, F, F#, G, G#, A, A#, B (default: 'C')
+- **enforceHarmony**: Constrain all pitches to scale (default: true)
+- **allowChromaticPassing**: Permit brief chromatic notes (default: false)
+- **dissonanceThreshold**: Maximum dissonance 0-1 (default: 0.3)
+- **quantizationStrength**: Scale snap strength 0-1 (default: 0.8)
+- **preferredChordProgression**: Default progression (default: 'I-IV-V-I')
+- **dynamicScaleModulation**: Auto scale changes (default: false)
+
+#### Testing
+- Ready for validation via Test Suite Modal
+- Recommended tests: Scale quantization accuracy, harmonic constraint enforcement, UI responsiveness
+- Performance profiling: Overhead measurement with/without theory enabled
+
+#### Files Modified
+- **Created**: 5 files (1,553 lines in `src/audio/theory/`)
+- **Modified**: 3 files (+385 lines across audio, config, UI)
+- **Total Impact**: ~1,900 lines, 3 commits
+
+---
+
 ### Added - Phase 5.2: Hub Node Orchestration ✅
 
 #### Overview
