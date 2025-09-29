@@ -973,24 +973,167 @@ These have been temporarily substituted with existing instruments. A future task
 - Strength-responsive theme variations (stronger clusters get more complex harmonies)
 - UI controls for strength modulation enable/disable and sensitivity settings
 
-#### Phase 5.2: Cluster Strength Modulation
-- **Objective**: Audio intensity based on cluster cohesion
+#### Phase 5.2: Hub Node Orchestration
+- **Objective**: Use hub nodes as "conductors" to drive dynamic orchestration decisions
+- **Status**: ❌ **NOT IMPLEMENTED** (Basic hub detection exists in 5.1, but orchestration is missing)
+
+**Current State Analysis:**
+- ✅ Basic hub identification exists (connection count threshold in `ClusterAudioMapper.ts:891-899`)
+- ✅ `hubCentrality` property defined in `EnhancedGraphNode` interface (`types.ts:64`)
+- ❌ Hub centrality **never calculated** - property remains undefined throughout codebase
+- ❌ No hub-driven orchestration logic
+- ❌ No distinct audio characteristics for hub vs peripheral nodes
+- ❌ No integration with musical dynamics
 
 **Implementation Tasks:**
-1. **Strength-Based Audio Modulation**
-   - Cluster strength → volume/intensity
-   - Cohesive clusters → consonant harmonies
-   - Weak clusters → sparse, subtle sounds
-   - Dynamic strength changes → real-time audio modulation
 
-2. **Integration with Smart Clustering**
-   - Access cluster strength from `SmartClusteringAlgorithms`
-   - Real-time updates during animation
-   - Cluster boundary visualization audio cues
+1. **Hub Centrality Calculator**
+   ```typescript
+   class HubCentralityAnalyzer {
+     calculateHubMetrics(nodes: GraphNode[], links: GraphLink[]): Map<string, HubMetrics>;
+
+     // Multiple centrality measures
+     calculateDegreeCentrality(node: GraphNode): number;
+     calculateBetweennessCentrality(node: GraphNode): number;
+     calculateEigenvectorCentrality(node: GraphNode): number;
+     calculatePageRank(node: GraphNode): number;
+
+     // Composite hub score (0-1)
+     calculateCompositeHubScore(metrics: HubMetrics): number;
+   }
+
+   interface HubMetrics {
+     nodeId: string;
+     degreeCentrality: number;
+     betweennessCentrality: number;
+     eigenvectorCentrality: number;
+     pageRank: number;
+     compositeScore: number;
+     isHub: boolean; // Score > threshold
+   }
+   ```
+
+2. **Hub-Driven Orchestration Engine**
+   ```typescript
+   class HubOrchestrationManager {
+     private hubMetrics: Map<string, HubMetrics>;
+     private orchestrationRules: OrchestrationRules;
+
+     // Hub nodes "conduct" their cluster's audio
+     orchestrateClusterFromHub(cluster: Cluster, hubNode: GraphNode): OrchestrationDecisions;
+
+     // Hub prominence affects musical dynamics
+     calculateHubVolume(hubScore: number): number; // Louder = more central
+     calculateHubComplexity(hubScore: number): number; // More complex harmony
+     selectHubInstrument(hubScore: number, clusterType: ClusterType): string;
+
+     // Hub transitions trigger orchestral events
+     detectHubTransitions(previousHubs: HubMetrics[], currentHubs: HubMetrics[]): HubTransitionEvent[];
+     triggerHubEmergence(newHub: HubMetrics): void;
+     triggerHubDemise(oldHub: HubMetrics): void;
+   }
+
+   interface OrchestrationDecisions {
+     leadInstrument: string; // Hub node plays lead
+     accompanyingInstruments: string[]; // Peripheral nodes accompany
+     harmonyComplexity: number;
+     volumeDistribution: Map<string, number>; // Per-node volumes
+     spatialPositioning: Map<string, number>; // Pan based on hub distance
+   }
+
+   interface HubTransitionEvent {
+     type: 'hub-emergence' | 'hub-demise' | 'hub-shift';
+     nodeId: string;
+     previousScore: number;
+     newScore: number;
+     clusterId?: string;
+   }
+   ```
+
+3. **Hub-Aware Audio Differentiation**
+   - **Hub Nodes**: Prominent lead instruments (piano, trumpet, lead synth)
+   - **Near-Hub Nodes**: Supporting harmony instruments (strings, pads)
+   - **Peripheral Nodes**: Subtle accompaniment (soft percussion, ambient textures)
+   - **Distance-Based Scaling**: Audio prominence decreases with graph distance from hub
+
+4. **Dynamic Hub Emergence Audio**
+   ```typescript
+   // When a node becomes a hub (centrality crosses threshold)
+   triggerHubEmergence(hubNode: GraphNode, hubScore: number): void {
+     // Crescendo effect as node gains prominence
+     // Instrument transition: subtle → prominent
+     // Add harmonic richness
+     // Trigger "leadership" audio motif
+   }
+
+   // When a hub loses centrality
+   triggerHubDemise(formerHub: GraphNode): void {
+     // Decrescendo effect
+     // Instrument transition: prominent → subtle
+     // Harmonic simplification
+     // Fadeout with grace notes
+   }
+   ```
+
+5. **Integration with GraphDataExtractor**
+   ```typescript
+   // In GraphDataExtractor.ts
+   private calculateHubCentrality(node: GraphNode, allNodes: GraphNode[], allLinks: GraphLink[]): number {
+     const metrics = this.hubAnalyzer.calculateHubMetrics([node], allLinks);
+     return metrics.get(node.id)?.compositeScore || 0;
+   }
+
+   // Populate hubCentrality in EnhancedGraphNode
+   enhancedNode.hubCentrality = this.calculateHubCentrality(node, nodes, links);
+   ```
+
+6. **Cluster-Hub Coordination**
+   ```typescript
+   // In ClusterAudioMapper.ts
+   private applyHubOrchestration(cluster: Cluster): void {
+     const hubNodes = this.identifyClusterHubs(cluster);
+
+     if (hubNodes.length > 0) {
+       // Primary hub conducts the cluster
+       const primaryHub = hubNodes[0];
+       const orchestration = this.hubOrchestrator.orchestrateClusterFromHub(cluster, primaryHub);
+
+       // Apply orchestration decisions to cluster audio
+       this.applyOrchestrationToCluster(cluster, orchestration);
+     }
+   }
+
+   private identifyClusterHubs(cluster: Cluster): GraphNode[] {
+     return cluster.nodes
+       .filter(node => node.hubCentrality && node.hubCentrality > 0.6) // Hub threshold
+       .sort((a, b) => (b.hubCentrality || 0) - (a.hubCentrality || 0));
+   }
+   ```
+
+7. **Hub Visualization Audio Feedback**
+   - Visual hub highlighting triggers audio "spotlight" effect
+   - Hub selection plays identifying chord/motif
+   - Hub expansion/collapse affects cluster dynamics
+
+**Files to Create:**
+- `src/audio/orchestration/HubCentralityAnalyzer.ts` - Centrality calculations
+- `src/audio/orchestration/HubOrchestrationManager.ts` - Hub-driven orchestration
+- `src/audio/orchestration/HubTransitionHandler.ts` - Hub emergence/demise audio
+- `src/audio/orchestration/types.ts` - Hub orchestration type definitions
 
 **Files to Modify:**
-- `src/graph/SmartClusteringAlgorithms.ts`: Audio callback integration
-- `src/audio/clustering/ClusterAudioMapper.ts`: Strength modulation logic
+- `src/graph/GraphDataExtractor.ts` - Calculate and populate `hubCentrality`
+- `src/audio/clustering/ClusterAudioMapper.ts` - Integrate hub orchestration
+- `src/graph/SmartClusteringAlgorithms.ts` - Expose hub analysis methods
+- `src/ui/SonicGraphModal.ts` - Hub orchestration settings UI
+
+**UI Settings to Add:**
+- Enable/disable hub orchestration
+- Hub centrality threshold slider (0.5-0.8)
+- Hub prominence multiplier (how much louder hubs are)
+- Hub instrument preference selection
+- Hub transition audio enable/disable
+- Orchestration mode: 'hub-led' | 'democratic' | 'balanced'
 
 #### Phase 5.3: Community Detection Audio
 - **Objective**: Audio representation of community structures and social clustering
