@@ -1,6 +1,8 @@
 import { TFile, TFolder, Vault, MetadataCache, CachedMetadata } from 'obsidian';
 import { getLogger } from '../logging';
 import { EnhancedGraphNode } from './types';
+import { HubCentralityAnalyzer } from '../audio/orchestration/HubCentralityAnalyzer';
+import type { CentralityWeights } from '../audio/orchestration/types';
 
 const logger = getLogger('GraphDataExtractor');
 
@@ -18,6 +20,8 @@ export interface GraphNode {
     dominantColors?: string[];
     tags?: string[];
   };
+  // Phase 5.2: Hub centrality score
+  hubCentrality?: number;
   // D3 simulation properties
   x?: number;
   y?: number;
@@ -55,6 +59,9 @@ export class GraphDataExtractor {
     showTags: boolean;
     showOrphans: boolean;
   };
+  // Phase 5.2: Hub centrality calculation
+  private hubCentralityAnalyzer: HubCentralityAnalyzer | null = null;
+  private enableHubCentrality: boolean;
 
   constructor(vault: Vault, metadataCache: MetadataCache, options?: {
     excludeFolders?: string[];
@@ -63,6 +70,10 @@ export class GraphDataExtractor {
       showTags: boolean;
       showOrphans: boolean;
     };
+    // Phase 5.2: Hub orchestration options
+    calculateHubCentrality?: boolean;
+    hubCentralityWeights?: CentralityWeights;
+    hubThreshold?: number;
   }) {
     logger.debug('extraction', 'GraphDataExtractor constructor started');
     
@@ -78,12 +89,24 @@ export class GraphDataExtractor {
       showTags: true,
       showOrphans: true
     };
-    logger.debug('extraction', 'Exclusions and filters set:', { 
+
+    // Phase 5.2: Initialize hub centrality analyzer if enabled
+    this.enableHubCentrality = options?.calculateHubCentrality || false;
+    if (this.enableHubCentrality) {
+      this.hubCentralityAnalyzer = new HubCentralityAnalyzer(
+        options?.hubCentralityWeights,
+        options?.hubThreshold
+      );
+      logger.debug('extraction', 'Hub centrality analyzer initialized');
+    }
+
+    logger.debug('extraction', 'Exclusions and filters set:', {
       excludeFolders: this.excludeFolders.length,
       excludeFiles: this.excludeFiles.length,
-      filterSettings: this.filterSettings
+      filterSettings: this.filterSettings,
+      hubCentralityEnabled: this.enableHubCentrality
     });
-    
+
     logger.debug('extraction', 'GraphDataExtractor constructor completed');
   }
 
@@ -122,7 +145,24 @@ export class GraphDataExtractor {
       logger.info('graph-extraction-connections', 'Populating node connections for hub highlighting');
       this.populateNodeConnections(nodes, links);
       logger.info('graph-extraction-connections', 'Node connections populated');
-      
+
+      // Phase 5.2: Calculate hub centrality if enabled
+      if (this.enableHubCentrality && this.hubCentralityAnalyzer) {
+        logger.info('graph-extraction-hub-centrality', 'Calculating hub centrality metrics');
+        const hubMetrics = this.hubCentralityAnalyzer.calculateHubMetrics(nodes, links);
+
+        // Populate hubCentrality on each node
+        nodes.forEach(node => {
+          const metrics = hubMetrics.get(node.id);
+          if (metrics) {
+            node.hubCentrality = metrics.compositeScore;
+          }
+        });
+
+        const hubCount = Array.from(hubMetrics.values()).filter(m => m.isHub).length;
+        logger.info('graph-extraction-hub-centrality', `Hub centrality calculated: ${hubCount} hubs identified`);
+      }
+
       // Filter orphans if showOrphans is disabled
       let filteredNodes = nodes;
       if (!this.filterSettings.showOrphans) {

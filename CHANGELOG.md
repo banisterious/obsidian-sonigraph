@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Phase 5.2: Hub Node Orchestration ✅
+
+#### Overview
+Hub nodes now act as "conductors" to drive dynamic orchestration decisions based on centrality metrics. Central nodes get prominent lead instruments while peripheral nodes provide accompaniment.
+
+#### Core Components (2,191 lines, 4 commits)
+
+**Hub Centrality Analysis**
+- **Multiple Centrality Algorithms**: 4 sophisticated algorithms working together
+  - Degree centrality: Normalized connection count
+  - Betweenness centrality: Frequency on shortest paths between nodes
+  - Eigenvector centrality: Connections to well-connected nodes
+  - PageRank: Google's authority algorithm adapted for knowledge graphs
+- **Composite Scoring**: Configurable weights (default: 30% degree, 30% betweenness, 20% eigenvector, 20% PageRank)
+- **Performance Caching**: 5-second cache minimizes recalculation overhead
+- **Hub Prominence Tiers**: 5 levels (super-hub, hub, near-hub, intermediate, peripheral)
+
+**Orchestration System**
+- **3 Orchestration Modes**:
+  - Hub-led: Strong hierarchy with clear leader-follower dynamics
+  - Democratic: All nodes equal volume (no hub prominence)
+  - Balanced: Moderate hub prominence (default)
+- **Role-Based Instrument Pools**:
+  - Conductor: Piano, trumpet, violin, lead synth
+  - Lead: Electric piano, French horn, cello, flute
+  - Harmony: Strings, pad synth, vibraphone, clarinet
+  - Accompaniment: Guitar, bass, marimba, harp
+  - Ambient: Choir, celesta, ambient synth, vocal pad
+- **Distance-Based Audio**: Volume scales with graph distance from hub
+- **Spatial Positioning**: Pan calculation based on hub distance and angular distribution
+
+**Hub Transition Audio**
+- **Hub Emergence**: Crescendo effect with harmonic buildup when node becomes hub
+- **Hub Demise**: Decrescendo with graceful fadeout when hub loses centrality
+- **Hub Shift**: Frequency sweep with filter modulation for centrality changes
+- **Configurable Curves**: Linear, exponential, or logarithmic transition curves
+
+#### Integration
+- **GraphDataExtractor**: Optional hub centrality calculation, `hubCentrality` property on nodes
+- **ClusterAudioMapper**: Full hub orchestration support with `updateGraphData()` and `updateHubOrchestrationSettings()` methods
+- **Settings UI**: Complete panel in Sonic Graph View with real-time controls
+
+#### Configuration
+- **Default Settings**: Disabled by default, balanced mode, 0.6 hub threshold, 2.0x prominence
+- **User Controls**: Hub threshold (40-90%), prominence multiplier (1-5x), centrality weights, transitions toggle
+
+#### Performance
+- **Algorithms**: O(n²) for betweenness, O(n log n) for others
+- **Caching**: 5-second cache with automatic invalidation
+- **Optimized**: Efficient graph algorithms (Dijkstra, power iteration, PageRank)
+
+#### Files
+- **Created**: 5 new files (1,702 lines in `src/audio/orchestration/`)
+- **Modified**: 5 files (+403 lines across graph, audio, UI, and config)
+
+---
+
 ### Changed - Sonic Graph: Modal to ItemView Migration ✅
 
 #### Major Architecture Update
