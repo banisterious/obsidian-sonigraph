@@ -642,6 +642,22 @@ export interface SonigraphSettings {
 		updateThrottleMs: number;
 	};
 
+	// Phase 5.2: Hub Node Orchestration
+	hubOrchestration?: {
+		enabled: boolean;
+		hubThreshold: number; // 0-1, minimum composite score to be hub
+		prominenceMultiplier: number; // 1-5, how much louder hubs are
+		orchestrationMode: 'hub-led' | 'democratic' | 'balanced';
+		transitionsEnabled: boolean;
+		centralityWeights: {
+			degree: number; // 0-1, weight for degree centrality
+			betweenness: number; // 0-1, weight for betweenness centrality
+			eigenvector: number; // 0-1, weight for eigenvector centrality
+			pageRank: number; // 0-1, weight for PageRank
+		};
+		hubInstrumentPreference: string[]; // Preferred instruments for hub nodes
+	};
+
 	// Phase 5.3: Community Detection Audio
 	communityDetection?: {
 		enabled: boolean;
@@ -2469,6 +2485,22 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		spatialAudio: true,
 		maxSimultaneousClusters: 5,
 		updateThrottleMs: 200
+	},
+
+	// Phase 5.2: Default hub orchestration settings (disabled by default)
+	hubOrchestration: {
+		enabled: false,
+		hubThreshold: 0.6, // Nodes with composite score > 0.6 are hubs
+		prominenceMultiplier: 2.0, // Hubs are 2x louder in balanced mode
+		orchestrationMode: 'balanced',
+		transitionsEnabled: true,
+		centralityWeights: {
+			degree: 0.3, // Basic connectivity
+			betweenness: 0.3, // Bridge importance
+			eigenvector: 0.2, // Network influence
+			pageRank: 0.2 // Authority score
+		},
+		hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
 	},
 
 	// Phase 5.3: Default community detection audio settings (disabled by default)
