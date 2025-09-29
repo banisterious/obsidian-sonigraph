@@ -61,10 +61,14 @@ export class SonicGraphView extends ItemView {
 
     // Performance optimization: Progress indicator
     private progressIndicator: HTMLElement | null = null;
-    
+
     // Responsive sizing: Resize observer for dynamic graph sizing
     private resizeObserver: ResizeObserver | null = null;
-    
+
+    // Background state handling: Track if view is in foreground
+    private isViewActive = true;
+    private wasAnimatingBeforeBackground = false;
+
     // UI elements
     private headerContainer: HTMLElement;
     private graphContainer: HTMLElement;
@@ -259,12 +263,79 @@ export class SonicGraphView extends ItemView {
                 logger.error('sonic-graph-init', 'Graph initialization failed:', error);
                 new Notice('Failed to initialize Sonic Graph: ' + error.message);
             });
-            
+
+            // Register workspace event listener for background state handling
+            this.registerWorkspaceListener();
+
         } catch (error) {
             logger.error('ui', 'Error opening Sonic Graph view:', (error as Error).message);
             logger.error('ui', 'Error stack:', (error as Error).stack);
             new Notice('Failed to open Sonic Graph view: ' + (error as Error).message);
         }
+    }
+
+    /**
+     * Register workspace event listener to detect when view becomes active/inactive
+     */
+    private registerWorkspaceListener(): void {
+        this.registerEvent(
+            this.app.workspace.on('active-leaf-change', (leaf) => {
+                if (leaf?.view === this) {
+                    // This view just became active
+                    this.handleViewActivated();
+                } else if (this.isViewActive) {
+                    // This view just became inactive
+                    this.handleViewDeactivated();
+                }
+            })
+        );
+        logger.debug('background-state', 'Workspace listener registered for background state handling');
+    }
+
+    /**
+     * Handle view becoming active (brought to foreground)
+     */
+    private handleViewActivated(): void {
+        if (this.isViewActive) {
+            return; // Already active
+        }
+
+        logger.info('background-state', 'View activated - resuming operations');
+        this.isViewActive = true;
+
+        // Resume animation if it was running before backgrounding
+        if (this.wasAnimatingBeforeBackground && this.temporalAnimator) {
+            logger.debug('background-state', 'Resuming animation');
+            this.temporalAnimator.play();
+            this.isAnimating = true;
+            this.wasAnimatingBeforeBackground = false;
+        }
+
+        // Audio automatically continues when view is active
+        logger.debug('background-state', 'View activation complete');
+    }
+
+    /**
+     * Handle view becoming inactive (moved to background)
+     */
+    private handleViewDeactivated(): void {
+        if (!this.isViewActive) {
+            return; // Already inactive
+        }
+
+        logger.info('background-state', 'View deactivated - pausing operations for performance');
+        this.isViewActive = false;
+
+        // Pause animation if it's running
+        if (this.isAnimating && this.temporalAnimator) {
+            logger.debug('background-state', 'Pausing animation');
+            this.temporalAnimator.pause();
+            this.wasAnimatingBeforeBackground = true;
+        }
+
+        // Note: We keep audio playing since continuous layers should persist
+        // Users can manually stop audio if desired via the controls
+        logger.debug('background-state', 'View deactivation complete (audio continues)');
     }
 
     /**
