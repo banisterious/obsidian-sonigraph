@@ -2112,8 +2112,14 @@ export class SonicGraphModal extends Modal {
         // Phase 1.3: Audio Enhancement Settings
         this.createAudioEnhancementSettings(section);
 
-        // Phase 5: Cluster Audio Settings
+        // Phase 5.1: Cluster Audio Settings
         this.createClusterAudioSettings(section);
+
+        // Phase 5.3: Community Detection Audio Settings
+        this.createCommunityDetectionSettings(section);
+
+        // Phase 5.3: Community Evolution Audio Settings
+        this.createCommunityEvolutionSettings(section);
     }
 
     /**
@@ -2705,6 +2711,518 @@ export class SonicGraphModal extends Modal {
     }
 
     /**
+     * Phase 5.3: Create community detection audio settings section
+     */
+    private createCommunityDetectionSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Community Detection Header
+        const communityHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        communityHeader.createEl('label', {
+            text: 'Community Detection Audio (Phase 5.3)',
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header'
+        });
+        communityHeader.createEl('div', {
+            text: 'Generate distinct audio themes for detected community structures with evolution tracking',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Main Community Detection Toggle
+        new Setting(container)
+            .setName('Enable community detection audio')
+            .setDesc('Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.communityDetection?.enabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.communityDetection) {
+                        this.plugin.settings.communityDetection = {
+                            enabled: false,
+                            largeCommunitySizeThreshold: 15,
+                            hierarchyAnalysis: true,
+                            hierarchyContainmentThreshold: 0.7,
+                            themeIntensity: 1.0,
+                            communityTypeEnabled: {
+                                'large-stable': true,
+                                'small-dynamic': true,
+                                'bridge': true,
+                                'isolated': true,
+                                'hierarchical': true
+                            },
+                            communityTypeVolumes: {
+                                'large-stable': 0.8,
+                                'small-dynamic': 0.6,
+                                'bridge': 0.7,
+                                'isolated': 0.5,
+                                'hierarchical': 0.75
+                            },
+                            spatialAudio: true,
+                            spatialWidth: 0.8
+                        };
+                    }
+                    this.plugin.settings.communityDetection.enabled = value;
+                    await this.plugin.saveSettings();
+                    this.refreshCommunityDetectionSettings();
+                })
+            );
+
+        // Show additional settings only when community detection is enabled
+        if (this.plugin.settings.communityDetection?.enabled) {
+            this.createCommunityDetectionDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 5.3: Create detailed community detection audio settings
+     */
+    private createCommunityDetectionDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.communityDetection!;
+
+        // Theme Intensity Slider
+        new Setting(container)
+            .setName('Theme intensity')
+            .setDesc('Overall intensity of community audio themes')
+            .addSlider(slider => slider
+                .setLimits(0, 2, 0.1)
+                .setValue(settings.themeIntensity)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.themeIntensity = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Community Type Toggles and Volume Controls
+        const communityTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        communityTypesHeader.createEl('h4', {
+            text: 'Community Type Audio Themes',
+            cls: 'sonic-graph-setting-label'
+        });
+        communityTypesHeader.createEl('div', {
+            text: 'Configure unique audio characteristics for each community type',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Large Stable Communities
+        this.createCommunityTypeSettings(container, 'large-stable', 'Large Stable Communities',
+            'Rich, sustained harmonies for well-established communities (>15 nodes)', settings);
+
+        // Small Dynamic Communities
+        this.createCommunityTypeSettings(container, 'small-dynamic', 'Small Dynamic Communities',
+            'Lighter, evolving patterns for agile communities (<15 nodes)', settings);
+
+        // Bridge Communities
+        this.createCommunityTypeSettings(container, 'bridge', 'Bridge Communities',
+            'Transitional themes connecting different community structures', settings);
+
+        // Isolated Communities
+        this.createCommunityTypeSettings(container, 'isolated', 'Isolated Communities',
+            'Sparse, minimal textures for disconnected groups', settings);
+
+        // Hierarchical Communities
+        this.createCommunityTypeSettings(container, 'hierarchical', 'Hierarchical Communities',
+            'Layered, structured harmonies reflecting containment relationships', settings);
+
+        // Community Analysis Settings
+        const analysisHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        analysisHeader.createEl('h4', {
+            text: 'Community Analysis',
+            cls: 'sonic-graph-setting-label'
+        });
+        analysisHeader.createEl('div', {
+            text: 'Configure how communities are detected and classified',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Large Community Size Threshold
+        new Setting(container)
+            .setName('Large community threshold')
+            .setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)')
+            .addSlider(slider => slider
+                .setLimits(5, 30, 1)
+                .setValue(settings.largeCommunitySizeThreshold)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.largeCommunitySizeThreshold = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Hierarchy Analysis Toggle
+        new Setting(container)
+            .setName('Hierarchy analysis')
+            .setDesc('Detect nested community structures for hierarchical themes')
+            .addToggle(toggle => toggle
+                .setValue(settings.hierarchyAnalysis)
+                .onChange(async (value) => {
+                    settings.hierarchyAnalysis = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        if (settings.hierarchyAnalysis) {
+            // Hierarchy Containment Threshold
+            new Setting(container)
+                .setName('Containment threshold')
+                .setDesc('Minimum overlap ratio to consider nested hierarchy (0-1)')
+                .addSlider(slider => slider
+                    .setLimits(0.3, 1.0, 0.05)
+                    .setValue(settings.hierarchyContainmentThreshold)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.hierarchyContainmentThreshold = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+
+        // Spatial Audio Settings
+        const spatialHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        spatialHeader.createEl('h4', {
+            text: 'Spatial Audio',
+            cls: 'sonic-graph-setting-label'
+        });
+
+        // Spatial Audio Toggle
+        new Setting(container)
+            .setName('Enable spatial audio')
+            .setDesc('Position community themes in stereo field based on community centroid')
+            .addToggle(toggle => toggle
+                .setValue(settings.spatialAudio)
+                .onChange(async (value) => {
+                    settings.spatialAudio = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        if (settings.spatialAudio) {
+            // Spatial Width
+            new Setting(container)
+                .setName('Spatial width')
+                .setDesc('Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)')
+                .addSlider(slider => slider
+                    .setLimits(0, 1, 0.1)
+                    .setValue(settings.spatialWidth)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.spatialWidth = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+
+        // Info note
+        const infoNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        infoNote.createEl('div', {
+            text: 'Community detection uses graph algorithms to identify natural groupings and generate thematic audio for each community type',
+            cls: 'sonic-graph-setting-description sonic-graph-info'
+        });
+    }
+
+    /**
+     * Phase 5.3: Create community evolution audio settings section
+     */
+    private createCommunityEvolutionSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Community Evolution Header
+        const evolutionHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        evolutionHeader.createEl('label', {
+            text: 'Community Evolution Audio (Phase 5.3)',
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header'
+        });
+        evolutionHeader.createEl('div', {
+            text: 'Audio feedback for community evolution events (merge, split, growth, decline, etc.)',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Main Community Evolution Toggle
+        new Setting(container)
+            .setName('Enable evolution audio')
+            .setDesc('Play audio events when communities merge, split, grow, decline, or change structure')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.communityEvolution?.enabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.communityEvolution) {
+                        this.plugin.settings.communityEvolution = {
+                            enabled: false,
+                            growthThreshold: 0.3,
+                            declineThreshold: 0.3,
+                            eventAudioEnabled: true,
+                            enabledEventTypes: {
+                                'merge': true,
+                                'split': true,
+                                'growth': true,
+                                'decline': true,
+                                'bridging': true,
+                                'formation': true,
+                                'dissolution': true
+                            },
+                            eventVolumes: {
+                                'merge': 0.7,
+                                'split': 0.6,
+                                'growth': 0.5,
+                                'decline': 0.5,
+                                'bridging': 0.6,
+                                'formation': 0.65,
+                                'dissolution': 0.65
+                            },
+                            eventThrottleMs: 500
+                        };
+                    }
+                    this.plugin.settings.communityEvolution.enabled = value;
+                    await this.plugin.saveSettings();
+                    this.refreshCommunityEvolutionSettings();
+                })
+            );
+
+        // Show additional settings only when evolution audio is enabled
+        if (this.plugin.settings.communityEvolution?.enabled) {
+            this.createCommunityEvolutionDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 5.3: Create detailed community evolution audio settings
+     */
+    private createCommunityEvolutionDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.communityEvolution!;
+
+        // Evolution Event Types Header
+        const eventTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        eventTypesHeader.createEl('h4', {
+            text: 'Evolution Event Types',
+            cls: 'sonic-graph-setting-label'
+        });
+        eventTypesHeader.createEl('div', {
+            text: 'Enable or disable specific evolution event audio',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Community Merge
+        this.createEvolutionEventSettings(container, 'merge', 'Community Merge',
+            'Audio when two communities combine into one', settings);
+
+        // Community Split
+        this.createEvolutionEventSettings(container, 'split', 'Community Split',
+            'Audio when a community divides into multiple parts', settings);
+
+        // Community Growth
+        this.createEvolutionEventSettings(container, 'growth', 'Community Growth',
+            'Audio when a community expands significantly', settings);
+
+        // Community Decline
+        this.createEvolutionEventSettings(container, 'decline', 'Community Decline',
+            'Audio when a community shrinks significantly', settings);
+
+        // Community Bridging
+        this.createEvolutionEventSettings(container, 'bridging', 'Community Bridging',
+            'Audio when new connections form between communities', settings);
+
+        // Community Formation
+        this.createEvolutionEventSettings(container, 'formation', 'Community Formation',
+            'Audio when a new community is detected', settings);
+
+        // Community Dissolution
+        this.createEvolutionEventSettings(container, 'dissolution', 'Community Dissolution',
+            'Audio when a community completely dissolves', settings);
+
+        // Evolution Thresholds Header
+        const thresholdsHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        thresholdsHeader.createEl('h4', {
+            text: 'Evolution Thresholds',
+            cls: 'sonic-graph-setting-label'
+        });
+        thresholdsHeader.createEl('div', {
+            text: 'Configure sensitivity for detecting growth and decline',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Growth Threshold
+        new Setting(container)
+            .setName('Growth threshold')
+            .setDesc('Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)')
+            .addSlider(slider => slider
+                .setLimits(0.1, 1.0, 0.05)
+                .setValue(settings.growthThreshold)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.growthThreshold = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Decline Threshold
+        new Setting(container)
+            .setName('Decline threshold')
+            .setDesc('Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)')
+            .addSlider(slider => slider
+                .setLimits(0.1, 1.0, 0.05)
+                .setValue(settings.declineThreshold)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.declineThreshold = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Performance Settings
+        const performanceHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        performanceHeader.createEl('h4', {
+            text: 'Performance Settings',
+            cls: 'sonic-graph-setting-label'
+        });
+
+        // Event Throttle
+        new Setting(container)
+            .setName('Event throttle (ms)')
+            .setDesc('Minimum time between evolution events to prevent audio overload')
+            .addSlider(slider => slider
+                .setLimits(100, 2000, 100)
+                .setValue(settings.eventThrottleMs)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.eventThrottleMs = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Info note
+        const infoNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        infoNote.createEl('div', {
+            text: 'Evolution events track changes over time to provide real-time audio feedback as your vault structure evolves',
+            cls: 'sonic-graph-setting-description sonic-graph-info'
+        });
+    }
+
+    /**
+     * Phase 5.3: Create settings for individual community types
+     */
+    private createCommunityTypeSettings(
+        container: HTMLElement,
+        communityType: keyof typeof this.plugin.settings.communityDetection.communityTypeEnabled,
+        displayName: string,
+        description: string,
+        settings: any
+    ): void {
+        const communityContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
+
+        // Toggle for this community type
+        new Setting(communityContainer)
+            .setName(displayName)
+            .setDesc(description)
+            .addToggle(toggle => toggle
+                .setValue(settings.communityTypeEnabled[communityType])
+                .onChange(async (value) => {
+                    settings.communityTypeEnabled[communityType] = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Volume control (only shown if enabled)
+        if (settings.communityTypeEnabled[communityType]) {
+            new Setting(communityContainer)
+                .setName(`${displayName} volume`)
+                .setDesc(`Volume level for ${displayName.toLowerCase()}`)
+                .addSlider(slider => slider
+                    .setLimits(0, 1, 0.1)
+                    .setValue(settings.communityTypeVolumes[communityType])
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.communityTypeVolumes[communityType] = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+    }
+
+    /**
+     * Phase 5.3: Create settings for individual evolution event types
+     */
+    private createEvolutionEventSettings(
+        container: HTMLElement,
+        eventType: keyof typeof this.plugin.settings.communityEvolution.enabledEventTypes,
+        displayName: string,
+        description: string,
+        settings: any
+    ): void {
+        const eventContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
+
+        // Toggle for this event type
+        new Setting(eventContainer)
+            .setName(displayName)
+            .setDesc(description)
+            .addToggle(toggle => toggle
+                .setValue(settings.enabledEventTypes[eventType])
+                .onChange(async (value) => {
+                    settings.enabledEventTypes[eventType] = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Volume control (only shown if enabled)
+        if (settings.enabledEventTypes[eventType]) {
+            new Setting(eventContainer)
+                .setName(`${displayName} volume`)
+                .setDesc(`Volume level for ${displayName.toLowerCase()} events`)
+                .addSlider(slider => slider
+                    .setLimits(0, 1, 0.1)
+                    .setValue(settings.eventVolumes[eventType])
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.eventVolumes[eventType] = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+    }
+
+    /**
+     * Phase 5.3: Refresh community detection settings when enabled/disabled
+     */
+    private refreshCommunityDetectionSettings(): void {
+        // Find the settings panel and recreate the audio section
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find and refresh the audio section
+        const audioSection = settingsContent.querySelector('.sonic-graph-settings-section:has(.sonic-graph-settings-section-title)');
+        if (audioSection) {
+            // Clear and recreate the audio section content
+            const existingContent = audioSection.querySelector('.sonic-graph-settings-section-content');
+            if (existingContent) {
+                existingContent.empty();
+                this.createAudioSettings(existingContent as HTMLElement);
+            }
+        }
+    }
+
+    /**
+     * Phase 5.3: Refresh community evolution settings when enabled/disabled
+     */
+    private refreshCommunityEvolutionSettings(): void {
+        // Find the settings panel and recreate the audio section
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find and refresh the audio section
+        const audioSection = settingsContent.querySelector('.sonic-graph-settings-section:has(.sonic-graph-settings-section-title)');
+        if (audioSection) {
+            // Clear and recreate the audio section content
+            const existingContent = audioSection.querySelector('.sonic-graph-settings-section-content');
+            if (existingContent) {
+                existingContent.empty();
+                this.createAudioSettings(existingContent as HTMLElement);
+            }
+        }
+    }
+
+    /**
      * Phase 5: Create settings for individual cluster types
      */
     private createClusterTypeSettings(
@@ -2845,7 +3363,7 @@ export class SonicGraphModal extends Modal {
         if (this.getSonicGraphSettings().visual.timelineMarkersEnabled) {
             markersSwitch.addClass('active');
         }
-        const markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        const _markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         markersSwitch.addEventListener('click', () => {
             const isActive = markersSwitch.hasClass('active');
@@ -2902,7 +3420,7 @@ export class SonicGraphModal extends Modal {
         if (this.getSonicGraphSettings().visual.loopAnimation) {
             loopSwitch.addClass('active');
         }
-        const loopHandle = loopSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        const _loopHandle = loopSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         loopSwitch.addEventListener('click', () => {
             const isActive = loopSwitch.hasClass('active');
@@ -2924,7 +3442,7 @@ export class SonicGraphModal extends Modal {
         if (this.getSonicGraphSettings().visual.showFileNames) {
             fileNamesSwitch.addClass('active');
         }
-        const fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        const _fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         // Add tooltip to show file names toggle
         setTooltip(fileNamesSwitch, 'Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.', {
@@ -2941,7 +3459,7 @@ export class SonicGraphModal extends Modal {
     /**
      * Create navigation settings section
      */
-    private createNavigationSettings(container: HTMLElement): void {
+    private createNavigationSettings(_container: HTMLElement): void {
         // Navigation settings section removed - Control Center button moved to header
         // This method kept for future navigation-related settings if needed
     }
@@ -2952,9 +3470,9 @@ export class SonicGraphModal extends Modal {
     private createAdvancedSettings(container: HTMLElement): void {
         // Create collapsible Advanced section
         const advancedSection = container.createEl('details', { cls: 'sonic-graph-advanced-settings' });
-        const summary = advancedSection.createEl('summary', { 
-            text: 'ADVANCED', 
-            cls: 'sonic-graph-settings-section-title sonic-graph-advanced-summary' 
+        advancedSection.createEl('summary', {
+            text: 'ADVANCED',
+            cls: 'sonic-graph-settings-section-title sonic-graph-advanced-summary'
         });
         
         // Create the content container
