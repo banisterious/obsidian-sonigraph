@@ -1,4 +1,5 @@
 import { GraphData, GraphNode, MusicalMapping, GraphStats, EnhancedGraphNode, AudioMappingConfig } from './types';
+import { GraphNode as GDEGraphNode, GraphLink } from './GraphDataExtractor';
 import { SonigraphSettings } from '../utils/constants';
 import { MUSICAL_SCALES } from '../utils/constants';
 import { getLogger } from '../logging';
@@ -14,6 +15,10 @@ import {
 } from '../audio/mapping';
 import { ClusterAudioMapper, ClusterAudioSettings } from '../audio/clustering';
 import { Cluster, SmartClusteringAlgorithms } from './SmartClusteringAlgorithms';
+import {
+	DynamicOrchestrationManager,
+	DynamicOrchestrationSettings
+} from '../audio/orchestration';
 
 const logger = getLogger('musical-mapper');
 
@@ -36,11 +41,15 @@ export class MusicalMapper {
 	private clusterAudioMapper: ClusterAudioMapper | null = null;
 	private isClusterAudioEnabled = false;
 
+	// Phase 6.2: Dynamic orchestration
+	private dynamicOrchestrationManager: DynamicOrchestrationManager | null = null;
+	private isDynamicOrchestrationEnabled = false;
+
 	constructor(settings: SonigraphSettings, app?: App) {
 		this.settings = settings;
 		this.app = app || null;
 		this.updateMusicalParams();
-		
+
 		// Initialize Phase 2 components if app is provided
 		if (this.app && this.settings.contentAwareMapping?.enabled) {
 			this.initializePhase2Components();
@@ -50,12 +59,17 @@ export class MusicalMapper {
 		if (this.settings.clusterAudio?.enabled) {
 			this.initializeClusterAudio();
 		}
+
+		// Initialize Phase 6.2 dynamic orchestration if enabled
+		if (this.settings.dynamicOrchestration?.enabled) {
+			this.initializeDynamicOrchestration();
+		}
 	}
 
 	updateSettings(settings: SonigraphSettings): void {
 		this.settings = settings;
 		this.updateMusicalParams();
-		
+
 		// Phase 2: Update metadata mapping components if enabled
 		if (this.app && this.settings.contentAwareMapping?.enabled) {
 			if (!this.isPhase2Enabled) {
@@ -76,6 +90,17 @@ export class MusicalMapper {
 			}
 		} else if (this.isClusterAudioEnabled) {
 			this.disableClusterAudio();
+		}
+
+		// Phase 6.2: Update dynamic orchestration if enabled
+		if (this.settings.dynamicOrchestration?.enabled) {
+			if (!this.isDynamicOrchestrationEnabled) {
+				this.initializeDynamicOrchestration();
+			} else {
+				this.updateDynamicOrchestrationSettings();
+			}
+		} else if (this.isDynamicOrchestrationEnabled) {
+			this.disableDynamicOrchestration();
 		}
 	}
 
@@ -326,6 +351,108 @@ export class MusicalMapper {
 		if (!this.isClusterAudioEnabled || !this.clusterAudioMapper) return;
 
 		await this.clusterAudioMapper.processClusters(clusters);
+	}
+
+	/**
+	 * Phase 6.2: Initialize dynamic orchestration manager
+	 */
+	private initializeDynamicOrchestration(): void {
+		if (this.isDynamicOrchestrationEnabled) return;
+
+		logger.info('phase6.2-init', 'Initializing Phase 6.2 dynamic orchestration');
+
+		try {
+			const orchestrationSettings: DynamicOrchestrationSettings = {
+				enabled: true,
+				complexityThresholds: [],
+				customThresholds: this.settings.dynamicOrchestration?.customThresholds || false,
+				temporalInfluenceEnabled: this.settings.dynamicOrchestration?.temporalInfluenceEnabled !== false,
+				timeOfDayInfluence: this.settings.dynamicOrchestration?.timeOfDayInfluence || 0.5,
+				seasonalInfluence: this.settings.dynamicOrchestration?.seasonalInfluence || 0.3,
+				transitionDuration: this.settings.dynamicOrchestration?.transitionDuration || 3.0,
+				autoAdjust: this.settings.dynamicOrchestration?.autoAdjust !== false
+			};
+
+			this.dynamicOrchestrationManager = new DynamicOrchestrationManager(orchestrationSettings);
+
+			// Start auto-update if enabled
+			if (orchestrationSettings.autoAdjust) {
+				this.dynamicOrchestrationManager.startAutoUpdate();
+			}
+
+			this.isDynamicOrchestrationEnabled = true;
+			logger.info('phase6.2-initialized', 'Phase 6.2 dynamic orchestration initialized successfully');
+
+		} catch (error) {
+			logger.error('phase6.2-init-error', 'Error initializing Phase 6.2 dynamic orchestration', error as Error);
+			this.isDynamicOrchestrationEnabled = false;
+		}
+	}
+
+	/**
+	 * Phase 6.2: Update dynamic orchestration settings
+	 */
+	private updateDynamicOrchestrationSettings(): void {
+		if (!this.dynamicOrchestrationManager || !this.settings.dynamicOrchestration) return;
+
+		logger.debug('phase6.2-update', 'Updating Phase 6.2 dynamic orchestration settings');
+
+		const orchestrationSettings: Partial<DynamicOrchestrationSettings> = {
+			customThresholds: this.settings.dynamicOrchestration.customThresholds,
+			temporalInfluenceEnabled: this.settings.dynamicOrchestration.temporalInfluenceEnabled,
+			timeOfDayInfluence: this.settings.dynamicOrchestration.timeOfDayInfluence,
+			seasonalInfluence: this.settings.dynamicOrchestration.seasonalInfluence,
+			transitionDuration: this.settings.dynamicOrchestration.transitionDuration,
+			autoAdjust: this.settings.dynamicOrchestration.autoAdjust
+		};
+
+		this.dynamicOrchestrationManager.updateSettings(orchestrationSettings);
+	}
+
+	/**
+	 * Phase 6.2: Disable dynamic orchestration and clean up
+	 */
+	private disableDynamicOrchestration(): void {
+		if (!this.isDynamicOrchestrationEnabled) return;
+
+		logger.info('phase6.2-cleanup', 'Disabling Phase 6.2 dynamic orchestration');
+
+		try {
+			if (this.dynamicOrchestrationManager) {
+				this.dynamicOrchestrationManager.dispose();
+				this.dynamicOrchestrationManager = null;
+			}
+
+			this.isDynamicOrchestrationEnabled = false;
+			logger.info('phase6.2-disabled', 'Phase 6.2 dynamic orchestration disabled and cleaned up');
+
+		} catch (error) {
+			logger.error('phase6.2-disable-error', 'Error during Phase 6.2 cleanup', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 6.2: Update orchestration based on current graph state
+	 */
+	public updateOrchestration(
+		nodes: GDEGraphNode[],
+		links: GraphLink[],
+		clusters?: Cluster[]
+	): void {
+		if (!this.isDynamicOrchestrationEnabled || !this.dynamicOrchestrationManager) return;
+
+		this.dynamicOrchestrationManager.updateOrchestration(nodes, links, clusters);
+	}
+
+	/**
+	 * Phase 6.2: Get current orchestration state
+	 */
+	public getOrchestrationState() {
+		if (!this.isDynamicOrchestrationEnabled || !this.dynamicOrchestrationManager) {
+			return null;
+		}
+
+		return this.dynamicOrchestrationManager.getState();
 	}
 
 	/**
@@ -771,6 +898,12 @@ export class MusicalMapper {
 	dispose(): void {
 		if (this.isPhase2Enabled) {
 			this.disablePhase2Components();
+		}
+		if (this.isClusterAudioEnabled) {
+			this.disableClusterAudio();
+		}
+		if (this.isDynamicOrchestrationEnabled) {
+			this.disableDynamicOrchestration();
 		}
 		logger.debug('musical-mapper-disposed', 'MusicalMapper disposed');
 	}
