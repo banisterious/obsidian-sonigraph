@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, SonigraphSettings } from './utils/constants';
 import { SonigraphSettingTab } from './ui/settings';
 import { MaterialControlPanelModal } from './ui/control-panel';
 import { TestSuiteModal } from './testing/TestSuiteModal';
+import { SonicGraphView, VIEW_TYPE_SONIC_GRAPH } from './ui/SonicGraphView';
 import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';
 import { MusicalMapper } from './graph/musical-mapper';
@@ -33,12 +34,36 @@ export default class SonigraphPlugin extends Plugin {
 		// Initialize whale integration for high-quality samples
 		await this.initializeWhaleIntegration();
 
-		// Add ribbon icon
+		// Register Sonic Graph view
+		this.registerView(
+			VIEW_TYPE_SONIC_GRAPH,
+			(leaf) => new SonicGraphView(leaf, this)
+		);
+
+		// Add ribbon icon - opens Sonic Graph view
 		this.addRibbonIcon('chart-network', 'Sonigraph: Open Sonic Graph', () => {
-			this.openSonicGraph();
+			this.activateSonicGraphView();
 		});
 
-		// Add command
+		// Add command to open Sonic Graph view
+		this.addCommand({
+			id: 'open-sonic-graph-view',
+			name: 'Open Sonic Graph',
+			callback: () => {
+				this.activateSonicGraphView();
+			}
+		});
+
+		// Add legacy modal command (temporary during transition)
+		this.addCommand({
+			id: 'open-sonic-graph-modal',
+			name: 'Open Sonic Graph (Modal - Legacy)',
+			callback: () => {
+				this.openSonicGraph();
+			}
+		});
+
+		// Add command to open Control Panel
 		this.addCommand({
 			id: 'open-control-panel',
 			name: 'Open Control Panel',
@@ -69,16 +94,37 @@ export default class SonigraphPlugin extends Plugin {
 	async onunload() {
 		logger.info('lifecycle', 'Sonigraph plugin unloading...');
 
-		// Clean up whale integration
-		const whaleIntegration = getWhaleIntegration();
-		if (whaleIntegration) {
-			whaleIntegration.cleanup();
+		try {
+			// Close all Sonic Graph views
+			logger.debug('lifecycle', 'Detaching Sonic Graph views...');
+			this.app.workspace.detachLeavesOfType(VIEW_TYPE_SONIC_GRAPH);
+			logger.debug('lifecycle', 'Sonic Graph views detached');
+		} catch (error) {
+			logger.error('lifecycle', 'Error detaching views:', error);
 		}
 
-		// Clean up audio engine
-		if (this.audioEngine) {
-			this.audioEngine.dispose();
-			this.audioEngine = null;
+		try {
+			// Clean up whale integration
+			logger.debug('lifecycle', 'Cleaning up whale integration...');
+			const whaleIntegration = getWhaleIntegration();
+			if (whaleIntegration) {
+				whaleIntegration.cleanup();
+			}
+			logger.debug('lifecycle', 'Whale integration cleaned up');
+		} catch (error) {
+			logger.error('lifecycle', 'Error cleaning up whale integration:', error);
+		}
+
+		try {
+			// Clean up audio engine
+			logger.debug('lifecycle', 'Disposing audio engine...');
+			if (this.audioEngine) {
+				this.audioEngine.dispose();
+				this.audioEngine = null;
+			}
+			logger.debug('lifecycle', 'Audio engine disposed');
+		} catch (error) {
+			logger.error('lifecycle', 'Error disposing audio engine:', error);
 		}
 
 		// Clean up other components
@@ -86,7 +132,7 @@ export default class SonigraphPlugin extends Plugin {
 		this.musicalMapper = null;
 		this.currentGraphData = null;
 
-		logger.info('lifecycle', 'Sonigraph plugin unloaded');
+		logger.info('lifecycle', 'Sonigraph plugin unloaded successfully');
 	}
 
 	/**
@@ -163,14 +209,52 @@ export default class SonigraphPlugin extends Plugin {
 		modal.open();
 	}
 
+	/**
+	 * Activate Sonic Graph view (new default method)
+	 */
+	async activateSonicGraphView(): Promise<void> {
+		logger.info('ui', 'Activating Sonic Graph view');
+
+		const { workspace } = this.app;
+
+		// Check if view already exists
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_SONIC_GRAPH);
+
+		if (leaves.length > 0) {
+			// View already exists, use it
+			leaf = leaves[0];
+			logger.debug('ui', 'Sonic Graph view already exists, revealing it');
+		} else {
+			// Create new leaf in main area (center)
+			leaf = workspace.getLeaf(false);
+			if (leaf) {
+				await leaf.setViewState({
+					type: VIEW_TYPE_SONIC_GRAPH,
+					active: true
+				});
+				logger.debug('ui', 'Created new Sonic Graph view in main area');
+			}
+		}
+
+		// Reveal the leaf
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+			logger.info('ui', 'Sonic Graph view activated and revealed');
+		}
+	}
+
+	/**
+	 * Open Sonic Graph modal (legacy method, kept for transition)
+	 */
 	public openSonicGraph(): void {
-		logger.info('ui', 'Opening Sonic Graph from ribbon');
+		logger.info('ui', 'Opening Sonic Graph modal (legacy)');
 
 		import('./ui/SonicGraphModal').then(({ SonicGraphModal }) => {
 			const modal = new SonicGraphModal(this.app, this);
 			modal.open();
 		}).catch(error => {
-			logger.error('ui', 'Failed to open Sonic Graph:', error);
+			logger.error('ui', 'Failed to open Sonic Graph modal:', error);
 		});
 	}
 
