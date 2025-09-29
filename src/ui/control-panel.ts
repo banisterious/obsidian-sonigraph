@@ -1092,41 +1092,22 @@ export class MaterialControlPanelModal extends Modal {
 	}
 
 	/**
-	 * Launch the full Sonic Graph modal
+	 * Launch the full Sonic Graph view
 	 */
 	private launchSonicGraphModal(): void {
-		logger.debug('ui', 'Launching Sonic Graph modal');
-		
+		logger.debug('ui', 'Launching Sonic Graph view from Control Center');
+
 		// Close Control Center first for smooth transition
 		this.close();
-		
+
 		try {
-			logger.debug('ui', 'Starting dynamic import of SonicGraphModal');
-			
-			// Import and open Sonic Graph modal
-			import('./SonicGraphModal').then(({ SonicGraphModal }) => {
-				logger.debug('ui', 'SonicGraphModal imported successfully, creating instance');
-				
-				try {
-					const sonicGraphModal = new SonicGraphModal(this.app, this.plugin);
-					logger.debug('ui', 'SonicGraphModal instance created, opening modal');
-					
-					sonicGraphModal.open();
-					logger.debug('ui', 'SonicGraphModal.open() called');
-				} catch (constructorError) {
-					logger.error('ui', 'Failed to create SonicGraphModal instance:', (constructorError as Error).message);
-					logger.error('ui', 'Constructor error stack:', (constructorError as Error).stack);
-					new Notice('Failed to create Sonic Graph: ' + (constructorError as Error).message);
-				}
-			}).catch(error => {
-				logger.error('ui', 'Failed to import SonicGraphModal:', (error as Error).message);
-				logger.error('ui', 'Import error stack:', (error as Error).stack);
-				new Notice('Failed to load Sonic Graph: ' + error.message);
-			});
-		} catch (outerError) {
-			logger.error('ui', 'Outer error in launchSonicGraphModal:', (outerError as Error).message);
-			logger.error('ui', 'Outer error stack:', (outerError as Error).stack);
-			new Notice('Failed to launch Sonic Graph: ' + (outerError as Error).message);
+			// Open Sonic Graph view (primary interface)
+			this.plugin.activateSonicGraphView();
+			logger.debug('ui', 'Sonic Graph view activated');
+		} catch (error) {
+			logger.error('ui', 'Failed to launch Sonic Graph view:', (error as Error).message);
+			logger.error('ui', 'Error stack:', (error as Error).stack);
+			new Notice('Failed to launch Sonic Graph: ' + (error as Error).message);
 		}
 	}
 

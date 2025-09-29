@@ -467,6 +467,23 @@
   overflow: hidden;
 }
 
+/* View container - for ItemView implementation */
+.sonic-graph-view {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sonic-graph-view-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 /* Modal header with Control Center and close buttons */
 .sonic-graph-modal-header {
   position: absolute;
