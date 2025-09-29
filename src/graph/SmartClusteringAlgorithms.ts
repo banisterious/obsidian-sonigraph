@@ -13,13 +13,15 @@ import { getLogger } from '../logging';
 
 const logger = getLogger('SmartClustering');
 
+export type ClusterType = 'tag-based' | 'folder-based' | 'link-dense' | 'temporal' | 'community';
+
 export interface Cluster {
   id: string;
   nodes: GraphNode[];
   centroid: { x: number; y: number };
   radius: number;
   color: string;
-  type: 'tag-based' | 'folder-based' | 'link-dense' | 'temporal' | 'community';
+  type: ClusterType;
   strength: number; // 0-1, how cohesive the cluster is
   label?: string; // Auto-generated or user-defined cluster name
 }
