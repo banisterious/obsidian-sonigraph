@@ -5,7 +5,7 @@
  */
 
 import { Cluster, SmartClusteringAlgorithms } from '../../graph/SmartClusteringAlgorithms';
-import { GraphNode } from '../../graph/types';
+import { GraphNode, GraphLink } from '../../graph/GraphDataExtractor';
 import { getLogger } from '../../logging';
 import {
   ClusterAudioTheme,
@@ -15,9 +15,14 @@ import {
   ClusterAudioSettings,
   ClusterAudioState,
   ActiveClusterAudio,
-  ClusterAudioAnalysis
+  ClusterAudioAnalysis,
+  Community,
+  CommunityDetectionSettings,
+  CommunityEvolutionSettings
 } from './types';
 import { ClusterThemeGenerator } from './ClusterThemeGenerator';
+import { CommunityAudioAnalyzer } from './CommunityAudioAnalyzer';
+import { CommunityEvolutionTracker } from './CommunityEvolutionTracker';
 import * as Tone from 'tone';
 
 const logger = getLogger('cluster-audio');
@@ -34,7 +39,19 @@ export class ClusterAudioMapper {
   private previousClusters: Map<string, Cluster> = new Map();
   private nodeClusterMapping: Map<string, string> = new Map();
 
-  constructor(settings: ClusterAudioSettings) {
+  // Phase 5.3: Community detection integration
+  private communityAnalyzer: CommunityAudioAnalyzer | null = null;
+  private communityEvolutionTracker: CommunityEvolutionTracker | null = null;
+  private communityDetectionSettings: CommunityDetectionSettings | null = null;
+  private communityEvolutionSettings: CommunityEvolutionSettings | null = null;
+  private clusteringAlgorithms: SmartClusteringAlgorithms | null = null;
+
+  constructor(
+    settings: ClusterAudioSettings,
+    communityDetectionSettings?: CommunityDetectionSettings,
+    communityEvolutionSettings?: CommunityEvolutionSettings,
+    clusteringAlgorithms?: SmartClusteringAlgorithms
+  ) {
     logger.debug('initialization', 'ClusterAudioMapper created');
 
     this.settings = { ...settings };
@@ -48,6 +65,21 @@ export class ClusterAudioMapper {
       lastUpdateTime: Date.now(),
       currentStrengthValues: new Map()
     };
+
+    // Phase 5.3: Initialize community detection if settings provided
+    if (communityDetectionSettings && communityEvolutionSettings && clusteringAlgorithms) {
+      this.communityDetectionSettings = communityDetectionSettings;
+      this.communityEvolutionSettings = communityEvolutionSettings;
+      this.clusteringAlgorithms = clusteringAlgorithms;
+      this.communityAnalyzer = new CommunityAudioAnalyzer(
+        communityDetectionSettings,
+        clusteringAlgorithms
+      );
+      this.communityEvolutionTracker = new CommunityEvolutionTracker(
+        communityEvolutionSettings,
+        this.masterVolume
+      );
+    }
 
     // Connect master volume to destination
     this.masterVolume.toDestination();
@@ -64,6 +96,17 @@ export class ClusterAudioMapper {
 
       // Initialize theme generator
       await this.themeGenerator.initialize();
+
+      // Phase 5.3: Initialize community detection components
+      if (this.communityAnalyzer) {
+        await this.communityAnalyzer.initialize();
+        logger.debug('initialization', 'Community audio analyzer initialized');
+      }
+
+      if (this.communityEvolutionTracker) {
+        await this.communityEvolutionTracker.initialize();
+        logger.debug('initialization', 'Community evolution tracker initialized');
+      }
 
       // Set up performance monitoring
       this.startPerformanceMonitoring();
@@ -856,6 +899,98 @@ export class ClusterAudioMapper {
   }
 
   /**
+   * Phase 5.3: Process communities with audio mapping
+   */
+  public async processCommunities(
+    nodes: GraphNode[],
+    links: GraphLink[]
+  ): Promise<void> {
+    if (!this.isInitialized || !this.communityAnalyzer || !this.communityEvolutionTracker) {
+      return;
+    }
+
+    if (!this.communityDetectionSettings?.enabled) {
+      return;
+    }
+
+    try {
+      logger.debug('community-processing', 'Processing communities for audio', {
+        nodeCount: nodes.length,
+        linkCount: links.length
+      });
+
+      // Detect communities
+      const communities = await this.communityAnalyzer.detectCommunities(nodes, links);
+
+      // Analyze hierarchy if enabled
+      const hierarchicalCommunities = this.communityAnalyzer.analyzeCommunityHierarchy(communities);
+
+      // Track evolution
+      const evolutionEvents = this.communityEvolutionTracker.trackEvolution(hierarchicalCommunities);
+
+      // Generate themes and trigger evolution audio events
+      for (const community of hierarchicalCommunities) {
+        // Generate theme for this community
+        const theme = this.communityAnalyzer.generateCommunityTheme(community);
+
+        // Handle any evolution events for this community
+        const communityEvents = evolutionEvents.filter(e => e.communityId === community.id);
+        for (const event of communityEvents) {
+          await this.communityEvolutionTracker.triggerEvolutionAudioEvent(event, theme);
+        }
+      }
+
+      logger.debug('community-processing', 'Communities processed', {
+        communityCount: hierarchicalCommunities.length,
+        evolutionEventCount: evolutionEvents.length
+      });
+
+    } catch (error) {
+      logger.error('community-processing', 'Error processing communities', { error });
+    }
+  }
+
+  /**
+   * Phase 5.3: Get community audio analysis
+   */
+  public getCommunityAnalysis(communityId: string): any {
+    if (!this.communityAnalyzer) {
+      return null;
+    }
+
+    const theme = this.communityAnalyzer.getCommunityTheme(communityId);
+    const lifecycle = this.communityEvolutionTracker?.getCommunityLifecycle(communityId);
+
+    return {
+      theme,
+      lifecycle,
+      activeEvents: this.communityEvolutionTracker?.getActiveEvolutionEvents().filter(
+        e => e.communityId === communityId
+      ) || []
+    };
+  }
+
+  /**
+   * Phase 5.3: Update community detection settings
+   */
+  public updateCommunitySettings(
+    detectionSettings: CommunityDetectionSettings,
+    evolutionSettings: CommunityEvolutionSettings
+  ): void {
+    if (this.communityAnalyzer) {
+      this.communityAnalyzer.updateSettings(detectionSettings);
+      this.communityDetectionSettings = detectionSettings;
+    }
+
+    if (this.communityEvolutionTracker) {
+      this.communityEvolutionTracker.updateSettings(evolutionSettings);
+      this.communityEvolutionSettings = evolutionSettings;
+    }
+
+    logger.debug('settings', 'Community settings updated');
+  }
+
+  /**
    * Dispose of all resources
    */
   public dispose(): void {
@@ -865,6 +1000,15 @@ export class ClusterAudioMapper {
 
     if (this.updateThrottleTimer) {
       clearTimeout(this.updateThrottleTimer);
+    }
+
+    // Phase 5.3: Dispose community components
+    if (this.communityAnalyzer) {
+      this.communityAnalyzer.dispose();
+    }
+
+    if (this.communityEvolutionTracker) {
+      this.communityEvolutionTracker.dispose();
     }
 
     this.masterVolume.dispose();
