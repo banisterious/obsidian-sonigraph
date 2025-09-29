@@ -2111,6 +2111,9 @@ export class SonicGraphModal extends Modal {
 
         // Phase 1.3: Audio Enhancement Settings
         this.createAudioEnhancementSettings(section);
+
+        // Phase 5: Cluster Audio Settings
+        this.createClusterAudioSettings(section);
     }
 
     /**
@@ -2423,10 +2426,345 @@ export class SonicGraphModal extends Modal {
 
         // Performance note
         const performanceNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
-        performanceNote.createEl('div', { 
+        performanceNote.createEl('div', {
             text: 'Continuous layers target <5% additional CPU usage and work alongside existing node-based audio', 
             cls: 'sonic-graph-setting-description sonic-graph-info' 
         });
+    }
+
+    /**
+     * Phase 5: Create cluster audio settings section
+     */
+    private createClusterAudioSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Cluster Audio Header
+        const clusterHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        clusterHeader.createEl('label', {
+            text: 'Smart Clustering Audio (Phase 5)',
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header'
+        });
+        clusterHeader.createEl('div', {
+            text: 'Generate unique audio themes for different cluster types with dynamic transitions',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Main Cluster Audio Toggle
+        new Setting(container)
+            .setName('Enable cluster audio')
+            .setDesc('Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.clusterAudio?.enabled || false)
+                .onChange(async (value) => {
+                    if (!this.plugin.settings.clusterAudio) {
+                        this.plugin.settings.clusterAudio = {
+                            enabled: false,
+                            globalVolume: 0.3,
+                            clusterTypeEnabled: {
+                                'tag-based': true,
+                                'folder-based': true,
+                                'link-dense': true,
+                                'temporal': true,
+                                'community': true
+                            },
+                            clusterTypeVolumes: {
+                                'tag-based': 0.6,
+                                'folder-based': 0.7,
+                                'link-dense': 0.5,
+                                'temporal': 0.6,
+                                'community': 0.8
+                            },
+                            transitionsEnabled: true,
+                            transitionVolume: 0.4,
+                            transitionSpeed: 1.0,
+                            realTimeUpdates: true,
+                            strengthModulation: true,
+                            strengthSensitivity: 1.0,
+                            spatialAudio: true,
+                            maxSimultaneousClusters: 5,
+                            updateThrottleMs: 200
+                        };
+                    }
+                    this.plugin.settings.clusterAudio.enabled = value;
+                    await this.plugin.saveSettings();
+                    this.refreshClusterAudioSettings();
+                })
+            );
+
+        // Show additional settings only when cluster audio is enabled
+        if (this.plugin.settings.clusterAudio?.enabled) {
+            this.createClusterAudioDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 5: Create detailed cluster audio settings
+     */
+    private createClusterAudioDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.clusterAudio!;
+
+        // Global Volume Slider
+        new Setting(container)
+            .setName('Global cluster volume')
+            .setDesc('Master volume for all cluster audio themes')
+            .addSlider(slider => slider
+                .setLimits(0, 1, 0.1)
+                .setValue(settings.globalVolume)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.globalVolume = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Cluster Type Toggles and Volume Controls
+        const clusterTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        clusterTypesHeader.createEl('h4', {
+            text: 'Cluster Type Audio Themes',
+            cls: 'sonic-graph-setting-label'
+        });
+        clusterTypesHeader.createEl('div', {
+            text: 'Configure unique audio characteristics for each cluster type',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Tag-based clusters (Green theme - Harmonious chords)
+        this.createClusterTypeSettings(container, 'tag-based', 'Tag-based Clusters',
+            'Harmonious chords representing semantic tag relationships (Green theme)', settings);
+
+        // Folder-based clusters (Blue theme - Architectural sounds)
+        this.createClusterTypeSettings(container, 'folder-based', 'Folder-based Clusters',
+            'Structured tones reflecting organizational hierarchy (Blue theme)', settings);
+
+        // Link-dense clusters (Pink theme - Dense harmonies)
+        this.createClusterTypeSettings(container, 'link-dense', 'Link-dense Clusters',
+            'Dense, complex harmonies for highly connected nodes (Pink theme)', settings);
+
+        // Temporal clusters (Yellow theme - Rhythmic patterns)
+        this.createClusterTypeSettings(container, 'temporal', 'Temporal Clusters',
+            'Rhythmic patterns reflecting time-based relationships (Yellow theme)', settings);
+
+        // Community clusters (Purple theme - Orchestral sections)
+        this.createClusterTypeSettings(container, 'community', 'Community Clusters',
+            'Rich orchestral harmonies representing community structures (Purple theme)', settings);
+
+        // Transition Settings
+        const transitionHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        transitionHeader.createEl('h4', {
+            text: 'Cluster Transition Audio',
+            cls: 'sonic-graph-setting-label'
+        });
+        transitionHeader.createEl('div', {
+            text: 'Audio effects when nodes join, leave, or clusters form/dissolve',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Transitions Toggle
+        new Setting(container)
+            .setName('Enable transitions')
+            .setDesc('Play audio effects during cluster changes (join, leave, formation, dissolution)')
+            .addToggle(toggle => toggle
+                .setValue(settings.transitionsEnabled)
+                .onChange(async (value) => {
+                    settings.transitionsEnabled = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        if (settings.transitionsEnabled) {
+            // Transition Volume
+            new Setting(container)
+                .setName('Transition volume')
+                .setDesc('Volume level for cluster transition effects')
+                .addSlider(slider => slider
+                    .setLimits(0, 1, 0.1)
+                    .setValue(settings.transitionVolume)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.transitionVolume = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+
+            // Transition Speed
+            new Setting(container)
+                .setName('Transition speed')
+                .setDesc('Speed of cluster transition effects (higher = faster)')
+                .addSlider(slider => slider
+                    .setLimits(0.1, 5.0, 0.1)
+                    .setValue(settings.transitionSpeed)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.transitionSpeed = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+
+        // Advanced Settings
+        const advancedHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        advancedHeader.createEl('h4', {
+            text: 'Advanced Settings',
+            cls: 'sonic-graph-setting-label'
+        });
+
+        // Real-time Updates
+        new Setting(container)
+            .setName('Real-time updates')
+            .setDesc('Update cluster audio immediately as clusters change during animation')
+            .addToggle(toggle => toggle
+                .setValue(settings.realTimeUpdates)
+                .onChange(async (value) => {
+                    settings.realTimeUpdates = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Strength Modulation
+        new Setting(container)
+            .setName('Strength modulation')
+            .setDesc('Modulate audio based on cluster strength (cohesion)')
+            .addToggle(toggle => toggle
+                .setValue(settings.strengthModulation)
+                .onChange(async (value) => {
+                    settings.strengthModulation = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        if (settings.strengthModulation) {
+            // Strength Sensitivity
+            new Setting(container)
+                .setName('Strength sensitivity')
+                .setDesc('How responsive cluster audio is to strength changes')
+                .addSlider(slider => slider
+                    .setLimits(0.1, 2.0, 0.1)
+                    .setValue(settings.strengthSensitivity)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.strengthSensitivity = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+
+        // Spatial Audio
+        new Setting(container)
+            .setName('Spatial audio')
+            .setDesc('Use cluster positions for stereo panning')
+            .addToggle(toggle => toggle
+                .setValue(settings.spatialAudio)
+                .onChange(async (value) => {
+                    settings.spatialAudio = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Performance Settings
+        const performanceHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        performanceHeader.createEl('h4', {
+            text: 'Performance Settings',
+            cls: 'sonic-graph-setting-label'
+        });
+
+        // Max Simultaneous Clusters
+        new Setting(container)
+            .setName('Max simultaneous clusters')
+            .setDesc('Limit concurrent cluster audio for performance')
+            .addSlider(slider => slider
+                .setLimits(1, 10, 1)
+                .setValue(settings.maxSimultaneousClusters)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.maxSimultaneousClusters = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Update Throttle
+        new Setting(container)
+            .setName('Update throttle (ms)')
+            .setDesc('Throttle cluster updates to prevent audio crackling')
+            .addSlider(slider => slider
+                .setLimits(50, 1000, 50)
+                .setValue(settings.updateThrottleMs)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    settings.updateThrottleMs = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Performance note
+        const performanceNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        performanceNote.createEl('div', {
+            text: 'Cluster audio uses efficient synthesis and automatic voice management to minimize performance impact',
+            cls: 'sonic-graph-setting-description sonic-graph-info'
+        });
+    }
+
+    /**
+     * Phase 5: Create settings for individual cluster types
+     */
+    private createClusterTypeSettings(
+        container: HTMLElement,
+        clusterType: keyof typeof this.plugin.settings.clusterAudio.clusterTypeEnabled,
+        displayName: string,
+        description: string,
+        settings: any
+    ): void {
+        const clusterContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
+
+        // Toggle for this cluster type
+        new Setting(clusterContainer)
+            .setName(displayName)
+            .setDesc(description)
+            .addToggle(toggle => toggle
+                .setValue(settings.clusterTypeEnabled[clusterType])
+                .onChange(async (value) => {
+                    settings.clusterTypeEnabled[clusterType] = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Volume control (only shown if enabled)
+        if (settings.clusterTypeEnabled[clusterType]) {
+            new Setting(clusterContainer)
+                .setName(`${displayName} volume`)
+                .setDesc(`Volume level for ${displayName.toLowerCase()}`)
+                .addSlider(slider => slider
+                    .setLimits(0, 1, 0.1)
+                    .setValue(settings.clusterTypeVolumes[clusterType])
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        settings.clusterTypeVolumes[clusterType] = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+        }
+    }
+
+    /**
+     * Phase 5: Refresh cluster audio settings when enabled/disabled
+     */
+    private refreshClusterAudioSettings(): void {
+        // Find the settings panel and recreate the audio section
+        const settingsContent = this.settingsPanel?.querySelector('.sonic-graph-settings-content');
+        if (!settingsContent) {
+            return;
+        }
+
+        // Find and refresh the audio section
+        const audioSection = settingsContent.querySelector('.sonic-graph-settings-section:has(.sonic-graph-settings-section-title)');
+        if (audioSection) {
+            // Clear and recreate the audio section content
+            const existingContent = audioSection.querySelector('.sonic-graph-settings-section-content');
+            if (existingContent) {
+                existingContent.empty();
+                this.createAudioSettings(existingContent as HTMLElement);
+            }
+        }
     }
 
     /**
