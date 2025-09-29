@@ -658,6 +658,19 @@ export interface SonigraphSettings {
 		hubInstrumentPreference: string[]; // Preferred instruments for hub nodes
 	};
 
+	// Phase 6.1: Musical Theory Integration
+	musicalTheory?: {
+		enabled: boolean;
+		scale: string; // 'major', 'minor', 'dorian', 'pentatonic-major', etc.
+		rootNote: string; // 'C', 'C#', 'D', etc.
+		enforceHarmony: boolean; // Constrain all notes to scale
+		allowChromaticPassing: boolean; // Allow chromatic passing tones
+		dissonanceThreshold: number; // 0-1, maximum allowed dissonance
+		quantizationStrength: number; // 0-1, how strongly to quantize pitches
+		preferredChordProgression: string; // 'I-IV-V-I', 'ii-V-I', etc.
+		dynamicScaleModulation: boolean; // Change scale based on vault state
+	};
+
 	// Phase 5.3: Community Detection Audio
 	communityDetection?: {
 		enabled: boolean;
@@ -2501,6 +2514,19 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			pageRank: 0.2 // Authority score
 		},
 		hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
+	},
+
+	// Phase 6.1: Default musical theory settings (disabled by default)
+	musicalTheory: {
+		enabled: false,
+		scale: 'major', // Start with C major
+		rootNote: 'C',
+		enforceHarmony: true, // Constrain notes to scale
+		allowChromaticPassing: false, // No chromatic notes by default
+		dissonanceThreshold: 0.3, // Low dissonance tolerance
+		quantizationStrength: 0.8, // Strong quantization to scale
+		preferredChordProgression: 'I-IV-V-I', // Classic progression
+		dynamicScaleModulation: false // Static scale by default
 	},
 
 	// Phase 5.3: Default community detection audio settings (disabled by default)
