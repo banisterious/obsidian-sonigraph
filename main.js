@@ -67196,6 +67196,7 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     // Performance optimization: Settings debouncing
     this.pendingSettingsUpdates = /* @__PURE__ */ new Map();
     this.settingsUpdateTimeout = null;
+    this.scrubSaveTimeout = null;
     // Performance optimization: Progress indicator
     this.progressIndicator = null;
     // Responsive sizing: Resize observer for dynamic graph sizing
@@ -67236,10 +67237,71 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     return "chart-network";
   }
   async setState(state, result) {
+    logger39.debug("state", "Restoring view state", state);
     await super.setState(state, result);
+    if (!state || typeof state !== "object") {
+      logger39.debug("state", "No valid state to restore");
+      return;
+    }
+    const viewState = state;
+    if (viewState.isTimelineView !== void 0) {
+      this.isTimelineView = viewState.isTimelineView;
+      logger39.debug("state", "Restored isTimelineView", this.isTimelineView);
+    }
+    if (viewState.isAnimating !== void 0) {
+      logger39.debug("state", "Animation state was", viewState.isAnimating);
+    }
+    if (viewState.detectedSpacing !== void 0) {
+      this.detectedSpacing = viewState.detectedSpacing;
+      logger39.debug("state", "Restored detectedSpacing", this.detectedSpacing);
+    }
+    if (viewState.isSettingsVisible !== void 0) {
+      this.isSettingsVisible = viewState.isSettingsVisible;
+      logger39.debug("state", "Restored isSettingsVisible", this.isSettingsVisible);
+    }
+    if (viewState.currentTimelinePosition !== void 0 || viewState.animationSpeed !== void 0) {
+      this._pendingState = {
+        timelinePosition: viewState.currentTimelinePosition,
+        animationSpeed: viewState.animationSpeed
+      };
+      logger39.debug("state", "Stored pending timeline state for post-initialization");
+    }
+    logger39.info("state", "View state restoration complete");
   }
   getState() {
-    return super.getState();
+    var _a, _b;
+    logger39.info("state", "getState() called - capturing view state", {
+      isTimelineView: this.isTimelineView,
+      hasScrubber: !!this.timelineScrubber,
+      hasAnimator: !!this.temporalAnimator,
+      scrubberValue: (_a = this.timelineScrubber) == null ? void 0 : _a.value,
+      hasGraphRenderer: !!this.graphRenderer,
+      callStack: (_b = new Error().stack) == null ? void 0 : _b.split("\n").slice(1, 4).join(" | ")
+    });
+    let currentTimelinePosition = 0;
+    if (this.timelineScrubber) {
+      currentTimelinePosition = parseFloat(this.timelineScrubber.value) || 0;
+      logger39.info("state", "Captured timeline position from scrubber", { currentTimelinePosition });
+    } else if (this.isTimelineView) {
+      logger39.warn("state", "isTimelineView is true but scrubber does not exist - cannot capture position");
+    }
+    let animationSpeed = 1;
+    if (this.speedSelect) {
+      animationSpeed = parseFloat(this.speedSelect.value) || 1;
+    }
+    const state = {
+      // Timeline state
+      isTimelineView: this.isTimelineView,
+      isAnimating: this.isAnimating,
+      currentTimelinePosition,
+      animationSpeed,
+      // Settings panel state
+      isSettingsVisible: this.isSettingsVisible,
+      // View configuration
+      detectedSpacing: this.detectedSpacing
+    };
+    logger39.info("state", "Final state being returned from getState()", state);
+    return state;
   }
   async onOpen() {
     logger39.info("sonic-graph-init", "View onOpen() started");
@@ -67276,6 +67338,67 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     }
   }
   /**
+   * Apply pending state after view initialization
+   */
+  async applyPendingState() {
+    const pendingState = this._pendingState;
+    if (!pendingState) {
+      logger39.debug("state", "No pending state to apply");
+      return;
+    }
+    logger39.debug("state", "Applying pending state", pendingState);
+    try {
+      if (this.isTimelineView && !this.temporalAnimator) {
+        logger39.debug("state", "Timeline view is active but animator not initialized yet - waiting");
+        await this.waitForTemporalAnimator();
+      }
+      if (pendingState.timelinePosition !== void 0 && this.timelineScrubber && this.temporalAnimator) {
+        const position = pendingState.timelinePosition;
+        this.timelineScrubber.value = position.toString();
+        const timelineInfo = this.temporalAnimator.getTimelineInfo();
+        const time = position / 100 * timelineInfo.duration;
+        this.temporalAnimator.seekTo(time);
+        logger39.debug("state", "Restored timeline position to", { position, time });
+      }
+      if (pendingState.animationSpeed !== void 0 && this.speedSelect) {
+        this.speedSelect.value = pendingState.animationSpeed.toString();
+        if (this.temporalAnimator) {
+          this.temporalAnimator.setSpeed(pendingState.animationSpeed);
+        }
+        logger39.debug("state", "Restored animation speed", pendingState.animationSpeed);
+      }
+      if (this.isSettingsVisible && this.settingsPanel) {
+        this.settingsPanel.removeClass("hidden");
+        if (this.settingsButton) {
+          this.settingsButton.addClass("active");
+        }
+        logger39.debug("state", "Restored settings panel visibility");
+      }
+      logger39.info("state", "Pending state applied successfully");
+    } catch (error) {
+      logger39.error("state", "Failed to apply pending state", error);
+    } finally {
+      delete this._pendingState;
+    }
+  }
+  /**
+   * Wait for temporal animator to be initialized
+   * Used during state restoration to ensure animator is ready before seeking
+   */
+  async waitForTemporalAnimator() {
+    const maxWaitTime = 5e3;
+    const checkInterval = 100;
+    const startTime = Date.now();
+    while (!this.temporalAnimator) {
+      if (Date.now() - startTime > maxWaitTime) {
+        logger39.error("state", "Timeout waiting for temporal animator initialization");
+        throw new Error("Temporal animator initialization timeout");
+      }
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    }
+    logger39.debug("state", "Temporal animator is ready");
+  }
+  /**
    * Initialize continuous layers for Phase 3
    */
   async initializeContinuousLayers() {
@@ -67308,6 +67431,10 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     if (this.settingsUpdateTimeout) {
       clearTimeout(this.settingsUpdateTimeout);
       this.settingsUpdateTimeout = null;
+    }
+    if (this.scrubSaveTimeout) {
+      clearTimeout(this.scrubSaveTimeout);
+      this.scrubSaveTimeout = null;
     }
     this.pendingSettingsUpdates.clear();
     if (this.continuousLayerManager) {
@@ -67600,6 +67727,7 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
       this.updateStats();
       this.updateViewMode();
       logger39.debug("ui", "Sonic Graph initialized successfully");
+      this.applyPendingState();
     } catch (error) {
       logger39.error("ui", "Failed to initialize Sonic Graph:", error.message);
       logger39.error("ui", "Initialization error stack:", error.stack);
@@ -67699,6 +67827,15 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     this.isTimelineView = !this.isTimelineView;
     this.updateViewMode();
     logger39.debug("ui", `View mode toggled: ${this.isTimelineView ? "Timeline" : "Static"}`);
+    this.requestSave();
+  }
+  /**
+   * Request Obsidian to save the workspace state
+   * This ensures view state persistence when important changes occur
+   */
+  requestSave() {
+    this.app.workspace.requestSaveLayout();
+    logger39.debug("state", "Requested workspace save");
   }
   /**
    * Update UI based on current view mode
@@ -70442,6 +70579,13 @@ var SonicGraphView = class extends import_obsidian13.ItemView {
     const targetTime = progress * timelineInfo.duration;
     this.temporalAnimator.seekTo(targetTime);
     logger39.debug("ui", "Timeline scrubbed", { progress, targetTime });
+    if (this.scrubSaveTimeout) {
+      clearTimeout(this.scrubSaveTimeout);
+    }
+    this.scrubSaveTimeout = setTimeout(() => {
+      this.requestSave();
+      this.scrubSaveTimeout = null;
+    }, 500);
   }
   /**
    * Update timeline UI elements
