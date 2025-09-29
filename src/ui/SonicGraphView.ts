@@ -386,54 +386,91 @@ export class SonicGraphView extends ItemView {
     }
 
     async onClose() {
-        logger.debug('ui', 'Closing Sonic Graph view');
-        
-        // Performance optimization: Cleanup all event listeners
-        this.removeAllEventListeners();
-        
-        // Performance optimization: Clear any pending settings updates
-        if (this.settingsUpdateTimeout) {
-            clearTimeout(this.settingsUpdateTimeout);
-            this.settingsUpdateTimeout = null;
+        logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
+
+        try {
+            // Performance optimization: Cleanup all event listeners
+            logger.debug('ui', 'Removing event listeners');
+            this.removeAllEventListeners();
+        } catch (error) {
+            logger.error('ui', 'Error removing event listeners:', error);
         }
-        if (this.scrubSaveTimeout) {
-            clearTimeout(this.scrubSaveTimeout);
-            this.scrubSaveTimeout = null;
+
+        try {
+            // Performance optimization: Clear any pending settings updates
+            logger.debug('ui', 'Clearing timeouts');
+            if (this.settingsUpdateTimeout) {
+                clearTimeout(this.settingsUpdateTimeout);
+                this.settingsUpdateTimeout = null;
+            }
+            if (this.scrubSaveTimeout) {
+                clearTimeout(this.scrubSaveTimeout);
+                this.scrubSaveTimeout = null;
+            }
+            this.pendingSettingsUpdates.clear();
+        } catch (error) {
+            logger.error('ui', 'Error clearing timeouts:', error);
         }
-        this.pendingSettingsUpdates.clear();
-        
-        // Cleanup continuous layers
-        if (this.continuousLayerManager) {
-            this.continuousLayerManager.stop();
-            this.continuousLayerManager = null;
+
+        try {
+            // Cleanup continuous layers
+            logger.debug('ui', 'Stopping continuous layers');
+            if (this.continuousLayerManager) {
+                this.continuousLayerManager.stop();
+                this.continuousLayerManager = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error stopping continuous layers:', error);
         }
-        
-        // Cleanup temporal animator
-        if (this.temporalAnimator) {
-            this.temporalAnimator.destroy();
-            this.temporalAnimator = null;
+
+        try {
+            // Cleanup temporal animator
+            logger.debug('ui', 'Destroying temporal animator');
+            if (this.temporalAnimator) {
+                this.temporalAnimator.destroy();
+                this.temporalAnimator = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error destroying temporal animator:', error);
         }
-        
-        // Cleanup graph renderer
-        if (this.graphRenderer) {
-            this.graphRenderer.destroy();
-            this.graphRenderer = null;
+
+        try {
+            // Cleanup graph renderer
+            logger.debug('ui', 'Destroying graph renderer');
+            if (this.graphRenderer) {
+                this.graphRenderer.destroy();
+                this.graphRenderer = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error destroying graph renderer:', error);
         }
-        
-        // Cleanup resize observer
-        if (this.resizeObserver) {
-            this.resizeObserver.disconnect();
-            this.resizeObserver = null;
+
+        try {
+            // Cleanup resize observer
+            logger.debug('ui', 'Disconnecting resize observer');
+            if (this.resizeObserver) {
+                this.resizeObserver.disconnect();
+                this.resizeObserver = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error disconnecting resize observer:', error);
         }
-        
-        // Reset animation state
-        this.isAnimating = false;
-        
-        // Hide progress indicator
-        this.hideProgressIndicator();
-        
-        const { contentEl } = this;
-        contentEl.empty();
+
+        try {
+            // Reset animation state
+            this.isAnimating = false;
+
+            // Hide progress indicator
+            this.hideProgressIndicator();
+
+            // Clear content
+            const { contentEl } = this;
+            contentEl.empty();
+        } catch (error) {
+            logger.error('ui', 'Error clearing content:', error);
+        }
+
+        logger.info('ui', 'Sonic Graph view closed successfully');
     }
 
     /**
