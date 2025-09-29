@@ -168,3 +168,127 @@ export interface ClusterHubAnalysis {
     standardDeviation: number;
   };
 }
+
+// ============================================================================
+// Phase 6.2: Dynamic Orchestration Type Definitions
+// ============================================================================
+
+/**
+ * Vault complexity metrics for orchestration decisions
+ */
+export interface VaultComplexity {
+  totalNodes: number;
+  totalLinks: number;
+  averageDegree: number;
+  clusterCount: number;
+  maxDepth: number;
+  complexityScore: number; // 0-1: Normalized complexity
+  tier: ComplexityTier;
+}
+
+/**
+ * Complexity tiers for layer activation
+ */
+export type ComplexityTier =
+  | 'minimal'      // 0-100 nodes: Basic instruments only
+  | 'simple'       // 100-500 nodes: Add rhythmic layers
+  | 'moderate'     // 500-1000 nodes: Add harmonic pads
+  | 'complex'      // 1000-5000 nodes: Full orchestral arrangement
+  | 'extensive';   // 5000+ nodes: Maximum complexity with all layers
+
+/**
+ * Complexity threshold configuration
+ */
+export interface ComplexityThreshold {
+  tier: ComplexityTier;
+  minNodes: number;
+  maxNodes: number;
+  enabledLayers: OrchestrationLayer[];
+  instrumentDensity: number; // 0-1: How many instruments to activate
+  harmonyComplexity: number; // 0-1: Chord complexity for this tier
+}
+
+/**
+ * Orchestration layers that can be activated
+ */
+export type OrchestrationLayer =
+  | 'basic-melody'     // Always active
+  | 'rhythmic'         // Active at simple+
+  | 'harmonic-pad'     // Active at moderate+
+  | 'bass-line'        // Active at moderate+
+  | 'counter-melody'   // Active at complex+
+  | 'orchestral-fills' // Active at complex+
+  | 'ambient-texture'; // Active at extensive
+
+/**
+ * Time-of-day periods for temporal influence
+ */
+export type TimeOfDay =
+  | 'early-morning'  // 5am-8am: Bright, awakening sounds
+  | 'morning'        // 8am-12pm: Energetic, clear tones
+  | 'afternoon'      // 12pm-5pm: Warm, balanced
+  | 'evening'        // 5pm-9pm: Mellow, reflective
+  | 'night'          // 9pm-12am: Darker, atmospheric
+  | 'late-night';    // 12am-5am: Minimal, ambient
+
+/**
+ * Seasonal periods for temporal influence
+ */
+export type Season =
+  | 'spring'  // March-May: Bright, light instruments
+  | 'summer'  // June-August: Full, rich orchestration
+  | 'autumn'  // September-November: Warm, reflective tones
+  | 'winter'; // December-February: Cool, crystalline sounds
+
+/**
+ * Temporal influence on instrument selection
+ */
+export interface TemporalInfluence {
+  timeOfDay: TimeOfDay;
+  season: Season;
+  instrumentBrightness: number;  // 0-1: Affects filter cutoff
+  orchestralDensity: number;     // 0-1: How many instruments to use
+  preferredInstruments: string[]; // Instruments fitting this time/season
+  timbreAdjustment: number;      // -1 to 1: Darker to brighter
+}
+
+/**
+ * Instrument layer configuration
+ */
+export interface InstrumentLayer {
+  id: string;
+  layerType: OrchestrationLayer;
+  instruments: string[];         // Instruments for this layer
+  volume: number;                // 0-1
+  enabled: boolean;
+  activationThreshold: ComplexityTier;
+  temporalSensitivity: number;   // 0-1: How much temporal influence affects this layer
+}
+
+/**
+ * Dynamic orchestration configuration
+ */
+export interface DynamicOrchestrationSettings {
+  enabled: boolean;
+  complexityThresholds: ComplexityThreshold[];
+  customThresholds: boolean;     // Use custom vs default thresholds
+  temporalInfluenceEnabled: boolean;
+  timeOfDayInfluence: number;    // 0-1: Strength of time-of-day effect
+  seasonalInfluence: number;     // 0-1: Strength of seasonal effect
+  transitionDuration: number;    // Seconds: How long to transition between tiers
+  autoAdjust: boolean;           // Automatically adjust based on vault changes
+}
+
+/**
+ * Current orchestration state
+ */
+export interface OrchestrationState {
+  currentComplexity: VaultComplexity;
+  activeTier: ComplexityTier;
+  previousTier: ComplexityTier;
+  activeLayers: Set<OrchestrationLayer>;
+  temporalInfluence: TemporalInfluence;
+  activeInstrumentLayers: InstrumentLayer[];
+  transitionProgress: number;    // 0-1: Progress of tier transition
+  lastUpdateTime: number;
+}
