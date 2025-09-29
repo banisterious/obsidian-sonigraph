@@ -50713,34 +50713,123 @@ var init_SonicGraphModal = __esm({
        * Create connection type audio differentiation settings section (Phase 4.4)
        */
       createConnectionTypeMappingSettings(container) {
-        const settings = this.getSonicGraphSettings().connectionTypeMapping;
-        if (!settings || !settings.enabled) {
-          return;
-        }
         const section = container.createDiv({ cls: "sonic-graph-settings-section connection-type-mapping-section" });
-        section.createEl("div", { text: "CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)", cls: "sonic-graph-settings-section-title" });
-        const statusItem = section.createDiv({ cls: "sonic-graph-setting-item connection-type-status" });
-        statusItem.createEl("label", { text: "Current status", cls: "sonic-graph-setting-label" });
-        const statusText = statusItem.createEl("div", {
-          text: `${settings.enabled ? "ENABLED" : "DISABLED"} - ${settings.currentPreset || "No preset"}`,
-          cls: "sonic-graph-setting-status"
+        section.style.cssText = `
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 6px;
+            margin: 8px 0;
+            padding: 0;
+            overflow: hidden;
+        `;
+        const header = section.createDiv({ cls: "sonic-graph-collapsible-header" });
+        header.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px 16px;
+            background-color: var(--background-secondary);
+            border-bottom: 1px solid var(--background-modifier-border);
+        `;
+        const headerTitle = header.createEl("div", {
+          text: "CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)",
+          cls: "sonic-graph-settings-section-title"
         });
-        new import_obsidian10.Setting(section).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
+        const toggleIcon = header.createEl("span", {
+          text: "\u25B6",
+          // Start collapsed by default
+          cls: "sonic-graph-collapsible-icon"
+        });
+        toggleIcon.style.cssText = "font-size: 14px; color: var(--text-muted); transition: transform 0.2s ease;";
+        const content = section.createDiv({
+          cls: "sonic-graph-collapsible-content collapsed"
+        });
+        content.style.cssText = `
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+        `;
+        header.addEventListener("click", () => {
+          const isExpanded = content.hasClass("expanded");
+          if (isExpanded) {
+            content.removeClass("expanded");
+            content.addClass("collapsed");
+            content.style.cssText = `
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                    max-height: 0;
+                    opacity: 0;
+                    padding-top: 0;
+                `;
+            toggleIcon.textContent = "\u25B6";
+          } else {
+            content.removeClass("collapsed");
+            content.addClass("expanded");
+            content.style.cssText = `
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                    max-height: none;
+                    opacity: 1;
+                    padding-top: 12px;
+                `;
+            toggleIcon.textContent = "\u25BC";
+          }
+        });
+        const settings = this.getSonicGraphSettings().connectionTypeMapping || {
+          enabled: false,
+          independentFromContentAware: true,
+          mappings: {
+            wikilink: { enabled: true, instrumentFamily: "strings" },
+            embed: { enabled: true, instrumentFamily: "percussion" },
+            markdown: { enabled: true, instrumentFamily: "woodwinds" },
+            tag: { enabled: true, instrumentFamily: "ambient" }
+          },
+          globalSettings: {
+            connectionVolumeMix: 0.7,
+            maxSimultaneousConnections: 25
+          },
+          currentPreset: "minimal"
+        };
+        new import_obsidian10.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
+          (toggle) => toggle.setValue(settings.enabled || false).onChange(async (value) => {
+            try {
+              const currentSettings = this.getSonicGraphSettings();
+              if (!currentSettings.connectionTypeMapping) {
+                const { DEFAULT_SETTINGS: DEFAULT_SETTINGS2 } = await Promise.resolve().then(() => (init_constants(), constants_exports));
+                currentSettings.connectionTypeMapping = {
+                  ...DEFAULT_SETTINGS2.sonicGraphSettings.connectionTypeMapping,
+                  enabled: value
+                };
+              } else {
+                currentSettings.connectionTypeMapping.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger31.info("connection-type-mapping", "Connection type mapping toggled", {
+                enabled: value
+              });
+            } catch (error) {
+              logger31.error("connection-type-mapping", "Failed to toggle connection type mapping", error);
+            }
+          })
+        );
+        new import_obsidian10.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
           (toggle) => toggle.setValue(settings.independentFromContentAware).onChange((value) => {
             this.updateConnectionTypeMappingConfig("independentFromContentAware", value);
           })
         );
-        new import_obsidian10.Setting(section).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
+        new import_obsidian10.Setting(content).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
           (slider) => slider.setLimits(0, 100, 5).setValue(settings.globalSettings.connectionVolumeMix * 100).setDynamicTooltip().onChange((value) => {
             this.updateConnectionTypeMappingGlobalSetting("connectionVolumeMix", value / 100);
           })
         );
-        new import_obsidian10.Setting(section).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
+        new import_obsidian10.Setting(content).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
           (slider) => slider.setLimits(5, 50, 1).setValue(settings.globalSettings.maxSimultaneousConnections).setDynamicTooltip().onChange((value) => {
             this.updateConnectionTypeMappingGlobalSetting("maxSimultaneousConnections", value);
           })
         );
-        const connectionTypesSection = section.createDiv({ cls: "connection-types-toggles" });
+        const connectionTypesSection = content.createDiv({ cls: "connection-types-toggles" });
         connectionTypesSection.createEl("h5", { text: "Connection Types", cls: "connection-type-subsection-title" });
         new import_obsidian10.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
           (toggle) => toggle.setValue(settings.mappings.wikilink.enabled).onChange((value) => {
@@ -51168,37 +51257,6 @@ var init_SonicGraphModal = __esm({
               logger31.info("audio-enhancement", "Content-aware mapping toggled", {
                 enabled: value
               });
-            });
-          }
-        );
-        new import_obsidian10.Setting(container).setName("Enable connection type audio differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
-          (toggle) => {
-            var _a2;
-            return toggle.setValue(((_a2 = this.getSonicGraphSettings().connectionTypeMapping) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
-              try {
-                const settings = this.getSonicGraphSettings();
-                if (!settings.connectionTypeMapping) {
-                  const { DEFAULT_SETTINGS: DEFAULT_SETTINGS2 } = await Promise.resolve().then(() => (init_constants(), constants_exports));
-                  settings.connectionTypeMapping = {
-                    ...DEFAULT_SETTINGS2.sonicGraphSettings.connectionTypeMapping,
-                    enabled: value
-                    // Set to the actual toggle value
-                  };
-                }
-                settings.connectionTypeMapping.enabled = value;
-                await this.plugin.saveSettings();
-                logger31.info("connection-type-mapping", "Connection type mapping toggled", {
-                  enabled: value
-                });
-                if (value) {
-                  new import_obsidian10.Notice("Connection Type Audio Differentiation enabled. Detailed settings will appear below.", 3e3);
-                } else {
-                  new import_obsidian10.Notice("Connection Type Audio Differentiation disabled.", 2e3);
-                }
-              } catch (error) {
-                logger31.error("connection-type-mapping", "Failed to toggle connection type mapping", error);
-                new import_obsidian10.Notice("Error enabling Connection Type Audio Differentiation. Check console for details.", 5e3);
-              }
             });
           }
         );

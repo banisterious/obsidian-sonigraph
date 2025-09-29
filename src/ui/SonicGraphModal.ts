@@ -902,6 +902,7 @@ export class SonicGraphModal extends Modal {
         this.createAdvancedSettings(settingsContent);
     }
 
+
     /**
      * Create adaptive detail override section (Quick Override)
      */
@@ -1414,26 +1415,128 @@ export class SonicGraphModal extends Modal {
      * Create connection type audio differentiation settings section (Phase 4.4)
      */
     private createConnectionTypeMappingSettings(container: HTMLElement): void {
-        const settings = this.getSonicGraphSettings().connectionTypeMapping;
-
-        // Only show if connection type mapping is enabled in main settings
-        if (!settings || !settings.enabled) {
-            return;
-        }
-
         const section = container.createDiv({ cls: 'sonic-graph-settings-section connection-type-mapping-section' });
-        section.createEl('div', { text: 'CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)', cls: 'sonic-graph-settings-section-title' });
+        section.style.cssText = `
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 6px;
+            margin: 8px 0;
+            padding: 0;
+            overflow: hidden;
+        `;
 
-        // Status indicator
-        const statusItem = section.createDiv({ cls: 'sonic-graph-setting-item connection-type-status' });
-        statusItem.createEl('label', { text: 'Current status', cls: 'sonic-graph-setting-label' });
-        const statusText = statusItem.createEl('div', {
-            text: `${settings.enabled ? 'ENABLED' : 'DISABLED'} - ${settings.currentPreset || 'No preset'}`,
-            cls: 'sonic-graph-setting-status'
+        // Create collapsible header
+        const header = section.createDiv({ cls: 'sonic-graph-collapsible-header' });
+        header.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px 16px;
+            background-color: var(--background-secondary);
+            border-bottom: 1px solid var(--background-modifier-border);
+        `;
+
+        const headerTitle = header.createEl('div', {
+            text: 'CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)',
+            cls: 'sonic-graph-settings-section-title'
         });
 
+        const toggleIcon = header.createEl('span', {
+            text: '▶', // Start collapsed by default
+            cls: 'sonic-graph-collapsible-icon'
+        });
+        toggleIcon.style.cssText = 'font-size: 14px; color: var(--text-muted); transition: transform 0.2s ease;';
+
+        // Create collapsible content container (collapsed by default)
+        const content = section.createDiv({
+            cls: 'sonic-graph-collapsible-content collapsed'
+        });
+        content.style.cssText = `
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+        `;
+
+        // Make header clickable to toggle content
+        header.addEventListener('click', () => {
+            const isExpanded = content.hasClass('expanded');
+            if (isExpanded) {
+                content.removeClass('expanded');
+                content.addClass('collapsed');
+                content.style.cssText = `
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                    max-height: 0;
+                    opacity: 0;
+                    padding-top: 0;
+                `;
+                toggleIcon.textContent = '▶';
+            } else {
+                content.removeClass('collapsed');
+                content.addClass('expanded');
+                content.style.cssText = `
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                    max-height: none;
+                    opacity: 1;
+                    padding-top: 12px;
+                `;
+                toggleIcon.textContent = '▼';
+            }
+        });
+
+        // Always add all the settings to the content area (no conditional logic)
+        const settings = this.getSonicGraphSettings().connectionTypeMapping || {
+            enabled: false,
+            independentFromContentAware: true,
+            mappings: {
+                wikilink: { enabled: true, instrumentFamily: 'strings' } as any,
+                embed: { enabled: true, instrumentFamily: 'percussion' } as any,
+                markdown: { enabled: true, instrumentFamily: 'woodwinds' } as any,
+                tag: { enabled: true, instrumentFamily: 'ambient' } as any
+            },
+            globalSettings: {
+                connectionVolumeMix: 0.7,
+                maxSimultaneousConnections: 25
+            } as any,
+            currentPreset: 'minimal'
+        } as any;
+
+        // Main enable toggle (inside the collapsible content)
+        new Setting(content)
+            .setName('Enable Connection Type Audio Differentiation')
+            .setDesc('Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics')
+            .addToggle(toggle => toggle
+                .setValue(settings.enabled || false)
+                .onChange(async (value) => {
+                    try {
+                        const currentSettings = this.getSonicGraphSettings();
+                        if (!currentSettings.connectionTypeMapping) {
+                            // Initialize with the default config from constants if it doesn't exist
+                            const { DEFAULT_SETTINGS } = await import('../utils/constants');
+                            currentSettings.connectionTypeMapping = {
+                                ...DEFAULT_SETTINGS.sonicGraphSettings.connectionTypeMapping,
+                                enabled: value
+                            };
+                        } else {
+                            currentSettings.connectionTypeMapping.enabled = value;
+                        }
+                        await this.plugin.saveSettings();
+
+                        logger.info('connection-type-mapping', 'Connection type mapping toggled', {
+                            enabled: value
+                        });
+                    } catch (error) {
+                        logger.error('connection-type-mapping', 'Failed to toggle connection type mapping', error);
+                    }
+                })
+            );
+
+
         // Independence toggle
-        new Setting(section)
+        new Setting(content)
             .setName('Independent from Content-Aware Mapping')
             .setDesc('Operate independently of Phase 4.1 content-aware mapping system')
             .addToggle(toggle => toggle
@@ -1444,7 +1547,7 @@ export class SonicGraphModal extends Modal {
             );
 
         // Global volume mix
-        new Setting(section)
+        new Setting(content)
             .setName('Connection Volume Mix')
             .setDesc('Overall volume level for connection audio')
             .addSlider(slider => slider
@@ -1457,7 +1560,7 @@ export class SonicGraphModal extends Modal {
             );
 
         // Max simultaneous connections
-        new Setting(section)
+        new Setting(content)
             .setName('Maximum Simultaneous Connections')
             .setDesc('Limit concurrent connection sounds for performance')
             .addSlider(slider => slider
@@ -1470,7 +1573,7 @@ export class SonicGraphModal extends Modal {
             );
 
         // Connection type toggles
-        const connectionTypesSection = section.createDiv({ cls: 'connection-types-toggles' });
+        const connectionTypesSection = content.createDiv({ cls: 'connection-types-toggles' });
         connectionTypesSection.createEl('h5', { text: 'Connection Types', cls: 'connection-type-subsection-title' });
 
         // Wikilinks
@@ -2050,43 +2153,6 @@ export class SonicGraphModal extends Modal {
                 })
             );
 
-        // Connection Type Audio Differentiation Toggle (Phase 4.4)
-        new Setting(container)
-            .setName('Enable connection type audio differentiation')
-            .setDesc('Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics')
-            .addToggle(toggle => toggle
-                .setValue(this.getSonicGraphSettings().connectionTypeMapping?.enabled || false)
-                .onChange(async (value) => {
-                    try {
-                        const settings = this.getSonicGraphSettings();
-                        if (!settings.connectionTypeMapping) {
-                            // Initialize with the default config from constants
-                            const { DEFAULT_SETTINGS } = await import('../utils/constants');
-                            settings.connectionTypeMapping = {
-                                ...DEFAULT_SETTINGS.sonicGraphSettings.connectionTypeMapping,
-                                enabled: value // Set to the actual toggle value
-                            };
-                        }
-
-                        settings.connectionTypeMapping.enabled = value;
-                        await this.plugin.saveSettings();
-
-                        logger.info('connection-type-mapping', 'Connection type mapping toggled', {
-                            enabled: value
-                        });
-
-                        // Simple notification instead of full refresh
-                        if (value) {
-                            new Notice('Connection Type Audio Differentiation enabled. Detailed settings will appear below.', 3000);
-                        } else {
-                            new Notice('Connection Type Audio Differentiation disabled.', 2000);
-                        }
-                    } catch (error) {
-                        logger.error('connection-type-mapping', 'Failed to toggle connection type mapping', error);
-                        new Notice('Error enabling Connection Type Audio Differentiation. Check console for details.', 5000);
-                    }
-                })
-            );
 
         // Phase 2: Metadata-Driven Mapping Settings
         if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
