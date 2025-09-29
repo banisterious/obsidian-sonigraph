@@ -19,6 +19,13 @@ import {
 	DynamicOrchestrationManager,
 	DynamicOrchestrationSettings
 } from '../audio/orchestration';
+import {
+	SpatialAudioManager,
+	SpatialAudioConfig,
+	GraphBounds,
+	PanningMode,
+	PanningCurve
+} from '../audio/spatial';
 
 const logger = getLogger('musical-mapper');
 
@@ -45,6 +52,10 @@ export class MusicalMapper {
 	private dynamicOrchestrationManager: DynamicOrchestrationManager | null = null;
 	private isDynamicOrchestrationEnabled = false;
 
+	// Phase 6.3: Spatial audio and panning
+	private spatialAudioManager: SpatialAudioManager | null = null;
+	private isSpatialAudioEnabled = false;
+
 	constructor(settings: SonigraphSettings, app?: App) {
 		this.settings = settings;
 		this.app = app || null;
@@ -63,6 +74,11 @@ export class MusicalMapper {
 		// Initialize Phase 6.2 dynamic orchestration if enabled
 		if (this.settings.dynamicOrchestration?.enabled) {
 			this.initializeDynamicOrchestration();
+		}
+
+		// Initialize Phase 6.3 spatial audio if enabled
+		if (this.settings.spatialAudio?.enabled) {
+			this.initializeSpatialAudio();
 		}
 	}
 
@@ -101,6 +117,17 @@ export class MusicalMapper {
 			}
 		} else if (this.isDynamicOrchestrationEnabled) {
 			this.disableDynamicOrchestration();
+		}
+
+		// Phase 6.3: Update spatial audio if enabled
+		if (this.settings.spatialAudio?.enabled) {
+			if (!this.isSpatialAudioEnabled) {
+				this.initializeSpatialAudio();
+			} else {
+				this.updateSpatialAudioSettings();
+			}
+		} else if (this.isSpatialAudioEnabled) {
+			this.disableSpatialAudio();
 		}
 	}
 
@@ -429,6 +456,158 @@ export class MusicalMapper {
 		} catch (error) {
 			logger.error('phase6.2-disable-error', 'Error during Phase 6.2 cleanup', error as Error);
 		}
+	}
+
+	/**
+	 * Phase 6.3: Initialize spatial audio and panning
+	 */
+	private initializeSpatialAudio(): void {
+		if (this.isSpatialAudioEnabled) return;
+
+		logger.info('phase6.3-init', 'Initializing Phase 6.3 spatial audio and panning');
+
+		try {
+			const spatialConfig: SpatialAudioConfig = this.settings.spatialAudio || {
+				enabled: true,
+				mode: PanningMode.Hybrid,
+				graphPositionSettings: {
+					curve: PanningCurve.Sigmoid,
+					intensity: 0.7,
+					smoothingFactor: 0.5,
+					updateThrottleMs: 100,
+				},
+				folderSettings: {
+					enabled: true,
+					customMappings: [],
+					autoDetectTopLevel: true,
+					spreadFactor: 0.3,
+				},
+				clusterSettings: {
+					enabled: true,
+					useCentroid: true,
+					individualSpread: 0.2,
+					clusterSeparation: 0.5,
+				},
+				hybridWeights: {
+					graphPosition: 0.5,
+					folderBased: 0.3,
+					clusterBased: 0.2,
+				},
+				advanced: {
+					enableDepthMapping: false,
+					depthInfluence: 0.3,
+					boundaryPadding: 0.1,
+					velocityDamping: true,
+					dampingFactor: 0.7,
+				},
+			};
+
+			this.spatialAudioManager = new SpatialAudioManager(spatialConfig);
+
+			this.isSpatialAudioEnabled = true;
+			logger.info('phase6.3-initialized', 'Phase 6.3 spatial audio initialized successfully');
+
+		} catch (error) {
+			logger.error('phase6.3-init-error', 'Error initializing Phase 6.3 spatial audio', error as Error);
+			this.isSpatialAudioEnabled = false;
+		}
+	}
+
+	/**
+	 * Phase 6.3: Update spatial audio settings
+	 */
+	private updateSpatialAudioSettings(): void {
+		if (!this.spatialAudioManager || !this.settings.spatialAudio) return;
+
+		logger.debug('phase6.3-update', 'Updating Phase 6.3 spatial audio settings');
+
+		this.spatialAudioManager.updateConfig(this.settings.spatialAudio);
+	}
+
+	/**
+	 * Phase 6.3: Disable spatial audio and clean up
+	 */
+	private disableSpatialAudio(): void {
+		if (!this.isSpatialAudioEnabled) return;
+
+		logger.info('phase6.3-cleanup', 'Disabling Phase 6.3 spatial audio');
+
+		try {
+			if (this.spatialAudioManager) {
+				this.spatialAudioManager.dispose();
+				this.spatialAudioManager = null;
+			}
+
+			this.isSpatialAudioEnabled = false;
+			logger.info('phase6.3-disabled', 'Phase 6.3 spatial audio disabled and cleaned up');
+
+		} catch (error) {
+			logger.error('phase6.3-disable-error', 'Error during Phase 6.3 cleanup', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 6.3: Update spatial audio for node positions
+	 */
+	public updateSpatialAudio(nodes: GDEGraphNode[], bounds?: GraphBounds): void {
+		if (!this.spatialAudioManager || !this.isSpatialAudioEnabled) return;
+
+		try {
+			// Update bounds if provided
+			if (bounds) {
+				this.spatialAudioManager.updateGraphBounds(bounds);
+			}
+
+			// Update node positions
+			for (const node of nodes) {
+				if (node.x !== undefined && node.y !== undefined) {
+					this.spatialAudioManager.updateNodePosition(node.id, { x: node.x, y: node.y });
+				}
+			}
+
+		} catch (error) {
+			logger.error('phase6.3-update-error', 'Error updating spatial audio', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 6.3: Register node for spatial audio tracking
+	 */
+	public registerNodeForSpatialAudio(
+		nodeId: string,
+		position: { x: number; y: number },
+		folderPath?: string,
+		clusterId?: string
+	): void {
+		if (!this.spatialAudioManager || !this.isSpatialAudioEnabled) return;
+
+		try {
+			this.spatialAudioManager.registerNode(nodeId, position, folderPath, clusterId);
+		} catch (error) {
+			logger.error('phase6.3-register-error', 'Error registering node for spatial audio', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 6.3: Unregister node from spatial audio
+	 */
+	public unregisterNodeFromSpatialAudio(nodeId: string): void {
+		if (!this.spatialAudioManager || !this.isSpatialAudioEnabled) return;
+
+		try {
+			this.spatialAudioManager.unregisterNode(nodeId);
+		} catch (error) {
+			logger.error('phase6.3-unregister-error', 'Error unregistering node from spatial audio', error as Error);
+		}
+	}
+
+	/**
+	 * Phase 6.3: Get panner node for audio routing
+	 */
+	public getPannerForNode(nodeId: string): any {
+		if (!this.spatialAudioManager || !this.isSpatialAudioEnabled) return null;
+
+		return this.spatialAudioManager.getPannerForNode(nodeId);
 	}
 
 	/**
@@ -904,6 +1083,9 @@ export class MusicalMapper {
 		}
 		if (this.isDynamicOrchestrationEnabled) {
 			this.disableDynamicOrchestration();
+		}
+		if (this.isSpatialAudioEnabled) {
+			this.disableSpatialAudio();
 		}
 		logger.debug('musical-mapper-disposed', 'MusicalMapper disposed');
 	}
