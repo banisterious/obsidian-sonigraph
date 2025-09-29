@@ -7,6 +7,178 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Phase 6.2: Dynamic Orchestration ✅
+
+#### Overview
+Comprehensive vault complexity and temporal influence system that evolves instrumentation dynamically based on vault size, structure, time of day, and season. Provides 5-tier complexity scaling with automatic layer activation and intelligent instrument selection.
+
+#### Core Components (1,022 lines, 3 files)
+
+**Complexity Analyzer** (`src/audio/orchestration/ComplexityAnalyzer.ts` - 269 lines)
+- **5 Complexity Tiers**: Minimal (0-100 nodes), Simple (100-500), Moderate (500-1000), Complex (1000-5000), Extensive (5000+)
+- **Multi-Factor Scoring**: Weighted complexity calculation (40% nodes, 30% links, 20% clusters, 10% folder depth)
+- **Logarithmic Scaling**: Handles large vaults gracefully with log10(nodes) normalization
+- **Dynamic Thresholds**: Configurable tier thresholds with custom user settings
+- **Tier Change Detection**: Intelligent detection of complexity increases/decreases
+- **Instrument Count Recommendations**: 3 to 16 instruments based on tier and complexity score
+- **Performance Optimized**: O(n) complexity calculation with minimal overhead
+
+**Temporal Influence Engine** (`src/audio/orchestration/TemporalInfluence.ts` - 329 lines)
+- **6 Time-of-Day Periods**: Early morning (5-8am), morning (8-12pm), afternoon (12-5pm), evening (5-9pm), night (9pm-12am), late-night (12-5am)
+- **4 Seasonal Periods**: Spring (Mar-May), summer (Jun-Aug), autumn (Sep-Nov), winter (Dec-Feb)
+- **Instrument Brightness Calculation**: Time and season affect overall brightness (0-1 scale)
+- **Orchestral Density Control**: Dynamic instrument count modulation based on temporal context
+- **Preferred Instrument Selection**: Time/season-appropriate instrument recommendations for each period
+- **Timbre Adjustment**: -1 to +1 adjustment for darker (negative) to brighter (positive) sounds
+- **Real-Time Detection**: System time-based automatic period detection
+- **Configurable Strength**: Independent control over time-of-day (0-1) and seasonal (0-1) influence strength
+- **Temporal Descriptions**: Human-readable descriptions of current temporal context
+
+**Dynamic Orchestration Manager** (`src/audio/orchestration/DynamicOrchestrationManager.ts` - 424 lines)
+- **7 Orchestration Layers**: basic-melody (always active), rhythmic (simple+), harmonic-pad (moderate+), bass-line (moderate+), counter-melody (complex+), orchestral-fills (complex+), ambient-texture (extensive only)
+- **Complexity-Driven Activation**: Layers automatically enable as vault grows through complexity tiers
+- **Temporal Modulation**: Time-of-day and seasonal influences on instrument selection and density
+- **Instrument Density Control**: Recommended instrument count for each complexity tier (3-16 instruments)
+- **Smooth Tier Transitions**: Configurable transition duration (0.5-10 seconds) for seamless orchestration changes
+- **Auto-Adjustment Mode**: Real-time orchestration updates when vault structure changes
+- **State Tracking**: Current complexity, active tier, previous tier, active layers, temporal influence, transition progress
+- **Orchestration State Management**: Comprehensive state interface for monitoring and debugging
+
+#### Integration (156 lines added)
+
+**MusicalMapper** (`src/graph/musical-mapper.ts`)
+- **Phase 6.2 Integration**: Full dynamic orchestration system integration
+- **Manager Initialization**: DynamicOrchestrationManager created with user settings
+- **Public Methods**: updateOrchestration(nodes, links, clusters) and getOrchestrationState()
+- **Settings Updates**: Real-time configuration changes via updateSettings
+- **Proper Disposal**: Manager cleanup on mapper disposal
+
+**Type System** (`src/audio/orchestration/types.ts`)
+- **124 Lines of Phase 6.2 Types**: VaultComplexity, ComplexityTier, ComplexityThreshold, OrchestrationLayer
+- **Temporal Types**: TimeOfDay, Season, TemporalInfluence
+- **Configuration Types**: InstrumentLayer, DynamicOrchestrationSettings, OrchestrationState
+
+**Settings & Constants** (`src/utils/constants.ts`)
+- **Configuration Interface**: dynamicOrchestration settings with 7 parameters
+- **Sensible Defaults**: Disabled by default, temporal influence enabled, 0.5/0.3 strengths, 3s transitions, auto-adjust on
+
+#### User Interface (219 lines)
+
+**Settings Panel** (`src/ui/SonicGraphView.ts`)
+- **Enable Toggle**: Master switch for dynamic orchestration system
+- **Custom Thresholds Toggle**: Use custom vs default complexity thresholds
+- **Temporal Influence Toggle**: Enable/disable time-of-day and seasonal effects
+- **Time-of-Day Influence Slider**: 0-100% control over time-based instrument selection
+- **Seasonal Influence Slider**: 0-100% control over season-based timbre adjustment
+- **Transition Duration Slider**: 0.5-10 seconds for tier change smoothness
+- **Auto-Adjust Toggle**: Automatic orchestration updates when vault changes
+- **Real-Time Updates**: All settings apply immediately to orchestration engine
+- **Collapsible Details**: Settings expand/collapse for clean interface with 6 detail controls
+- **Dynamic Visibility**: Detail settings only shown when dynamic orchestration is enabled
+
+#### Complexity Tiers
+
+**Minimal (0-100 nodes)**
+- Layers: basic-melody only
+- Instrument Density: 30%
+- Harmony Complexity: 30%
+- Recommended Instruments: 3
+
+**Simple (100-500 nodes)**
+- Layers: basic-melody, rhythmic
+- Instrument Density: 50%
+- Harmony Complexity: 50%
+- Recommended Instruments: 5
+
+**Moderate (500-1000 nodes)**
+- Layers: basic-melody, rhythmic, harmonic-pad, bass-line
+- Instrument Density: 70%
+- Harmony Complexity: 70%
+- Recommended Instruments: 8
+
+**Complex (1000-5000 nodes)**
+- Layers: basic-melody, rhythmic, harmonic-pad, bass-line, counter-melody, orchestral-fills
+- Instrument Density: 85%
+- Harmony Complexity: 85%
+- Recommended Instruments: 12
+
+**Extensive (5000+ nodes)**
+- Layers: All 7 layers including ambient-texture
+- Instrument Density: 100%
+- Harmony Complexity: 100%
+- Recommended Instruments: 16
+
+#### Time-of-Day Characteristics
+
+**Early Morning (5-8am)**: Bright, awakening sounds
+- Instruments: flute, celesta, harp, vibraphone
+- Brightness: +30%, Density: -20%, Timbre: +0.3 (brighter)
+
+**Morning (8-12pm)**: Energetic, clear tones
+- Instruments: flute, violin, trumpet, piano
+- Brightness: +40%, Density: +20%, Timbre: +0.4 (brightest)
+
+**Afternoon (12-5pm)**: Warm, balanced
+- Instruments: piano, guitar, cello, clarinet
+- Brightness: +20%, Density: +30%, Timbre: +0.1
+
+**Evening (5-9pm)**: Mellow, reflective
+- Instruments: cello, french horn, oboe, piano
+- Brightness: -20%, Density: +10%, Timbre: -0.2 (warmer)
+
+**Night (9pm-12am)**: Darker, atmospheric
+- Instruments: bass, synth pad, vocal pad, electric piano
+- Brightness: -30%, Density: -20%, Timbre: -0.4 (darker)
+
+**Late Night (12-5am)**: Minimal, ambient
+- Instruments: synth pad, bass, ambient drone, vocal pad
+- Brightness: -40%, Density: -40%, Timbre: -0.5 (darkest)
+
+#### Seasonal Characteristics
+
+**Spring (Mar-May)**: Bright, light instruments
+- Instruments: flute, violin, harp, celesta, clarinet
+- Brightness: +20%, Density: +10%, Timbre: +0.2
+
+**Summer (Jun-Aug)**: Full, rich orchestration
+- Instruments: trumpet, guitar, vibraphone, saxophone, marimba
+- Brightness: +30%, Density: +30%, Timbre: +0.1
+
+**Autumn (Sep-Nov)**: Warm, reflective tones
+- Instruments: cello, oboe, french horn, bassoon, piano
+- Brightness: -10%, Density: +20%, Timbre: -0.1
+
+**Winter (Dec-Feb)**: Cool, crystalline sounds
+- Instruments: celesta, vibraphone, synth pad, bells, ambient drone
+- Brightness: -20%, Density: -10%, Timbre: -0.2
+
+#### Performance
+- **Efficient Algorithms**: O(n) complexity calculation where n = node count
+- **Minimal Overhead**: System only processes when enabled
+- **Real-Time Safe**: All operations suitable for live orchestration updates
+- **Memory Efficient**: Threshold data cached, no dynamic allocations in hot paths
+
+#### Configuration Options
+- **enabled**: Master toggle (default: false)
+- **customThresholds**: Use custom vs default tier thresholds (default: false)
+- **temporalInfluenceEnabled**: Enable time/season effects (default: true)
+- **timeOfDayInfluence**: Time-based influence strength 0-1 (default: 0.5)
+- **seasonalInfluence**: Season-based influence strength 0-1 (default: 0.3)
+- **transitionDuration**: Tier change smoothness in seconds (default: 3.0)
+- **autoAdjust**: Auto-update on vault changes (default: true)
+
+#### Testing
+- Ready for validation via Test Suite Modal
+- Recommended tests: Complexity tier detection, temporal influence accuracy, UI responsiveness
+- Performance profiling: Overhead measurement with/without orchestration enabled
+
+#### Files Modified
+- **Created**: 3 files (1,022 lines in `src/audio/orchestration/`)
+- **Modified**: 4 files (+502 lines across orchestration types, audio, config, UI)
+- **Total Impact**: ~1,500 lines, fully integrated system
+
+---
+
 ### Added - Phase 6.1: Musical Theory Integration ✅
 
 #### Overview
