@@ -1,4 +1,5 @@
 import { AudioMappingConfig } from '../graph/types';
+import { PanningMode, PanningCurve } from '../audio/spatial/types';
 
 export interface InstrumentSettings {
 	enabled: boolean;
@@ -680,6 +681,46 @@ export interface SonigraphSettings {
 		seasonalInfluence: number; // 0-1, strength of seasonal effect
 		transitionDuration: number; // Seconds, duration of tier transitions
 		autoAdjust: boolean; // Auto-adjust based on vault changes
+	};
+
+	// Phase 6.3: Spatial Audio and Panning
+	spatialAudio?: {
+		enabled: boolean;
+		mode: PanningMode;
+		graphPositionSettings: {
+			curve: PanningCurve;
+			intensity: number; // 0-1, how extreme panning can be
+			smoothingFactor: number; // 0-1, smooths position changes
+			updateThrottleMs: number; // Min ms between updates
+		};
+		folderSettings: {
+			enabled: boolean;
+			customMappings: Array<{
+				folderPath: string;
+				panPosition: number; // -1 to 1
+				priority: number;
+			}>;
+			autoDetectTopLevel: boolean;
+			spreadFactor: number; // 0-1, variation for nested files
+		};
+		clusterSettings: {
+			enabled: boolean;
+			useCentroid: boolean;
+			individualSpread: number; // 0-1
+			clusterSeparation: number; // 0-1
+		};
+		hybridWeights: {
+			graphPosition: number; // 0-1
+			folderBased: number; // 0-1
+			clusterBased: number; // 0-1
+		};
+		advanced: {
+			enableDepthMapping: boolean; // Future surround sound
+			depthInfluence: number; // 0-1
+			boundaryPadding: number; // 0-1
+			velocityDamping: boolean;
+			dampingFactor: number; // 0-1
+		};
 	};
 
 	// Phase 5.3: Community Detection Audio
@@ -2549,6 +2590,49 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		seasonalInfluence: 0.3, // Subtle seasonal influence
 		transitionDuration: 3.0, // 3 second transitions
 		autoAdjust: true // Automatically adjust to vault changes
+	},
+
+	// Phase 6.3: Default spatial audio settings (disabled by default)
+	spatialAudio: {
+		enabled: false,
+		mode: PanningMode.Hybrid,
+		graphPositionSettings: {
+			curve: PanningCurve.Sigmoid,
+			intensity: 0.7, // 70% pan intensity
+			smoothingFactor: 0.5, // Moderate smoothing
+			updateThrottleMs: 100 // Update every 100ms
+		},
+		folderSettings: {
+			enabled: true,
+			customMappings: [
+				{ folderPath: 'Projects', panPosition: 0.5, priority: 1 },
+				{ folderPath: 'Journal', panPosition: -0.5, priority: 1 },
+				{ folderPath: 'Archive', panPosition: -0.8, priority: 2 },
+				{ folderPath: 'Research', panPosition: 0.3, priority: 1 },
+				{ folderPath: 'Ideas', panPosition: -0.3, priority: 1 },
+				{ folderPath: 'Notes', panPosition: 0.0, priority: 0 }
+			],
+			autoDetectTopLevel: true,
+			spreadFactor: 0.3 // 30% variation
+		},
+		clusterSettings: {
+			enabled: true,
+			useCentroid: true,
+			individualSpread: 0.2, // 20% node variation
+			clusterSeparation: 0.5 // Moderate cluster separation
+		},
+		hybridWeights: {
+			graphPosition: 0.5, // 50% graph position
+			folderBased: 0.3, // 30% folder
+			clusterBased: 0.2 // 20% cluster
+		},
+		advanced: {
+			enableDepthMapping: false, // Future feature
+			depthInfluence: 0.3,
+			boundaryPadding: 0.1, // 10% padding from extremes
+			velocityDamping: true,
+			dampingFactor: 0.7 // Strong damping
+		}
 	},
 
 	// Phase 5.3: Default community detection audio settings (disabled by default)

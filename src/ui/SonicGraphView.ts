@@ -2465,6 +2465,9 @@ export class SonicGraphView extends ItemView {
 
         // Phase 6.2: Dynamic Orchestration Settings
         this.createDynamicOrchestrationSettings(section);
+
+        // Phase 6.3: Spatial Audio and Panning Settings
+        this.createSpatialAudioSettings(section);
     }
 
     /**
@@ -4227,6 +4230,241 @@ export class SonicGraphView extends ItemView {
 
         // Recreate dynamic orchestration section
         this.createDynamicOrchestrationSettings(settingsContent as HTMLElement);
+    }
+
+    /**
+     * Phase 6.3: Create spatial audio and panning settings
+     */
+    private createSpatialAudioSettings(container: HTMLElement): void {
+        // Divider
+        container.createEl('hr', { cls: 'sonic-graph-settings-divider' });
+
+        // Header
+        const headerItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        headerItem.createEl('label', {
+            text: 'Phase 6.3: Spatial Audio & Panning',
+            cls: 'sonic-graph-setting-label sonic-graph-setting-header'
+        });
+        headerItem.createEl('div', {
+            text: 'Map graph positions to stereo field for immersive spatial audio experience',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        // Enable toggle
+        const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        enabledItem.createEl('label', {
+            text: 'Enable Spatial Audio',
+            cls: 'sonic-graph-setting-label'
+        });
+        enabledItem.createEl('div', {
+            text: 'Position notes in stereo field based on graph location, folder, and clusters',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const enabledToggle = enabledItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        enabledToggle.checked = this.plugin.settings.spatialAudio?.enabled || false;
+        enabledToggle.addEventListener('change', async () => {
+            if (!this.plugin.settings.spatialAudio) {
+                this.plugin.settings.spatialAudio = {
+                    enabled: enabledToggle.checked,
+                    mode: 'hybrid' as any,
+                    graphPositionSettings: {
+                        curve: 'sigmoid' as any,
+                        intensity: 0.7,
+                        smoothingFactor: 0.5,
+                        updateThrottleMs: 100
+                    },
+                    folderSettings: {
+                        enabled: true,
+                        customMappings: [],
+                        autoDetectTopLevel: true,
+                        spreadFactor: 0.3
+                    },
+                    clusterSettings: {
+                        enabled: true,
+                        useCentroid: true,
+                        individualSpread: 0.2,
+                        clusterSeparation: 0.5
+                    },
+                    hybridWeights: {
+                        graphPosition: 0.5,
+                        folderBased: 0.3,
+                        clusterBased: 0.2
+                    },
+                    advanced: {
+                        enableDepthMapping: false,
+                        depthInfluence: 0.3,
+                        boundaryPadding: 0.1,
+                        velocityDamping: true,
+                        dampingFactor: 0.7
+                    }
+                };
+            } else {
+                this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
+            }
+            await this.plugin.saveSettings();
+            this.refreshSpatialAudioSettings();
+        });
+
+        // Show detailed settings if enabled
+        if (this.plugin.settings.spatialAudio?.enabled) {
+            this.createSpatialAudioDetailSettings(container);
+        }
+    }
+
+    /**
+     * Phase 6.3: Create detailed spatial audio settings
+     */
+    private createSpatialAudioDetailSettings(container: HTMLElement): void {
+        const settings = this.plugin.settings.spatialAudio!;
+
+        // Panning Mode
+        const modeItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        modeItem.createEl('label', {
+            text: 'Panning Mode',
+            cls: 'sonic-graph-setting-label'
+        });
+        modeItem.createEl('div', {
+            text: 'Choose how node positions map to stereo panning',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const modeSelect = modeItem.createEl('select', {
+            cls: 'sonic-graph-dropdown'
+        });
+        const modes = [
+            { value: 'graph-position', label: 'Graph Position' },
+            { value: 'folder-based', label: 'Folder Based' },
+            { value: 'cluster-based', label: 'Cluster Based' },
+            { value: 'hybrid', label: 'Hybrid (Recommended)' },
+            { value: 'disabled', label: 'Disabled' }
+        ];
+        modes.forEach(mode => {
+            const option = modeSelect.createEl('option', {
+                value: mode.value,
+                text: mode.label
+            });
+            if (settings.mode === mode.value) {
+                option.selected = true;
+            }
+        });
+        modeSelect.addEventListener('change', async () => {
+            settings.mode = modeSelect.value as any;
+            await this.plugin.saveSettings();
+        });
+
+        // Pan Intensity
+        const intensityItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        intensityItem.createEl('label', {
+            text: 'Pan Intensity',
+            cls: 'sonic-graph-setting-label'
+        });
+        intensityItem.createEl('div', {
+            text: `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`,
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const intensitySlider = intensityItem.createEl('input', {
+            type: 'range',
+            cls: 'sonic-graph-slider',
+            attr: {
+                min: '0',
+                max: '1',
+                step: '0.05'
+            }
+        });
+        intensitySlider.value = settings.graphPositionSettings.intensity.toString();
+        intensitySlider.addEventListener('input', async () => {
+            settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
+            intensityItem.querySelector('.sonic-graph-setting-description')!.textContent =
+                `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+            await this.plugin.saveSettings();
+        });
+
+        // Panning Curve
+        const curveItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        curveItem.createEl('label', {
+            text: 'Panning Curve',
+            cls: 'sonic-graph-setting-label'
+        });
+        curveItem.createEl('div', {
+            text: 'Mapping curve from position to pan',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const curveSelect = curveItem.createEl('select', {
+            cls: 'sonic-graph-dropdown'
+        });
+        const curves = [
+            { value: 'linear', label: 'Linear' },
+            { value: 'exponential', label: 'Exponential' },
+            { value: 'sigmoid', label: 'Sigmoid (Recommended)' },
+            { value: 'logarithmic', label: 'Logarithmic' }
+        ];
+        curves.forEach(curve => {
+            const option = curveSelect.createEl('option', {
+                value: curve.value,
+                text: curve.label
+            });
+            if (settings.graphPositionSettings.curve === curve.value) {
+                option.selected = true;
+            }
+        });
+        curveSelect.addEventListener('change', async () => {
+            settings.graphPositionSettings.curve = curveSelect.value as any;
+            await this.plugin.saveSettings();
+        });
+
+        // Velocity Damping Toggle
+        const dampingItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
+        dampingItem.createEl('label', {
+            text: 'Velocity Damping',
+            cls: 'sonic-graph-setting-label'
+        });
+        dampingItem.createEl('div', {
+            text: 'Smooth rapid position changes during graph animation',
+            cls: 'sonic-graph-setting-description'
+        });
+
+        const dampingToggle = dampingItem.createEl('input', {
+            type: 'checkbox',
+            cls: 'sonic-graph-toggle'
+        });
+        dampingToggle.checked = settings.advanced.velocityDamping;
+        dampingToggle.addEventListener('change', async () => {
+            settings.advanced.velocityDamping = dampingToggle.checked;
+            await this.plugin.saveSettings();
+        });
+    }
+
+    /**
+     * Phase 6.3: Refresh spatial audio settings display
+     */
+    private refreshSpatialAudioSettings(): void {
+        // Find the settings section
+        const settingsContent = document.querySelector('.sonic-graph-modal-content');
+        if (!settingsContent) return;
+
+        // Find and remove existing spatial audio settings
+        let removeNext = false;
+        for (const section of Array.from(settingsContent.children)) {
+            if (removeNext) {
+                section.remove();
+                break;
+            }
+            if (section.textContent?.includes('Phase 6.3: Spatial Audio')) {
+                removeNext = true;
+            }
+            if (removeNext) {
+                section.remove();
+            }
+        }
+
+        // Recreate spatial audio section
+        this.createSpatialAudioSettings(settingsContent as HTMLElement);
     }
 
     /**

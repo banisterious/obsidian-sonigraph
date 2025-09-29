@@ -24,6 +24,12 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/audio/spatial/types.ts
+var init_types = __esm({
+  "src/audio/spatial/types.ts"() {
+  }
+});
+
 // src/utils/constants.ts
 var constants_exports = {};
 __export(constants_exports, {
@@ -184,6 +190,7 @@ function migrateToEnhancedRouting(settings) {
 var DEFAULT_SETTINGS, MUSICAL_SCALES, ROOT_NOTES, TRAVERSAL_METHODS, VOICE_ASSIGNMENT_STRATEGIES, INSTRUMENT_FAMILIES, INSTRUMENT_INFO, EFFECT_PRESETS, INSTRUMENT_SMART_RANGES, DEFAULT_SMART_RANGES;
 var init_constants = __esm({
   "src/utils/constants.ts"() {
+    init_types();
     DEFAULT_SETTINGS = {
       tempo: 120,
       volume: 0.5,
@@ -2107,6 +2114,60 @@ var init_constants = __esm({
         // 3 second transitions
         autoAdjust: true
         // Automatically adjust to vault changes
+      },
+      // Phase 6.3: Default spatial audio settings (disabled by default)
+      spatialAudio: {
+        enabled: false,
+        mode: "hybrid" /* Hybrid */,
+        graphPositionSettings: {
+          curve: "sigmoid" /* Sigmoid */,
+          intensity: 0.7,
+          // 70% pan intensity
+          smoothingFactor: 0.5,
+          // Moderate smoothing
+          updateThrottleMs: 100
+          // Update every 100ms
+        },
+        folderSettings: {
+          enabled: true,
+          customMappings: [
+            { folderPath: "Projects", panPosition: 0.5, priority: 1 },
+            { folderPath: "Journal", panPosition: -0.5, priority: 1 },
+            { folderPath: "Archive", panPosition: -0.8, priority: 2 },
+            { folderPath: "Research", panPosition: 0.3, priority: 1 },
+            { folderPath: "Ideas", panPosition: -0.3, priority: 1 },
+            { folderPath: "Notes", panPosition: 0, priority: 0 }
+          ],
+          autoDetectTopLevel: true,
+          spreadFactor: 0.3
+          // 30% variation
+        },
+        clusterSettings: {
+          enabled: true,
+          useCentroid: true,
+          individualSpread: 0.2,
+          // 20% node variation
+          clusterSeparation: 0.5
+          // Moderate cluster separation
+        },
+        hybridWeights: {
+          graphPosition: 0.5,
+          // 50% graph position
+          folderBased: 0.3,
+          // 30% folder
+          clusterBased: 0.2
+          // 20% cluster
+        },
+        advanced: {
+          enableDepthMapping: false,
+          // Future feature
+          depthInfluence: 0.3,
+          boundaryPadding: 0.1,
+          // 10% padding from extremes
+          velocityDamping: true,
+          dampingFactor: 0.7
+          // Strong damping
+        }
       },
       // Phase 5.3: Default community detection audio settings (disabled by default)
       communityDetection: {
@@ -16514,7 +16575,7 @@ var init_persistent_automation_event = __esm({
 });
 
 // node_modules/automation-events/build/es2019/types/index.js
-var init_types = __esm({
+var init_types2 = __esm({
   "node_modules/automation-events/build/es2019/types/index.js"() {
     init_automation_event();
     init_persistent_automation_event();
@@ -16533,7 +16594,7 @@ var init_module = __esm({
     init_create_set_value_automation_event();
     init_create_set_value_curve_automation_event();
     init_interfaces();
-    init_types();
+    init_types2();
   }
 });
 
@@ -28166,7 +28227,7 @@ var init_wrap_event_listener_function = __esm({
 });
 
 // node_modules/standardized-audio-context/build/es2019/types/index.js
-var init_types2 = __esm({
+var init_types3 = __esm({
   "node_modules/standardized-audio-context/build/es2019/types/index.js"() {
     init_abort_error_factory();
     init_active_audio_worklet_node_inputs_store();
@@ -28771,7 +28832,7 @@ var init_module2 = __esm({
     init_wrap_audio_scheduled_source_node_stop_method_consecutive_calls();
     init_wrap_event_listener();
     init_interfaces2();
-    init_types2();
+    init_types3();
     addActiveInputConnectionToAudioNode = createAddActiveInputConnectionToAudioNode(insertElementInSet);
     addPassiveInputConnectionToAudioNode = createAddPassiveInputConnectionToAudioNode(insertElementInSet);
     deleteActiveInputConnectionToAudioNode = createDeleteActiveInputConnectionToAudioNode(pickElementFromSet);
@@ -47154,7 +47215,7 @@ var init_MetadataListener = __esm({
 
 // src/audio/configs/types.ts
 var FORMAT_PLACEHOLDER;
-var init_types3 = __esm({
+var init_types4 = __esm({
   "src/audio/configs/types.ts"() {
     FORMAT_PLACEHOLDER = "[format]";
   }
@@ -47164,7 +47225,7 @@ var init_types3 = __esm({
 var keyboardInstruments;
 var init_keyboard_instruments = __esm({
   "src/audio/configs/keyboard-instruments.ts"() {
-    init_types3();
+    init_types4();
     keyboardInstruments = {
       name: "Keyboard Instruments",
       description: "Piano, organ, harpsichord, and other keyboard-based instruments",
@@ -47284,7 +47345,7 @@ var init_keyboard_instruments = __esm({
 var stringInstruments;
 var init_string_instruments = __esm({
   "src/audio/configs/string-instruments.ts"() {
-    init_types3();
+    init_types4();
     stringInstruments = {
       name: "String Instruments",
       description: "Violin, viola, cello, bass, guitar, harp and other stringed instruments",
@@ -47538,7 +47599,7 @@ var init_string_instruments = __esm({
 var brassInstruments;
 var init_brass_instruments = __esm({
   "src/audio/configs/brass-instruments.ts"() {
-    init_types3();
+    init_types4();
     brassInstruments = {
       name: "Brass Instruments",
       description: "Trumpet, horn, trombone, tuba and other brass instruments",
@@ -47616,7 +47677,7 @@ var init_brass_instruments = __esm({
 var woodwindInstruments;
 var init_woodwind_instruments = __esm({
   "src/audio/configs/woodwind-instruments.ts"() {
-    init_types3();
+    init_types4();
     woodwindInstruments = {
       name: "Woodwind Instruments",
       description: "Flute, clarinet, saxophone, bassoon and other wind instruments",
@@ -47719,7 +47780,7 @@ var init_woodwind_instruments = __esm({
 var percussionInstruments, electronicInstruments;
 var init_percussion_electronic_instruments = __esm({
   "src/audio/configs/percussion-electronic-instruments.ts"() {
-    init_types3();
+    init_types4();
     percussionInstruments = {
       name: "Percussion Instruments",
       description: "Timpani, xylophone, vibraphone, gongs and other percussion",
@@ -47820,7 +47881,7 @@ var init_percussion_electronic_instruments = __esm({
 var worldInstruments;
 var init_world_instruments = __esm({
   "src/audio/configs/world-instruments.ts"() {
-    init_types3();
+    init_types4();
     worldInstruments = {
       name: "World & Environmental Instruments",
       description: "Unique, environmental and world music instruments with authentic whale sounds",
@@ -48057,7 +48118,7 @@ function getInstrumentFamily2(name) {
 var instrumentFamilies;
 var init_configs = __esm({
   "src/audio/configs/index.ts"() {
-    init_types3();
+    init_types4();
     init_keyboard_instruments();
     init_string_instruments();
     init_brass_instruments();
@@ -53446,7 +53507,7 @@ var init_ClusterAudioMapper = __esm({
 });
 
 // src/audio/clustering/types.ts
-var init_types4 = __esm({
+var init_types5 = __esm({
   "src/audio/clustering/types.ts"() {
   }
 });
@@ -53459,7 +53520,7 @@ var init_clustering = __esm({
     init_CommunityAudioAnalyzer();
     init_CommunityThemeGenerator();
     init_CommunityEvolutionTracker();
-    init_types4();
+    init_types5();
   }
 });
 
@@ -54310,6 +54371,600 @@ var init_orchestration = __esm({
   }
 });
 
+// src/audio/spatial/PanningSystem.ts
+var PanningSystem;
+var init_PanningSystem = __esm({
+  "src/audio/spatial/PanningSystem.ts"() {
+    init_types();
+    PanningSystem = class {
+      constructor(config) {
+        this.currentBounds = null;
+        // Velocity damping state for smooth transitions
+        this.velocityState = /* @__PURE__ */ new Map();
+        this.config = config;
+      }
+      /**
+       * Update the panning system configuration
+       */
+      updateConfig(config) {
+        this.config = config;
+      }
+      /**
+       * Update graph bounds for normalization
+       */
+      updateBounds(bounds) {
+        this.currentBounds = bounds;
+      }
+      /**
+       * Calculate pan position from graph coordinates
+       * @param position Raw graph position
+       * @param nodeId Node identifier for velocity damping
+       * @returns Pan position (-1 to 1)
+       */
+      calculatePanFromPosition(position, nodeId) {
+        if (!this.currentBounds) {
+          return 0;
+        }
+        const normalized = this.normalizePosition(position);
+        const rawPan = this.applyCurve(normalized.x);
+        const scaledPan = rawPan * this.config.graphPositionSettings.intensity;
+        const paddedPan = this.applyBoundaryPadding(scaledPan);
+        if (this.config.advanced.velocityDamping) {
+          return this.applyVelocityDamping(nodeId, paddedPan);
+        }
+        return this.clampPan(paddedPan);
+      }
+      /**
+       * Normalize graph position to 0-1 range
+       */
+      normalizePosition(position) {
+        if (!this.currentBounds) {
+          return { x: 0.5, y: 0.5 };
+        }
+        const x3 = (position.x - this.currentBounds.minX) / this.currentBounds.width;
+        const y3 = (position.y - this.currentBounds.minY) / this.currentBounds.height;
+        return {
+          x: Math.max(0, Math.min(1, x3)),
+          y: Math.max(0, Math.min(1, y3))
+        };
+      }
+      /**
+       * Apply panning curve transformation
+       * Converts 0-1 normalized X to -1 to 1 pan
+       */
+      applyCurve(normalizedX) {
+        const centered = normalizedX * 2 - 1;
+        switch (this.config.graphPositionSettings.curve) {
+          case "linear" /* Linear */:
+            return centered;
+          case "exponential" /* Exponential */:
+            return Math.sign(centered) * Math.pow(Math.abs(centered), 2);
+          case "sigmoid" /* Sigmoid */:
+            return 2 / (1 + Math.exp(-4 * centered)) - 1;
+          case "logarithmic" /* Logarithmic */:
+            return Math.sign(centered) * Math.log10(1 + 9 * Math.abs(centered));
+          default:
+            return centered;
+        }
+      }
+      /**
+       * Apply boundary padding to keep pan away from extremes
+       */
+      applyBoundaryPadding(pan) {
+        const padding = this.config.advanced.boundaryPadding;
+        const range2 = 1 - padding;
+        return pan * range2;
+      }
+      /**
+       * Apply velocity damping for smooth transitions
+       */
+      applyVelocityDamping(nodeId, targetPan) {
+        const now3 = performance.now();
+        const state = this.velocityState.get(nodeId);
+        if (!state) {
+          this.velocityState.set(nodeId, {
+            pan: targetPan,
+            velocity: 0,
+            lastUpdate: now3
+          });
+          return targetPan;
+        }
+        const dt = (now3 - state.lastUpdate) / 1e3;
+        if (dt < 1e-3) {
+          return state.pan;
+        }
+        const panDelta = targetPan - state.pan;
+        const dampingFactor = this.config.advanced.dampingFactor;
+        const acceleration = panDelta * (1 - dampingFactor);
+        const newVelocity = (state.velocity + acceleration) * dampingFactor;
+        const newPan = state.pan + newVelocity;
+        this.velocityState.set(nodeId, {
+          pan: newPan,
+          velocity: newVelocity,
+          lastUpdate: now3
+        });
+        return this.clampPan(newPan);
+      }
+      /**
+       * Calculate folder-based pan position
+       * @param folderPath Full folder path
+       * @returns Pan position or null if no mapping found
+       */
+      calculateFolderPan(folderPath) {
+        if (!this.config.folderSettings.enabled) {
+          return null;
+        }
+        const mappings = this.config.folderSettings.customMappings;
+        let bestMatch = null;
+        for (const mapping of mappings) {
+          if (folderPath.startsWith(mapping.folderPath)) {
+            const depth = mapping.folderPath.split("/").length;
+            if (!bestMatch || depth > bestMatch.depth || depth === bestMatch.depth && mapping.priority > bestMatch.mapping.priority) {
+              bestMatch = { mapping, depth };
+            }
+          }
+        }
+        if (bestMatch) {
+          const basePan = bestMatch.mapping.panPosition;
+          const spread = this.config.folderSettings.spreadFactor;
+          const variation = this.hashPathToVariation(folderPath) * spread;
+          return this.clampPan(basePan + variation);
+        }
+        if (this.config.folderSettings.autoDetectTopLevel) {
+          const topLevelFolder = folderPath.split("/")[0];
+          if (topLevelFolder) {
+            return this.hashPathToVariation(topLevelFolder);
+          }
+        }
+        return null;
+      }
+      /**
+       * Calculate cluster-based pan position
+       * @param clusterCenter Center position of cluster
+       * @param nodePosition Individual node position
+       * @returns Pan position
+       */
+      calculateClusterPan(clusterCenter, nodePosition) {
+        if (!this.currentBounds) {
+          return 0;
+        }
+        const centerNormalized = this.normalizePosition(clusterCenter);
+        const centerPan = this.applyCurve(centerNormalized.x) * this.config.graphPositionSettings.intensity;
+        const nodeNormalized = this.normalizePosition(nodePosition);
+        const nodePan = this.applyCurve(nodeNormalized.x) * this.config.graphPositionSettings.intensity;
+        const spread = this.config.clusterSettings.individualSpread;
+        const blendedPan = centerPan * (1 - spread) + nodePan * spread;
+        return this.clampPan(blendedPan);
+      }
+      /**
+       * Calculate weighted hybrid pan from multiple sources
+       */
+      calculateHybridPan(graphPan, folderPan, clusterPan) {
+        const weights = this.config.hybridWeights;
+        let totalWeight = 0;
+        let weightedSum = 0;
+        weightedSum += graphPan * weights.graphPosition;
+        totalWeight += weights.graphPosition;
+        if (folderPan !== null) {
+          weightedSum += folderPan * weights.folderBased;
+          totalWeight += weights.folderBased;
+        }
+        if (clusterPan !== null) {
+          weightedSum += clusterPan * weights.clusterBased;
+          totalWeight += weights.clusterBased;
+        }
+        if (totalWeight > 0) {
+          return this.clampPan(weightedSum / totalWeight);
+        }
+        return graphPan;
+      }
+      /**
+       * Calculate depth-based volume adjustment (future feature)
+       * @param normalizedY Y-position in 0-1 range (0 = top, 1 = bottom)
+       * @returns Volume multiplier (0-1)
+       */
+      calculateDepthVolume(normalizedY) {
+        if (!this.config.advanced.enableDepthMapping) {
+          return 1;
+        }
+        const influence = this.config.advanced.depthInfluence;
+        const depthFactor = 1 - normalizedY * influence;
+        return Math.max(0.1, Math.min(1, depthFactor));
+      }
+      /**
+       * Clear velocity state for a node (e.g., when node is removed)
+       */
+      clearNodeState(nodeId) {
+        this.velocityState.delete(nodeId);
+      }
+      /**
+       * Clear all velocity state
+       */
+      clearAllState() {
+        this.velocityState.clear();
+      }
+      /**
+       * Clamp pan position to valid range
+       */
+      clampPan(pan) {
+        return Math.max(-1, Math.min(1, pan));
+      }
+      /**
+       * Generate consistent variation from path hash
+       * @returns Value between -1 and 1
+       */
+      hashPathToVariation(path) {
+        let hash = 0;
+        for (let i = 0; i < path.length; i++) {
+          hash = (hash << 5) - hash + path.charCodeAt(i);
+          hash = hash & hash;
+        }
+        const normalized = hash % 1e3 / 1e3;
+        return normalized * 2 - 1;
+      }
+      /**
+       * Get current bounds
+       */
+      getBounds() {
+        return this.currentBounds;
+      }
+      /**
+       * Check if position is within current bounds
+       */
+      isPositionInBounds(position) {
+        if (!this.currentBounds) {
+          return false;
+        }
+        return position.x >= this.currentBounds.minX && position.x <= this.currentBounds.maxX && position.y >= this.currentBounds.minY && position.y <= this.currentBounds.maxY;
+      }
+    };
+  }
+});
+
+// src/audio/spatial/SpatialAudioManager.ts
+var SpatialAudioManager;
+var init_SpatialAudioManager = __esm({
+  "src/audio/spatial/SpatialAudioManager.ts"() {
+    init_esm();
+    init_PanningSystem();
+    init_types();
+    SpatialAudioManager = class {
+      constructor(config) {
+        // Node tracking
+        this.nodeStates = /* @__PURE__ */ new Map();
+        this.pannerNodes = /* @__PURE__ */ new Map();
+        // Cluster tracking
+        this.clusterConfigs = /* @__PURE__ */ new Map();
+        // Update throttling
+        this.lastUpdateTime = /* @__PURE__ */ new Map();
+        // Statistics
+        this.stats = {
+          totalNodes: 0,
+          trackedNodes: 0,
+          averagePan: 0,
+          panDistribution: { left: 0, center: 0, right: 0 },
+          updateFrequency: 0,
+          lastBoundsUpdate: 0
+        };
+        // Event handlers
+        this.eventHandlers = /* @__PURE__ */ new Map();
+        this.config = config;
+        this.panningSystem = new PanningSystem(config);
+        this.updateThrottleMs = config.graphPositionSettings.updateThrottleMs;
+      }
+      /**
+       * Update spatial audio configuration
+       */
+      updateConfig(config) {
+        this.config = config;
+        this.panningSystem.updateConfig(config);
+        this.updateThrottleMs = config.graphPositionSettings.updateThrottleMs;
+        if (config.enabled) {
+          this.recalculateAllPanPositions();
+        }
+        this.emitEvent({
+          type: "mode-change",
+          timestamp: Date.now()
+        });
+      }
+      /**
+       * Update graph bounds (called when graph layout changes)
+       */
+      updateGraphBounds(bounds) {
+        this.panningSystem.updateBounds(bounds);
+        this.stats.lastBoundsUpdate = Date.now();
+        this.recalculateAllPanPositions();
+        this.emitEvent({
+          type: "bounds-update",
+          timestamp: Date.now()
+        });
+      }
+      /**
+       * Register a node for spatial audio tracking
+       */
+      registerNode(nodeId, position, folderPath, clusterId) {
+        if (!this.config.enabled) {
+          return;
+        }
+        const panPosition = this.calculateNodePan(nodeId, position, folderPath, clusterId);
+        const state = {
+          nodeId,
+          position,
+          normalizedPosition: { x: 0, y: 0 },
+          // Will be calculated by panning system
+          panPosition,
+          folderBasedPan: folderPath ? this.panningSystem.calculateFolderPan(folderPath) || void 0 : void 0,
+          clusterPan: clusterId ? this.calculateClusterPan(clusterId, position) : void 0,
+          finalPan: panPosition,
+          lastUpdated: Date.now()
+        };
+        this.nodeStates.set(nodeId, state);
+        this.stats.trackedNodes = this.nodeStates.size;
+        this.applyPanToNode(nodeId, panPosition);
+      }
+      /**
+       * Update node position (called during force simulation)
+       */
+      updateNodePosition(nodeId, position) {
+        if (!this.config.enabled) {
+          return;
+        }
+        const state = this.nodeStates.get(nodeId);
+        if (!state) {
+          return;
+        }
+        const now3 = Date.now();
+        const lastUpdate = this.lastUpdateTime.get(nodeId) || 0;
+        if (now3 - lastUpdate < this.updateThrottleMs) {
+          return;
+        }
+        const oldPan = state.finalPan;
+        state.position = position;
+        const newPan = this.calculateNodePan(
+          nodeId,
+          position,
+          void 0,
+          // Keep existing folder path
+          void 0
+          // Keep existing cluster
+        );
+        state.finalPan = newPan;
+        state.lastUpdated = now3;
+        this.lastUpdateTime.set(nodeId, now3);
+        if (Math.abs(newPan - oldPan) > 0.01) {
+          this.applyPanToNode(nodeId, newPan);
+          this.emitEvent({
+            type: "pan-change",
+            nodeId,
+            oldPan,
+            newPan,
+            timestamp: now3
+          });
+        }
+      }
+      /**
+       * Unregister a node (when removed from graph)
+       */
+      unregisterNode(nodeId) {
+        this.nodeStates.delete(nodeId);
+        this.lastUpdateTime.delete(nodeId);
+        this.panningSystem.clearNodeState(nodeId);
+        const panner = this.pannerNodes.get(nodeId);
+        if (panner) {
+          panner.dispose();
+          this.pannerNodes.delete(nodeId);
+        }
+        this.stats.trackedNodes = this.nodeStates.size;
+      }
+      /**
+       * Get or create panner node for a node
+       */
+      getPannerForNode(nodeId) {
+        if (!this.config.enabled) {
+          return null;
+        }
+        let panner = this.pannerNodes.get(nodeId);
+        if (!panner) {
+          panner = new Panner(0).toDestination();
+          this.pannerNodes.set(nodeId, panner);
+        }
+        return panner;
+      }
+      /**
+       * Update cluster configuration
+       */
+      updateClusterConfig(clusterId, config) {
+        this.clusterConfigs.set(clusterId, config);
+        for (const [nodeId, state] of this.nodeStates.entries()) {
+          if (state.clusterPan !== void 0) {
+            const newClusterPan = this.calculateClusterPan(clusterId, state.position);
+            state.clusterPan = newClusterPan;
+            const newPan = this.calculateNodePan(nodeId, state.position);
+            if (Math.abs(newPan - state.finalPan) > 0.01) {
+              state.finalPan = newPan;
+              this.applyPanToNode(nodeId, newPan);
+            }
+          }
+        }
+      }
+      /**
+       * Calculate pan position for a node based on current mode
+       */
+      calculateNodePan(nodeId, position, folderPath, clusterId) {
+        const state = this.nodeStates.get(nodeId);
+        switch (this.config.mode) {
+          case "graph-position" /* GraphPosition */:
+            return this.panningSystem.calculatePanFromPosition(position, nodeId);
+          case "folder-based" /* FolderBased */:
+            const folderPan = folderPath ? this.panningSystem.calculateFolderPan(folderPath) : state == null ? void 0 : state.folderBasedPan;
+            return folderPan !== null && folderPan !== void 0 ? folderPan : 0;
+          case "cluster-based" /* ClusterBased */:
+            const clusterPan = clusterId ? this.calculateClusterPan(clusterId, position) : state == null ? void 0 : state.clusterPan;
+            return clusterPan !== void 0 ? clusterPan : 0;
+          case "hybrid" /* Hybrid */:
+            const graphPan = this.panningSystem.calculatePanFromPosition(position, nodeId);
+            const folderHybridPan = folderPath ? this.panningSystem.calculateFolderPan(folderPath) : (state == null ? void 0 : state.folderBasedPan) || null;
+            const clusterHybridPan = clusterId ? this.calculateClusterPan(clusterId, position) : (state == null ? void 0 : state.clusterPan) !== void 0 ? state.clusterPan : null;
+            return this.panningSystem.calculateHybridPan(graphPan, folderHybridPan, clusterHybridPan);
+          case "disabled" /* Disabled */:
+          default:
+            return 0;
+        }
+      }
+      /**
+       * Calculate cluster-based pan
+       */
+      calculateClusterPan(clusterId, nodePosition) {
+        const clusterConfig = this.clusterConfigs.get(clusterId);
+        if (!clusterConfig) {
+          return void 0;
+        }
+        if (this.config.clusterSettings.useCentroid) {
+          return this.panningSystem.calculateClusterPan(clusterConfig.centerPosition, nodePosition);
+        } else {
+          return clusterConfig.panPosition;
+        }
+      }
+      /**
+       * Apply pan position to audio node
+       */
+      applyPanToNode(nodeId, pan) {
+        const panner = this.pannerNodes.get(nodeId);
+        if (panner) {
+          panner.pan.value = pan;
+        }
+      }
+      /**
+       * Recalculate all node pan positions
+       */
+      recalculateAllPanPositions() {
+        for (const [nodeId, state] of this.nodeStates.entries()) {
+          const newPan = this.calculateNodePan(nodeId, state.position);
+          if (Math.abs(newPan - state.finalPan) > 0.01) {
+            state.finalPan = newPan;
+            this.applyPanToNode(nodeId, newPan);
+          }
+        }
+        this.updateStatistics();
+      }
+      /**
+       * Update statistics
+       */
+      updateStatistics() {
+        const states = Array.from(this.nodeStates.values());
+        this.stats.totalNodes = states.length;
+        this.stats.trackedNodes = states.length;
+        if (states.length === 0) {
+          this.stats.averagePan = 0;
+          this.stats.panDistribution = { left: 0, center: 0, right: 0 };
+          return;
+        }
+        const totalPan = states.reduce((sum, state) => sum + state.finalPan, 0);
+        this.stats.averagePan = totalPan / states.length;
+        let left = 0, center = 0, right = 0;
+        for (const state of states) {
+          if (state.finalPan < -0.33)
+            left++;
+          else if (state.finalPan > 0.33)
+            right++;
+          else
+            center++;
+        }
+        this.stats.panDistribution = { left, center, right };
+      }
+      /**
+       * Get current statistics
+       */
+      getStatistics() {
+        return { ...this.stats };
+      }
+      /**
+       * Get node state
+       */
+      getNodeState(nodeId) {
+        return this.nodeStates.get(nodeId);
+      }
+      /**
+       * Get all node states
+       */
+      getAllNodeStates() {
+        return Array.from(this.nodeStates.values());
+      }
+      /**
+       * Event handling
+       */
+      addEventListener(type2, handler2) {
+        if (!this.eventHandlers.has(type2)) {
+          this.eventHandlers.set(type2, []);
+        }
+        this.eventHandlers.get(type2).push(handler2);
+      }
+      removeEventListener(type2, handler2) {
+        const handlers = this.eventHandlers.get(type2);
+        if (handlers) {
+          const index2 = handlers.indexOf(handler2);
+          if (index2 > -1) {
+            handlers.splice(index2, 1);
+          }
+        }
+      }
+      emitEvent(event) {
+        const handlers = this.eventHandlers.get(event.type);
+        if (handlers) {
+          for (const handler2 of handlers) {
+            handler2(event);
+          }
+        }
+        const wildcardHandlers = this.eventHandlers.get("*");
+        if (wildcardHandlers) {
+          for (const handler2 of wildcardHandlers) {
+            handler2(event);
+          }
+        }
+      }
+      /**
+       * Enable spatial audio
+       */
+      enable() {
+        this.config.enabled = true;
+        this.recalculateAllPanPositions();
+      }
+      /**
+       * Disable spatial audio (center all audio)
+       */
+      disable() {
+        this.config.enabled = false;
+        for (const panner of this.pannerNodes.values()) {
+          panner.pan.value = 0;
+        }
+      }
+      /**
+       * Dispose of all resources
+       */
+      dispose() {
+        for (const panner of this.pannerNodes.values()) {
+          panner.dispose();
+        }
+        this.pannerNodes.clear();
+        this.nodeStates.clear();
+        this.lastUpdateTime.clear();
+        this.clusterConfigs.clear();
+        this.eventHandlers.clear();
+        this.panningSystem.clearAllState();
+      }
+    };
+  }
+});
+
+// src/audio/spatial/index.ts
+var init_spatial = __esm({
+  "src/audio/spatial/index.ts"() {
+    init_SpatialAudioManager();
+    init_PanningSystem();
+    init_types();
+  }
+});
+
 // src/graph/musical-mapper.ts
 var import_obsidian11, logger35, MusicalMapper;
 var init_musical_mapper = __esm({
@@ -54320,6 +54975,7 @@ var init_musical_mapper = __esm({
     init_mapping();
     init_clustering();
     init_orchestration();
+    init_spatial();
     logger35 = getLogger("musical-mapper");
     MusicalMapper = class {
       constructor(settings, app) {
@@ -54341,7 +54997,10 @@ var init_musical_mapper = __esm({
         // Phase 6.2: Dynamic orchestration
         this.dynamicOrchestrationManager = null;
         this.isDynamicOrchestrationEnabled = false;
-        var _a, _b, _c;
+        // Phase 6.3: Spatial audio and panning
+        this.spatialAudioManager = null;
+        this.isSpatialAudioEnabled = false;
+        var _a, _b, _c, _d;
         this.settings = settings;
         this.app = app || null;
         this.updateMusicalParams();
@@ -54354,9 +55013,12 @@ var init_musical_mapper = __esm({
         if ((_c = this.settings.dynamicOrchestration) == null ? void 0 : _c.enabled) {
           this.initializeDynamicOrchestration();
         }
+        if ((_d = this.settings.spatialAudio) == null ? void 0 : _d.enabled) {
+          this.initializeSpatialAudio();
+        }
       }
       updateSettings(settings) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         this.settings = settings;
         this.updateMusicalParams();
         if (this.app && ((_a = this.settings.contentAwareMapping) == null ? void 0 : _a.enabled)) {
@@ -54385,6 +55047,15 @@ var init_musical_mapper = __esm({
           }
         } else if (this.isDynamicOrchestrationEnabled) {
           this.disableDynamicOrchestration();
+        }
+        if ((_d = this.settings.spatialAudio) == null ? void 0 : _d.enabled) {
+          if (!this.isSpatialAudioEnabled) {
+            this.initializeSpatialAudio();
+          } else {
+            this.updateSpatialAudioSettings();
+          }
+        } else if (this.isSpatialAudioEnabled) {
+          this.disableSpatialAudio();
         }
       }
       /**
@@ -54657,6 +55328,134 @@ var init_musical_mapper = __esm({
         } catch (error) {
           logger35.error("phase6.2-disable-error", "Error during Phase 6.2 cleanup", error);
         }
+      }
+      /**
+       * Phase 6.3: Initialize spatial audio and panning
+       */
+      initializeSpatialAudio() {
+        if (this.isSpatialAudioEnabled)
+          return;
+        logger35.info("phase6.3-init", "Initializing Phase 6.3 spatial audio and panning");
+        try {
+          const spatialConfig = this.settings.spatialAudio || {
+            enabled: true,
+            mode: "hybrid" /* Hybrid */,
+            graphPositionSettings: {
+              curve: "sigmoid" /* Sigmoid */,
+              intensity: 0.7,
+              smoothingFactor: 0.5,
+              updateThrottleMs: 100
+            },
+            folderSettings: {
+              enabled: true,
+              customMappings: [],
+              autoDetectTopLevel: true,
+              spreadFactor: 0.3
+            },
+            clusterSettings: {
+              enabled: true,
+              useCentroid: true,
+              individualSpread: 0.2,
+              clusterSeparation: 0.5
+            },
+            hybridWeights: {
+              graphPosition: 0.5,
+              folderBased: 0.3,
+              clusterBased: 0.2
+            },
+            advanced: {
+              enableDepthMapping: false,
+              depthInfluence: 0.3,
+              boundaryPadding: 0.1,
+              velocityDamping: true,
+              dampingFactor: 0.7
+            }
+          };
+          this.spatialAudioManager = new SpatialAudioManager(spatialConfig);
+          this.isSpatialAudioEnabled = true;
+          logger35.info("phase6.3-initialized", "Phase 6.3 spatial audio initialized successfully");
+        } catch (error) {
+          logger35.error("phase6.3-init-error", "Error initializing Phase 6.3 spatial audio", error);
+          this.isSpatialAudioEnabled = false;
+        }
+      }
+      /**
+       * Phase 6.3: Update spatial audio settings
+       */
+      updateSpatialAudioSettings() {
+        if (!this.spatialAudioManager || !this.settings.spatialAudio)
+          return;
+        logger35.debug("phase6.3-update", "Updating Phase 6.3 spatial audio settings");
+        this.spatialAudioManager.updateConfig(this.settings.spatialAudio);
+      }
+      /**
+       * Phase 6.3: Disable spatial audio and clean up
+       */
+      disableSpatialAudio() {
+        if (!this.isSpatialAudioEnabled)
+          return;
+        logger35.info("phase6.3-cleanup", "Disabling Phase 6.3 spatial audio");
+        try {
+          if (this.spatialAudioManager) {
+            this.spatialAudioManager.dispose();
+            this.spatialAudioManager = null;
+          }
+          this.isSpatialAudioEnabled = false;
+          logger35.info("phase6.3-disabled", "Phase 6.3 spatial audio disabled and cleaned up");
+        } catch (error) {
+          logger35.error("phase6.3-disable-error", "Error during Phase 6.3 cleanup", error);
+        }
+      }
+      /**
+       * Phase 6.3: Update spatial audio for node positions
+       */
+      updateSpatialAudio(nodes, bounds) {
+        if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
+          return;
+        try {
+          if (bounds) {
+            this.spatialAudioManager.updateGraphBounds(bounds);
+          }
+          for (const node of nodes) {
+            if (node.x !== void 0 && node.y !== void 0) {
+              this.spatialAudioManager.updateNodePosition(node.id, { x: node.x, y: node.y });
+            }
+          }
+        } catch (error) {
+          logger35.error("phase6.3-update-error", "Error updating spatial audio", error);
+        }
+      }
+      /**
+       * Phase 6.3: Register node for spatial audio tracking
+       */
+      registerNodeForSpatialAudio(nodeId, position, folderPath, clusterId) {
+        if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
+          return;
+        try {
+          this.spatialAudioManager.registerNode(nodeId, position, folderPath, clusterId);
+        } catch (error) {
+          logger35.error("phase6.3-register-error", "Error registering node for spatial audio", error);
+        }
+      }
+      /**
+       * Phase 6.3: Unregister node from spatial audio
+       */
+      unregisterNodeFromSpatialAudio(nodeId) {
+        if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
+          return;
+        try {
+          this.spatialAudioManager.unregisterNode(nodeId);
+        } catch (error) {
+          logger35.error("phase6.3-unregister-error", "Error unregistering node from spatial audio", error);
+        }
+      }
+      /**
+       * Phase 6.3: Get panner node for audio routing
+       */
+      getPannerForNode(nodeId) {
+        if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
+          return null;
+        return this.spatialAudioManager.getPannerForNode(nodeId);
       }
       /**
        * Phase 6.2: Update orchestration based on current graph state
@@ -54966,6 +55765,9 @@ var init_musical_mapper = __esm({
         }
         if (this.isDynamicOrchestrationEnabled) {
           this.disableDynamicOrchestration();
+        }
+        if (this.isSpatialAudioEnabled) {
+          this.disableSpatialAudio();
         }
         logger35.debug("musical-mapper-disposed", "MusicalMapper disposed");
       }
@@ -55516,7 +56318,7 @@ var init_AdaptiveDetailManager = __esm({
 
 // src/audio/layers/types.ts
 var ContinuousLayerError;
-var init_types5 = __esm({
+var init_types6 = __esm({
   "src/audio/layers/types.ts"() {
     ContinuousLayerError = class extends Error {
       constructor(message, layerType, genre) {
@@ -55534,7 +56336,7 @@ var logger37, MusicalGenreEngine;
 var init_MusicalGenreEngine = __esm({
   "src/audio/layers/MusicalGenreEngine.ts"() {
     init_esm();
-    init_types5();
+    init_types6();
     init_logging();
     logger37 = getLogger("MusicalGenreEngine");
     MusicalGenreEngine = class {
@@ -56802,7 +57604,7 @@ var logger39, RhythmicLayerManager;
 var init_RhythmicLayerManager = __esm({
   "src/audio/layers/RhythmicLayerManager.ts"() {
     init_esm();
-    init_types5();
+    init_types6();
     init_logging();
     logger39 = getLogger("RhythmicLayerManager");
     RhythmicLayerManager = class {
@@ -57167,7 +57969,7 @@ var logger40, HarmonicLayerManager;
 var init_HarmonicLayerManager = __esm({
   "src/audio/layers/HarmonicLayerManager.ts"() {
     init_esm();
-    init_types5();
+    init_types6();
     init_logging();
     logger40 = getLogger("HarmonicLayerManager");
     HarmonicLayerManager = class {
@@ -57606,7 +58408,7 @@ var logger41, ContinuousLayerManager;
 var init_ContinuousLayerManager = __esm({
   "src/audio/layers/ContinuousLayerManager.ts"() {
     init_esm();
-    init_types5();
+    init_types6();
     init_MusicalGenreEngine();
     init_FreesoundSampleLoader();
     init_RhythmicLayerManager();
@@ -57972,7 +58774,7 @@ var init_ContinuousLayerManager = __esm({
 });
 
 // src/external/freesound/types.ts
-var init_types6 = __esm({
+var init_types7 = __esm({
   "src/external/freesound/types.ts"() {
   }
 });
@@ -59407,7 +60209,7 @@ var init_whale_audio_manager = __esm({
 // src/external/freesound/index.ts
 var init_freesound = __esm({
   "src/external/freesound/index.ts"() {
-    init_types6();
+    init_types7();
     init_client();
     init_whale_audio_manager();
   }
@@ -72028,6 +72830,7 @@ var SonicGraphView = class extends import_obsidian12.ItemView {
     this.createCommunityEvolutionSettings(section);
     this.createMusicalTheorySettings(section);
     this.createDynamicOrchestrationSettings(section);
+    this.createSpatialAudioSettings(section);
   }
   /**
    * Phase 1.3: Create audio enhancement settings
@@ -73465,6 +74268,215 @@ var SonicGraphView = class extends import_obsidian12.ItemView {
       }
     }
     this.createDynamicOrchestrationSettings(settingsContent);
+  }
+  /**
+   * Phase 6.3: Create spatial audio and panning settings
+   */
+  createSpatialAudioSettings(container) {
+    var _a, _b;
+    container.createEl("hr", { cls: "sonic-graph-settings-divider" });
+    const headerItem = container.createDiv({ cls: "sonic-graph-setting-item" });
+    headerItem.createEl("label", {
+      text: "Phase 6.3: Spatial Audio & Panning",
+      cls: "sonic-graph-setting-label sonic-graph-setting-header"
+    });
+    headerItem.createEl("div", {
+      text: "Map graph positions to stereo field for immersive spatial audio experience",
+      cls: "sonic-graph-setting-description"
+    });
+    const enabledItem = container.createDiv({ cls: "sonic-graph-setting-item" });
+    enabledItem.createEl("label", {
+      text: "Enable Spatial Audio",
+      cls: "sonic-graph-setting-label"
+    });
+    enabledItem.createEl("div", {
+      text: "Position notes in stereo field based on graph location, folder, and clusters",
+      cls: "sonic-graph-setting-description"
+    });
+    const enabledToggle = enabledItem.createEl("input", {
+      type: "checkbox",
+      cls: "sonic-graph-toggle"
+    });
+    enabledToggle.checked = ((_a = this.plugin.settings.spatialAudio) == null ? void 0 : _a.enabled) || false;
+    enabledToggle.addEventListener("change", async () => {
+      if (!this.plugin.settings.spatialAudio) {
+        this.plugin.settings.spatialAudio = {
+          enabled: enabledToggle.checked,
+          mode: "hybrid",
+          graphPositionSettings: {
+            curve: "sigmoid",
+            intensity: 0.7,
+            smoothingFactor: 0.5,
+            updateThrottleMs: 100
+          },
+          folderSettings: {
+            enabled: true,
+            customMappings: [],
+            autoDetectTopLevel: true,
+            spreadFactor: 0.3
+          },
+          clusterSettings: {
+            enabled: true,
+            useCentroid: true,
+            individualSpread: 0.2,
+            clusterSeparation: 0.5
+          },
+          hybridWeights: {
+            graphPosition: 0.5,
+            folderBased: 0.3,
+            clusterBased: 0.2
+          },
+          advanced: {
+            enableDepthMapping: false,
+            depthInfluence: 0.3,
+            boundaryPadding: 0.1,
+            velocityDamping: true,
+            dampingFactor: 0.7
+          }
+        };
+      } else {
+        this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
+      }
+      await this.plugin.saveSettings();
+      this.refreshSpatialAudioSettings();
+    });
+    if ((_b = this.plugin.settings.spatialAudio) == null ? void 0 : _b.enabled) {
+      this.createSpatialAudioDetailSettings(container);
+    }
+  }
+  /**
+   * Phase 6.3: Create detailed spatial audio settings
+   */
+  createSpatialAudioDetailSettings(container) {
+    const settings = this.plugin.settings.spatialAudio;
+    const modeItem = container.createDiv({ cls: "sonic-graph-setting-item" });
+    modeItem.createEl("label", {
+      text: "Panning Mode",
+      cls: "sonic-graph-setting-label"
+    });
+    modeItem.createEl("div", {
+      text: "Choose how node positions map to stereo panning",
+      cls: "sonic-graph-setting-description"
+    });
+    const modeSelect = modeItem.createEl("select", {
+      cls: "sonic-graph-dropdown"
+    });
+    const modes = [
+      { value: "graph-position", label: "Graph Position" },
+      { value: "folder-based", label: "Folder Based" },
+      { value: "cluster-based", label: "Cluster Based" },
+      { value: "hybrid", label: "Hybrid (Recommended)" },
+      { value: "disabled", label: "Disabled" }
+    ];
+    modes.forEach((mode) => {
+      const option = modeSelect.createEl("option", {
+        value: mode.value,
+        text: mode.label
+      });
+      if (settings.mode === mode.value) {
+        option.selected = true;
+      }
+    });
+    modeSelect.addEventListener("change", async () => {
+      settings.mode = modeSelect.value;
+      await this.plugin.saveSettings();
+    });
+    const intensityItem = container.createDiv({ cls: "sonic-graph-setting-item" });
+    intensityItem.createEl("label", {
+      text: "Pan Intensity",
+      cls: "sonic-graph-setting-label"
+    });
+    intensityItem.createEl("div", {
+      text: `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`,
+      cls: "sonic-graph-setting-description"
+    });
+    const intensitySlider = intensityItem.createEl("input", {
+      type: "range",
+      cls: "sonic-graph-slider",
+      attr: {
+        min: "0",
+        max: "1",
+        step: "0.05"
+      }
+    });
+    intensitySlider.value = settings.graphPositionSettings.intensity.toString();
+    intensitySlider.addEventListener("input", async () => {
+      settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
+      intensityItem.querySelector(".sonic-graph-setting-description").textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+      await this.plugin.saveSettings();
+    });
+    const curveItem = container.createDiv({ cls: "sonic-graph-setting-item" });
+    curveItem.createEl("label", {
+      text: "Panning Curve",
+      cls: "sonic-graph-setting-label"
+    });
+    curveItem.createEl("div", {
+      text: "Mapping curve from position to pan",
+      cls: "sonic-graph-setting-description"
+    });
+    const curveSelect = curveItem.createEl("select", {
+      cls: "sonic-graph-dropdown"
+    });
+    const curves = [
+      { value: "linear", label: "Linear" },
+      { value: "exponential", label: "Exponential" },
+      { value: "sigmoid", label: "Sigmoid (Recommended)" },
+      { value: "logarithmic", label: "Logarithmic" }
+    ];
+    curves.forEach((curve) => {
+      const option = curveSelect.createEl("option", {
+        value: curve.value,
+        text: curve.label
+      });
+      if (settings.graphPositionSettings.curve === curve.value) {
+        option.selected = true;
+      }
+    });
+    curveSelect.addEventListener("change", async () => {
+      settings.graphPositionSettings.curve = curveSelect.value;
+      await this.plugin.saveSettings();
+    });
+    const dampingItem = container.createDiv({ cls: "sonic-graph-setting-item" });
+    dampingItem.createEl("label", {
+      text: "Velocity Damping",
+      cls: "sonic-graph-setting-label"
+    });
+    dampingItem.createEl("div", {
+      text: "Smooth rapid position changes during graph animation",
+      cls: "sonic-graph-setting-description"
+    });
+    const dampingToggle = dampingItem.createEl("input", {
+      type: "checkbox",
+      cls: "sonic-graph-toggle"
+    });
+    dampingToggle.checked = settings.advanced.velocityDamping;
+    dampingToggle.addEventListener("change", async () => {
+      settings.advanced.velocityDamping = dampingToggle.checked;
+      await this.plugin.saveSettings();
+    });
+  }
+  /**
+   * Phase 6.3: Refresh spatial audio settings display
+   */
+  refreshSpatialAudioSettings() {
+    var _a;
+    const settingsContent = document.querySelector(".sonic-graph-modal-content");
+    if (!settingsContent)
+      return;
+    let removeNext = false;
+    for (const section of Array.from(settingsContent.children)) {
+      if (removeNext) {
+        section.remove();
+        break;
+      }
+      if ((_a = section.textContent) == null ? void 0 : _a.includes("Phase 6.3: Spatial Audio")) {
+        removeNext = true;
+      }
+      if (removeNext) {
+        section.remove();
+      }
+    }
+    this.createSpatialAudioSettings(settingsContent);
   }
   /**
    * Phase 5.3: Create settings for individual community types
@@ -77196,7 +78208,7 @@ var EffectBusManager = class {
 };
 
 // src/audio/configs/InstrumentConfigLoader.ts
-init_types3();
+init_types4();
 init_configs();
 var InstrumentConfigLoader = class {
   constructor(options = { audioFormat: "mp3" }) {
