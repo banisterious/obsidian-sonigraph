@@ -53463,6 +53463,853 @@ var init_clustering = __esm({
   }
 });
 
+// src/audio/orchestration/ComplexityAnalyzer.ts
+var ComplexityAnalyzer;
+var init_ComplexityAnalyzer = __esm({
+  "src/audio/orchestration/ComplexityAnalyzer.ts"() {
+    ComplexityAnalyzer = class {
+      constructor() {
+        this.complexityThresholds = this.getDefaultThresholds();
+      }
+      /**
+       * Evaluate vault complexity from graph data
+       */
+      evaluateComplexity(nodes, links, clusters) {
+        const totalNodes = nodes.length;
+        const totalLinks = links.length;
+        const averageDegree = totalNodes > 0 ? totalLinks / totalNodes : 0;
+        const clusterCount = (clusters == null ? void 0 : clusters.length) || 0;
+        const maxDepth = this.calculateMaxDepth(nodes);
+        const complexityScore = this.calculateComplexityScore(
+          totalNodes,
+          totalLinks,
+          averageDegree,
+          clusterCount,
+          maxDepth
+        );
+        const tier = this.determineComplexityTier(totalNodes);
+        return {
+          totalNodes,
+          totalLinks,
+          averageDegree,
+          clusterCount,
+          maxDepth,
+          complexityScore,
+          tier
+        };
+      }
+      /**
+       * Calculate maximum folder depth from nodes
+       */
+      calculateMaxDepth(nodes) {
+        let maxDepth = 0;
+        for (const node of nodes) {
+          const depth = node.path.split("/").length - 1;
+          if (depth > maxDepth) {
+            maxDepth = depth;
+          }
+        }
+        return maxDepth;
+      }
+      /**
+       * Calculate normalized complexity score (0-1)
+       *
+       * Factors:
+       * - Node count (40%): More nodes = more complex
+       * - Link density (30%): More connections = more complex
+       * - Cluster count (20%): More clusters = more structure
+       * - Folder depth (10%): Deeper hierarchy = more organization
+       */
+      calculateComplexityScore(nodes, links, avgDegree, clusters, maxDepth) {
+        const nodeScore = Math.min(1, Math.log10(nodes + 1) / 4);
+        const linkScore = Math.min(1, avgDegree / 10);
+        const clusterScore = Math.min(1, clusters / 50);
+        const depthScore = Math.min(1, maxDepth / 10);
+        const complexityScore = nodeScore * 0.4 + linkScore * 0.3 + clusterScore * 0.2 + depthScore * 0.1;
+        return Math.max(0, Math.min(1, complexityScore));
+      }
+      /**
+       * Determine complexity tier based on node count
+       */
+      determineComplexityTier(nodeCount) {
+        const threshold = this.complexityThresholds.find(
+          (t) => nodeCount >= t.minNodes && nodeCount < t.maxNodes
+        );
+        return (threshold == null ? void 0 : threshold.tier) || "extensive";
+      }
+      /**
+       * Get default complexity thresholds
+       */
+      getDefaultThresholds() {
+        return [
+          {
+            tier: "minimal",
+            minNodes: 0,
+            maxNodes: 100,
+            enabledLayers: ["basic-melody"],
+            instrumentDensity: 0.3,
+            harmonyComplexity: 0.3
+          },
+          {
+            tier: "simple",
+            minNodes: 100,
+            maxNodes: 500,
+            enabledLayers: ["basic-melody", "rhythmic"],
+            instrumentDensity: 0.5,
+            harmonyComplexity: 0.5
+          },
+          {
+            tier: "moderate",
+            minNodes: 500,
+            maxNodes: 1e3,
+            enabledLayers: ["basic-melody", "rhythmic", "harmonic-pad", "bass-line"],
+            instrumentDensity: 0.7,
+            harmonyComplexity: 0.7
+          },
+          {
+            tier: "complex",
+            minNodes: 1e3,
+            maxNodes: 5e3,
+            enabledLayers: [
+              "basic-melody",
+              "rhythmic",
+              "harmonic-pad",
+              "bass-line",
+              "counter-melody",
+              "orchestral-fills"
+            ],
+            instrumentDensity: 0.85,
+            harmonyComplexity: 0.85
+          },
+          {
+            tier: "extensive",
+            minNodes: 5e3,
+            maxNodes: Infinity,
+            enabledLayers: [
+              "basic-melody",
+              "rhythmic",
+              "harmonic-pad",
+              "bass-line",
+              "counter-melody",
+              "orchestral-fills",
+              "ambient-texture"
+            ],
+            instrumentDensity: 1,
+            harmonyComplexity: 1
+          }
+        ];
+      }
+      /**
+       * Update complexity thresholds (for custom user configuration)
+       */
+      setComplexityThresholds(thresholds) {
+        this.complexityThresholds = thresholds;
+      }
+      /**
+       * Get current complexity thresholds
+       */
+      getComplexityThresholds() {
+        return this.complexityThresholds;
+      }
+      /**
+       * Get threshold for specific tier
+       */
+      getThresholdForTier(tier) {
+        return this.complexityThresholds.find((t) => t.tier === tier);
+      }
+      /**
+       * Check if vault complexity requires tier change
+       */
+      shouldChangeTier(currentTier, newComplexity) {
+        return currentTier !== newComplexity.tier;
+      }
+      /**
+       * Get complexity change direction
+       */
+      getTierChangeDirection(currentTier, newTier) {
+        const tierOrder = [
+          "minimal",
+          "simple",
+          "moderate",
+          "complex",
+          "extensive"
+        ];
+        const currentIndex = tierOrder.indexOf(currentTier);
+        const newIndex = tierOrder.indexOf(newTier);
+        if (newIndex > currentIndex)
+          return "increase";
+        if (newIndex < currentIndex)
+          return "decrease";
+        return "none";
+      }
+      /**
+       * Calculate recommended instrument count for complexity
+       */
+      getRecommendedInstrumentCount(complexity) {
+        const threshold = this.getThresholdForTier(complexity.tier);
+        if (!threshold)
+          return 3;
+        const baseCount = {
+          minimal: 3,
+          simple: 5,
+          moderate: 8,
+          complex: 12,
+          extensive: 16
+        };
+        const base = baseCount[complexity.tier];
+        const adjustment = Math.floor(complexity.complexityScore * 4);
+        return base + adjustment;
+      }
+      /**
+       * Dispose resources
+       */
+      dispose() {
+        this.complexityThresholds = [];
+      }
+    };
+  }
+});
+
+// src/audio/orchestration/TemporalInfluence.ts
+var TemporalInfluence;
+var init_TemporalInfluence = __esm({
+  "src/audio/orchestration/TemporalInfluence.ts"() {
+    TemporalInfluence = class {
+      constructor() {
+        this.timeOfDayStrength = 0.5;
+        this.seasonalStrength = 0.3;
+      }
+      /**
+       * Get current temporal influence based on system time
+       */
+      getCurrentTemporalInfluence() {
+        const now3 = new Date();
+        const timeOfDay = this.determineTimeOfDay(now3);
+        const season = this.determineSeason(now3);
+        return this.calculateInfluence(timeOfDay, season);
+      }
+      /**
+       * Determine time of day from Date object
+       */
+      determineTimeOfDay(date) {
+        const hour = date.getHours();
+        if (hour >= 5 && hour < 8)
+          return "early-morning";
+        if (hour >= 8 && hour < 12)
+          return "morning";
+        if (hour >= 12 && hour < 17)
+          return "afternoon";
+        if (hour >= 17 && hour < 21)
+          return "evening";
+        if (hour >= 21 && hour < 24)
+          return "night";
+        return "late-night";
+      }
+      /**
+       * Determine season from Date object
+       */
+      determineSeason(date) {
+        const month = date.getMonth();
+        if (month >= 2 && month <= 4)
+          return "spring";
+        if (month >= 5 && month <= 7)
+          return "summer";
+        if (month >= 8 && month <= 10)
+          return "autumn";
+        return "winter";
+      }
+      /**
+       * Calculate temporal influence data
+       */
+      calculateInfluence(timeOfDay, season) {
+        const brightness = this.calculateBrightness(timeOfDay, season);
+        const density = this.calculateDensity(timeOfDay, season);
+        const instruments = this.selectPreferredInstruments(timeOfDay, season);
+        const timbreAdj = this.calculateTimbreAdjustment(timeOfDay, season);
+        return {
+          timeOfDay,
+          season,
+          instrumentBrightness: brightness,
+          orchestralDensity: density,
+          preferredInstruments: instruments,
+          timbreAdjustment: timbreAdj
+        };
+      }
+      /**
+       * Calculate instrument brightness (0-1)
+       * Higher values = brighter, more open sounds
+       */
+      calculateBrightness(timeOfDay, season) {
+        let brightness = 0.5;
+        switch (timeOfDay) {
+          case "early-morning":
+            brightness += 0.3 * this.timeOfDayStrength;
+            break;
+          case "morning":
+            brightness += 0.4 * this.timeOfDayStrength;
+            break;
+          case "afternoon":
+            brightness += 0.2 * this.timeOfDayStrength;
+            break;
+          case "evening":
+            brightness -= 0.2 * this.timeOfDayStrength;
+            break;
+          case "night":
+            brightness -= 0.3 * this.timeOfDayStrength;
+            break;
+          case "late-night":
+            brightness -= 0.4 * this.timeOfDayStrength;
+            break;
+        }
+        switch (season) {
+          case "spring":
+            brightness += 0.2 * this.seasonalStrength;
+            break;
+          case "summer":
+            brightness += 0.3 * this.seasonalStrength;
+            break;
+          case "autumn":
+            brightness -= 0.1 * this.seasonalStrength;
+            break;
+          case "winter":
+            brightness -= 0.2 * this.seasonalStrength;
+            break;
+        }
+        return Math.max(0, Math.min(1, brightness));
+      }
+      /**
+       * Calculate orchestral density (0-1)
+       * Higher values = more instruments active
+       */
+      calculateDensity(timeOfDay, season) {
+        let density = 0.5;
+        switch (timeOfDay) {
+          case "early-morning":
+            density -= 0.2 * this.timeOfDayStrength;
+            break;
+          case "morning":
+            density += 0.2 * this.timeOfDayStrength;
+            break;
+          case "afternoon":
+            density += 0.3 * this.timeOfDayStrength;
+            break;
+          case "evening":
+            density += 0.1 * this.timeOfDayStrength;
+            break;
+          case "night":
+            density -= 0.2 * this.timeOfDayStrength;
+            break;
+          case "late-night":
+            density -= 0.4 * this.timeOfDayStrength;
+            break;
+        }
+        switch (season) {
+          case "spring":
+            density += 0.1 * this.seasonalStrength;
+            break;
+          case "summer":
+            density += 0.3 * this.seasonalStrength;
+            break;
+          case "autumn":
+            density += 0.2 * this.seasonalStrength;
+            break;
+          case "winter":
+            density -= 0.1 * this.seasonalStrength;
+            break;
+        }
+        return Math.max(0.2, Math.min(1, density));
+      }
+      /**
+       * Select preferred instruments based on temporal context
+       */
+      selectPreferredInstruments(timeOfDay, season) {
+        const instruments = [];
+        const timeInstruments = this.getTimeOfDayInstruments(timeOfDay);
+        instruments.push(...timeInstruments);
+        const seasonInstruments = this.getSeasonalInstruments(season);
+        instruments.push(...seasonInstruments);
+        return [...new Set(instruments)];
+      }
+      /**
+       * Get instruments appropriate for time of day
+       */
+      getTimeOfDayInstruments(timeOfDay) {
+        switch (timeOfDay) {
+          case "early-morning":
+            return ["flute", "celesta", "harp", "vibraphone"];
+          case "morning":
+            return ["flute", "violin", "trumpet", "piano"];
+          case "afternoon":
+            return ["piano", "guitar", "cello", "clarinet"];
+          case "evening":
+            return ["cello", "french-horn", "oboe", "piano"];
+          case "night":
+            return ["bass", "synth-pad", "vocal-pad", "electric-piano"];
+          case "late-night":
+            return ["synth-pad", "bass", "ambient-drone", "vocal-pad"];
+          default:
+            return ["piano", "synth-pad"];
+        }
+      }
+      /**
+       * Get instruments appropriate for season
+       */
+      getSeasonalInstruments(season) {
+        switch (season) {
+          case "spring":
+            return ["flute", "violin", "harp", "celesta", "clarinet"];
+          case "summer":
+            return ["trumpet", "guitar", "vibraphone", "saxophone", "marimba"];
+          case "autumn":
+            return ["cello", "oboe", "french-horn", "bassoon", "piano"];
+          case "winter":
+            return ["celesta", "vibraphone", "synth-pad", "bells", "ambient-drone"];
+          default:
+            return ["piano", "synth-pad"];
+        }
+      }
+      /**
+       * Calculate timbre adjustment (-1 to 1)
+       * Negative = darker/warmer, Positive = brighter/cooler
+       */
+      calculateTimbreAdjustment(timeOfDay, season) {
+        let adjustment = 0;
+        switch (timeOfDay) {
+          case "early-morning":
+            adjustment += 0.3;
+            break;
+          case "morning":
+            adjustment += 0.4;
+            break;
+          case "afternoon":
+            adjustment += 0.1;
+            break;
+          case "evening":
+            adjustment -= 0.2;
+            break;
+          case "night":
+            adjustment -= 0.4;
+            break;
+          case "late-night":
+            adjustment -= 0.5;
+            break;
+        }
+        switch (season) {
+          case "spring":
+            adjustment += 0.2;
+            break;
+          case "summer":
+            adjustment += 0.1;
+            break;
+          case "autumn":
+            adjustment -= 0.1;
+            break;
+          case "winter":
+            adjustment -= 0.2;
+            break;
+        }
+        return Math.max(-1, Math.min(1, adjustment));
+      }
+      /**
+       * Set time of day influence strength (0-1)
+       */
+      setTimeOfDayStrength(strength) {
+        this.timeOfDayStrength = Math.max(0, Math.min(1, strength));
+      }
+      /**
+       * Set seasonal influence strength (0-1)
+       */
+      setSeasonalStrength(strength) {
+        this.seasonalStrength = Math.max(0, Math.min(1, strength));
+      }
+      /**
+       * Get readable description of current temporal context
+       */
+      getTemporalDescription(influence) {
+        const timeDesc = this.getTimeOfDayDescription(influence.timeOfDay);
+        const seasonDesc = this.getSeasonDescription(influence.season);
+        return `${timeDesc}, ${seasonDesc}`;
+      }
+      /**
+       * Get description for time of day
+       */
+      getTimeOfDayDescription(timeOfDay) {
+        switch (timeOfDay) {
+          case "early-morning":
+            return "Early morning awakening";
+          case "morning":
+            return "Bright morning energy";
+          case "afternoon":
+            return "Warm afternoon balance";
+          case "evening":
+            return "Mellow evening reflection";
+          case "night":
+            return "Dark atmospheric night";
+          case "late-night":
+            return "Minimal late-night ambience";
+          default:
+            return "Unknown time";
+        }
+      }
+      /**
+       * Get description for season
+       */
+      getSeasonDescription(season) {
+        switch (season) {
+          case "spring":
+            return "spring renewal";
+          case "summer":
+            return "summer richness";
+          case "autumn":
+            return "autumn warmth";
+          case "winter":
+            return "winter clarity";
+          default:
+            return "unknown season";
+        }
+      }
+      /**
+       * Dispose resources
+       */
+      dispose() {
+      }
+    };
+  }
+});
+
+// src/audio/orchestration/DynamicOrchestrationManager.ts
+var DynamicOrchestrationManager;
+var init_DynamicOrchestrationManager = __esm({
+  "src/audio/orchestration/DynamicOrchestrationManager.ts"() {
+    init_ComplexityAnalyzer();
+    init_TemporalInfluence();
+    DynamicOrchestrationManager = class {
+      constructor(settings) {
+        this.updateInterval = null;
+        this.transitionStartTime = 0;
+        this.settings = settings;
+        this.complexityAnalyzer = new ComplexityAnalyzer();
+        this.temporalInfluence = new TemporalInfluence();
+        this.orchestrationState = this.createInitialState();
+        if (settings.customThresholds && settings.complexityThresholds.length > 0) {
+          this.complexityAnalyzer.setComplexityThresholds(settings.complexityThresholds);
+        }
+        this.temporalInfluence.setTimeOfDayStrength(settings.timeOfDayInfluence);
+        this.temporalInfluence.setSeasonalStrength(settings.seasonalInfluence);
+      }
+      /**
+       * Create initial orchestration state
+       */
+      createInitialState() {
+        return {
+          currentComplexity: {
+            totalNodes: 0,
+            totalLinks: 0,
+            averageDegree: 0,
+            clusterCount: 0,
+            maxDepth: 0,
+            complexityScore: 0,
+            tier: "minimal"
+          },
+          activeTier: "minimal",
+          previousTier: "minimal",
+          activeLayers: /* @__PURE__ */ new Set(["basic-melody"]),
+          temporalInfluence: {
+            timeOfDay: "afternoon",
+            season: "spring",
+            instrumentBrightness: 0.5,
+            orchestralDensity: 0.5,
+            preferredInstruments: [],
+            timbreAdjustment: 0
+          },
+          activeInstrumentLayers: [],
+          transitionProgress: 1,
+          lastUpdateTime: Date.now()
+        };
+      }
+      /**
+       * Update orchestration based on current graph state
+       */
+      updateOrchestration(nodes, links, clusters) {
+        if (!this.settings.enabled)
+          return;
+        const complexity = this.complexityAnalyzer.evaluateComplexity(nodes, links, clusters);
+        const temporal = this.settings.temporalInfluenceEnabled ? this.temporalInfluence.getCurrentTemporalInfluence() : this.orchestrationState.temporalInfluence;
+        if (complexity.tier !== this.orchestrationState.activeTier) {
+          this.initiateTierTransition(complexity.tier);
+        }
+        this.orchestrationState.currentComplexity = complexity;
+        this.orchestrationState.temporalInfluence = temporal;
+        this.orchestrationState.lastUpdateTime = Date.now();
+        this.updateInstrumentLayers(complexity, temporal);
+        this.updateTransitionProgress();
+      }
+      /**
+       * Initiate transition to new complexity tier
+       */
+      initiateTierTransition(newTier) {
+        console.log(`[DynamicOrchestration] Transitioning: ${this.orchestrationState.activeTier} \u2192 ${newTier}`);
+        this.orchestrationState.previousTier = this.orchestrationState.activeTier;
+        this.orchestrationState.activeTier = newTier;
+        this.orchestrationState.transitionProgress = 0;
+        this.transitionStartTime = Date.now();
+        const threshold = this.complexityAnalyzer.getThresholdForTier(newTier);
+        if (threshold) {
+          this.orchestrationState.activeLayers = new Set(threshold.enabledLayers);
+        }
+      }
+      /**
+       * Update transition progress
+       */
+      updateTransitionProgress() {
+        if (this.orchestrationState.transitionProgress >= 1)
+          return;
+        const elapsed = (Date.now() - this.transitionStartTime) / 1e3;
+        const progress = elapsed / this.settings.transitionDuration;
+        this.orchestrationState.transitionProgress = Math.min(1, progress);
+      }
+      /**
+       * Update instrument layers based on complexity and temporal influence
+       */
+      updateInstrumentLayers(complexity, temporal) {
+        const threshold = this.complexityAnalyzer.getThresholdForTier(complexity.tier);
+        if (!threshold)
+          return;
+        const layers = [];
+        for (const layerType of threshold.enabledLayers) {
+          const instruments = this.selectInstrumentsForLayer(
+            layerType,
+            temporal,
+            complexity
+          );
+          const layer = {
+            id: `${layerType}-${Date.now()}`,
+            layerType,
+            instruments,
+            volume: this.calculateLayerVolume(layerType, complexity, temporal),
+            enabled: true,
+            activationThreshold: complexity.tier,
+            temporalSensitivity: this.getLayerTemporalSensitivity(layerType)
+          };
+          layers.push(layer);
+        }
+        this.orchestrationState.activeInstrumentLayers = layers;
+      }
+      /**
+       * Select instruments for a specific layer
+       */
+      selectInstrumentsForLayer(layerType, temporal, complexity) {
+        const baseInstruments = this.getBaseInstrumentsForLayer(layerType);
+        if (this.settings.temporalInfluenceEnabled && temporal.preferredInstruments.length > 0) {
+          const preferredSet = new Set(temporal.preferredInstruments);
+          const filtered = baseInstruments.filter((inst) => preferredSet.has(inst));
+          if (filtered.length > 0) {
+            return filtered;
+          }
+        }
+        return baseInstruments;
+      }
+      /**
+       * Get base instruments for layer type
+       */
+      getBaseInstrumentsForLayer(layerType) {
+        switch (layerType) {
+          case "basic-melody":
+            return ["piano", "acoustic-guitar", "violin", "flute"];
+          case "rhythmic":
+            return ["timpani", "vibraphone", "xylophone", "marimba"];
+          case "harmonic-pad":
+            return ["synth-pad", "vocal-pad", "string-ensemble", "choir"];
+          case "bass-line":
+            return ["bass", "cello", "contrabass", "bass-synth"];
+          case "counter-melody":
+            return ["oboe", "clarinet", "french-horn", "trumpet"];
+          case "orchestral-fills":
+            return ["brass-section", "string-ensemble", "woodwind-ensemble"];
+          case "ambient-texture":
+            return ["ambient-drone", "synth-pad", "vocal-pad", "bells"];
+          default:
+            return ["piano"];
+        }
+      }
+      /**
+       * Calculate volume for layer
+       */
+      calculateLayerVolume(layerType, complexity, temporal) {
+        let volume = this.getBaseLayerVolume(layerType);
+        volume *= 0.5 + complexity.complexityScore * 0.5;
+        if (this.settings.temporalInfluenceEnabled) {
+          volume *= 0.7 + temporal.orchestralDensity * 0.3;
+        }
+        if (this.orchestrationState.transitionProgress < 1) {
+          volume *= this.orchestrationState.transitionProgress;
+        }
+        return Math.max(0, Math.min(1, volume));
+      }
+      /**
+       * Get base volume for layer type
+       */
+      getBaseLayerVolume(layerType) {
+        switch (layerType) {
+          case "basic-melody":
+            return 0.8;
+          case "rhythmic":
+            return 0.6;
+          case "harmonic-pad":
+            return 0.5;
+          case "bass-line":
+            return 0.7;
+          case "counter-melody":
+            return 0.6;
+          case "orchestral-fills":
+            return 0.5;
+          case "ambient-texture":
+            return 0.4;
+          default:
+            return 0.5;
+        }
+      }
+      /**
+       * Get temporal sensitivity for layer
+       */
+      getLayerTemporalSensitivity(layerType) {
+        switch (layerType) {
+          case "basic-melody":
+            return 0.7;
+          case "rhythmic":
+            return 0.5;
+          case "harmonic-pad":
+            return 0.8;
+          case "bass-line":
+            return 0.4;
+          case "counter-melody":
+            return 0.6;
+          case "orchestral-fills":
+            return 0.5;
+          case "ambient-texture":
+            return 0.9;
+          default:
+            return 0.5;
+        }
+      }
+      /**
+       * Start auto-update loop (if enabled)
+       */
+      startAutoUpdate(intervalMs = 6e4) {
+        if (!this.settings.autoAdjust)
+          return;
+        this.stopAutoUpdate();
+        this.updateInterval = window.setInterval(() => {
+          if (this.settings.temporalInfluenceEnabled) {
+            const temporal = this.temporalInfluence.getCurrentTemporalInfluence();
+            this.orchestrationState.temporalInfluence = temporal;
+          }
+        }, intervalMs);
+      }
+      /**
+       * Stop auto-update loop
+       */
+      stopAutoUpdate() {
+        if (this.updateInterval !== null) {
+          clearInterval(this.updateInterval);
+          this.updateInterval = null;
+        }
+      }
+      /**
+       * Get current orchestration state
+       */
+      getState() {
+        return { ...this.orchestrationState };
+      }
+      /**
+       * Get active instrument layers
+       */
+      getActiveInstrumentLayers() {
+        return this.orchestrationState.activeInstrumentLayers;
+      }
+      /**
+       * Get current complexity
+       */
+      getCurrentComplexity() {
+        return this.orchestrationState.currentComplexity;
+      }
+      /**
+       * Get current temporal influence
+       */
+      getCurrentTemporalInfluence() {
+        return this.orchestrationState.temporalInfluence;
+      }
+      /**
+       * Check if layer is active
+       */
+      isLayerActive(layerType) {
+        return this.orchestrationState.activeLayers.has(layerType);
+      }
+      /**
+       * Get recommended instrument count
+       */
+      getRecommendedInstrumentCount() {
+        return this.complexityAnalyzer.getRecommendedInstrumentCount(
+          this.orchestrationState.currentComplexity
+        );
+      }
+      /**
+       * Update settings
+       */
+      updateSettings(settings) {
+        this.settings = { ...this.settings, ...settings };
+        if (settings.timeOfDayInfluence !== void 0) {
+          this.temporalInfluence.setTimeOfDayStrength(settings.timeOfDayInfluence);
+        }
+        if (settings.seasonalInfluence !== void 0) {
+          this.temporalInfluence.setSeasonalStrength(settings.seasonalInfluence);
+        }
+        if (settings.customThresholds && settings.complexityThresholds) {
+          this.complexityAnalyzer.setComplexityThresholds(settings.complexityThresholds);
+        }
+        if (settings.autoAdjust !== void 0) {
+          if (settings.autoAdjust) {
+            this.startAutoUpdate();
+          } else {
+            this.stopAutoUpdate();
+          }
+        }
+      }
+      /**
+       * Get human-readable orchestration description
+       */
+      getOrchestrationDescription() {
+        const tier = this.orchestrationState.activeTier;
+        const layerCount = this.orchestrationState.activeInstrumentLayers.length;
+        const temporal = this.temporalInfluence.getTemporalDescription(
+          this.orchestrationState.temporalInfluence
+        );
+        return `${tier} complexity, ${layerCount} active layers, ${temporal}`;
+      }
+      /**
+       * Dispose resources
+       */
+      dispose() {
+        this.stopAutoUpdate();
+        this.complexityAnalyzer.dispose();
+        this.temporalInfluence.dispose();
+      }
+    };
+  }
+});
+
+// src/audio/orchestration/index.ts
+var init_orchestration = __esm({
+  "src/audio/orchestration/index.ts"() {
+    init_HubCentralityAnalyzer();
+    init_HubOrchestrationManager();
+    init_HubTransitionHandler();
+    init_ComplexityAnalyzer();
+    init_TemporalInfluence();
+    init_DynamicOrchestrationManager();
+  }
+});
+
 // src/graph/musical-mapper.ts
 var import_obsidian11, logger35, MusicalMapper;
 var init_musical_mapper = __esm({
@@ -53472,6 +54319,7 @@ var init_musical_mapper = __esm({
     import_obsidian11 = require("obsidian");
     init_mapping();
     init_clustering();
+    init_orchestration();
     logger35 = getLogger("musical-mapper");
     MusicalMapper = class {
       constructor(settings, app) {
@@ -53490,7 +54338,10 @@ var init_musical_mapper = __esm({
         // Phase 5: Cluster-based audio mapping
         this.clusterAudioMapper = null;
         this.isClusterAudioEnabled = false;
-        var _a, _b;
+        // Phase 6.2: Dynamic orchestration
+        this.dynamicOrchestrationManager = null;
+        this.isDynamicOrchestrationEnabled = false;
+        var _a, _b, _c;
         this.settings = settings;
         this.app = app || null;
         this.updateMusicalParams();
@@ -53500,9 +54351,12 @@ var init_musical_mapper = __esm({
         if ((_b = this.settings.clusterAudio) == null ? void 0 : _b.enabled) {
           this.initializeClusterAudio();
         }
+        if ((_c = this.settings.dynamicOrchestration) == null ? void 0 : _c.enabled) {
+          this.initializeDynamicOrchestration();
+        }
       }
       updateSettings(settings) {
-        var _a, _b;
+        var _a, _b, _c;
         this.settings = settings;
         this.updateMusicalParams();
         if (this.app && ((_a = this.settings.contentAwareMapping) == null ? void 0 : _a.enabled)) {
@@ -53522,6 +54376,15 @@ var init_musical_mapper = __esm({
           }
         } else if (this.isClusterAudioEnabled) {
           this.disableClusterAudio();
+        }
+        if ((_c = this.settings.dynamicOrchestration) == null ? void 0 : _c.enabled) {
+          if (!this.isDynamicOrchestrationEnabled) {
+            this.initializeDynamicOrchestration();
+          } else {
+            this.updateDynamicOrchestrationSettings();
+          }
+        } else if (this.isDynamicOrchestrationEnabled) {
+          this.disableDynamicOrchestration();
         }
       }
       /**
@@ -53729,6 +54592,88 @@ var init_musical_mapper = __esm({
         if (!this.isClusterAudioEnabled || !this.clusterAudioMapper)
           return;
         await this.clusterAudioMapper.processClusters(clusters);
+      }
+      /**
+       * Phase 6.2: Initialize dynamic orchestration manager
+       */
+      initializeDynamicOrchestration() {
+        var _a, _b, _c, _d, _e, _f;
+        if (this.isDynamicOrchestrationEnabled)
+          return;
+        logger35.info("phase6.2-init", "Initializing Phase 6.2 dynamic orchestration");
+        try {
+          const orchestrationSettings = {
+            enabled: true,
+            complexityThresholds: [],
+            customThresholds: ((_a = this.settings.dynamicOrchestration) == null ? void 0 : _a.customThresholds) || false,
+            temporalInfluenceEnabled: ((_b = this.settings.dynamicOrchestration) == null ? void 0 : _b.temporalInfluenceEnabled) !== false,
+            timeOfDayInfluence: ((_c = this.settings.dynamicOrchestration) == null ? void 0 : _c.timeOfDayInfluence) || 0.5,
+            seasonalInfluence: ((_d = this.settings.dynamicOrchestration) == null ? void 0 : _d.seasonalInfluence) || 0.3,
+            transitionDuration: ((_e = this.settings.dynamicOrchestration) == null ? void 0 : _e.transitionDuration) || 3,
+            autoAdjust: ((_f = this.settings.dynamicOrchestration) == null ? void 0 : _f.autoAdjust) !== false
+          };
+          this.dynamicOrchestrationManager = new DynamicOrchestrationManager(orchestrationSettings);
+          if (orchestrationSettings.autoAdjust) {
+            this.dynamicOrchestrationManager.startAutoUpdate();
+          }
+          this.isDynamicOrchestrationEnabled = true;
+          logger35.info("phase6.2-initialized", "Phase 6.2 dynamic orchestration initialized successfully");
+        } catch (error) {
+          logger35.error("phase6.2-init-error", "Error initializing Phase 6.2 dynamic orchestration", error);
+          this.isDynamicOrchestrationEnabled = false;
+        }
+      }
+      /**
+       * Phase 6.2: Update dynamic orchestration settings
+       */
+      updateDynamicOrchestrationSettings() {
+        if (!this.dynamicOrchestrationManager || !this.settings.dynamicOrchestration)
+          return;
+        logger35.debug("phase6.2-update", "Updating Phase 6.2 dynamic orchestration settings");
+        const orchestrationSettings = {
+          customThresholds: this.settings.dynamicOrchestration.customThresholds,
+          temporalInfluenceEnabled: this.settings.dynamicOrchestration.temporalInfluenceEnabled,
+          timeOfDayInfluence: this.settings.dynamicOrchestration.timeOfDayInfluence,
+          seasonalInfluence: this.settings.dynamicOrchestration.seasonalInfluence,
+          transitionDuration: this.settings.dynamicOrchestration.transitionDuration,
+          autoAdjust: this.settings.dynamicOrchestration.autoAdjust
+        };
+        this.dynamicOrchestrationManager.updateSettings(orchestrationSettings);
+      }
+      /**
+       * Phase 6.2: Disable dynamic orchestration and clean up
+       */
+      disableDynamicOrchestration() {
+        if (!this.isDynamicOrchestrationEnabled)
+          return;
+        logger35.info("phase6.2-cleanup", "Disabling Phase 6.2 dynamic orchestration");
+        try {
+          if (this.dynamicOrchestrationManager) {
+            this.dynamicOrchestrationManager.dispose();
+            this.dynamicOrchestrationManager = null;
+          }
+          this.isDynamicOrchestrationEnabled = false;
+          logger35.info("phase6.2-disabled", "Phase 6.2 dynamic orchestration disabled and cleaned up");
+        } catch (error) {
+          logger35.error("phase6.2-disable-error", "Error during Phase 6.2 cleanup", error);
+        }
+      }
+      /**
+       * Phase 6.2: Update orchestration based on current graph state
+       */
+      updateOrchestration(nodes, links, clusters) {
+        if (!this.isDynamicOrchestrationEnabled || !this.dynamicOrchestrationManager)
+          return;
+        this.dynamicOrchestrationManager.updateOrchestration(nodes, links, clusters);
+      }
+      /**
+       * Phase 6.2: Get current orchestration state
+       */
+      getOrchestrationState() {
+        if (!this.isDynamicOrchestrationEnabled || !this.dynamicOrchestrationManager) {
+          return null;
+        }
+        return this.dynamicOrchestrationManager.getState();
       }
       /**
        * Map graph nodes to musical parameters
@@ -54015,6 +54960,12 @@ var init_musical_mapper = __esm({
       dispose() {
         if (this.isPhase2Enabled) {
           this.disablePhase2Components();
+        }
+        if (this.isClusterAudioEnabled) {
+          this.disableClusterAudio();
+        }
+        if (this.isDynamicOrchestrationEnabled) {
+          this.disableDynamicOrchestration();
         }
         logger35.debug("musical-mapper-disposed", "MusicalMapper disposed");
       }
