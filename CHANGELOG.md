@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Sonic Graph: Modal to ItemView Migration ✅
+
+#### Major Architecture Update
+- **Migrated from Modal to ItemView**: Complete conversion from modal-based interface to persistent workspace view
+  - Sonic Graph now integrates seamlessly with Obsidian's workspace system
+  - View can be docked in sidebars, split panes, or main area
+  - Works alongside other views and files for better multitasking
+  - Single-instance pattern prevents duplicate views
+  - ItemView is now the **default** interface (ribbon icon, primary command, Control Center button)
+
+#### State Persistence
+- **Timeline Position Persistence**: Timeline scrubber position saved across Obsidian restarts
+- **Animation Speed Persistence**: Playback speed (0.5x-5x) preserved between sessions
+- **View Mode Persistence**: Static vs Timeline view mode restored automatically
+- **Settings Panel State**: Settings visibility maintained across restarts
+- **Auto-Save on Changes**: Workspace layout automatically saved when state changes
+- **Debounced Saving**: Timeline scrubbing triggers save after 500ms of inactivity for performance
+
+#### Performance Optimizations
+- **Background Animation Pause**: Animation automatically pauses when view is inactive to save CPU
+- **Smart Resume**: Animation seamlessly resumes when returning to Sonic Graph view
+- **Audio Continuity**: Continuous layers keep playing in background for uninterrupted experience
+- **Resource Management**: Proper cleanup prevents memory leaks and ensures smooth disable/enable cycles
+
+#### Lifecycle Management
+- **Robust Cleanup**: Comprehensive error handling in view close and plugin unload
+- **Fixed Plugin Disable**: Plugin now properly disables and stays disabled (was re-enabling on restart)
+- **Proper Resource Release**: All audio, animation, and UI resources cleaned up correctly
+- **Workspace Integration**: View closes automatically when plugin is disabled
+
+#### User Interface
+- **Consistent Interface**: View accessible via ribbon icon, command palette, and Control Center
+- **Responsive Sizing**: Works correctly in all view positions and sizes
+- **Settings Panel**: Fully functional in all contexts (main, sidebar, split panes)
+- **Legacy Fallback**: Original modal still available via "Open Sonic Graph (Modal - Legacy)" command
+
+#### Technical Details
+- **New File**: `src/ui/SonicGraphView.ts` (6,258 lines) - Complete ItemView implementation
+- **Updated**: Control Center button now opens view instead of modal
+- **State Interface**: `SonicGraphViewState` with 6 tracked properties
+- **CSS Classes**: Separate view classes (`.sonic-graph-view`) with no modal conflicts
+- **Event Handling**: Workspace `active-leaf-change` event for background state detection
+- **Async Initialization**: Proper handling of async animator initialization during state restoration
+
+#### Migration Status
+- **Phase 1**: Core Migration ✅ Complete
+- **Phase 2**: State Persistence ✅ Complete
+- **Phase 3**: UI and Styling ✅ Complete
+- **Phase 4**: Lifecycle Management ✅ Complete
+- **Phase 5**: Testing ✅ Substantially Complete
+- **Phase 6**: Modal Deprecation ⏸️ Deferred (keeping modal as fallback)
+
+**Status**: PRODUCTION READY - All core functionality tested and working
+
 ### Added - Phase 5.3: Community Detection Audio System
 
 #### Community Structure Audio Representation
