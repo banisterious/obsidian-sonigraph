@@ -23,6 +23,23 @@ const logger = getLogger('SonicGraphView');
 
 export const VIEW_TYPE_SONIC_GRAPH = 'sonic-graph-view';
 
+/**
+ * State interface for Sonic Graph view persistence
+ */
+export interface SonicGraphViewState {
+    // Timeline state
+    isTimelineView: boolean;
+    isAnimating: boolean;
+    currentTimelinePosition: number;
+    animationSpeed: number;
+
+    // Settings panel state
+    isSettingsVisible: boolean;
+
+    // View configuration
+    detectedSpacing: 'dense' | 'balanced' | 'sparse';
+}
+
 export class SonicGraphView extends ItemView {
     private plugin: SonigraphPlugin;
     private graphDataExtractor: GraphDataExtractor;
@@ -40,7 +57,8 @@ export class SonicGraphView extends ItemView {
     // Performance optimization: Settings debouncing
     private pendingSettingsUpdates = new Map<string, any>();
     private settingsUpdateTimeout: NodeJS.Timeout | null = null;
-    
+    private scrubSaveTimeout: NodeJS.Timeout | null = null;
+
     // Performance optimization: Progress indicator
     private progressIndicator: HTMLElement | null = null;
     
@@ -108,13 +126,97 @@ export class SonicGraphView extends ItemView {
     }
 
     async setState(state: any, result: any): Promise<void> {
-        // TODO: Phase 2 - Implement state restoration
+        logger.debug('state', 'Restoring view state', state);
+
+        // Call parent implementation first
         await super.setState(state, result);
+
+        // Type guard to ensure we have valid state
+        if (!state || typeof state !== 'object') {
+            logger.debug('state', 'No valid state to restore');
+            return;
+        }
+
+        const viewState = state as Partial<SonicGraphViewState>;
+
+        // Restore timeline state after view is initialized
+        // These will be applied when UI elements are created in onOpen()
+        if (viewState.isTimelineView !== undefined) {
+            this.isTimelineView = viewState.isTimelineView;
+            logger.debug('state', 'Restored isTimelineView', this.isTimelineView);
+        }
+
+        if (viewState.isAnimating !== undefined) {
+            // Note: We don't auto-start animation on restore, just preserve the flag
+            // The user can manually restart if desired
+            logger.debug('state', 'Animation state was', viewState.isAnimating);
+        }
+
+        if (viewState.detectedSpacing !== undefined) {
+            this.detectedSpacing = viewState.detectedSpacing;
+            logger.debug('state', 'Restored detectedSpacing', this.detectedSpacing);
+        }
+
+        if (viewState.isSettingsVisible !== undefined) {
+            this.isSettingsVisible = viewState.isSettingsVisible;
+            logger.debug('state', 'Restored isSettingsVisible', this.isSettingsVisible);
+        }
+
+        // Store timeline position and speed for restoration after graph initialization
+        if (viewState.currentTimelinePosition !== undefined || viewState.animationSpeed !== undefined) {
+            // We'll apply these values after the UI is fully initialized
+            // Store them temporarily for use in onOpen()
+            (this as any)._pendingState = {
+                timelinePosition: viewState.currentTimelinePosition,
+                animationSpeed: viewState.animationSpeed
+            };
+            logger.debug('state', 'Stored pending timeline state for post-initialization');
+        }
+
+        logger.info('state', 'View state restoration complete');
     }
 
     getState(): any {
-        // TODO: Phase 2 - Implement state persistence
-        return super.getState();
+        logger.info('state', 'getState() called - capturing view state', {
+            isTimelineView: this.isTimelineView,
+            hasScrubber: !!this.timelineScrubber,
+            hasAnimator: !!this.temporalAnimator,
+            scrubberValue: this.timelineScrubber?.value,
+            hasGraphRenderer: !!this.graphRenderer,
+            callStack: new Error().stack?.split('\n').slice(1, 4).join(' | ')
+        });
+
+        // Get current timeline position from scrubber if available
+        let currentTimelinePosition = 0;
+        if (this.timelineScrubber) {
+            currentTimelinePosition = parseFloat(this.timelineScrubber.value) || 0;
+            logger.info('state', 'Captured timeline position from scrubber', { currentTimelinePosition });
+        } else if (this.isTimelineView) {
+            logger.warn('state', 'isTimelineView is true but scrubber does not exist - cannot capture position');
+        }
+
+        // Get animation speed from select if available
+        let animationSpeed = 1;
+        if (this.speedSelect) {
+            animationSpeed = parseFloat(this.speedSelect.value) || 1;
+        }
+
+        const state: SonicGraphViewState = {
+            // Timeline state
+            isTimelineView: this.isTimelineView,
+            isAnimating: this.isAnimating,
+            currentTimelinePosition,
+            animationSpeed,
+
+            // Settings panel state
+            isSettingsVisible: this.isSettingsVisible,
+
+            // View configuration
+            detectedSpacing: this.detectedSpacing
+        };
+
+        logger.info('state', 'Final state being returned from getState()', state);
+        return state;
     }
 
     async onOpen() {
@@ -166,6 +268,90 @@ export class SonicGraphView extends ItemView {
     }
 
     /**
+     * Apply pending state after view initialization
+     */
+    private async applyPendingState(): Promise<void> {
+        const pendingState = (this as any)._pendingState;
+        if (!pendingState) {
+            logger.debug('state', 'No pending state to apply');
+            return;
+        }
+
+        logger.debug('state', 'Applying pending state', pendingState);
+
+        try {
+            // First, ensure temporal animator exists if we're in timeline view
+            // This is needed because the animator initializes asynchronously
+            if (this.isTimelineView && !this.temporalAnimator) {
+                logger.debug('state', 'Timeline view is active but animator not initialized yet - waiting');
+                await this.waitForTemporalAnimator();
+            }
+
+            // Restore timeline position (after timeline is visible and animator is ready)
+            if (pendingState.timelinePosition !== undefined && this.timelineScrubber && this.temporalAnimator) {
+                const position = pendingState.timelinePosition;
+                this.timelineScrubber.value = position.toString();
+
+                // Calculate time from position (position is 0-100, time is in seconds)
+                const timelineInfo = this.temporalAnimator.getTimelineInfo();
+                const time = (position / 100) * timelineInfo.duration;
+
+                // Seek animator to the position
+                this.temporalAnimator.seekTo(time);
+
+                logger.debug('state', 'Restored timeline position to', { position, time });
+            }
+
+            // Restore animation speed
+            if (pendingState.animationSpeed !== undefined && this.speedSelect) {
+                this.speedSelect.value = pendingState.animationSpeed.toString();
+                // Update animator speed if available
+                if (this.temporalAnimator) {
+                    this.temporalAnimator.setSpeed(pendingState.animationSpeed);
+                }
+                logger.debug('state', 'Restored animation speed', pendingState.animationSpeed);
+            }
+
+            // Restore settings panel visibility
+            if (this.isSettingsVisible && this.settingsPanel) {
+                this.settingsPanel.removeClass('hidden');
+                if (this.settingsButton) {
+                    this.settingsButton.addClass('active');
+                }
+                logger.debug('state', 'Restored settings panel visibility');
+            }
+
+            logger.info('state', 'Pending state applied successfully');
+        } catch (error) {
+            logger.error('state', 'Failed to apply pending state', error);
+        } finally {
+            // Clear pending state
+            delete (this as any)._pendingState;
+        }
+    }
+
+    /**
+     * Wait for temporal animator to be initialized
+     * Used during state restoration to ensure animator is ready before seeking
+     */
+    private async waitForTemporalAnimator(): Promise<void> {
+        const maxWaitTime = 5000; // 5 seconds max wait
+        const checkInterval = 100; // Check every 100ms
+        const startTime = Date.now();
+
+        while (!this.temporalAnimator) {
+            if (Date.now() - startTime > maxWaitTime) {
+                logger.error('state', 'Timeout waiting for temporal animator initialization');
+                throw new Error('Temporal animator initialization timeout');
+            }
+            // Wait 100ms before checking again
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+
+        logger.debug('state', 'Temporal animator is ready');
+    }
+
+    /**
      * Initialize continuous layers for Phase 3
      */
     private async initializeContinuousLayers(): Promise<void> {
@@ -209,6 +395,10 @@ export class SonicGraphView extends ItemView {
         if (this.settingsUpdateTimeout) {
             clearTimeout(this.settingsUpdateTimeout);
             this.settingsUpdateTimeout = null;
+        }
+        if (this.scrubSaveTimeout) {
+            clearTimeout(this.scrubSaveTimeout);
+            this.scrubSaveTimeout = null;
         }
         this.pendingSettingsUpdates.clear();
         
@@ -609,8 +799,11 @@ export class SonicGraphView extends ItemView {
             
             // Initialize view mode (starts in Static View)
             this.updateViewMode();
-            
+
             logger.debug('ui', 'Sonic Graph initialized successfully');
+
+            // Apply pending state if available (from setState restoration)
+            this.applyPendingState();
             
         } catch (error) {
             logger.error('ui', 'Failed to initialize Sonic Graph:', (error as Error).message);
@@ -753,6 +946,19 @@ export class SonicGraphView extends ItemView {
         this.isTimelineView = !this.isTimelineView;
         this.updateViewMode();
         logger.debug('ui', `View mode toggled: ${this.isTimelineView ? 'Timeline' : 'Static'}`);
+
+        // Request workspace save to persist the view mode change
+        this.requestSave();
+    }
+
+    /**
+     * Request Obsidian to save the workspace state
+     * This ensures view state persistence when important changes occur
+     */
+    private requestSave(): void {
+        // Obsidian will call getState() to capture current state
+        this.app.workspace.requestSaveLayout();
+        logger.debug('state', 'Requested workspace save');
     }
 
     /**
@@ -4403,13 +4609,23 @@ export class SonicGraphView extends ItemView {
      */
     private handleTimelineScrub(): void {
         if (!this.temporalAnimator) return;
-        
+
         const progress = parseFloat(this.timelineScrubber.value) / 100;
         const timelineInfo = this.temporalAnimator.getTimelineInfo();
         const targetTime = progress * timelineInfo.duration;
-        
+
         this.temporalAnimator.seekTo(targetTime);
         logger.debug('ui', 'Timeline scrubbed', { progress, targetTime });
+
+        // Request workspace save to persist the timeline position
+        // Debounce to avoid excessive saves during scrubbing
+        if (this.scrubSaveTimeout) {
+            clearTimeout(this.scrubSaveTimeout);
+        }
+        this.scrubSaveTimeout = setTimeout(() => {
+            this.requestSave();
+            this.scrubSaveTimeout = null;
+        }, 500); // Save 500ms after user stops scrubbing
     }
 
     /**
