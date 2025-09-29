@@ -4,7 +4,7 @@
  * Defines audio mapping for different cluster types and transition events
  */
 
-import { GraphNode } from '../../graph/types';
+import { GraphNode } from '../../graph/GraphDataExtractor';
 import { Cluster } from '../../graph/SmartClusteringAlgorithms';
 
 /**
@@ -209,4 +209,176 @@ export interface ClusterAudioAnalysis {
   spatialPosition: { pan: number; depth: number };
   transitionEvents: ClusterTransitionEvent[];
   hubNodes: string[]; // Node IDs that are hubs within this cluster
+}
+
+// ============================================================================
+// Phase 5.3: Community Detection Audio Types
+// ============================================================================
+
+/**
+ * Community type classifications
+ */
+export type CommunityType =
+  | 'large-stable'      // Large, stable communities with rich orchestral sound
+  | 'small-dynamic'     // Small, agile communities with chamber music
+  | 'bridge'            // Bridge communities connecting other communities
+  | 'isolated'          // Isolated communities with unique characteristics
+  | 'hierarchical';     // Hierarchical communities with nested structures
+
+/**
+ * Community structure extending Cluster
+ */
+export interface Community {
+  id: string;
+  nodes: GraphNode[];
+  type: CommunityType;
+  characteristics: CommunityCharacteristics;
+  strength: number;
+  centroid: { x: number; y: number };
+  radius: number;
+  label: string;
+
+  // Hierarchy information
+  hierarchyLevel: number;
+  parentCommunityId?: string;
+  subCommunities: string[];
+}
+
+/**
+ * Community characteristics for audio mapping
+ */
+export interface CommunityCharacteristics {
+  size: number;
+  density: number; // 0-1, how densely connected the community is
+  stability: number; // 0-1, temporal stability of the community
+  connectionStrength: number; // Average strength of internal connections
+  isBridge: boolean; // Whether this community bridges others
+  isIsolated: boolean; // Whether this community is isolated
+  internalConnections: number;
+  externalConnections: number;
+  cohesion: number; // Overall cohesiveness measure
+}
+
+/**
+ * Audio theme for communities with orchestration
+ */
+export interface CommunityAudioTheme {
+  id: string;
+  communityType: CommunityType;
+  name: string;
+  description: string;
+
+  // Base audio characteristics
+  baseFrequency: number;
+  harmonicIntervals: number[];
+  timbreProfile: TimbreProfile;
+  dynamicsRange: DynamicsRange;
+
+  // Orchestration profile
+  orchestrationProfile: OrchestrationProfile;
+
+  // Modulation parameters
+  modulationRate: number;
+  modulationDepth: number;
+  filterCutoff: number;
+  resonance: number;
+
+  // Spatial characteristics
+  panningBehavior: 'static' | 'dynamic' | 'cluster-based';
+  reverbAmount: number;
+  spatialWidth: number; // Stereo width 0-1
+
+  // Evolution parameters
+  evolutionSpeed: number;
+  complexityFactor: number;
+  harmonyComplexity: number; // 0-1, harmonic richness
+}
+
+/**
+ * Orchestration profile for community audio
+ */
+export interface OrchestrationProfile {
+  voiceCount: number; // Number of simultaneous voices
+  voiceSpread: number; // Pitch spread in semitones
+  ensembleType: 'solo' | 'chamber-group' | 'mixed-ensemble' | 'sectional-orchestra' | 'full-orchestra';
+  sectionBalance: {
+    bass: number; // 0-1, bass presence
+    mid: number; // 0-1, mid-range presence
+    treble: number; // 0-1, treble presence
+  };
+}
+
+/**
+ * Community evolution event types
+ */
+export type CommunityEvolutionType =
+  | 'merge'       // Communities merging together
+  | 'split'       // Community splitting apart
+  | 'growth'      // Community growing in size
+  | 'decline'     // Community declining in size
+  | 'bridging'    // Community forming bridges
+  | 'formation'   // New community forming
+  | 'dissolution'; // Community dissolving
+
+/**
+ * Community evolution event
+ */
+export interface CommunityEvolutionEvent {
+  type: CommunityEvolutionType;
+  communityId: string;
+  sourceCommunityIds: string[]; // Communities involved in the evolution
+  targetCommunityId?: string; // Target community for merge/formation
+  targetCommunityIds?: string[]; // Target communities for split
+  timestamp: number;
+  intensity: number; // 0-1, intensity of the evolution
+  affectedNodeCount: number;
+}
+
+/**
+ * Community lifecycle state
+ */
+export interface CommunityLifecycleState {
+  communityId: string;
+  state: 'forming' | 'growing' | 'stable' | 'mature' | 'declining' | 'merging' | 'splitting' | 'bridging';
+  age: number; // Number of update cycles
+  previousState?: CommunityLifecycleState['state'];
+  stateChangedAt: number;
+}
+
+/**
+ * Settings for community detection audio
+ */
+export interface CommunityDetectionSettings {
+  enabled: boolean;
+
+  // Detection parameters
+  largeCommunitySizeThreshold: number; // Minimum size for large community
+  hierarchyAnalysis: boolean; // Enable hierarchy detection
+  hierarchyContainmentThreshold: number; // 0-1, threshold for parent-child relationship
+
+  // Audio parameters
+  themeIntensity: number; // 0-2, global theme intensity multiplier
+  communityTypeEnabled: Record<CommunityType, boolean>;
+  communityTypeVolumes: Record<CommunityType, number>;
+
+  // Spatial audio
+  spatialAudio: boolean;
+  spatialWidth: number; // 0-1, stereo width
+}
+
+/**
+ * Settings for community evolution tracking
+ */
+export interface CommunityEvolutionSettings {
+  enabled: boolean;
+
+  // Evolution detection thresholds
+  growthThreshold: number; // 0-1, minimum growth ratio to trigger event
+  declineThreshold: number; // 0-1, minimum decline ratio to trigger event
+
+  // Event audio settings
+  eventAudioEnabled: boolean;
+  enabledEventTypes: Record<CommunityEvolutionType, boolean>;
+  eventVolumes: Record<CommunityEvolutionType, number>;
+  eventThrottleMs: number; // Throttle duration for events
 }

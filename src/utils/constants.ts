@@ -613,7 +613,7 @@ export interface SonigraphSettings {
 		distributionStrategy?: string;
 	};
 
-	// Phase 5: Smart clustering audio integration
+	// Phase 5.1: Smart clustering audio integration
 	clusterAudio?: {
 		enabled: boolean;
 		globalVolume: number;
@@ -640,6 +640,58 @@ export interface SonigraphSettings {
 		spatialAudio: boolean;
 		maxSimultaneousClusters: number;
 		updateThrottleMs: number;
+	};
+
+	// Phase 5.3: Community Detection Audio
+	communityDetection?: {
+		enabled: boolean;
+		largeCommunitySizeThreshold: number;
+		hierarchyAnalysis: boolean;
+		hierarchyContainmentThreshold: number;
+		themeIntensity: number;
+		communityTypeEnabled: {
+			'large-stable': boolean;
+			'small-dynamic': boolean;
+			'bridge': boolean;
+			'isolated': boolean;
+			'hierarchical': boolean;
+		};
+		communityTypeVolumes: {
+			'large-stable': number;
+			'small-dynamic': number;
+			'bridge': number;
+			'isolated': number;
+			'hierarchical': number;
+		};
+		spatialAudio: boolean;
+		spatialWidth: number;
+	};
+
+	// Phase 5.3: Community Evolution Audio
+	communityEvolution?: {
+		enabled: boolean;
+		growthThreshold: number;
+		declineThreshold: number;
+		eventAudioEnabled: boolean;
+		enabledEventTypes: {
+			'merge': boolean;
+			'split': boolean;
+			'growth': boolean;
+			'decline': boolean;
+			'bridging': boolean;
+			'formation': boolean;
+			'dissolution': boolean;
+		};
+		eventVolumes: {
+			'merge': number;
+			'split': number;
+			'growth': number;
+			'decline': number;
+			'bridging': number;
+			'formation': number;
+			'dissolution': number;
+		};
+		eventThrottleMs: number;
 	};
 }
 
@@ -2390,7 +2442,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		version: '3.5.0'
 	},
 
-	// Phase 5: Default cluster audio settings (disabled by default)
+	// Phase 5.1: Default cluster audio settings (disabled by default)
 	clusterAudio: {
 		enabled: false,
 		globalVolume: 0.3,
@@ -2417,6 +2469,58 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		spatialAudio: true,
 		maxSimultaneousClusters: 5,
 		updateThrottleMs: 200
+	},
+
+	// Phase 5.3: Default community detection audio settings (disabled by default)
+	communityDetection: {
+		enabled: false,
+		largeCommunitySizeThreshold: 15,
+		hierarchyAnalysis: true,
+		hierarchyContainmentThreshold: 0.7,
+		themeIntensity: 1.0,
+		communityTypeEnabled: {
+			'large-stable': true,
+			'small-dynamic': true,
+			'bridge': true,
+			'isolated': true,
+			'hierarchical': true
+		},
+		communityTypeVolumes: {
+			'large-stable': 0.8,
+			'small-dynamic': 0.6,
+			'bridge': 0.7,
+			'isolated': 0.5,
+			'hierarchical': 0.75
+		},
+		spatialAudio: true,
+		spatialWidth: 0.8
+	},
+
+	// Phase 5.3: Default community evolution audio settings (disabled by default)
+	communityEvolution: {
+		enabled: false,
+		growthThreshold: 0.3,
+		declineThreshold: 0.3,
+		eventAudioEnabled: true,
+		enabledEventTypes: {
+			'merge': true,
+			'split': true,
+			'growth': true,
+			'decline': true,
+			'bridging': true,
+			'formation': true,
+			'dissolution': true
+		},
+		eventVolumes: {
+			'merge': 0.7,
+			'split': 0.6,
+			'growth': 0.5,
+			'decline': 0.5,
+			'bridging': 0.6,
+			'formation': 0.65,
+			'dissolution': 0.65
+		},
+		eventThrottleMs: 500
 	}
 };
 
