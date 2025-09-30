@@ -599,8 +599,9 @@ export interface SonigraphSettings {
 		version: string; // For migration compatibility
 	};
 	
-	// Phase 3: Add freesoundApiKey for continuous layers
+	// Phase 7.1: Freesound API integration settings
 	freesoundApiKey?: string;
+	enableFreesoundSamples?: boolean;
 	
 	// Phase 2: Content-aware mapping settings
 	contentAwareMapping?: {
@@ -2458,7 +2459,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		}
 	},
 	voiceAssignmentStrategy: 'frequency',
-	
+
+	// Phase 7.1: Freesound API integration defaults
+	freesoundApiKey: '',
+	enableFreesoundSamples: false,
+
 	// Phase 3: Performance Mode Settings
 	performanceMode: {
 		mode: 'medium',
