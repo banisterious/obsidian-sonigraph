@@ -256,10 +256,15 @@ export class MusicalMapper {
 				harmonicPad: null
 			},
 			musicalTheory: {
+				enabled: false,
 				scale: this.settings.scale,
-				key: this.settings.rootNote,
-				mode: 'major', // Default mode
-				constrainToScale: true
+				rootNote: this.settings.rootNote,
+				enforceHarmony: true,
+				allowChromaticPassing: false,
+				dissonanceThreshold: 0.3,
+				quantizationStrength: 0.8,
+				preferredChordProgression: 'I-IV-V-I',
+				dynamicScaleModulation: false
 			},
 			externalServices: {
 				freesoundApiKey: this.settings.freesoundApiKey || '',

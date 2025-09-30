@@ -14094,6 +14094,8 @@ var init_SonicGraphLayersSettings = __esm({
         if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) {
           this.renderGenreSection(container);
           this.renderIntensitySection(container);
+          this.renderLayerTypesSection(container);
+          this.renderMusicalSettingsSection(container);
           this.renderAdaptiveSection(container);
         }
       }
@@ -14147,10 +14149,15 @@ var init_SonicGraphLayersSettings = __esm({
                     harmonicPad: {}
                   },
                   musicalTheory: {
+                    enabled: false,
                     scale: "major",
-                    key: "C",
-                    mode: "ionian",
-                    constrainToScale: false
+                    rootNote: "C",
+                    enforceHarmony: false,
+                    allowChromaticPassing: false,
+                    dissonanceThreshold: 0.3,
+                    quantizationStrength: 0.8,
+                    preferredChordProgression: "I-IV-V-I",
+                    dynamicScaleModulation: false
                   },
                   externalServices: {
                     freesoundApiKey: "",
@@ -14241,7 +14248,240 @@ var init_SonicGraphLayersSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 4: Adaptive Behavior
+       * Section 4: Layer Types (Rhythmic & Harmonic)
+       */
+      renderLayerTypesSection(container) {
+        var _a, _b, _c, _d;
+        const card = new MaterialCard({
+          title: "Additional Layers",
+          iconName: "layers-3",
+          subtitle: "Rhythmic and harmonic layers",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const description = content.createDiv({ cls: "osp-settings-description" });
+        description.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
+				Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers
+				that respond to vault activity and cluster dynamics.
+			</p>
+		`;
+        new import_obsidian7.Setting(content).setName("Enable rhythmic layer").setDesc("Add activity-based percussion patterns").addToggle(
+          (toggle) => {
+            var _a2, _b2;
+            return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicEnabled) || false).onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers))
+                return;
+              this.plugin.settings.audioEnhancement.continuousLayers.rhythmicEnabled = value;
+              if (value && !this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer) {
+                this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer = {
+                  enabled: true,
+                  baseTempo: 120,
+                  tempoRange: [80, 160],
+                  percussionIntensity: 0.7,
+                  arpeggioComplexity: 0.5,
+                  activitySensitivity: 0.6
+                };
+              }
+              await this.plugin.saveSettings();
+              logger13.info("layers-settings", `Rhythmic layer: ${value}`);
+              container.empty();
+              this.render(container);
+            });
+          }
+        );
+        if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.rhythmicEnabled) {
+          const rhythmicDetails = content.createDiv({ cls: "osp-settings-subsection" });
+          rhythmicDetails.createEl("h4", { text: "Rhythmic Layer Settings", attr: { style: "margin-top: 1rem;" } });
+          new import_obsidian7.Setting(rhythmicDetails).setName("Base tempo").setDesc("Base BPM for rhythmic patterns (60-180)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(60, 180, 5).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.baseTempo) || 120).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.rhythmicLayer))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.baseTempo = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(rhythmicDetails).setName("Percussion intensity").setDesc("Volume and prominence of percussive elements (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.percussionIntensity) || 0.7).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.rhythmicLayer))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.percussionIntensity = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(rhythmicDetails).setName("Pattern complexity").setDesc("Complexity of rhythmic patterns and arpeggios (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.arpeggioComplexity) || 0.5).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.rhythmicLayer))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.arpeggioComplexity = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(rhythmicDetails).setName("Activity sensitivity").setDesc("How responsive tempo is to vault activity (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.activitySensitivity) || 0.6).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.rhythmicLayer))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.activitySensitivity = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+        }
+        new import_obsidian7.Setting(content).setName("Enable harmonic layer").setDesc("Add cluster-based harmonic pads").addToggle(
+          (toggle) => {
+            var _a2, _b2;
+            return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicEnabled) || false).onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers))
+                return;
+              this.plugin.settings.audioEnhancement.continuousLayers.harmonicEnabled = value;
+              if (value && !this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad) {
+                this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad = {
+                  enabled: true,
+                  chordComplexity: 3,
+                  progressionSpeed: 0.5,
+                  dissonanceLevel: 0.3,
+                  clusterInfluence: 0.7,
+                  scaleConstraints: true
+                };
+              }
+              await this.plugin.saveSettings();
+              logger13.info("layers-settings", `Harmonic layer: ${value}`);
+              container.empty();
+              this.render(container);
+            });
+          }
+        );
+        if ((_d = (_c = this.plugin.settings.audioEnhancement) == null ? void 0 : _c.continuousLayers) == null ? void 0 : _d.harmonicEnabled) {
+          const harmonicDetails = content.createDiv({ cls: "osp-settings-subsection" });
+          harmonicDetails.createEl("h4", { text: "Harmonic Layer Settings", attr: { style: "margin-top: 1rem;" } });
+          new import_obsidian7.Setting(harmonicDetails).setName("Chord complexity").setDesc("Number of voices in chords (2-6)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(2, 6, 1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.chordComplexity) || 3).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.harmonicPad))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.chordComplexity = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(harmonicDetails).setName("Progression speed").setDesc("How fast harmonies change (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.progressionSpeed) || 0.5).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.harmonicPad))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.progressionSpeed = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(harmonicDetails).setName("Dissonance level").setDesc("Harmonic tension and complexity (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.dissonanceLevel) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.harmonicPad))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.dissonanceLevel = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(harmonicDetails).setName("Cluster influence").setDesc("How much clusters affect harmony (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2, _c2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.clusterInfluence) || 0.7).setDynamicTooltip().onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.harmonicPad))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.clusterInfluence = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+          new import_obsidian7.Setting(harmonicDetails).setName("Scale constraints").setDesc("Constrain harmonies to the selected musical scale").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2, _d2;
+              return toggle.setValue((_d2 = (_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.scaleConstraints) != null ? _d2 : true).onChange(async (value) => {
+                var _a3, _b3;
+                if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers) == null ? void 0 : _b3.harmonicPad))
+                  return;
+                this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.scaleConstraints = value;
+                await this.plugin.saveSettings();
+              });
+            }
+          );
+        }
+        container.appendChild(card.getElement());
+      }
+      /**
+       * Section 5: Musical Settings (Scale & Key)
+       */
+      renderMusicalSettingsSection(container) {
+        const card = new MaterialCard({
+          title: "Layer Tonality",
+          iconName: "music-4",
+          subtitle: "Musical scale and key for all continuous layers",
+          elevation: 1
+        });
+        const content = card.getContent();
+        new import_obsidian7.Setting(content).setName("Continuous layer scale").setDesc("Scale for ambient, rhythmic, and harmonic layers (independent of node sonification)").addDropdown(
+          (dropdown) => {
+            var _a, _b;
+            return dropdown.addOption("major", "Major - Bright, happy").addOption("minor", "Minor - Dark, melancholic").addOption("dorian", "Dorian - Modal, jazzy").addOption("phrygian", "Phrygian - Spanish, exotic").addOption("lydian", "Lydian - Dreamy, ethereal").addOption("mixolydian", "Mixolydian - Folk, bluesy").addOption("pentatonic", "Pentatonic - Asian, simple").addOption("chromatic", "Chromatic - All notes").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.scale) || "major").onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers))
+                return;
+              this.plugin.settings.audioEnhancement.continuousLayers.scale = value;
+              await this.plugin.saveSettings();
+              logger13.info("layers-settings", `Continuous layers scale: ${value}`);
+            });
+          }
+        );
+        new import_obsidian7.Setting(content).setName("Continuous layer key").setDesc("Root note for all continuous layers (ambient, rhythmic, harmonic)").addDropdown(
+          (dropdown) => {
+            var _a, _b;
+            return dropdown.addOption("C", "C").addOption("C#", "C# / Db").addOption("D", "D").addOption("D#", "D# / Eb").addOption("E", "E").addOption("F", "F").addOption("F#", "F# / Gb").addOption("G", "G").addOption("G#", "G# / Ab").addOption("A", "A").addOption("A#", "A# / Bb").addOption("B", "B").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.key) || "C").onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers))
+                return;
+              this.plugin.settings.audioEnhancement.continuousLayers.key = value;
+              await this.plugin.saveSettings();
+              logger13.info("layers-settings", `Continuous layers key: ${value}`);
+            });
+          }
+        );
+        const note = content.createDiv({ cls: "osp-settings-note" });
+        note.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
+				<strong>Note:</strong> These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic).
+				For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.
+			</p>
+		`;
+        container.appendChild(card.getElement());
+      }
+      /**
+       * Section 6: Adaptive Behavior
        */
       renderAdaptiveSection(container) {
         const card = new MaterialCard({
@@ -14288,6 +14528,7 @@ var init_SonicGraphAdvancedSettings = __esm({
     import_obsidian8 = require("obsidian");
     init_material_components();
     init_logging();
+    init_types();
     logger14 = getLogger("SonicGraphAdvancedSettings");
     SonicGraphAdvancedSettings = class {
       constructor(app, plugin) {
@@ -14299,37 +14540,22 @@ var init_SonicGraphAdvancedSettings = __esm({
        */
       render(container) {
         logger14.debug("advanced-settings", "Rendering advanced features settings");
-        this.renderOverviewCard(container);
         this.renderClusteringSection(container);
+        this.renderHubOrchestrationSection(container);
         this.renderMusicalTheorySection(container);
-        this.renderComingSoonSection(container);
-      }
-      /**
-       * Overview Card
-       */
-      renderOverviewCard(container) {
-        const card = new MaterialCard({
-          title: "Advanced Features",
-          iconName: "sparkles",
-          subtitle: "Sophisticated audio features for power users",
-          elevation: 1
-        });
-        const content = card.getContent();
-        const description = content.createDiv({ cls: "osp-settings-description" });
-        description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5;">
-				Advanced features provide sophisticated audio mappings based on graph structure,
-				musical theory, and spatial positioning. These features are designed for users who
-				want fine-grained control over the sonic experience.
-			</p>
-		`;
-        container.appendChild(card.getElement());
+        this.renderDynamicOrchestrationSection(container);
+        this.renderSpatialAudioSection(container);
       }
       /**
        * Phase 5: Smart Clustering Audio
        */
       renderClusteringSection(container) {
+        const cardContainer = container.createDiv({ cls: "osp-settings-card-container" });
+        this.renderClusteringCard(cardContainer);
+      }
+      renderClusteringCard(cardContainer) {
         var _a;
+        cardContainer.empty();
         const card = new MaterialCard({
           title: "Smart Clustering Audio",
           iconName: "network",
@@ -14374,8 +14600,7 @@ var init_SonicGraphAdvancedSettings = __esm({
               }
               await this.plugin.saveSettings();
               logger14.info("advanced-settings", `Cluster audio: ${value}`);
-              container.empty();
-              this.render(container);
+              this.renderClusteringCard(cardContainer);
             });
           }
         );
@@ -14410,7 +14635,7 @@ var init_SonicGraphAdvancedSettings = __esm({
 				</p>
 			`;
         }
-        container.appendChild(card.getElement());
+        cardContainer.appendChild(card.getElement());
       }
       /**
        * Phase 6.1: Musical Theory Integration
@@ -14439,57 +14664,695 @@ var init_SonicGraphAdvancedSettings = __esm({
         new import_obsidian8.Setting(content).setName("Key signature").setDesc("Root note for the selected scale").addDropdown(
           (dropdown) => {
             var _a, _b;
-            return dropdown.addOption("C", "C").addOption("C#", "C# / Db").addOption("D", "D").addOption("D#", "D# / Eb").addOption("E", "E").addOption("F", "F").addOption("F#", "F# / Gb").addOption("G", "G").addOption("G#", "G# / Ab").addOption("A", "A").addOption("A#", "A# / Bb").addOption("B", "B").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.key) || "C").onChange(async (value) => {
+            return dropdown.addOption("C", "C").addOption("C#", "C# / Db").addOption("D", "D").addOption("D#", "D# / Eb").addOption("E", "E").addOption("F", "F").addOption("F#", "F# / Gb").addOption("G", "G").addOption("G#", "G# / Ab").addOption("A", "A").addOption("A#", "A# / Bb").addOption("B", "B").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.rootNote) || "C").onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
                 return;
-              this.plugin.settings.audioEnhancement.musicalTheory.key = value;
+              this.plugin.settings.audioEnhancement.musicalTheory.rootNote = value;
               await this.plugin.saveSettings();
-              logger14.info("advanced-settings", `Key: ${value}`);
+              logger14.info("advanced-settings", `Root note: ${value}`);
             });
           }
         );
-        new import_obsidian8.Setting(content).setName("Constrain to scale").setDesc("Force all notes to fit within the selected scale (experimental)").addToggle(
+        new import_obsidian8.Setting(content).setName("Enforce harmony").setDesc("Force all notes to fit within the selected scale and key").addToggle(
           (toggle) => {
             var _a, _b;
-            return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.constrainToScale) || false).onChange(async (value) => {
+            return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.enforceHarmony) || false).onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
                 return;
-              this.plugin.settings.audioEnhancement.musicalTheory.constrainToScale = value;
+              this.plugin.settings.audioEnhancement.musicalTheory.enforceHarmony = value;
               await this.plugin.saveSettings();
-              logger14.info("advanced-settings", `Constrain to scale: ${value}`);
+              logger14.info("advanced-settings", `Enforce harmony: ${value}`);
+            });
+          }
+        );
+        new import_obsidian8.Setting(content).setName("Allow chromatic passing").setDesc("Allow notes outside the scale as passing tones between scale notes").addToggle(
+          (toggle) => {
+            var _a, _b;
+            return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.allowChromaticPassing) || false).onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
+                return;
+              this.plugin.settings.audioEnhancement.musicalTheory.allowChromaticPassing = value;
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Allow chromatic passing: ${value}`);
+            });
+          }
+        );
+        new import_obsidian8.Setting(content).setName("Dissonance threshold").setDesc("Maximum allowed dissonance in harmonies (0 = consonant, 1 = fully dissonant)").addSlider(
+          (slider) => {
+            var _a, _b;
+            return slider.setLimits(0, 1, 0.05).setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.dissonanceThreshold) || 0.5).setDynamicTooltip().onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
+                return;
+              this.plugin.settings.audioEnhancement.musicalTheory.dissonanceThreshold = value;
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Dissonance threshold: ${value}`);
+            });
+          }
+        );
+        new import_obsidian8.Setting(content).setName("Quantization strength").setDesc("How strongly to snap notes to the scale (0 = free, 1 = strict quantization)").addSlider(
+          (slider) => {
+            var _a, _b;
+            return slider.setLimits(0, 1, 0.05).setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.quantizationStrength) || 0.8).setDynamicTooltip().onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
+                return;
+              this.plugin.settings.audioEnhancement.musicalTheory.quantizationStrength = value;
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Quantization strength: ${value}`);
+            });
+          }
+        );
+        new import_obsidian8.Setting(content).setName("Preferred chord progression").setDesc('Name of preferred chord progression (e.g., "I-IV-V-I", "ii-V-I"). Leave empty for automatic.').addText(
+          (text) => {
+            var _a, _b;
+            return text.setPlaceholder("e.g., I-IV-V-I").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.preferredChordProgression) || "").onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
+                return;
+              this.plugin.settings.audioEnhancement.musicalTheory.preferredChordProgression = value || void 0;
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Preferred chord progression: ${value || "automatic"}`);
+            });
+          }
+        );
+        new import_obsidian8.Setting(content).setName("Dynamic scale modulation").setDesc("Automatically change scale based on vault state and context").addToggle(
+          (toggle) => {
+            var _a, _b;
+            return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.dynamicScaleModulation) || false).onChange(async (value) => {
+              var _a2;
+              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
+                return;
+              this.plugin.settings.audioEnhancement.musicalTheory.dynamicScaleModulation = value;
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Dynamic scale modulation: ${value}`);
             });
           }
         );
         container.appendChild(card.getElement());
       }
       /**
-       * Coming Soon: Phase 6.2 & 6.3
+       * Phase 5.2: Hub Node Orchestration
        */
-      renderComingSoonSection(container) {
+      renderHubOrchestrationSection(container) {
+        const cardContainer = container.createDiv({ cls: "osp-settings-card-container" });
+        this.renderHubOrchestrationCard(cardContainer);
+      }
+      renderHubOrchestrationCard(cardContainer) {
+        var _a;
+        cardContainer.empty();
         const card = new MaterialCard({
-          title: "Dynamic Orchestration & Spatial Audio",
-          iconName: "construction",
-          subtitle: "Phase 6.2 & 6.3: Coming soon",
+          title: "Hub Node Orchestration",
+          iconName: "git-branch",
+          subtitle: "Phase 5.2: Emphasize highly connected nodes",
           elevation: 1
         });
         const content = card.getContent();
-        const note = content.createDiv({ cls: "osp-settings-description" });
-        note.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5;">
-				<strong>Phase 6.2: Dynamic Orchestration</strong><br>
-				Automatically adjust instrument complexity tiers based on graph density and temporal influence.
-			</p>
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Phase 6.3: Spatial Audio & Panning</strong><br>
-				Position sounds in stereo space based on node position, using geometric or cluster-based panning.
-			</p>
-			<p style="color: var(--text-muted); font-size: 12px; font-style: italic; margin-top: 1rem;">
-				These features are planned for future implementation.
-			</p>
-		`;
-        container.appendChild(card.getElement());
+        new import_obsidian8.Setting(content).setName("Enable hub orchestration").setDesc('Make highly connected "hub" nodes more prominent in the audio mix').addToggle(
+          (toggle) => {
+            var _a2;
+            return toggle.setValue(((_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.hubOrchestration) {
+                this.plugin.settings.hubOrchestration = {
+                  enabled: value,
+                  hubThreshold: 0.6,
+                  prominenceMultiplier: 2,
+                  orchestrationMode: "balanced",
+                  transitionsEnabled: true,
+                  centralityWeights: {
+                    degree: 0.3,
+                    betweenness: 0.3,
+                    eigenvector: 0.2,
+                    pageRank: 0.2
+                  },
+                  hubInstrumentPreference: ["piano", "strings", "brass"]
+                };
+              } else {
+                this.plugin.settings.hubOrchestration.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Hub orchestration: ${value}`);
+              this.renderHubOrchestrationCard(cardContainer);
+            });
+          }
+        );
+        if ((_a = this.plugin.settings.hubOrchestration) == null ? void 0 : _a.enabled) {
+          new import_obsidian8.Setting(content).setName("Hub threshold").setDesc("Minimum composite score for a node to be considered a hub (0-1)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(0, 1, 0.05).setValue(((_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.hubThreshold) || 0.6).setDynamicTooltip().onChange(async (value) => {
+                if (this.plugin.settings.hubOrchestration) {
+                  this.plugin.settings.hubOrchestration.hubThreshold = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Prominence multiplier").setDesc("How much louder hub nodes are (1-5x)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(1, 5, 0.5).setValue(((_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.prominenceMultiplier) || 2).setDynamicTooltip().onChange(async (value) => {
+                if (this.plugin.settings.hubOrchestration) {
+                  this.plugin.settings.hubOrchestration.prominenceMultiplier = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Orchestration mode").setDesc("How hubs interact with other nodes").addDropdown(
+            (dropdown) => {
+              var _a2;
+              return dropdown.addOption("hub-led", "Hub-Led - Hubs dominate").addOption("balanced", "Balanced - Moderate emphasis").addOption("democratic", "Democratic - Subtle emphasis").setValue(((_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.orchestrationMode) || "balanced").onChange(async (value) => {
+                if (this.plugin.settings.hubOrchestration) {
+                  this.plugin.settings.hubOrchestration.orchestrationMode = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Hub transitions").setDesc("Play special audio when nodes become or cease to be hubs").addToggle(
+            (toggle) => {
+              var _a2, _b;
+              return toggle.setValue((_b = (_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.transitionsEnabled) != null ? _b : true).onChange(async (value) => {
+                if (this.plugin.settings.hubOrchestration) {
+                  this.plugin.settings.hubOrchestration.transitionsEnabled = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          const weightsDiv = content.createDiv({ cls: "osp-settings-subsection" });
+          weightsDiv.createEl("h4", { text: "Centrality Weights" });
+          weightsDiv.createEl("p", {
+            text: "Adjust how different centrality metrics contribute to hub detection",
+            cls: "osp-settings-description"
+          });
+          new import_obsidian8.Setting(weightsDiv).setName("Degree weight").setDesc("Basic connectivity (number of connections)").addSlider(
+            (slider) => {
+              var _a2, _b;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b = (_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.centralityWeights) == null ? void 0 : _b.degree) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a3.centralityWeights) {
+                  this.plugin.settings.hubOrchestration.centralityWeights.degree = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(weightsDiv).setName("Betweenness weight").setDesc("Bridge importance (on shortest paths)").addSlider(
+            (slider) => {
+              var _a2, _b;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b = (_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.centralityWeights) == null ? void 0 : _b.betweenness) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a3.centralityWeights) {
+                  this.plugin.settings.hubOrchestration.centralityWeights.betweenness = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(weightsDiv).setName("Eigenvector weight").setDesc("Network influence (connected to well-connected nodes)").addSlider(
+            (slider) => {
+              var _a2, _b;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b = (_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.centralityWeights) == null ? void 0 : _b.eigenvector) || 0.2).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a3.centralityWeights) {
+                  this.plugin.settings.hubOrchestration.centralityWeights.eigenvector = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(weightsDiv).setName("PageRank weight").setDesc("Authority score (Google PageRank algorithm)").addSlider(
+            (slider) => {
+              var _a2, _b;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b = (_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.centralityWeights) == null ? void 0 : _b.pageRank) || 0.2).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a3.centralityWeights) {
+                  this.plugin.settings.hubOrchestration.centralityWeights.pageRank = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          const instrumentsNote = content.createDiv({ cls: "osp-settings-note" });
+          instrumentsNote.innerHTML = `
+				<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
+					<strong>Hub Instrument Preference:</strong> Hub nodes will preferentially use piano, strings,
+					and brass instruments to emphasize their prominence in the network.
+				</p>
+			`;
+        }
+        cardContainer.appendChild(card.getElement());
+      }
+      /**
+       * Phase 6.2: Dynamic Orchestration
+       */
+      renderDynamicOrchestrationSection(container) {
+        const cardContainer = container.createDiv({ cls: "osp-settings-card-container" });
+        this.renderDynamicOrchestrationCard(cardContainer);
+      }
+      renderDynamicOrchestrationCard(cardContainer) {
+        var _a;
+        cardContainer.empty();
+        const card = new MaterialCard({
+          title: "Dynamic Orchestration",
+          iconName: "activity",
+          subtitle: "Phase 6.2: Auto-adjust complexity based on context",
+          elevation: 1
+        });
+        const content = card.getContent();
+        new import_obsidian8.Setting(content).setName("Enable dynamic orchestration").setDesc("Automatically adjust instrument complexity based on graph density and time").addToggle(
+          (toggle) => {
+            var _a2;
+            return toggle.setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.dynamicOrchestration) {
+                this.plugin.settings.dynamicOrchestration = {
+                  enabled: value,
+                  customThresholds: false,
+                  temporalInfluenceEnabled: true,
+                  timeOfDayInfluence: 0.5,
+                  seasonalInfluence: 0.3,
+                  transitionDuration: 3,
+                  autoAdjust: true
+                };
+              } else {
+                this.plugin.settings.dynamicOrchestration.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Dynamic orchestration: ${value}`);
+              this.renderDynamicOrchestrationCard(cardContainer);
+            });
+          }
+        );
+        if ((_a = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a.enabled) {
+          new import_obsidian8.Setting(content).setName("Temporal influence").setDesc("Enable time-of-day and seasonal effects").addToggle(
+            (toggle) => {
+              var _a2;
+              return toggle.setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.temporalInfluenceEnabled) || true).onChange(async (value) => {
+                if (this.plugin.settings.dynamicOrchestration) {
+                  this.plugin.settings.dynamicOrchestration.temporalInfluenceEnabled = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Time-of-day influence").setDesc("How much time-of-day affects orchestration (0-1)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.timeOfDayInfluence) || 0.5).setDynamicTooltip().onChange(async (value) => {
+                if (this.plugin.settings.dynamicOrchestration) {
+                  this.plugin.settings.dynamicOrchestration.timeOfDayInfluence = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Seasonal influence").setDesc("How much season affects orchestration (0-1)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.seasonalInfluence) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                if (this.plugin.settings.dynamicOrchestration) {
+                  this.plugin.settings.dynamicOrchestration.seasonalInfluence = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Transition duration").setDesc("How long to transition between complexity tiers (seconds)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(0.5, 10, 0.5).setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.transitionDuration) || 3).setDynamicTooltip().onChange(async (value) => {
+                if (this.plugin.settings.dynamicOrchestration) {
+                  this.plugin.settings.dynamicOrchestration.transitionDuration = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Auto-adjust").setDesc("Automatically adjust to vault changes").addToggle(
+            (toggle) => {
+              var _a2;
+              return toggle.setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.autoAdjust) || true).onChange(async (value) => {
+                if (this.plugin.settings.dynamicOrchestration) {
+                  this.plugin.settings.dynamicOrchestration.autoAdjust = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Custom complexity thresholds").setDesc("Use custom thresholds instead of automatic detection").addToggle(
+            (toggle) => {
+              var _a2;
+              return toggle.setValue(((_a2 = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a2.customThresholds) || false).onChange(async (value) => {
+                if (this.plugin.settings.dynamicOrchestration) {
+                  this.plugin.settings.dynamicOrchestration.customThresholds = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          const note = content.createDiv({ cls: "osp-settings-note" });
+          note.innerHTML = `
+				<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
+					<strong>Complexity Tiers:</strong> The system automatically adjusts orchestration based on vault size:
+					<br>\u2022 Minimal (0-100 nodes): Basic instruments only
+					<br>\u2022 Simple (100-500): Add rhythmic layers
+					<br>\u2022 Moderate (500-1000): Add harmonic pads
+					<br>\u2022 Complex (1000-5000): Full orchestral arrangement
+					<br>\u2022 Extensive (5000+): Maximum complexity
+				</p>
+			`;
+        }
+        cardContainer.appendChild(card.getElement());
+      }
+      /**
+       * Phase 6.3: Spatial Audio & Panning
+       */
+      renderSpatialAudioSection(container) {
+        const cardContainer = container.createDiv({ cls: "osp-settings-card-container" });
+        this.renderSpatialAudioCard(cardContainer);
+      }
+      renderSpatialAudioCard(cardContainer) {
+        var _a, _b, _c, _d;
+        cardContainer.empty();
+        const card = new MaterialCard({
+          title: "Spatial Audio & Panning",
+          iconName: "radio",
+          subtitle: "Phase 6.3: Position sounds in stereo space",
+          elevation: 1
+        });
+        const content = card.getContent();
+        new import_obsidian8.Setting(content).setName("Enable spatial audio").setDesc("Position sounds in stereo space based on node position").addToggle(
+          (toggle) => {
+            var _a2;
+            return toggle.setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.spatialAudio) {
+                this.plugin.settings.spatialAudio = {
+                  enabled: value,
+                  mode: "hybrid" /* Hybrid */,
+                  graphPositionSettings: {
+                    curve: "sigmoid" /* Sigmoid */,
+                    intensity: 0.7,
+                    smoothingFactor: 0.5,
+                    updateThrottleMs: 100
+                  },
+                  folderSettings: {
+                    enabled: true,
+                    customMappings: [],
+                    autoDetectTopLevel: true,
+                    spreadFactor: 0.3
+                  },
+                  clusterSettings: {
+                    enabled: true,
+                    useCentroid: true,
+                    individualSpread: 0.2,
+                    clusterSeparation: 0.5
+                  },
+                  hybridWeights: {
+                    graphPosition: 0.5,
+                    folderBased: 0.3,
+                    clusterBased: 0.2
+                  },
+                  advanced: {
+                    enableDepthMapping: false,
+                    depthInfluence: 0.3,
+                    boundaryPadding: 0.1,
+                    velocityDamping: true,
+                    dampingFactor: 0.7
+                  }
+                };
+              } else {
+                this.plugin.settings.spatialAudio.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Spatial audio: ${value}`);
+              this.renderSpatialAudioCard(cardContainer);
+            });
+          }
+        );
+        if ((_a = this.plugin.settings.spatialAudio) == null ? void 0 : _a.enabled) {
+          new import_obsidian8.Setting(content).setName("Panning mode").setDesc("How node positions map to stereo panning").addDropdown(
+            (dropdown) => {
+              var _a2;
+              return dropdown.addOption("geometric", "Geometric - Based on X position").addOption("cluster-based", "Cluster-Based - By cluster").addOption("folder-based", "Folder-Based - By folder").addOption("hybrid", "Hybrid - Combined approach").setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.mode) || "hybrid").onChange(async (value) => {
+                if (this.plugin.settings.spatialAudio) {
+                  this.plugin.settings.spatialAudio.mode = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Pan intensity").setDesc("How extreme panning can be (0-1)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.graphPositionSettings.intensity) || 0.7).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.graphPositionSettings) {
+                  this.plugin.settings.spatialAudio.graphPositionSettings.intensity = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Smoothing factor").setDesc("Smooths position changes (0-1)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.graphPositionSettings.smoothingFactor) || 0.5).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.graphPositionSettings) {
+                  this.plugin.settings.spatialAudio.graphPositionSettings.smoothingFactor = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Panning curve").setDesc("Curve type for position-to-pan mapping").addDropdown(
+            (dropdown) => {
+              var _a2;
+              return dropdown.addOption("linear" /* Linear */, "Linear - Direct proportion").addOption("exponential" /* Exponential */, "Exponential - Emphasize extremes").addOption("sigmoid" /* Sigmoid */, "Sigmoid - Smooth S-curve").addOption("logarithmic" /* Logarithmic */, "Logarithmic - Compress extremes").setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.graphPositionSettings.curve) || "sigmoid" /* Sigmoid */).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.graphPositionSettings) {
+                  this.plugin.settings.spatialAudio.graphPositionSettings.curve = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(content).setName("Update throttle").setDesc("Minimum milliseconds between position updates (lower = more responsive, higher = better performance)").addSlider(
+            (slider) => {
+              var _a2;
+              return slider.setLimits(16, 500, 16).setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.graphPositionSettings.updateThrottleMs) || 100).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.graphPositionSettings) {
+                  this.plugin.settings.spatialAudio.graphPositionSettings.updateThrottleMs = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          if (((_b = this.plugin.settings.spatialAudio) == null ? void 0 : _b.mode) === "hybrid" /* Hybrid */) {
+            const hybridSection = content.createDiv({ cls: "osp-settings-subsection" });
+            hybridSection.createEl("h4", { text: "Hybrid Mode Weights" });
+            hybridSection.createEl("p", {
+              text: "Balance between different panning strategies (should sum to ~1.0)",
+              cls: "osp-settings-description"
+            });
+            new import_obsidian8.Setting(hybridSection).setName("Graph position weight").setDesc("Weight for X-position based panning (0-1)").addSlider(
+              (slider) => {
+                var _a2, _b2;
+                return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.hybridWeights) == null ? void 0 : _b2.graphPosition) || 0.5).setDynamicTooltip().onChange(async (value) => {
+                  var _a3;
+                  if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.hybridWeights) {
+                    this.plugin.settings.spatialAudio.hybridWeights.graphPosition = value;
+                    await this.plugin.saveSettings();
+                  }
+                });
+              }
+            );
+            new import_obsidian8.Setting(hybridSection).setName("Folder weight").setDesc("Weight for folder-based panning (0-1)").addSlider(
+              (slider) => {
+                var _a2, _b2;
+                return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.hybridWeights) == null ? void 0 : _b2.folderBased) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                  var _a3;
+                  if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.hybridWeights) {
+                    this.plugin.settings.spatialAudio.hybridWeights.folderBased = value;
+                    await this.plugin.saveSettings();
+                  }
+                });
+              }
+            );
+            new import_obsidian8.Setting(hybridSection).setName("Cluster weight").setDesc("Weight for cluster-based panning (0-1)").addSlider(
+              (slider) => {
+                var _a2, _b2;
+                return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.hybridWeights) == null ? void 0 : _b2.clusterBased) || 0.2).setDynamicTooltip().onChange(async (value) => {
+                  var _a3;
+                  if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.hybridWeights) {
+                    this.plugin.settings.spatialAudio.hybridWeights.clusterBased = value;
+                    await this.plugin.saveSettings();
+                  }
+                });
+              }
+            );
+          }
+          const folderSection = content.createDiv({ cls: "osp-settings-subsection" });
+          folderSection.createEl("h4", { text: "Folder-Based Settings" });
+          new import_obsidian8.Setting(folderSection).setName("Enable folder panning").setDesc("Use folder structure to determine pan positions").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2;
+              return toggle.setValue((_c2 = (_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.folderSettings) == null ? void 0 : _b2.enabled) != null ? _c2 : true).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.folderSettings) {
+                  this.plugin.settings.spatialAudio.folderSettings.enabled = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(folderSection).setName("Auto-detect top folders").setDesc("Automatically assign pan positions to top-level folders").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2;
+              return toggle.setValue((_c2 = (_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.folderSettings) == null ? void 0 : _b2.autoDetectTopLevel) != null ? _c2 : true).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.folderSettings) {
+                  this.plugin.settings.spatialAudio.folderSettings.autoDetectTopLevel = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(folderSection).setName("Folder spread").setDesc("How much nested files vary from folder pan (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.folderSettings) == null ? void 0 : _b2.spreadFactor) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.folderSettings) {
+                  this.plugin.settings.spatialAudio.folderSettings.spreadFactor = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          const clusterSection = content.createDiv({ cls: "osp-settings-subsection" });
+          clusterSection.createEl("h4", { text: "Cluster-Based Settings" });
+          new import_obsidian8.Setting(clusterSection).setName("Enable cluster panning").setDesc("Use cluster positions for panning").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2;
+              return toggle.setValue((_c2 = (_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.clusterSettings) == null ? void 0 : _b2.enabled) != null ? _c2 : true).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.clusterSettings) {
+                  this.plugin.settings.spatialAudio.clusterSettings.enabled = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(clusterSection).setName("Use cluster centroid").setDesc("Pan based on cluster center position").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2;
+              return toggle.setValue((_c2 = (_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.clusterSettings) == null ? void 0 : _b2.useCentroid) != null ? _c2 : true).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.clusterSettings) {
+                  this.plugin.settings.spatialAudio.clusterSettings.useCentroid = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(clusterSection).setName("Individual spread").setDesc("How much nodes vary within cluster (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.clusterSettings) == null ? void 0 : _b2.individualSpread) || 0.2).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.clusterSettings) {
+                  this.plugin.settings.spatialAudio.clusterSettings.individualSpread = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(clusterSection).setName("Cluster separation").setDesc("Force clusters to different pan positions (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.clusterSettings) == null ? void 0 : _b2.clusterSeparation) || 0.5).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.clusterSettings) {
+                  this.plugin.settings.spatialAudio.clusterSettings.clusterSeparation = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          const advancedSection = content.createDiv({ cls: "osp-settings-subsection" });
+          advancedSection.createEl("h4", { text: "Advanced Settings" });
+          new import_obsidian8.Setting(advancedSection).setName("Enable depth mapping").setDesc("Use Y-axis position for future surround sound support").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2;
+              return toggle.setValue((_c2 = (_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.advanced) == null ? void 0 : _b2.enableDepthMapping) != null ? _c2 : false).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.advanced) {
+                  this.plugin.settings.spatialAudio.advanced.enableDepthMapping = value;
+                  await this.plugin.saveSettings();
+                  this.renderSpatialAudioCard(cardContainer);
+                }
+              });
+            }
+          );
+          if ((_d = (_c = this.plugin.settings.spatialAudio) == null ? void 0 : _c.advanced) == null ? void 0 : _d.enableDepthMapping) {
+            new import_obsidian8.Setting(advancedSection).setName("Depth influence").setDesc("How much depth affects volume (0-1)").addSlider(
+              (slider) => {
+                var _a2, _b2;
+                return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.advanced) == null ? void 0 : _b2.depthInfluence) || 0.3).setDynamicTooltip().onChange(async (value) => {
+                  var _a3;
+                  if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.advanced) {
+                    this.plugin.settings.spatialAudio.advanced.depthInfluence = value;
+                    await this.plugin.saveSettings();
+                  }
+                });
+              }
+            );
+          }
+          new import_obsidian8.Setting(advancedSection).setName("Velocity damping").setDesc("Smooth rapid position changes").addToggle(
+            (toggle) => {
+              var _a2, _b2, _c2;
+              return toggle.setValue((_c2 = (_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.advanced) == null ? void 0 : _b2.velocityDamping) != null ? _c2 : true).onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.advanced) {
+                  this.plugin.settings.spatialAudio.advanced.velocityDamping = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(advancedSection).setName("Damping strength").setDesc("How much to damp rapid changes (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2;
+              return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.advanced) == null ? void 0 : _b2.dampingFactor) || 0.7).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.advanced) {
+                  this.plugin.settings.spatialAudio.advanced.dampingFactor = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+          new import_obsidian8.Setting(advancedSection).setName("Boundary padding").setDesc("Keep sounds away from extreme pan positions (0-1)").addSlider(
+            (slider) => {
+              var _a2, _b2;
+              return slider.setLimits(0, 1, 0.05).setValue(((_b2 = (_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.advanced) == null ? void 0 : _b2.boundaryPadding) || 0.1).setDynamicTooltip().onChange(async (value) => {
+                var _a3;
+                if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.advanced) {
+                  this.plugin.settings.spatialAudio.advanced.boundaryPadding = value;
+                  await this.plugin.saveSettings();
+                }
+              });
+            }
+          );
+        }
+        cardContainer.appendChild(card.getElement());
       }
     };
   }
@@ -56197,11 +57060,15 @@ var init_musical_mapper = __esm({
             harmonicPad: null
           },
           musicalTheory: {
+            enabled: false,
             scale: this.settings.scale,
-            key: this.settings.rootNote,
-            mode: "major",
-            // Default mode
-            constrainToScale: true
+            rootNote: this.settings.rootNote,
+            enforceHarmony: true,
+            allowChromaticPassing: false,
+            dissonanceThreshold: 0.3,
+            quantizationStrength: 0.8,
+            preferredChordProgression: "I-IV-V-I",
+            dynamicScaleModulation: false
           },
           externalServices: {
             freesoundApiKey: this.settings.freesoundApiKey || "",
