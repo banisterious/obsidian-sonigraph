@@ -14751,8 +14751,13 @@ var init_control_panel = __esm({
         logger13.debug("ui", "Show file names toggle created");
         const freesoundSection = settingsSection.createDiv({ cls: "osp-settings-section" });
         freesoundSection.createEl("h3", { text: "Freesound Integration", cls: "osp-section-header" });
+        const descriptionEl = freesoundSection.createEl("p", {
+          text: "Enter your API key from Freesound.org here. Get your free API key at: https://freesound.org/apiv2/apply/",
+          cls: "osp-settings-description"
+        });
+        descriptionEl.style.marginBottom = "10px";
         const apiKeyContainer = freesoundSection.createDiv({ cls: "osp-settings-item" });
-        new import_obsidian6.Setting(apiKeyContainer).setName("Freesound API Key").setDesc("Enter your API key from Freesound.org. Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. Only share your vault if you trust recipients with API access. Get your free API key at: https://freesound.org/apiv2/apply/").addText((text) => {
+        new import_obsidian6.Setting(apiKeyContainer).setName("API Key").addText((text) => {
           text.setPlaceholder("Enter your Freesound API key (32 characters)").setValue(this.plugin.settings.freesoundApiKey || "").onChange(async (value) => {
             this.plugin.settings.freesoundApiKey = value;
             await this.plugin.saveSettings();
@@ -14766,6 +14771,14 @@ var init_control_panel = __esm({
             await this.testFreesoundConnection(button.buttonEl);
           });
         });
+        const securityNote = freesoundSection.createEl("p", {
+          text: "Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. Only share your vault if you trust recipients with API access.",
+          cls: "osp-settings-note"
+        });
+        securityNote.style.fontSize = "12px";
+        securityNote.style.color = "var(--text-muted)";
+        securityNote.style.marginTop = "8px";
+        securityNote.style.marginBottom = "16px";
         const enableSamplesContainer = freesoundSection.createDiv({ cls: "osp-settings-item" });
         new import_obsidian6.Setting(enableSamplesContainer).setName("Enable Freesound Samples").setDesc("Download and use audio samples from Freesound for continuous layers (requires API key)").addToggle(
           (toggle) => toggle.setValue(this.plugin.settings.enableFreesoundSamples || false).onChange(async (value) => {
