@@ -1,13 +1,14 @@
 # Sonigraph Development Roadmap
 
-**Project**: Obsidian Sonigraph Plugin  
-**Version**: 0.3.0  
-**Last Updated**: 2025-06-23
+**Project**: Obsidian Sonigraph Plugin
+**Version**: 0.12.0
+**Last Updated**: September 30, 2025
 
 ---
 
 ## Table of Contents
 
+- [Planning Documents](#planning-documents)
 - [Executive Summary](#executive-summary)
 - [Quick Navigation](#quick-navigation)
 - [Current Sprint](#current-sprint)
@@ -22,6 +23,34 @@
 - [Recent Achievements](#recent-achievements)
 - [Dependencies & Blockers](#dependencies--blockers)
 - [Development Guidelines](#development-guidelines)
+
+---
+
+## Planning Documents
+
+### 📚 Reference Documents
+Core specifications and catalogs that remain current:
+- **[Sonic Graph Audio Enhancement Specification](sonic-graph-audio-enhancement-specification.md)** - Complete technical specification for audio enhancement system
+- **[Feature Catalog](feature-catalog.md)** - Comprehensive catalog of all plugin features
+- **[Instruments Catalog](instruments-catalog.md)** - Full orchestral instrument reference
+- **[Freesound Audio Library](freesound-audio-library.md)** - Curated sample library for continuous layers
+- **[Whale Sample Research](whale-sample-research.md)** - Research notes on whale audio samples
+
+### 🔄 Active Implementation Plans
+Plans currently in progress or ready to start:
+- **[Effect Presets Implementation](active/effect-presets-implementation-plan.md)** - Backend complete, UI needed
+- **[User Experience Improvements](active/user-experience-improvements-plan.md)** - Documentation, tutorials, and preset library
+
+### ✅ Completed Implementation Plans
+Successfully implemented features (kept for reference):
+- **[Sonic Graph Audio Enhancement](completed/sonic-graph-audio-enhancement-implementation-plan.md)** - All 8 phases complete (Phases 1-7 + 8.1)
+- **[Timeline Granularity](completed/timeline-granularity-implementation-plan.md)** - Multi-level timeline controls
+- **[Modal to View Migration](completed/sonic-graph-modal-to-view-migration.md)** - SonicGraphView implementation
+
+### 📦 Archived Plans
+Superseded or experimental plans (historical reference):
+- **[Sonic Graph Animation Plan](archived/sonic-graph-animation-plan.md)** - Original plan, superseded by audio enhancement
+- **[Whale Sound Integration](archived/whale-sound-integration-plan.md)** - Experimental feature, superseded by Freesound
 
 ---
 
