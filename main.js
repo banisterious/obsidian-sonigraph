@@ -1972,6 +1972,12 @@ var init_constants = __esm({
       // Phase 7.1: Freesound API integration defaults
       freesoundApiKey: "",
       enableFreesoundSamples: false,
+      // Phase 7.3: Preloading and caching defaults
+      freesoundPredictivePreload: true,
+      freesoundPreloadOnStartup: false,
+      freesoundBackgroundLoading: true,
+      freesoundCacheStrategy: "adaptive",
+      freesoundMaxStorageMB: 100,
       // Phase 3: Performance Mode Settings
       performanceMode: {
         mode: "medium",
@@ -14785,6 +14791,43 @@ var init_control_panel = __esm({
             this.plugin.settings.enableFreesoundSamples = value;
             await this.plugin.saveSettings();
             logger13.info("freesound", `Freesound samples ${value ? "enabled" : "disabled"}`);
+          })
+        );
+        freesoundSection.createEl("h4", { text: "Preloading & Caching", cls: "osp-subsection-header" });
+        new import_obsidian6.Setting(freesoundSection).setName("Predictive Preloading").setDesc("Automatically preload samples for genres you use frequently").addToggle(
+          (toggle) => toggle.setValue(this.plugin.settings.freesoundPredictivePreload !== false).onChange(async (value) => {
+            this.plugin.settings.freesoundPredictivePreload = value;
+            await this.plugin.saveSettings();
+            logger13.info("freesound", `Predictive preloading ${value ? "enabled" : "disabled"}`);
+          })
+        );
+        new import_obsidian6.Setting(freesoundSection).setName("Preload on Startup").setDesc("Automatically preload frequently used samples when Obsidian starts").addToggle(
+          (toggle) => toggle.setValue(this.plugin.settings.freesoundPreloadOnStartup || false).onChange(async (value) => {
+            this.plugin.settings.freesoundPreloadOnStartup = value;
+            await this.plugin.saveSettings();
+            logger13.info("freesound", `Preload on startup ${value ? "enabled" : "disabled"}`);
+          })
+        );
+        new import_obsidian6.Setting(freesoundSection).setName("Background Loading").setDesc("Download samples in the background during idle time").addToggle(
+          (toggle) => toggle.setValue(this.plugin.settings.freesoundBackgroundLoading !== false).onChange(async (value) => {
+            this.plugin.settings.freesoundBackgroundLoading = value;
+            await this.plugin.saveSettings();
+            logger13.info("freesound", `Background loading ${value ? "enabled" : "disabled"}`);
+          })
+        );
+        new import_obsidian6.Setting(freesoundSection).setName("Cache Strategy").setDesc("Algorithm for managing cached samples when storage is full").addDropdown(
+          (dropdown) => dropdown.addOption("adaptive", "Adaptive (Recommended)").addOption("lru", "Least Recently Used").addOption("lfu", "Least Frequently Used").addOption("predictive", "Predictive").setValue(this.plugin.settings.freesoundCacheStrategy || "adaptive").onChange(async (value) => {
+            this.plugin.settings.freesoundCacheStrategy = value;
+            await this.plugin.saveSettings();
+            logger13.info("freesound", `Cache strategy set to ${value}`);
+          })
+        );
+        new import_obsidian6.Setting(freesoundSection).setName("Max Storage (MB)").setDesc("Maximum disk space for cached samples (default: 100MB)").addText(
+          (text) => text.setPlaceholder("100").setValue(String(this.plugin.settings.freesoundMaxStorageMB || 100)).onChange(async (value) => {
+            const numValue = parseInt(value) || 100;
+            this.plugin.settings.freesoundMaxStorageMB = numValue;
+            await this.plugin.saveSettings();
+            logger13.info("freesound", `Max storage set to ${numValue}MB`);
           })
         );
         settingsSection.createDiv({ cls: "osp-settings-spacer" });
