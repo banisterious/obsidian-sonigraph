@@ -234,6 +234,9 @@ export class SonicGraphCoreSettings {
 			</p>
 		`;
 
+		// Create wrapper for detailed settings (will be dynamically shown/hidden)
+		const detailsWrapper = content.createDiv({ cls: 'osp-settings-details-wrapper' });
+
 		// Enable content-aware mapping toggle
 		new Setting(content)
 			.setName('Enable content-aware mapping')
@@ -261,71 +264,20 @@ export class SonicGraphCoreSettings {
 					await this.plugin.saveSettings();
 					logger.info('core-settings', `Content-aware mapping: ${value}`);
 
-					// Re-render to show/hide detailed settings
-					content.empty();
-					this.renderContentMappingCard(content);
+					// Re-render only the details wrapper
+					detailsWrapper.empty();
+					if (value) {
+						this.renderContentMappingDetails(detailsWrapper);
+					}
 				})
 			);
 
 		// Show detailed settings only if enabled
 		if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
-			this.renderContentMappingDetails(content);
+			this.renderContentMappingDetails(detailsWrapper);
 		}
 
 		container.appendChild(card.getElement());
-	}
-
-	/**
-	 * Render content mapping card (for re-rendering)
-	 */
-	private renderContentMappingCard(content: HTMLElement): void {
-		// Description
-		const description = content.createDiv({ cls: 'osp-settings-description' });
-		description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Content-aware mapping automatically selects instruments based on file types, tags,
-				folder structure, and frontmatter metadata. This creates semantic correlation between
-				your vault's content and its musical representation.
-			</p>
-		`;
-
-		// Enable toggle
-		new Setting(content)
-			.setName('Enable content-aware mapping')
-			.setDesc('Automatically map file properties to musical parameters')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled || false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.audioEnhancement) {
-						this.plugin.settings.audioEnhancement = {} as any;
-					}
-					if (!this.plugin.settings.audioEnhancement.contentAwareMapping) {
-						this.plugin.settings.audioEnhancement.contentAwareMapping = {
-							enabled: value,
-							frontmatterPropertyName: 'instrument',
-							moodPropertyName: 'musical-mood',
-							distributionStrategy: 'balanced',
-							fileTypePreferences: {},
-							tagMappings: {},
-							folderMappings: {},
-							connectionTypeMappings: {}
-						};
-					} else {
-						this.plugin.settings.audioEnhancement.contentAwareMapping.enabled = value;
-					}
-					await this.plugin.saveSettings();
-					logger.info('core-settings', `Content-aware mapping: ${value}`);
-
-					// Re-render to show/hide detailed settings
-					content.empty();
-					this.renderContentMappingCard(content);
-				})
-			);
-
-		// Show detailed settings only if enabled
-		if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
-			this.renderContentMappingDetails(content);
-		}
 	}
 
 	/**
