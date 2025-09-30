@@ -114,10 +114,15 @@ export interface AudioMappingConfig {
 		harmonicPad: any;
 	};
 	musicalTheory: {
-		scale: string; // Will be enhanced with MusicalScale type later
-		key: string;
-		mode: string;
-		constrainToScale: boolean;
+		enabled: boolean;
+		scale: string;
+		rootNote: string;
+		enforceHarmony: boolean;
+		allowChromaticPassing: boolean;
+		dissonanceThreshold: number;
+		quantizationStrength: number;
+		preferredChordProgression?: string;
+		dynamicScaleModulation: boolean;
 	};
 	externalServices: {
 		freesoundApiKey: string;
