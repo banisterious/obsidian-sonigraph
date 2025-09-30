@@ -2170,12 +2170,20 @@ export class GraphRenderer {
       cancelAnimationFrame(this.pendingUpdate);
       this.pendingUpdate = null;
     }
-    
+
+    // Stop and clean up simulation
     this.simulation.stop();
-    
+    this.simulation.nodes([]);
+
+    // Clear data arrays to release memory
+    this.nodes = [];
+    this.links = [];
+
     // No tooltip cleanup needed - using native browser tooltips
-    
+
+    // Remove all DOM elements
     d3.select(this.container).selectAll('*').remove();
-    logger.debug('renderer', 'GraphRenderer destroyed');
+
+    logger.debug('renderer', 'GraphRenderer destroyed and memory released');
   }
 } 
