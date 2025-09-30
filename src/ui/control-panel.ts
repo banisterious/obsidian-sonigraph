@@ -13,6 +13,7 @@ import { GraphDataExtractor } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { FolderSuggestModal } from './FolderSuggestModal';
 import { FileSuggestModal } from './FileSuggestModal';
+import { SonicGraphSettingsTabs } from './settings/SonicGraphSettingsTabs';
 
 const logger = getLogger('control-panel');
 
@@ -40,6 +41,7 @@ export class MaterialControlPanelModal extends Modal {
 	// Sonic Graph components
 	private graphRenderer: GraphRenderer | null = null;
 	private showFileNames: boolean = false;
+	private sonicGraphSettingsTabs: SonicGraphSettingsTabs | null = null;
 
 	// Issue #006 Fix: Store bound event handlers for proper cleanup
 	private boundEventHandlers: {
@@ -96,6 +98,12 @@ export class MaterialControlPanelModal extends Modal {
 		if (this.graphRenderer) {
 			this.graphRenderer.destroy();
 			this.graphRenderer = null;
+		}
+
+		// Phase 8.1: Cleanup settings tabs
+		if (this.sonicGraphSettingsTabs) {
+			this.sonicGraphSettingsTabs.destroy();
+			this.sonicGraphSettingsTabs = null;
 		}
 	}
 
@@ -471,9 +479,9 @@ export class MaterialControlPanelModal extends Modal {
 	private createSonicGraphTab(): void {
 		// Graph Preview Card
 		this.createGraphPreviewCard();
-		
-		// Launch Controls Card
-		this.createSonicGraphControlsCard();
+
+		// Sonic Graph Settings Tabs (Phase 8.1)
+		this.createSonicGraphSettingsTabs();
 	}
 
 	private createScaleKeyCard(): void {
@@ -1113,6 +1121,32 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Update stats asynchronously
 		this.updateSonicGraphStats(filesStat, linksStat);
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Phase 8.1: Create Sonic Graph Settings Tabs
+	 */
+	private createSonicGraphSettingsTabs(): void {
+		const card = new MaterialCard({
+			title: 'Sonic graph settings',
+			iconName: 'settings',
+			subtitle: 'Configure graph visualization preferences',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Create tabs container
+		const tabsContainer = content.createDiv({ cls: 'osp-sonic-graph-settings-tabs' });
+
+		// Initialize tabs system
+		this.sonicGraphSettingsTabs = new SonicGraphSettingsTabs(
+			this.app,
+			this.plugin,
+			tabsContainer
+		);
 
 		this.contentContainer.appendChild(card.getElement());
 	}

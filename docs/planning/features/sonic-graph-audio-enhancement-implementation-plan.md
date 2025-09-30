@@ -1938,57 +1938,168 @@ Phase 7.3: Caching and Preloading has been successfully implemented with compreh
 **Goal**: Complete documentation, tutorials, and final polish
 
 #### Phase 8.1: Sonic Graph Settings Panel UI Polish
-- **Objective**: Improve organization, usability, and visual design of the Sonic Graph settings panel
+- **Objective**: Reorganize Sonic Graph settings from cramped modal panel to spacious Control Center with tabbed interface
+- **Strategy**: Move majority of settings to Control Center Sonic Graph tab, keep only essential visualization controls in modal
+
+**Architecture Decision:**
+The Sonic Graph modal settings panel has become too cramped with 9+ major feature groups (Phases 1-7). To improve usability and provide adequate space for complex settings, we will:
+
+1. **Minimize Sonic Graph Modal Panel** - Keep only essential visualization controls
+2. **Expand Control Center Sonic Graph Tab** - House comprehensive settings with horizontal tab navigation
+3. **Improve Discoverability** - Add prominent "Open Control Center for Advanced Settings" link in modal
+
+**New Settings Distribution:**
+
+**Sonic Graph Modal Panel** (Minimal - Essential Visualization):
+- View Mode toggle (Static/Timeline)
+- Animation style dropdown
+- Time window selector
+- Timeline granularity
+- Basic filters (show tags, show orphans)
+- Node density slider
+- Clustering strength slider
+- **Quick Link**: "Open Control Center for Advanced Settings →" button
+
+**Control Center > Sonic Graph Tab** (Comprehensive - 4 Horizontal Tabs):
+
+**Tab 1: "Core Settings"**
+- Graph & Layout Settings
+  - Show file names toggle
+  - Group separation slider
+  - Force simulation settings (if needed)
+- Audio Core Settings
+  - Audio density slider
+  - Audio detection dropdown
+  - Note duration slider
+  - Animation duration
+  - Loop animation toggle
+  - Event spreading controls
+- Content-Aware Mapping (Phase 1-2)
+  - Enable content-aware mapping toggle
+  - Basic mapping configuration
+  - Distribution strategy
+
+**Tab 2: "Audio Layers"** (Phase 3)
+- Continuous Layers Section
+  - Enable continuous layers toggle
+  - Genre selection (13 genres)
+  - Genre-specific intensity controls
+- Layer Type Controls
+  - Ambient Layer (enable/volume)
+  - Rhythmic Layer (enable/volume)
+  - Harmonic Layer (enable/volume)
+- Layer Mixing
+  - Master layer volume
+  - Evolution rate controls
+
+**Tab 3: "Advanced Features"** (Phases 5-6)
+- Smart Clustering Audio (Phase 5)
+  - Cluster-Based Musical Themes
+    - Enable cluster audio toggle
+    - Per-cluster-type volume controls (5 types)
+    - Cluster transition effects
+  - Hub Node Orchestration
+    - Enable hub orchestration toggle
+    - Orchestration mode selection
+    - Hub threshold and prominence controls
+  - Community Detection Audio
+    - Enable community detection toggle
+    - Community theme settings
+    - Evolution audio controls
+- Musical Theory Integration (Phase 6.1)
+  - Enable musical theory toggle
+  - Scale and mode selection
+  - Harmonic constraint settings
+- Dynamic Orchestration (Phase 6.2)
+  - Enable dynamic orchestration toggle
+  - Complexity tier settings
+  - Temporal influence controls
+- Spatial Audio & Panning (Phase 6.3)
+  - Enable spatial audio toggle
+  - Panning mode selection
+  - Pan intensity and curve controls
+
+**Tab 4: "Freesound & Presets"** (Phase 7 + Presets)
+- Freesound Integration
+  - API key input and connection test
+  - Enable Freesound samples toggle
+  - Sample management settings
+- Preloading & Caching
+  - Predictive preloading toggle
+  - Preload on startup toggle
+  - Background loading toggle
+  - Cache strategy selection
+  - Max storage quota
+- Preset Management
+  - Preset browser/selector
+  - Import/Export buttons
+  - Save current as preset
+  - Preset comparison view
 
 **Implementation Tasks:**
-1. **Settings Organization and Grouping**
-   - Group related settings into collapsible sections with clear hierarchy
-   - Implement tabbed interface for major feature categories (Basic, Continuous Layers, Content Mapping, Clustering, Musical Theory, etc.)
-   - Add visual separators and section headers for better scanability
-   - Reorganize settings flow from basic to advanced
 
-2. **Visual Design Improvements**
-   - Consistent spacing and alignment across all settings
-   - Enhanced typography with proper heading hierarchy
-   - Color-coded section headers matching feature themes (e.g., green for clusters, purple for musical theory)
-   - Improved slider and control styling with value indicators
-   - Better visual feedback for enabled/disabled states
+1. **Create Horizontal Tab System for Control Center**
+   ```typescript
+   interface SonicGraphTabConfig {
+     id: 'core' | 'layers' | 'advanced' | 'freesound';
+     label: string;
+     icon: LucideIconName;
+     renderContent: (container: HTMLElement) => void;
+   }
+   ```
 
-3. **Usability Enhancements**
-   - Add tooltips/help icons for complex settings with detailed explanations
-   - Implement "Reset to Default" buttons for each section
-   - Add setting search/filter functionality for quick access
-   - Collapsible advanced settings to reduce cognitive load
-   - Quick preset switcher at the top of the panel
+2. **Migrate Settings from SonicGraphModal to Control Center**
+   - Extract settings rendering logic from `SonicGraphModal.ts`
+   - Create modular setting component builders
+   - Implement settings state management
+   - Ensure proper event handling and updates
 
-4. **Responsive Layout**
-   - Ensure settings panel works well at different window sizes
-   - Implement responsive grid for settings controls
-   - Scrollable sections with sticky headers
-   - Mobile-friendly touch targets (if applicable)
+3. **Simplify SonicGraphModal Settings Panel**
+   - Remove advanced feature settings
+   - Keep only essential visualization controls
+   - Add prominent Control Center link
+   - Improve visual clarity with reduced clutter
 
-5. **Performance Indicators**
-   - Real-time performance impact indicators for resource-intensive features
-   - Visual feedback when settings changes take effect
-   - Loading states for settings that require computation
-   - Validation feedback for invalid settings
+4. **Visual Design Improvements**
+   - Consistent Material Design styling across all tabs
+   - Clear section headers with icons
+   - Proper spacing and alignment
+   - Enhanced slider and control styling
+   - Better enabled/disabled state indicators
 
-6. **Preset Management Integration**
-   - Visual preset browser with preview cards
-   - Import/export UI within settings panel
-   - Preset comparison view
-   - Custom preset creation wizard
+5. **Usability Enhancements**
+   - Tooltips for complex settings
+   - "Reset to Default" buttons per section
+   - Collapsible sections within tabs
+   - Real-time settings validation
+   - Immediate visual feedback for changes
+
+6. **Performance Considerations**
+   - Lazy load tab content on demand
+   - Debounce settings updates
+   - Efficient state management
+   - Minimal re-renders
 
 **Files to Modify:**
-- `src/ui/SonicGraphModal.ts` - Main settings panel refactoring
-- `src/ui/settings/SettingsPanel.ts` - Create new modular settings component system
-- `styles.css` - Enhanced styling for settings UI
+- `src/ui/control-panel.ts` - Add 4-tab system to Sonic Graph tab
+- `src/ui/SonicGraphModal.ts` - Simplify to essential visualization controls only
+- `styles.css` - Enhanced styling for tabbed settings UI
 
 **Files to Create:**
-- `src/ui/settings/SettingsTabManager.ts` - Tabbed interface manager
-- `src/ui/settings/SettingsSection.ts` - Reusable collapsible section component
-- `src/ui/settings/SettingsTooltip.ts` - Enhanced tooltip system
-- `src/ui/settings/PresetBrowserPanel.ts` - Visual preset browser
+- `src/ui/settings/SonicGraphSettingsTabs.ts` - Tab navigation and rendering system
+- `src/ui/settings/SonicGraphCoreSettings.ts` - Core settings tab content
+- `src/ui/settings/SonicGraphLayersSettings.ts` - Audio layers tab content
+- `src/ui/settings/SonicGraphAdvancedSettings.ts` - Advanced features tab content
+- `src/ui/settings/SonicGraphFreesoundSettings.ts` - Freesound & presets tab content
+
+**Success Criteria:**
+- ✅ Sonic Graph modal panel feels spacious and focused
+- ✅ Control Center provides comprehensive settings access
+- ✅ All Phase 1-7 settings properly organized in tabs
+- ✅ Clear visual hierarchy and grouping
+- ✅ Settings changes apply immediately with feedback
+- ✅ No functionality lost in migration
+- ✅ Improved discoverability for advanced features
 
 #### Phase 8.2: User Documentation
 - **Objective**: Create comprehensive documentation for audio enhancement features
