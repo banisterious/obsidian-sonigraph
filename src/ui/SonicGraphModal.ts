@@ -851,57 +851,102 @@ export class SonicGraphModal extends Modal {
     private createSettingsContent(): void {
         // Settings header
         const settingsHeader = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-header' });
-        const headerTitle = settingsHeader.createEl('h3', { 
-            text: '⚙️ Timeline Settings', 
-            cls: 'sonic-graph-settings-title' 
+        const headerTitle = settingsHeader.createEl('h3', {
+            text: '⚙️ Timeline Settings',
+            cls: 'sonic-graph-settings-title'
         });
-        
-        const closeButton = settingsHeader.createEl('button', { 
-            cls: 'sonic-graph-settings-close' 
+
+        const closeButton = settingsHeader.createEl('button', {
+            cls: 'sonic-graph-settings-close'
         });
         closeButton.textContent = '×';
         closeButton.addEventListener('click', () => this.toggleSettings());
-        
+
         // Settings content (scrollable area)
         const settingsContent = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-content' });
-        
-        // 1. Filters section
+
+        // Phase 8.1: Simplified settings panel - only essential visualization controls
+        // All advanced settings moved to Control Center > Sonic Graph tab
+
+        // Control Center quick link (prominent)
+        this.createControlCenterLink(settingsContent);
+
+        // Essential visualization controls only
         this.createFiltersSettings(settingsContent);
-        
-        // 2. Groups section
-        this.createGroupsSettings(settingsContent);
-        
-        // 3. Visual section
         this.createVisualSettings(settingsContent);
-        
-        // 4. Layout section
         this.createLayoutSettings(settingsContent);
-        
-        // 4.5. Adaptive Detail Override (Quick Override)
-        this.createAdaptiveDetailOverride(settingsContent);
-        
-        // 4.6. Content-Aware Positioning section
-        this.createContentAwarePositioningSettings(settingsContent);
-        
-        // 4.7. Smart Clustering Algorithms section
-        this.createSmartClusteringSettings(settingsContent);
-
-        // 4.8. Connection Type Audio Differentiation section (Phase 4.4)
-        this.createConnectionTypeMappingSettings(settingsContent);
-
-        // 5. Timeline section
         this.createTimelineSettings(settingsContent);
-        
-        // 6. Audio section
-        this.createAudioSettings(settingsContent);
-        
-        // 7. Navigation section
-        this.createNavigationSettings(settingsContent);
-        
-        // 8. Advanced section
-        this.createAdvancedSettings(settingsContent);
     }
 
+
+    /**
+     * Phase 8.1: Create Control Center link for advanced settings
+     */
+    private createControlCenterLink(container: HTMLElement): void {
+        const linkSection = container.createDiv({ cls: 'sonic-graph-settings-section control-center-link-section' });
+
+        // Prominent info box
+        const infoBox = linkSection.createDiv({ cls: 'sonic-graph-control-center-notice' });
+        infoBox.innerHTML = `
+            <div style="padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--interactive-accent); margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--interactive-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <strong style="color: var(--text-normal); font-size: 14px;">Advanced Settings Moved</strong>
+                </div>
+                <p style="margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
+                    Audio layers, musical theory, spatial audio, and other advanced features are now in the
+                    <strong>Control Center</strong> for a better experience with organized tabs.
+                </p>
+            </div>
+        `;
+
+        // Large button to open Control Center
+        const button = linkSection.createEl('button', {
+            cls: 'sonic-graph-control-center-button'
+        });
+        button.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            Open Control Center for Advanced Settings
+        `;
+        button.style.cssText = `
+            width: 100%;
+            padding: 14px 20px;
+            background: var(--interactive-accent);
+            color: var(--text-on-accent);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+        `;
+
+        button.addEventListener('mouseenter', () => {
+            button.style.background = 'var(--interactive-accent-hover)';
+            button.style.transform = 'translateY(-1px)';
+        });
+        button.addEventListener('mouseleave', () => {
+            button.style.background = 'var(--interactive-accent)';
+            button.style.transform = 'translateY(0)';
+        });
+        button.addEventListener('click', () => {
+            // Close this modal and open Control Center
+            this.close();
+            // Trigger Control Center to open (it should open to Sonic Graph tab)
+            (this.app as any).workspace.trigger('sonigraph:open-control-center');
+        });
+    }
 
     /**
      * Create adaptive detail override section (Quick Override)
