@@ -602,7 +602,14 @@ export interface SonigraphSettings {
 	// Phase 7.1: Freesound API integration settings
 	freesoundApiKey?: string;
 	enableFreesoundSamples?: boolean;
-	
+
+	// Phase 7.3: Preloading and caching settings
+	freesoundPredictivePreload?: boolean;
+	freesoundPreloadOnStartup?: boolean;
+	freesoundBackgroundLoading?: boolean;
+	freesoundCacheStrategy?: 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
+	freesoundMaxStorageMB?: number;
+
 	// Phase 2: Content-aware mapping settings
 	contentAwareMapping?: {
 		enabled: boolean;
@@ -2463,6 +2470,13 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 	// Phase 7.1: Freesound API integration defaults
 	freesoundApiKey: '',
 	enableFreesoundSamples: false,
+
+	// Phase 7.3: Preloading and caching defaults
+	freesoundPredictivePreload: true,
+	freesoundPreloadOnStartup: false,
+	freesoundBackgroundLoading: true,
+	freesoundCacheStrategy: 'adaptive',
+	freesoundMaxStorageMB: 100,
 
 	// Phase 3: Performance Mode Settings
 	performanceMode: {

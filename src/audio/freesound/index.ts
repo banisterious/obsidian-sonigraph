@@ -12,6 +12,12 @@
  * - Genre-based sample collections and preloading
  * - Memory and disk cache management
  *
+ * Phase 7.3: Caching and Preloading
+ * - Intelligent preloading system with predictive algorithms
+ * - Cache optimization strategies (LRU, LFU, adaptive, predictive)
+ * - Offline support with graceful degradation
+ * - Background loading during idle time
+ *
  * This module provides Freesound.org API integration for downloading
  * high-quality ambient audio samples to enhance continuous layers.
  */
@@ -36,3 +42,22 @@ export {
 	GenreSampleCollection,
 	PreloadProgress
 } from './FreesoundSampleManager';
+
+// Phase 7.3: Caching and Preloading
+export {
+	SamplePreloader,
+	PreloadStrategy,
+	UsageMetrics,
+	PreloadConfig,
+	PreloadStatus
+} from './SamplePreloader';
+
+export {
+	CacheStrategy,
+	CacheStrategyConfig,
+	CacheItem,
+	CachePriority,
+	CacheEvictionStrategy,
+	EvictionCandidate,
+	CacheOptimizationResult
+} from './CacheStrategy';
