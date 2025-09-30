@@ -953,15 +953,18 @@ export class MaterialControlPanelModal extends Modal {
 		const freesoundSection = settingsSection.createDiv({ cls: 'osp-settings-section' });
 		freesoundSection.createEl('h3', { text: 'Freesound Integration', cls: 'osp-section-header' });
 
-		// API Key field with transparent disclosure
+		// Description paragraph
+		const descriptionEl = freesoundSection.createEl('p', {
+			text: 'Enter your API key from Freesound.org here. Get your free API key at: https://freesound.org/apiv2/apply/',
+			cls: 'osp-settings-description'
+		});
+		descriptionEl.style.marginBottom = '10px';
+
+		// API Key field with test button
 		const apiKeyContainer = freesoundSection.createDiv({ cls: 'osp-settings-item' });
 
 		new Setting(apiKeyContainer)
-			.setName('Freesound API Key')
-			.setDesc('Enter your API key from Freesound.org. ' +
-					'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
-					'Only share your vault if you trust recipients with API access. ' +
-					'Get your free API key at: https://freesound.org/apiv2/apply/')
+			.setName('API Key')
 			.addText(text => {
 				text
 					.setPlaceholder('Enter your Freesound API key (32 characters)')
@@ -984,6 +987,17 @@ export class MaterialControlPanelModal extends Modal {
 						await this.testFreesoundConnection(button.buttonEl);
 					});
 			});
+
+		// Security note
+		const securityNote = freesoundSection.createEl('p', {
+			text: 'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
+				  'Only share your vault if you trust recipients with API access.',
+			cls: 'osp-settings-note'
+		});
+		securityNote.style.fontSize = '12px';
+		securityNote.style.color = 'var(--text-muted)';
+		securityNote.style.marginTop = '8px';
+		securityNote.style.marginBottom = '16px';
 
 		// Enable Freesound Samples toggle
 		const enableSamplesContainer = freesoundSection.createDiv({ cls: 'osp-settings-item' });
