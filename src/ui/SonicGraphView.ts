@@ -517,6 +517,17 @@ export class SonicGraphView extends ItemView {
         }
 
         try {
+            // Cleanup adaptive detail manager
+            logger.debug('ui', 'Destroying adaptive detail manager');
+            if (this.adaptiveDetailManager) {
+                this.adaptiveDetailManager.destroy();
+                this.adaptiveDetailManager = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error destroying adaptive detail manager:', error);
+        }
+
+        try {
             // Cleanup resize observer
             logger.debug('ui', 'Disconnecting resize observer');
             if (this.resizeObserver) {

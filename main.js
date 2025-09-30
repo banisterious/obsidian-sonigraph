@@ -13808,8 +13808,11 @@ var init_GraphRenderer = __esm({
           this.pendingUpdate = null;
         }
         this.simulation.stop();
+        this.simulation.nodes([]);
+        this.nodes = [];
+        this.links = [];
         select_default2(this.container).selectAll("*").remove();
-        logger9.debug("renderer", "GraphRenderer destroyed");
+        logger9.debug("renderer", "GraphRenderer destroyed and memory released");
       }
     };
   }
@@ -47310,13 +47313,17 @@ var init_TemporalGraphAnimator = __esm({
        */
       destroy() {
         this.stop();
+        this.timeline = [];
+        this.nodes = [];
+        this.links = [];
+        this.visibleNodes.clear();
         this.onVisibilityChange = void 0;
         this.onTimeUpdate = void 0;
         this.onAnimationEnd = void 0;
         this.onNodeAppear = void 0;
         this.onVaultStateChange = void 0;
         this.onActivityChange = void 0;
-        logger20.debug("cleanup", "TemporalGraphAnimator destroyed");
+        logger20.debug("cleanup", "TemporalGraphAnimator destroyed and memory released");
       }
     };
   }
@@ -58564,6 +58571,19 @@ var init_AdaptiveDetailManager = __esm({
             filterReason
           }
         };
+      }
+      /**
+       * Cleanup resources and release memory
+       */
+      destroy() {
+        if (this.pendingZoomUpdate) {
+          clearTimeout(this.pendingZoomUpdate);
+          this.pendingZoomUpdate = null;
+        }
+        this.allNodes = [];
+        this.allLinks = [];
+        this.onDetailLevelChanged = null;
+        logger42.debug("cleanup", "AdaptiveDetailManager destroyed and memory released");
       }
     };
   }
@@ -73556,6 +73576,15 @@ var SonicGraphView = class extends import_obsidian16.ItemView {
       }
     } catch (error) {
       logger48.error("ui", "Error destroying graph renderer:", error);
+    }
+    try {
+      logger48.debug("ui", "Destroying adaptive detail manager");
+      if (this.adaptiveDetailManager) {
+        this.adaptiveDetailManager.destroy();
+        this.adaptiveDetailManager = null;
+      }
+    } catch (error) {
+      logger48.error("ui", "Error destroying adaptive detail manager:", error);
     }
     try {
       logger48.debug("ui", "Disconnecting resize observer");
