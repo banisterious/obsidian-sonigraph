@@ -949,49 +949,54 @@ export class MaterialControlPanelModal extends Modal {
 		);
 		logger.debug('ui', 'Show file names toggle created');
 
-		// Freesound API Key field  
-		const apiKeySection = settingsSection.createDiv({ cls: 'osp-settings-item' });
-		
-		new Setting(apiKeySection)
+		// Phase 7.1: Freesound API Integration
+		const freesoundSection = settingsSection.createDiv({ cls: 'osp-settings-section' });
+		freesoundSection.createEl('h3', { text: 'Freesound Integration', cls: 'osp-section-header' });
+
+		// API Key field with transparent disclosure
+		const apiKeyContainer = freesoundSection.createDiv({ cls: 'osp-settings-item' });
+
+		new Setting(apiKeyContainer)
 			.setName('Freesound API Key')
-			.setDesc('Required for downloading ambient audio samples from Freesound.org')
-			.addText(text => text
-				.setPlaceholder('Enter your Freesound.org API key')
-				.setValue(this.plugin.settings.audioEnhancement?.externalServices?.freesoundApiKey || '')
+			.setDesc('Enter your API key from Freesound.org. ' +
+					'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
+					'Only share your vault if you trust recipients with API access. ' +
+					'Get your free API key at: https://freesound.org/apiv2/apply/')
+			.addText(text => {
+				text
+					.setPlaceholder('Enter your Freesound API key (32 characters)')
+					.setValue(this.plugin.settings.freesoundApiKey || '')
+					.onChange(async (value) => {
+						this.plugin.settings.freesoundApiKey = value;
+						await this.plugin.saveSettings();
+						logger.info('freesound', 'Freesound API key updated');
+					});
+				// Make the input field wider and use monospace font for better readability
+				text.inputEl.style.width = '400px';
+				text.inputEl.style.fontFamily = 'monospace';
+				text.inputEl.style.fontSize = '13px';
+			})
+			.addButton(button => {
+				button
+					.setButtonText('Test Connection')
+					.setTooltip('Test API key and connection to Freesound')
+					.onClick(async () => {
+						await this.testFreesoundConnection(button.buttonEl);
+					});
+			});
+
+		// Enable Freesound Samples toggle
+		const enableSamplesContainer = freesoundSection.createDiv({ cls: 'osp-settings-item' });
+
+		new Setting(enableSamplesContainer)
+			.setName('Enable Freesound Samples')
+			.setDesc('Download and use audio samples from Freesound for continuous layers (requires API key)')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableFreesoundSamples || false)
 				.onChange(async (value) => {
-					// Initialize audio enhancement settings if needed
-					if (!this.plugin.settings.audioEnhancement) {
-						this.plugin.settings.audioEnhancement = {
-							contentAwareMapping: {
-								enabled: false,
-								fileTypePreferences: {},
-								tagMappings: {},
-								folderMappings: {},
-								connectionTypeMappings: {}
-							},
-							continuousLayers: {
-								enabled: false,
-								ambientDrone: {},
-								rhythmicLayer: {},
-								harmonicPad: {}
-							},
-							musicalTheory: {
-								scale: 'major',
-								key: 'C',
-								mode: 'ionian',
-								constrainToScale: false
-							},
-							externalServices: {
-								freesoundApiKey: '',
-								enableFreesoundSamples: false
-							}
-						};
-					}
-					
-					this.plugin.settings.audioEnhancement.externalServices.freesoundApiKey = value;
+					this.plugin.settings.enableFreesoundSamples = value;
 					await this.plugin.saveSettings();
-					
-					logger.info('audio-enhancement', 'Freesound API key updated');
+					logger.info('freesound', `Freesound samples ${value ? 'enabled' : 'disabled'}`);
 				})
 			);
 		
@@ -2869,5 +2874,66 @@ All whale samples are authentic recordings from marine research institutions and
 		
 		// Show a simple notice for now
 		new Notice('Whale sample attribution information logged to console. Check developer tools for details.');
+	}
+
+	/**
+	 * Phase 7.1: Test Freesound API connection
+	 */
+	private async testFreesoundConnection(buttonEl: HTMLElement): Promise<void> {
+		const apiKey = this.plugin.settings.freesoundApiKey;
+
+		if (!apiKey || apiKey.trim().length === 0) {
+			new Notice('⚠️ Please enter a Freesound API key first');
+			return;
+		}
+
+		// Disable button and show loading state
+		const button = buttonEl as HTMLButtonElement;
+		button.textContent = 'Testing...';
+		button.disabled = true;
+
+		logger.info('freesound', `Testing connection with API key (length: ${apiKey.length})`);
+
+		try {
+			// Import FreesoundAuthManager dynamically
+			const { FreesoundAuthManager } = await import('../audio/freesound/FreesoundAuthManager');
+
+			// Create auth manager and test connection
+			const authManager = new FreesoundAuthManager({ apiKey: apiKey.trim() });
+			logger.debug('freesound', 'FreesoundAuthManager created, testing connection...');
+
+			const result = await authManager.testConnection();
+			logger.debug('freesound', `Connection test result: ${JSON.stringify(result)}`);
+
+			// Restore button state
+			button.textContent = 'Test Connection';
+			button.disabled = false;
+
+			// Show result to user
+			if (result.success) {
+				const message = result.username
+					? `✓ Connected successfully as ${result.username}`
+					: `✓ ${result.message}`;
+				new Notice(message, 5000);
+				logger.info('freesound', `Connection test successful: ${result.message}`);
+			} else {
+				// Show more detailed error message
+				const detailedMessage = result.message + (result.error ? ` (${result.error})` : '');
+				new Notice(`✗ Connection failed: ${detailedMessage}`, 8000);
+				logger.error('freesound', `Connection test failed: ${result.error} - ${result.message}`);
+			}
+
+		} catch (error) {
+			// Restore button state
+			button.textContent = 'Test Connection';
+			button.disabled = false;
+
+			const errorMessage = error.message || 'Unknown error';
+			const stackTrace = error.stack || '';
+
+			new Notice(`✗ Connection test error: ${errorMessage}`, 8000);
+			logger.error('freesound', `Connection test exception: ${errorMessage}`);
+			logger.debug('freesound', `Stack trace: ${stackTrace}`);
+		}
 	}
 }
