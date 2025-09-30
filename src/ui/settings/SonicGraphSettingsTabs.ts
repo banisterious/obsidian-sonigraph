@@ -17,6 +17,7 @@ import { MaterialCard } from '../material-components';
 import { SonicGraphCoreSettings } from './SonicGraphCoreSettings';
 import { SonicGraphLayersSettings } from './SonicGraphLayersSettings';
 import { SonicGraphAdvancedSettings } from './SonicGraphAdvancedSettings';
+import { SonicGraphFreesoundSettings } from './SonicGraphFreesoundSettings';
 
 const logger = getLogger('SonicGraphSettingsTabs');
 
@@ -210,15 +211,9 @@ export class SonicGraphSettingsTabs {
 	private renderFreesoundSettings(container: HTMLElement): void {
 		logger.debug('tabs', 'Rendering Freesound & Presets tab');
 
-		// Placeholder
-		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
-		placeholder.innerHTML = `
-			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
-				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Freesound & Presets Tab</h4>
-				<p>Phase 7 Freesound Integration and Preset Management settings will appear here.</p>
-				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
-			</div>
-		`;
+		// Render actual Freesound settings
+		const freesoundSettings = new SonicGraphFreesoundSettings(this.app, this.plugin);
+		freesoundSettings.render(container);
 	}
 
 	/**
