@@ -6,7 +6,7 @@
 
 **Related Documents:**
 - **Main Specification:** [Sonic Graph Audio Enhancement Specification](../sonic-graph-audio-enhancement-specification.md)
-- **Implementation Plan:** [Sonic Graph Audio Enhancement Implementation Plan](sonic-graph-audio-enhancement-implementation-plan.md)
+- **Implementation Plan:** [Sonic Graph Audio Enhancement Implementation Plan](../completed/sonic-graph-audio-enhancement-implementation-plan.md)
 
 ---
 

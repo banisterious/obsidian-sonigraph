@@ -134,7 +134,7 @@
 - **Specialized Processing**: Oceanic effects, ultra-long sustains
 - **Frequency Coverage**: Wide-spectrum natural soundscapes
 - **Acoustic Modeling**: Environmental acoustics and spatial processing
-- **External Integration**: See [Whale Sound Integration Plan](features/whale-sound-integration-plan.md) for Freesound.org proof of concept
+- **External Integration**: See [Whale Sound Integration Plan](archived/whale-sound-integration-plan.md) for Freesound.org proof of concept
 
 ---
 
@@ -152,7 +152,7 @@
 **Animal Sounds Collection**:
 - **Birds** (800-3000Hz): Dawn chorus, songbirds, birds of prey
 - **Mammals**: Cats (400-2000Hz), Dogs (200-1500Hz), Wolves (100-800Hz)
-- **Marine Life**: Dolphins (1000-8000Hz), additional whale species (see [Whale Sound Integration Plan](features/whale-sound-integration-plan.md))
+- **Marine Life**: Dolphins (1000-8000Hz), additional whale species (see [Whale Sound Integration Plan](archived/whale-sound-integration-plan.md))
 - **Large Animals**: Elephants (5-200Hz), Big Cats (50-600Hz), Bears (80-400Hz)
 
 **Environmental Atmospheres**:
@@ -212,4 +212,4 @@
 
 ---
 
-*This catalog serves as the comprehensive reference for all Sonigraph instruments and specifications. For strategic planning and development priorities, see [Development Roadmap](development-roadmap.md) and [Feature Catalog](feature-catalog.md). For external sample integration plans, see [Whale Sound Integration Plan](features/whale-sound-integration-plan.md).*
+*This catalog serves as the comprehensive reference for all Sonigraph instruments and specifications. For strategic planning and development priorities, see [Development Roadmap](development-roadmap.md) and [Feature Catalog](feature-catalog.md). For external sample integration plans, see [Whale Sound Integration Plan](archived/whale-sound-integration-plan.md).*
