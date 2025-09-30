@@ -22,7 +22,6 @@ export const woodwindInstruments: InstrumentFamily = {
                 'D3': `D3.${FORMAT_PLACEHOLDER}`,
                 'D4': `D4.${FORMAT_PLACEHOLDER}`,
                 'D5': `D5.${FORMAT_PLACEHOLDER}`,
-                'F2': `F2.${FORMAT_PLACEHOLDER}`,
                 'F3': `F3.${FORMAT_PLACEHOLDER}`,
                 'F4': `F4.${FORMAT_PLACEHOLDER}`,
                 'F5': `F5.${FORMAT_PLACEHOLDER}`
@@ -40,9 +39,11 @@ export const woodwindInstruments: InstrumentFamily = {
             urls: {
                 'A4': `A4.${FORMAT_PLACEHOLDER}`,
                 'A5': `A5.${FORMAT_PLACEHOLDER}`,
+                'A6': `A6.${FORMAT_PLACEHOLDER}`,
                 'C4': `C4.${FORMAT_PLACEHOLDER}`,
                 'C5': `C5.${FORMAT_PLACEHOLDER}`,
                 'C6': `C6.${FORMAT_PLACEHOLDER}`,
+                'C7': `C7.${FORMAT_PLACEHOLDER}`,
                 'E4': `E4.${FORMAT_PLACEHOLDER}`,
                 'E5': `E5.${FORMAT_PLACEHOLDER}`,
                 'E6': `E6.${FORMAT_PLACEHOLDER}`

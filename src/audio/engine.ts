@@ -2661,19 +2661,36 @@ export class AudioEngine {
 			// O(1) cache hit - this should be the common path after Phase 2.2 optimization
 			return this.cachedEnabledInstruments;
 		}
-		
+
 		// O(n) cache miss - rebuild cache
 		logger.debug('optimization', 'Building enabled instruments cache - should be rare after first call');
 		const enabled: string[] = [];
+
+		// Load all instrument configs to check requiresHighQuality flag
+		const allInstrumentConfigs = this.instrumentConfigLoader.loadAllInstruments();
+
 		Object.entries(this.settings.instruments).forEach(([instrumentKey, settings]) => {
 			if (settings.enabled) {
-				enabled.push(instrumentKey);
+				// Check if instrument requires high quality mode
+				const instrumentConfig = allInstrumentConfigs[instrumentKey];
+				if (instrumentConfig?.requiresHighQuality) {
+					// Only enable if useHighQuality is also enabled for this instrument
+					if (settings.useHighQuality) {
+						enabled.push(instrumentKey);
+						logger.debug('optimization', `High-quality instrument enabled: ${instrumentKey}`);
+					} else {
+						logger.debug('optimization', `High-quality instrument skipped (useHighQuality=false): ${instrumentKey}`);
+					}
+				} else {
+					// Regular instrument - just check enabled flag
+					enabled.push(instrumentKey);
+				}
 			}
 		});
-		
+
 		this.cachedEnabledInstruments = enabled;
 		this.instrumentCacheValid = true;
-		
+
 		logger.debug('optimization', `Enabled instruments cache built: ${enabled.length} instruments`, enabled);
 		return enabled;
 	}
@@ -2776,23 +2793,50 @@ export class AudioEngine {
 			if (enabledInstruments.includes('trombone')) return 'trombone';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else if (mapping.pitch > 200) {
-			// Low pitch - prefer strings, harp, timpani, bassSynth, whaleHumpback if available
+			// Low pitch - prefer whale instruments first for authentic oceanic atmosphere
+			// Sei whale (200-600Hz downsweeps)
+			if (mapping.pitch <= 600 && enabledInstruments.includes('whaleSei')) return 'whaleSei';
+			// Right whale (50-500Hz upcalls)
+			if (mapping.pitch <= 500 && enabledInstruments.includes('whaleRight')) return 'whaleRight';
+			// Humpback whale (20-4000Hz complex songs)
+			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
+			// Traditional instruments as fallback
 			if (enabledInstruments.includes('strings')) return 'strings';
 			if (enabledInstruments.includes('harp')) return 'harp';
 			if (enabledInstruments.includes('timpani')) return 'timpani';
 			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
-			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
 			return sortedInstruments[0];
-		} else if (mapping.pitch > 100) {
-			// Very low pitch - prefer tuba, bassSynth, whaleHumpback if available
+		} else if (mapping.pitch > 50) {
+			// Very low pitch - prefer whale species with infrasonic/low frequency calls
+			// Minke whale (35-50Hz downsweeps)
+			if (mapping.pitch <= 100 && enabledInstruments.includes('whaleMinke')) return 'whaleMinke';
+			// Gray whale (100-2000Hz migration calls)
+			if (enabledInstruments.includes('whaleGray')) return 'whaleGray';
+			// Humpback whale
+			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
+			// Traditional instruments as fallback
 			if (enabledInstruments.includes('tuba')) return 'tuba';
 			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
+			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
+		} else if (mapping.pitch > 20) {
+			// Ultra low pitch - infrasonic whale species
+			// Blue whale (10-40Hz infrasonic calls)
+			if (enabledInstruments.includes('whaleBlue')) return 'whaleBlue';
+			// Fin whale (15-30Hz pulse sequences)
+			if (enabledInstruments.includes('whaleFin')) return 'whaleFin';
+			// Humpback whale
 			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
+			// Traditional instruments as fallback
+			if (enabledInstruments.includes('gongs')) return 'gongs';
+			if (enabledInstruments.includes('tuba')) return 'tuba';
+			if (enabledInstruments.includes('bassSynth')) return 'bassSynth';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];
 		} else {
-			// Ultra low pitch - prefer gongs, whaleHumpback, tuba if available
-			if (enabledInstruments.includes('gongs')) return 'gongs';
+			// Extremely low pitch (< 20Hz) - deepest whale calls
+			if (enabledInstruments.includes('whaleBlue')) return 'whaleBlue';
+			if (enabledInstruments.includes('whaleFin')) return 'whaleFin';
 			if (enabledInstruments.includes('whaleHumpback')) return 'whaleHumpback';
+			if (enabledInstruments.includes('gongs')) return 'gongs';
 			if (enabledInstruments.includes('leadSynth')) return 'leadSynth';
 			if (enabledInstruments.includes('tuba')) return 'tuba';
 			return enabledInstruments.includes('strings') ? 'strings' : sortedInstruments[0];

@@ -4,15 +4,11 @@ export const worldInstruments: InstrumentFamily = {
     name: 'World & Environmental Instruments',
     description: 'Unique, environmental and world music instruments with authentic whale sounds',
     instruments: {
-        // Synthesized humpback whale (fallback)
+        // Synthesized humpback whale (fallback when external samples unavailable)
         whaleHumpback: {
-            urls: {
-                "C1": `C1.${FORMAT_PLACEHOLDER}`, "F1": `F1.${FORMAT_PLACEHOLDER}`, "Bb1": `Bb1.${FORMAT_PLACEHOLDER}`,
-                "C2": `C2.${FORMAT_PLACEHOLDER}`, "F2": `F2.${FORMAT_PLACEHOLDER}`, "Bb2": `Bb2.${FORMAT_PLACEHOLDER}`,
-                "C3": `C3.${FORMAT_PLACEHOLDER}`, "F3": `F3.${FORMAT_PLACEHOLDER}`
-            },
+            urls: {},  // No CDN samples available, use synthesis or external whale manager
             release: 6.0,
-            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/whale-humpback/",
+            baseUrl: "",  // Empty baseUrl forces synthesis mode
             effects: ['reverb', 'filter'],
             maxVoices: 2,
             priority: 'low',
