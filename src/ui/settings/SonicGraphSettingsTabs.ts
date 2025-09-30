@@ -16,6 +16,7 @@ import { getLogger } from '../../logging';
 import { MaterialCard } from '../material-components';
 import { SonicGraphCoreSettings } from './SonicGraphCoreSettings';
 import { SonicGraphLayersSettings } from './SonicGraphLayersSettings';
+import { SonicGraphAdvancedSettings } from './SonicGraphAdvancedSettings';
 
 const logger = getLogger('SonicGraphSettingsTabs');
 
@@ -198,15 +199,9 @@ export class SonicGraphSettingsTabs {
 	private renderAdvancedSettings(container: HTMLElement): void {
 		logger.debug('tabs', 'Rendering Advanced Features tab');
 
-		// Placeholder
-		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
-		placeholder.innerHTML = `
-			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
-				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Advanced Features Tab</h4>
-				<p>Smart Clustering, Musical Theory, Dynamic Orchestration, and Spatial Audio settings will appear here.</p>
-				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
-			</div>
-		`;
+		// Render actual advanced settings
+		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
+		advancedSettings.render(container);
 	}
 
 	/**
