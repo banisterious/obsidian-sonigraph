@@ -15,6 +15,7 @@ import { createLucideIcon, LucideIconName } from '../lucide-icons';
 import { getLogger } from '../../logging';
 import { MaterialCard } from '../material-components';
 import { SonicGraphCoreSettings } from './SonicGraphCoreSettings';
+import { SonicGraphLayersSettings } from './SonicGraphLayersSettings';
 
 const logger = getLogger('SonicGraphSettingsTabs');
 
@@ -186,15 +187,9 @@ export class SonicGraphSettingsTabs {
 	private renderAudioLayersSettings(container: HTMLElement): void {
 		logger.debug('tabs', 'Rendering Audio Layers tab');
 
-		// Placeholder
-		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
-		placeholder.innerHTML = `
-			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
-				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Audio Layers Tab</h4>
-				<p>Phase 3 Continuous Layers settings (13 genres, layer controls) will appear here.</p>
-				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
-			</div>
-		`;
+		// Render actual audio layers settings
+		const layersSettings = new SonicGraphLayersSettings(this.app, this.plugin);
+		layersSettings.render(container);
 	}
 
 	/**
