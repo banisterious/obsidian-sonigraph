@@ -2171,7 +2171,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.8,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2204,7 +2204,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 2,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2237,7 +2237,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2270,7 +2270,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2303,7 +2303,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2336,7 +2336,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.8,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2369,7 +2369,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2402,7 +2402,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.6,
 			maxVoices: 1,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2435,7 +2435,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			enabled: false,
 			volume: 0.7,
 			maxVoices: 2,
-			useHighQuality: false, // Default to synthesis
+			useHighQuality: true, // Recordings-only instrument (no synthesis available)
 			effects: {
 				reverb: {
 					enabled: true,

@@ -787,24 +787,26 @@ export class WhaleAudioManager {
                 
                 if (proxyResponse.ok) {
                     const arrayBuffer = await proxyResponse.arrayBuffer();
-                    
+                    const arrayBufferSize = arrayBuffer.byteLength; // Store size before detachment
+
                     logger.debug('download', 'CORS proxy response received', {
                         proxy: proxyService,
-                        size: arrayBuffer.byteLength,
+                        size: arrayBufferSize,
                         status: proxyResponse.status
                     });
-                    
+
+                    // Cache to disk BEFORE decoding (which detaches the ArrayBuffer)
+                    if (species) {
+                        await this.cacheSampleToDisk(originalUrl, arrayBuffer, species);
+                    }
+
                     // Validate and decode the audio
                     const audioBuffer = await this.validateAndDecodeAudio(arrayBuffer, originalUrl);
                     if (audioBuffer) {
-                        // Cache to disk if successful and species is provided
-                        if (species) {
-                            await this.cacheSampleToDisk(originalUrl, arrayBuffer, species);
-                        }
-                        
+
                         logger.info('download', 'CORS proxy successful', {
                             proxy: proxyService,
-                            size: arrayBuffer.byteLength,
+                            size: arrayBufferSize,
                             duration: audioBuffer.length / audioBuffer.sampleRate,
                             channels: audioBuffer.numberOfChannels,
                             retryCount: retry,
