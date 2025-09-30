@@ -212,32 +212,181 @@ export class SonicGraphCoreSettings {
 	}
 
 	/**
-	 * Section 3: Content-Aware Mapping Settings
+	 * Section 3: Content-Aware Mapping Settings (Phase 2, 4.1-4.3)
 	 */
 	private renderContentMappingSettings(container: HTMLElement): void {
 		const card = new MaterialCard({
 			title: 'Content-Aware Mapping',
 			iconName: 'brain',
-			subtitle: 'Phase 1-2: Map content types to instruments (Coming Soon)',
+			subtitle: 'Phase 2 & 4.1-4.3: Map content types and metadata to instruments',
 			elevation: 1
 		});
 
 		const content = card.getContent();
 
-		// Placeholder note
-		const note = content.createDiv({ cls: 'osp-settings-note' });
-		note.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5;">
-				Content-aware mapping will allow the Sonic Graph to automatically select instruments
-				based on file types, tags, and folder structure. This feature is planned for Phase 1-2
-				implementation.
-			</p>
-			<p style="color: var(--text-muted); font-size: 13px; margin-top: 0.5rem;">
-				For now, instruments are selected using the basic audio engine settings configured
-				in the Control Center's Instrument tabs.
+		// Description
+		const description = content.createDiv({ cls: 'osp-settings-description' });
+		description.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
+				Content-aware mapping automatically selects instruments based on file types, tags,
+				folder structure, and frontmatter metadata. This creates semantic correlation between
+				your vault's content and its musical representation.
 			</p>
 		`;
 
+		// Enable content-aware mapping toggle
+		new Setting(content)
+			.setName('Enable content-aware mapping')
+			.setDesc('Automatically map file properties to musical parameters')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement) {
+						this.plugin.settings.audioEnhancement = {} as any;
+					}
+					if (!this.plugin.settings.audioEnhancement.contentAwareMapping) {
+						this.plugin.settings.audioEnhancement.contentAwareMapping = {
+							enabled: value,
+							frontmatterPropertyName: 'instrument',
+							moodPropertyName: 'musical-mood',
+							distributionStrategy: 'balanced',
+							fileTypePreferences: {},
+							tagMappings: {},
+							folderMappings: {},
+							connectionTypeMappings: {}
+						};
+					} else {
+						this.plugin.settings.audioEnhancement.contentAwareMapping.enabled = value;
+					}
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Content-aware mapping: ${value}`);
+
+					// Re-render to show/hide detailed settings
+					content.empty();
+					this.renderContentMappingCard(content);
+				})
+			);
+
+		// Show detailed settings only if enabled
+		if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
+			this.renderContentMappingDetails(content);
+		}
+
 		container.appendChild(card.getElement());
+	}
+
+	/**
+	 * Render content mapping card (for re-rendering)
+	 */
+	private renderContentMappingCard(content: HTMLElement): void {
+		// Description
+		const description = content.createDiv({ cls: 'osp-settings-description' });
+		description.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
+				Content-aware mapping automatically selects instruments based on file types, tags,
+				folder structure, and frontmatter metadata. This creates semantic correlation between
+				your vault's content and its musical representation.
+			</p>
+		`;
+
+		// Enable toggle
+		new Setting(content)
+			.setName('Enable content-aware mapping')
+			.setDesc('Automatically map file properties to musical parameters')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement) {
+						this.plugin.settings.audioEnhancement = {} as any;
+					}
+					if (!this.plugin.settings.audioEnhancement.contentAwareMapping) {
+						this.plugin.settings.audioEnhancement.contentAwareMapping = {
+							enabled: value,
+							frontmatterPropertyName: 'instrument',
+							moodPropertyName: 'musical-mood',
+							distributionStrategy: 'balanced',
+							fileTypePreferences: {},
+							tagMappings: {},
+							folderMappings: {},
+							connectionTypeMappings: {}
+						};
+					} else {
+						this.plugin.settings.audioEnhancement.contentAwareMapping.enabled = value;
+					}
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Content-aware mapping: ${value}`);
+
+					// Re-render to show/hide detailed settings
+					content.empty();
+					this.renderContentMappingCard(content);
+				})
+			);
+
+		// Show detailed settings only if enabled
+		if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
+			this.renderContentMappingDetails(content);
+		}
+	}
+
+	/**
+	 * Render detailed content mapping settings
+	 */
+	private renderContentMappingDetails(content: HTMLElement): void {
+		// Frontmatter instrument property
+		new Setting(content)
+			.setName('Instrument frontmatter property')
+			.setDesc('Property name for explicit instrument selection (e.g., "instrument: piano")')
+			.addText(text => text
+				.setPlaceholder('instrument')
+				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.frontmatterPropertyName || 'instrument')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.contentAwareMapping) return;
+					this.plugin.settings.audioEnhancement.contentAwareMapping.frontmatterPropertyName = value || 'instrument';
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Frontmatter property: ${value}`);
+				})
+			);
+
+		// Musical mood property
+		new Setting(content)
+			.setName('Musical mood property')
+			.setDesc('Property name for musical mood/character (e.g., "musical-mood: contemplative")')
+			.addText(text => text
+				.setPlaceholder('musical-mood')
+				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.moodPropertyName || 'musical-mood')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.contentAwareMapping) return;
+					this.plugin.settings.audioEnhancement.contentAwareMapping.moodPropertyName = value || 'musical-mood';
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Mood property: ${value}`);
+				})
+			);
+
+		// Distribution strategy dropdown
+		new Setting(content)
+			.setName('Instrument distribution')
+			.setDesc('How to distribute instruments across similar files')
+			.addDropdown(dropdown => dropdown
+				.addOption('balanced', 'Balanced - Prevent clustering')
+				.addOption('random', 'Random - Natural variation')
+				.addOption('semantic', 'Semantic - Based on content')
+				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.distributionStrategy || 'balanced')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.contentAwareMapping) return;
+					this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy = value;
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Distribution strategy: ${value}`);
+				})
+			);
+
+		// Info note about Phase 4 settings
+		const advancedNote = content.createDiv({ cls: 'osp-settings-note' });
+		advancedNote.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
+				<strong>Note:</strong> Advanced file type, tag, and folder mappings (Phase 4.1-4.3)
+				can be configured in the instrument settings. Connection type audio differentiation
+				(Phase 4.4) is available in the Advanced Features tab.
+			</p>
+		`;
 	}
 }
