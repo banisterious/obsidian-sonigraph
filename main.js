@@ -73569,6 +73569,15 @@ var SonicGraphView = class extends import_obsidian16.ItemView {
       logger48.error("ui", "Error destroying temporal animator:", error);
     }
     try {
+      logger48.debug("ui", "Disposing musical mapper");
+      if (this.musicalMapper) {
+        this.musicalMapper.dispose();
+        this.musicalMapper = null;
+      }
+    } catch (error) {
+      logger48.error("ui", "Error disposing musical mapper:", error);
+    }
+    try {
       logger48.debug("ui", "Destroying graph renderer");
       if (this.graphRenderer) {
         this.graphRenderer.destroy();

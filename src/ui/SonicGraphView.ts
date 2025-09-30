@@ -506,6 +506,17 @@ export class SonicGraphView extends ItemView {
         }
 
         try {
+            // Cleanup musical mapper
+            logger.debug('ui', 'Disposing musical mapper');
+            if (this.musicalMapper) {
+                this.musicalMapper.dispose();
+                this.musicalMapper = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error disposing musical mapper:', error);
+        }
+
+        try {
             // Cleanup graph renderer
             logger.debug('ui', 'Destroying graph renderer');
             if (this.graphRenderer) {
