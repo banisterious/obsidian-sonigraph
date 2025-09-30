@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-09-30 03:03:00 UTC
+ * - Generated: 2025-09-30 03:10:55 UTC
  * - Components: 19 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6304,7 +6304,7 @@ details.osp-advanced-settings {
    COMPONENT: CONTROLCENTER.CSS
    ========================================================================== */
 
-/* Component Size: 631 lines, 15.9 KB */
+/* Component Size: 773 lines, 18.64 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROL CENTER FRAMEWORK
@@ -6935,6 +6935,148 @@ details.osp-advanced-settings {
 
 .sonigraph-enabled-indicator.disabled {
   color: var(--md-on-surface-variant);
+}
+
+/* ==========================================================================
+   PHASE 8.1: SONIC GRAPH SETTINGS TABS
+   Horizontal tab navigation for Control Center Sonic Graph settings
+   ========================================================================== */
+
+/* Tabs container */
+.osp-sonic-graph-settings-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px;
+}
+
+/* Tab navigation bar - HORIZONTAL LAYOUT */
+.osp-sonic-tabs-nav {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 2px solid var(--background-modifier-border);
+  margin-bottom: var(--md-space-4);
+}
+
+/* Individual tab button */
+.osp-sonic-tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--background-primary-alt);
+  border: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+}
+
+.osp-sonic-tab-button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.osp-sonic-tab-button.active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.osp-sonic-tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--interactive-accent);
+}
+
+/* Tab icon */
+.osp-sonic-tab-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.osp-sonic-tab-button.active .osp-sonic-tab-icon {
+  opacity: 1;
+}
+
+/* Tab label */
+.osp-sonic-tab-label {
+  white-space: nowrap;
+}
+
+/* Tab content area */
+.osp-sonic-tabs-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tab header (appears at top of each tab) */
+.osp-sonic-tab-header {
+  margin-bottom: var(--md-space-4);
+  padding-bottom: var(--md-space-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.osp-sonic-tab-header h3 {
+  margin: 0 0 var(--md-space-2) 0;
+  color: var(--text-normal);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.osp-sonic-tab-description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Scrollable content area within tab */
+.osp-sonic-tab-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Settings placeholder (temporary) */
+.osp-settings-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .osp-sonic-tabs-nav {
+    gap: 2px;
+  }
+
+  .osp-sonic-tab-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .osp-sonic-tab-label {
+    display: none;
+  }
+
+  .osp-sonic-tab-icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 
@@ -9412,11 +9554,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-09-30 03:03:00 UTC
+ * Build completed: 2025-09-30 03:10:55 UTC
  * Components processed: 19
- * Total lines: 9215
- * Total size: 195.88 KB
- * Build duration: 0.02 seconds
+ * Total lines: 9357
+ * Total size: 198.62 KB
+ * Build duration: 0.01 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -9433,7 +9575,7 @@ details.osp-advanced-settings {
  * - settings.css: 198 lines, 4.57 KB
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
- * - controlcenter.css: 631 lines, 15.9 KB
+ * - controlcenter.css: 773 lines, 18.64 KB
  * - sonic-graph.css: 1894 lines, 42.46 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB

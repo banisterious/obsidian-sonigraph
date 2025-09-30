@@ -177,9 +177,11 @@ export class SonicGraphSettingsTabs {
 		// Placeholder - will be implemented in separate file
 		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
 		placeholder.innerHTML = `
-			<p style="color: var(--text-muted); text-align: center; padding: 2rem;">
-				Core Settings content will be implemented next.
-			</p>
+			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Core Settings Tab</h4>
+				<p>Graph & Layout, Audio Core, and Content-Aware Mapping settings will appear here.</p>
+				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
+			</div>
 		`;
 	}
 
@@ -192,9 +194,11 @@ export class SonicGraphSettingsTabs {
 		// Placeholder
 		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
 		placeholder.innerHTML = `
-			<p style="color: var(--text-muted); text-align: center; padding: 2rem;">
-				Audio Layers content will be implemented next.
-			</p>
+			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Audio Layers Tab</h4>
+				<p>Phase 3 Continuous Layers settings (13 genres, layer controls) will appear here.</p>
+				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
+			</div>
 		`;
 	}
 
@@ -207,9 +211,11 @@ export class SonicGraphSettingsTabs {
 		// Placeholder
 		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
 		placeholder.innerHTML = `
-			<p style="color: var(--text-muted); text-align: center; padding: 2rem;">
-				Advanced Features content will be implemented next.
-			</p>
+			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Advanced Features Tab</h4>
+				<p>Smart Clustering, Musical Theory, Dynamic Orchestration, and Spatial Audio settings will appear here.</p>
+				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
+			</div>
 		`;
 	}
 
@@ -222,9 +228,11 @@ export class SonicGraphSettingsTabs {
 		// Placeholder
 		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
 		placeholder.innerHTML = `
-			<p style="color: var(--text-muted); text-align: center; padding: 2rem;">
-				Freesound & Presets content will be implemented next.
-			</p>
+			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Freesound & Presets Tab</h4>
+				<p>Phase 7 Freesound Integration and Preset Management settings will appear here.</p>
+				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
+			</div>
 		`;
 	}
 
