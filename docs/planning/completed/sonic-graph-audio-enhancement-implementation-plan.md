@@ -50,11 +50,10 @@
 - **Phase 7.2:** Sample Management System ✅
 - **Phase 7.3:** Caching and Preloading ✅
 
-### ✅ Phase 8: Polish and Documentation - IN PROGRESS
+### ✅ Phase 8: Polish and Documentation - COMPLETED
 - **Phase 8.1:** Sonic Graph Settings Panel UI Polish ✅
-- **Phase 8.2:** User Documentation ❌
-- **Phase 8.3:** Tutorial System ❌
-- **Phase 8.4:** Preset Library ❌
+
+**Note:** Phases 8.2-8.4 (User Documentation, Tutorial System, Preset Library) have been moved to the [User Experience Improvements Plan](user-experience-improvements-plan.md) to better organize UX-focused work separately from audio feature implementation.
 
 ---
 
@@ -2101,94 +2100,7 @@ The Sonic Graph modal settings panel has become too cramped with 9+ major featur
 - ✅ No functionality lost in migration
 - ✅ Improved discoverability for advanced features
 
-#### Phase 8.2: User Documentation
-- **Objective**: Create comprehensive documentation for audio enhancement features
-
-**Implementation Tasks:**
-1. **Feature Documentation**
-   - Continuous layers user guide
-   - Content-aware mapping explanation
-   - Musical theory settings guide
-   - Freesound integration setup
-
-2. **Quick Start Guides**
-   - Getting started with audio enhancements
-   - Setting up your first musical theme
-   - Customizing mappings for your vault
-   - Troubleshooting common issues
-
-3. **Advanced Documentation**
-   - Creating custom presets
-   - Advanced mapping rules
-   - Performance optimization tips
-   - API integration guide
-
-**Files to Create:**
-- `docs/user-guide/audio-enhancements.md`
-- `docs/user-guide/freesound-setup.md`
-- `docs/user-guide/custom-mappings.md`
-
-#### Phase 8.3: Tutorial System
-- **Objective**: Interactive tutorials for new users
-
-**Implementation Tasks:**
-1. **In-App Tutorial System**
-   ```typescript
-   class AudioTutorialManager {
-     private tutorialSteps: TutorialStep[];
-     private currentStep: number;
-
-     startTutorial(tutorialName: string): void;
-     showNextStep(): void;
-     skipTutorial(): void;
-   }
-   ```
-
-2. **Tutorial Content**
-   - First-time setup walkthrough
-   - Musical theme selection guide
-   - Mapping customization tutorial
-   - Performance optimization tips
-
-3. **Interactive Elements**
-   - Highlight relevant UI elements
-   - Step-by-step guidance
-   - Example configurations
-   - Progress tracking
-
-**Files to Create:**
-- `src/ui/tutorials/AudioTutorialManager.ts`
-- `src/ui/tutorials/TutorialSteps.ts`
-
-#### Phase 8.4: Preset Library
-- **Objective**: Expand and polish the preset system
-
-**Implementation Tasks:**
-1. **Expanded Preset Collection**
-   - Genre-specific preset packs
-   - Use-case based presets (research, creative writing, journaling)
-   - Community-contributed presets
-   - Seasonal/mood-based themes
-
-2. **Preset Management UI**
-   - Visual preset browser
-   - Preview functionality
-   - Import/export system
-   - Favorite presets
-
-3. **Final Polish**
-   - Performance optimization
-   - Bug fixes and edge cases
-   - UI/UX refinements
-   - Final testing pass
-
-**Files to Create:**
-- `src/audio/presets/PresetLibrary.ts`
-- `src/ui/audio/PresetBrowser.ts`
-
-**Files to Modify:**
-- `src/testing/TestSuiteModal.ts`: New test categories
-- `src/testing/integration/AudioEngineTests.ts`: Enhancement testing
+**Status:** Phase 8.1 completed September 29, 2025. Phases 8.2-8.4 moved to [User Experience Improvements Plan](user-experience-improvements-plan.md).
 
 ---
 
