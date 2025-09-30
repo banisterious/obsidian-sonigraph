@@ -14,6 +14,7 @@ import type SonigraphPlugin from '../../main';
 import { createLucideIcon, LucideIconName } from '../lucide-icons';
 import { getLogger } from '../../logging';
 import { MaterialCard } from '../material-components';
+import { SonicGraphCoreSettings } from './SonicGraphCoreSettings';
 
 const logger = getLogger('SonicGraphSettingsTabs');
 
@@ -174,15 +175,9 @@ export class SonicGraphSettingsTabs {
 	private renderCoreSettings(container: HTMLElement): void {
 		logger.debug('tabs', 'Rendering Core Settings tab');
 
-		// Placeholder - will be implemented in separate file
-		const placeholder = container.createDiv({ cls: 'osp-settings-placeholder' });
-		placeholder.innerHTML = `
-			<div style="text-align: center; padding: 3rem; color: var(--text-muted);">
-				<h4 style="margin-bottom: 1rem; color: var(--text-normal);">Core Settings Tab</h4>
-				<p>Graph & Layout, Audio Core, and Content-Aware Mapping settings will appear here.</p>
-				<p style="margin-top: 1rem; font-size: 12px;">Implementation in progress...</p>
-			</div>
-		`;
+		// Render actual core settings
+		const coreSettings = new SonicGraphCoreSettings(this.app, this.plugin);
+		coreSettings.render(container);
 	}
 
 	/**
