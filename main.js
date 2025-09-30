@@ -63224,18 +63224,72 @@ var init_SonicGraphModal = __esm({
         closeButton.textContent = "\xD7";
         closeButton.addEventListener("click", () => this.toggleSettings());
         const settingsContent = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-content" });
+        this.createControlCenterLink(settingsContent);
         this.createFiltersSettings(settingsContent);
-        this.createGroupsSettings(settingsContent);
         this.createVisualSettings(settingsContent);
         this.createLayoutSettings(settingsContent);
-        this.createAdaptiveDetailOverride(settingsContent);
-        this.createContentAwarePositioningSettings(settingsContent);
-        this.createSmartClusteringSettings(settingsContent);
-        this.createConnectionTypeMappingSettings(settingsContent);
         this.createTimelineSettings(settingsContent);
-        this.createAudioSettings(settingsContent);
-        this.createNavigationSettings(settingsContent);
-        this.createAdvancedSettings(settingsContent);
+      }
+      /**
+       * Phase 8.1: Create Control Center link for advanced settings
+       */
+      createControlCenterLink(container) {
+        const linkSection = container.createDiv({ cls: "sonic-graph-settings-section control-center-link-section" });
+        const infoBox = linkSection.createDiv({ cls: "sonic-graph-control-center-notice" });
+        infoBox.innerHTML = `
+            <div style="padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--interactive-accent); margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--interactive-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <strong style="color: var(--text-normal); font-size: 14px;">Advanced Settings Moved</strong>
+                </div>
+                <p style="margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
+                    Audio layers, musical theory, spatial audio, and other advanced features are now in the
+                    <strong>Control Center</strong> for a better experience with organized tabs.
+                </p>
+            </div>
+        `;
+        const button = linkSection.createEl("button", {
+          cls: "sonic-graph-control-center-button"
+        });
+        button.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            Open Control Center for Advanced Settings
+        `;
+        button.style.cssText = `
+            width: 100%;
+            padding: 14px 20px;
+            background: var(--interactive-accent);
+            color: var(--text-on-accent);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+        `;
+        button.addEventListener("mouseenter", () => {
+          button.style.background = "var(--interactive-accent-hover)";
+          button.style.transform = "translateY(-1px)";
+        });
+        button.addEventListener("mouseleave", () => {
+          button.style.background = "var(--interactive-accent)";
+          button.style.transform = "translateY(0)";
+        });
+        button.addEventListener("click", () => {
+          this.close();
+          this.app.workspace.trigger("sonigraph:open-control-center");
+        });
       }
       /**
        * Create adaptive detail override section (Quick Override)
