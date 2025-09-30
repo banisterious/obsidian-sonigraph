@@ -9,7 +9,7 @@
 
 **Related Documents:**
 - **Main Specification:** [Sonic Graph Audio Enhancement Specification](../sonic-graph-audio-enhancement-specification.md) - Overall enhancement design and technical requirements
-- **Audio Library:** [Freesound Audio Library](freesound-audio-library.md) - Curated collection of audio samples for continuous layer genres
+- **Audio Library:** [Freesound Audio Library](../freesound-audio-library.md) - Curated collection of audio samples for continuous layer genres
 
 ---
 
@@ -53,7 +53,7 @@
 ### ✅ Phase 8: Polish and Documentation - COMPLETED
 - **Phase 8.1:** Sonic Graph Settings Panel UI Polish ✅
 
-**Note:** Phases 8.2-8.4 (User Documentation, Tutorial System, Preset Library) have been moved to the [User Experience Improvements Plan](user-experience-improvements-plan.md) to better organize UX-focused work separately from audio feature implementation.
+**Note:** Phases 8.2-8.4 (User Documentation, Tutorial System, Preset Library) have been moved to the [User Experience Improvements Plan](../active/user-experience-improvements-plan.md) to better organize UX-focused work separately from audio feature implementation.
 
 ---
 
@@ -404,7 +404,7 @@ Phase 2 has been successfully implemented with full metadata-driven mapping capa
 ### Phase 3: Continuous Audio Layers (Weeks 6-8)
 **Goal**: Implement ambient, rhythmic, and harmonic background layers
 
-**Note**: This phase leverages the curated audio samples documented in the [Freesound Audio Library](freesound-audio-library.md), which provides high-quality samples for all 13 supported genres.
+**Note**: This phase leverages the curated audio samples documented in the [Freesound Audio Library](../freesound-audio-library.md), which provides high-quality samples for all 13 supported genres.
 
 #### Phase 3.1: Continuous Background Layer System
 - **Objective**: Genre-based continuous layers that evolve with vault state
@@ -2100,7 +2100,7 @@ The Sonic Graph modal settings panel has become too cramped with 9+ major featur
 - ✅ No functionality lost in migration
 - ✅ Improved discoverability for advanced features
 
-**Status:** Phase 8.1 completed September 29, 2025. Phases 8.2-8.4 moved to [User Experience Improvements Plan](user-experience-improvements-plan.md).
+**Status:** Phase 8.1 completed September 29, 2025. Phases 8.2-8.4 moved to [User Experience Improvements Plan](../active/user-experience-improvements-plan.md).
 
 ---
 

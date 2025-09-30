@@ -144,7 +144,7 @@ Superseded or experimental plans (historical reference):
 **Status**: 📋 Planned | **Backend**: ✅ Complete | **UI**: ❌ Needed  
 **Description**: One-click acoustic environment transformation with 11 professional presets
 👉 [Technical Specifications](feature-catalog.md#effect-presets-system)
-👉 [Implementation Plan](features/effect-presets-implementation-plan.md)
+👉 [Implementation Plan](active/effect-presets-implementation-plan.md)
 
 **Customizable Sequence Controls**  
 **Priority**: Medium | **Effort**: 2-3 weeks | **User Impact**: High  

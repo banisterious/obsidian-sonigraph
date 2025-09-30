@@ -6,7 +6,7 @@
 
 **Related Documents:**
 - **Main Specification:** [Sonic Graph Audio Enhancement Specification](../sonic-graph-audio-enhancement-specification.md) - Overall enhancement design and technical implementation
-- **Implementation Plan:** [Sonic Graph Audio Enhancement Implementation Plan](sonic-graph-audio-enhancement-implementation-plan.md) - Detailed development roadmap and integration strategy
+- **Implementation Plan:** [Sonic Graph Audio Enhancement Implementation Plan](completed/sonic-graph-audio-enhancement-implementation-plan.md) - Detailed development roadmap and integration strategy
 
 ---
 
