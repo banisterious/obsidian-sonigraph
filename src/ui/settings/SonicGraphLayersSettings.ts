@@ -30,10 +30,12 @@ export class SonicGraphLayersSettings {
 		// Section 1: Enable/Disable Continuous Layers
 		this.renderEnableSection(container);
 
-		// Section 2: Genre Selection (only if enabled)
+		// Section 2: Additional settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
 			this.renderGenreSection(container);
 			this.renderIntensitySection(container);
+			this.renderLayerTypesSection(container);
+			this.renderMusicalSettingsSection(container);
 			this.renderAdaptiveSection(container);
 		}
 	}
@@ -96,10 +98,15 @@ export class SonicGraphLayersSettings {
 								harmonicPad: {}
 							},
 							musicalTheory: {
+								enabled: false,
 								scale: 'major',
-								key: 'C',
-								mode: 'ionian',
-								constrainToScale: false
+								rootNote: 'C',
+								enforceHarmony: false,
+								allowChromaticPassing: false,
+								dissonanceThreshold: 0.3,
+								quantizationStrength: 0.8,
+								preferredChordProgression: 'I-IV-V-I',
+								dynamicScaleModulation: false
 							},
 							externalServices: {
 								freesoundApiKey: '',
@@ -222,7 +229,303 @@ export class SonicGraphLayersSettings {
 	}
 
 	/**
-	 * Section 4: Adaptive Behavior
+	 * Section 4: Layer Types (Rhythmic & Harmonic)
+	 */
+	private renderLayerTypesSection(container: HTMLElement): void {
+		const card = new MaterialCard({
+			title: 'Additional Layers',
+			iconName: 'layers-3',
+			subtitle: 'Rhythmic and harmonic layers',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Description
+		const description = content.createDiv({ cls: 'osp-settings-description' });
+		description.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
+				Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers
+				that respond to vault activity and cluster dynamics.
+			</p>
+		`;
+
+		// Rhythmic layer toggle
+		new Setting(content)
+			.setName('Enable rhythmic layer')
+			.setDesc('Add activity-based percussion patterns')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicEnabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
+					this.plugin.settings.audioEnhancement.continuousLayers.rhythmicEnabled = value;
+
+					// Initialize rhythmic layer config if enabled
+					if (value && !this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer) {
+						this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer = {
+							enabled: true,
+							baseTempo: 120,
+							tempoRange: [80, 160],
+							percussionIntensity: 0.7,
+							arpeggioComplexity: 0.5,
+							activitySensitivity: 0.6
+						};
+					}
+
+					await this.plugin.saveSettings();
+					logger.info('layers-settings', `Rhythmic layer: ${value}`);
+
+					// Re-render to show/hide detailed settings
+					container.empty();
+					this.render(container);
+				})
+			);
+
+		// Rhythmic layer detailed settings (only if enabled)
+		if (this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicEnabled) {
+			const rhythmicDetails = content.createDiv({ cls: 'osp-settings-subsection' });
+			rhythmicDetails.createEl('h4', { text: 'Rhythmic Layer Settings', attr: { style: 'margin-top: 1rem;' } });
+
+			new Setting(rhythmicDetails)
+				.setName('Base tempo')
+				.setDesc('Base BPM for rhythmic patterns (60-180)')
+				.addSlider(slider => slider
+					.setLimits(60, 180, 5)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer?.baseTempo || 120)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.baseTempo = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(rhythmicDetails)
+				.setName('Percussion intensity')
+				.setDesc('Volume and prominence of percussive elements (0-1)')
+				.addSlider(slider => slider
+					.setLimits(0, 1, 0.1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer?.percussionIntensity || 0.7)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.percussionIntensity = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(rhythmicDetails)
+				.setName('Pattern complexity')
+				.setDesc('Complexity of rhythmic patterns and arpeggios (0-1)')
+				.addSlider(slider => slider
+					.setLimits(0, 1, 0.1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer?.arpeggioComplexity || 0.5)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.arpeggioComplexity = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(rhythmicDetails)
+				.setName('Activity sensitivity')
+				.setDesc('How responsive tempo is to vault activity (0-1)')
+				.addSlider(slider => slider
+					.setLimits(0, 1, 0.1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer?.activitySensitivity || 0.6)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicLayer) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.rhythmicLayer.activitySensitivity = value;
+						await this.plugin.saveSettings();
+					})
+				);
+		}
+
+		// Harmonic layer toggle
+		new Setting(content)
+			.setName('Enable harmonic layer')
+			.setDesc('Add cluster-based harmonic pads')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicEnabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
+					this.plugin.settings.audioEnhancement.continuousLayers.harmonicEnabled = value;
+
+					// Initialize harmonic layer config if enabled
+					if (value && !this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad) {
+						this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad = {
+							enabled: true,
+							chordComplexity: 3,
+							progressionSpeed: 0.5,
+							dissonanceLevel: 0.3,
+							clusterInfluence: 0.7,
+							scaleConstraints: true
+						};
+					}
+
+					await this.plugin.saveSettings();
+					logger.info('layers-settings', `Harmonic layer: ${value}`);
+
+					// Re-render to show/hide detailed settings
+					container.empty();
+					this.render(container);
+				})
+			);
+
+		// Harmonic layer detailed settings (only if enabled)
+		if (this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicEnabled) {
+			const harmonicDetails = content.createDiv({ cls: 'osp-settings-subsection' });
+			harmonicDetails.createEl('h4', { text: 'Harmonic Layer Settings', attr: { style: 'margin-top: 1rem;' } });
+
+			new Setting(harmonicDetails)
+				.setName('Chord complexity')
+				.setDesc('Number of voices in chords (2-6)')
+				.addSlider(slider => slider
+					.setLimits(2, 6, 1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad?.chordComplexity || 3)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.chordComplexity = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(harmonicDetails)
+				.setName('Progression speed')
+				.setDesc('How fast harmonies change (0-1)')
+				.addSlider(slider => slider
+					.setLimits(0, 1, 0.1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad?.progressionSpeed || 0.5)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.progressionSpeed = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(harmonicDetails)
+				.setName('Dissonance level')
+				.setDesc('Harmonic tension and complexity (0-1)')
+				.addSlider(slider => slider
+					.setLimits(0, 1, 0.1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad?.dissonanceLevel || 0.3)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.dissonanceLevel = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(harmonicDetails)
+				.setName('Cluster influence')
+				.setDesc('How much clusters affect harmony (0-1)')
+				.addSlider(slider => slider
+					.setLimits(0, 1, 0.1)
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad?.clusterInfluence || 0.7)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.clusterInfluence = value;
+						await this.plugin.saveSettings();
+					})
+				);
+
+			new Setting(harmonicDetails)
+				.setName('Scale constraints')
+				.setDesc('Constrain harmonies to the selected musical scale')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad?.scaleConstraints ?? true)
+					.onChange(async (value) => {
+						if (!this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicPad) return;
+						this.plugin.settings.audioEnhancement.continuousLayers.harmonicPad.scaleConstraints = value;
+						await this.plugin.saveSettings();
+					})
+				);
+		}
+
+		container.appendChild(card.getElement());
+	}
+
+	/**
+	 * Section 5: Musical Settings (Scale & Key)
+	 */
+	private renderMusicalSettingsSection(container: HTMLElement): void {
+		const card = new MaterialCard({
+			title: 'Layer Tonality',
+			iconName: 'music-4',
+			subtitle: 'Musical scale and key for all continuous layers',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Scale selection
+		new Setting(content)
+			.setName('Continuous layer scale')
+			.setDesc('Scale for ambient, rhythmic, and harmonic layers (independent of node sonification)')
+			.addDropdown(dropdown => dropdown
+				.addOption('major', 'Major - Bright, happy')
+				.addOption('minor', 'Minor - Dark, melancholic')
+				.addOption('dorian', 'Dorian - Modal, jazzy')
+				.addOption('phrygian', 'Phrygian - Spanish, exotic')
+				.addOption('lydian', 'Lydian - Dreamy, ethereal')
+				.addOption('mixolydian', 'Mixolydian - Folk, bluesy')
+				.addOption('pentatonic', 'Pentatonic - Asian, simple')
+				.addOption('chromatic', 'Chromatic - All notes')
+				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.scale || 'major')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
+					this.plugin.settings.audioEnhancement.continuousLayers.scale = value;
+					await this.plugin.saveSettings();
+					logger.info('layers-settings', `Continuous layers scale: ${value}`);
+				})
+			);
+
+		// Key selection
+		new Setting(content)
+			.setName('Continuous layer key')
+			.setDesc('Root note for all continuous layers (ambient, rhythmic, harmonic)')
+			.addDropdown(dropdown => dropdown
+				.addOption('C', 'C')
+				.addOption('C#', 'C# / Db')
+				.addOption('D', 'D')
+				.addOption('D#', 'D# / Eb')
+				.addOption('E', 'E')
+				.addOption('F', 'F')
+				.addOption('F#', 'F# / Gb')
+				.addOption('G', 'G')
+				.addOption('G#', 'G# / Ab')
+				.addOption('A', 'A')
+				.addOption('A#', 'A# / Bb')
+				.addOption('B', 'B')
+				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.key || 'C')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
+					this.plugin.settings.audioEnhancement.continuousLayers.key = value;
+					await this.plugin.saveSettings();
+					logger.info('layers-settings', `Continuous layers key: ${value}`);
+				})
+			);
+
+		// Info note
+		const note = content.createDiv({ cls: 'osp-settings-note' });
+		note.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
+				<strong>Note:</strong> These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic).
+				For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.
+			</p>
+		`;
+
+		container.appendChild(card.getElement());
+	}
+
+	/**
+	 * Section 6: Adaptive Behavior
 	 */
 	private renderAdaptiveSection(container: HTMLElement): void {
 		const card = new MaterialCard({
