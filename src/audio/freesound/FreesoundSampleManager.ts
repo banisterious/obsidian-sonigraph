@@ -8,6 +8,8 @@ import { FreesoundAPI, FreesoundSearchFilters } from './FreesoundAPI';
 import { FreesoundAuthManager } from './FreesoundAuthManager';
 import { SampleCache, CacheStatistics } from './SampleCache';
 import { DownloadQueue, DownloadResult, DownloadProgress } from './DownloadQueue';
+import { SamplePreloader, PreloadConfig, PreloadStatus, UsageMetrics } from './SamplePreloader';
+import { CacheStrategy, CacheStrategyConfig, CacheItem, CachePriority, CacheOptimizationResult } from './CacheStrategy';
 
 export type MusicalGenre =
     | 'ambient' | 'drone' | 'orchestral' | 'electronic' | 'minimal'
@@ -30,8 +32,11 @@ export class FreesoundSampleManager {
     private api: FreesoundAPI;
     private cache: SampleCache;
     private downloadQueue: DownloadQueue;
+    private preloader: SamplePreloader;
+    private cacheStrategy: CacheStrategy;
     private logger = getLogger('sample-manager');
     private initialized: boolean = false;
+    private audioContext: AudioContext;
 
     // Genre collections (will be populated from Freesound Audio Library)
     private genreCollections: Map<MusicalGenre, GenreSampleCollection>;
@@ -40,15 +45,22 @@ export class FreesoundSampleManager {
     private onPreloadProgress?: (progress: PreloadProgress) => void;
     private onPreloadComplete?: (genre: MusicalGenre) => void;
 
+    // Offline mode
+    private isOffline: boolean = false;
+
     constructor(apiKey: string, maxConcurrentDownloads: number = 3) {
         const authManager = new FreesoundAuthManager({ apiKey });
         this.api = new FreesoundAPI(authManager);
         this.cache = new SampleCache(50); // Max 50 samples in memory
         this.downloadQueue = new DownloadQueue(this.api, maxConcurrentDownloads);
+        this.audioContext = new AudioContext();
+        this.preloader = new SamplePreloader(this, this.audioContext);
+        this.cacheStrategy = new CacheStrategy();
         this.genreCollections = new Map();
 
         this.initializeGenreCollections();
         this.setupDownloadCallbacks();
+        this.setupNetworkMonitoring();
     }
 
     /**
@@ -368,12 +380,167 @@ export class FreesoundSampleManager {
     }
 
     /**
+     * Private: Setup network monitoring for offline detection
+     */
+    private setupNetworkMonitoring(): void {
+        // Monitor online/offline status
+        if (typeof window !== 'undefined') {
+            window.addEventListener('online', () => {
+                this.isOffline = false;
+                this.logger.info('sample-manager', 'Network connection restored - switching to online mode');
+            });
+
+            window.addEventListener('offline', () => {
+                this.isOffline = true;
+                this.logger.warn('sample-manager', 'Network connection lost - switching to offline mode');
+            });
+
+            // Check initial status
+            this.isOffline = !navigator.onLine;
+        }
+    }
+
+    /**
+     * Check if manager is in offline mode
+     */
+    isInOfflineMode(): boolean {
+        return this.isOffline;
+    }
+
+    /**
+     * Update preloader configuration
+     */
+    updatePreloaderConfig(config: Partial<PreloadConfig>): void {
+        this.preloader.updateConfig(config);
+        this.logger.info('sample-manager', 'Preloader configuration updated');
+    }
+
+    /**
+     * Update cache strategy configuration
+     */
+    updateCacheStrategyConfig(config: Partial<CacheStrategyConfig>): void {
+        this.cacheStrategy.updateConfig(config);
+        this.logger.info('sample-manager', 'Cache strategy configuration updated');
+    }
+
+    /**
+     * Get preloader status
+     */
+    getPreloaderStatus(): PreloadStatus {
+        return this.preloader.getStatus();
+    }
+
+    /**
+     * Get usage metrics
+     */
+    getUsageMetrics(): UsageMetrics {
+        return this.preloader.getUsageMetrics();
+    }
+
+    /**
+     * Record genre usage for predictive preloading
+     */
+    recordGenreUsage(genre: MusicalGenre): void {
+        this.preloader.recordGenreUsage(genre);
+        this.logger.debug('sample-manager', `Genre usage recorded - genre: ${genre}`);
+    }
+
+    /**
+     * Preload critical samples
+     */
+    async preloadCriticalSamples(): Promise<void> {
+        await this.preloader.preloadCriticalSamples();
+    }
+
+    /**
+     * Cancel current preloading
+     */
+    cancelPreload(): void {
+        this.preloader.cancelPreload();
+    }
+
+    /**
+     * Optimize cache using current strategy
+     */
+    async optimizeCache(): Promise<CacheOptimizationResult> {
+        const stats = await this.getCacheStatistics();
+        const result = this.cacheStrategy.optimizeCache(stats);
+        this.logger.info('sample-manager', 'Cache optimization completed - ' + JSON.stringify({
+            itemsEvicted: result.itemsEvicted,
+            spaceFreedMB: result.spaceFreedMB.toFixed(2)
+        }));
+        return result;
+    }
+
+    /**
+     * Get cache recommendations
+     */
+    getCacheRecommendations(): string[] {
+        return this.cacheStrategy.getRecommendations();
+    }
+
+    /**
+     * Register cache item for strategy tracking
+     */
+    private registerCacheItem(soundId: number, genre: MusicalGenre, priority: CachePriority, sizeBytes: number): void {
+        const item: CacheItem = {
+            soundId,
+            genre,
+            priority,
+            accessCount: 1,
+            lastAccessed: Date.now(),
+            addedTime: Date.now(),
+            sizeBytes
+        };
+        this.cacheStrategy.registerItem(item);
+    }
+
+    /**
+     * Record cache access for strategy
+     */
+    private recordCacheAccess(soundId: number): void {
+        this.cacheStrategy.recordAccess(soundId);
+    }
+
+    /**
+     * Get sample with offline fallback
+     * Returns cached sample if available, null if offline and not cached
+     */
+    async getSampleWithOfflineFallback(soundId: number): Promise<AudioBuffer | null> {
+        // Try cache first
+        const cached = await this.getCachedSample(soundId);
+        if (cached) {
+            this.recordCacheAccess(soundId);
+            return cached;
+        }
+
+        // If offline, return null (graceful degradation)
+        if (this.isOffline) {
+            this.logger.warn('sample-manager', 'Sample not in cache and offline - returning null - ' + JSON.stringify({ soundId }));
+            return null;
+        }
+
+        // Try downloading
+        try {
+            return await this.downloadSample(soundId);
+        } catch (error) {
+            this.logger.error('sample-manager', `Failed to download sample - soundId: ${soundId}, error: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
      * Dispose of resources
      */
     dispose(): void {
         this.cache.dispose();
         this.downloadQueue.dispose();
+        this.preloader.dispose();
+        this.cacheStrategy.clear();
         this.genreCollections.clear();
+        if (this.audioContext.state !== 'closed') {
+            this.audioContext.close();
+        }
         this.logger.info('sample-manager', 'FreesoundSampleManager disposed');
     }
 }

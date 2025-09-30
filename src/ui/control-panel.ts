@@ -1013,7 +1013,81 @@ export class MaterialControlPanelModal extends Modal {
 					logger.info('freesound', `Freesound samples ${value ? 'enabled' : 'disabled'}`);
 				})
 			);
-		
+
+		// Phase 7.3: Preloading and Caching Settings
+		freesoundSection.createEl('h4', { text: 'Preloading & Caching', cls: 'osp-subsection-header' });
+
+		// Enable predictive preloading
+		new Setting(freesoundSection)
+			.setName('Predictive Preloading')
+			.setDesc('Automatically preload samples for genres you use frequently')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.freesoundPredictivePreload !== false)
+				.onChange(async (value) => {
+					this.plugin.settings.freesoundPredictivePreload = value;
+					await this.plugin.saveSettings();
+					logger.info('freesound', `Predictive preloading ${value ? 'enabled' : 'disabled'}`);
+				})
+			);
+
+		// Preload on startup
+		new Setting(freesoundSection)
+			.setName('Preload on Startup')
+			.setDesc('Automatically preload frequently used samples when Obsidian starts')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.freesoundPreloadOnStartup || false)
+				.onChange(async (value) => {
+					this.plugin.settings.freesoundPreloadOnStartup = value;
+					await this.plugin.saveSettings();
+					logger.info('freesound', `Preload on startup ${value ? 'enabled' : 'disabled'}`);
+				})
+			);
+
+		// Background loading
+		new Setting(freesoundSection)
+			.setName('Background Loading')
+			.setDesc('Download samples in the background during idle time')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.freesoundBackgroundLoading !== false)
+				.onChange(async (value) => {
+					this.plugin.settings.freesoundBackgroundLoading = value;
+					await this.plugin.saveSettings();
+					logger.info('freesound', `Background loading ${value ? 'enabled' : 'disabled'}`);
+				})
+			);
+
+		// Cache eviction strategy
+		new Setting(freesoundSection)
+			.setName('Cache Strategy')
+			.setDesc('Algorithm for managing cached samples when storage is full')
+			.addDropdown(dropdown => dropdown
+				.addOption('adaptive', 'Adaptive (Recommended)')
+				.addOption('lru', 'Least Recently Used')
+				.addOption('lfu', 'Least Frequently Used')
+				.addOption('predictive', 'Predictive')
+				.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
+				.onChange(async (value) => {
+					this.plugin.settings.freesoundCacheStrategy = value as 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
+					await this.plugin.saveSettings();
+					logger.info('freesound', `Cache strategy set to ${value}`);
+				})
+			);
+
+		// Storage quota
+		new Setting(freesoundSection)
+			.setName('Max Storage (MB)')
+			.setDesc('Maximum disk space for cached samples (default: 100MB)')
+			.addText(text => text
+				.setPlaceholder('100')
+				.setValue(String(this.plugin.settings.freesoundMaxStorageMB || 100))
+				.onChange(async (value) => {
+					const numValue = parseInt(value) || 100;
+					this.plugin.settings.freesoundMaxStorageMB = numValue;
+					await this.plugin.saveSettings();
+					logger.info('freesound', `Max storage set to ${numValue}MB`);
+				})
+			);
+
 		// Add some spacing before exclusion settings
 		settingsSection.createDiv({ cls: 'osp-settings-spacer' });
 
