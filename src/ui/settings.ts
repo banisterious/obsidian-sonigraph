@@ -1,7 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import SonigraphPlugin from '../main';
-import { getLogger, loggerFactory, LoggerFactory } from '../logging';
-import { createObsidianToggle } from './components';
+import { getLogger, LoggerFactory } from '../logging';
 
 const logger = getLogger('settings');
 
@@ -37,7 +36,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		// Control Center Setting
 		new Setting(containerEl)
 			.setName('Control center')
-			.setDesc('Open the Sonigraph Audio Control Center to configure instruments, musical parameters, and effects')
+			.setDesc('Open the Sonigraph Audio Control Center to configure all plugin settings')
 			.addButton(button => button
 				.setButtonText('Open Control Center')
 				.setCta()
@@ -47,6 +46,21 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					this.plugin.openControlPanel();
 				}));
 
+		// Note about Sonic Graph settings
+		const sonicGraphNote = containerEl.createDiv({ cls: 'osp-settings-note' });
+		sonicGraphNote.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 1rem;">
+				<strong>Note:</strong> Sonic Graph settings (adaptive detail, content-aware positioning, smart clustering, animation duration)
+				are now available in:
+			</p>
+			<ul style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0.5rem 0 0 1.5rem;">
+				<li><strong>Control Center > Sonic Graph tab</strong> for comprehensive settings</li>
+				<li><strong>Sonic Graph settings panel</strong> (⚙️ icon) for quick visualization controls</li>
+			</ul>
+		`;
+
+		// Legacy: Kept for backwards compatibility but no longer displayed
+		/*
 		// Sonic Graph Animation Duration Setting
 		new Setting(containerEl)
 			.setName('Sonic Graph animation duration')
@@ -284,6 +298,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					})
 				);
 		}
+		*/
 
 		// --- Advanced Section ---
 		const advancedSection = containerEl.createEl('details', { cls: 'osp-advanced-settings' });

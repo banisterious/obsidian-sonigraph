@@ -65,7 +65,33 @@ export class SonicGraphAdvancedSettings {
 
 		const content = card.getContent();
 
-		// Enable toggle
+		// Enable Smart Clustering Algorithms toggle
+		new Setting(content)
+			.setName('Enable smart clustering algorithms')
+			.setDesc('Use advanced algorithms to detect and group related notes based on links, tags, folders, and temporal proximity')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sonicGraphSettings?.smartClustering?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) return;
+					if (!this.plugin.settings.sonicGraphSettings.smartClustering) {
+						this.plugin.settings.sonicGraphSettings.smartClustering = {
+							enabled: value,
+							algorithm: 'hybrid',
+							weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 },
+							clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1.0 },
+							visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: 'subtle', colorScheme: 'type-based' },
+							integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 },
+							debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false }
+						};
+					} else {
+						this.plugin.settings.sonicGraphSettings.smartClustering.enabled = value;
+					}
+					await this.plugin.saveSettings();
+					logger.info('advanced-settings', `Smart clustering algorithms: ${value}`);
+				})
+			);
+
+		// Enable cluster audio toggle
 		new Setting(content)
 			.setName('Enable cluster audio')
 			.setDesc('Generate unique audio themes for different cluster types (tag-based, temporal, link-dense, community)')
