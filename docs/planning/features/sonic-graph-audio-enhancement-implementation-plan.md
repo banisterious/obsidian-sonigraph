@@ -46,7 +46,7 @@
 - **Phase 6.3:** Spatial Audio and Panning ✅ **COMPLETED**
 
 ### ⏳ Phase 7: Freesound Integration
-- **Phase 7.1:** OAuth Implementation ✅ **COMPLETED** (September 29, 2025)
+- **Phase 7.1:** API Authentication (Token-Based) ✅ **COMPLETED** (September 29, 2025)
 - **Phase 7.2:** Sample Management System ❌
 - **Phase 7.3:** Caching and Preloading ❌
 
@@ -1675,8 +1675,9 @@ Phase 5.3: Community Detection Audio has been successfully implemented with comp
 ### Phase 7: Freesound Integration (Weeks 20-22) - RENUMBERED
 **Goal**: Integrate Freesound API for high-quality continuous layer samples
 
-#### Phase 7.1: OAuth Implementation
-- **Objective**: Implement Freesound API authentication and sample retrieval
+#### Phase 7.1: API Authentication (Token-Based, No OAuth2)
+- **Objective**: Implement simple token-based Freesound API authentication
+- **Note**: Despite the historical name "OAuth Implementation" in early planning, this phase uses **simple Token authentication only**. Full OAuth2 is not required for preview URL access.
 
 **Implementation Tasks:**
 1. **API Authentication System**
@@ -1684,23 +1685,23 @@ Phase 5.3: Community Detection Audio has been successfully implemented with comp
    class FreesoundAuthManager {
      private apiKey: string;
      private baseUrl: string = 'https://freesound.org/apiv2';
-     
-     async authenticateWithApiKey(key: string): Promise<boolean>;
-     async testConnection(): Promise<boolean>;
-     getAuthHeaders(): Record<string, string>;
+
+     async testConnection(): Promise<FreesoundConnectionTestResult>;
+     getAuthHeaders(): Record<string, string>; // Returns: Authorization: Token YOUR_KEY
    }
    ```
 
 2. **API Key Management**
-   - Secure storage in plugin settings
+   - Plain text storage in plugin settings (with transparent user disclosure)
    - Validation on entry
-   - Connection testing UI
+   - Connection testing UI (uses search endpoint, not /me/)
    - Error handling for invalid keys
 
-3. **Preview URL Strategy**
-   - Use preview-hq-mp3 URLs (128kbps)
-   - No OAuth2 flow required
-   - Token-based authentication only
+3. **Preview URL Strategy (Why No OAuth2 Needed)**
+   - Use preview-hq-mp3 URLs (128kbps MP3)
+   - Preview URLs work with simple Token authentication
+   - OAuth2 only required for /me/ endpoint and full-quality downloads
+   - Token authentication sufficient for our use case
    - Fallback to synthesized sounds if unavailable
 
 **Files to Create:**
@@ -1717,7 +1718,7 @@ Phase 5.3: Community Detection Audio has been successfully implemented with comp
 
 **Completed on September 29, 2025**
 
-Phase 7.1: OAuth Implementation has been successfully completed with token-based authentication:
+Phase 7.1: API Authentication (Token-Based, No OAuth2) has been successfully completed:
 
 #### **API Authentication System** ✅
 - **FreesoundAuthManager** (207 lines) - Token-based authentication
