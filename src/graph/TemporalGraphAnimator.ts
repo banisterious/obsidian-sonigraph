@@ -1087,14 +1087,21 @@ export class TemporalGraphAnimator {
    */
   destroy(): void {
     this.stop();
-    
+
+    // Clear all data arrays to release memory
+    this.timeline = [];
+    this.nodes = [];
+    this.links = [];
+    this.visibleNodes.clear();
+
+    // Clear callbacks
     this.onVisibilityChange = undefined;
     this.onTimeUpdate = undefined;
     this.onAnimationEnd = undefined;
     this.onNodeAppear = undefined;
     this.onVaultStateChange = undefined;
     this.onActivityChange = undefined;
-    
-    logger.debug('cleanup', 'TemporalGraphAnimator destroyed');
+
+    logger.debug('cleanup', 'TemporalGraphAnimator destroyed and memory released');
   }
 } 

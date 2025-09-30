@@ -450,9 +450,9 @@ export class AdaptiveDetailManager {
    * Create FilteredGraphData result
    */
   private createFilteredData(
-    nodes: GraphNode[], 
-    links: GraphLink[], 
-    level: DetailLevel, 
+    nodes: GraphNode[],
+    links: GraphLink[],
+    level: DetailLevel,
     filterReason: string
   ): FilteredGraphData {
     return {
@@ -467,5 +467,25 @@ export class AdaptiveDetailManager {
         filterReason
       }
     };
+  }
+
+  /**
+   * Cleanup resources and release memory
+   */
+  destroy(): void {
+    // Clear pending zoom update
+    if (this.pendingZoomUpdate) {
+      clearTimeout(this.pendingZoomUpdate);
+      this.pendingZoomUpdate = null;
+    }
+
+    // Clear data arrays
+    this.allNodes = [];
+    this.allLinks = [];
+
+    // Clear callback
+    this.onDetailLevelChanged = null;
+
+    logger.debug('cleanup', 'AdaptiveDetailManager destroyed and memory released');
   }
 }
