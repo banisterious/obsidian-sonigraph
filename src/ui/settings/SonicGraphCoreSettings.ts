@@ -95,6 +95,53 @@ export class SonicGraphCoreSettings {
 				})
 			);
 
+		// Enable Adaptive Detail Levels toggle
+		new Setting(content)
+			.setName('Enable adaptive detail levels')
+			.setDesc('Automatically show/hide elements based on zoom level for better performance and visual clarity')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sonicGraphSettings?.adaptiveDetail?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) return;
+					if (!this.plugin.settings.sonicGraphSettings.adaptiveDetail) {
+						this.plugin.settings.sonicGraphSettings.adaptiveDetail = {
+							enabled: value,
+							mode: 'automatic',
+							thresholds: { overview: 0.5, standard: 1.5, detail: 3.0 },
+							overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 }
+						};
+					} else {
+						this.plugin.settings.sonicGraphSettings.adaptiveDetail.enabled = value;
+					}
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Adaptive detail levels: ${value}`);
+				})
+			);
+
+		// Enable Content-Aware Positioning toggle
+		new Setting(content)
+			.setName('Enable content-aware positioning')
+			.setDesc('Position nodes based on tags, temporal data, and hub centrality for semantic clustering')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sonicGraphSettings?.contentAwarePositioning?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) return;
+					if (!this.plugin.settings.sonicGraphSettings.contentAwarePositioning) {
+						this.plugin.settings.sonicGraphSettings.contentAwarePositioning = {
+							enabled: value,
+							tagInfluence: { strength: 'moderate', weight: 0.3 },
+							temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 },
+							hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 },
+							debugVisualization: false
+						};
+					} else {
+						this.plugin.settings.sonicGraphSettings.contentAwarePositioning.enabled = value;
+					}
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Content-aware positioning: ${value}`);
+				})
+			);
+
 		// Group separation slider
 		new Setting(content)
 			.setName('Group separation')

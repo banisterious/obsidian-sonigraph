@@ -13955,6 +13955,49 @@ var init_SonicGraphCoreSettings = __esm({
             });
           }
         );
+        new import_obsidian6.Setting(content).setName("Enable adaptive detail levels").setDesc("Automatically show/hide elements based on zoom level for better performance and visual clarity").addToggle(
+          (toggle) => {
+            var _a, _b;
+            return toggle.setValue(((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.adaptiveDetail) == null ? void 0 : _b.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.sonicGraphSettings)
+                return;
+              if (!this.plugin.settings.sonicGraphSettings.adaptiveDetail) {
+                this.plugin.settings.sonicGraphSettings.adaptiveDetail = {
+                  enabled: value,
+                  mode: "automatic",
+                  thresholds: { overview: 0.5, standard: 1.5, detail: 3 },
+                  overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 }
+                };
+              } else {
+                this.plugin.settings.sonicGraphSettings.adaptiveDetail.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger12.info("core-settings", `Adaptive detail levels: ${value}`);
+            });
+          }
+        );
+        new import_obsidian6.Setting(content).setName("Enable content-aware positioning").setDesc("Position nodes based on tags, temporal data, and hub centrality for semantic clustering").addToggle(
+          (toggle) => {
+            var _a, _b;
+            return toggle.setValue(((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.contentAwarePositioning) == null ? void 0 : _b.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.sonicGraphSettings)
+                return;
+              if (!this.plugin.settings.sonicGraphSettings.contentAwarePositioning) {
+                this.plugin.settings.sonicGraphSettings.contentAwarePositioning = {
+                  enabled: value,
+                  tagInfluence: { strength: "moderate", weight: 0.3 },
+                  temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 },
+                  hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 },
+                  debugVisualization: false
+                };
+              } else {
+                this.plugin.settings.sonicGraphSettings.contentAwarePositioning.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger12.info("core-settings", `Content-aware positioning: ${value}`);
+            });
+          }
+        );
         new import_obsidian6.Setting(content).setName("Group separation").setDesc("Distance between different groups of nodes").addSlider(
           (slider) => {
             var _a;
@@ -14646,6 +14689,30 @@ var init_SonicGraphAdvancedSettings = __esm({
           elevation: 1
         });
         const content = card.getContent();
+        new import_obsidian8.Setting(content).setName("Enable smart clustering algorithms").setDesc("Use advanced algorithms to detect and group related notes based on links, tags, folders, and temporal proximity").addToggle(
+          (toggle) => {
+            var _a2, _b;
+            return toggle.setValue(((_b = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.smartClustering) == null ? void 0 : _b.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.sonicGraphSettings)
+                return;
+              if (!this.plugin.settings.sonicGraphSettings.smartClustering) {
+                this.plugin.settings.sonicGraphSettings.smartClustering = {
+                  enabled: value,
+                  algorithm: "hybrid",
+                  weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 },
+                  clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1 },
+                  visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: "subtle", colorScheme: "type-based" },
+                  integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 },
+                  debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false }
+                };
+              } else {
+                this.plugin.settings.sonicGraphSettings.smartClustering.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              logger14.info("advanced-settings", `Smart clustering algorithms: ${value}`);
+            });
+          }
+        );
         new import_obsidian8.Setting(content).setName("Enable cluster audio").setDesc("Generate unique audio themes for different cluster types (tag-based, temporal, link-dense, community)").addToggle(
           (toggle) => {
             var _a2;
@@ -67276,7 +67343,6 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     this.plugin = plugin;
   }
   display() {
-    var _a, _b, _c, _d;
     const { containerEl } = this;
     containerEl.empty();
     logger.debug("rendering", "Rendering settings tab", {
@@ -67290,171 +67356,21 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     dismissBtn.addEventListener("click", () => {
       onboardingSection.style.display = "none";
     });
-    new import_obsidian.Setting(containerEl).setName("Control center").setDesc("Open the Sonigraph Audio Control Center to configure instruments, musical parameters, and effects").addButton((button) => button.setButtonText("Open Control Center").setCta().onClick(() => {
+    new import_obsidian.Setting(containerEl).setName("Control center").setDesc("Open the Sonigraph Audio Control Center to configure all plugin settings").addButton((button) => button.setButtonText("Open Control Center").setCta().onClick(() => {
       this.app.setting.close();
       this.plugin.openControlPanel();
     }));
-    new import_obsidian.Setting(containerEl).setName("Sonic Graph animation duration").setDesc("Base duration for temporal graph animations in seconds. Higher values create more contemplative pacing.").addSlider(
-      (slider) => slider.setLimits(15, 420, 15).setValue(this.plugin.settings.sonicGraphAnimationDuration || 60).setDynamicTooltip().onChange(async (value) => {
-        this.plugin.settings.sonicGraphAnimationDuration = value;
-        await this.plugin.saveSettings();
-        logger.info("settings-change", "Animation duration changed", { duration: value });
-      })
-    );
-    const sonicGraphSection = containerEl.createEl("div", { cls: "osp-sonic-graph-settings" });
-    sonicGraphSection.createEl("h3", { text: "Sonic Graph Settings", cls: "osp-section-header" });
-    new import_obsidian.Setting(sonicGraphSection).setName("Enable Adaptive Detail Levels").setDesc("Automatically show/hide elements based on zoom level for better performance and visual clarity. Reduces clutter when zoomed out, shows more detail when zoomed in.").addToggle(
-      (toggle) => {
-        var _a2, _b2;
-        return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.adaptiveDetail) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
-          if (!this.plugin.settings.sonicGraphSettings) {
-            this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, timeWindow: "all-time", granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
-              audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
-              visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
-              navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
-              adaptiveDetail: { enabled: false, mode: "automatic", thresholds: { overview: 0.5, standard: 1.5, detail: 3 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
-              contentAwarePositioning: { enabled: false, tagInfluence: { strength: "moderate", weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
-              layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: "balanced", adaptiveScaling: true },
-              smartClustering: { enabled: false, algorithm: "hybrid", weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 }, clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1 }, visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: "subtle", colorScheme: "type-based" }, integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 }, debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false } },
-              connectionTypeMapping: { enabled: false, independentFromContentAware: true, mappings: { wikilink: { enabled: true, instrumentFamily: "strings", intensity: 0.7, audioCharacteristics: { baseVolume: 0.7, volumeVariation: 0.1, noteDuration: 1, attackTime: 0.05, releaseTime: 0.8, spatialSpread: 0.3, reverbAmount: 0.2, delayAmount: 0.1, harmonicRichness: 0.6, dissonanceLevel: 0, chordsEnabled: false, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.3, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, embed: { enabled: true, instrumentFamily: "keyboards", intensity: 0.7, audioCharacteristics: { baseVolume: 0.8, volumeVariation: 0.15, noteDuration: 1.2, attackTime: 0.08, releaseTime: 1.2, spatialSpread: 0.5, reverbAmount: 0.3, delayAmount: 0.2, harmonicRichness: 0.8, dissonanceLevel: 0, chordsEnabled: true, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.4, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, markdown: { enabled: false, instrumentFamily: "woodwinds", intensity: 0.7, audioCharacteristics: { baseVolume: 0.6, volumeVariation: 0.1, noteDuration: 0.8, attackTime: 0.03, releaseTime: 0.6, spatialSpread: 0.2, reverbAmount: 0.15, delayAmount: 0.05, harmonicRichness: 0.4, dissonanceLevel: 0, chordsEnabled: false, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.2, bidirectionalHarmony: false, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, tag: { enabled: false, instrumentFamily: "ambient", intensity: 0.7, audioCharacteristics: { baseVolume: 0.5, volumeVariation: 0.2, noteDuration: 1.5, attackTime: 0.1, releaseTime: 2, spatialSpread: 0.7, reverbAmount: 0.4, delayAmount: 0.3, harmonicRichness: 0.9, dissonanceLevel: 0, chordsEnabled: true, strengthToVolumeEnabled: false, strengthToVolumeAmount: 0, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: false, frequencyThreshold: 3, volumeBoost: 1, harmonicBoost: 1 }, contextualModifiers: { sameFolderBoost: 1, crossFolderReduction: 1, recentConnectionBoost: 1, timeDecayDays: 30 } } }, globalSettings: { connectionVolumeMix: 0.6, maxSimultaneousConnections: 15, connectionAudioFadeTime: 0.3, enableCaching: true, maxCacheSize: 500, selectiveProcessing: true, highQualityMode: false, antiAliasingEnabled: true, compressionEnabled: true }, currentPreset: "Default", customPresets: [], advancedFeatures: { connectionChords: false, contextualHarmony: false, dynamicInstrumentation: false, velocityModulation: true, temporalSpacing: false, crossfadeConnections: false } }
-            };
-          }
-          if (!this.plugin.settings.sonicGraphSettings.adaptiveDetail) {
-            this.plugin.settings.sonicGraphSettings.adaptiveDetail = {
-              enabled: false,
-              mode: "automatic",
-              thresholds: { overview: 0.5, standard: 1.5, detail: 3 },
-              overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 }
-            };
-          }
-          this.plugin.settings.sonicGraphSettings.adaptiveDetail.enabled = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Adaptive detail levels toggled", { enabled: value });
-          this.display();
-        });
-      }
-    );
-    if ((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.adaptiveDetail) == null ? void 0 : _b.enabled) {
-      new import_obsidian.Setting(sonicGraphSection).setName("Adaptive Detail Mode").setDesc("Automatic: Changes based on zoom level. Performance: Optimized for large vaults. Manual: User controls via buttons.").addDropdown(
-        (dropdown) => dropdown.addOption("automatic", "Automatic (Recommended)").addOption("performance", "Performance Optimized").addOption("manual", "Manual Control").setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode).onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Adaptive detail mode changed", { mode: value });
-        })
-      );
-      new import_obsidian.Setting(sonicGraphSection).setName("Always show labels").setDesc("Override zoom-based label visibility and always show node labels regardless of zoom level.").addToggle(
-        (toggle) => toggle.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels).onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Always show labels override changed", { enabled: value });
-        })
-      );
-      new import_obsidian.Setting(sonicGraphSection).setName("Maximum visible nodes").setDesc("Limit the maximum number of nodes shown for performance. Set to 0 for no limit.").addSlider(
-        (slider) => slider.setLimits(0, 2e3, 50).setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes === -1 ? 0 : this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes).setDynamicTooltip().onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes = value === 0 ? -1 : value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Maximum visible nodes changed", { maxNodes: value === 0 ? "unlimited" : value });
-        })
-      );
-    }
-    new import_obsidian.Setting(sonicGraphSection).setName("Enable Content-Aware Positioning").setDesc("Use semantic relationships (tags, creation time, connections) to influence graph layout for more meaningful positioning.").addToggle(
-      (toggle) => {
-        var _a2, _b2;
-        return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.contentAwarePositioning) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
-          if (!this.plugin.settings.sonicGraphSettings) {
-            this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, timeWindow: "all-time", granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
-              audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
-              visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
-              navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
-              adaptiveDetail: { enabled: false, mode: "automatic", thresholds: { overview: 0.5, standard: 1.5, detail: 3 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
-              contentAwarePositioning: { enabled: false, tagInfluence: { strength: "moderate", weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
-              layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: "balanced", adaptiveScaling: true },
-              smartClustering: { enabled: false, algorithm: "hybrid", weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 }, clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1 }, visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: "subtle", colorScheme: "type-based" }, integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 }, debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false } },
-              connectionTypeMapping: { enabled: false, independentFromContentAware: true, mappings: { wikilink: { enabled: true, instrumentFamily: "strings", intensity: 0.7, audioCharacteristics: { baseVolume: 0.7, volumeVariation: 0.1, noteDuration: 1, attackTime: 0.05, releaseTime: 0.8, spatialSpread: 0.3, reverbAmount: 0.2, delayAmount: 0.1, harmonicRichness: 0.6, dissonanceLevel: 0, chordsEnabled: false, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.3, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, embed: { enabled: true, instrumentFamily: "keyboards", intensity: 0.7, audioCharacteristics: { baseVolume: 0.8, volumeVariation: 0.15, noteDuration: 1.2, attackTime: 0.08, releaseTime: 1.2, spatialSpread: 0.5, reverbAmount: 0.3, delayAmount: 0.2, harmonicRichness: 0.8, dissonanceLevel: 0, chordsEnabled: true, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.4, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, markdown: { enabled: false, instrumentFamily: "woodwinds", intensity: 0.7, audioCharacteristics: { baseVolume: 0.6, volumeVariation: 0.1, noteDuration: 0.8, attackTime: 0.03, releaseTime: 0.6, spatialSpread: 0.2, reverbAmount: 0.15, delayAmount: 0.05, harmonicRichness: 0.4, dissonanceLevel: 0, chordsEnabled: false, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.2, bidirectionalHarmony: false, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, tag: { enabled: false, instrumentFamily: "ambient", intensity: 0.7, audioCharacteristics: { baseVolume: 0.5, volumeVariation: 0.2, noteDuration: 1.5, attackTime: 0.1, releaseTime: 2, spatialSpread: 0.7, reverbAmount: 0.4, delayAmount: 0.3, harmonicRichness: 0.9, dissonanceLevel: 0, chordsEnabled: true, strengthToVolumeEnabled: false, strengthToVolumeAmount: 0, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: false, frequencyThreshold: 3, volumeBoost: 1, harmonicBoost: 1 }, contextualModifiers: { sameFolderBoost: 1, crossFolderReduction: 1, recentConnectionBoost: 1, timeDecayDays: 30 } } }, globalSettings: { connectionVolumeMix: 0.6, maxSimultaneousConnections: 15, connectionAudioFadeTime: 0.3, enableCaching: true, maxCacheSize: 500, selectiveProcessing: true, highQualityMode: false, antiAliasingEnabled: true, compressionEnabled: true }, currentPreset: "Default", customPresets: [], advancedFeatures: { connectionChords: false, contextualHarmony: false, dynamicInstrumentation: false, velocityModulation: true, temporalSpacing: false, crossfadeConnections: false } }
-            };
-          }
-          if (!this.plugin.settings.sonicGraphSettings.contentAwarePositioning) {
-            this.plugin.settings.sonicGraphSettings.contentAwarePositioning = {
-              enabled: false,
-              tagInfluence: { strength: "moderate", weight: 0.3 },
-              temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 },
-              hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 },
-              debugVisualization: false
-            };
-          }
-          this.plugin.settings.sonicGraphSettings.contentAwarePositioning.enabled = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Content-aware positioning toggled", { enabled: value });
-        });
-      }
-    );
-    new import_obsidian.Setting(sonicGraphSection).setName("Enable Smart Clustering Algorithms").setDesc("Automatically group related nodes using community detection and multi-factor analysis. Combines link strength, shared tags, folder hierarchy, and temporal proximity.").addToggle(
-      (toggle) => {
-        var _a2, _b2;
-        return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.smartClustering) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
-          if (!this.plugin.settings.sonicGraphSettings) {
-            this.plugin.settings.sonicGraphSettings = {
-              timeline: { duration: 60, spacing: "auto", loop: false, showMarkers: true, timeWindow: "all-time", granularity: "year", customRange: { value: 1, unit: "years" }, eventSpreadingMode: "gentle", maxEventSpacing: 5, simultaneousEventLimit: 3, eventBatchSize: 5 },
-              audio: { density: 30, noteDuration: 0.3, enableEffects: true, autoDetectionOverride: "auto" },
-              visual: { showLabels: false, showFileNames: false, animationStyle: "fade", nodeScaling: 1, connectionOpacity: 0.6, timelineMarkersEnabled: true, loopAnimation: false },
-              navigation: { enableControlCenter: true, enableReset: true, enableExport: false },
-              adaptiveDetail: { enabled: false, mode: "automatic", thresholds: { overview: 0.5, standard: 1.5, detail: 3 }, overrides: { alwaysShowLabels: false, minimumVisibleNodes: 10, maximumVisibleNodes: -1 } },
-              contentAwarePositioning: { enabled: false, tagInfluence: { strength: "moderate", weight: 0.3 }, temporalPositioning: { enabled: true, weight: 0.1, recentThresholdDays: 30 }, hubCentrality: { enabled: true, weight: 0.2, minimumConnections: 5 }, debugVisualization: false },
-              layout: { clusteringStrength: 0.15, groupSeparation: 0.08, pathBasedGrouping: { enabled: false, groups: [] }, filters: { showTags: true, showOrphans: true }, temporalClustering: false, journalGravity: 0.1, layoutPreset: "balanced", adaptiveScaling: true },
-              smartClustering: { enabled: false, algorithm: "hybrid", weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 }, clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1 }, visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: "subtle", colorScheme: "type-based" }, integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 }, debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false } },
-              connectionTypeMapping: { enabled: false, independentFromContentAware: true, mappings: { wikilink: { enabled: true, instrumentFamily: "strings", intensity: 0.7, audioCharacteristics: { baseVolume: 0.7, volumeVariation: 0.1, noteDuration: 1, attackTime: 0.05, releaseTime: 0.8, spatialSpread: 0.3, reverbAmount: 0.2, delayAmount: 0.1, harmonicRichness: 0.6, dissonanceLevel: 0, chordsEnabled: false, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.3, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, embed: { enabled: true, instrumentFamily: "keyboards", intensity: 0.7, audioCharacteristics: { baseVolume: 0.8, volumeVariation: 0.15, noteDuration: 1.2, attackTime: 0.08, releaseTime: 1.2, spatialSpread: 0.5, reverbAmount: 0.3, delayAmount: 0.2, harmonicRichness: 0.8, dissonanceLevel: 0, chordsEnabled: true, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.4, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, markdown: { enabled: false, instrumentFamily: "woodwinds", intensity: 0.7, audioCharacteristics: { baseVolume: 0.6, volumeVariation: 0.1, noteDuration: 0.8, attackTime: 0.03, releaseTime: 0.6, spatialSpread: 0.2, reverbAmount: 0.15, delayAmount: 0.05, harmonicRichness: 0.4, dissonanceLevel: 0, chordsEnabled: false, strengthToVolumeEnabled: true, strengthToVolumeAmount: 0.2, bidirectionalHarmony: false, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: true, frequencyThreshold: 3, volumeBoost: 1.3, harmonicBoost: 1.2 }, contextualModifiers: { sameFolderBoost: 1.1, crossFolderReduction: 0.9, recentConnectionBoost: 1.15, timeDecayDays: 30 } }, tag: { enabled: false, instrumentFamily: "ambient", intensity: 0.7, audioCharacteristics: { baseVolume: 0.5, volumeVariation: 0.2, noteDuration: 1.5, attackTime: 0.1, releaseTime: 2, spatialSpread: 0.7, reverbAmount: 0.4, delayAmount: 0.3, harmonicRichness: 0.9, dissonanceLevel: 0, chordsEnabled: true, strengthToVolumeEnabled: false, strengthToVolumeAmount: 0, bidirectionalHarmony: true, brokenLinkDissonance: false }, linkStrengthAnalysis: { enabled: false, frequencyThreshold: 3, volumeBoost: 1, harmonicBoost: 1 }, contextualModifiers: { sameFolderBoost: 1, crossFolderReduction: 1, recentConnectionBoost: 1, timeDecayDays: 30 } } }, globalSettings: { connectionVolumeMix: 0.6, maxSimultaneousConnections: 15, connectionAudioFadeTime: 0.3, enableCaching: true, maxCacheSize: 500, selectiveProcessing: true, highQualityMode: false, antiAliasingEnabled: true, compressionEnabled: true }, currentPreset: "Default", customPresets: [], advancedFeatures: { connectionChords: false, contextualHarmony: false, dynamicInstrumentation: false, velocityModulation: true, temporalSpacing: false, crossfadeConnections: false } }
-            };
-          }
-          if (!this.plugin.settings.sonicGraphSettings.smartClustering) {
-            this.plugin.settings.sonicGraphSettings.smartClustering = {
-              enabled: false,
-              algorithm: "hybrid",
-              weights: { linkStrength: 0.4, sharedTags: 0.3, folderHierarchy: 0.2, temporalProximity: 0.1 },
-              clustering: { minClusterSize: 3, maxClusters: 12, resolution: 1 },
-              visualization: { enableVisualization: true, showClusterLabels: true, clusterBoundaries: "subtle", colorScheme: "type-based" },
-              integration: { respectExistingGroups: true, hybridMode: true, overrideThreshold: 0.7 },
-              debugging: { debugMode: false, showStatistics: false, logClusteringDetails: false }
-            };
-          }
-          this.plugin.settings.sonicGraphSettings.smartClustering.enabled = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Smart clustering algorithms toggled", { enabled: value });
-          this.display();
-        });
-      }
-    );
-    if ((_d = (_c = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _c.smartClustering) == null ? void 0 : _d.enabled) {
-      new import_obsidian.Setting(sonicGraphSection).setName("Clustering Algorithm").setDesc("Louvain: Fast community detection. Modularity: High-quality academic clustering. Hybrid: Combines both with multi-factor refinement.").addDropdown(
-        (dropdown) => dropdown.addOption("louvain", "Louvain (Fast)").addOption("modularity", "Modularity (Quality)").addOption("hybrid", "Hybrid (Recommended)").setValue(this.plugin.settings.sonicGraphSettings.smartClustering.algorithm).onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.smartClustering.algorithm = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Clustering algorithm changed", { algorithm: value });
-        })
-      );
-      new import_obsidian.Setting(sonicGraphSection).setName("Minimum cluster size").setDesc("Minimum number of nodes required to form a cluster. Smaller values create more clusters.").addSlider(
-        (slider) => slider.setLimits(2, 10, 1).setValue(this.plugin.settings.sonicGraphSettings.smartClustering.clustering.minClusterSize).setDynamicTooltip().onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.smartClustering.clustering.minClusterSize = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Minimum cluster size changed", { minSize: value });
-        })
-      );
-      new import_obsidian.Setting(sonicGraphSection).setName("Maximum clusters").setDesc("Maximum number of clusters to create. Prevents over-fragmentation of the graph.").addSlider(
-        (slider) => slider.setLimits(5, 25, 1).setValue(this.plugin.settings.sonicGraphSettings.smartClustering.clustering.maxClusters).setDynamicTooltip().onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.smartClustering.clustering.maxClusters = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Maximum clusters changed", { maxClusters: value });
-        })
-      );
-      new import_obsidian.Setting(sonicGraphSection).setName("Respect manual groups").setDesc("Honor existing path-based groups when creating automatic clusters.").addToggle(
-        (toggle) => toggle.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.integration.respectExistingGroups).onChange(async (value) => {
-          this.plugin.settings.sonicGraphSettings.smartClustering.integration.respectExistingGroups = value;
-          await this.plugin.saveSettings();
-          logger.info("settings-change", "Respect existing groups changed", { respectGroups: value });
-        })
-      );
-    }
+    const sonicGraphNote = containerEl.createDiv({ cls: "osp-settings-note" });
+    sonicGraphNote.innerHTML = `
+			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 1rem;">
+				<strong>Note:</strong> Sonic Graph settings (adaptive detail, content-aware positioning, smart clustering, animation duration)
+				are now available in:
+			</p>
+			<ul style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0.5rem 0 0 1.5rem;">
+				<li><strong>Control Center > Sonic Graph tab</strong> for comprehensive settings</li>
+				<li><strong>Sonic Graph settings panel</strong> (\u2699\uFE0F icon) for quick visualization controls</li>
+			</ul>
+		`;
     const advancedSection = containerEl.createEl("details", { cls: "osp-advanced-settings" });
     advancedSection.createEl("summary", { text: "Advanced", cls: "osp-advanced-summary" });
     advancedSection.open = false;
