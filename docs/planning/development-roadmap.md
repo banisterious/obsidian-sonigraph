@@ -1,8 +1,8 @@
 # Sonigraph Development Roadmap
 
-**Project**: Obsidian Sonigraph Plugin
-**Version**: 0.12.0
-**Last Updated**: September 30, 2025
+**Project**: Obsidian Sonigraph Plugin 
+**Version**: 0.12.0 
+**Last Updated**: September 30, 2025 
 
 ---
 
@@ -305,3 +305,4 @@ Superseded or experimental plans (historical reference):
 ---
 
 *For detailed feature specifications, see [Feature Catalog](feature-catalog.md). For system architecture, see [Architecture Documentation](../architecture/overview.md).*
+
