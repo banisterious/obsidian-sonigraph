@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-09-29
+
+### Added - Phase 8.1: Sonic Graph Settings Panel UI Polish ✅
+
+#### Overview
+Comprehensive UI reorganization that moves Sonic Graph settings from cramped modal panel to spacious Control Center with horizontal tab navigation. Creates 4 organized tabs housing all Phase 1-7 settings with improved discoverability and usability.
+
+#### Core Components (2,420 lines, 5 new files)
+
+**SonicGraphSettingsTabs** (`src/ui/settings/SonicGraphSettingsTabs.ts` - 240 lines)
+- **Horizontal Tab Navigation**: 4-tab system with icons and descriptions
+- **Tab IDs**: 'core', 'layers', 'advanced', 'freesound'
+- **Active State Management**: Visual highlighting of current tab
+- **Tab Switching**: Smooth content transitions with event handling
+- **Public API**: `showTab()`, `getActiveTab()`, `destroy()`
+
+**SonicGraphCoreSettings** (`src/ui/settings/SonicGraphCoreSettings.ts` - 243 lines)
+- **Graph & Layout Section**: Show file names, group separation, timeline settings (4 settings)
+- **Audio Core Section**: Audio detection, density, duration, animation, event spreading (5 settings)
+- **Content-Aware Mapping Section**: Placeholder for Phase 2 expansion
+- **Material Design Cards**: Consistent styling with elevation and icons
+
+**SonicGraphLayersSettings** (`src/ui/settings/SonicGraphLayersSettings.ts` - 569 lines)
+- **Continuous Layers Section**: Enable toggle, genre selection (13 genres), fade settings
+- **Ambient Layer Section**: Enable toggle, volume, intensity, evolution controls
+- **Rhythmic Layer Section**: Enable toggle with collapsible detailed settings (tempo, percussion, arpeggios, activity sensitivity)
+- **Harmonic Layer Section**: Enable toggle with collapsible detailed settings (chord progression, harmonic rhythm, voice leading)
+- **Layer Tonality Section**: Global scale and root note settings for continuous layers
+- **Dynamic Re-rendering**: Per-card re-render on toggle for instant feedback
+- **Proper Initialization**: Creates default configs when enabling layers
+
+**SonicGraphAdvancedSettings** (`src/ui/settings/SonicGraphAdvancedSettings.ts` - 1,078 lines)
+- **Smart Clustering Section**: Cluster audio enable, cluster type volumes (5 types), transition effects
+- **Hub Orchestration Section**: Hub orchestration enable, mode selection, transitions, centrality weights, prominence settings
+- **Community Detection Section**: Community detection enable, theme settings, evolution controls
+- **Musical Theory Section**: Enable toggle, scale/root note, harmony enforcement, chromaticism, dissonance, quantization, chord progressions (9 settings)
+- **Dynamic Orchestration Section**: Enable toggle, complexity tiers, temporal influence, activity mapping, transition smoothness (6 settings)
+- **Spatial Audio Section**: Enable toggle, panning mode, intensity, smoothing, update throttle, depth mapping (6 settings)
+- **Per-Section Re-rendering**: Optimized updates without full tab reload
+
+**SonicGraphFreesoundSettings** (`src/ui/settings/SonicGraphFreesoundSettings.ts` - 290 lines)
+- **Freesound API Section**: API key input with test button (uses FreesoundAuthManager), enable toggle, info about Freesound.org
+- **Caching Section**: Predictive preload, preload on startup, background loading, cache strategy dropdown (5 options), max storage slider
+- **Preset Management Section**: Current preset display, custom preset count, note about full management in modal
+
+#### UI Simplification
+
+**SonicGraphModal Changes** (`src/ui/SonicGraphModal.ts` - Modified)
+- **Removed 8 Advanced Sections**: Audio, audio enhancement, continuous layers, cluster audio, community detection, navigation, advanced, groups
+- **Kept 4 Essential Sections**: Filters, visual, layout, timeline
+- **Added Control Center Link**: Prominent info box explaining settings migration + large button to open Control Center
+- **Event Integration**: Button closes modal and triggers 'sonigraph:open-control-center' event
+
+**SonicGraphView Changes** (`src/ui/settings/SonicGraphView.ts` - Modified)
+- **Same Simplification Applied**: Removed same 8 advanced sections from view panel
+- **Same Control Center Link**: Identical info box and button as modal
+- **Consistent Experience**: Both modal and view panels now streamlined
+
+#### Control Center Integration
+
+**Control Panel Enhancements** (`src/ui/control-panel.ts` - +40 lines)
+- **Tab System Integration**: Instantiates SonicGraphSettingsTabs in Sonic Graph tab
+- **Replaces Old Content**: Removes previous simple settings list
+- **Event Listener**: 'sonigraph:open-control-center' opens Control Center and switches to Sonic Graph tab
+
+#### CSS Styling
+
+**Tab Navigation Styles** (`styles/controlcenter.css` - +142 lines)
+- **Horizontal Tab Bar**: Flex layout with row direction, gap spacing
+- **Tab Buttons**: Icon + label layout, hover effects, active state highlighting
+- **Active Tab**: Blue accent color, bold text, bottom border indicator
+- **Tab Content Area**: Proper scrolling, padding, responsive layout
+- **Control Center Button**: Large, prominent styling for "Open Control Center" button
+- **Info Box**: Blue left border, clear messaging about settings migration
+
+#### Key Features
+- ✅ **Organized Settings**: All Phase 1-7 settings logically grouped in 4 tabs
+- ✅ **Improved Discoverability**: Clear tab labels and section headers with descriptions
+- ✅ **Streamlined Modal**: Essential visualization controls only, no advanced clutter
+- ✅ **Instant Feedback**: Per-card re-rendering for responsive settings changes
+- ✅ **Material Design**: Consistent card-based layout with proper elevation and spacing
+- ✅ **Clear Guidance**: Prominent info boxes and links to advanced settings
+- ✅ **100% Feature Parity**: No functionality lost in migration
+- ✅ **Dual Simplification**: Both SonicGraphModal and SonicGraphView panels updated
+
+#### Architecture Improvements
+- **Modular Tab System**: Each tab in separate file for maintainability
+- **Reusable Components**: MaterialCard pattern used consistently
+- **State Management**: Proper settings persistence via plugin.saveSettings()
+- **Event-Driven**: Control Center navigation via workspace events
+- **Performance Optimized**: Per-card rendering reduces unnecessary re-renders
+
+#### Files Modified
+- `src/ui/control-panel.ts` - Tab system integration
+- `src/ui/SonicGraphModal.ts` - Simplified to essentials + Control Center link
+- `src/ui/SonicGraphView.ts` - Simplified to essentials + Control Center link
+- `src/graph/types.ts` - Extended AudioMappingConfig with full MusicalTheoryConfig
+- `src/graph/musical-mapper.ts` - Updated initialization for expanded interface
+- `styles/controlcenter.css` - Tab navigation and button styling
+
+#### Files Created
+- `src/ui/settings/SonicGraphSettingsTabs.ts` - Tab navigation system
+- `src/ui/settings/SonicGraphCoreSettings.ts` - Core settings tab
+- `src/ui/settings/SonicGraphLayersSettings.ts` - Audio layers tab
+- `src/ui/settings/SonicGraphAdvancedSettings.ts` - Advanced features tab
+- `src/ui/settings/SonicGraphFreesoundSettings.ts` - Freesound & presets tab
+
+---
+
 ### Added - Phase 7.3: Caching and Preloading ✅
 
 #### Overview
