@@ -74,15 +74,21 @@ export class AudioExporter {
 
             // Stage 3: Encoding
             this.updateProgress('encoding', 60, `Encoding to ${config.format.toUpperCase()}`);
-            const encodedData = await this.encode(audioBuffer, config);
+            const encodeResult = await this.encode(audioBuffer, config);
 
             if (this.isCancelled) {
                 return { success: false, error: this.createCancelError() };
             }
 
+            // Update config with actual extension if encoder provided one
+            // (e.g., MP3 may become M4A, WebM, or OGG depending on platform support)
+            if (encodeResult.extension) {
+                config.format = encodeResult.extension as any;
+            }
+
             // Stage 4: Writing
             this.updateProgress('writing', 90, 'Writing file');
-            const filePath = await this.writeFile(encodedData, config);
+            const filePath = await this.writeFile(encodeResult.data, config);
 
             if (this.isCancelled) {
                 await this.cleanup(filePath);
@@ -100,7 +106,7 @@ export class AudioExporter {
             return {
                 success: true,
                 filePath,
-                fileSize: encodedData.byteLength,
+                fileSize: encodeResult.data.byteLength,
                 duration: audioBuffer.duration,
                 notePath
             };
@@ -241,14 +247,25 @@ export class AudioExporter {
 
     /**
      * Encode audio buffer to target format
+     * Returns encoded data and actual format info (since MP3 may become M4A/WebM/OGG)
      */
-    private async encode(audioBuffer: AudioBuffer, config: ExportConfig): Promise<ArrayBuffer> {
+    private async encode(audioBuffer: AudioBuffer, config: ExportConfig): Promise<{ data: ArrayBuffer; extension?: string }> {
         switch (config.format) {
             case 'wav':
-                return WavEncoder.encode(audioBuffer, config.quality as any);
+                return { data: WavEncoder.encode(audioBuffer, config.quality as any) };
 
-            case 'mp3':
-                return Mp3Encoder.encode(audioBuffer, config.quality as any);
+            case 'mp3': {
+                const result = await Mp3Encoder.encode(
+                    audioBuffer,
+                    config.quality as any,
+                    (percentage) => {
+                        // Map encoding progress to 60-90% of total progress
+                        const mappedPercentage = 60 + (percentage * 0.3);
+                        this.updateProgress('encoding', mappedPercentage, 'Encoding to compressed audio');
+                    }
+                );
+                return { data: result.data, extension: result.extension };
+            }
 
             case 'ogg':
                 // TODO: Phase 2 (optional)
