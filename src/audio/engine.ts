@@ -269,9 +269,16 @@ export class AudioEngine {
 		// Use the new modular InstrumentConfigLoader to load all available instruments
 		// Individual instruments will decide whether to use samples or synthesis based on their useHighQuality setting
 		const loadedInstruments = this.instrumentConfigLoader.loadAllInstruments();
-		
+
 		// Return the loaded instruments for compatibility
 		return loadedInstruments;
+	}
+
+	/**
+	 * Get the master volume node for audio export/recording
+	 */
+	public getMasterVolume(): Volume | null {
+		return this.volume;
 	}
 
 	async initialize(): Promise<void> {

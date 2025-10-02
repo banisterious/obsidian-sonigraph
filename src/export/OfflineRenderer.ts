@@ -20,6 +20,7 @@ export class OfflineRenderer {
     private audioEngine: AudioEngine;
     private animator: TemporalGraphAnimator;
     private progressCallback?: (percentage: number) => void;
+    private isCancelled = false;
 
     constructor(audioEngine: AudioEngine, animator: TemporalGraphAnimator) {
         this.audioEngine = audioEngine;
@@ -31,6 +32,14 @@ export class OfflineRenderer {
      */
     setProgressCallback(callback: (percentage: number) => void): void {
         this.progressCallback = callback;
+    }
+
+    /**
+     * Cancel the rendering process
+     */
+    cancel(): void {
+        this.isCancelled = true;
+        logger.info('offline-renderer', 'Cancellation requested');
     }
 
     /**
@@ -87,7 +96,7 @@ export class OfflineRenderer {
         const webAudioContext = audioContext as AudioContext;
 
         // Access the audio engine's master volume node (Tone.js Volume)
-        const masterVolume = (this.audioEngine as any).volume;
+        const masterVolume = this.audioEngine.getMasterVolume();
         if (!masterVolume) {
             throw new Error('Could not access audio engine master volume');
         }
@@ -146,9 +155,17 @@ export class OfflineRenderer {
         this.animator.play();
         logger.info('offline-renderer', 'Animation started');
 
-        // Wait for animation to complete
-        await new Promise<void>((resolve) => {
+        // Wait for animation to complete or cancellation
+        await new Promise<void>((resolve, reject) => {
             const checkInterval = setInterval(() => {
+                // Check for cancellation
+                if (this.isCancelled) {
+                    clearInterval(checkInterval);
+                    logger.info('offline-renderer', 'Render cancelled by user');
+                    reject(new Error('Export cancelled by user'));
+                    return;
+                }
+
                 // Access animator config duration through public interface
                 const animDuration = duration;
 
@@ -165,8 +182,10 @@ export class OfflineRenderer {
 
             // Fallback timeout in case animation doesn't auto-pause
             setTimeout(() => {
-                logger.info('offline-renderer', 'Animation timeout reached');
-                resolve();
+                if (!this.isCancelled) {
+                    logger.info('offline-renderer', 'Animation timeout reached');
+                    resolve();
+                }
             }, (duration + 2) * 1000); // Add 2s buffer
         });
 

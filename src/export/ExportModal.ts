@@ -50,7 +50,7 @@ export class ExportModal extends Modal {
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
-        this.exporter = new AudioExporter(app, audioEngine);
+        this.exporter = new AudioExporter(app, audioEngine, plugin.settings);
 
         if (animator) {
             this.exporter.setAnimator(animator);
@@ -344,7 +344,11 @@ export class ExportModal extends Modal {
                 renderingMethod: this.config.renderingMethod!,
                 maxDurationMinutes: this.config.maxDurationMinutes!,
                 createNote: this.config.createNote!,
-                includeSettingsSummary: this.config.includeSettingsSummary!
+                includeSettingsSummary: this.config.includeSettingsSummary!,
+                // Capture actual audio engine state for note generation
+                masterVolume: this.plugin.settings.volume,
+                enabledEffects: this.getEnabledEffects(),
+                selectedInstruments: this.getEnabledInstruments()
             };
 
             // Check for file collision before starting export
@@ -530,5 +534,81 @@ export class ExportModal extends Modal {
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    /**
+     * Get list of enabled effects for note generation
+     */
+    private getEnabledEffects(): string[] {
+        const effects: string[] = [];
+        const settingsEffects = this.plugin.settings.effects;
+
+        if (!settingsEffects) {
+            return effects;
+        }
+
+        // Check each effect
+        for (const [effectName, effectConfig] of Object.entries(settingsEffects)) {
+            if (effectConfig?.enabled) {
+                // Capitalize first letter of effect name
+                const displayName = effectName.charAt(0).toUpperCase() + effectName.slice(1);
+                effects.push(displayName);
+            }
+        }
+
+        return effects;
+    }
+
+    /**
+     * Get list of enabled instruments for note generation
+     */
+    private getEnabledInstruments(): string[] {
+        const instruments: string[] = [];
+        const settings = this.plugin.settings.instruments;
+
+        // Check each individual instrument
+        for (const [instrumentKey, instrumentConfig] of Object.entries(settings)) {
+            if (instrumentConfig?.enabled) {
+                // Get display name from config or format the key
+                const displayName = this.formatInstrumentName(instrumentKey);
+                instruments.push(displayName);
+            }
+        }
+
+        return instruments.sort(); // Sort alphabetically
+    }
+
+    /**
+     * Format instrument key to display name
+     */
+    private formatInstrumentName(key: string): string {
+        // Handle special cases
+        const specialNames: Record<string, string> = {
+            'frenchHorn': 'French Horn',
+            'electricPiano': 'Electric Piano',
+            'guitarElectric': 'Electric Guitar',
+            'guitarNylon': 'Nylon Guitar',
+            'bassElectric': 'Electric Bass',
+            'leadSynth': 'Lead Synth',
+            'bassSynth': 'Bass Synth',
+            'arpSynth': 'Arp Synth',
+            'whaleHumpback': 'Humpback Whale',
+            'whaleBlue': 'Blue Whale',
+            'whaleOrca': 'Orca',
+            'whaleGray': 'Gray Whale',
+            'whaleSperm': 'Sperm Whale',
+            'whaleMinke': 'Minke Whale',
+            'whaleFin': 'Fin Whale',
+            'whaleRight': 'Right Whale',
+            'whaleSei': 'Sei Whale',
+            'whalePilot': 'Pilot Whale'
+        };
+
+        if (specialNames[key]) {
+            return specialNames[key];
+        }
+
+        // Default: capitalize first letter
+        return key.charAt(0).toUpperCase() + key.slice(1);
     }
 }

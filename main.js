@@ -63035,6 +63035,7 @@ var init_OfflineRenderer = __esm({
     logger51 = getLogger("offline-renderer");
     OfflineRenderer = class {
       constructor(audioEngine, animator) {
+        this.isCancelled = false;
         this.audioEngine = audioEngine;
         this.animator = animator;
       }
@@ -63043,6 +63044,13 @@ var init_OfflineRenderer = __esm({
        */
       setProgressCallback(callback) {
         this.progressCallback = callback;
+      }
+      /**
+       * Cancel the rendering process
+       */
+      cancel() {
+        this.isCancelled = true;
+        logger51.info("offline-renderer", "Cancellation requested");
       }
       /**
        * Render timeline animation to audio buffer
@@ -63084,7 +63092,7 @@ var init_OfflineRenderer = __esm({
           throw new Error("Audio context does not support MediaStream recording");
         }
         const webAudioContext = audioContext;
-        const masterVolume = this.audioEngine.volume;
+        const masterVolume = this.audioEngine.getMasterVolume();
         if (!masterVolume) {
           throw new Error("Could not access audio engine master volume");
         }
@@ -63123,8 +63131,14 @@ var init_OfflineRenderer = __esm({
         }, 100);
         this.animator.play();
         logger51.info("offline-renderer", "Animation started");
-        await new Promise((resolve) => {
+        await new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
+            if (this.isCancelled) {
+              clearInterval(checkInterval);
+              logger51.info("offline-renderer", "Render cancelled by user");
+              reject(new Error("Export cancelled by user"));
+              return;
+            }
             const animDuration = duration;
             const isStillPlaying = this.animator.isPlaying;
             if (!isStillPlaying) {
@@ -63134,8 +63148,10 @@ var init_OfflineRenderer = __esm({
             }
           }, 100);
           setTimeout(() => {
-            logger51.info("offline-renderer", "Animation timeout reached");
-            resolve();
+            if (!this.isCancelled) {
+              logger51.info("offline-renderer", "Animation timeout reached");
+              resolve();
+            }
           }, (duration + 2) * 1e3);
         });
         clearInterval(progressInterval);
@@ -63209,13 +63225,13 @@ var init_ExportNoteCreator = __esm({
       /**
        * Create export note
        */
-      async createNote(config, result, animator) {
+      async createNote(config, result, animator, pluginSettings) {
         try {
           logger52.info("export-note", "Creating export note", {
             filename: config.filename,
             createNote: config.createNote
           });
-          const noteContent = this.generateNoteContent(config, result, animator);
+          const noteContent = this.generateNoteContent(config, result, animator, pluginSettings);
           const noteName = `${config.filename}-export`;
           const noteFolder = config.exportNoteFolder || config.location;
           const notePath = `${noteFolder}/${noteName}.md`;
@@ -63236,7 +63252,7 @@ var init_ExportNoteCreator = __esm({
       /**
        * Generate note content from template
        */
-      generateNoteContent(config, result, animator) {
+      generateNoteContent(config, result, animator, pluginSettings) {
         var _a, _b;
         const timestamp = new Date().toISOString();
         const date = new Date().toLocaleDateString();
@@ -63296,9 +63312,12 @@ ${audioConfig}
             content += `- **Comment:** ${metadata.comment}
 `;
         }
+        if (pluginSettings) {
+          content += this.generateComprehensiveSettings(pluginSettings);
+        }
         if (config.includeSettingsSummary) {
           content += `
-## Export Settings
+## Export Configuration
 
 \`\`\`json
 ${JSON.stringify(this.sanitizeConfig(config), null, 2)}
@@ -63321,6 +63340,18 @@ ${JSON.stringify(this.sanitizeConfig(config), null, 2)}
         }
         const config = animator.config || {};
         let settings = "";
+        if (config.duration !== void 0) {
+          settings += `- **Animation Duration:** ${config.duration}s
+`;
+        }
+        if (config.speed !== void 0) {
+          settings += `- **Speed:** ${config.speed}x
+`;
+        }
+        if (config.loop !== void 0) {
+          settings += `- **Loop:** ${config.loop ? "Yes" : "No"}
+`;
+        }
         if (config.timeWindow) {
           settings += `- **Time Window:** ${config.timeWindow}
 `;
@@ -63332,13 +63363,17 @@ ${JSON.stringify(this.sanitizeConfig(config), null, 2)}
         if (config.eventSpreadingMode) {
           settings += `- **Event Spreading:** ${config.eventSpreadingMode}
 `;
-          settings += `- **Max Event Spacing:** ${config.maxEventSpacing || "N/A"}s
-`;
-          settings += `- **Simultaneous Event Limit:** ${config.simultaneousEventLimit || "N/A"}
+        }
+        if (config.maxEventSpacing !== void 0) {
+          settings += `- **Max Event Spacing:** ${config.maxEventSpacing}s
 `;
         }
-        if (config.duration) {
-          settings += `- **Animation Duration:** ${config.duration}s
+        if (config.simultaneousEventLimit !== void 0) {
+          settings += `- **Simultaneous Event Limit:** ${config.simultaneousEventLimit}
+`;
+        }
+        if (config.simultaneousThresholdMs !== void 0) {
+          settings += `- **Simultaneous Threshold:** ${config.simultaneousThresholdMs}ms
 `;
         }
         return settings || "- **Configuration:** Default settings";
@@ -63349,23 +63384,62 @@ ${JSON.stringify(this.sanitizeConfig(config), null, 2)}
       getAudioConfiguration(config) {
         let audioConfig = "";
         if (config.selectedInstruments && config.selectedInstruments.length > 0) {
-          audioConfig += `- **Active Instruments:** ${config.selectedInstruments.join(", ")}
+          audioConfig += `- **Active Instruments:** ${this.formatInstrumentList(config.selectedInstruments)}
 `;
         } else {
-          audioConfig += `- **Active Instruments:** All enabled
+          audioConfig += `- **Active Instruments:** All enabled instruments
 `;
         }
-        audioConfig += `- **Continuous Layers:** ${config.includeContinuousLayers ? "Yes" : "No"}
+        if (config.masterVolume !== void 0) {
+          audioConfig += `- **Master Volume:** ${config.masterVolume} dB
 `;
-        audioConfig += `- **Master Volume Applied:** ${config.applyMasterVolume ? "Yes" : "No"}
+        }
+        audioConfig += `- **Continuous Layers:** ${config.includeContinuousLayers ? "Enabled" : "Disabled"}
 `;
-        audioConfig += `- **Effects Applied:** ${config.applyEffects ? "Yes" : "No"}
+        if (config.enabledEffects && config.enabledEffects.length > 0) {
+          audioConfig += `- **Effects:** ${this.formatEffectsList(config.enabledEffects)}
 `;
-        audioConfig += `- **Spatial Audio:** ${config.preserveSpatialAudio ? "Yes" : "No"}
+        } else if (config.applyEffects) {
+          audioConfig += `- **Effects:** Applied (default configuration)
 `;
-        audioConfig += `- **Rendering Method:** ${config.renderingMethod}
+        } else {
+          audioConfig += `- **Effects:** Disabled
+`;
+        }
+        audioConfig += `- **Spatial Audio:** ${config.preserveSpatialAudio ? "Enabled" : "Disabled"}
+`;
+        audioConfig += `- **Rendering Method:** ${this.formatRenderingMethod(config.renderingMethod)}
 `;
         return audioConfig;
+      }
+      /**
+       * Format instrument list for display
+       */
+      formatInstrumentList(instruments) {
+        if (instruments.length === 0)
+          return "None";
+        return instruments.join(", ");
+      }
+      /**
+       * Format effects list for display
+       */
+      formatEffectsList(effects) {
+        if (effects.length === 0)
+          return "None";
+        return effects.join(", ");
+      }
+      /**
+       * Format rendering method for display
+       */
+      formatRenderingMethod(method) {
+        switch (method) {
+          case "offline":
+            return "Offline Rendering (High Quality)";
+          case "realtime":
+            return "Real-time Recording";
+          default:
+            return method;
+        }
       }
       /**
        * Format export scope for display
@@ -63419,18 +63493,192 @@ ${JSON.stringify(this.sanitizeConfig(config), null, 2)}
       sanitizeConfig(config) {
         return {
           scope: config.scope,
+          customRange: config.customRange,
           format: config.format,
           quality: config.quality,
           locationType: config.locationType,
           location: config.location,
           filename: config.filename,
+          selectedInstruments: config.selectedInstruments,
           includeContinuousLayers: config.includeContinuousLayers,
           applyMasterVolume: config.applyMasterVolume,
           applyEffects: config.applyEffects,
           preserveSpatialAudio: config.preserveSpatialAudio,
+          masterVolume: config.masterVolume,
+          enabledEffects: config.enabledEffects,
           renderingMethod: config.renderingMethod,
-          metadata: config.metadata
+          maxDurationMinutes: config.maxDurationMinutes,
+          metadata: config.metadata,
+          createNote: config.createNote,
+          includeSettingsSummary: config.includeSettingsSummary
         };
+      }
+      /**
+       * Generate comprehensive settings section with all Sonic Graph settings
+       */
+      generateComprehensiveSettings(settings) {
+        let content = "\n## Sonic Graph Settings\n\n";
+        content += "### Core Audio Settings\n\n";
+        content += `- **Enabled:** ${settings.isEnabled ? "Yes" : "No"}
+`;
+        content += `- **Tempo:** ${settings.tempo || 120} BPM
+`;
+        content += `- **Master Volume:** ${settings.volume || 0} dB
+`;
+        content += `- **Scale:** ${settings.scale || "major"}
+`;
+        content += `- **Root Note:** ${settings.rootNote || "C"}
+`;
+        content += `- **Traversal Method:** ${settings.traversalMethod || "depth-first"}
+`;
+        content += `- **Voice Assignment:** ${settings.voiceAssignmentStrategy || "frequency"}
+`;
+        if (settings.microtuning !== void 0) {
+          content += `- **Microtuning:** ${settings.microtuning ? "Enabled" : "Disabled"}
+`;
+        }
+        if (settings.antiCracklingDetuning !== void 0) {
+          content += `- **Anti-Crackling Detuning:** ${settings.antiCracklingDetuning} cents
+`;
+        }
+        content += "\n";
+        if (settings.sonicGraphSettings) {
+          const sgs = settings.sonicGraphSettings;
+          content += "### Sonic Graph View Settings\n\n";
+          if (sgs.timeline) {
+            content += "**Timeline:**\n";
+            content += `- Duration: ${sgs.timeline.duration || 60}s
+`;
+            content += `- Spacing: ${sgs.timeline.spacing || "auto"}
+`;
+            content += `- Loop: ${sgs.timeline.loop ? "Yes" : "No"}
+`;
+            content += `- Show Markers: ${sgs.timeline.showMarkers ? "Yes" : "No"}
+`;
+            content += `- Time Window: ${sgs.timeline.timeWindow || "all-time"}
+`;
+            content += `- Granularity: ${sgs.timeline.granularity || "year"}
+`;
+            content += `- Event Spreading Mode: ${sgs.timeline.eventSpreadingMode || "none"}
+`;
+            content += `- Max Event Spacing: ${sgs.timeline.maxEventSpacing || 0.5}s
+`;
+            content += `- Simultaneous Event Limit: ${sgs.timeline.simultaneousEventLimit || 8}
+`;
+            content += `- Event Batch Size: ${sgs.timeline.eventBatchSize || 10}
+`;
+            if (sgs.timeline.customRange) {
+              content += `- Custom Range: ${sgs.timeline.customRange.value} ${sgs.timeline.customRange.unit}
+`;
+            }
+            content += "\n";
+          }
+          if (sgs.audio) {
+            content += "**Audio:**\n";
+            content += `- Density: ${sgs.audio.density || 30}
+`;
+            content += `- Note Duration: ${sgs.audio.noteDuration || 0.3}s
+`;
+            content += `- Enable Effects: ${sgs.audio.enableEffects ? "Yes" : "No"}
+`;
+            content += `- Auto Detection Override: ${sgs.audio.autoDetectionOverride || "auto"}
+`;
+            content += "\n";
+          }
+          if (sgs.visual) {
+            content += "**Visual:**\n";
+            content += `- Show Labels: ${sgs.visual.showLabels ? "Yes" : "No"}
+`;
+            content += `- Show File Names: ${sgs.visual.showFileNames ? "Yes" : "No"}
+`;
+            content += `- Animation Style: ${sgs.visual.animationStyle || "fade"}
+`;
+            content += `- Node Scaling: ${sgs.visual.nodeScaling || 1}
+`;
+            content += `- Connection Opacity: ${sgs.visual.connectionOpacity || 0.6}
+`;
+            content += `- Timeline Markers: ${sgs.visual.timelineMarkersEnabled ? "Yes" : "No"}
+`;
+            content += `- Loop Animation: ${sgs.visual.loopAnimation ? "Yes" : "No"}
+`;
+            content += "\n";
+          }
+          if (sgs.navigation) {
+            content += "**Navigation:**\n";
+            content += `- Enable Control Center: ${sgs.navigation.enableControlCenter ? "Yes" : "No"}
+`;
+            content += `- Enable Reset: ${sgs.navigation.enableReset ? "Yes" : "No"}
+`;
+            content += `- Enable Export: ${sgs.navigation.enableExport ? "Yes" : "No"}
+`;
+            content += "\n";
+          }
+          if (sgs.adaptiveDetail) {
+            content += "**Adaptive Detail:**\n";
+            content += `- Enabled: ${sgs.adaptiveDetail.enabled ? "Yes" : "No"}
+`;
+            content += `- Mode: ${sgs.adaptiveDetail.mode || "automatic"}
+`;
+            if (sgs.adaptiveDetail.thresholds) {
+              content += `- Overview Threshold: ${sgs.adaptiveDetail.thresholds.overview}
+`;
+              content += `- Standard Threshold: ${sgs.adaptiveDetail.thresholds.standard}
+`;
+              content += `- Detail Threshold: ${sgs.adaptiveDetail.thresholds.detail}
+`;
+            }
+            content += "\n";
+          }
+        }
+        if (settings.sonicGraphAnimationDuration !== void 0 || settings.sonicGraphAnimationSpeed !== void 0) {
+          content += "### Legacy Settings\n\n";
+          if (settings.sonicGraphAnimationDuration !== void 0) {
+            content += `- **Animation Duration:** ${settings.sonicGraphAnimationDuration}s
+`;
+          }
+          if (settings.sonicGraphAnimationSpeed !== void 0) {
+            content += `- **Animation Speed:** ${settings.sonicGraphAnimationSpeed}x
+`;
+          }
+          if (settings.sonicGraphShowFileNames !== void 0) {
+            content += `- **Show File Names:** ${settings.sonicGraphShowFileNames ? "Yes" : "No"}
+`;
+          }
+          content += "\n";
+        }
+        if (settings.sonicGraphExcludeFolders || settings.sonicGraphExcludeFiles) {
+          content += "### Exclusions\n\n";
+          if (settings.sonicGraphExcludeFolders && settings.sonicGraphExcludeFolders.length > 0) {
+            content += `- **Excluded Folders:** ${settings.sonicGraphExcludeFolders.join(", ")}
+`;
+          }
+          if (settings.sonicGraphExcludeFiles && settings.sonicGraphExcludeFiles.length > 0) {
+            content += `- **Excluded Files:** ${settings.sonicGraphExcludeFiles.join(", ")}
+`;
+          }
+          content += "\n";
+        }
+        if (settings.performanceMode) {
+          content += "### Performance Settings\n\n";
+          content += `- **Mode:** ${settings.performanceMode.mode || "medium"}
+`;
+          content += `- **Max Concurrent Voices:** ${settings.performanceMode.maxConcurrentVoices || 32}
+`;
+          content += `- **Processing Quality:** ${settings.performanceMode.processingQuality || "balanced"}
+`;
+          content += `- **Frequency Detuning:** ${settings.performanceMode.enableFrequencyDetuning ? "Enabled" : "Disabled"}
+`;
+          content += `- **Audio Optimizations:** ${settings.performanceMode.enableAudioOptimizations ? "Enabled" : "Disabled"}
+`;
+          content += "\n";
+        }
+        if (settings.logLevel) {
+          content += "### Logging\n\n";
+          content += `- **Log Level:** ${settings.logLevel}
+
+`;
+        }
+        return content;
       }
     };
   }
@@ -63446,11 +63694,12 @@ var init_AudioExporter = __esm({
     init_logging();
     logger53 = getLogger("export");
     AudioExporter = class {
-      constructor(app, audioEngine) {
+      constructor(app, audioEngine, pluginSettings) {
         this.animator = null;
         this.isCancelled = false;
         this.app = app;
         this.audioEngine = audioEngine;
+        this.pluginSettings = pluginSettings;
       }
       /**
        * Set the temporal graph animator for timeline exports
@@ -63513,12 +63762,27 @@ var init_AudioExporter = __esm({
        */
       cancel() {
         this.isCancelled = true;
+        if (this.currentRenderer) {
+          this.currentRenderer.cancel();
+        }
         logger53.info("export", "Export cancelled by user");
       }
       /**
        * Validate export configuration
        */
       async validate(config) {
+        const masterVolume = this.audioEngine.getMasterVolume();
+        if (!masterVolume) {
+          logger53.info("export", "Audio engine not initialized, initializing now");
+          try {
+            await this.audioEngine.initialize();
+          } catch (error) {
+            throw new Error(`Failed to initialize audio engine: ${error.message}`);
+          }
+          if (!this.audioEngine.getMasterVolume()) {
+            throw new Error("Audio engine initialization did not create master volume");
+          }
+        }
         if (config.scope === "full-timeline" || config.scope === "custom-range") {
           if (!this.animator) {
             throw new Error("Animator not set for timeline export");
@@ -63572,6 +63836,7 @@ var init_AudioExporter = __esm({
           throw new Error("Animator not set");
         }
         const renderer = new OfflineRenderer(this.audioEngine, this.animator);
+        this.currentRenderer = renderer;
         renderer.setProgressCallback((percentage) => {
           const mappedPercentage = 10 + percentage * 0.5;
           this.updateProgress("rendering", mappedPercentage, "Rendering audio");
@@ -63641,7 +63906,7 @@ var init_AudioExporter = __esm({
           if (file && "stat" in file) {
             result.fileSize = file.stat.size;
           }
-          const notePath = await noteCreator.createNote(config, result, this.animator);
+          const notePath = await noteCreator.createNote(config, result, this.animator, this.pluginSettings);
           logger53.info("export", `Export note created: ${notePath}`);
           return notePath;
         } catch (error) {
@@ -64186,7 +64451,7 @@ var init_ExportModal = __esm({
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
-        this.exporter = new AudioExporter(app, audioEngine);
+        this.exporter = new AudioExporter(app, audioEngine, plugin.settings);
         if (animator) {
           this.exporter.setAnimator(animator);
         }
@@ -64372,7 +64637,11 @@ var init_ExportModal = __esm({
             renderingMethod: this.config.renderingMethod,
             maxDurationMinutes: this.config.maxDurationMinutes,
             createNote: this.config.createNote,
-            includeSettingsSummary: this.config.includeSettingsSummary
+            includeSettingsSummary: this.config.includeSettingsSummary,
+            // Capture actual audio engine state for note generation
+            masterVolume: this.plugin.settings.volume,
+            enabledEffects: this.getEnabledEffects(),
+            selectedInstruments: this.getEnabledInstruments()
           };
           const extension = exportConfig.format;
           const fullPath = `${exportConfig.location}/${exportConfig.filename}.${extension}`;
@@ -64521,6 +64790,66 @@ var init_ExportModal = __esm({
         if (bytes < 1024 * 1024)
           return (bytes / 1024).toFixed(1) + " KB";
         return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+      }
+      /**
+       * Get list of enabled effects for note generation
+       */
+      getEnabledEffects() {
+        const effects = [];
+        const settingsEffects = this.plugin.settings.effects;
+        if (!settingsEffects) {
+          return effects;
+        }
+        for (const [effectName, effectConfig] of Object.entries(settingsEffects)) {
+          if (effectConfig == null ? void 0 : effectConfig.enabled) {
+            const displayName = effectName.charAt(0).toUpperCase() + effectName.slice(1);
+            effects.push(displayName);
+          }
+        }
+        return effects;
+      }
+      /**
+       * Get list of enabled instruments for note generation
+       */
+      getEnabledInstruments() {
+        const instruments = [];
+        const settings = this.plugin.settings.instruments;
+        for (const [instrumentKey, instrumentConfig] of Object.entries(settings)) {
+          if (instrumentConfig == null ? void 0 : instrumentConfig.enabled) {
+            const displayName = this.formatInstrumentName(instrumentKey);
+            instruments.push(displayName);
+          }
+        }
+        return instruments.sort();
+      }
+      /**
+       * Format instrument key to display name
+       */
+      formatInstrumentName(key) {
+        const specialNames = {
+          "frenchHorn": "French Horn",
+          "electricPiano": "Electric Piano",
+          "guitarElectric": "Electric Guitar",
+          "guitarNylon": "Nylon Guitar",
+          "bassElectric": "Electric Bass",
+          "leadSynth": "Lead Synth",
+          "bassSynth": "Bass Synth",
+          "arpSynth": "Arp Synth",
+          "whaleHumpback": "Humpback Whale",
+          "whaleBlue": "Blue Whale",
+          "whaleOrca": "Orca",
+          "whaleGray": "Gray Whale",
+          "whaleSperm": "Sperm Whale",
+          "whaleMinke": "Minke Whale",
+          "whaleFin": "Fin Whale",
+          "whaleRight": "Right Whale",
+          "whaleSei": "Sei Whale",
+          "whalePilot": "Pilot Whale"
+        };
+        if (specialNames[key]) {
+          return specialNames[key];
+        }
+        return key.charAt(0).toUpperCase() + key.slice(1);
       }
     };
   }
@@ -75751,7 +76080,21 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
   /**
    * Open export modal
    */
-  openExportModal() {
+  async openExportModal() {
+    if (!this.temporalAnimator) {
+      logger57.debug("ui", "Initializing temporal animator for export");
+      try {
+        await this.initializeTemporalAnimator();
+      } catch (error) {
+        logger57.error("Failed to initialize temporal animator for export", error);
+        new import_obsidian19.Notice("Failed to initialize timeline for export. Please try switching to Timeline View first.");
+        return;
+      }
+    }
+    if (!this.temporalAnimator) {
+      new import_obsidian19.Notice("Export requires Timeline View to be initialized. Please switch to Timeline View and try again.");
+      return;
+    }
     const { ExportModal: ExportModal2 } = (init_ExportModal(), __toCommonJS(ExportModal_exports));
     const modal = new ExportModal2(
       this.app,
@@ -82328,12 +82671,27 @@ var InstrumentConfigLoader = class {
   processInstrumentCollection(instruments) {
     const processed = {};
     Object.entries(instruments).forEach(([name, config]) => {
-      processed[name] = this.processInstrumentConfig(config);
+      const processedConfig = this.processInstrumentConfig(config);
+      processed[name] = processedConfig;
+      const camelCaseName = this.toCamelCase(name);
+      if (camelCaseName !== name) {
+        processed[camelCaseName] = processedConfig;
+      }
       if (!this.loadedInstruments.has(name)) {
         this.loadedInstruments.set(name, processed[name]);
       }
+      if (!this.loadedInstruments.has(camelCaseName)) {
+        this.loadedInstruments.set(camelCaseName, processed[camelCaseName]);
+      }
     });
     return processed;
+  }
+  /**
+   * Convert kebab-case to camelCase
+   * e.g., 'french-horn' -> 'frenchHorn'
+   */
+  toCamelCase(str) {
+    return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
   }
   /**
    * Process individual instrument config - replace format placeholders
@@ -83114,6 +83472,12 @@ var AudioEngine = class {
   getSamplerConfigs() {
     const loadedInstruments = this.instrumentConfigLoader.loadAllInstruments();
     return loadedInstruments;
+  }
+  /**
+   * Get the master volume node for audio export/recording
+   */
+  getMasterVolume() {
+    return this.volume;
   }
   async initialize() {
     var _a;
