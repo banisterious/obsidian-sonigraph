@@ -15,10 +15,12 @@ const logger = getLogger('SonicGraphLayersSettings');
 export class SonicGraphLayersSettings {
 	private app: App;
 	private plugin: SonigraphPlugin;
+	private onToggleCallback?: () => void;
 
-	constructor(app: App, plugin: SonigraphPlugin) {
+	constructor(app: App, plugin: SonigraphPlugin, onToggleCallback?: () => void) {
 		this.app = app;
 		this.plugin = plugin;
+		this.onToggleCallback = onToggleCallback;
 	}
 
 	/**
@@ -120,9 +122,14 @@ export class SonicGraphLayersSettings {
 					await this.plugin.saveSettings();
 					logger.info('layers-settings', `Continuous layers: ${value}`);
 
-					// Re-render to show/hide dependent sections
-					container.empty();
-					this.render(container);
+					// Trigger parent tab re-render to show/hide Freesound integration
+					if (this.onToggleCallback) {
+						this.onToggleCallback();
+					} else {
+						// Fallback: re-render just the layers settings
+						container.empty();
+						this.render(container);
+					}
 				})
 			);
 

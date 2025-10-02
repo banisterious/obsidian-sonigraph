@@ -22,7 +22,7 @@ import { SonicGraphFreesoundSettings } from './SonicGraphFreesoundSettings';
 const logger = getLogger('SonicGraphSettingsTabs');
 
 export interface SonicGraphTabConfig {
-	id: 'core' | 'layers' | 'advanced' | 'freesound';
+	id: 'core' | 'advanced';
 	label: string;
 	icon: LucideIconName;
 	description: string;
@@ -39,7 +39,7 @@ export class SonicGraphSettingsTabs {
 	private container: HTMLElement;
 	private tabNavigation: HTMLElement;
 	private tabContent: HTMLElement;
-	private activeTabId: 'core' | 'layers' | 'advanced' | 'freesound' = 'core';
+	private activeTabId: 'core' | 'advanced' = 'core';
 	private tabs: SonicGraphTabConfig[];
 
 	constructor(app: App, plugin: SonigraphPlugin, container: HTMLElement) {
@@ -48,6 +48,7 @@ export class SonicGraphSettingsTabs {
 		this.container = container;
 
 		// Define tab configurations
+		// Note: Audio Layers and Freesound settings moved to dedicated vertical "Layers" tab for better UX
 		this.tabs = [
 			{
 				id: 'core',
@@ -57,25 +58,11 @@ export class SonicGraphSettingsTabs {
 				renderContent: (container) => this.renderCoreSettings(container)
 			},
 			{
-				id: 'layers',
-				label: 'Audio Layers',
-				icon: 'layers',
-				description: 'Continuous ambient, rhythmic, and harmonic layers',
-				renderContent: (container) => this.renderAudioLayersSettings(container)
-			},
-			{
 				id: 'advanced',
 				label: 'Advanced Features',
 				icon: 'sparkles',
 				description: 'Clustering, musical theory, orchestration, and spatial audio',
 				renderContent: (container) => this.renderAdvancedSettings(container)
-			},
-			{
-				id: 'freesound',
-				label: 'Freesound & Presets',
-				icon: 'package',
-				description: 'Sample integration and preset management',
-				renderContent: (container) => this.renderFreesoundSettings(container)
 			}
 		];
 
@@ -184,17 +171,6 @@ export class SonicGraphSettingsTabs {
 	}
 
 	/**
-	 * Audio Layers Tab Content
-	 */
-	private renderAudioLayersSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Audio Layers tab');
-
-		// Render actual audio layers settings
-		const layersSettings = new SonicGraphLayersSettings(this.app, this.plugin);
-		layersSettings.render(container);
-	}
-
-	/**
 	 * Advanced Features Tab Content
 	 */
 	private renderAdvancedSettings(container: HTMLElement): void {
@@ -206,20 +182,9 @@ export class SonicGraphSettingsTabs {
 	}
 
 	/**
-	 * Freesound & Presets Tab Content
-	 */
-	private renderFreesoundSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Freesound & Presets tab');
-
-		// Render actual Freesound settings
-		const freesoundSettings = new SonicGraphFreesoundSettings(this.app, this.plugin);
-		freesoundSettings.render(container);
-	}
-
-	/**
 	 * Public API: Switch to a specific tab programmatically
 	 */
-	public showTab(tabId: 'core' | 'layers' | 'advanced' | 'freesound'): void {
+	public showTab(tabId: 'core' | 'advanced'): void {
 		this.switchTab(tabId);
 	}
 

@@ -143,9 +143,10 @@ export class WhaleAudioManager {
         if (this.vault) {
             this.initializeCacheDirectory();
         }
-        
-        // Start downloading and caching samples asynchronously
-        this.initializationPromise = this.downloadAndCacheSamples();
+
+        // Note: Automatic downloads disabled to reduce console errors on startup
+        // Samples will only be downloaded when explicitly requested by user
+        // this.initializationPromise = this.downloadAndCacheSamples();
     }
 
     /**
@@ -514,6 +515,47 @@ export class WhaleAudioManager {
     }
 
     /**
+     * Manually trigger whale sample downloads
+     * This is now opt-in to avoid console errors on startup
+     */
+    async manuallyDownloadSamples(): Promise<void> {
+        if (!this.initializationPromise) {
+            logger.info('manual-download', 'Starting manual whale sample download');
+
+            // Add timeout to prevent hanging
+            const downloadPromise = this.downloadAndCacheSamples();
+            const timeoutPromise = new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    logger.warn('manual-download', 'Download timeout after 60 seconds');
+                    resolve();
+                }, 60000); // 60 second timeout
+            });
+
+            this.initializationPromise = Promise.race([downloadPromise, timeoutPromise]);
+        } else {
+            logger.info('manual-download', 'Download already in progress or completed');
+        }
+        return this.initializationPromise;
+    }
+
+    /**
+     * Get the count of cached samples
+     */
+    getCachedSampleCount(): { speciesCount: number; totalSamples: number } {
+        const speciesCount = this.cachedSamples.size;
+        const totalSamples = Array.from(this.cachedSamples.values())
+            .reduce((sum, arr) => sum + arr.length, 0);
+        return { speciesCount, totalSamples };
+    }
+
+    /**
+     * Check if samples are available for playback
+     */
+    hasSamples(): boolean {
+        return this.cachedSamples.size > 0;
+    }
+
+    /**
      * Download and cache whale samples locally for better performance
      */
     private async downloadAndCacheSamples(): Promise<void> {
@@ -708,23 +750,13 @@ export class WhaleAudioManager {
             url: url.substring(0, 60) + '...'
         });
 
-        // Try multiple CORS proxy services for better reliability
-        // Use different proxies with different approaches
+        // Use single CORS proxy to reduce console errors
+        // allorigins.win is generally most reliable for archive.org
         const corsProxies = [
-            {
-                name: 'corsproxy.io',
-                url: `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                headers: { 'Accept': 'audio/*', 'User-Agent': 'Mozilla/5.0' }
-            },
             {
                 name: 'api.allorigins.win',
                 url: `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
                 headers: { 'Accept': 'audio/*' }
-            },
-            {
-                name: 'proxy.cors.sh',
-                url: `https://proxy.cors.sh/${url}`,
-                headers: { 'Accept': 'audio/*', 'x-cors-api-key': 'temp_key' }
             }
         ];
         
@@ -749,7 +781,7 @@ export class WhaleAudioManager {
             }
         }
         
-        logger.warn('download', 'All CORS proxy attempts failed', {
+        logger.debug('download', 'All CORS proxy attempts failed', {
             url: url.substring(0, 60) + '...',
             attemptedProxies: corsProxies.length
         });

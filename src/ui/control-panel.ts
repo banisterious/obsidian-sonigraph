@@ -14,6 +14,7 @@ import { GraphRenderer } from '../graph/GraphRenderer';
 import { FolderSuggestModal } from './FolderSuggestModal';
 import { FileSuggestModal } from './FileSuggestModal';
 import { SonicGraphSettingsTabs } from './settings/SonicGraphSettingsTabs';
+import { getWhaleIntegration } from '../external/whale-integration';
 
 const logger = getLogger('control-panel');
 
@@ -333,6 +334,9 @@ export class MaterialControlPanelModal extends Modal {
 			case 'master':
 				this.createMasterTab();
 				break;
+			case 'layers':
+				this.createLayersTab();
+				break;
 			case 'sonic-graph':
 				this.createSonicGraphTab();
 				break;
@@ -482,6 +486,183 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Sonic Graph Settings Tabs (Phase 8.1)
 		this.createSonicGraphSettingsTabs();
+	}
+
+	/**
+	 * Create Layers tab - Continuous layers and Freesound integration
+	 */
+	private createLayersTab(): void {
+		// Import layers settings class - renders continuous layers card first
+		import('./settings/SonicGraphLayersSettings').then(({ SonicGraphLayersSettings }) => {
+			// Callback to re-render entire tab when toggle changes
+			const onToggle = () => {
+				this.contentContainer.empty();
+				this.createLayersTab();
+			};
+
+			const layersSettings = new SonicGraphLayersSettings(this.app, this.plugin, onToggle);
+			layersSettings.render(this.contentContainer);
+
+			// Freesound Integration Card - only show when continuous layers are enabled
+			if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
+				this.createFreesoundIntegrationCard();
+			}
+		});
+	}
+
+	/**
+	 * Create Freesound Integration Card for Layers Tab
+	 */
+	private createFreesoundIntegrationCard(): void {
+		const card = new MaterialCard({
+			title: 'Freesound Integration',
+			iconName: 'cloud-download',
+			subtitle: 'Configure Freesound.org API for audio samples',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		const settingsSection = content.createDiv({ cls: 'osp-settings-section' });
+
+		// Enable Freesound Integration toggle
+		new Setting(settingsSection)
+			.setName('Enable Freesound integration')
+			.setDesc('Use Freesound.org API to download real audio samples for continuous layers')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableFreesoundSamples || false)
+				.onChange(async (value) => {
+					this.plugin.settings.enableFreesoundSamples = value;
+					await this.plugin.saveSettings();
+					logger.info('freesound', `Freesound integration ${value ? 'enabled' : 'disabled'}`);
+
+					// Re-render the entire Layers tab to show/hide settings
+					this.contentContainer.empty();
+					this.createLayersTab();
+				})
+			);
+
+		// Only show configuration if enabled
+		if (this.plugin.settings.enableFreesoundSamples) {
+			// Description paragraph
+			const descriptionEl = settingsSection.createEl('p', {
+				text: 'Enter your API key from Freesound.org here. Get your free API key at: https://freesound.org/apiv2/apply/',
+				cls: 'osp-settings-description'
+			});
+			descriptionEl.style.marginBottom = '10px';
+
+			// API Key field with test button
+			const apiKeyContainer = settingsSection.createDiv({ cls: 'osp-settings-item' });
+
+			new Setting(apiKeyContainer)
+				.setName('API Key')
+				.addText(text => {
+					text
+						.setPlaceholder('Enter your Freesound API key (32 characters)')
+						.setValue(this.plugin.settings.freesoundApiKey || '')
+						.onChange(async (value) => {
+							this.plugin.settings.freesoundApiKey = value;
+							await this.plugin.saveSettings();
+							logger.info('freesound', 'Freesound API key updated');
+						});
+					text.inputEl.style.width = '400px';
+					text.inputEl.style.fontFamily = 'monospace';
+					text.inputEl.style.fontSize = '13px';
+				})
+				.addButton(button => {
+					button
+						.setButtonText('Test Connection')
+						.setTooltip('Test API key and connection to Freesound')
+						.onClick(async () => {
+							await this.testFreesoundConnection(button.buttonEl);
+						});
+				});
+
+			// Security note
+			const securityNote = settingsSection.createEl('p', {
+				text: 'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
+					  'Only share your vault if you trust recipients with API access.',
+				cls: 'osp-settings-note'
+			});
+			securityNote.style.fontSize = '12px';
+			securityNote.style.color = 'var(--text-muted)';
+			securityNote.style.marginTop = '8px';
+			securityNote.style.marginBottom = '16px';
+			// Preloading and Caching Settings
+			settingsSection.createEl('h4', { text: 'Preloading & Caching', cls: 'osp-subsection-header' });
+
+			// Enable predictive preloading
+			new Setting(settingsSection)
+				.setName('Predictive Preloading')
+				.setDesc('Automatically preload samples for genres you use frequently')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.freesoundPredictivePreload !== false)
+					.onChange(async (value) => {
+						this.plugin.settings.freesoundPredictivePreload = value;
+						await this.plugin.saveSettings();
+						logger.info('freesound', `Predictive preloading ${value ? 'enabled' : 'disabled'}`);
+					})
+				);
+
+			// Preload on startup
+			new Setting(settingsSection)
+				.setName('Preload on Startup')
+				.setDesc('Automatically preload frequently used samples when Obsidian starts')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.freesoundPreloadOnStartup || false)
+					.onChange(async (value) => {
+						this.plugin.settings.freesoundPreloadOnStartup = value;
+						await this.plugin.saveSettings();
+						logger.info('freesound', `Preload on startup ${value ? 'enabled' : 'disabled'}`);
+					})
+				);
+
+			// Background loading
+			new Setting(settingsSection)
+				.setName('Background Loading')
+				.setDesc('Download samples in the background during idle time')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.freesoundBackgroundLoading !== false)
+					.onChange(async (value) => {
+						this.plugin.settings.freesoundBackgroundLoading = value;
+						await this.plugin.saveSettings();
+						logger.info('freesound', `Background loading ${value ? 'enabled' : 'disabled'}`);
+					})
+				);
+
+			// Cache eviction strategy
+			new Setting(settingsSection)
+				.setName('Cache Strategy')
+				.setDesc('Algorithm for managing cached samples when storage is full')
+				.addDropdown(dropdown => dropdown
+					.addOption('adaptive', 'Adaptive (Recommended)')
+					.addOption('lru', 'Least Recently Used')
+					.addOption('lfu', 'Least Frequently Used')
+					.addOption('predictive', 'Predictive')
+					.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
+					.onChange(async (value) => {
+						this.plugin.settings.freesoundCacheStrategy = value as 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
+						await this.plugin.saveSettings();
+						logger.info('freesound', `Cache strategy set to ${value}`);
+					})
+				);
+
+			// Storage quota
+			new Setting(settingsSection)
+				.setName('Max Storage (MB)')
+				.setDesc('Maximum disk space for cached samples (default: 100MB)')
+				.addText(text => text
+					.setPlaceholder('100')
+					.setValue(String(this.plugin.settings.freesoundMaxStorageMB || 100))
+					.onChange(async (value) => {
+						const numValue = parseInt(value) || 100;
+						this.plugin.settings.freesoundMaxStorageMB = numValue;
+						await this.plugin.saveSettings();
+						logger.info('freesound', `Max storage set to ${numValue}MB`);
+					})
+				);
+		}
+
+		this.contentContainer.appendChild(card.getElement());
 	}
 
 	private createScaleKeyCard(): void {
@@ -957,145 +1138,7 @@ export class MaterialControlPanelModal extends Modal {
 		);
 		logger.debug('ui', 'Show file names toggle created');
 
-		// Phase 7.1: Freesound API Integration
-		const freesoundSection = settingsSection.createDiv({ cls: 'osp-settings-section' });
-		freesoundSection.createEl('h3', { text: 'Freesound Integration', cls: 'osp-section-header' });
-
-		// Description paragraph
-		const descriptionEl = freesoundSection.createEl('p', {
-			text: 'Enter your API key from Freesound.org here. Get your free API key at: https://freesound.org/apiv2/apply/',
-			cls: 'osp-settings-description'
-		});
-		descriptionEl.style.marginBottom = '10px';
-
-		// API Key field with test button
-		const apiKeyContainer = freesoundSection.createDiv({ cls: 'osp-settings-item' });
-
-		new Setting(apiKeyContainer)
-			.setName('API Key')
-			.addText(text => {
-				text
-					.setPlaceholder('Enter your Freesound API key (32 characters)')
-					.setValue(this.plugin.settings.freesoundApiKey || '')
-					.onChange(async (value) => {
-						this.plugin.settings.freesoundApiKey = value;
-						await this.plugin.saveSettings();
-						logger.info('freesound', 'Freesound API key updated');
-					});
-				// Make the input field wider and use monospace font for better readability
-				text.inputEl.style.width = '400px';
-				text.inputEl.style.fontFamily = 'monospace';
-				text.inputEl.style.fontSize = '13px';
-			})
-			.addButton(button => {
-				button
-					.setButtonText('Test Connection')
-					.setTooltip('Test API key and connection to Freesound')
-					.onClick(async () => {
-						await this.testFreesoundConnection(button.buttonEl);
-					});
-			});
-
-		// Security note
-		const securityNote = freesoundSection.createEl('p', {
-			text: 'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
-				  'Only share your vault if you trust recipients with API access.',
-			cls: 'osp-settings-note'
-		});
-		securityNote.style.fontSize = '12px';
-		securityNote.style.color = 'var(--text-muted)';
-		securityNote.style.marginTop = '8px';
-		securityNote.style.marginBottom = '16px';
-
-		// Enable Freesound Samples toggle
-		const enableSamplesContainer = freesoundSection.createDiv({ cls: 'osp-settings-item' });
-
-		new Setting(enableSamplesContainer)
-			.setName('Enable Freesound Samples')
-			.setDesc('Download and use audio samples from Freesound for continuous layers (requires API key)')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.enableFreesoundSamples || false)
-				.onChange(async (value) => {
-					this.plugin.settings.enableFreesoundSamples = value;
-					await this.plugin.saveSettings();
-					logger.info('freesound', `Freesound samples ${value ? 'enabled' : 'disabled'}`);
-				})
-			);
-
-		// Phase 7.3: Preloading and Caching Settings
-		freesoundSection.createEl('h4', { text: 'Preloading & Caching', cls: 'osp-subsection-header' });
-
-		// Enable predictive preloading
-		new Setting(freesoundSection)
-			.setName('Predictive Preloading')
-			.setDesc('Automatically preload samples for genres you use frequently')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.freesoundPredictivePreload !== false)
-				.onChange(async (value) => {
-					this.plugin.settings.freesoundPredictivePreload = value;
-					await this.plugin.saveSettings();
-					logger.info('freesound', `Predictive preloading ${value ? 'enabled' : 'disabled'}`);
-				})
-			);
-
-		// Preload on startup
-		new Setting(freesoundSection)
-			.setName('Preload on Startup')
-			.setDesc('Automatically preload frequently used samples when Obsidian starts')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.freesoundPreloadOnStartup || false)
-				.onChange(async (value) => {
-					this.plugin.settings.freesoundPreloadOnStartup = value;
-					await this.plugin.saveSettings();
-					logger.info('freesound', `Preload on startup ${value ? 'enabled' : 'disabled'}`);
-				})
-			);
-
-		// Background loading
-		new Setting(freesoundSection)
-			.setName('Background Loading')
-			.setDesc('Download samples in the background during idle time')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.freesoundBackgroundLoading !== false)
-				.onChange(async (value) => {
-					this.plugin.settings.freesoundBackgroundLoading = value;
-					await this.plugin.saveSettings();
-					logger.info('freesound', `Background loading ${value ? 'enabled' : 'disabled'}`);
-				})
-			);
-
-		// Cache eviction strategy
-		new Setting(freesoundSection)
-			.setName('Cache Strategy')
-			.setDesc('Algorithm for managing cached samples when storage is full')
-			.addDropdown(dropdown => dropdown
-				.addOption('adaptive', 'Adaptive (Recommended)')
-				.addOption('lru', 'Least Recently Used')
-				.addOption('lfu', 'Least Frequently Used')
-				.addOption('predictive', 'Predictive')
-				.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
-				.onChange(async (value) => {
-					this.plugin.settings.freesoundCacheStrategy = value as 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
-					await this.plugin.saveSettings();
-					logger.info('freesound', `Cache strategy set to ${value}`);
-				})
-			);
-
-		// Storage quota
-		new Setting(freesoundSection)
-			.setName('Max Storage (MB)')
-			.setDesc('Maximum disk space for cached samples (default: 100MB)')
-			.addText(text => text
-				.setPlaceholder('100')
-				.setValue(String(this.plugin.settings.freesoundMaxStorageMB || 100))
-				.onChange(async (value) => {
-					const numValue = parseInt(value) || 100;
-					this.plugin.settings.freesoundMaxStorageMB = numValue;
-					await this.plugin.saveSettings();
-					logger.info('freesound', `Max storage set to ${numValue}MB`);
-				})
-			);
-
+		// Note: Freesound Integration moved to Layers tab for better UX
 		// Add some spacing before exclusion settings
 		settingsSection.createDiv({ cls: 'osp-settings-spacer' });
 
@@ -1483,15 +1526,16 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Family Overview Card
 		this.createFamilyOverviewCard(familyId, tabConfig);
-		
+
+		// Whale integration temporarily disabled due to CORS download issues
+		// TODO: Re-enable when we have a reliable sample delivery method (bundled samples or backend)
+		// if (familyId === 'experimental') {
+		// 	this.createWhaleIntegrationCard();
+		// }
+
 		// Individual Instruments Card
 		this.createInstrumentsCard(familyId, tabConfig);
-		
-		// Special whale integration controls for experimental family
-		if (familyId === 'experimental') {
-			this.createWhaleIntegrationCard();
-		}
-		
+
 		// Family Effects Card
 		this.createFamilyEffectsCard(familyId, tabConfig);
 	}
@@ -1641,15 +1685,22 @@ export class MaterialControlPanelModal extends Modal {
 		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
 		actionsRow.style.marginTop = 'var(--md-space-4)';
 
-		// Preview random sample button
-		const previewBtn = actionsRow.createEl('button', { 
+		// Download samples button
+		const downloadBtn = actionsRow.createEl('button', {
 			cls: 'osp-action-btn osp-action-btn--primary',
+			text: 'Download samples'
+		});
+		downloadBtn.addEventListener('click', () => this.handleWhaleDownload());
+
+		// Preview random sample button
+		const previewBtn = actionsRow.createEl('button', {
+			cls: 'osp-action-btn osp-action-btn--secondary',
 			text: 'Preview sample'
 		});
 		previewBtn.addEventListener('click', () => this.handleWhalePreview());
-		
+
 		// View attribution info button
-		const attributionBtn = actionsRow.createEl('button', { 
+		const attributionBtn = actionsRow.createEl('button', {
 			cls: 'osp-action-btn osp-action-btn--secondary',
 			text: 'Attribution info'
 		});
@@ -1875,13 +1926,14 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const familyMap: Record<string, string[]> = {
 			// Based on actual instruments defined in DEFAULT_SETTINGS
-			strings: ['strings', 'violin', 'cello', 'contrabass', 'guitar', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp'], 
+			strings: ['strings', 'violin', 'cello', 'contrabass', 'guitar', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp'],
 			woodwinds: ['flute', 'clarinet', 'saxophone', 'bassoon', 'oboe'],
 			brass: ['trumpet', 'frenchHorn', 'trombone', 'tuba'],
 
 			percussion: ['timpani', 'xylophone', 'vibraphone', 'gongs'],
 			electronic: ['leadSynth', 'bassSynth', 'arpSynth'], // All electronic instruments
-			experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
+			experimental: [], // Whale instruments temporarily disabled
+			// experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
 			// Additional families for other instruments
 			keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta']
 		};
@@ -2907,11 +2959,12 @@ export class MaterialControlPanelModal extends Modal {
 					...this.plugin.settings.instruments,
 					whaleHumpback: {
 						...this.plugin.settings.instruments.whaleHumpback,
-						enabled: true
+						enabled: true,
+						useHighQuality: true  // Enable high-quality external samples
 					}
 				}
 			});
-			
+
 			logger.info('whale-ui', 'Whale integration enabled via UI', {
 				highQualitySamples: true,
 				whaleEnabled: true
@@ -2940,17 +2993,55 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Handle whale sample preview
 	 */
-	private handleWhalePreview(): void {
+	private async handleWhalePreview(): Promise<void> {
 		// Play a test whale sound using the audio engine
-		if (this.plugin.audioEngine) {
-			// Trigger a low frequency note to test whale sound
-			this.plugin.audioEngine.playTestNote(80); // Low frequency for whale
-			
-			logger.info('whale-ui', 'Whale sample preview triggered', {
-				frequency: 80
-			});
-		} else {
+		if (!this.plugin.audioEngine) {
+			new Notice('⚠️ Audio engine not available');
 			logger.warn('whale-ui', 'Cannot preview whale sample: audio engine not available');
+			return;
+		}
+
+		try {
+			// Check if whale instrument is enabled
+			const whaleEnabled = this.plugin.settings.instruments.whaleHumpback?.enabled;
+
+			if (!whaleEnabled) {
+				new Notice('⚠️ Please enable whale sounds first');
+				logger.warn('whale-ui', 'Cannot preview whale: instrument not enabled');
+				return;
+			}
+
+			// Check if whale integration has samples
+			const whaleIntegration = getWhaleIntegration();
+			const hasSamples = whaleIntegration?.whaleManager?.hasSamples() || false;
+
+			if (!hasSamples) {
+				new Notice('ℹ️ No whale samples downloaded yet. Click "Download samples" first to hear authentic whale recordings. Playing synthesized preview...');
+				logger.info('whale-ui', 'No cached whale samples available, playing synthesis');
+			}
+
+			// Play a low frequency note (typical whale range: 40-200 Hz)
+			await this.plugin.audioEngine.playNoteImmediate({
+				pitch: 50,        // Low frequency for whale sound
+				duration: 2000,   // 2 second duration
+				velocity: 0.8,    // Strong velocity
+				instrument: 'whaleHumpback'
+			});
+
+			if (hasSamples) {
+				new Notice('🐋 Playing whale recording...');
+			}
+
+			logger.info('whale-ui', 'Whale sample preview triggered', {
+				pitch: 50,
+				instrument: 'whaleHumpback',
+				hasSamples
+			});
+		} catch (error) {
+			new Notice('❌ Failed to preview whale sample');
+			logger.error('whale-ui', 'Whale preview failed', {
+				error: error instanceof Error ? error.message : String(error)
+			});
 		}
 	}
 
@@ -2993,9 +3084,50 @@ All whale samples are authentic recordings from marine research institutions and
 		console.log(attributionInfo);
 		
 		logger.info('whale-ui', 'Whale attribution info displayed');
-		
+
 		// Show a simple notice for now
 		new Notice('Whale sample attribution information logged to console. Check developer tools for details.');
+	}
+
+	/**
+	 * Handle manual whale sample download
+	 */
+	private async handleWhaleDownload(): Promise<void> {
+		// Get whale integration instance
+		const whaleIntegration = getWhaleIntegration();
+
+		if (!whaleIntegration || !whaleIntegration.whaleManager) {
+			new Notice('⚠️ Whale integration not initialized. Please enable whale sounds first.');
+			logger.warn('whale-ui', 'Cannot download samples - whale integration not initialized');
+			return;
+		}
+
+		try {
+			new Notice('📥 Starting whale sample download... This may take a few minutes.');
+			logger.info('whale-ui', 'Manual whale sample download initiated by user');
+
+			const before = whaleIntegration.whaleManager.getCachedSampleCount();
+
+			await whaleIntegration.whaleManager.manuallyDownloadSamples();
+
+			const after = whaleIntegration.whaleManager.getCachedSampleCount();
+
+			if (after.totalSamples > before.totalSamples || after.totalSamples > 0) {
+				new Notice(`✅ Downloaded ${after.totalSamples} whale sample(s) for ${after.speciesCount} species!`);
+				logger.info('whale-ui', 'Whale sample download completed', {
+					speciesCount: after.speciesCount,
+					totalSamples: after.totalSamples
+				});
+			} else {
+				new Notice('⚠️ No whale samples could be downloaded. This may be due to network issues or CORS restrictions. Whale sounds will use synthesis as fallback.');
+				logger.warn('whale-ui', 'Whale sample download completed but no samples were cached');
+			}
+		} catch (error) {
+			new Notice('❌ Failed to download whale samples. Check console for details.');
+			logger.error('whale-ui', 'Whale sample download failed', {
+				error: error instanceof Error ? error.message : String(error)
+			});
+		}
 	}
 
 	/**

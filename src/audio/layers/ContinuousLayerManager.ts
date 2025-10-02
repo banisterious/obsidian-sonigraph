@@ -62,16 +62,22 @@ export class ContinuousLayerManager {
     config?: Partial<ContinuousLayerConfig>
   ) {
     logger.debug('initialization', 'Creating ContinuousLayerManager');
-    
+
     this.config = {
       enabled: false, // Disabled by default for gradual rollout
       genre: 'ambient',
       intensity: 0.5,
       evolutionRate: 0.3,
-      baseVolume: -20,
+      baseVolume: -10, // Increased from -20 to -10 for better audibility
       adaptiveIntensity: true,
       ...config
     };
+
+    logger.info('initialization', 'Final layer config', {
+      enabled: this.config.enabled,
+      genre: this.config.genre,
+      intensity: this.config.intensity
+    });
     
     // Initialize state
     this.currentState = {
@@ -153,9 +159,11 @@ export class ContinuousLayerManager {
     if (!this.isInitialized) {
       await this.initialize();
     }
-    
+
     if (!this.config.enabled) {
-      logger.debug('playback', 'Continuous layers disabled, skipping start');
+      logger.warn('playback', 'Continuous layers disabled in config, skipping start', {
+        configEnabled: this.config.enabled
+      });
       return;
     }
     

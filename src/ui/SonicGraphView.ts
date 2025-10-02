@@ -428,13 +428,22 @@ export class SonicGraphView extends ItemView {
     private async initializeContinuousLayers(): Promise<void> {
         try {
             logger.info('continuous-layers', 'Initializing continuous layers');
-            
+
             if (!this.continuousLayerManager) {
+                // Pass continuous layer configuration to the manager
+                const layerConfig = this.plugin.settings.audioEnhancement?.continuousLayers;
+                logger.info('continuous-layers', 'Layer config', {
+                    enabled: layerConfig?.enabled,
+                    genre: layerConfig?.genre,
+                    hasConfig: !!layerConfig
+                });
+
                 this.continuousLayerManager = new ContinuousLayerManager(
-                    this.plugin.settings
+                    this.plugin.settings,
+                    layerConfig
                 );
             }
-            
+
             // Initialize and start the continuous layers
             await this.continuousLayerManager.initialize();
             await this.continuousLayerManager.start();
@@ -1226,14 +1235,14 @@ export class SonicGraphView extends ItemView {
         // Phase 8.1: Simplified settings panel - only essential visualization controls
         // All advanced settings moved to Control Center > Sonic Graph tab
 
-        // Control Center quick link (prominent)
-        this.createControlCenterLink(settingsContent);
-
         // Essential visualization controls only
         this.createFiltersSettings(settingsContent);
         this.createVisualSettings(settingsContent);
         this.createLayoutSettings(settingsContent);
         this.createTimelineSettings(settingsContent);
+
+        // Control Center quick link (at bottom)
+        this.createControlCenterLink(settingsContent);
     }
 
 
@@ -1243,24 +1252,12 @@ export class SonicGraphView extends ItemView {
     private createControlCenterLink(container: HTMLElement): void {
         const linkSection = container.createDiv({ cls: 'sonic-graph-settings-section control-center-link-section' });
 
-        // Prominent info box
-        const infoBox = linkSection.createDiv({ cls: 'sonic-graph-control-center-notice' });
-        infoBox.innerHTML = `
-            <div style="padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--interactive-accent); margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--interactive-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                    <strong style="color: var(--text-normal); font-size: 14px;">Advanced Settings Moved</strong>
-                </div>
-                <p style="margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
-                    Audio layers, musical theory, spatial audio, and other advanced features are now in the
-                    <strong>Control Center</strong> for a better experience with organized tabs.
-                </p>
-            </div>
-        `;
+        // Section heading
+        linkSection.createEl('div', { text: 'ADVANCED SETTINGS', cls: 'sonic-graph-settings-section-title' });
+
+        // Descriptive paragraph
+        const description = linkSection.createEl('p', { cls: 'sonic-graph-settings-description sonic-graph-small-text' });
+        description.textContent = 'Audio layers, musical theory, spatial audio, and other advanced features are available in the Control Center for a better experience with organized tabs.';
 
         // Large button to open Control Center
         const button = linkSection.createEl('button', {
@@ -1271,14 +1268,14 @@ export class SonicGraphView extends ItemView {
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="9" y1="3" x2="9" y2="21"></line>
             </svg>
-            Open Control Center for Advanced Settings
+            Control Center
         `;
 
         button.addEventListener('click', () => {
             // Close the settings panel
             this.toggleSettings();
             // Open Control Center
-            (this.app as any).workspace.trigger('sonigraph:open-control-center');
+            this.plugin.openControlPanel();
         });
     }
 
