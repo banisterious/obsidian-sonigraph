@@ -64657,7 +64657,24 @@ var init_ExportModal = __esm({
           this.scopeDropdown = dropdown;
           dropdown.addOption("full-timeline", `Full Timeline Animation (${((_a = this.animator) == null ? void 0 : _a.config.duration) || 60}s)`).addOption("custom-range", "Custom Time Range").addOption("static-graph", "Current Static Graph").setValue(this.config.scope || "full-timeline").onChange((value) => {
             this.config.scope = value;
+            this.updateCustomRangeVisibility();
             this.updateEstimate();
+          });
+        });
+        this.customRangeContainer = section.createDiv("custom-range-container");
+        this.customRangeContainer.style.display = "none";
+        new import_obsidian18.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
+          this.startTimeInput = text;
+          text.setPlaceholder("0").setValue("0").onChange((value) => {
+            this.updateCustomRange();
+          });
+        });
+        new import_obsidian18.Setting(this.customRangeContainer).setName("End time").setDesc("End time in seconds (e.g., 30 or 0:30)").addText((text) => {
+          var _a;
+          this.endTimeInput = text;
+          const maxDuration = ((_a = this.animator) == null ? void 0 : _a.config.duration) || 60;
+          text.setPlaceholder(maxDuration.toString()).setValue(maxDuration.toString()).onChange((value) => {
+            this.updateCustomRange();
           });
         });
       }
@@ -65033,6 +65050,55 @@ var init_ExportModal = __esm({
           return specialNames[key];
         }
         return key.charAt(0).toUpperCase() + key.slice(1);
+      }
+      /**
+       * Show/hide custom range inputs based on scope selection
+       */
+      updateCustomRangeVisibility() {
+        if (!this.customRangeContainer)
+          return;
+        if (this.config.scope === "custom-range") {
+          this.customRangeContainer.style.display = "block";
+        } else {
+          this.customRangeContainer.style.display = "none";
+        }
+      }
+      /**
+       * Update custom range in config based on input values
+       */
+      updateCustomRange() {
+        var _a;
+        if (!this.startTimeInput || !this.endTimeInput)
+          return;
+        const startValue = this.startTimeInput.getValue().trim();
+        const endValue = this.endTimeInput.getValue().trim();
+        const start3 = this.parseTimeInput(startValue);
+        const end = this.parseTimeInput(endValue);
+        const maxDuration = ((_a = this.animator) == null ? void 0 : _a.config.duration) || 60;
+        const validStart = Math.max(0, Math.min(start3, maxDuration));
+        const validEnd = Math.max(validStart + 1, Math.min(end, maxDuration));
+        this.config.customRange = {
+          start: validStart * 1e3,
+          // Convert to milliseconds
+          end: validEnd * 1e3
+        };
+        this.updateEstimate();
+      }
+      /**
+       * Parse time input (supports seconds or MM:SS format)
+       */
+      parseTimeInput(value) {
+        if (!value)
+          return 0;
+        if (value.includes(":")) {
+          const parts = value.split(":");
+          if (parts.length === 2) {
+            const minutes = parseInt(parts[0], 10) || 0;
+            const seconds = parseInt(parts[1], 10) || 0;
+            return minutes * 60 + seconds;
+          }
+        }
+        return parseFloat(value) || 0;
       }
     };
   }

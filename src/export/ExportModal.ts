@@ -32,6 +32,9 @@ export class ExportModal extends Modal {
 
     // UI elements
     private scopeDropdown?: DropdownComponent;
+    private customRangeContainer?: HTMLElement;
+    private startTimeInput?: TextComponent;
+    private endTimeInput?: TextComponent;
     private formatDropdown?: DropdownComponent;
     private qualityDropdown?: DropdownComponent;
     private locationTypeDropdown?: DropdownComponent;
@@ -128,11 +131,39 @@ export class ExportModal extends Modal {
                     .setValue(this.config.scope || 'full-timeline')
                     .onChange(value => {
                         this.config.scope = value as ExportScope;
+                        this.updateCustomRangeVisibility();
                         this.updateEstimate();
                     });
             });
 
-        // TODO: Add custom range inputs when custom-range is selected
+        // Custom range inputs (initially hidden)
+        this.customRangeContainer = section.createDiv('custom-range-container');
+        this.customRangeContainer.style.display = 'none';
+
+        new Setting(this.customRangeContainer)
+            .setName('Start time')
+            .setDesc('Start time in seconds (e.g., 5 or 0:05)')
+            .addText(text => {
+                this.startTimeInput = text;
+                text.setPlaceholder('0')
+                    .setValue('0')
+                    .onChange(value => {
+                        this.updateCustomRange();
+                    });
+            });
+
+        new Setting(this.customRangeContainer)
+            .setName('End time')
+            .setDesc('End time in seconds (e.g., 30 or 0:30)')
+            .addText(text => {
+                this.endTimeInput = text;
+                const maxDuration = this.animator?.config.duration || 60;
+                text.setPlaceholder(maxDuration.toString())
+                    .setValue(maxDuration.toString())
+                    .onChange(value => {
+                        this.updateCustomRange();
+                    });
+            });
     }
 
     /**
@@ -660,5 +691,66 @@ export class ExportModal extends Modal {
 
         // Default: capitalize first letter
         return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
+    /**
+     * Show/hide custom range inputs based on scope selection
+     */
+    private updateCustomRangeVisibility(): void {
+        if (!this.customRangeContainer) return;
+
+        if (this.config.scope === 'custom-range') {
+            this.customRangeContainer.style.display = 'block';
+        } else {
+            this.customRangeContainer.style.display = 'none';
+        }
+    }
+
+    /**
+     * Update custom range in config based on input values
+     */
+    private updateCustomRange(): void {
+        if (!this.startTimeInput || !this.endTimeInput) return;
+
+        const startValue = this.startTimeInput.getValue().trim();
+        const endValue = this.endTimeInput.getValue().trim();
+
+        // Parse time values (support both seconds and MM:SS format)
+        const start = this.parseTimeInput(startValue);
+        const end = this.parseTimeInput(endValue);
+
+        // Validate
+        const maxDuration = this.animator?.config.duration || 60;
+        const validStart = Math.max(0, Math.min(start, maxDuration));
+        const validEnd = Math.max(validStart + 1, Math.min(end, maxDuration));
+
+        // Update config
+        this.config.customRange = {
+            start: validStart * 1000, // Convert to milliseconds
+            end: validEnd * 1000
+        };
+
+        // Update estimate
+        this.updateEstimate();
+    }
+
+    /**
+     * Parse time input (supports seconds or MM:SS format)
+     */
+    private parseTimeInput(value: string): number {
+        if (!value) return 0;
+
+        // Check if it's in MM:SS format
+        if (value.includes(':')) {
+            const parts = value.split(':');
+            if (parts.length === 2) {
+                const minutes = parseInt(parts[0], 10) || 0;
+                const seconds = parseInt(parts[1], 10) || 0;
+                return minutes * 60 + seconds;
+            }
+        }
+
+        // Otherwise, treat as seconds
+        return parseFloat(value) || 0;
     }
 }
