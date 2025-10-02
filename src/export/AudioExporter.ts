@@ -277,10 +277,33 @@ export class AudioExporter {
      * Create export note in vault
      */
     private async createExportNote(config: ExportConfig, filePath: string): Promise<string> {
-        // TODO: Implement note creation using template
-        // For now, return placeholder
-        logger.info('export', 'Export note creation not yet implemented');
-        return '';
+        try {
+            const { ExportNoteCreator } = require('./ExportNoteCreator');
+            const noteCreator = new ExportNoteCreator(this.app);
+
+            // Build result object for note creation
+            const result: ExportResult = {
+                success: true,
+                filePath,
+                duration: this.estimateDuration(config)
+            };
+
+            // Get file size from written file
+            const file = this.app.vault.getAbstractFileByPath(filePath);
+            if (file && 'stat' in file) {
+                result.fileSize = (file as any).stat.size;
+            }
+
+            // Create the note
+            const notePath = await noteCreator.createNote(config, result, this.animator);
+            logger.info('export', `Export note created: ${notePath}`);
+            return notePath;
+
+        } catch (error) {
+            logger.error('export', 'Failed to create export note:', error);
+            // Don't fail the export if note creation fails
+            return '';
+        }
     }
 
     /**
