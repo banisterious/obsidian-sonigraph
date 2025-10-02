@@ -40,6 +40,15 @@ export class ExportModal extends Modal {
     private locationTypeDropdown?: DropdownComponent;
     private locationInput?: TextComponent;
     private filenameInput?: TextComponent;
+    private metadataContainer?: HTMLElement;
+    private metadataInputs: {
+        title?: TextComponent;
+        artist?: TextComponent;
+        album?: TextComponent;
+        comment?: TextComponent;
+        year?: TextComponent;
+        genre?: TextComponent;
+    } = {};
     private advancedContainer?: HTMLElement;
     private estimateDisplay?: HTMLElement;
 
@@ -72,10 +81,12 @@ export class ExportModal extends Modal {
         contentEl.createEl('h2', { text: 'Export Sonic Graph' });
 
         // Create form sections
+        this.createPresetsSection(contentEl);
         this.createScopeSection(contentEl);
         this.createFormatSection(contentEl);
         this.createLocationSection(contentEl);
         this.createFilenameSection(contentEl);
+        this.createMetadataSection(contentEl);
         this.createEstimateDisplay(contentEl);
         this.createAdvancedSection(contentEl);
         this.createActionButtons(contentEl);
@@ -84,6 +95,177 @@ export class ExportModal extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
+    }
+
+    /**
+     * Create presets section
+     */
+    private createPresetsSection(container: HTMLElement): void {
+        const section = container.createDiv('export-section');
+        section.createEl('h3', { text: 'Quick Presets' });
+
+        const presetButtons = section.createDiv('export-preset-buttons');
+
+        // Get presets from settings
+        const presets = this.plugin.settings.exportSettings?.exportPresets || [];
+
+        if (presets.length === 0) {
+            // Show default presets
+            this.createPresetButton(presetButtons, {
+                id: 'high-quality-wav',
+                name: 'High Quality WAV',
+                format: 'wav',
+                quality: { sampleRate: 48000, bitDepth: 16 }
+            });
+
+            this.createPresetButton(presetButtons, {
+                id: 'compressed-audio',
+                name: 'Compressed Audio',
+                format: 'mp3',
+                quality: { sampleRate: 48000, bitRate: 192 }
+            });
+
+            this.createPresetButton(presetButtons, {
+                id: 'lossless',
+                name: 'Lossless',
+                format: 'wav',
+                quality: { sampleRate: 48000, bitDepth: 24 }
+            });
+        } else {
+            // Show custom presets
+            presets.forEach(preset => {
+                this.createPresetButton(presetButtons, preset);
+            });
+        }
+
+        // Save current as preset button
+        const savePresetBtn = presetButtons.createEl('button', {
+            text: '💾 Save Current as Preset',
+            cls: 'export-preset-save'
+        });
+        savePresetBtn.addEventListener('click', () => this.saveCurrentAsPreset());
+    }
+
+    /**
+     * Create a preset button
+     */
+    private createPresetButton(container: HTMLElement, preset: any): void {
+        const btn = container.createEl('button', {
+            text: preset.name,
+            cls: 'export-preset-btn'
+        });
+
+        btn.addEventListener('click', () => {
+            this.loadPreset(preset);
+        });
+    }
+
+    /**
+     * Load a preset
+     */
+    private loadPreset(preset: any): void {
+        // Update config
+        this.config.format = preset.format;
+        this.config.quality = preset.quality;
+
+        if (preset.metadata) {
+            this.config.metadata = preset.metadata;
+        }
+
+        // Update UI
+        if (this.formatDropdown) {
+            this.formatDropdown.setValue(preset.format);
+        }
+
+        this.updateQualityOptions();
+        this.updateEstimate();
+
+        // Update metadata inputs if present
+        if (preset.metadata && this.metadataInputs) {
+            if (this.metadataInputs.title) this.metadataInputs.title.setValue(preset.metadata.title || '');
+            if (this.metadataInputs.artist) this.metadataInputs.artist.setValue(preset.metadata.artist || '');
+            if (this.metadataInputs.album) this.metadataInputs.album.setValue(preset.metadata.album || '');
+            if (this.metadataInputs.year) this.metadataInputs.year.setValue(preset.metadata.year?.toString() || '');
+            if (this.metadataInputs.genre) this.metadataInputs.genre.setValue(preset.metadata.genre || '');
+            if (this.metadataInputs.comment) this.metadataInputs.comment.setValue(preset.metadata.comment || '');
+        }
+
+        new Notice(`Loaded preset: ${preset.name}`);
+    }
+
+    /**
+     * Save current settings as a preset
+     */
+    private async saveCurrentAsPreset(): Promise<void> {
+        // Prompt for preset name
+        const name = await this.promptForPresetName();
+        if (!name) return;
+
+        const preset = {
+            id: `preset-${Date.now()}`,
+            name,
+            format: this.config.format!,
+            quality: this.config.quality!,
+            metadata: this.config.metadata
+        };
+
+        // Save to settings
+        if (!this.plugin.settings.exportSettings) {
+            this.plugin.settings.exportSettings = {} as any;
+        }
+        if (!this.plugin.settings.exportSettings.exportPresets) {
+            this.plugin.settings.exportSettings.exportPresets = [];
+        }
+
+        this.plugin.settings.exportSettings.exportPresets.push(preset);
+        await this.plugin.saveSettings();
+
+        new Notice(`Saved preset: ${name}`);
+
+        // Refresh presets section
+        this.close();
+        // Would need to reopen or refresh, but for now just notify
+    }
+
+    /**
+     * Prompt user for preset name
+     */
+    private async promptForPresetName(): Promise<string | null> {
+        return new Promise((resolve) => {
+            const modal = new Modal(this.app);
+            modal.titleEl.setText('Save Preset');
+
+            const content = modal.contentEl;
+            content.createEl('p', { text: 'Enter a name for this preset:' });
+
+            let nameInput: TextComponent;
+            new Setting(content)
+                .setName('Preset name')
+                .addText(text => {
+                    nameInput = text;
+                    text.setPlaceholder('My Preset');
+                });
+
+            const buttonContainer = content.createDiv('modal-button-container');
+            buttonContainer.createEl('button', { text: 'Cancel' })
+                .addEventListener('click', () => {
+                    modal.close();
+                    resolve(null);
+                });
+
+            buttonContainer.createEl('button', { text: 'Save', cls: 'mod-cta' })
+                .addEventListener('click', () => {
+                    const name = nameInput.getValue().trim();
+                    if (name) {
+                        modal.close();
+                        resolve(name);
+                    } else {
+                        new Notice('Please enter a preset name');
+                    }
+                });
+
+            modal.open();
+        });
     }
 
     /**
@@ -298,6 +480,117 @@ export class ExportModal extends Modal {
     }
 
     /**
+     * Create metadata section (collapsed by default)
+     */
+    private createMetadataSection(container: HTMLElement): void {
+        const section = container.createDiv('export-section');
+
+        const header = section.createDiv('export-metadata-header');
+        header.createEl('span', { text: 'Metadata (Optional) ▼' });
+        header.addClass('clickable');
+
+        this.metadataContainer = section.createDiv('export-metadata-content');
+        this.metadataContainer.style.display = 'none';
+
+        // Toggle metadata section
+        header.addEventListener('click', () => {
+            const isVisible = this.metadataContainer!.style.display !== 'none';
+            this.metadataContainer!.style.display = isVisible ? 'none' : 'block';
+            header.textContent = isVisible ? 'Metadata (Optional) ▼' : 'Metadata (Optional) ▲';
+        });
+
+        // Load last used metadata if available
+        const lastMetadata = this.plugin.settings.exportSettings?.lastMetadata;
+
+        // Title
+        new Setting(this.metadataContainer)
+            .setName('Title')
+            .setDesc('Song or export title')
+            .addText(text => {
+                this.metadataInputs.title = text;
+                text.setPlaceholder('Sonic Graph Export')
+                    .setValue(lastMetadata?.title || '')
+                    .onChange(value => {
+                        if (!this.config.metadata) this.config.metadata = {};
+                        this.config.metadata.title = value.trim() || undefined;
+                    });
+            });
+
+        // Artist
+        new Setting(this.metadataContainer)
+            .setName('Artist')
+            .setDesc('Artist or creator name')
+            .addText(text => {
+                this.metadataInputs.artist = text;
+                text.setPlaceholder('Your Name')
+                    .setValue(lastMetadata?.artist || '')
+                    .onChange(value => {
+                        if (!this.config.metadata) this.config.metadata = {};
+                        this.config.metadata.artist = value.trim() || undefined;
+                    });
+            });
+
+        // Album
+        new Setting(this.metadataContainer)
+            .setName('Album')
+            .setDesc('Album or collection name')
+            .addText(text => {
+                this.metadataInputs.album = text;
+                text.setPlaceholder('Vault Soundscapes')
+                    .setValue(lastMetadata?.album || '')
+                    .onChange(value => {
+                        if (!this.config.metadata) this.config.metadata = {};
+                        this.config.metadata.album = value.trim() || undefined;
+                    });
+            });
+
+        // Year
+        new Setting(this.metadataContainer)
+            .setName('Year')
+            .setDesc('Year of creation')
+            .addText(text => {
+                this.metadataInputs.year = text;
+                const currentYear = new Date().getFullYear();
+                text.setPlaceholder(currentYear.toString())
+                    .setValue(lastMetadata?.year?.toString() || '')
+                    .onChange(value => {
+                        if (!this.config.metadata) this.config.metadata = {};
+                        const year = parseInt(value.trim(), 10);
+                        this.config.metadata.year = isNaN(year) ? undefined : year;
+                    });
+            });
+
+        // Genre
+        new Setting(this.metadataContainer)
+            .setName('Genre')
+            .setDesc('Musical genre or category')
+            .addText(text => {
+                this.metadataInputs.genre = text;
+                text.setPlaceholder('Ambient, Generative')
+                    .setValue(lastMetadata?.genre || '')
+                    .onChange(value => {
+                        if (!this.config.metadata) this.config.metadata = {};
+                        this.config.metadata.genre = value.trim() || undefined;
+                    });
+            });
+
+        // Comment
+        new Setting(this.metadataContainer)
+            .setName('Comment')
+            .setDesc('Additional notes or description')
+            .addTextArea(text => {
+                this.metadataInputs.comment = text as any;
+                text.setPlaceholder('Generated from Obsidian vault using Sonigraph plugin')
+                    .setValue(lastMetadata?.comment || '')
+                    .onChange(value => {
+                        if (!this.config.metadata) this.config.metadata = {};
+                        this.config.metadata.comment = value.trim() || undefined;
+                    });
+                (text.inputEl as HTMLTextAreaElement).rows = 3;
+            });
+    }
+
+    /**
      * Create advanced options section (collapsed by default)
      */
     private createAdvancedSection(container: HTMLElement): void {
@@ -379,8 +672,19 @@ export class ExportModal extends Modal {
                 // Capture actual audio engine state for note generation
                 masterVolume: this.plugin.settings.volume,
                 enabledEffects: this.getEnabledEffects(),
-                selectedInstruments: this.getEnabledInstruments()
+                selectedInstruments: this.getEnabledInstruments(),
+                // Include metadata if provided
+                metadata: this.config.metadata
             };
+
+            // Save metadata for next time if user wants to remember it
+            if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
+                if (!this.plugin.settings.exportSettings) {
+                    this.plugin.settings.exportSettings = {} as any;
+                }
+                this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
+                await this.plugin.saveSettings();
+            }
 
             // Check for file collision before starting export
             const extension = exportConfig.format;
