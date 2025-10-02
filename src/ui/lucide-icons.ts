@@ -354,12 +354,19 @@ export const TAB_CONFIGS = [
     instrumentCount: 3
   },
   {
-    id: 'experimental',
-    name: 'Experimental',
-    icon: 'flask',
-    description: 'Experimental sound sources',
-    instrumentCount: 1
+    id: 'layers',
+    name: 'Layers',
+    icon: 'layers',
+    description: 'Continuous audio layers and Freesound integration'
   },
+  // Experimental tab temporarily hidden - whale integration disabled
+  // {
+  //   id: 'experimental',
+  //   name: 'Experimental',
+  //   icon: 'flask',
+  //   description: 'Experimental sound sources',
+  //   instrumentCount: 1
+  // },
   {
     id: 'sonic-graph',
     name: 'Sonic Graph',

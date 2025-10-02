@@ -2134,7 +2134,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		},
 		// Phase 8B: Environmental & Natural Sounds
 		whaleHumpback: {
-			enabled: true,
+			enabled: false,  // Disabled - whale integration temporarily unavailable due to CORS issues
 			volume: 0.7,
 			maxVoices: 4,
 			useHighQuality: false, // This is synthesis, not recordings

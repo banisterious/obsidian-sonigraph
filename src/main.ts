@@ -31,8 +31,9 @@ export default class SonigraphPlugin extends Plugin {
 		// Initialize components
 		this.initializeComponents();
 
-		// Initialize whale integration for high-quality samples
-		await this.initializeWhaleIntegration();
+		// Whale integration temporarily disabled due to CORS download issues
+		// TODO: Re-enable when we have a reliable sample delivery method (bundled samples or backend)
+		// await this.initializeWhaleIntegration();
 
 		// Register Sonic Graph view
 		this.registerView(
