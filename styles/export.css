@@ -20,73 +20,158 @@
 }
 
 .export-section {
-	margin-bottom: var(--size-4-6);
+	margin-bottom: var(--size-4-4);
+	padding: var(--size-4-4);
+	background: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .export-section h3 {
-	margin-bottom: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
 	font-size: var(--font-ui-medium);
-	font-weight: var(--font-medium);
-	color: var(--text-muted);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
 }
 
 .export-section .setting-item {
 	border: none;
 	padding: var(--size-4-2) 0;
+	background: transparent;
 }
 
 .export-section .setting-item:last-child {
 	border-bottom: none;
+	padding-bottom: 0;
+}
+
+/* Preset Buttons */
+.export-preset-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-2);
+}
+
+.export-preset-btn {
+	padding: var(--size-4-2) var(--size-4-3);
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.export-preset-btn:hover {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.export-preset-save {
+	padding: var(--size-4-2) var(--size-4-3);
+	background: transparent;
+	color: var(--text-muted);
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.export-preset-save:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+	border-style: solid;
+	border-color: var(--interactive-accent);
 }
 
 /* Estimate Display */
 .export-estimate {
-	margin: var(--size-4-4) 0;
+	margin: 0;
 	padding: var(--size-4-3);
-	background: var(--background-modifier-form-field);
+	background: var(--background-modifier-success);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-m);
+	border-radius: var(--radius-s);
+	border-left: 3px solid var(--interactive-accent);
 }
 
 .export-estimate-box {
 	display: flex;
 	flex-direction: column;
-	gap: var(--size-4-1);
+	gap: var(--size-4-2);
 }
 
 .export-estimate-box div {
 	font-size: var(--font-ui-small);
-	color: var(--text-muted);
+	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
 }
 
-/* Advanced Options Toggle */
+.export-estimate-box div::before {
+	font-size: var(--font-ui-medium);
+}
+
+.export-estimate-box div:first-child::before {
+	content: '📦';
+}
+
+.export-estimate-box div:last-child::before {
+	content: '⏱️';
+}
+
+/* Custom Range Container */
+.custom-range-container {
+	margin-top: var(--size-4-3);
+	padding-top: var(--size-4-3);
+	border-top: 1px dashed var(--background-modifier-border);
+}
+
+/* Collapsible Section Headers (Metadata & Advanced) */
+.export-metadata-header,
 .export-advanced-header {
 	display: flex;
 	align-items: center;
-	padding: var(--size-4-2);
-	margin: var(--size-4-4) 0 var(--size-4-2);
-	background: var(--background-secondary);
+	padding: 0;
+	margin: 0 0 var(--size-4-3) 0;
+	background: transparent;
 	border-radius: var(--radius-s);
 	cursor: pointer;
 	user-select: none;
-	transition: background-color 0.15s ease;
+	transition: all 0.15s ease;
 }
 
+.export-metadata-header:hover,
 .export-advanced-header:hover {
 	background: var(--background-modifier-hover);
+	padding: var(--size-4-1) var(--size-4-2);
+	margin: 0 calc(var(--size-4-2) * -1) var(--size-4-3) calc(var(--size-4-2) * -1);
 }
 
+.export-metadata-header span,
 .export-advanced-header span {
 	font-size: var(--font-ui-small);
-	font-weight: var(--font-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-muted);
+}
+
+.export-metadata-header:hover span,
+.export-advanced-header:hover span {
 	color: var(--text-normal);
 }
 
+.export-metadata-content,
 .export-advanced-content {
-	padding: var(--size-4-3);
-	background: var(--background-secondary);
-	border-radius: var(--radius-s);
-	margin-bottom: var(--size-4-4);
+	padding-top: var(--size-4-2);
 }
 
 /* Action Buttons */
