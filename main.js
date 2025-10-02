@@ -64597,6 +64597,7 @@ var init_ExportModal = __esm({
         super(app);
         // Configuration state
         this.config = {};
+        this.metadataInputs = {};
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
@@ -64611,10 +64612,12 @@ var init_ExportModal = __esm({
         contentEl.empty();
         contentEl.addClass("sonigraph-export-modal");
         contentEl.createEl("h2", { text: "Export Sonic Graph" });
+        this.createPresetsSection(contentEl);
         this.createScopeSection(contentEl);
         this.createFormatSection(contentEl);
         this.createLocationSection(contentEl);
         this.createFilenameSection(contentEl);
+        this.createMetadataSection(contentEl);
         this.createEstimateDisplay(contentEl);
         this.createAdvancedSection(contentEl);
         this.createActionButtons(contentEl);
@@ -64622,6 +64625,144 @@ var init_ExportModal = __esm({
       onClose() {
         const { contentEl } = this;
         contentEl.empty();
+      }
+      /**
+       * Create presets section
+       */
+      createPresetsSection(container) {
+        var _a;
+        const section = container.createDiv("export-section");
+        section.createEl("h3", { text: "Quick Presets" });
+        const presetButtons = section.createDiv("export-preset-buttons");
+        const presets = ((_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.exportPresets) || [];
+        if (presets.length === 0) {
+          this.createPresetButton(presetButtons, {
+            id: "high-quality-wav",
+            name: "High Quality WAV",
+            format: "wav",
+            quality: { sampleRate: 48e3, bitDepth: 16 }
+          });
+          this.createPresetButton(presetButtons, {
+            id: "compressed-audio",
+            name: "Compressed Audio",
+            format: "mp3",
+            quality: { sampleRate: 48e3, bitRate: 192 }
+          });
+          this.createPresetButton(presetButtons, {
+            id: "lossless",
+            name: "Lossless",
+            format: "wav",
+            quality: { sampleRate: 48e3, bitDepth: 24 }
+          });
+        } else {
+          presets.forEach((preset) => {
+            this.createPresetButton(presetButtons, preset);
+          });
+        }
+        const savePresetBtn = presetButtons.createEl("button", {
+          text: "\u{1F4BE} Save Current as Preset",
+          cls: "export-preset-save"
+        });
+        savePresetBtn.addEventListener("click", () => this.saveCurrentAsPreset());
+      }
+      /**
+       * Create a preset button
+       */
+      createPresetButton(container, preset) {
+        const btn = container.createEl("button", {
+          text: preset.name,
+          cls: "export-preset-btn"
+        });
+        btn.addEventListener("click", () => {
+          this.loadPreset(preset);
+        });
+      }
+      /**
+       * Load a preset
+       */
+      loadPreset(preset) {
+        var _a;
+        this.config.format = preset.format;
+        this.config.quality = preset.quality;
+        if (preset.metadata) {
+          this.config.metadata = preset.metadata;
+        }
+        if (this.formatDropdown) {
+          this.formatDropdown.setValue(preset.format);
+        }
+        this.updateQualityOptions();
+        this.updateEstimate();
+        if (preset.metadata && this.metadataInputs) {
+          if (this.metadataInputs.title)
+            this.metadataInputs.title.setValue(preset.metadata.title || "");
+          if (this.metadataInputs.artist)
+            this.metadataInputs.artist.setValue(preset.metadata.artist || "");
+          if (this.metadataInputs.album)
+            this.metadataInputs.album.setValue(preset.metadata.album || "");
+          if (this.metadataInputs.year)
+            this.metadataInputs.year.setValue(((_a = preset.metadata.year) == null ? void 0 : _a.toString()) || "");
+          if (this.metadataInputs.genre)
+            this.metadataInputs.genre.setValue(preset.metadata.genre || "");
+          if (this.metadataInputs.comment)
+            this.metadataInputs.comment.setValue(preset.metadata.comment || "");
+        }
+        new import_obsidian18.Notice(`Loaded preset: ${preset.name}`);
+      }
+      /**
+       * Save current settings as a preset
+       */
+      async saveCurrentAsPreset() {
+        const name = await this.promptForPresetName();
+        if (!name)
+          return;
+        const preset = {
+          id: `preset-${Date.now()}`,
+          name,
+          format: this.config.format,
+          quality: this.config.quality,
+          metadata: this.config.metadata
+        };
+        if (!this.plugin.settings.exportSettings) {
+          this.plugin.settings.exportSettings = {};
+        }
+        if (!this.plugin.settings.exportSettings.exportPresets) {
+          this.plugin.settings.exportSettings.exportPresets = [];
+        }
+        this.plugin.settings.exportSettings.exportPresets.push(preset);
+        await this.plugin.saveSettings();
+        new import_obsidian18.Notice(`Saved preset: ${name}`);
+        this.close();
+      }
+      /**
+       * Prompt user for preset name
+       */
+      async promptForPresetName() {
+        return new Promise((resolve) => {
+          const modal = new import_obsidian18.Modal(this.app);
+          modal.titleEl.setText("Save Preset");
+          const content = modal.contentEl;
+          content.createEl("p", { text: "Enter a name for this preset:" });
+          let nameInput;
+          new import_obsidian18.Setting(content).setName("Preset name").addText((text) => {
+            nameInput = text;
+            text.setPlaceholder("My Preset");
+          });
+          const buttonContainer = content.createDiv("modal-button-container");
+          buttonContainer.createEl("button", { text: "Cancel" }).addEventListener("click", () => {
+            modal.close();
+            resolve(null);
+          });
+          buttonContainer.createEl("button", { text: "Save", cls: "mod-cta" }).addEventListener("click", () => {
+            const name = nameInput.getValue().trim();
+            if (name) {
+              modal.close();
+              resolve(name);
+            } else {
+              new import_obsidian18.Notice("Please enter a preset name");
+            }
+          });
+          modal.open();
+        });
       }
       /**
        * Initialize configuration with defaults from plugin settings
@@ -64746,6 +64887,76 @@ var init_ExportModal = __esm({
         this.updateEstimate();
       }
       /**
+       * Create metadata section (collapsed by default)
+       */
+      createMetadataSection(container) {
+        var _a;
+        const section = container.createDiv("export-section");
+        const header = section.createDiv("export-metadata-header");
+        header.createEl("span", { text: "Metadata (Optional) \u25BC" });
+        header.addClass("clickable");
+        this.metadataContainer = section.createDiv("export-metadata-content");
+        this.metadataContainer.style.display = "none";
+        header.addEventListener("click", () => {
+          const isVisible = this.metadataContainer.style.display !== "none";
+          this.metadataContainer.style.display = isVisible ? "none" : "block";
+          header.textContent = isVisible ? "Metadata (Optional) \u25BC" : "Metadata (Optional) \u25B2";
+        });
+        const lastMetadata = (_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.lastMetadata;
+        new import_obsidian18.Setting(this.metadataContainer).setName("Title").setDesc("Song or export title").addText((text) => {
+          this.metadataInputs.title = text;
+          text.setPlaceholder("Sonic Graph Export").setValue((lastMetadata == null ? void 0 : lastMetadata.title) || "").onChange((value) => {
+            if (!this.config.metadata)
+              this.config.metadata = {};
+            this.config.metadata.title = value.trim() || void 0;
+          });
+        });
+        new import_obsidian18.Setting(this.metadataContainer).setName("Artist").setDesc("Artist or creator name").addText((text) => {
+          this.metadataInputs.artist = text;
+          text.setPlaceholder("Your Name").setValue((lastMetadata == null ? void 0 : lastMetadata.artist) || "").onChange((value) => {
+            if (!this.config.metadata)
+              this.config.metadata = {};
+            this.config.metadata.artist = value.trim() || void 0;
+          });
+        });
+        new import_obsidian18.Setting(this.metadataContainer).setName("Album").setDesc("Album or collection name").addText((text) => {
+          this.metadataInputs.album = text;
+          text.setPlaceholder("Vault Soundscapes").setValue((lastMetadata == null ? void 0 : lastMetadata.album) || "").onChange((value) => {
+            if (!this.config.metadata)
+              this.config.metadata = {};
+            this.config.metadata.album = value.trim() || void 0;
+          });
+        });
+        new import_obsidian18.Setting(this.metadataContainer).setName("Year").setDesc("Year of creation").addText((text) => {
+          var _a2;
+          this.metadataInputs.year = text;
+          const currentYear = new Date().getFullYear();
+          text.setPlaceholder(currentYear.toString()).setValue(((_a2 = lastMetadata == null ? void 0 : lastMetadata.year) == null ? void 0 : _a2.toString()) || "").onChange((value) => {
+            if (!this.config.metadata)
+              this.config.metadata = {};
+            const year = parseInt(value.trim(), 10);
+            this.config.metadata.year = isNaN(year) ? void 0 : year;
+          });
+        });
+        new import_obsidian18.Setting(this.metadataContainer).setName("Genre").setDesc("Musical genre or category").addText((text) => {
+          this.metadataInputs.genre = text;
+          text.setPlaceholder("Ambient, Generative").setValue((lastMetadata == null ? void 0 : lastMetadata.genre) || "").onChange((value) => {
+            if (!this.config.metadata)
+              this.config.metadata = {};
+            this.config.metadata.genre = value.trim() || void 0;
+          });
+        });
+        new import_obsidian18.Setting(this.metadataContainer).setName("Comment").setDesc("Additional notes or description").addTextArea((text) => {
+          this.metadataInputs.comment = text;
+          text.setPlaceholder("Generated from Obsidian vault using Sonigraph plugin").setValue((lastMetadata == null ? void 0 : lastMetadata.comment) || "").onChange((value) => {
+            if (!this.config.metadata)
+              this.config.metadata = {};
+            this.config.metadata.comment = value.trim() || void 0;
+          });
+          text.inputEl.rows = 3;
+        });
+      }
+      /**
        * Create advanced options section (collapsed by default)
        */
       createAdvancedSection(container) {
@@ -64807,8 +65018,17 @@ var init_ExportModal = __esm({
             // Capture actual audio engine state for note generation
             masterVolume: this.plugin.settings.volume,
             enabledEffects: this.getEnabledEffects(),
-            selectedInstruments: this.getEnabledInstruments()
+            selectedInstruments: this.getEnabledInstruments(),
+            // Include metadata if provided
+            metadata: this.config.metadata
           };
+          if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
+            if (!this.plugin.settings.exportSettings) {
+              this.plugin.settings.exportSettings = {};
+            }
+            this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
+            await this.plugin.saveSettings();
+          }
           const extension = exportConfig.format;
           const fullPath = `${exportConfig.location}/${exportConfig.filename}.${extension}`;
           const fileExists = this.app.vault.getAbstractFileByPath(fullPath);
