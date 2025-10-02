@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-02 14:06:45 UTC
+ * - Generated: 2025-10-02 14:15:04 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -8989,7 +8989,7 @@ details.osp-advanced-settings {
    COMPONENT: EXPORT.CSS
    ========================================================================== */
 
-/* Component Size: 342 lines, 8.24 KB */
+/* Component Size: 529 lines, 12.49 KB */
 
 /**
  * Export Feature Styles
@@ -9300,6 +9300,193 @@ details.osp-advanced-settings {
 	.export-buttons button {
 		width: 100%;
 	}
+}
+
+/* ============================================================================
+   File Collision Modal
+   ============================================================================ */
+
+.sonigraph-file-collision-modal .modal-content {
+	max-width: 550px;
+	padding: var(--size-4-6);
+}
+
+.sonigraph-file-collision-modal h2 {
+	margin-bottom: var(--size-4-4);
+	font-size: var(--font-ui-large);
+	font-weight: var(--font-semibold);
+	color: var(--text-error);
+}
+
+/* Collision Info */
+.collision-info {
+	margin-bottom: var(--size-4-6);
+}
+
+.collision-message {
+	margin-bottom: var(--size-4-2);
+	font-size: var(--font-ui-medium);
+	color: var(--text-muted);
+}
+
+.collision-file-info {
+	padding: var(--size-4-3);
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	border-left: 3px solid var(--interactive-accent);
+}
+
+.collision-filename {
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+	margin-bottom: var(--size-4-2);
+	word-break: break-all;
+}
+
+.collision-file-detail {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	margin: var(--size-4-1) 0;
+}
+
+/* Options */
+.collision-options {
+	margin: var(--size-4-6) 0;
+}
+
+.collision-prompt {
+	margin-bottom: var(--size-4-3);
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.collision-radio-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+}
+
+.collision-option {
+	padding: var(--size-4-3);
+	background: var(--background-secondary);
+	border: 2px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+
+.collision-option:hover {
+	border-color: var(--background-modifier-border-hover);
+	background: var(--background-modifier-hover);
+}
+
+.collision-option input[type='radio'] {
+	margin-right: var(--size-4-2);
+	cursor: pointer;
+}
+
+.collision-option input[type='radio']:checked ~ label {
+	color: var(--text-normal);
+}
+
+.collision-option:has(input[type='radio']:checked) {
+	border-color: var(--interactive-accent);
+	background: var(--background-primary-alt);
+}
+
+.collision-option label {
+	cursor: pointer;
+	display: block;
+}
+
+.collision-option strong {
+	display: block;
+	margin-bottom: var(--size-4-1);
+	font-size: var(--font-ui-medium);
+	color: var(--text-normal);
+}
+
+.collision-option-description {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	margin-top: var(--size-4-1);
+}
+
+/* Rename Input */
+.collision-rename-input-container {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	margin-top: var(--size-4-2);
+}
+
+.collision-rename-input {
+	flex: 1;
+	padding: var(--size-4-2);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.collision-rename-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.collision-rename-input:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: var(--background-modifier-form-field);
+}
+
+.collision-extension {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-muted);
+}
+
+/* Buttons */
+.collision-buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-6);
+	padding-top: var(--size-4-4);
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.collision-buttons button {
+	padding: var(--size-4-2) var(--size-4-4);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	border-radius: var(--radius-s);
+	transition: all 0.15s ease;
+}
+
+.collision-buttons button.mod-cancel {
+	background: transparent;
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.collision-buttons button.mod-cancel:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.collision-buttons button.mod-cta {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+}
+
+.collision-buttons button.mod-cta:hover {
+	background: var(--interactive-accent-hover);
 }
 
 /* ============================================================================
@@ -9905,11 +10092,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-02 14:06:45 UTC
+ * Build completed: 2025-10-02 14:15:04 UTC
  * Components processed: 20
- * Total lines: 9699
- * Total size: 206.86 KB
- * Build duration: 0.01 seconds
+ * Total lines: 9886
+ * Total size: 211.11 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -9928,7 +10115,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 773 lines, 18.64 KB
  * - sonic-graph.css: 1894 lines, 42.46 KB
- * - export.css: 342 lines, 8.24 KB
+ * - export.css: 529 lines, 12.49 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB

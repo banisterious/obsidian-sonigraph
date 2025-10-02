@@ -310,6 +310,193 @@
 }
 
 /* ============================================================================
+   File Collision Modal
+   ============================================================================ */
+
+.sonigraph-file-collision-modal .modal-content {
+	max-width: 550px;
+	padding: var(--size-4-6);
+}
+
+.sonigraph-file-collision-modal h2 {
+	margin-bottom: var(--size-4-4);
+	font-size: var(--font-ui-large);
+	font-weight: var(--font-semibold);
+	color: var(--text-error);
+}
+
+/* Collision Info */
+.collision-info {
+	margin-bottom: var(--size-4-6);
+}
+
+.collision-message {
+	margin-bottom: var(--size-4-2);
+	font-size: var(--font-ui-medium);
+	color: var(--text-muted);
+}
+
+.collision-file-info {
+	padding: var(--size-4-3);
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	border-left: 3px solid var(--interactive-accent);
+}
+
+.collision-filename {
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+	margin-bottom: var(--size-4-2);
+	word-break: break-all;
+}
+
+.collision-file-detail {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	margin: var(--size-4-1) 0;
+}
+
+/* Options */
+.collision-options {
+	margin: var(--size-4-6) 0;
+}
+
+.collision-prompt {
+	margin-bottom: var(--size-4-3);
+	font-size: var(--font-ui-medium);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+}
+
+.collision-radio-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-3);
+}
+
+.collision-option {
+	padding: var(--size-4-3);
+	background: var(--background-secondary);
+	border: 2px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+
+.collision-option:hover {
+	border-color: var(--background-modifier-border-hover);
+	background: var(--background-modifier-hover);
+}
+
+.collision-option input[type='radio'] {
+	margin-right: var(--size-4-2);
+	cursor: pointer;
+}
+
+.collision-option input[type='radio']:checked ~ label {
+	color: var(--text-normal);
+}
+
+.collision-option:has(input[type='radio']:checked) {
+	border-color: var(--interactive-accent);
+	background: var(--background-primary-alt);
+}
+
+.collision-option label {
+	cursor: pointer;
+	display: block;
+}
+
+.collision-option strong {
+	display: block;
+	margin-bottom: var(--size-4-1);
+	font-size: var(--font-ui-medium);
+	color: var(--text-normal);
+}
+
+.collision-option-description {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	margin-top: var(--size-4-1);
+}
+
+/* Rename Input */
+.collision-rename-input-container {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	margin-top: var(--size-4-2);
+}
+
+.collision-rename-input {
+	flex: 1;
+	padding: var(--size-4-2);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.collision-rename-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.collision-rename-input:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: var(--background-modifier-form-field);
+}
+
+.collision-extension {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-muted);
+}
+
+/* Buttons */
+.collision-buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-6);
+	padding-top: var(--size-4-4);
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.collision-buttons button {
+	padding: var(--size-4-2) var(--size-4-4);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	border-radius: var(--radius-s);
+	transition: all 0.15s ease;
+}
+
+.collision-buttons button.mod-cancel {
+	background: transparent;
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.collision-buttons button.mod-cancel:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.collision-buttons button.mod-cta {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+}
+
+.collision-buttons button.mod-cta:hover {
+	background: var(--interactive-accent-hover);
+}
+
+/* ============================================================================
    Dark Theme Adjustments
    ============================================================================ */
 

@@ -12,6 +12,7 @@ import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { AudioExporter } from './AudioExporter';
 import { ExportConfig, ExportScope, AudioFormat, QualityPreset, ExportLocationType } from './types';
 import { ExportProgressModal } from './ExportProgressModal';
+import { CollisionResolution } from './FileCollisionModal';
 import { getLogger } from '../logging';
 
 const logger = getLogger('export-modal');
@@ -346,19 +347,70 @@ export class ExportModal extends Modal {
                 includeSettingsSummary: this.config.includeSettingsSummary!
             };
 
-            logger.info('export-modal', 'Starting export with config:', exportConfig);
+            // Check for file collision before starting export
+            const extension = exportConfig.format;
+            const fullPath = `${exportConfig.location}/${exportConfig.filename}.${extension}`;
+            const fileExists = this.app.vault.getAbstractFileByPath(fullPath);
 
-            // Close this modal
-            this.close();
+            if (fileExists) {
+                // Show collision modal
+                logger.info('export-modal', 'File collision detected, showing resolution modal');
 
-            // Open progress modal
-            const progressModal = new ExportProgressModal(this.app, this.exporter, exportConfig);
-            progressModal.open();
+                const { FileCollisionModal } = require('./FileCollisionModal');
+                const collisionModal = new FileCollisionModal(
+                    this.app,
+                    fullPath,
+                    (resolution: CollisionResolution | null) => {
+                        if (!resolution) {
+                            // User cancelled
+                            logger.info('export-modal', 'Export cancelled by user (file collision)');
+                            return;
+                        }
+
+                        // Update config based on resolution
+                        if (resolution.action === 'rename' && resolution.newFilename) {
+                            // Remove extension from new filename
+                            const nameWithoutExt = resolution.newFilename.substring(
+                                0,
+                                resolution.newFilename.lastIndexOf('.')
+                            );
+                            exportConfig.filename = nameWithoutExt;
+                            exportConfig.onCollision = 'cancel'; // After rename, don't allow collision
+                        } else {
+                            exportConfig.onCollision = resolution.action;
+                        }
+
+                        logger.info('export-modal', 'File collision resolved', { resolution, newFilename: exportConfig.filename });
+
+                        // Start export with resolved config
+                        this.proceedWithExport(exportConfig);
+                    }
+                );
+                collisionModal.open();
+                return; // Don't close this modal yet
+            }
+
+            // No collision, proceed directly
+            await this.proceedWithExport(exportConfig);
 
         } catch (error) {
             logger.error('export-modal', 'Export start failed:', error);
             new Notice(`Export failed: ${error.message}`);
         }
+    }
+
+    /**
+     * Proceed with export after collision resolution (if any)
+     */
+    private async proceedWithExport(exportConfig: ExportConfig): Promise<void> {
+        logger.info('export-modal', 'Starting export with config:', exportConfig);
+
+        // Close this modal
+        this.close();
+
+        // Open progress modal
+        const progressModal = new ExportProgressModal(this.app, this.exporter, exportConfig);
+        progressModal.open();
     }
 
     /**
