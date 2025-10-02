@@ -98,9 +98,9 @@ export class TemporalGraphAnimator {
       granularity: 'year',
       customRange: { value: 1, unit: 'years' },
       eventSpreadingMode: 'gentle',
-      maxEventSpacing: 5.0,
-      simultaneousEventLimit: 3,
-      eventBatchSize: 5,
+      maxEventSpacing: 3.0,
+      simultaneousEventLimit: 8,
+      eventBatchSize: 10,
       // Legacy options for backward compatibility
       enableIntelligentSpacing: true,
       simultaneousThreshold: 0.01,
@@ -308,12 +308,12 @@ export class TemporalGraphAnimator {
     const modeConfig = mode === 'gentle' ? {
       simultaneousThreshold: 0.1, // 100ms threshold
       maxSpacingWindow: Math.min(maxEventSpacing, 2.0), // Gentler spreading
-      minEventSpacing: 0.1, // 100ms minimum spacing
+      minEventSpacing: 0.05, // 50ms minimum spacing (reduced for more notes)
       batchProcessing: true
     } : {
       simultaneousThreshold: 0.05, // 50ms threshold (more aggressive)
       maxSpacingWindow: maxEventSpacing, // Use full spacing window
-      minEventSpacing: 0.05, // 50ms minimum spacing
+      minEventSpacing: 0.03, // 30ms minimum spacing (reduced for more notes)
       batchProcessing: true
     };
     
