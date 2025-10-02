@@ -29,7 +29,8 @@ export class ExportNoteCreator {
     async createNote(
         config: ExportConfig,
         result: ExportResult,
-        animator: any
+        animator: any,
+        pluginSettings?: any
     ): Promise<string> {
         try {
             logger.info('export-note', 'Creating export note', {
@@ -38,7 +39,7 @@ export class ExportNoteCreator {
             });
 
             // Generate note content
-            const noteContent = this.generateNoteContent(config, result, animator);
+            const noteContent = this.generateNoteContent(config, result, animator, pluginSettings);
 
             // Determine note filename
             const noteName = `${config.filename}-export`;
@@ -71,7 +72,8 @@ export class ExportNoteCreator {
     private generateNoteContent(
         config: ExportConfig,
         result: ExportResult,
-        animator: any
+        animator: any,
+        pluginSettings?: any
     ): string {
         const timestamp = new Date().toISOString();
         const date = new Date().toLocaleDateString();
@@ -131,9 +133,14 @@ ${audioConfig}
             if (metadata.comment) content += `- **Comment:** ${metadata.comment}\n`;
         }
 
-        // Add full settings if requested
+        // Add comprehensive Sonic Graph settings if available
+        if (pluginSettings) {
+            content += this.generateComprehensiveSettings(pluginSettings);
+        }
+
+        // Add full export config if requested
         if (config.includeSettingsSummary) {
-            content += `\n## Export Settings\n\n\`\`\`json\n${JSON.stringify(this.sanitizeConfig(config), null, 2)}\n\`\`\`\n`;
+            content += `\n## Export Configuration\n\n\`\`\`json\n${JSON.stringify(this.sanitizeConfig(config), null, 2)}\n\`\`\`\n`;
         }
 
         // Add footer
@@ -156,22 +163,46 @@ ${audioConfig}
         const config = animator.config || {};
         let settings = '';
 
+        // Duration
+        if (config.duration !== undefined) {
+            settings += `- **Animation Duration:** ${config.duration}s\n`;
+        }
+
+        // Speed
+        if (config.speed !== undefined) {
+            settings += `- **Speed:** ${config.speed}x\n`;
+        }
+
+        // Loop
+        if (config.loop !== undefined) {
+            settings += `- **Loop:** ${config.loop ? 'Yes' : 'No'}\n`;
+        }
+
+        // Time window
         if (config.timeWindow) {
             settings += `- **Time Window:** ${config.timeWindow}\n`;
         }
 
+        // Granularity
         if (config.granularity) {
             settings += `- **Granularity:** ${config.granularity}\n`;
         }
 
+        // Event spreading
         if (config.eventSpreadingMode) {
             settings += `- **Event Spreading:** ${config.eventSpreadingMode}\n`;
-            settings += `- **Max Event Spacing:** ${config.maxEventSpacing || 'N/A'}s\n`;
-            settings += `- **Simultaneous Event Limit:** ${config.simultaneousEventLimit || 'N/A'}\n`;
         }
 
-        if (config.duration) {
-            settings += `- **Animation Duration:** ${config.duration}s\n`;
+        if (config.maxEventSpacing !== undefined) {
+            settings += `- **Max Event Spacing:** ${config.maxEventSpacing}s\n`;
+        }
+
+        if (config.simultaneousEventLimit !== undefined) {
+            settings += `- **Simultaneous Event Limit:** ${config.simultaneousEventLimit}\n`;
+        }
+
+        if (config.simultaneousThresholdMs !== undefined) {
+            settings += `- **Simultaneous Threshold:** ${config.simultaneousThresholdMs}ms\n`;
         }
 
         return settings || '- **Configuration:** Default settings';
@@ -183,23 +214,67 @@ ${audioConfig}
     private getAudioConfiguration(config: ExportConfig): string {
         let audioConfig = '';
 
-        // Selected instruments
+        // Selected instruments - show actual instrument names
         if (config.selectedInstruments && config.selectedInstruments.length > 0) {
-            audioConfig += `- **Active Instruments:** ${config.selectedInstruments.join(', ')}\n`;
+            audioConfig += `- **Active Instruments:** ${this.formatInstrumentList(config.selectedInstruments)}\n`;
         } else {
-            audioConfig += `- **Active Instruments:** All enabled\n`;
+            audioConfig += `- **Active Instruments:** All enabled instruments\n`;
         }
 
-        // Audio options
-        audioConfig += `- **Continuous Layers:** ${config.includeContinuousLayers ? 'Yes' : 'No'}\n`;
-        audioConfig += `- **Master Volume Applied:** ${config.applyMasterVolume ? 'Yes' : 'No'}\n`;
-        audioConfig += `- **Effects Applied:** ${config.applyEffects ? 'Yes' : 'No'}\n`;
-        audioConfig += `- **Spatial Audio:** ${config.preserveSpatialAudio ? 'Yes' : 'No'}\n`;
+        // Master volume
+        if (config.masterVolume !== undefined) {
+            audioConfig += `- **Master Volume:** ${config.masterVolume} dB\n`;
+        }
+
+        // Continuous layers
+        audioConfig += `- **Continuous Layers:** ${config.includeContinuousLayers ? 'Enabled' : 'Disabled'}\n`;
+
+        // Effects configuration
+        if (config.enabledEffects && config.enabledEffects.length > 0) {
+            audioConfig += `- **Effects:** ${this.formatEffectsList(config.enabledEffects)}\n`;
+        } else if (config.applyEffects) {
+            audioConfig += `- **Effects:** Applied (default configuration)\n`;
+        } else {
+            audioConfig += `- **Effects:** Disabled\n`;
+        }
+
+        // Spatial audio
+        audioConfig += `- **Spatial Audio:** ${config.preserveSpatialAudio ? 'Enabled' : 'Disabled'}\n`;
 
         // Rendering method
-        audioConfig += `- **Rendering Method:** ${config.renderingMethod}\n`;
+        audioConfig += `- **Rendering Method:** ${this.formatRenderingMethod(config.renderingMethod)}\n`;
 
         return audioConfig;
+    }
+
+    /**
+     * Format instrument list for display
+     */
+    private formatInstrumentList(instruments: string[]): string {
+        if (instruments.length === 0) return 'None';
+        return instruments.join(', ');
+    }
+
+    /**
+     * Format effects list for display
+     */
+    private formatEffectsList(effects: string[]): string {
+        if (effects.length === 0) return 'None';
+        return effects.join(', ');
+    }
+
+    /**
+     * Format rendering method for display
+     */
+    private formatRenderingMethod(method: string): string {
+        switch (method) {
+            case 'offline':
+                return 'Offline Rendering (High Quality)';
+            case 'realtime':
+                return 'Real-time Recording';
+            default:
+                return method;
+        }
     }
 
     /**
@@ -259,17 +334,164 @@ ${audioConfig}
     private sanitizeConfig(config: ExportConfig): any {
         return {
             scope: config.scope,
+            customRange: config.customRange,
             format: config.format,
             quality: config.quality,
             locationType: config.locationType,
             location: config.location,
             filename: config.filename,
+            selectedInstruments: config.selectedInstruments,
             includeContinuousLayers: config.includeContinuousLayers,
             applyMasterVolume: config.applyMasterVolume,
             applyEffects: config.applyEffects,
             preserveSpatialAudio: config.preserveSpatialAudio,
+            masterVolume: config.masterVolume,
+            enabledEffects: config.enabledEffects,
             renderingMethod: config.renderingMethod,
-            metadata: config.metadata
+            maxDurationMinutes: config.maxDurationMinutes,
+            metadata: config.metadata,
+            createNote: config.createNote,
+            includeSettingsSummary: config.includeSettingsSummary
         };
+    }
+
+    /**
+     * Generate comprehensive settings section with all Sonic Graph settings
+     */
+    private generateComprehensiveSettings(settings: any): string {
+        let content = '\n## Sonic Graph Settings\n\n';
+
+        // Core settings
+        content += '### Core Audio Settings\n\n';
+        content += `- **Enabled:** ${settings.isEnabled ? 'Yes' : 'No'}\n`;
+        content += `- **Tempo:** ${settings.tempo || 120} BPM\n`;
+        content += `- **Master Volume:** ${settings.volume || 0} dB\n`;
+        content += `- **Scale:** ${settings.scale || 'major'}\n`;
+        content += `- **Root Note:** ${settings.rootNote || 'C'}\n`;
+        content += `- **Traversal Method:** ${settings.traversalMethod || 'depth-first'}\n`;
+        content += `- **Voice Assignment:** ${settings.voiceAssignmentStrategy || 'frequency'}\n`;
+        if (settings.microtuning !== undefined) {
+            content += `- **Microtuning:** ${settings.microtuning ? 'Enabled' : 'Disabled'}\n`;
+        }
+        if (settings.antiCracklingDetuning !== undefined) {
+            content += `- **Anti-Crackling Detuning:** ${settings.antiCracklingDetuning} cents\n`;
+        }
+        content += '\n';
+
+        // Sonic Graph View Settings
+        if (settings.sonicGraphSettings) {
+            const sgs = settings.sonicGraphSettings;
+            content += '### Sonic Graph View Settings\n\n';
+
+            // Timeline settings
+            if (sgs.timeline) {
+                content += '**Timeline:**\n';
+                content += `- Duration: ${sgs.timeline.duration || 60}s\n`;
+                content += `- Spacing: ${sgs.timeline.spacing || 'auto'}\n`;
+                content += `- Loop: ${sgs.timeline.loop ? 'Yes' : 'No'}\n`;
+                content += `- Show Markers: ${sgs.timeline.showMarkers ? 'Yes' : 'No'}\n`;
+                content += `- Time Window: ${sgs.timeline.timeWindow || 'all-time'}\n`;
+                content += `- Granularity: ${sgs.timeline.granularity || 'year'}\n`;
+                content += `- Event Spreading Mode: ${sgs.timeline.eventSpreadingMode || 'none'}\n`;
+                content += `- Max Event Spacing: ${sgs.timeline.maxEventSpacing || 0.5}s\n`;
+                content += `- Simultaneous Event Limit: ${sgs.timeline.simultaneousEventLimit || 8}\n`;
+                content += `- Event Batch Size: ${sgs.timeline.eventBatchSize || 10}\n`;
+                if (sgs.timeline.customRange) {
+                    content += `- Custom Range: ${sgs.timeline.customRange.value} ${sgs.timeline.customRange.unit}\n`;
+                }
+                content += '\n';
+            }
+
+            // Audio settings
+            if (sgs.audio) {
+                content += '**Audio:**\n';
+                content += `- Density: ${sgs.audio.density || 30}\n`;
+                content += `- Note Duration: ${sgs.audio.noteDuration || 0.3}s\n`;
+                content += `- Enable Effects: ${sgs.audio.enableEffects ? 'Yes' : 'No'}\n`;
+                content += `- Auto Detection Override: ${sgs.audio.autoDetectionOverride || 'auto'}\n`;
+                content += '\n';
+            }
+
+            // Visual settings
+            if (sgs.visual) {
+                content += '**Visual:**\n';
+                content += `- Show Labels: ${sgs.visual.showLabels ? 'Yes' : 'No'}\n`;
+                content += `- Show File Names: ${sgs.visual.showFileNames ? 'Yes' : 'No'}\n`;
+                content += `- Animation Style: ${sgs.visual.animationStyle || 'fade'}\n`;
+                content += `- Node Scaling: ${sgs.visual.nodeScaling || 1.0}\n`;
+                content += `- Connection Opacity: ${sgs.visual.connectionOpacity || 0.6}\n`;
+                content += `- Timeline Markers: ${sgs.visual.timelineMarkersEnabled ? 'Yes' : 'No'}\n`;
+                content += `- Loop Animation: ${sgs.visual.loopAnimation ? 'Yes' : 'No'}\n`;
+                content += '\n';
+            }
+
+            // Navigation settings
+            if (sgs.navigation) {
+                content += '**Navigation:**\n';
+                content += `- Enable Control Center: ${sgs.navigation.enableControlCenter ? 'Yes' : 'No'}\n`;
+                content += `- Enable Reset: ${sgs.navigation.enableReset ? 'Yes' : 'No'}\n`;
+                content += `- Enable Export: ${sgs.navigation.enableExport ? 'Yes' : 'No'}\n`;
+                content += '\n';
+            }
+
+            // Adaptive detail settings
+            if (sgs.adaptiveDetail) {
+                content += '**Adaptive Detail:**\n';
+                content += `- Enabled: ${sgs.adaptiveDetail.enabled ? 'Yes' : 'No'}\n`;
+                content += `- Mode: ${sgs.adaptiveDetail.mode || 'automatic'}\n`;
+                if (sgs.adaptiveDetail.thresholds) {
+                    content += `- Overview Threshold: ${sgs.adaptiveDetail.thresholds.overview}\n`;
+                    content += `- Standard Threshold: ${sgs.adaptiveDetail.thresholds.standard}\n`;
+                    content += `- Detail Threshold: ${sgs.adaptiveDetail.thresholds.detail}\n`;
+                }
+                content += '\n';
+            }
+        }
+
+        // Legacy Sonic Graph settings (top-level)
+        if (settings.sonicGraphAnimationDuration !== undefined || settings.sonicGraphAnimationSpeed !== undefined) {
+            content += '### Legacy Settings\n\n';
+            if (settings.sonicGraphAnimationDuration !== undefined) {
+                content += `- **Animation Duration:** ${settings.sonicGraphAnimationDuration}s\n`;
+            }
+            if (settings.sonicGraphAnimationSpeed !== undefined) {
+                content += `- **Animation Speed:** ${settings.sonicGraphAnimationSpeed}x\n`;
+            }
+            if (settings.sonicGraphShowFileNames !== undefined) {
+                content += `- **Show File Names:** ${settings.sonicGraphShowFileNames ? 'Yes' : 'No'}\n`;
+            }
+            content += '\n';
+        }
+
+        // Exclusion settings
+        if (settings.sonicGraphExcludeFolders || settings.sonicGraphExcludeFiles) {
+            content += '### Exclusions\n\n';
+            if (settings.sonicGraphExcludeFolders && settings.sonicGraphExcludeFolders.length > 0) {
+                content += `- **Excluded Folders:** ${settings.sonicGraphExcludeFolders.join(', ')}\n`;
+            }
+            if (settings.sonicGraphExcludeFiles && settings.sonicGraphExcludeFiles.length > 0) {
+                content += `- **Excluded Files:** ${settings.sonicGraphExcludeFiles.join(', ')}\n`;
+            }
+            content += '\n';
+        }
+
+        // Performance settings
+        if (settings.performanceMode) {
+            content += '### Performance Settings\n\n';
+            content += `- **Mode:** ${settings.performanceMode.mode || 'medium'}\n`;
+            content += `- **Max Concurrent Voices:** ${settings.performanceMode.maxConcurrentVoices || 32}\n`;
+            content += `- **Processing Quality:** ${settings.performanceMode.processingQuality || 'balanced'}\n`;
+            content += `- **Frequency Detuning:** ${settings.performanceMode.enableFrequencyDetuning ? 'Enabled' : 'Disabled'}\n`;
+            content += `- **Audio Optimizations:** ${settings.performanceMode.enableAudioOptimizations ? 'Enabled' : 'Disabled'}\n`;
+            content += '\n';
+        }
+
+        // Logging
+        if (settings.logLevel) {
+            content += '### Logging\n\n';
+            content += `- **Log Level:** ${settings.logLevel}\n\n`;
+        }
+
+        return content;
     }
 }

@@ -114,6 +114,10 @@ export interface ExportConfig {
     applyEffects: boolean;
     preserveSpatialAudio: boolean;
 
+    // Audio configuration details (for note generation)
+    masterVolume?: number; // Actual master volume value in dB
+    enabledEffects?: string[]; // List of enabled effect names
+
     // File handling
     locationType: ExportLocationType;
     location: string; // Vault folder path or system path

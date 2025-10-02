@@ -29,10 +29,13 @@ export class AudioExporter {
     private animator: TemporalGraphAnimator | null = null;
     private isCancelled = false;
     private progressCallback?: (progress: ExportProgress) => void;
+    private currentRenderer?: OfflineRenderer;
+    private pluginSettings?: any;
 
-    constructor(app: App, audioEngine: AudioEngine) {
+    constructor(app: App, audioEngine: AudioEngine, pluginSettings?: any) {
         this.app = app;
         this.audioEngine = audioEngine;
+        this.pluginSettings = pluginSettings;
     }
 
     /**
@@ -115,6 +118,12 @@ export class AudioExporter {
      */
     cancel(): void {
         this.isCancelled = true;
+
+        // Cancel the renderer if it's currently running
+        if (this.currentRenderer) {
+            this.currentRenderer.cancel();
+        }
+
         logger.info('export', 'Export cancelled by user');
     }
 
@@ -122,6 +131,22 @@ export class AudioExporter {
      * Validate export configuration
      */
     private async validate(config: ExportConfig): Promise<void> {
+        // Check if audio engine is initialized
+        const masterVolume = this.audioEngine.getMasterVolume();
+        if (!masterVolume) {
+            logger.info('export', 'Audio engine not initialized, initializing now');
+            try {
+                await this.audioEngine.initialize();
+            } catch (error) {
+                throw new Error(`Failed to initialize audio engine: ${error.message}`);
+            }
+
+            // Verify initialization succeeded
+            if (!this.audioEngine.getMasterVolume()) {
+                throw new Error('Audio engine initialization did not create master volume');
+            }
+        }
+
         // Check if animator is set for timeline exports
         if (config.scope === 'full-timeline' || config.scope === 'custom-range') {
             if (!this.animator) {
@@ -192,6 +217,7 @@ export class AudioExporter {
         }
 
         const renderer = new OfflineRenderer(this.audioEngine, this.animator);
+        this.currentRenderer = renderer;
 
         // Set progress callback for rendering stage
         renderer.setProgressCallback((percentage: number) => {
@@ -294,8 +320,8 @@ export class AudioExporter {
                 result.fileSize = (file as any).stat.size;
             }
 
-            // Create the note
-            const notePath = await noteCreator.createNote(config, result, this.animator);
+            // Create the note with full plugin settings
+            const notePath = await noteCreator.createNote(config, result, this.animator, this.pluginSettings);
             logger.info('export', `Export note created: ${notePath}`);
             return notePath;
 

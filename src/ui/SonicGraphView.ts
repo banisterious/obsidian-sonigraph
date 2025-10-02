@@ -1098,7 +1098,24 @@ export class SonicGraphView extends ItemView {
     /**
      * Open export modal
      */
-    private openExportModal(): void {
+    private async openExportModal(): Promise<void> {
+        // Ensure temporal animator is initialized
+        if (!this.temporalAnimator) {
+            logger.debug('ui', 'Initializing temporal animator for export');
+            try {
+                await this.initializeTemporalAnimator();
+            } catch (error) {
+                logger.error('Failed to initialize temporal animator for export', error);
+                new Notice('Failed to initialize timeline for export. Please try switching to Timeline View first.');
+                return;
+            }
+        }
+
+        if (!this.temporalAnimator) {
+            new Notice('Export requires Timeline View to be initialized. Please switch to Timeline View and try again.');
+            return;
+        }
+
         const { ExportModal } = require('../export/ExportModal');
         const modal = new ExportModal(
             this.app,
