@@ -151,8 +151,8 @@ export class ExportModal extends Modal {
 
                 dropdown
                     .addOption('wav', 'WAV (Lossless Audio)')
-                    // Phase 2:
-                    // .addOption('mp3', 'MP3 (Compressed Audio)')
+                    .addOption('mp3', 'MP3 (Compressed Audio)')
+                    // Phase 2 (optional):
                     // .addOption('ogg', 'OGG Vorbis')
                     // .addOption('flac', 'FLAC (Lossless Compressed)')
                     .setValue(this.config.format || 'wav')
@@ -421,8 +421,30 @@ export class ExportModal extends Modal {
      * Update quality dropdown options based on selected format
      */
     private updateQualityOptions(): void {
-        // For Phase 1, WAV only, so no changes needed
-        // Phase 2 will add format-specific quality options
+        if (!this.qualityDropdown) return;
+
+        // Clear existing options
+        this.qualityDropdown.selectEl.empty();
+
+        const format = this.config.format || 'wav';
+
+        if (format === 'wav') {
+            this.qualityDropdown
+                .addOption('high', 'High Quality (48kHz, 16-bit)')
+                .addOption('lossless', 'Lossless (48kHz, 24-bit)')
+                .addOption('standard', 'Standard (44.1kHz, 16-bit)')
+                .setValue('high');
+            this.config.quality = this.getQualityFromPreset('high');
+        } else if (format === 'mp3') {
+            this.qualityDropdown
+                .addOption('high', 'High Quality (320 kbps)')
+                .addOption('standard', 'Standard (192 kbps)')
+                .addOption('small', 'Small Size (128 kbps)')
+                .setValue('high');
+            this.config.quality = this.getQualityFromPreset('high');
+        }
+
+        this.updateEstimate();
     }
 
     /**
@@ -479,16 +501,33 @@ export class ExportModal extends Modal {
      * Get quality settings from preset
      */
     private getQualityFromPreset(preset: QualityPreset): any {
-        switch (preset) {
-            case 'high':
-                return { sampleRate: 48000, bitDepth: 16 };
-            case 'lossless':
-                return { sampleRate: 48000, bitDepth: 24 };
-            case 'standard':
-                return { sampleRate: 44100, bitDepth: 16 };
-            default:
-                return { sampleRate: 48000, bitDepth: 16 };
+        const format = this.config.format || 'wav';
+
+        if (format === 'wav') {
+            switch (preset) {
+                case 'high':
+                    return { sampleRate: 48000, bitDepth: 16 };
+                case 'lossless':
+                    return { sampleRate: 48000, bitDepth: 24 };
+                case 'standard':
+                    return { sampleRate: 44100, bitDepth: 16 };
+                default:
+                    return { sampleRate: 48000, bitDepth: 16 };
+            }
+        } else if (format === 'mp3') {
+            switch (preset) {
+                case 'high':
+                    return { sampleRate: 48000, bitRate: 320 };
+                case 'standard':
+                    return { sampleRate: 48000, bitRate: 192 };
+                case 'small':
+                    return { sampleRate: 44100, bitRate: 128 };
+                default:
+                    return { sampleRate: 48000, bitRate: 192 };
+            }
         }
+
+        return { sampleRate: 48000, bitDepth: 16 };
     }
 
     /**
@@ -506,16 +545,27 @@ export class ExportModal extends Modal {
      */
     private estimateFileSize(duration: number): number {
         const quality = this.config.quality as any;
-        const sampleRate = quality?.sampleRate || 48000;
-        const bitDepth = quality?.bitDepth || 16;
-        const numChannels = 2; // Stereo
+        const format = this.config.format || 'wav';
 
-        // Calculate raw PCM size
-        const bytesPerSample = bitDepth / 8;
-        const dataSize = duration * sampleRate * numChannels * bytesPerSample;
+        if (format === 'wav') {
+            const sampleRate = quality?.sampleRate || 48000;
+            const bitDepth = quality?.bitDepth || 16;
+            const numChannels = 2; // Stereo
 
-        // Add WAV header (44 bytes)
-        return dataSize + 44;
+            // Calculate raw PCM size
+            const bytesPerSample = bitDepth / 8;
+            const dataSize = duration * sampleRate * numChannels * bytesPerSample;
+
+            // Add WAV header (44 bytes)
+            return dataSize + 44;
+        } else if (format === 'mp3') {
+            const bitRate = quality?.bitRate || 192;
+            // MP3 file size = (bitrate in kbps * duration in seconds * 1000) / 8
+            return (bitRate * duration * 1000) / 8;
+        }
+
+        // Default estimate (WAV)
+        return duration * 48000 * 2 * 2 + 44;
     }
 
     /**

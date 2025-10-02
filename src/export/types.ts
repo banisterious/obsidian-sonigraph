@@ -17,7 +17,7 @@ export type VideoFormat = 'mp4' | 'webm';
 /**
  * Quality preset levels
  */
-export type QualityPreset = 'low' | 'standard' | 'high' | 'lossless';
+export type QualityPreset = 'low' | 'small' | 'standard' | 'high' | 'lossless';
 
 /**
  * Export scope - what to export
