@@ -77,7 +77,7 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 
 *Sonic Graph now delivers production-ready performance matching Obsidian's core Graph plugin.*
 
-### 🎵 Audio Export (v0.12.1)
+### 🎵 Audio Export (v0.12.2)
 
 - **Professional Audio Export**: Export timeline animations as high-quality audio files
   - **Multiple Formats**: WAV (lossless) and compressed audio (M4A/AAC, WebM/Opus, OGG/Vorbis)
