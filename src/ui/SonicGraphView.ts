@@ -600,13 +600,22 @@ export class SonicGraphView extends ItemView {
         pluginSettingsBtn.addEventListener('click', () => this.openPluginSettings());
         
         // Control Center button
-        const controlCenterBtn = buttonGroup.createEl('button', { 
+        const controlCenterBtn = buttonGroup.createEl('button', {
             cls: 'sonic-graph-header-btn sonic-graph-control-center-btn',
             text: 'Control Center'
         });
         const controlCenterIcon = createLucideIcon('keyboard-music', 16);
         controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
         controlCenterBtn.addEventListener('click', () => this.openControlCenter());
+
+        // Export button (secondary)
+        const exportBtn = buttonGroup.createEl('button', {
+            cls: 'sonic-graph-header-btn sonic-graph-export-btn',
+            text: 'Export'
+        });
+        const exportIcon = createLucideIcon('download', 16);
+        exportBtn.insertBefore(exportIcon, exportBtn.firstChild);
+        exportBtn.addEventListener('click', () => this.openExportModal());
     }
 
     /**
@@ -691,7 +700,16 @@ export class SonicGraphView extends ItemView {
         this.playButton
             .setButtonText('Play')
             .onClick(() => this.toggleAnimation());
-        
+
+        // Export button (PRIMARY CTA)
+        const exportButtonContainer = playControls.createDiv({ cls: 'sonic-graph-export-button-container' });
+        const exportButton = new ButtonComponent(exportButtonContainer);
+        exportButton
+            .setButtonText('Export')
+            .setCta()
+            .setIcon('download')
+            .onClick(() => this.openExportModal());
+
         // Speed control
         const speedContainer = playControls.createDiv({ cls: 'sonic-graph-speed-container' });
         speedContainer.createEl('label', { text: 'Speed:', cls: 'sonic-graph-speed-label' });
@@ -1077,6 +1095,37 @@ export class SonicGraphView extends ItemView {
         }
     }
 
+    /**
+     * Open export modal
+     */
+    private async openExportModal(): Promise<void> {
+        // Ensure temporal animator is initialized
+        if (!this.temporalAnimator) {
+            logger.debug('ui', 'Initializing temporal animator for export');
+            try {
+                await this.initializeTemporalAnimator();
+            } catch (error) {
+                logger.error('Failed to initialize temporal animator for export', error);
+                new Notice('Failed to initialize timeline for export. Please try switching to Timeline View first.');
+                return;
+            }
+        }
+
+        if (!this.temporalAnimator) {
+            new Notice('Export requires Timeline View to be initialized. Please switch to Timeline View and try again.');
+            return;
+        }
+
+        const { ExportModal } = require('../export/ExportModal');
+        const modal = new ExportModal(
+            this.app,
+            this.plugin,
+            this.plugin.audioEngine,
+            this.temporalAnimator
+        );
+        modal.open();
+        logger.info('ui', 'Opened export modal');
+    }
 
     /**
      * Toggle between Static View and Timeline View

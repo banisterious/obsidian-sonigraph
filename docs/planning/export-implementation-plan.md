@@ -1,9 +1,27 @@
 ## Export Feature - Implementation Plan
 
-**Document Version:** 1.0
+**Document Version:** 1.1
 **Date:** January 15, 2025
-**Status:** Approved - Ready for Implementation
+**Status:** Decisions Finalized - Ready for Phase 1 Implementation
 **Based On:** export-feature-specification.md
+
+---
+
+## ✅ FINALIZED DECISIONS SUMMARY
+
+All implementation decisions have been made and approved by the user:
+
+| Decision Area | User Choice |
+|--------------|-------------|
+| **File Organization** | Hybrid approach (Option 4) - Group related exports in dated folders |
+| **Export Button Priority** | Timeline controls = PRIMARY (CTA style), others = secondary |
+| **Settings Location** | Both plugin settings AND modal (remember last used settings) |
+| **Phase 1 Scope** | Approved - 2-3 weeks for basic WAV export |
+| **Export Naming Template** | `sonigraph-YYYY-MM-DD-HHmmss.wav` (approved) |
+| **File Collision Default** | Cancel export (prompt user for action) |
+| **Progress Modal Style** | Either/both depending on export length |
+
+**Ready for implementation:** All architectural questions resolved. Phase 1 can begin immediately.
 
 ---
 
@@ -100,14 +118,15 @@ This document provides the approved implementation plan for the Sonigraph export
    - Offline rendering (faster than real-time)
    - Selected instruments support
 
-4. **Progress & Cancellation**
+4. **Progress & Cancellation** ✅ **ADAPTIVE STYLE**
    - Progress modal with percentage
    - Cancel button (cleanup partial files)
    - Basic error handling
+   - Style adapts to export length (simple for short, detailed for long)
 
-5. **UI Integration**
-   - Export button in timeline controls
-   - Export button in Sonic Graph header
+5. **UI Integration** ✅ **PRIMARY IN TIMELINE**
+   - Export button in timeline controls (PRIMARY - larger, CTA styling)
+   - Export button in Sonic Graph header (secondary - smaller, outlined)
 
 #### Deliverables
 - Working WAV export
@@ -166,9 +185,9 @@ src/utils/constants.ts - Add export settings
    - Include settings summary in note
    - Optional: Add to daily note
 
-6. **Additional UI Locations**
-   - Export option in Control Center
-   - Right-click context menu
+6. **Additional UI Locations** ✅ **SECONDARY STYLING**
+   - Export option in Control Center (secondary button)
+   - Right-click context menu (standard menu item)
 
 #### Deliverables
 - MP3/OGG/FLAC export
@@ -464,7 +483,7 @@ Sonigraph Exports/
 **Pros:** Organized by type
 **Cons:** Separates related files (audio + metadata)
 
-### Option 4: Hybrid (Recommended)
+### Option 4: Hybrid ✅ **USER SELECTED**
 ```
 Sonigraph Exports/
   2025-01-15-timeline-past-year/
@@ -486,7 +505,7 @@ Sonigraph Exports/
 **Cons:**
 - More complex structure
 
-**Recommendation:** Start with **Option 1 (Flat)** for Phase 1, then add **user preference** for organization style in Phase 2.
+**✅ DECISION:** Implement **Hybrid approach** from Phase 1. Use folder naming: `YYYY-MM-DD-descriptive-name/`
 
 ---
 
@@ -631,9 +650,9 @@ Examples:
 (auto-closes after cleanup)
 ```
 
-#### 6. File Collision
+#### 6. File Collision ✅ **DEFAULT: CANCEL**
 **When:** File already exists
-**Handling:** Prompt user for action
+**Handling:** Prompt user for action (default to cancel for safety)
 
 **UI:**
 ```
@@ -650,13 +669,15 @@ Examples:
 │ Would you like to:                 │
 │                                    │
 │ ○ Overwrite existing file          │
-│ ● Rename new file:                 │
+│ ○ Rename new file:                 │
 │   [sonigraph-2025-01-15-1] .wav    │
-│ ○ Cancel export                    │
+│ ● Cancel export                    │
 │                                    │
 │              [Continue]            │
 └────────────────────────────────────┘
 ```
+
+**✅ DECISION:** Default selection is "Cancel export" for safety. User must explicitly choose overwrite/rename.
 
 ### Error Logging
 
