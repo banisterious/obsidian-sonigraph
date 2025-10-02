@@ -64619,7 +64619,6 @@ var init_ExportModal = __esm({
         this.createFilenameSection(contentEl);
         this.createMetadataSection(contentEl);
         this.createEstimateDisplay(contentEl);
-        this.createAdvancedSection(contentEl);
         this.createActionButtons(contentEl);
       }
       onClose() {
@@ -64874,9 +64873,24 @@ var init_ExportModal = __esm({
             this.updateEstimate();
           });
         });
-        new import_obsidian18.Setting(section).setName("Remember settings").setDesc("Save these settings as defaults for future exports").addToggle((toggle) => {
-          toggle.setValue(false).onChange((value) => {
+        new import_obsidian18.Setting(section).setName("Create export note").setDesc("Generate a markdown note documenting this export").addToggle((toggle) => {
+          toggle.setValue(this.config.createNote !== false).onChange((value) => {
+            this.config.createNote = value;
           });
+        });
+        new import_obsidian18.Setting(section).setName("Include full settings in note").setDesc("Add comprehensive settings documentation to the export note").addToggle((toggle) => {
+          toggle.setValue(this.config.includeSettingsSummary !== false).onChange((value) => {
+            this.config.includeSettingsSummary = value;
+          });
+        });
+        new import_obsidian18.Setting(section).setName("Max export duration").setDesc("Safety limit in minutes (prevents accidentally long exports)").addText((text) => {
+          var _a;
+          text.setPlaceholder("10").setValue(((_a = this.config.maxDurationMinutes) == null ? void 0 : _a.toString()) || "10").onChange((value) => {
+            const minutes = parseInt(value, 10);
+            this.config.maxDurationMinutes = isNaN(minutes) ? 10 : Math.max(1, minutes);
+          });
+          text.inputEl.type = "number";
+          text.inputEl.min = "1";
         });
       }
       /**
@@ -64954,22 +64968,6 @@ var init_ExportModal = __esm({
             this.config.metadata.comment = value.trim() || void 0;
           });
           text.inputEl.rows = 3;
-        });
-      }
-      /**
-       * Create advanced options section (collapsed by default)
-       */
-      createAdvancedSection(container) {
-        const section = container.createDiv("export-section");
-        const header = section.createDiv("sonigraph-export-advanced-header");
-        header.createEl("span", { text: "Advanced Options \u25BC" });
-        header.addClass("clickable");
-        this.advancedContainer = section.createDiv("sonigraph-export-advanced-content");
-        this.advancedContainer.style.display = "none";
-        header.addEventListener("click", () => {
-          const isVisible = this.advancedContainer.style.display !== "none";
-          this.advancedContainer.style.display = isVisible ? "none" : "block";
-          header.textContent = isVisible ? "Advanced Options \u25BC" : "Advanced Options \u25B2";
         });
       }
       /**

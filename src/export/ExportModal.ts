@@ -49,7 +49,6 @@ export class ExportModal extends Modal {
         year?: TextComponent;
         genre?: TextComponent;
     } = {};
-    private advancedContainer?: HTMLElement;
     private estimateDisplay?: HTMLElement;
 
     constructor(
@@ -88,7 +87,6 @@ export class ExportModal extends Modal {
         this.createFilenameSection(contentEl);
         this.createMetadataSection(contentEl);
         this.createEstimateDisplay(contentEl);
-        this.createAdvancedSection(contentEl);
         this.createActionButtons(contentEl);
     }
 
@@ -458,16 +456,44 @@ export class ExportModal extends Modal {
                     });
             });
 
-        // Remember settings checkbox
+        // Create export note toggle
         new Setting(section)
-            .setName('Remember settings')
-            .setDesc('Save these settings as defaults for future exports')
+            .setName('Create export note')
+            .setDesc('Generate a markdown note documenting this export')
             .addToggle(toggle => {
                 toggle
-                    .setValue(false)
+                    .setValue(this.config.createNote !== false)
                     .onChange(value => {
-                        // Will be implemented when export starts
+                        this.config.createNote = value;
                     });
+            });
+
+        // Include settings summary toggle
+        new Setting(section)
+            .setName('Include full settings in note')
+            .setDesc('Add comprehensive settings documentation to the export note')
+            .addToggle(toggle => {
+                toggle
+                    .setValue(this.config.includeSettingsSummary !== false)
+                    .onChange(value => {
+                        this.config.includeSettingsSummary = value;
+                    });
+            });
+
+        // Max duration limit
+        new Setting(section)
+            .setName('Max export duration')
+            .setDesc('Safety limit in minutes (prevents accidentally long exports)')
+            .addText(text => {
+                text
+                    .setPlaceholder('10')
+                    .setValue(this.config.maxDurationMinutes?.toString() || '10')
+                    .onChange(value => {
+                        const minutes = parseInt(value, 10);
+                        this.config.maxDurationMinutes = isNaN(minutes) ? 10 : Math.max(1, minutes);
+                    });
+                text.inputEl.type = 'number';
+                text.inputEl.min = '1';
             });
     }
 
@@ -588,34 +614,6 @@ export class ExportModal extends Modal {
                     });
                 (text.inputEl as HTMLTextAreaElement).rows = 3;
             });
-    }
-
-    /**
-     * Create advanced options section (collapsed by default)
-     */
-    private createAdvancedSection(container: HTMLElement): void {
-        const section = container.createDiv('export-section');
-
-        const header = section.createDiv('sonigraph-export-advanced-header');
-        header.createEl('span', { text: 'Advanced Options ▼' });
-        header.addClass('clickable');
-
-        this.advancedContainer = section.createDiv('sonigraph-export-advanced-content');
-        this.advancedContainer.style.display = 'none';
-
-        // Toggle advanced options
-        header.addEventListener('click', () => {
-            const isVisible = this.advancedContainer!.style.display !== 'none';
-            this.advancedContainer!.style.display = isVisible ? 'none' : 'block';
-            header.textContent = isVisible ? 'Advanced Options ▼' : 'Advanced Options ▲';
-        });
-
-        // TODO: Phase 2 - Add advanced options:
-        // - Instrument selection
-        // - Effects toggles
-        // - Metadata fields
-        // - Rendering method
-        // - Max duration
     }
 
     /**
