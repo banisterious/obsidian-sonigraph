@@ -63031,6 +63031,7 @@ var logger51, OfflineRenderer;
 var init_OfflineRenderer = __esm({
   "src/export/OfflineRenderer.ts"() {
     init_logging();
+    init_esm();
     logger51 = getLogger("offline-renderer");
     OfflineRenderer = class {
       constructor(audioEngine, animator) {
@@ -63045,33 +63046,136 @@ var init_OfflineRenderer = __esm({
       }
       /**
        * Render timeline animation to audio buffer
+       *
+       * Phase 1: Real-time recording approach
+       * - Plays animation normally and records audio output
+       * - 1:1 realtime speed (60s animation = 60s render time)
+       * - Works with existing audio engine without modifications
        */
       async render(config) {
         const startTime = performance.now();
         const duration = this.calculateDuration(config);
         const sampleRate = config.quality.sampleRate || 48e3;
-        logger51.info("offline-renderer", `Starting offline render: ${duration}s at ${sampleRate}Hz`);
-        const numChannels = 2;
-        const numSamples = Math.ceil(duration * sampleRate);
-        const offlineContext = new OfflineAudioContext(numChannels, numSamples, sampleRate);
-        const events = this.getTimelineEvents(config);
-        logger51.info("offline-renderer", `Processing ${events.length} timeline events`);
-        await this.scheduleEvents(offlineContext, events, config);
-        if (this.progressCallback) {
-          this.progressCallback(50);
+        logger51.info("offline-renderer", `Starting real-time render: ${duration}s at ${sampleRate}Hz`);
+        logger51.info("offline-renderer", "Phase 1: Using real-time recording (1:1 speed)");
+        try {
+          const audioBuffer = await this.recordRealtime(duration, sampleRate);
+          const renderTime = performance.now() - startTime;
+          logger51.info(
+            "offline-renderer",
+            `Render complete: ${duration}s in ${(renderTime / 1e3).toFixed(1)}s`
+          );
+          return audioBuffer;
+        } catch (error) {
+          logger51.error("offline-renderer", "Render failed:", error);
+          throw error;
         }
-        logger51.info("offline-renderer", "Starting offline context rendering...");
-        const audioBuffer = await offlineContext.startRendering();
-        if (this.progressCallback) {
-          this.progressCallback(100);
+      }
+      /**
+       * Record animation in real-time using MediaRecorder
+       */
+      async recordRealtime(duration, targetSampleRate) {
+        logger51.info("offline-renderer", "Setting up real-time recording");
+        const audioContext = getContext().rawContext;
+        if (!audioContext) {
+          throw new Error("Audio context not available");
         }
-        const renderTime = performance.now() - startTime;
-        const realtimeRatio = duration * 1e3 / renderTime;
-        logger51.info(
-          "offline-renderer",
-          `Offline render complete: ${duration}s in ${renderTime.toFixed(0)}ms (${realtimeRatio.toFixed(1)}x realtime)`
-        );
+        if (!("createMediaStreamDestination" in audioContext)) {
+          throw new Error("Audio context does not support MediaStream recording");
+        }
+        const webAudioContext = audioContext;
+        const masterVolume = this.audioEngine.volume;
+        if (!masterVolume) {
+          throw new Error("Could not access audio engine master volume");
+        }
+        const destination = webAudioContext.createMediaStreamDestination();
+        const volumeNode = masterVolume.output;
+        volumeNode.connect(destination);
+        const mediaRecorder = new MediaRecorder(destination.stream, {
+          mimeType: "audio/webm;codecs=opus"
+        });
+        const chunks = [];
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+        const recordingPromise = new Promise((resolve, reject) => {
+          mediaRecorder.onstop = () => {
+            const blob2 = new Blob(chunks, { type: "audio/webm" });
+            logger51.info("offline-renderer", `Recording stopped, captured ${blob2.size} bytes`);
+            resolve(blob2);
+          };
+          mediaRecorder.onerror = (error) => {
+            reject(new Error(`MediaRecorder error: ${error}`));
+          };
+        });
+        mediaRecorder.start(100);
+        logger51.info("offline-renderer", "Recording started");
+        this.animator.stop();
+        const progressStartTime = Date.now();
+        const progressInterval = setInterval(() => {
+          const elapsed = (Date.now() - progressStartTime) / 1e3;
+          const progress = Math.min(95, elapsed / duration * 50);
+          if (this.progressCallback) {
+            this.progressCallback(10 + progress);
+          }
+        }, 100);
+        this.animator.play();
+        logger51.info("offline-renderer", "Animation started");
+        await new Promise((resolve) => {
+          const checkInterval = setInterval(() => {
+            const animDuration = duration;
+            const isStillPlaying = this.animator.isPlaying;
+            if (!isStillPlaying) {
+              clearInterval(checkInterval);
+              logger51.info("offline-renderer", "Animation playback complete");
+              resolve();
+            }
+          }, 100);
+          setTimeout(() => {
+            logger51.info("offline-renderer", "Animation timeout reached");
+            resolve();
+          }, (duration + 2) * 1e3);
+        });
+        clearInterval(progressInterval);
+        this.animator.pause();
+        logger51.info("offline-renderer", "Stopping recording...");
+        mediaRecorder.stop();
+        const blob = await recordingPromise;
+        volumeNode.disconnect(destination);
+        if (this.progressCallback) {
+          this.progressCallback(70);
+        }
+        logger51.info("offline-renderer", "Converting recorded audio to AudioBuffer");
+        const arrayBuffer = await blob.arrayBuffer();
+        if (this.progressCallback) {
+          this.progressCallback(80);
+        }
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        logger51.info("offline-renderer", `Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+        if (audioBuffer.sampleRate !== targetSampleRate) {
+          logger51.info("offline-renderer", `Resampling from ${audioBuffer.sampleRate}Hz to ${targetSampleRate}Hz`);
+          return await this.resampleBuffer(audioBuffer, targetSampleRate);
+        }
         return audioBuffer;
+      }
+      /**
+       * Resample audio buffer to target sample rate
+       */
+      async resampleBuffer(sourceBuffer, targetSampleRate) {
+        const offlineContext = new OfflineAudioContext(
+          sourceBuffer.numberOfChannels,
+          Math.ceil(sourceBuffer.duration * targetSampleRate),
+          targetSampleRate
+        );
+        const source = offlineContext.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineContext.destination);
+        source.start(0);
+        const resampled = await offlineContext.startRendering();
+        logger51.info("offline-renderer", "Resampling complete");
+        return resampled;
       }
       /**
        * Calculate render duration based on export scope
@@ -63080,36 +63184,8 @@ var init_OfflineRenderer = __esm({
         if (config.scope === "custom-range" && config.customRange) {
           return (config.customRange.end - config.customRange.start) / 1e3;
         }
-        return this.animator.config.duration;
-      }
-      /**
-       * Get timeline events for the export scope
-       */
-      getTimelineEvents(config) {
-        logger51.warn("offline-renderer", "Event extraction not fully implemented - using placeholder");
-        return [];
-      }
-      /**
-       * Schedule all events in offline context
-       */
-      async scheduleEvents(context2, events, config) {
-        logger51.warn("offline-renderer", "Event scheduling not fully implemented - creating test tone");
-        const oscillator = context2.createOscillator();
-        const gainNode = context2.createGain();
-        oscillator.type = "sine";
-        oscillator.frequency.value = 440;
-        gainNode.gain.value = 0.3;
-        oscillator.connect(gainNode);
-        gainNode.connect(context2.destination);
-        oscillator.start(0);
-        oscillator.stop(Math.min(1, context2.length / context2.sampleRate));
-        if (config.selectedInstruments && config.selectedInstruments.length > 0) {
-          logger51.info("offline-renderer", `Filtering to selected instruments: ${config.selectedInstruments.join(", ")}`);
-        }
-        if (config.applyMasterVolume) {
-        }
-        if (config.applyEffects) {
-        }
+        const animConfig = this.animator.config;
+        return animConfig ? animConfig.duration : 60;
       }
     };
   }

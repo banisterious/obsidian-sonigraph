@@ -1,19 +1,20 @@
 /**
- * Offline Renderer - Faster-than-realtime audio rendering
+ * Offline Renderer - Real-time audio recording
  *
- * Renders timeline animations using OfflineAudioContext for export.
- * This allows rendering much faster than real-time playback.
+ * Phase 1: Records timeline animation in real-time using MediaRecorder
+ * Phase 2: Will implement true offline rendering for faster-than-realtime export
  */
 
 import { AudioEngine } from '../audio/engine';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { ExportConfig } from './types';
 import { getLogger } from '../logging';
+import { getContext } from 'tone';
 
 const logger = getLogger('offline-renderer');
 
 /**
- * Offline audio renderer for timeline exports
+ * Audio renderer for timeline exports
  */
 export class OfflineRenderer {
     private audioEngine: AudioEngine;
@@ -34,6 +35,11 @@ export class OfflineRenderer {
 
     /**
      * Render timeline animation to audio buffer
+     *
+     * Phase 1: Real-time recording approach
+     * - Plays animation normally and records audio output
+     * - 1:1 realtime speed (60s animation = 60s render time)
+     * - Works with existing audio engine without modifications
      */
     async render(config: ExportConfig): Promise<AudioBuffer> {
         const startTime = performance.now();
@@ -42,46 +48,190 @@ export class OfflineRenderer {
         const duration = this.calculateDuration(config);
         const sampleRate = (config.quality as any).sampleRate || 48000;
 
-        logger.info('offline-renderer', `Starting offline render: ${duration}s at ${sampleRate}Hz`);
+        logger.info('offline-renderer', `Starting real-time render: ${duration}s at ${sampleRate}Hz`);
+        logger.info('offline-renderer', 'Phase 1: Using real-time recording (1:1 speed)');
 
-        // Create offline audio context
-        const numChannels = 2; // Stereo
-        const numSamples = Math.ceil(duration * sampleRate);
-        const offlineContext = new OfflineAudioContext(numChannels, numSamples, sampleRate);
+        try {
+            // Record the animation in real-time
+            const audioBuffer = await this.recordRealtime(duration, sampleRate);
 
-        // TODO: Phase 1 implementation approach:
-        // For now, we'll create a simplified rendering that captures the audio engine's output
-        // In Phase 1.5, we'll implement proper offline rendering with timeline events
+            const renderTime = performance.now() - startTime;
+            logger.info('offline-renderer',
+                `Render complete: ${duration}s in ${(renderTime / 1000).toFixed(1)}s`
+            );
 
-        // Get timeline events
-        const events = this.getTimelineEvents(config);
-        logger.info('offline-renderer', `Processing ${events.length} timeline events`);
+            return audioBuffer;
+        } catch (error) {
+            logger.error('offline-renderer', 'Render failed:', error);
+            throw error;
+        }
+    }
 
-        // Schedule all events in offline context
-        await this.scheduleEvents(offlineContext, events, config);
+    /**
+     * Record animation in real-time using MediaRecorder
+     */
+    private async recordRealtime(duration: number, targetSampleRate: number): Promise<AudioBuffer> {
+        logger.info('offline-renderer', 'Setting up real-time recording');
+
+        // Get the Tone.js audio context (as BaseAudioContext/AudioContext)
+        const audioContext = getContext().rawContext as BaseAudioContext;
+        if (!audioContext) {
+            throw new Error('Audio context not available');
+        }
+
+        // Verify we have an AudioContext with MediaStream support
+        if (!('createMediaStreamDestination' in audioContext)) {
+            throw new Error('Audio context does not support MediaStream recording');
+        }
+
+        const webAudioContext = audioContext as AudioContext;
+
+        // Access the audio engine's master volume node (Tone.js Volume)
+        const masterVolume = (this.audioEngine as any).volume;
+        if (!masterVolume) {
+            throw new Error('Could not access audio engine master volume');
+        }
+
+        // Create MediaStreamDestination to capture audio
+        const destination = webAudioContext.createMediaStreamDestination();
+
+        // Connect master volume to our recording destination
+        // Tone.js Volume extends ToneAudioNode which has _nativeNode
+        const volumeNode = masterVolume.output;
+        volumeNode.connect(destination);
+
+        // Create MediaRecorder to record the stream
+        const mediaRecorder = new MediaRecorder(destination.stream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+
+        const chunks: Blob[] = [];
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                chunks.push(event.data);
+            }
+        };
+
+        // Track recording state
+        const recordingPromise = new Promise<Blob>((resolve, reject) => {
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                logger.info('offline-renderer', `Recording stopped, captured ${blob.size} bytes`);
+                resolve(blob);
+            };
+
+            mediaRecorder.onerror = (error) => {
+                reject(new Error(`MediaRecorder error: ${error}`));
+            };
+        });
+
+        // Start recording
+        mediaRecorder.start(100); // Collect data every 100ms
+        logger.info('offline-renderer', 'Recording started');
+
+        // Reset animator to beginning (use stop then play)
+        this.animator.stop();
+
+        // Progress tracking
+        const progressStartTime = Date.now();
+        const progressInterval = setInterval(() => {
+            const elapsed = (Date.now() - progressStartTime) / 1000;
+            const progress = Math.min(95, (elapsed / duration) * 50); // Use 0-50% for recording
+            if (this.progressCallback) {
+                this.progressCallback(10 + progress); // Offset by 10% (validation already done)
+            }
+        }, 100);
+
+        // Start the animation
+        this.animator.play();
+        logger.info('offline-renderer', 'Animation started');
+
+        // Wait for animation to complete
+        await new Promise<void>((resolve) => {
+            const checkInterval = setInterval(() => {
+                // Access animator config duration through public interface
+                const animDuration = duration;
+
+                // Check if animation completed by watching for pause
+                // The animator will auto-pause when complete
+                const isStillPlaying = (this.animator as any).isPlaying;
+
+                if (!isStillPlaying) {
+                    clearInterval(checkInterval);
+                    logger.info('offline-renderer', 'Animation playback complete');
+                    resolve();
+                }
+            }, 100);
+
+            // Fallback timeout in case animation doesn't auto-pause
+            setTimeout(() => {
+                logger.info('offline-renderer', 'Animation timeout reached');
+                resolve();
+            }, (duration + 2) * 1000); // Add 2s buffer
+        });
+
+        // Stop recording
+        clearInterval(progressInterval);
+        this.animator.pause();
+
+        logger.info('offline-renderer', 'Stopping recording...');
+        mediaRecorder.stop();
+
+        // Wait for recording to finish processing
+        const blob = await recordingPromise;
+
+        // Disconnect from destination
+        volumeNode.disconnect(destination);
 
         // Update progress
         if (this.progressCallback) {
-            this.progressCallback(50);
+            this.progressCallback(70);
         }
 
-        // Render
-        logger.info('offline-renderer', 'Starting offline context rendering...');
-        const audioBuffer = await offlineContext.startRendering();
+        // Convert blob to ArrayBuffer
+        logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
+        const arrayBuffer = await blob.arrayBuffer();
 
-        // Update progress
         if (this.progressCallback) {
-            this.progressCallback(100);
+            this.progressCallback(80);
         }
 
-        const renderTime = performance.now() - startTime;
-        const realtimeRatio = (duration * 1000) / renderTime;
+        // Decode audio data
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        logger.info('offline-renderer',
-            `Offline render complete: ${duration}s in ${renderTime.toFixed(0)}ms (${realtimeRatio.toFixed(1)}x realtime)`
-        );
+        logger.info('offline-renderer', `Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+
+        // Resample if needed
+        if (audioBuffer.sampleRate !== targetSampleRate) {
+            logger.info('offline-renderer', `Resampling from ${audioBuffer.sampleRate}Hz to ${targetSampleRate}Hz`);
+            return await this.resampleBuffer(audioBuffer, targetSampleRate);
+        }
 
         return audioBuffer;
+    }
+
+    /**
+     * Resample audio buffer to target sample rate
+     */
+    private async resampleBuffer(sourceBuffer: AudioBuffer, targetSampleRate: number): Promise<AudioBuffer> {
+        // Create offline context with target sample rate
+        const offlineContext = new OfflineAudioContext(
+            sourceBuffer.numberOfChannels,
+            Math.ceil(sourceBuffer.duration * targetSampleRate),
+            targetSampleRate
+        );
+
+        // Create buffer source
+        const source = offlineContext.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineContext.destination);
+        source.start(0);
+
+        // Render
+        const resampled = await offlineContext.startRendering();
+        logger.info('offline-renderer', 'Resampling complete');
+
+        return resampled;
     }
 
     /**
@@ -92,79 +242,8 @@ export class OfflineRenderer {
             return (config.customRange.end - config.customRange.start) / 1000;
         }
 
-        // Full timeline
-        return this.animator.config.duration;
+        // Access animator duration through config
+        const animConfig = (this.animator as any).config;
+        return animConfig ? animConfig.duration : 60;
     }
-
-    /**
-     * Get timeline events for the export scope
-     */
-    private getTimelineEvents(config: ExportConfig): TimelineEvent[] {
-        // TODO: Extract events from animator
-        // For Phase 1, we'll return a placeholder
-
-        // This will need to:
-        // 1. Get all graph nodes in the time range
-        // 2. Apply event spreading algorithm
-        // 3. Map to audio events with timing and instrument info
-
-        logger.warn('offline-renderer', 'Event extraction not fully implemented - using placeholder');
-        return [];
-    }
-
-    /**
-     * Schedule all events in offline context
-     */
-    private async scheduleEvents(
-        context: OfflineAudioContext,
-        events: TimelineEvent[],
-        config: ExportConfig
-    ): Promise<void> {
-        // TODO: Phase 1 implementation
-        // For now, we'll create a simple test tone
-        // In Phase 1.5, we'll properly schedule all timeline events
-
-        logger.warn('offline-renderer', 'Event scheduling not fully implemented - creating test tone');
-
-        // Create a test tone (440Hz sine wave for 1 second)
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
-
-        oscillator.type = 'sine';
-        oscillator.frequency.value = 440;
-        gainNode.gain.value = 0.3;
-
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-
-        oscillator.start(0);
-        oscillator.stop(Math.min(1, context.length / context.sampleRate));
-
-        // Filter instruments if specified
-        if (config.selectedInstruments && config.selectedInstruments.length > 0) {
-            logger.info('offline-renderer', `Filtering to selected instruments: ${config.selectedInstruments.join(', ')}`);
-        }
-
-        // Apply master volume
-        if (config.applyMasterVolume) {
-            // TODO: Apply master volume from audio engine settings
-        }
-
-        // Apply effects
-        if (config.applyEffects) {
-            // TODO: Apply reverb, chorus, etc.
-        }
-    }
-}
-
-/**
- * Timeline event for rendering
- */
-interface TimelineEvent {
-    time: number;          // Seconds from start
-    nodeId: string;        // Note/node identifier
-    instrumentId: string;  // Instrument to use
-    pitch: number;         // MIDI note number
-    velocity: number;      // 0-1
-    duration: number;      // Seconds
 }
