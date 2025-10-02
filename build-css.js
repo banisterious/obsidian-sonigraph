@@ -43,6 +43,7 @@ const CONFIG = {
     'status.css',        // Status displays and real-time feedback
     'controlcenter.css', // Control Center framework
     'sonic-graph.css',   // Sonic Graph visualization and temporal animation system
+    'export.css',        // Export feature modals and buttons
     'animations.css',    // Keyframes and transitions
     'responsive.css',    // Responsive breakpoints
     'theme.css'          // Theme compatibility and accessibility (last)

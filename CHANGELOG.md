@@ -7,6 +7,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2025-10-02
+
+### Added - Audio Export Feature (Phase 1 & 2) ✅
+
+#### Overview
+Professional audio export system enabling users to export Sonic Graph timeline animations as high-quality audio files with comprehensive configuration options, metadata support, and automatic documentation.
+
+#### Core Components (8 new files, ~2,500 lines)
+
+**AudioExporter** (`src/export/AudioExporter.ts` - ~350 lines)
+- **Export Orchestration**: Validates config, renders audio, encodes, writes files, generates notes
+- **Progress Tracking**: Real-time progress callbacks mapped to 0-100% with stage indicators
+- **Cancellation Support**: User can cancel export at any stage with proper cleanup
+- **Error Handling**: Comprehensive error detection with user-friendly messages
+- **Audio Engine Integration**: Initializes audio engine if needed, accesses master volume
+- **Public API**: `export()`, `cancel()`, `setProgressCallback()`
+
+**OfflineRenderer** (`src/export/OfflineRenderer.ts` - ~200 lines)
+- **Real-time Audio Capture**: Uses MediaRecorder to capture Tone.js master volume output
+- **Timeline Synchronization**: Plays timeline animation while recording audio
+- **Progress Feedback**: Reports rendering progress during timeline playback
+- **Cancellation**: Stops recording and cleans up when cancelled
+- **Custom Range Support**: Renders specific time ranges when configured
+
+**WavEncoder** (`src/export/WavEncoder.ts` - ~150 lines)
+- **WAV Format**: Creates proper WAV headers with RIFF/WAVE structure
+- **Quality Options**: Configurable sample rate (44.1/48/96 kHz) and bit depth (16/24-bit)
+- **Audio Conversion**: Converts Float32Array to Int16/Int32 for WAV format
+- **Efficient Encoding**: Direct buffer manipulation for performance
+
+**Mp3Encoder** (`src/export/Mp3Encoder.ts` - ~150 lines)
+- **Native Codec Support**: Uses MediaRecorder with platform-native audio encoders
+- **Automatic Codec Selection**: Chooses best available (M4A/AAC, WebM/Opus, OGG/Vorbis)
+- **Quality Presets**: Configurable bitrate (128-320 kbps)
+- **Progress Tracking**: Real-time encoding progress based on elapsed time vs. duration
+- **Better Than MP3**: AAC and Opus provide superior quality-to-size ratios
+
+**ExportModal** (`src/export/ExportModal.ts` - ~1,000 lines)
+- **Card-Based UI**: Each settings group in visual card with borders and shadows
+- **Quick Presets Section**: Three defaults + save custom presets functionality
+- **What to Export Section**: Full timeline, custom time range (MM:SS or seconds), static graph
+- **Format & Quality Section**: WAV or compressed audio with dynamic quality dropdown
+- **Save Location Section**: Vault folder or system location (vault only for now)
+- **Filename Section**: Name input + three useful toggles (create note, include settings, max duration)
+- **Metadata Section**: Collapsible optional metadata (title, artist, album, year, genre, comment)
+- **Estimate Display**: Real-time file size and render time with emoji icons (📦 ⏱️)
+- **Preset Management**: Save/load presets with name prompt modal
+- **Dynamic Updates**: Real-time estimation as settings change
+- **Proper CSS Prefixing**: All classes prefixed with `sonigraph-` to prevent conflicts
+
+**ExportProgressModal** (`src/export/ExportProgressModal.ts` - ~250 lines)
+- **Real-time Progress**: Animated progress bar with percentage display
+- **Stage Indicators**: Shows current stage (validating, rendering, encoding, writing, complete)
+- **Cancellation Button**: User can cancel at any time with proper cleanup
+- **Success/Error States**: Visual feedback for completion or failure
+- **Auto-close**: Closes automatically on success after brief display
+
+**FileCollisionModal** (`src/export/FileCollisionModal.ts` - ~200 lines)
+- **Collision Detection**: Checks if file exists before export
+- **Three Resolution Strategies**: Cancel, Overwrite, or Rename
+- **Rename UI**: Text input with preview of full filename + extension
+- **File Information**: Shows existing file details (size, modified date)
+- **Radio Button Selection**: Clear visual indication of chosen action
+
+**ExportNoteCreator** (`src/export/ExportNoteCreator.ts` - ~300 lines)
+- **Automatic Documentation**: Generates comprehensive markdown notes
+- **Export Metadata**: Timestamp, duration, format, quality, file size, location
+- **Audio Settings**: Sample rate, bit depth/bitrate, active instruments, enabled effects
+- **Timeline Information**: Scope, time range, granularity settings
+- **Comprehensive Settings**: All Sonic Graph settings from Control Center
+- **User Metadata**: Title, artist, album, year, genre, comment if provided
+- **Vault Organization**: Saved alongside audio file or in specified note folder
+
+**Type Definitions** (`src/export/types.ts` - ~200 lines)
+- **ExportConfig**: Complete export configuration with all options
+- **ExportResult**: Success/failure with file paths and error details
+- **ExportProgress**: Progress tracking with stage and percentage
+- **AudioFormat**: 'wav' | 'mp3' | 'ogg' | 'flac'
+- **Quality Types**: WavQuality, Mp3Quality, OggQuality, FlacQuality
+- **Export Scope**: 'full-timeline' | 'custom-range' | 'static-graph'
+- **AudioMetadata**: Optional metadata fields
+- **ExportPreset**: Saved preset configuration
+
+#### UI Integration
+
+**SonicGraphView Export Button** (`src/ui/SonicGraphView.ts`)
+- **Export Button**: Added to timeline controls with download icon
+- **Auto-initialization**: Initializes temporal animator if not present
+- **Modal Opening**: Passes audio engine and animator to export modal
+- **Error Handling**: User-friendly notices for missing prerequisites
+
+#### Styling (`styles/export.css` - ~600 lines)
+
+**Export Modal Styles**
+- **Card-Based Layout**: All sections in visual cards with elevation
+- **Preset Button Styling**: Hover effects with color change and lift animation
+- **Save Preset Button**: Distinctive dashed border style
+- **Estimate Box**: Highlighted with accent border, emoji icons for size/time
+- **Collapsible Headers**: Hover states for metadata/advanced sections
+- **Custom Range Container**: Visual separator with dashed border
+- **Proper Prefixing**: All classes use `sonigraph-` prefix
+
+**Progress Modal Styles**
+- **Progress Bar**: Smooth animated fill with accent color
+- **Stage Text**: Clear typography with success/error states
+- **Cancellation Button**: Warning style with hover effects
+
+**File Collision Modal Styles**
+- **Radio Options**: Card-based selection with hover and checked states
+- **File Information**: Highlighted box with file details
+- **Rename Input**: Inline text input with extension label
+
+#### Features Summary
+
+**Phase 1: Core Audio Export**
+- ✅ WAV export with quality settings (sample rate, bit depth)
+- ✅ Export progress modal with real-time feedback
+- ✅ File collision handling (cancel, overwrite, rename)
+- ✅ Export notes with comprehensive settings documentation
+- ✅ Timeline animation export with temporal animator integration
+- ✅ Cancellation support at all stages
+
+**Phase 2: Advanced Features**
+- ✅ Compressed audio export (M4A/AAC, WebM/Opus, OGG/Vorbis)
+- ✅ Dynamic quality presets (High 320kbps, Standard 192kbps, Small 128kbps)
+- ✅ Custom time range selection (flexible MM:SS or seconds input)
+- ✅ Metadata editing (title, artist, album, year, genre, comment)
+- ✅ Export presets with save/load functionality
+- ✅ Progress feedback during encoding stage
+- ✅ Polished card-based UI with proper CSS prefixing
+
+**Skipped Features**
+- ⏭️ Instrument selection checkboxes (redundant with Control Center)
+- ⏭️ Additional UI locations (unnecessary for good UX)
+- ⏭️ OGG/FLAC formats (MediaRecorder handles compressed audio)
+
+**Known Limitations**
+- Metadata tags not written to audio files (browser MediaRecorder limitation)
+- Export speed tied to playback speed (real-time rendering)
+- Vault folder only (system location requires Electron fs integration)
+
+**Phase 3: Video Export** (Future - Separate Branch)
+- Canvas/WebGL frame capture
+- Video encoding with audio track
+- WebCodecs API integration
+
+#### Integration Points
+
+- **Settings Integration**: Export settings structure in plugin settings
+- **Audio Engine**: getMasterVolume() public method added
+- **Temporal Animator**: Lazy initialization for exports
+- **File System**: Vault file creation and collision detection
+- **Progress System**: Reusable progress modal pattern
+
+#### Documentation
+
+- **Feature Documentation**: `docs/features/export-feature.md` (comprehensive guide)
+- **Updated README.md**: Added "Audio Export" section to production features
+- **Updated CHANGELOG.md**: Complete Phase 1 & 2 implementation details
+
+### Changed
+- Version bumped to 0.12.1
+- Updated current status in README to include audio export
+
 ## [0.12.0] - 2025-09-29
 
 ### Added - Phase 8.1: Sonic Graph Settings Panel UI Polish ✅

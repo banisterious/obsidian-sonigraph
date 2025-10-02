@@ -176,17 +176,37 @@ export class InstrumentConfigLoader {
      */
     private processInstrumentCollection(instruments: InstrumentCollection): InstrumentCollection {
         const processed: InstrumentCollection = {};
-        
+
         Object.entries(instruments).forEach(([name, config]) => {
-            processed[name] = this.processInstrumentConfig(config);
-            
-            // Cache the processed config
+            const processedConfig = this.processInstrumentConfig(config);
+
+            // Add with original key (kebab-case)
+            processed[name] = processedConfig;
+
+            // Also add with camelCase key for settings compatibility
+            const camelCaseName = this.toCamelCase(name);
+            if (camelCaseName !== name) {
+                processed[camelCaseName] = processedConfig;
+            }
+
+            // Cache both versions
             if (!this.loadedInstruments.has(name)) {
                 this.loadedInstruments.set(name, processed[name] as LoadedInstrumentConfig);
             }
+            if (!this.loadedInstruments.has(camelCaseName)) {
+                this.loadedInstruments.set(camelCaseName, processed[camelCaseName] as LoadedInstrumentConfig);
+            }
         });
-        
+
         return processed;
+    }
+
+    /**
+     * Convert kebab-case to camelCase
+     * e.g., 'french-horn' -> 'frenchHorn'
+     */
+    private toCamelCase(str: string): string {
+        return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
     }
 
     /**
