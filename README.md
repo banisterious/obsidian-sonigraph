@@ -77,6 +77,20 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 
 *Sonic Graph now delivers production-ready performance matching Obsidian's core Graph plugin.*
 
+### 🎵 Audio Export (v0.12.1)
+
+- **Professional Audio Export**: Export timeline animations as high-quality audio files
+  - **Multiple Formats**: WAV (lossless) and compressed audio (M4A/AAC, WebM/Opus, OGG/Vorbis)
+  - **Quality Presets**: High Quality, Standard, Small Size with configurable bitrates (128-320 kbps)
+  - **Custom Time Ranges**: Export specific portions of timeline animations
+  - **Metadata Support**: Add title, artist, album, year, genre, and comments to exports
+- **Export Presets**: Save and load custom export configurations for quick access
+- **Automatic Documentation**: Generate comprehensive markdown notes with all export settings
+- **Progress Tracking**: Real-time progress feedback with cancellation support
+- **File Management**: Intelligent file collision handling and automatic vault organization
+
+*Export your sonic graphs as shareable audio files with professional quality settings.*
+
 ## 📦 Installation
 
 **Recommended:** Install via [BRAT Plugin](https://github.com/TfTHacker/obsidian42-brat)
@@ -98,7 +112,7 @@ If you find this plugin useful, please consider supporting its development!
 
 ## 🎯 Current Status
 
-**Current Version**: 0.12.0 (Production Ready)
+**Current Version**: 0.12.1 (Production Ready)
 
 ✅ **Complete Audio Enhancement System**
 - **Continuous Audio Layers**: Ambient, rhythmic, and harmonic background layers with 13 musical genres
@@ -109,6 +123,7 @@ If you find this plugin useful, please consider supporting its development!
 - **Advanced Synthesis Engines**: Percussion physics, electronic modulation, and sample-based orchestral voices
 - **Master Effects Processing**: Orchestral-grade reverb, EQ, and compression with 11 professional presets
 - **Performance Optimization**: Adaptive quality control, voice pooling, and resolved audio quality issues
+- **Audio Export**: Professional audio export with WAV and compressed formats, metadata, and presets (v0.12.1)
 
 
 ## 🎼 Orchestral Instrument Families
