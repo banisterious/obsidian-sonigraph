@@ -47,14 +47,14 @@
 }
 
 /* Preset Buttons */
-.export-preset-buttons {
+.sonigraph-export-preset-buttons {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--size-4-2);
 	margin-top: var(--size-4-2);
 }
 
-.export-preset-btn {
+.sonigraph-export-preset-btn {
 	padding: var(--size-4-2) var(--size-4-3);
 	background: var(--background-secondary);
 	color: var(--text-normal);
@@ -66,7 +66,7 @@
 	transition: all 0.15s ease;
 }
 
-.export-preset-btn:hover {
+.sonigraph-export-preset-btn:hover {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 	border-color: var(--interactive-accent);
@@ -74,7 +74,7 @@
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.export-preset-save {
+.sonigraph-export-preset-save {
 	padding: var(--size-4-2) var(--size-4-3);
 	background: transparent;
 	color: var(--text-muted);
@@ -86,7 +86,7 @@
 	transition: all 0.15s ease;
 }
 
-.export-preset-save:hover {
+.sonigraph-export-preset-save:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 	border-style: solid;
@@ -130,15 +130,15 @@
 }
 
 /* Custom Range Container */
-.custom-range-container {
+.sonigraph-custom-range-container {
 	margin-top: var(--size-4-3);
 	padding-top: var(--size-4-3);
 	border-top: 1px dashed var(--background-modifier-border);
 }
 
 /* Collapsible Section Headers (Metadata & Advanced) */
-.export-metadata-header,
-.export-advanced-header {
+.sonigraph-export-metadata-header,
+.sonigraph-export-advanced-header {
 	display: flex;
 	align-items: center;
 	padding: 0;
@@ -150,27 +150,27 @@
 	transition: all 0.15s ease;
 }
 
-.export-metadata-header:hover,
-.export-advanced-header:hover {
+.sonigraph-export-metadata-header:hover,
+.sonigraph-export-advanced-header:hover {
 	background: var(--background-modifier-hover);
 	padding: var(--size-4-1) var(--size-4-2);
 	margin: 0 calc(var(--size-4-2) * -1) var(--size-4-3) calc(var(--size-4-2) * -1);
 }
 
-.export-metadata-header span,
-.export-advanced-header span {
+.sonigraph-export-metadata-header span,
+.sonigraph-export-advanced-header span {
 	font-size: var(--font-ui-small);
 	font-weight: var(--font-semibold);
 	color: var(--text-muted);
 }
 
-.export-metadata-header:hover span,
-.export-advanced-header:hover span {
+.sonigraph-export-metadata-header:hover span,
+.sonigraph-export-advanced-header:hover span {
 	color: var(--text-normal);
 }
 
-.export-metadata-content,
-.export-advanced-content {
+.sonigraph-export-metadata-content,
+.sonigraph-export-advanced-content {
 	padding-top: var(--size-4-2);
 }
 
