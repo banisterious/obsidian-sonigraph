@@ -449,9 +449,10 @@ export class MaterialControlPanelModal extends Modal {
 
 	private getEnabledInstrumentsList(): Array<{name: string, activeVoices: number, maxVoices: number}> {
 		const enabled: Array<{name: string, activeVoices: number, maxVoices: number}> = [];
-		
+
 		Object.entries(this.plugin.settings.instruments).forEach(([key, settings]) => {
-			if (settings.enabled) {
+			// Filter out whale instruments (temporarily disabled)
+			if (settings.enabled && !key.toLowerCase().includes('whale')) {
 				enabled.push({
 					name: key,
 					activeVoices: this.getInstrumentActiveVoices(key),
@@ -459,7 +460,7 @@ export class MaterialControlPanelModal extends Modal {
 				});
 			}
 		});
-		
+
 		return enabled;
 	}
 
@@ -1181,6 +1182,16 @@ export class MaterialControlPanelModal extends Modal {
 
 		const content = card.getContent();
 
+		// Add reset button at the top
+		const resetButtonContainer = content.createDiv({ cls: 'osp-sonic-graph-reset-container' });
+		const resetButton = new MaterialButton({
+			text: 'Reset to Defaults',
+			icon: 'rotate-ccw',
+			variant: 'outlined',
+			onClick: () => this.resetSonicGraphSettings()
+		});
+		resetButtonContainer.appendChild(resetButton.getElement());
+
 		// Create tabs container
 		const tabsContainer = content.createDiv({ cls: 'osp-sonic-graph-settings-tabs' });
 
@@ -1192,6 +1203,37 @@ export class MaterialControlPanelModal extends Modal {
 		);
 
 		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Reset Sonic Graph settings to defaults
+	 */
+	private async resetSonicGraphSettings(): Promise<void> {
+		try {
+			// Import default settings
+			const { DEFAULT_SETTINGS } = await import('../utils/constants');
+
+			// Reset sonicGraphSettings to defaults
+			this.plugin.settings.sonicGraphSettings = JSON.parse(
+				JSON.stringify(DEFAULT_SETTINGS.sonicGraphSettings)
+			);
+
+			// Save settings
+			await this.plugin.saveSettings();
+
+			// Refresh the tab UI to reflect changes
+			if (this.sonicGraphSettingsTabs) {
+				this.sonicGraphSettingsTabs.refresh();
+			}
+
+			// Show confirmation notice
+			new Notice('Sonic Graph settings reset to defaults');
+
+			logger.info('ui', 'Sonic Graph settings reset to defaults');
+		} catch (error) {
+			logger.error('ui', 'Failed to reset Sonic Graph settings:', error);
+			new Notice('Failed to reset settings');
+		}
 	}
 
 	/**

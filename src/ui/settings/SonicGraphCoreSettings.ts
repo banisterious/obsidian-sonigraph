@@ -255,6 +255,54 @@ export class SonicGraphCoreSettings {
 				})
 			);
 
+		// Simultaneous event limit slider
+		new Setting(content)
+			.setName('Simultaneous event limit')
+			.setDesc('Maximum concurrent notes playing at once (1-20)')
+			.addSlider(slider => slider
+				.setLimits(1, 20, 1)
+				.setValue(this.plugin.settings.sonicGraphSettings?.timeline.simultaneousEventLimit || 8)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) return;
+					this.plugin.settings.sonicGraphSettings.timeline.simultaneousEventLimit = value;
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Simultaneous event limit: ${value}`);
+				})
+			);
+
+		// Event batch size slider
+		new Setting(content)
+			.setName('Event batch size')
+			.setDesc('Events processed per animation frame (1-20)')
+			.addSlider(slider => slider
+				.setLimits(1, 20, 1)
+				.setValue(this.plugin.settings.sonicGraphSettings?.timeline.eventBatchSize || 10)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) return;
+					this.plugin.settings.sonicGraphSettings.timeline.eventBatchSize = value;
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Event batch size: ${value}`);
+				})
+			);
+
+		// Max event spacing slider
+		new Setting(content)
+			.setName('Max event spacing')
+			.setDesc('Maximum time window for spreading events (0.5s - 10s)')
+			.addSlider(slider => slider
+				.setLimits(0.5, 10, 0.5)
+				.setValue(this.plugin.settings.sonicGraphSettings?.timeline.maxEventSpacing || 3.0)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.sonicGraphSettings) return;
+					this.plugin.settings.sonicGraphSettings.timeline.maxEventSpacing = value;
+					await this.plugin.saveSettings();
+					logger.info('core-settings', `Max event spacing: ${value}s`);
+				})
+			);
+
 		container.appendChild(card.getElement());
 	}
 
