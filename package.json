@@ -1,6 +1,6 @@
 {
   "name": "sonigraph",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "An Obsidian plugin that transforms the visual structure of your knowledge graph into music.",
   "main": "main.js",
   "scripts": {

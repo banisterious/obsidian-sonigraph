@@ -1,7 +1,7 @@
 # Audio Export Feature
 
 **Status**: ✅ Complete (Phase 1 & 2)
-**Version**: 0.12.1
+**Version**: 0.12.2
 **Branch**: `feature/export-audio-video`
 
 ## Overview
