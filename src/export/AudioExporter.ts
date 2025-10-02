@@ -15,6 +15,7 @@ import {
     AudioFormat
 } from './types';
 import { WavEncoder } from './WavEncoder';
+import { Mp3Encoder } from './Mp3Encoder';
 import { OfflineRenderer } from './OfflineRenderer';
 import { getLogger } from '../logging';
 
@@ -247,15 +248,14 @@ export class AudioExporter {
                 return WavEncoder.encode(audioBuffer, config.quality as any);
 
             case 'mp3':
-                // TODO: Phase 2
-                throw new Error('MP3 encoding not yet implemented');
+                return Mp3Encoder.encode(audioBuffer, config.quality as any);
 
             case 'ogg':
-                // TODO: Phase 2
+                // TODO: Phase 2 (optional)
                 throw new Error('OGG encoding not yet implemented');
 
             case 'flac':
-                // TODO: Phase 2
+                // TODO: Phase 2 (optional)
                 throw new Error('FLAC encoding not yet implemented');
 
             default:
