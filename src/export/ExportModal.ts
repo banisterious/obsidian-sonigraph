@@ -104,7 +104,7 @@ export class ExportModal extends Modal {
         const section = container.createDiv('export-section');
         section.createEl('h3', { text: 'Quick Presets' });
 
-        const presetButtons = section.createDiv('export-preset-buttons');
+        const presetButtons = section.createDiv('sonigraph-export-preset-buttons');
 
         // Get presets from settings
         const presets = this.plugin.settings.exportSettings?.exportPresets || [];
@@ -141,7 +141,7 @@ export class ExportModal extends Modal {
         // Save current as preset button
         const savePresetBtn = presetButtons.createEl('button', {
             text: '💾 Save Current as Preset',
-            cls: 'export-preset-save'
+            cls: 'sonigraph-export-preset-save'
         });
         savePresetBtn.addEventListener('click', () => this.saveCurrentAsPreset());
     }
@@ -152,7 +152,7 @@ export class ExportModal extends Modal {
     private createPresetButton(container: HTMLElement, preset: any): void {
         const btn = container.createEl('button', {
             text: preset.name,
-            cls: 'export-preset-btn'
+            cls: 'sonigraph-export-preset-btn'
         });
 
         btn.addEventListener('click', () => {
@@ -319,7 +319,7 @@ export class ExportModal extends Modal {
             });
 
         // Custom range inputs (initially hidden)
-        this.customRangeContainer = section.createDiv('custom-range-container');
+        this.customRangeContainer = section.createDiv('sonigraph-custom-range-container');
         this.customRangeContainer.style.display = 'none';
 
         new Setting(this.customRangeContainer)
@@ -485,11 +485,11 @@ export class ExportModal extends Modal {
     private createMetadataSection(container: HTMLElement): void {
         const section = container.createDiv('export-section');
 
-        const header = section.createDiv('export-metadata-header');
+        const header = section.createDiv('sonigraph-export-metadata-header');
         header.createEl('span', { text: 'Metadata (Optional) ▼' });
         header.addClass('clickable');
 
-        this.metadataContainer = section.createDiv('export-metadata-content');
+        this.metadataContainer = section.createDiv('sonigraph-export-metadata-content');
         this.metadataContainer.style.display = 'none';
 
         // Toggle metadata section
@@ -596,11 +596,11 @@ export class ExportModal extends Modal {
     private createAdvancedSection(container: HTMLElement): void {
         const section = container.createDiv('export-section');
 
-        const header = section.createDiv('export-advanced-header');
+        const header = section.createDiv('sonigraph-export-advanced-header');
         header.createEl('span', { text: 'Advanced Options ▼' });
         header.addClass('clickable');
 
-        this.advancedContainer = section.createDiv('export-advanced-content');
+        this.advancedContainer = section.createDiv('sonigraph-export-advanced-content');
         this.advancedContainer.style.display = 'none';
 
         // Toggle advanced options

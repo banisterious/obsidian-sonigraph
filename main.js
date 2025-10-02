@@ -64633,7 +64633,7 @@ var init_ExportModal = __esm({
         var _a;
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Quick Presets" });
-        const presetButtons = section.createDiv("export-preset-buttons");
+        const presetButtons = section.createDiv("sonigraph-export-preset-buttons");
         const presets = ((_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.exportPresets) || [];
         if (presets.length === 0) {
           this.createPresetButton(presetButtons, {
@@ -64661,7 +64661,7 @@ var init_ExportModal = __esm({
         }
         const savePresetBtn = presetButtons.createEl("button", {
           text: "\u{1F4BE} Save Current as Preset",
-          cls: "export-preset-save"
+          cls: "sonigraph-export-preset-save"
         });
         savePresetBtn.addEventListener("click", () => this.saveCurrentAsPreset());
       }
@@ -64671,7 +64671,7 @@ var init_ExportModal = __esm({
       createPresetButton(container, preset) {
         const btn = container.createEl("button", {
           text: preset.name,
-          cls: "export-preset-btn"
+          cls: "sonigraph-export-preset-btn"
         });
         btn.addEventListener("click", () => {
           this.loadPreset(preset);
@@ -64802,7 +64802,7 @@ var init_ExportModal = __esm({
             this.updateEstimate();
           });
         });
-        this.customRangeContainer = section.createDiv("custom-range-container");
+        this.customRangeContainer = section.createDiv("sonigraph-custom-range-container");
         this.customRangeContainer.style.display = "none";
         new import_obsidian18.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
           this.startTimeInput = text;
@@ -64892,10 +64892,10 @@ var init_ExportModal = __esm({
       createMetadataSection(container) {
         var _a;
         const section = container.createDiv("export-section");
-        const header = section.createDiv("export-metadata-header");
+        const header = section.createDiv("sonigraph-export-metadata-header");
         header.createEl("span", { text: "Metadata (Optional) \u25BC" });
         header.addClass("clickable");
-        this.metadataContainer = section.createDiv("export-metadata-content");
+        this.metadataContainer = section.createDiv("sonigraph-export-metadata-content");
         this.metadataContainer.style.display = "none";
         header.addEventListener("click", () => {
           const isVisible = this.metadataContainer.style.display !== "none";
@@ -64961,10 +64961,10 @@ var init_ExportModal = __esm({
        */
       createAdvancedSection(container) {
         const section = container.createDiv("export-section");
-        const header = section.createDiv("export-advanced-header");
+        const header = section.createDiv("sonigraph-export-advanced-header");
         header.createEl("span", { text: "Advanced Options \u25BC" });
         header.addClass("clickable");
-        this.advancedContainer = section.createDiv("export-advanced-content");
+        this.advancedContainer = section.createDiv("sonigraph-export-advanced-content");
         this.advancedContainer.style.display = "none";
         header.addEventListener("click", () => {
           const isVisible = this.advancedContainer.style.display !== "none";
