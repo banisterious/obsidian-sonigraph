@@ -145,13 +145,13 @@ export class ExportModal extends Modal {
         // Format
         new Setting(section)
             .setName('Format')
-            .setDesc('Audio file format')
+            .setDesc('Audio file format. Compressed audio uses native platform codecs (M4A/AAC, WebM/Opus, or OGG/Vorbis).')
             .addDropdown(dropdown => {
                 this.formatDropdown = dropdown;
 
                 dropdown
                     .addOption('wav', 'WAV (Lossless Audio)')
-                    .addOption('mp3', 'MP3 (Compressed Audio)')
+                    .addOption('mp3', 'Compressed Audio (M4A/WebM/OGG)')
                     // Phase 2 (optional):
                     // .addOption('ogg', 'OGG Vorbis')
                     // .addOption('flac', 'FLAC (Lossless Compressed)')

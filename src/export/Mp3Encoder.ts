@@ -1,25 +1,32 @@
 /**
  * MP3 Encoder - Encodes audio data to MP3 format
  *
- * Uses lamejs library for MP3 encoding with configurable bitrate and quality.
+ * Uses MediaRecorder with native audio encoding support.
+ * Supports audio/mp4 (AAC), audio/webm (Opus), or audio/ogg (Vorbis) depending on browser support.
  */
 
-// @ts-ignore
-import lamejs from 'lamejs';
 import { Mp3Quality } from './types';
 import { getLogger } from '../logging';
 
 const logger = getLogger('mp3-encoder');
 
 /**
- * Encodes audio buffer to MP3 format
+ * Encodes audio buffer to compressed audio format using MediaRecorder
  */
 export class Mp3Encoder {
     /**
-     * Encode AudioBuffer to MP3
+     * Encode AudioBuffer to compressed audio format
+     *
+     * Note: This uses MediaRecorder which may produce audio/mp4, audio/webm, or audio/ogg
+     * depending on platform support. The file extension should be determined by the actual
+     * MIME type returned.
      */
-    static encode(audioBuffer: AudioBuffer, quality: Mp3Quality): ArrayBuffer {
-        logger.info('mp3-encoder', 'Starting MP3 encoding', {
+    static async encode(
+        audioBuffer: AudioBuffer,
+        quality: Mp3Quality,
+        onProgress?: (percentage: number) => void
+    ): Promise<{ data: ArrayBuffer; mimeType: string; extension: string }> {
+        logger.info('mp3-encoder', 'Starting audio encoding via MediaRecorder', {
             sampleRate: audioBuffer.sampleRate,
             duration: audioBuffer.duration,
             channels: audioBuffer.numberOfChannels,
@@ -28,124 +35,139 @@ export class Mp3Encoder {
 
         const startTime = performance.now();
 
-        // Get channel data
-        const leftChannel = audioBuffer.getChannelData(0);
-        const rightChannel = audioBuffer.numberOfChannels > 1
-            ? audioBuffer.getChannelData(1)
-            : leftChannel;
+        // Determine best available codec
+        const codec = this.selectBestCodec(quality.bitRate);
+        logger.info('mp3-encoder', `Selected codec: ${codec.mimeType}`);
 
-        // Resample if needed
-        const targetSampleRate = quality.sampleRate;
-        const needsResampling = audioBuffer.sampleRate !== targetSampleRate;
+        // Create a real AudioContext for MediaRecorder
+        const audioContext = new AudioContext({ sampleRate: quality.sampleRate });
+        const destination = audioContext.createMediaStreamDestination();
 
-        let leftSamples: Int16Array;
-        let rightSamples: Int16Array;
+        // Create a buffer source from the audio buffer
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(destination);
 
-        if (needsResampling) {
-            logger.debug('mp3-encoder', 'Resampling audio', {
-                from: audioBuffer.sampleRate,
-                to: targetSampleRate
-            });
+        // Set up MediaRecorder
+        const mediaRecorder = new MediaRecorder(destination.stream, {
+            mimeType: codec.mimeType,
+            audioBitsPerSecond: quality.bitRate * 1000
+        });
 
-            leftSamples = this.resampleAndConvert(leftChannel, audioBuffer.sampleRate, targetSampleRate);
-            rightSamples = this.resampleAndConvert(rightChannel, audioBuffer.sampleRate, targetSampleRate);
-        } else {
-            leftSamples = this.convertToInt16(leftChannel);
-            rightSamples = this.convertToInt16(rightChannel);
+        const chunks: Blob[] = [];
+
+        // Track progress based on time elapsed
+        const duration = audioBuffer.duration;
+        let progressInterval: NodeJS.Timeout | null = null;
+
+        if (onProgress) {
+            const progressStartTime = Date.now();
+            progressInterval = setInterval(() => {
+                const elapsed = (Date.now() - progressStartTime) / 1000;
+                const percentage = Math.min(95, (elapsed / duration) * 100);
+                onProgress(percentage);
+            }, 100);
         }
 
-        // Initialize MP3 encoder
-        const mp3encoder = new lamejs.Mp3Encoder(
-            audioBuffer.numberOfChannels,
-            targetSampleRate,
-            quality.bitRate
-        );
+        // Collect encoded data
+        const recordingPromise = new Promise<Blob>((resolve, reject) => {
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
 
-        // Encode in chunks
-        const sampleBlockSize = 1152; // Standard MP3 frame size
-        const mp3Data: Int8Array[] = [];
+            mediaRecorder.onstop = () => {
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                }
+                if (onProgress) {
+                    onProgress(100);
+                }
+                const blob = new Blob(chunks, { type: codec.mimeType });
+                logger.info('mp3-encoder', `Encoding complete, size: ${blob.size} bytes`);
+                resolve(blob);
+            };
 
-        for (let i = 0; i < leftSamples.length; i += sampleBlockSize) {
-            const leftChunk = leftSamples.subarray(i, i + sampleBlockSize);
-            const rightChunk = rightSamples.subarray(i, i + sampleBlockSize);
+            mediaRecorder.onerror = (error) => {
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                }
+                reject(new Error(`MediaRecorder error: ${error}`));
+            };
+        });
 
-            const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-            if (mp3buf.length > 0) {
-                mp3Data.push(mp3buf);
-            }
-        }
+        // Start recording
+        mediaRecorder.start(100); // Collect data every 100ms
+        source.start(0);
 
-        // Flush remaining data
-        const mp3buf = mp3encoder.flush();
-        if (mp3buf.length > 0) {
-            mp3Data.push(mp3buf);
-        }
+        // Wait for playback to complete
+        await new Promise<void>((resolve) => {
+            source.onended = () => {
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    resolve();
+                }, 100); // Small delay to ensure all data is captured
+            };
+        });
 
-        // Concatenate all chunks
-        const totalLength = mp3Data.reduce((acc, chunk) => acc + chunk.length, 0);
-        const result = new Int8Array(totalLength);
-        let offset = 0;
+        // Get the encoded blob
+        const blob = await recordingPromise;
 
-        for (const chunk of mp3Data) {
-            result.set(chunk, offset);
-            offset += chunk.length;
-        }
+        // Clean up
+        audioContext.close();
+
+        // Convert to ArrayBuffer
+        const arrayBuffer = await blob.arrayBuffer();
 
         const endTime = performance.now();
         const encodingTime = endTime - startTime;
 
-        logger.info('mp3-encoder', 'MP3 encoding complete', {
-            outputSize: result.byteLength,
+        logger.info('mp3-encoder', 'Encoding complete', {
+            outputSize: arrayBuffer.byteLength,
             encodingTime: `${encodingTime.toFixed(2)}ms`,
-            compressionRatio: (audioBuffer.length * audioBuffer.numberOfChannels * 2 / result.byteLength).toFixed(2)
+            compressionRatio: (audioBuffer.length * audioBuffer.numberOfChannels * 2 / arrayBuffer.byteLength).toFixed(2),
+            mimeType: codec.mimeType
         });
 
-        return result.buffer;
+        return {
+            data: arrayBuffer,
+            mimeType: codec.mimeType,
+            extension: codec.extension
+        };
     }
 
     /**
-     * Convert Float32Array to Int16Array
+     * Select the best available codec for encoding
      */
-    private static convertToInt16(float32Array: Float32Array): Int16Array {
-        const int16Array = new Int16Array(float32Array.length);
+    private static selectBestCodec(targetBitrate: number): { mimeType: string; extension: string } {
+        // Try codecs in order of preference
+        const codecs = [
+            { mimeType: 'audio/mp4', extension: 'm4a' },           // AAC in MP4 container
+            { mimeType: 'audio/webm;codecs=opus', extension: 'webm' }, // Opus in WebM
+            { mimeType: 'audio/webm', extension: 'webm' },         // Default WebM
+            { mimeType: 'audio/ogg;codecs=opus', extension: 'ogg' }, // Opus in OGG
+            { mimeType: 'audio/ogg', extension: 'ogg' }            // Vorbis in OGG
+        ];
 
-        for (let i = 0; i < float32Array.length; i++) {
-            // Clamp to [-1, 1] range
-            const sample = Math.max(-1, Math.min(1, float32Array[i]));
-            // Convert to 16-bit integer
-            int16Array[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        for (const codec of codecs) {
+            if (MediaRecorder.isTypeSupported(codec.mimeType)) {
+                return codec;
+            }
         }
 
-        return int16Array;
+        // Fallback to default (should always be supported)
+        logger.warn('mp3-encoder', 'No preferred codec supported, using default');
+        return { mimeType: 'audio/webm', extension: 'webm' };
     }
 
     /**
-     * Resample and convert audio data
+     * Get file extension for a given MIME type
      */
-    private static resampleAndConvert(
-        sourceData: Float32Array,
-        sourceSampleRate: number,
-        targetSampleRate: number
-    ): Int16Array {
-        const ratio = sourceSampleRate / targetSampleRate;
-        const targetLength = Math.ceil(sourceData.length / ratio);
-        const result = new Int16Array(targetLength);
-
-        for (let i = 0; i < targetLength; i++) {
-            const sourceIndex = i * ratio;
-            const index = Math.floor(sourceIndex);
-            const fraction = sourceIndex - index;
-
-            // Linear interpolation
-            const sample1 = sourceData[index] || 0;
-            const sample2 = sourceData[index + 1] || sample1;
-            const interpolated = sample1 + (sample2 - sample1) * fraction;
-
-            // Clamp and convert to 16-bit
-            const clamped = Math.max(-1, Math.min(1, interpolated));
-            result[i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7FFF;
-        }
-
-        return result;
+    static getExtensionForMimeType(mimeType: string): string {
+        if (mimeType.includes('mp4')) return 'm4a';
+        if (mimeType.includes('webm')) return 'webm';
+        if (mimeType.includes('ogg')) return 'ogg';
+        return 'audio';
     }
 }
