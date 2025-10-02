@@ -229,10 +229,10 @@ var init_constants = __esm({
           },
           // Event spreading defaults
           eventSpreadingMode: "gentle",
-          maxEventSpacing: 5,
+          maxEventSpacing: 3,
           // Audio crackling prevention defaults
-          simultaneousEventLimit: 3,
-          eventBatchSize: 5
+          simultaneousEventLimit: 8,
+          eventBatchSize: 10
         },
         audio: {
           density: 30,
@@ -3528,7 +3528,7 @@ function createGrid(columns) {
   grid.className = `ospcc-grid ${columns ? `ospcc-grid--${columns}` : ""}`;
   return grid;
 }
-var logger3, MaterialCard, EffectSection, ActionChip, MaterialSlider;
+var logger3, MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton;
 var init_material_components = __esm({
   "src/ui/material-components.ts"() {
     init_lucide_icons();
@@ -3821,6 +3821,37 @@ var init_material_components = __esm({
       setDisplayValue(displayValue) {
         this.options.displayValue = displayValue;
         this.updateDisplay();
+      }
+    };
+    MaterialButton = class {
+      constructor(options) {
+        this.container = this.createButton(options);
+      }
+      createButton(options) {
+        const button = document.createElement("button");
+        button.className = `ospcc-button ospcc-button--${options.variant || "filled"} ${options.className || ""}`;
+        button.disabled = options.disabled || false;
+        if (options.iconName) {
+          const icon = createLucideIcon(options.iconName, 18);
+          button.appendChild(icon);
+        }
+        button.appendText(options.text);
+        if (options.onClick) {
+          button.addEventListener("click", options.onClick);
+        }
+        return button;
+      }
+      getElement() {
+        return this.container;
+      }
+      setDisabled(disabled) {
+        this.container.disabled = disabled;
+      }
+      setText(text) {
+        const textNode = Array.from(this.container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+        if (textNode) {
+          textNode.textContent = text;
+        }
       }
     };
   }
@@ -14094,6 +14125,42 @@ var init_SonicGraphCoreSettings = __esm({
             });
           }
         );
+        new import_obsidian6.Setting(content).setName("Simultaneous event limit").setDesc("Maximum concurrent notes playing at once (1-20)").addSlider(
+          (slider) => {
+            var _a;
+            return slider.setLimits(1, 20, 1).setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.simultaneousEventLimit) || 8).setDynamicTooltip().onChange(async (value) => {
+              if (!this.plugin.settings.sonicGraphSettings)
+                return;
+              this.plugin.settings.sonicGraphSettings.timeline.simultaneousEventLimit = value;
+              await this.plugin.saveSettings();
+              logger12.info("core-settings", `Simultaneous event limit: ${value}`);
+            });
+          }
+        );
+        new import_obsidian6.Setting(content).setName("Event batch size").setDesc("Events processed per animation frame (1-20)").addSlider(
+          (slider) => {
+            var _a;
+            return slider.setLimits(1, 20, 1).setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.eventBatchSize) || 10).setDynamicTooltip().onChange(async (value) => {
+              if (!this.plugin.settings.sonicGraphSettings)
+                return;
+              this.plugin.settings.sonicGraphSettings.timeline.eventBatchSize = value;
+              await this.plugin.saveSettings();
+              logger12.info("core-settings", `Event batch size: ${value}`);
+            });
+          }
+        );
+        new import_obsidian6.Setting(content).setName("Max event spacing").setDesc("Maximum time window for spreading events (0.5s - 10s)").addSlider(
+          (slider) => {
+            var _a;
+            return slider.setLimits(0.5, 10, 0.5).setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.maxEventSpacing) || 3).setDynamicTooltip().onChange(async (value) => {
+              if (!this.plugin.settings.sonicGraphSettings)
+                return;
+              this.plugin.settings.sonicGraphSettings.timeline.maxEventSpacing = value;
+              await this.plugin.saveSettings();
+              logger12.info("core-settings", `Max event spacing: ${value}s`);
+            });
+          }
+        );
         container.appendChild(card.getElement());
       }
       /**
@@ -15182,6 +15249,13 @@ var init_SonicGraphSettingsTabs = __esm({
        */
       showTab(tabId) {
         this.switchTab(tabId);
+      }
+      /**
+       * Public API: Refresh the current tab (re-render)
+       */
+      refresh() {
+        logger14.debug("tabs", "Refreshing active tab");
+        this.renderActiveTab();
       }
       /**
        * Public API: Get current active tab
@@ -17880,7 +17954,7 @@ var init_control_panel = __esm({
       getEnabledInstrumentsList() {
         const enabled = [];
         Object.entries(this.plugin.settings.instruments).forEach(([key, settings]) => {
-          if (settings.enabled) {
+          if (settings.enabled && !key.toLowerCase().includes("whale")) {
             enabled.push({
               name: key,
               activeVoices: this.getInstrumentActiveVoices(key),
@@ -18417,6 +18491,14 @@ var init_control_panel = __esm({
           elevation: 1
         });
         const content = card.getContent();
+        const resetButtonContainer = content.createDiv({ cls: "osp-sonic-graph-reset-container" });
+        const resetButton = new MaterialButton({
+          text: "Reset to Defaults",
+          icon: "rotate-ccw",
+          variant: "outlined",
+          onClick: () => this.resetSonicGraphSettings()
+        });
+        resetButtonContainer.appendChild(resetButton.getElement());
         const tabsContainer = content.createDiv({ cls: "osp-sonic-graph-settings-tabs" });
         this.sonicGraphSettingsTabs = new SonicGraphSettingsTabs(
           this.app,
@@ -18424,6 +18506,26 @@ var init_control_panel = __esm({
           tabsContainer
         );
         this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Reset Sonic Graph settings to defaults
+       */
+      async resetSonicGraphSettings() {
+        try {
+          const { DEFAULT_SETTINGS: DEFAULT_SETTINGS2 } = await Promise.resolve().then(() => (init_constants(), constants_exports));
+          this.plugin.settings.sonicGraphSettings = JSON.parse(
+            JSON.stringify(DEFAULT_SETTINGS2.sonicGraphSettings)
+          );
+          await this.plugin.saveSettings();
+          if (this.sonicGraphSettingsTabs) {
+            this.sonicGraphSettingsTabs.refresh();
+          }
+          new import_obsidian9.Notice("Sonic Graph settings reset to defaults");
+          logger20.info("ui", "Sonic Graph settings reset to defaults");
+        } catch (error) {
+          logger20.error("ui", "Failed to reset Sonic Graph settings:", error);
+          new import_obsidian9.Notice("Failed to reset settings");
+        }
       }
       /**
        * Initialize graph preview visualization
@@ -48187,9 +48289,9 @@ var init_TemporalGraphAnimator = __esm({
           granularity: "year",
           customRange: { value: 1, unit: "years" },
           eventSpreadingMode: "gentle",
-          maxEventSpacing: 5,
-          simultaneousEventLimit: 3,
-          eventBatchSize: 5,
+          maxEventSpacing: 3,
+          simultaneousEventLimit: 8,
+          eventBatchSize: 10,
           // Legacy options for backward compatibility
           enableIntelligentSpacing: true,
           simultaneousThreshold: 0.01,
@@ -48352,16 +48454,16 @@ var init_TemporalGraphAnimator = __esm({
           // 100ms threshold
           maxSpacingWindow: Math.min(maxEventSpacing, 2),
           // Gentler spreading
-          minEventSpacing: 0.1,
-          // 100ms minimum spacing
+          minEventSpacing: 0.05,
+          // 50ms minimum spacing (reduced for more notes)
           batchProcessing: true
         } : {
           simultaneousThreshold: 0.05,
           // 50ms threshold (more aggressive)
           maxSpacingWindow: maxEventSpacing,
           // Use full spacing window
-          minEventSpacing: 0.05,
-          // 50ms minimum spacing
+          minEventSpacing: 0.03,
+          // 30ms minimum spacing (reduced for more notes)
           batchProcessing: true
         };
         const spacedEvents = [];
@@ -66304,9 +66406,9 @@ var init_SonicGraphModal = __esm({
               unit: "years"
             },
             eventSpreadingMode: "gentle",
-            maxEventSpacing: 5,
-            simultaneousEventLimit: 3,
-            eventBatchSize: 5
+            maxEventSpacing: 3,
+            simultaneousEventLimit: 8,
+            eventBatchSize: 10
           },
           audio: {
             density: 100,
@@ -77884,9 +77986,9 @@ var SonicGraphView = class extends import_obsidian15.ItemView {
           unit: "years"
         },
         eventSpreadingMode: "gentle",
-        maxEventSpacing: 5,
-        simultaneousEventLimit: 3,
-        eventBatchSize: 5
+        maxEventSpacing: 3,
+        simultaneousEventLimit: 8,
+        eventBatchSize: 10
       },
       audio: {
         density: 100,

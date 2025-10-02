@@ -189,6 +189,14 @@ export class SonicGraphSettingsTabs {
 	}
 
 	/**
+	 * Public API: Refresh the current tab (re-render)
+	 */
+	public refresh(): void {
+		logger.debug('tabs', 'Refreshing active tab');
+		this.renderActiveTab();
+	}
+
+	/**
 	 * Public API: Get current active tab
 	 */
 	public getActiveTab(): string {

@@ -815,10 +815,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			},
 			// Event spreading defaults
 			eventSpreadingMode: 'gentle',
-			maxEventSpacing: 5.0,
+			maxEventSpacing: 3.0,
 			// Audio crackling prevention defaults
-			simultaneousEventLimit: 3,
-			eventBatchSize: 5
+			simultaneousEventLimit: 8,
+			eventBatchSize: 10
 		},
 		audio: {
 			density: 30,

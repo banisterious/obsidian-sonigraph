@@ -6205,9 +6205,9 @@ export class SonicGraphView extends ItemView {
                     unit: 'years' as const
                 },
                 eventSpreadingMode: 'gentle' as const,
-                maxEventSpacing: 5.0,
-                simultaneousEventLimit: 3,
-                eventBatchSize: 5
+                maxEventSpacing: 3.0,
+                simultaneousEventLimit: 8,
+                eventBatchSize: 10
             },
             audio: {
                 density: 100,
