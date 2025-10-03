@@ -23,7 +23,7 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 
 ### Core Sonification
 - **Graph-to-Music Mapping**: Convert note connections into orchestral compositions
-- **34-Instrument Orchestra**: Full orchestral palette including strings, woodwinds, brass, percussion, vocals, electronic synthesis, and environmental sounds
+- **34-Instrument Orchestra**: Full orchestral palette including strings, woodwinds, brass, percussion, vocals, and electronic synthesis
 - **Real-time Audio Synthesis**: Generate music directly within Obsidian using Tone.js Web Audio API
 - **Intelligent Musical Mapping**: Sophisticated algorithms that translate graph structure to musical elements
 
@@ -119,7 +119,7 @@ If you find this plugin useful, please consider supporting its development!
 - **Freesound Integration**: Token-based API with curated sample library and intelligent caching
 - **Content-Aware Mapping**: File types, tags, folders, and frontmatter drive instrument selection
 - **Musical Theory Integration**: Scale systems, chord progressions, and harmonic relationships
-- **34 Orchestral Instruments**: Complete implementation across all families with environmental sounds
+- **34 Orchestral Instruments**: Complete implementation across all families
 - **Advanced Synthesis Engines**: Percussion physics, electronic modulation, and sample-based orchestral voices
 - **Master Effects Processing**: Orchestral-grade reverb, EQ, and compression with 11 professional presets
 - **Performance Optimization**: Adaptive quality control, voice pooling, and resolved audio quality issues
@@ -165,15 +165,6 @@ If you find this plugin useful, please consider supporting its development!
 - **Lead Synth** - Filter-swept lead with modulation
 - **Bass Synth** - Sub-oscillator bass with envelope control
 - **Arp Synth** - Arpeggiated patterns with sequencing
-
-### Environmental (7 instruments)
-- **Ocean Waves** - Rhythmic coastal surf with natural dynamics
-- **Rain** - Gentle to heavy precipitation patterns
-- **Forest** - Woodland ambience with subtle movement
-- **Wind** - Atmospheric air movement and gusts
-- **Thunder** - Low-frequency rumbles and distant storms
-- **Fire** - Crackling flames with organic variation
-- **Whale Song (Humpback)** - Oceanic vocalizations with ultra-long reverb
 
 ## 🎛️ Advanced Audio Features
 
@@ -237,17 +228,15 @@ Continuous audio layers use high-quality samples from Freesound.org:
 ### Audio Control Center Tabs
 - **Status**: Real-time system diagnostics and performance monitoring
 - **Musical**: Set scales, tempo, and musical parameters
-- **Continuous Layers**: Configure ambient/rhythmic/harmonic background layers (13 genres)
-- **Content Mapping**: Set up file type, tag, and folder-based instrument assignment
-- **Freesound Integration**: API authentication, sample browsing, and cache management
+- **Layers**: Continuous audio layers (ambient/rhythmic/harmonic) with 13 genres and Freesound integration
 - **Master**: Global controls, master effects, and bulk operations
-- **Strings**: String family instruments (violin, cello, guitar, harp, strings)
-- **Woodwinds**: Woodwind family (flute, clarinet, saxophone, oboe)
+- **Keyboard**: Keyboard family instruments (piano, organ, electric piano, harpsichord, accordion, celesta)
+- **Strings**: String family instruments (violin, cello, guitar, harp, strings, contrabass)
+- **Woodwinds**: Woodwind family (flute, clarinet, saxophone, oboe, bassoon)
 - **Brass**: Brass family (trumpet, french horn, trombone, tuba)
-- **Vocals**: Vocal family (choir, soprano, alto, tenor, bass, vocal pads, pad)
 - **Percussion**: Percussion family (timpani, xylophone, vibraphone, gongs)
 - **Electronic**: Electronic family (lead synth, bass synth, arp synth)
-- **Environmental**: Environmental sounds (ocean, rain, forest, wind, thunder, fire, whale song)
+- **Sonic Graph**: Knowledge graph visualization with temporal animation
 
 ## 🤝 Contributing
 
