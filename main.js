@@ -17252,7 +17252,7 @@ var init_FreesoundSearchModal = __esm({
     init_logging();
     logger18 = getLogger("FreesoundSearchModal");
     FreesoundSearchModal = class extends import_obsidian8.Modal {
-      constructor(app, apiKey, genre, onAddSample) {
+      constructor(app, apiKey, onAddSample) {
         super(app);
         this.filters = {
           query: "",
@@ -17263,11 +17263,11 @@ var init_FreesoundSearchModal = __esm({
         this.searchResults = [];
         this.isSearching = false;
         this.currentAudio = null;
+        this.currentPreviewButton = null;
         // UI elements
         this.searchInput = null;
         this.resultsContainer = null;
         this.apiKey = apiKey;
-        this.currentGenre = genre;
         this.onAddSample = onAddSample;
       }
       onOpen() {
@@ -17275,7 +17275,7 @@ var init_FreesoundSearchModal = __esm({
         contentEl.empty();
         contentEl.addClass("freesound-search-modal");
         contentEl.createEl("h2", {
-          text: `Search Freesound for ${this.currentGenre} samples`,
+          text: "Search Freesound",
           cls: "freesound-search-title"
         });
         this.createSearchSection(contentEl);
@@ -17428,16 +17428,20 @@ var init_FreesoundSearchModal = __esm({
         });
       }
       async previewSample(result, button) {
-        const originalText = button.textContent;
+        if (button.textContent === "Stop") {
+          this.stopPreview();
+          return;
+        }
+        if (this.currentAudio) {
+          this.stopPreview();
+        }
+        const originalText = button.textContent || "Preview";
         try {
-          if (this.currentAudio) {
-            this.currentAudio.pause();
-            this.currentAudio = null;
-          }
           button.textContent = "Loading...";
           button.disabled = true;
           const audio = new Audio(result.previews["preview-lq-mp3"]);
           this.currentAudio = audio;
+          this.currentPreviewButton = button;
           await new Promise((resolve, reject) => {
             audio.addEventListener("canplay", () => resolve(), { once: true });
             audio.addEventListener("error", (e) => reject(e), { once: true });
@@ -17446,16 +17450,12 @@ var init_FreesoundSearchModal = __esm({
           await audio.play();
           button.textContent = "Stop";
           button.disabled = false;
-          const stopHandler = () => {
-            audio.pause();
-            audio.currentTime = 0;
-            this.currentAudio = null;
-            button.textContent = originalText;
-          };
-          button.addEventListener("click", stopHandler, { once: true });
           audio.addEventListener("ended", () => {
-            button.textContent = originalText;
+            if (this.currentPreviewButton) {
+              this.currentPreviewButton.textContent = originalText;
+            }
             this.currentAudio = null;
+            this.currentPreviewButton = null;
           });
         } catch (error) {
           logger18.error("preview", `Failed to preview sample ${result.id}`, error);
@@ -17464,6 +17464,19 @@ var init_FreesoundSearchModal = __esm({
             button.textContent = originalText;
             button.disabled = false;
           }, 2e3);
+          this.currentAudio = null;
+          this.currentPreviewButton = null;
+        }
+      }
+      stopPreview() {
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.currentAudio = null;
+        }
+        if (this.currentPreviewButton) {
+          this.currentPreviewButton.textContent = "Preview";
+          this.currentPreviewButton = null;
         }
       }
       addSampleToLibrary(result) {
@@ -17474,14 +17487,13 @@ var init_FreesoundSearchModal = __esm({
           duration: result.duration,
           license: result.license,
           attribution: result.username,
-          genre: this.currentGenre,
           fadeIn: 2,
           // Default fade settings
           fadeOut: 3
         };
         this.onAddSample(sample);
-        new import_obsidian8.Notice(`Added "${result.name}" to ${this.currentGenre} library`);
-        logger18.info("library", `Added sample ${result.id} to ${this.currentGenre} library`);
+        new import_obsidian8.Notice(`Added "${result.name}" to library`);
+        logger18.info("library", `Added sample ${result.id} to library`);
       }
       displayError(error) {
         if (!this.resultsContainer)
@@ -17542,10 +17554,11 @@ var init_SonicGraphLayersSettings = __esm({
     init_logging();
     logger19 = getLogger("SonicGraphLayersSettings");
     SonicGraphLayersSettings = class {
-      constructor(app, plugin, onToggleCallback) {
+      constructor(app, plugin, onToggleCallback, onGenreChangeCallback) {
         this.app = app;
         this.plugin = plugin;
         this.onToggleCallback = onToggleCallback;
+        this.onGenreChangeCallback = onGenreChangeCallback;
       }
       /**
        * Render all audio layers settings
@@ -17555,7 +17568,6 @@ var init_SonicGraphLayersSettings = __esm({
         logger19.debug("layers-settings", "Rendering audio layers settings");
         this.renderEnableSection(container);
         if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) {
-          this.renderGenreSection(container);
           this.renderIntensitySection(container);
           this.renderLayerTypesSection(container);
           this.renderMusicalSettingsSection(container);
@@ -17651,30 +17663,52 @@ var init_SonicGraphLayersSettings = __esm({
       }
       /**
        * Section 2: Musical Genre Selection
+       * DEPRECATED: Genre-based organization removed in favor of flat sample library
        */
-      renderGenreSection(container) {
-        const card = new MaterialCard({
-          title: "Musical genre",
-          iconName: "music-2",
-          subtitle: "Choose the ambient genre for your soundscape",
-          elevation: 1
-        });
-        const content = card.getContent();
-        new import_obsidian9.Setting(content).setName("Genre selection").setDesc("Each genre provides unique timbres and atmospheric qualities").addDropdown(
-          (dropdown) => {
-            var _a, _b;
-            return dropdown.addOption("ambient", "Ambient - Gentle evolving textures").addOption("drone", "Drone - Sustained atmospheric tones").addOption("orchestral", "Orchestral - Classical instruments").addOption("electronic", "Electronic - Synthesized pads").addOption("minimal", "Minimal - Sparse, contemplative").addOption("oceanic", "Oceanic - Whale songs & ocean").addOption("sci-fi", "Sci-Fi - Futuristic atmospheres").addOption("experimental", "Experimental - Unconventional").addOption("industrial", "Industrial - Mechanical drones").addOption("urban", "Urban - City soundscapes").addOption("nature", "Nature - Forest, rain, wind").addOption("mechanical", "Mechanical - Machine hums").addOption("organic", "Organic - Acoustic processing").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.genre) || "ambient").onChange(async (value) => {
-              var _a2;
-              if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers))
-                return;
-              this.plugin.settings.audioEnhancement.continuousLayers.genre = value;
-              await this.plugin.saveSettings();
-              logger19.info("layers-settings", `Genre: ${value}`);
-            });
-          }
-        );
-        container.appendChild(card.getElement());
-      }
+      /* private renderGenreSection(container: HTMLElement): void {
+      		const card = new MaterialCard({
+      			title: 'Musical genre',
+      			iconName: 'music-2',
+      			subtitle: 'Choose the ambient genre for your soundscape',
+      			elevation: 1
+      		});
+      
+      		const content = card.getContent();
+      
+      		// Genre dropdown with all 13 options
+      		new Setting(content)
+      			.setName('Genre selection')
+      			.setDesc('Each genre provides unique timbres and atmospheric qualities')
+      			.addDropdown(dropdown => dropdown
+      				.addOption('ambient', 'Ambient - Gentle evolving textures')
+      				.addOption('drone', 'Drone - Sustained atmospheric tones')
+      				.addOption('orchestral', 'Orchestral - Classical instruments')
+      				.addOption('electronic', 'Electronic - Synthesized pads')
+      				.addOption('minimal', 'Minimal - Sparse, contemplative')
+      				.addOption('oceanic', 'Oceanic - Whale songs & ocean')
+      				.addOption('sci-fi', 'Sci-Fi - Futuristic atmospheres')
+      				.addOption('experimental', 'Experimental - Unconventional')
+      				.addOption('industrial', 'Industrial - Mechanical drones')
+      				.addOption('urban', 'Urban - City soundscapes')
+      				.addOption('nature', 'Nature - Forest, rain, wind')
+      				.addOption('mechanical', 'Mechanical - Machine hums')
+      				.addOption('organic', 'Organic - Acoustic processing')
+      				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient')
+      				.onChange(async (value) => {
+      					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
+      					this.plugin.settings.audioEnhancement.continuousLayers.genre = value;
+      					await this.plugin.saveSettings();
+      					logger.info('layers-settings', `Genre changed to: ${value}`);
+      
+      					// Notify control panel to refresh sample browser
+      					if (this.onGenreChangeCallback) {
+      						this.onGenreChangeCallback();
+      					}
+      				})
+      			);
+      
+      		container.appendChild(card.getElement());
+      	} */
       /**
        * Section 3: Intensity Controls
        */
@@ -18159,7 +18193,7 @@ var init_FreesoundSampleLoader = __esm({
         }
       }
       /**
-       * Get all samples for a specific genre
+       * Get all samples for a specific genre (placeholder samples only)
        */
       getSamplesForGenre(genre) {
         return this.sampleLibrary.get(genre) || [];
@@ -18967,8 +19001,13 @@ var init_control_panel = __esm({
         this.graphRenderer = null;
         this.showFileNames = false;
         this.sonicGraphSettingsTabs = null;
+        // Sample browser container for refreshing when genre changes
+        this.sampleBrowserContainer = null;
+        this.sampleBrowserCard = null;
         // Issue #006 Fix: Store bound event handlers for proper cleanup
         this.boundEventHandlers = null;
+        this.currentPreviewAudio = null;
+        this.currentPreviewButton = null;
         this.plugin = plugin;
         this.playButtonManager = new PlayButtonManager();
       }
@@ -19281,7 +19320,10 @@ var init_control_panel = __esm({
             this.contentContainer.empty();
             this.createLayersTab();
           };
-          const layersSettings = new SonicGraphLayersSettings2(this.app, this.plugin, onToggle);
+          const onGenreChange = () => {
+            this.refreshSampleBrowser();
+          };
+          const layersSettings = new SonicGraphLayersSettings2(this.app, this.plugin, onToggle, onGenreChange);
           layersSettings.render(this.contentContainer);
           if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) {
             this.createFreesoundIntegrationCard();
@@ -19385,16 +19427,26 @@ var init_control_panel = __esm({
        * Create sample browser card for browsing and selecting Freesound samples
        */
       createSampleBrowserCard() {
-        var _a, _b;
         const card = new MaterialCard({
           title: "Sample browser",
           iconName: "library",
           subtitle: "Browse and preview Freesound samples for the current genre",
           elevation: 1
         });
+        this.sampleBrowserCard = card;
         const content = card.getContent();
         const browserSection = content.createDiv({ cls: "osp-sample-browser-section" });
-        const currentGenre = ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.genre) || "ambient";
+        this.sampleBrowserContainer = browserSection;
+        this.refreshSampleBrowser();
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Refresh the sample browser
+       */
+      refreshSampleBrowser() {
+        if (!this.sampleBrowserContainer)
+          return;
+        this.sampleBrowserContainer.empty();
         let sampleLoader;
         const layerManager = this.plugin.continuousLayerManager;
         if (layerManager && layerManager.sampleLoader) {
@@ -19402,96 +19454,180 @@ var init_control_panel = __esm({
         } else {
           Promise.resolve().then(() => (init_FreesoundSampleLoader(), FreesoundSampleLoader_exports)).then(({ FreesoundSampleLoader: FreesoundSampleLoader2 }) => {
             const tempLoader = new FreesoundSampleLoader2(this.plugin.settings.freesoundApiKey);
-            this.renderSampleBrowser(browserSection, tempLoader, currentGenre);
+            this.renderSampleBrowser(this.sampleBrowserContainer, tempLoader);
           });
-          this.contentContainer.appendChild(card.getElement());
           return;
         }
-        this.renderSampleBrowser(browserSection, sampleLoader, currentGenre);
-        this.contentContainer.appendChild(card.getElement());
+        this.renderSampleBrowser(this.sampleBrowserContainer, sampleLoader);
       }
       /**
        * Render the sample browser UI
        */
-      renderSampleBrowser(container, sampleLoader, currentGenre) {
-        const samples = sampleLoader.getSamplesForGenre(currentGenre);
+      renderSampleBrowser(container, sampleLoader) {
+        const userSamples = this.plugin.settings.freesoundSamples || [];
         const headerEl = container.createDiv({ cls: "osp-sample-browser-header" });
         const titleRow = headerEl.createDiv({ cls: "osp-sample-browser-title-row" });
         titleRow.createEl("h4", {
-          text: `${currentGenre.charAt(0).toUpperCase() + currentGenre.slice(1)} samples (${samples.length} available)`,
+          text: "Sample Library",
           cls: "osp-sample-browser-title"
         });
         const searchBtn = titleRow.createEl("button", {
           text: "Search Freesound",
           cls: "osp-search-freesound-btn"
         });
-        searchBtn.addEventListener("click", () => this.openFreesoundSearch(currentGenre));
+        searchBtn.addEventListener("click", () => this.openFreesoundSearch());
         const infoNote = headerEl.createEl("p", {
           cls: "osp-sample-browser-note"
         });
-        infoNote.innerHTML = '<strong>Tip:</strong> Click "Search Freesound" above to find and add real audio samples to your library. The samples below are placeholders for demonstration.';
-        if (samples.length === 0) {
+        infoNote.innerHTML = '<strong>Tip:</strong> Click "Search Freesound" to find and add real audio samples to your library.';
+        if (userSamples.length > 0) {
+          const enabledSamples = userSamples.filter((s) => s.enabled !== false);
+          const disabledSamples = userSamples.filter((s) => s.enabled === false);
+          if (enabledSamples.length > 0) {
+            const enabledSection = container.createDiv({ cls: "osp-sample-section" });
+            enabledSection.createEl("h5", {
+              text: `Enabled Samples (${enabledSamples.length})`,
+              cls: "osp-sample-section-title osp-enabled-title"
+            });
+            const enabledList = enabledSection.createDiv({ cls: "osp-sample-list" });
+            enabledSamples.forEach((sample, index2) => {
+              this.renderSampleItem(enabledList, sample, index2 + 1, true);
+            });
+          }
+          if (disabledSamples.length > 0) {
+            const disabledSection = container.createDiv({ cls: "osp-sample-section" });
+            disabledSection.createEl("h5", {
+              text: `Disabled Samples (${disabledSamples.length})`,
+              cls: "osp-sample-section-title osp-disabled-title"
+            });
+            const disabledList = disabledSection.createDiv({ cls: "osp-sample-list" });
+            disabledSamples.forEach((sample, index2) => {
+              this.renderSampleItem(disabledList, sample, index2 + 1, true);
+            });
+          }
+        }
+        if (userSamples.length === 0) {
           container.createEl("p", {
-            text: `No samples available for genre: ${currentGenre}`,
+            text: 'No samples in library. Click "Search Freesound" to add samples.',
             cls: "osp-info-message"
           });
-          return;
         }
-        const sampleList = container.createDiv({ cls: "osp-sample-list" });
-        samples.forEach((sample, index2) => {
-          const sampleItem = sampleList.createDiv({ cls: "osp-sample-item" });
-          const infoSection = sampleItem.createDiv({ cls: "osp-sample-info" });
-          const titleEl = infoSection.createEl("div", {
-            text: `${index2 + 1}. ${sample.title}`,
-            cls: "osp-sample-title"
-          });
-          const metaEl = infoSection.createDiv({ cls: "osp-sample-metadata" });
-          metaEl.createEl("span", {
-            text: `${sample.duration}s`,
-            cls: "osp-sample-duration"
-          });
-          metaEl.createEl("span", {
-            text: ` \u2022 ${sample.license}`,
-            cls: "osp-sample-license"
-          });
-          metaEl.createEl("span", {
-            text: ` \u2022 by ${sample.attribution}`,
-            cls: "osp-sample-attribution"
-          });
-          const fadeEl = infoSection.createDiv({ cls: "osp-sample-fade-info" });
-          fadeEl.createEl("span", {
-            text: `Fade in: ${sample.fadeIn}s, Fade out: ${sample.fadeOut}s`,
-            cls: "osp-sample-fade-text"
-          });
-          const actionsSection = sampleItem.createDiv({ cls: "osp-sample-actions" });
-          const previewBtn = actionsSection.createEl("button", {
-            text: "Preview",
-            cls: "osp-sample-action-btn osp-preview-btn"
-          });
-          previewBtn.addEventListener("click", async () => {
-            await this.previewSample(sample, previewBtn);
-          });
-          const infoBtn = actionsSection.createEl("button", {
-            text: "Info",
-            cls: "osp-sample-action-btn osp-info-btn"
-          });
-          infoBtn.addEventListener("click", () => {
-            window.open(`https://freesound.org/s/${sample.id}/`, "_blank");
-          });
+      }
+      /**
+       * Render a single sample item
+       */
+      renderSampleItem(container, sample, number, isUserSample) {
+        const sampleItem = container.createDiv({
+          cls: isUserSample ? "osp-sample-item osp-user-sample" : "osp-sample-item osp-placeholder-sample"
         });
+        const infoSection = sampleItem.createDiv({ cls: "osp-sample-info" });
+        infoSection.createEl("div", {
+          text: `${number}. ${sample.title}`,
+          cls: "osp-sample-title"
+        });
+        const metaEl = infoSection.createDiv({ cls: "osp-sample-metadata" });
+        metaEl.createEl("span", {
+          text: `ID: ${sample.id}`,
+          cls: "osp-sample-id"
+        });
+        metaEl.createEl("span", {
+          text: ` \u2022 ${sample.duration}s`,
+          cls: "osp-sample-duration"
+        });
+        metaEl.createEl("span", {
+          text: ` \u2022 ${sample.license}`,
+          cls: "osp-sample-license"
+        });
+        metaEl.createEl("span", {
+          text: ` \u2022 by ${sample.attribution}`,
+          cls: "osp-sample-attribution"
+        });
+        const fadeEl = infoSection.createDiv({ cls: "osp-sample-fade-info" });
+        fadeEl.createEl("span", {
+          text: `Fade in: ${sample.fadeIn}s, Fade out: ${sample.fadeOut}s`,
+          cls: "osp-sample-fade-text"
+        });
+        const actionsSection = sampleItem.createDiv({ cls: "osp-sample-actions" });
+        const previewBtn = actionsSection.createEl("button", {
+          text: "Preview",
+          cls: "osp-sample-action-btn osp-preview-btn"
+        });
+        previewBtn.addEventListener("click", async () => {
+          await this.previewSample(sample, previewBtn);
+        });
+        const infoBtn = actionsSection.createEl("button", {
+          text: "Info",
+          cls: "osp-sample-action-btn osp-info-btn"
+        });
+        infoBtn.addEventListener("click", () => {
+          logger22.debug("sample-info", `Opening Freesound page for sample`, {
+            id: sample.id,
+            title: sample.title,
+            attribution: sample.attribution,
+            url: `https://freesound.org/s/${sample.id}/`
+          });
+          window.open(`https://freesound.org/s/${sample.id}/`, "_blank");
+        });
+        if (isUserSample) {
+          const isEnabled = sample.enabled !== false;
+          const toggleBtn = actionsSection.createEl("button", {
+            text: isEnabled ? "Disable" : "Enable",
+            cls: `osp-sample-action-btn ${isEnabled ? "osp-disable-btn" : "osp-enable-btn"}`
+          });
+          toggleBtn.addEventListener("click", async () => {
+            await this.toggleSampleEnabled(sample.id);
+          });
+          const removeBtn = actionsSection.createEl("button", {
+            text: "Remove",
+            cls: "osp-sample-action-btn osp-remove-btn"
+          });
+          removeBtn.addEventListener("click", async () => {
+            await this.removeSampleFromLibrary(sample.id);
+          });
+        }
       }
       /**
        * Preview a Freesound sample
        */
       async previewSample(sample, button) {
-        const originalText = button.textContent;
+        if (button.textContent === "Stop") {
+          this.stopPreview();
+          return;
+        }
+        if (this.currentPreviewAudio) {
+          this.stopPreview();
+        }
+        const originalText = button.textContent || "Preview";
         let audio = null;
         try {
           button.textContent = "Loading...";
           button.disabled = true;
+          const apiKey = this.plugin.settings.freesoundApiKey;
+          if (!apiKey) {
+            throw new Error("Freesound API key not configured");
+          }
+          logger22.debug("sample-preview", `Fetching fresh preview URL for sample ${sample.id}`);
+          const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}&fields=previews`;
+          const soundResponse = await (0, import_obsidian10.requestUrl)({
+            url: soundUrl,
+            method: "GET"
+          });
+          const soundData = JSON.parse(soundResponse.text);
+          const previewUrl = soundData.previews["preview-hq-mp3"] || soundData.previews["preview-lq-mp3"];
+          if (!previewUrl) {
+            throw new Error("No preview URL available for this sound");
+          }
+          logger22.debug("sample-preview", `Downloading sample ${sample.id} from ${previewUrl}`);
+          const response = await (0, import_obsidian10.requestUrl)({
+            url: previewUrl,
+            method: "GET"
+          });
+          const blob = new Blob([response.arrayBuffer], { type: "audio/mpeg" });
+          const blobUrl = URL.createObjectURL(blob);
           audio = new Audio();
           audio.addEventListener("error", (e) => {
             logger22.error("sample-preview", `Audio load error for sample ${sample.id}`, e);
+            URL.revokeObjectURL(blobUrl);
             button.textContent = "Error";
             button.disabled = false;
             setTimeout(() => {
@@ -19505,7 +19641,7 @@ var init_control_panel = __esm({
             }
             audio.addEventListener("canplay", () => resolve(), { once: true });
             audio.addEventListener("error", (e) => reject(e), { once: true });
-            audio.src = sample.previewUrl;
+            audio.src = blobUrl;
             audio.load();
           });
           audio.volume = 0;
@@ -19513,6 +19649,8 @@ var init_control_panel = __esm({
           if (playPromise !== void 0) {
             await playPromise;
           }
+          this.currentPreviewAudio = audio;
+          this.currentPreviewButton = button;
           const fadeInSteps = 20;
           const fadeInInterval = sample.fadeIn * 1e3 / fadeInSteps;
           for (let i = 0; i <= fadeInSteps; i++) {
@@ -19524,29 +19662,15 @@ var init_control_panel = __esm({
           }
           button.textContent = "Stop";
           button.disabled = false;
-          const stopHandler = () => {
-            if (!audio)
-              return;
-            const fadeOutSteps = 20;
-            const fadeOutInterval = sample.fadeOut * 1e3 / fadeOutSteps;
-            let currentVolume = audio.volume;
-            for (let i = fadeOutSteps; i >= 0; i--) {
-              setTimeout(() => {
-                if (audio) {
-                  audio.volume = i / fadeOutSteps * currentVolume;
-                  if (i === 0) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                  }
-                }
-              }, (fadeOutSteps - i) * fadeOutInterval);
-            }
-            button.textContent = originalText;
-            button.removeEventListener("click", stopHandler);
-          };
-          button.addEventListener("click", stopHandler, { once: true });
           audio.addEventListener("ended", () => {
-            button.textContent = originalText;
+            URL.revokeObjectURL(blobUrl);
+          });
+          audio.addEventListener("ended", () => {
+            if (this.currentPreviewButton) {
+              this.currentPreviewButton.textContent = originalText;
+            }
+            this.currentPreviewAudio = null;
+            this.currentPreviewButton = null;
           });
         } catch (error) {
           logger22.error("sample-preview", `Failed to preview sample ${sample.id}`, error);
@@ -19555,12 +19679,44 @@ var init_control_panel = __esm({
           setTimeout(() => {
             button.textContent = originalText;
           }, 2e3);
+          this.currentPreviewAudio = null;
+          this.currentPreviewButton = null;
         }
+      }
+      /**
+       * Stop the currently playing preview
+       */
+      stopPreview() {
+        if (!this.currentPreviewAudio || !this.currentPreviewButton)
+          return;
+        const audio = this.currentPreviewAudio;
+        const button = this.currentPreviewButton;
+        const fadeOut = 1;
+        const fadeOutSteps = 20;
+        const fadeOutInterval = fadeOut * 1e3 / fadeOutSteps;
+        const currentVolume = audio.volume;
+        for (let i = fadeOutSteps; i >= 0; i--) {
+          setTimeout(() => {
+            if (audio) {
+              audio.volume = i / fadeOutSteps * currentVolume;
+              if (i === 0) {
+                audio.pause();
+                audio.currentTime = 0;
+                if (audio.src.startsWith("blob:")) {
+                  URL.revokeObjectURL(audio.src);
+                }
+              }
+            }
+          }, (fadeOutSteps - i) * fadeOutInterval);
+        }
+        button.textContent = "Preview";
+        this.currentPreviewAudio = null;
+        this.currentPreviewButton = null;
       }
       /**
        * Open Freesound search modal
        */
-      openFreesoundSearch(genre) {
+      openFreesoundSearch() {
         const apiKey = this.plugin.settings.freesoundApiKey;
         if (!apiKey) {
           new import_obsidian10.Notice("Please enter your Freesound API key in the Freesound Integration settings first.");
@@ -19569,31 +19725,65 @@ var init_control_panel = __esm({
         const modal = new FreesoundSearchModal(
           this.app,
           apiKey,
-          genre,
-          (sample) => this.addSampleToLibrary(genre, sample)
+          (sample) => this.addSampleToLibrary(sample)
         );
         modal.open();
       }
       /**
        * Add a sample to the user's library
        */
-      async addSampleToLibrary(genre, sample) {
+      async addSampleToLibrary(sample) {
         if (!this.plugin.settings.freesoundSamples) {
-          this.plugin.settings.freesoundSamples = {};
+          this.plugin.settings.freesoundSamples = [];
         }
-        if (!this.plugin.settings.freesoundSamples[genre]) {
-          this.plugin.settings.freesoundSamples[genre] = [];
-        }
-        const exists = this.plugin.settings.freesoundSamples[genre].some((s) => s.id === sample.id);
+        const exists = this.plugin.settings.freesoundSamples.some((s) => s.id === sample.id);
         if (exists) {
-          new import_obsidian10.Notice(`Sample "${sample.title}" is already in your ${genre} library`);
+          new import_obsidian10.Notice(`Sample "${sample.title}" is already in your library`);
           return;
         }
-        this.plugin.settings.freesoundSamples[genre].push(sample);
+        const sampleWithEnabled = { ...sample, enabled: true };
+        this.plugin.settings.freesoundSamples.push(sampleWithEnabled);
         await this.plugin.saveSettings();
-        logger22.info("library", `Added sample ${sample.id} to ${genre} library`);
-        this.contentContainer.empty();
-        this.createLayersTab();
+        logger22.info("library", `Added sample ${sample.id} to library`);
+        this.refreshSampleBrowser();
+      }
+      /**
+       * Toggle a sample's enabled status
+       */
+      async toggleSampleEnabled(sampleId) {
+        if (!this.plugin.settings.freesoundSamples) {
+          return;
+        }
+        const sample = this.plugin.settings.freesoundSamples.find((s) => s.id === sampleId);
+        if (!sample) {
+          new import_obsidian10.Notice("Sample not found in library");
+          return;
+        }
+        const wasEnabled = sample.enabled !== false;
+        sample.enabled = !wasEnabled;
+        await this.plugin.saveSettings();
+        logger22.info("library", `${wasEnabled ? "Disabled" : "Enabled"} sample ${sampleId}`);
+        new import_obsidian10.Notice(`${wasEnabled ? "Disabled" : "Enabled"} "${sample.title}"`);
+        this.refreshSampleBrowser();
+      }
+      /**
+       * Remove a sample from the user's library
+       */
+      async removeSampleFromLibrary(sampleId) {
+        if (!this.plugin.settings.freesoundSamples) {
+          return;
+        }
+        const index2 = this.plugin.settings.freesoundSamples.findIndex((s) => s.id === sampleId);
+        if (index2 === -1) {
+          new import_obsidian10.Notice("Sample not found in library");
+          return;
+        }
+        const sampleTitle = this.plugin.settings.freesoundSamples[index2].title;
+        this.plugin.settings.freesoundSamples.splice(index2, 1);
+        await this.plugin.saveSettings();
+        logger22.info("library", `Removed sample ${sampleId} from library`);
+        new import_obsidian10.Notice(`Removed "${sampleTitle}" from library`);
+        this.refreshSampleBrowser();
       }
       createScaleKeyCard() {
         const card = new MaterialCard({
@@ -62157,6 +62347,10 @@ var init_MusicalGenreEngine = __esm({
         // Sample integration
         this.sampleLoader = null;
         this.loadedSamples = /* @__PURE__ */ new Map();
+        this.activeSampleAudios = [];
+        this.sampleFadeOutTimers = [];
+        this.userSamples = [];
+        // Flat array of all user samples
         // Playback state
         this.activeNotes = /* @__PURE__ */ new Set();
         this.evolutionTimer = null;
@@ -62225,6 +62419,7 @@ var init_MusicalGenreEngine = __esm({
           this.stopEvolution();
           this.lfos.forEach((lfo) => lfo.stop());
           this.releaseAllNotes();
+          this.stopActiveSample();
           this.synthVolume.volume.rampTo(-60, 2);
           await new Promise((resolve) => setTimeout(resolve, 2e3));
           this.isPlaying = false;
@@ -62313,6 +62508,15 @@ var init_MusicalGenreEngine = __esm({
        */
       setSampleLoader(loader) {
         this.sampleLoader = loader;
+      }
+      /**
+       * Set user samples from settings (flat array)
+       */
+      setUserSamples(userSamples) {
+        this.userSamples = userSamples || [];
+        logger47.debug("samples", "User samples set", {
+          count: this.userSamples.length
+        });
       }
       /**
        * Clean up resources
@@ -62863,6 +63067,23 @@ var init_MusicalGenreEngine = __esm({
           return;
         }
         try {
+          let samplesToUse = null;
+          let sampleSource = "none";
+          if (this.userSamples && this.userSamples.length > 0) {
+            const enabledUserSamples = this.userSamples.filter((s) => s.enabled !== false);
+            if (enabledUserSamples.length > 0) {
+              samplesToUse = enabledUserSamples;
+              sampleSource = "user";
+            }
+          }
+          if (samplesToUse && samplesToUse.length > 0) {
+            logger47.info("playback", `Playing ${samplesToUse.length} ${sampleSource} sample(s)`);
+            const playPromises = samplesToUse.map(
+              (sample, index2) => this.playSample(sample, samplesToUse.length)
+            );
+            await Promise.all(playPromises);
+            return;
+          }
           switch (this.currentGenre) {
             case "drone":
             case "ambient":
@@ -62909,6 +63130,71 @@ var init_MusicalGenreEngine = __esm({
         } catch (error) {
           logger47.error("playback", "Error playing initial sound", error);
         }
+      }
+      /**
+       * Play a Freesound sample
+       * @param sample - The sample to play
+       * @param totalSamples - Total number of samples playing (for volume adjustment)
+       */
+      async playSample(sample, totalSamples = 1) {
+        try {
+          logger47.info("playback", `Playing sample: ${sample.title}`, { id: sample.id, url: sample.previewUrl });
+          const audio = new Audio(sample.previewUrl);
+          this.activeSampleAudios.push(audio);
+          const volumeAdjustment = Math.min(1, 1 / Math.sqrt(totalSamples));
+          audio.volume = 0;
+          audio.play();
+          const fadeInSteps = 20;
+          const fadeInInterval = (sample.fadeIn || 1) * 1e3 / fadeInSteps;
+          for (let i = 0; i <= fadeInSteps; i++) {
+            setTimeout(() => {
+              if (audio && this.activeSampleAudios.includes(audio)) {
+                audio.volume = Math.min(volumeAdjustment, i / fadeInSteps * volumeAdjustment);
+              }
+            }, i * fadeInInterval);
+          }
+          const fadeOutStart = (sample.duration || 4) - (sample.fadeOut || 1);
+          const fadeOutTimer = window.setTimeout(() => {
+            if (audio && this.activeSampleAudios.includes(audio)) {
+              const fadeOutSteps = 20;
+              const fadeOutInterval = (sample.fadeOut || 1) * 1e3 / fadeOutSteps;
+              const currentVolume = audio.volume;
+              for (let i = fadeOutSteps; i >= 0; i--) {
+                setTimeout(() => {
+                  if (audio && this.activeSampleAudios.includes(audio)) {
+                    audio.volume = i / fadeOutSteps * currentVolume;
+                    if (i === 0) {
+                      audio.pause();
+                      const audioIndex = this.activeSampleAudios.indexOf(audio);
+                      if (audioIndex > -1) {
+                        this.activeSampleAudios.splice(audioIndex, 1);
+                      }
+                    }
+                  }
+                }, (fadeOutSteps - i) * fadeOutInterval);
+              }
+            }
+          }, fadeOutStart * 1e3);
+          this.sampleFadeOutTimers.push(fadeOutTimer);
+          logger47.info("playback", `Sample ${sample.id} playing successfully at ${(volumeAdjustment * 100).toFixed(0)}% volume`);
+        } catch (error) {
+          logger47.error("playback", `Error playing sample ${sample.id}`, error);
+        }
+      }
+      /**
+       * Stop all currently playing samples
+       */
+      stopActiveSample() {
+        this.activeSampleAudios.forEach((audio) => {
+          audio.pause();
+          audio.currentTime = 0;
+        });
+        this.activeSampleAudios = [];
+        this.sampleFadeOutTimers.forEach((timer2) => {
+          clearTimeout(timer2);
+        });
+        this.sampleFadeOutTimers = [];
+        logger47.debug("playback", "Stopped all active samples");
       }
       triggerNote(notes, duration) {
         if (!this.primarySynth) {
@@ -63886,6 +64172,12 @@ var init_ContinuousLayerManager = __esm({
         this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey);
         this.rhythmicLayer = new RhythmicLayerManager(settings);
         this.harmonicLayer = new HarmonicLayerManager(settings);
+        if (settings.freesoundSamples) {
+          this.genreEngine.setUserSamples(settings.freesoundSamples);
+          logger50.debug("initialization", "Set user samples on genre engine", {
+            count: settings.freesoundSamples.length
+          });
+        }
         logger50.info("initialization", `ContinuousLayerManager created with genre: ${this.config.genre}`);
       }
       /**
@@ -63909,6 +64201,7 @@ var init_ContinuousLayerManager = __esm({
           await this.sampleLoader.initialize();
           await this.rhythmicLayer.initialize();
           await this.harmonicLayer.initialize();
+          this.genreEngine.setSampleLoader(this.sampleLoader);
           if (this.settings.freesoundApiKey) {
             await this.sampleLoader.preloadGenreSamples(this.config.genre);
           }
@@ -90135,6 +90428,7 @@ var GraphParser = class {
 init_musical_mapper();
 init_logging();
 init_whale_integration();
+init_FreesoundSampleLoader();
 var logger72 = getLogger("main");
 var SonigraphPlugin = class extends import_obsidian22.Plugin {
   constructor() {
@@ -90535,6 +90829,7 @@ var SonigraphPlugin = class extends import_obsidian22.Plugin {
    */
   migrateSettings() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+    logger72.info("migration", "migrateSettings() called - checking for needed migrations");
     let migrationNeeded = false;
     if ("effects" in this.settings && !((_a = this.settings.effects) == null ? void 0 : _a.piano)) {
       logger72.info("settings", "Migrating old effects structure to per-instrument structure");
@@ -90749,10 +91044,77 @@ var SonigraphPlugin = class extends import_obsidian22.Plugin {
         }
       };
     }
+    if (this.settings.freesoundSamples && typeof this.settings.freesoundSamples === "object" && !Array.isArray(this.settings.freesoundSamples)) {
+      logger72.info("migration", "Migrating from genre-based samples to flat array");
+      this.flattenGenreBasedSamples();
+      migrationNeeded = true;
+    }
     if (migrationNeeded) {
       this.saveSettings();
       logger72.info("settings", "Settings migration completed");
     }
+  }
+  /**
+   * Flatten genre-based samples ({genre: sample[]}) to flat array (sample[])
+   * Part of Option 3 refactor to remove genre organization
+   */
+  flattenGenreBasedSamples() {
+    const oldFormat = this.settings.freesoundSamples;
+    const flatArray = [];
+    Object.keys(oldFormat).forEach((genre) => {
+      const samples = oldFormat[genre];
+      if (Array.isArray(samples)) {
+        flatArray.push(...samples);
+      }
+    });
+    this.settings.freesoundSamples = flatArray;
+    logger72.info("migration", `Flattened ${flatArray.length} samples from genre-based format to flat array`);
+  }
+  /**
+   * Check if placeholder migration is needed by counting actual placeholder samples in library
+   */
+  checkPlaceholderMigrationNeeded() {
+    const sampleCount = Array.isArray(this.settings.freesoundSamples) ? this.settings.freesoundSamples.length : 0;
+    logger72.info("migration-check", "Checking placeholder migration status", {
+      sampleCount,
+      needsMigration: sampleCount < 39
+    });
+    if (sampleCount < 39) {
+      logger72.info("migration-check", `Migration needed - only have ${sampleCount} samples, need 39`);
+      return true;
+    }
+    logger72.info("migration-check", `Already complete - have ${sampleCount} samples`);
+    return false;
+  }
+  /**
+   * Add all 39 placeholder samples to user's library as disabled samples
+   */
+  addPlaceholderSamplesToLibrary() {
+    const sampleLoader = new FreesoundSampleLoader();
+    const allGenres = sampleLoader.getAllGenres();
+    logger72.info("migration", `Starting placeholder migration for ${allGenres.length} genres`);
+    logger72.info("migration", "Genres: " + allGenres.map((g) => `${g.genre}(${g.sampleCount})`).join(", "));
+    if (!this.settings.freesoundSamples) {
+      this.settings.freesoundSamples = {};
+    }
+    let totalAdded = 0;
+    allGenres.forEach(({ genre, sampleCount }) => {
+      const genreSamples = sampleLoader.getSamplesForGenre(genre);
+      logger72.info("migration", `Processing ${genre}: expected=${sampleCount}, actual=${genreSamples.length}`);
+      if (genreSamples && genreSamples.length > 0) {
+        const existingUserSamples = this.settings.freesoundSamples[genre] || [];
+        const disabledPlaceholders = genreSamples.map((sample) => ({
+          ...sample,
+          enabled: false
+        }));
+        const existingIds = new Set(existingUserSamples.map((s) => s.id));
+        const newPlaceholders = disabledPlaceholders.filter((s) => !existingIds.has(s.id));
+        this.settings.freesoundSamples[genre] = [...existingUserSamples, ...newPlaceholders];
+        totalAdded += newPlaceholders.length;
+        logger72.info("migration", `${genre}: added ${newPlaceholders.length} new, ${existingUserSamples.length} existing, ${this.settings.freesoundSamples[genre].length} total`);
+      }
+    });
+    logger72.info("migration", `Complete: added ${totalAdded} samples across ${allGenres.length} genres`);
   }
   async saveSettings() {
     await this.saveData(this.settings);

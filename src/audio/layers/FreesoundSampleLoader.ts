@@ -226,7 +226,7 @@ export class FreesoundSampleLoader {
   }
   
   /**
-   * Get all samples for a specific genre
+   * Get all samples for a specific genre (placeholder samples only)
    */
   getSamplesForGenre(genre: MusicalGenre): FreesoundSample[] {
     return this.sampleLibrary.get(genre) || [];

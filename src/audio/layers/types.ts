@@ -91,9 +91,9 @@ export interface FreesoundSample {
   duration: number;
   license: string;
   attribution: string;
-  genre: MusicalGenre;
   fadeIn: number; // Fade in duration in seconds
   fadeOut: number; // Fade out duration in seconds
+  enabled?: boolean; // Whether this sample is enabled for playback (default: true)
 }
 
 export interface LayerState {

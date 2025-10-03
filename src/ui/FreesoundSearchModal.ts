@@ -34,7 +34,6 @@ interface SearchFilters {
 
 export class FreesoundSearchModal extends Modal {
 	private apiKey: string;
-	private currentGenre: MusicalGenre;
 	private onAddSample: (sample: FreesoundSample) => void;
 
 	private filters: SearchFilters = {
@@ -47,6 +46,7 @@ export class FreesoundSearchModal extends Modal {
 	private searchResults: FreesoundSearchResult[] = [];
 	private isSearching = false;
 	private currentAudio: HTMLAudioElement | null = null;
+	private currentPreviewButton: HTMLButtonElement | null = null;
 
 	// UI elements
 	private searchInput: HTMLInputElement | null = null;
@@ -55,12 +55,10 @@ export class FreesoundSearchModal extends Modal {
 	constructor(
 		app: App,
 		apiKey: string,
-		genre: MusicalGenre,
 		onAddSample: (sample: FreesoundSample) => void
 	) {
 		super(app);
 		this.apiKey = apiKey;
-		this.currentGenre = genre;
 		this.onAddSample = onAddSample;
 	}
 
@@ -71,7 +69,7 @@ export class FreesoundSearchModal extends Modal {
 
 		// Modal header
 		contentEl.createEl('h2', {
-			text: `Search Freesound for ${this.currentGenre} samples`,
+			text: 'Search Freesound',
 			cls: 'freesound-search-title'
 		});
 
@@ -299,15 +297,20 @@ export class FreesoundSearchModal extends Modal {
 	}
 
 	private async previewSample(result: FreesoundSearchResult, button: HTMLButtonElement): Promise<void> {
-		const originalText = button.textContent;
+		// If already playing this sample, stop it
+		if (button.textContent === 'Stop') {
+			this.stopPreview();
+			return;
+		}
+
+		// Stop any currently playing preview
+		if (this.currentAudio) {
+			this.stopPreview();
+		}
+
+		const originalText = button.textContent || 'Preview';
 
 		try {
-			// Stop current audio if playing
-			if (this.currentAudio) {
-				this.currentAudio.pause();
-				this.currentAudio = null;
-			}
-
 			// Show loading
 			button.textContent = 'Loading...';
 			button.disabled = true;
@@ -315,6 +318,7 @@ export class FreesoundSearchModal extends Modal {
 			// Create and play audio
 			const audio = new Audio(result.previews['preview-lq-mp3']);
 			this.currentAudio = audio;
+			this.currentPreviewButton = button;
 
 			await new Promise<void>((resolve, reject) => {
 				audio.addEventListener('canplay', () => resolve(), { once: true });
@@ -327,18 +331,12 @@ export class FreesoundSearchModal extends Modal {
 			button.textContent = 'Stop';
 			button.disabled = false;
 
-			const stopHandler = () => {
-				audio.pause();
-				audio.currentTime = 0;
-				this.currentAudio = null;
-				button.textContent = originalText;
-			};
-
-			button.addEventListener('click', stopHandler, { once: true });
-
 			audio.addEventListener('ended', () => {
-				button.textContent = originalText;
+				if (this.currentPreviewButton) {
+					this.currentPreviewButton.textContent = originalText;
+				}
 				this.currentAudio = null;
+				this.currentPreviewButton = null;
 			});
 
 		} catch (error) {
@@ -348,6 +346,21 @@ export class FreesoundSearchModal extends Modal {
 				button.textContent = originalText;
 				button.disabled = false;
 			}, 2000);
+			this.currentAudio = null;
+			this.currentPreviewButton = null;
+		}
+	}
+
+	private stopPreview(): void {
+		if (this.currentAudio) {
+			this.currentAudio.pause();
+			this.currentAudio.currentTime = 0;
+			this.currentAudio = null;
+		}
+
+		if (this.currentPreviewButton) {
+			this.currentPreviewButton.textContent = 'Preview';
+			this.currentPreviewButton = null;
 		}
 	}
 
@@ -359,14 +372,13 @@ export class FreesoundSearchModal extends Modal {
 			duration: result.duration,
 			license: result.license,
 			attribution: result.username,
-			genre: this.currentGenre,
 			fadeIn: 2,  // Default fade settings
 			fadeOut: 3
 		};
 
 		this.onAddSample(sample);
-		new Notice(`Added "${result.name}" to ${this.currentGenre} library`);
-		logger.info('library', `Added sample ${result.id} to ${this.currentGenre} library`);
+		new Notice(`Added "${result.name}" to library`);
+		logger.info('library', `Added sample ${result.id} to library`);
 	}
 
 	private displayError(error: any): void {

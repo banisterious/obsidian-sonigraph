@@ -76,7 +76,10 @@ export class MusicalGenreEngine {
   // Sample integration
   private sampleLoader: FreesoundSampleLoader | null = null;
   private loadedSamples: Map<string, Sampler> = new Map();
-  
+  private activeSampleAudios: HTMLAudioElement[] = [];
+  private sampleFadeOutTimers: number[] = [];
+  private userSamples: any[] = []; // Flat array of all user samples
+
   // Playback state
   private activeNotes: Set<string> = new Set();
   private evolutionTimer: number | null = null;
@@ -172,28 +175,31 @@ export class MusicalGenreEngine {
     if (!this.isPlaying) {
       return;
     }
-    
+
     try {
       logger.info('playback', `Stopping genre playback: ${this.currentGenre}`);
-      
+
       // Stop evolution
       this.stopEvolution();
-      
+
       // Stop all LFOs
       this.lfos.forEach(lfo => lfo.stop());
-      
+
       // Release all active notes
       this.releaseAllNotes();
-      
+
+      // Stop any active sample playback
+      this.stopActiveSample();
+
       // Fade out volume
       this.synthVolume.volume.rampTo(-60, 2);
-      
+
       // Wait for fade out
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       this.isPlaying = false;
       this.activeVoices = 0;
-      
+
       logger.info('playback', `Genre playback stopped: ${this.currentGenre}`);
     } catch (error) {
       logger.error('playback', `Error stopping genre playback: ${this.currentGenre}`, error);
@@ -313,6 +319,16 @@ export class MusicalGenreEngine {
    */
   setSampleLoader(loader: FreesoundSampleLoader): void {
     this.sampleLoader = loader;
+  }
+
+  /**
+   * Set user samples from settings (flat array)
+   */
+  setUserSamples(userSamples: any[]): void {
+    this.userSamples = userSamples || [];
+    logger.debug('samples', 'User samples set', {
+      count: this.userSamples.length
+    });
   }
   
   /**
@@ -926,8 +942,35 @@ export class MusicalGenreEngine {
     if (!this.primarySynth) {
       return;
     }
-    
+
     try {
+      // Use user samples (only enabled ones) - no genre filtering
+      let samplesToUse = null;
+      let sampleSource = 'none';
+
+      // Check for enabled user samples
+      if (this.userSamples && this.userSamples.length > 0) {
+        const enabledUserSamples = this.userSamples.filter(s => s.enabled !== false);
+        if (enabledUserSamples.length > 0) {
+          samplesToUse = enabledUserSamples;
+          sampleSource = 'user';
+        }
+      }
+
+      // If we have samples, play all of them layered together
+      if (samplesToUse && samplesToUse.length > 0) {
+        logger.info('playback', `Playing ${samplesToUse.length} ${sampleSource} sample(s)`);
+
+        // Play all enabled samples concurrently
+        const playPromises = samplesToUse.map((sample, index) =>
+          this.playSample(sample, samplesToUse.length)
+        );
+
+        await Promise.all(playPromises);
+        return;
+      }
+
+      // Fallback to synthesized sounds if no samples available
       // Play initial drone/chord based on genre
       switch (this.currentGenre) {
         case 'drone':
@@ -935,70 +978,156 @@ export class MusicalGenreEngine {
           // Play a low drone chord
           this.triggerNote(['C2', 'G2', 'C3'], 16); // Long sustain
           break;
-          
+
         case 'electronic':
           // Play an evolving pad chord
           this.triggerNote(['C3', 'E3', 'G3'], 8);
           break;
-          
+
         case 'industrial':
           // Play percussive industrial sound
           if (this.primarySynth instanceof MetalSynth) {
             this.primarySynth.triggerAttackRelease('C2', '2n');
           }
           break;
-          
+
         case 'orchestral':
           // Play rich orchestral chord
           this.triggerNote(['C2', 'G2', 'C3', 'E3', 'G3'], 12);
           break;
-          
+
         case 'minimal':
           // Play single sparse note
           this.triggerNote(['C3'], 16);
           break;
-          
+
         case 'oceanic':
           // Play flowing wave-like chord
           this.triggerNote(['F2', 'C3', 'F3'], 20);
           break;
-          
+
         case 'sci-fi':
           // Play futuristic interval
           this.triggerNote(['C2', 'F#2', 'C3'], 8);
           break;
-          
+
         case 'experimental':
           // Play dissonant cluster
           this.triggerNote(['C2', 'C#2', 'D2', 'Eb2'], 6);
           break;
-          
+
         case 'urban':
           // Play city-like rhythm chord
           this.triggerNote(['A2', 'E3', 'A3'], 8);
           break;
-          
+
         case 'nature':
           // Play natural harmonics
           this.triggerNote(['D2', 'A2', 'D3', 'F#3'], 16);
           break;
-          
+
         case 'mechanical':
           // Play industrial rhythm
           this.triggerNote(['E2', 'B2'], 2);
           break;
-          
+
         case 'organic':
           // Play warm organic chord
           this.triggerNote(['G2', 'D3', 'G3', 'B3'], 12);
           break;
-          
+
         default:
           this.triggerNote(['C3', 'E3'], 8);
       }
     } catch (error) {
       logger.error('playback', 'Error playing initial sound', error);
     }
+  }
+
+  /**
+   * Play a Freesound sample
+   * @param sample - The sample to play
+   * @param totalSamples - Total number of samples playing (for volume adjustment)
+   */
+  private async playSample(sample: any, totalSamples: number = 1): Promise<void> {
+    try {
+      logger.info('playback', `Playing sample: ${sample.title}`, { id: sample.id, url: sample.previewUrl });
+
+      // Create a simple HTML5 audio element for playback
+      const audio = new Audio(sample.previewUrl);
+      this.activeSampleAudios.push(audio);
+
+      // Adjust volume based on number of samples to prevent clipping
+      // Use equal-power panning formula: 1/sqrt(n) for n sources
+      const volumeAdjustment = Math.min(1, 1 / Math.sqrt(totalSamples));
+
+      // Apply fade in
+      audio.volume = 0;
+      audio.play();
+
+      // Fade in over fadeIn duration
+      const fadeInSteps = 20;
+      const fadeInInterval = ((sample.fadeIn || 1) * 1000) / fadeInSteps;
+      for (let i = 0; i <= fadeInSteps; i++) {
+        setTimeout(() => {
+          if (audio && this.activeSampleAudios.includes(audio)) {
+            audio.volume = Math.min(volumeAdjustment, (i / fadeInSteps) * volumeAdjustment);
+          }
+        }, i * fadeInInterval);
+      }
+
+      // Schedule fade out before end
+      const fadeOutStart = (sample.duration || 4) - (sample.fadeOut || 1);
+      const fadeOutTimer = window.setTimeout(() => {
+        if (audio && this.activeSampleAudios.includes(audio)) {
+          const fadeOutSteps = 20;
+          const fadeOutInterval = ((sample.fadeOut || 1) * 1000) / fadeOutSteps;
+          const currentVolume = audio.volume;
+
+          for (let i = fadeOutSteps; i >= 0; i--) {
+            setTimeout(() => {
+              if (audio && this.activeSampleAudios.includes(audio)) {
+                audio.volume = (i / fadeOutSteps) * currentVolume;
+                if (i === 0) {
+                  audio.pause();
+                  // Remove from active list
+                  const audioIndex = this.activeSampleAudios.indexOf(audio);
+                  if (audioIndex > -1) {
+                    this.activeSampleAudios.splice(audioIndex, 1);
+                  }
+                }
+              }
+            }, (fadeOutSteps - i) * fadeOutInterval);
+          }
+        }
+      }, fadeOutStart * 1000);
+
+      this.sampleFadeOutTimers.push(fadeOutTimer);
+
+      logger.info('playback', `Sample ${sample.id} playing successfully at ${(volumeAdjustment * 100).toFixed(0)}% volume`);
+    } catch (error) {
+      logger.error('playback', `Error playing sample ${sample.id}`, error);
+    }
+  }
+
+  /**
+   * Stop all currently playing samples
+   */
+  private stopActiveSample(): void {
+    // Stop all active audio elements
+    this.activeSampleAudios.forEach(audio => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
+    this.activeSampleAudios = [];
+
+    // Clear all fade out timers
+    this.sampleFadeOutTimers.forEach(timer => {
+      clearTimeout(timer);
+    });
+    this.sampleFadeOutTimers = [];
+
+    logger.debug('playback', 'Stopped all active samples');
   }
   
   private triggerNote(notes: string | string[], duration: number): void {

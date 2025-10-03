@@ -102,7 +102,15 @@ export class ContinuousLayerManager {
     this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey);
     this.rhythmicLayer = new RhythmicLayerManager(settings);
     this.harmonicLayer = new HarmonicLayerManager(settings);
-    
+
+    // Set user samples directly on genre engine (flat array)
+    if (settings.freesoundSamples) {
+      this.genreEngine.setUserSamples(settings.freesoundSamples);
+      logger.debug('initialization', 'Set user samples on genre engine', {
+        count: settings.freesoundSamples.length
+      });
+    }
+
     logger.info('initialization', `ContinuousLayerManager created with genre: ${this.config.genre}`);
   }
   
@@ -136,7 +144,10 @@ export class ContinuousLayerManager {
       await this.sampleLoader.initialize();
       await this.rhythmicLayer.initialize();
       await this.harmonicLayer.initialize();
-      
+
+      // Connect sample loader to genre engine
+      this.genreEngine.setSampleLoader(this.sampleLoader);
+
       // Preload samples for current genre if Freesound is available
       if (this.settings.freesoundApiKey) {
         await this.sampleLoader.preloadGenreSamples(this.config.genre);
