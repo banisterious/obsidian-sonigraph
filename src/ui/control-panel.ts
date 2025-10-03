@@ -722,6 +722,12 @@ export class MaterialControlPanelModal extends Modal {
 			cls: 'osp-sample-browser-title'
 		});
 
+		// Add info note about placeholder samples
+		const infoNote = headerEl.createEl('p', {
+			cls: 'osp-sample-browser-note'
+		});
+		infoNote.innerHTML = '<strong>Note:</strong> These are placeholder sample IDs. Preview and Info buttons may not work until you configure real Freesound samples via the API. Use the Freesound search functionality to find and add real samples to your library.';
+
 		if (samples.length === 0) {
 			container.createEl('p', {
 				text: `No samples available for genre: ${currentGenre}`,
@@ -784,7 +790,8 @@ export class MaterialControlPanelModal extends Modal {
 				cls: 'osp-sample-action-btn osp-info-btn'
 			});
 			infoBtn.addEventListener('click', () => {
-				window.open(`https://freesound.org/people/${sample.attribution}/sounds/${sample.id}/`, '_blank');
+				// Direct link to sound page (username agnostic)
+				window.open(`https://freesound.org/s/${sample.id}/`, '_blank');
 			});
 		});
 	}
@@ -794,6 +801,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
 		const originalText = button.textContent;
+		let audio: HTMLAudioElement | null = null;
 
 		try {
 			// Show loading state
@@ -801,18 +809,47 @@ export class MaterialControlPanelModal extends Modal {
 			button.disabled = true;
 
 			// Create audio element for preview
-			const audio = new Audio(sample.previewUrl);
+			audio = new Audio();
 
-			// Apply fade in/out
+			// Set up error handling before setting src
+			audio.addEventListener('error', (e) => {
+				logger.error('sample-preview', `Audio load error for sample ${sample.id}`, e);
+				button.textContent = 'Error';
+				button.disabled = false;
+				setTimeout(() => {
+					button.textContent = originalText;
+				}, 2000);
+			});
+
+			// Wait for audio to be ready
+			await new Promise<void>((resolve, reject) => {
+				if (!audio) {
+					reject(new Error('Audio element not created'));
+					return;
+				}
+
+				audio.addEventListener('canplay', () => resolve(), { once: true });
+				audio.addEventListener('error', (e) => reject(e), { once: true });
+				audio.src = sample.previewUrl;
+				audio.load();
+			});
+
+			// Start playback with fade in
 			audio.volume = 0;
-			audio.play();
+			const playPromise = audio.play();
+
+			if (playPromise !== undefined) {
+				await playPromise;
+			}
 
 			// Fade in
 			const fadeInSteps = 20;
 			const fadeInInterval = (sample.fadeIn * 1000) / fadeInSteps;
 			for (let i = 0; i <= fadeInSteps; i++) {
 				setTimeout(() => {
-					audio.volume = i / fadeInSteps;
+					if (audio) {
+						audio.volume = Math.min(1, i / fadeInSteps);
+					}
 				}, i * fadeInInterval);
 			}
 
@@ -822,15 +859,21 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Handle stop on click
 			const stopHandler = () => {
+				if (!audio) return;
+
 				// Fade out
 				const fadeOutSteps = 20;
 				const fadeOutInterval = (sample.fadeOut * 1000) / fadeOutSteps;
+				let currentVolume = audio.volume;
+
 				for (let i = fadeOutSteps; i >= 0; i--) {
 					setTimeout(() => {
-						audio.volume = i / fadeOutSteps;
-						if (i === 0) {
-							audio.pause();
-							audio.currentTime = 0;
+						if (audio) {
+							audio.volume = (i / fadeOutSteps) * currentVolume;
+							if (i === 0) {
+								audio.pause();
+								audio.currentTime = 0;
+							}
 						}
 					}, (fadeOutSteps - i) * fadeOutInterval);
 				}
@@ -848,8 +891,11 @@ export class MaterialControlPanelModal extends Modal {
 
 		} catch (error) {
 			logger.error('sample-preview', `Failed to preview sample ${sample.id}`, error);
-			button.textContent = originalText;
+			button.textContent = 'Error';
 			button.disabled = false;
+			setTimeout(() => {
+				button.textContent = originalText;
+			}, 2000);
 		}
 	}
 
