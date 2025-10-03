@@ -789,6 +789,14 @@ export default class SonigraphPlugin extends Plugin {
 		//   migrationNeeded = true;
 		// }
 
+		// Import curated Freesound samples if user has no samples yet
+		if (!this.settings.freesoundSamples || this.settings.freesoundSamples.length === 0) {
+			logger.info('settings', 'No Freesound samples found - importing curated library');
+			migrationNeeded = true;
+			this.settings.freesoundSamples = this.getCuratedSamples();
+			logger.info('settings', `Imported ${this.settings.freesoundSamples.length} curated samples`);
+		}
+
 		// Save migrated settings if any changes were made
 		if (migrationNeeded) {
 			this.saveSettings();
@@ -888,6 +896,15 @@ export default class SonigraphPlugin extends Plugin {
 		});
 
 		logger.info('migration', `Complete: added ${totalAdded} samples across ${allGenres.length} genres`);
+	}
+
+	/**
+	 * Get curated Freesound samples for initial library
+	 */
+	private getCuratedSamples(): any[] {
+		// Import the transformed curated samples
+		const curatedSamples = require('../curated-samples-transformed.json');
+		return curatedSamples;
 	}
 
 	async saveSettings(): Promise<void> {
