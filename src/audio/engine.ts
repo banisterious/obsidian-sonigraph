@@ -13,6 +13,8 @@ import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackPro
 import { PlaybackOptimizer } from './optimizations/PlaybackOptimizer';
 import { MemoryMonitor } from './optimizations/MemoryMonitor';
 import { AudioGraphCleaner } from './optimizations/AudioGraphCleaner';
+import { MusicalTheoryEngine } from './theory/MusicalTheoryEngine';
+import { MusicalTheoryConfig } from './theory/types';
 
 const logger = getLogger('audio-engine');
 
@@ -36,6 +38,7 @@ export class AudioEngine {
 	private voiceManager: VoiceManager;
 	private effectBusManager: EffectBusManager;
 	private instrumentConfigLoader: InstrumentConfigLoader;
+	private musicalTheoryEngine: MusicalTheoryEngine | null = null;
 
 	// Real-time feedback properties
 	private previewTimeouts: Map<string, number> = new Map();
@@ -307,13 +310,16 @@ export class AudioEngine {
 
 			// Initialize effects first to ensure volume/effects maps are populated
 			await this.initializeEffects();
-			
+
 			// Initialize instruments
 			await this.initializeInstruments();
-			
+
 			// Initialize advanced synthesis engines
 			await this.initializeAdvancedSynthesis();
-			
+
+			// Initialize musical theory engine for harmonic constraints
+			this.initializeMusicalTheory();
+
 			// Check if enhanced routing is enabled
 			if (this.settings.enhancedRouting?.enabled) {
 				await this.initializeEnhancedRouting();
@@ -434,6 +440,74 @@ export class AudioEngine {
 		} catch (error) {
 			logger.error('advanced-synthesis', 'Failed to initialize advanced synthesis', error);
 			// Don't throw - fall back to basic synthesis
+		}
+	}
+
+	/**
+	 * Initialize Musical Theory Engine for harmonic constraints
+	 */
+	private initializeMusicalTheory(): void {
+		try {
+			if (!this.settings.audioEnhancement?.musicalTheory) {
+				logger.warn('musical-theory', 'Musical theory settings not found, skipping initialization');
+				return;
+			}
+
+			const theorySettings = this.settings.audioEnhancement.musicalTheory;
+
+			// Create config from settings
+			const config: MusicalTheoryConfig = {
+				rootNote: theorySettings.rootNote as any || 'C',
+				scale: theorySettings.scale as any || 'major',
+				enforceHarmony: theorySettings.enforceHarmony ?? true,
+				quantizationStrength: theorySettings.quantizationStrength ?? 0.8,
+				dissonanceThreshold: theorySettings.dissonanceThreshold ?? 0.5,
+				allowChromaticPassing: theorySettings.allowChromaticPassing ?? false,
+				dynamicScaleModulation: theorySettings.dynamicScaleModulation ?? false,
+				preferredChordProgression: theorySettings.preferredChordProgression
+			};
+
+			this.musicalTheoryEngine = new MusicalTheoryEngine(config);
+
+			logger.info('musical-theory', 'Musical Theory Engine initialized', {
+				scale: config.scale,
+				rootNote: config.rootNote,
+				enforceHarmony: config.enforceHarmony,
+				quantizationStrength: config.quantizationStrength
+			});
+		} catch (error) {
+			logger.error('musical-theory', 'Failed to initialize Musical Theory Engine', error);
+			// Don't throw - continue without harmonic constraints
+		}
+	}
+
+	/**
+	 * Quantize a frequency to the current musical scale
+	 * @param frequency The input frequency in Hz
+	 * @returns The quantized frequency that fits the scale
+	 */
+	private quantizeFrequency(frequency: number): number {
+		// If musical theory engine not initialized or enforce harmony disabled, return original
+		if (!this.musicalTheoryEngine || !this.settings.audioEnhancement?.musicalTheory?.enforceHarmony) {
+			return frequency;
+		}
+
+		try {
+			// Use the musical theory engine to constrain to scale
+			const quantized = this.musicalTheoryEngine.constrainToScale(frequency);
+
+			logger.debug('musical-theory', 'Frequency quantized', {
+				original: frequency.toFixed(2),
+				quantized: quantized.frequency.toFixed(2),
+				note: quantized.noteName,
+				scale: this.settings.audioEnhancement.musicalTheory.scale,
+				rootNote: this.settings.audioEnhancement.musicalTheory.rootNote
+			});
+
+			return quantized.frequency;
+		} catch (error) {
+			logger.warn('musical-theory', 'Failed to quantize frequency, using original', error);
+			return frequency;
 		}
 	}
 
@@ -2130,15 +2204,18 @@ export class AudioEngine {
 				});
 			} else {
 				const synth = this.instruments.get(instrumentName);
-				
+
 				if (synth) {
 					try {
+						// Quantize frequency to musical scale if harmony enforcement is enabled
+						const quantizedFrequency = this.quantizeFrequency(frequency);
+
 						// Phase 3: Apply frequency detuning for phase conflict resolution
-						const detunedFrequency = this.applyFrequencyDetuning(frequency);
-						
+						const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
+
 						// Add pre-trigger audio context state logging
 						const audioContext = getContext();
-						
+
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 
 						// Trigger rhythmic percussion accent if enabled
@@ -2331,6 +2408,35 @@ export class AudioEngine {
 				// Percussion still enabled - update configuration
 				logger.debug('rhythmic-percussion', 'Updating percussion config', settings.percussionAccents);
 				this.rhythmicPercussion.updateConfig(settings.percussionAccents);
+			}
+		}
+
+		// Update musical theory engine if settings changed
+		if (settings.audioEnhancement?.musicalTheory) {
+			const theorySettings = settings.audioEnhancement.musicalTheory;
+
+			// Reinitialize if major settings changed
+			if (this.musicalTheoryEngine) {
+				const config: MusicalTheoryConfig = {
+					rootNote: theorySettings.rootNote as any || 'C',
+					scale: theorySettings.scale as any || 'major',
+					enforceHarmony: theorySettings.enforceHarmony ?? true,
+					quantizationStrength: theorySettings.quantizationStrength ?? 0.8,
+					dissonanceThreshold: theorySettings.dissonanceThreshold ?? 0.5,
+					allowChromaticPassing: theorySettings.allowChromaticPassing ?? false,
+					dynamicScaleModulation: theorySettings.dynamicScaleModulation ?? false,
+					preferredChordProgression: theorySettings.preferredChordProgression
+				};
+
+				this.musicalTheoryEngine = new MusicalTheoryEngine(config);
+				logger.info('musical-theory', 'Musical Theory Engine updated', {
+					scale: config.scale,
+					rootNote: config.rootNote,
+					enforceHarmony: config.enforceHarmony
+				});
+			} else if (theorySettings.enforceHarmony) {
+				// Initialize if enforce harmony was just enabled
+				this.initializeMusicalTheory();
 			}
 		}
 
@@ -2975,8 +3081,11 @@ export class AudioEngine {
 				throw new Error(`Instrument ${instrument} not available and piano fallback failed`);
 			}
 
+			// Quantize frequency to musical scale if harmony enforcement is enabled
+			const quantizedFrequency = this.quantizeFrequency(pitch);
+
 			// Apply frequency detuning for phase conflict resolution (from existing logic)
-			const detunedFrequency = this.applyFrequencyDetuning(pitch);
+			const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
 
 			// Trigger the note immediately (no timing delay)
 			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
