@@ -84687,9 +84687,11 @@ var AudioEngine = class {
     }
     try {
       const quantized = this.musicalTheoryEngine.constrainPitchToScale(frequency);
-      logger68.debug("musical-theory", "Frequency quantized", {
+      const cents = 1200 * Math.log2(quantized / frequency);
+      logger68.info("musical-theory", "Frequency quantized", {
         original: frequency.toFixed(2),
         quantized: quantized.toFixed(2),
+        shift: cents.toFixed(1) + " cents",
         scale: this.settings.audioEnhancement.musicalTheory.scale,
         rootNote: this.settings.audioEnhancement.musicalTheory.rootNote
       });
