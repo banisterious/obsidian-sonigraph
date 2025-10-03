@@ -16,11 +16,13 @@ export class SonicGraphLayersSettings {
 	private app: App;
 	private plugin: SonigraphPlugin;
 	private onToggleCallback?: () => void;
+	private onGenreChangeCallback?: () => void;
 
-	constructor(app: App, plugin: SonigraphPlugin, onToggleCallback?: () => void) {
+	constructor(app: App, plugin: SonigraphPlugin, onToggleCallback?: () => void, onGenreChangeCallback?: () => void) {
 		this.app = app;
 		this.plugin = plugin;
 		this.onToggleCallback = onToggleCallback;
+		this.onGenreChangeCallback = onGenreChangeCallback;
 	}
 
 	/**
@@ -34,7 +36,6 @@ export class SonicGraphLayersSettings {
 
 		// Section 2: Additional settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
-			this.renderGenreSection(container);
 			this.renderIntensitySection(container);
 			this.renderLayerTypesSection(container);
 			this.renderMusicalSettingsSection(container);
@@ -146,8 +147,9 @@ export class SonicGraphLayersSettings {
 
 	/**
 	 * Section 2: Musical Genre Selection
+	 * DEPRECATED: Genre-based organization removed in favor of flat sample library
 	 */
-	private renderGenreSection(container: HTMLElement): void {
+	/* private renderGenreSection(container: HTMLElement): void {
 		const card = new MaterialCard({
 			title: 'Musical genre',
 			iconName: 'music-2',
@@ -180,12 +182,17 @@ export class SonicGraphLayersSettings {
 					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
 					this.plugin.settings.audioEnhancement.continuousLayers.genre = value;
 					await this.plugin.saveSettings();
-					logger.info('layers-settings', `Genre: ${value}`);
+					logger.info('layers-settings', `Genre changed to: ${value}`);
+
+					// Notify control panel to refresh sample browser
+					if (this.onGenreChangeCallback) {
+						this.onGenreChangeCallback();
+					}
 				})
 			);
 
 		container.appendChild(card.getElement());
-	}
+	} */
 
 	/**
 	 * Section 3: Intensity Controls

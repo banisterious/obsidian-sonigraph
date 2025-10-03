@@ -9,6 +9,7 @@ import { GraphParser } from './graph/parser';
 import { MusicalMapper } from './graph/musical-mapper';
 import { getLogger, LoggerFactory } from './logging';
 import { initializeWhaleIntegration, getWhaleIntegration } from './external/whale-integration';
+import { FreesoundSampleLoader } from './audio/layers/FreesoundSampleLoader';
 
 const logger = getLogger('main');
 
@@ -541,6 +542,7 @@ export default class SonigraphPlugin extends Plugin {
 	 * Migrate settings from old structure to new per-instrument effects structure
 	 */
 	private migrateSettings(): void {
+		logger.info('migration', 'migrateSettings() called - checking for needed migrations');
 		let migrationNeeded = false;
 
 		// Check if we have old global effects structure
@@ -772,11 +774,120 @@ export default class SonigraphPlugin extends Plugin {
 			};
 		}
 		
+		// Migrate from genre-based to flat sample array (Option 3 refactor)
+		if (this.settings.freesoundSamples && typeof this.settings.freesoundSamples === 'object' && !Array.isArray(this.settings.freesoundSamples)) {
+			logger.info('migration', 'Migrating from genre-based samples to flat array');
+			this.flattenGenreBasedSamples();
+			migrationNeeded = true;
+		}
+
+		// NOTE: Placeholder migration disabled after Option 3 refactor (flat sample array)
+		// Users will add their own samples via Freesound Search
+		// const needsPlaceholderMigration = this.checkPlaceholderMigrationNeeded();
+		// if (needsPlaceholderMigration) {
+		//   this.addPlaceholderSamplesToLibrary();
+		//   migrationNeeded = true;
+		// }
+
 		// Save migrated settings if any changes were made
 		if (migrationNeeded) {
 			this.saveSettings();
 			logger.info('settings', 'Settings migration completed');
 		}
+	}
+
+	/**
+	 * Flatten genre-based samples ({genre: sample[]}) to flat array (sample[])
+	 * Part of Option 3 refactor to remove genre organization
+	 */
+	private flattenGenreBasedSamples(): void {
+		const oldFormat = this.settings.freesoundSamples as any;
+		const flatArray: any[] = [];
+
+		// Iterate through each genre and collect all samples
+		Object.keys(oldFormat).forEach(genre => {
+			const samples = oldFormat[genre];
+			if (Array.isArray(samples)) {
+				flatArray.push(...samples);
+			}
+		});
+
+		// Replace with flat array
+		this.settings.freesoundSamples = flatArray;
+
+		logger.info('migration', `Flattened ${flatArray.length} samples from genre-based format to flat array`);
+	}
+
+	/**
+	 * Check if placeholder migration is needed by counting actual placeholder samples in library
+	 */
+	private checkPlaceholderMigrationNeeded(): boolean {
+		const sampleCount = Array.isArray(this.settings.freesoundSamples) ?
+			this.settings.freesoundSamples.length : 0;
+
+		logger.info('migration-check', 'Checking placeholder migration status', {
+			sampleCount,
+			needsMigration: sampleCount < 39
+		});
+
+		// Simple check: if we have fewer than 39 samples, we need migration
+		if (sampleCount < 39) {
+			logger.info('migration-check', `Migration needed - only have ${sampleCount} samples, need 39`);
+			return true;
+		}
+
+		logger.info('migration-check', `Already complete - have ${sampleCount} samples`);
+		return false;
+	}
+
+	/**
+	 * Add all 39 placeholder samples to user's library as disabled samples
+	 */
+	private addPlaceholderSamplesToLibrary(): void {
+		// Create a temporary sample loader to get all placeholder samples
+		const sampleLoader = new FreesoundSampleLoader();
+		const allGenres = sampleLoader.getAllGenres();
+
+		logger.info('migration', `Starting placeholder migration for ${allGenres.length} genres`);
+		logger.info('migration', 'Genres: ' + allGenres.map(g => `${g.genre}(${g.sampleCount})`).join(', '));
+
+		// Initialize freesoundSamples if it doesn't exist
+		if (!this.settings.freesoundSamples) {
+			this.settings.freesoundSamples = {};
+		}
+
+		let totalAdded = 0;
+
+		// Add all placeholder samples as disabled (merge with existing user samples)
+		allGenres.forEach(({ genre, sampleCount }) => {
+			const genreSamples = sampleLoader.getSamplesForGenre(genre);
+
+			logger.info('migration', `Processing ${genre}: expected=${sampleCount}, actual=${genreSamples.length}`);
+
+			if (genreSamples && genreSamples.length > 0) {
+				// Get existing user samples for this genre
+				const existingUserSamples = this.settings.freesoundSamples[genre] || [];
+
+				// Set enabled: false for all placeholder samples
+				const disabledPlaceholders = genreSamples.map(sample => ({
+					...sample,
+					enabled: false
+				}));
+
+				// Merge: keep user samples first, then add placeholder samples
+				// Only add placeholders that don't already exist (by ID)
+				const existingIds = new Set(existingUserSamples.map(s => s.id));
+				const newPlaceholders = disabledPlaceholders.filter(s => !existingIds.has(s.id));
+
+				this.settings.freesoundSamples[genre] = [...existingUserSamples, ...newPlaceholders];
+
+				totalAdded += newPlaceholders.length;
+
+				logger.info('migration', `${genre}: added ${newPlaceholders.length} new, ${existingUserSamples.length} existing, ${this.settings.freesoundSamples[genre].length} total`);
+			}
+		});
+
+		logger.info('migration', `Complete: added ${totalAdded} samples across ${allGenres.length} genres`);
 	}
 
 	async saveSettings(): Promise<void> {

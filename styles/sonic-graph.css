@@ -2082,6 +2082,21 @@
   color: var(--text-accent);
 }
 
+.osp-sample-section {
+  margin-bottom: 24px;
+}
+
+.osp-sample-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
 .osp-sample-list {
   display: flex;
   flex-direction: column;
@@ -2104,17 +2119,40 @@
   border-color: var(--interactive-accent);
 }
 
+/* User samples - highlighted with accent color */
+.osp-user-sample {
+  border-left: 3px solid var(--interactive-accent);
+}
+
+.osp-user-sample:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Placeholder samples - more subtle */
+.osp-placeholder-sample {
+  opacity: 0.85;
+}
+
+.osp-placeholder-sample:hover {
+  opacity: 1;
+}
+
 .osp-sample-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  overflow: hidden;
 }
 
 .osp-sample-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .osp-sample-metadata {
@@ -2122,12 +2160,19 @@
   color: var(--text-muted);
   display: flex;
   gap: 4px;
+  flex-wrap: wrap; /* Allow metadata to wrap to next line if needed */
 }
 
 .osp-sample-duration,
-.osp-sample-license,
-.osp-sample-attribution {
+.osp-sample-license {
   white-space: nowrap;
+}
+
+.osp-sample-attribution {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px; /* Limit attribution width */
 }
 
 .osp-sample-fade-info {
@@ -2139,6 +2184,7 @@
   display: flex;
   gap: 8px;
   margin-left: 16px;
+  flex-shrink: 0; /* Prevent action buttons from shrinking */
 }
 
 .osp-sample-action-btn {
@@ -2163,9 +2209,54 @@
   cursor: not-allowed;
 }
 
+.osp-remove-btn {
+  background-color: var(--background-modifier-error);
+  color: var(--text-error);
+  border-color: var(--background-modifier-error);
+}
+
+.osp-remove-btn:hover {
+  background-color: var(--text-error);
+  color: var(--text-on-accent);
+  border-color: var(--text-error);
+}
+
+.osp-disable-btn {
+  background-color: var(--background-modifier-error-hover);
+  color: var(--text-error);
+  border-color: var(--background-modifier-error);
+}
+
+.osp-disable-btn:hover {
+  background-color: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  border-color: var(--text-error);
+}
+
+.osp-enable-btn {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.osp-enable-btn:hover {
+  background-color: var(--interactive-accent-hover);
+  color: var(--text-on-accent);
+}
+
 .osp-preview-btn:hover {
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
+}
+
+/* Section title styling for enabled/disabled */
+.osp-enabled-title {
+  color: var(--text-accent);
+}
+
+.osp-disabled-title {
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .osp-info-btn:hover {

@@ -1,4 +1,4 @@
-import { App, Modal, Setting, Notice } from 'obsidian';
+import { App, Modal, Setting, Notice, requestUrl } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
@@ -40,11 +40,15 @@ export class MaterialControlPanelModal extends Modal {
 	private progressElement: HTMLElement | null = null;
 	private progressText: HTMLElement | null = null;
 	private progressBar: HTMLElement | null = null;
-	
+
 	// Sonic Graph components
 	private graphRenderer: GraphRenderer | null = null;
 	private showFileNames: boolean = false;
 	private sonicGraphSettingsTabs: SonicGraphSettingsTabs | null = null;
+
+	// Sample browser container for refreshing when genre changes
+	private sampleBrowserContainer: HTMLElement | null = null;
+	private sampleBrowserCard: MaterialCard | null = null;
 
 	// Issue #006 Fix: Store bound event handlers for proper cleanup
 	private boundEventHandlers: {
@@ -503,7 +507,12 @@ export class MaterialControlPanelModal extends Modal {
 				this.createLayersTab();
 			};
 
-			const layersSettings = new SonicGraphLayersSettings(this.app, this.plugin, onToggle);
+			// Callback to refresh sample browser when genre changes
+			const onGenreChange = () => {
+				this.refreshSampleBrowser();
+			};
+
+			const layersSettings = new SonicGraphLayersSettings(this.app, this.plugin, onToggle, onGenreChange);
 			layersSettings.render(this.contentContainer);
 
 			// Freesound Integration Card - only show when continuous layers are enabled
@@ -684,11 +693,29 @@ export class MaterialControlPanelModal extends Modal {
 			elevation: 1
 		});
 
+		// Store card reference for later refresh
+		this.sampleBrowserCard = card;
+
 		const content = card.getContent();
 		const browserSection = content.createDiv({ cls: 'osp-sample-browser-section' });
 
-		// Get current genre from settings
-		const currentGenre = this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient';
+		// Store browser container reference for refreshing
+		this.sampleBrowserContainer = browserSection;
+
+		// Initial render
+		this.refreshSampleBrowser();
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Refresh the sample browser
+	 */
+	public refreshSampleBrowser(): void {
+		if (!this.sampleBrowserContainer) return;
+
+		// Clear existing content
+		this.sampleBrowserContainer.empty();
 
 		// Get sample loader - try from layer manager first, fallback to creating new instance
 		let sampleLoader;
@@ -701,28 +728,27 @@ export class MaterialControlPanelModal extends Modal {
 			// Import FreesoundSampleLoader dynamically
 			import('../audio/layers/FreesoundSampleLoader').then(({ FreesoundSampleLoader }) => {
 				const tempLoader = new FreesoundSampleLoader(this.plugin.settings.freesoundApiKey);
-				this.renderSampleBrowser(browserSection, tempLoader, currentGenre);
+				this.renderSampleBrowser(this.sampleBrowserContainer!, tempLoader);
 			});
-			this.contentContainer.appendChild(card.getElement());
 			return;
 		}
 
-		this.renderSampleBrowser(browserSection, sampleLoader, currentGenre);
-		this.contentContainer.appendChild(card.getElement());
+		this.renderSampleBrowser(this.sampleBrowserContainer, sampleLoader);
 	}
 
 	/**
 	 * Render the sample browser UI
 	 */
-	private renderSampleBrowser(container: HTMLElement, sampleLoader: any, currentGenre: string): void {
-		const samples = sampleLoader.getSamplesForGenre(currentGenre);
+	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
+		// Get all user samples (flat array, no genre filtering)
+		const userSamples = this.plugin.settings.freesoundSamples || [];
 
-		// Genre info header
+		// Header
 		const headerEl = container.createDiv({ cls: 'osp-sample-browser-header' });
 
 		const titleRow = headerEl.createDiv({ cls: 'osp-sample-browser-title-row' });
 		titleRow.createEl('h4', {
-			text: `${currentGenre.charAt(0).toUpperCase() + currentGenre.slice(1)} samples (${samples.length} available)`,
+			text: 'Sample Library',
 			cls: 'osp-sample-browser-title'
 		});
 
@@ -731,87 +757,175 @@ export class MaterialControlPanelModal extends Modal {
 			text: 'Search Freesound',
 			cls: 'osp-search-freesound-btn'
 		});
-		searchBtn.addEventListener('click', () => this.openFreesoundSearch(currentGenre));
+		searchBtn.addEventListener('click', () => this.openFreesoundSearch());
 
 		// Add info note
 		const infoNote = headerEl.createEl('p', {
 			cls: 'osp-sample-browser-note'
 		});
-		infoNote.innerHTML = '<strong>Tip:</strong> Click "Search Freesound" above to find and add real audio samples to your library. The samples below are placeholders for demonstration.';
+		infoNote.innerHTML = '<strong>Tip:</strong> Click "Search Freesound" to find and add real audio samples to your library.';
 
-		if (samples.length === 0) {
-			container.createEl('p', {
-				text: `No samples available for genre: ${currentGenre}`,
-				cls: 'osp-info-message'
-			});
-			return;
+		// User's Library Section - split into enabled and disabled
+		if (userSamples.length > 0) {
+			const enabledSamples = userSamples.filter(s => s.enabled !== false);
+			const disabledSamples = userSamples.filter(s => s.enabled === false);
+
+			// Enabled samples section
+			if (enabledSamples.length > 0) {
+				const enabledSection = container.createDiv({ cls: 'osp-sample-section' });
+				enabledSection.createEl('h5', {
+					text: `Enabled Samples (${enabledSamples.length})`,
+					cls: 'osp-sample-section-title osp-enabled-title'
+				});
+
+				const enabledList = enabledSection.createDiv({ cls: 'osp-sample-list' });
+				enabledSamples.forEach((sample, index) => {
+					this.renderSampleItem(enabledList, sample, index + 1, true);
+				});
+			}
+
+			// Disabled samples section
+			if (disabledSamples.length > 0) {
+				const disabledSection = container.createDiv({ cls: 'osp-sample-section' });
+				disabledSection.createEl('h5', {
+					text: `Disabled Samples (${disabledSamples.length})`,
+					cls: 'osp-sample-section-title osp-disabled-title'
+				});
+
+				const disabledList = disabledSection.createDiv({ cls: 'osp-sample-list' });
+				disabledSamples.forEach((sample, index) => {
+					this.renderSampleItem(disabledList, sample, index + 1, true);
+				});
+			}
 		}
 
-		// Sample list
-		const sampleList = container.createDiv({ cls: 'osp-sample-list' });
-
-		samples.forEach((sample, index) => {
-			const sampleItem = sampleList.createDiv({ cls: 'osp-sample-item' });
-
-			// Sample info section
-			const infoSection = sampleItem.createDiv({ cls: 'osp-sample-info' });
-
-			// Sample title and metadata
-			const titleEl = infoSection.createEl('div', {
-				text: `${index + 1}. ${sample.title}`,
-				cls: 'osp-sample-title'
+		// Show message if no samples at all
+		if (userSamples.length === 0) {
+			container.createEl('p', {
+				text: 'No samples in library. Click "Search Freesound" to add samples.',
+				cls: 'osp-info-message'
 			});
-
-			const metaEl = infoSection.createDiv({ cls: 'osp-sample-metadata' });
-			metaEl.createEl('span', {
-				text: `${sample.duration}s`,
-				cls: 'osp-sample-duration'
-			});
-			metaEl.createEl('span', {
-				text: ` • ${sample.license}`,
-				cls: 'osp-sample-license'
-			});
-			metaEl.createEl('span', {
-				text: ` • by ${sample.attribution}`,
-				cls: 'osp-sample-attribution'
-			});
-
-			// Fade settings
-			const fadeEl = infoSection.createDiv({ cls: 'osp-sample-fade-info' });
-			fadeEl.createEl('span', {
-				text: `Fade in: ${sample.fadeIn}s, Fade out: ${sample.fadeOut}s`,
-				cls: 'osp-sample-fade-text'
-			});
-
-			// Action buttons section
-			const actionsSection = sampleItem.createDiv({ cls: 'osp-sample-actions' });
-
-			// Preview button
-			const previewBtn = actionsSection.createEl('button', {
-				text: 'Preview',
-				cls: 'osp-sample-action-btn osp-preview-btn'
-			});
-			previewBtn.addEventListener('click', async () => {
-				await this.previewSample(sample, previewBtn);
-			});
-
-			// Info button (opens Freesound page)
-			const infoBtn = actionsSection.createEl('button', {
-				text: 'Info',
-				cls: 'osp-sample-action-btn osp-info-btn'
-			});
-			infoBtn.addEventListener('click', () => {
-				// Direct link to sound page (username agnostic)
-				window.open(`https://freesound.org/s/${sample.id}/`, '_blank');
-			});
-		});
+		}
 	}
+
+	/**
+	 * Render a single sample item
+	 */
+	private renderSampleItem(
+		container: HTMLElement,
+		sample: any,
+		number: number,
+		isUserSample: boolean
+	): void {
+		const sampleItem = container.createDiv({
+			cls: isUserSample ? 'osp-sample-item osp-user-sample' : 'osp-sample-item osp-placeholder-sample'
+		});
+
+		// Sample info section
+		const infoSection = sampleItem.createDiv({ cls: 'osp-sample-info' });
+
+		// Sample title and metadata
+		infoSection.createEl('div', {
+			text: `${number}. ${sample.title}`,
+			cls: 'osp-sample-title'
+		});
+
+		const metaEl = infoSection.createDiv({ cls: 'osp-sample-metadata' });
+		metaEl.createEl('span', {
+			text: `ID: ${sample.id}`,
+			cls: 'osp-sample-id'
+		});
+		metaEl.createEl('span', {
+			text: ` • ${sample.duration}s`,
+			cls: 'osp-sample-duration'
+		});
+		metaEl.createEl('span', {
+			text: ` • ${sample.license}`,
+			cls: 'osp-sample-license'
+		});
+		metaEl.createEl('span', {
+			text: ` • by ${sample.attribution}`,
+			cls: 'osp-sample-attribution'
+		});
+
+		// Fade settings
+		const fadeEl = infoSection.createDiv({ cls: 'osp-sample-fade-info' });
+		fadeEl.createEl('span', {
+			text: `Fade in: ${sample.fadeIn}s, Fade out: ${sample.fadeOut}s`,
+			cls: 'osp-sample-fade-text'
+		});
+
+		// Action buttons section
+		const actionsSection = sampleItem.createDiv({ cls: 'osp-sample-actions' });
+
+		// Preview button
+		const previewBtn = actionsSection.createEl('button', {
+			text: 'Preview',
+			cls: 'osp-sample-action-btn osp-preview-btn'
+		});
+		previewBtn.addEventListener('click', async () => {
+			await this.previewSample(sample, previewBtn);
+		});
+
+		// Info button (opens Freesound page)
+		const infoBtn = actionsSection.createEl('button', {
+			text: 'Info',
+			cls: 'osp-sample-action-btn osp-info-btn'
+		});
+		infoBtn.addEventListener('click', () => {
+			// Log sample details for debugging
+			logger.debug('sample-info', `Opening Freesound page for sample`, {
+				id: sample.id,
+				title: sample.title,
+				attribution: sample.attribution,
+				url: `https://freesound.org/s/${sample.id}/`
+			});
+			window.open(`https://freesound.org/s/${sample.id}/`, '_blank');
+		});
+
+		// User sample controls (toggle + remove)
+		if (isUserSample) {
+			const isEnabled = sample.enabled !== false; // Default to true if undefined
+
+			// Toggle button (Enable/Disable)
+			const toggleBtn = actionsSection.createEl('button', {
+				text: isEnabled ? 'Disable' : 'Enable',
+				cls: `osp-sample-action-btn ${isEnabled ? 'osp-disable-btn' : 'osp-enable-btn'}`
+			});
+			toggleBtn.addEventListener('click', async () => {
+				await this.toggleSampleEnabled(sample.id);
+			});
+
+			// Remove button
+			const removeBtn = actionsSection.createEl('button', {
+				text: 'Remove',
+				cls: 'osp-sample-action-btn osp-remove-btn'
+			});
+			removeBtn.addEventListener('click', async () => {
+				await this.removeSampleFromLibrary(sample.id);
+			});
+		}
+	}
+
+	private currentPreviewAudio: HTMLAudioElement | null = null;
+	private currentPreviewButton: HTMLButtonElement | null = null;
 
 	/**
 	 * Preview a Freesound sample
 	 */
 	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
-		const originalText = button.textContent;
+		// If already playing this sample, stop it
+		if (button.textContent === 'Stop') {
+			this.stopPreview();
+			return;
+		}
+
+		// Stop any currently playing preview
+		if (this.currentPreviewAudio) {
+			this.stopPreview();
+		}
+
+		const originalText = button.textContent || 'Preview';
 		let audio: HTMLAudioElement | null = null;
 
 		try {
@@ -819,12 +933,44 @@ export class MaterialControlPanelModal extends Modal {
 			button.textContent = 'Loading...';
 			button.disabled = true;
 
+			// Fetch fresh preview URL from Freesound API
+			const apiKey = this.plugin.settings.freesoundApiKey;
+			if (!apiKey) {
+				throw new Error('Freesound API key not configured');
+			}
+
+			logger.debug('sample-preview', `Fetching fresh preview URL for sample ${sample.id}`);
+			const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}&fields=previews`;
+			const soundResponse = await requestUrl({
+				url: soundUrl,
+				method: 'GET'
+			});
+
+			const soundData = JSON.parse(soundResponse.text);
+			const previewUrl = soundData.previews['preview-hq-mp3'] || soundData.previews['preview-lq-mp3'];
+
+			if (!previewUrl) {
+				throw new Error('No preview URL available for this sound');
+			}
+
+			// Download audio data using Obsidian's requestUrl to bypass CORS
+			logger.debug('sample-preview', `Downloading sample ${sample.id} from ${previewUrl}`);
+			const response = await requestUrl({
+				url: previewUrl,
+				method: 'GET'
+			});
+
+			// Convert array buffer to blob URL
+			const blob = new Blob([response.arrayBuffer], { type: 'audio/mpeg' });
+			const blobUrl = URL.createObjectURL(blob);
+
 			// Create audio element for preview
 			audio = new Audio();
 
 			// Set up error handling before setting src
 			audio.addEventListener('error', (e) => {
 				logger.error('sample-preview', `Audio load error for sample ${sample.id}`, e);
+				URL.revokeObjectURL(blobUrl); // Clean up blob URL
 				button.textContent = 'Error';
 				button.disabled = false;
 				setTimeout(() => {
@@ -841,7 +987,7 @@ export class MaterialControlPanelModal extends Modal {
 
 				audio.addEventListener('canplay', () => resolve(), { once: true });
 				audio.addEventListener('error', (e) => reject(e), { once: true });
-				audio.src = sample.previewUrl;
+				audio.src = blobUrl;
 				audio.load();
 			});
 
@@ -852,6 +998,10 @@ export class MaterialControlPanelModal extends Modal {
 			if (playPromise !== undefined) {
 				await playPromise;
 			}
+
+			// Store current preview references
+			this.currentPreviewAudio = audio;
+			this.currentPreviewButton = button;
 
 			// Fade in
 			const fadeInSteps = 20;
@@ -868,36 +1018,18 @@ export class MaterialControlPanelModal extends Modal {
 			button.textContent = 'Stop';
 			button.disabled = false;
 
-			// Handle stop on click
-			const stopHandler = () => {
-				if (!audio) return;
-
-				// Fade out
-				const fadeOutSteps = 20;
-				const fadeOutInterval = (sample.fadeOut * 1000) / fadeOutSteps;
-				let currentVolume = audio.volume;
-
-				for (let i = fadeOutSteps; i >= 0; i--) {
-					setTimeout(() => {
-						if (audio) {
-							audio.volume = (i / fadeOutSteps) * currentVolume;
-							if (i === 0) {
-								audio.pause();
-								audio.currentTime = 0;
-							}
-						}
-					}, (fadeOutSteps - i) * fadeOutInterval);
-				}
-
-				button.textContent = originalText;
-				button.removeEventListener('click', stopHandler);
-			};
-
-			button.addEventListener('click', stopHandler, { once: true });
+			// Clean up blob URL when audio ends
+			audio.addEventListener('ended', () => {
+				URL.revokeObjectURL(blobUrl);
+			});
 
 			// Auto-stop when audio ends
 			audio.addEventListener('ended', () => {
-				button.textContent = originalText;
+				if (this.currentPreviewButton) {
+					this.currentPreviewButton.textContent = originalText;
+				}
+				this.currentPreviewAudio = null;
+				this.currentPreviewButton = null;
 			});
 
 		} catch (error) {
@@ -907,13 +1039,51 @@ export class MaterialControlPanelModal extends Modal {
 			setTimeout(() => {
 				button.textContent = originalText;
 			}, 2000);
+			this.currentPreviewAudio = null;
+			this.currentPreviewButton = null;
 		}
+	}
+
+	/**
+	 * Stop the currently playing preview
+	 */
+	private stopPreview(): void {
+		if (!this.currentPreviewAudio || !this.currentPreviewButton) return;
+
+		const audio = this.currentPreviewAudio;
+		const button = this.currentPreviewButton;
+		const fadeOut = 1; // Default fade out time in seconds
+
+		// Fade out
+		const fadeOutSteps = 20;
+		const fadeOutInterval = (fadeOut * 1000) / fadeOutSteps;
+		const currentVolume = audio.volume;
+
+		for (let i = fadeOutSteps; i >= 0; i--) {
+			setTimeout(() => {
+				if (audio) {
+					audio.volume = (i / fadeOutSteps) * currentVolume;
+					if (i === 0) {
+						audio.pause();
+						audio.currentTime = 0;
+						// Clean up blob URL if it was used
+						if (audio.src.startsWith('blob:')) {
+							URL.revokeObjectURL(audio.src);
+						}
+					}
+				}
+			}, (fadeOutSteps - i) * fadeOutInterval);
+		}
+
+		button.textContent = 'Preview';
+		this.currentPreviewAudio = null;
+		this.currentPreviewButton = null;
 	}
 
 	/**
 	 * Open Freesound search modal
 	 */
-	private openFreesoundSearch(genre: string): void {
+	private openFreesoundSearch(): void {
 		const apiKey = this.plugin.settings.freesoundApiKey;
 
 		if (!apiKey) {
@@ -924,8 +1094,7 @@ export class MaterialControlPanelModal extends Modal {
 		const modal = new FreesoundSearchModal(
 			this.app,
 			apiKey,
-			genre as MusicalGenre,
-			(sample: FreesoundSample) => this.addSampleToLibrary(genre as MusicalGenre, sample)
+			(sample: FreesoundSample) => this.addSampleToLibrary(sample)
 		);
 
 		modal.open();
@@ -934,33 +1103,86 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Add a sample to the user's library
 	 */
-	private async addSampleToLibrary(genre: MusicalGenre, sample: FreesoundSample): Promise<void> {
-		// Initialize freesoundSamples if it doesn't exist
+	private async addSampleToLibrary(sample: FreesoundSample): Promise<void> {
+		// Initialize freesoundSamples as array if it doesn't exist
 		if (!this.plugin.settings.freesoundSamples) {
-			this.plugin.settings.freesoundSamples = {};
-		}
-
-		// Initialize genre array if it doesn't exist
-		if (!this.plugin.settings.freesoundSamples[genre]) {
-			this.plugin.settings.freesoundSamples[genre] = [];
+			this.plugin.settings.freesoundSamples = [];
 		}
 
 		// Check if sample already exists
-		const exists = this.plugin.settings.freesoundSamples[genre].some(s => s.id === sample.id);
+		const exists = this.plugin.settings.freesoundSamples.some(s => s.id === sample.id);
 		if (exists) {
-			new Notice(`Sample "${sample.title}" is already in your ${genre} library`);
+			new Notice(`Sample "${sample.title}" is already in your library`);
 			return;
 		}
 
-		// Add sample to library
-		this.plugin.settings.freesoundSamples[genre].push(sample);
+		// Add sample to library with enabled flag set to true by default
+		const sampleWithEnabled = { ...sample, enabled: true };
+		this.plugin.settings.freesoundSamples.push(sampleWithEnabled);
 		await this.plugin.saveSettings();
 
-		logger.info('library', `Added sample ${sample.id} to ${genre} library`);
+		logger.info('library', `Added sample ${sample.id} to library`);
 
 		// Refresh the sample browser to show the new sample
-		this.contentContainer.empty();
-		this.createLayersTab();
+		this.refreshSampleBrowser();
+	}
+
+	/**
+	 * Toggle a sample's enabled status
+	 */
+	private async toggleSampleEnabled(sampleId: number): Promise<void> {
+		if (!this.plugin.settings.freesoundSamples) {
+			return;
+		}
+
+		// Find the sample in flat array
+		const sample = this.plugin.settings.freesoundSamples.find(s => s.id === sampleId);
+
+		if (!sample) {
+			new Notice('Sample not found in library');
+			return;
+		}
+
+		// Toggle enabled state
+		const wasEnabled = sample.enabled !== false;
+		sample.enabled = !wasEnabled;
+		await this.plugin.saveSettings();
+
+		logger.info('library', `${wasEnabled ? 'Disabled' : 'Enabled'} sample ${sampleId}`);
+		new Notice(`${wasEnabled ? 'Disabled' : 'Enabled'} "${sample.title}"`);
+
+		// Refresh the sample browser to reflect the change
+		this.refreshSampleBrowser();
+	}
+
+	/**
+	 * Remove a sample from the user's library
+	 */
+	private async removeSampleFromLibrary(sampleId: number): Promise<void> {
+		if (!this.plugin.settings.freesoundSamples) {
+			return;
+		}
+
+		// Find index of sample to remove in flat array
+		const index = this.plugin.settings.freesoundSamples.findIndex(s => s.id === sampleId);
+
+		if (index === -1) {
+			new Notice('Sample not found in library');
+			return;
+		}
+
+		// Get sample title for confirmation message
+		const sampleTitle = this.plugin.settings.freesoundSamples[index].title;
+
+		// Remove sample from array
+		this.plugin.settings.freesoundSamples.splice(index, 1);
+		await this.plugin.saveSettings();
+
+		logger.info('library', `Removed sample ${sampleId} from library`);
+		new Notice(`Removed "${sampleTitle}" from library`);
+
+		// Refresh the sample browser to reflect the removal
+		this.refreshSampleBrowser();
 	}
 
 	private createScaleKeyCard(): void {
