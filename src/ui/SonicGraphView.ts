@@ -6200,12 +6200,9 @@ export class SonicGraphView extends ItemView {
             return this.createFallbackMapping(node, 'piano');
         }
         
-        // Calculate pitch based on node properties
-        const baseFreq = 261.63; // C4
-        const fileNameHash = this.hashString(node.title);
-        const pitchOffset = (fileNameHash % 24) - 12; // ±12 semitones
-        const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
-        
+        // Calculate pitch using scale-aware generation for more musical results
+        const pitch = this.calculateScaleAwarePitch(node, settings);
+
         // Duration based on file size (logarithmic scale) and note duration setting
         const baseDuration = settings.audio.noteDuration; // Use setting instead of hardcoded 0.3
         const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
@@ -6232,6 +6229,84 @@ export class SonicGraphView extends ItemView {
             timing: 0,
             instrument: selectedInstrument
         };
+    }
+
+    /**
+     * Calculate scale-aware pitch for a node
+     * Uses scale degrees instead of chromatic hashing for more musical results
+     */
+    private calculateScaleAwarePitch(node: GraphNode, settings: any): number {
+        // Get musical theory settings
+        const theorySettings = this.plugin.settings.audioEnhancement?.musicalTheory;
+        const scale = theorySettings?.scale || 'major';
+        const rootNote = theorySettings?.rootNote || 'C';
+
+        // Define scale intervals in semitones from root
+        const scaleIntervals: { [key: string]: number[] } = {
+            'major': [0, 2, 4, 5, 7, 9, 11],           // Major scale
+            'minor': [0, 2, 3, 5, 7, 8, 10],           // Natural minor
+            'dorian': [0, 2, 3, 5, 7, 9, 10],          // Dorian mode
+            'phrygian': [0, 1, 3, 5, 7, 8, 10],        // Phrygian mode
+            'lydian': [0, 2, 4, 6, 7, 9, 11],          // Lydian mode
+            'mixolydian': [0, 2, 4, 5, 7, 9, 10],      // Mixolydian mode
+            'aeolian': [0, 2, 3, 5, 7, 8, 10],         // Aeolian (natural minor)
+            'locrian': [0, 1, 3, 5, 6, 8, 10],         // Locrian mode
+            'pentatonic-major': [0, 2, 4, 7, 9],       // Major pentatonic
+            'pentatonic-minor': [0, 3, 5, 7, 10],      // Minor pentatonic
+            'blues': [0, 3, 5, 6, 7, 10],              // Blues scale
+            'whole-tone': [0, 2, 4, 6, 8, 10],         // Whole tone
+            'chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] // Chromatic
+        };
+
+        // Root note frequencies (C4 = 261.63 Hz)
+        const rootFrequencies: { [key: string]: number } = {
+            'C': 261.63,
+            'C#': 277.18,
+            'D': 293.66,
+            'D#': 311.13,
+            'E': 329.63,
+            'F': 349.23,
+            'F#': 369.99,
+            'G': 392.00,
+            'G#': 415.30,
+            'A': 440.00,
+            'A#': 466.16,
+            'B': 493.88
+        };
+
+        // Get scale intervals for current scale
+        const intervals = scaleIntervals[scale] || scaleIntervals['major'];
+        const baseFreq = rootFrequencies[rootNote] || rootFrequencies['C'];
+
+        // Use hash to select scale degree and octave
+        const fileNameHash = this.hashString(node.title);
+
+        // Map to scale degree (wrap around scale length)
+        const scaleDegree = fileNameHash % intervals.length;
+        const semitones = intervals[scaleDegree];
+
+        // Determine octave based on file size and connection count
+        // Smaller files = higher octave, more connections = lower octave
+        const sizeScore = Math.log10(Math.max(node.fileSize, 1)) / 10; // 0-1
+        const connectionScore = Math.min(node.connections.length / 20, 1); // 0-1
+
+        // Map to octave range: -1 to +2 (spans 3 octaves, centered on base)
+        const octaveOffset = Math.floor((sizeScore - connectionScore) * 3) - 1;
+
+        // Calculate final frequency
+        const pitch = baseFreq * Math.pow(2, (semitones + (octaveOffset * 12)) / 12);
+
+        logger.debug('scale-aware-pitch', 'Generated scale-aware pitch', {
+            nodeId: node.id,
+            scale,
+            rootNote,
+            scaleDegree,
+            semitones,
+            octaveOffset,
+            pitch: pitch.toFixed(2)
+        });
+
+        return pitch;
     }
 
     /**

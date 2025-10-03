@@ -80692,10 +80692,7 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
       });
       return this.createFallbackMapping(node, "piano");
     }
-    const baseFreq = 261.63;
-    const fileNameHash = this.hashString(node.title);
-    const pitchOffset = fileNameHash % 24 - 12;
-    const pitch = baseFreq * Math.pow(2, pitchOffset / 12);
+    const pitch = this.calculateScaleAwarePitch(node, settings);
     const baseDuration = settings.audio.noteDuration;
     const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
     const duration = Math.min(baseDuration + sizeFactor, 2);
@@ -80717,6 +80714,77 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
       timing: 0,
       instrument: selectedInstrument
     };
+  }
+  /**
+   * Calculate scale-aware pitch for a node
+   * Uses scale degrees instead of chromatic hashing for more musical results
+   */
+  calculateScaleAwarePitch(node, settings) {
+    var _a;
+    const theorySettings = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory;
+    const scale = (theorySettings == null ? void 0 : theorySettings.scale) || "major";
+    const rootNote = (theorySettings == null ? void 0 : theorySettings.rootNote) || "C";
+    const scaleIntervals = {
+      "major": [0, 2, 4, 5, 7, 9, 11],
+      // Major scale
+      "minor": [0, 2, 3, 5, 7, 8, 10],
+      // Natural minor
+      "dorian": [0, 2, 3, 5, 7, 9, 10],
+      // Dorian mode
+      "phrygian": [0, 1, 3, 5, 7, 8, 10],
+      // Phrygian mode
+      "lydian": [0, 2, 4, 6, 7, 9, 11],
+      // Lydian mode
+      "mixolydian": [0, 2, 4, 5, 7, 9, 10],
+      // Mixolydian mode
+      "aeolian": [0, 2, 3, 5, 7, 8, 10],
+      // Aeolian (natural minor)
+      "locrian": [0, 1, 3, 5, 6, 8, 10],
+      // Locrian mode
+      "pentatonic-major": [0, 2, 4, 7, 9],
+      // Major pentatonic
+      "pentatonic-minor": [0, 3, 5, 7, 10],
+      // Minor pentatonic
+      "blues": [0, 3, 5, 6, 7, 10],
+      // Blues scale
+      "whole-tone": [0, 2, 4, 6, 8, 10],
+      // Whole tone
+      "chromatic": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+      // Chromatic
+    };
+    const rootFrequencies = {
+      "C": 261.63,
+      "C#": 277.18,
+      "D": 293.66,
+      "D#": 311.13,
+      "E": 329.63,
+      "F": 349.23,
+      "F#": 369.99,
+      "G": 392,
+      "G#": 415.3,
+      "A": 440,
+      "A#": 466.16,
+      "B": 493.88
+    };
+    const intervals = scaleIntervals[scale] || scaleIntervals["major"];
+    const baseFreq = rootFrequencies[rootNote] || rootFrequencies["C"];
+    const fileNameHash = this.hashString(node.title);
+    const scaleDegree = fileNameHash % intervals.length;
+    const semitones = intervals[scaleDegree];
+    const sizeScore = Math.log10(Math.max(node.fileSize, 1)) / 10;
+    const connectionScore = Math.min(node.connections.length / 20, 1);
+    const octaveOffset = Math.floor((sizeScore - connectionScore) * 3) - 1;
+    const pitch = baseFreq * Math.pow(2, (semitones + octaveOffset * 12) / 12);
+    logger58.debug("scale-aware-pitch", "Generated scale-aware pitch", {
+      nodeId: node.id,
+      scale,
+      rootNote,
+      scaleDegree,
+      semitones,
+      octaveOffset,
+      pitch: pitch.toFixed(2)
+    });
+    return pitch;
   }
   /**
    * Get Sonic Graph settings with fallback to defaults
