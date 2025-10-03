@@ -726,7 +726,7 @@ export class MaterialControlPanelModal extends Modal {
 		const infoNote = headerEl.createEl('p', {
 			cls: 'osp-sample-browser-note'
 		});
-		infoNote.innerHTML = '<strong>Note:</strong> These are placeholder sample IDs. Preview and Info buttons may not work until you configure real Freesound samples via the API. Use the Freesound search functionality to find and add real samples to your library.';
+		infoNote.innerHTML = '<strong>Note:</strong> These are placeholder samples for demonstration. To use real Freesound audio, you\'ll need to search and add samples via the Freesound API (feature coming soon). Preview and Info buttons show the intended functionality.';
 
 		if (samples.length === 0) {
 			container.createEl('p', {
