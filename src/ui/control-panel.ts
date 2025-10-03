@@ -15,6 +15,8 @@ import { FolderSuggestModal } from './FolderSuggestModal';
 import { FileSuggestModal } from './FileSuggestModal';
 import { SonicGraphSettingsTabs } from './settings/SonicGraphSettingsTabs';
 import { getWhaleIntegration } from '../external/whale-integration';
+import { FreesoundSearchModal } from './FreesoundSearchModal';
+import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
 
 const logger = getLogger('control-panel');
 
@@ -717,16 +719,25 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Genre info header
 		const headerEl = container.createDiv({ cls: 'osp-sample-browser-header' });
-		headerEl.createEl('h4', {
+
+		const titleRow = headerEl.createDiv({ cls: 'osp-sample-browser-title-row' });
+		titleRow.createEl('h4', {
 			text: `${currentGenre.charAt(0).toUpperCase() + currentGenre.slice(1)} samples (${samples.length} available)`,
 			cls: 'osp-sample-browser-title'
 		});
 
-		// Add info note about placeholder samples
+		// Add "Search Freesound" button
+		const searchBtn = titleRow.createEl('button', {
+			text: 'Search Freesound',
+			cls: 'osp-search-freesound-btn'
+		});
+		searchBtn.addEventListener('click', () => this.openFreesoundSearch(currentGenre));
+
+		// Add info note
 		const infoNote = headerEl.createEl('p', {
 			cls: 'osp-sample-browser-note'
 		});
-		infoNote.innerHTML = '<strong>Note:</strong> These are placeholder samples for demonstration. To use real Freesound audio, you\'ll need to search and add samples via the Freesound API (feature coming soon). Preview and Info buttons show the intended functionality.';
+		infoNote.innerHTML = '<strong>Tip:</strong> Click "Search Freesound" above to find and add real audio samples to your library. The samples below are placeholders for demonstration.';
 
 		if (samples.length === 0) {
 			container.createEl('p', {
@@ -897,6 +908,59 @@ export class MaterialControlPanelModal extends Modal {
 				button.textContent = originalText;
 			}, 2000);
 		}
+	}
+
+	/**
+	 * Open Freesound search modal
+	 */
+	private openFreesoundSearch(genre: string): void {
+		const apiKey = this.plugin.settings.freesoundApiKey;
+
+		if (!apiKey) {
+			new Notice('Please enter your Freesound API key in the Freesound Integration settings first.');
+			return;
+		}
+
+		const modal = new FreesoundSearchModal(
+			this.app,
+			apiKey,
+			genre as MusicalGenre,
+			(sample: FreesoundSample) => this.addSampleToLibrary(genre as MusicalGenre, sample)
+		);
+
+		modal.open();
+	}
+
+	/**
+	 * Add a sample to the user's library
+	 */
+	private async addSampleToLibrary(genre: MusicalGenre, sample: FreesoundSample): Promise<void> {
+		// Initialize freesoundSamples if it doesn't exist
+		if (!this.plugin.settings.freesoundSamples) {
+			this.plugin.settings.freesoundSamples = {};
+		}
+
+		// Initialize genre array if it doesn't exist
+		if (!this.plugin.settings.freesoundSamples[genre]) {
+			this.plugin.settings.freesoundSamples[genre] = [];
+		}
+
+		// Check if sample already exists
+		const exists = this.plugin.settings.freesoundSamples[genre].some(s => s.id === sample.id);
+		if (exists) {
+			new Notice(`Sample "${sample.title}" is already in your ${genre} library`);
+			return;
+		}
+
+		// Add sample to library
+		this.plugin.settings.freesoundSamples[genre].push(sample);
+		await this.plugin.saveSettings();
+
+		logger.info('library', `Added sample ${sample.id} to ${genre} library`);
+
+		// Refresh the sample browser to show the new sample
+		this.contentContainer.empty();
+		this.createLayersTab();
 	}
 
 	private createScaleKeyCard(): void {

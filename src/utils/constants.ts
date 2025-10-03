@@ -619,6 +619,21 @@ export interface SonigraphSettings {
 	freesoundApiKey?: string;
 	enableFreesoundSamples?: boolean;
 
+	// Phase 7.2: User's Freesound sample library (indexed by genre)
+	freesoundSamples?: {
+		[genre: string]: Array<{
+			id: number;
+			title: string;
+			previewUrl: string;
+			duration: number;
+			license: string;
+			attribution: string;
+			genre: string;
+			fadeIn: number;
+			fadeOut: number;
+		}>;
+	};
+
 	// Phase 7.3: Preloading and caching settings
 	freesoundPredictivePreload?: boolean;
 	freesoundPreloadOnStartup?: boolean;
