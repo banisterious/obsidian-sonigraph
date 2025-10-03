@@ -688,38 +688,50 @@ export class MaterialControlPanelModal extends Modal {
 		// Get current genre from settings
 		const currentGenre = this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient';
 
-		// Get sample loader from continuous layer manager
+		// Get sample loader - try from layer manager first, fallback to creating new instance
+		let sampleLoader;
 		const layerManager = (this.plugin as any).continuousLayerManager;
-		if (!layerManager || !layerManager.sampleLoader) {
-			browserSection.createEl('p', {
-				text: 'Sample browser unavailable. Please restart continuous layers.',
-				cls: 'osp-error-message'
+
+		if (layerManager && layerManager.sampleLoader) {
+			sampleLoader = layerManager.sampleLoader;
+		} else {
+			// Create temporary sample loader just for browsing
+			// Import FreesoundSampleLoader dynamically
+			import('../audio/layers/FreesoundSampleLoader').then(({ FreesoundSampleLoader }) => {
+				const tempLoader = new FreesoundSampleLoader(this.plugin.settings.freesoundApiKey);
+				this.renderSampleBrowser(browserSection, tempLoader, currentGenre);
 			});
 			this.contentContainer.appendChild(card.getElement());
 			return;
 		}
 
-		const sampleLoader = layerManager.sampleLoader;
+		this.renderSampleBrowser(browserSection, sampleLoader, currentGenre);
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Render the sample browser UI
+	 */
+	private renderSampleBrowser(container: HTMLElement, sampleLoader: any, currentGenre: string): void {
 		const samples = sampleLoader.getSamplesForGenre(currentGenre);
 
 		// Genre info header
-		const headerEl = browserSection.createDiv({ cls: 'osp-sample-browser-header' });
+		const headerEl = container.createDiv({ cls: 'osp-sample-browser-header' });
 		headerEl.createEl('h4', {
 			text: `${currentGenre.charAt(0).toUpperCase() + currentGenre.slice(1)} samples (${samples.length} available)`,
 			cls: 'osp-sample-browser-title'
 		});
 
 		if (samples.length === 0) {
-			browserSection.createEl('p', {
+			container.createEl('p', {
 				text: `No samples available for genre: ${currentGenre}`,
 				cls: 'osp-info-message'
 			});
-			this.contentContainer.appendChild(card.getElement());
 			return;
 		}
 
 		// Sample list
-		const sampleList = browserSection.createDiv({ cls: 'osp-sample-list' });
+		const sampleList = container.createDiv({ cls: 'osp-sample-list' });
 
 		samples.forEach((sample, index) => {
 			const sampleItem = sampleList.createDiv({ cls: 'osp-sample-item' });
@@ -775,8 +787,6 @@ export class MaterialControlPanelModal extends Modal {
 				window.open(`https://freesound.org/people/${sample.attribution}/sounds/${sample.id}/`, '_blank');
 			});
 		});
-
-		this.contentContainer.appendChild(card.getElement());
 	}
 
 	/**
