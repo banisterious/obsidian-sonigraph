@@ -84646,7 +84646,7 @@ var AudioEngine = class {
    * Initialize Musical Theory Engine for harmonic constraints
    */
   initializeMusicalTheory() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     try {
       if (!((_a = this.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory)) {
         logger68.warn("musical-theory", "Musical theory settings not found, skipping initialization");
@@ -84654,13 +84654,14 @@ var AudioEngine = class {
       }
       const theorySettings = this.settings.audioEnhancement.musicalTheory;
       const config = {
+        enabled: (_b = theorySettings.enforceHarmony) != null ? _b : true,
         rootNote: theorySettings.rootNote || "C",
         scale: theorySettings.scale || "major",
-        enforceHarmony: (_b = theorySettings.enforceHarmony) != null ? _b : true,
-        quantizationStrength: (_c = theorySettings.quantizationStrength) != null ? _c : 0.8,
-        dissonanceThreshold: (_d = theorySettings.dissonanceThreshold) != null ? _d : 0.5,
-        allowChromaticPassing: (_e = theorySettings.allowChromaticPassing) != null ? _e : false,
-        dynamicScaleModulation: (_f = theorySettings.dynamicScaleModulation) != null ? _f : false,
+        enforceHarmony: (_c = theorySettings.enforceHarmony) != null ? _c : true,
+        quantizationStrength: (_d = theorySettings.quantizationStrength) != null ? _d : 0.8,
+        dissonanceThreshold: (_e = theorySettings.dissonanceThreshold) != null ? _e : 0.5,
+        allowChromaticPassing: (_f = theorySettings.allowChromaticPassing) != null ? _f : false,
+        dynamicScaleModulation: (_g = theorySettings.dynamicScaleModulation) != null ? _g : false,
         preferredChordProgression: theorySettings.preferredChordProgression
       };
       this.musicalTheoryEngine = new MusicalTheoryEngine(config);
@@ -84685,15 +84686,14 @@ var AudioEngine = class {
       return frequency;
     }
     try {
-      const quantized = this.musicalTheoryEngine.constrainToScale(frequency);
+      const quantized = this.musicalTheoryEngine.constrainPitchToScale(frequency);
       logger68.debug("musical-theory", "Frequency quantized", {
         original: frequency.toFixed(2),
-        quantized: quantized.frequency.toFixed(2),
-        note: quantized.noteName,
+        quantized: quantized.toFixed(2),
         scale: this.settings.audioEnhancement.musicalTheory.scale,
         rootNote: this.settings.audioEnhancement.musicalTheory.rootNote
       });
-      return quantized.frequency;
+      return quantized;
     } catch (error) {
       logger68.warn("musical-theory", "Failed to quantize frequency, using original", error);
       return frequency;
@@ -86200,7 +86200,7 @@ var AudioEngine = class {
     logger68.info("playback", "Sequence stopped and Transport reset");
   }
   async updateSettings(settings) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     this.settings = settings;
     this.onInstrumentSettingsChanged();
     const effectiveFormat = "ogg";
@@ -86227,13 +86227,14 @@ var AudioEngine = class {
       const theorySettings = settings.audioEnhancement.musicalTheory;
       if (this.musicalTheoryEngine) {
         const config = {
+          enabled: (_e = theorySettings.enforceHarmony) != null ? _e : true,
           rootNote: theorySettings.rootNote || "C",
           scale: theorySettings.scale || "major",
-          enforceHarmony: (_e = theorySettings.enforceHarmony) != null ? _e : true,
-          quantizationStrength: (_f = theorySettings.quantizationStrength) != null ? _f : 0.8,
-          dissonanceThreshold: (_g = theorySettings.dissonanceThreshold) != null ? _g : 0.5,
-          allowChromaticPassing: (_h = theorySettings.allowChromaticPassing) != null ? _h : false,
-          dynamicScaleModulation: (_i = theorySettings.dynamicScaleModulation) != null ? _i : false,
+          enforceHarmony: (_f = theorySettings.enforceHarmony) != null ? _f : true,
+          quantizationStrength: (_g = theorySettings.quantizationStrength) != null ? _g : 0.8,
+          dissonanceThreshold: (_h = theorySettings.dissonanceThreshold) != null ? _h : 0.5,
+          allowChromaticPassing: (_i = theorySettings.allowChromaticPassing) != null ? _i : false,
+          dynamicScaleModulation: (_j = theorySettings.dynamicScaleModulation) != null ? _j : false,
           preferredChordProgression: theorySettings.preferredChordProgression
         };
         this.musicalTheoryEngine = new MusicalTheoryEngine(config);
