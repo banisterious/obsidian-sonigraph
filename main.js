@@ -48580,8 +48580,10 @@ var init_TemporalGraphAnimator = __esm({
         this.animationFrameRate = 30;
         // Target FPS for animation
         this.frameInterval = 1e3 / 30;
+        this.wasPlayingBeforeHidden = false;
         this.nodes = nodes;
         this.links = links;
+        this.setupVisibilityHandling();
         const now3 = new Date();
         const oneYearAgo = new Date(now3.getTime() - 365 * 24 * 60 * 60 * 1e3);
         this.config = {
@@ -48615,6 +48617,40 @@ var init_TemporalGraphAnimator = __esm({
           timelineEvents: this.timeline.length,
           animationFPS: this.animationFrameRate
         });
+      }
+      /**
+       * Setup visibility change handling to keep animation running when tab loses focus
+       * Uses requestAnimationFrame when visible, setTimeout when hidden
+       */
+      setupVisibilityHandling() {
+        this.visibilityChangeHandler = () => {
+          if (document.hidden) {
+            if (this.isPlaying && !this.isPaused) {
+              logger22.debug("visibility", "Tab hidden while animation playing - switching to background mode");
+              if (this.animationId !== null) {
+                cancelAnimationFrame(this.animationId);
+                this.animationId = null;
+              }
+              this.scheduleNextFrame();
+            }
+          } else {
+            if (this.isPlaying && !this.isPaused) {
+              logger22.debug("visibility", "Tab visible again - switching to foreground mode");
+            }
+          }
+        };
+        document.addEventListener("visibilitychange", this.visibilityChangeHandler);
+      }
+      /**
+       * Schedule the next animation frame, using requestAnimationFrame when visible
+       * or setTimeout when hidden (to keep animation running in background)
+       */
+      scheduleNextFrame() {
+        if (document.hidden) {
+          this.animationId = window.setTimeout(() => this.animate(), this.frameInterval);
+        } else {
+          this.animationId = requestAnimationFrame(() => this.animate());
+        }
       }
       /**
        * Calculate date range based on time window filtering and actual file dates
@@ -49008,6 +49044,7 @@ var init_TemporalGraphAnimator = __esm({
         this.isPaused = true;
         if (this.animationId) {
           cancelAnimationFrame(this.animationId);
+          clearTimeout(this.animationId);
           this.animationId = null;
         }
         logger22.info("playback", "Animation paused", { currentTime: this.currentTime });
@@ -49023,6 +49060,7 @@ var init_TemporalGraphAnimator = __esm({
         this.currentTime = 0;
         if (this.animationId) {
           cancelAnimationFrame(this.animationId);
+          clearTimeout(this.animationId);
           this.animationId = null;
         }
         if (wasPlaying && currentProgress > 0 && currentProgress < 1) {
@@ -49107,7 +49145,7 @@ var init_TemporalGraphAnimator = __esm({
         }
         const now3 = performance.now();
         if (now3 - this.lastAnimationTime < this.frameInterval) {
-          this.animationId = requestAnimationFrame(() => this.animate());
+          this.scheduleNextFrame();
           return;
         }
         this.lastAnimationTime = now3;
@@ -49121,7 +49159,7 @@ var init_TemporalGraphAnimator = __esm({
             this.animationStartTime = performance.now();
             this.visibleNodes.clear();
             (_a = this.onVisibilityChange) == null ? void 0 : _a.call(this, this.visibleNodes);
-            this.animationId = requestAnimationFrame(() => this.animate());
+            this.scheduleNextFrame();
             return;
           } else {
             this.isPlaying = false;
@@ -49137,7 +49175,7 @@ var init_TemporalGraphAnimator = __esm({
           }
         }
         this.updateVisibility();
-        this.animationId = requestAnimationFrame(() => this.animate());
+        this.scheduleNextFrame();
       }
       /**
        * Update node visibility based on current time
@@ -49362,6 +49400,10 @@ var init_TemporalGraphAnimator = __esm({
        */
       destroy() {
         this.stop();
+        if (this.visibilityChangeHandler) {
+          document.removeEventListener("visibilitychange", this.visibilityChangeHandler);
+          this.visibilityChangeHandler = void 0;
+        }
         this.timeline = [];
         this.nodes = [];
         this.links = [];
@@ -51537,7 +51579,6 @@ var init_keyboard_instruments = __esm({
       instruments: {
         piano: {
           urls: {
-            "A0": `A0.${FORMAT_PLACEHOLDER}`,
             "C1": `C1.${FORMAT_PLACEHOLDER}`,
             "D#1": `Ds1.${FORMAT_PLACEHOLDER}`,
             "F#1": `Fs1.${FORMAT_PLACEHOLDER}`,
@@ -51911,13 +51952,17 @@ var init_brass_instruments = __esm({
       instruments: {
         trumpet: {
           urls: {
-            "C5": `C5.${FORMAT_PLACEHOLDER}`,
-            "D4": `D4.${FORMAT_PLACEHOLDER}`,
-            "Ds5": `Ds5.${FORMAT_PLACEHOLDER}`,
+            "A3": `A3.${FORMAT_PLACEHOLDER}`,
+            "A5": `A5.${FORMAT_PLACEHOLDER}`,
+            "A#4": `As4.${FORMAT_PLACEHOLDER}`,
+            "C4": `C4.${FORMAT_PLACEHOLDER}`,
+            "C6": `C6.${FORMAT_PLACEHOLDER}`,
+            "D5": `D5.${FORMAT_PLACEHOLDER}`,
+            "D#4": `Ds4.${FORMAT_PLACEHOLDER}`,
+            "F3": `F3.${FORMAT_PLACEHOLDER}`,
             "F4": `F4.${FORMAT_PLACEHOLDER}`,
-            "G4": `G4.${FORMAT_PLACEHOLDER}`,
-            "A4": `A4.${FORMAT_PLACEHOLDER}`,
-            "As4": `As4.${FORMAT_PLACEHOLDER}`
+            "F5": `F5.${FORMAT_PLACEHOLDER}`,
+            "G4": `G4.${FORMAT_PLACEHOLDER}`
           },
           release: 1.8,
           baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/",
@@ -51934,7 +51979,7 @@ var init_brass_instruments = __esm({
             "C4": `C4.${FORMAT_PLACEHOLDER}`,
             "D3": `D3.${FORMAT_PLACEHOLDER}`,
             "D5": `D5.${FORMAT_PLACEHOLDER}`,
-            "Ds2": `Ds2.${FORMAT_PLACEHOLDER}`,
+            "D#2": `Ds2.${FORMAT_PLACEHOLDER}`,
             "F3": `F3.${FORMAT_PLACEHOLDER}`,
             "F5": `F5.${FORMAT_PLACEHOLDER}`,
             "G2": `G2.${FORMAT_PLACEHOLDER}`
@@ -51948,12 +51993,12 @@ var init_brass_instruments = __esm({
         },
         trombone: {
           urls: {
-            "As2": `As2.${FORMAT_PLACEHOLDER}`,
+            "A#2": `As2.${FORMAT_PLACEHOLDER}`,
             "C3": `C3.${FORMAT_PLACEHOLDER}`,
             "D3": `D3.${FORMAT_PLACEHOLDER}`,
             "F2": `F2.${FORMAT_PLACEHOLDER}`,
             "F3": `F3.${FORMAT_PLACEHOLDER}`,
-            "As1": `As1.${FORMAT_PLACEHOLDER}`
+            "A#1": `As1.${FORMAT_PLACEHOLDER}`
           },
           release: 2.2,
           baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
@@ -51964,12 +52009,15 @@ var init_brass_instruments = __esm({
         },
         tuba: {
           urls: {
-            "As1": `As1.${FORMAT_PLACEHOLDER}`,
-            "D2": `D2.${FORMAT_PLACEHOLDER}`,
+            "A#1": `As1.${FORMAT_PLACEHOLDER}`,
+            "A#2": `As2.${FORMAT_PLACEHOLDER}`,
+            "A#3": `As3.${FORMAT_PLACEHOLDER}`,
             "D3": `D3.${FORMAT_PLACEHOLDER}`,
-            "Ds2": `Ds2.${FORMAT_PLACEHOLDER}`,
+            "D4": `D4.${FORMAT_PLACEHOLDER}`,
+            "D#2": `Ds2.${FORMAT_PLACEHOLDER}`,
             "F1": `F1.${FORMAT_PLACEHOLDER}`,
-            "As0": `As0.${FORMAT_PLACEHOLDER}`
+            "F2": `F2.${FORMAT_PLACEHOLDER}`,
+            "F3": `F3.${FORMAT_PLACEHOLDER}`
           },
           release: 3.5,
           baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
@@ -52044,17 +52092,38 @@ var init_woodwind_instruments = __esm({
         // Saxophone - only include available samples
         saxophone: {
           urls: {
-            "Ds4": `Ds4.${FORMAT_PLACEHOLDER}`,
-            "Ds5": `Ds5.${FORMAT_PLACEHOLDER}`,
+            "A4": `A4.${FORMAT_PLACEHOLDER}`,
+            "A5": `A5.${FORMAT_PLACEHOLDER}`,
+            "A#3": `As3.${FORMAT_PLACEHOLDER}`,
+            "A#4": `As4.${FORMAT_PLACEHOLDER}`,
+            "B3": `B3.${FORMAT_PLACEHOLDER}`,
+            "B4": `B4.${FORMAT_PLACEHOLDER}`,
+            "C4": `C4.${FORMAT_PLACEHOLDER}`,
+            "C5": `C5.${FORMAT_PLACEHOLDER}`,
+            "C#3": `Cs3.${FORMAT_PLACEHOLDER}`,
+            "C#4": `Cs4.${FORMAT_PLACEHOLDER}`,
+            "C#5": `Cs5.${FORMAT_PLACEHOLDER}`,
+            "D3": `D3.${FORMAT_PLACEHOLDER}`,
+            "D4": `D4.${FORMAT_PLACEHOLDER}`,
+            "D5": `D5.${FORMAT_PLACEHOLDER}`,
+            "D#3": `Ds3.${FORMAT_PLACEHOLDER}`,
+            "D#4": `Ds4.${FORMAT_PLACEHOLDER}`,
+            "D#5": `Ds5.${FORMAT_PLACEHOLDER}`,
+            "E3": `E3.${FORMAT_PLACEHOLDER}`,
+            "E4": `E4.${FORMAT_PLACEHOLDER}`,
+            "E5": `E5.${FORMAT_PLACEHOLDER}`,
             "F3": `F3.${FORMAT_PLACEHOLDER}`,
             "F4": `F4.${FORMAT_PLACEHOLDER}`,
             "F5": `F5.${FORMAT_PLACEHOLDER}`,
-            "A3": `A3.${FORMAT_PLACEHOLDER}`,
-            "A4": `A4.${FORMAT_PLACEHOLDER}`,
-            "A5": `A5.${FORMAT_PLACEHOLDER}`,
-            "C3": `C3.${FORMAT_PLACEHOLDER}`,
-            "C4": `C4.${FORMAT_PLACEHOLDER}`,
-            "C5": `C5.${FORMAT_PLACEHOLDER}`
+            "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
+            "F#4": `Fs4.${FORMAT_PLACEHOLDER}`,
+            "F#5": `Fs5.${FORMAT_PLACEHOLDER}`,
+            "G3": `G3.${FORMAT_PLACEHOLDER}`,
+            "G4": `G4.${FORMAT_PLACEHOLDER}`,
+            "G5": `G5.${FORMAT_PLACEHOLDER}`,
+            "G#3": `Gs3.${FORMAT_PLACEHOLDER}`,
+            "G#4": `Gs4.${FORMAT_PLACEHOLDER}`,
+            "G#5": `Gs5.${FORMAT_PLACEHOLDER}`
           },
           release: 1.8,
           baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/",
@@ -75969,6 +76038,7 @@ init_ContinuousLayerManager();
 var logger58 = getLogger("SonicGraphView");
 var VIEW_TYPE_SONIC_GRAPH = "sonic-graph-view";
 var SonicGraphView = class extends import_obsidian19.ItemView {
+  // Musical phrase length
   constructor(leaf, plugin) {
     super(leaf);
     this.graphRenderer = null;
@@ -75997,6 +76067,12 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
     // Audio density tracking for even distribution
     this.nodeAppearanceCounter = 0;
     this.lastAudioNodeIndex = -1;
+    // Musical progression tracking for melodic continuity
+    this.lastScaleDegree = 0;
+    this.currentChordIndex = 0;
+    this.currentChordProgression = [];
+    this.notesInCurrentPhrase = 0;
+    this.phraseLengthInNotes = 8;
     logger58.debug("ui", "SonicGraphView constructor started");
     this.plugin = plugin;
     logger58.debug("ui", "Plugin assigned");
@@ -80700,18 +80776,22 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
       return this.createFallbackMapping(node, "piano");
     }
     const pitch = this.calculateScaleAwarePitch(node, settings);
-    const baseDuration = settings.audio.noteDuration;
-    const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
-    const duration = Math.min(baseDuration + sizeFactor, 2);
-    const baseVelocity = 0.5;
-    const connectionFactor = Math.min(node.connections.length / 10, 0.4);
-    const velocity = baseVelocity + connectionFactor;
-    logger58.debug("audio", "Created musical mapping for node", {
+    const duration = this.calculateRhythmicDuration(node, settings);
+    const velocity = this.calculateDynamicVelocity(node, settings);
+    const currentPosition = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+    this.notesInCurrentPhrase++;
+    logger58.info("musical-structure", "\u{1F3B5} Note generated with full musical context", {
       nodeId: node.id,
+      nodeTitle: node.title,
       nodeType: node.type,
-      selectedInstrument,
-      enabledInstrumentsCount: enabledInstruments.length,
-      pitch: pitch.toFixed(2)
+      instrument: selectedInstrument,
+      pitch: pitch.toFixed(2),
+      duration: duration.toFixed(3),
+      velocity: velocity.toFixed(3),
+      positionInPhrase: currentPosition,
+      phraseNumber: Math.floor((this.notesInCurrentPhrase - 1) / this.phraseLengthInNotes),
+      chordIndex: this.currentChordIndex,
+      totalNotesPlayed: this.notesInCurrentPhrase
     });
     return {
       nodeId: node.id,
@@ -80775,23 +80855,176 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
     };
     const intervals = scaleIntervals[scale] || scaleIntervals["major"];
     const baseFreq = rootFrequencies[rootNote] || rootFrequencies["C"];
+    if (this.currentChordProgression.length === 0) {
+      this.currentChordProgression = this.generateChordProgression(intervals, scale);
+    }
+    const currentChord = this.currentChordProgression[this.currentChordIndex];
+    const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+    const isStartOfPhrase = positionInPhrase === 0;
+    const isEndOfPhrase = positionInPhrase === this.phraseLengthInNotes - 1;
+    let scaleDegree;
     const fileNameHash = this.hashString(node.title);
-    const scaleDegree = fileNameHash % intervals.length;
+    const hashSeed = fileNameHash % 100;
+    if (isStartOfPhrase) {
+      scaleDegree = currentChord[0];
+      logger58.debug("phrase-boundary", "Starting new phrase on tonic", {
+        scaleDegree,
+        chordIndex: this.currentChordIndex,
+        phraseNumber: Math.floor(this.notesInCurrentPhrase / this.phraseLengthInNotes)
+      });
+    } else if (isEndOfPhrase) {
+      const isFinalChord = this.currentChordIndex === this.currentChordProgression.length - 1;
+      if (isFinalChord) {
+        scaleDegree = 0;
+      } else {
+        scaleDegree = currentChord[hashSeed % 2 === 0 ? 0 : 2];
+      }
+      logger58.debug("phrase-boundary", "Ending phrase with cadence", {
+        scaleDegree,
+        isFinalChord,
+        chordIndex: this.currentChordIndex
+      });
+    } else {
+      if (hashSeed < 70 && this.lastScaleDegree !== null) {
+        const stepOptions = [-2, -1, 1, 2];
+        const stepIndex = hashSeed % stepOptions.length;
+        scaleDegree = (this.lastScaleDegree + stepOptions[stepIndex] + intervals.length) % intervals.length;
+      } else {
+        scaleDegree = currentChord[hashSeed % currentChord.length];
+      }
+    }
     const semitones = intervals[scaleDegree];
     const sizeScore = Math.log10(Math.max(node.fileSize, 1)) / 10;
     const connectionScore = Math.min(node.connections.length / 20, 1);
-    const octaveOffset = Math.floor((sizeScore - connectionScore) * 3) - 1;
+    const folderDepth = (node.path.match(/\//g) || []).length;
+    const depthScore = Math.min(folderDepth / 5, 1);
+    const octaveScore = sizeScore - connectionScore * 0.5 - depthScore * 0.3;
+    let octaveOffset = Math.floor(octaveScore * 3) - 1;
+    if (positionInPhrase >= 2 && positionInPhrase <= 5) {
+      octaveOffset += 1;
+    }
     const pitch = baseFreq * Math.pow(2, (semitones + octaveOffset * 12) / 12);
-    logger58.debug("scale-aware-pitch", "Generated scale-aware pitch", {
+    this.lastScaleDegree = scaleDegree;
+    const notesInChord = 4 + fileNameHash % 5;
+    if (this.nodeAppearanceCounter % notesInChord === 0) {
+      this.currentChordIndex = (this.currentChordIndex + 1) % this.currentChordProgression.length;
+    }
+    logger58.debug("scale-aware-pitch", "Generated melodic pitch with musical structure", {
       nodeId: node.id,
       scale,
       rootNote,
       scaleDegree,
+      lastScaleDegree: this.lastScaleDegree,
+      currentChordIndex: this.currentChordIndex,
+      currentChord,
+      positionInPhrase,
+      isStartOfPhrase,
+      isEndOfPhrase,
+      phraseNumber: Math.floor(this.notesInCurrentPhrase / this.phraseLengthInNotes),
+      stepwiseMotion: hashSeed < 70 && !isStartOfPhrase && !isEndOfPhrase,
+      folderDepth,
       semitones,
       octaveOffset,
       pitch: pitch.toFixed(2)
     });
     return pitch;
+  }
+  /**
+   * Calculate rhythmic duration with phrase-aware patterns
+   * Creates rhythmic variety through phrase position and file properties
+   */
+  calculateRhythmicDuration(node, settings) {
+    const baseDuration = settings.audio.noteDuration || 0.3;
+    const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+    const isStartOfPhrase = positionInPhrase === 0;
+    const isEndOfPhrase = positionInPhrase === this.phraseLengthInNotes - 1;
+    const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
+    let rhythmMultiplier = 1;
+    if (isStartOfPhrase) {
+      rhythmMultiplier = 3;
+    } else if (isEndOfPhrase) {
+      rhythmMultiplier = 4;
+    } else if (positionInPhrase % 2 === 1) {
+      rhythmMultiplier = 0.3;
+    } else if (positionInPhrase === 4) {
+      rhythmMultiplier = 1.5;
+    }
+    const fileNameHash = this.hashString(node.title);
+    const syncopationChance = fileNameHash % 100;
+    if (syncopationChance < 5 && !isStartOfPhrase && !isEndOfPhrase) {
+      rhythmMultiplier = 0.4;
+    }
+    let duration = baseDuration * rhythmMultiplier + sizeFactor;
+    const restChance = (fileNameHash >> 8) % 100;
+    if (restChance < 10 && !isStartOfPhrase && !isEndOfPhrase) {
+      duration = 0.05;
+      logger58.debug("rhythm", "Inserted musical rest", {
+        nodeId: node.id,
+        positionInPhrase,
+        restChance
+      });
+    }
+    duration = Math.min(Math.max(duration, 0.05), 3);
+    logger58.debug("rhythm", "Calculated rhythmic duration", {
+      nodeId: node.id,
+      baseDuration,
+      positionInPhrase,
+      isStartOfPhrase,
+      isEndOfPhrase,
+      rhythmMultiplier,
+      sizeFactor,
+      finalDuration: duration.toFixed(3)
+    });
+    return duration;
+  }
+  /**
+   * Calculate dynamic velocity with phrase expression curves
+   * Creates musical dynamics through crescendo/diminuendo and accents
+   */
+  calculateDynamicVelocity(node, settings) {
+    const baseVelocity = 0.5;
+    const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+    const isStartOfPhrase = positionInPhrase === 0;
+    const isEndOfPhrase = positionInPhrase === this.phraseLengthInNotes - 1;
+    let phraseDynamics = 0;
+    if (positionInPhrase <= 3) {
+      phraseDynamics = positionInPhrase / 3 * 0.4;
+    } else {
+      phraseDynamics = (this.phraseLengthInNotes - 1 - positionInPhrase) / 4 * 0.4;
+    }
+    let accentBoost = 0;
+    if (isStartOfPhrase) {
+      accentBoost = 0.5;
+    } else if (positionInPhrase === 4) {
+      accentBoost = 0.3;
+    } else if (isEndOfPhrase && this.currentChordIndex === this.currentChordProgression.length - 1) {
+      accentBoost = 0.6;
+    } else if (positionInPhrase % 2 === 1) {
+      accentBoost = -0.3;
+    }
+    const connectionFactor = Math.min(node.connections.length / 20, 0.2);
+    let fileTypeBoost = 0;
+    if (node.type === "md" || node.type === "txt") {
+      fileTypeBoost = 0.1;
+    }
+    let velocity = baseVelocity + phraseDynamics + accentBoost + connectionFactor + fileTypeBoost;
+    const fileNameHash = this.hashString(node.title);
+    const randomVariation = (fileNameHash % 10 - 5) / 100;
+    velocity += randomVariation;
+    velocity = Math.min(Math.max(velocity, 0.1), 1);
+    logger58.debug("dynamics", "Calculated dynamic velocity", {
+      nodeId: node.id,
+      baseVelocity,
+      positionInPhrase,
+      isStartOfPhrase,
+      isEndOfPhrase,
+      phraseDynamics: phraseDynamics.toFixed(3),
+      accentBoost: accentBoost.toFixed(3),
+      connectionFactor: connectionFactor.toFixed(3),
+      fileTypeBoost: fileTypeBoost.toFixed(3),
+      finalVelocity: velocity.toFixed(3)
+    });
+    return velocity;
   }
   /**
    * Get Sonic Graph settings with fallback to defaults
@@ -81543,6 +81776,85 @@ var SonicGraphView = class extends import_obsidian19.ItemView {
       hash = hash & hash;
     }
     return Math.abs(hash);
+  }
+  /**
+   * Generate a musically-coherent chord progression
+   * Returns array of chord tone arrays (scale degrees)
+   */
+  generateChordProgression(scaleIntervals, scaleName) {
+    const progressions = {
+      // Major scales use I-IV-V-I or I-V-vi-IV progressions
+      "major": [
+        [0, 2, 4],
+        // I (tonic triad)
+        [3, 5, 0],
+        // IV (subdominant)
+        [4, 6, 1],
+        // V (dominant)
+        [0, 2, 4]
+        // I (tonic return)
+      ],
+      "minor": [
+        [0, 2, 4],
+        // i (tonic minor)
+        [3, 5, 0],
+        // iv (subdominant)
+        [4, 6, 1],
+        // v (dominant minor)
+        [0, 2, 4]
+        // i (tonic return)
+      ],
+      "dorian": [
+        [0, 2, 4],
+        // i (minor tonic)
+        [1, 3, 5],
+        // ii (major)
+        [4, 6, 1],
+        // V (major)
+        [0, 2, 4]
+        // i (return)
+      ],
+      "pentatonic-major": [
+        [0, 1, 2],
+        // Pentatonic I
+        [2, 3, 4],
+        // Pentatonic IV
+        [1, 2, 3],
+        // Pentatonic V
+        [0, 1, 2]
+        // Return
+      ],
+      "pentatonic-minor": [
+        [0, 1, 2],
+        // Minor pentatonic i
+        [1, 2, 3],
+        // Minor pentatonic iv
+        [2, 3, 4],
+        // Minor pentatonic v
+        [0, 1, 2]
+        // Return
+      ],
+      "blues": [
+        [0, 2, 4],
+        // Blues tonic
+        [3, 4, 5],
+        // Blues IV
+        [4, 5, 0],
+        // Blues V
+        [0, 2, 4]
+        // Return
+      ]
+    };
+    let progression = progressions[scaleName] || progressions["major"];
+    progression = progression.map(
+      (chord) => chord.map((degree) => degree % scaleIntervals.length)
+    );
+    logger58.debug("chord-progression", "Generated chord progression", {
+      scale: scaleName,
+      progressionLength: progression.length,
+      chords: progression
+    });
+    return progression;
   }
   // Performance optimization: Event listener management
   addEventListener(element, event, handler2) {
@@ -83733,6 +84045,15 @@ var InstrumentConfigLoader = class {
         this.loadedInstruments.set(instrumentName, config);
         return config;
       }
+      const kebabCaseName = instrumentName.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+      if (kebabCaseName !== instrumentName && family.instruments[kebabCaseName]) {
+        const config = this.processInstrumentConfig(
+          family.instruments[kebabCaseName],
+          family.name
+        );
+        this.loadedInstruments.set(instrumentName, config);
+        return config;
+      }
     }
     return null;
   }
@@ -85051,6 +85372,16 @@ var AudioEngine = class {
       const useHighQuality = (_a = instrumentSettings == null ? void 0 : instrumentSettings.useHighQuality) != null ? _a : false;
       const config = configs[instrumentName];
       const hasSamples = config && config.urls && Object.keys(config.urls).length > 0;
+      if (instrumentName === "frenchHorn" || instrumentName === "trumpet" || instrumentName === "saxophone") {
+        logger68.info("instruments", `${instrumentName} config check`, {
+          configExists: !!config,
+          hasUrls: (config == null ? void 0 : config.urls) ? Object.keys(config.urls).length : 0,
+          baseUrl: config == null ? void 0 : config.baseUrl,
+          sampleUrls: (config == null ? void 0 : config.urls) ? Object.keys(config.urls) : [],
+          useHighQuality,
+          hasSamples
+        });
+      }
       if (useHighQuality && hasSamples) {
         await this.initializeInstrumentWithSamples(instrumentName, config);
       } else {
@@ -85064,7 +85395,7 @@ var AudioEngine = class {
     logger68.info("instruments", `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
   }
   async initializeInstrumentWithSamples(instrumentName, config) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     try {
       logger68.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
       const sampler = await new Promise((resolve, reject) => {
@@ -85115,7 +85446,16 @@ var AudioEngine = class {
       this.instruments.set(instrumentName, sampler);
       logger68.info("instruments", `Successfully initialized ${instrumentName} with samples`);
     } catch (error) {
-      logger68.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
+      logger68.error("instruments", `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : void 0,
+        errorType: (_d = error == null ? void 0 : error.constructor) == null ? void 0 : _d.name,
+        config: {
+          baseUrl: config.baseUrl,
+          sampleCount: Object.keys(config.urls || {}).length,
+          firstSample: Object.keys(config.urls || {})[0]
+        }
+      });
       this.initializeInstrumentWithSynthesis(instrumentName);
     }
   }
@@ -86278,8 +86618,12 @@ var AudioEngine = class {
   }
   async updateSettings(settings) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+    const oldSettings = this.settings;
     this.settings = settings;
     this.onInstrumentSettingsChanged();
+    if (this.isInitialized && oldSettings) {
+      await this.handleInstrumentSettingsChanges(oldSettings, settings);
+    }
     const effectiveFormat = "ogg";
     this.instrumentConfigLoader.updateAudioFormat(effectiveFormat);
     if (this.percussionEngine) {
@@ -86333,6 +86677,82 @@ var AudioEngine = class {
       tempo: settings.tempo,
       effectsApplied: this.isInitialized
     });
+  }
+  /**
+   * Handle hot-swapping of instruments when settings change
+   * Detects enabled/disabled changes and quality setting changes
+   */
+  async handleInstrumentSettingsChanges(oldSettings, newSettings) {
+    const instrumentsToAdd = [];
+    const instrumentsToRemove = [];
+    const instrumentsToReinitialize = [];
+    Object.keys(newSettings.instruments).forEach((instrumentName) => {
+      const oldInstrument = oldSettings.instruments[instrumentName];
+      const newInstrument = newSettings.instruments[instrumentName];
+      if (!oldInstrument || !newInstrument)
+        return;
+      const wasEnabled = oldInstrument.enabled;
+      const isEnabled = newInstrument.enabled;
+      const wasHighQuality = oldInstrument.useHighQuality;
+      const isHighQuality = newInstrument.useHighQuality;
+      if (!wasEnabled && isEnabled) {
+        instrumentsToAdd.push(instrumentName);
+        logger68.info("hot-swap", `Instrument enabled: ${instrumentName}`);
+      } else if (wasEnabled && !isEnabled) {
+        instrumentsToRemove.push(instrumentName);
+        logger68.info("hot-swap", `Instrument disabled: ${instrumentName}`);
+      } else if (isEnabled && wasHighQuality !== isHighQuality) {
+        instrumentsToReinitialize.push(instrumentName);
+        logger68.info("hot-swap", `Quality changed for ${instrumentName}: ${wasHighQuality} \u2192 ${isHighQuality}`);
+      }
+    });
+    for (const instrumentName of instrumentsToRemove) {
+      const instrument = this.instruments.get(instrumentName);
+      if (instrument) {
+        instrument.dispose();
+        this.instruments.delete(instrumentName);
+        logger68.info("hot-swap", `Removed instrument: ${instrumentName}`);
+      }
+    }
+    for (const instrumentName of instrumentsToReinitialize) {
+      const instrument = this.instruments.get(instrumentName);
+      if (instrument) {
+        instrument.dispose();
+        this.instruments.delete(instrumentName);
+      }
+      await this.initializeSingleInstrument(instrumentName);
+    }
+    for (const instrumentName of instrumentsToAdd) {
+      await this.initializeSingleInstrument(instrumentName);
+    }
+    if (instrumentsToAdd.length > 0 || instrumentsToRemove.length > 0 || instrumentsToReinitialize.length > 0) {
+      logger68.info("hot-swap", "Instrument hot-swap complete", {
+        added: instrumentsToAdd,
+        removed: instrumentsToRemove,
+        reinitialized: instrumentsToReinitialize
+      });
+    }
+  }
+  /**
+   * Initialize a single instrument (used for hot-swapping)
+   */
+  async initializeSingleInstrument(instrumentName) {
+    var _a;
+    const configs = this.getSamplerConfigs();
+    const instrumentSettings = this.settings.instruments[instrumentName];
+    if (!instrumentSettings || !instrumentSettings.enabled) {
+      logger68.debug("hot-swap", `Skipping ${instrumentName} - not enabled`);
+      return;
+    }
+    const useHighQuality = (_a = instrumentSettings.useHighQuality) != null ? _a : false;
+    const config = configs[instrumentName];
+    const hasSamples = config && config.urls && Object.keys(config.urls).length > 0;
+    if (useHighQuality && hasSamples) {
+      await this.initializeInstrumentWithSamples(instrumentName, config);
+    } else {
+      this.initializeInstrumentWithSynthesis(instrumentName);
+    }
+    logger68.info("hot-swap", `Initialized ${instrumentName} successfully`);
   }
   /**
    * Update reverb effect parameters for a specific instrument
@@ -86689,6 +87109,7 @@ var AudioEngine = class {
    */
   onInstrumentSettingsChanged() {
     this.invalidateInstrumentCache();
+    this.instrumentConfigLoader.clearCache();
     logger68.debug("optimization", "Instrument cache invalidated due to settings change");
   }
   /**

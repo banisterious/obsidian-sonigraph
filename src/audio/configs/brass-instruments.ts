@@ -6,13 +6,17 @@ export const brassInstruments: InstrumentFamily = {
     instruments: {
         trumpet: {
             urls: {
-                'C5': `C5.${FORMAT_PLACEHOLDER}`,
-                'D4': `D4.${FORMAT_PLACEHOLDER}`,
-                'Ds5': `Ds5.${FORMAT_PLACEHOLDER}`,
+                'A3': `A3.${FORMAT_PLACEHOLDER}`,
+                'A5': `A5.${FORMAT_PLACEHOLDER}`,
+                'A#4': `As4.${FORMAT_PLACEHOLDER}`,
+                'C4': `C4.${FORMAT_PLACEHOLDER}`,
+                'C6': `C6.${FORMAT_PLACEHOLDER}`,
+                'D5': `D5.${FORMAT_PLACEHOLDER}`,
+                'D#4': `Ds4.${FORMAT_PLACEHOLDER}`,
+                'F3': `F3.${FORMAT_PLACEHOLDER}`,
                 'F4': `F4.${FORMAT_PLACEHOLDER}`,
-                'G4': `G4.${FORMAT_PLACEHOLDER}`,
-                'A4': `A4.${FORMAT_PLACEHOLDER}`,
-                'As4': `As4.${FORMAT_PLACEHOLDER}`
+                'F5': `F5.${FORMAT_PLACEHOLDER}`,
+                'G4': `G4.${FORMAT_PLACEHOLDER}`
             },
             release: 1.8,
             baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/",
@@ -30,7 +34,7 @@ export const brassInstruments: InstrumentFamily = {
                 'C4': `C4.${FORMAT_PLACEHOLDER}`,
                 'D3': `D3.${FORMAT_PLACEHOLDER}`,
                 'D5': `D5.${FORMAT_PLACEHOLDER}`,
-                'Ds2': `Ds2.${FORMAT_PLACEHOLDER}`,
+                'D#2': `Ds2.${FORMAT_PLACEHOLDER}`,
                 'F3': `F3.${FORMAT_PLACEHOLDER}`,
                 'F5': `F5.${FORMAT_PLACEHOLDER}`,
                 'G2': `G2.${FORMAT_PLACEHOLDER}`
@@ -45,12 +49,12 @@ export const brassInstruments: InstrumentFamily = {
 
         trombone: {
             urls: {
-                'As2': `As2.${FORMAT_PLACEHOLDER}`,
+                'A#2': `As2.${FORMAT_PLACEHOLDER}`,
                 'C3': `C3.${FORMAT_PLACEHOLDER}`,
                 'D3': `D3.${FORMAT_PLACEHOLDER}`,
                 'F2': `F2.${FORMAT_PLACEHOLDER}`,
                 'F3': `F3.${FORMAT_PLACEHOLDER}`,
-                'As1': `As1.${FORMAT_PLACEHOLDER}`
+                'A#1': `As1.${FORMAT_PLACEHOLDER}`
             },
             release: 2.2,
             baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
@@ -62,12 +66,15 @@ export const brassInstruments: InstrumentFamily = {
 
         tuba: {
             urls: {
-                'As1': `As1.${FORMAT_PLACEHOLDER}`,
-                'D2': `D2.${FORMAT_PLACEHOLDER}`,
+                'A#1': `As1.${FORMAT_PLACEHOLDER}`,
+                'A#2': `As2.${FORMAT_PLACEHOLDER}`,
+                'A#3': `As3.${FORMAT_PLACEHOLDER}`,
                 'D3': `D3.${FORMAT_PLACEHOLDER}`,
-                'Ds2': `Ds2.${FORMAT_PLACEHOLDER}`,
+                'D4': `D4.${FORMAT_PLACEHOLDER}`,
+                'D#2': `Ds2.${FORMAT_PLACEHOLDER}`,
                 'F1': `F1.${FORMAT_PLACEHOLDER}`,
-                'As0': `As0.${FORMAT_PLACEHOLDER}`
+                'F2': `F2.${FORMAT_PLACEHOLDER}`,
+                'F3': `F3.${FORMAT_PLACEHOLDER}`
             },
             release: 3.5,
             baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",

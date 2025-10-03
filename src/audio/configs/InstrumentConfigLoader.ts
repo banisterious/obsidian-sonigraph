@@ -106,11 +106,25 @@ export class InstrumentConfigLoader {
 
         // Search through all families
         for (const family of instrumentFamilies) {
+            // Try exact match first
             if (family.instruments[instrumentName]) {
                 const config = this.processInstrumentConfig(
-                    family.instruments[instrumentName], 
+                    family.instruments[instrumentName],
                     family.name
                 );
+                this.loadedInstruments.set(instrumentName, config);
+                return config;
+            }
+
+            // If not found, try converting camelCase to kebab-case
+            // e.g., 'frenchHorn' -> 'french-horn'
+            const kebabCaseName = instrumentName.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+            if (kebabCaseName !== instrumentName && family.instruments[kebabCaseName]) {
+                const config = this.processInstrumentConfig(
+                    family.instruments[kebabCaseName],
+                    family.name
+                );
+                // Cache with original name for future lookups
                 this.loadedInstruments.set(instrumentName, config);
                 return config;
             }

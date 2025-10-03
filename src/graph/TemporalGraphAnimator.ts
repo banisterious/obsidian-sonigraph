@@ -81,9 +81,16 @@ export class TemporalGraphAnimator {
   private onVaultStateChange?: (vaultState: VaultState) => void;
   private onActivityChange?: (metrics: ActivityMetrics) => void;
 
+  // Visibility change handling
+  private visibilityChangeHandler?: () => void;
+  private wasPlayingBeforeHidden: boolean = false;
+
   constructor(nodes: GraphNode[], links: GraphLink[], config?: Partial<AnimationConfig>) {
     this.nodes = nodes;
     this.links = links;
+
+    // Setup visibility change listener to handle tab/window focus loss
+    this.setupVisibilityHandling();
     
     // Set default configuration
     const now = new Date();
@@ -124,6 +131,51 @@ export class TemporalGraphAnimator {
       timelineEvents: this.timeline.length,
       animationFPS: this.animationFrameRate
     });
+  }
+
+  /**
+   * Setup visibility change handling to keep animation running when tab loses focus
+   * Uses requestAnimationFrame when visible, setTimeout when hidden
+   */
+  private setupVisibilityHandling(): void {
+    this.visibilityChangeHandler = () => {
+      if (document.hidden) {
+        // Tab became hidden
+        if (this.isPlaying && !this.isPaused) {
+          logger.debug('visibility', 'Tab hidden while animation playing - switching to background mode');
+          // Cancel the current animation frame and restart with setTimeout
+          if (this.animationId !== null) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+          }
+          // Restart animation loop with setTimeout for background operation
+          this.scheduleNextFrame();
+        }
+      } else {
+        // Tab became visible again
+        if (this.isPlaying && !this.isPaused) {
+          logger.debug('visibility', 'Tab visible again - switching to foreground mode');
+          // Already running with setTimeout, will naturally switch to requestAnimationFrame
+          // on next iteration since document.hidden will be false
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+  }
+
+  /**
+   * Schedule the next animation frame, using requestAnimationFrame when visible
+   * or setTimeout when hidden (to keep animation running in background)
+   */
+  private scheduleNextFrame(): void {
+    if (document.hidden) {
+      // Tab is hidden, use setTimeout to continue animation in background
+      this.animationId = window.setTimeout(() => this.animate(), this.frameInterval) as unknown as number;
+    } else {
+      // Tab is visible, use requestAnimationFrame for smooth animation
+      this.animationId = requestAnimationFrame(() => this.animate());
+    }
   }
 
   /**
@@ -617,14 +669,16 @@ export class TemporalGraphAnimator {
       logger.debug('playback', 'Animation not playing or already paused');
       return;
     }
-    
+
     this.isPaused = true;
-    
+
     if (this.animationId) {
+      // Cancel both requestAnimationFrame and setTimeout
       cancelAnimationFrame(this.animationId);
+      clearTimeout(this.animationId);
       this.animationId = null;
     }
-    
+
     logger.info('playback', 'Animation paused', { currentTime: this.currentTime });
   }
 
@@ -634,13 +688,15 @@ export class TemporalGraphAnimator {
   stop(): void {
     const wasPlaying = this.isPlaying;
     const currentProgress = this.currentTime / this.config.duration;
-    
+
     this.isPlaying = false;
     this.isPaused = false;
     this.currentTime = 0;
-    
+
     if (this.animationId) {
+      // Cancel both requestAnimationFrame and setTimeout
       cancelAnimationFrame(this.animationId);
+      clearTimeout(this.animationId);
       this.animationId = null;
     }
     
@@ -747,7 +803,7 @@ export class TemporalGraphAnimator {
     
     // Performance optimization: Frame rate limiting
     if (now - this.lastAnimationTime < this.frameInterval) {
-      this.animationId = requestAnimationFrame(() => this.animate());
+      this.scheduleNextFrame();
       return;
     }
     this.lastAnimationTime = now;
@@ -769,9 +825,9 @@ export class TemporalGraphAnimator {
         
         // Trigger visibility change to reset the graph
         this.onVisibilityChange?.(this.visibleNodes);
-        
+
         // Continue the loop
-        this.animationId = requestAnimationFrame(() => this.animate());
+        this.scheduleNextFrame();
         return;
       } else {
         // Animation complete, no loop
@@ -791,9 +847,9 @@ export class TemporalGraphAnimator {
     }
     
     this.updateVisibility();
-    
+
     // Continue animation
-    this.animationId = requestAnimationFrame(() => this.animate());
+    this.scheduleNextFrame();
   }
 
   /**
@@ -1087,6 +1143,12 @@ export class TemporalGraphAnimator {
    */
   destroy(): void {
     this.stop();
+
+    // Remove visibility change listener
+    if (this.visibilityChangeHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+      this.visibilityChangeHandler = undefined;
+    }
 
     // Clear all data arrays to release memory
     this.timeline = [];

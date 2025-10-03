@@ -6,7 +6,7 @@ export const keyboardInstruments: InstrumentFamily = {
     instruments: {
         piano: {
             urls: {
-                "A0": `A0.${FORMAT_PLACEHOLDER}`, "C1": `C1.${FORMAT_PLACEHOLDER}`, "D#1": `Ds1.${FORMAT_PLACEHOLDER}`,
+                "C1": `C1.${FORMAT_PLACEHOLDER}`, "D#1": `Ds1.${FORMAT_PLACEHOLDER}`,
                 "F#1": `Fs1.${FORMAT_PLACEHOLDER}`, "A1": `A1.${FORMAT_PLACEHOLDER}`, "C2": `C2.${FORMAT_PLACEHOLDER}`,
                 "D#2": `Ds2.${FORMAT_PLACEHOLDER}`, "F#2": `Fs2.${FORMAT_PLACEHOLDER}`, "A2": `A2.${FORMAT_PLACEHOLDER}`,
                 "C3": `C3.${FORMAT_PLACEHOLDER}`, "D#3": `Ds3.${FORMAT_PLACEHOLDER}`, "F#3": `Fs3.${FORMAT_PLACEHOLDER}`,
