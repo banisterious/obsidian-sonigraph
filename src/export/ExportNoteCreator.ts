@@ -138,11 +138,6 @@ ${audioConfig}
             content += this.generateComprehensiveSettings(pluginSettings);
         }
 
-        // Add full export config if requested
-        if (config.includeSettingsSummary) {
-            content += `\n## Export Configuration\n\n\`\`\`json\n${JSON.stringify(this.sanitizeConfig(config), null, 2)}\n\`\`\`\n`;
-        }
-
         // Add footer
         content += `\n---
 
@@ -329,33 +324,6 @@ ${audioConfig}
     }
 
     /**
-     * Sanitize config for JSON output (remove functions, circular refs)
-     */
-    private sanitizeConfig(config: ExportConfig): any {
-        return {
-            scope: config.scope,
-            customRange: config.customRange,
-            format: config.format,
-            quality: config.quality,
-            locationType: config.locationType,
-            location: config.location,
-            filename: config.filename,
-            selectedInstruments: config.selectedInstruments,
-            includeContinuousLayers: config.includeContinuousLayers,
-            applyMasterVolume: config.applyMasterVolume,
-            applyEffects: config.applyEffects,
-            preserveSpatialAudio: config.preserveSpatialAudio,
-            masterVolume: config.masterVolume,
-            enabledEffects: config.enabledEffects,
-            renderingMethod: config.renderingMethod,
-            maxDurationMinutes: config.maxDurationMinutes,
-            metadata: config.metadata,
-            createNote: config.createNote,
-            includeSettingsSummary: config.includeSettingsSummary
-        };
-    }
-
-    /**
      * Generate comprehensive settings section with all Sonic Graph settings
      */
     private generateComprehensiveSettings(settings: any): string {
@@ -484,12 +452,6 @@ ${audioConfig}
             content += `- **Frequency Detuning:** ${settings.performanceMode.enableFrequencyDetuning ? 'Enabled' : 'Disabled'}\n`;
             content += `- **Audio Optimizations:** ${settings.performanceMode.enableAudioOptimizations ? 'Enabled' : 'Disabled'}\n`;
             content += '\n';
-        }
-
-        // Logging
-        if (settings.logLevel) {
-            content += '### Logging\n\n';
-            content += `- **Log Level:** ${settings.logLevel}\n\n`;
         }
 
         return content;
