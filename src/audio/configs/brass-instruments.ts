@@ -24,11 +24,16 @@ export const brassInstruments: InstrumentFamily = {
 
         'french-horn': {
             urls: {
-                'D2': `D2.${FORMAT_PLACEHOLDER}`,
-                'D4': `D4.${FORMAT_PLACEHOLDER}`,
-                'G2': `G2.${FORMAT_PLACEHOLDER}`,
                 'A1': `A1.${FORMAT_PLACEHOLDER}`,
-                'A3': `A3.${FORMAT_PLACEHOLDER}`
+                'A3': `A3.${FORMAT_PLACEHOLDER}`,
+                'C2': `C2.${FORMAT_PLACEHOLDER}`,
+                'C4': `C4.${FORMAT_PLACEHOLDER}`,
+                'D3': `D3.${FORMAT_PLACEHOLDER}`,
+                'D5': `D5.${FORMAT_PLACEHOLDER}`,
+                'Ds2': `Ds2.${FORMAT_PLACEHOLDER}`,
+                'F3': `F3.${FORMAT_PLACEHOLDER}`,
+                'F5': `F5.${FORMAT_PLACEHOLDER}`,
+                'G2': `G2.${FORMAT_PLACEHOLDER}`
             },
             release: 2.5,
             baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/french-horn/",
