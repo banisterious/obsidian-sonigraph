@@ -33521,13 +33521,13 @@ var init_Defaults = __esm({
 });
 
 // node_modules/tone/build/esm/core/Tone.js
-var Tone2;
+var Tone;
 var init_Tone = __esm({
   "node_modules/tone/build/esm/core/Tone.js"() {
     init_version();
     init_AudioContext();
     init_Debug();
-    Tone2 = class {
+    Tone = class {
       constructor() {
         this.debug = false;
         this._wasDisposed = false;
@@ -33580,7 +33580,7 @@ var init_Tone = __esm({
         return this.name;
       }
     };
-    Tone2.version = version;
+    Tone.version = version;
   }
 });
 
@@ -33615,7 +33615,7 @@ var init_Timeline = __esm({
     init_Defaults();
     init_Debug();
     init_Math();
-    Timeline = class extends Tone2 {
+    Timeline = class extends Tone {
       constructor() {
         super();
         this.name = "Timeline";
@@ -33952,7 +33952,7 @@ var init_Emitter = __esm({
   "node_modules/tone/build/esm/core/util/Emitter.js"() {
     init_Tone();
     init_TypeCheck();
-    Emitter = class extends Tone2 {
+    Emitter = class extends Tone {
       constructor() {
         super(...arguments);
         this.name = "Emitter";
@@ -34703,7 +34703,7 @@ var init_ToneAudioBuffer = __esm({
     init_Interface();
     init_TypeCheck();
     init_Debug();
-    ToneAudioBuffer = class extends Tone2 {
+    ToneAudioBuffer = class extends Tone {
       constructor() {
         super();
         this.name = "ToneAudioBuffer";
@@ -35174,7 +35174,7 @@ var init_TimeBase = __esm({
   "node_modules/tone/build/esm/core/type/TimeBase.js"() {
     init_Tone();
     init_TypeCheck();
-    TimeBaseClass = class extends Tone2 {
+    TimeBaseClass = class extends Tone {
       /**
        * @param context The context associated with the time value. Used to compute
        * Transport and context-relative timing.
@@ -35536,6 +35536,9 @@ var init_Time = __esm({
 });
 
 // node_modules/tone/build/esm/core/type/Frequency.js
+function Frequency(value, units) {
+  return new FrequencyClass(getContext(), value, units);
+}
 var FrequencyClass, noteToScaleIndex, scaleIndexToNote;
 var init_Frequency = __esm({
   "node_modules/tone/build/esm/core/type/Frequency.js"() {
@@ -35827,7 +35830,7 @@ var init_ToneWithContext = __esm({
     init_Debug();
     init_Defaults();
     init_TypeCheck();
-    ToneWithContext = class extends Tone2 {
+    ToneWithContext = class extends Tone {
       constructor() {
         super();
         const options = optionsFromArguments(ToneWithContext.getDefaults(), arguments, ["context"]);
@@ -37989,7 +37992,7 @@ var init_ToneAudioBuffers = __esm({
     init_TypeCheck();
     init_ToneAudioBuffer();
     init_Debug();
-    ToneAudioBuffers = class extends Tone2 {
+    ToneAudioBuffers = class extends Tone {
       constructor() {
         super();
         this.name = "ToneAudioBuffers";
@@ -38272,7 +38275,7 @@ var init_IntervalTimeline = __esm({
     init_Tone();
     init_TypeCheck();
     init_Debug();
-    IntervalTimeline = class extends Tone2 {
+    IntervalTimeline = class extends Tone {
       constructor() {
         super(...arguments);
         this.name = "IntervalTimeline";
@@ -38935,7 +38938,7 @@ var init_TimelineValue = __esm({
   "node_modules/tone/build/esm/core/util/TimelineValue.js"() {
     init_Timeline();
     init_Tone();
-    TimelineValue = class extends Tone2 {
+    TimelineValue = class extends Tone {
       /**
        * @param initialValue The value to return if there is no scheduled values
        */
@@ -85926,7 +85929,7 @@ var AudioEngine = class {
             const audioContext = getContext();
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
             if (this.rhythmicPercussion) {
-              const midiNote = Tone.Frequency(frequency, "hz").toMidi();
+              const midiNote = new Frequency(frequency, "hz").toMidi();
               logger68.debug("rhythmic-percussion", "Triggering accent", { frequency, midiNote, velocity });
               this.rhythmicPercussion.triggerAccent({
                 pitch: midiNote,
@@ -86633,13 +86636,13 @@ var AudioEngine = class {
       const detunedFrequency = this.applyFrequencyDetuning(pitch);
       synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
       if (this.rhythmicPercussion) {
-        const midiNote = Tone.Frequency(pitch, "hz").toMidi();
+        const midiNote = new Frequency(pitch, "hz").toMidi();
         logger68.debug("rhythmic-percussion", "Triggering accent (immediate playback)", { pitch, midiNote, velocity });
         this.rhythmicPercussion.triggerAccent({
           pitch: midiNote,
           velocity,
           duration,
-          time: Tone.now()
+          time: getContext().currentTime
         });
       }
       logger68.debug("immediate-playback", "Note triggered successfully", {
