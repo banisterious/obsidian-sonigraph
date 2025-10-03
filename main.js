@@ -18027,34 +18027,34 @@ var init_FreesoundSampleLoader = __esm({
       initializeSampleLibrary() {
         this.sampleLibrary.set("ambient", [
           {
-            id: 316847,
-            title: "Forest Ambience Morning",
-            previewUrl: "https://freesound.org/data/previews/316/316847_5123451-hq.mp3",
+            id: 17854,
+            title: "Atmosphere 1",
+            previewUrl: "https://freesound.org/data/previews/17/17854_-preview.mp3",
             duration: 60,
             license: "CC0",
-            attribution: "klankbeeld",
+            attribution: "ERH",
             genre: "ambient",
             fadeIn: 2,
             fadeOut: 3
           },
           {
-            id: 458867,
-            title: "Deep Space Ambient Drone",
-            previewUrl: "https://freesound.org/data/previews/458/458867_9576592-hq.mp3",
+            id: 18765,
+            title: "Deep Pad",
+            previewUrl: "https://freesound.org/data/previews/18/18765_-preview.mp3",
             duration: 45,
             license: "CC BY 3.0",
-            attribution: "karolist",
+            attribution: "ERH",
             genre: "ambient",
             fadeIn: 3,
             fadeOut: 4
           },
           {
-            id: 523606,
-            title: "Ethereal Pad",
-            previewUrl: "https://freesound.org/data/previews/523/523606_197130-hq.mp3",
+            id: 28117,
+            title: "Ethereal Background",
+            previewUrl: "https://freesound.org/data/previews/28/28117_-preview.mp3",
             duration: 30,
             license: "CC0",
-            attribution: "unfa",
+            attribution: "ERH",
             genre: "ambient",
             fadeIn: 2,
             fadeOut: 3
@@ -19134,6 +19134,10 @@ var init_control_panel = __esm({
           text: `${currentGenre.charAt(0).toUpperCase() + currentGenre.slice(1)} samples (${samples.length} available)`,
           cls: "osp-sample-browser-title"
         });
+        const infoNote = headerEl.createEl("p", {
+          cls: "osp-sample-browser-note"
+        });
+        infoNote.innerHTML = "<strong>Note:</strong> These are placeholder sample IDs. Preview and Info buttons may not work until you configure real Freesound samples via the API. Use the Freesound search functionality to find and add real samples to your library.";
         if (samples.length === 0) {
           container.createEl("p", {
             text: `No samples available for genre: ${currentGenre}`,
@@ -19180,7 +19184,7 @@ var init_control_panel = __esm({
             cls: "osp-sample-action-btn osp-info-btn"
           });
           infoBtn.addEventListener("click", () => {
-            window.open(`https://freesound.org/people/${sample.attribution}/sounds/${sample.id}/`, "_blank");
+            window.open(`https://freesound.org/s/${sample.id}/`, "_blank");
           });
         });
       }
@@ -19189,30 +19193,59 @@ var init_control_panel = __esm({
        */
       async previewSample(sample, button) {
         const originalText = button.textContent;
+        let audio = null;
         try {
           button.textContent = "Loading...";
           button.disabled = true;
-          const audio = new Audio(sample.previewUrl);
+          audio = new Audio();
+          audio.addEventListener("error", (e) => {
+            logger21.error("sample-preview", `Audio load error for sample ${sample.id}`, e);
+            button.textContent = "Error";
+            button.disabled = false;
+            setTimeout(() => {
+              button.textContent = originalText;
+            }, 2e3);
+          });
+          await new Promise((resolve, reject) => {
+            if (!audio) {
+              reject(new Error("Audio element not created"));
+              return;
+            }
+            audio.addEventListener("canplay", () => resolve(), { once: true });
+            audio.addEventListener("error", (e) => reject(e), { once: true });
+            audio.src = sample.previewUrl;
+            audio.load();
+          });
           audio.volume = 0;
-          audio.play();
+          const playPromise = audio.play();
+          if (playPromise !== void 0) {
+            await playPromise;
+          }
           const fadeInSteps = 20;
           const fadeInInterval = sample.fadeIn * 1e3 / fadeInSteps;
           for (let i = 0; i <= fadeInSteps; i++) {
             setTimeout(() => {
-              audio.volume = i / fadeInSteps;
+              if (audio) {
+                audio.volume = Math.min(1, i / fadeInSteps);
+              }
             }, i * fadeInInterval);
           }
           button.textContent = "Stop";
           button.disabled = false;
           const stopHandler = () => {
+            if (!audio)
+              return;
             const fadeOutSteps = 20;
             const fadeOutInterval = sample.fadeOut * 1e3 / fadeOutSteps;
+            let currentVolume = audio.volume;
             for (let i = fadeOutSteps; i >= 0; i--) {
               setTimeout(() => {
-                audio.volume = i / fadeOutSteps;
-                if (i === 0) {
-                  audio.pause();
-                  audio.currentTime = 0;
+                if (audio) {
+                  audio.volume = i / fadeOutSteps * currentVolume;
+                  if (i === 0) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                  }
                 }
               }, (fadeOutSteps - i) * fadeOutInterval);
             }
@@ -19225,8 +19258,11 @@ var init_control_panel = __esm({
           });
         } catch (error) {
           logger21.error("sample-preview", `Failed to preview sample ${sample.id}`, error);
-          button.textContent = originalText;
+          button.textContent = "Error";
           button.disabled = false;
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2e3);
         }
       }
       createScaleKeyCard() {

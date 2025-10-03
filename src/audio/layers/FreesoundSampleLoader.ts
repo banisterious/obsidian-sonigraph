@@ -433,39 +433,41 @@ export class FreesoundSampleLoader {
   
   private initializeSampleLibrary(): void {
     // Curated Freesound sample library for all 13 musical genres
-    // Each sample includes real Freesound IDs, preview URLs, and optimal fade settings
+    // NOTE: These are placeholder samples. Users should use the Freesound API to search
+    // for real samples or provide their own sample IDs through the UI.
+    // Preview URL format: https://freesound.org/data/previews/{first3}/{id}_preview.mp3
 
     // 1. Ambient - Ethereal atmospheric textures
     this.sampleLibrary.set('ambient', [
       {
-        id: 316847,
-        title: 'Forest Ambience Morning',
-        previewUrl: 'https://freesound.org/data/previews/316/316847_5123451-hq.mp3',
+        id: 17854,
+        title: 'Atmosphere 1',
+        previewUrl: 'https://freesound.org/data/previews/17/17854_-preview.mp3',
         duration: 60,
         license: 'CC0',
-        attribution: 'klankbeeld',
+        attribution: 'ERH',
         genre: 'ambient',
         fadeIn: 2,
         fadeOut: 3
       },
       {
-        id: 458867,
-        title: 'Deep Space Ambient Drone',
-        previewUrl: 'https://freesound.org/data/previews/458/458867_9576592-hq.mp3',
+        id: 18765,
+        title: 'Deep Pad',
+        previewUrl: 'https://freesound.org/data/previews/18/18765_-preview.mp3',
         duration: 45,
         license: 'CC BY 3.0',
-        attribution: 'karolist',
+        attribution: 'ERH',
         genre: 'ambient',
         fadeIn: 3,
         fadeOut: 4
       },
       {
-        id: 523606,
-        title: 'Ethereal Pad',
-        previewUrl: 'https://freesound.org/data/previews/523/523606_197130-hq.mp3',
+        id: 28117,
+        title: 'Ethereal Background',
+        previewUrl: 'https://freesound.org/data/previews/28/28117_-preview.mp3',
         duration: 30,
         license: 'CC0',
-        attribution: 'unfa',
+        attribution: 'ERH',
         genre: 'ambient',
         fadeIn: 2,
         fadeOut: 3

@@ -2037,10 +2037,21 @@
 }
 
 .osp-sample-browser-title {
-  margin: 0;
+  margin: 0 0 8px 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-normal);
+}
+
+.osp-sample-browser-note {
+  margin: 0;
+  padding: 8px 12px;
+  background-color: var(--background-modifier-message);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .osp-sample-list {
