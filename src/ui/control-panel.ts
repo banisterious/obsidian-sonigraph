@@ -512,11 +512,11 @@ export class MaterialControlPanelModal extends Modal {
 	}
 
 	/**
-	 * Create Freesound Integration Card for Layers Tab
+	 * Create Freesound integration card for Layers tab
 	 */
 	private createFreesoundIntegrationCard(): void {
 		const card = new MaterialCard({
-			title: 'Freesound Integration',
+			title: 'Freesound integration',
 			iconName: 'cloud-download',
 			subtitle: 'Configure Freesound.org API for audio samples',
 			elevation: 1
@@ -555,7 +555,7 @@ export class MaterialControlPanelModal extends Modal {
 			const apiKeyContainer = settingsSection.createDiv({ cls: 'osp-settings-item' });
 
 			new Setting(apiKeyContainer)
-				.setName('API Key')
+				.setName('API key')
 				.addText(text => {
 					text
 						.setPlaceholder('Enter your Freesound API key (32 characters)')
@@ -571,7 +571,7 @@ export class MaterialControlPanelModal extends Modal {
 				})
 				.addButton(button => {
 					button
-						.setButtonText('Test Connection')
+						.setButtonText('Test connection')
 						.setTooltip('Test API key and connection to Freesound')
 						.onClick(async () => {
 							await this.testFreesoundConnection(button.buttonEl);
@@ -589,11 +589,11 @@ export class MaterialControlPanelModal extends Modal {
 			securityNote.style.marginTop = '8px';
 			securityNote.style.marginBottom = '16px';
 			// Preloading and Caching Settings
-			settingsSection.createEl('h4', { text: 'Preloading & Caching', cls: 'osp-subsection-header' });
+			settingsSection.createEl('h4', { text: 'Preloading and caching', cls: 'osp-subsection-header' });
 
 			// Enable predictive preloading
 			new Setting(settingsSection)
-				.setName('Predictive Preloading')
+				.setName('Predictive preloading')
 				.setDesc('Automatically preload samples for genres you use frequently')
 				.addToggle(toggle => toggle
 					.setValue(this.plugin.settings.freesoundPredictivePreload !== false)
@@ -606,7 +606,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Preload on startup
 			new Setting(settingsSection)
-				.setName('Preload on Startup')
+				.setName('Preload on startup')
 				.setDesc('Automatically preload frequently used samples when Obsidian starts')
 				.addToggle(toggle => toggle
 					.setValue(this.plugin.settings.freesoundPreloadOnStartup || false)
@@ -619,7 +619,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Background loading
 			new Setting(settingsSection)
-				.setName('Background Loading')
+				.setName('Background loading')
 				.setDesc('Download samples in the background during idle time')
 				.addToggle(toggle => toggle
 					.setValue(this.plugin.settings.freesoundBackgroundLoading !== false)
@@ -632,7 +632,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Cache eviction strategy
 			new Setting(settingsSection)
-				.setName('Cache Strategy')
+				.setName('Cache strategy')
 				.setDesc('Algorithm for managing cached samples when storage is full')
 				.addDropdown(dropdown => dropdown
 					.addOption('adaptive', 'Adaptive (Recommended)')
@@ -649,7 +649,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Storage quota
 			new Setting(settingsSection)
-				.setName('Max Storage (MB)')
+				.setName('Max storage (MB)')
 				.setDesc('Maximum disk space for cached samples (default: 100MB)')
 				.addText(text => text
 					.setPlaceholder('100')

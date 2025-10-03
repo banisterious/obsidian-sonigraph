@@ -1,7 +1,7 @@
 /**
- * Sonic Graph Advanced Features Settings - Phase 8.1
+ * Sonic Graph Advanced Features Settings
  *
- * Advanced audio features for Control Center (Phases 5-6).
+ * Advanced audio features for Control Center.
  * Contains: Clustering Audio, Musical Theory, Orchestration, Spatial Audio.
  */
 
@@ -28,26 +28,26 @@ export class SonicGraphAdvancedSettings {
 	public render(container: HTMLElement): void {
 		logger.debug('advanced-settings', 'Rendering advanced features settings');
 
-		// Phase 5.1: Smart Clustering Audio
+		// Smart Clustering Audio
 		this.renderClusteringSection(container);
 
-		// Phase 5.2: Hub Node Orchestration
+		// Hub Node Orchestration
 		this.renderHubOrchestrationSection(container);
 
-		// Phase 6.1: Musical Theory
+		// Musical Theory
 		this.renderMusicalTheorySection(container);
 
-		// Phase 6.2: Dynamic Orchestration
+		// Dynamic Orchestration
 		this.renderDynamicOrchestrationSection(container);
 
-		// Phase 6.3: Spatial Audio & Panning
+		// Spatial Audio & Panning
 		this.renderSpatialAudioSection(container);
 	}
 
 	/**
-	 * Phase 5: Smart Clustering Audio
+	 * Smart Clustering Audio
 	 */
-	private renderClusteringSection(container: HTMLElement): void {
+	public renderClusteringSection(container: HTMLElement): void {
 		// Create a wrapper for this card so we can re-render just this section
 		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
 		this.renderClusteringCard(cardContainer);
@@ -57,9 +57,9 @@ export class SonicGraphAdvancedSettings {
 		cardContainer.empty();
 
 		const card = new MaterialCard({
-			title: 'Smart Clustering Audio',
+			title: 'Smart clustering audio',
 			iconName: 'network',
-			subtitle: 'Phase 5: Generate audio themes for cluster types',
+			subtitle: 'Generate audio themes for cluster types',
 			elevation: 1
 		});
 
@@ -183,13 +183,13 @@ export class SonicGraphAdvancedSettings {
 	}
 
 	/**
-	 * Phase 6.1: Musical Theory Integration
+	 * Musical Theory Integration
 	 */
-	private renderMusicalTheorySection(container: HTMLElement): void {
+	public renderMusicalTheorySection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Musical Theory Integration',
+			title: 'Musical theory integration',
 			iconName: 'book-open',
-			subtitle: 'Phase 6.1: Constrain notes to scales and modes',
+			subtitle: 'Constrain notes to scales and modes',
 			elevation: 1
 		});
 
@@ -336,9 +336,9 @@ export class SonicGraphAdvancedSettings {
 	}
 
 	/**
-	 * Phase 5.2: Hub Node Orchestration
+	 * Hub Node Orchestration
 	 */
-	private renderHubOrchestrationSection(container: HTMLElement): void {
+	public renderHubOrchestrationSection(container: HTMLElement): void {
 		// Create a wrapper for this card so we can re-render just this section
 		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
 		this.renderHubOrchestrationCard(cardContainer);
@@ -348,9 +348,9 @@ export class SonicGraphAdvancedSettings {
 		cardContainer.empty();
 
 		const card = new MaterialCard({
-			title: 'Hub Node Orchestration',
+			title: 'Hub node orchestration',
 			iconName: 'git-branch',
-			subtitle: 'Phase 5.2: Emphasize highly connected nodes',
+			subtitle: 'Emphasize highly connected nodes',
 			elevation: 1
 		});
 
@@ -456,7 +456,7 @@ export class SonicGraphAdvancedSettings {
 
 			// Centrality weights section
 			const weightsDiv = content.createDiv({ cls: 'osp-settings-subsection' });
-			weightsDiv.createEl('h4', { text: 'Centrality Weights' });
+			weightsDiv.createEl('h4', { text: 'Centrality weights' });
 			weightsDiv.createEl('p', {
 				text: 'Adjust how different centrality metrics contribute to hub detection',
 				cls: 'osp-settings-description'
@@ -540,9 +540,9 @@ export class SonicGraphAdvancedSettings {
 	}
 
 	/**
-	 * Phase 6.2: Dynamic Orchestration
+	 * Dynamic Orchestration
 	 */
-	private renderDynamicOrchestrationSection(container: HTMLElement): void {
+	public renderDynamicOrchestrationSection(container: HTMLElement): void {
 		// Create a wrapper for this card so we can re-render just this section
 		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
 		this.renderDynamicOrchestrationCard(cardContainer);
@@ -552,9 +552,9 @@ export class SonicGraphAdvancedSettings {
 		cardContainer.empty();
 
 		const card = new MaterialCard({
-			title: 'Dynamic Orchestration',
+			title: 'Dynamic orchestration',
 			iconName: 'activity',
-			subtitle: 'Phase 6.2: Auto-adjust complexity based on context',
+			subtitle: 'Auto-adjust complexity based on context',
 			elevation: 1
 		});
 
@@ -698,21 +698,37 @@ export class SonicGraphAdvancedSettings {
 	}
 
 	/**
-	 * Phase 6.3: Spatial Audio & Panning
+	 * Spatial Audio & Panning
 	 */
-	private renderSpatialAudioSection(container: HTMLElement): void {
-		// Create a wrapper for this card so we can re-render just this section
-		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderSpatialAudioCard(cardContainer);
+	public renderSpatialAudioSection(container: HTMLElement): void {
+		// Core spatial audio settings
+		const spatialCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
+		this.renderSpatialAudioCard(spatialCardContainer);
+
+		// Hybrid mode weights (conditionally rendered when hybrid mode is selected)
+		const hybridCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
+		this.renderHybridModeWeightsCard(hybridCardContainer);
+
+		// Folder-based panning (conditionally rendered when spatial audio is enabled)
+		const folderCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
+		this.renderFolderPanningCard(folderCardContainer);
+
+		// Cluster-based panning (conditionally rendered when spatial audio is enabled)
+		const clusterCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
+		this.renderClusterPanningCard(clusterCardContainer);
+
+		// Advanced spatial settings (conditionally rendered when spatial audio is enabled)
+		const advancedCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
+		this.renderAdvancedSpatialCard(advancedCardContainer);
 	}
 
 	private renderSpatialAudioCard(cardContainer: HTMLElement): void {
 		cardContainer.empty();
 
 		const card = new MaterialCard({
-			title: 'Spatial Audio & Panning',
+			title: 'Spatial audio and panning',
 			iconName: 'radio',
-			subtitle: 'Phase 6.3: Position sounds in stereo space',
+			subtitle: 'Position sounds in stereo space',
 			elevation: 1
 		});
 
@@ -787,6 +803,13 @@ export class SonicGraphAdvancedSettings {
 						if (this.plugin.settings.spatialAudio) {
 							this.plugin.settings.spatialAudio.mode = value as any;
 							await this.plugin.saveSettings();
+
+							// Re-render spatial audio section to show/hide hybrid weights card
+							const container = cardContainer.parentElement;
+							if (container) {
+								container.empty();
+								this.renderSpatialAudioSection(container);
+							}
 						}
 					})
 				);
@@ -856,248 +879,348 @@ export class SonicGraphAdvancedSettings {
 						}
 					})
 				);
+		}
 
-			// Hybrid mode weights (only show if mode is hybrid)
-			if (this.plugin.settings.spatialAudio?.mode === PanningMode.Hybrid) {
-				const hybridSection = content.createDiv({ cls: 'osp-settings-subsection' });
-				hybridSection.createEl('h4', { text: 'Hybrid Mode Weights' });
-				hybridSection.createEl('p', {
-					text: 'Balance between different panning strategies (should sum to ~1.0)',
-					cls: 'osp-settings-description'
-				});
+		cardContainer.appendChild(card.getElement());
+	}
 
-				new Setting(hybridSection)
-					.setName('Graph position weight')
-					.setDesc('Weight for X-position based panning (0-1)')
-					.addSlider(slider => slider
-						.setLimits(0, 1, 0.1)
-						.setValue(this.plugin.settings.spatialAudio?.hybridWeights?.graphPosition || 0.5)
-						.setDynamicTooltip()
-						.onChange(async (value) => {
-							if (this.plugin.settings.spatialAudio?.hybridWeights) {
-								this.plugin.settings.spatialAudio.hybridWeights.graphPosition = value;
-								await this.plugin.saveSettings();
-							}
-						})
-					);
+	/**
+	 * Folder-Based Panning Card
+	 */
+	private renderFolderPanningCard(cardContainer: HTMLElement): void {
+		cardContainer.empty();
 
-				new Setting(hybridSection)
-					.setName('Folder weight')
-					.setDesc('Weight for folder-based panning (0-1)')
-					.addSlider(slider => slider
-						.setLimits(0, 1, 0.1)
-						.setValue(this.plugin.settings.spatialAudio?.hybridWeights?.folderBased || 0.3)
-						.setDynamicTooltip()
-						.onChange(async (value) => {
-							if (this.plugin.settings.spatialAudio?.hybridWeights) {
-								this.plugin.settings.spatialAudio.hybridWeights.folderBased = value;
-								await this.plugin.saveSettings();
-							}
-						})
-					);
+		// Only render if spatial audio is enabled
+		if (!this.plugin.settings.spatialAudio?.enabled) {
+			return;
+		}
 
-				new Setting(hybridSection)
-					.setName('Cluster weight')
-					.setDesc('Weight for cluster-based panning (0-1)')
-					.addSlider(slider => slider
-						.setLimits(0, 1, 0.1)
-						.setValue(this.plugin.settings.spatialAudio?.hybridWeights?.clusterBased || 0.2)
-						.setDynamicTooltip()
-						.onChange(async (value) => {
-							if (this.plugin.settings.spatialAudio?.hybridWeights) {
-								this.plugin.settings.spatialAudio.hybridWeights.clusterBased = value;
-								await this.plugin.saveSettings();
-							}
-						})
-					);
-			}
+		const card = new MaterialCard({
+			title: 'Folder-based panning',
+			iconName: 'folder',
+			subtitle: 'Pan sounds based on vault folder structure',
+			elevation: 1
+		});
 
-			// Folder settings section
-			const folderSection = content.createDiv({ cls: 'osp-settings-subsection' });
-			folderSection.createEl('h4', { text: 'Folder-Based Settings' });
+		const content = card.getContent();
 
-			new Setting(folderSection)
-				.setName('Enable folder panning')
-				.setDesc('Use folder structure to determine pan positions')
-				.addToggle(toggle => toggle
-					.setValue(this.plugin.settings.spatialAudio?.folderSettings?.enabled ?? true)
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.folderSettings) {
-							this.plugin.settings.spatialAudio.folderSettings.enabled = value;
-							await this.plugin.saveSettings();
+		new Setting(content)
+			.setName('Enable folder panning')
+			.setDesc('Use folder structure to determine pan positions')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.spatialAudio?.folderSettings?.enabled ?? true)
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.folderSettings) {
+						this.plugin.settings.spatialAudio.folderSettings.enabled = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Auto-detect top folders')
+			.setDesc('Automatically assign pan positions to top-level folders')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.spatialAudio?.folderSettings?.autoDetectTopLevel ?? true)
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.folderSettings) {
+						this.plugin.settings.spatialAudio.folderSettings.autoDetectTopLevel = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Folder spread')
+			.setDesc('How much nested files vary from folder pan (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.folderSettings?.spreadFactor || 0.3)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.folderSettings) {
+						this.plugin.settings.spatialAudio.folderSettings.spreadFactor = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		cardContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Cluster-Based Panning Card
+	 */
+	private renderClusterPanningCard(cardContainer: HTMLElement): void {
+		cardContainer.empty();
+
+		// Only render if spatial audio is enabled
+		if (!this.plugin.settings.spatialAudio?.enabled) {
+			return;
+		}
+
+		const card = new MaterialCard({
+			title: 'Cluster-based panning',
+			iconName: 'network',
+			subtitle: 'Pan sounds based on cluster positions',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		new Setting(content)
+			.setName('Enable cluster panning')
+			.setDesc('Use cluster positions for panning')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.enabled ?? true)
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.clusterSettings) {
+						this.plugin.settings.spatialAudio.clusterSettings.enabled = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Use cluster centroid')
+			.setDesc('Pan based on cluster center position')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.useCentroid ?? true)
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.clusterSettings) {
+						this.plugin.settings.spatialAudio.clusterSettings.useCentroid = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Individual spread')
+			.setDesc('How much nodes vary within cluster (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.individualSpread || 0.2)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.clusterSettings) {
+						this.plugin.settings.spatialAudio.clusterSettings.individualSpread = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Cluster separation')
+			.setDesc('Force clusters to different pan positions (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.clusterSeparation || 0.5)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.clusterSettings) {
+						this.plugin.settings.spatialAudio.clusterSettings.clusterSeparation = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		cardContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Advanced Spatial Settings Card
+	 */
+	private renderAdvancedSpatialCard(cardContainer: HTMLElement): void {
+		cardContainer.empty();
+
+		// Only render if spatial audio is enabled
+		if (!this.plugin.settings.spatialAudio?.enabled) {
+			return;
+		}
+
+		const card = new MaterialCard({
+			title: 'Advanced spatial settings',
+			iconName: 'settings',
+			subtitle: 'Fine-tune spatial audio behavior',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		new Setting(content)
+			.setName('Enable depth mapping')
+			.setDesc('Use Y-axis position for future surround sound support')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.spatialAudio?.advanced?.enableDepthMapping ?? false)
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.advanced) {
+						this.plugin.settings.spatialAudio.advanced.enableDepthMapping = value;
+						await this.plugin.saveSettings();
+
+						// Re-render to show/hide depth influence slider
+						const container = cardContainer.parentElement;
+						if (container) {
+							container.empty();
+							this.renderSpatialAudioSection(container);
 						}
-					})
-				);
+					}
+				})
+			);
 
-			new Setting(folderSection)
-				.setName('Auto-detect top folders')
-				.setDesc('Automatically assign pan positions to top-level folders')
-				.addToggle(toggle => toggle
-					.setValue(this.plugin.settings.spatialAudio?.folderSettings?.autoDetectTopLevel ?? true)
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.folderSettings) {
-							this.plugin.settings.spatialAudio.folderSettings.autoDetectTopLevel = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			new Setting(folderSection)
-				.setName('Folder spread')
-				.setDesc('How much nested files vary from folder pan (0-1)')
+		// Show depth influence only if depth mapping is enabled
+		if (this.plugin.settings.spatialAudio?.advanced?.enableDepthMapping) {
+			new Setting(content)
+				.setName('Depth influence')
+				.setDesc('How much depth affects volume (0-1)')
 				.addSlider(slider => slider
 					.setLimits(0, 1, 0.1)
-					.setValue(this.plugin.settings.spatialAudio?.folderSettings?.spreadFactor || 0.3)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.folderSettings) {
-							this.plugin.settings.spatialAudio.folderSettings.spreadFactor = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			// Cluster settings section
-			const clusterSection = content.createDiv({ cls: 'osp-settings-subsection' });
-			clusterSection.createEl('h4', { text: 'Cluster-Based Settings' });
-
-			new Setting(clusterSection)
-				.setName('Enable cluster panning')
-				.setDesc('Use cluster positions for panning')
-				.addToggle(toggle => toggle
-					.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.enabled ?? true)
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.clusterSettings) {
-							this.plugin.settings.spatialAudio.clusterSettings.enabled = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			new Setting(clusterSection)
-				.setName('Use cluster centroid')
-				.setDesc('Pan based on cluster center position')
-				.addToggle(toggle => toggle
-					.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.useCentroid ?? true)
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.clusterSettings) {
-							this.plugin.settings.spatialAudio.clusterSettings.useCentroid = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			new Setting(clusterSection)
-				.setName('Individual spread')
-				.setDesc('How much nodes vary within cluster (0-1)')
-				.addSlider(slider => slider
-					.setLimits(0, 1, 0.1)
-					.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.individualSpread || 0.2)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.clusterSettings) {
-							this.plugin.settings.spatialAudio.clusterSettings.individualSpread = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			new Setting(clusterSection)
-				.setName('Cluster separation')
-				.setDesc('Force clusters to different pan positions (0-1)')
-				.addSlider(slider => slider
-					.setLimits(0, 1, 0.1)
-					.setValue(this.plugin.settings.spatialAudio?.clusterSettings?.clusterSeparation || 0.5)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.clusterSettings) {
-							this.plugin.settings.spatialAudio.clusterSettings.clusterSeparation = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			// Advanced settings section
-			const advancedSection = content.createDiv({ cls: 'osp-settings-subsection' });
-			advancedSection.createEl('h4', { text: 'Advanced Settings' });
-
-			new Setting(advancedSection)
-				.setName('Enable depth mapping')
-				.setDesc('Use Y-axis position for future surround sound support')
-				.addToggle(toggle => toggle
-					.setValue(this.plugin.settings.spatialAudio?.advanced?.enableDepthMapping ?? false)
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.advanced) {
-							this.plugin.settings.spatialAudio.advanced.enableDepthMapping = value;
-							await this.plugin.saveSettings();
-
-							// Re-render to show/hide depth influence slider
-							this.renderSpatialAudioCard(cardContainer);
-						}
-					})
-				);
-
-			// Show depth influence only if depth mapping is enabled
-			if (this.plugin.settings.spatialAudio?.advanced?.enableDepthMapping) {
-				new Setting(advancedSection)
-					.setName('Depth influence')
-					.setDesc('How much depth affects volume (0-1)')
-					.addSlider(slider => slider
-						.setLimits(0, 1, 0.1)
-						.setValue(this.plugin.settings.spatialAudio?.advanced?.depthInfluence || 0.3)
-						.setDynamicTooltip()
-						.onChange(async (value) => {
-							if (this.plugin.settings.spatialAudio?.advanced) {
-								this.plugin.settings.spatialAudio.advanced.depthInfluence = value;
-								await this.plugin.saveSettings();
-							}
-						})
-					);
-			}
-
-			new Setting(advancedSection)
-				.setName('Velocity damping')
-				.setDesc('Smooth rapid position changes')
-				.addToggle(toggle => toggle
-					.setValue(this.plugin.settings.spatialAudio?.advanced?.velocityDamping ?? true)
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.advanced) {
-							this.plugin.settings.spatialAudio.advanced.velocityDamping = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			new Setting(advancedSection)
-				.setName('Damping strength')
-				.setDesc('How much to damp rapid changes (0-1)')
-				.addSlider(slider => slider
-					.setLimits(0, 1, 0.1)
-					.setValue(this.plugin.settings.spatialAudio?.advanced?.dampingFactor || 0.7)
+					.setValue(this.plugin.settings.spatialAudio?.advanced?.depthInfluence || 0.3)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
 						if (this.plugin.settings.spatialAudio?.advanced) {
-							this.plugin.settings.spatialAudio.advanced.dampingFactor = value;
-							await this.plugin.saveSettings();
-						}
-					})
-				);
-
-			new Setting(advancedSection)
-				.setName('Boundary padding')
-				.setDesc('Keep sounds away from extreme pan positions (0-1)')
-				.addSlider(slider => slider
-					.setLimits(0, 1, 0.05)
-					.setValue(this.plugin.settings.spatialAudio?.advanced?.boundaryPadding || 0.1)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						if (this.plugin.settings.spatialAudio?.advanced) {
-							this.plugin.settings.spatialAudio.advanced.boundaryPadding = value;
+							this.plugin.settings.spatialAudio.advanced.depthInfluence = value;
 							await this.plugin.saveSettings();
 						}
 					})
 				);
 		}
+
+		new Setting(content)
+			.setName('Velocity damping')
+			.setDesc('Smooth rapid position changes')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.spatialAudio?.advanced?.velocityDamping ?? true)
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.advanced) {
+						this.plugin.settings.spatialAudio.advanced.velocityDamping = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Damping strength')
+			.setDesc('How much to damp rapid changes (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.advanced?.dampingFactor || 0.7)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.advanced) {
+						this.plugin.settings.spatialAudio.advanced.dampingFactor = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		new Setting(content)
+			.setName('Boundary padding')
+			.setDesc('Keep sounds away from extreme pan positions (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.05)
+				.setValue(this.plugin.settings.spatialAudio?.advanced?.boundaryPadding || 0.1)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.advanced) {
+						this.plugin.settings.spatialAudio.advanced.boundaryPadding = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		cardContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Hybrid Mode Weights Card - Conditionally rendered when hybrid panning mode is selected
+	 */
+	private renderHybridModeWeightsCard(cardContainer: HTMLElement): void {
+		cardContainer.empty();
+
+		// Only render if spatial audio is enabled and mode is hybrid
+		if (!this.plugin.settings.spatialAudio?.enabled ||
+		    this.plugin.settings.spatialAudio?.mode !== PanningMode.Hybrid) {
+			return;
+		}
+
+		const card = new MaterialCard({
+			title: 'Hybrid mode weights',
+			iconName: 'sliders',
+			subtitle: 'Balance between different panning strategies',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Description
+		content.createEl('p', {
+			text: 'Adjust how much each panning strategy contributes to the final pan position. Values should sum to approximately 1.0 for best results.',
+			cls: 'osp-settings-description'
+		});
+
+		// Graph position weight
+		new Setting(content)
+			.setName('Graph position weight')
+			.setDesc('Weight for X-position based panning (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.hybridWeights?.graphPosition || 0.5)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.hybridWeights) {
+						this.plugin.settings.spatialAudio.hybridWeights.graphPosition = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		// Folder weight
+		new Setting(content)
+			.setName('Folder weight')
+			.setDesc('Weight for folder-based panning (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.hybridWeights?.folderBased || 0.3)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.hybridWeights) {
+						this.plugin.settings.spatialAudio.hybridWeights.folderBased = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		// Cluster weight
+		new Setting(content)
+			.setName('Cluster weight')
+			.setDesc('Weight for cluster-based panning (0-1)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.1)
+				.setValue(this.plugin.settings.spatialAudio?.hybridWeights?.clusterBased || 0.2)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.spatialAudio?.hybridWeights) {
+						this.plugin.settings.spatialAudio.hybridWeights.clusterBased = value;
+						await this.plugin.saveSettings();
+					}
+				})
+			);
+
+		// Weight sum indicator (helpful for users)
+		const weightsSum = (this.plugin.settings.spatialAudio?.hybridWeights?.graphPosition || 0) +
+		                   (this.plugin.settings.spatialAudio?.hybridWeights?.folderBased || 0) +
+		                   (this.plugin.settings.spatialAudio?.hybridWeights?.clusterBased || 0);
+
+		const sumIndicator = content.createDiv({ cls: 'osp-settings-info' });
+		sumIndicator.createEl('strong', { text: 'Total weight: ' });
+		sumIndicator.createEl('span', {
+			text: weightsSum.toFixed(2),
+			cls: weightsSum >= 0.9 && weightsSum <= 1.1 ? 'osp-text-success' : 'osp-text-warning'
+		});
+		sumIndicator.createEl('span', {
+			text: ' (recommended: ~1.0)',
+			cls: 'osp-text-muted'
+		});
 
 		cardContainer.appendChild(card.getElement());
 	}

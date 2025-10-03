@@ -1849,25 +1849,9 @@ export class SonicGraphView extends ItemView {
      */
     private createConnectionTypeMappingSettings(container: HTMLElement): void {
         const section = container.createDiv({ cls: 'sonic-graph-settings-section connection-type-mapping-section' });
-        section.style.cssText = `
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 6px;
-            margin: 8px 0;
-            padding: 0;
-            overflow: hidden;
-        `;
 
         // Create collapsible header
         const header = section.createDiv({ cls: 'sonic-graph-collapsible-header' });
-        header.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            padding: 12px 16px;
-            background-color: var(--background-secondary);
-            border-bottom: 1px solid var(--background-modifier-border);
-        `;
 
         const headerTitle = header.createEl('div', {
             text: 'CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)',
@@ -1876,46 +1860,24 @@ export class SonicGraphView extends ItemView {
 
         const toggleIcon = header.createEl('span', {
             text: '▶', // Start collapsed by default
-            cls: 'sonic-graph-collapsible-icon'
+            cls: 'sonic-graph-collapsible-toggle'
         });
-        toggleIcon.style.cssText = 'font-size: 14px; color: var(--text-muted); transition: transform 0.2s ease;';
 
         // Create collapsible content container (collapsed by default)
         const content = section.createDiv({
-            cls: 'sonic-graph-collapsible-content collapsed'
+            cls: 'sonic-graph-collapsible-content is-collapsed'
         });
-        content.style.cssText = `
-            transition: all 0.3s ease;
-            overflow: hidden;
-            max-height: 0;
-            opacity: 0;
-            padding-top: 0;
-        `;
 
         // Make header clickable to toggle content
         header.addEventListener('click', () => {
-            const isExpanded = content.hasClass('expanded');
+            const isExpanded = content.hasClass('is-expanded');
             if (isExpanded) {
-                content.removeClass('expanded');
-                content.addClass('collapsed');
-                content.style.cssText = `
-                    transition: all 0.3s ease;
-                    overflow: hidden;
-                    max-height: 0;
-                    opacity: 0;
-                    padding-top: 0;
-                `;
+                content.removeClass('is-expanded');
+                content.addClass('is-collapsed');
                 toggleIcon.textContent = '▶';
             } else {
-                content.removeClass('collapsed');
-                content.addClass('expanded');
-                content.style.cssText = `
-                    transition: all 0.3s ease;
-                    overflow: hidden;
-                    max-height: none;
-                    opacity: 1;
-                    padding-top: 12px;
-                `;
+                content.removeClass('is-collapsed');
+                content.addClass('is-expanded');
                 toggleIcon.textContent = '▼';
             }
         });
@@ -5247,21 +5209,10 @@ export class SonicGraphView extends ItemView {
         
         groups.forEach((group, index) => {
             const groupItem = groupsList.createDiv({ cls: 'sonic-graph-group-list-item' });
-            groupItem.style.display = 'flex';
-            groupItem.style.alignItems = 'center';
-            groupItem.style.marginBottom = '6px';
-            groupItem.style.padding = '4px 8px';
-            groupItem.style.backgroundColor = 'var(--background-secondary)';
-            groupItem.style.borderRadius = '4px';
-            
+
             // Colored dot
             const colorDot = groupItem.createEl('div', { cls: 'sonic-graph-group-color-dot' });
-            colorDot.style.width = '12px';
-            colorDot.style.height = '12px';
-            colorDot.style.borderRadius = '50%';
             colorDot.style.backgroundColor = group.color;
-            colorDot.style.marginRight = '8px';
-            colorDot.style.cursor = 'pointer';
             
             // Group label (type:name format)
             const groupLabel = groupItem.createEl('span', { 
@@ -7592,20 +7543,6 @@ export class SonicGraphView extends ItemView {
             this.progressIndicator = this.contentEl.createDiv({
                 cls: 'sonic-graph-progress-indicator'
             });
-            this.progressIndicator.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: var(--background-primary);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 8px;
-                padding: 20px;
-                z-index: 1000;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            `;
         }
         
         this.progressIndicator.innerHTML = `

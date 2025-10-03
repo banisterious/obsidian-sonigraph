@@ -290,7 +290,7 @@ export class AudioEngine {
 
 	async initialize(): Promise<void> {
 		if (this.isInitialized) {
-			console.warn('AudioEngine already initialized');
+			logger.warn('audio-engine', 'AudioEngine already initialized');
 			return;
 		}
 
@@ -3857,12 +3857,12 @@ export class AudioEngine {
 	applyEffectPreset(presetKey: string, instrumentName: string): void {
 		const preset = EFFECT_PRESETS[presetKey];
 		if (!preset) {
-			console.warn(`Effect preset '${presetKey}' not found`);
+			logger.warn('audio-engine', `Effect preset '${presetKey}' not found`);
 			return;
 		}
 
 		if (!this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']]) {
-			console.warn(`Instrument '${instrumentName}' not found in settings`);
+			logger.warn('audio-engine', `Instrument '${instrumentName}' not found in settings`);
 			return;
 		}
 
@@ -3908,7 +3908,7 @@ export class AudioEngine {
 	applyEffectPresetToAll(presetKey: string): void {
 		const preset = EFFECT_PRESETS[presetKey];
 		if (!preset) {
-			console.warn(`Effect preset '${presetKey}' not found`);
+			logger.warn('audio-engine', `Effect preset '${presetKey}' not found`);
 			return;
 		}
 
@@ -3927,7 +3927,7 @@ export class AudioEngine {
 	createCustomPreset(instrumentName: string, presetName: string, description: string): EffectPreset | null {
 		const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 		if (!instrumentSettings) {
-			console.warn(`Instrument '${instrumentName}' not found in settings`);
+			logger.warn('audio-engine', `Instrument '${instrumentName}' not found in settings`);
 			return null;
 		}
 
@@ -3950,7 +3950,7 @@ export class AudioEngine {
 		// Find the default settings for this instrument
 		const defaultInstrumentSettings = DEFAULT_SETTINGS.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 		if (!defaultInstrumentSettings) {
-			console.warn(`Default settings for instrument '${instrumentName}' not found`);
+			logger.warn('audio-engine', `Default settings for instrument '${instrumentName}' not found`);
 			return;
 		}
 
@@ -4030,7 +4030,7 @@ export class AudioEngine {
 				}, 10000);
 			}
 		} catch (error) {
-			console.warn('Failed to start preview note:', error);
+			logger.warn('audio-engine', 'Failed to start preview note:', error);
 		}
 	}
 
@@ -4045,7 +4045,7 @@ export class AudioEngine {
 					synth.triggerRelease('C4');
 				}
 			} catch (error) {
-				console.warn('Failed to stop preview note:', error);
+				logger.warn('audio-engine', 'Failed to stop preview note:', error);
 			}
 		}
 		this.previewNote = null;
@@ -4107,7 +4107,7 @@ export class AudioEngine {
 					break;
 			}
 		} catch (error) {
-			console.warn('Failed to apply immediate parameter change:', error);
+			logger.warn('audio-engine', 'Failed to apply immediate parameter change:', error);
 		}
 	}
 
@@ -4178,7 +4178,7 @@ export class AudioEngine {
 				}
 			}
 		} catch (error) {
-			console.warn('Failed to apply effect bypass:', error);
+			logger.warn('audio-engine', 'Failed to apply effect bypass:', error);
 		}
 	}
 
@@ -4230,7 +4230,7 @@ export class AudioEngine {
 				latency: currentLatency * 1000 // Convert to milliseconds
 			});
 		} catch (error) {
-			console.warn('Failed to update performance metrics:', error);
+			logger.warn('audio-engine', 'Failed to update performance metrics:', error);
 		}
 	}
 

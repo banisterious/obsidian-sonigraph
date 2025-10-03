@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-03 18:23:33 UTC
+ * - Generated: 2025-10-03 19:25:57 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -7128,7 +7128,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 1894 lines, 42.46 KB */
+/* Component Size: 2026 lines, 45.28 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9024,6 +9024,138 @@ details.osp-advanced-settings {
   cursor: pointer;
 }
 
+/* ===================================
+   COLLAPSIBLE SECTIONS
+   ================================== */
+
+/* Collapsible section wrapper */
+.connection-type-mapping-section,
+.sonic-graph-collapsible-section {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  margin: 8px 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Collapsible header */
+.sonic-graph-collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 12px 16px;
+  background-color: var(--background-secondary);
+  transition: background-color 0.2s ease;
+}
+
+.sonic-graph-collapsible-header:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+/* Collapsible header toggle icon */
+.sonic-graph-collapsible-toggle {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+/* Collapsible content */
+.sonic-graph-collapsible-content {
+  padding: 12px 16px;
+  background-color: var(--background-primary);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sonic-graph-collapsible-content.is-collapsed {
+  padding: 0 16px;
+  max-height: 0;
+  opacity: 0;
+}
+
+.sonic-graph-collapsible-content.is-expanded {
+  padding: 12px 16px;
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* ===================================
+   GROUP AND CLUSTER VISUALIZATION
+   ================================== */
+
+/* Group list */
+.sonic-graph-groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Group list item */
+.sonic-graph-group-list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  background-color: var(--background-secondary);
+  border-radius: 4px;
+}
+
+/* Group color dot */
+.sonic-graph-group-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ===================================
+   CONTROL CENTER OPEN BUTTON
+   ================================== */
+
+.sonic-graph-control-center-button {
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+}
+
+.sonic-graph-control-center-button:hover {
+  background: var(--interactive-accent-hover);
+  transform: translateY(-1px);
+}
+
+/* ===================================
+   PROGRESS INDICATOR OVERLAY
+   ================================== */
+
+.sonic-graph-progress-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 
 /* End of sonic-graph.css */
 
@@ -10219,10 +10351,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-03 18:23:33 UTC
+ * Build completed: 2025-10-03 19:25:57 UTC
  * Components processed: 20
- * Total lines: 10013
- * Total size: 214.52 KB
+ * Total lines: 10145
+ * Total size: 217.33 KB
  * Build duration: 0.02 seconds
  * 
  * Component breakdown:
@@ -10241,7 +10373,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 815 lines, 19.73 KB
- * - sonic-graph.css: 1894 lines, 42.46 KB
+ * - sonic-graph.css: 2026 lines, 45.28 KB
  * - export.css: 614 lines, 14.8 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
