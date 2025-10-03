@@ -1565,7 +1565,7 @@ export class MaterialControlPanelModal extends Modal {
 	private createFamilyTab(familyId: string): void {
 		const tabConfig = TAB_CONFIGS.find(tab => tab.id === familyId);
 		if (!tabConfig) return;
-		
+
 		// Family Overview Card
 		this.createFamilyOverviewCard(familyId, tabConfig);
 
@@ -1577,6 +1577,11 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Individual Instruments Card
 		this.createInstrumentsCard(familyId, tabConfig);
+
+		// Rhythmic Percussion Accent Layer (percussion family only)
+		if (familyId === 'percussion') {
+			this.createRhythmicPercussionCard();
+		}
 
 		// Family Effects Card
 		this.createFamilyEffectsCard(familyId, tabConfig);
@@ -1665,6 +1670,146 @@ export class MaterialControlPanelModal extends Modal {
 				activeVoices: this.getInstrumentActiveVoices(instrument)
 			});
 		});
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create rhythmic percussion accent layer card
+	 */
+	private createRhythmicPercussionCard(): void {
+		const card = new MaterialCard({
+			title: 'Rhythmic Percussion (Accent Layer)',
+			iconName: 'drum',
+			subtitle: 'Add drum accents to enhance rhythmic emphasis',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Enable/disable toggle
+		const enabledSetting = new Setting(content)
+			.setName('Enable drum accents')
+			.setDesc('Trigger percussion sounds alongside regular notes')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.percussionAccents?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.percussionAccents) {
+						this.plugin.settings.percussionAccents = {
+							enabled: value,
+							density: 0.6,
+							activeDrums: { kick: true, snare: true, hihat: true, tom: false },
+							accentMode: 'velocity',
+							volume: -6
+						};
+					} else {
+						this.plugin.settings.percussionAccents.enabled = value;
+					}
+					await this.plugin.saveSettings();
+
+					// Reinitialize audio engine to apply changes
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Density slider
+		const densitySetting = new Setting(content)
+			.setName('Density')
+			.setDesc('Probability of percussion triggering (0-100%)')
+			.addSlider(slider => slider
+				.setLimits(0, 100, 5)
+				.setValue((this.plugin.settings.percussionAccents?.density || 0.6) * 100)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.percussionAccents) {
+						this.plugin.settings.percussionAccents.density = value / 100;
+						await this.plugin.saveSettings();
+
+						// Update percussion engine if initialized
+						if (this.plugin.audioEngine) {
+							await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						}
+					}
+				})
+			);
+
+		// Active drums section
+		const drumsContainer = content.createDiv({ cls: 'osp-percussion-drums-container' });
+		drumsContainer.createEl('h4', { text: 'Active drums', cls: 'osp-section-heading' });
+
+		const drumsGrid = drumsContainer.createDiv({ cls: 'osp-drums-grid' });
+
+		// Individual drum toggles
+		const drums: Array<{ key: 'kick' | 'snare' | 'hihat' | 'tom', label: string }> = [
+			{ key: 'kick', label: 'Kick Drum' },
+			{ key: 'snare', label: 'Snare Drum' },
+			{ key: 'hihat', label: 'Hi-Hat' },
+			{ key: 'tom', label: 'Tom' }
+		];
+
+		drums.forEach(drum => {
+			new Setting(drumsGrid)
+				.setName(drum.label)
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.percussionAccents?.activeDrums[drum.key] || false)
+					.onChange(async (value) => {
+						if (this.plugin.settings.percussionAccents) {
+							this.plugin.settings.percussionAccents.activeDrums[drum.key] = value;
+							await this.plugin.saveSettings();
+
+							// Update percussion engine if initialized
+							if (this.plugin.audioEngine) {
+								await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+							}
+						}
+					})
+				);
+		});
+
+		// Accent mode dropdown
+		const modeSetting = new Setting(content)
+			.setName('Accent mode')
+			.setDesc('How drums are selected based on note properties')
+			.addDropdown(dropdown => dropdown
+				.addOption('velocity', 'Velocity-based (soft=hi-hat, loud=kick)')
+				.addOption('pitch', 'Pitch-based (low=kick, high=hi-hat)')
+				.addOption('random', 'Random selection')
+				.setValue(this.plugin.settings.percussionAccents?.accentMode || 'velocity')
+				.onChange(async (value: 'velocity' | 'pitch' | 'random') => {
+					if (this.plugin.settings.percussionAccents) {
+						this.plugin.settings.percussionAccents.accentMode = value;
+						await this.plugin.saveSettings();
+
+						// Update percussion engine if initialized
+						if (this.plugin.audioEngine) {
+							await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						}
+					}
+				})
+			);
+
+		// Volume slider
+		const volumeSetting = new Setting(content)
+			.setName('Volume')
+			.setDesc('Percussion volume in dB (-12 to 0)')
+			.addSlider(slider => slider
+				.setLimits(-12, 0, 1)
+				.setValue(this.plugin.settings.percussionAccents?.volume || -6)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (this.plugin.settings.percussionAccents) {
+						this.plugin.settings.percussionAccents.volume = value;
+						await this.plugin.saveSettings();
+
+						// Update percussion engine if initialized
+						if (this.plugin.audioEngine) {
+							await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						}
+					}
+				})
+			);
+
 		this.contentContainer.appendChild(card.getElement());
 	}
 
