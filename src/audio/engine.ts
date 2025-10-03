@@ -457,6 +457,7 @@ export class AudioEngine {
 
 			// Create config from settings
 			const config: MusicalTheoryConfig = {
+				enabled: theorySettings.enforceHarmony ?? true,
 				rootNote: theorySettings.rootNote as any || 'C',
 				scale: theorySettings.scale as any || 'major',
 				enforceHarmony: theorySettings.enforceHarmony ?? true,
@@ -494,17 +495,16 @@ export class AudioEngine {
 
 		try {
 			// Use the musical theory engine to constrain to scale
-			const quantized = this.musicalTheoryEngine.constrainToScale(frequency);
+			const quantized = this.musicalTheoryEngine.constrainPitchToScale(frequency);
 
 			logger.debug('musical-theory', 'Frequency quantized', {
 				original: frequency.toFixed(2),
-				quantized: quantized.frequency.toFixed(2),
-				note: quantized.noteName,
+				quantized: quantized.toFixed(2),
 				scale: this.settings.audioEnhancement.musicalTheory.scale,
 				rootNote: this.settings.audioEnhancement.musicalTheory.rootNote
 			});
 
-			return quantized.frequency;
+			return quantized;
 		} catch (error) {
 			logger.warn('musical-theory', 'Failed to quantize frequency, using original', error);
 			return frequency;
@@ -2418,6 +2418,7 @@ export class AudioEngine {
 			// Reinitialize if major settings changed
 			if (this.musicalTheoryEngine) {
 				const config: MusicalTheoryConfig = {
+					enabled: theorySettings.enforceHarmony ?? true,
 					rootNote: theorySettings.rootNote as any || 'C',
 					scale: theorySettings.scale as any || 'major',
 					enforceHarmony: theorySettings.enforceHarmony ?? true,
