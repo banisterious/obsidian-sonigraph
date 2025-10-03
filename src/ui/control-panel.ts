@@ -507,6 +507,11 @@ export class MaterialControlPanelModal extends Modal {
 			// Freesound Integration Card - only show when continuous layers are enabled
 			if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
 				this.createFreesoundIntegrationCard();
+
+				// Sample Browser Card - only show when Freesound is enabled
+				if (this.plugin.settings.enableFreesoundSamples) {
+					this.createSampleBrowserCard();
+				}
 			}
 		});
 	}
@@ -664,6 +669,178 @@ export class MaterialControlPanelModal extends Modal {
 		}
 
 		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create sample browser card for browsing and selecting Freesound samples
+	 */
+	private createSampleBrowserCard(): void {
+		const card = new MaterialCard({
+			title: 'Sample browser',
+			iconName: 'library',
+			subtitle: 'Browse and preview Freesound samples for the current genre',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		const browserSection = content.createDiv({ cls: 'osp-sample-browser-section' });
+
+		// Get current genre from settings
+		const currentGenre = this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient';
+
+		// Get sample loader from continuous layer manager
+		const layerManager = (this.plugin as any).continuousLayerManager;
+		if (!layerManager || !layerManager.sampleLoader) {
+			browserSection.createEl('p', {
+				text: 'Sample browser unavailable. Please restart continuous layers.',
+				cls: 'osp-error-message'
+			});
+			this.contentContainer.appendChild(card.getElement());
+			return;
+		}
+
+		const sampleLoader = layerManager.sampleLoader;
+		const samples = sampleLoader.getSamplesForGenre(currentGenre);
+
+		// Genre info header
+		const headerEl = browserSection.createDiv({ cls: 'osp-sample-browser-header' });
+		headerEl.createEl('h4', {
+			text: `${currentGenre.charAt(0).toUpperCase() + currentGenre.slice(1)} samples (${samples.length} available)`,
+			cls: 'osp-sample-browser-title'
+		});
+
+		if (samples.length === 0) {
+			browserSection.createEl('p', {
+				text: `No samples available for genre: ${currentGenre}`,
+				cls: 'osp-info-message'
+			});
+			this.contentContainer.appendChild(card.getElement());
+			return;
+		}
+
+		// Sample list
+		const sampleList = browserSection.createDiv({ cls: 'osp-sample-list' });
+
+		samples.forEach((sample, index) => {
+			const sampleItem = sampleList.createDiv({ cls: 'osp-sample-item' });
+
+			// Sample info section
+			const infoSection = sampleItem.createDiv({ cls: 'osp-sample-info' });
+
+			// Sample title and metadata
+			const titleEl = infoSection.createEl('div', {
+				text: `${index + 1}. ${sample.title}`,
+				cls: 'osp-sample-title'
+			});
+
+			const metaEl = infoSection.createDiv({ cls: 'osp-sample-metadata' });
+			metaEl.createEl('span', {
+				text: `${sample.duration}s`,
+				cls: 'osp-sample-duration'
+			});
+			metaEl.createEl('span', {
+				text: ` • ${sample.license}`,
+				cls: 'osp-sample-license'
+			});
+			metaEl.createEl('span', {
+				text: ` • by ${sample.attribution}`,
+				cls: 'osp-sample-attribution'
+			});
+
+			// Fade settings
+			const fadeEl = infoSection.createDiv({ cls: 'osp-sample-fade-info' });
+			fadeEl.createEl('span', {
+				text: `Fade in: ${sample.fadeIn}s, Fade out: ${sample.fadeOut}s`,
+				cls: 'osp-sample-fade-text'
+			});
+
+			// Action buttons section
+			const actionsSection = sampleItem.createDiv({ cls: 'osp-sample-actions' });
+
+			// Preview button
+			const previewBtn = actionsSection.createEl('button', {
+				text: 'Preview',
+				cls: 'osp-sample-action-btn osp-preview-btn'
+			});
+			previewBtn.addEventListener('click', async () => {
+				await this.previewSample(sample, previewBtn);
+			});
+
+			// Info button (opens Freesound page)
+			const infoBtn = actionsSection.createEl('button', {
+				text: 'Info',
+				cls: 'osp-sample-action-btn osp-info-btn'
+			});
+			infoBtn.addEventListener('click', () => {
+				window.open(`https://freesound.org/people/${sample.attribution}/sounds/${sample.id}/`, '_blank');
+			});
+		});
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Preview a Freesound sample
+	 */
+	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
+		const originalText = button.textContent;
+
+		try {
+			// Show loading state
+			button.textContent = 'Loading...';
+			button.disabled = true;
+
+			// Create audio element for preview
+			const audio = new Audio(sample.previewUrl);
+
+			// Apply fade in/out
+			audio.volume = 0;
+			audio.play();
+
+			// Fade in
+			const fadeInSteps = 20;
+			const fadeInInterval = (sample.fadeIn * 1000) / fadeInSteps;
+			for (let i = 0; i <= fadeInSteps; i++) {
+				setTimeout(() => {
+					audio.volume = i / fadeInSteps;
+				}, i * fadeInInterval);
+			}
+
+			// Update button to show playing state
+			button.textContent = 'Stop';
+			button.disabled = false;
+
+			// Handle stop on click
+			const stopHandler = () => {
+				// Fade out
+				const fadeOutSteps = 20;
+				const fadeOutInterval = (sample.fadeOut * 1000) / fadeOutSteps;
+				for (let i = fadeOutSteps; i >= 0; i--) {
+					setTimeout(() => {
+						audio.volume = i / fadeOutSteps;
+						if (i === 0) {
+							audio.pause();
+							audio.currentTime = 0;
+						}
+					}, (fadeOutSteps - i) * fadeOutInterval);
+				}
+
+				button.textContent = originalText;
+				button.removeEventListener('click', stopHandler);
+			};
+
+			button.addEventListener('click', stopHandler, { once: true });
+
+			// Auto-stop when audio ends
+			audio.addEventListener('ended', () => {
+				button.textContent = originalText;
+			});
+
+		} catch (error) {
+			logger.error('sample-preview', `Failed to preview sample ${sample.id}`, error);
+			button.textContent = originalText;
+			button.disabled = false;
+		}
 	}
 
 	private createScaleKeyCard(): void {

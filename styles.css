@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-03 19:25:57 UTC
+ * - Generated: 2025-10-03 19:35:31 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -7128,7 +7128,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 2026 lines, 45.28 KB */
+/* Component Size: 2153 lines, 47.56 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9156,6 +9156,133 @@ details.osp-advanced-settings {
   gap: 10px;
 }
 
+/* === Sample Browser Styles === */
+
+.osp-sample-browser-section {
+  padding: 0;
+}
+
+.osp-sample-browser-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.osp-sample-browser-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.osp-sample-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.osp-sample-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: var(--background-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  transition: all 0.2s ease;
+}
+
+.osp-sample-item:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.osp-sample-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.osp-sample-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.osp-sample-metadata {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 4px;
+}
+
+.osp-sample-duration,
+.osp-sample-license,
+.osp-sample-attribution {
+  white-space: nowrap;
+}
+
+.osp-sample-fade-info {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.osp-sample-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.osp-sample-action-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background-color: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.osp-sample-action-btn:hover {
+  background-color: var(--interactive-hover);
+  border-color: var(--interactive-accent);
+}
+
+.osp-sample-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.osp-preview-btn:hover {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.osp-info-btn:hover {
+  background-color: var(--background-modifier-border);
+}
+
+.osp-error-message,
+.osp-info-message {
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.osp-error-message {
+  background-color: var(--background-modifier-error);
+  color: var(--text-error);
+}
+
+.osp-info-message {
+  background-color: var(--background-secondary);
+  color: var(--text-muted);
+}
+
 
 /* End of sonic-graph.css */
 
@@ -10351,11 +10478,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-03 19:25:57 UTC
+ * Build completed: 2025-10-03 19:35:31 UTC
  * Components processed: 20
- * Total lines: 10145
- * Total size: 217.33 KB
- * Build duration: 0.02 seconds
+ * Total lines: 10272
+ * Total size: 219.62 KB
+ * Build duration: 0.01 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -10373,7 +10500,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 815 lines, 19.73 KB
- * - sonic-graph.css: 2026 lines, 45.28 KB
+ * - sonic-graph.css: 2153 lines, 47.56 KB
  * - export.css: 614 lines, 14.8 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
