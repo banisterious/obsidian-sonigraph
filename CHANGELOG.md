@@ -7,6 +7,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-10-03
+
+### Added - Musical Theory Integration & Enhanced Musicality 🎵
+
+#### Overview
+Complete overhaul of note generation system to create musically coherent melodies instead of random pitch sequences. Timeline animations now feature proper chord progressions, melodic contour, phrase structure, rhythmic patterns, and dynamic expression.
+
+#### Core Musical Enhancements
+
+**1. Scale-Degree Melodic Progression**
+- **Step-wise motion**: 70% of notes move by ±1 or ±2 scale degrees for smooth melodies
+- **Chord tone anchoring**: 30% of notes land on harmonically important chord tones
+- **Melodic memory**: Tracks previous scale degree to create voice leading
+- **Replaces**: Hash-based chromatic pitch generation (which created random jumps)
+
+**2. Chord Progression System**
+- **Traditional progressions**: I-IV-V-I for major, i-iv-v-i for minor
+- **Scale-specific patterns**: Custom progressions for dorian, pentatonic, blues, and modal scales
+- **Harmonic rhythm**: Chord changes every 4-8 notes for tonal movement
+- **4-chord cycles**: Creates tension and resolution through classic cadential patterns
+
+**3. Musical Phrase Boundaries**
+- **8-note phrases**: Clear beginning/middle/end structure
+- **Phrase starts**: Begin on tonic (chord root) for stability
+- **Phrase ends**: Cadential motion resolving to tonic on final chord
+- **Melodic contour**: Arch shape with higher pitches in phrase middle (notes 2-5)
+
+**4. Rhythmic Variation**
+- **Phrase-based patterns**: Long notes on phrase starts (3x), very long on ends (4x)
+- **Weak beat shortening**: Odd positions are shorter (0.3x) for rhythmic variety
+- **Syncopation**: 5% chance of very short notes for interest
+- **Musical rests**: 10% chance of silence for "breathing"
+
+**5. Dynamic Expression**
+- **Crescendo/diminuendo**: Arch-shaped volume curve over each phrase
+- **Accent patterns**: Strong accents on downbeats (+0.5) and cadences (+0.6)
+- **Weak beat softening**: Odd positions are quieter (-0.3)
+- **Humanization**: ±5% random variation per note
+
+**6. Enhanced Node Property Mapping**
+- **File size** → Octave/register (larger files = higher pitches)
+- **Connection count** → Octave/register (more connections = lower/foundational)
+- **Folder depth** → Octave/register (deeper nesting = lower register)
+- **Phrase position** → Melodic contour (arch shape for natural phrasing)
+
+#### Technical Implementation
+
+**Files Modified**:
+- `src/ui/SonicGraphView.ts`: Added 6 new musical state variables, 3 new methods (~200 lines)
+  - `calculateScaleAwarePitch()`: Melodic progression with phrase boundaries
+  - `calculateRhythmicDuration()`: Phrase-based rhythmic patterns
+  - `calculateDynamicVelocity()`: Expression curves and accents
+  - `generateChordProgression()`: Scale-specific chord progressions
+
+**Musical State Tracking**:
+```typescript
+private lastScaleDegree: number = 0;           // For melodic continuity
+private currentChordIndex: number = 0;          // Position in progression
+private currentChordProgression: number[][];    // I-IV-V-I pattern
+private notesInCurrentPhrase: number = 0;       // Phrase position (0-7)
+private phraseLengthInNotes: number = 8;        // Phrase length
+```
+
+**Chord Progressions**:
+- Major: I-IV-V-I (tonic-subdominant-dominant-tonic)
+- Minor: i-iv-v-i (natural minor progression)
+- Dorian: i-II-V-i (modal progression)
+- Pentatonic Major: I-IV-V-I (pentatonic degrees)
+- Pentatonic Minor: i-iv-v-i (pentatonic degrees)
+- Blues: I-IV-V-I (blues scale degrees)
+
+#### Musical Results
+
+**Before**: Random chromatic jumps, uniform rhythm, flat dynamics
+**After**: Smooth melodies, phrase structure, rhythmic patterns, expressive dynamics
+
+Users will now hear:
+- ✅ Recognizable melodies with step-wise motion
+- ✅ Clear musical phrases with natural cadences
+- ✅ Harmonic progression creating tension/resolution
+- ✅ Rhythmic variety (long-short-short patterns)
+- ✅ Dynamic expression (crescendo/diminuendo)
+- ✅ Tonal coherence with strong sense of key
+
+### Fixed
+
+**Hot-Swapping for Instrument Settings**
+- Fixed issue where toggling instruments on/off or changing quality settings required plugin reload
+- `updateSettings()` now properly clears InstrumentConfigLoader cache
+- Instruments dynamically add/remove/reinitialize when settings change
+- No reload required for any instrument configuration changes
+
+**Timeline Animation Background Playback**
+- Fixed issue where timeline animation stopped when switching tabs/windows
+- Implemented hybrid scheduling: `requestAnimationFrame` when visible, `setTimeout` when hidden
+- Added visibility change handlers to maintain playback in background
+- Animation now continues seamlessly when tab loses focus
+
+**InstrumentConfigLoader Cache Management**
+- `onInstrumentSettingsChanged()` now calls `instrumentConfigLoader.clearCache()`
+- Ensures fresh configs are loaded after settings updates
+- Fixes stale cache preventing hot-swapping from working
+
 ## [0.12.2] - 2025-10-02
 
 ### Added - Audio Export Feature (Phase 1 & 2) ✅

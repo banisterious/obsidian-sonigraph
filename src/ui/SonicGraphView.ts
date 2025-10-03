@@ -89,6 +89,13 @@ export class SonicGraphView extends ItemView {
     private nodeAppearanceCounter: number = 0;
     private lastAudioNodeIndex: number = -1;
 
+    // Musical progression tracking for melodic continuity
+    private lastScaleDegree: number = 0;
+    private currentChordIndex: number = 0;
+    private currentChordProgression: number[][] = [];
+    private notesInCurrentPhrase: number = 0;
+    private phraseLengthInNotes: number = 8; // Musical phrase length
+
     constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
         super(leaf);
         logger.debug('ui', 'SonicGraphView constructor started');
@@ -6203,22 +6210,28 @@ export class SonicGraphView extends ItemView {
         // Calculate pitch using scale-aware generation for more musical results
         const pitch = this.calculateScaleAwarePitch(node, settings);
 
-        // Duration based on file size (logarithmic scale) and note duration setting
-        const baseDuration = settings.audio.noteDuration; // Use setting instead of hardcoded 0.3
-        const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10;
-        const duration = Math.min(baseDuration + sizeFactor, 2.0); // Allow longer notes up to 2 seconds
-        
-        // Velocity based on connections (if available)
-        const baseVelocity = 0.5;
-        const connectionFactor = Math.min(node.connections.length / 10, 0.4);
-        const velocity = baseVelocity + connectionFactor;
-        
-        logger.debug('audio', 'Created musical mapping for node', {
+        // Calculate rhythmic duration with phrase-aware patterns
+        const duration = this.calculateRhythmicDuration(node, settings);
+
+        // Calculate dynamic velocity with phrase expression
+        const velocity = this.calculateDynamicVelocity(node, settings);
+
+        // Increment phrase counter AFTER all calculations use current position
+        const currentPosition = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+        this.notesInCurrentPhrase++;
+
+        logger.info('musical-structure', '🎵 Note generated with full musical context', {
             nodeId: node.id,
+            nodeTitle: node.title,
             nodeType: node.type,
-            selectedInstrument,
-            enabledInstrumentsCount: enabledInstruments.length,
-            pitch: pitch.toFixed(2)
+            instrument: selectedInstrument,
+            pitch: pitch.toFixed(2),
+            duration: duration.toFixed(3),
+            velocity: velocity.toFixed(3),
+            positionInPhrase: currentPosition,
+            phraseNumber: Math.floor((this.notesInCurrentPhrase - 1) / this.phraseLengthInNotes),
+            chordIndex: this.currentChordIndex,
+            totalNotesPlayed: this.notesInCurrentPhrase
         });
         
         return {
@@ -6278,35 +6291,264 @@ export class SonicGraphView extends ItemView {
         const intervals = scaleIntervals[scale] || scaleIntervals['major'];
         const baseFreq = rootFrequencies[rootNote] || rootFrequencies['C'];
 
-        // Use hash to select scale degree and octave
-        const fileNameHash = this.hashString(node.title);
+        // Initialize chord progression if needed
+        if (this.currentChordProgression.length === 0) {
+            this.currentChordProgression = this.generateChordProgression(intervals, scale);
+        }
 
-        // Map to scale degree (wrap around scale length)
-        const scaleDegree = fileNameHash % intervals.length;
+        // Get current chord tones for harmonic foundation
+        const currentChord = this.currentChordProgression[this.currentChordIndex];
+
+        // Track position in musical phrase
+        const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+        const isStartOfPhrase = positionInPhrase === 0;
+        const isEndOfPhrase = positionInPhrase === this.phraseLengthInNotes - 1;
+
+        // Generate melodic scale degree with context-aware logic
+        let scaleDegree: number;
+
+        // Use file hash as a seed for deterministic but varied results
+        const fileNameHash = this.hashString(node.title);
+        const hashSeed = fileNameHash % 100; // 0-99
+
+        // Phrase boundary logic for musical structure
+        if (isStartOfPhrase) {
+            // Start phrase on tonic (root note of current chord)
+            scaleDegree = currentChord[0];
+            logger.debug('phrase-boundary', 'Starting new phrase on tonic', {
+                scaleDegree,
+                chordIndex: this.currentChordIndex,
+                phraseNumber: Math.floor(this.notesInCurrentPhrase / this.phraseLengthInNotes)
+            });
+        } else if (isEndOfPhrase) {
+            // End phrase with cadential motion (resolve to chord tone or approach tonic)
+            const isFinalChord = this.currentChordIndex === this.currentChordProgression.length - 1;
+            if (isFinalChord) {
+                // Final chord - resolve to tonic
+                scaleDegree = 0; // Scale degree 0 = tonic
+            } else {
+                // Other chords - end on chord root or fifth
+                scaleDegree = currentChord[hashSeed % 2 === 0 ? 0 : 2]; // Root or fifth
+            }
+            logger.debug('phrase-boundary', 'Ending phrase with cadence', {
+                scaleDegree,
+                isFinalChord,
+                chordIndex: this.currentChordIndex
+            });
+        } else {
+            // Middle of phrase - use melodic logic
+            // 70% chance of step-wise motion (±1 or ±2 scale degrees)
+            // 30% chance of chord tone or larger interval
+            if (hashSeed < 70 && this.lastScaleDegree !== null) {
+                // Prefer step-wise motion from last note
+                const stepOptions = [-2, -1, 1, 2]; // Step up or down by 1 or 2 scale degrees
+                const stepIndex = hashSeed % stepOptions.length;
+                scaleDegree = (this.lastScaleDegree + stepOptions[stepIndex] + intervals.length) % intervals.length;
+            } else {
+                // Use chord tones for harmonic anchoring
+                scaleDegree = currentChord[hashSeed % currentChord.length];
+            }
+        }
+
         const semitones = intervals[scaleDegree];
 
-        // Determine octave based on file size and connection count
-        // Smaller files = higher octave, more connections = lower octave
+        // Determine octave with more musical mapping
+        // Map node properties to octave/register more thoughtfully
         const sizeScore = Math.log10(Math.max(node.fileSize, 1)) / 10; // 0-1
         const connectionScore = Math.min(node.connections.length / 20, 1); // 0-1
 
+        // Folder depth affects register (deeper files = lower octave)
+        const folderDepth = (node.path.match(/\//g) || []).length;
+        const depthScore = Math.min(folderDepth / 5, 1); // 0-1
+
+        // Combine factors: size up, connections down, depth down
+        const octaveScore = sizeScore - connectionScore * 0.5 - depthScore * 0.3;
+
         // Map to octave range: -1 to +2 (spans 3 octaves, centered on base)
-        const octaveOffset = Math.floor((sizeScore - connectionScore) * 3) - 1;
+        let octaveOffset = Math.floor(octaveScore * 3) - 1;
+
+        // Phrase contour: higher at middle, lower at ends for arch shape
+        if (positionInPhrase >= 2 && positionInPhrase <= 5) {
+            octaveOffset += 1; // Peak in middle of phrase
+        }
 
         // Calculate final frequency
         const pitch = baseFreq * Math.pow(2, (semitones + (octaveOffset * 12)) / 12);
 
-        logger.debug('scale-aware-pitch', 'Generated scale-aware pitch', {
+        // Update musical state for next note
+        this.lastScaleDegree = scaleDegree;
+
+        // Advance chord progression every 4-8 notes
+        const notesInChord = 4 + (fileNameHash % 5); // 4-8 notes per chord
+        if (this.nodeAppearanceCounter % notesInChord === 0) {
+            this.currentChordIndex = (this.currentChordIndex + 1) % this.currentChordProgression.length;
+        }
+
+        logger.debug('scale-aware-pitch', 'Generated melodic pitch with musical structure', {
             nodeId: node.id,
             scale,
             rootNote,
             scaleDegree,
+            lastScaleDegree: this.lastScaleDegree,
+            currentChordIndex: this.currentChordIndex,
+            currentChord: currentChord,
+            positionInPhrase,
+            isStartOfPhrase,
+            isEndOfPhrase,
+            phraseNumber: Math.floor(this.notesInCurrentPhrase / this.phraseLengthInNotes),
+            stepwiseMotion: hashSeed < 70 && !isStartOfPhrase && !isEndOfPhrase,
+            folderDepth,
             semitones,
             octaveOffset,
             pitch: pitch.toFixed(2)
         });
 
         return pitch;
+    }
+
+    /**
+     * Calculate rhythmic duration with phrase-aware patterns
+     * Creates rhythmic variety through phrase position and file properties
+     */
+    private calculateRhythmicDuration(node: GraphNode, settings: any): number {
+        const baseDuration = settings.audio.noteDuration || 0.3;
+
+        // Position in current phrase (0-7 for 8-note phrases)
+        const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+        const isStartOfPhrase = positionInPhrase === 0;
+        const isEndOfPhrase = positionInPhrase === this.phraseLengthInNotes - 1;
+
+        // File size factor (larger files = longer notes)
+        const sizeFactor = Math.log10(Math.max(node.fileSize, 1)) / 10; // 0-0.3
+
+        // Phrase-based rhythmic patterns (DRAMATIC contrasts for clear audibility)
+        let rhythmMultiplier = 1.0;
+
+        if (isStartOfPhrase) {
+            // Phrase starts: MUCH longer notes for emphasis (downbeat)
+            rhythmMultiplier = 3.0;
+        } else if (isEndOfPhrase) {
+            // Phrase ends: LONGEST notes for cadence/resolution
+            rhythmMultiplier = 4.0;
+        } else if (positionInPhrase % 2 === 1) {
+            // Odd positions (weak beats): VERY short notes for rhythmic contrast
+            rhythmMultiplier = 0.3;
+        } else if (positionInPhrase === 4) {
+            // Middle of phrase: Medium length
+            rhythmMultiplier = 1.5;
+        }
+
+        // Add occasional syncopation (5% chance for very short notes)
+        const fileNameHash = this.hashString(node.title);
+        const syncopationChance = fileNameHash % 100;
+        if (syncopationChance < 5 && !isStartOfPhrase && !isEndOfPhrase) {
+            rhythmMultiplier = 0.4; // Short, syncopated note
+        }
+
+        // Calculate final duration
+        let duration = baseDuration * rhythmMultiplier + sizeFactor;
+
+        // Add rest/silence probability (10% chance, never on phrase boundaries)
+        const restChance = (fileNameHash >> 8) % 100;
+        if (restChance < 10 && !isStartOfPhrase && !isEndOfPhrase) {
+            duration = 0.05; // Very short "rest" note
+            logger.debug('rhythm', 'Inserted musical rest', {
+                nodeId: node.id,
+                positionInPhrase,
+                restChance
+            });
+        }
+
+        // Clamp to reasonable range
+        duration = Math.min(Math.max(duration, 0.05), 3.0);
+
+        logger.debug('rhythm', 'Calculated rhythmic duration', {
+            nodeId: node.id,
+            baseDuration,
+            positionInPhrase,
+            isStartOfPhrase,
+            isEndOfPhrase,
+            rhythmMultiplier,
+            sizeFactor,
+            finalDuration: duration.toFixed(3)
+        });
+
+        return duration;
+    }
+
+    /**
+     * Calculate dynamic velocity with phrase expression curves
+     * Creates musical dynamics through crescendo/diminuendo and accents
+     */
+    private calculateDynamicVelocity(node: GraphNode, settings: any): number {
+        const baseVelocity = 0.5;
+
+        // Position in current phrase
+        const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
+        const isStartOfPhrase = positionInPhrase === 0;
+        const isEndOfPhrase = positionInPhrase === this.phraseLengthInNotes - 1;
+
+        // Phrase expression curve (arch shape: DRAMATIC crescendo then diminuendo)
+        let phraseDynamics = 0.0;
+        if (positionInPhrase <= 3) {
+            // First half: STRONG Crescendo (0.0 -> 0.4)
+            phraseDynamics = (positionInPhrase / 3) * 0.4;
+        } else {
+            // Second half: STRONG Diminuendo (0.4 -> 0.0)
+            phraseDynamics = ((this.phraseLengthInNotes - 1 - positionInPhrase) / 4) * 0.4;
+        }
+
+        // Accent patterns (MUCH more dramatic)
+        let accentBoost = 0.0;
+
+        if (isStartOfPhrase) {
+            // VERY strong accent on phrase start (downbeat)
+            accentBoost = 0.5;
+        } else if (positionInPhrase === 4) {
+            // Strong accent at phrase middle
+            accentBoost = 0.3;
+        } else if (isEndOfPhrase && this.currentChordIndex === this.currentChordProgression.length - 1) {
+            // VERY strong accent on final cadence
+            accentBoost = 0.6;
+        } else if (positionInPhrase % 2 === 1) {
+            // Weak beats are MUCH softer
+            accentBoost = -0.3;
+        }
+
+        // Connection factor (more connections = slightly louder, implies importance)
+        const connectionFactor = Math.min(node.connections.length / 20, 0.2);
+
+        // File type factor (certain file types get emphasis)
+        let fileTypeBoost = 0.0;
+        if (node.type === 'md' || node.type === 'txt') {
+            fileTypeBoost = 0.1; // Emphasize note files
+        }
+
+        // Combine all factors
+        let velocity = baseVelocity + phraseDynamics + accentBoost + connectionFactor + fileTypeBoost;
+
+        // Add subtle random variation (±5%) for humanization
+        const fileNameHash = this.hashString(node.title);
+        const randomVariation = ((fileNameHash % 10) - 5) / 100; // -0.05 to +0.05
+        velocity += randomVariation;
+
+        // Clamp to valid MIDI velocity range (0.1 - 1.0)
+        velocity = Math.min(Math.max(velocity, 0.1), 1.0);
+
+        logger.debug('dynamics', 'Calculated dynamic velocity', {
+            nodeId: node.id,
+            baseVelocity,
+            positionInPhrase,
+            isStartOfPhrase,
+            isEndOfPhrase,
+            phraseDynamics: phraseDynamics.toFixed(3),
+            accentBoost: accentBoost.toFixed(3),
+            connectionFactor: connectionFactor.toFixed(3),
+            fileTypeBoost: fileTypeBoost.toFixed(3),
+            finalVelocity: velocity.toFixed(3)
+        });
+
+        return velocity;
     }
 
     /**
@@ -7177,6 +7419,69 @@ export class SonicGraphView extends ItemView {
             hash = hash & hash; // Convert to 32-bit integer
         }
         return Math.abs(hash);
+    }
+
+    /**
+     * Generate a musically-coherent chord progression
+     * Returns array of chord tone arrays (scale degrees)
+     */
+    private generateChordProgression(scaleIntervals: number[], scaleName: string): number[][] {
+        // Common chord progressions based on scale type
+        const progressions: { [key: string]: number[][] } = {
+            // Major scales use I-IV-V-I or I-V-vi-IV progressions
+            'major': [
+                [0, 2, 4],      // I (tonic triad)
+                [3, 5, 0],      // IV (subdominant)
+                [4, 6, 1],      // V (dominant)
+                [0, 2, 4]       // I (tonic return)
+            ],
+            'minor': [
+                [0, 2, 4],      // i (tonic minor)
+                [3, 5, 0],      // iv (subdominant)
+                [4, 6, 1],      // v (dominant minor)
+                [0, 2, 4]       // i (tonic return)
+            ],
+            'dorian': [
+                [0, 2, 4],      // i (minor tonic)
+                [1, 3, 5],      // ii (major)
+                [4, 6, 1],      // V (major)
+                [0, 2, 4]       // i (return)
+            ],
+            'pentatonic-major': [
+                [0, 1, 2],      // Pentatonic I
+                [2, 3, 4],      // Pentatonic IV
+                [1, 2, 3],      // Pentatonic V
+                [0, 1, 2]       // Return
+            ],
+            'pentatonic-minor': [
+                [0, 1, 2],      // Minor pentatonic i
+                [1, 2, 3],      // Minor pentatonic iv
+                [2, 3, 4],      // Minor pentatonic v
+                [0, 1, 2]       // Return
+            ],
+            'blues': [
+                [0, 2, 4],      // Blues tonic
+                [3, 4, 5],      // Blues IV
+                [4, 5, 0],      // Blues V
+                [0, 2, 4]       // Return
+            ]
+        };
+
+        // Get progression for this scale, or use major as default
+        let progression = progressions[scaleName] || progressions['major'];
+
+        // Validate scale degrees are within the scale length
+        progression = progression.map(chord =>
+            chord.map(degree => degree % scaleIntervals.length)
+        );
+
+        logger.debug('chord-progression', 'Generated chord progression', {
+            scale: scaleName,
+            progressionLength: progression.length,
+            chords: progression
+        });
+
+        return progression;
     }
 
     // Performance optimization: Event listener management

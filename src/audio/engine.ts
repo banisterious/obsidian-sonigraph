@@ -841,10 +841,22 @@ export class AudioEngine {
 		for (const instrumentName of enabledInstruments) {
 			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
 			const useHighQuality = instrumentSettings?.useHighQuality ?? false;
-			
+
 			const config = configs[instrumentName];
 			const hasSamples = config && config.urls && Object.keys(config.urls).length > 0;
-			
+
+			// Debug logging for instrument config resolution
+			if (instrumentName === 'frenchHorn' || instrumentName === 'trumpet' || instrumentName === 'saxophone') {
+				logger.info('instruments', `${instrumentName} config check`, {
+					configExists: !!config,
+					hasUrls: config?.urls ? Object.keys(config.urls).length : 0,
+					baseUrl: config?.baseUrl,
+					sampleUrls: config?.urls ? Object.keys(config.urls) : [],
+					useHighQuality,
+					hasSamples
+				});
+			}
+
 			if (useHighQuality && hasSamples) {
 				// Use high-quality samples if available and requested
 				await this.initializeInstrumentWithSamples(instrumentName, config);
@@ -923,7 +935,16 @@ export class AudioEngine {
 			logger.info('instruments', `Successfully initialized ${instrumentName} with samples`);
 			
 		} catch (error) {
-			logger.error('instruments', `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, error);
+			logger.error('instruments', `Failed to initialize ${instrumentName} with samples, falling back to synthesis`, {
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				errorType: error?.constructor?.name,
+				config: {
+					baseUrl: config.baseUrl,
+					sampleCount: Object.keys(config.urls || {}).length,
+					firstSample: Object.keys(config.urls || {})[0]
+				}
+			});
 			this.initializeInstrumentWithSynthesis(instrumentName);
 		}
 	}
@@ -2376,11 +2397,17 @@ export class AudioEngine {
 	}
 
 	async updateSettings(settings: SonigraphSettings): Promise<void> {
+		const oldSettings = this.settings;
 		this.settings = settings;
 
 		// Issue #006 Fix: Invalidate instruments cache when settings change
 		// This ensures that instrument enable/disable changes are reflected in playback
 		this.onInstrumentSettingsChanged();
+
+		// Hot-swap instruments when enabled/disabled or quality settings change
+		if (this.isInitialized && oldSettings) {
+			await this.handleInstrumentSettingsChanges(oldSettings, settings);
+		}
 
 		// Issue #005 Fix: Update InstrumentConfigLoader with new audio format
 		// This ensures that format changes are propagated to the sample loading system
@@ -2455,6 +2482,103 @@ export class AudioEngine {
 			tempo: settings.tempo,
 			effectsApplied: this.isInitialized
 		});
+	}
+
+	/**
+	 * Handle hot-swapping of instruments when settings change
+	 * Detects enabled/disabled changes and quality setting changes
+	 */
+	private async handleInstrumentSettingsChanges(oldSettings: SonigraphSettings, newSettings: SonigraphSettings): Promise<void> {
+		const instrumentsToAdd: string[] = [];
+		const instrumentsToRemove: string[] = [];
+		const instrumentsToReinitialize: string[] = [];
+
+		// Check each instrument for changes
+		Object.keys(newSettings.instruments).forEach(instrumentName => {
+			const oldInstrument = oldSettings.instruments[instrumentName as keyof typeof oldSettings.instruments];
+			const newInstrument = newSettings.instruments[instrumentName as keyof typeof newSettings.instruments];
+
+			if (!oldInstrument || !newInstrument) return;
+
+			const wasEnabled = oldInstrument.enabled;
+			const isEnabled = newInstrument.enabled;
+			const wasHighQuality = oldInstrument.useHighQuality;
+			const isHighQuality = newInstrument.useHighQuality;
+
+			// Instrument newly enabled
+			if (!wasEnabled && isEnabled) {
+				instrumentsToAdd.push(instrumentName);
+				logger.info('hot-swap', `Instrument enabled: ${instrumentName}`);
+			}
+			// Instrument newly disabled
+			else if (wasEnabled && !isEnabled) {
+				instrumentsToRemove.push(instrumentName);
+				logger.info('hot-swap', `Instrument disabled: ${instrumentName}`);
+			}
+			// Quality setting changed (and instrument is enabled)
+			else if (isEnabled && wasHighQuality !== isHighQuality) {
+				instrumentsToReinitialize.push(instrumentName);
+				logger.info('hot-swap', `Quality changed for ${instrumentName}: ${wasHighQuality} → ${isHighQuality}`);
+			}
+		});
+
+		// Remove disabled instruments
+		for (const instrumentName of instrumentsToRemove) {
+			const instrument = this.instruments.get(instrumentName);
+			if (instrument) {
+				instrument.dispose();
+				this.instruments.delete(instrumentName);
+				logger.info('hot-swap', `Removed instrument: ${instrumentName}`);
+			}
+		}
+
+		// Reinitialize instruments with quality changes
+		for (const instrumentName of instrumentsToReinitialize) {
+			const instrument = this.instruments.get(instrumentName);
+			if (instrument) {
+				instrument.dispose();
+				this.instruments.delete(instrumentName);
+			}
+			await this.initializeSingleInstrument(instrumentName);
+		}
+
+		// Add newly enabled instruments
+		for (const instrumentName of instrumentsToAdd) {
+			await this.initializeSingleInstrument(instrumentName);
+		}
+
+		if (instrumentsToAdd.length > 0 || instrumentsToRemove.length > 0 || instrumentsToReinitialize.length > 0) {
+			logger.info('hot-swap', 'Instrument hot-swap complete', {
+				added: instrumentsToAdd,
+				removed: instrumentsToRemove,
+				reinitialized: instrumentsToReinitialize
+			});
+		}
+	}
+
+	/**
+	 * Initialize a single instrument (used for hot-swapping)
+	 */
+	private async initializeSingleInstrument(instrumentName: string): Promise<void> {
+		const configs = this.getSamplerConfigs();
+		const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
+
+		if (!instrumentSettings || !instrumentSettings.enabled) {
+			logger.debug('hot-swap', `Skipping ${instrumentName} - not enabled`);
+			return;
+		}
+
+		const useHighQuality = instrumentSettings.useHighQuality ?? false;
+		const config = configs[instrumentName];
+		const hasSamples = config && config.urls && Object.keys(config.urls).length > 0;
+
+		if (useHighQuality && hasSamples) {
+			await this.initializeInstrumentWithSamples(instrumentName, config);
+		} else {
+			this.initializeInstrumentWithSynthesis(instrumentName);
+		}
+
+		logger.info('hot-swap', `Initialized ${instrumentName} successfully`);
 	}
 
 	/**
@@ -2874,6 +2998,8 @@ export class AudioEngine {
 	 */
 	public onInstrumentSettingsChanged(): void {
 		this.invalidateInstrumentCache();
+		// Also clear the InstrumentConfigLoader cache so configs are reloaded
+		this.instrumentConfigLoader.clearCache();
 		logger.debug('optimization', 'Instrument cache invalidated due to settings change');
 	}
 
