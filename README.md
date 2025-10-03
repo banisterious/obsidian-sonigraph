@@ -160,6 +160,7 @@ If you find this plugin useful, please consider supporting its development!
 - **Xylophone** - Bright mallet percussion with wood resonance
 - **Vibraphone** - Metallic bars with motor tremolo
 - **Gongs** - Large suspended cymbals with extended resonance
+- **Rhythmic Percussion** - Kick drum, snare Drum, hi-hat
 
 ### Electronic (3 instruments)
 - **Lead Synth** - Filter-swept lead with modulation
@@ -265,3 +266,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 **Note**: This plugin is not affiliated with or endorsed by Obsidian.md. 
+
