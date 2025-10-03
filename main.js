@@ -51928,11 +51928,16 @@ var init_brass_instruments = __esm({
         },
         "french-horn": {
           urls: {
-            "D2": `D2.${FORMAT_PLACEHOLDER}`,
-            "D4": `D4.${FORMAT_PLACEHOLDER}`,
-            "G2": `G2.${FORMAT_PLACEHOLDER}`,
             "A1": `A1.${FORMAT_PLACEHOLDER}`,
-            "A3": `A3.${FORMAT_PLACEHOLDER}`
+            "A3": `A3.${FORMAT_PLACEHOLDER}`,
+            "C2": `C2.${FORMAT_PLACEHOLDER}`,
+            "C4": `C4.${FORMAT_PLACEHOLDER}`,
+            "D3": `D3.${FORMAT_PLACEHOLDER}`,
+            "D5": `D5.${FORMAT_PLACEHOLDER}`,
+            "Ds2": `Ds2.${FORMAT_PLACEHOLDER}`,
+            "F3": `F3.${FORMAT_PLACEHOLDER}`,
+            "F5": `F5.${FORMAT_PLACEHOLDER}`,
+            "G2": `G2.${FORMAT_PLACEHOLDER}`
           },
           release: 2.5,
           baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/french-horn/",
@@ -52058,17 +52063,19 @@ var init_woodwind_instruments = __esm({
           priority: "medium",
           category: "woodwind"
         },
-        // Bassoon - already correctly configured
+        // Bassoon - corrected to match actual nbrosowsky samples
         bassoon: {
           urls: {
             "A2": `A2.${FORMAT_PLACEHOLDER}`,
-            "C2": `C2.${FORMAT_PLACEHOLDER}`,
+            "A3": `A3.${FORMAT_PLACEHOLDER}`,
+            "A4": `A4.${FORMAT_PLACEHOLDER}`,
             "C3": `C3.${FORMAT_PLACEHOLDER}`,
             "C4": `C4.${FORMAT_PLACEHOLDER}`,
-            "E2": `E2.${FORMAT_PLACEHOLDER}`,
-            "G1": `G1.${FORMAT_PLACEHOLDER}`,
+            "C5": `C5.${FORMAT_PLACEHOLDER}`,
+            "E4": `E4.${FORMAT_PLACEHOLDER}`,
             "G2": `G2.${FORMAT_PLACEHOLDER}`,
-            "G3": `G3.${FORMAT_PLACEHOLDER}`
+            "G3": `G3.${FORMAT_PLACEHOLDER}`,
+            "G4": `G4.${FORMAT_PLACEHOLDER}`
           },
           release: 2.2,
           baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/bassoon/",
