@@ -86632,6 +86632,16 @@ var AudioEngine = class {
       }
       const detunedFrequency = this.applyFrequencyDetuning(pitch);
       synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
+      if (this.rhythmicPercussion) {
+        const midiNote = Tone.Frequency(pitch, "hz").toMidi();
+        logger68.debug("rhythmic-percussion", "Triggering accent (immediate playback)", { pitch, midiNote, velocity });
+        this.rhythmicPercussion.triggerAccent({
+          pitch: midiNote,
+          velocity,
+          duration,
+          time: Tone.now()
+        });
+      }
       logger68.debug("immediate-playback", "Note triggered successfully", {
         instrument,
         detunedFrequency: detunedFrequency.toFixed(2),
