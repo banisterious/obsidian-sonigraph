@@ -1,5 +1,5 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
+import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, Frequency } from 'tone';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
@@ -2144,7 +2144,7 @@ export class AudioEngine {
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
 							// Convert frequency to MIDI note number for percussion mapping
-							const midiNote = Tone.Frequency(frequency, 'hz').toMidi();
+							const midiNote = new Frequency(frequency, 'hz').toMidi();
 							logger.debug('rhythmic-percussion', 'Triggering accent', { frequency, midiNote, velocity });
 							this.rhythmicPercussion.triggerAccent({
 								pitch: midiNote,
@@ -2984,13 +2984,13 @@ export class AudioEngine {
 			// Trigger rhythmic percussion accent if enabled
 			if (this.rhythmicPercussion) {
 				// Convert frequency to MIDI note number for percussion mapping
-				const midiNote = Tone.Frequency(pitch, 'hz').toMidi();
+				const midiNote = new Frequency(pitch, 'hz').toMidi();
 				logger.debug('rhythmic-percussion', 'Triggering accent (immediate playback)', { pitch, midiNote, velocity });
 				this.rhythmicPercussion.triggerAccent({
 					pitch: midiNote,
 					velocity: velocity,
 					duration: duration,
-					time: Tone.now()
+					time: getContext().currentTime
 				});
 			}
 
