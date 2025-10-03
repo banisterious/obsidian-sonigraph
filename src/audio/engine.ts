@@ -2143,9 +2143,11 @@ export class AudioEngine {
 
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
-							logger.debug('rhythmic-percussion', 'Triggering accent', { frequency, velocity });
+							// Convert frequency to MIDI note number for percussion mapping
+							const midiNote = Tone.Frequency(frequency, 'hz').toMidi();
+							logger.debug('rhythmic-percussion', 'Triggering accent', { frequency, midiNote, velocity });
 							this.rhythmicPercussion.triggerAccent({
-								pitch: frequency, // Use original frequency (MIDI note number)
+								pitch: midiNote,
 								velocity: velocity,
 								duration: duration,
 								time: currentTime
