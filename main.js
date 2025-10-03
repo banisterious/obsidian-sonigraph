@@ -84317,6 +84317,7 @@ var AudioGraphCleaner = class {
 };
 
 // src/audio/engine.ts
+init_MusicalTheoryEngine();
 var logger68 = getLogger("audio-engine");
 var AudioEngine = class {
   // Master Effects Processing - moved to EffectBusManager
@@ -84336,6 +84337,7 @@ var AudioEngine = class {
     this.realtimeStartTime = 0;
     this.lastTriggerTime = 0;
     this.volume = null;
+    this.musicalTheoryEngine = null;
     // Real-time feedback properties
     this.previewTimeouts = /* @__PURE__ */ new Map();
     this.bypassStates = /* @__PURE__ */ new Map();
@@ -84532,6 +84534,7 @@ var AudioEngine = class {
       await this.initializeEffects();
       await this.initializeInstruments();
       await this.initializeAdvancedSynthesis();
+      this.initializeMusicalTheory();
       if ((_a = this.settings.enhancedRouting) == null ? void 0 : _a.enabled) {
         await this.initializeEnhancedRouting();
       } else {
@@ -84637,6 +84640,63 @@ var AudioEngine = class {
       logger68.info("advanced-synthesis", "Advanced synthesis engines ready");
     } catch (error) {
       logger68.error("advanced-synthesis", "Failed to initialize advanced synthesis", error);
+    }
+  }
+  /**
+   * Initialize Musical Theory Engine for harmonic constraints
+   */
+  initializeMusicalTheory() {
+    var _a, _b, _c, _d, _e, _f;
+    try {
+      if (!((_a = this.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory)) {
+        logger68.warn("musical-theory", "Musical theory settings not found, skipping initialization");
+        return;
+      }
+      const theorySettings = this.settings.audioEnhancement.musicalTheory;
+      const config = {
+        rootNote: theorySettings.rootNote || "C",
+        scale: theorySettings.scale || "major",
+        enforceHarmony: (_b = theorySettings.enforceHarmony) != null ? _b : true,
+        quantizationStrength: (_c = theorySettings.quantizationStrength) != null ? _c : 0.8,
+        dissonanceThreshold: (_d = theorySettings.dissonanceThreshold) != null ? _d : 0.5,
+        allowChromaticPassing: (_e = theorySettings.allowChromaticPassing) != null ? _e : false,
+        dynamicScaleModulation: (_f = theorySettings.dynamicScaleModulation) != null ? _f : false,
+        preferredChordProgression: theorySettings.preferredChordProgression
+      };
+      this.musicalTheoryEngine = new MusicalTheoryEngine(config);
+      logger68.info("musical-theory", "Musical Theory Engine initialized", {
+        scale: config.scale,
+        rootNote: config.rootNote,
+        enforceHarmony: config.enforceHarmony,
+        quantizationStrength: config.quantizationStrength
+      });
+    } catch (error) {
+      logger68.error("musical-theory", "Failed to initialize Musical Theory Engine", error);
+    }
+  }
+  /**
+   * Quantize a frequency to the current musical scale
+   * @param frequency The input frequency in Hz
+   * @returns The quantized frequency that fits the scale
+   */
+  quantizeFrequency(frequency) {
+    var _a, _b;
+    if (!this.musicalTheoryEngine || !((_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.enforceHarmony)) {
+      return frequency;
+    }
+    try {
+      const quantized = this.musicalTheoryEngine.constrainToScale(frequency);
+      logger68.debug("musical-theory", "Frequency quantized", {
+        original: frequency.toFixed(2),
+        quantized: quantized.frequency.toFixed(2),
+        note: quantized.noteName,
+        scale: this.settings.audioEnhancement.musicalTheory.scale,
+        rootNote: this.settings.audioEnhancement.musicalTheory.rootNote
+      });
+      return quantized.frequency;
+    } catch (error) {
+      logger68.warn("musical-theory", "Failed to quantize frequency, using original", error);
+      return frequency;
     }
   }
   async initializeEffects() {
@@ -86025,7 +86085,8 @@ var AudioEngine = class {
         const synth = this.instruments.get(instrumentName);
         if (synth) {
           try {
-            const detunedFrequency = this.applyFrequencyDetuning(frequency);
+            const quantizedFrequency = this.quantizeFrequency(frequency);
+            const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
             const audioContext = getContext();
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
             if (this.rhythmicPercussion) {
@@ -86139,7 +86200,7 @@ var AudioEngine = class {
     logger68.info("playback", "Sequence stopped and Transport reset");
   }
   async updateSettings(settings) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i;
     this.settings = settings;
     this.onInstrumentSettingsChanged();
     const effectiveFormat = "ogg";
@@ -86160,6 +86221,29 @@ var AudioEngine = class {
       } else if (((_c = settings.percussionAccents) == null ? void 0 : _c.enabled) && this.rhythmicPercussion) {
         logger68.debug("rhythmic-percussion", "Updating percussion config", settings.percussionAccents);
         this.rhythmicPercussion.updateConfig(settings.percussionAccents);
+      }
+    }
+    if ((_d = settings.audioEnhancement) == null ? void 0 : _d.musicalTheory) {
+      const theorySettings = settings.audioEnhancement.musicalTheory;
+      if (this.musicalTheoryEngine) {
+        const config = {
+          rootNote: theorySettings.rootNote || "C",
+          scale: theorySettings.scale || "major",
+          enforceHarmony: (_e = theorySettings.enforceHarmony) != null ? _e : true,
+          quantizationStrength: (_f = theorySettings.quantizationStrength) != null ? _f : 0.8,
+          dissonanceThreshold: (_g = theorySettings.dissonanceThreshold) != null ? _g : 0.5,
+          allowChromaticPassing: (_h = theorySettings.allowChromaticPassing) != null ? _h : false,
+          dynamicScaleModulation: (_i = theorySettings.dynamicScaleModulation) != null ? _i : false,
+          preferredChordProgression: theorySettings.preferredChordProgression
+        };
+        this.musicalTheoryEngine = new MusicalTheoryEngine(config);
+        logger68.info("musical-theory", "Musical Theory Engine updated", {
+          scale: config.scale,
+          rootNote: config.rootNote,
+          enforceHarmony: config.enforceHarmony
+        });
+      } else if (theorySettings.enforceHarmony) {
+        this.initializeMusicalTheory();
       }
     }
     this.updateVolume();
@@ -86733,7 +86817,8 @@ var AudioEngine = class {
         }
         throw new Error(`Instrument ${instrument} not available and piano fallback failed`);
       }
-      const detunedFrequency = this.applyFrequencyDetuning(pitch);
+      const quantizedFrequency = this.quantizeFrequency(pitch);
+      const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
       synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
       if (this.rhythmicPercussion) {
         const midiNote = new Frequency(pitch, "hz").toMidi();
