@@ -4,6 +4,7 @@ import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
 import { ElectronicEngine } from './electronic-engine';
+import { RhythmicPercussionEngine } from './percussion';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
 import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
@@ -62,7 +63,10 @@ export class AudioEngine {
 
 	// Phase 8: Advanced Synthesis Engines
 	private percussionEngine: PercussionEngine | null = null;
-	
+
+	// Rhythmic percussion accent layer
+	private rhythmicPercussion: RhythmicPercussionEngine | null = null;
+
 	// Phase 3: Frequency detuning for phase conflict resolution
 	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
 	private electronicEngine: ElectronicEngine | null = null;
@@ -408,6 +412,16 @@ export class AudioEngine {
 				logger.debug('electronic', 'Advanced electronic synthesis initialized');
 			} else {
 				logger.info('electronic', 'Skipping electronic engine initialization (no electronic instruments enabled)');
+			}
+
+			// Initialize rhythmic percussion accent layer
+			if (this.volume && this.settings.percussionAccents?.enabled) {
+				logger.debug('rhythmic-percussion', 'Initializing rhythmic percussion accent layer');
+				this.rhythmicPercussion = new RhythmicPercussionEngine(this.settings.percussionAccents);
+				await this.rhythmicPercussion.initialize(this.volume);
+				logger.debug('rhythmic-percussion', 'Rhythmic percussion initialized');
+			} else {
+				logger.info('rhythmic-percussion', 'Skipping rhythmic percussion initialization (disabled in settings)');
 			}
 			
 			// Initialize master effects
@@ -2126,7 +2140,17 @@ export class AudioEngine {
 						const audioContext = getContext();
 						
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
-						
+
+						// Trigger rhythmic percussion accent if enabled
+						if (this.rhythmicPercussion) {
+							this.rhythmicPercussion.triggerAccent({
+								pitch: frequency, // Use original frequency (MIDI note number)
+								velocity: velocity,
+								duration: duration,
+								time: currentTime
+							});
+						}
+
 						// Schedule cleanup for this note
 						const noteId = `note-${this.noteCounter++}`;
 						this.audioGraphCleaner.scheduleNoteCleanup(noteId, duration);
@@ -4581,7 +4605,12 @@ export class AudioEngine {
 			this.percussionEngine.dispose();
 			this.percussionEngine = null;
 		}
-		
+
+		if (this.rhythmicPercussion) {
+			this.rhythmicPercussion.dispose();
+			this.rhythmicPercussion = null;
+		}
+
 		if (this.electronicEngine) {
 			this.electronicEngine.dispose();
 			this.electronicEngine = null;

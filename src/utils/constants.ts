@@ -592,7 +592,21 @@ export interface SonigraphSettings {
 		processingQuality: 'fast' | 'balanced' | 'high-quality';
 		enableAudioOptimizations: boolean;
 	};
-	
+
+	// Rhythmic Percussion Accent Layer
+	percussionAccents?: {
+		enabled: boolean;
+		density: number; // 0-1 probability
+		activeDrums: {
+			kick: boolean;
+			snare: boolean;
+			hihat: boolean;
+			tom: boolean;
+		};
+		accentMode: 'velocity' | 'pitch' | 'random';
+		volume: number; // dB
+	};
+
 	// Phase 3.5: Enhanced Effect Routing
 	enhancedRouting?: {
 		enabled: boolean;
@@ -2488,7 +2502,21 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		processingQuality: 'balanced',
 		enableAudioOptimizations: true
 	},
-	
+
+	// Rhythmic Percussion Accent Layer (disabled by default)
+	percussionAccents: {
+		enabled: false,
+		density: 0.6,
+		activeDrums: {
+			kick: true,
+			snare: true,
+			hihat: true,
+			tom: false
+		},
+		accentMode: 'velocity',
+		volume: -6
+	},
+
 	// Phase 3.5: Enhanced Effect Routing (disabled by default for backward compatibility)
 	enhancedRouting: {
 		enabled: false,
