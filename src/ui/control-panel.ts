@@ -16,6 +16,7 @@ import { FileSuggestModal } from './FileSuggestModal';
 import { SonicGraphSettingsTabs } from './settings/SonicGraphSettingsTabs';
 import { getWhaleIntegration } from '../external/whale-integration';
 import { FreesoundSearchModal } from './FreesoundSearchModal';
+import { SampleTableBrowser } from './SampleTableBrowser';
 import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
 
 const logger = getLogger('control-panel');
@@ -737,75 +738,12 @@ export class MaterialControlPanelModal extends Modal {
 	}
 
 	/**
-	 * Render the sample browser UI
+	 * Render the sample browser UI with table layout
 	 */
 	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
-		// Get all user samples (flat array, no genre filtering)
-		const userSamples = this.plugin.settings.freesoundSamples || [];
-
-		// Header
-		const headerEl = container.createDiv({ cls: 'osp-sample-browser-header' });
-
-		const titleRow = headerEl.createDiv({ cls: 'osp-sample-browser-title-row' });
-		titleRow.createEl('h4', {
-			text: 'Sample Library',
-			cls: 'osp-sample-browser-title'
-		});
-
-		// Add "Search Freesound" button
-		const searchBtn = titleRow.createEl('button', {
-			text: 'Search Freesound',
-			cls: 'osp-search-freesound-btn'
-		});
-		searchBtn.addEventListener('click', () => this.openFreesoundSearch());
-
-		// Add info note
-		const infoNote = headerEl.createEl('p', {
-			cls: 'osp-sample-browser-note'
-		});
-		infoNote.innerHTML = '<strong>Tip:</strong> Click "Search Freesound" to find and add real audio samples to your library.';
-
-		// User's Library Section - split into enabled and disabled
-		if (userSamples.length > 0) {
-			const enabledSamples = userSamples.filter(s => s.enabled !== false);
-			const disabledSamples = userSamples.filter(s => s.enabled === false);
-
-			// Enabled samples section
-			if (enabledSamples.length > 0) {
-				const enabledSection = container.createDiv({ cls: 'osp-sample-section' });
-				enabledSection.createEl('h5', {
-					text: `Enabled Samples (${enabledSamples.length})`,
-					cls: 'osp-sample-section-title osp-enabled-title'
-				});
-
-				const enabledList = enabledSection.createDiv({ cls: 'osp-sample-list' });
-				enabledSamples.forEach((sample, index) => {
-					this.renderSampleItem(enabledList, sample, index + 1, true);
-				});
-			}
-
-			// Disabled samples section
-			if (disabledSamples.length > 0) {
-				const disabledSection = container.createDiv({ cls: 'osp-sample-section' });
-				disabledSection.createEl('h5', {
-					text: `Disabled Samples (${disabledSamples.length})`,
-					cls: 'osp-sample-section-title osp-disabled-title'
-				});
-
-				const disabledList = disabledSection.createDiv({ cls: 'osp-sample-list' });
-				disabledSamples.forEach((sample, index) => {
-					this.renderSampleItem(disabledList, sample, index + 1, true);
-				});
-			}
-		}
-
-		// Show message if no samples at all
-		if (userSamples.length === 0) {
-			container.createEl('p', {
-				text: 'No samples in library. Click "Search Freesound" to add samples.',
-				cls: 'osp-info-message'
-			});
-		}
+		// Use the new table-based browser
+		const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
+		tableBrowser.render();
 	}
 
 	/**

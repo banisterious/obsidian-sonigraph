@@ -1,0 +1,234 @@
+/**
+ * Sample Table Browser Styles
+ * Professional data table for Freesound sample management
+ */
+
+/* Header */
+.sample-table-header {
+	margin-bottom: 1rem;
+}
+
+.sample-table-title-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+}
+
+.sample-table-title {
+	margin: 0;
+	font-size: 1.2rem;
+}
+
+.sample-table-search-btn {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+	padding: 0.5rem 1rem;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 0.9rem;
+}
+
+.sample-table-search-btn:hover {
+	background: var(--interactive-accent-hover);
+}
+
+/* Filter Controls */
+.sample-table-filters {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+}
+
+.sample-table-filter-search {
+	flex: 1;
+	min-width: 200px;
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.sample-table-filter-tag,
+.sample-table-filter-license {
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	min-width: 120px;
+}
+
+.sample-table-filter-toggle {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: pointer;
+	user-select: none;
+}
+
+/* Table Container */
+.sample-table-wrapper {
+	overflow-x: auto;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	max-height: 600px;
+	overflow-y: auto;
+}
+
+/* Table Styles */
+.sample-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+}
+
+.sample-table thead {
+	position: sticky;
+	top: 0;
+	background: var(--background-secondary);
+	z-index: 1;
+}
+
+.sample-table th {
+	padding: 0.75rem;
+	text-align: left;
+	font-weight: 600;
+	border-bottom: 2px solid var(--background-modifier-border);
+	white-space: nowrap;
+}
+
+.sample-table th.sortable {
+	cursor: pointer;
+	user-select: none;
+}
+
+.sample-table th.sortable:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sample-table th .sort-arrow {
+	color: var(--text-accent);
+	font-size: 0.8em;
+}
+
+.sample-table tbody tr {
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sample-table tbody tr:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sample-table tbody tr.disabled {
+	opacity: 0.5;
+}
+
+.sample-table td {
+	padding: 0.75rem;
+	vertical-align: middle;
+}
+
+/* Column-specific styles */
+.sample-table td.sample-name {
+	font-weight: 500;
+	max-width: 250px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sample-table td.sample-tags {
+	max-width: 200px;
+}
+
+.tag-badge {
+	display: inline-block;
+	padding: 0.2rem 0.5rem;
+	margin-right: 0.25rem;
+	margin-bottom: 0.25rem;
+	background: var(--background-modifier-border);
+	border-radius: 3px;
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.tag-more {
+	font-size: 0.8em;
+	color: var(--text-faint);
+}
+
+.sample-table td.sample-actions {
+	white-space: nowrap;
+}
+
+/* Buttons */
+.preview-btn,
+.info-btn,
+.enable-btn,
+.disable-btn,
+.remove-btn {
+	padding: 0.3rem 0.6rem;
+	margin-right: 0.25rem;
+	border: none;
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 0.85em;
+	transition: background 0.15s;
+}
+
+.preview-btn {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.preview-btn:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.info-btn {
+	background: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.info-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.enable-btn {
+	background: var(--interactive-success);
+	color: white;
+}
+
+.enable-btn:hover {
+	opacity: 0.9;
+}
+
+.disable-btn {
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.disable-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.remove-btn {
+	background: var(--background-modifier-error);
+	color: white;
+}
+
+.remove-btn:hover {
+	opacity: 0.9;
+}
+
+/* Empty State */
+.sample-table-empty {
+	text-align: center;
+	padding: 2rem;
+	color: var(--text-muted);
+}
