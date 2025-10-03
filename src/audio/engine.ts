@@ -2981,6 +2981,19 @@ export class AudioEngine {
 			// Trigger the note immediately (no timing delay)
 			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
 
+			// Trigger rhythmic percussion accent if enabled
+			if (this.rhythmicPercussion) {
+				// Convert frequency to MIDI note number for percussion mapping
+				const midiNote = Tone.Frequency(pitch, 'hz').toMidi();
+				logger.debug('rhythmic-percussion', 'Triggering accent (immediate playback)', { pitch, midiNote, velocity });
+				this.rhythmicPercussion.triggerAccent({
+					pitch: midiNote,
+					velocity: velocity,
+					duration: duration,
+					time: Tone.now()
+				});
+			}
+
 			logger.debug('immediate-playback', 'Note triggered successfully', {
 				instrument: instrument,
 				detunedFrequency: detunedFrequency.toFixed(2),
