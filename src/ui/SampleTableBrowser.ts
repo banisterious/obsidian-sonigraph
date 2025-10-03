@@ -5,7 +5,7 @@
  * Freesound samples with sortable columns, search, and tag filtering.
  */
 
-import { App, Notice, requestUrl } from 'obsidian';
+import { App, Notice, requestUrl, Modal, Setting } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger } from '../logging';
 import { FreesoundSample } from '../audio/layers/types';
@@ -61,14 +61,14 @@ export class SampleTableBrowser {
 	 * Render header with title and search button
 	 */
 	private renderHeader(): void {
-		const header = this.container.createDiv({ cls: 'sample-table-header' });
+		const header = this.container.createDiv({ cls: 'sonigraph-sample-table-header' });
 
-		const titleRow = header.createDiv({ cls: 'sample-table-title-row' });
-		titleRow.createEl('h4', { text: 'Sample Library', cls: 'sample-table-title' });
+		const titleRow = header.createDiv({ cls: 'sonigraph-sample-table-title-row' });
+		titleRow.createEl('h4', { text: 'Sample Library', cls: 'sonigraph-sample-table-title' });
 
 		const searchBtn = titleRow.createEl('button', {
 			text: 'Search Freesound',
-			cls: 'sample-table-search-btn'
+			cls: 'sonigraph-sample-table-search-btn'
 		});
 		searchBtn.addEventListener('click', () => this.openFreesoundSearch());
 	}
@@ -77,13 +77,13 @@ export class SampleTableBrowser {
 	 * Render filter controls
 	 */
 	private renderFilters(): void {
-		const filterRow = this.container.createDiv({ cls: 'sample-table-filters' });
+		const filterRow = this.container.createDiv({ cls: 'sonigraph-sample-table-filters' });
 
 		// Search input
 		const searchInput = filterRow.createEl('input', {
 			type: 'text',
 			placeholder: 'Search samples...',
-			cls: 'sample-table-filter-search'
+			cls: 'sonigraph-sample-table-filter-search'
 		});
 		searchInput.value = this.filters.search;
 		searchInput.addEventListener('input', (e) => {
@@ -92,7 +92,7 @@ export class SampleTableBrowser {
 		});
 
 		// Tag filter
-		const tagFilter = filterRow.createEl('select', { cls: 'sample-table-filter-tag' });
+		const tagFilter = filterRow.createEl('select', { cls: 'sonigraph-sample-table-filter-tag' });
 		this.populateTagFilter(tagFilter);
 		tagFilter.value = this.filters.tag;
 		tagFilter.addEventListener('change', (e) => {
@@ -101,7 +101,7 @@ export class SampleTableBrowser {
 		});
 
 		// License filter
-		const licenseFilter = filterRow.createEl('select', { cls: 'sample-table-filter-license' });
+		const licenseFilter = filterRow.createEl('select', { cls: 'sonigraph-sample-table-filter-license' });
 		this.populateLicenseFilter(licenseFilter);
 		licenseFilter.value = this.filters.license;
 		licenseFilter.addEventListener('change', (e) => {
@@ -110,7 +110,7 @@ export class SampleTableBrowser {
 		});
 
 		// Show disabled toggle
-		const toggleLabel = filterRow.createEl('label', { cls: 'sample-table-filter-toggle' });
+		const toggleLabel = filterRow.createEl('label', { cls: 'sonigraph-sample-table-filter-toggle' });
 		const toggleCheck = toggleLabel.createEl('input', { type: 'checkbox' });
 		toggleCheck.checked = this.filters.showDisabled;
 		toggleCheck.addEventListener('change', (e) => {
@@ -163,7 +163,7 @@ export class SampleTableBrowser {
 	 */
 	private renderTable(): void {
 		// Remove existing table
-		const existingTable = this.container.querySelector('.sample-table-wrapper');
+		const existingTable = this.container.querySelector('.sonigraph-sample-table-wrapper');
 		if (existingTable) existingTable.remove();
 
 		const samples = this.getFilteredSamples();
@@ -171,25 +171,21 @@ export class SampleTableBrowser {
 		if (samples.length === 0) {
 			this.container.createEl('p', {
 				text: 'No samples match your filters.',
-				cls: 'sample-table-empty'
+				cls: 'sonigraph-sample-table-empty'
 			});
 			return;
 		}
 
-		const tableWrapper = this.container.createDiv({ cls: 'sample-table-wrapper' });
-		const table = tableWrapper.createEl('table', { cls: 'sample-table' });
+		const tableWrapper = this.container.createDiv({ cls: 'sonigraph-sample-table-wrapper' });
+		const table = tableWrapper.createEl('table', { cls: 'sonigraph-sample-table' });
 
 		// Table header
 		const thead = table.createEl('thead');
 		const headerRow = thead.createEl('tr');
 
-		this.renderColumnHeader(headerRow, 'name', 'Sample Name');
+		this.renderColumnHeader(headerRow, 'name', 'Sample');
 		this.renderColumnHeader(headerRow, 'author', 'Author');
-		this.renderColumnHeader(headerRow, 'duration', 'Duration');
-		this.renderColumnHeader(headerRow, 'description', 'Description');
 		this.renderColumnHeader(headerRow, 'license', 'License');
-		headerRow.createEl('th', { text: 'Preview' });
-		headerRow.createEl('th', { text: 'Info' });
 		this.renderColumnHeader(headerRow, 'tags', 'Tags');
 		headerRow.createEl('th', { text: 'Actions' });
 
@@ -231,63 +227,102 @@ export class SampleTableBrowser {
 			cls: sample.enabled === false ? 'disabled' : ''
 		});
 
-		// Name
-		row.createEl('td', { text: sample.title || sample.name || 'Untitled', cls: 'sample-name' });
+		// Sample Name with duration
+		const nameCell = row.createEl('td', { cls: 'sonigraph-sample-name' });
+		const nameDiv = nameCell.createDiv({ cls: 'sonigraph-sample-name-text' });
+		nameDiv.setText(sample.title || sample.name || 'Untitled');
+		const durationDiv = nameCell.createDiv({ cls: 'sonigraph-sample-duration' });
+		const duration = Math.round(sample.duration || 0);
+		durationDiv.setText(`${duration}s`);
 
 		// Author
-		row.createEl('td', { text: sample.attribution || 'Unknown' });
-
-		// Duration
-		const duration = Math.round(sample.duration || 0);
-		row.createEl('td', { text: `${duration}s` });
-
-		// Description
-		const desc = sample.description || sample.usageNotes || '';
-		row.createEl('td', { text: desc.substring(0, 50) + (desc.length > 50 ? '...' : '') });
+		row.createEl('td', { text: sample.attribution || 'Unknown', cls: 'sonigraph-sample-author' });
 
 		// License
-		row.createEl('td', { text: sample.license || 'Unknown' });
+		row.createEl('td', { text: this.formatLicense(sample.license), cls: 'sonigraph-sample-license' });
+
+		// Tags
+		const tagsCell = row.createEl('td', { cls: 'sonigraph-sample-tags' });
+		if (sample.tags && Array.isArray(sample.tags)) {
+			sample.tags.slice(0, 2).forEach(tag => {
+				tagsCell.createSpan({ text: tag, cls: 'sonigraph-tag-badge' });
+			});
+			if (sample.tags.length > 2) {
+				tagsCell.createSpan({ text: `+${sample.tags.length - 2}`, cls: 'sonigraph-tag-more' });
+			}
+		}
+
+		// Actions - all inline
+		const actionsCell = row.createEl('td', { cls: 'sonigraph-sample-actions' });
 
 		// Preview button
-		const previewCell = row.createEl('td');
-		const previewBtn = previewCell.createEl('button', { text: '▶', cls: 'preview-btn' });
+		const previewBtn = actionsCell.createEl('button', { text: '▶', cls: 'sonigraph-preview-btn' });
 		previewBtn.addEventListener('click', () => this.previewSample(sample, previewBtn));
 
 		// Info button
-		const infoCell = row.createEl('td');
-		const infoBtn = infoCell.createEl('button', { text: '🔗', cls: 'info-btn' });
+		const infoBtn = actionsCell.createEl('button', { text: 'ℹ', cls: 'sonigraph-info-btn' });
 		infoBtn.addEventListener('click', () => {
 			window.open(`https://freesound.org/s/${sample.id}/`, '_blank');
 		});
 
-		// Tags
-		const tagsCell = row.createEl('td', { cls: 'sample-tags' });
-		if (sample.tags && Array.isArray(sample.tags)) {
-			sample.tags.slice(0, 3).forEach(tag => {
-				tagsCell.createSpan({ text: tag, cls: 'tag-badge' });
-			});
-			if (sample.tags.length > 3) {
-				tagsCell.createSpan({ text: `+${sample.tags.length - 3}`, cls: 'tag-more' });
-			}
-		}
-
-		// Actions
-		const actionsCell = row.createEl('td', { cls: 'sample-actions' });
+		// Edit Tags button
+		const editTagsBtn = actionsCell.createEl('button', { text: '🏷', cls: 'sonigraph-edit-tags-btn' });
+		editTagsBtn.addEventListener('click', () => {
+			this.openTagEditor(sample);
+		});
 
 		// Enable/Disable toggle
 		const toggleBtn = actionsCell.createEl('button', {
-			text: sample.enabled === false ? 'Enable' : 'Disable',
-			cls: sample.enabled === false ? 'enable-btn' : 'disable-btn'
+			text: sample.enabled === false ? '✓' : '✕',
+			cls: sample.enabled === false ? 'sonigraph-enable-btn' : 'sonigraph-disable-btn',
+			attr: { 'aria-label': sample.enabled === false ? 'Enable' : 'Disable' }
 		});
 		toggleBtn.addEventListener('click', async () => {
 			await this.toggleSampleEnabled(sample.id);
 		});
 
 		// Remove button
-		const removeBtn = actionsCell.createEl('button', { text: 'Remove', cls: 'remove-btn' });
+		const removeBtn = actionsCell.createEl('button', { text: '🗑', cls: 'sonigraph-remove-btn' });
 		removeBtn.addEventListener('click', async () => {
 			await this.removeSample(sample.id);
 		});
+	}
+
+	/**
+	 * Format license URL to friendly name
+	 */
+	private formatLicense(license: string | undefined): string {
+		if (!license) return 'Unknown';
+
+		// If it's already a short name (not a URL), return as-is
+		if (!license.includes('http')) return license;
+
+		// Convert common Creative Commons URLs to short names
+		const licenseMap: { [key: string]: string } = {
+			'creativecommons.org/licenses/by/': 'CC-BY',
+			'creativecommons.org/licenses/by-nc/': 'CC-BY-NC',
+			'creativecommons.org/licenses/by-sa/': 'CC-BY-SA',
+			'creativecommons.org/licenses/by-nd/': 'CC-BY-ND',
+			'creativecommons.org/licenses/by-nc-sa/': 'CC-BY-NC-SA',
+			'creativecommons.org/licenses/by-nc-nd/': 'CC-BY-NC-ND',
+			'creativecommons.org/publicdomain/zero/': 'CC0',
+			'creativecommons.org/publicdomain/mark/': 'Public Domain'
+		};
+
+		// Find matching license
+		for (const [urlPart, name] of Object.entries(licenseMap)) {
+			if (license.includes(urlPart)) {
+				return name;
+			}
+		}
+
+		// If no match, extract domain or return "Other"
+		try {
+			const url = new URL(license);
+			return url.hostname.replace('www.', '');
+		} catch {
+			return 'Other';
+		}
 	}
 
 	/**
@@ -514,5 +549,217 @@ export class SampleTableBrowser {
 		);
 
 		modal.open();
+	}
+
+	/**
+	 * Open tag editor modal
+	 */
+	private openTagEditor(sample: any): void {
+		const modal = new TagEditorModal(
+			this.app,
+			this.plugin,
+			sample,
+			async (updatedTags: string[]) => {
+				// Update sample tags
+				const samples = this.plugin.settings.freesoundSamples;
+				if (!samples) return;
+
+				const sampleToUpdate = samples.find(s => s.id === sample.id);
+				if (sampleToUpdate) {
+					sampleToUpdate.tags = updatedTags;
+					await this.plugin.saveSettings();
+					this.render(); // Refresh table
+				}
+			}
+		);
+		modal.open();
+	}
+}
+
+/**
+ * Modal for editing sample tags
+ */
+class TagEditorModal extends Modal {
+	private plugin: SonigraphPlugin;
+	private sample: any;
+	private onSave: (tags: string[]) => Promise<void>;
+	private tagInput: HTMLInputElement | null = null;
+	private tagListEl: HTMLElement | null = null;
+	private currentTags: string[] = [];
+
+	// Available tag suggestions from curated samples and other samples
+	private availableTags: Set<string> = new Set([
+		'drone', 'ambient', 'atmospheric', 'electronic', 'oceanic', 'nature',
+		'sci-fi', 'orchestral', 'minimal', 'experimental', 'urban', 'industrial',
+		'rhythmic', 'jazz', 'tonal', 'atonal', 'modulated', 'lo-fi', 'water',
+		'space', 'cinematic', 'synth', 'pad', 'texture', 'field-recording'
+	]);
+
+	constructor(app: App, plugin: SonigraphPlugin, sample: any, onSave: (tags: string[]) => Promise<void>) {
+		super(app);
+		this.plugin = plugin;
+		this.sample = sample;
+		this.onSave = onSave;
+		this.currentTags = [...(sample.tags || [])];
+
+		// Add tags from other samples
+		const allSamples = plugin.settings.freesoundSamples || [];
+		allSamples.forEach(s => {
+			if (s.tags && Array.isArray(s.tags)) {
+				s.tags.forEach(tag => this.availableTags.add(tag));
+			}
+		});
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.empty();
+
+		contentEl.createEl('h3', { text: 'Edit Tags' });
+		contentEl.createEl('p', {
+			text: `Sample: ${this.sample.title || this.sample.name}`,
+			cls: 'sonigraph-tag-editor-sample-name'
+		});
+
+		// Tag input with suggestions
+		const inputContainer = contentEl.createDiv({ cls: 'sonigraph-tag-editor-input-container' });
+
+		this.tagInput = inputContainer.createEl('input', {
+			type: 'text',
+			placeholder: 'Type to add tags...',
+			cls: 'sonigraph-tag-editor-input'
+		});
+
+		const suggestionsEl = inputContainer.createDiv({ cls: 'sonigraph-tag-suggestions' });
+
+		// Show suggestions as user types
+		this.tagInput.addEventListener('input', () => {
+			const value = this.tagInput!.value.toLowerCase().trim();
+			suggestionsEl.empty();
+
+			if (value.length > 0) {
+				const matches = Array.from(this.availableTags)
+					.filter(tag => tag.toLowerCase().includes(value) && !this.currentTags.includes(tag))
+					.slice(0, 10);
+
+				matches.forEach(tag => {
+					const suggestion = suggestionsEl.createDiv({
+						text: tag,
+						cls: 'sonigraph-tag-suggestion'
+					});
+					suggestion.addEventListener('click', () => {
+						this.addTag(tag);
+						this.tagInput!.value = '';
+						suggestionsEl.empty();
+					});
+				});
+			}
+		});
+
+		// Add tag on Enter
+		this.tagInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				const value = this.tagInput!.value.trim().toLowerCase();
+				if (value) {
+					this.addTag(value);
+					this.tagInput!.value = '';
+					suggestionsEl.empty();
+				}
+			}
+		});
+
+		// Current tags display
+		contentEl.createEl('h4', { text: 'Current Tags' });
+		this.tagListEl = contentEl.createDiv({ cls: 'sonigraph-tag-editor-list' });
+		this.renderTags();
+
+		// Common tags section
+		const commonSection = contentEl.createDiv({ cls: 'sonigraph-tag-common-section' });
+		commonSection.createEl('h4', { text: 'Common Tags' });
+		const commonTagsEl = commonSection.createDiv({ cls: 'sonigraph-tag-common-grid' });
+
+		const commonTags = ['drone', 'ambient', 'atmospheric', 'electronic', 'oceanic',
+			'nature', 'sci-fi', 'orchestral', 'minimal', 'experimental'];
+
+		commonTags.forEach(tag => {
+			const tagBtn = commonTagsEl.createEl('button', {
+				text: tag,
+				cls: this.currentTags.includes(tag) ? 'sonigraph-tag-common-btn added' : 'sonigraph-tag-common-btn'
+			});
+			tagBtn.addEventListener('click', () => {
+				if (!this.currentTags.includes(tag)) {
+					this.addTag(tag);
+				}
+			});
+		});
+
+		// Save/Cancel buttons
+		const btnContainer = contentEl.createDiv({ cls: 'sonigraph-tag-editor-buttons' });
+
+		const saveBtn = btnContainer.createEl('button', {
+			text: 'Save',
+			cls: 'mod-cta'
+		});
+		saveBtn.addEventListener('click', async () => {
+			await this.onSave(this.currentTags);
+			new Notice('Tags updated');
+			this.close();
+		});
+
+		const cancelBtn = btnContainer.createEl('button', {
+			text: 'Cancel'
+		});
+		cancelBtn.addEventListener('click', () => {
+			this.close();
+		});
+	}
+
+	private addTag(tag: string) {
+		const normalized = tag.toLowerCase().trim();
+		if (normalized && !this.currentTags.includes(normalized)) {
+			this.currentTags.push(normalized);
+			this.renderTags();
+			this.availableTags.add(normalized);
+		}
+	}
+
+	private removeTag(tag: string) {
+		const index = this.currentTags.indexOf(tag);
+		if (index > -1) {
+			this.currentTags.splice(index, 1);
+			this.renderTags();
+		}
+	}
+
+	private renderTags() {
+		if (!this.tagListEl) return;
+		this.tagListEl.empty();
+
+		if (this.currentTags.length === 0) {
+			this.tagListEl.createEl('p', {
+				text: 'No tags yet. Add some above.',
+				cls: 'sonigraph-tag-editor-empty'
+			});
+			return;
+		}
+
+		this.currentTags.forEach(tag => {
+			const tagEl = this.tagListEl!.createDiv({ cls: 'sonigraph-tag-editor-item' });
+			tagEl.createSpan({ text: tag, cls: 'sonigraph-tag-editor-item-text' });
+
+			const removeBtn = tagEl.createEl('button', {
+				text: '×',
+				cls: 'sonigraph-tag-editor-item-remove'
+			});
+			removeBtn.addEventListener('click', () => {
+				this.removeTag(tag);
+			});
+		});
+	}
+
+	onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
 	}
 }

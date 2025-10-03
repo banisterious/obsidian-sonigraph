@@ -4,23 +4,23 @@
  */
 
 /* Header */
-.sample-table-header {
+.sonigraph-sample-table-header {
 	margin-bottom: 1rem;
 }
 
-.sample-table-title-row {
+.sonigraph-sample-table-title-row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 0.5rem;
 }
 
-.sample-table-title {
+.sonigraph-sample-table-title {
 	margin: 0;
 	font-size: 1.2rem;
 }
 
-.sample-table-search-btn {
+.sonigraph-sample-table-search-btn {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 	border: none;
@@ -30,12 +30,12 @@
 	font-size: 0.9rem;
 }
 
-.sample-table-search-btn:hover {
+.sonigraph-sample-table-search-btn:hover {
 	background: var(--interactive-accent-hover);
 }
 
 /* Filter Controls */
-.sample-table-filters {
+.sonigraph-sample-table-filters {
 	display: flex;
 	gap: 0.75rem;
 	align-items: center;
@@ -43,7 +43,7 @@
 	flex-wrap: wrap;
 }
 
-.sample-table-filter-search {
+.sonigraph-sample-table-filter-search {
 	flex: 1;
 	min-width: 200px;
 	padding: 0.5rem;
@@ -53,8 +53,8 @@
 	color: var(--text-normal);
 }
 
-.sample-table-filter-tag,
-.sample-table-filter-license {
+.sonigraph-sample-table-filter-tag,
+.sonigraph-sample-table-filter-license {
 	padding: 0.5rem;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
@@ -63,7 +63,7 @@
 	min-width: 120px;
 }
 
-.sample-table-filter-toggle {
+.sonigraph-sample-table-filter-toggle {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -72,7 +72,7 @@
 }
 
 /* Table Container */
-.sample-table-wrapper {
+.sonigraph-sample-table-wrapper {
 	overflow-x: auto;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
@@ -81,72 +81,94 @@
 }
 
 /* Table Styles */
-.sample-table {
+.sonigraph-sample-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 0.9rem;
+	font-size: 0.85rem;
 }
 
-.sample-table thead {
+.sonigraph-sample-table thead {
 	position: sticky;
 	top: 0;
 	background: var(--background-secondary);
 	z-index: 1;
 }
 
-.sample-table th {
-	padding: 0.75rem;
+.sonigraph-sample-table th {
+	padding: 0.5rem;
 	text-align: left;
 	font-weight: 600;
 	border-bottom: 2px solid var(--background-modifier-border);
 	white-space: nowrap;
 }
 
-.sample-table th.sortable {
+.sonigraph-sample-table th.sortable {
 	cursor: pointer;
 	user-select: none;
 }
 
-.sample-table th.sortable:hover {
+.sonigraph-sample-table th.sortable:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sample-table th .sort-arrow {
+.sonigraph-sample-table th .sort-arrow {
 	color: var(--text-accent);
 	font-size: 0.8em;
 }
 
-.sample-table tbody tr {
+.sonigraph-sample-table tbody tr {
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.sample-table tbody tr:hover {
+.sonigraph-sample-table tbody tr:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sample-table tbody tr.disabled {
+.sonigraph-sample-table tbody tr.disabled {
 	opacity: 0.5;
 }
 
-.sample-table td {
-	padding: 0.75rem;
+.sonigraph-sample-table td {
+	padding: 0.4rem 0.5rem;
 	vertical-align: middle;
 }
 
 /* Column-specific styles */
-.sample-table td.sample-name {
+.sonigraph-sample-table td.sonigraph-sample-name {
+	max-width: 200px;
+	min-width: 150px;
+}
+
+.sonigraph-sample-name-text {
 	font-weight: 500;
-	max-width: 250px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.sample-table td.sample-tags {
-	max-width: 200px;
+.sonigraph-sample-duration {
+	font-size: 0.75em;
+	color: var(--text-muted);
+	margin-top: 0.1rem;
 }
 
-.tag-badge {
+.sonigraph-sample-table td.sonigraph-sample-author {
+	max-width: 120px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sonigraph-sample-table td.sonigraph-sample-license {
+	max-width: 100px;
+	white-space: nowrap;
+}
+
+.sonigraph-sample-table td.sonigraph-sample-tags {
+	max-width: 150px;
+}
+
+.sonigraph-tag-badge {
 	display: inline-block;
 	padding: 0.2rem 0.5rem;
 	margin-right: 0.25rem;
@@ -157,78 +179,236 @@
 	color: var(--text-muted);
 }
 
-.tag-more {
+.sonigraph-tag-more {
 	font-size: 0.8em;
 	color: var(--text-faint);
 }
 
-.sample-table td.sample-actions {
+.sonigraph-sample-table td.sonigraph-sample-actions {
 	white-space: nowrap;
+	min-width: 150px;
 }
 
 /* Buttons */
-.preview-btn,
-.info-btn,
-.enable-btn,
-.disable-btn,
-.remove-btn {
-	padding: 0.3rem 0.6rem;
-	margin-right: 0.25rem;
+.sonigraph-preview-btn,
+.sonigraph-info-btn,
+.sonigraph-edit-tags-btn,
+.sonigraph-enable-btn,
+.sonigraph-disable-btn,
+.sonigraph-remove-btn {
+	padding: 0.25rem 0.4rem;
+	margin-right: 0.15rem;
 	border: none;
 	border-radius: 3px;
 	cursor: pointer;
-	font-size: 0.85em;
+	font-size: 1em;
+	line-height: 1;
 	transition: background 0.15s;
 }
 
-.preview-btn {
+.sonigraph-preview-btn {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 }
 
-.preview-btn:hover {
+.sonigraph-preview-btn:hover {
 	background: var(--interactive-accent-hover);
 }
 
-.info-btn {
+.sonigraph-info-btn {
 	background: var(--background-modifier-border);
 	color: var(--text-normal);
 }
 
-.info-btn:hover {
+.sonigraph-info-btn:hover {
 	background: var(--background-modifier-hover);
 }
 
-.enable-btn {
+.sonigraph-edit-tags-btn {
+	background: var(--interactive-normal);
+	color: var(--text-normal);
+}
+
+.sonigraph-edit-tags-btn:hover {
+	background: var(--interactive-hover);
+}
+
+.sonigraph-enable-btn {
 	background: var(--interactive-success);
 	color: white;
 }
 
-.enable-btn:hover {
+.sonigraph-enable-btn:hover {
 	opacity: 0.9;
 }
 
-.disable-btn {
+.sonigraph-disable-btn {
 	background: var(--background-modifier-border);
 	color: var(--text-muted);
 }
 
-.disable-btn:hover {
+.sonigraph-disable-btn:hover {
 	background: var(--background-modifier-hover);
 }
 
-.remove-btn {
+.sonigraph-remove-btn {
 	background: var(--background-modifier-error);
 	color: white;
 }
 
-.remove-btn:hover {
+.sonigraph-remove-btn:hover {
 	opacity: 0.9;
 }
 
 /* Empty State */
-.sample-table-empty {
+.sonigraph-sample-table-empty {
 	text-align: center;
 	padding: 2rem;
 	color: var(--text-muted);
+}
+
+/* Tag Editor Modal */
+.sonigraph-tag-editor-input-container {
+	margin-bottom: 1rem;
+	position: relative;
+}
+
+.sonigraph-tag-editor-input {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 0.9rem;
+}
+
+.sonigraph-tag-suggestions {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	margin-top: 0.25rem;
+	max-height: 200px;
+	overflow-y: auto;
+	z-index: 10;
+}
+
+.sonigraph-tag-suggestion {
+	padding: 0.5rem;
+	cursor: pointer;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sonigraph-tag-suggestion:last-child {
+	border-bottom: none;
+}
+
+.sonigraph-tag-suggestion:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sonigraph-tag-editor-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	min-height: 2rem;
+	padding: 0.5rem;
+	background: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.sonigraph-tag-editor-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.3rem 0.6rem;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 3px;
+	font-size: 0.85em;
+}
+
+.sonigraph-tag-editor-item-remove {
+	cursor: pointer;
+	font-weight: bold;
+	margin-left: 0.25rem;
+	opacity: 0.8;
+}
+
+.sonigraph-tag-editor-item-remove:hover {
+	opacity: 1;
+}
+
+.sonigraph-tag-common-section {
+	margin-bottom: 1rem;
+}
+
+.sonigraph-tag-common-section h4 {
+	margin-bottom: 0.5rem;
+	font-size: 0.9rem;
+	color: var(--text-muted);
+}
+
+.sonigraph-tag-common-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	gap: 0.5rem;
+}
+
+.sonigraph-tag-common-btn {
+	padding: 0.4rem 0.6rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 3px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 0.85em;
+	text-align: center;
+}
+
+.sonigraph-tag-common-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sonigraph-tag-common-btn.added {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.sonigraph-tag-editor-buttons {
+	display: flex;
+	gap: 0.5rem;
+	justify-content: flex-end;
+	margin-top: 1rem;
+}
+
+.sonigraph-tag-editor-buttons button {
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 0.9rem;
+}
+
+.sonigraph-tag-editor-buttons button:first-child {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.sonigraph-tag-editor-buttons button:first-child:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.sonigraph-tag-editor-buttons button:last-child {
+	background: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.sonigraph-tag-editor-buttons button:last-child:hover {
+	background: var(--background-modifier-hover);
 }
