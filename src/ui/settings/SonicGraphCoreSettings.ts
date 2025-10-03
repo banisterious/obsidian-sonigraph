@@ -1,5 +1,5 @@
 /**
- * Sonic Graph Core Settings - Phase 8.1
+ * Sonic Graph Core Settings
  *
  * Essential graph visualization and audio settings for Control Center.
  * Contains: Graph & Layout, Audio Core, and Content-Aware Mapping basics.
@@ -42,7 +42,7 @@ export class SonicGraphCoreSettings {
 	 */
 	private renderGraphLayoutSettings(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Graph & Layout',
+			title: 'Graph and layout',
 			iconName: 'layout-grid',
 			subtitle: 'Visual appearance and force simulation settings',
 			elevation: 1
@@ -166,7 +166,7 @@ export class SonicGraphCoreSettings {
 	 */
 	private renderAudioCoreSettings(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Audio Core',
+			title: 'Audio core',
 			iconName: 'music',
 			subtitle: 'Basic audio playback and timing settings',
 			elevation: 1
@@ -307,13 +307,13 @@ export class SonicGraphCoreSettings {
 	}
 
 	/**
-	 * Section 3: Content-Aware Mapping Settings (Phase 2, 4.1-4.3)
+	 * Section 3: Content-Aware Mapping Settings
 	 */
 	private renderContentMappingSettings(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Content-Aware Mapping',
+			title: 'Content-aware mapping',
 			iconName: 'brain',
-			subtitle: 'Phase 2 & 4.1-4.3: Map content types and metadata to instruments',
+			subtitle: 'Map content types and metadata to instruments',
 			elevation: 1
 		});
 
@@ -426,13 +426,13 @@ export class SonicGraphCoreSettings {
 				})
 			);
 
-		// Info note about Phase 4 settings
+		// Info note about advanced settings
 		const advancedNote = content.createDiv({ cls: 'osp-settings-note' });
 		advancedNote.innerHTML = `
 			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Note:</strong> Advanced file type, tag, and folder mappings (Phase 4.1-4.3)
+				<strong>Note:</strong> Advanced file type, tag, and folder mappings
 				can be configured in the instrument settings. Connection type audio differentiation
-				(Phase 4.4) is available in the Advanced Features tab.
+				is available in the Spatial Audio tab.
 			</p>
 		`;
 	}

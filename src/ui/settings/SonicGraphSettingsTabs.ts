@@ -1,12 +1,8 @@
 /**
- * Sonic Graph Settings Tabs - Phase 8.1
+ * Sonic Graph Settings Tabs
  *
  * Horizontal tab navigation system for organizing Sonic Graph settings
- * in the Control Center. Provides 4 main tabs:
- * - Core Settings: Essential graph, audio, and content mapping
- * - Audio Layers: Phase 3 continuous layers
- * - Advanced Features: Phases 5-6 clustering, theory, orchestration, spatial
- * - Freesound & Presets: Phase 7 integration and preset management
+ * in the Control Center.
  */
 
 import { App, Setting } from 'obsidian';
@@ -22,7 +18,7 @@ import { SonicGraphFreesoundSettings } from './SonicGraphFreesoundSettings';
 const logger = getLogger('SonicGraphSettingsTabs');
 
 export interface SonicGraphTabConfig {
-	id: 'core' | 'advanced';
+	id: 'core' | 'clustering' | 'musical' | 'spatial';
 	label: string;
 	icon: LucideIconName;
 	description: string;
@@ -39,7 +35,7 @@ export class SonicGraphSettingsTabs {
 	private container: HTMLElement;
 	private tabNavigation: HTMLElement;
 	private tabContent: HTMLElement;
-	private activeTabId: 'core' | 'advanced' = 'core';
+	private activeTabId: 'core' | 'clustering' | 'musical' | 'spatial' = 'core';
 	private tabs: SonicGraphTabConfig[];
 
 	constructor(app: App, plugin: SonigraphPlugin, container: HTMLElement) {
@@ -48,7 +44,6 @@ export class SonicGraphSettingsTabs {
 		this.container = container;
 
 		// Define tab configurations
-		// Note: Audio Layers and Freesound settings moved to dedicated vertical "Layers" tab for better UX
 		this.tabs = [
 			{
 				id: 'core',
@@ -58,11 +53,25 @@ export class SonicGraphSettingsTabs {
 				renderContent: (container) => this.renderCoreSettings(container)
 			},
 			{
-				id: 'advanced',
-				label: 'Advanced Features',
-				icon: 'sparkles',
-				description: 'Clustering, musical theory, orchestration, and spatial audio',
-				renderContent: (container) => this.renderAdvancedSettings(container)
+				id: 'clustering',
+				label: 'Smart Clustering',
+				icon: 'network',
+				description: 'Intelligent note grouping and hub detection',
+				renderContent: (container) => this.renderClusteringSettings(container)
+			},
+			{
+				id: 'musical',
+				label: 'Musical Features',
+				icon: 'music',
+				description: 'Musical theory integration and dynamic orchestration',
+				renderContent: (container) => this.renderMusicalSettings(container)
+			},
+			{
+				id: 'spatial',
+				label: 'Spatial Audio',
+				icon: 'radio',
+				description: 'Position sounds in stereo space with intelligent panning',
+				renderContent: (container) => this.renderSpatialSettings(container)
 			}
 		];
 
@@ -171,20 +180,41 @@ export class SonicGraphSettingsTabs {
 	}
 
 	/**
-	 * Advanced Features Tab Content
+	 * Smart Clustering Tab Content
 	 */
-	private renderAdvancedSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Advanced Features tab');
+	private renderClusteringSettings(container: HTMLElement): void {
+		logger.debug('tabs', 'Rendering Smart Clustering tab');
 
-		// Render actual advanced settings
 		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
-		advancedSettings.render(container);
+		advancedSettings.renderClusteringSection(container);
+		advancedSettings.renderHubOrchestrationSection(container);
+	}
+
+	/**
+	 * Musical Features Tab Content
+	 */
+	private renderMusicalSettings(container: HTMLElement): void {
+		logger.debug('tabs', 'Rendering Musical Features tab');
+
+		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
+		advancedSettings.renderMusicalTheorySection(container);
+		advancedSettings.renderDynamicOrchestrationSection(container);
+	}
+
+	/**
+	 * Spatial Audio Tab Content
+	 */
+	private renderSpatialSettings(container: HTMLElement): void {
+		logger.debug('tabs', 'Rendering Spatial Audio tab');
+
+		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
+		advancedSettings.renderSpatialAudioSection(container);
 	}
 
 	/**
 	 * Public API: Switch to a specific tab programmatically
 	 */
-	public showTab(tabId: 'core' | 'advanced'): void {
+	public showTab(tabId: 'core' | 'clustering' | 'musical' | 'spatial'): void {
 		this.switchTab(tabId);
 	}
 

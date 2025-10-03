@@ -42,9 +42,9 @@ export class SonicGraphFreesoundSettings {
 	 */
 	private renderFreesoundApiSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Freesound API Integration',
+			title: 'Freesound API integration',
 			iconName: 'cloud-download',
-			subtitle: 'Phase 7.1: Access Freesound.org audio library',
+			subtitle: 'Access Freesound.org audio library',
 			elevation: 1
 		});
 
@@ -137,9 +137,9 @@ export class SonicGraphFreesoundSettings {
 	 */
 	private renderCachingSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Caching & Preloading',
+			title: 'Caching and preloading',
 			iconName: 'database',
-			subtitle: 'Phase 7.3: Optimize sample loading performance',
+			subtitle: 'Optimize sample loading performance',
 			elevation: 1
 		});
 
@@ -233,7 +233,7 @@ export class SonicGraphFreesoundSettings {
 	 */
 	private renderPresetManagementSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Preset Management',
+			title: 'Preset management',
 			iconName: 'save',
 			subtitle: 'Save and load configuration presets',
 			elevation: 1

@@ -47,9 +47,9 @@ export class SonicGraphLayersSettings {
 	 */
 	private renderEnableSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Continuous Audio Layers',
+			title: 'Continuous audio layers',
 			iconName: 'layers',
-			subtitle: 'Phase 3: Ambient background layers that evolve with your vault',
+			subtitle: 'Ambient background layers that evolve with your vault',
 			elevation: 1
 		});
 
@@ -149,7 +149,7 @@ export class SonicGraphLayersSettings {
 	 */
 	private renderGenreSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Musical Genre',
+			title: 'Musical genre',
 			iconName: 'music-2',
 			subtitle: 'Choose the ambient genre for your soundscape',
 			elevation: 1
@@ -192,7 +192,7 @@ export class SonicGraphLayersSettings {
 	 */
 	private renderIntensitySection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Layer Intensity',
+			title: 'Layer intensity',
 			iconName: 'sliders',
 			subtitle: 'Control volume and prominence',
 			elevation: 1
@@ -240,7 +240,7 @@ export class SonicGraphLayersSettings {
 	 */
 	private renderLayerTypesSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Additional Layers',
+			title: 'Additional layers',
 			iconName: 'layers-3',
 			subtitle: 'Rhythmic and harmonic layers',
 			elevation: 1
@@ -291,7 +291,7 @@ export class SonicGraphLayersSettings {
 		// Rhythmic layer detailed settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicEnabled) {
 			const rhythmicDetails = content.createDiv({ cls: 'osp-settings-subsection' });
-			rhythmicDetails.createEl('h4', { text: 'Rhythmic Layer Settings', attr: { style: 'margin-top: 1rem;' } });
+			rhythmicDetails.createEl('h4', { text: 'Rhythmic layer settings', attr: { style: 'margin-top: 1rem;' } });
 
 			new Setting(rhythmicDetails)
 				.setName('Base tempo')
@@ -384,7 +384,7 @@ export class SonicGraphLayersSettings {
 		// Harmonic layer detailed settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicEnabled) {
 			const harmonicDetails = content.createDiv({ cls: 'osp-settings-subsection' });
-			harmonicDetails.createEl('h4', { text: 'Harmonic Layer Settings', attr: { style: 'margin-top: 1rem;' } });
+			harmonicDetails.createEl('h4', { text: 'Harmonic layer settings', attr: { style: 'margin-top: 1rem;' } });
 
 			new Setting(harmonicDetails)
 				.setName('Chord complexity')
@@ -463,7 +463,7 @@ export class SonicGraphLayersSettings {
 	 */
 	private renderMusicalSettingsSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Layer Tonality',
+			title: 'Layer tonality',
 			iconName: 'music-4',
 			subtitle: 'Musical scale and key for all continuous layers',
 			elevation: 1
@@ -536,7 +536,7 @@ export class SonicGraphLayersSettings {
 	 */
 	private renderAdaptiveSection(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Adaptive Behavior',
+			title: 'Adaptive behavior',
 			iconName: 'brain-circuit',
 			subtitle: 'Context-aware layer adjustments',
 			elevation: 1
