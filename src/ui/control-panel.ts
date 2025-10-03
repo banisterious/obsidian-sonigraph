@@ -668,9 +668,9 @@ export class MaterialControlPanelModal extends Modal {
 
 	private createScaleKeyCard(): void {
 		const card = new MaterialCard({
-			title: 'Scale & key',
+			title: 'Scale & harmony',
 			iconName: 'music',
-			subtitle: 'Musical scale and key signature settings',
+			subtitle: 'Musical scale, key signature, and harmonic controls',
 			elevation: 1
 		});
 
@@ -681,21 +681,131 @@ export class MaterialControlPanelModal extends Modal {
 		const scaleGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
 		scaleGroup.createEl('label', { text: 'Musical scale', cls: 'osp-control-label' });
 		const scaleSelect = scaleGroup.createEl('select', { cls: 'osp-select' });
-		['Major', 'Minor', 'Dorian', 'Mixolydian', 'Pentatonic'].forEach(scale => {
-			const option = scaleSelect.createEl('option', { value: scale.toLowerCase(), text: scale });
-			if (scale === 'Major') option.selected = true;
+
+		const scales = [
+			{ value: 'major', label: 'Major' },
+			{ value: 'minor', label: 'Minor (Natural)' },
+			{ value: 'dorian', label: 'Dorian' },
+			{ value: 'phrygian', label: 'Phrygian' },
+			{ value: 'lydian', label: 'Lydian' },
+			{ value: 'mixolydian', label: 'Mixolydian' },
+			{ value: 'aeolian', label: 'Aeolian' },
+			{ value: 'locrian', label: 'Locrian' },
+			{ value: 'pentatonic-major', label: 'Pentatonic Major' },
+			{ value: 'pentatonic-minor', label: 'Pentatonic Minor' },
+			{ value: 'blues', label: 'Blues' },
+			{ value: 'whole-tone', label: 'Whole Tone' },
+			{ value: 'chromatic', label: 'Chromatic' }
+		];
+
+		scales.forEach(scale => {
+			const option = scaleSelect.createEl('option', { value: scale.value, text: scale.label });
+			if (this.plugin.settings.audioEnhancement?.musicalTheory?.scale === scale.value) {
+				option.selected = true;
+			}
+		});
+
+		scaleSelect.addEventListener('change', async () => {
+			if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+			this.plugin.settings.audioEnhancement.musicalTheory.scale = scaleSelect.value;
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			}
 		});
 
 		// Key selection
 		const keyGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
 		keyGroup.createEl('label', { text: 'Key signature', cls: 'osp-control-label' });
 		const keySelect = keyGroup.createEl('select', { cls: 'osp-select' });
-		['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].forEach(key => {
+
+		const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+		keys.forEach(key => {
 			const option = keySelect.createEl('option', { value: key, text: key });
-			if (key === 'C') option.selected = true;
+			if (this.plugin.settings.audioEnhancement?.musicalTheory?.rootNote === key) {
+				option.selected = true;
+			}
+		});
+
+		keySelect.addEventListener('change', async () => {
+			if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+			this.plugin.settings.audioEnhancement.musicalTheory.rootNote = keySelect.value;
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			}
 		});
 
 		content.appendChild(settingsGrid);
+
+		// Enforce harmony toggle
+		new Setting(content)
+			.setName('Enforce harmony')
+			.setDesc('Force all notes to fit within the selected scale')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.musicalTheory?.enforceHarmony || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+					this.plugin.settings.audioEnhancement.musicalTheory.enforceHarmony = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Quantization strength
+		new Setting(content)
+			.setName('Quantization strength')
+			.setDesc('How strongly to snap notes to the scale (0 = free, 1 = strict)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.05)
+				.setValue(this.plugin.settings.audioEnhancement?.musicalTheory?.quantizationStrength || 0.8)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+					this.plugin.settings.audioEnhancement.musicalTheory.quantizationStrength = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Dissonance threshold
+		new Setting(content)
+			.setName('Dissonance threshold')
+			.setDesc('Maximum allowed dissonance (0 = consonant, 1 = dissonant)')
+			.addSlider(slider => slider
+				.setLimits(0, 1, 0.05)
+				.setValue(this.plugin.settings.audioEnhancement?.musicalTheory?.dissonanceThreshold || 0.5)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+					this.plugin.settings.audioEnhancement.musicalTheory.dissonanceThreshold = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Allow chromatic passing
+		new Setting(content)
+			.setName('Chromatic passing tones')
+			.setDesc('Allow notes outside the scale as passing tones')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.musicalTheory?.allowChromaticPassing || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+					this.plugin.settings.audioEnhancement.musicalTheory.allowChromaticPassing = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
 		this.contentContainer.appendChild(card.getElement());
 	}
 
