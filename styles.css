@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-02 22:24:39 UTC
+ * - Generated: 2025-10-03 04:19:37 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6304,7 +6304,7 @@ details.osp-advanced-settings {
    COMPONENT: CONTROLCENTER.CSS
    ========================================================================== */
 
-/* Component Size: 773 lines, 18.64 KB */
+/* Component Size: 815 lines, 19.73 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROL CENTER FRAMEWORK
@@ -7077,6 +7077,48 @@ details.osp-advanced-settings {
     width: 20px;
     height: 20px;
   }
+}
+
+/* ==========================================================================
+   RHYTHMIC PERCUSSION - Accent Layer Controls
+   ========================================================================== */
+
+.osp-percussion-drums-container {
+  margin-top: var(--md-space-4);
+  padding-top: var(--md-space-3);
+  border-top: 1px solid var(--md-outline-variant);
+}
+
+.osp-section-heading {
+  font-size: var(--md-font-title-small);
+  font-weight: 600;
+  color: var(--md-on-surface);
+  margin: 0 0 var(--md-space-3) 0;
+}
+
+.osp-drums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--md-space-2);
+}
+
+.osp-drums-grid .setting-item {
+  padding: var(--md-space-2);
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-m);
+  transition: all 0.2s ease;
+}
+
+.osp-drums-grid .setting-item:hover {
+  background: var(--md-surface-container);
+  border-color: var(--md-outline);
+}
+
+.osp-drums-grid .setting-item-name {
+  font-size: var(--md-font-body-medium);
+  font-weight: 500;
+  color: var(--md-on-surface);
 }
 
 
@@ -10177,10 +10219,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-02 22:24:39 UTC
+ * Build completed: 2025-10-03 04:19:37 UTC
  * Components processed: 20
- * Total lines: 9971
- * Total size: 213.43 KB
+ * Total lines: 10013
+ * Total size: 214.52 KB
  * Build duration: 0.02 seconds
  * 
  * Component breakdown:
@@ -10198,7 +10240,7 @@ details.osp-advanced-settings {
  * - settings.css: 198 lines, 4.57 KB
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
- * - controlcenter.css: 773 lines, 18.64 KB
+ * - controlcenter.css: 815 lines, 19.73 KB
  * - sonic-graph.css: 1894 lines, 42.46 KB
  * - export.css: 614 lines, 14.8 KB
  * - animations.css: 237 lines, 4.81 KB
