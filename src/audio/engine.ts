@@ -2143,12 +2143,15 @@ export class AudioEngine {
 
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
+							logger.debug('rhythmic-percussion', 'Triggering accent', { frequency, velocity });
 							this.rhythmicPercussion.triggerAccent({
 								pitch: frequency, // Use original frequency (MIDI note number)
 								velocity: velocity,
 								duration: duration,
 								time: currentTime
 							});
+						} else {
+							logger.debug('rhythmic-percussion', 'No percussion engine available');
 						}
 
 						// Schedule cleanup for this note
@@ -2291,31 +2294,51 @@ export class AudioEngine {
 		logger.info('playback', 'Sequence stopped and Transport reset');
 	}
 
-	updateSettings(settings: SonigraphSettings): void {
+	async updateSettings(settings: SonigraphSettings): Promise<void> {
 		this.settings = settings;
-		
+
 		// Issue #006 Fix: Invalidate instruments cache when settings change
 		// This ensures that instrument enable/disable changes are reflected in playback
 		this.onInstrumentSettingsChanged();
-		
+
 		// Issue #005 Fix: Update InstrumentConfigLoader with new audio format
 		// This ensures that format changes are propagated to the sample loading system
 		// Always use ogg format since that's the only format that actually exists on nbrosowsky CDN
 		const effectiveFormat = 'ogg';
 		this.instrumentConfigLoader.updateAudioFormat(effectiveFormat as 'mp3' | 'wav' | 'ogg');
-		
+
 		// Also update PercussionEngine format if it exists
 		if (this.percussionEngine) {
 			this.percussionEngine.updateAudioFormat(effectiveFormat as 'wav' | 'ogg' | 'mp3');
 		}
-		
+
+		// Update rhythmic percussion engine based on settings
+		if (this.volume) {
+			if (settings.percussionAccents?.enabled && !this.rhythmicPercussion) {
+				// Percussion just enabled - initialize it
+				logger.info('rhythmic-percussion', 'Initializing percussion engine from settings update');
+				this.rhythmicPercussion = new RhythmicPercussionEngine(settings.percussionAccents);
+				await this.rhythmicPercussion.initialize(this.volume);
+				logger.info('rhythmic-percussion', 'Percussion engine initialized');
+			} else if (!settings.percussionAccents?.enabled && this.rhythmicPercussion) {
+				// Percussion just disabled - dispose it
+				logger.info('rhythmic-percussion', 'Disposing percussion engine from settings update');
+				this.rhythmicPercussion.dispose();
+				this.rhythmicPercussion = null;
+			} else if (settings.percussionAccents?.enabled && this.rhythmicPercussion) {
+				// Percussion still enabled - update configuration
+				logger.debug('rhythmic-percussion', 'Updating percussion config', settings.percussionAccents);
+				this.rhythmicPercussion.updateConfig(settings.percussionAccents);
+			}
+		}
+
 		this.updateVolume();
-		
+
 		// Apply effect settings if engine is initialized
 		if (this.isInitialized) {
 			this.applyEffectSettings();
 		}
-		
+
 		logger.debug('settings', 'Audio settings updated', {
 			volume: settings.volume,
 			tempo: settings.tempo,
