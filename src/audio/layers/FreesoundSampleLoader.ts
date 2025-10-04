@@ -288,9 +288,28 @@ export class FreesoundSampleLoader {
 
       logger.debug('loading', `Loading sample: ${sampleId} - ${sample.title}`);
 
+      // Fetch fresh preview URL from Freesound API if we have an API key
+      let previewUrl = sample.previewUrl;
+
+      if (this.apiKey) {
+        try {
+          const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${this.apiKey}`;
+          const soundResponse = await requestUrl({ url: soundUrl, method: 'GET' });
+          const soundData = JSON.parse(soundResponse.text);
+          const freshPreviewUrl = soundData.previews?.['preview-hq-mp3'] || soundData.previews?.['preview-lq-mp3'];
+
+          if (freshPreviewUrl) {
+            previewUrl = freshPreviewUrl;
+            logger.debug('loading', `Using fresh preview URL from API for ${sampleId}`);
+          }
+        } catch (apiError) {
+          logger.warn('loading', `Failed to fetch fresh preview URL, using stored URL for ${sampleId}`, apiError);
+        }
+      }
+
       // Download audio data using requestUrl to bypass CORS
       const response = await requestUrl({
-        url: sample.previewUrl,
+        url: previewUrl,
         method: 'GET'
       });
 
