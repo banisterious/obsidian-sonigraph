@@ -7,6 +7,10 @@
 - [3. Effects Processing](#3-effects-processing)
 - [4. Voice Management](#4-voice-management)
 - [5. Performance Optimization](#5-performance-optimization)
+- [6. Continuous Layers System](#6-continuous-layers-system)
+- [7. Freesound Integration](#7-freesound-integration)
+- [8. Musical Theory Engine](#8-musical-theory-engine)
+- [9. Hub Orchestration](#9-hub-orchestration)
 
 ---
 
@@ -23,10 +27,42 @@ The AudioEngine serves as the central orchestrator for all audio operations, man
 **File Structure:**
 ```
 src/audio/
-├── engine.ts           # Main AudioEngine class
-├── harmonic-engine.ts  # Harmonic processing
-├── percussion-engine.ts # Physics-based percussion synthesis
-└── electronic-engine.ts # Analog-style electronic synthesis
+├── engine.ts              # Main AudioEngine class
+├── harmonic-engine.ts     # Harmonic processing
+├── percussion-engine.ts   # Physics-based percussion synthesis
+├── electronic-engine.ts   # Analog-style electronic synthesis
+├── playback-events.ts     # Event scheduling and coordination
+├── layers/                # Continuous audio layers system
+│   ├── ContinuousLayerManager.ts  # Layer orchestration and management
+│   ├── MusicalGenreEngine.ts      # 13 musical genres with synthesis parameters
+│   ├── RhythmicLayerManager.ts    # Activity-based percussion patterns
+│   ├── HarmonicLayerManager.ts    # Cluster-based chord progressions
+│   ├── FreesoundSampleLoader.ts   # Freesound sample integration
+│   └── types.ts           # Layer type definitions
+├── freesound/             # Freesound API integration
+│   ├── FreesoundAPI.ts    # API client and authentication
+│   ├── FreesoundAuthManager.ts    # Token management
+│   ├── FreesoundSampleManager.ts  # Sample library management
+│   ├── SampleCache.ts     # Persistent sample caching
+│   ├── SamplePreloader.ts # Predictive preloading
+│   ├── CacheStrategy.ts   # Cache optimization strategies
+│   └── DownloadQueue.ts   # Download queue management
+├── theory/                # Musical theory engine
+│   ├── MusicalTheoryEngine.ts     # Scale and harmony system
+│   ├── ScaleDefinitions.ts        # Musical scale formulas
+│   └── HarmonicRules.ts   # Voice leading and progressions
+├── orchestration/         # Hub orchestration system
+│   ├── HubOrchestrationManager.ts # Hub detection and emphasis
+│   ├── HubCentralityAnalyzer.ts   # Centrality metrics
+│   ├── HubTransitionHandler.ts    # Smooth hub transitions
+│   └── DynamicOrchestrationManager.ts # Real-time orchestration
+├── mapping/               # Content-aware mapping
+├── effects/               # Effect processors
+├── voice-management/      # Voice pooling and allocation
+├── percussion/            # Percussion instruments
+├── spatial/               # Spatial audio
+├── configs/               # Instrument configurations
+└── clustering/            # Audio clustering algorithms
 ```
 
 ## 2. Instrument Implementation
@@ -186,9 +222,140 @@ interface PerformanceMode {
 - Real-time fallback detection and replacement within 5 seconds
 - Specialized synthesis voices for soprano, alto, tenor, bass with distinct timbres
 
+## 6. Continuous Layers System
+
+**Three Independent Audio Layers:**
+
+**Ambient Layer:**
+- Genre-based continuous background soundscapes
+- Evolves with vault state and graph complexity
+- Density and texture complexity controls
+- Freesound sample integration
+
+**Rhythmic Layer:**
+- Activity-responsive percussion patterns
+- Syncs with vault interactions and timeline animation
+- Tempo mapping based on vault activity
+- Pattern complexity: Simple, Medium, Complex
+
+**Harmonic Layer:**
+- Cluster-based harmony generation
+- Chord progressions driven by graph structure
+- Musical theory integration (scales, keys, voice leading)
+- 2-6 voice chord complexity
+
+**Musical Genre Engine (13 Genres):**
+1. Ambient Drone
+2. Cinematic Orchestral
+3. Jazz Lounge
+4. Electronic Pulse
+5. Nature Soundscape
+6. Minimal Piano
+7. Dark Atmospheric
+8. World Ethnic
+9. Retro Synth
+10. Classical Chamber
+11. Industrial Noise
+12. Meditation Zen
+13. Experimental Glitch
+
+Each genre includes:
+- Curated Freesound sample sets
+- Synthesis parameter profiles
+- Rhythmic pattern templates
+- Harmonic voicing preferences
+
+**Adaptive Behavior:**
+- Responds to vault size (more files = richer textures)
+- Evolves through timeline animation
+- Quieter during busy node playback
+- Dynamic volume and intensity adjustment
+
+## 7. Freesound Integration
+
+**Complete API Integration:**
+
+**FreesoundAPI:**
+- OAuth2 token-based authentication
+- Search with filters (license, tags, duration)
+- Sample metadata retrieval
+- Preview URL fetching
+
+**Sample Management:**
+- 114 curated samples in library
+- Tag-based organization
+- License tracking (CC0, CC-BY, CC-BY-NC)
+- Enable/disable individual samples
+
+**Caching System:**
+- Persistent sample cache in `.sonigraph-cache/`
+- Predictive preloading based on genre preferences
+- Offline mode support
+- Cache size management and cleanup
+
+**Download Queue:**
+- Prioritized sample downloads
+- Retry logic for failed downloads
+- Progress tracking
+- Bandwidth optimization
+
+## 8. Musical Theory Engine
+
+**Scale System:**
+- 8 musical scales (Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Pentatonic, Chromatic)
+- 12 key centers (C through B)
+- Independent tonality for continuous layers vs. node sonification
+
+**Harmonic Rules:**
+- Voice leading algorithms
+- Chord progression generation
+- Consonance/dissonance management
+- Common tone preservation
+
+**Scale Definitions:**
+- Interval formulas for each scale
+- Pitch mapping utilities
+- MIDI note conversion
+- Frequency calculation
+
+## 9. Hub Orchestration
+
+**Hub Detection:**
+
+**Centrality Metrics:**
+- Degree centrality (connection count)
+- Betweenness centrality (bridge nodes)
+- Closeness centrality (graph center)
+- Eigenvector centrality (influence of influencers)
+
+**Configurable Weights:**
+- Each metric has 0-100% weight
+- Total weights must equal 100%
+- Real-time recalculation
+
+**Musical Emphasis:**
+
+**Hub Treatment:**
+- Volume boost (0-200%)
+- Extended sustain (2-4s vs. 0.5-1s)
+- Richer harmony (extended chords)
+- Featured instruments (brass, vocals)
+
+**Transition Handling:**
+- Smooth crossfades between hubs
+- Voice leading preservation
+- Rhythmic synchronization
+- Morph timbre gradually
+
+**Dynamic Orchestration:**
+- Real-time hub detection during playback
+- Automatic emphasis adjustment
+- Cluster membership awareness
+- Temporal influence modeling
+
 ---
 
 *For related documentation, see:*
 - [Sonic Graph System](sonic-graph-system.md) - Graph-to-audio mapping
-- [External Integrations](external-integrations.md) - CDN sample sources
+- [External Integrations](external-integrations.md) - CDN sample sources and Freesound
 - [Performance & Monitoring](performance.md) - System optimization
