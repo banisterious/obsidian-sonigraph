@@ -234,13 +234,13 @@ var init_constants = __esm({
           eventSpreadingMode: "gentle",
           maxEventSpacing: 3,
           // Audio crackling prevention defaults
-          simultaneousEventLimit: 0,
-          // 0 = Use intelligent spacing (eventSpreadingMode) // Reduced from 8 to prevent polyphony overflow with multiple instruments
+          simultaneousEventLimit: 25,
+          // Allow 25 notes per audio-enabled frame (every 3rd frame) for richer soundscape
           eventBatchSize: 10
         },
         audio: {
-          density: 10,
-          // Reduced from 30 for better performance with large vaults
+          density: 50,
+          // Increased for fuller soundscape (original was 30)
           noteDuration: 0.3,
           enableEffects: true,
           autoDetectionOverride: "auto"
@@ -14228,10 +14228,10 @@ var init_SonicGraphCoreSettings = __esm({
             });
           }
         );
-        new import_obsidian6.Setting(content).setName("Simultaneous event limit").setDesc("Maximum concurrent notes playing at once (1-20)").addSlider(
+        new import_obsidian6.Setting(content).setName("Simultaneous event limit").setDesc("Maximum concurrent notes playing at once (1-50). Higher values create richer soundscapes.").addSlider(
           (slider) => {
             var _a;
-            return slider.setLimits(1, 20, 1).setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.simultaneousEventLimit) || 8).setDynamicTooltip().onChange(async (value) => {
+            return slider.setLimits(1, 50, 1).setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.simultaneousEventLimit) || 8).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.sonicGraphSettings)
                 return;
               this.plugin.settings.sonicGraphSettings.timeline.simultaneousEventLimit = value;
@@ -50854,7 +50854,7 @@ var init_TemporalGraphAnimator = __esm({
         // 33ms for 30fps
         // Audio throttling: Skip frames to prevent polyphony overflow
         this.audioFrameCounter = 0;
-        this.AUDIO_FRAMES_TO_SKIP = 5;
+        this.AUDIO_FRAMES_TO_SKIP = 3;
         this.wasPlayingBeforeHidden = false;
         this.nodes = nodes;
         this.links = links;
@@ -91165,7 +91165,7 @@ var AudioEngine = class {
   }
   async updateSettings(settings) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-    const oldSettings = this.settings;
+    const oldSettings = this.settings ? JSON.parse(JSON.stringify(this.settings)) : null;
     this.settings = settings;
     this.onInstrumentSettingsChanged();
     if (this.isInitialized && oldSettings) {

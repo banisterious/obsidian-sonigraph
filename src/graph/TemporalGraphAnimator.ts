@@ -73,7 +73,7 @@ export class TemporalGraphAnimator {
 
   // Audio throttling: Skip frames to prevent polyphony overflow
   private audioFrameCounter: number = 0;
-  private readonly AUDIO_FRAMES_TO_SKIP = 5; // Only trigger audio every 5th frame (~167ms spacing at 30fps)
+  private readonly AUDIO_FRAMES_TO_SKIP = 3; // Only trigger audio every 3rd frame (~100ms spacing at 30fps)
 
   // Callbacks
   private onVisibilityChange?: (visibleNodeIds: Set<string>) => void;

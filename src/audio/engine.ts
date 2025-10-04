@@ -2401,7 +2401,9 @@ export class AudioEngine {
 	}
 
 	async updateSettings(settings: SonigraphSettings): Promise<void> {
-		const oldSettings = this.settings;
+		// Deep copy oldSettings to preserve original state for hot-swap comparison
+		// Without this, oldSettings and settings point to the same object, preventing change detection
+		const oldSettings = this.settings ? JSON.parse(JSON.stringify(this.settings)) : null;
 		this.settings = settings;
 
 		// Issue #006 Fix: Invalidate instruments cache when settings change
