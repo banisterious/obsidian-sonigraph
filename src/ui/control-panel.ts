@@ -690,7 +690,7 @@ export class MaterialControlPanelModal extends Modal {
 		const card = new MaterialCard({
 			title: 'Sample browser',
 			iconName: 'library',
-			subtitle: 'Browse and preview Freesound samples for the current genre',
+			subtitle: 'Browse, preview, and manage your Freesound sample library',
 			elevation: 1
 		});
 
