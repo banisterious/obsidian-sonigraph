@@ -99,7 +99,7 @@ export class ContinuousLayerManager {
     
     // Initialize engines
     this.genreEngine = new MusicalGenreEngine(this.config.genre);
-    this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey);
+    this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey, settings);
     this.rhythmicLayer = new RhythmicLayerManager(settings);
     this.harmonicLayer = new HarmonicLayerManager(settings);
 

@@ -18669,7 +18669,7 @@ var init_FreesoundSampleLoader = __esm({
     init_logging();
     logger21 = getLogger("FreesoundSampleLoader");
     FreesoundSampleLoader = class {
-      constructor(apiKey) {
+      constructor(apiKey, settings) {
         this.sampleCache = /* @__PURE__ */ new Map();
         this.loadingOperations = /* @__PURE__ */ new Map();
         this.isInitialized = false;
@@ -18690,9 +18690,11 @@ var init_FreesoundSampleLoader = __esm({
         // Genre-specific sample library
         this.sampleLibrary = /* @__PURE__ */ new Map();
         this.apiKey = apiKey || "";
+        this.settings = settings;
         this.initializeSampleLibrary();
         logger21.debug("initialization", "FreesoundSampleLoader created", {
           hasApiKey: !!this.apiKey,
+          hasSettings: !!this.settings,
           librarySize: Array.from(this.sampleLibrary.values()).reduce((sum, samples) => sum + samples.length, 0)
         });
       }
@@ -18980,21 +18982,49 @@ var init_FreesoundSampleLoader = __esm({
         }
       }
       initializeSampleLibrary() {
+        var _a;
+        if ((_a = this.settings) == null ? void 0 : _a.freesoundSamples) {
+          const enabledSamples = this.settings.freesoundSamples.filter((s) => s.enabled !== false);
+          logger21.info("initialization", `Loading ${enabledSamples.length} enabled samples from settings`);
+          const genreMap = /* @__PURE__ */ new Map();
+          enabledSamples.forEach((sample) => {
+            const tags = sample.tags || [];
+            const genres = this.mapTagsToGenres(tags);
+            genres.forEach((genre) => {
+              if (!genreMap.has(genre)) {
+                genreMap.set(genre, []);
+              }
+              genreMap.get(genre).push({
+                ...sample,
+                genre
+              });
+            });
+          });
+          this.sampleLibrary = genreMap;
+          logger21.info("initialization", `Organized samples into ${genreMap.size} genres`, {
+            genres: Array.from(genreMap.entries()).map(([genre, samples]) => ({
+              genre,
+              count: samples.length
+            }))
+          });
+          return;
+        }
+        logger21.warn("initialization", "No settings provided, using placeholder sample library");
         this.sampleLibrary.set("ambient", [
           {
             id: 17854,
-            title: "Atmosphere 1",
+            title: "Atmosphere 1 (Placeholder)",
             previewUrl: "https://freesound.org/data/previews/17/17854_-preview.mp3",
             duration: 60,
             license: "CC0",
-            attribution: "ERH",
+            attribution: "Placeholder",
             genre: "ambient",
             fadeIn: 2,
             fadeOut: 3
           },
           {
             id: 18765,
-            title: "Deep Pad",
+            title: "Deep Pad (Placeholder)",
             previewUrl: "https://freesound.org/data/previews/18/18765_-preview.mp3",
             duration: 45,
             license: "CC BY 3.0",
@@ -19439,6 +19469,37 @@ var init_FreesoundSampleLoader = __esm({
           totalGenres: this.sampleLibrary.size,
           totalSamples: Array.from(this.sampleLibrary.values()).reduce((sum, samples) => sum + samples.length, 0)
         });
+      }
+      /**
+       * Map sample tags to musical genres
+       */
+      mapTagsToGenres(tags) {
+        const genres = /* @__PURE__ */ new Set();
+        const lowerTags = tags.map((t) => t.toLowerCase());
+        const genreTagMap = {
+          "ambient": ["ambient", "atmospheric", "ethereal", "pad", "soundscape"],
+          "drone": ["drone", "sustained", "continuous", "tonal"],
+          "glitch": ["glitch", "digital", "glitchy", "processed", "granular"],
+          "idm": ["idm", "intelligent", "experimental", "abstract"],
+          "minimalist": ["minimal", "minimalist", "simple", "sparse"],
+          "downtempo": ["downtempo", "chill", "slow", "relaxed"],
+          "oceanic": ["ocean", "water", "wave", "sea", "aquatic"],
+          "industrial": ["industrial", "mechanical", "metallic", "harsh"],
+          "organic": ["organic", "natural", "acoustic", "field-recording"],
+          "electronic": ["electronic", "synth", "synthesizer", "electro"],
+          "techno": ["techno", "tech", "driving", "rhythmic"],
+          "house": ["house", "deep", "groove"],
+          "trance": ["trance", "uplifting", "melodic"]
+        };
+        for (const [genre, keywords] of Object.entries(genreTagMap)) {
+          if (keywords.some((keyword) => lowerTags.some((tag) => tag.includes(keyword)))) {
+            genres.add(genre);
+          }
+        }
+        if (genres.size === 0) {
+          genres.add("ambient");
+        }
+        return Array.from(genres);
       }
     };
   }
@@ -64760,7 +64821,7 @@ var init_ContinuousLayerManager = __esm({
         this.delayBus = new Delay("8n", 0.3);
         this.modLFO = new LFO(0.5, 0, 1);
         this.genreEngine = new MusicalGenreEngine(this.config.genre);
-        this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey);
+        this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey, settings);
         this.rhythmicLayer = new RhythmicLayerManager(settings);
         this.harmonicLayer = new HarmonicLayerManager(settings);
         if (settings.freesoundSamples) {
