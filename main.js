@@ -67596,11 +67596,19 @@ var init_SonicGraphModal = __esm({
        * Initialize continuous layers for Phase 3
        */
       async initializeContinuousLayers() {
+        var _a;
         try {
           logger72.info("continuous-layers", "Initializing continuous layers");
           if (!this.continuousLayerManager) {
+            const layerConfig = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers;
+            logger72.info("continuous-layers", "Layer config", {
+              enabled: layerConfig == null ? void 0 : layerConfig.enabled,
+              genre: layerConfig == null ? void 0 : layerConfig.genre,
+              hasConfig: !!layerConfig
+            });
             this.continuousLayerManager = new ContinuousLayerManager(
-              this.plugin.settings
+              this.plugin.settings,
+              layerConfig
             );
           }
           await this.continuousLayerManager.initialize();

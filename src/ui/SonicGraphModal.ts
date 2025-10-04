@@ -149,10 +149,19 @@ export class SonicGraphModal extends Modal {
     private async initializeContinuousLayers(): Promise<void> {
         try {
             logger.info('continuous-layers', 'Initializing continuous layers');
-            
+
             if (!this.continuousLayerManager) {
+                // Pass continuous layer configuration to the manager
+                const layerConfig = this.plugin.settings.audioEnhancement?.continuousLayers;
+                logger.info('continuous-layers', 'Layer config', {
+                    enabled: layerConfig?.enabled,
+                    genre: layerConfig?.genre,
+                    hasConfig: !!layerConfig
+                });
+
                 this.continuousLayerManager = new ContinuousLayerManager(
-                    this.plugin.settings
+                    this.plugin.settings,
+                    layerConfig
                 );
             }
             
