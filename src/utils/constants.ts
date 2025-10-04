@@ -846,11 +846,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			eventSpreadingMode: 'gentle',
 			maxEventSpacing: 3.0,
 			// Audio crackling prevention defaults
-			simultaneousEventLimit: 0, // 0 = Use intelligent spacing (eventSpreadingMode) // Reduced from 8 to prevent polyphony overflow with multiple instruments
+			simultaneousEventLimit: 25, // Allow 25 notes per audio-enabled frame (every 3rd frame) for richer soundscape
 			eventBatchSize: 10
 		},
 		audio: {
-			density: 10,  // Reduced from 30 for better performance with large vaults
+			density: 50,  // Increased for fuller soundscape (original was 30)
 			noteDuration: 0.3,
 			enableEffects: true,
 			autoDetectionOverride: 'auto'
