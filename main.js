@@ -20057,7 +20057,7 @@ var init_control_panel = __esm({
         const card = new MaterialCard({
           title: "Sample browser",
           iconName: "library",
-          subtitle: "Browse and preview Freesound samples for the current genre",
+          subtitle: "Browse, preview, and manage your Freesound sample library",
           elevation: 1
         });
         this.sampleBrowserCard = card;
