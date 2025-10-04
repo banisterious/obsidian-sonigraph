@@ -104,6 +104,7 @@ export class HarmonicLayerManager {
     
     // Create synthesis components
     this.chordSynth = new PolySynth(FMSynth, {
+      maxPolyphony: 8, // Limit polyphony to prevent voice overflow
       envelope: {
         attack: 2,
         decay: 1,
@@ -116,6 +117,7 @@ export class HarmonicLayerManager {
     });
     
     this.padSynth = new PolySynth(AMSynth, {
+      maxPolyphony: 8, // Limit polyphony to prevent voice overflow
       envelope: {
         attack: 3,
         decay: 2,

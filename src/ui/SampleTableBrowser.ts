@@ -496,7 +496,15 @@ export class SampleTableBrowser {
 		const sample = samples.find(s => s.id === sampleId);
 		if (!sample) return;
 
-		sample.enabled = sample.enabled === false ? true : false;
+		// Toggle logic:
+		// - undefined (default) → true (enable on first click)
+		// - true → false (disable)
+		// - false → true (re-enable)
+		if (sample.enabled === undefined) {
+			sample.enabled = true;
+		} else {
+			sample.enabled = !sample.enabled;
+		}
 		await this.plugin.saveSettings();
 		this.renderTable();
 

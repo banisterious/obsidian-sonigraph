@@ -846,11 +846,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			eventSpreadingMode: 'gentle',
 			maxEventSpacing: 3.0,
 			// Audio crackling prevention defaults
-			simultaneousEventLimit: 8,
+			simultaneousEventLimit: 25, // Allow 25 notes per audio-enabled frame (every 3rd frame) for richer soundscape
 			eventBatchSize: 10
 		},
 		audio: {
-			density: 30,
+			density: 50,  // Increased for fuller soundscape (original was 30)
 			noteDuration: 0.3,
 			enableEffects: true,
 			autoDetectionOverride: 'auto'
@@ -1147,7 +1147,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		piano: { 
 			enabled: true, 
 			volume: 0.8, 
-			maxVoices: 8,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1180,7 +1180,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		organ: { 
 			enabled: true, 
 			volume: 0.7, 
-			maxVoices: 8,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1213,7 +1213,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		strings: { 
 			enabled: true, 
 			volume: 0.6, 
-			maxVoices: 8,
+			maxVoices: 4,
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1245,7 +1245,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		flute: { 
 			enabled: true, 
 			volume: 0.6, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1278,7 +1278,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		clarinet: { 
 			enabled: true, 
 			volume: 0.5, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1311,7 +1311,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		saxophone: { 
 			enabled: false, 
 			volume: 0.7, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1345,7 +1345,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		electricPiano: { 
 			enabled: false,
 			volume: 0.7, 
-			maxVoices: 8,
+			maxVoices: 4,
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1377,7 +1377,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		harpsichord: { 
 			enabled: false,
 			volume: 0.6, 
-			maxVoices: 8,
+			maxVoices: 4,
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1409,7 +1409,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		accordion: { 
 			enabled: false,
 			volume: 0.6, 
-			maxVoices: 8,
+			maxVoices: 4,
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1441,7 +1441,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		celesta: { 
 			enabled: false,
 			volume: 0.5, 
-			maxVoices: 6,
+			maxVoices: 4,
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1474,7 +1474,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		violin: { 
 			enabled: false,
 			volume: 0.7, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1507,7 +1507,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		cello: { 
 			enabled: false,
 			volume: 0.8, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1540,7 +1540,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		contrabass: { 
 			enabled: false,
 			volume: 0.7, 
-			maxVoices: 3,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1573,7 +1573,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		guitar: { 
 			enabled: false,
 			volume: 0.6, 
-			maxVoices: 8,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1606,7 +1606,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		guitarElectric: { 
 			enabled: false,
 			volume: 0.7, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1639,7 +1639,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		guitarNylon: { 
 			enabled: false,
 			volume: 0.6, 
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
@@ -1837,7 +1837,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		tuba: { 
 			enabled: false,
 			volume: 0.8, 
-			maxVoices: 3,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can opt-in to samples)
 			effects: {
 				reverb: { 
@@ -1969,7 +1969,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		xylophone: {
 			enabled: true,
 			volume: 0.8,
-			maxVoices: 6,
+			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
@@ -2132,7 +2132,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		arpSynth: {
 			enabled: false,
 			volume: 0.6,
-			maxVoices: 8,
+			maxVoices: 4,
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2630,17 +2630,33 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
 	},
 
-	// Phase 6.1: Default musical theory settings (disabled by default)
+	// Phase 6: Audio Enhancement settings wrapper
+	audioEnhancement: {
+		// Phase 6.1: Musical theory settings
+		musicalTheory: {
+			enabled: false,
+			scale: 'major', // Start with C major
+			rootNote: 'C',
+			enforceHarmony: true, // Constrain notes to scale when enabled
+			allowChromaticPassing: false, // No chromatic notes by default
+			dissonanceThreshold: 0.3, // Low dissonance tolerance
+			quantizationStrength: 0.8, // Strong quantization to scale
+			preferredChordProgression: 'I-IV-V-I', // Classic progression
+			dynamicScaleModulation: false // Static scale by default
+		}
+	},
+
+	// Kept for backward compatibility - use audioEnhancement.musicalTheory instead
 	musicalTheory: {
 		enabled: false,
-		scale: 'major', // Start with C major
+		scale: 'major',
 		rootNote: 'C',
-		enforceHarmony: true, // Constrain notes to scale
-		allowChromaticPassing: false, // No chromatic notes by default
-		dissonanceThreshold: 0.3, // Low dissonance tolerance
-		quantizationStrength: 0.8, // Strong quantization to scale
-		preferredChordProgression: 'I-IV-V-I', // Classic progression
-		dynamicScaleModulation: false // Static scale by default
+		enforceHarmony: true,
+		allowChromaticPassing: false,
+		dissonanceThreshold: 0.3,
+		quantizationStrength: 0.8,
+		preferredChordProgression: 'I-IV-V-I',
+		dynamicScaleModulation: false
 	},
 
 	// Phase 6.2: Default dynamic orchestration settings (disabled by default)

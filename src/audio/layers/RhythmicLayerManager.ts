@@ -110,6 +110,7 @@ export class RhythmicLayerManager {
     });
     
     this.arpSynth = new PolySynth(FMSynth, {
+      maxPolyphony: 8, // Limit polyphony to prevent voice overflow
       envelope: {
         attack: 0.01,
         decay: 0.1,
