@@ -72,6 +72,10 @@ export class AudioEngine {
 
 	// Phase 3: Frequency detuning for phase conflict resolution
 	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
+
+	// Active note tracking for polyphony management
+	private activeNoteCount: number = 0;
+	private readonly MAX_ACTIVE_NOTES = 20;
 	private electronicEngine: ElectronicEngine | null = null;
 
 	// Enhanced Play Button: Playback event system
@@ -3189,20 +3193,11 @@ export class AudioEngine {
 			const { pitch, duration, velocity, instrument } = mapping;
 
 			// CRITICAL: Polyphony limiting to prevent audio stuttering
-			// Count currently playing notes across all instruments
-			const currentNoteCount = Array.from(this.instruments.values()).reduce((count, synth) => {
-				// PolySynth has activeVoices, Sampler tracks internally
-				if ('activeVoices' in synth) {
-					return count + (synth as any).activeVoices;
-				}
-				return count;
-			}, 0);
-
-			// Skip note if we're at capacity (max 20 simultaneous notes for safety)
-			if (currentNoteCount >= 20) {
+			// Check active note count before triggering
+			if (this.activeNoteCount >= this.MAX_ACTIVE_NOTES) {
 				logger.debug('polyphony-limit', 'Skipping note - polyphony limit reached', {
-					currentNotes: currentNoteCount,
-					limit: 20,
+					currentNotes: this.activeNoteCount,
+					limit: this.MAX_ACTIVE_NOTES,
 					instrument,
 					pitch: pitch.toFixed(2)
 				});
@@ -3214,7 +3209,7 @@ export class AudioEngine {
 				pitch: pitch.toFixed(2),
 				duration: duration,
 				velocity: velocity,
-				currentNotes: currentNoteCount
+				currentNotes: this.activeNoteCount
 			});
 
 			// Get the synthesizer for the specified instrument
@@ -3238,8 +3233,18 @@ export class AudioEngine {
 			// Apply frequency detuning for phase conflict resolution (from existing logic)
 			const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
 
+			// Increment active note counter
+			this.activeNoteCount++;
+
 			// Trigger the note immediately (no timing delay)
 			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
+
+			// Schedule counter decrement when note ends
+			// Convert duration to milliseconds (Tone.js uses seconds)
+			const durationMs = typeof duration === 'number' ? duration * 1000 : parseFloat(duration) * 1000;
+			setTimeout(() => {
+				this.activeNoteCount = Math.max(0, this.activeNoteCount - 1);
+			}, durationMs);
 
 			// Trigger rhythmic percussion accent if enabled
 			if (this.rhythmicPercussion) {

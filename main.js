@@ -89287,6 +89287,9 @@ var AudioEngine = class {
     // Phase 3: Frequency detuning for phase conflict resolution
     this.frequencyHistory = /* @__PURE__ */ new Map();
     // frequency -> last used time
+    // Active note tracking for polyphony management
+    this.activeNoteCount = 0;
+    this.MAX_ACTIVE_NOTES = 20;
     this.electronicEngine = null;
     // Enhanced Play Button: Playback event system
     this.eventEmitter = new PlaybackEventEmitter();
@@ -91825,16 +91828,10 @@ var AudioEngine = class {
     }
     try {
       const { pitch, duration, velocity, instrument } = mapping;
-      const currentNoteCount = Array.from(this.instruments.values()).reduce((count, synth2) => {
-        if ("activeVoices" in synth2) {
-          return count + synth2.activeVoices;
-        }
-        return count;
-      }, 0);
-      if (currentNoteCount >= 20) {
+      if (this.activeNoteCount >= this.MAX_ACTIVE_NOTES) {
         logger70.debug("polyphony-limit", "Skipping note - polyphony limit reached", {
-          currentNotes: currentNoteCount,
-          limit: 20,
+          currentNotes: this.activeNoteCount,
+          limit: this.MAX_ACTIVE_NOTES,
           instrument,
           pitch: pitch.toFixed(2)
         });
@@ -91845,7 +91842,7 @@ var AudioEngine = class {
         pitch: pitch.toFixed(2),
         duration,
         velocity,
-        currentNotes: currentNoteCount
+        currentNotes: this.activeNoteCount
       });
       const synth = this.instruments.get(instrument);
       if (!synth) {
@@ -91861,7 +91858,12 @@ var AudioEngine = class {
       }
       const quantizedFrequency = this.quantizeFrequency(pitch);
       const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
+      this.activeNoteCount++;
       synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
+      const durationMs = typeof duration === "number" ? duration * 1e3 : parseFloat(duration) * 1e3;
+      setTimeout(() => {
+        this.activeNoteCount = Math.max(0, this.activeNoteCount - 1);
+      }, durationMs);
       if (this.rhythmicPercussion) {
         const midiNote = new Frequency(pitch, "hz").toMidi();
         logger70.debug("rhythmic-percussion", "Triggering accent (immediate playback)", { pitch, midiNote, velocity });
