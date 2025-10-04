@@ -51480,10 +51480,15 @@ var init_TemporalGraphAnimator = __esm({
             hasCallback: !!this.onNodeAppear,
             callbackFunction: this.onNodeAppear ? "registered" : "missing"
           });
-          newlyAppearedNodes.forEach((node) => {
+          const limit = this.config.simultaneousEventLimit || 1;
+          const nodesToTrigger = newlyAppearedNodes.slice(0, limit);
+          nodesToTrigger.forEach((node) => {
             var _a2;
             (_a2 = this.onNodeAppear) == null ? void 0 : _a2.call(this, node);
           });
+          if (newlyAppearedNodes.length > limit) {
+            logger25.debug("throttling", `Throttled ${newlyAppearedNodes.length - limit} nodes this frame to prevent polyphony overflow`);
+          }
         }
         const progress = this.config.duration > 0 ? this.currentTime / this.config.duration : 0;
         (_b = this.onTimeUpdate) == null ? void 0 : _b.call(this, this.currentTime, progress);

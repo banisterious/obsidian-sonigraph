@@ -893,10 +893,19 @@ export class TemporalGraphAnimator {
         hasCallback: !!this.onNodeAppear,
         callbackFunction: this.onNodeAppear ? 'registered' : 'missing'
       });
-      
-      newlyAppearedNodes.forEach(node => {
+
+      // CRITICAL: Limit nodes per frame to prevent audio overload
+      // Only trigger up to simultaneousEventLimit nodes per frame
+      const limit = this.config.simultaneousEventLimit || 1;
+      const nodesToTrigger = newlyAppearedNodes.slice(0, limit);
+
+      nodesToTrigger.forEach(node => {
         this.onNodeAppear?.(node);
       });
+
+      if (newlyAppearedNodes.length > limit) {
+        logger.debug('throttling', `Throttled ${newlyAppearedNodes.length - limit} nodes this frame to prevent polyphony overflow`);
+      }
     }
     
     // Update time progress
