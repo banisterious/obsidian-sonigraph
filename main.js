@@ -234,8 +234,8 @@ var init_constants = __esm({
           eventSpreadingMode: "gentle",
           maxEventSpacing: 3,
           // Audio crackling prevention defaults
-          simultaneousEventLimit: 1,
-          // Reduced from 8 to prevent polyphony overflow with multiple instruments
+          simultaneousEventLimit: 0,
+          // 0 = Use intelligent spacing (eventSpreadingMode) // Reduced from 8 to prevent polyphony overflow with multiple instruments
           eventBatchSize: 10
         },
         audio: {
@@ -50851,6 +50851,10 @@ var init_TemporalGraphAnimator = __esm({
         this.animationFrameRate = 30;
         // Target FPS for animation
         this.frameInterval = 1e3 / 30;
+        // 33ms for 30fps
+        // Audio throttling: Skip frames to prevent polyphony overflow
+        this.audioFrameCounter = 0;
+        this.AUDIO_FRAMES_TO_SKIP = 5;
         this.wasPlayingBeforeHidden = false;
         this.nodes = nodes;
         this.links = links;
@@ -51480,14 +51484,20 @@ var init_TemporalGraphAnimator = __esm({
             hasCallback: !!this.onNodeAppear,
             callbackFunction: this.onNodeAppear ? "registered" : "missing"
           });
-          const limit = this.config.simultaneousEventLimit || 1;
-          const nodesToTrigger = newlyAppearedNodes.slice(0, limit);
-          nodesToTrigger.forEach((node) => {
-            var _a2;
-            (_a2 = this.onNodeAppear) == null ? void 0 : _a2.call(this, node);
-          });
-          if (newlyAppearedNodes.length > limit) {
-            logger25.debug("throttling", `Throttled ${newlyAppearedNodes.length - limit} nodes this frame to prevent polyphony overflow`);
+          this.audioFrameCounter++;
+          if (this.audioFrameCounter >= this.AUDIO_FRAMES_TO_SKIP) {
+            this.audioFrameCounter = 0;
+            const limit = this.config.simultaneousEventLimit || 1;
+            const nodesToTrigger = newlyAppearedNodes.slice(0, limit);
+            nodesToTrigger.forEach((node) => {
+              var _a2;
+              (_a2 = this.onNodeAppear) == null ? void 0 : _a2.call(this, node);
+            });
+            if (newlyAppearedNodes.length > limit) {
+              logger25.debug("throttling", `Throttled ${newlyAppearedNodes.length - limit} nodes this frame`);
+            }
+          } else {
+            logger25.debug("frame-skip", `Skipped audio for ${newlyAppearedNodes.length} nodes (frame ${this.audioFrameCounter}/${this.AUDIO_FRAMES_TO_SKIP})`);
           }
         }
         const progress = this.config.duration > 0 ? this.currentTime / this.config.duration : 0;
