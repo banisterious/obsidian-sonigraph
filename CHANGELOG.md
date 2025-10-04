@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Freesound Sample Browser 🎵
+
+**Professional Sample Library Management**
+- Complete table-based sample browser UI with search, filter, and sort capabilities
+- 114 professionally curated Freesound samples automatically imported (disabled by default)
+- Tag-based organization: atmospheric (56), ambient (41), drone (33), electronic (29), and more
+- License distribution: 57 CC0, 29 CC BY 4.0, 18 CC BY-NC, 10 CC BY 3.0
+
+**Sample Browser Features**
+- Compact table layout with sortable columns: Sample, Author/License, Tags, Actions
+- Real-time preview with working audio playback
+- Tag editor modal for organizing samples with autocomplete suggestions
+- Enable/disable toggle for selective sample activation
+- Search across sample names, authors, and descriptions
+- Filter by tags and license type
+- Show/hide disabled samples toggle
+
+**User Experience**
+- Curated samples start disabled - users opt-in to samples they want
+- License names displayed in friendly format (CC-BY-NC instead of URLs)
+- Combined Author/License column for space efficiency
+- Icon-based action buttons: Preview (▶), Info (ℹ), Edit Tags (🏷), On/Off, Remove (🗑)
+
 ### Changed - UI Consistency & Organization
 
 **Control Center Improvements**
@@ -14,11 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split Advanced Features tab into 3 focused tabs: Smart Clustering, Musical Features, and Spatial Audio
 - Reorganized spatial audio settings into 5 separate cards for better clarity
 - Removed all phase references from UI text and comments
+- Updated sample browser subtitle to reflect library management capabilities
 
 **Code Quality**
 - Moved inline styles to CSS classes for collapsible sections, group visualizations, and control center button
 - Replaced console.warn with structured logger.warn calls in audio engine
 - Improved code organization and maintainability
+- Removed genre-based sample organization in favor of flat tag-based system
 
 ## [0.13.0] - 2025-10-03
 
