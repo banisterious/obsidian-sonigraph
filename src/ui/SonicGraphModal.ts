@@ -164,6 +164,13 @@ export class SonicGraphModal extends Modal {
                     hasConfig: !!layerConfig
                 });
 
+                console.log('[SONIGRAPH-DEBUG] Creating ContinuousLayerManager with settings:', {
+                    hasSettings: !!this.plugin.settings,
+                    hasFreesoundSamples: !!this.plugin.settings?.freesoundSamples,
+                    samplesCount: this.plugin.settings?.freesoundSamples?.length || 0,
+                    samples: this.plugin.settings?.freesoundSamples
+                });
+
                 this.continuousLayerManager = new ContinuousLayerManager(
                     this.plugin.settings,
                     layerConfig
