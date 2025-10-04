@@ -89287,9 +89287,10 @@ var AudioEngine = class {
     // Phase 3: Frequency detuning for phase conflict resolution
     this.frequencyHistory = /* @__PURE__ */ new Map();
     // frequency -> last used time
-    // Active note tracking for polyphony management
-    this.activeNoteCount = 0;
-    this.MAX_ACTIVE_NOTES = 20;
+    // Active note tracking for polyphony management (per-instrument)
+    this.activeNotesPerInstrument = /* @__PURE__ */ new Map();
+    this.MAX_NOTES_PER_INSTRUMENT = 4;
+    // Conservative limit per instrument
     this.electronicEngine = null;
     // Enhanced Play Button: Playback event system
     this.eventEmitter = new PlaybackEventEmitter();
@@ -91828,11 +91829,15 @@ var AudioEngine = class {
     }
     try {
       const { pitch, duration, velocity, instrument } = mapping;
-      if (this.activeNoteCount >= this.MAX_ACTIVE_NOTES) {
-        logger70.debug("polyphony-limit", "Skipping note - polyphony limit reached", {
-          currentNotes: this.activeNoteCount,
-          limit: this.MAX_ACTIVE_NOTES,
+      if (!this.activeNotesPerInstrument.has(instrument)) {
+        this.activeNotesPerInstrument.set(instrument, 0);
+      }
+      const currentNotes = this.activeNotesPerInstrument.get(instrument) || 0;
+      if (currentNotes >= this.MAX_NOTES_PER_INSTRUMENT) {
+        logger70.debug("polyphony-limit", "Skipping note - instrument polyphony limit reached", {
           instrument,
+          currentNotes,
+          limit: this.MAX_NOTES_PER_INSTRUMENT,
           pitch: pitch.toFixed(2)
         });
         return;
@@ -91842,7 +91847,7 @@ var AudioEngine = class {
         pitch: pitch.toFixed(2),
         duration,
         velocity,
-        currentNotes: this.activeNoteCount
+        currentInstrumentNotes: currentNotes
       });
       const synth = this.instruments.get(instrument);
       if (!synth) {
@@ -91858,11 +91863,12 @@ var AudioEngine = class {
       }
       const quantizedFrequency = this.quantizeFrequency(pitch);
       const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
-      this.activeNoteCount++;
+      this.activeNotesPerInstrument.set(instrument, currentNotes + 1);
       synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
       const durationMs = typeof duration === "number" ? duration * 1e3 : parseFloat(duration) * 1e3;
       setTimeout(() => {
-        this.activeNoteCount = Math.max(0, this.activeNoteCount - 1);
+        const current = this.activeNotesPerInstrument.get(instrument) || 0;
+        this.activeNotesPerInstrument.set(instrument, Math.max(0, current - 1));
       }, durationMs);
       if (this.rhythmicPercussion) {
         const midiNote = new Frequency(pitch, "hz").toMidi();
