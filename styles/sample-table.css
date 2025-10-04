@@ -152,16 +152,21 @@
 	margin-top: 0.1rem;
 }
 
-.sonigraph-sample-table td.sonigraph-sample-author {
-	max-width: 120px;
+.sonigraph-sample-table td.sonigraph-sample-author-license {
+	max-width: 140px;
+	min-width: 110px;
+}
+
+.sonigraph-author-text {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.sonigraph-sample-table td.sonigraph-sample-license {
-	max-width: 100px;
-	white-space: nowrap;
+.sonigraph-license-text {
+	font-size: 0.75em;
+	color: var(--text-muted);
+	margin-top: 0.1rem;
 }
 
 .sonigraph-sample-table td.sonigraph-sample-tags {

@@ -184,8 +184,7 @@ export class SampleTableBrowser {
 		const headerRow = thead.createEl('tr');
 
 		this.renderColumnHeader(headerRow, 'name', 'Sample');
-		this.renderColumnHeader(headerRow, 'author', 'Author');
-		this.renderColumnHeader(headerRow, 'license', 'License');
+		this.renderColumnHeader(headerRow, 'author', 'Author / License');
 		this.renderColumnHeader(headerRow, 'tags', 'Tags');
 		headerRow.createEl('th', { text: 'Actions' });
 
@@ -235,11 +234,12 @@ export class SampleTableBrowser {
 		const duration = Math.round(sample.duration || 0);
 		durationDiv.setText(`${duration}s`);
 
-		// Author
-		row.createEl('td', { text: sample.attribution || 'Unknown', cls: 'sonigraph-sample-author' });
-
-		// License
-		row.createEl('td', { text: this.formatLicense(sample.license), cls: 'sonigraph-sample-license' });
+		// Author / License combined
+		const authorCell = row.createEl('td', { cls: 'sonigraph-sample-author-license' });
+		const authorDiv = authorCell.createDiv({ cls: 'sonigraph-author-text' });
+		authorDiv.setText(sample.attribution || 'Unknown');
+		const licenseDiv = authorCell.createDiv({ cls: 'sonigraph-license-text' });
+		licenseDiv.setText(this.formatLicense(sample.license));
 
 		// Tags
 		const tagsCell = row.createEl('td', { cls: 'sonigraph-sample-tags' });
@@ -273,7 +273,7 @@ export class SampleTableBrowser {
 
 		// Enable/Disable toggle
 		const toggleBtn = actionsCell.createEl('button', {
-			text: sample.enabled === false ? '✓' : '✕',
+			text: sample.enabled === false ? 'On' : 'Off',
 			cls: sample.enabled === false ? 'sonigraph-enable-btn' : 'sonigraph-disable-btn',
 			attr: { 'aria-label': sample.enabled === false ? 'Enable' : 'Disable' }
 		});
@@ -412,10 +412,11 @@ export class SampleTableBrowser {
 				throw new Error('Freesound API key not configured');
 			}
 
-			const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}&fields=previews`;
+			// Note: Removed &fields=previews as it might be causing 404
+			const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}`;
 			const soundResponse = await requestUrl({ url: soundUrl, method: 'GET' });
 			const soundData = JSON.parse(soundResponse.text);
-			const previewUrl = soundData.previews['preview-hq-mp3'] || soundData.previews['preview-lq-mp3'];
+			const previewUrl = soundData.previews?.['preview-hq-mp3'] || soundData.previews?.['preview-lq-mp3'];
 
 			if (!previewUrl) {
 				throw new Error('No preview URL available');
