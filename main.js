@@ -18866,6 +18866,7 @@ var init_FreesoundSampleLoader = __esm({
       }
       // === PRIVATE METHODS ===
       async performLoad(sampleId) {
+        var _a, _b;
         const startTime = Date.now();
         try {
           const sample = this.findSampleById(sampleId);
@@ -18874,8 +18875,23 @@ var init_FreesoundSampleLoader = __esm({
             return null;
           }
           logger21.debug("loading", `Loading sample: ${sampleId} - ${sample.title}`);
+          let previewUrl = sample.previewUrl;
+          if (this.apiKey) {
+            try {
+              const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${this.apiKey}`;
+              const soundResponse = await (0, import_obsidian11.requestUrl)({ url: soundUrl, method: "GET" });
+              const soundData = JSON.parse(soundResponse.text);
+              const freshPreviewUrl = ((_a = soundData.previews) == null ? void 0 : _a["preview-hq-mp3"]) || ((_b = soundData.previews) == null ? void 0 : _b["preview-lq-mp3"]);
+              if (freshPreviewUrl) {
+                previewUrl = freshPreviewUrl;
+                logger21.debug("loading", `Using fresh preview URL from API for ${sampleId}`);
+              }
+            } catch (apiError) {
+              logger21.warn("loading", `Failed to fetch fresh preview URL, using stored URL for ${sampleId}`, apiError);
+            }
+          }
           const response = await (0, import_obsidian11.requestUrl)({
-            url: sample.previewUrl,
+            url: previewUrl,
             method: "GET"
           });
           const arrayBuffer = response.arrayBuffer;
