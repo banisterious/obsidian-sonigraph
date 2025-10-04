@@ -68,7 +68,7 @@ export class ContinuousLayerManager {
       genre: 'ambient',
       intensity: 0.5,
       evolutionRate: 0.3,
-      baseVolume: -10, // Increased from -20 to -10 for better audibility
+      baseVolume: 0, // Set to 0dB for maximum audibility during testing
       adaptiveIntensity: true,
       ...config
     };
@@ -98,8 +98,16 @@ export class ContinuousLayerManager {
     this.modLFO = new LFO(0.5, 0, 1);
     
     // Initialize engines
-    this.genreEngine = new MusicalGenreEngine(this.config.genre);
-    this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey, settings);
+    this.genreEngine = new MusicalGenreEngine(this.config.genre, settings);
+
+    logger.info('initialization', 'About to create FreesoundSampleLoader', {
+      hasSettings: !!settings,
+      hasApiKey: !!settings?.freesoundApiKey,
+      hasSamples: !!settings?.freesoundSamples,
+      samplesCount: settings?.freesoundSamples?.length || 0
+    });
+
+    this.sampleLoader = new FreesoundSampleLoader(settings?.freesoundApiKey, settings);
     this.rhythmicLayer = new RhythmicLayerManager(settings);
     this.harmonicLayer = new HarmonicLayerManager(settings);
 

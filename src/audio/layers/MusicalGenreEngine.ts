@@ -34,6 +34,7 @@ import {
 } from './types';
 import { FreesoundSampleLoader } from './FreesoundSampleLoader';
 import { getLogger } from '../../logging';
+import { requestUrl } from 'obsidian';
 
 const logger = getLogger('MusicalGenreEngine');
 
@@ -57,22 +58,23 @@ type EffectType = 'reverb' | 'delay' | 'chorus' | 'distortion' | 'filter' | 'pha
 
 export class MusicalGenreEngine {
   private currentGenre: MusicalGenre;
+  private settings: any; // Settings for API access
   private isInitialized = false;
   private isPlaying = false;
-  
+
   // Synthesis components
   private primarySynth: PolySynth | FMSynth | AMSynth | NoiseSynth | MetalSynth | Sampler | null = null;
   private supportingSynths: Map<string, any> = new Map();
   private synthVolume: Volume;
-  
+
   // Effects chain
   private effects: Map<string, any> = new Map();
   private effectsChain: any[] = [];
-  
+
   // Modulation
   private lfos: Map<string, LFO> = new Map();
   private modulationTargets: Map<string, any> = new Map();
-  
+
   // Sample integration
   private sampleLoader: FreesoundSampleLoader | null = null;
   private loadedSamples: Map<string, Sampler> = new Map();
@@ -85,15 +87,16 @@ export class MusicalGenreEngine {
   private evolutionTimer: number | null = null;
   private lastNoteTime = 0;
   private noteInterval = 0;
-  
+
   // Performance tracking
   private activeVoices = 0;
   private cpuUsage = 0;
-  
-  constructor(genre: MusicalGenre) {
+
+  constructor(genre: MusicalGenre, settings?: any) {
     this.currentGenre = genre;
+    this.settings = settings;
     this.synthVolume = new Volume(-20); // Start quiet
-    
+
     logger.debug('initialization', `Creating MusicalGenreEngine for genre: ${genre}`);
   }
   
@@ -1054,27 +1057,121 @@ export class MusicalGenreEngine {
    */
   private async playSample(sample: any, totalSamples: number = 1): Promise<void> {
     try {
-      logger.info('playback', `Playing sample: ${sample.title}`, { id: sample.id, url: sample.previewUrl });
+      logger.info('playback', `Playing sample: ${sample.title}`, { id: sample.id });
 
-      // Create a simple HTML5 audio element for playback
-      const audio = new Audio(sample.previewUrl);
+      // Fetch fresh preview URL from Freesound API (same as Preview button)
+      // This ensures we always have a valid, non-expired URL
+      const apiKey = this.settings?.freesoundApiKey;
+      if (!apiKey) {
+        logger.error('playback', 'Freesound API key not configured');
+        return;
+      }
+
+      const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}`;
+      logger.debug('api-fetch', 'Fetching fresh preview URL from API', { soundUrl: soundUrl.replace(apiKey, '[REDACTED]') });
+
+      const soundResponse = await requestUrl({ url: soundUrl, method: 'GET' });
+      const soundData = JSON.parse(soundResponse.text);
+      const previewUrl = soundData.previews?.['preview-hq-mp3'] || soundData.previews?.['preview-lq-mp3'];
+
+      if (!previewUrl) {
+        logger.error('playback', 'No preview URL available from API', { sampleId: sample.id });
+        return;
+      }
+
+      logger.debug('download', 'Downloading sample via requestUrl', {
+        previewUrl
+      });
+
+      // Download audio via requestUrl to bypass CORS
+      const response = await requestUrl({ url: previewUrl, method: 'GET' });
+      const blob = new Blob([response.arrayBuffer], { type: 'audio/mpeg' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      logger.debug('download', 'Sample downloaded, blob URL created', {
+        blobUrl,
+        blobSize: blob.size
+      });
+
+      // Create HTML5 audio element with blob URL (no CORS issues)
+      const audio = new Audio(blobUrl);
       this.activeSampleAudios.push(audio);
+
+      logger.debug('audio-element', 'Audio element created with blob URL', {
+        sampleTitle: sample.title,
+        blobUrl,
+        readyState: audio.readyState
+      });
 
       // Adjust volume based on number of samples to prevent clipping
       // Use equal-power panning formula: 1/sqrt(n) for n sources
       const volumeAdjustment = Math.min(1, 1 / Math.sqrt(totalSamples));
 
+      logger.debug('volume', 'Volume adjustment calculated', {
+        totalSamples,
+        volumeAdjustment,
+        formula: `1/sqrt(${totalSamples}) = ${volumeAdjustment}`
+      });
+
       // Apply fade in
       audio.volume = 0;
-      audio.play();
+      const playPromise = audio.play();
+
+      logger.debug('playback', 'Attempting to play audio', {
+        initialVolume: audio.volume,
+        targetVolume: volumeAdjustment,
+        fadeInDuration: sample.fadeIn || 1
+      });
+
+      // Handle play promise
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            logger.info('playback', 'Audio playback started successfully', {
+              sampleTitle: sample.title,
+              currentTime: audio.currentTime,
+              duration: audio.duration,
+              volume: audio.volume,
+              paused: audio.paused
+            });
+          })
+          .catch(error => {
+            logger.error('playback', `Failed to play sample: ${sample.title}`, {
+              error: error.message,
+              errorName: error.name,
+              blobUrl
+            });
+          });
+      }
+
+      // Clean up blob URL when audio ends
+      audio.addEventListener('ended', () => {
+        URL.revokeObjectURL(blobUrl);
+      }, { once: true });
 
       // Fade in over fadeIn duration
       const fadeInSteps = 20;
       const fadeInInterval = ((sample.fadeIn || 1) * 1000) / fadeInSteps;
+
+      logger.debug('fade-in', 'Fade-in configuration', {
+        fadeInSteps,
+        fadeInInterval,
+        totalFadeInDuration: fadeInSteps * fadeInInterval
+      });
+
       for (let i = 0; i <= fadeInSteps; i++) {
         setTimeout(() => {
           if (audio && this.activeSampleAudios.includes(audio)) {
             audio.volume = Math.min(volumeAdjustment, (i / fadeInSteps) * volumeAdjustment);
+
+            // Log every 5th step to avoid spam
+            if (i % 5 === 0 || i === fadeInSteps) {
+              logger.debug('fade-in', `Fade-in step ${i}/${fadeInSteps}`, {
+                volume: audio.volume,
+                paused: audio.paused,
+                currentTime: audio.currentTime
+              });
+            }
           }
         }, i * fadeInInterval);
       }
@@ -1093,6 +1190,10 @@ export class MusicalGenreEngine {
                 audio.volume = (i / fadeOutSteps) * currentVolume;
                 if (i === 0) {
                   audio.pause();
+                  // Clean up blob URL
+                  if (audio.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(audio.src);
+                  }
                   // Remove from active list
                   const audioIndex = this.activeSampleAudios.indexOf(audio);
                   if (audioIndex > -1) {
@@ -1121,6 +1222,10 @@ export class MusicalGenreEngine {
     this.activeSampleAudios.forEach(audio => {
       audio.pause();
       audio.currentTime = 0;
+      // Clean up blob URLs
+      if (audio.src.startsWith('blob:')) {
+        URL.revokeObjectURL(audio.src);
+      }
     });
     this.activeSampleAudios = [];
 

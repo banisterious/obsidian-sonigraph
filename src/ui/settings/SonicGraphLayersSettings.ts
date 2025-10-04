@@ -116,6 +116,22 @@ export class SonicGraphLayersSettings {
 								enableFreesoundSamples: false
 							}
 						};
+					} else if (!this.plugin.settings.audioEnhancement.continuousLayers) {
+						// Initialize continuousLayers if it doesn't exist
+						this.plugin.settings.audioEnhancement.continuousLayers = {
+							enabled: value,
+							genre: 'ambient',
+							intensity: 0.5,
+							evolutionRate: 0.3,
+							adaptiveIntensity: true,
+							rhythmicEnabled: false,
+							harmonicEnabled: false,
+							scale: 'major',
+							key: 'C',
+							ambientDrone: {},
+							rhythmicLayer: {},
+							harmonicPad: {}
+						};
 					} else {
 						this.plugin.settings.audioEnhancement.continuousLayers.enabled = value;
 					}

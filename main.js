@@ -17938,7 +17938,11 @@ var init_SampleTableBrowser = __esm({
         const sample = samples.find((s) => s.id === sampleId);
         if (!sample)
           return;
-        sample.enabled = sample.enabled === false ? true : false;
+        if (sample.enabled === void 0) {
+          sample.enabled = true;
+        } else {
+          sample.enabled = !sample.enabled;
+        }
         await this.plugin.saveSettings();
         this.renderTable();
         new import_obsidian9.Notice(`Sample ${sample.enabled ? "enabled" : "disabled"}`);
@@ -18290,6 +18294,21 @@ var init_SonicGraphLayersSettings = __esm({
                     freesoundApiKey: "",
                     enableFreesoundSamples: false
                   }
+                };
+              } else if (!this.plugin.settings.audioEnhancement.continuousLayers) {
+                this.plugin.settings.audioEnhancement.continuousLayers = {
+                  enabled: value,
+                  genre: "ambient",
+                  intensity: 0.5,
+                  evolutionRate: 0.3,
+                  adaptiveIntensity: true,
+                  rhythmicEnabled: false,
+                  harmonicEnabled: false,
+                  scale: "major",
+                  key: "C",
+                  ambientDrone: {},
+                  rhythmicLayer: {},
+                  harmonicPad: {}
                 };
               } else {
                 this.plugin.settings.audioEnhancement.continuousLayers.enabled = value;
@@ -18747,7 +18766,7 @@ var init_FreesoundSampleLoader = __esm({
         }
         const samples = this.sampleLibrary.get(genre);
         if (!samples || samples.length === 0) {
-          logger21.warn("preload", `No samples found for genre: ${genre}`);
+          logger21.debug("preload", `No samples found for genre: ${genre} (using direct API fetch instead)`);
           return;
         }
         logger21.info("preload", `Preloading samples for genre: ${genre}`, {
@@ -18938,19 +18957,7 @@ var init_FreesoundSampleLoader = __esm({
         }
       }
       async testApiConnection() {
-        if (!this.apiKey) {
-          return;
-        }
-        try {
-          const testUrl = `https://freesound.org/apiv2/sounds/1/?token=${this.apiKey}`;
-          const response = await (0, import_obsidian11.requestUrl)({
-            url: testUrl,
-            method: "GET"
-          });
-          logger21.info("connection", "Freesound API connection test successful");
-        } catch (error) {
-          logger21.error("connection", "Freesound API connection test failed", error);
-        }
+        return;
       }
       findSampleById(sampleId) {
         for (const samples of this.sampleLibrary.values()) {
@@ -63024,15 +63031,17 @@ var init_types7 = __esm({
 });
 
 // src/audio/layers/MusicalGenreEngine.ts
-var logger48, MusicalGenreEngine;
+var import_obsidian18, logger48, MusicalGenreEngine;
 var init_MusicalGenreEngine = __esm({
   "src/audio/layers/MusicalGenreEngine.ts"() {
     init_esm();
     init_types7();
     init_logging();
+    import_obsidian18 = require("obsidian");
     logger48 = getLogger("MusicalGenreEngine");
     MusicalGenreEngine = class {
-      constructor(genre) {
+      constructor(genre, settings) {
+        // Settings for API access
         this.isInitialized = false;
         this.isPlaying = false;
         // Synthesis components
@@ -63060,6 +63069,7 @@ var init_MusicalGenreEngine = __esm({
         this.activeVoices = 0;
         this.cpuUsage = 0;
         this.currentGenre = genre;
+        this.settings = settings;
         this.synthVolume = new Volume(-20);
         logger48.debug("initialization", `Creating MusicalGenreEngine for genre: ${genre}`);
       }
@@ -63842,19 +63852,91 @@ var init_MusicalGenreEngine = __esm({
        * @param totalSamples - Total number of samples playing (for volume adjustment)
        */
       async playSample(sample, totalSamples = 1) {
+        var _a, _b, _c;
         try {
-          logger48.info("playback", `Playing sample: ${sample.title}`, { id: sample.id, url: sample.previewUrl });
-          const audio = new Audio(sample.previewUrl);
+          logger48.info("playback", `Playing sample: ${sample.title}`, { id: sample.id });
+          const apiKey = (_a = this.settings) == null ? void 0 : _a.freesoundApiKey;
+          if (!apiKey) {
+            logger48.error("playback", "Freesound API key not configured");
+            return;
+          }
+          const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}`;
+          logger48.debug("api-fetch", "Fetching fresh preview URL from API", { soundUrl: soundUrl.replace(apiKey, "[REDACTED]") });
+          const soundResponse = await (0, import_obsidian18.requestUrl)({ url: soundUrl, method: "GET" });
+          const soundData = JSON.parse(soundResponse.text);
+          const previewUrl = ((_b = soundData.previews) == null ? void 0 : _b["preview-hq-mp3"]) || ((_c = soundData.previews) == null ? void 0 : _c["preview-lq-mp3"]);
+          if (!previewUrl) {
+            logger48.error("playback", "No preview URL available from API", { sampleId: sample.id });
+            return;
+          }
+          logger48.debug("download", "Downloading sample via requestUrl", {
+            previewUrl
+          });
+          const response = await (0, import_obsidian18.requestUrl)({ url: previewUrl, method: "GET" });
+          const blob = new Blob([response.arrayBuffer], { type: "audio/mpeg" });
+          const blobUrl = URL.createObjectURL(blob);
+          logger48.debug("download", "Sample downloaded, blob URL created", {
+            blobUrl,
+            blobSize: blob.size
+          });
+          const audio = new Audio(blobUrl);
           this.activeSampleAudios.push(audio);
+          logger48.debug("audio-element", "Audio element created with blob URL", {
+            sampleTitle: sample.title,
+            blobUrl,
+            readyState: audio.readyState
+          });
           const volumeAdjustment = Math.min(1, 1 / Math.sqrt(totalSamples));
+          logger48.debug("volume", "Volume adjustment calculated", {
+            totalSamples,
+            volumeAdjustment,
+            formula: `1/sqrt(${totalSamples}) = ${volumeAdjustment}`
+          });
           audio.volume = 0;
-          audio.play();
+          const playPromise = audio.play();
+          logger48.debug("playback", "Attempting to play audio", {
+            initialVolume: audio.volume,
+            targetVolume: volumeAdjustment,
+            fadeInDuration: sample.fadeIn || 1
+          });
+          if (playPromise !== void 0) {
+            playPromise.then(() => {
+              logger48.info("playback", "Audio playback started successfully", {
+                sampleTitle: sample.title,
+                currentTime: audio.currentTime,
+                duration: audio.duration,
+                volume: audio.volume,
+                paused: audio.paused
+              });
+            }).catch((error) => {
+              logger48.error("playback", `Failed to play sample: ${sample.title}`, {
+                error: error.message,
+                errorName: error.name,
+                blobUrl
+              });
+            });
+          }
+          audio.addEventListener("ended", () => {
+            URL.revokeObjectURL(blobUrl);
+          }, { once: true });
           const fadeInSteps = 20;
           const fadeInInterval = (sample.fadeIn || 1) * 1e3 / fadeInSteps;
+          logger48.debug("fade-in", "Fade-in configuration", {
+            fadeInSteps,
+            fadeInInterval,
+            totalFadeInDuration: fadeInSteps * fadeInInterval
+          });
           for (let i = 0; i <= fadeInSteps; i++) {
             setTimeout(() => {
               if (audio && this.activeSampleAudios.includes(audio)) {
                 audio.volume = Math.min(volumeAdjustment, i / fadeInSteps * volumeAdjustment);
+                if (i % 5 === 0 || i === fadeInSteps) {
+                  logger48.debug("fade-in", `Fade-in step ${i}/${fadeInSteps}`, {
+                    volume: audio.volume,
+                    paused: audio.paused,
+                    currentTime: audio.currentTime
+                  });
+                }
               }
             }, i * fadeInInterval);
           }
@@ -63870,6 +63952,9 @@ var init_MusicalGenreEngine = __esm({
                     audio.volume = i / fadeOutSteps * currentVolume;
                     if (i === 0) {
                       audio.pause();
+                      if (audio.src.startsWith("blob:")) {
+                        URL.revokeObjectURL(audio.src);
+                      }
                       const audioIndex = this.activeSampleAudios.indexOf(audio);
                       if (audioIndex > -1) {
                         this.activeSampleAudios.splice(audioIndex, 1);
@@ -63893,6 +63978,9 @@ var init_MusicalGenreEngine = __esm({
         this.activeSampleAudios.forEach((audio) => {
           audio.pause();
           audio.currentTime = 0;
+          if (audio.src.startsWith("blob:")) {
+            URL.revokeObjectURL(audio.src);
+          }
         });
         this.activeSampleAudios = [];
         this.sampleFadeOutTimers.forEach((timer2) => {
@@ -64848,6 +64936,7 @@ var init_ContinuousLayerManager = __esm({
         this.PARAMETER_UPDATE_THROTTLE = 10;
         // Update every 10 frames
         this.PERFORMANCE_CHECK_INTERVAL = 5e3;
+        var _a;
         logger51.debug("initialization", "Creating ContinuousLayerManager");
         this.config = {
           enabled: false,
@@ -64855,8 +64944,8 @@ var init_ContinuousLayerManager = __esm({
           genre: "ambient",
           intensity: 0.5,
           evolutionRate: 0.3,
-          baseVolume: -10,
-          // Increased from -20 to -10 for better audibility
+          baseVolume: 0,
+          // Set to 0dB for maximum audibility during testing
           adaptiveIntensity: true,
           ...config
         };
@@ -64879,8 +64968,14 @@ var init_ContinuousLayerManager = __esm({
         this.reverbBus = new Reverb(2);
         this.delayBus = new Delay("8n", 0.3);
         this.modLFO = new LFO(0.5, 0, 1);
-        this.genreEngine = new MusicalGenreEngine(this.config.genre);
-        this.sampleLoader = new FreesoundSampleLoader(settings.freesoundApiKey, settings);
+        this.genreEngine = new MusicalGenreEngine(this.config.genre, settings);
+        logger51.info("initialization", "About to create FreesoundSampleLoader", {
+          hasSettings: !!settings,
+          hasApiKey: !!(settings == null ? void 0 : settings.freesoundApiKey),
+          hasSamples: !!(settings == null ? void 0 : settings.freesoundSamples),
+          samplesCount: ((_a = settings == null ? void 0 : settings.freesoundSamples) == null ? void 0 : _a.length) || 0
+        });
+        this.sampleLoader = new FreesoundSampleLoader(settings == null ? void 0 : settings.freesoundApiKey, settings);
         this.rhythmicLayer = new RhythmicLayerManager(settings);
         this.harmonicLayer = new HarmonicLayerManager(settings);
         if (settings.freesoundSamples) {
@@ -66118,10 +66213,10 @@ ${audioConfig}
 });
 
 // src/export/AudioExporter.ts
-var import_obsidian18, logger56, AudioExporter;
+var import_obsidian19, logger56, AudioExporter;
 var init_AudioExporter = __esm({
   "src/export/AudioExporter.ts"() {
-    import_obsidian18 = require("obsidian");
+    import_obsidian19 = require("obsidian");
     init_WavEncoder();
     init_Mp3Encoder();
     init_OfflineRenderer();
@@ -66369,7 +66464,7 @@ var init_AudioExporter = __esm({
           return;
         try {
           const file = this.app.vault.getAbstractFileByPath(filePath);
-          if (file instanceof import_obsidian18.TFile) {
+          if (file instanceof import_obsidian19.TFile) {
             await this.app.vault.delete(file);
             logger56.info("export", `Cleaned up partial file: ${filePath}`);
           }
@@ -66443,13 +66538,13 @@ var init_AudioExporter = __esm({
 });
 
 // src/export/ExportProgressModal.ts
-var import_obsidian19, logger57, ExportProgressModal;
+var import_obsidian20, logger57, ExportProgressModal;
 var init_ExportProgressModal = __esm({
   "src/export/ExportProgressModal.ts"() {
-    import_obsidian19 = require("obsidian");
+    import_obsidian20 = require("obsidian");
     init_logging();
     logger57 = getLogger("export-progress");
-    ExportProgressModal = class extends import_obsidian19.Modal {
+    ExportProgressModal = class extends import_obsidian20.Modal {
       constructor(app, exporter, config) {
         super(app);
         this.isCancelled = false;
@@ -66495,7 +66590,7 @@ var init_ExportProgressModal = __esm({
           });
           const result = await this.exporter.export(this.config);
           if (this.isCancelled) {
-            new import_obsidian19.Notice("Export cancelled");
+            new import_obsidian20.Notice("Export cancelled");
             logger57.info("export-progress", "Export cancelled by user");
           } else if (result.success) {
             this.showSuccess(result);
@@ -66504,7 +66599,7 @@ var init_ExportProgressModal = __esm({
           }
         } catch (error) {
           logger57.error("export-progress", "Export failed:", error);
-          new import_obsidian19.Notice(`Export failed: ${error.message}`);
+          new import_obsidian20.Notice(`Export failed: ${error.message}`);
         } finally {
           setTimeout(() => {
             if (!this.isCancelled) {
@@ -66556,7 +66651,7 @@ var init_ExportProgressModal = __esm({
           this.cancelButton.disabled = true;
         }
         const fileSizeMB = result.fileSize ? (result.fileSize / (1024 * 1024)).toFixed(1) : "?";
-        new import_obsidian19.Notice(`Export complete: ${result.filePath} (${fileSizeMB} MB)`);
+        new import_obsidian20.Notice(`Export complete: ${result.filePath} (${fileSizeMB} MB)`);
         logger57.info("export-progress", `Export successful: ${result.filePath}`, {
           fileSize: result.fileSize,
           duration: result.duration,
@@ -66576,7 +66671,7 @@ var init_ExportProgressModal = __esm({
           this.cancelButton.textContent = "Close";
           this.cancelButton.classList.remove("mod-warning");
         }
-        new import_obsidian19.Notice(`Export failed: ${((_b = result.error) == null ? void 0 : _b.message) || "Unknown error"}`);
+        new import_obsidian20.Notice(`Export failed: ${((_b = result.error) == null ? void 0 : _b.message) || "Unknown error"}`);
         logger57.error("export-progress", "Export failed:", result.error);
       }
       /**
@@ -66642,13 +66737,13 @@ var FileCollisionModal_exports = {};
 __export(FileCollisionModal_exports, {
   FileCollisionModal: () => FileCollisionModal
 });
-var import_obsidian20, logger58, FileCollisionModal;
+var import_obsidian21, logger58, FileCollisionModal;
 var init_FileCollisionModal = __esm({
   "src/export/FileCollisionModal.ts"() {
-    import_obsidian20 = require("obsidian");
+    import_obsidian21 = require("obsidian");
     init_logging();
     logger58 = getLogger("file-collision");
-    FileCollisionModal = class extends import_obsidian20.Modal {
+    FileCollisionModal = class extends import_obsidian21.Modal {
       constructor(app, filePath, resolveCallback) {
         super(app);
         this.filePath = filePath;
@@ -66751,19 +66846,19 @@ var init_FileCollisionModal = __esm({
         continueBtn.addEventListener("click", () => {
           const selectedRadio = radioGroup.querySelector('input[name="collision-action"]:checked');
           if (!selectedRadio) {
-            new import_obsidian20.Notice("Please select an option");
+            new import_obsidian21.Notice("Please select an option");
             return;
           }
           const action = selectedRadio.value;
           if (action === "rename") {
             const newName = renameInput.value.trim();
             if (!newName) {
-              new import_obsidian20.Notice("Please enter a filename");
+              new import_obsidian21.Notice("Please enter a filename");
               renameInput.focus();
               return;
             }
             if (this.containsInvalidCharacters(newName)) {
-              new import_obsidian20.Notice("Filename contains invalid characters");
+              new import_obsidian21.Notice("Filename contains invalid characters");
               renameInput.focus();
               return;
             }
@@ -66882,15 +66977,15 @@ var ExportModal_exports = {};
 __export(ExportModal_exports, {
   ExportModal: () => ExportModal
 });
-var import_obsidian21, logger59, ExportModal;
+var import_obsidian22, logger59, ExportModal;
 var init_ExportModal = __esm({
   "src/export/ExportModal.ts"() {
-    import_obsidian21 = require("obsidian");
+    import_obsidian22 = require("obsidian");
     init_AudioExporter();
     init_ExportProgressModal();
     init_logging();
     logger59 = getLogger("export-modal");
-    ExportModal = class extends import_obsidian21.Modal {
+    ExportModal = class extends import_obsidian22.Modal {
       constructor(app, plugin, audioEngine, animator) {
         super(app);
         // Configuration state
@@ -67003,7 +67098,7 @@ var init_ExportModal = __esm({
           if (this.metadataInputs.comment)
             this.metadataInputs.comment.setValue(preset.metadata.comment || "");
         }
-        new import_obsidian21.Notice(`Loaded preset: ${preset.name}`);
+        new import_obsidian22.Notice(`Loaded preset: ${preset.name}`);
       }
       /**
        * Save current settings as a preset
@@ -67027,7 +67122,7 @@ var init_ExportModal = __esm({
         }
         this.plugin.settings.exportSettings.exportPresets.push(preset);
         await this.plugin.saveSettings();
-        new import_obsidian21.Notice(`Saved preset: ${name}`);
+        new import_obsidian22.Notice(`Saved preset: ${name}`);
         this.close();
       }
       /**
@@ -67035,12 +67130,12 @@ var init_ExportModal = __esm({
        */
       async promptForPresetName() {
         return new Promise((resolve) => {
-          const modal = new import_obsidian21.Modal(this.app);
+          const modal = new import_obsidian22.Modal(this.app);
           modal.titleEl.setText("Save Preset");
           const content = modal.contentEl;
           content.createEl("p", { text: "Enter a name for this preset:" });
           let nameInput;
-          new import_obsidian21.Setting(content).setName("Preset name").addText((text) => {
+          new import_obsidian22.Setting(content).setName("Preset name").addText((text) => {
             nameInput = text;
             text.setPlaceholder("My Preset");
           });
@@ -67055,7 +67150,7 @@ var init_ExportModal = __esm({
               modal.close();
               resolve(name);
             } else {
-              new import_obsidian21.Notice("Please enter a preset name");
+              new import_obsidian22.Notice("Please enter a preset name");
             }
           });
           modal.open();
@@ -67090,7 +67185,7 @@ var init_ExportModal = __esm({
       createScopeSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "What to export" });
-        new import_obsidian21.Setting(section).setName("Export scope").setDesc("Choose what portion of the timeline to export").addDropdown((dropdown) => {
+        new import_obsidian22.Setting(section).setName("Export scope").setDesc("Choose what portion of the timeline to export").addDropdown((dropdown) => {
           var _a;
           this.scopeDropdown = dropdown;
           dropdown.addOption("full-timeline", `Full Timeline Animation (${((_a = this.animator) == null ? void 0 : _a.config.duration) || 60}s)`).addOption("custom-range", "Custom Time Range").addOption("static-graph", "Current Static Graph").setValue(this.config.scope || "full-timeline").onChange((value) => {
@@ -67101,13 +67196,13 @@ var init_ExportModal = __esm({
         });
         this.customRangeContainer = section.createDiv("sonigraph-custom-range-container");
         this.customRangeContainer.style.display = "none";
-        new import_obsidian21.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
+        new import_obsidian22.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
           this.startTimeInput = text;
           text.setPlaceholder("0").setValue("0").onChange((value) => {
             this.updateCustomRange();
           });
         });
-        new import_obsidian21.Setting(this.customRangeContainer).setName("End time").setDesc("End time in seconds (e.g., 30 or 0:30)").addText((text) => {
+        new import_obsidian22.Setting(this.customRangeContainer).setName("End time").setDesc("End time in seconds (e.g., 30 or 0:30)").addText((text) => {
           var _a;
           this.endTimeInput = text;
           const maxDuration = ((_a = this.animator) == null ? void 0 : _a.config.duration) || 60;
@@ -67122,7 +67217,7 @@ var init_ExportModal = __esm({
       createFormatSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Format & Quality" });
-        new import_obsidian21.Setting(section).setName("Format").setDesc("Audio file format. Compressed audio uses native platform codecs (M4A/AAC, WebM/Opus, or OGG/Vorbis).").addDropdown((dropdown) => {
+        new import_obsidian22.Setting(section).setName("Format").setDesc("Audio file format. Compressed audio uses native platform codecs (M4A/AAC, WebM/Opus, or OGG/Vorbis).").addDropdown((dropdown) => {
           this.formatDropdown = dropdown;
           dropdown.addOption("wav", "WAV (Lossless Audio)").addOption("mp3", "Compressed Audio (M4A/WebM/OGG)").setValue(this.config.format || "wav").onChange((value) => {
             this.config.format = value;
@@ -67130,7 +67225,7 @@ var init_ExportModal = __esm({
             this.updateEstimate();
           });
         });
-        new import_obsidian21.Setting(section).setName("Quality preset").setDesc("Audio quality settings").addDropdown((dropdown) => {
+        new import_obsidian22.Setting(section).setName("Quality preset").setDesc("Audio quality settings").addDropdown((dropdown) => {
           this.qualityDropdown = dropdown;
           dropdown.addOption("high", "High Quality (48kHz, 16-bit)").addOption("lossless", "Lossless (48kHz, 24-bit)").addOption("standard", "Standard (44.1kHz, 16-bit)").setValue("high").onChange((value) => {
             this.config.quality = this.getQualityFromPreset(value);
@@ -67144,14 +67239,14 @@ var init_ExportModal = __esm({
       createLocationSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Save Location" });
-        new import_obsidian21.Setting(section).setName("Location type").setDesc("Save to vault or system location").addDropdown((dropdown) => {
+        new import_obsidian22.Setting(section).setName("Location type").setDesc("Save to vault or system location").addDropdown((dropdown) => {
           this.locationTypeDropdown = dropdown;
           dropdown.addOption("vault", "Vault Folder").addOption("system", "System Location").setValue(this.config.locationType || "vault").onChange((value) => {
             this.config.locationType = value;
             this.updateLocationInput();
           });
         });
-        new import_obsidian21.Setting(section).setName("Location").setDesc("Folder path for exported file").addText((text) => {
+        new import_obsidian22.Setting(section).setName("Location").setDesc("Folder path for exported file").addText((text) => {
           this.locationInput = text;
           text.setPlaceholder("Sonigraph Exports").setValue(this.config.location || "Sonigraph Exports").onChange((value) => {
             this.config.location = value;
@@ -67164,24 +67259,24 @@ var init_ExportModal = __esm({
       createFilenameSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Filename" });
-        new import_obsidian21.Setting(section).setName("Filename").setDesc("Name for the exported file (without extension)").addText((text) => {
+        new import_obsidian22.Setting(section).setName("Filename").setDesc("Name for the exported file (without extension)").addText((text) => {
           this.filenameInput = text;
           text.setPlaceholder("sonigraph-export").setValue(this.config.filename || this.generateFilename()).onChange((value) => {
             this.config.filename = value;
             this.updateEstimate();
           });
         });
-        new import_obsidian21.Setting(section).setName("Create export note").setDesc("Generate a markdown note documenting this export").addToggle((toggle) => {
+        new import_obsidian22.Setting(section).setName("Create export note").setDesc("Generate a markdown note documenting this export").addToggle((toggle) => {
           toggle.setValue(this.config.createNote !== false).onChange((value) => {
             this.config.createNote = value;
           });
         });
-        new import_obsidian21.Setting(section).setName("Include full settings in note").setDesc("Add comprehensive settings documentation to the export note").addToggle((toggle) => {
+        new import_obsidian22.Setting(section).setName("Include full settings in note").setDesc("Add comprehensive settings documentation to the export note").addToggle((toggle) => {
           toggle.setValue(this.config.includeSettingsSummary !== false).onChange((value) => {
             this.config.includeSettingsSummary = value;
           });
         });
-        new import_obsidian21.Setting(section).setName("Max export duration").setDesc("Safety limit in minutes (prevents accidentally long exports)").addText((text) => {
+        new import_obsidian22.Setting(section).setName("Max export duration").setDesc("Safety limit in minutes (prevents accidentally long exports)").addText((text) => {
           var _a;
           text.setPlaceholder("10").setValue(((_a = this.config.maxDurationMinutes) == null ? void 0 : _a.toString()) || "10").onChange((value) => {
             const minutes = parseInt(value, 10);
@@ -67215,7 +67310,7 @@ var init_ExportModal = __esm({
           header.textContent = isVisible ? "Metadata (Optional) \u25BC" : "Metadata (Optional) \u25B2";
         });
         const lastMetadata = (_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.lastMetadata;
-        new import_obsidian21.Setting(this.metadataContainer).setName("Title").setDesc("Song or export title").addText((text) => {
+        new import_obsidian22.Setting(this.metadataContainer).setName("Title").setDesc("Song or export title").addText((text) => {
           this.metadataInputs.title = text;
           text.setPlaceholder("Sonic Graph Export").setValue((lastMetadata == null ? void 0 : lastMetadata.title) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -67223,7 +67318,7 @@ var init_ExportModal = __esm({
             this.config.metadata.title = value.trim() || void 0;
           });
         });
-        new import_obsidian21.Setting(this.metadataContainer).setName("Artist").setDesc("Artist or creator name").addText((text) => {
+        new import_obsidian22.Setting(this.metadataContainer).setName("Artist").setDesc("Artist or creator name").addText((text) => {
           this.metadataInputs.artist = text;
           text.setPlaceholder("Your Name").setValue((lastMetadata == null ? void 0 : lastMetadata.artist) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -67231,7 +67326,7 @@ var init_ExportModal = __esm({
             this.config.metadata.artist = value.trim() || void 0;
           });
         });
-        new import_obsidian21.Setting(this.metadataContainer).setName("Album").setDesc("Album or collection name").addText((text) => {
+        new import_obsidian22.Setting(this.metadataContainer).setName("Album").setDesc("Album or collection name").addText((text) => {
           this.metadataInputs.album = text;
           text.setPlaceholder("Vault Soundscapes").setValue((lastMetadata == null ? void 0 : lastMetadata.album) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -67239,7 +67334,7 @@ var init_ExportModal = __esm({
             this.config.metadata.album = value.trim() || void 0;
           });
         });
-        new import_obsidian21.Setting(this.metadataContainer).setName("Year").setDesc("Year of creation").addText((text) => {
+        new import_obsidian22.Setting(this.metadataContainer).setName("Year").setDesc("Year of creation").addText((text) => {
           var _a2;
           this.metadataInputs.year = text;
           const currentYear = new Date().getFullYear();
@@ -67250,7 +67345,7 @@ var init_ExportModal = __esm({
             this.config.metadata.year = isNaN(year) ? void 0 : year;
           });
         });
-        new import_obsidian21.Setting(this.metadataContainer).setName("Genre").setDesc("Musical genre or category").addText((text) => {
+        new import_obsidian22.Setting(this.metadataContainer).setName("Genre").setDesc("Musical genre or category").addText((text) => {
           this.metadataInputs.genre = text;
           text.setPlaceholder("Ambient, Generative").setValue((lastMetadata == null ? void 0 : lastMetadata.genre) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -67258,7 +67353,7 @@ var init_ExportModal = __esm({
             this.config.metadata.genre = value.trim() || void 0;
           });
         });
-        new import_obsidian21.Setting(this.metadataContainer).setName("Comment").setDesc("Additional notes or description").addTextArea((text) => {
+        new import_obsidian22.Setting(this.metadataContainer).setName("Comment").setDesc("Additional notes or description").addTextArea((text) => {
           this.metadataInputs.comment = text;
           text.setPlaceholder("Generated from Obsidian vault using Sonigraph plugin").setValue((lastMetadata == null ? void 0 : lastMetadata.comment) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -67292,7 +67387,7 @@ var init_ExportModal = __esm({
       async startExport() {
         try {
           if (!this.config.filename || this.config.filename.trim() === "") {
-            new import_obsidian21.Notice("Please enter a filename");
+            new import_obsidian22.Notice("Please enter a filename");
             return;
           }
           const exportConfig = {
@@ -67359,7 +67454,7 @@ var init_ExportModal = __esm({
           await this.proceedWithExport(exportConfig);
         } catch (error) {
           logger59.error("export-modal", "Export start failed:", error);
-          new import_obsidian21.Notice(`Export failed: ${error.message}`);
+          new import_obsidian22.Notice(`Export failed: ${error.message}`);
         }
       }
       /**
@@ -67625,10 +67720,10 @@ var SonicGraphModal_exports = {};
 __export(SonicGraphModal_exports, {
   SonicGraphModal: () => SonicGraphModal
 });
-var import_obsidian23, logger72, SonicGraphModal;
+var import_obsidian24, logger72, SonicGraphModal;
 var init_SonicGraphModal = __esm({
   "src/ui/SonicGraphModal.ts"() {
-    import_obsidian23 = require("obsidian");
+    import_obsidian24 = require("obsidian");
     init_GraphDataExtractor();
     init_GraphRenderer();
     init_TemporalGraphAnimator();
@@ -67639,7 +67734,7 @@ var init_SonicGraphModal = __esm({
     init_src31();
     init_ContinuousLayerManager();
     logger72 = getLogger("SonicGraphModal");
-    SonicGraphModal = class extends import_obsidian23.Modal {
+    SonicGraphModal = class extends import_obsidian24.Modal {
       constructor(app, plugin) {
         super(app);
         this.graphRenderer = null;
@@ -67711,19 +67806,19 @@ var init_SonicGraphModal = __esm({
           logger72.info("sonic-graph-init", "Starting graph initialization - THIS IS THE CRITICAL STEP");
           this.initializeGraph().catch((error) => {
             logger72.error("sonic-graph-init", "Graph initialization failed:", error);
-            new import_obsidian23.Notice("Failed to initialize Sonic Graph: " + error.message);
+            new import_obsidian24.Notice("Failed to initialize Sonic Graph: " + error.message);
           });
         } catch (error) {
           logger72.error("ui", "Error opening Sonic Graph modal:", error.message);
           logger72.error("ui", "Error stack:", error.stack);
-          new import_obsidian23.Notice("Failed to open Sonic Graph modal: " + error.message);
+          new import_obsidian24.Notice("Failed to open Sonic Graph modal: " + error.message);
         }
       }
       /**
        * Initialize continuous layers for Phase 3
        */
       async initializeContinuousLayers() {
-        var _a;
+        var _a, _b, _c, _d, _e;
         try {
           logger72.info("continuous-layers", "Initializing continuous layers");
           const layerConfig = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers;
@@ -67736,6 +67831,12 @@ var init_SonicGraphModal = __esm({
               enabled: layerConfig == null ? void 0 : layerConfig.enabled,
               genre: layerConfig == null ? void 0 : layerConfig.genre,
               hasConfig: !!layerConfig
+            });
+            console.log("[SONIGRAPH-DEBUG] Creating ContinuousLayerManager with settings:", {
+              hasSettings: !!this.plugin.settings,
+              hasFreesoundSamples: !!((_b = this.plugin.settings) == null ? void 0 : _b.freesoundSamples),
+              samplesCount: ((_d = (_c = this.plugin.settings) == null ? void 0 : _c.freesoundSamples) == null ? void 0 : _d.length) || 0,
+              samples: (_e = this.plugin.settings) == null ? void 0 : _e.freesoundSamples
             });
             this.continuousLayerManager = new ContinuousLayerManager(
               this.plugin.settings,
@@ -67755,7 +67856,7 @@ var init_SonicGraphModal = __esm({
           logger72.info("continuous-layers", "Continuous layers initialized successfully");
         } catch (error) {
           logger72.error("continuous-layers", "Failed to initialize continuous layers", error);
-          new import_obsidian23.Notice("Failed to initialize continuous audio layers");
+          new import_obsidian24.Notice("Failed to initialize continuous audio layers");
         }
       }
       onClose() {
@@ -67862,7 +67963,7 @@ var init_SonicGraphModal = __esm({
         this.controlsContainer = container.createDiv({ cls: "sonic-graph-controls" });
         const playControls = this.controlsContainer.createDiv({ cls: "sonic-graph-play-controls" });
         const playButtonContainer = playControls.createDiv({ cls: "sonic-graph-play-button-container" });
-        this.playButton = new import_obsidian23.ButtonComponent(playButtonContainer);
+        this.playButton = new import_obsidian24.ButtonComponent(playButtonContainer);
         this.playButton.setButtonText("Play").onClick(() => this.toggleAnimation());
         const speedContainer = playControls.createDiv({ cls: "sonic-graph-speed-container" });
         speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
@@ -68064,7 +68165,7 @@ var init_SonicGraphModal = __esm({
           if (loadingIndicator) {
             loadingIndicator.remove();
           }
-          new import_obsidian23.Notice(`Failed to load graph data: ${error.message}`);
+          new import_obsidian24.Notice(`Failed to load graph data: ${error.message}`);
           this.showErrorState(error.message);
         }
       }
@@ -68074,7 +68175,7 @@ var init_SonicGraphModal = __esm({
       async toggleAnimation() {
         var _a, _b, _c;
         if (!this.graphRenderer) {
-          new import_obsidian23.Notice("Graph not ready");
+          new import_obsidian24.Notice("Graph not ready");
           return;
         }
         if (!this.isTimelineView) {
@@ -68088,7 +68189,7 @@ var init_SonicGraphModal = __esm({
             if (!status.isInitialized) {
               logger72.info("audio", "Audio engine not initialized - initializing for animation");
               await this.plugin.audioEngine.initialize();
-              new import_obsidian23.Notice("Audio engine initialized");
+              new import_obsidian24.Notice("Audio engine initialized");
             } else {
               logger72.info("audio", "Reinitializing audio engine for animation to ensure fresh state");
               await this.plugin.audioEngine.initialize();
@@ -68098,18 +68199,18 @@ var init_SonicGraphModal = __esm({
                 enabledCount: enabledInstruments.length,
                 audioContext: this.plugin.audioEngine.getStatus().audioContext
               });
-              new import_obsidian23.Notice("Audio engine ready for animation");
+              new import_obsidian24.Notice("Audio engine ready for animation");
             }
             logger72.info("audio", "Audio engine ready for Sonic Graph animation");
           } catch (audioError) {
             logger72.warn("Failed to check audio engine for animation", audioError.message);
-            new import_obsidian23.Notice("Audio check failed - animation may be silent");
+            new import_obsidian24.Notice("Audio check failed - animation may be silent");
           }
           if (!this.temporalAnimator) {
             await this.initializeTemporalAnimator();
           }
           if (!this.temporalAnimator) {
-            new import_obsidian23.Notice("Failed to initialize animation");
+            new import_obsidian24.Notice("Failed to initialize animation");
             this.isAnimating = false;
             return;
           }
@@ -68131,7 +68232,7 @@ var init_SonicGraphModal = __esm({
           });
           this.temporalAnimator.play();
           logger72.info("ui", "Starting Sonic Graph temporal animation");
-          new import_obsidian23.Notice("Sonic Graph animation started");
+          new import_obsidian24.Notice("Sonic Graph animation started");
         } else {
           this.playButton.setButtonText("Play");
           const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
@@ -68145,7 +68246,7 @@ var init_SonicGraphModal = __esm({
             this.continuousLayerManager.stop();
           }
           logger72.info("ui", "Pausing Sonic Graph animation");
-          new import_obsidian23.Notice("Animation paused");
+          new import_obsidian24.Notice("Animation paused");
         }
       }
       /**
@@ -68308,7 +68409,7 @@ var init_SonicGraphModal = __esm({
         }
         const section = container.createDiv({ cls: "sonic-graph-settings-section adaptive-detail-override" });
         section.createEl("div", { text: "ADAPTIVE DETAIL", cls: "sonic-graph-settings-section-title" });
-        new import_obsidian23.Setting(section).setName("Disable for this session").setDesc("The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
+        new import_obsidian24.Setting(section).setName("Disable for this session").setDesc("The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
           (toggle) => toggle.setValue(false).onChange((isOverridden) => {
             if (this.adaptiveDetailManager) {
               this.adaptiveDetailManager.setSessionOverride(isOverridden);
@@ -68410,7 +68511,7 @@ var init_SonicGraphModal = __esm({
           text: Math.round(settings.tagInfluence.weight * 100) + "%",
           cls: "sonic-graph-weight-value"
         });
-        (0, import_obsidian23.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
+        (0, import_obsidian24.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
           placement: "top"
         });
         tagWeightSlider.addEventListener("input", (e) => {
@@ -68443,7 +68544,7 @@ var init_SonicGraphModal = __esm({
             text: Math.round(settings.temporalPositioning.weight * 100) + "%",
             cls: "sonic-graph-weight-value"
           });
-          (0, import_obsidian23.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
+          (0, import_obsidian24.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
             placement: "top"
           });
           temporalWeightSlider.addEventListener("input", (e) => {
@@ -68477,7 +68578,7 @@ var init_SonicGraphModal = __esm({
             text: Math.round(settings.hubCentrality.weight * 100) + "%",
             cls: "sonic-graph-weight-value"
           });
-          (0, import_obsidian23.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
+          (0, import_obsidian24.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
             placement: "top"
           });
           hubWeightSlider.addEventListener("input", (e) => {
@@ -68503,7 +68604,7 @@ var init_SonicGraphModal = __esm({
           debugSwitch.addClass("active");
         }
         const debugHandle = debugSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-        (0, import_obsidian23.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
+        (0, import_obsidian24.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
           placement: "left"
         });
         debugSwitch.addEventListener("click", () => {
@@ -68540,7 +68641,7 @@ var init_SonicGraphModal = __esm({
             option.selected = true;
           }
         });
-        (0, import_obsidian23.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.", {
+        (0, import_obsidian24.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.", {
           placement: "top"
         });
         algorithmSelect.addEventListener("change", (e) => {
@@ -68619,7 +68720,7 @@ var init_SonicGraphModal = __esm({
           const minSize = parseInt(target.value);
           this.updateClusteringParameter("minClusterSize", minSize);
         });
-        (0, import_obsidian23.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
+        (0, import_obsidian24.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
           placement: "top",
           delay: 500
         });
@@ -68642,13 +68743,13 @@ var init_SonicGraphModal = __esm({
           const maxClusters = parseInt(target.value);
           this.updateClusteringParameter("maxClusters", maxClusters);
         });
-        (0, import_obsidian23.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
+        (0, import_obsidian24.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
           placement: "top",
           delay: 500
         });
         const visualizationHeader = section.createDiv({ cls: "sonic-graph-visualization-header" });
         visualizationHeader.createEl("h4", { text: "Visualization", cls: "sonic-graph-visualization-title" });
-        new import_obsidian23.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.').addToggle(
+        new import_obsidian24.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.').addToggle(
           (toggle) => toggle.setValue(settings.visualization.showClusterLabels).onChange((value) => {
             this.updateClusteringVisualization("showClusterLabels", value);
           })
@@ -68739,7 +68840,7 @@ var init_SonicGraphModal = __esm({
           },
           currentPreset: "minimal"
         };
-        new import_obsidian23.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
+        new import_obsidian24.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
           (toggle) => toggle.setValue(settings.enabled || false).onChange(async (value) => {
             try {
               const currentSettings = this.getSonicGraphSettings();
@@ -68761,42 +68862,42 @@ var init_SonicGraphModal = __esm({
             }
           })
         );
-        new import_obsidian23.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
+        new import_obsidian24.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
           (toggle) => toggle.setValue(settings.independentFromContentAware).onChange((value) => {
             this.updateConnectionTypeMappingConfig("independentFromContentAware", value);
           })
         );
-        new import_obsidian23.Setting(content).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
+        new import_obsidian24.Setting(content).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
           (slider) => slider.setLimits(0, 100, 5).setValue(settings.globalSettings.connectionVolumeMix * 100).setDynamicTooltip().onChange((value) => {
             this.updateConnectionTypeMappingGlobalSetting("connectionVolumeMix", value / 100);
           })
         );
-        new import_obsidian23.Setting(content).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
+        new import_obsidian24.Setting(content).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
           (slider) => slider.setLimits(5, 50, 1).setValue(settings.globalSettings.maxSimultaneousConnections).setDynamicTooltip().onChange((value) => {
             this.updateConnectionTypeMappingGlobalSetting("maxSimultaneousConnections", value);
           })
         );
         const connectionTypesSection = content.createDiv({ cls: "connection-types-toggles" });
         connectionTypesSection.createEl("h5", { text: "Connection Types", cls: "connection-type-subsection-title" });
-        new import_obsidian23.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+        new import_obsidian24.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
           (toggle) => toggle.setValue(settings.mappings.wikilink.enabled).onChange((value) => {
             this.updateConnectionTypeMapping("wikilink", "enabled", value);
           })
         );
-        new import_obsidian23.Setting(connectionTypesSection).setName("Embeds (![[embedded content]])").setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+        new import_obsidian24.Setting(connectionTypesSection).setName("Embeds (![[embedded content]])").setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
           (toggle) => toggle.setValue(settings.mappings.embed.enabled).onChange((value) => {
             this.updateConnectionTypeMapping("embed", "enabled", value);
           })
         );
         if (settings.mappings.markdown) {
-          new import_obsidian23.Setting(connectionTypesSection).setName("Markdown Links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+          new import_obsidian24.Setting(connectionTypesSection).setName("Markdown Links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
             (toggle) => toggle.setValue(settings.mappings.markdown.enabled).onChange((value) => {
               this.updateConnectionTypeMapping("markdown", "enabled", value);
             })
           );
         }
         if (settings.mappings.tag) {
-          new import_obsidian23.Setting(connectionTypesSection).setName("Tag Connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+          new import_obsidian24.Setting(connectionTypesSection).setName("Tag Connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
             (toggle) => toggle.setValue(settings.mappings.tag.enabled).onChange((value) => {
               this.updateConnectionTypeMapping("tag", "enabled", value);
             })
@@ -68804,12 +68905,12 @@ var init_SonicGraphModal = __esm({
         }
         const performanceSection = section.createDiv({ cls: "connection-type-performance" });
         performanceSection.createEl("h5", { text: "Performance", cls: "connection-type-subsection-title" });
-        new import_obsidian23.Setting(performanceSection).setName("Enable Caching").setDesc("Cache connection analysis results for better performance").addToggle(
+        new import_obsidian24.Setting(performanceSection).setName("Enable Caching").setDesc("Cache connection analysis results for better performance").addToggle(
           (toggle) => toggle.setValue(settings.globalSettings.enableCaching).onChange((value) => {
             this.updateConnectionTypeMappingGlobalSetting("enableCaching", value);
           })
         );
-        new import_obsidian23.Setting(performanceSection).setName("Selective Processing").setDesc("Only process visible connections to improve performance").addToggle(
+        new import_obsidian24.Setting(performanceSection).setName("Selective Processing").setDesc("Only process visible connections to improve performance").addToggle(
           (toggle) => toggle.setValue(settings.globalSettings.selectiveProcessing).onChange((value) => {
             this.updateConnectionTypeMappingGlobalSetting("selectiveProcessing", value);
           })
@@ -68885,7 +68986,7 @@ var init_SonicGraphModal = __esm({
           cls: "sonic-graph-weight-value"
         });
         if (tooltipText) {
-          (0, import_obsidian23.setTooltip)(weightSlider, tooltipText, {
+          (0, import_obsidian24.setTooltip)(weightSlider, tooltipText, {
             placement: "top"
           });
         }
@@ -68929,7 +69030,7 @@ var init_SonicGraphModal = __esm({
           densityValueDisplay.textContent = density + "%";
           this.updateAudioDensity(density);
         });
-        (0, import_obsidian23.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
+        (0, import_obsidian24.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
           placement: "top"
         });
         const densityLabels = densityContainer.createDiv({ cls: "sonic-graph-density-labels" });
@@ -68960,7 +69061,7 @@ var init_SonicGraphModal = __esm({
           durationValueDisplay.textContent = duration + " seconds";
           this.updateAnimationDuration(duration);
         });
-        (0, import_obsidian23.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
+        (0, import_obsidian24.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
           placement: "top"
         });
         const durationLabels = durationContainer.createDiv({ cls: "sonic-graph-density-labels" });
@@ -68983,7 +69084,7 @@ var init_SonicGraphModal = __esm({
           toggleSwitch.toggleClass("active", !isActive);
           this.updateLoopAnimation(!isActive);
         });
-        (0, import_obsidian23.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
+        (0, import_obsidian24.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
           placement: "left"
         });
         const timeWindowItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -69014,7 +69115,7 @@ var init_SonicGraphModal = __esm({
         timeWindowSelect.addEventListener("change", () => {
           this.updateTimeWindow(timeWindowSelect.value);
         });
-        (0, import_obsidian23.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
+        (0, import_obsidian24.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
           placement: "top"
         });
         const granularityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -69045,7 +69146,7 @@ var init_SonicGraphModal = __esm({
         granularitySelect.addEventListener("change", () => {
           this.updateTimelineGranularity(granularitySelect.value);
         });
-        (0, import_obsidian23.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
+        (0, import_obsidian24.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
           placement: "top"
         });
         const customRangeItem = section.createDiv({
@@ -69094,10 +69195,10 @@ var init_SonicGraphModal = __esm({
         customUnitSelect.addEventListener("change", () => {
           this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value);
         });
-        (0, import_obsidian23.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
+        (0, import_obsidian24.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
           placement: "top"
         });
-        (0, import_obsidian23.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
+        (0, import_obsidian24.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
           placement: "top"
         });
         const spreadingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -69127,7 +69228,7 @@ var init_SonicGraphModal = __esm({
         spreadingSelect.addEventListener("change", () => {
           this.updateEventSpreadingMode(spreadingSelect.value);
         });
-        (0, import_obsidian23.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
+        (0, import_obsidian24.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
           placement: "left"
         });
       }
@@ -69149,7 +69250,7 @@ var init_SonicGraphModal = __esm({
           if (option.includes("Auto"))
             optionEl.selected = true;
         });
-        (0, import_obsidian23.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
+        (0, import_obsidian24.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
           placement: "top"
         });
         const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -69167,7 +69268,7 @@ var init_SonicGraphModal = __esm({
           text: `${this.getSonicGraphSettings().audio.noteDuration.toFixed(1)}s`,
           cls: "sonic-graph-slider-value"
         });
-        (0, import_obsidian23.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
+        (0, import_obsidian24.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
           placement: "top"
         });
         durationSlider.addEventListener("input", () => {
@@ -69195,7 +69296,7 @@ var init_SonicGraphModal = __esm({
           text: "Advanced audio mapping features for richer soundscapes",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -69211,7 +69312,7 @@ var init_SonicGraphModal = __esm({
           }
         );
         if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.contentAwareMapping) == null ? void 0 : _b.enabled) {
-          new import_obsidian23.Setting(container).setName("Instrument frontmatter property").setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")').addText(
+          new import_obsidian24.Setting(container).setName("Instrument frontmatter property").setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")').addText(
             (text) => {
               var _a2, _b2;
               return text.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.frontmatterPropertyName) || "instrument").onChange(async (value) => {
@@ -69223,7 +69324,7 @@ var init_SonicGraphModal = __esm({
               });
             }
           );
-          new import_obsidian23.Setting(container).setName("Musical mood property").setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")').addText(
+          new import_obsidian24.Setting(container).setName("Musical mood property").setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")').addText(
             (text) => {
               var _a2, _b2;
               return text.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.moodPropertyName) || "musical-mood").onChange(async (value) => {
@@ -69235,7 +69336,7 @@ var init_SonicGraphModal = __esm({
               });
             }
           );
-          new import_obsidian23.Setting(container).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
+          new import_obsidian24.Setting(container).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
             (dropdown) => {
               var _a2, _b2;
               return dropdown.addOption("balanced", "Balanced - Prevent clustering").addOption("random", "Random - Natural variation").addOption("semantic", "Semantic - Based on content").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.distributionStrategy) || "balanced").onChange(async (value) => {
@@ -69270,7 +69371,7 @@ var init_SonicGraphModal = __esm({
           text: "Ambient background layers that evolve with your vault structure and activity",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Enable continuous layers").setDesc("Add ambient background audio that responds to vault size, activity, and animation progress").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable continuous layers").setDesc("Add ambient background audio that responds to vault size, activity, and animation progress").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -69293,7 +69394,7 @@ var init_SonicGraphModal = __esm({
        */
       createContinuousLayerControls(container) {
         var _a, _b;
-        new import_obsidian23.Setting(container).setName("Musical genre").setDesc("Choose the ambient genre for continuous layers").addDropdown(
+        new import_obsidian24.Setting(container).setName("Musical genre").setDesc("Choose the ambient genre for continuous layers").addDropdown(
           (dropdown) => {
             var _a2, _b2;
             return dropdown.addOption("ambient", "Ambient - Gentle evolving textures").addOption("drone", "Drone - Sustained atmospheric tones").addOption("orchestral", "Orchestral - Classical instruments in sustained arrangements").addOption("electronic", "Electronic - Synthesized pads and evolving textures").addOption("minimal", "Minimal - Sparse, contemplative elements").addOption("oceanic", "Oceanic - Whale songs and ocean sounds").addOption("sci-fi", "Sci-Fi - Futuristic atmospheric sounds").addOption("experimental", "Experimental - Unconventional sound design").addOption("industrial", "Industrial - Mechanical drones and factory ambience").addOption("urban", "Urban - City soundscapes and human activity").addOption("nature", "Nature - Forest ambience, rain, wind").addOption("mechanical", "Mechanical - Machine hums and motor drones").addOption("organic", "Organic - Acoustic instruments with natural processing").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.genre) || "ambient").onChange(async (value) => {
@@ -69307,7 +69408,7 @@ var init_SonicGraphModal = __esm({
             });
           }
         );
-        new import_obsidian23.Setting(container).setName("Layer intensity").setDesc("Control the volume and prominence of continuous layers").addSlider(
+        new import_obsidian24.Setting(container).setName("Layer intensity").setDesc("Control the volume and prominence of continuous layers").addSlider(
           (slider) => {
             var _a2, _b2;
             return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.intensity) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -69320,7 +69421,7 @@ var init_SonicGraphModal = __esm({
             });
           }
         );
-        new import_obsidian23.Setting(container).setName("Adaptive intensity").setDesc("Layer intensity responds to vault size and activity level").addToggle(
+        new import_obsidian24.Setting(container).setName("Adaptive intensity").setDesc("Layer intensity responds to vault size and activity level").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.adaptiveIntensity) || true).onChange(async (value) => {
@@ -69333,7 +69434,7 @@ var init_SonicGraphModal = __esm({
             });
           }
         );
-        new import_obsidian23.Setting(container).setName("Evolution rate").setDesc("How quickly the ambient layers change and evolve").addSlider(
+        new import_obsidian24.Setting(container).setName("Evolution rate").setDesc("How quickly the ambient layers change and evolve").addSlider(
           (slider) => {
             var _a2, _b2;
             return slider.setLimits(0.1, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.evolutionRate) || 0.3).setDynamicTooltip().onChange(async (value) => {
@@ -69346,7 +69447,7 @@ var init_SonicGraphModal = __esm({
             });
           }
         );
-        new import_obsidian23.Setting(container).setName("Enable rhythmic layer").setDesc("Add subtle percussion that responds to vault activity").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable rhythmic layer").setDesc("Add subtle percussion that responds to vault activity").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicEnabled) || false).onChange(async (value) => {
@@ -69359,7 +69460,7 @@ var init_SonicGraphModal = __esm({
             });
           }
         );
-        new import_obsidian23.Setting(container).setName("Enable harmonic layer").setDesc("Add evolving chord progressions based on vault structure").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable harmonic layer").setDesc("Add evolving chord progressions based on vault structure").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicEnabled) || false).onChange(async (value) => {
@@ -69373,7 +69474,7 @@ var init_SonicGraphModal = __esm({
           }
         );
         if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.harmonicEnabled) {
-          new import_obsidian23.Setting(container).setName("Musical scale").setDesc("Scale for harmonic progressions").addDropdown(
+          new import_obsidian24.Setting(container).setName("Musical scale").setDesc("Scale for harmonic progressions").addDropdown(
             (dropdown) => {
               var _a2, _b2;
               return dropdown.addOption("major", "Major - Bright and uplifting").addOption("minor", "Minor - Contemplative and introspective").addOption("dorian", "Dorian - Medieval and mysterious").addOption("pentatonic_major", "Pentatonic Major - Simple and peaceful").addOption("pentatonic_minor", "Pentatonic Minor - Eastern and meditative").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.scale) || "major").onChange(async (value) => {
@@ -69386,7 +69487,7 @@ var init_SonicGraphModal = __esm({
               });
             }
           );
-          new import_obsidian23.Setting(container).setName("Musical key").setDesc("Root key for harmonic progressions").addDropdown(
+          new import_obsidian24.Setting(container).setName("Musical key").setDesc("Root key for harmonic progressions").addDropdown(
             (dropdown) => {
               var _a2, _b2;
               return dropdown.addOption("C", "C").addOption("C#", "C#").addOption("D", "D").addOption("D#", "D#").addOption("E", "E").addOption("F", "F").addOption("F#", "F#").addOption("G", "G").addOption("G#", "G#").addOption("A", "A").addOption("A#", "A#").addOption("B", "B").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.key) || "C").onChange(async (value) => {
@@ -69421,7 +69522,7 @@ var init_SonicGraphModal = __esm({
           text: "Generate unique audio themes for different cluster types with dynamic transitions",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Enable cluster audio").setDesc("Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable cluster audio").setDesc("Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = this.plugin.settings.clusterAudio) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -69469,7 +69570,7 @@ var init_SonicGraphModal = __esm({
        */
       createClusterAudioDetailSettings(container) {
         const settings = this.plugin.settings.clusterAudio;
-        new import_obsidian23.Setting(container).setName("Global cluster volume").setDesc("Master volume for all cluster audio themes").addSlider(
+        new import_obsidian24.Setting(container).setName("Global cluster volume").setDesc("Master volume for all cluster audio themes").addSlider(
           (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.globalVolume).setDynamicTooltip().onChange(async (value) => {
             settings.globalVolume = value;
             await this.plugin.saveSettings();
@@ -69528,20 +69629,20 @@ var init_SonicGraphModal = __esm({
           text: "Audio effects when nodes join, leave, or clusters form/dissolve",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Enable transitions").setDesc("Play audio effects during cluster changes (join, leave, formation, dissolution)").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable transitions").setDesc("Play audio effects during cluster changes (join, leave, formation, dissolution)").addToggle(
           (toggle) => toggle.setValue(settings.transitionsEnabled).onChange(async (value) => {
             settings.transitionsEnabled = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.transitionsEnabled) {
-          new import_obsidian23.Setting(container).setName("Transition volume").setDesc("Volume level for cluster transition effects").addSlider(
+          new import_obsidian24.Setting(container).setName("Transition volume").setDesc("Volume level for cluster transition effects").addSlider(
             (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.transitionVolume).setDynamicTooltip().onChange(async (value) => {
               settings.transitionVolume = value;
               await this.plugin.saveSettings();
             })
           );
-          new import_obsidian23.Setting(container).setName("Transition speed").setDesc("Speed of cluster transition effects (higher = faster)").addSlider(
+          new import_obsidian24.Setting(container).setName("Transition speed").setDesc("Speed of cluster transition effects (higher = faster)").addSlider(
             (slider) => slider.setLimits(0.1, 5, 0.1).setValue(settings.transitionSpeed).setDynamicTooltip().onChange(async (value) => {
               settings.transitionSpeed = value;
               await this.plugin.saveSettings();
@@ -69553,27 +69654,27 @@ var init_SonicGraphModal = __esm({
           text: "Advanced Settings",
           cls: "sonic-graph-setting-label"
         });
-        new import_obsidian23.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
+        new import_obsidian24.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
           (toggle) => toggle.setValue(settings.realTimeUpdates).onChange(async (value) => {
             settings.realTimeUpdates = value;
             await this.plugin.saveSettings();
           })
         );
-        new import_obsidian23.Setting(container).setName("Strength modulation").setDesc("Modulate audio based on cluster strength (cohesion)").addToggle(
+        new import_obsidian24.Setting(container).setName("Strength modulation").setDesc("Modulate audio based on cluster strength (cohesion)").addToggle(
           (toggle) => toggle.setValue(settings.strengthModulation).onChange(async (value) => {
             settings.strengthModulation = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.strengthModulation) {
-          new import_obsidian23.Setting(container).setName("Strength sensitivity").setDesc("How responsive cluster audio is to strength changes").addSlider(
+          new import_obsidian24.Setting(container).setName("Strength sensitivity").setDesc("How responsive cluster audio is to strength changes").addSlider(
             (slider) => slider.setLimits(0.1, 2, 0.1).setValue(settings.strengthSensitivity).setDynamicTooltip().onChange(async (value) => {
               settings.strengthSensitivity = value;
               await this.plugin.saveSettings();
             })
           );
         }
-        new import_obsidian23.Setting(container).setName("Spatial audio").setDesc("Use cluster positions for stereo panning").addToggle(
+        new import_obsidian24.Setting(container).setName("Spatial audio").setDesc("Use cluster positions for stereo panning").addToggle(
           (toggle) => toggle.setValue(settings.spatialAudio).onChange(async (value) => {
             settings.spatialAudio = value;
             await this.plugin.saveSettings();
@@ -69584,13 +69685,13 @@ var init_SonicGraphModal = __esm({
           text: "Performance Settings",
           cls: "sonic-graph-setting-label"
         });
-        new import_obsidian23.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
+        new import_obsidian24.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
           (slider) => slider.setLimits(1, 10, 1).setValue(settings.maxSimultaneousClusters).setDynamicTooltip().onChange(async (value) => {
             settings.maxSimultaneousClusters = value;
             await this.plugin.saveSettings();
           })
         );
-        new import_obsidian23.Setting(container).setName("Update throttle (ms)").setDesc("Throttle cluster updates to prevent audio crackling").addSlider(
+        new import_obsidian24.Setting(container).setName("Update throttle (ms)").setDesc("Throttle cluster updates to prevent audio crackling").addSlider(
           (slider) => slider.setLimits(50, 1e3, 50).setValue(settings.updateThrottleMs).setDynamicTooltip().onChange(async (value) => {
             settings.updateThrottleMs = value;
             await this.plugin.saveSettings();
@@ -69617,7 +69718,7 @@ var init_SonicGraphModal = __esm({
           text: "Generate distinct audio themes for detected community structures with evolution tracking",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Enable community detection audio").setDesc("Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable community detection audio").setDesc("Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = this.plugin.settings.communityDetection) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -69661,7 +69762,7 @@ var init_SonicGraphModal = __esm({
        */
       createCommunityDetectionDetailSettings(container) {
         const settings = this.plugin.settings.communityDetection;
-        new import_obsidian23.Setting(container).setName("Theme intensity").setDesc("Overall intensity of community audio themes").addSlider(
+        new import_obsidian24.Setting(container).setName("Theme intensity").setDesc("Overall intensity of community audio themes").addSlider(
           (slider) => slider.setLimits(0, 2, 0.1).setValue(settings.themeIntensity).setDynamicTooltip().onChange(async (value) => {
             settings.themeIntensity = value;
             await this.plugin.saveSettings();
@@ -69720,20 +69821,20 @@ var init_SonicGraphModal = __esm({
           text: "Configure how communities are detected and classified",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Large community threshold").setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)').addSlider(
+        new import_obsidian24.Setting(container).setName("Large community threshold").setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)').addSlider(
           (slider) => slider.setLimits(5, 30, 1).setValue(settings.largeCommunitySizeThreshold).setDynamicTooltip().onChange(async (value) => {
             settings.largeCommunitySizeThreshold = value;
             await this.plugin.saveSettings();
           })
         );
-        new import_obsidian23.Setting(container).setName("Hierarchy analysis").setDesc("Detect nested community structures for hierarchical themes").addToggle(
+        new import_obsidian24.Setting(container).setName("Hierarchy analysis").setDesc("Detect nested community structures for hierarchical themes").addToggle(
           (toggle) => toggle.setValue(settings.hierarchyAnalysis).onChange(async (value) => {
             settings.hierarchyAnalysis = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.hierarchyAnalysis) {
-          new import_obsidian23.Setting(container).setName("Containment threshold").setDesc("Minimum overlap ratio to consider nested hierarchy (0-1)").addSlider(
+          new import_obsidian24.Setting(container).setName("Containment threshold").setDesc("Minimum overlap ratio to consider nested hierarchy (0-1)").addSlider(
             (slider) => slider.setLimits(0.3, 1, 0.05).setValue(settings.hierarchyContainmentThreshold).setDynamicTooltip().onChange(async (value) => {
               settings.hierarchyContainmentThreshold = value;
               await this.plugin.saveSettings();
@@ -69745,14 +69846,14 @@ var init_SonicGraphModal = __esm({
           text: "Spatial Audio",
           cls: "sonic-graph-setting-label"
         });
-        new import_obsidian23.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
           (toggle) => toggle.setValue(settings.spatialAudio).onChange(async (value) => {
             settings.spatialAudio = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.spatialAudio) {
-          new import_obsidian23.Setting(container).setName("Spatial width").setDesc("Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)").addSlider(
+          new import_obsidian24.Setting(container).setName("Spatial width").setDesc("Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)").addSlider(
             (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.spatialWidth).setDynamicTooltip().onChange(async (value) => {
               settings.spatialWidth = value;
               await this.plugin.saveSettings();
@@ -69780,7 +69881,7 @@ var init_SonicGraphModal = __esm({
           text: "Audio feedback for community evolution events (merge, split, growth, decline, etc.)",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Enable evolution audio").setDesc("Play audio events when communities merge, split, grow, decline, or change structure").addToggle(
+        new import_obsidian24.Setting(container).setName("Enable evolution audio").setDesc("Play audio events when communities merge, split, grow, decline, or change structure").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = this.plugin.settings.communityEvolution) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -69893,13 +69994,13 @@ var init_SonicGraphModal = __esm({
           text: "Configure sensitivity for detecting growth and decline",
           cls: "sonic-graph-setting-description"
         });
-        new import_obsidian23.Setting(container).setName("Growth threshold").setDesc("Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)").addSlider(
+        new import_obsidian24.Setting(container).setName("Growth threshold").setDesc("Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)").addSlider(
           (slider) => slider.setLimits(0.1, 1, 0.05).setValue(settings.growthThreshold).setDynamicTooltip().onChange(async (value) => {
             settings.growthThreshold = value;
             await this.plugin.saveSettings();
           })
         );
-        new import_obsidian23.Setting(container).setName("Decline threshold").setDesc("Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)").addSlider(
+        new import_obsidian24.Setting(container).setName("Decline threshold").setDesc("Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)").addSlider(
           (slider) => slider.setLimits(0.1, 1, 0.05).setValue(settings.declineThreshold).setDynamicTooltip().onChange(async (value) => {
             settings.declineThreshold = value;
             await this.plugin.saveSettings();
@@ -69910,7 +70011,7 @@ var init_SonicGraphModal = __esm({
           text: "Performance Settings",
           cls: "sonic-graph-setting-label"
         });
-        new import_obsidian23.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
+        new import_obsidian24.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
           (slider) => slider.setLimits(100, 2e3, 100).setValue(settings.eventThrottleMs).setDynamicTooltip().onChange(async (value) => {
             settings.eventThrottleMs = value;
             await this.plugin.saveSettings();
@@ -69927,14 +70028,14 @@ var init_SonicGraphModal = __esm({
        */
       createCommunityTypeSettings(container, communityType, displayName, description, settings) {
         const communityContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-        new import_obsidian23.Setting(communityContainer).setName(displayName).setDesc(description).addToggle(
+        new import_obsidian24.Setting(communityContainer).setName(displayName).setDesc(description).addToggle(
           (toggle) => toggle.setValue(settings.communityTypeEnabled[communityType]).onChange(async (value) => {
             settings.communityTypeEnabled[communityType] = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.communityTypeEnabled[communityType]) {
-          new import_obsidian23.Setting(communityContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
+          new import_obsidian24.Setting(communityContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
             (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.communityTypeVolumes[communityType]).setDynamicTooltip().onChange(async (value) => {
               settings.communityTypeVolumes[communityType] = value;
               await this.plugin.saveSettings();
@@ -69947,14 +70048,14 @@ var init_SonicGraphModal = __esm({
        */
       createEvolutionEventSettings(container, eventType, displayName, description, settings) {
         const eventContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-        new import_obsidian23.Setting(eventContainer).setName(displayName).setDesc(description).addToggle(
+        new import_obsidian24.Setting(eventContainer).setName(displayName).setDesc(description).addToggle(
           (toggle) => toggle.setValue(settings.enabledEventTypes[eventType]).onChange(async (value) => {
             settings.enabledEventTypes[eventType] = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.enabledEventTypes[eventType]) {
-          new import_obsidian23.Setting(eventContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()} events`).addSlider(
+          new import_obsidian24.Setting(eventContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()} events`).addSlider(
             (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.eventVolumes[eventType]).setDynamicTooltip().onChange(async (value) => {
               settings.eventVolumes[eventType] = value;
               await this.plugin.saveSettings();
@@ -70003,14 +70104,14 @@ var init_SonicGraphModal = __esm({
        */
       createClusterTypeSettings(container, clusterType, displayName, description, settings) {
         const clusterContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-        new import_obsidian23.Setting(clusterContainer).setName(displayName).setDesc(description).addToggle(
+        new import_obsidian24.Setting(clusterContainer).setName(displayName).setDesc(description).addToggle(
           (toggle) => toggle.setValue(settings.clusterTypeEnabled[clusterType]).onChange(async (value) => {
             settings.clusterTypeEnabled[clusterType] = value;
             await this.plugin.saveSettings();
           })
         );
         if (settings.clusterTypeEnabled[clusterType]) {
-          new import_obsidian23.Setting(clusterContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
+          new import_obsidian24.Setting(clusterContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
             (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.clusterTypeVolumes[clusterType]).setDynamicTooltip().onChange(async (value) => {
               settings.clusterTypeVolumes[clusterType] = value;
               await this.plugin.saveSettings();
@@ -70112,7 +70213,7 @@ var init_SonicGraphModal = __esm({
           markersSwitch.toggleClass("active", !isActive);
           this.updateTimelineMarkersVisibility(!isActive);
         });
-        (0, import_obsidian23.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
+        (0, import_obsidian24.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
           placement: "left"
         });
         const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -70134,7 +70235,7 @@ var init_SonicGraphModal = __esm({
             optionEl.selected = true;
           }
         });
-        (0, import_obsidian23.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
+        (0, import_obsidian24.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
           placement: "top"
         });
         styleSelect.addEventListener("change", (e) => {
@@ -70155,7 +70256,7 @@ var init_SonicGraphModal = __esm({
           loopSwitch.toggleClass("active", !isActive);
           this.updateLoopAnimation(!isActive);
         });
-        (0, import_obsidian23.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
+        (0, import_obsidian24.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
           placement: "left"
         });
         const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -70166,7 +70267,7 @@ var init_SonicGraphModal = __esm({
           fileNamesSwitch.addClass("active");
         }
         const _fileNamesHandle = fileNamesSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-        (0, import_obsidian23.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
+        (0, import_obsidian24.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
           placement: "left"
         });
         fileNamesSwitch.addEventListener("click", () => {
@@ -70291,7 +70392,7 @@ var init_SonicGraphModal = __esm({
           };
           this.updateLayoutSetting("layoutPreset", densityToPreset[value]);
         });
-        (0, import_obsidian23.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
+        (0, import_obsidian24.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
           placement: "top"
         });
         const clusteringItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -70318,7 +70419,7 @@ var init_SonicGraphModal = __esm({
           clusteringValue.textContent = `${Math.round(value * 100)}%`;
           this.updateLayoutSetting("clusteringStrength", value);
         });
-        (0, import_obsidian23.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
+        (0, import_obsidian24.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
           placement: "top"
         });
         const separationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -70345,7 +70446,7 @@ var init_SonicGraphModal = __esm({
           separationValue.textContent = `${Math.round(value * 100)}%`;
           this.updateLayoutSetting("groupSeparation", value);
         });
-        (0, import_obsidian23.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
+        (0, import_obsidian24.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
           placement: "top"
         });
       }
@@ -70368,14 +70469,14 @@ var init_SonicGraphModal = __esm({
           tagsSwitch.toggleClass("active", !isActive);
           this.updateFilterSetting("showTags", !isActive);
         });
-        (0, import_obsidian23.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
+        (0, import_obsidian24.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
           placement: "left"
         });
         const orphansItem = section.createDiv({ cls: "sonic-graph-setting-item" });
         orphansItem.createEl("label", { text: "Show orphans", cls: "sonic-graph-setting-label" });
         const orphansToggle = orphansItem.createDiv({ cls: "sonic-graph-setting-toggle" });
         const orphansSwitch = orphansToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
-        (0, import_obsidian23.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
+        (0, import_obsidian24.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
           placement: "left"
         });
         if (this.getSonicGraphSettings().layout.filters.showOrphans) {
@@ -70467,7 +70568,7 @@ var init_SonicGraphModal = __esm({
         searchInput.style.borderRadius = "4px";
         searchInput.style.backgroundColor = "#fef3c7";
         searchInput.style.fontSize = "12px";
-        (0, import_obsidian23.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
+        (0, import_obsidian24.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
           placement: "top"
         });
         searchInput.addEventListener("focus", () => {
@@ -70798,7 +70899,7 @@ var init_SonicGraphModal = __esm({
             vaultFileCount: this.app.vault.getFiles().length,
             userAgent: navigator.userAgent
           };
-          navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian23.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian23.Notice("Failed to copy debug info"));
+          navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian24.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian24.Notice("Failed to copy debug info"));
         });
       }
       /**
@@ -70977,7 +71078,7 @@ var init_SonicGraphModal = __esm({
           currentIndicator.style.display = "none";
         }
         logger72.info("ui", "Sonic Graph animation completed");
-        new import_obsidian23.Notice("Animation completed");
+        new import_obsidian24.Notice("Animation completed");
       }
       /**
        * Handle node appearance for audio synchronization
@@ -74773,7 +74874,7 @@ __export(main_exports, {
   default: () => SonigraphPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian24 = require("obsidian");
+var import_obsidian25 = require("obsidian");
 init_constants();
 
 // src/ui/settings.ts
@@ -80642,7 +80743,7 @@ var TestSuiteModal = class extends import_obsidian13.Modal {
 };
 
 // src/ui/SonicGraphView.ts
-var import_obsidian22 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 init_GraphDataExtractor();
 init_GraphRenderer();
 init_TemporalGraphAnimator();
@@ -80654,7 +80755,7 @@ init_src31();
 init_ContinuousLayerManager();
 var logger60 = getLogger("SonicGraphView");
 var VIEW_TYPE_SONIC_GRAPH = "sonic-graph-view";
-var SonicGraphView = class extends import_obsidian22.ItemView {
+var SonicGraphView = class extends import_obsidian23.ItemView {
   // Musical phrase length
   constructor(leaf, plugin) {
     super(leaf);
@@ -80813,13 +80914,13 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       logger60.info("sonic-graph-init", "Starting graph initialization - THIS IS THE CRITICAL STEP");
       this.initializeGraph().catch((error) => {
         logger60.error("sonic-graph-init", "Graph initialization failed:", error);
-        new import_obsidian22.Notice("Failed to initialize Sonic Graph: " + error.message);
+        new import_obsidian23.Notice("Failed to initialize Sonic Graph: " + error.message);
       });
       this.registerWorkspaceListener();
     } catch (error) {
       logger60.error("ui", "Error opening Sonic Graph view:", error.message);
       logger60.error("ui", "Error stack:", error.stack);
-      new import_obsidian22.Notice("Failed to open Sonic Graph view: " + error.message);
+      new import_obsidian23.Notice("Failed to open Sonic Graph view: " + error.message);
     }
   }
   /**
@@ -80967,7 +81068,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       logger60.info("continuous-layers", "Continuous layers initialized successfully");
     } catch (error) {
       logger60.error("continuous-layers", "Failed to initialize continuous layers", error);
-      new import_obsidian22.Notice("Failed to initialize continuous audio layers");
+      new import_obsidian23.Notice("Failed to initialize continuous audio layers");
     }
   }
   async onClose() {
@@ -81138,10 +81239,10 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     this.controlsContainer = container.createDiv({ cls: "sonic-graph-controls" });
     const playControls = this.controlsContainer.createDiv({ cls: "sonic-graph-play-controls" });
     const playButtonContainer = playControls.createDiv({ cls: "sonic-graph-play-button-container" });
-    this.playButton = new import_obsidian22.ButtonComponent(playButtonContainer);
+    this.playButton = new import_obsidian23.ButtonComponent(playButtonContainer);
     this.playButton.setButtonText("Play").onClick(() => this.toggleAnimation());
     const exportButtonContainer = playControls.createDiv({ cls: "sonic-graph-export-button-container" });
-    const exportButton = new import_obsidian22.ButtonComponent(exportButtonContainer);
+    const exportButton = new import_obsidian23.ButtonComponent(exportButtonContainer);
     exportButton.setButtonText("Export").setCta().setIcon("download").onClick(() => this.openExportModal());
     const speedContainer = playControls.createDiv({ cls: "sonic-graph-speed-container" });
     speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
@@ -81344,7 +81445,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       if (loadingIndicator) {
         loadingIndicator.remove();
       }
-      new import_obsidian22.Notice(`Failed to load graph data: ${error.message}`);
+      new import_obsidian23.Notice(`Failed to load graph data: ${error.message}`);
       this.showErrorState(error.message);
     }
   }
@@ -81354,7 +81455,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
   async toggleAnimation() {
     var _a, _b, _c;
     if (!this.graphRenderer) {
-      new import_obsidian22.Notice("Graph not ready");
+      new import_obsidian23.Notice("Graph not ready");
       return;
     }
     if (!this.isTimelineView) {
@@ -81368,7 +81469,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         if (!status.isInitialized) {
           logger60.info("audio", "Audio engine not initialized - initializing for animation");
           await this.plugin.audioEngine.initialize();
-          new import_obsidian22.Notice("Audio engine initialized");
+          new import_obsidian23.Notice("Audio engine initialized");
         } else {
           logger60.info("audio", "Reinitializing audio engine for animation to ensure fresh state");
           await this.plugin.audioEngine.initialize();
@@ -81378,18 +81479,18 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
             enabledCount: enabledInstruments.length,
             audioContext: this.plugin.audioEngine.getStatus().audioContext
           });
-          new import_obsidian22.Notice("Audio engine ready for animation");
+          new import_obsidian23.Notice("Audio engine ready for animation");
         }
         logger60.info("audio", "Audio engine ready for Sonic Graph animation");
       } catch (audioError) {
         logger60.warn("Failed to check audio engine for animation", audioError.message);
-        new import_obsidian22.Notice("Audio check failed - animation may be silent");
+        new import_obsidian23.Notice("Audio check failed - animation may be silent");
       }
       if (!this.temporalAnimator) {
         await this.initializeTemporalAnimator();
       }
       if (!this.temporalAnimator) {
-        new import_obsidian22.Notice("Failed to initialize animation");
+        new import_obsidian23.Notice("Failed to initialize animation");
         this.isAnimating = false;
         return;
       }
@@ -81411,7 +81512,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       });
       this.temporalAnimator.play();
       logger60.info("ui", "Starting Sonic Graph temporal animation");
-      new import_obsidian22.Notice("Sonic Graph animation started");
+      new import_obsidian23.Notice("Sonic Graph animation started");
     } else {
       this.playButton.setButtonText("Play");
       const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
@@ -81425,7 +81526,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         this.continuousLayerManager.stop();
       }
       logger60.info("ui", "Pausing Sonic Graph animation");
-      new import_obsidian22.Notice("Animation paused");
+      new import_obsidian23.Notice("Animation paused");
     }
   }
   /**
@@ -81438,12 +81539,12 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         await this.initializeTemporalAnimator();
       } catch (error) {
         logger60.error("Failed to initialize temporal animator for export", error);
-        new import_obsidian22.Notice("Failed to initialize timeline for export. Please try switching to Timeline View first.");
+        new import_obsidian23.Notice("Failed to initialize timeline for export. Please try switching to Timeline View first.");
         return;
       }
     }
     if (!this.temporalAnimator) {
-      new import_obsidian22.Notice("Export requires Timeline View to be initialized. Please switch to Timeline View and try again.");
+      new import_obsidian23.Notice("Export requires Timeline View to be initialized. Please switch to Timeline View and try again.");
       return;
     }
     const { ExportModal: ExportModal2 } = (init_ExportModal(), __toCommonJS(ExportModal_exports));
@@ -81608,7 +81709,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     }
     const section = container.createDiv({ cls: "sonic-graph-settings-section adaptive-detail-override" });
     section.createEl("div", { text: "ADAPTIVE DETAIL", cls: "sonic-graph-settings-section-title" });
-    new import_obsidian22.Setting(section).setName("Disable for this session").setDesc("The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
+    new import_obsidian23.Setting(section).setName("Disable for this session").setDesc("The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
       (toggle) => toggle.setValue(false).onChange((isOverridden) => {
         if (this.adaptiveDetailManager) {
           this.adaptiveDetailManager.setSessionOverride(isOverridden);
@@ -81710,7 +81811,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: Math.round(settings.tagInfluence.weight * 100) + "%",
       cls: "sonic-graph-weight-value"
     });
-    (0, import_obsidian22.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
+    (0, import_obsidian23.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
       placement: "top"
     });
     tagWeightSlider.addEventListener("input", (e) => {
@@ -81743,7 +81844,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         text: Math.round(settings.temporalPositioning.weight * 100) + "%",
         cls: "sonic-graph-weight-value"
       });
-      (0, import_obsidian22.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
+      (0, import_obsidian23.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
         placement: "top"
       });
       temporalWeightSlider.addEventListener("input", (e) => {
@@ -81777,7 +81878,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         text: Math.round(settings.hubCentrality.weight * 100) + "%",
         cls: "sonic-graph-weight-value"
       });
-      (0, import_obsidian22.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
+      (0, import_obsidian23.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
         placement: "top"
       });
       hubWeightSlider.addEventListener("input", (e) => {
@@ -81803,7 +81904,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       debugSwitch.addClass("active");
     }
     const debugHandle = debugSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-    (0, import_obsidian22.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
+    (0, import_obsidian23.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
       placement: "left"
     });
     debugSwitch.addEventListener("click", () => {
@@ -81840,7 +81941,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         option.selected = true;
       }
     });
-    (0, import_obsidian22.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.", {
+    (0, import_obsidian23.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.", {
       placement: "top"
     });
     algorithmSelect.addEventListener("change", (e) => {
@@ -81919,7 +82020,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       const minSize = parseInt(target.value);
       this.updateClusteringParameter("minClusterSize", minSize);
     });
-    (0, import_obsidian22.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
+    (0, import_obsidian23.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
       placement: "top",
       delay: 500
     });
@@ -81942,13 +82043,13 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       const maxClusters = parseInt(target.value);
       this.updateClusteringParameter("maxClusters", maxClusters);
     });
-    (0, import_obsidian22.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
+    (0, import_obsidian23.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
       placement: "top",
       delay: 500
     });
     const visualizationHeader = section.createDiv({ cls: "sonic-graph-visualization-header" });
     visualizationHeader.createEl("h4", { text: "Visualization", cls: "sonic-graph-visualization-title" });
-    new import_obsidian22.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.').addToggle(
+    new import_obsidian23.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.').addToggle(
       (toggle) => toggle.setValue(settings.visualization.showClusterLabels).onChange((value) => {
         this.updateClusteringVisualization("showClusterLabels", value);
       })
@@ -82039,7 +82140,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       },
       currentPreset: "minimal"
     };
-    new import_obsidian22.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
+    new import_obsidian23.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
       (toggle) => toggle.setValue(settings.enabled || false).onChange(async (value) => {
         try {
           const currentSettings = this.getSonicGraphSettings();
@@ -82061,42 +82162,42 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         }
       })
     );
-    new import_obsidian22.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
+    new import_obsidian23.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
       (toggle) => toggle.setValue(settings.independentFromContentAware).onChange((value) => {
         this.updateConnectionTypeMappingConfig("independentFromContentAware", value);
       })
     );
-    new import_obsidian22.Setting(content).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
+    new import_obsidian23.Setting(content).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
       (slider) => slider.setLimits(0, 100, 5).setValue(settings.globalSettings.connectionVolumeMix * 100).setDynamicTooltip().onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("connectionVolumeMix", value / 100);
       })
     );
-    new import_obsidian22.Setting(content).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
+    new import_obsidian23.Setting(content).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
       (slider) => slider.setLimits(5, 50, 1).setValue(settings.globalSettings.maxSimultaneousConnections).setDynamicTooltip().onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("maxSimultaneousConnections", value);
       })
     );
     const connectionTypesSection = content.createDiv({ cls: "connection-types-toggles" });
     connectionTypesSection.createEl("h5", { text: "Connection Types", cls: "connection-type-subsection-title" });
-    new import_obsidian22.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+    new import_obsidian23.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
       (toggle) => toggle.setValue(settings.mappings.wikilink.enabled).onChange((value) => {
         this.updateConnectionTypeMapping("wikilink", "enabled", value);
       })
     );
-    new import_obsidian22.Setting(connectionTypesSection).setName("Embeds (![[embedded content]])").setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+    new import_obsidian23.Setting(connectionTypesSection).setName("Embeds (![[embedded content]])").setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
       (toggle) => toggle.setValue(settings.mappings.embed.enabled).onChange((value) => {
         this.updateConnectionTypeMapping("embed", "enabled", value);
       })
     );
     if (settings.mappings.markdown) {
-      new import_obsidian22.Setting(connectionTypesSection).setName("Markdown Links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+      new import_obsidian23.Setting(connectionTypesSection).setName("Markdown Links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
         (toggle) => toggle.setValue(settings.mappings.markdown.enabled).onChange((value) => {
           this.updateConnectionTypeMapping("markdown", "enabled", value);
         })
       );
     }
     if (settings.mappings.tag) {
-      new import_obsidian22.Setting(connectionTypesSection).setName("Tag Connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+      new import_obsidian23.Setting(connectionTypesSection).setName("Tag Connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
         (toggle) => toggle.setValue(settings.mappings.tag.enabled).onChange((value) => {
           this.updateConnectionTypeMapping("tag", "enabled", value);
         })
@@ -82104,12 +82205,12 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     }
     const performanceSection = section.createDiv({ cls: "connection-type-performance" });
     performanceSection.createEl("h5", { text: "Performance", cls: "connection-type-subsection-title" });
-    new import_obsidian22.Setting(performanceSection).setName("Enable Caching").setDesc("Cache connection analysis results for better performance").addToggle(
+    new import_obsidian23.Setting(performanceSection).setName("Enable Caching").setDesc("Cache connection analysis results for better performance").addToggle(
       (toggle) => toggle.setValue(settings.globalSettings.enableCaching).onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("enableCaching", value);
       })
     );
-    new import_obsidian22.Setting(performanceSection).setName("Selective Processing").setDesc("Only process visible connections to improve performance").addToggle(
+    new import_obsidian23.Setting(performanceSection).setName("Selective Processing").setDesc("Only process visible connections to improve performance").addToggle(
       (toggle) => toggle.setValue(settings.globalSettings.selectiveProcessing).onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("selectiveProcessing", value);
       })
@@ -82185,7 +82286,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       cls: "sonic-graph-weight-value"
     });
     if (tooltipText) {
-      (0, import_obsidian22.setTooltip)(weightSlider, tooltipText, {
+      (0, import_obsidian23.setTooltip)(weightSlider, tooltipText, {
         placement: "top"
       });
     }
@@ -82229,7 +82330,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       densityValueDisplay.textContent = density + "%";
       this.updateAudioDensity(density);
     });
-    (0, import_obsidian22.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
+    (0, import_obsidian23.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
       placement: "top"
     });
     const densityLabels = densityContainer.createDiv({ cls: "sonic-graph-density-labels" });
@@ -82260,7 +82361,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       durationValueDisplay.textContent = duration + " seconds";
       this.updateAnimationDuration(duration);
     });
-    (0, import_obsidian22.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
+    (0, import_obsidian23.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
       placement: "top"
     });
     const durationLabels = durationContainer.createDiv({ cls: "sonic-graph-density-labels" });
@@ -82283,7 +82384,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       toggleSwitch.toggleClass("active", !isActive);
       this.updateLoopAnimation(!isActive);
     });
-    (0, import_obsidian22.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
+    (0, import_obsidian23.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
       placement: "left"
     });
     const timeWindowItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -82314,7 +82415,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     timeWindowSelect.addEventListener("change", () => {
       this.updateTimeWindow(timeWindowSelect.value);
     });
-    (0, import_obsidian22.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
+    (0, import_obsidian23.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
       placement: "top"
     });
     const granularityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -82345,7 +82446,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     granularitySelect.addEventListener("change", () => {
       this.updateTimelineGranularity(granularitySelect.value);
     });
-    (0, import_obsidian22.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
+    (0, import_obsidian23.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
       placement: "top"
     });
     const customRangeItem = section.createDiv({
@@ -82394,10 +82495,10 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     customUnitSelect.addEventListener("change", () => {
       this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value);
     });
-    (0, import_obsidian22.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
+    (0, import_obsidian23.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
       placement: "top"
     });
-    (0, import_obsidian22.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
+    (0, import_obsidian23.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
       placement: "top"
     });
     const spreadingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -82427,7 +82528,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     spreadingSelect.addEventListener("change", () => {
       this.updateEventSpreadingMode(spreadingSelect.value);
     });
-    (0, import_obsidian22.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
+    (0, import_obsidian23.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
       placement: "left"
     });
   }
@@ -82449,7 +82550,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       if (option.includes("Auto"))
         optionEl.selected = true;
     });
-    (0, import_obsidian22.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
+    (0, import_obsidian23.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
       placement: "top"
     });
     const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -82467,7 +82568,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: `${this.getSonicGraphSettings().audio.noteDuration.toFixed(1)}s`,
       cls: "sonic-graph-slider-value"
     });
-    (0, import_obsidian22.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
+    (0, import_obsidian23.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
       placement: "top"
     });
     durationSlider.addEventListener("input", () => {
@@ -82499,7 +82600,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Advanced audio mapping features for richer soundscapes",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -82515,7 +82616,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       }
     );
     if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.contentAwareMapping) == null ? void 0 : _b.enabled) {
-      new import_obsidian22.Setting(container).setName("Instrument frontmatter property").setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")').addText(
+      new import_obsidian23.Setting(container).setName("Instrument frontmatter property").setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")').addText(
         (text) => {
           var _a2, _b2;
           return text.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.frontmatterPropertyName) || "instrument").onChange(async (value) => {
@@ -82527,7 +82628,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
           });
         }
       );
-      new import_obsidian22.Setting(container).setName("Musical mood property").setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")').addText(
+      new import_obsidian23.Setting(container).setName("Musical mood property").setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")').addText(
         (text) => {
           var _a2, _b2;
           return text.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.moodPropertyName) || "musical-mood").onChange(async (value) => {
@@ -82539,7 +82640,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
           });
         }
       );
-      new import_obsidian22.Setting(container).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
+      new import_obsidian23.Setting(container).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
         (dropdown) => {
           var _a2, _b2;
           return dropdown.addOption("balanced", "Balanced - Prevent clustering").addOption("random", "Random - Natural variation").addOption("semantic", "Semantic - Based on content").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.distributionStrategy) || "balanced").onChange(async (value) => {
@@ -82574,7 +82675,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Ambient background layers that evolve with your vault structure and activity",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Enable continuous layers").setDesc("Add ambient background audio that responds to vault size, activity, and animation progress").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable continuous layers").setDesc("Add ambient background audio that responds to vault size, activity, and animation progress").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -82597,7 +82698,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
    */
   createContinuousLayerControls(container) {
     var _a, _b;
-    new import_obsidian22.Setting(container).setName("Musical genre").setDesc("Choose the ambient genre for continuous layers").addDropdown(
+    new import_obsidian23.Setting(container).setName("Musical genre").setDesc("Choose the ambient genre for continuous layers").addDropdown(
       (dropdown) => {
         var _a2, _b2;
         return dropdown.addOption("ambient", "Ambient - Gentle evolving textures").addOption("drone", "Drone - Sustained atmospheric tones").addOption("orchestral", "Orchestral - Classical instruments in sustained arrangements").addOption("electronic", "Electronic - Synthesized pads and evolving textures").addOption("minimal", "Minimal - Sparse, contemplative elements").addOption("oceanic", "Oceanic - Whale songs and ocean sounds").addOption("sci-fi", "Sci-Fi - Futuristic atmospheric sounds").addOption("experimental", "Experimental - Unconventional sound design").addOption("industrial", "Industrial - Mechanical drones and factory ambience").addOption("urban", "Urban - City soundscapes and human activity").addOption("nature", "Nature - Forest ambience, rain, wind").addOption("mechanical", "Mechanical - Machine hums and motor drones").addOption("organic", "Organic - Acoustic instruments with natural processing").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.genre) || "ambient").onChange(async (value) => {
@@ -82611,7 +82712,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         });
       }
     );
-    new import_obsidian22.Setting(container).setName("Layer intensity").setDesc("Control the volume and prominence of continuous layers").addSlider(
+    new import_obsidian23.Setting(container).setName("Layer intensity").setDesc("Control the volume and prominence of continuous layers").addSlider(
       (slider) => {
         var _a2, _b2;
         return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.intensity) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -82624,7 +82725,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         });
       }
     );
-    new import_obsidian22.Setting(container).setName("Adaptive intensity").setDesc("Layer intensity responds to vault size and activity level").addToggle(
+    new import_obsidian23.Setting(container).setName("Adaptive intensity").setDesc("Layer intensity responds to vault size and activity level").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.adaptiveIntensity) || true).onChange(async (value) => {
@@ -82637,7 +82738,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         });
       }
     );
-    new import_obsidian22.Setting(container).setName("Evolution rate").setDesc("How quickly the ambient layers change and evolve").addSlider(
+    new import_obsidian23.Setting(container).setName("Evolution rate").setDesc("How quickly the ambient layers change and evolve").addSlider(
       (slider) => {
         var _a2, _b2;
         return slider.setLimits(0.1, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.evolutionRate) || 0.3).setDynamicTooltip().onChange(async (value) => {
@@ -82650,7 +82751,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         });
       }
     );
-    new import_obsidian22.Setting(container).setName("Enable rhythmic layer").setDesc("Add subtle percussion that responds to vault activity").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable rhythmic layer").setDesc("Add subtle percussion that responds to vault activity").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicEnabled) || false).onChange(async (value) => {
@@ -82663,7 +82764,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         });
       }
     );
-    new import_obsidian22.Setting(container).setName("Enable harmonic layer").setDesc("Add evolving chord progressions based on vault structure").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable harmonic layer").setDesc("Add evolving chord progressions based on vault structure").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicEnabled) || false).onChange(async (value) => {
@@ -82677,7 +82778,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       }
     );
     if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.harmonicEnabled) {
-      new import_obsidian22.Setting(container).setName("Musical scale").setDesc("Scale for harmonic progressions").addDropdown(
+      new import_obsidian23.Setting(container).setName("Musical scale").setDesc("Scale for harmonic progressions").addDropdown(
         (dropdown) => {
           var _a2, _b2;
           return dropdown.addOption("major", "Major - Bright and uplifting").addOption("minor", "Minor - Contemplative and introspective").addOption("dorian", "Dorian - Medieval and mysterious").addOption("pentatonic_major", "Pentatonic Major - Simple and peaceful").addOption("pentatonic_minor", "Pentatonic Minor - Eastern and meditative").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.scale) || "major").onChange(async (value) => {
@@ -82690,7 +82791,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
           });
         }
       );
-      new import_obsidian22.Setting(container).setName("Musical key").setDesc("Root key for harmonic progressions").addDropdown(
+      new import_obsidian23.Setting(container).setName("Musical key").setDesc("Root key for harmonic progressions").addDropdown(
         (dropdown) => {
           var _a2, _b2;
           return dropdown.addOption("C", "C").addOption("C#", "C#").addOption("D", "D").addOption("D#", "D#").addOption("E", "E").addOption("F", "F").addOption("F#", "F#").addOption("G", "G").addOption("G#", "G#").addOption("A", "A").addOption("A#", "A#").addOption("B", "B").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.key) || "C").onChange(async (value) => {
@@ -82725,7 +82826,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Generate unique audio themes for different cluster types with dynamic transitions",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Enable cluster audio").setDesc("Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable cluster audio").setDesc("Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters").addToggle(
       (toggle) => {
         var _a2;
         return toggle.setValue(((_a2 = this.plugin.settings.clusterAudio) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -82773,7 +82874,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
    */
   createClusterAudioDetailSettings(container) {
     const settings = this.plugin.settings.clusterAudio;
-    new import_obsidian22.Setting(container).setName("Global cluster volume").setDesc("Master volume for all cluster audio themes").addSlider(
+    new import_obsidian23.Setting(container).setName("Global cluster volume").setDesc("Master volume for all cluster audio themes").addSlider(
       (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.globalVolume).setDynamicTooltip().onChange(async (value) => {
         settings.globalVolume = value;
         await this.plugin.saveSettings();
@@ -82832,20 +82933,20 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Audio effects when nodes join, leave, or clusters form/dissolve",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Enable transitions").setDesc("Play audio effects during cluster changes (join, leave, formation, dissolution)").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable transitions").setDesc("Play audio effects during cluster changes (join, leave, formation, dissolution)").addToggle(
       (toggle) => toggle.setValue(settings.transitionsEnabled).onChange(async (value) => {
         settings.transitionsEnabled = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.transitionsEnabled) {
-      new import_obsidian22.Setting(container).setName("Transition volume").setDesc("Volume level for cluster transition effects").addSlider(
+      new import_obsidian23.Setting(container).setName("Transition volume").setDesc("Volume level for cluster transition effects").addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.transitionVolume).setDynamicTooltip().onChange(async (value) => {
           settings.transitionVolume = value;
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian22.Setting(container).setName("Transition speed").setDesc("Speed of cluster transition effects (higher = faster)").addSlider(
+      new import_obsidian23.Setting(container).setName("Transition speed").setDesc("Speed of cluster transition effects (higher = faster)").addSlider(
         (slider) => slider.setLimits(0.1, 5, 0.1).setValue(settings.transitionSpeed).setDynamicTooltip().onChange(async (value) => {
           settings.transitionSpeed = value;
           await this.plugin.saveSettings();
@@ -82857,27 +82958,27 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Advanced Settings",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian22.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
+    new import_obsidian23.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
       (toggle) => toggle.setValue(settings.realTimeUpdates).onChange(async (value) => {
         settings.realTimeUpdates = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian22.Setting(container).setName("Strength modulation").setDesc("Modulate audio based on cluster strength (cohesion)").addToggle(
+    new import_obsidian23.Setting(container).setName("Strength modulation").setDesc("Modulate audio based on cluster strength (cohesion)").addToggle(
       (toggle) => toggle.setValue(settings.strengthModulation).onChange(async (value) => {
         settings.strengthModulation = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.strengthModulation) {
-      new import_obsidian22.Setting(container).setName("Strength sensitivity").setDesc("How responsive cluster audio is to strength changes").addSlider(
+      new import_obsidian23.Setting(container).setName("Strength sensitivity").setDesc("How responsive cluster audio is to strength changes").addSlider(
         (slider) => slider.setLimits(0.1, 2, 0.1).setValue(settings.strengthSensitivity).setDynamicTooltip().onChange(async (value) => {
           settings.strengthSensitivity = value;
           await this.plugin.saveSettings();
         })
       );
     }
-    new import_obsidian22.Setting(container).setName("Spatial audio").setDesc("Use cluster positions for stereo panning").addToggle(
+    new import_obsidian23.Setting(container).setName("Spatial audio").setDesc("Use cluster positions for stereo panning").addToggle(
       (toggle) => toggle.setValue(settings.spatialAudio).onChange(async (value) => {
         settings.spatialAudio = value;
         await this.plugin.saveSettings();
@@ -82888,13 +82989,13 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Performance Settings",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian22.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
+    new import_obsidian23.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
       (slider) => slider.setLimits(1, 10, 1).setValue(settings.maxSimultaneousClusters).setDynamicTooltip().onChange(async (value) => {
         settings.maxSimultaneousClusters = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian22.Setting(container).setName("Update throttle (ms)").setDesc("Throttle cluster updates to prevent audio crackling").addSlider(
+    new import_obsidian23.Setting(container).setName("Update throttle (ms)").setDesc("Throttle cluster updates to prevent audio crackling").addSlider(
       (slider) => slider.setLimits(50, 1e3, 50).setValue(settings.updateThrottleMs).setDynamicTooltip().onChange(async (value) => {
         settings.updateThrottleMs = value;
         await this.plugin.saveSettings();
@@ -83171,7 +83272,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Generate distinct audio themes for detected community structures with evolution tracking",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Enable community detection audio").setDesc("Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable community detection audio").setDesc("Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities").addToggle(
       (toggle) => {
         var _a2;
         return toggle.setValue(((_a2 = this.plugin.settings.communityDetection) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -83215,7 +83316,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
    */
   createCommunityDetectionDetailSettings(container) {
     const settings = this.plugin.settings.communityDetection;
-    new import_obsidian22.Setting(container).setName("Theme intensity").setDesc("Overall intensity of community audio themes").addSlider(
+    new import_obsidian23.Setting(container).setName("Theme intensity").setDesc("Overall intensity of community audio themes").addSlider(
       (slider) => slider.setLimits(0, 2, 0.1).setValue(settings.themeIntensity).setDynamicTooltip().onChange(async (value) => {
         settings.themeIntensity = value;
         await this.plugin.saveSettings();
@@ -83274,20 +83375,20 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Configure how communities are detected and classified",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Large community threshold").setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)').addSlider(
+    new import_obsidian23.Setting(container).setName("Large community threshold").setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)').addSlider(
       (slider) => slider.setLimits(5, 30, 1).setValue(settings.largeCommunitySizeThreshold).setDynamicTooltip().onChange(async (value) => {
         settings.largeCommunitySizeThreshold = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian22.Setting(container).setName("Hierarchy analysis").setDesc("Detect nested community structures for hierarchical themes").addToggle(
+    new import_obsidian23.Setting(container).setName("Hierarchy analysis").setDesc("Detect nested community structures for hierarchical themes").addToggle(
       (toggle) => toggle.setValue(settings.hierarchyAnalysis).onChange(async (value) => {
         settings.hierarchyAnalysis = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.hierarchyAnalysis) {
-      new import_obsidian22.Setting(container).setName("Containment threshold").setDesc("Minimum overlap ratio to consider nested hierarchy (0-1)").addSlider(
+      new import_obsidian23.Setting(container).setName("Containment threshold").setDesc("Minimum overlap ratio to consider nested hierarchy (0-1)").addSlider(
         (slider) => slider.setLimits(0.3, 1, 0.05).setValue(settings.hierarchyContainmentThreshold).setDynamicTooltip().onChange(async (value) => {
           settings.hierarchyContainmentThreshold = value;
           await this.plugin.saveSettings();
@@ -83299,14 +83400,14 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Spatial Audio",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian22.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
       (toggle) => toggle.setValue(settings.spatialAudio).onChange(async (value) => {
         settings.spatialAudio = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.spatialAudio) {
-      new import_obsidian22.Setting(container).setName("Spatial width").setDesc("Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)").addSlider(
+      new import_obsidian23.Setting(container).setName("Spatial width").setDesc("Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)").addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.spatialWidth).setDynamicTooltip().onChange(async (value) => {
           settings.spatialWidth = value;
           await this.plugin.saveSettings();
@@ -83334,7 +83435,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Audio feedback for community evolution events (merge, split, growth, decline, etc.)",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Enable evolution audio").setDesc("Play audio events when communities merge, split, grow, decline, or change structure").addToggle(
+    new import_obsidian23.Setting(container).setName("Enable evolution audio").setDesc("Play audio events when communities merge, split, grow, decline, or change structure").addToggle(
       (toggle) => {
         var _a2;
         return toggle.setValue(((_a2 = this.plugin.settings.communityEvolution) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -83447,13 +83548,13 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Configure sensitivity for detecting growth and decline",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian22.Setting(container).setName("Growth threshold").setDesc("Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)").addSlider(
+    new import_obsidian23.Setting(container).setName("Growth threshold").setDesc("Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)").addSlider(
       (slider) => slider.setLimits(0.1, 1, 0.05).setValue(settings.growthThreshold).setDynamicTooltip().onChange(async (value) => {
         settings.growthThreshold = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian22.Setting(container).setName("Decline threshold").setDesc("Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)").addSlider(
+    new import_obsidian23.Setting(container).setName("Decline threshold").setDesc("Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)").addSlider(
       (slider) => slider.setLimits(0.1, 1, 0.05).setValue(settings.declineThreshold).setDynamicTooltip().onChange(async (value) => {
         settings.declineThreshold = value;
         await this.plugin.saveSettings();
@@ -83464,7 +83565,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       text: "Performance Settings",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian22.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
+    new import_obsidian23.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
       (slider) => slider.setLimits(100, 2e3, 100).setValue(settings.eventThrottleMs).setDynamicTooltip().onChange(async (value) => {
         settings.eventThrottleMs = value;
         await this.plugin.saveSettings();
@@ -84135,14 +84236,14 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
    */
   createCommunityTypeSettings(container, communityType, displayName, description, settings) {
     const communityContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-    new import_obsidian22.Setting(communityContainer).setName(displayName).setDesc(description).addToggle(
+    new import_obsidian23.Setting(communityContainer).setName(displayName).setDesc(description).addToggle(
       (toggle) => toggle.setValue(settings.communityTypeEnabled[communityType]).onChange(async (value) => {
         settings.communityTypeEnabled[communityType] = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.communityTypeEnabled[communityType]) {
-      new import_obsidian22.Setting(communityContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
+      new import_obsidian23.Setting(communityContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.communityTypeVolumes[communityType]).setDynamicTooltip().onChange(async (value) => {
           settings.communityTypeVolumes[communityType] = value;
           await this.plugin.saveSettings();
@@ -84155,14 +84256,14 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
    */
   createEvolutionEventSettings(container, eventType, displayName, description, settings) {
     const eventContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-    new import_obsidian22.Setting(eventContainer).setName(displayName).setDesc(description).addToggle(
+    new import_obsidian23.Setting(eventContainer).setName(displayName).setDesc(description).addToggle(
       (toggle) => toggle.setValue(settings.enabledEventTypes[eventType]).onChange(async (value) => {
         settings.enabledEventTypes[eventType] = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.enabledEventTypes[eventType]) {
-      new import_obsidian22.Setting(eventContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()} events`).addSlider(
+      new import_obsidian23.Setting(eventContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()} events`).addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.eventVolumes[eventType]).setDynamicTooltip().onChange(async (value) => {
           settings.eventVolumes[eventType] = value;
           await this.plugin.saveSettings();
@@ -84211,14 +84312,14 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
    */
   createClusterTypeSettings(container, clusterType, displayName, description, settings) {
     const clusterContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-    new import_obsidian22.Setting(clusterContainer).setName(displayName).setDesc(description).addToggle(
+    new import_obsidian23.Setting(clusterContainer).setName(displayName).setDesc(description).addToggle(
       (toggle) => toggle.setValue(settings.clusterTypeEnabled[clusterType]).onChange(async (value) => {
         settings.clusterTypeEnabled[clusterType] = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.clusterTypeEnabled[clusterType]) {
-      new import_obsidian22.Setting(clusterContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
+      new import_obsidian23.Setting(clusterContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.clusterTypeVolumes[clusterType]).setDynamicTooltip().onChange(async (value) => {
           settings.clusterTypeVolumes[clusterType] = value;
           await this.plugin.saveSettings();
@@ -84320,7 +84421,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       markersSwitch.toggleClass("active", !isActive);
       this.updateTimelineMarkersVisibility(!isActive);
     });
-    (0, import_obsidian22.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
+    (0, import_obsidian23.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
       placement: "left"
     });
     const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84342,7 +84443,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         optionEl.selected = true;
       }
     });
-    (0, import_obsidian22.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
+    (0, import_obsidian23.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
       placement: "top"
     });
     styleSelect.addEventListener("change", (e) => {
@@ -84363,7 +84464,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       loopSwitch.toggleClass("active", !isActive);
       this.updateLoopAnimation(!isActive);
     });
-    (0, import_obsidian22.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
+    (0, import_obsidian23.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
       placement: "left"
     });
     const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84374,7 +84475,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       fileNamesSwitch.addClass("active");
     }
     const _fileNamesHandle = fileNamesSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-    (0, import_obsidian22.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
+    (0, import_obsidian23.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
       placement: "left"
     });
     fileNamesSwitch.addEventListener("click", () => {
@@ -84499,7 +84600,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       };
       this.updateLayoutSetting("layoutPreset", densityToPreset[value]);
     });
-    (0, import_obsidian22.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
+    (0, import_obsidian23.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
       placement: "top"
     });
     const clusteringItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84526,7 +84627,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       clusteringValue.textContent = `${Math.round(value * 100)}%`;
       this.updateLayoutSetting("clusteringStrength", value);
     });
-    (0, import_obsidian22.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
+    (0, import_obsidian23.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
       placement: "top"
     });
     const separationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84553,7 +84654,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       separationValue.textContent = `${Math.round(value * 100)}%`;
       this.updateLayoutSetting("groupSeparation", value);
     });
-    (0, import_obsidian22.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
+    (0, import_obsidian23.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
       placement: "top"
     });
   }
@@ -84576,14 +84677,14 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       tagsSwitch.toggleClass("active", !isActive);
       this.updateFilterSetting("showTags", !isActive);
     });
-    (0, import_obsidian22.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
+    (0, import_obsidian23.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
       placement: "left"
     });
     const orphansItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     orphansItem.createEl("label", { text: "Show orphans", cls: "sonic-graph-setting-label" });
     const orphansToggle = orphansItem.createDiv({ cls: "sonic-graph-setting-toggle" });
     const orphansSwitch = orphansToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
-    (0, import_obsidian22.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
+    (0, import_obsidian23.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
       placement: "left"
     });
     if (this.getSonicGraphSettings().layout.filters.showOrphans) {
@@ -84675,7 +84776,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
     searchInput.style.borderRadius = "4px";
     searchInput.style.backgroundColor = "#fef3c7";
     searchInput.style.fontSize = "12px";
-    (0, import_obsidian22.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
+    (0, import_obsidian23.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
       placement: "top"
     });
     searchInput.addEventListener("focus", () => {
@@ -85006,7 +85107,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
         vaultFileCount: this.app.vault.getFiles().length,
         userAgent: navigator.userAgent
       };
-      navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian22.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian22.Notice("Failed to copy debug info"));
+      navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian23.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian23.Notice("Failed to copy debug info"));
     });
   }
   /**
@@ -85192,7 +85293,7 @@ var SonicGraphView = class extends import_obsidian22.ItemView {
       currentIndicator.style.display = "none";
     }
     logger60.info("ui", "Sonic Graph animation completed");
-    new import_obsidian22.Notice("Animation completed");
+    new import_obsidian23.Notice("Animation completed");
   }
   /**
    * Handle node appearance for audio synchronization
@@ -93829,7 +93930,7 @@ init_logging();
 init_whale_integration();
 init_FreesoundSampleLoader();
 var logger73 = getLogger("main");
-var SonigraphPlugin = class extends import_obsidian24.Plugin {
+var SonigraphPlugin = class extends import_obsidian25.Plugin {
   constructor() {
     super(...arguments);
     this.audioEngine = null;
