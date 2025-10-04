@@ -71983,7 +71983,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "electronic",
@@ -72001,7 +72001,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "subtletransmissions",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "modulated",
@@ -72020,7 +72020,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "eardeer",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atmospheric",
@@ -72039,7 +72039,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "myluckyfeet",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atmospheric"
@@ -72056,7 +72056,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Skjor1",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atonal",
@@ -72075,7 +72075,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "rombart",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "low",
@@ -72095,7 +72095,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "subtletransmissions",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "hum",
@@ -72114,7 +72114,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "subtletransmissions",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "buzz",
@@ -72134,7 +72134,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "subtletransmissions",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "lamp",
@@ -72154,7 +72154,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atmospheric",
@@ -72173,7 +72173,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "brogenhogan",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "pad",
@@ -72193,7 +72193,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atmospheric",
@@ -72212,7 +72212,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gerainsan",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "rain",
@@ -72232,7 +72232,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "low",
@@ -72252,7 +72252,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "stixthule",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "loop",
@@ -72271,7 +72271,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "apotter1992",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "synth",
@@ -72291,7 +72291,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "minimal",
@@ -72312,7 +72312,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "chaos",
@@ -72333,7 +72333,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gis_sweden",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "algorithmic",
@@ -72354,7 +72354,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Wilii89",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "air",
@@ -72374,7 +72374,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "LogicMoon",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atmospheric"
@@ -72391,7 +72391,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Jovica",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "artillery",
@@ -72411,7 +72411,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "jordivburgel",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "cinematic",
@@ -72431,7 +72431,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "laserlife",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "piano",
@@ -72451,7 +72451,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Sclolex",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "monotonous",
@@ -72470,7 +72470,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Karma-Ron",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "fx",
@@ -72491,7 +72491,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Speedenza",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "space",
@@ -72512,7 +72512,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Speedenza",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "airy",
@@ -72532,7 +72532,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Diboz",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "drone",
           "atmospheric",
@@ -72550,7 +72550,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "peter5992",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "drone",
@@ -72575,7 +72575,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "MBARI_MARS",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "whale",
@@ -72598,7 +72598,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "subtletransmissions",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72619,7 +72619,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "subtletransmissions",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72639,7 +72639,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "cabled_mess",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72664,7 +72664,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "cabled_mess",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72689,7 +72689,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "alienistcog",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72715,7 +72715,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "clif_creates",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72739,7 +72739,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "voxlab",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72763,7 +72763,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "fectoper",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72787,7 +72787,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "hykenfreak",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72812,7 +72812,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "dotY21",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72836,7 +72836,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "dotY21",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72860,7 +72860,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "dotY21",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72885,7 +72885,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "clif_creates",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72910,7 +72910,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "szegvari",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72933,7 +72933,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "GregorQuendel",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72956,7 +72956,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "cliploop",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "oceanic",
           "sci-fi",
@@ -72980,7 +72980,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "harpoyume",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "sci-fi",
@@ -73004,7 +73004,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "soundshmyak",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "nature",
@@ -73026,7 +73026,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Universfield",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "melancholic",
@@ -73051,7 +73051,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "clawback",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "nature",
@@ -73077,7 +73077,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "AudioPapkin",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "nature",
@@ -73101,7 +73101,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "MichiJung",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "urban",
@@ -73127,7 +73127,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "DonnyDB",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "africa",
@@ -73153,7 +73153,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "TheFieldRecordist",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "rain",
@@ -73179,7 +73179,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "FlatHill",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "rain",
@@ -73201,7 +73201,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "acollier123",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "rain",
@@ -73228,7 +73228,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Dynamicell",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "wind",
@@ -73252,7 +73252,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "spoonbender",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "wind",
@@ -73278,7 +73278,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Paresh",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "wolves",
@@ -73302,7 +73302,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "brunoboselli",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "countryside",
@@ -73329,7 +73329,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "kangaroovindaloo",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "desert",
@@ -73354,7 +73354,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "kangaroovindaloo",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "nature",
@@ -73380,7 +73380,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "kangaroovindaloo",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "nature",
@@ -73404,7 +73404,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "kangaroovindaloo",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "nature",
@@ -73431,7 +73431,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Moulaythami",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "waves",
@@ -73458,7 +73458,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Guillaume.Capsowl.Voisin",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "crickets",
@@ -73484,7 +73484,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Porphyr",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "forest",
@@ -73510,7 +73510,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "ricardoemfield",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "forest",
@@ -73537,7 +73537,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Sadiquecat",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "rural",
@@ -73565,7 +73565,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "dibko",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "environmental-commentary",
@@ -73590,7 +73590,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "fectoper",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "abstract",
@@ -73612,7 +73612,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "CosmicD",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "ambient",
           "limbo",
@@ -73635,7 +73635,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "dotY21",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "ambient",
@@ -73657,7 +73657,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "james_longley",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73681,7 +73681,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "james_longley",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73705,7 +73705,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "james_longley",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73728,7 +73728,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "james_longley",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73751,7 +73751,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "LogicMoon",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73773,7 +73773,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "sgossner",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73797,7 +73797,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "sgossner",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73821,7 +73821,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "sgossner",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73845,7 +73845,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "sgossner",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73869,7 +73869,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "sgossner",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "orchestral",
           "strings",
@@ -73893,7 +73893,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "3ag1e",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "orchestral",
@@ -73919,7 +73919,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "johnnypanic",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -73943,7 +73943,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "mkoenig",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -73967,7 +73967,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Thalamus_Lab",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -73992,7 +73992,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Elmo_cookies",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74016,7 +74016,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "orangefreesounds",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74040,7 +74040,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "XHALE303",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74065,7 +74065,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "AlienXXX",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74090,7 +74090,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "thisusernameis",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74114,7 +74114,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "ERH",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74139,7 +74139,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "JMARTI_oficial",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74164,7 +74164,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Mick Gibbs",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74187,7 +74187,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Vospi",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74212,7 +74212,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "cabled_mess",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74237,7 +74237,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "fectoper",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "pad",
@@ -74261,7 +74261,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "xkeril",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74285,7 +74285,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "sherlock",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74307,7 +74307,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gmortizwavs",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74331,7 +74331,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "gmortizwavs",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74356,7 +74356,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "ERH",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74381,7 +74381,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "johnnypanic",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74405,7 +74405,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "martinbeltov",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "electronic",
           "texture",
@@ -74430,7 +74430,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "staticpony1",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "electronic",
@@ -74456,7 +74456,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "milo",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "sparse",
@@ -74481,7 +74481,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Timbre",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "sparse",
@@ -74504,7 +74504,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "zmadyun",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "sparse",
@@ -74528,7 +74528,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "visual",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "contemplative",
@@ -74552,7 +74552,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "zacnie",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "contemplative",
@@ -74576,7 +74576,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "juskiddink",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "contemplative",
@@ -74600,7 +74600,7 @@ var require_curated_samples_transformed = __commonJS({
         attribution: "Dave_Girtsman",
         fadeIn: 2,
         fadeOut: 3,
-        enabled: true,
+        enabled: false,
         tags: [
           "minimal",
           "contemplative",

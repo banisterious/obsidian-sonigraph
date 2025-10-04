@@ -8,7 +8,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "electronic",
@@ -26,7 +26,7 @@
     "attribution": "subtletransmissions",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "modulated",
@@ -45,7 +45,7 @@
     "attribution": "eardeer",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atmospheric",
@@ -64,7 +64,7 @@
     "attribution": "myluckyfeet",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atmospheric"
@@ -81,7 +81,7 @@
     "attribution": "Skjor1",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atonal",
@@ -100,7 +100,7 @@
     "attribution": "rombart",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "low",
@@ -120,7 +120,7 @@
     "attribution": "subtletransmissions",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "hum",
@@ -139,7 +139,7 @@
     "attribution": "subtletransmissions",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "buzz",
@@ -159,7 +159,7 @@
     "attribution": "subtletransmissions",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "lamp",
@@ -179,7 +179,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atmospheric",
@@ -198,7 +198,7 @@
     "attribution": "brogenhogan",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "pad",
@@ -218,7 +218,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atmospheric",
@@ -237,7 +237,7 @@
     "attribution": "gerainsan",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "rain",
@@ -257,7 +257,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "low",
@@ -277,7 +277,7 @@
     "attribution": "stixthule",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "loop",
@@ -296,7 +296,7 @@
     "attribution": "apotter1992",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "synth",
@@ -316,7 +316,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "minimal",
@@ -337,7 +337,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "chaos",
@@ -358,7 +358,7 @@
     "attribution": "gis_sweden",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "algorithmic",
@@ -379,7 +379,7 @@
     "attribution": "Wilii89",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "air",
@@ -399,7 +399,7 @@
     "attribution": "LogicMoon",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atmospheric"
@@ -416,7 +416,7 @@
     "attribution": "Jovica",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "artillery",
@@ -436,7 +436,7 @@
     "attribution": "jordivburgel",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "cinematic",
@@ -456,7 +456,7 @@
     "attribution": "laserlife",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "piano",
@@ -476,7 +476,7 @@
     "attribution": "Sclolex",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "monotonous",
@@ -495,7 +495,7 @@
     "attribution": "Karma-Ron",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "fx",
@@ -516,7 +516,7 @@
     "attribution": "Speedenza",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "space",
@@ -537,7 +537,7 @@
     "attribution": "Speedenza",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "airy",
@@ -557,7 +557,7 @@
     "attribution": "Diboz",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "drone",
       "atmospheric",
@@ -575,7 +575,7 @@
     "attribution": "peter5992",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "drone",
@@ -600,7 +600,7 @@
     "attribution": "MBARI_MARS",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "whale",
@@ -623,7 +623,7 @@
     "attribution": "subtletransmissions",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -644,7 +644,7 @@
     "attribution": "subtletransmissions",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -664,7 +664,7 @@
     "attribution": "cabled_mess",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -689,7 +689,7 @@
     "attribution": "cabled_mess",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -714,7 +714,7 @@
     "attribution": "alienistcog",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -740,7 +740,7 @@
     "attribution": "clif_creates",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -764,7 +764,7 @@
     "attribution": "voxlab",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -788,7 +788,7 @@
     "attribution": "fectoper",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -812,7 +812,7 @@
     "attribution": "hykenfreak",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -837,7 +837,7 @@
     "attribution": "dotY21",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -861,7 +861,7 @@
     "attribution": "dotY21",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -885,7 +885,7 @@
     "attribution": "dotY21",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -910,7 +910,7 @@
     "attribution": "clif_creates",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -935,7 +935,7 @@
     "attribution": "szegvari",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -958,7 +958,7 @@
     "attribution": "GregorQuendel",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -981,7 +981,7 @@
     "attribution": "cliploop",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "oceanic",
       "sci-fi",
@@ -1005,7 +1005,7 @@
     "attribution": "harpoyume",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "sci-fi",
@@ -1029,7 +1029,7 @@
     "attribution": "soundshmyak",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "nature",
@@ -1051,7 +1051,7 @@
     "attribution": "Universfield",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "melancholic",
@@ -1076,7 +1076,7 @@
     "attribution": "clawback",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "nature",
@@ -1102,7 +1102,7 @@
     "attribution": "AudioPapkin",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "nature",
@@ -1126,7 +1126,7 @@
     "attribution": "MichiJung",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "urban",
@@ -1152,7 +1152,7 @@
     "attribution": "DonnyDB",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "africa",
@@ -1178,7 +1178,7 @@
     "attribution": "TheFieldRecordist",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "rain",
@@ -1204,7 +1204,7 @@
     "attribution": "FlatHill",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "rain",
@@ -1226,7 +1226,7 @@
     "attribution": "acollier123",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "rain",
@@ -1253,7 +1253,7 @@
     "attribution": "Dynamicell",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "wind",
@@ -1277,7 +1277,7 @@
     "attribution": "spoonbender",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "wind",
@@ -1303,7 +1303,7 @@
     "attribution": "Paresh",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "wolves",
@@ -1327,7 +1327,7 @@
     "attribution": "brunoboselli",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "countryside",
@@ -1354,7 +1354,7 @@
     "attribution": "kangaroovindaloo",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "desert",
@@ -1379,7 +1379,7 @@
     "attribution": "kangaroovindaloo",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "nature",
@@ -1405,7 +1405,7 @@
     "attribution": "kangaroovindaloo",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "nature",
@@ -1429,7 +1429,7 @@
     "attribution": "kangaroovindaloo",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "nature",
@@ -1456,7 +1456,7 @@
     "attribution": "Moulaythami",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "waves",
@@ -1483,7 +1483,7 @@
     "attribution": "Guillaume.Capsowl.Voisin",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "crickets",
@@ -1509,7 +1509,7 @@
     "attribution": "Porphyr",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "forest",
@@ -1535,7 +1535,7 @@
     "attribution": "ricardoemfield",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "forest",
@@ -1562,7 +1562,7 @@
     "attribution": "Sadiquecat",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "rural",
@@ -1590,7 +1590,7 @@
     "attribution": "dibko",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "environmental-commentary",
@@ -1615,7 +1615,7 @@
     "attribution": "fectoper",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "abstract",
@@ -1637,7 +1637,7 @@
     "attribution": "CosmicD",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "ambient",
       "limbo",
@@ -1660,7 +1660,7 @@
     "attribution": "dotY21",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "ambient",
@@ -1682,7 +1682,7 @@
     "attribution": "james_longley",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1706,7 +1706,7 @@
     "attribution": "james_longley",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1730,7 +1730,7 @@
     "attribution": "james_longley",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1753,7 +1753,7 @@
     "attribution": "james_longley",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1776,7 +1776,7 @@
     "attribution": "LogicMoon",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1798,7 +1798,7 @@
     "attribution": "sgossner",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1822,7 +1822,7 @@
     "attribution": "sgossner",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1846,7 +1846,7 @@
     "attribution": "sgossner",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1870,7 +1870,7 @@
     "attribution": "sgossner",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1894,7 +1894,7 @@
     "attribution": "sgossner",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "orchestral",
       "strings",
@@ -1918,7 +1918,7 @@
     "attribution": "3ag1e",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "orchestral",
@@ -1944,7 +1944,7 @@
     "attribution": "johnnypanic",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -1968,7 +1968,7 @@
     "attribution": "mkoenig",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -1992,7 +1992,7 @@
     "attribution": "Thalamus_Lab",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2017,7 +2017,7 @@
     "attribution": "Elmo_cookies",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2041,7 +2041,7 @@
     "attribution": "orangefreesounds",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2065,7 +2065,7 @@
     "attribution": "XHALE303",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2090,7 +2090,7 @@
     "attribution": "AlienXXX",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2115,7 +2115,7 @@
     "attribution": "thisusernameis",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2139,7 +2139,7 @@
     "attribution": "ERH",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2164,7 +2164,7 @@
     "attribution": "JMARTI_oficial",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2189,7 +2189,7 @@
     "attribution": "Mick Gibbs",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2212,7 +2212,7 @@
     "attribution": "Vospi",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2237,7 +2237,7 @@
     "attribution": "cabled_mess",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2262,7 +2262,7 @@
     "attribution": "fectoper",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "pad",
@@ -2286,7 +2286,7 @@
     "attribution": "xkeril",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2310,7 +2310,7 @@
     "attribution": "sherlock",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2332,7 +2332,7 @@
     "attribution": "gmortizwavs",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2356,7 +2356,7 @@
     "attribution": "gmortizwavs",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2381,7 +2381,7 @@
     "attribution": "ERH",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2406,7 +2406,7 @@
     "attribution": "johnnypanic",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2430,7 +2430,7 @@
     "attribution": "martinbeltov",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "electronic",
       "texture",
@@ -2455,7 +2455,7 @@
     "attribution": "staticpony1",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "electronic",
@@ -2481,7 +2481,7 @@
     "attribution": "milo",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "sparse",
@@ -2506,7 +2506,7 @@
     "attribution": "Timbre",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "sparse",
@@ -2529,7 +2529,7 @@
     "attribution": "zmadyun",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "sparse",
@@ -2553,7 +2553,7 @@
     "attribution": "visual",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "contemplative",
@@ -2577,7 +2577,7 @@
     "attribution": "zacnie",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "contemplative",
@@ -2601,7 +2601,7 @@
     "attribution": "juskiddink",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "contemplative",
@@ -2625,7 +2625,7 @@
     "attribution": "Dave_Girtsman",
     "fadeIn": 2,
     "fadeOut": 3,
-    "enabled": true,
+    "enabled": false,
     "tags": [
       "minimal",
       "contemplative",
