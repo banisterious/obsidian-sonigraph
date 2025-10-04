@@ -17676,8 +17676,7 @@ var init_SampleTableBrowser = __esm({
         const thead = table.createEl("thead");
         const headerRow = thead.createEl("tr");
         this.renderColumnHeader(headerRow, "name", "Sample");
-        this.renderColumnHeader(headerRow, "author", "Author");
-        this.renderColumnHeader(headerRow, "license", "License");
+        this.renderColumnHeader(headerRow, "author", "Author / License");
         this.renderColumnHeader(headerRow, "tags", "Tags");
         headerRow.createEl("th", { text: "Actions" });
         const tbody = table.createEl("tbody");
@@ -17718,8 +17717,11 @@ var init_SampleTableBrowser = __esm({
         const durationDiv = nameCell.createDiv({ cls: "sonigraph-sample-duration" });
         const duration = Math.round(sample.duration || 0);
         durationDiv.setText(`${duration}s`);
-        row.createEl("td", { text: sample.attribution || "Unknown", cls: "sonigraph-sample-author" });
-        row.createEl("td", { text: this.formatLicense(sample.license), cls: "sonigraph-sample-license" });
+        const authorCell = row.createEl("td", { cls: "sonigraph-sample-author-license" });
+        const authorDiv = authorCell.createDiv({ cls: "sonigraph-author-text" });
+        authorDiv.setText(sample.attribution || "Unknown");
+        const licenseDiv = authorCell.createDiv({ cls: "sonigraph-license-text" });
+        licenseDiv.setText(this.formatLicense(sample.license));
         const tagsCell = row.createEl("td", { cls: "sonigraph-sample-tags" });
         if (sample.tags && Array.isArray(sample.tags)) {
           sample.tags.slice(0, 2).forEach((tag) => {
@@ -17741,7 +17743,7 @@ var init_SampleTableBrowser = __esm({
           this.openTagEditor(sample);
         });
         const toggleBtn = actionsCell.createEl("button", {
-          text: sample.enabled === false ? "\u2713" : "\u2715",
+          text: sample.enabled === false ? "On" : "Off",
           cls: sample.enabled === false ? "sonigraph-enable-btn" : "sonigraph-disable-btn",
           attr: { "aria-label": sample.enabled === false ? "Enable" : "Disable" }
         });
@@ -17832,6 +17834,7 @@ var init_SampleTableBrowser = __esm({
        * Preview a sample
        */
       async previewSample(sample, button) {
+        var _a, _b;
         if (button.textContent === "Stop") {
           this.stopPreview();
           return;
@@ -17847,10 +17850,10 @@ var init_SampleTableBrowser = __esm({
           if (!apiKey) {
             throw new Error("Freesound API key not configured");
           }
-          const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}&fields=previews`;
+          const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}`;
           const soundResponse = await (0, import_obsidian9.requestUrl)({ url: soundUrl, method: "GET" });
           const soundData = JSON.parse(soundResponse.text);
-          const previewUrl = soundData.previews["preview-hq-mp3"] || soundData.previews["preview-lq-mp3"];
+          const previewUrl = ((_a = soundData.previews) == null ? void 0 : _a["preview-hq-mp3"]) || ((_b = soundData.previews) == null ? void 0 : _b["preview-lq-mp3"]);
           if (!previewUrl) {
             throw new Error("No preview URL available");
           }

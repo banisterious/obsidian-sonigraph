@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-03 23:28:24 UTC
+ * - Generated: 2025-10-03 23:59:48 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -9657,7 +9657,7 @@ details.osp-advanced-settings {
    COMPONENT: SAMPLE-TABLE.CSS
    ========================================================================== */
 
-/* Component Size: 415 lines, 8.26 KB */
+/* Component Size: 420 lines, 8.32 KB */
 
 /**
  * Sample Table Browser Styles
@@ -9813,16 +9813,21 @@ details.osp-advanced-settings {
 	margin-top: 0.1rem;
 }
 
-.sonigraph-sample-table td.sonigraph-sample-author {
-	max-width: 120px;
+.sonigraph-sample-table td.sonigraph-sample-author-license {
+	max-width: 140px;
+	min-width: 110px;
+}
+
+.sonigraph-author-text {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.sonigraph-sample-table td.sonigraph-sample-license {
-	max-width: 100px;
-	white-space: nowrap;
+.sonigraph-license-text {
+	font-size: 0.75em;
+	color: var(--text-muted);
+	margin-top: 0.1rem;
 }
 
 .sonigraph-sample-table td.sonigraph-sample-tags {
@@ -11269,11 +11274,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-03 23:28:24 UTC
+ * Build completed: 2025-10-03 23:59:48 UTC
  * Components processed: 21
- * Total lines: 11054
- * Total size: 235.15 KB
- * Build duration: 0.04 seconds
+ * Total lines: 11059
+ * Total size: 235.21 KB
+ * Build duration: 0.02 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -11292,7 +11297,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 815 lines, 19.73 KB
  * - sonic-graph.css: 2520 lines, 54.83 KB
- * - sample-table.css: 415 lines, 8.26 KB
+ * - sample-table.css: 420 lines, 8.32 KB
  * - export.css: 614 lines, 14.8 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
