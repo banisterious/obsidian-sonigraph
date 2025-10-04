@@ -73,9 +73,9 @@ export class AudioEngine {
 	// Phase 3: Frequency detuning for phase conflict resolution
 	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
 
-	// Active note tracking for polyphony management
-	private activeNoteCount: number = 0;
-	private readonly MAX_ACTIVE_NOTES = 20;
+	// Active note tracking for polyphony management (per-instrument)
+	private activeNotesPerInstrument: Map<string, number> = new Map();
+	private readonly MAX_NOTES_PER_INSTRUMENT = 4; // Conservative limit per instrument
 	private electronicEngine: ElectronicEngine | null = null;
 
 	// Enhanced Play Button: Playback event system
@@ -3192,13 +3192,20 @@ export class AudioEngine {
 		try {
 			const { pitch, duration, velocity, instrument } = mapping;
 
-			// CRITICAL: Polyphony limiting to prevent audio stuttering
-			// Check active note count before triggering
-			if (this.activeNoteCount >= this.MAX_ACTIVE_NOTES) {
-				logger.debug('polyphony-limit', 'Skipping note - polyphony limit reached', {
-					currentNotes: this.activeNoteCount,
-					limit: this.MAX_ACTIVE_NOTES,
+			// CRITICAL: Per-instrument polyphony limiting to prevent Tone.js from dropping notes
+			// Initialize counter for this instrument if needed
+			if (!this.activeNotesPerInstrument.has(instrument)) {
+				this.activeNotesPerInstrument.set(instrument, 0);
+			}
+
+			const currentNotes = this.activeNotesPerInstrument.get(instrument) || 0;
+
+			// Skip note if this instrument is at capacity
+			if (currentNotes >= this.MAX_NOTES_PER_INSTRUMENT) {
+				logger.debug('polyphony-limit', 'Skipping note - instrument polyphony limit reached', {
 					instrument,
+					currentNotes,
+					limit: this.MAX_NOTES_PER_INSTRUMENT,
 					pitch: pitch.toFixed(2)
 				});
 				return;
@@ -3209,7 +3216,7 @@ export class AudioEngine {
 				pitch: pitch.toFixed(2),
 				duration: duration,
 				velocity: velocity,
-				currentNotes: this.activeNoteCount
+				currentInstrumentNotes: currentNotes
 			});
 
 			// Get the synthesizer for the specified instrument
@@ -3233,8 +3240,8 @@ export class AudioEngine {
 			// Apply frequency detuning for phase conflict resolution (from existing logic)
 			const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
 
-			// Increment active note counter
-			this.activeNoteCount++;
+			// Increment per-instrument note counter
+			this.activeNotesPerInstrument.set(instrument, currentNotes + 1);
 
 			// Trigger the note immediately (no timing delay)
 			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
@@ -3243,7 +3250,8 @@ export class AudioEngine {
 			// Convert duration to milliseconds (Tone.js uses seconds)
 			const durationMs = typeof duration === 'number' ? duration * 1000 : parseFloat(duration) * 1000;
 			setTimeout(() => {
-				this.activeNoteCount = Math.max(0, this.activeNoteCount - 1);
+				const current = this.activeNotesPerInstrument.get(instrument) || 0;
+				this.activeNotesPerInstrument.set(instrument, Math.max(0, current - 1));
 			}, durationMs);
 
 			// Trigger rhythmic percussion accent if enabled
