@@ -2630,17 +2630,33 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
 	},
 
-	// Phase 6.1: Default musical theory settings (disabled by default)
+	// Phase 6: Audio Enhancement settings wrapper
+	audioEnhancement: {
+		// Phase 6.1: Musical theory settings
+		musicalTheory: {
+			enabled: false,
+			scale: 'major', // Start with C major
+			rootNote: 'C',
+			enforceHarmony: true, // Constrain notes to scale when enabled
+			allowChromaticPassing: false, // No chromatic notes by default
+			dissonanceThreshold: 0.3, // Low dissonance tolerance
+			quantizationStrength: 0.8, // Strong quantization to scale
+			preferredChordProgression: 'I-IV-V-I', // Classic progression
+			dynamicScaleModulation: false // Static scale by default
+		}
+	},
+
+	// Kept for backward compatibility - use audioEnhancement.musicalTheory instead
 	musicalTheory: {
 		enabled: false,
-		scale: 'major', // Start with C major
+		scale: 'major',
 		rootNote: 'C',
-		enforceHarmony: true, // Constrain notes to scale
-		allowChromaticPassing: false, // No chromatic notes by default
-		dissonanceThreshold: 0.3, // Low dissonance tolerance
-		quantizationStrength: 0.8, // Strong quantization to scale
-		preferredChordProgression: 'I-IV-V-I', // Classic progression
-		dynamicScaleModulation: false // Static scale by default
+		enforceHarmony: true,
+		allowChromaticPassing: false,
+		dissonanceThreshold: 0.3,
+		quantizationStrength: 0.8,
+		preferredChordProgression: 'I-IV-V-I',
+		dynamicScaleModulation: false
 	},
 
 	// Phase 6.2: Default dynamic orchestration settings (disabled by default)
