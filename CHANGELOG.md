@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2025-10-04
+
+### Fixed
+- **Continuous Layers Playback**: Fixed CORS issues preventing continuous layers from playing
+  - Sample playback now uses Freesound API to fetch fresh preview URLs (matching Preview button approach)
+  - Downloads samples via `requestUrl()` and creates blob URLs to bypass CORS restrictions
+  - Proper blob URL cleanup on audio end and stop to prevent memory leaks
+- **Sample Toggle Persistence**: Fixed toggle state not persisting when switching settings tabs
+  - Now properly initializes `continuousLayers` object when missing
+- **Sample Enable/Disable Logic**: Fixed toggle to properly handle undefined state for curated samples
+  - First click enables (undefined → true)
+  - Subsequent clicks toggle between enabled/disabled
+- **Settings Architecture**: Pass settings to `MusicalGenreEngine` for API key access
+- **Logging Improvements**: Reduced noisy warnings from `FreesoundSampleLoader`
+  - Disabled connection test to avoid 404 errors
+  - Downgraded "No samples found" message to debug level
+
+### Changed
+- Increased baseVolume from -10dB to 0dB for better continuous layer audibility during testing
+
 ## [0.14.0] - 2025-10-03
 
 ### Added - Freesound Sample Browser 🎵
