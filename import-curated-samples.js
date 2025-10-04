@@ -25,7 +25,7 @@ const transformedSamples = curatedSamples.map(sample => ({
 	attribution: sample.author,
 	fadeIn: 2,  // Default fade in
 	fadeOut: 3, // Default fade out
-	enabled: true,
+	enabled: false,  // Disabled by default - users can opt in
 	tags: sample.tags || [],
 	description: sample.description,
 	usageNotes: sample.usageNotes
