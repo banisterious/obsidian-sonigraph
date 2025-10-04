@@ -35,6 +35,15 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 - **Freesound.org Integration**: Curated high-quality audio samples with token-based API authentication
 - **Sample Management System**: Intelligent caching, preloading, and offline mode support
 
+### Freesound Sample Browser (Unreleased)
+- **Professional Sample Library**: 114 curated Freesound samples with complete metadata
+- **Table-Based Browser**: Search, filter, and sort samples by name, author, tags, or license
+- **Real-Time Preview**: Instant audio playback directly from Freesound CDN
+- **Tag Management**: Organize samples with autocomplete tag editor and common tag suggestions
+- **Selective Activation**: Samples disabled by default - enable only the ones you want
+- **License Clarity**: CC0, CC-BY, CC-BY-NC licenses displayed in friendly format
+- **Smart Filtering**: Filter by multiple tags, license types, and show/hide disabled samples
+
 ### Content-Aware Mapping
 - **File Type Intelligence**: Automatic instrument assignment based on note types (markdown, images, PDFs, etc.)
 - **Tag-Based Semantics**: Musical mood and instrument selection driven by vault tags
