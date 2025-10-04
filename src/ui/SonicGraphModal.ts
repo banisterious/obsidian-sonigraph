@@ -150,9 +150,14 @@ export class SonicGraphModal extends Modal {
         try {
             logger.info('continuous-layers', 'Initializing continuous layers');
 
+            // Check if continuous layers are actually enabled before creating the manager
+            const layerConfig = this.plugin.settings.audioEnhancement?.continuousLayers;
+            if (!layerConfig?.enabled) {
+                logger.info('continuous-layers', 'Continuous layers disabled, skipping initialization');
+                return;
+            }
+
             if (!this.continuousLayerManager) {
-                // Pass continuous layer configuration to the manager
-                const layerConfig = this.plugin.settings.audioEnhancement?.continuousLayers;
                 logger.info('continuous-layers', 'Layer config', {
                     enabled: layerConfig?.enabled,
                     genre: layerConfig?.genre,
