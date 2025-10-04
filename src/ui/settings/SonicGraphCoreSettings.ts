@@ -258,9 +258,9 @@ export class SonicGraphCoreSettings {
 		// Simultaneous event limit slider
 		new Setting(content)
 			.setName('Simultaneous event limit')
-			.setDesc('Maximum concurrent notes playing at once (1-20)')
+			.setDesc('Maximum concurrent notes playing at once (1-50). Higher values create richer soundscapes.')
 			.addSlider(slider => slider
-				.setLimits(1, 20, 1)
+				.setLimits(1, 50, 1)
 				.setValue(this.plugin.settings.sonicGraphSettings?.timeline.simultaneousEventLimit || 8)
 				.setDynamicTooltip()
 				.onChange(async (value) => {

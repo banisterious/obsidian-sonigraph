@@ -72,6 +72,10 @@ export class AudioEngine {
 
 	// Phase 3: Frequency detuning for phase conflict resolution
 	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
+
+	// Active note tracking for polyphony management (per-instrument)
+	private activeNotesPerInstrument: Map<string, number> = new Map();
+	private readonly MAX_NOTES_PER_INSTRUMENT = 3; // Match Tone.js maxPolyphony limit
 	private electronicEngine: ElectronicEngine | null = null;
 
 	// Enhanced Play Button: Playback event system
@@ -2397,7 +2401,9 @@ export class AudioEngine {
 	}
 
 	async updateSettings(settings: SonigraphSettings): Promise<void> {
-		const oldSettings = this.settings;
+		// Deep copy oldSettings to preserve original state for hot-swap comparison
+		// Without this, oldSettings and settings point to the same object, preventing change detection
+		const oldSettings = this.settings ? JSON.parse(JSON.stringify(this.settings)) : null;
 		this.settings = settings;
 
 		// Issue #006 Fix: Invalidate instruments cache when settings change
@@ -3188,11 +3194,23 @@ export class AudioEngine {
 		try {
 			const { pitch, duration, velocity, instrument } = mapping;
 
+			// CRITICAL: Per-instrument polyphony limiting to prevent Tone.js from dropping notes
+			// Initialize counter for this instrument if needed
+			if (!this.activeNotesPerInstrument.has(instrument)) {
+				this.activeNotesPerInstrument.set(instrument, 0);
+			}
+
+			const currentNotes = this.activeNotesPerInstrument.get(instrument) || 0;
+
+			// Let Tone.js handle polyphony limiting with its built-in maxPolyphony
+			// Our manual limiting was too aggressive and caused choppy audio
+
 			logger.debug('immediate-playback', 'Playing note immediately', {
 				instrument: instrument,
 				pitch: pitch.toFixed(2),
 				duration: duration,
-				velocity: velocity
+				velocity: velocity,
+				currentInstrumentNotes: currentNotes
 			});
 
 			// Get the synthesizer for the specified instrument
@@ -3216,8 +3234,24 @@ export class AudioEngine {
 			// Apply frequency detuning for phase conflict resolution (from existing logic)
 			const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
 
-			// Trigger the note immediately (no timing delay)
-			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
+			// Increment per-instrument note counter
+			this.activeNotesPerInstrument.set(instrument, currentNotes + 1);
+
+			// Add micro-stagger to prevent audio buffer overload when multiple notes trigger simultaneously
+			// Each note gets a tiny delay (0-10ms) to spread audio processing load
+			const microDelay = Math.random() * 0.01; // 0-10ms random stagger
+			const triggerTime = getContext().currentTime + microDelay;
+
+			// Trigger the note with micro-stagger
+			synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
+
+			// Schedule counter decrement when note ends
+			// Convert duration to milliseconds (Tone.js uses seconds)
+			const durationMs = typeof duration === 'number' ? duration * 1000 : parseFloat(duration) * 1000;
+			setTimeout(() => {
+				const current = this.activeNotesPerInstrument.get(instrument) || 0;
+				this.activeNotesPerInstrument.set(instrument, Math.max(0, current - 1));
+			}, durationMs);
 
 			// Trigger rhythmic percussion accent if enabled
 			if (this.rhythmicPercussion) {

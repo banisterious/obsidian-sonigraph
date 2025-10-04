@@ -103,7 +103,7 @@ export class FreesoundSampleLoader {
     
     const samples = this.sampleLibrary.get(genre);
     if (!samples || samples.length === 0) {
-      logger.warn('preload', `No samples found for genre: ${genre}`);
+      logger.debug('preload', `No samples found for genre: ${genre} (using direct API fetch instead)`);
       return;
     }
     
@@ -355,22 +355,9 @@ export class FreesoundSampleLoader {
   }
   
   private async testApiConnection(): Promise<void> {
-    if (!this.apiKey) {
-      return;
-    }
-
-    try {
-      const testUrl = `https://freesound.org/apiv2/sounds/1/?token=${this.apiKey}`;
-      const response = await requestUrl({
-        url: testUrl,
-        method: 'GET'
-      });
-
-      logger.info('connection', 'Freesound API connection test successful');
-    } catch (error) {
-      logger.error('connection', 'Freesound API connection test failed', error);
-      // Don't throw - continue without API access
-    }
+    // Connection test disabled - actual API calls will fail gracefully if key is invalid
+    // This avoids noisy 404 errors from testing non-existent sound IDs
+    return;
   }
   
   private findSampleById(sampleId: number): FreesoundSample | null {
