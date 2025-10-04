@@ -234,7 +234,8 @@ var init_constants = __esm({
           eventSpreadingMode: "gentle",
           maxEventSpacing: 3,
           // Audio crackling prevention defaults
-          simultaneousEventLimit: 8,
+          simultaneousEventLimit: 4,
+          // Reduced from 8 to prevent polyphony overflow with multiple instruments
           eventBatchSize: 10
         },
         audio: {
