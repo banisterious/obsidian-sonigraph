@@ -63269,6 +63269,8 @@ var init_MusicalGenreEngine = __esm({
           case "poly":
             return new PolySynth({
               voice: FMSynth,
+              maxPolyphony: 8,
+              // Limit polyphony to prevent voice overflow
               options: {
                 oscillator: { type: "sine" },
                 envelope: {
@@ -63280,7 +63282,10 @@ var init_MusicalGenreEngine = __esm({
               }
             });
           default:
-            return new PolySynth();
+            return new PolySynth({
+              maxPolyphony: 8
+              // Limit polyphony to prevent voice overflow
+            });
         }
       }
       createEffectsChain() {
@@ -64034,6 +64039,8 @@ var init_RhythmicLayerManager = __esm({
           octaves: 0.5
         });
         this.arpSynth = new PolySynth(FMSynth, {
+          maxPolyphony: 8,
+          // Limit polyphony to prevent voice overflow
           envelope: {
             attack: 0.01,
             decay: 0.1,
@@ -64385,6 +64392,8 @@ var init_HarmonicLayerManager = __esm({
           mode: "Ionian"
         };
         this.chordSynth = new PolySynth(FMSynth, {
+          maxPolyphony: 8,
+          // Limit polyphony to prevent voice overflow
           envelope: {
             attack: 2,
             decay: 1,
@@ -64396,6 +64405,8 @@ var init_HarmonicLayerManager = __esm({
           }
         });
         this.padSynth = new PolySynth(AMSynth, {
+          maxPolyphony: 8,
+          // Limit polyphony to prevent voice overflow
           envelope: {
             attack: 3,
             decay: 2,
@@ -64885,6 +64896,7 @@ var init_ContinuousLayerManager = __esm({
        * Start continuous layer playback
        */
       async start() {
+        var _a;
         if (!this.isInitialized) {
           await this.initialize();
         }
@@ -64894,12 +64906,17 @@ var init_ContinuousLayerManager = __esm({
           });
           return;
         }
+        const enabledSamples = ((_a = this.settings.freesoundSamples) == null ? void 0 : _a.filter((s) => s.enabled !== false)) || [];
+        if (enabledSamples.length === 0) {
+          logger51.warn("playback", "No enabled Freesound samples available - continuous layers require at least one enabled sample to function properly. Please enable samples in the Sample Browser.");
+          return;
+        }
         if (this.isPlaying) {
           logger51.warn("playback", "Continuous layers already playing");
           return;
         }
         try {
-          logger51.info("playback", `Starting continuous layer playback - Genre: ${this.config.genre}`);
+          logger51.info("playback", `Starting continuous layer playback - Genre: ${this.config.genre}, ${enabledSamples.length} enabled samples available`);
           await this.genreEngine.start(this.config);
           if (this.rhythmicLayer.isEnabled()) {
             await this.rhythmicLayer.start();

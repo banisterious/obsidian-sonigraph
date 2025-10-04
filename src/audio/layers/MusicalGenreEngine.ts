@@ -430,6 +430,7 @@ export class MusicalGenreEngine {
       case 'poly':
         return new PolySynth({
           voice: FMSynth,
+          maxPolyphony: 8, // Limit polyphony to prevent voice overflow
           options: {
             oscillator: { type: 'sine' },
             envelope: {
@@ -440,9 +441,11 @@ export class MusicalGenreEngine {
             }
           }
         });
-        
+
       default:
-        return new PolySynth();
+        return new PolySynth({
+          maxPolyphony: 8 // Limit polyphony to prevent voice overflow
+        });
     }
   }
   
