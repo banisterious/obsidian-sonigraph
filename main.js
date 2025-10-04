@@ -91825,11 +91825,27 @@ var AudioEngine = class {
     }
     try {
       const { pitch, duration, velocity, instrument } = mapping;
+      const currentNoteCount = Array.from(this.instruments.values()).reduce((count, synth2) => {
+        if ("activeVoices" in synth2) {
+          return count + synth2.activeVoices;
+        }
+        return count;
+      }, 0);
+      if (currentNoteCount >= 20) {
+        logger70.debug("polyphony-limit", "Skipping note - polyphony limit reached", {
+          currentNotes: currentNoteCount,
+          limit: 20,
+          instrument,
+          pitch: pitch.toFixed(2)
+        });
+        return;
+      }
       logger70.debug("immediate-playback", "Playing note immediately", {
         instrument,
         pitch: pitch.toFixed(2),
         duration,
-        velocity
+        velocity,
+        currentNotes: currentNoteCount
       });
       const synth = this.instruments.get(instrument);
       if (!synth) {
