@@ -592,7 +592,7 @@ var init_constants = __esm({
       },
       instruments: {
         piano: {
-          enabled: true,
+          enabled: false,
           volume: 0.8,
           maxVoices: 4,
           useHighQuality: false,
@@ -629,8 +629,8 @@ var init_constants = __esm({
           enabled: true,
           volume: 0.7,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -660,7 +660,7 @@ var init_constants = __esm({
           }
         },
         strings: {
-          enabled: true,
+          enabled: false,
           volume: 0.6,
           maxVoices: 4,
           effects: {
@@ -692,7 +692,7 @@ var init_constants = __esm({
           }
         },
         flute: {
-          enabled: true,
+          enabled: false,
           volume: 0.6,
           maxVoices: 4,
           useHighQuality: false,
@@ -1060,11 +1060,11 @@ var init_constants = __esm({
           }
         },
         guitarElectric: {
-          enabled: false,
+          enabled: true,
           volume: 0.7,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -1128,11 +1128,11 @@ var init_constants = __esm({
           }
         },
         bassElectric: {
-          enabled: false,
+          enabled: true,
           volume: 0.8,
           maxVoices: 2,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -1230,11 +1230,11 @@ var init_constants = __esm({
           }
         },
         frenchHorn: {
-          enabled: false,
+          enabled: true,
           volume: 0.6,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -1333,11 +1333,11 @@ var init_constants = __esm({
         },
         // Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
         bassoon: {
-          enabled: false,
+          enabled: true,
           volume: 0.7,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -2120,8 +2120,8 @@ var init_constants = __esm({
           // Constrain notes to scale when enabled
           allowChromaticPassing: false,
           // No chromatic notes by default
-          dissonanceThreshold: 0.3,
-          // Low dissonance tolerance
+          dissonanceThreshold: 0.1,
+          // Very low dissonance tolerance
           quantizationStrength: 0.8,
           // Strong quantization to scale
           preferredChordProgression: "I-IV-V-I",
@@ -2137,7 +2137,7 @@ var init_constants = __esm({
         rootNote: "C",
         enforceHarmony: true,
         allowChromaticPassing: false,
-        dissonanceThreshold: 0.3,
+        dissonanceThreshold: 0.1,
         quantizationStrength: 0.8,
         preferredChordProgression: "I-IV-V-I",
         dynamicScaleModulation: false
@@ -17276,6 +17276,7 @@ var init_FreesoundSearchModal = __esm({
     init_logging();
     logger18 = getLogger("FreesoundSearchModal");
     FreesoundSearchModal = class extends import_obsidian8.Modal {
+      // Default genre for suggestions
       constructor(app, apiKey, onAddSample) {
         super(app);
         this.filters = {
@@ -17291,6 +17292,10 @@ var init_FreesoundSearchModal = __esm({
         // UI elements
         this.searchInput = null;
         this.resultsContainer = null;
+        this.filtersSection = null;
+        this.filtersCollapsed = false;
+        this.activeFilterCount = 0;
+        this.currentGenre = "ambient";
         this.apiKey = apiKey;
         this.onAddSample = onAddSample;
       }
@@ -17311,18 +17316,45 @@ var init_FreesoundSearchModal = __esm({
         const searchContainer = searchSection.createDiv({ cls: "freesound-search-input-container" });
         this.searchInput = searchContainer.createEl("input", {
           type: "text",
-          placeholder: 'Search for sounds (e.g., "ambient pad", "ocean waves")...',
-          cls: "freesound-search-input"
+          placeholder: "Search for sounds (e.g. ambient pad, ocean waves)",
+          cls: "freesound-search-input",
+          attr: {
+            "aria-label": "Search Freesound",
+            "autocomplete": "off"
+          }
+        });
+        let inputTimeout;
+        this.searchInput.addEventListener("input", () => {
+          clearTimeout(inputTimeout);
+          inputTimeout = setTimeout(() => {
+            this.updateClearButton();
+          }, 150);
         });
         this.searchInput.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
             this.performSearch();
           }
         });
-        const searchButton = searchContainer.createEl("button", {
-          text: "Search",
-          cls: "freesound-search-button"
+        const clearButton = searchContainer.createEl("button", {
+          cls: "freesound-clear-btn",
+          attr: {
+            "aria-label": "Clear search",
+            "style": "display: none;"
+          }
         });
+        clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        clearButton.addEventListener("click", () => {
+          if (this.searchInput) {
+            this.searchInput.value = "";
+            this.searchInput.focus();
+            this.updateClearButton();
+          }
+        });
+        const searchButton = searchContainer.createEl("button", {
+          cls: "freesound-search-button",
+          attr: { "aria-label": "Search" }
+        });
+        searchButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg><span>Search</span>`;
         searchButton.addEventListener("click", () => this.performSearch());
         const suggestionsEl = searchSection.createDiv({ cls: "freesound-search-suggestions" });
         suggestionsEl.createEl("span", { text: "Quick searches: ", cls: "freesound-suggestions-label" });
@@ -17330,9 +17362,16 @@ var init_FreesoundSearchModal = __esm({
         suggestions.forEach((suggestion, index2) => {
           const suggestionBtn = suggestionsEl.createEl("button", {
             text: suggestion,
-            cls: "freesound-suggestion-btn"
+            cls: "freesound-suggestion-btn",
+            attr: { "aria-label": `Search for ${suggestion}` }
           });
+          const icon = this.getSearchIcon(suggestion);
+          if (icon) {
+            suggestionBtn.innerHTML = `${icon}<span>${suggestion}</span>`;
+          }
           suggestionBtn.addEventListener("click", () => {
+            suggestionBtn.addClass("freesound-suggestion-active");
+            setTimeout(() => suggestionBtn.removeClass("freesound-suggestion-active"), 300);
             if (this.searchInput) {
               this.searchInput.value = suggestion;
               this.performSearch();
@@ -17340,26 +17379,115 @@ var init_FreesoundSearchModal = __esm({
           });
         });
       }
+      updateClearButton() {
+        const clearBtn = this.contentEl.querySelector(".freesound-clear-btn");
+        if (clearBtn && this.searchInput) {
+          clearBtn.style.display = this.searchInput.value ? "flex" : "none";
+        }
+      }
+      getSearchIcon(suggestion) {
+        const iconMap = {
+          "ambient": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
+          "pad": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
+          "texture": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
+          "ocean": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M2 12c3.667-3 7.333-3 11 0s7.333 3 11 0"></path></svg>',
+          "water": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>'
+        };
+        return iconMap[suggestion.toLowerCase()] || "";
+      }
       createFiltersSection(container) {
-        const filtersSection = container.createDiv({ cls: "freesound-filters-section" });
-        const filtersHeader = filtersSection.createDiv({ cls: "freesound-filters-header" });
-        filtersHeader.createEl("h3", { text: "Filters" });
-        const filtersGrid = filtersSection.createDiv({ cls: "freesound-filters-grid" });
+        this.filtersSection = container.createDiv({ cls: "freesound-filters-section" });
+        const filtersHeader = this.filtersSection.createDiv({ cls: "freesound-filters-header" });
+        const headerButton = filtersHeader.createEl("button", {
+          cls: "freesound-filters-toggle",
+          attr: { "aria-expanded": "true", "aria-label": "Toggle filters" }
+        });
+        headerButton.innerHTML = `
+			<svg class="freesound-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polyline points="6 9 12 15 18 9"></polyline>
+			</svg>
+			<h3>Filters</h3>
+			<span class="freesound-filter-badge" style="display: none;">0</span>
+		`;
+        headerButton.addEventListener("click", () => {
+          var _a, _b, _c;
+          this.filtersCollapsed = !this.filtersCollapsed;
+          const filtersGrid2 = (_a = this.filtersSection) == null ? void 0 : _a.querySelector(".freesound-filters-grid");
+          if (filtersGrid2) {
+            if (this.filtersCollapsed) {
+              filtersGrid2.style.display = "none";
+              (_b = this.filtersSection) == null ? void 0 : _b.addClass("freesound-filters-collapsed");
+              headerButton.setAttribute("aria-expanded", "false");
+            } else {
+              filtersGrid2.style.display = "grid";
+              (_c = this.filtersSection) == null ? void 0 : _c.removeClass("freesound-filters-collapsed");
+              headerButton.setAttribute("aria-expanded", "true");
+            }
+          }
+        });
+        const clearFiltersBtn = filtersHeader.createEl("button", {
+          text: "Clear",
+          cls: "freesound-clear-filters-btn",
+          attr: { "aria-label": "Clear all filters" }
+        });
+        clearFiltersBtn.addEventListener("click", () => this.clearFilters());
+        const filtersGrid = this.filtersSection.createDiv({ cls: "freesound-filters-grid" });
         new import_obsidian8.Setting(filtersGrid).setName("License").setDesc("Filter by Creative Commons license").addDropdown(
           (dropdown) => dropdown.addOption("any", "Any license").addOption("cc0", "CC0 (Public Domain)").addOption("cc-by", "CC BY (Attribution)").addOption("cc-by-sa", "CC BY-SA (ShareAlike)").setValue(this.filters.license).onChange((value) => {
             this.filters.license = value;
+            this.updateFilterCount();
           })
         );
         new import_obsidian8.Setting(filtersGrid).setName("Min duration").setDesc("Minimum sample length in seconds").addText(
           (text) => text.setPlaceholder("10").setValue(String(this.filters.minDuration)).onChange((value) => {
             this.filters.minDuration = parseInt(value) || 10;
+            this.updateFilterCount();
           })
         );
         new import_obsidian8.Setting(filtersGrid).setName("Max duration").setDesc("Maximum sample length in seconds").addText(
           (text) => text.setPlaceholder("300").setValue(String(this.filters.maxDuration)).onChange((value) => {
             this.filters.maxDuration = parseInt(value) || 300;
+            this.updateFilterCount();
           })
         );
+      }
+      updateFilterCount() {
+        let count = 0;
+        if (this.filters.license !== "any")
+          count++;
+        if (this.filters.minDuration !== 10)
+          count++;
+        if (this.filters.maxDuration !== 300)
+          count++;
+        this.activeFilterCount = count;
+        const badge = this.contentEl.querySelector(".freesound-filter-badge");
+        if (badge) {
+          if (count > 0) {
+            badge.textContent = String(count);
+            badge.style.display = "flex";
+          } else {
+            badge.style.display = "none";
+          }
+        }
+      }
+      clearFilters() {
+        this.filters = {
+          query: this.filters.query,
+          // Keep search query
+          license: "any",
+          minDuration: 10,
+          maxDuration: 300
+        };
+        const licenseDropdown = this.contentEl.querySelector(".freesound-filters-grid select");
+        if (licenseDropdown)
+          licenseDropdown.value = "any";
+        const durationInputs = this.contentEl.querySelectorAll('.freesound-filters-grid input[type="text"]');
+        if (durationInputs[0])
+          durationInputs[0].value = "10";
+        if (durationInputs[1])
+          durationInputs[1].value = "300";
+        this.updateFilterCount();
+        new import_obsidian8.Notice("Filters cleared");
       }
       createResultsSection(container) {
         const resultsSection = container.createDiv({ cls: "freesound-results-section" });
@@ -17381,6 +17509,7 @@ var init_FreesoundSearchModal = __esm({
         this.filters.query = query;
         this.isSearching = true;
         this.updateSearchButton("Searching...");
+        this.showLoadingSkeleton();
         try {
           logger18.info("search", `Searching Freesound for: ${query}`);
           const url = this.buildSearchUrl();
@@ -17420,49 +17549,112 @@ var init_FreesoundSearchModal = __esm({
           return;
         this.resultsContainer.empty();
         if (this.searchResults.length === 0) {
-          this.resultsContainer.createEl("p", {
-            text: "No results found. Try a different search query.",
-            cls: "freesound-no-results"
-          });
+          const emptyState = this.resultsContainer.createDiv({ cls: "freesound-empty-state" });
+          emptyState.innerHTML = `
+				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="11" cy="11" r="8"></circle>
+					<path d="m21 21-4.35-4.35"></path>
+				</svg>
+				<p>No results found</p>
+				<span>Try different search terms or adjust your filters</span>
+			`;
           return;
         }
         this.searchResults.forEach((result) => {
           const resultItem = this.resultsContainer.createDiv({ cls: "freesound-result-item" });
-          const infoSection = resultItem.createDiv({ cls: "freesound-result-info" });
-          infoSection.createEl("h4", { text: result.name, cls: "freesound-result-title" });
-          const metaEl = infoSection.createDiv({ cls: "freesound-result-meta" });
-          metaEl.createEl("span", { text: `${result.duration.toFixed(1)}s`, cls: "freesound-result-duration" });
-          metaEl.createEl("span", { text: ` \u2022 ${result.license}`, cls: "freesound-result-license" });
-          metaEl.createEl("span", { text: ` \u2022 by ${result.username}`, cls: "freesound-result-username" });
+          const thumbnail = resultItem.createDiv({ cls: "freesound-result-thumbnail" });
+          thumbnail.innerHTML = `
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+					<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+					<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+				</svg>
+			`;
+          const contentSection = resultItem.createDiv({ cls: "freesound-result-content" });
+          const headerSection = contentSection.createDiv({ cls: "freesound-result-header" });
+          headerSection.createEl("h4", { text: result.name, cls: "freesound-result-title" });
+          const badgesEl = headerSection.createDiv({ cls: "freesound-result-badges" });
+          const durationBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-duration" });
+          durationBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>${result.duration.toFixed(1)}s</span>`;
+          const licenseBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-license" });
+          licenseBadge.textContent = this.formatLicense(result.license);
           if (result.description) {
-            const descEl = infoSection.createDiv({ cls: "freesound-result-description" });
-            descEl.textContent = result.description.substring(0, 100) + (result.description.length > 100 ? "..." : "");
+            const descEl = contentSection.createDiv({ cls: "freesound-result-description" });
+            descEl.textContent = result.description.substring(0, 120) + (result.description.length > 120 ? "..." : "");
           }
+          if (result.tags && result.tags.length > 0) {
+            const tagsEl = contentSection.createDiv({ cls: "freesound-result-tags" });
+            result.tags.slice(0, 5).forEach((tag) => {
+              const tagEl = tagsEl.createEl("span", { cls: "freesound-tag", text: tag });
+            });
+            if (result.tags.length > 5) {
+              tagsEl.createEl("span", { cls: "freesound-tag-more", text: `+${result.tags.length - 5}` });
+            }
+          }
+          const footerEl = contentSection.createDiv({ cls: "freesound-result-footer" });
+          footerEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>by ${result.username}</span>`;
           const actionsSection = resultItem.createDiv({ cls: "freesound-result-actions" });
           const previewBtn = actionsSection.createEl("button", {
-            text: "Preview",
-            cls: "freesound-action-btn freesound-preview-btn"
+            cls: "freesound-action-btn freesound-preview-btn",
+            attr: { "aria-label": `Preview ${result.name}` }
           });
+          previewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Preview</span>`;
           previewBtn.addEventListener("click", () => this.previewSample(result, previewBtn));
           const addBtn = actionsSection.createEl("button", {
-            text: "Add to Library",
-            cls: "freesound-action-btn freesound-add-btn"
+            cls: "freesound-action-btn freesound-add-btn",
+            attr: { "aria-label": `Add ${result.name} to library` }
           });
+          addBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Add to Library</span>`;
           addBtn.addEventListener("click", () => this.addSampleToLibrary(result));
         });
       }
+      formatLicense(license) {
+        if (license.startsWith("http")) {
+          const url = license.toLowerCase();
+          if (url.includes("/publicdomain/zero/") || url.includes("cc0"))
+            return "CC0";
+          if (url.includes("/by-nc-sa/"))
+            return "CC BY-NC-SA";
+          if (url.includes("/by-nc-nd/"))
+            return "CC BY-NC-ND";
+          if (url.includes("/by-nc/"))
+            return "CC BY-NC";
+          if (url.includes("/by-sa/"))
+            return "CC BY-SA";
+          if (url.includes("/by-nd/"))
+            return "CC BY-ND";
+          if (url.includes("/by/"))
+            return "CC BY";
+          if (url.includes("sampling"))
+            return "Sampling+";
+          return "CC";
+        }
+        const licenseMap = {
+          "Attribution": "CC BY",
+          "Attribution Noncommercial": "CC BY-NC",
+          "Creative Commons 0": "CC0",
+          "Attribution Share Alike": "CC BY-SA",
+          "Attribution Noncommercial Share Alike": "CC BY-NC-SA",
+          "Attribution No Derivatives": "CC BY-ND",
+          "Attribution Noncommercial No Derivatives": "CC BY-NC-ND"
+        };
+        return licenseMap[license] || license;
+      }
       async previewSample(result, button) {
-        if (button.textContent === "Stop") {
+        if (button.querySelector(".freesound-stop-icon")) {
           this.stopPreview();
           return;
         }
         if (this.currentAudio) {
           this.stopPreview();
         }
-        const originalText = button.textContent || "Preview";
+        const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        const stopIcon = '<svg class="freesound-stop-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg>';
+        const loadingIcon = '<svg class="freesound-loading-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
         try {
-          button.textContent = "Loading...";
+          button.innerHTML = `${loadingIcon}<span>Loading...</span>`;
           button.disabled = true;
+          button.addClass("freesound-btn-loading");
           const audio = new Audio(result.previews["preview-lq-mp3"]);
           this.currentAudio = audio;
           this.currentPreviewButton = button;
@@ -17472,34 +17664,42 @@ var init_FreesoundSearchModal = __esm({
             audio.load();
           });
           await audio.play();
-          button.textContent = "Stop";
+          button.innerHTML = `${stopIcon}<span>Stop</span>`;
           button.disabled = false;
+          button.removeClass("freesound-btn-loading");
+          button.addClass("freesound-btn-playing");
           audio.addEventListener("ended", () => {
             if (this.currentPreviewButton) {
-              this.currentPreviewButton.textContent = originalText;
+              this.currentPreviewButton.innerHTML = `${playIcon}<span>Preview</span>`;
+              this.currentPreviewButton.removeClass("freesound-btn-playing");
             }
             this.currentAudio = null;
             this.currentPreviewButton = null;
           });
         } catch (error) {
           logger18.error("preview", `Failed to preview sample ${result.id}`, error);
-          button.textContent = "Error";
+          button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span>Error</span>`;
+          button.addClass("freesound-btn-error");
           setTimeout(() => {
-            button.textContent = originalText;
+            button.innerHTML = `${playIcon}<span>Preview</span>`;
             button.disabled = false;
+            button.removeClass("freesound-btn-loading");
+            button.removeClass("freesound-btn-error");
           }, 2e3);
           this.currentAudio = null;
           this.currentPreviewButton = null;
         }
       }
       stopPreview() {
+        const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
         if (this.currentAudio) {
           this.currentAudio.pause();
           this.currentAudio.currentTime = 0;
           this.currentAudio = null;
         }
         if (this.currentPreviewButton) {
-          this.currentPreviewButton.textContent = "Preview";
+          this.currentPreviewButton.innerHTML = `${playIcon}<span>Preview</span>`;
+          this.currentPreviewButton.removeClass("freesound-btn-playing");
           this.currentPreviewButton = null;
         }
       }
@@ -17523,16 +17723,52 @@ var init_FreesoundSearchModal = __esm({
         if (!this.resultsContainer)
           return;
         this.resultsContainer.empty();
-        this.resultsContainer.createEl("p", {
-          text: `Error: ${error.message || "Unknown error"}`,
-          cls: "freesound-error-message"
+        const errorState = this.resultsContainer.createDiv({ cls: "freesound-error-state" });
+        errorState.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="12" cy="12" r="10"></circle>
+				<line x1="12" y1="8" x2="12" y2="12"></line>
+				<line x1="12" y1="16" x2="12.01" y2="16"></line>
+			</svg>
+			<p>Search Error</p>
+			<span>${error.message || "Failed to search Freesound. Please check your API key and connection."}</span>
+		`;
+        const retryBtn = errorState.createEl("button", {
+          text: "Try Again",
+          cls: "freesound-retry-btn"
         });
+        retryBtn.addEventListener("click", () => this.performSearch());
       }
       updateSearchButton(text) {
         const button = this.contentEl.querySelector(".freesound-search-button");
         if (button) {
-          button.textContent = text;
+          const searchIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>';
+          const loadingIcon = '<svg class="freesound-loading-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+          if (this.isSearching) {
+            button.innerHTML = `${loadingIcon}<span>${text}</span>`;
+            button.addClass("freesound-btn-loading");
+          } else {
+            button.innerHTML = `${searchIcon}<span>${text}</span>`;
+            button.removeClass("freesound-btn-loading");
+          }
           button.disabled = this.isSearching;
+        }
+      }
+      showLoadingSkeleton() {
+        if (!this.resultsContainer)
+          return;
+        this.resultsContainer.empty();
+        for (let i = 0; i < 3; i++) {
+          const skeleton = this.resultsContainer.createDiv({ cls: "freesound-result-skeleton" });
+          skeleton.innerHTML = `
+				<div class="freesound-skeleton-thumbnail"></div>
+				<div class="freesound-skeleton-content">
+					<div class="freesound-skeleton-title"></div>
+					<div class="freesound-skeleton-badges"></div>
+					<div class="freesound-skeleton-description"></div>
+					<div class="freesound-skeleton-tags"></div>
+				</div>
+			`;
         }
       }
       getGenreSuggestions(genre) {

@@ -1144,9 +1144,9 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		dynamiccompressor: { enabled: false }
 	},
 	instruments: {
-		piano: { 
-			enabled: true, 
-			volume: 0.8, 
+		piano: {
+			enabled: false,
+			volume: 0.8,
 			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
@@ -1177,11 +1177,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		organ: { 
-			enabled: true, 
-			volume: 0.7, 
+		organ: {
+			enabled: true,
+			volume: 0.7,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1210,8 +1210,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		strings: { 
-			enabled: true, 
+		strings: {
+			enabled: false, 
 			volume: 0.6, 
 			maxVoices: 4,
 			effects: {
@@ -1242,8 +1242,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		flute: { 
-			enabled: true, 
+		flute: {
+			enabled: false, 
 			volume: 0.6, 
 			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
@@ -1603,11 +1603,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		guitarElectric: { 
-			enabled: false,
-			volume: 0.7, 
+		guitarElectric: {
+			enabled: true,
+			volume: 0.7,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1669,11 +1669,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		bassElectric: { 
-			enabled: false,
-			volume: 0.8, 
+		bassElectric: {
+			enabled: true,
+			volume: 0.8,
 			maxVoices: 2,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1768,11 +1768,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		frenchHorn: { 
-			enabled: false,
-			volume: 0.6, 
+		frenchHorn: {
+			enabled: true,
+			volume: 0.6,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1869,10 +1869,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		},
 		// Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
 		bassoon: {
-			enabled: false,
+			enabled: true,
 			volume: 0.7,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: {
 					enabled: true,
@@ -2639,7 +2639,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			rootNote: 'C',
 			enforceHarmony: true, // Constrain notes to scale when enabled
 			allowChromaticPassing: false, // No chromatic notes by default
-			dissonanceThreshold: 0.3, // Low dissonance tolerance
+			dissonanceThreshold: 0.10, // Very low dissonance tolerance
 			quantizationStrength: 0.8, // Strong quantization to scale
 			preferredChordProgression: 'I-IV-V-I', // Classic progression
 			dynamicScaleModulation: false // Static scale by default
@@ -2653,7 +2653,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		rootNote: 'C',
 		enforceHarmony: true,
 		allowChromaticPassing: false,
-		dissonanceThreshold: 0.3,
+		dissonanceThreshold: 0.10,
 		quantizationStrength: 0.8,
 		preferredChordProgression: 'I-IV-V-I',
 		dynamicScaleModulation: false
