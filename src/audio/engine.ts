@@ -3188,11 +3188,33 @@ export class AudioEngine {
 		try {
 			const { pitch, duration, velocity, instrument } = mapping;
 
+			// CRITICAL: Polyphony limiting to prevent audio stuttering
+			// Count currently playing notes across all instruments
+			const currentNoteCount = Array.from(this.instruments.values()).reduce((count, synth) => {
+				// PolySynth has activeVoices, Sampler tracks internally
+				if ('activeVoices' in synth) {
+					return count + (synth as any).activeVoices;
+				}
+				return count;
+			}, 0);
+
+			// Skip note if we're at capacity (max 20 simultaneous notes for safety)
+			if (currentNoteCount >= 20) {
+				logger.debug('polyphony-limit', 'Skipping note - polyphony limit reached', {
+					currentNotes: currentNoteCount,
+					limit: 20,
+					instrument,
+					pitch: pitch.toFixed(2)
+				});
+				return;
+			}
+
 			logger.debug('immediate-playback', 'Playing note immediately', {
 				instrument: instrument,
 				pitch: pitch.toFixed(2),
 				duration: duration,
-				velocity: velocity
+				velocity: velocity,
+				currentNotes: currentNoteCount
 			});
 
 			// Get the synthesizer for the specified instrument
