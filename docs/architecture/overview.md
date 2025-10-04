@@ -19,12 +19,15 @@
 Sonigraph is built on a modular architecture designed for scalability and maintainability:
 
 - **AudioEngine**: Orchestral audio synthesis with 34 instruments
+- **Continuous Layers**: Ambient, rhythmic, and harmonic background audio with 13 musical genres
 - **Graph Parser**: Obsidian vault data extraction and processing
 - **Musical Mapper**: Graph-to-music parameter conversion
 - **Control Center**: Professional 6-tab Material Design interface
+- **Sonic Graph System**: Dynamic graph visualization with temporal animation and smart clustering
+- **Audio Export**: Professional audio export with multiple formats (WAV, M4A, WebM, OGG)
+- **Freesound Integration**: Sample browser and API integration for high-quality audio samples
 - **Logging System**: Enterprise-grade logging with multiple adapters
 - **Effects Engine**: Per-instrument effects processing with master bus
-- **Sonic Graph System**: Dynamic graph visualization and interaction
 
 ### 1.2. Technology Stack
 
@@ -36,7 +39,9 @@ Sonigraph is built on a modular architecture designed for scalability and mainta
 - **UI Framework**: Custom Material Design components
 
 **Dependencies:**
-- `tone`: Advanced audio synthesis and effects
+- `tone` (v14.8.49): Advanced audio synthesis and effects
+- `d3` (v7.9.0): Graph visualization and force simulation
+- `lamejs` (v1.2.1): MP3 encoding for audio exports
 - `obsidian`: Plugin API types and utilities
 - Build tools: ESBuild configuration for production builds
 
@@ -53,25 +58,61 @@ src/
 │   ├── TemporalGraphAnimator.ts # Timeline animation system
 │   ├── ContentAwarePositioning.ts # Semantic force positioning system
 │   ├── SmartClusteringAlgorithms.ts # Community detection and clustering
+│   ├── AdaptiveDetailManager.ts # Dynamic rendering optimization
 │   └── types.ts           # Graph data interfaces
 ├── audio/
 │   ├── engine.ts          # Main orchestral audio engine
 │   ├── harmonic-engine.ts # Harmonic processing
 │   ├── percussion-engine.ts # Advanced percussion synthesis
-│   └── electronic-engine.ts # Electronic synthesis suite
+│   ├── electronic-engine.ts # Electronic synthesis suite
+│   ├── playback-events.ts # Event scheduling and coordination
+│   ├── clustering/        # Audio clustering algorithms
+│   ├── configs/           # Instrument configurations
+│   ├── effects/           # Audio effect processors
+│   ├── freesound/         # Freesound API integration
+│   ├── layers/            # Continuous audio layers (ambient, rhythmic, harmonic)
+│   ├── mapping/           # Content-aware mapping system
+│   ├── optimizations/     # Performance optimization
+│   ├── orchestration/     # Hub orchestration and centrality
+│   ├── percussion/        # Percussion instruments and patterns
+│   ├── spatial/           # Spatial audio processing
+│   ├── theory/            # Musical theory engine
+│   └── voice-management/  # Voice pooling and allocation
 ├── ui/
 │   ├── control-panel.ts   # Control Center with Sonic Graph integration
-│   ├── SonicGraphModal.ts # Main Sonic Graph interface
+│   ├── SonicGraphModal.ts # Main Sonic Graph modal interface
+│   ├── SonicGraphView.ts  # Sonic Graph view (right sidebar)
+│   ├── SampleTableBrowser.ts # Freesound sample browser
+│   ├── FreesoundSearchModal.ts # Freesound search interface
 │   ├── FolderSuggestModal.ts # Folder exclusion autocomplete
 │   ├── FileSuggestModal.ts # File exclusion autocomplete
-│   ├── settings.ts        # Settings management
+│   ├── GraphDemoModal.ts  # D3 demo and testing interface
+│   ├── play-button-manager.ts # Playback button state management
+│   ├── settings.ts        # Legacy settings management
+│   ├── settings/          # Modular settings tabs
 │   ├── components.ts      # Reusable UI components
-│   ├── lucide-icons.ts    # Icon system integration
+│   ├── lucide-icons.ts    # Lucide icon system integration
 │   └── material-components.ts # Material Design components
+├── export/                # Audio export system
+│   ├── ExportModal.ts     # Export configuration interface
+│   ├── ExportProgressModal.ts # Export progress tracking
+│   ├── FileCollisionModal.ts # File collision handling
+│   └── AudioExporter.ts   # Audio rendering and encoding
+├── external/              # External service integrations
+│   └── whale/             # Whale audio integration
+├── templates/             # Template system
+│   └── ui/                # Template UI components
+├── dom/                   # DOM utilities
+│   └── lucide/            # Lucide icon helpers
+├── testing/               # Testing infrastructure
+│   ├── TestSuiteModal.ts  # Test suite interface
+│   ├── performance/       # Performance tests
+│   ├── integration/       # Integration tests
+│   └── utils/             # Testing utilities
 ├── utils/
 │   ├── constants.ts       # Configuration and defaults
-│   └── [utilities]
-└── logging.ts             # Logging system
+│   └── [utilities]        # Various utility functions
+└── logging.ts             # Enterprise-grade logging system
 ```
 
 ## 2. Architecture Documents
