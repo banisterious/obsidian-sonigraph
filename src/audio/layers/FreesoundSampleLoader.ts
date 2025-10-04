@@ -6,6 +6,7 @@
  */
 
 import { Sampler, ToneAudioBuffer } from 'tone';
+import { requestUrl } from 'obsidian';
 import { MusicalGenre, FreesoundSample, ContinuousLayerError } from './types';
 import { getLogger } from '../../logging';
 
@@ -272,7 +273,7 @@ export class FreesoundSampleLoader {
   
   private async performLoad(sampleId: number): Promise<AudioBuffer | null> {
     const startTime = Date.now();
-    
+
     try {
       // Find sample in library
       const sample = this.findSampleById(sampleId);
@@ -280,16 +281,16 @@ export class FreesoundSampleLoader {
         logger.warn('loading', `Sample not found in library: ${sampleId}`);
         return null;
       }
-      
+
       logger.debug('loading', `Loading sample: ${sampleId} - ${sample.title}`);
-      
-      // Download audio data
-      const response = await fetch(sample.previewUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const arrayBuffer = await response.arrayBuffer();
+
+      // Download audio data using requestUrl to bypass CORS
+      const response = await requestUrl({
+        url: sample.previewUrl,
+        method: 'GET'
+      });
+
+      const arrayBuffer = response.arrayBuffer;
       
       // Decode audio data
       const audioContext = new AudioContext();
@@ -334,15 +335,14 @@ export class FreesoundSampleLoader {
     if (!this.apiKey) {
       return;
     }
-    
+
     try {
       const testUrl = `https://freesound.org/apiv2/sounds/1/?token=${this.apiKey}`;
-      const response = await fetch(testUrl);
-      
-      if (!response.ok) {
-        throw new Error(`API test failed: ${response.status}`);
-      }
-      
+      const response = await requestUrl({
+        url: testUrl,
+        method: 'GET'
+      });
+
       logger.info('connection', 'Freesound API connection test successful');
     } catch (error) {
       logger.error('connection', 'Freesound API connection test failed', error);
