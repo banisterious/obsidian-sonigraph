@@ -5,7 +5,7 @@
  * Freesound samples with sortable columns, search, and tag filtering.
  */
 
-import { App, Notice, requestUrl, Modal, Setting } from 'obsidian';
+import { App, Notice, requestUrl, Modal, Setting, setIcon } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger } from '../logging';
 import { FreesoundSample } from '../audio/layers/types';
@@ -256,33 +256,37 @@ export class SampleTableBrowser {
 		const actionsCell = row.createEl('td', { cls: 'sonigraph-sample-actions' });
 
 		// Preview button
-		const previewBtn = actionsCell.createEl('button', { text: '▶', cls: 'sonigraph-preview-btn' });
+		const previewBtn = actionsCell.createEl('button', { cls: 'sonigraph-preview-btn', attr: { 'aria-label': 'Preview sample' } });
+		setIcon(previewBtn, 'play');
 		previewBtn.addEventListener('click', () => this.previewSample(sample, previewBtn));
 
 		// Info button
-		const infoBtn = actionsCell.createEl('button', { text: 'ℹ', cls: 'sonigraph-info-btn' });
+		const infoBtn = actionsCell.createEl('button', { cls: 'sonigraph-info-btn', attr: { 'aria-label': 'View on Freesound' } });
+		setIcon(infoBtn, 'info');
 		infoBtn.addEventListener('click', () => {
 			window.open(`https://freesound.org/s/${sample.id}/`, '_blank');
 		});
 
 		// Edit Tags button
-		const editTagsBtn = actionsCell.createEl('button', { text: '🏷', cls: 'sonigraph-edit-tags-btn' });
+		const editTagsBtn = actionsCell.createEl('button', { cls: 'sonigraph-edit-tags-btn', attr: { 'aria-label': 'Edit tags' } });
+		setIcon(editTagsBtn, 'tag');
 		editTagsBtn.addEventListener('click', () => {
 			this.openTagEditor(sample);
 		});
 
 		// Enable/Disable toggle
 		const toggleBtn = actionsCell.createEl('button', {
-			text: sample.enabled === false ? 'On' : 'Off',
 			cls: sample.enabled === false ? 'sonigraph-enable-btn' : 'sonigraph-disable-btn',
 			attr: { 'aria-label': sample.enabled === false ? 'Enable' : 'Disable' }
 		});
+		setIcon(toggleBtn, sample.enabled === false ? 'toggle-left' : 'toggle-right');
 		toggleBtn.addEventListener('click', async () => {
 			await this.toggleSampleEnabled(sample.id);
 		});
 
 		// Remove button
-		const removeBtn = actionsCell.createEl('button', { text: '🗑', cls: 'sonigraph-remove-btn' });
+		const removeBtn = actionsCell.createEl('button', { cls: 'sonigraph-remove-btn', attr: { 'aria-label': 'Remove sample' } });
+		setIcon(removeBtn, 'trash-2');
 		removeBtn.addEventListener('click', async () => {
 			await this.removeSample(sample.id);
 		});
@@ -389,8 +393,8 @@ export class SampleTableBrowser {
 	 * Preview a sample
 	 */
 	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
-		// Stop if already playing
-		if (button.textContent === 'Stop') {
+		// Stop if already playing (check if button has stop icon)
+		if (this.currentPreviewButton === button && this.currentPreviewAudio) {
 			this.stopPreview();
 			return;
 		}
@@ -400,10 +404,9 @@ export class SampleTableBrowser {
 			this.stopPreview();
 		}
 
-		const originalText = button.textContent || '▶';
-
 		try {
-			button.textContent = '...';
+			button.empty();
+			button.createSpan({ text: '...' });
 			button.disabled = true;
 
 			// Fetch fresh preview URL from Freesound API
@@ -440,14 +443,16 @@ export class SampleTableBrowser {
 			this.currentPreviewAudio = audio;
 			this.currentPreviewButton = button;
 
-			button.textContent = 'Stop';
+			button.empty();
+			setIcon(button, 'square');
 			button.disabled = false;
 
 			// Auto-stop when done
 			audio.addEventListener('ended', () => {
 				URL.revokeObjectURL(blobUrl);
 				if (this.currentPreviewButton) {
-					this.currentPreviewButton.textContent = originalText;
+					this.currentPreviewButton.empty();
+					setIcon(this.currentPreviewButton, 'play');
 				}
 				this.currentPreviewAudio = null;
 				this.currentPreviewButton = null;
@@ -455,10 +460,12 @@ export class SampleTableBrowser {
 
 		} catch (error) {
 			logger.error('preview', 'Failed to preview sample', error);
-			button.textContent = 'Error';
+			button.empty();
+			button.createSpan({ text: 'Error' });
 			button.disabled = false;
 			setTimeout(() => {
-				button.textContent = originalText;
+				button.empty();
+				setIcon(button, 'play');
 			}, 2000);
 		}
 	}
@@ -472,7 +479,8 @@ export class SampleTableBrowser {
 			if (this.currentPreviewAudio.src.startsWith('blob:')) {
 				URL.revokeObjectURL(this.currentPreviewAudio.src);
 			}
-			this.currentPreviewButton.textContent = '▶';
+			this.currentPreviewButton.empty();
+			setIcon(this.currentPreviewButton, 'play');
 			this.currentPreviewAudio = null;
 			this.currentPreviewButton = null;
 		}

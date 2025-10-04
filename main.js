@@ -17732,25 +17732,29 @@ var init_SampleTableBrowser = __esm({
           }
         }
         const actionsCell = row.createEl("td", { cls: "sonigraph-sample-actions" });
-        const previewBtn = actionsCell.createEl("button", { text: "\u25B6", cls: "sonigraph-preview-btn" });
+        const previewBtn = actionsCell.createEl("button", { cls: "sonigraph-preview-btn", attr: { "aria-label": "Preview sample" } });
+        (0, import_obsidian9.setIcon)(previewBtn, "play");
         previewBtn.addEventListener("click", () => this.previewSample(sample, previewBtn));
-        const infoBtn = actionsCell.createEl("button", { text: "\u2139", cls: "sonigraph-info-btn" });
+        const infoBtn = actionsCell.createEl("button", { cls: "sonigraph-info-btn", attr: { "aria-label": "View on Freesound" } });
+        (0, import_obsidian9.setIcon)(infoBtn, "info");
         infoBtn.addEventListener("click", () => {
           window.open(`https://freesound.org/s/${sample.id}/`, "_blank");
         });
-        const editTagsBtn = actionsCell.createEl("button", { text: "\u{1F3F7}", cls: "sonigraph-edit-tags-btn" });
+        const editTagsBtn = actionsCell.createEl("button", { cls: "sonigraph-edit-tags-btn", attr: { "aria-label": "Edit tags" } });
+        (0, import_obsidian9.setIcon)(editTagsBtn, "tag");
         editTagsBtn.addEventListener("click", () => {
           this.openTagEditor(sample);
         });
         const toggleBtn = actionsCell.createEl("button", {
-          text: sample.enabled === false ? "On" : "Off",
           cls: sample.enabled === false ? "sonigraph-enable-btn" : "sonigraph-disable-btn",
           attr: { "aria-label": sample.enabled === false ? "Enable" : "Disable" }
         });
+        (0, import_obsidian9.setIcon)(toggleBtn, sample.enabled === false ? "toggle-left" : "toggle-right");
         toggleBtn.addEventListener("click", async () => {
           await this.toggleSampleEnabled(sample.id);
         });
-        const removeBtn = actionsCell.createEl("button", { text: "\u{1F5D1}", cls: "sonigraph-remove-btn" });
+        const removeBtn = actionsCell.createEl("button", { cls: "sonigraph-remove-btn", attr: { "aria-label": "Remove sample" } });
+        (0, import_obsidian9.setIcon)(removeBtn, "trash-2");
         removeBtn.addEventListener("click", async () => {
           await this.removeSample(sample.id);
         });
@@ -17835,16 +17839,16 @@ var init_SampleTableBrowser = __esm({
        */
       async previewSample(sample, button) {
         var _a, _b;
-        if (button.textContent === "Stop") {
+        if (this.currentPreviewButton === button && this.currentPreviewAudio) {
           this.stopPreview();
           return;
         }
         if (this.currentPreviewAudio) {
           this.stopPreview();
         }
-        const originalText = button.textContent || "\u25B6";
         try {
-          button.textContent = "...";
+          button.empty();
+          button.createSpan({ text: "..." });
           button.disabled = true;
           const apiKey = this.plugin.settings.freesoundApiKey;
           if (!apiKey) {
@@ -17869,22 +17873,26 @@ var init_SampleTableBrowser = __esm({
           await audio.play();
           this.currentPreviewAudio = audio;
           this.currentPreviewButton = button;
-          button.textContent = "Stop";
+          button.empty();
+          (0, import_obsidian9.setIcon)(button, "square");
           button.disabled = false;
           audio.addEventListener("ended", () => {
             URL.revokeObjectURL(blobUrl);
             if (this.currentPreviewButton) {
-              this.currentPreviewButton.textContent = originalText;
+              this.currentPreviewButton.empty();
+              (0, import_obsidian9.setIcon)(this.currentPreviewButton, "play");
             }
             this.currentPreviewAudio = null;
             this.currentPreviewButton = null;
           });
         } catch (error) {
           logger19.error("preview", "Failed to preview sample", error);
-          button.textContent = "Error";
+          button.empty();
+          button.createSpan({ text: "Error" });
           button.disabled = false;
           setTimeout(() => {
-            button.textContent = originalText;
+            button.empty();
+            (0, import_obsidian9.setIcon)(button, "play");
           }, 2e3);
         }
       }
@@ -17897,7 +17905,8 @@ var init_SampleTableBrowser = __esm({
           if (this.currentPreviewAudio.src.startsWith("blob:")) {
             URL.revokeObjectURL(this.currentPreviewAudio.src);
           }
-          this.currentPreviewButton.textContent = "\u25B6";
+          this.currentPreviewButton.empty();
+          (0, import_obsidian9.setIcon)(this.currentPreviewButton, "play");
           this.currentPreviewAudio = null;
           this.currentPreviewButton = null;
         }
