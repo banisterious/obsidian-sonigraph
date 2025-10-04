@@ -177,14 +177,21 @@ export class ContinuousLayerManager {
       });
       return;
     }
-    
+
+    // Validate that we have enabled samples before starting
+    const enabledSamples = this.settings.freesoundSamples?.filter(s => s.enabled !== false) || [];
+    if (enabledSamples.length === 0) {
+      logger.warn('playback', 'No enabled Freesound samples available - continuous layers require at least one enabled sample to function properly. Please enable samples in the Sample Browser.');
+      return;
+    }
+
     if (this.isPlaying) {
       logger.warn('playback', 'Continuous layers already playing');
       return;
     }
-    
+
     try {
-      logger.info('playback', `Starting continuous layer playback - Genre: ${this.config.genre}`);
+      logger.info('playback', `Starting continuous layer playback - Genre: ${this.config.genre}, ${enabledSamples.length} enabled samples available`);
       
       // Start genre engine
       await this.genreEngine.start(this.config);
