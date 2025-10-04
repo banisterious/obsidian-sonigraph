@@ -9,6 +9,7 @@ import { Sampler, ToneAudioBuffer } from 'tone';
 import { requestUrl } from 'obsidian';
 import { MusicalGenre, FreesoundSample, ContinuousLayerError } from './types';
 import { getLogger } from '../../logging';
+import { SonigraphSettings } from '../../utils/constants';
 
 const logger = getLogger('FreesoundSampleLoader');
 
@@ -46,13 +47,16 @@ export class FreesoundSampleLoader {
   
   // Genre-specific sample library
   private sampleLibrary: Map<MusicalGenre, FreesoundSample[]> = new Map();
-  
-  constructor(apiKey?: string) {
+  private settings?: SonigraphSettings;
+
+  constructor(apiKey?: string, settings?: SonigraphSettings) {
     this.apiKey = apiKey || '';
+    this.settings = settings;
     this.initializeSampleLibrary();
-    
+
     logger.debug('initialization', 'FreesoundSampleLoader created', {
       hasApiKey: !!this.apiKey,
+      hasSettings: !!this.settings,
       librarySize: Array.from(this.sampleLibrary.values()).reduce((sum, samples) => sum + samples.length, 0)
     });
   }
@@ -432,27 +436,62 @@ export class FreesoundSampleLoader {
   }
   
   private initializeSampleLibrary(): void {
-    // Curated Freesound sample library for all 13 musical genres
-    // NOTE: These are placeholder samples. Users should use the Freesound API to search
-    // for real samples or provide their own sample IDs through the UI.
-    // Preview URL format: https://freesound.org/data/previews/{first3}/{id}_preview.mp3
+    // Use enabled samples from settings if available
+    if (this.settings?.freesoundSamples) {
+      const enabledSamples = this.settings.freesoundSamples.filter(s => s.enabled !== false);
+
+      logger.info('initialization', `Loading ${enabledSamples.length} enabled samples from settings`);
+
+      // Group samples by their tags to map to genres
+      const genreMap: Map<MusicalGenre, FreesoundSample[]> = new Map();
+
+      enabledSamples.forEach(sample => {
+        // Map sample tags to genres
+        const tags = sample.tags || [];
+        const genres = this.mapTagsToGenres(tags);
+
+        genres.forEach(genre => {
+          if (!genreMap.has(genre)) {
+            genreMap.set(genre, []);
+          }
+          genreMap.get(genre)!.push({
+            ...sample,
+            genre
+          });
+        });
+      });
+
+      this.sampleLibrary = genreMap;
+
+      logger.info('initialization', `Organized samples into ${genreMap.size} genres`, {
+        genres: Array.from(genreMap.entries()).map(([genre, samples]) => ({
+          genre,
+          count: samples.length
+        }))
+      });
+
+      return;
+    }
+
+    // Fallback: Use placeholder samples (these are now just for reference/testing)
+    logger.warn('initialization', 'No settings provided, using placeholder sample library');
 
     // 1. Ambient - Ethereal atmospheric textures
     this.sampleLibrary.set('ambient', [
       {
         id: 17854,
-        title: 'Atmosphere 1',
+        title: 'Atmosphere 1 (Placeholder)',
         previewUrl: 'https://freesound.org/data/previews/17/17854_-preview.mp3',
         duration: 60,
         license: 'CC0',
-        attribution: 'ERH',
+        attribution: 'Placeholder',
         genre: 'ambient',
         fadeIn: 2,
         fadeOut: 3
       },
       {
         id: 18765,
-        title: 'Deep Pad',
+        title: 'Deep Pad (Placeholder)',
         previewUrl: 'https://freesound.org/data/previews/18/18765_-preview.mp3',
         duration: 45,
         license: 'CC BY 3.0',
@@ -922,5 +961,44 @@ export class FreesoundSampleLoader {
       totalGenres: this.sampleLibrary.size,
       totalSamples: Array.from(this.sampleLibrary.values()).reduce((sum, samples) => sum + samples.length, 0)
     });
+  }
+
+  /**
+   * Map sample tags to musical genres
+   */
+  private mapTagsToGenres(tags: string[]): MusicalGenre[] {
+    const genres: Set<MusicalGenre> = new Set();
+    const lowerTags = tags.map(t => t.toLowerCase());
+
+    // Genre mapping based on tags
+    const genreTagMap: Record<MusicalGenre, string[]> = {
+      'ambient': ['ambient', 'atmospheric', 'ethereal', 'pad', 'soundscape'],
+      'drone': ['drone', 'sustained', 'continuous', 'tonal'],
+      'glitch': ['glitch', 'digital', 'glitchy', 'processed', 'granular'],
+      'idm': ['idm', 'intelligent', 'experimental', 'abstract'],
+      'minimalist': ['minimal', 'minimalist', 'simple', 'sparse'],
+      'downtempo': ['downtempo', 'chill', 'slow', 'relaxed'],
+      'oceanic': ['ocean', 'water', 'wave', 'sea', 'aquatic'],
+      'industrial': ['industrial', 'mechanical', 'metallic', 'harsh'],
+      'organic': ['organic', 'natural', 'acoustic', 'field-recording'],
+      'electronic': ['electronic', 'synth', 'synthesizer', 'electro'],
+      'techno': ['techno', 'tech', 'driving', 'rhythmic'],
+      'house': ['house', 'deep', 'groove'],
+      'trance': ['trance', 'uplifting', 'melodic']
+    };
+
+    // Check each genre's associated tags
+    for (const [genre, keywords] of Object.entries(genreTagMap)) {
+      if (keywords.some(keyword => lowerTags.some(tag => tag.includes(keyword)))) {
+        genres.add(genre as MusicalGenre);
+      }
+    }
+
+    // Default to ambient if no genres matched
+    if (genres.size === 0) {
+      genres.add('ambient');
+    }
+
+    return Array.from(genres);
   }
 }
