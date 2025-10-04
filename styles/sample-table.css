@@ -209,6 +209,21 @@
 	font-size: 1em;
 	line-height: 1;
 	transition: background 0.15s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	min-height: 24px;
+}
+
+.sonigraph-preview-btn svg,
+.sonigraph-info-btn svg,
+.sonigraph-edit-tags-btn svg,
+.sonigraph-enable-btn svg,
+.sonigraph-disable-btn svg,
+.sonigraph-remove-btn svg {
+	width: 14px;
+	height: 14px;
 }
 
 .sonigraph-preview-btn {
