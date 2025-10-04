@@ -234,12 +234,13 @@ var init_constants = __esm({
           eventSpreadingMode: "gentle",
           maxEventSpacing: 3,
           // Audio crackling prevention defaults
-          simultaneousEventLimit: 2,
+          simultaneousEventLimit: 1,
           // Reduced from 8 to prevent polyphony overflow with multiple instruments
           eventBatchSize: 10
         },
         audio: {
-          density: 30,
+          density: 10,
+          // Reduced from 30 for better performance with large vaults
           noteDuration: 0.3,
           enableEffects: true,
           autoDetectionOverride: "auto"
