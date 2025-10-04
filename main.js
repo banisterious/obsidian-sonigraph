@@ -234,7 +234,7 @@ var init_constants = __esm({
           eventSpreadingMode: "gentle",
           maxEventSpacing: 3,
           // Audio crackling prevention defaults
-          simultaneousEventLimit: 4,
+          simultaneousEventLimit: 2,
           // Reduced from 8 to prevent polyphony overflow with multiple instruments
           eventBatchSize: 10
         },
@@ -593,7 +593,7 @@ var init_constants = __esm({
         piano: {
           enabled: true,
           volume: 0.8,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -627,7 +627,7 @@ var init_constants = __esm({
         organ: {
           enabled: true,
           volume: 0.7,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -661,7 +661,7 @@ var init_constants = __esm({
         strings: {
           enabled: true,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           effects: {
             reverb: {
               enabled: true,
@@ -693,7 +693,7 @@ var init_constants = __esm({
         flute: {
           enabled: true,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -727,7 +727,7 @@ var init_constants = __esm({
         clarinet: {
           enabled: true,
           volume: 0.5,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -761,7 +761,7 @@ var init_constants = __esm({
         saxophone: {
           enabled: false,
           volume: 0.7,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -796,7 +796,7 @@ var init_constants = __esm({
         electricPiano: {
           enabled: false,
           volume: 0.7,
-          maxVoices: 3,
+          maxVoices: 4,
           effects: {
             reverb: {
               enabled: true,
@@ -828,7 +828,7 @@ var init_constants = __esm({
         harpsichord: {
           enabled: false,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           effects: {
             reverb: {
               enabled: true,
@@ -860,7 +860,7 @@ var init_constants = __esm({
         accordion: {
           enabled: false,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           effects: {
             reverb: {
               enabled: true,
@@ -892,7 +892,7 @@ var init_constants = __esm({
         celesta: {
           enabled: false,
           volume: 0.5,
-          maxVoices: 3,
+          maxVoices: 4,
           effects: {
             reverb: {
               enabled: true,
@@ -925,7 +925,7 @@ var init_constants = __esm({
         violin: {
           enabled: false,
           volume: 0.7,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -959,7 +959,7 @@ var init_constants = __esm({
         cello: {
           enabled: false,
           volume: 0.8,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -993,7 +993,7 @@ var init_constants = __esm({
         contrabass: {
           enabled: false,
           volume: 0.7,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -1027,7 +1027,7 @@ var init_constants = __esm({
         guitar: {
           enabled: false,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -1061,7 +1061,7 @@ var init_constants = __esm({
         guitarElectric: {
           enabled: false,
           volume: 0.7,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -1095,7 +1095,7 @@ var init_constants = __esm({
         guitarNylon: {
           enabled: false,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -1299,7 +1299,7 @@ var init_constants = __esm({
         tuba: {
           enabled: false,
           volume: 0.8,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can opt-in to samples)
           effects: {
@@ -1434,7 +1434,7 @@ var init_constants = __esm({
         xylophone: {
           enabled: true,
           volume: 0.8,
-          maxVoices: 3,
+          maxVoices: 4,
           useHighQuality: false,
           // Default to synthesis (user can switch to recordings)
           effects: {
@@ -1600,7 +1600,7 @@ var init_constants = __esm({
         arpSynth: {
           enabled: false,
           volume: 0.6,
-          maxVoices: 3,
+          maxVoices: 4,
           effects: {
             reverb: {
               enabled: true,
@@ -89289,8 +89289,8 @@ var AudioEngine = class {
     // frequency -> last used time
     // Active note tracking for polyphony management (per-instrument)
     this.activeNotesPerInstrument = /* @__PURE__ */ new Map();
-    this.MAX_NOTES_PER_INSTRUMENT = 4;
-    // Conservative limit per instrument
+    this.MAX_NOTES_PER_INSTRUMENT = 3;
+    // Match Tone.js maxPolyphony limit
     this.electronicEngine = null;
     // Enhanced Play Button: Playback event system
     this.eventEmitter = new PlaybackEventEmitter();
@@ -91833,17 +91833,6 @@ var AudioEngine = class {
         this.activeNotesPerInstrument.set(instrument, 0);
       }
       const currentNotes = this.activeNotesPerInstrument.get(instrument) || 0;
-      if (currentNotes >= this.MAX_NOTES_PER_INSTRUMENT) {
-        console.warn(`[POLYPHONY LIMIT] Skipping note for ${instrument} - ${currentNotes}/${this.MAX_NOTES_PER_INSTRUMENT} active`);
-        logger70.debug("polyphony-limit", "Skipping note - instrument polyphony limit reached", {
-          instrument,
-          currentNotes,
-          limit: this.MAX_NOTES_PER_INSTRUMENT,
-          pitch: pitch.toFixed(2)
-        });
-        return;
-      }
-      console.log(`[POLYPHONY] Playing note for ${instrument} - ${currentNotes}/${this.MAX_NOTES_PER_INSTRUMENT} active before this note`);
       logger70.debug("immediate-playback", "Playing note immediately", {
         instrument,
         pitch: pitch.toFixed(2),
@@ -91866,7 +91855,9 @@ var AudioEngine = class {
       const quantizedFrequency = this.quantizeFrequency(pitch);
       const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
       this.activeNotesPerInstrument.set(instrument, currentNotes + 1);
-      synth.triggerAttackRelease(detunedFrequency, duration, void 0, velocity);
+      const microDelay = Math.random() * 0.01;
+      const triggerTime = getContext().currentTime + microDelay;
+      synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
       const durationMs = typeof duration === "number" ? duration * 1e3 : parseFloat(duration) * 1e3;
       setTimeout(() => {
         const current = this.activeNotesPerInstrument.get(instrument) || 0;

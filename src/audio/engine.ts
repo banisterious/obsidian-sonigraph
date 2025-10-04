@@ -75,7 +75,7 @@ export class AudioEngine {
 
 	// Active note tracking for polyphony management (per-instrument)
 	private activeNotesPerInstrument: Map<string, number> = new Map();
-	private readonly MAX_NOTES_PER_INSTRUMENT = 4; // Conservative limit per instrument
+	private readonly MAX_NOTES_PER_INSTRUMENT = 3; // Match Tone.js maxPolyphony limit
 	private electronicEngine: ElectronicEngine | null = null;
 
 	// Enhanced Play Button: Playback event system
@@ -3200,20 +3200,8 @@ export class AudioEngine {
 
 			const currentNotes = this.activeNotesPerInstrument.get(instrument) || 0;
 
-			// Skip note if this instrument is at capacity
-			if (currentNotes >= this.MAX_NOTES_PER_INSTRUMENT) {
-				console.warn(`[POLYPHONY LIMIT] Skipping note for ${instrument} - ${currentNotes}/${this.MAX_NOTES_PER_INSTRUMENT} active`);
-				logger.debug('polyphony-limit', 'Skipping note - instrument polyphony limit reached', {
-					instrument,
-					currentNotes,
-					limit: this.MAX_NOTES_PER_INSTRUMENT,
-					pitch: pitch.toFixed(2)
-				});
-				return;
-			}
-
-			// Log when we DO play a note
-			console.log(`[POLYPHONY] Playing note for ${instrument} - ${currentNotes}/${this.MAX_NOTES_PER_INSTRUMENT} active before this note`);
+			// Let Tone.js handle polyphony limiting with its built-in maxPolyphony
+			// Our manual limiting was too aggressive and caused choppy audio
 
 			logger.debug('immediate-playback', 'Playing note immediately', {
 				instrument: instrument,
@@ -3247,8 +3235,13 @@ export class AudioEngine {
 			// Increment per-instrument note counter
 			this.activeNotesPerInstrument.set(instrument, currentNotes + 1);
 
-			// Trigger the note immediately (no timing delay)
-			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
+			// Add micro-stagger to prevent audio buffer overload when multiple notes trigger simultaneously
+			// Each note gets a tiny delay (0-10ms) to spread audio processing load
+			const microDelay = Math.random() * 0.01; // 0-10ms random stagger
+			const triggerTime = getContext().currentTime + microDelay;
+
+			// Trigger the note with micro-stagger
+			synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
 
 			// Schedule counter decrement when note ends
 			// Convert duration to milliseconds (Tone.js uses seconds)
