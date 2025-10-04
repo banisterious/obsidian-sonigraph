@@ -61,7 +61,7 @@ export class ExportModal extends Modal {
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
-        this.exporter = new AudioExporter(app, audioEngine, plugin.settings);
+        this.exporter = new AudioExporter(app, audioEngine, plugin.settings, plugin.manifest.version);
 
         if (animator) {
             this.exporter.setAnimator(animator);

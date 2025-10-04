@@ -66019,7 +66019,7 @@ var init_ExportNoteCreator = __esm({
     init_logging();
     logger55 = getLogger("export-note");
     ExportNoteCreator = class {
-      constructor(app, pluginVersion = "0.12.1") {
+      constructor(app, pluginVersion = "0.14.2") {
         this.app = app;
         this.pluginVersion = pluginVersion;
       }
@@ -66455,12 +66455,13 @@ var init_AudioExporter = __esm({
     init_logging();
     logger56 = getLogger("export");
     AudioExporter = class {
-      constructor(app, audioEngine, pluginSettings) {
+      constructor(app, audioEngine, pluginSettings, pluginVersion = "0.14.2") {
         this.animator = null;
         this.isCancelled = false;
         this.app = app;
         this.audioEngine = audioEngine;
         this.pluginSettings = pluginSettings;
+        this.pluginVersion = pluginVersion;
       }
       /**
        * Set the temporal graph animator for timeline exports
@@ -66670,7 +66671,7 @@ var init_AudioExporter = __esm({
       async createExportNote(config, filePath) {
         try {
           const { ExportNoteCreator: ExportNoteCreator2 } = (init_ExportNoteCreator(), __toCommonJS(ExportNoteCreator_exports));
-          const noteCreator = new ExportNoteCreator2(this.app);
+          const noteCreator = new ExportNoteCreator2(this.app, this.pluginVersion);
           const result = {
             success: true,
             filePath,
@@ -67226,7 +67227,7 @@ var init_ExportModal = __esm({
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
-        this.exporter = new AudioExporter(app, audioEngine, plugin.settings);
+        this.exporter = new AudioExporter(app, audioEngine, plugin.settings, plugin.manifest.version);
         if (animator) {
           this.exporter.setAnimator(animator);
         }

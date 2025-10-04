@@ -18,7 +18,7 @@ export class ExportNoteCreator {
     private app: App;
     private pluginVersion: string;
 
-    constructor(app: App, pluginVersion: string = '0.12.1') {
+    constructor(app: App, pluginVersion: string = '0.14.2') {
         this.app = app;
         this.pluginVersion = pluginVersion;
     }

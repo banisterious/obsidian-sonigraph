@@ -32,11 +32,13 @@ export class AudioExporter {
     private progressCallback?: (progress: ExportProgress) => void;
     private currentRenderer?: OfflineRenderer;
     private pluginSettings?: any;
+    private pluginVersion: string;
 
-    constructor(app: App, audioEngine: AudioEngine, pluginSettings?: any) {
+    constructor(app: App, audioEngine: AudioEngine, pluginSettings?: any, pluginVersion: string = '0.14.2') {
         this.app = app;
         this.audioEngine = audioEngine;
         this.pluginSettings = pluginSettings;
+        this.pluginVersion = pluginVersion;
     }
 
     /**
@@ -322,7 +324,7 @@ export class AudioExporter {
     private async createExportNote(config: ExportConfig, filePath: string): Promise<string> {
         try {
             const { ExportNoteCreator } = require('./ExportNoteCreator');
-            const noteCreator = new ExportNoteCreator(this.app);
+            const noteCreator = new ExportNoteCreator(this.app, this.pluginVersion);
 
             // Build result object for note creation
             const result: ExportResult = {
