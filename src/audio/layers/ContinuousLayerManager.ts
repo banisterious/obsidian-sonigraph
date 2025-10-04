@@ -178,6 +178,11 @@ export class ContinuousLayerManager {
       return;
     }
 
+    // IMPORTANT: Continuous layers are disabled during timeline playback to prevent polyphony conflicts
+    // They consume significant audio resources and compete with the main graph sonification
+    logger.warn('playback', 'Continuous layers are currently disabled during timeline playback to prevent polyphony conflicts. This feature will be re-enabled in a future update with proper resource management.');
+    return;
+
     // Validate that we have enabled samples before starting
     const enabledSamples = this.settings.freesoundSamples?.filter(s => s.enabled !== false) || [];
     if (enabledSamples.length === 0) {

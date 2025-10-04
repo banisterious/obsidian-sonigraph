@@ -64906,6 +64906,8 @@ var init_ContinuousLayerManager = __esm({
           });
           return;
         }
+        logger51.warn("playback", "Continuous layers are currently disabled during timeline playback to prevent polyphony conflicts. This feature will be re-enabled in a future update with proper resource management.");
+        return;
         const enabledSamples = ((_a = this.settings.freesoundSamples) == null ? void 0 : _a.filter((s) => s.enabled !== false)) || [];
         if (enabledSamples.length === 0) {
           logger51.warn("playback", "No enabled Freesound samples available - continuous layers require at least one enabled sample to function properly. Please enable samples in the Sample Browser.");
