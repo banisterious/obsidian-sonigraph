@@ -3202,6 +3202,7 @@ export class AudioEngine {
 
 			// Skip note if this instrument is at capacity
 			if (currentNotes >= this.MAX_NOTES_PER_INSTRUMENT) {
+				console.warn(`[POLYPHONY LIMIT] Skipping note for ${instrument} - ${currentNotes}/${this.MAX_NOTES_PER_INSTRUMENT} active`);
 				logger.debug('polyphony-limit', 'Skipping note - instrument polyphony limit reached', {
 					instrument,
 					currentNotes,
@@ -3210,6 +3211,9 @@ export class AudioEngine {
 				});
 				return;
 			}
+
+			// Log when we DO play a note
+			console.log(`[POLYPHONY] Playing note for ${instrument} - ${currentNotes}/${this.MAX_NOTES_PER_INSTRUMENT} active before this note`);
 
 			logger.debug('immediate-playback', 'Playing note immediately', {
 				instrument: instrument,
