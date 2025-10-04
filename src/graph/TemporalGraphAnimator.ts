@@ -70,7 +70,11 @@ export class TemporalGraphAnimator {
   private lastAnimationTime: number = 0;
   private animationFrameRate: number = 30; // Target FPS for animation
   private frameInterval: number = 1000 / 30; // 33ms for 30fps
-  
+
+  // Audio throttling: Skip frames to prevent polyphony overflow
+  private audioFrameCounter: number = 0;
+  private readonly AUDIO_FRAMES_TO_SKIP = 5; // Only trigger audio every 5th frame (~167ms spacing at 30fps)
+
   // Callbacks
   private onVisibilityChange?: (visibleNodeIds: Set<string>) => void;
   private onTimeUpdate?: (currentTime: number, progress: number) => void;
@@ -894,17 +898,26 @@ export class TemporalGraphAnimator {
         callbackFunction: this.onNodeAppear ? 'registered' : 'missing'
       });
 
-      // CRITICAL: Limit nodes per frame to prevent audio overload
-      // Only trigger up to simultaneousEventLimit nodes per frame
-      const limit = this.config.simultaneousEventLimit || 1;
-      const nodesToTrigger = newlyAppearedNodes.slice(0, limit);
+      // CRITICAL: Frame skipping to prevent polyphony overflow
+      // Only trigger audio every Nth frame to allow notes to release
+      this.audioFrameCounter++;
 
-      nodesToTrigger.forEach(node => {
-        this.onNodeAppear?.(node);
-      });
+      if (this.audioFrameCounter >= this.AUDIO_FRAMES_TO_SKIP) {
+        this.audioFrameCounter = 0; // Reset counter
 
-      if (newlyAppearedNodes.length > limit) {
-        logger.debug('throttling', `Throttled ${newlyAppearedNodes.length - limit} nodes this frame to prevent polyphony overflow`);
+        // Limit nodes per audio-enabled frame
+        const limit = this.config.simultaneousEventLimit || 1;
+        const nodesToTrigger = newlyAppearedNodes.slice(0, limit);
+
+        nodesToTrigger.forEach(node => {
+          this.onNodeAppear?.(node);
+        });
+
+        if (newlyAppearedNodes.length > limit) {
+          logger.debug('throttling', `Throttled ${newlyAppearedNodes.length - limit} nodes this frame`);
+        }
+      } else {
+        logger.debug('frame-skip', `Skipped audio for ${newlyAppearedNodes.length} nodes (frame ${this.audioFrameCounter}/${this.AUDIO_FRAMES_TO_SKIP})`);
       }
     }
     
