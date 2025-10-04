@@ -4,7 +4,7 @@ node_modules
 ui-mockups
 logs/
 
-# Claude AI assistant files
+# AI assistant files
 .claude/
 
 # Sample cache directories (user-specific)

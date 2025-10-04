@@ -314,7 +314,7 @@ export class SonicGraphLayersSettings {
 		// Rhythmic layer detailed settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.rhythmicEnabled) {
 			const rhythmicDetails = content.createDiv({ cls: 'osp-settings-subsection' });
-			rhythmicDetails.createEl('h4', { text: 'Rhythmic layer settings', attr: { style: 'margin-top: 1rem;' } });
+			new Setting(rhythmicDetails).setHeading().setName('Rhythmic layer settings');
 
 			new Setting(rhythmicDetails)
 				.setName('Base tempo')
@@ -407,7 +407,7 @@ export class SonicGraphLayersSettings {
 		// Harmonic layer detailed settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.harmonicEnabled) {
 			const harmonicDetails = content.createDiv({ cls: 'osp-settings-subsection' });
-			harmonicDetails.createEl('h4', { text: 'Harmonic layer settings', attr: { style: 'margin-top: 1rem;' } });
+			new Setting(harmonicDetails).setHeading().setName('Harmonic layer settings');
 
 			new Setting(harmonicDetails)
 				.setName('Chord complexity')
@@ -565,7 +565,7 @@ export class SonicGraphLayersSettings {
 			elevation: 1
 		});
 
-		const content = card.getElement();
+		const content = card.getContent();
 
 		// Adaptive intensity toggle
 		new Setting(content)

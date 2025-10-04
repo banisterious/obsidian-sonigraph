@@ -456,11 +456,10 @@ export class SonicGraphAdvancedSettings {
 
 			// Centrality weights section
 			const weightsDiv = content.createDiv({ cls: 'osp-settings-subsection' });
-			weightsDiv.createEl('h4', { text: 'Centrality weights' });
-			weightsDiv.createEl('p', {
-				text: 'Adjust how different centrality metrics contribute to hub detection',
-				cls: 'osp-settings-description'
-			});
+			new Setting(weightsDiv)
+				.setHeading()
+				.setName('Centrality weights')
+				.setDesc('Adjust how different centrality metrics contribute to hub detection');
 
 			// Degree centrality weight
 			new Setting(weightsDiv)

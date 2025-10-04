@@ -14741,11 +14741,7 @@ var init_SonicGraphAdvancedSettings = __esm({
             }
           );
           const weightsDiv = content.createDiv({ cls: "osp-settings-subsection" });
-          weightsDiv.createEl("h4", { text: "Centrality weights" });
-          weightsDiv.createEl("p", {
-            text: "Adjust how different centrality metrics contribute to hub detection",
-            cls: "osp-settings-description"
-          });
+          new import_obsidian7.Setting(weightsDiv).setHeading().setName("Centrality weights").setDesc("Adjust how different centrality metrics contribute to hub detection");
           new import_obsidian7.Setting(weightsDiv).setName("Degree weight").setDesc("Basic connectivity (number of connections)").addSlider(
             (slider) => {
               var _a2, _b;
@@ -18701,7 +18697,7 @@ var init_SonicGraphLayersSettings = __esm({
         );
         if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.rhythmicEnabled) {
           const rhythmicDetails = content.createDiv({ cls: "osp-settings-subsection" });
-          rhythmicDetails.createEl("h4", { text: "Rhythmic layer settings", attr: { style: "margin-top: 1rem;" } });
+          new import_obsidian10.Setting(rhythmicDetails).setHeading().setName("Rhythmic layer settings");
           new import_obsidian10.Setting(rhythmicDetails).setName("Base tempo").setDesc("Base BPM for rhythmic patterns (60-180)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
@@ -18778,7 +18774,7 @@ var init_SonicGraphLayersSettings = __esm({
         );
         if ((_d = (_c = this.plugin.settings.audioEnhancement) == null ? void 0 : _c.continuousLayers) == null ? void 0 : _d.harmonicEnabled) {
           const harmonicDetails = content.createDiv({ cls: "osp-settings-subsection" });
-          harmonicDetails.createEl("h4", { text: "Harmonic layer settings", attr: { style: "margin-top: 1rem;" } });
+          new import_obsidian10.Setting(harmonicDetails).setHeading().setName("Harmonic layer settings");
           new import_obsidian10.Setting(harmonicDetails).setName("Chord complexity").setDesc("Number of voices in chords (2-6)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
@@ -18898,7 +18894,7 @@ var init_SonicGraphLayersSettings = __esm({
           subtitle: "Context-aware layer adjustments",
           elevation: 1
         });
-        const content = card.getElement();
+        const content = card.getContent();
         new import_obsidian10.Setting(content).setName("Adaptive intensity").setDesc("Automatically adjust layer volume based on vault activity and animation state").addToggle(
           (toggle) => {
             var _a, _b;
@@ -20357,7 +20353,7 @@ var init_control_panel = __esm({
           securityNote.style.color = "var(--text-muted)";
           securityNote.style.marginTop = "8px";
           securityNote.style.marginBottom = "16px";
-          settingsSection.createEl("h4", { text: "Preloading and caching", cls: "osp-subsection-header" });
+          new import_obsidian12.Setting(settingsSection).setHeading().setName("Preloading and caching");
           new import_obsidian12.Setting(settingsSection).setName("Predictive preloading").setDesc("Automatically preload samples for genres you use frequently").addToggle(
             (toggle) => toggle.setValue(this.plugin.settings.freesoundPredictivePreload !== false).onChange(async (value) => {
               this.plugin.settings.freesoundPredictivePreload = value;
@@ -21634,7 +21630,7 @@ var init_control_panel = __esm({
           }
         );
         const drumsContainer = content.createDiv({ cls: "osp-percussion-drums-container" });
-        drumsContainer.createEl("h4", { text: "Active drums", cls: "osp-section-heading" });
+        new import_obsidian12.Setting(drumsContainer).setHeading().setName("Active drums");
         const drumsGrid = drumsContainer.createDiv({ cls: "osp-drums-grid" });
         const drums = [
           { key: "kick", label: "Kick Drum" },

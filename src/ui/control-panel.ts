@@ -606,7 +606,7 @@ export class MaterialControlPanelModal extends Modal {
 			securityNote.style.marginTop = '8px';
 			securityNote.style.marginBottom = '16px';
 			// Preloading and Caching Settings
-			settingsSection.createEl('h4', { text: 'Preloading and caching', cls: 'osp-subsection-header' });
+			new Setting(settingsSection).setHeading().setName('Preloading and caching');
 
 			// Enable predictive preloading
 			new Setting(settingsSection)
@@ -2303,7 +2303,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Active drums section
 		const drumsContainer = content.createDiv({ cls: 'osp-percussion-drums-container' });
-		drumsContainer.createEl('h4', { text: 'Active drums', cls: 'osp-section-heading' });
+		new Setting(drumsContainer).setHeading().setName('Active drums');
 
 		const drumsGrid = drumsContainer.createDiv({ cls: 'osp-drums-grid' });
 
