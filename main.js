@@ -71582,6 +71582,16 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     this.visualDisplaySection.setCssStyles({
       "--visual-display-height": `${this.visualDisplayHeight}px`
     });
+    if (this.visualizationManager) {
+      logger65.debug("visual-display", "Updating visualization manager enabled state", this.isVisualDisplayVisible);
+      this.visualizationManager.updateConfig({
+        enabled: this.isVisualDisplayVisible
+      });
+      if (this.isVisualDisplayVisible) {
+        logger65.debug("visual-display", "Starting visualization after setState");
+        this.visualizationManager.start(0);
+      }
+    }
   }
   /**
    * Initialize the visual note display manager

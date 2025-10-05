@@ -616,6 +616,20 @@ export class SonicGraphView extends ItemView {
         this.visualDisplaySection.setCssStyles({
             '--visual-display-height': `${this.visualDisplayHeight}px`
         });
+
+        // Update visualization manager config if it exists
+        if (this.visualizationManager) {
+            logger.debug('visual-display', 'Updating visualization manager enabled state', this.isVisualDisplayVisible);
+            this.visualizationManager.updateConfig({
+                enabled: this.isVisualDisplayVisible
+            });
+
+            // If now visible, start it (start() will check if already running)
+            if (this.isVisualDisplayVisible) {
+                logger.debug('visual-display', 'Starting visualization after setState');
+                this.visualizationManager.start(0);
+            }
+        }
     }
 
     /**
