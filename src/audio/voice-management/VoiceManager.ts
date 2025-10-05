@@ -514,7 +514,7 @@ export class VoiceManager {
         
         // Log memory cleanup for debugging
         if (process.env.NODE_ENV === 'development') {
-            console.debug(`VoiceManager: Compacted ${instrumentName} indices from ${availableIndices.size} to ${validIndices.size}`);
+            logger.debug('memory-cleanup', `Compacted ${instrumentName} indices from ${availableIndices.size} to ${validIndices.size}`);
         }
     }
 

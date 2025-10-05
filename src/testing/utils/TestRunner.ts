@@ -12,6 +12,9 @@ import { AudioEngineTests } from '../integration/AudioEngineTests';
 import { IssueValidationTests } from '../integration/IssueValidationTests';
 import { AudioCracklingTests } from '../integration/AudioCracklingTests';
 import { TestResults, TestDetail, PerformanceMetrics } from './MetricsCollector';
+import { getLogger } from '../../logging';
+
+const logger = getLogger('test-runner');
 
 export interface TestRunnerConfig {
     detailedLogging: boolean;
@@ -489,18 +492,15 @@ export class TestRunner {
      */
     private log(level: 'info' | 'warn' | 'error', message: string, ...args: any[]): void {
         if (this.config?.detailedLogging) {
-            const timestamp = new Date().toISOString();
-            const prefix = `[TestRunner ${timestamp}]`;
-            
             switch (level) {
                 case 'info':
-                    console.log(prefix, message, ...args);
+                    logger.info('test-runner', message, ...args);
                     break;
                 case 'warn':
-                    console.warn(prefix, message, ...args);
+                    logger.warn('test-runner', message, ...args);
                     break;
                 case 'error':
-                    console.error(prefix, message, ...args);
+                    logger.error('test-runner', message, ...args);
                     break;
             }
         }

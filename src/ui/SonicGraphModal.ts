@@ -164,7 +164,7 @@ export class SonicGraphModal extends Modal {
                     hasConfig: !!layerConfig
                 });
 
-                console.log('[SONIGRAPH-DEBUG] Creating ContinuousLayerManager with settings:', {
+                logger.debug('continuous-layer-init', 'Creating ContinuousLayerManager with settings:', {
                     hasSettings: !!this.plugin.settings,
                     hasFreesoundSamples: !!this.plugin.settings?.freesoundSamples,
                     samplesCount: this.plugin.settings?.freesoundSamples?.length || 0,
@@ -4624,7 +4624,7 @@ export class SonicGraphModal extends Modal {
         } catch (error) {
             logger.error('Failed to play audio for node appearance', (error as Error).message);
             // Show user feedback about audio issues
-            console.warn('Audio playback failed:', error);
+            logger.warn('audio-playback', 'Audio playback failed:', error);
         }
     }
 

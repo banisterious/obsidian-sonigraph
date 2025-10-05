@@ -8,6 +8,9 @@
 import { AudioEngine } from '../../audio/engine';
 import { TestDetail, PerformanceMetrics } from '../utils/MetricsCollector';
 import * as Tone from 'tone';
+import { getLogger } from '../../logging';
+
+const logger = getLogger('audio-crackling-tests');
 
 interface CracklingDiagnostic {
     timestamp: number;
@@ -102,14 +105,14 @@ export class AudioCracklingTests {
 
         // Log critical issues immediately
         if (diagnostic.performanceSpike || diagnostic.anomalyDetected) {
-            console.warn(`🚨 AUDIO ANOMALY DETECTED:`, JSON.stringify({
+            logger.warn('audio-anomaly', `🚨 AUDIO ANOMALY DETECTED:`, {
                 operation,
                 processingTime: `${processingTime.toFixed(2)}ms`,
                 anomalyType: diagnostic.anomalyType,
                 contextState: diagnostic.bufferHealth.contextState,
-                memoryPressure: diagnostic.memoryStatus.heapLimit > 0 ? 
+                memoryPressure: diagnostic.memoryStatus.heapLimit > 0 ?
                     (diagnostic.memoryStatus.heapUsed / diagnostic.memoryStatus.heapLimit * 100).toFixed(1) + '%' : 'unknown'
-            }, null, 2));
+            });
         }
     }
 
@@ -126,8 +129,8 @@ export class AudioCracklingTests {
                 this.captureDiagnostic('monitoring', performance.now());
             }
         }, 25) as any;
-        
-        console.log('📊 Started real-time audio monitoring (25ms intervals)');
+
+        logger.info('monitoring', '📊 Started real-time audio monitoring (25ms intervals)');
     }
 
     /**
@@ -141,8 +144,8 @@ export class AudioCracklingTests {
         }
         
         const anomalies = this.diagnostics.filter(d => d.anomalyDetected || d.performanceSpike);
-        console.log(`📊 Stopped monitoring. Captured ${this.diagnostics.length} samples, ${anomalies.length} anomalies`);
-        
+        logger.info('monitoring', `📊 Stopped monitoring. Captured ${this.diagnostics.length} samples, ${anomalies.length} anomalies`);
+
         return [...this.diagnostics]; // Return copy
     }
 
@@ -326,8 +329,8 @@ export class AudioCracklingTests {
      */
     async runAll(): Promise<TestDetail[]> {
         this.testResults = [];
-        
-        console.log('🔊 Starting Issue #010 Audio Crackling Analysis');
+
+        logger.info('audio-quality', '🔊 Starting Issue #010 Audio Crackling Analysis');
         
         try {
             // Run tests with individual timeouts to prevent hanging
@@ -342,17 +345,17 @@ export class AudioCracklingTests {
 
             for (const test of testSequence) {
                 try {
-                    console.log(`🔊 Running ${test.name}...`);
-                    
+                    logger.info('test', `🔊 Running ${test.name}...`);
+
                     // Add individual test timeout
                     const timeoutPromise = new Promise((_, reject) => {
                         setTimeout(() => reject(new Error(`Individual test timeout: ${test.name}`)), test.timeout);
                     });
-                    
+
                     await Promise.race([test.fn(), timeoutPromise]);
-                    
+
                 } catch (testError) {
-                    console.error(`❌ ${test.name} failed:`, testError);
+                    logger.error('test', `❌ ${test.name} failed:`, testError);
                     this.testResults.push({
                         name: test.name,
                         passed: false,
@@ -363,11 +366,11 @@ export class AudioCracklingTests {
                     });
                 }
             }
-            
-            console.log(`✅ Issue #010 Audio Crackling Analysis completed: ${this.testResults.length} tests`);
-            
+
+            logger.info('audio-quality', `✅ Issue #010 Audio Crackling Analysis completed: ${this.testResults.length} tests`);
+
         } catch (error) {
-            console.error('❌ Issue #010 Audio Crackling Analysis failed:', error);
+            logger.error('audio-quality', '❌ Issue #010 Audio Crackling Analysis failed:', error);
             this.testResults.push({
                 name: 'Issue #010 Test Suite Fatal Error',
                 passed: false,
@@ -414,12 +417,12 @@ export class AudioCracklingTests {
                 throw new Error(`Audio context in unhealthy state: ${context.state}`);
             }
 
-            console.log('🔊 Audio Context Health:', metrics);
+            logger.info('audio-quality', '🔊 Audio Context Health:', metrics);
             passed = true;
 
         } catch (err) {
             error = err.message;
-            console.error('❌ Audio Context Health Check failed:', err);
+            logger.error('audio-quality', '❌ Audio Context Health Check failed:', err);
         }
 
         this.testResults.push({
@@ -443,14 +446,14 @@ export class AudioCracklingTests {
         let metrics: any = null;
 
         try {
-            console.log('🔊 Starting enhanced baseline audio quality test with real-time diagnostics...');
+            logger.info('audio-quality', '🔊 Starting enhanced baseline audio quality test with real-time diagnostics...');
 
             // Start real-time monitoring with error handling
             try {
                 this.startRealtimeMonitoring();
-                console.log('📊 Real-time monitoring started successfully');
+                logger.info('monitoring', '📊 Real-time monitoring started successfully');
             } catch (monitoringError) {
-                console.warn('📊 Real-time monitoring failed to start:', monitoringError);
+                logger.warn('monitoring', '📊 Real-time monitoring failed to start:', monitoringError);
                 // Continue with test without monitoring
             }
 
@@ -459,19 +462,19 @@ export class AudioCracklingTests {
             try {
                 this.captureDiagnostic('initialization', initStartTime);
             } catch (diagError) {
-                console.warn('📊 Diagnostic capture failed:', diagError);
+                logger.warn('diagnostic', '📊 Diagnostic capture failed:', diagError);
             }
-            
+
             // Test actual audio engine playback with comprehensive diagnostics
             try {
-                console.log('🎵 Playing test note with diagnostic monitoring...');
-                
+                logger.info('audio-quality', '🎵 Playing test note with diagnostic monitoring...');
+
                 // Capture pre-playback state
                 const prePlayStartTime = performance.now();
                 try {
                     this.captureDiagnostic('pre-playback', prePlayStartTime);
                 } catch (diagError) {
-                    console.warn('📊 Pre-playback diagnostic failed:', diagError);
+                    logger.warn('diagnostic', '📊 Pre-playback diagnostic failed:', diagError);
                 }
                 
                 // Add timeout protection for audio engine calls
@@ -487,29 +490,29 @@ export class AudioCracklingTests {
                             effects: ['reverb', 'chorus', 'filter']
                         });
                     } catch (diagError) {
-                        console.warn('📊 Note-trigger diagnostic failed:', diagError);
+                        logger.warn('diagnostic', '📊 Note-trigger diagnostic failed:', diagError);
                     }
-                    
+
                     // Monitor during sustained playback
                     const sustainDuration = 500;
                     const sustainStartTime = performance.now();
-                    
+
                     await new Promise(resolve => setTimeout(resolve, sustainDuration));
-                    
+
                     try {
                         this.captureDiagnostic('sustain-phase', sustainStartTime);
                     } catch (diagError) {
-                        console.warn('📊 Sustain-phase diagnostic failed:', diagError);
+                        logger.warn('diagnostic', '📊 Sustain-phase diagnostic failed:', diagError);
                     }
-                    
+
                     // Capture stop event
                     const stopStartTime = performance.now();
                     this.audioEngine.stop();
-                    
+
                     try {
                         this.captureDiagnostic('note-stop', stopStartTime);
                     } catch (diagError) {
-                        console.warn('📊 Note-stop diagnostic failed:', diagError);
+                        logger.warn('diagnostic', '📊 Note-stop diagnostic failed:', diagError);
                     }
                 })();
                 
@@ -520,10 +523,10 @@ export class AudioCracklingTests {
                 await Promise.race([audioTestPromise, audioTimeout]);
                 
             } catch (audioError) {
-                console.warn('Audio engine test note failed, using simulation:', audioError);
+                logger.warn('audio-quality', 'Audio engine test note failed, using simulation:', audioError);
                 // Capture error state
                 this.captureDiagnostic('audio-error', performance.now());
-                
+
                 // Fallback to brief wait if audio engine isn't available
                 await new Promise(resolve => setTimeout(resolve, 300));
             }
@@ -531,20 +534,20 @@ export class AudioCracklingTests {
             // Stop monitoring and generate report with error handling
             let diagnosticData: any[] = [];
             let diagnosticReport: any = {};
-            
+
             try {
                 diagnosticData = this.stopRealtimeMonitoring();
                 diagnosticReport = this.generateDiagnosticReport();
-                
+
                 // Log comprehensive diagnostic report
-                console.log('📊 BASELINE TEST DIAGNOSTIC REPORT:', {
+                logger.info('diagnostic', '📊 BASELINE TEST DIAGNOSTIC REPORT:', {
                     summary: diagnosticReport.summary,
                     performance: diagnosticReport.performance,
                     anomalyTypes: diagnosticReport.anomalyTypes,
                     recommendations: diagnosticReport.recommendations
                 });
             } catch (reportError) {
-                console.warn('📊 Failed to generate diagnostic report:', reportError);
+                logger.warn('diagnostic', '📊 Failed to generate diagnostic report:', reportError);
                 diagnosticReport = {
                     summary: { totalSamples: 0, anomaliesDetected: 0, performanceSpikes: 0, anomalyRate: '0%' },
                     performance: { avgProcessingTime: '0ms', maxProcessingTime: '0ms' },
@@ -566,11 +569,11 @@ export class AudioCracklingTests {
             };
 
             passed = true;
-            console.log('✅ Baseline audio quality test completed');
+            logger.info('audio-quality', '✅ Baseline audio quality test completed');
 
         } catch (err) {
             error = err.message;
-            console.error('❌ Baseline Audio Quality Test failed:', err);
+            logger.error('audio-quality', '❌ Baseline Audio Quality Test failed:', err);
         }
 
         this.testResults.push({
@@ -594,20 +597,20 @@ export class AudioCracklingTests {
         let metrics: any = null;
 
         try {
-            console.log('🔊 Testing instrument families for crackling patterns with enhanced diagnostics...');
-            
+            logger.info('audio-quality', '🔊 Testing instrument families for crackling patterns with enhanced diagnostics...');
+
             // Start diagnostic monitoring for family tests
             this.startRealtimeMonitoring();
 
             const instrumentFamilies = [
-                'strings', 'brass', 'woodwinds', 'keyboard', 
+                'strings', 'brass', 'woodwinds', 'keyboard',
                 'vocals', 'percussion', 'electronic'
             ];
 
             const familyResults: any = {};
 
             for (const family of instrumentFamilies) {
-                console.log(`🎵 Testing ${family} family...`);
+                logger.info('test', `🎵 Testing ${family} family...`);
                 
                 const familyStartTime = performance.now();
                 const initialMetrics = this.capturePerformanceSnapshot();
@@ -654,9 +657,9 @@ export class AudioCracklingTests {
             // Stop monitoring and generate comprehensive family diagnostic report
             const diagnosticData = this.stopRealtimeMonitoring();
             const diagnosticReport = this.generateDiagnosticReport();
-            
+
             // Log family-specific diagnostic report
-            console.log('📊 FAMILY TEST DIAGNOSTIC REPORT:', {
+            logger.info('diagnostic', '📊 FAMILY TEST DIAGNOSTIC REPORT:', {
                 familiesTested: instrumentFamilies.length,
                 summary: diagnosticReport.summary,
                 anomalyTypes: diagnosticReport.anomalyTypes,
@@ -674,11 +677,11 @@ export class AudioCracklingTests {
             };
 
             passed = true;
-            console.log('✅ Instrument family crackling test completed with enhanced diagnostics');
+            logger.info('audio-quality', '✅ Instrument family crackling test completed with enhanced diagnostics');
 
         } catch (err) {
             error = err.message;
-            console.error('❌ Instrument Family Crackling Test failed:', err);
+            logger.error('audio-quality', '❌ Instrument Family Crackling Test failed:', err);
         }
 
         this.testResults.push({
@@ -702,7 +705,7 @@ export class AudioCracklingTests {
         let metrics: any = {};
 
         try {
-            console.log('🔊 Starting extended playback stress test (4 seconds)...');
+            logger.info('audio-quality', '🔊 Starting extended playback stress test (4 seconds)...');
 
             const snapshots: any[] = [];
             const testDuration = 4000; // 4 seconds (reduced for timeout prevention)
@@ -716,8 +719,8 @@ export class AudioCracklingTests {
                     timestamp: Date.now()
                 };
                 snapshots.push(snapshot);
-                
-                console.log(`📊 Snapshot at ${i}ms:`, snapshot.metrics);
+
+                logger.info('performance', `📊 Snapshot at ${i}ms:`, snapshot.metrics);
                 
                 // Try to play test audio during stress test with timeout protection
                 try {
@@ -746,11 +749,11 @@ export class AudioCracklingTests {
             metrics = null;
 
             passed = true;
-            console.log('✅ Extended playback stress test completed');
+            logger.info('audio-quality', '✅ Extended playback stress test completed');
 
         } catch (err) {
             error = err.message;
-            console.error('❌ Extended Playback Stress Test failed:', err);
+            logger.error('audio-quality', '❌ Extended Playback Stress Test failed:', err);
         }
 
         this.testResults.push({
@@ -773,8 +776,8 @@ export class AudioCracklingTests {
         let error: string | undefined;
         let metrics: any = {};
 
-        try {
-            console.log('🔊 Analyzing performance correlation with audio quality...');
+        try{
+            logger.info('audio-quality', '🔊 Analyzing performance correlation with audio quality...');
 
             // Simulate different load conditions
             const loadTests = [
@@ -786,7 +789,7 @@ export class AudioCracklingTests {
             const correlationResults: any = {};
 
             for (const test of loadTests) {
-                console.log(`📊 Testing ${test.name} conditions...`);
+                logger.info('performance', `📊 Testing ${test.name} conditions...`);
                 
                 const testStartTime = performance.now();
                 const beforeMetrics = this.capturePerformanceSnapshot();
@@ -827,11 +830,11 @@ export class AudioCracklingTests {
             metrics = null;
 
             passed = true;
-            console.log('✅ Performance correlation analysis completed');
+            logger.info('audio-quality', '✅ Performance correlation analysis completed');
 
         } catch (err) {
             error = err.message;
-            console.error('❌ Performance Correlation Analysis failed:', err);
+            logger.error('audio-quality', '❌ Performance Correlation Analysis failed:', err);
         }
 
         this.testResults.push({
@@ -855,7 +858,7 @@ export class AudioCracklingTests {
         let metrics: any = {};
 
         try {
-            console.log('🔊 Testing voice allocation impact on audio quality...');
+            logger.info('audio-quality', '🔊 Testing voice allocation impact on audio quality...');
 
             // Test voice allocation patterns
             const allocationTests = [
@@ -867,7 +870,7 @@ export class AudioCracklingTests {
             const allocationResults: any = {};
 
             for (const test of allocationTests) {
-                console.log(`🎵 Testing ${test.name} voice allocation...`);
+                logger.info('test', `🎵 Testing ${test.name} voice allocation...`);
                 
                 const testStartTime = performance.now();
                 const beforeMetrics = this.capturePerformanceSnapshot();
@@ -908,11 +911,11 @@ export class AudioCracklingTests {
             metrics = null;
 
             passed = true;
-            console.log('✅ Voice allocation impact test completed');
+            logger.info('audio-quality', '✅ Voice allocation impact test completed');
 
         } catch (err) {
             error = err.message;
-            console.error('❌ Voice Allocation Impact Test failed:', err);
+            logger.error('audio-quality', '❌ Voice Allocation Impact Test failed:', err);
         }
 
         this.testResults.push({

@@ -8,6 +8,9 @@
 import { GraphNode, GraphLink } from '../../graph/GraphDataExtractor';
 import { Cluster } from '../../graph/SmartClusteringAlgorithms';
 import { ComplexityAnalyzer } from './ComplexityAnalyzer';
+import { getLogger } from '../../logging';
+
+const logger = getLogger('dynamic-orchestration');
 import { TemporalInfluence } from './TemporalInfluence';
 import {
   DynamicOrchestrationSettings,
@@ -116,7 +119,7 @@ export class DynamicOrchestrationManager {
    * Initiate transition to new complexity tier
    */
   private initiateTierTransition(newTier: ComplexityTier): void {
-    console.log(`[DynamicOrchestration] Transitioning: ${this.orchestrationState.activeTier} → ${newTier}`);
+    logger.info('tier-transition', `Transitioning: ${this.orchestrationState.activeTier} → ${newTier}`);
 
     this.orchestrationState.previousTier = this.orchestrationState.activeTier;
     this.orchestrationState.activeTier = newTier;

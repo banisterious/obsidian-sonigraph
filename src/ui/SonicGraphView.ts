@@ -6058,7 +6058,7 @@ export class SonicGraphView extends ItemView {
         } catch (error) {
             logger.error('Failed to play audio for node appearance', (error as Error).message);
             // Show user feedback about audio issues
-            console.warn('Audio playback failed:', error);
+            logger.warn('audio-playback', 'Audio playback failed:', error);
         }
     }
 

@@ -1,6 +1,9 @@
 import { AudioMappingConfig } from '../graph/types';
 import { PanningMode, PanningCurve } from '../audio/spatial/types';
 import { ExportSettings } from '../export/types';
+import { getLogger } from '../logging';
+
+const logger = getLogger('constants');
 
 export interface InstrumentSettings {
 	enabled: boolean;
@@ -2820,12 +2823,12 @@ export function validateInstrumentSettings(settings: any): settings is Record<In
 	const extraKeys = providedKeys.filter(key => !isValidInstrumentKey(key));
 	
 	if (missingKeys.length > 0) {
-		console.warn('Missing instrument settings for:', missingKeys);
+		logger.warn('validation', 'Missing instrument settings for:', missingKeys);
 		return false;
 	}
-	
+
 	if (extraKeys.length > 0) {
-		console.warn('Unknown instrument keys found:', extraKeys);
+		logger.warn('validation', 'Unknown instrument keys found:', extraKeys);
 	}
 	
 	return true;

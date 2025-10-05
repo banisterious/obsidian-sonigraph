@@ -1,5 +1,8 @@
 import { Modal, App } from 'obsidian';
 import * as d3 from 'd3';
+import { getLogger } from '../logging';
+
+const logger = getLogger('graph-demo-modal');
 
 interface DemoNode {
 	id: string;
@@ -348,7 +351,7 @@ export class GraphDemoModal extends Modal {
 			oscillator.stop(audioContext.currentTime + 0.3);
 		} catch (error) {
 			// Fallback if audio context fails
-			console.log(`♪ ${node.name} (${node.type})`);
+			logger.info('audio-fallback', `♪ ${node.name} (${node.type})`);
 		}
 	}
 

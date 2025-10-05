@@ -15,6 +15,9 @@ import { TestRunner } from './utils/TestRunner';
 import { MetricsCollector, TestResults } from './utils/MetricsCollector';
 import { ReportGenerator } from './utils/ReportGenerator';
 import { AudioEngine } from '../audio/engine';
+import { getLogger } from '../logging';
+
+const logger = getLogger('test-suite-modal');
 
 export interface TestSuiteConfig {
     selectedTests: {
@@ -338,7 +341,7 @@ export class TestSuiteModal extends Modal {
             this.displayResults(results);
 
         } catch (error) {
-            console.error('Test execution failed:', error);
+            logger.error('test-execution', 'Test execution failed:', error);
             this.showError('Test execution failed: ' + error.message);
         } finally {
             this.isRunning = false;
@@ -840,7 +843,9 @@ export class TestSuiteModal extends Modal {
                     ).length
                 }
             };
-            
+
+            // Intentional console output for structured diagnostic capture (Issue #003)
+            // This is meant to be captured by external monitoring tools, not replaced with logger
             console.log('[SONIGRAPH-TEST-MONITOR-SUMMARY]', JSON.stringify(summary, null, 2));
         }
     }

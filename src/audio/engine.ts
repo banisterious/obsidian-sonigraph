@@ -4150,7 +4150,7 @@ export class AudioEngine {
 	 */
 	private commitParameterChange(instrumentName: string, effectType: string, paramName: string, value: number): void {
 		// This would typically save to settings - handled by the UI layer
-		console.debug(`Parameter committed: ${instrumentName}.${effectType}.${paramName} = ${value}`);
+		logger.debug('parameter-change', `Parameter committed: ${instrumentName}.${effectType}.${paramName} = ${value}`);
 	}
 
 	/**

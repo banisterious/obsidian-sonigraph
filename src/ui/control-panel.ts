@@ -3799,8 +3799,8 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// For now, just log the attribution info
 		// In a full implementation, this could open a modal with formatted attribution
-		console.log(attributionInfo);
-		
+		logger.debug('whale-ui', 'Whale attribution info:', attributionInfo);
+
 		logger.info('whale-ui', 'Whale attribution info displayed');
 
 		// Show a simple notice for now
