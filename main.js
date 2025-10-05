@@ -94200,13 +94200,6 @@ var SonigraphPlugin = class extends import_obsidian27.Plugin {
   async onunload() {
     logger73.info("lifecycle", "Sonigraph plugin unloading...");
     try {
-      logger73.debug("lifecycle", "Detaching Sonic Graph views...");
-      this.app.workspace.detachLeavesOfType(VIEW_TYPE_SONIC_GRAPH);
-      logger73.debug("lifecycle", "Sonic Graph views detached");
-    } catch (error) {
-      logger73.error("lifecycle", "Error detaching views:", error);
-    }
-    try {
       logger73.debug("lifecycle", "Cleaning up whale integration...");
       const whaleIntegration2 = getWhaleIntegration();
       if (whaleIntegration2) {

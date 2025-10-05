@@ -96,14 +96,8 @@ export default class SonigraphPlugin extends Plugin {
 	async onunload() {
 		logger.info('lifecycle', 'Sonigraph plugin unloading...');
 
-		try {
-			// Close all Sonic Graph views
-			logger.debug('lifecycle', 'Detaching Sonic Graph views...');
-			this.app.workspace.detachLeavesOfType(VIEW_TYPE_SONIC_GRAPH);
-			logger.debug('lifecycle', 'Sonic Graph views detached');
-		} catch (error) {
-			logger.error('lifecycle', 'Error detaching views:', error);
-		}
+		// Note: We don't detach leaves here - Obsidian handles that automatically
+		// See: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Don't+detach+leaves+in+%60onunload%60
 
 		try {
 			// Clean up whale integration
