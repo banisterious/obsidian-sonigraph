@@ -676,10 +676,10 @@ export class SonicGraphView extends ItemView {
             // Initialize with content container
             this.visualizationManager.initialize(this.visualDisplayContent);
 
-            // Add some demo notes for testing
-            this.addDemoNotes();
+            // Connect to audio engine note events
+            this.setupAudioEngineIntegration();
 
-            // Trigger initial render to show static piano roll with demo notes
+            // Trigger initial render to show empty piano roll
             if (this.isVisualDisplayVisible) {
                 this.visualizationManager.start(0);
                 logger.debug('visual-display', 'Started visualization for initial render');
@@ -693,34 +693,39 @@ export class SonicGraphView extends ItemView {
     }
 
     /**
-     * Add demo notes for testing visualization
-     * TODO: Remove this once audio engine integration is complete
+     * Setup audio engine integration for visual display
+     * Listens to note-triggered events from the audio engine
      */
-    private addDemoNotes(): void {
-        if (!this.visualizationManager) return;
-
-        const layers: Array<'rhythmic' | 'harmonic' | 'melodic' | 'ambient'> = ['rhythmic', 'harmonic', 'melodic', 'ambient'];
-        const pitches = [48, 52, 55, 60, 64, 67, 72, 76]; // C3, E3, G3, C4, E4, G4, C5, E5
-
-        // Add some test notes at various times
-        for (let i = 0; i < 20; i++) {
-            const timestamp = i * 0.5; // Every 0.5 seconds
-            const pitch = pitches[Math.floor(Math.random() * pitches.length)];
-            const layer = layers[Math.floor(Math.random() * layers.length)];
-            const duration = 0.3 + Math.random() * 0.5;
-            const velocity = 0.5 + Math.random() * 0.5;
-
-            this.visualizationManager.addNoteEvent({
-                pitch,
-                velocity,
-                duration,
-                layer,
-                timestamp,
-                isPlaying: false
-            });
+    private setupAudioEngineIntegration(): void {
+        if (!this.visualizationManager) {
+            logger.warn('visual-display', 'Cannot setup audio integration - no visualization manager');
+            return;
         }
 
-        logger.debug('visual-display', 'Added demo notes for testing');
+        // Listen for note-triggered events from audio engine
+        this.plugin.audioEngine.on('note-triggered', (data: any) => {
+            if (!this.visualizationManager) return;
+
+            logger.debug('visual-display', 'Received note-triggered event from audio engine', data);
+
+            this.visualizationManager.addNoteEvent({
+                pitch: data.pitch,
+                velocity: data.velocity,
+                duration: data.duration,
+                layer: data.layer,
+                timestamp: data.timestamp,
+                isPlaying: false
+            });
+        });
+
+        // Listen for playback-started to reset visualization
+        this.plugin.audioEngine.on('playback-started', () => {
+            if (!this.visualizationManager) return;
+            logger.debug('visual-display', 'Playback started - clearing notes');
+            this.visualizationManager.clearNotes();
+        });
+
+        logger.info('visual-display', 'Audio engine integration setup complete');
     }
 
     async onClose() {

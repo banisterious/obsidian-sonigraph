@@ -71033,6 +71033,15 @@ var NoteVisualizationManager = class {
     return `${event.layer}-${event.pitch}-${event.timestamp}`;
   }
   /**
+   * Clear all note events
+   * Used when starting new playback
+   */
+  clearNotes() {
+    this.noteEvents = [];
+    this.activeNotes.clear();
+    logger56.debug("events", "Cleared all note events");
+  }
+  /**
    * Start visualization rendering loop
    */
   start(initialTime = 0) {
@@ -71509,9 +71518,13 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
    * Setup divider drag functionality for resizing visual display panel
    */
   setupDividerDrag() {
-    if (!this.visualDivider)
+    if (!this.visualDivider) {
+      logger65.warn("visual-display", "Cannot setup divider drag - visualDivider is null");
       return;
+    }
+    logger65.info("visual-display", "Setting up divider drag handlers");
     const onMouseDown = (e) => {
+      logger65.debug("visual-display", "Divider mousedown event triggered");
       this.isDraggingDivider = true;
       document.body.style.cursor = "ns-resize";
       document.body.style.userSelect = "none";
@@ -71527,8 +71540,13 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       const newHeight = containerRect.bottom - e.clientY;
       const constrainedHeight = Math.max(150, Math.min(400, newHeight));
       this.visualDisplayHeight = constrainedHeight;
-      this.visualDisplaySection.setCssStyles({
-        "--visual-display-height": `${constrainedHeight}px`
+      this.visualDisplaySection.style.setProperty("--visual-display-height", `${constrainedHeight}px`);
+      const appliedValue = this.visualDisplaySection.style.getPropertyValue("--visual-display-height");
+      logger65.debug("visual-display", "Divider dragged - new height", {
+        requested: constrainedHeight,
+        applied: appliedValue,
+        computedMinHeight: getComputedStyle(this.visualDisplaySection).minHeight,
+        computedMaxHeight: getComputedStyle(this.visualDisplaySection).maxHeight
       });
     };
     const onMouseUp = () => {
@@ -71536,12 +71554,13 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         this.isDraggingDivider = false;
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
-        logger65.debug("visual-display", "Saved visual display height", this.visualDisplayHeight);
+        logger65.info("visual-display", "Saved visual display height", this.visualDisplayHeight);
       }
     };
-    this.addEventListener(this.visualDivider, "mousedown", onMouseDown);
-    this.addEventListener(document, "mousemove", onMouseMove);
-    this.addEventListener(document, "mouseup", onMouseUp);
+    this.registerDomEvent(this.visualDivider, "mousedown", onMouseDown);
+    this.registerDomEvent(document, "mousemove", onMouseMove);
+    this.registerDomEvent(document, "mouseup", onMouseUp);
+    logger65.info("visual-display", "Divider drag handlers registered successfully");
   }
   /**
    * Toggle visual display panel visibility
@@ -71579,9 +71598,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       this.visualDisplaySection.addClass("collapsed");
       logger65.debug("visual-display", "Added collapsed class after setState");
     }
-    this.visualDisplaySection.setCssStyles({
-      "--visual-display-height": `${this.visualDisplayHeight}px`
-    });
+    this.visualDisplaySection.style.setProperty("--visual-display-height", `${this.visualDisplayHeight}px`);
     if (this.visualizationManager) {
       logger65.debug("visual-display", "Updating visualization manager enabled state", this.isVisualDisplayVisible);
       this.visualizationManager.updateConfig({
@@ -71615,7 +71632,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         enableTrails: (_d = visualSettings == null ? void 0 : visualSettings.enableTrails) != null ? _d : false
       });
       this.visualizationManager.initialize(this.visualDisplayContent);
-      this.addDemoNotes();
+      this.setupAudioEngineIntegration();
       if (this.isVisualDisplayVisible) {
         this.visualizationManager.start(0);
         logger65.debug("visual-display", "Started visualization for initial render");
@@ -71627,30 +71644,34 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     }
   }
   /**
-   * Add demo notes for testing visualization
-   * TODO: Remove this once audio engine integration is complete
+   * Setup audio engine integration for visual display
+   * Listens to note-triggered events from the audio engine
    */
-  addDemoNotes() {
-    if (!this.visualizationManager)
+  setupAudioEngineIntegration() {
+    if (!this.visualizationManager) {
+      logger65.warn("visual-display", "Cannot setup audio integration - no visualization manager");
       return;
-    const layers = ["rhythmic", "harmonic", "melodic", "ambient"];
-    const pitches = [48, 52, 55, 60, 64, 67, 72, 76];
-    for (let i = 0; i < 20; i++) {
-      const timestamp = i * 0.5;
-      const pitch = pitches[Math.floor(Math.random() * pitches.length)];
-      const layer = layers[Math.floor(Math.random() * layers.length)];
-      const duration = 0.3 + Math.random() * 0.5;
-      const velocity = 0.5 + Math.random() * 0.5;
+    }
+    this.plugin.audioEngine.on("note-triggered", (data) => {
+      if (!this.visualizationManager)
+        return;
+      logger65.debug("visual-display", "Received note-triggered event from audio engine", data);
       this.visualizationManager.addNoteEvent({
-        pitch,
-        velocity,
-        duration,
-        layer,
-        timestamp,
+        pitch: data.pitch,
+        velocity: data.velocity,
+        duration: data.duration,
+        layer: data.layer,
+        timestamp: data.timestamp,
         isPlaying: false
       });
-    }
-    logger65.debug("visual-display", "Added demo notes for testing");
+    });
+    this.plugin.audioEngine.on("playback-started", () => {
+      if (!this.visualizationManager)
+        return;
+      logger65.debug("visual-display", "Playback started - clearing notes");
+      this.visualizationManager.clearNotes();
+    });
+    logger65.info("visual-display", "Audio engine integration setup complete");
   }
   async onClose() {
     logger65.info("ui", "Closing Sonic Graph view - starting cleanup");
@@ -71807,9 +71828,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       this.visualDisplaySection.removeClass("collapsed");
       logger65.debug("visual-display", "Visual display section created as expanded");
     }
-    this.visualDisplaySection.setCssStyles({
-      "--visual-display-height": `${this.visualDisplayHeight}px`
-    });
+    this.visualDisplaySection.style.setProperty("--visual-display-height", `${this.visualDisplayHeight}px`);
     const visualHeader = this.visualDisplaySection.createDiv({ cls: "sonic-graph-visual-display-header" });
     const visualTitle = visualHeader.createDiv({ cls: "sonic-graph-visual-display-title" });
     visualTitle.createSpan({ text: "\u{1F4CA} Visual Note Display" });
@@ -71831,7 +71850,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       text: this.isVisualDisplayVisible ? "\u25BC" : "\u25B2",
       cls: "sonic-graph-visual-collapse-btn"
     });
-    this.addEventListener(collapseBtn, "click", () => this.toggleVisualDisplay(collapseBtn));
+    this.registerDomEvent(collapseBtn, "click", () => this.toggleVisualDisplay(collapseBtn));
     this.visualDisplayContent = this.visualDisplaySection.createDiv({
       cls: "sonic-graph-visual-display-content"
     });
@@ -71854,7 +71873,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     this.timelineScrubber.min = "0";
     this.timelineScrubber.max = "100";
     this.timelineScrubber.value = "0";
-    this.addEventListener(this.timelineScrubber, "input", () => this.handleTimelineScrub());
+    this.registerDomEvent(this.timelineScrubber, "input", () => this.handleTimelineScrub());
     this.timelineInfo = this.timelineContainer.createDiv({ cls: "sonic-graph-timeline-info" });
     const timelineTrack = this.timelineInfo.createDiv({ cls: "sonic-graph-timeline-track-unified" });
     const timelineLine = timelineTrack.createDiv({ cls: "sonic-graph-timeline-line-unified" });
@@ -71888,7 +71907,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       if (speed === savedSpeedString)
         option.selected = true;
     });
-    this.addEventListener(this.speedSelect, "change", () => this.handleSpeedChange());
+    this.registerDomEvent(this.speedSelect, "change", () => this.handleSpeedChange());
     const statsControls = this.controlsContainer.createDiv({ cls: "sonic-graph-stats-controls" });
     this.statsContainer = statsControls.createDiv({ cls: "sonic-graph-stats" });
     this.updateStats();
@@ -71900,7 +71919,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     const viewModeIcon = createLucideIcon("eye", 16);
     this.viewModeBtn.appendChild(viewModeIcon);
     this.viewModeBtn.appendText("Static View");
-    this.addEventListener(this.viewModeBtn, "click", () => this.toggleViewMode());
+    this.registerDomEvent(this.viewModeBtn, "click", () => this.toggleViewMode());
     const resetViewBtn = viewControls.createEl("button", {
       cls: "sonic-graph-control-btn"
     });
@@ -81807,6 +81826,15 @@ var AudioEngine = class {
             const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
             const audioContext = getContext();
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+            const layer = this.getLayerForInstrument(instrumentName);
+            this.eventEmitter.emit("note-triggered", {
+              pitch: new Frequency(detunedFrequency, "hz").toMidi(),
+              velocity,
+              duration: typeof duration === "number" ? duration : parseFloat(duration),
+              layer,
+              timestamp: elapsedTime,
+              instrument: instrumentName
+            });
             if (this.rhythmicPercussion) {
               const midiNote = new Frequency(frequency, "hz").toMidi();
               logger75.debug("rhythmic-percussion", "Triggering accent", { frequency, midiNote, velocity });
@@ -83584,6 +83612,25 @@ var AudioEngine = class {
   }
   isEnvironmentalInstrument(instrumentName) {
     return ["whaleHumpback"].includes(instrumentName);
+  }
+  /**
+   * Map instrument name to visualization layer
+   * Used for color-coding notes in the visual display
+   */
+  getLayerForInstrument(instrumentName) {
+    if (this.isPercussionInstrument(instrumentName)) {
+      return "percussion";
+    }
+    if (["contrabass", "bassSynth", "tuba"].includes(instrumentName)) {
+      return "rhythmic";
+    }
+    if (["piano", "organ", "harpsichord", "harp", "strings"].includes(instrumentName)) {
+      return "harmonic";
+    }
+    if (this.isEnvironmentalInstrument(instrumentName) || this.isElectronicInstrument(instrumentName)) {
+      return "ambient";
+    }
+    return "melodic";
   }
   /**
    * Issue #010 Fix: Get default voice limits to avoid require() in methods

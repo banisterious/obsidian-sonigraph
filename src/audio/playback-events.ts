@@ -10,14 +10,15 @@ const logger = getLogger('playback-events');
 /**
  * Playback event types
  */
-export type PlaybackEventType = 
+export type PlaybackEventType =
 	| 'playback-started'
-	| 'playback-ended' 
+	| 'playback-ended'
 	| 'playback-paused'
 	| 'playback-resumed'
 	| 'playback-stopped'
 	| 'playback-error'
-	| 'sequence-progress';
+	| 'sequence-progress'
+	| 'note-triggered';
 
 /**
  * Event data interfaces
@@ -35,10 +36,19 @@ export interface PlaybackErrorData {
 	context: string;
 }
 
+export interface NoteTriggeredData {
+	pitch: number;
+	velocity: number;
+	duration: number;
+	layer: 'rhythmic' | 'harmonic' | 'melodic' | 'ambient' | 'percussion';
+	timestamp: number;
+	instrument: string;
+}
+
 /**
  * Event data union type
  */
-export type PlaybackEventData = PlaybackProgressData | PlaybackErrorData | null;
+export type PlaybackEventData = PlaybackProgressData | PlaybackErrorData | NoteTriggeredData | null;
 
 /**
  * Event listener function type

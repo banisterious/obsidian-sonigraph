@@ -2250,6 +2250,17 @@ export class AudioEngine {
 
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 
+						// Emit note-triggered event for visualization
+						const layer = this.getLayerForInstrument(instrumentName);
+						this.eventEmitter.emit('note-triggered', {
+							pitch: new Frequency(detunedFrequency, 'hz').toMidi(),
+							velocity,
+							duration: typeof duration === 'number' ? duration : parseFloat(duration),
+							layer,
+							timestamp: elapsedTime,
+							instrument: instrumentName
+						});
+
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
 							// Convert frequency to MIDI note number for percussion mapping
@@ -4438,6 +4449,36 @@ export class AudioEngine {
 
 	private isEnvironmentalInstrument(instrumentName: string): boolean {
 		return ['whaleHumpback'].includes(instrumentName);
+	}
+
+	/**
+	 * Map instrument name to visualization layer
+	 * Used for color-coding notes in the visual display
+	 */
+	private getLayerForInstrument(instrumentName: string): 'rhythmic' | 'harmonic' | 'melodic' | 'ambient' | 'percussion' {
+		// Percussion instruments
+		if (this.isPercussionInstrument(instrumentName)) {
+			return 'percussion';
+		}
+
+		// Rhythmic instruments (bass, drums, rhythm section)
+		if (['contrabass', 'bassSynth', 'tuba'].includes(instrumentName)) {
+			return 'rhythmic';
+		}
+
+		// Harmonic instruments (chords, accompaniment)
+		if (['piano', 'organ', 'harpsichord', 'harp', 'strings'].includes(instrumentName)) {
+			return 'harmonic';
+		}
+
+		// Ambient/atmospheric instruments
+		if (this.isEnvironmentalInstrument(instrumentName) || this.isElectronicInstrument(instrumentName)) {
+			return 'ambient';
+		}
+
+		// Melodic instruments (lead, solo instruments)
+		// Default for woodwinds, brass, solo strings
+		return 'melodic';
 	}
 
 	/**

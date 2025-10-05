@@ -208,6 +208,16 @@ export class NoteVisualizationManager {
     }
 
     /**
+     * Clear all note events
+     * Used when starting new playback
+     */
+    clearNotes(): void {
+        this.noteEvents = [];
+        this.activeNotes.clear();
+        logger.debug('events', 'Cleared all note events');
+    }
+
+    /**
      * Start visualization rendering loop
      */
     public start(initialTime: number = 0): void {

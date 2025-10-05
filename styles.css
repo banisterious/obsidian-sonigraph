@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-05 20:19:28 UTC
+ * - Generated: 2025-10-05 20:51:32 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6675,7 +6675,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 3329 lines, 71.74 KB */
+/* Component Size: 3330 lines, 71.81 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9755,7 +9755,7 @@ details.osp-advanced-settings {
 
 /* Top section: Graph view */
 .sonic-graph-section {
-  flex: 1;
+  flex: 1 1 auto; /* Allow shrinking when visual display is resized */
   min-height: 200px;
   position: relative;
   overflow: hidden;
@@ -9805,17 +9805,18 @@ details.osp-advanced-settings {
 /* Bottom section: Visual display panel */
 .sonic-graph-visual-display-section {
   --visual-display-height: 250px; /* Default height, can be overridden */
-  height: var(--visual-display-height);
+  min-height: var(--visual-display-height);
+  max-height: var(--visual-display-height);
+  flex-shrink: 0;
   background: var(--background-primary);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  transition: height 0.3s ease;
   overflow: hidden;
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 32px !important; /* Header-only height when collapsed */
+  min-height: 32px !important;
+  max-height: 32px !important;
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
@@ -11661,10 +11662,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-05 20:19:28 UTC
+ * Build completed: 2025-10-05 20:51:32 UTC
  * Components processed: 20
- * Total lines: 11455
- * Total size: 243.45 KB
+ * Total lines: 11456
+ * Total size: 243.52 KB
  * Build duration: 0.03 seconds
  * 
  * Component breakdown:
@@ -11682,7 +11683,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
- * - sonic-graph.css: 3329 lines, 71.74 KB
+ * - sonic-graph.css: 3330 lines, 71.81 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB
