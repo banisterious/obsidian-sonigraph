@@ -863,8 +863,13 @@ export class SonicGraphView extends ItemView {
 
         // Bottom section: Visual display panel
         this.visualDisplaySection = splitContainer.createDiv({ cls: 'sonic-graph-visual-display-section' });
+        // Explicitly set collapsed state based on visibility
         if (!this.isVisualDisplayVisible) {
             this.visualDisplaySection.addClass('collapsed');
+            logger.debug('visual-display', 'Visual display section created as collapsed');
+        } else {
+            this.visualDisplaySection.removeClass('collapsed');
+            logger.debug('visual-display', 'Visual display section created as expanded');
         }
         // Set height via CSS custom property instead of inline style
         this.visualDisplaySection.setCssStyles({

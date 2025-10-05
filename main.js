@@ -71768,6 +71768,10 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     this.visualDisplaySection = splitContainer.createDiv({ cls: "sonic-graph-visual-display-section" });
     if (!this.isVisualDisplayVisible) {
       this.visualDisplaySection.addClass("collapsed");
+      logger65.debug("visual-display", "Visual display section created as collapsed");
+    } else {
+      this.visualDisplaySection.removeClass("collapsed");
+      logger65.debug("visual-display", "Visual display section created as expanded");
     }
     this.visualDisplaySection.setCssStyles({
       "--visual-display-height": `${this.visualDisplayHeight}px`
