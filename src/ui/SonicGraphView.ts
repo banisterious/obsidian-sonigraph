@@ -7563,6 +7563,8 @@ export class SonicGraphView extends ItemView {
     private hideProgressIndicator(): void {
         if (this.progressIndicator) {
             this.progressIndicator.removeClass('sonigraph-progress-indicator--visible');
+            // Clear content to stop animations and free memory
+            this.progressIndicator.empty();
         }
     }
 
