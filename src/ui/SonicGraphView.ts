@@ -700,9 +700,17 @@ export class SonicGraphView extends ItemView {
 
         // Listen for note-triggered events from audio engine
         this.plugin.audioEngine.on('note-triggered', (data: any) => {
-            if (!this.visualizationManager) return;
+            if (!this.visualizationManager) {
+                logger.warn('visual-display', 'Received note event but no visualization manager');
+                return;
+            }
 
-            logger.debug('visual-display', 'Received note-triggered event from audio engine', data);
+            logger.info('visual-display', 'Received note-triggered event from audio engine', {
+                pitch: data.pitch,
+                layer: data.layer,
+                timestamp: data.timestamp,
+                enabled: this.visualizationManager ? 'yes' : 'no'
+            });
 
             this.visualizationManager.addNoteEvent({
                 pitch: data.pitch,

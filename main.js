@@ -71650,9 +71650,16 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       return;
     }
     this.plugin.audioEngine.on("note-triggered", (data) => {
-      if (!this.visualizationManager)
+      if (!this.visualizationManager) {
+        logger65.warn("visual-display", "Received note event but no visualization manager");
         return;
-      logger65.debug("visual-display", "Received note-triggered event from audio engine", data);
+      }
+      logger65.info("visual-display", "Received note-triggered event from audio engine", {
+        pitch: data.pitch,
+        layer: data.layer,
+        timestamp: data.timestamp,
+        enabled: this.visualizationManager ? "yes" : "no"
+      });
       this.visualizationManager.addNoteEvent({
         pitch: data.pitch,
         velocity: data.velocity,
@@ -82649,6 +82656,7 @@ var AudioEngine = class {
       const microDelay = Math.random() * 0.01;
       const triggerTime = getContext().currentTime + microDelay;
       synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
+      this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, getContext().currentTime);
       const durationMs = typeof duration === "number" ? duration * 1e3 : parseFloat(duration) * 1e3;
       setTimeout(() => {
         const current = this.activeNotesPerInstrument.get(instrument) || 0;

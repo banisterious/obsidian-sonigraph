@@ -3256,6 +3256,9 @@ export class AudioEngine {
 			// Trigger the note with micro-stagger
 			synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
 
+			// Emit note event for visualization
+			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, getContext().currentTime);
+
 			// Schedule counter decrement when note ends
 			// Convert duration to milliseconds (Tone.js uses seconds)
 			const durationMs = typeof duration === 'number' ? duration * 1000 : parseFloat(duration) * 1000;
