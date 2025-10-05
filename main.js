@@ -52231,7 +52231,7 @@ var init_AudioExporter = __esm({
         try {
           const file = this.app.vault.getAbstractFileByPath(filePath);
           if (file instanceof import_obsidian20.TFile) {
-            await this.app.vault.delete(file);
+            await this.app.fileManager.trashFile(file);
             logger58.info("export", `Cleaned up partial file: ${filePath}`);
           }
         } catch (error) {

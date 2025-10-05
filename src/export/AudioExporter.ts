@@ -361,7 +361,7 @@ export class AudioExporter {
         try {
             const file = this.app.vault.getAbstractFileByPath(filePath);
             if (file instanceof TFile) {
-                await this.app.vault.delete(file);
+                await this.app.fileManager.trashFile(file);
                 logger.info('export', `Cleaned up partial file: ${filePath}`);
             }
         } catch (error) {
