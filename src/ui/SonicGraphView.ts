@@ -18,6 +18,7 @@ import { SonicGraphSettings } from '../utils/constants';
 import * as d3 from 'd3';
 import type SonigraphPlugin from '../main';
 import { ContinuousLayerManager } from '../audio/layers/ContinuousLayerManager';
+import { NoteVisualizationManager } from '../visualization/NoteVisualizationManager';
 
 const logger = getLogger('SonicGraphView');
 
@@ -52,6 +53,7 @@ export class SonicGraphView extends ItemView {
     private musicalMapper: MusicalMapper | null = null;
     private adaptiveDetailManager: AdaptiveDetailManager | null = null;
     private continuousLayerManager: ContinuousLayerManager | null = null;
+    private visualizationManager: NoteVisualizationManager | null = null;
     private isAnimating: boolean = false;
     private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
@@ -569,6 +571,39 @@ export class SonicGraphView extends ItemView {
         }
     }
 
+    /**
+     * Initialize the visual note display manager
+     */
+    private initializeVisualizationManager(): void {
+        if (!this.visualDisplayContent) {
+            logger.warn('visual-display', 'Cannot initialize visualization manager without content container');
+            return;
+        }
+
+        try {
+            logger.info('visual-display', 'Initializing visualization manager');
+
+            // Create visualization manager
+            this.visualizationManager = new NoteVisualizationManager({
+                mode: 'piano-roll',
+                enabled: this.isVisualDisplayVisible,
+                frameRate: 30,
+                colorScheme: 'layer',
+                showLabels: true,
+                showGrid: true,
+                enableTrails: false
+            });
+
+            // Initialize with content container
+            this.visualizationManager.initialize(this.visualDisplayContent);
+
+            logger.info('visual-display', 'Visualization manager initialized successfully');
+        } catch (error) {
+            logger.error('visual-display', 'Failed to initialize visualization manager', error);
+            new Notice('Failed to initialize visual note display');
+        }
+    }
+
     async onClose() {
         logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
@@ -649,6 +684,17 @@ export class SonicGraphView extends ItemView {
             }
         } catch (error) {
             logger.error('ui', 'Error destroying adaptive detail manager:', error);
+        }
+
+        try {
+            // Cleanup visualization manager
+            logger.debug('ui', 'Destroying visualization manager');
+            if (this.visualizationManager) {
+                this.visualizationManager.destroy();
+                this.visualizationManager = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error destroying visualization manager:', error);
         }
 
         try {
@@ -805,6 +851,9 @@ export class SonicGraphView extends ItemView {
         // Placeholder content (will be replaced with actual visualization)
         const placeholder = this.visualDisplayContent.createDiv({ cls: 'sonic-graph-visual-placeholder' });
         placeholder.createSpan({ text: 'Visual note display will appear here during playback' });
+
+        // Initialize visualization manager
+        this.initializeVisualizationManager();
     }
 
     /**
