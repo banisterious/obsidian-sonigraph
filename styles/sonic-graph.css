@@ -541,12 +541,12 @@
   display: flex;
   justify-content: space-between; /* Title left, button right */
   align-items: center;
-  padding: 8px 16px 8px;
+  padding: 12px 16px;
   padding-right: 48px; /* Make space for close button like Control Center */
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   flex-shrink: 0;
-  min-height: 40px;
+  min-height: 48px;
 }
 
 .sonic-graph-title-container {
@@ -856,11 +856,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--osp-spacing-xs) var(--osp-spacing-md);
+  padding: 10px var(--osp-spacing-md);
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   flex-shrink: 0;
-  min-height: 44px; /* Increased from 36px to 44px for better spacing */
+  min-height: 52px; /* Ensure enough height for all buttons */
   gap: var(--osp-spacing-sm);
 }
 
