@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-05 20:04:53 UTC
+ * - Generated: 2025-10-05 20:19:28 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6675,7 +6675,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 3328 lines, 71.74 KB */
+/* Component Size: 3329 lines, 71.74 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9977,7 +9977,7 @@ details.osp-advanced-settings {
   right: 10px;
   display: flex;
   gap: 12px;
-  background: rgba(var(--background-primary-rgb), 0.95);
+  background: var(--background-secondary);
   padding: 6px 10px;
   border-radius: 4px;
   border: 1px solid var(--background-modifier-border);
@@ -10003,6 +10003,7 @@ details.osp-advanced-settings {
 
 .piano-roll-legend-text {
   color: var(--text-normal);
+  font-weight: 500;
 }
 
 
@@ -11660,11 +11661,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-05 20:04:53 UTC
+ * Build completed: 2025-10-05 20:19:28 UTC
  * Components processed: 20
- * Total lines: 11454
+ * Total lines: 11455
  * Total size: 243.45 KB
- * Build duration: 0.04 seconds
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -11681,7 +11682,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
- * - sonic-graph.css: 3328 lines, 71.74 KB
+ * - sonic-graph.css: 3329 lines, 71.74 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB
