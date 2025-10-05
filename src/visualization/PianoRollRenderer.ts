@@ -122,15 +122,43 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Create legend
         this.createLegend();
 
-        // Setup canvas sizing - delay to allow DOM layout
-        setTimeout(() => {
-            this.resizeCanvas();
-        }, 100);
+        // Setup canvas sizing - use requestAnimationFrame and retry until container has size
+        this.waitForContainerAndResize();
 
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
 
         logger.info('initialization', 'PianoRollRenderer initialized');
+    }
+
+    /**
+     * Wait for container to have dimensions, then resize canvas
+     */
+    private waitForContainerAndResize(attempts: number = 0): void {
+        if (!this.container) return;
+
+        const rect = this.container.getBoundingClientRect();
+
+        if (rect.width > 0 && rect.height > 0) {
+            // Container has dimensions, safe to resize
+            logger.info('initialization', 'Container has dimensions, resizing canvas', {
+                width: rect.width,
+                height: rect.height
+            });
+            this.resizeCanvas();
+        } else if (attempts < 20) {
+            // Container still has no dimensions, wait and retry
+            logger.debug('initialization', `Container has no dimensions yet (attempt ${attempts + 1}/20), retrying...`);
+            requestAnimationFrame(() => this.waitForContainerAndResize(attempts + 1));
+        } else {
+            // Give up after 20 attempts
+            logger.error('initialization', 'Container never got dimensions after 20 attempts', {
+                width: rect.width,
+                height: rect.height
+            });
+            // Try to resize anyway with fallback
+            this.resizeCanvas();
+        }
     }
 
     /**
