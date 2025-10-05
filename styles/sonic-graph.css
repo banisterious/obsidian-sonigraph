@@ -817,7 +817,7 @@
   bottom: 0;
   width: 3px;
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: 20; /* Higher z-index to ensure visibility above visual display */
   pointer-events: none;
 }
 
