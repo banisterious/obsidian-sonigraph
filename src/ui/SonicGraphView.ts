@@ -598,11 +598,45 @@ export class SonicGraphView extends ItemView {
             // Initialize with content container
             this.visualizationManager.initialize(this.visualDisplayContent);
 
+            // Add some demo notes for testing
+            this.addDemoNotes();
+
             logger.info('visual-display', 'Visualization manager initialized successfully');
         } catch (error) {
             logger.error('visual-display', 'Failed to initialize visualization manager', error);
             new Notice('Failed to initialize visual note display');
         }
+    }
+
+    /**
+     * Add demo notes for testing visualization
+     * TODO: Remove this once audio engine integration is complete
+     */
+    private addDemoNotes(): void {
+        if (!this.visualizationManager) return;
+
+        const layers: Array<'rhythmic' | 'harmonic' | 'melodic' | 'ambient'> = ['rhythmic', 'harmonic', 'melodic', 'ambient'];
+        const pitches = [48, 52, 55, 60, 64, 67, 72, 76]; // C3, E3, G3, C4, E4, G4, C5, E5
+
+        // Add some test notes at various times
+        for (let i = 0; i < 20; i++) {
+            const timestamp = i * 0.5; // Every 0.5 seconds
+            const pitch = pitches[Math.floor(Math.random() * pitches.length)];
+            const layer = layers[Math.floor(Math.random() * layers.length)];
+            const duration = 0.3 + Math.random() * 0.5;
+            const velocity = 0.5 + Math.random() * 0.5;
+
+            this.visualizationManager.addNoteEvent({
+                pitch,
+                velocity,
+                duration,
+                layer,
+                timestamp,
+                isPlaying: false
+            });
+        }
+
+        logger.debug('visual-display', 'Added demo notes for testing');
     }
 
     async onClose() {
@@ -1280,22 +1314,34 @@ export class SonicGraphView extends ItemView {
             });
             
             this.temporalAnimator.play();
-            
+
+            // Start visual note display if enabled
+            if (this.visualizationManager && this.isVisualDisplayVisible) {
+                this.visualizationManager.start(0);
+                logger.debug('visual-display', 'Visualization started');
+            }
+
             logger.info('ui', 'Starting Sonic Graph temporal animation');
             new Notice('Sonic Graph animation started');
-            
+
         } else {
             // Pause animation
             this.playButton.setButtonText('Play');
-            
+
             // Hide current position indicator when animation stops
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
             if (currentIndicator) {
                 currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
-            
+
             if (this.temporalAnimator) {
                 this.temporalAnimator.pause();
+            }
+
+            // Stop visual note display
+            if (this.visualizationManager) {
+                this.visualizationManager.stop();
+                logger.debug('visual-display', 'Visualization stopped');
             }
             
             // Stop continuous layers if running
@@ -6021,11 +6067,16 @@ export class SonicGraphView extends ItemView {
         if (this.timelineScrubber) {
             this.timelineScrubber.value = (progress * 100).toString();
         }
-        
+
         // Update timeline info
         if (this.timelineInfo && this.temporalAnimator) {
             this.updateTimelineMarkers();
             this.updateCurrentPosition(currentTime, progress);
+        }
+
+        // Update visualization playback time
+        if (this.visualizationManager) {
+            this.visualizationManager.updatePlaybackTime(currentTime);
         }
     }
 
