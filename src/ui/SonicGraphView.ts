@@ -954,11 +954,9 @@ export class SonicGraphView extends ItemView {
                     .scale(0.3) // Better balance - shows full graph but not too tiny
             );
             
-            // Hide loading indicator
-            const loadingIndicator = this.graphContainer.querySelector('.sonic-graph-loading');
-            if (loadingIndicator) {
-                loadingIndicator.remove();
-            }
+            // Hide loading indicator - remove all instances to be safe
+            const loadingIndicators = this.graphContainer.querySelectorAll('.sonic-graph-loading');
+            loadingIndicators.forEach(indicator => indicator.remove());
             
             // Performance optimization: Hide progress indicator
             this.hideProgressIndicator();
@@ -981,11 +979,9 @@ export class SonicGraphView extends ItemView {
             // Performance optimization: Hide progress indicator on error
             this.hideProgressIndicator();
             
-            // Clear loading indicator
-            const loadingIndicator = this.graphContainer.querySelector('.sonic-graph-loading');
-            if (loadingIndicator) {
-                loadingIndicator.remove();
-            }
+            // Clear loading indicator - remove all instances to be safe
+            const loadingIndicators = this.graphContainer.querySelectorAll('.sonic-graph-loading');
+            loadingIndicators.forEach(indicator => indicator.remove());
             
             new Notice(`Failed to load graph data: ${(error as Error).message}`);
             

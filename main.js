@@ -68355,10 +68355,8 @@ var init_SonicGraphModal = __esm({
             identity2.translate(centerX, centerY).scale(0.3)
             // Better balance - shows full graph but not too tiny
           );
-          const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
-          if (loadingIndicator) {
-            loadingIndicator.remove();
-          }
+          const loadingIndicators = this.graphContainer.querySelectorAll(".sonic-graph-loading");
+          loadingIndicators.forEach((indicator) => indicator.remove());
           this.hideProgressIndicator();
           this.updateStats();
           this.updateViewMode();
@@ -68367,10 +68365,8 @@ var init_SonicGraphModal = __esm({
           logger72.error("ui", "Failed to initialize Sonic Graph:", error.message);
           logger72.error("ui", "Initialization error stack:", error.stack);
           this.hideProgressIndicator();
-          const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
-          if (loadingIndicator) {
-            loadingIndicator.remove();
-          }
+          const loadingIndicators = this.graphContainer.querySelectorAll(".sonic-graph-loading");
+          loadingIndicators.forEach((indicator) => indicator.remove());
           new import_obsidian26.Notice(`Failed to load graph data: ${error.message}`);
           this.showErrorState(error.message);
         }
@@ -81644,10 +81640,8 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         identity2.translate(centerX, centerY).scale(0.3)
         // Better balance - shows full graph but not too tiny
       );
-      const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
-      if (loadingIndicator) {
-        loadingIndicator.remove();
-      }
+      const loadingIndicators = this.graphContainer.querySelectorAll(".sonic-graph-loading");
+      loadingIndicators.forEach((indicator) => indicator.remove());
       this.hideProgressIndicator();
       this.updateStats();
       this.updateViewMode();
@@ -81657,10 +81651,8 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       logger60.error("ui", "Failed to initialize Sonic Graph:", error.message);
       logger60.error("ui", "Initialization error stack:", error.stack);
       this.hideProgressIndicator();
-      const loadingIndicator = this.graphContainer.querySelector(".sonic-graph-loading");
-      if (loadingIndicator) {
-        loadingIndicator.remove();
-      }
+      const loadingIndicators = this.graphContainer.querySelectorAll(".sonic-graph-loading");
+      loadingIndicators.forEach((indicator) => indicator.remove());
       new import_obsidian25.Notice(`Failed to load graph data: ${error.message}`);
       this.showErrorState(error.message);
     }
