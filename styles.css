@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-05 19:29:18 UTC
+ * - Generated: 2025-10-05 19:33:59 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6675,7 +6675,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 3326 lines, 71.71 KB */
+/* Component Size: 3328 lines, 71.74 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9930,8 +9930,10 @@ details.osp-advanced-settings {
   position: absolute;
   left: 40px; /* Space for pitch labels */
   top: 0;
+  right: 0;
   bottom: 30px; /* Space for timeline */
   background: #1a1a1a;
+  display: block;
 }
 
 /* Pitch labels */
@@ -11658,11 +11660,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-05 19:29:18 UTC
+ * Build completed: 2025-10-05 19:33:59 UTC
  * Components processed: 20
- * Total lines: 11452
- * Total size: 243.42 KB
- * Build duration: 0.03 seconds
+ * Total lines: 11454
+ * Total size: 243.45 KB
+ * Build duration: 0.05 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -11679,7 +11681,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
- * - sonic-graph.css: 3326 lines, 71.71 KB
+ * - sonic-graph.css: 3328 lines, 71.74 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

@@ -122,8 +122,10 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Create legend
         this.createLegend();
 
-        // Setup canvas sizing
-        this.resizeCanvas();
+        // Setup canvas sizing - delay to allow DOM layout
+        setTimeout(() => {
+            this.resizeCanvas();
+        }, 100);
 
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
@@ -211,14 +213,27 @@ export class PianoRollRenderer implements VisualizationRenderer {
         const containerRect = this.container.getBoundingClientRect();
         const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
 
-        // Set canvas size
-        this.canvas.width = containerRect.width - this.pianoRollConfig.pitchLabelWidth;
-        this.canvas.height = pitchCount * this.pianoRollConfig.pitchRowHeight;
+        // Set canvas size with minimum width to ensure visibility
+        const canvasWidth = Math.max(containerRect.width - this.pianoRollConfig.pitchLabelWidth, 100);
+        const canvasHeight = pitchCount * this.pianoRollConfig.pitchRowHeight;
 
-        logger.debug('resize', 'Canvas resized', {
-            width: this.canvas.width,
-            height: this.canvas.height
+        this.canvas.width = canvasWidth;
+        this.canvas.height = canvasHeight;
+
+        logger.info('resize', 'Canvas resized', {
+            containerWidth: containerRect.width,
+            containerHeight: containerRect.height,
+            canvasWidth: this.canvas.width,
+            canvasHeight: this.canvas.height,
+            pitchCount
         });
+
+        // Draw background immediately after resize to test visibility
+        if (this.ctx && this.canvas.width > 0 && this.canvas.height > 0) {
+            this.ctx.fillStyle = '#1a1a1a';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            logger.debug('resize', 'Drew background after resize');
+        }
     }
 
     /**

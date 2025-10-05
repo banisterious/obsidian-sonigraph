@@ -3251,8 +3251,10 @@
   position: absolute;
   left: 40px; /* Space for pitch labels */
   top: 0;
+  right: 0;
   bottom: 30px; /* Space for timeline */
   background: #1a1a1a;
+  display: block;
 }
 
 /* Pitch labels */
