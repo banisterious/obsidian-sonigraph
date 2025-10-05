@@ -709,7 +709,7 @@ export class SonicGraphView extends ItemView {
                 pitch: data.pitch,
                 layer: data.layer,
                 timestamp: data.timestamp,
-                enabled: this.visualizationManager ? 'yes' : 'no'
+                instrument: data.instrument
             });
 
             this.visualizationManager.addNoteEvent({
@@ -717,7 +717,7 @@ export class SonicGraphView extends ItemView {
                 velocity: data.velocity,
                 duration: data.duration,
                 layer: data.layer,
-                timestamp: data.timestamp,
+                timestamp: data.timestamp, // Use timestamp from audio engine
                 isPlaying: false
             });
         });
@@ -725,8 +725,9 @@ export class SonicGraphView extends ItemView {
         // Listen for playback-started to reset visualization
         this.plugin.audioEngine.on('playback-started', () => {
             if (!this.visualizationManager) return;
-            logger.debug('visual-display', 'Playback started - clearing notes');
+            logger.debug('visual-display', 'Playback started - resetting visualization');
             this.visualizationManager.clearNotes();
+            this.visualizationManager.updatePlaybackTime(0); // Reset playback time to 0
         });
 
         logger.info('visual-display', 'Audio engine integration setup complete');
@@ -6357,9 +6358,12 @@ export class SonicGraphView extends ItemView {
                 volume: audioStatus.volume
             });
             
+            // Get current timeline elapsed time for visualization
+            const currentTime = this.temporalAnimator ? this.temporalAnimator.getState().currentTime : 0;
+
             // Play the note immediately using the new immediate playback method
             try {
-                await this.plugin.audioEngine.playNoteImmediate(mapping);
+                await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime);
                 logger.info('audio-success', 'Audio note played successfully for node appearance', { 
                     nodeId: node.id,
                     nodeTitle: node.title,

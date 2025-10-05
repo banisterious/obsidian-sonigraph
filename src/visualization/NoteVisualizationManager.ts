@@ -265,6 +265,13 @@ export class NoteVisualizationManager {
     }
 
     /**
+     * Get current playback time
+     */
+    public getCurrentPlaybackTime(): number {
+        return this.currentPlaybackTime;
+    }
+
+    /**
      * Main rendering loop
      */
     private renderLoop = (): void => {

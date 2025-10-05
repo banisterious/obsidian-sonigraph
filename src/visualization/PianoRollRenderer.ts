@@ -68,6 +68,9 @@ export class PianoRollRenderer implements VisualizationRenderer {
     private timelineContainer: HTMLElement | null = null;
     private legendContainer: HTMLElement | null = null;
 
+    // Debug counter
+    private noteCount: number = 0;
+
     constructor() {
         this.config = {
             mode: 'piano-roll',
@@ -239,11 +242,10 @@ export class PianoRollRenderer implements VisualizationRenderer {
         if (!this.canvas || !this.container) return;
 
         const containerRect = this.container.getBoundingClientRect();
-        const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
 
-        // Set canvas size with minimum width to ensure visibility
+        // Set canvas size to match container dimensions
         const canvasWidth = Math.max(containerRect.width - this.pianoRollConfig.pitchLabelWidth, 100);
-        const canvasHeight = pitchCount * this.pianoRollConfig.pitchRowHeight;
+        const canvasHeight = Math.max(containerRect.height, 100);
 
         this.canvas.width = canvasWidth;
         this.canvas.height = canvasHeight;
@@ -252,8 +254,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
             containerWidth: containerRect.width,
             containerHeight: containerRect.height,
             canvasWidth: this.canvas.width,
-            canvasHeight: this.canvas.height,
-            pitchCount
+            canvasHeight: this.canvas.height
         });
 
         // Draw background immediately after resize to test visibility
@@ -281,8 +282,8 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Draw notes
         this.drawNotes(events, currentTime);
 
-        // Draw playhead
-        this.drawPlayhead(currentTime);
+        // Draw playhead (pass events to calculate timeline duration)
+        this.drawPlayhead(currentTime, events);
     }
 
     /**
@@ -323,28 +324,61 @@ export class PianoRollRenderer implements VisualizationRenderer {
      * Draw note bars
      */
     private drawNotes(events: NoteEvent[], currentTime: number): void {
-        if (!this.ctx) return;
+        if (!this.ctx || !this.canvas) return;
 
         const ctx = this.ctx;
-        const scrollOffset = currentTime * this.pianoRollConfig.pixelsPerSecond;
+
+        // Calculate timeline duration from events (use max timestamp + some buffer)
+        const maxTimestamp = events.length > 0
+            ? Math.max(...events.map(e => e.timestamp + e.duration))
+            : currentTime + this.pianoRollConfig.timeWindow;
+        const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
 
         events.forEach(event => {
-            // Calculate position
-            const x = (event.timestamp * this.pianoRollConfig.pixelsPerSecond) - scrollOffset;
-            const width = (event.duration * this.pianoRollConfig.pixelsPerSecond);
+            // Calculate position - notes stay in fixed positions, playhead moves
+            // Map note timestamp to canvas position
+            const x = (event.timestamp / timelineDuration) * this.canvas!.width;
+            const width = (event.duration / timelineDuration) * this.canvas!.width;
 
             // Skip if outside visible area
             if (x + width < 0 || x > this.canvas!.width) return;
 
             // Get pitch (convert MIDI number or note name to pitch)
             const pitch = typeof event.pitch === 'number' ? event.pitch : this.noteToPitch(event.pitch);
-            const pitchIndex = this.pianoRollConfig.maxPitch - pitch;
-            const y = pitchIndex * this.pianoRollConfig.pitchRowHeight;
-            const height = this.pianoRollConfig.pitchRowHeight - 2; // 2px gap
+
+            // Debug logging for first few notes
+            if (this.noteCount < 5) {
+                logger.info('pitch-debug', 'Note pitch calculation', {
+                    eventPitch: event.pitch,
+                    calculatedPitch: pitch,
+                    minPitch: this.pianoRollConfig.minPitch,
+                    maxPitch: this.pianoRollConfig.maxPitch,
+                    canvasHeight: this.canvas!.height
+                });
+                this.noteCount++;
+            }
 
             // Skip if pitch is out of range
-            if (pitchIndex < 0 || pitchIndex > (this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch)) {
+            if (pitch < this.pianoRollConfig.minPitch || pitch > this.pianoRollConfig.maxPitch) {
+                logger.debug('pitch-debug', 'Pitch out of range, skipping', { pitch });
                 return;
+            }
+
+            // Scale pitch to canvas height
+            const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
+            const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange; // 0 to 1
+            const y = (1 - pitchNormalized) * this.canvas!.height; // Invert so high pitches are at top
+            const height = Math.max(4, this.canvas!.height / pitchRange); // Scale height to canvas
+
+            // Debug logging for Y position
+            if (this.noteCount <= 5) {
+                logger.info('pitch-debug', 'Y position calculation', {
+                    pitch,
+                    pitchNormalized,
+                    y,
+                    height,
+                    canvasHeight: this.canvas!.height
+                });
             }
 
             // Get color based on layer
@@ -374,11 +408,19 @@ export class PianoRollRenderer implements VisualizationRenderer {
     /**
      * Draw playhead indicator
      */
-    private drawPlayhead(currentTime: number): void {
+    private drawPlayhead(currentTime: number, events: NoteEvent[]): void {
         if (!this.ctx || !this.canvas) return;
 
         const ctx = this.ctx;
-        const x = this.canvas.width / 4; // Playhead at 25% from left
+
+        // Calculate timeline duration (same as in drawNotes)
+        const maxTimestamp = events.length > 0
+            ? Math.max(...events.map(e => e.timestamp + e.duration))
+            : currentTime + this.pianoRollConfig.timeWindow;
+        const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+
+        // Playhead moves across canvas based on current time vs timeline duration
+        const x = (currentTime / timelineDuration) * this.canvas.width;
 
         // Draw playhead line
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';

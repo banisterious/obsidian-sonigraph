@@ -70605,6 +70605,8 @@ var PianoRollRenderer = class {
     this.pitchLabelsContainer = null;
     this.timelineContainer = null;
     this.legendContainer = null;
+    // Debug counter
+    this.noteCount = 0;
     this.config = {
       mode: "piano-roll",
       enabled: true,
@@ -70744,17 +70746,15 @@ var PianoRollRenderer = class {
     if (!this.canvas || !this.container)
       return;
     const containerRect = this.container.getBoundingClientRect();
-    const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
     const canvasWidth = Math.max(containerRect.width - this.pianoRollConfig.pitchLabelWidth, 100);
-    const canvasHeight = pitchCount * this.pianoRollConfig.pitchRowHeight;
+    const canvasHeight = Math.max(containerRect.height, 100);
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
     logger55.info("resize", "Canvas resized", {
       containerWidth: containerRect.width,
       containerHeight: containerRect.height,
       canvasWidth: this.canvas.width,
-      canvasHeight: this.canvas.height,
-      pitchCount
+      canvasHeight: this.canvas.height
     });
     if (this.ctx && this.canvas.width > 0 && this.canvas.height > 0) {
       this.ctx.fillStyle = "#1a1a1a";
@@ -70773,7 +70773,7 @@ var PianoRollRenderer = class {
       this.drawGrid();
     }
     this.drawNotes(events, currentTime);
-    this.drawPlayhead(currentTime);
+    this.drawPlayhead(currentTime, events);
   }
   /**
    * Draw grid lines
@@ -70806,21 +70806,43 @@ var PianoRollRenderer = class {
    * Draw note bars
    */
   drawNotes(events, currentTime) {
-    if (!this.ctx)
+    if (!this.ctx || !this.canvas)
       return;
     const ctx = this.ctx;
-    const scrollOffset = currentTime * this.pianoRollConfig.pixelsPerSecond;
+    const maxTimestamp = events.length > 0 ? Math.max(...events.map((e) => e.timestamp + e.duration)) : currentTime + this.pianoRollConfig.timeWindow;
+    const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
     events.forEach((event) => {
-      const x3 = event.timestamp * this.pianoRollConfig.pixelsPerSecond - scrollOffset;
-      const width = event.duration * this.pianoRollConfig.pixelsPerSecond;
+      const x3 = event.timestamp / timelineDuration * this.canvas.width;
+      const width = event.duration / timelineDuration * this.canvas.width;
       if (x3 + width < 0 || x3 > this.canvas.width)
         return;
       const pitch = typeof event.pitch === "number" ? event.pitch : this.noteToPitch(event.pitch);
-      const pitchIndex = this.pianoRollConfig.maxPitch - pitch;
-      const y3 = pitchIndex * this.pianoRollConfig.pitchRowHeight;
-      const height = this.pianoRollConfig.pitchRowHeight - 2;
-      if (pitchIndex < 0 || pitchIndex > this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch) {
+      if (this.noteCount < 5) {
+        logger55.info("pitch-debug", "Note pitch calculation", {
+          eventPitch: event.pitch,
+          calculatedPitch: pitch,
+          minPitch: this.pianoRollConfig.minPitch,
+          maxPitch: this.pianoRollConfig.maxPitch,
+          canvasHeight: this.canvas.height
+        });
+        this.noteCount++;
+      }
+      if (pitch < this.pianoRollConfig.minPitch || pitch > this.pianoRollConfig.maxPitch) {
+        logger55.debug("pitch-debug", "Pitch out of range, skipping", { pitch });
         return;
+      }
+      const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
+      const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
+      const y3 = (1 - pitchNormalized) * this.canvas.height;
+      const height = Math.max(4, this.canvas.height / pitchRange);
+      if (this.noteCount <= 5) {
+        logger55.info("pitch-debug", "Y position calculation", {
+          pitch,
+          pitchNormalized,
+          y: y3,
+          height,
+          canvasHeight: this.canvas.height
+        });
       }
       const color2 = LAYER_COLORS[event.layer] || "#888888";
       const gradient = ctx.createLinearGradient(x3, y3, x3 + width, y3);
@@ -70840,11 +70862,13 @@ var PianoRollRenderer = class {
   /**
    * Draw playhead indicator
    */
-  drawPlayhead(currentTime) {
+  drawPlayhead(currentTime, events) {
     if (!this.ctx || !this.canvas)
       return;
     const ctx = this.ctx;
-    const x3 = this.canvas.width / 4;
+    const maxTimestamp = events.length > 0 ? Math.max(...events.map((e) => e.timestamp + e.duration)) : currentTime + this.pianoRollConfig.timeWindow;
+    const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+    const x3 = currentTime / timelineDuration * this.canvas.width;
     ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -71078,6 +71102,12 @@ var NoteVisualizationManager = class {
    */
   updatePlaybackTime(time) {
     this.currentPlaybackTime = time;
+  }
+  /**
+   * Get current playback time
+   */
+  getCurrentPlaybackTime() {
+    return this.currentPlaybackTime;
   }
   /**
    * Render current frame
@@ -71658,7 +71688,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         pitch: data.pitch,
         layer: data.layer,
         timestamp: data.timestamp,
-        enabled: this.visualizationManager ? "yes" : "no"
+        instrument: data.instrument
       });
       this.visualizationManager.addNoteEvent({
         pitch: data.pitch,
@@ -71666,14 +71696,16 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         duration: data.duration,
         layer: data.layer,
         timestamp: data.timestamp,
+        // Use timestamp from audio engine
         isPlaying: false
       });
     });
     this.plugin.audioEngine.on("playback-started", () => {
       if (!this.visualizationManager)
         return;
-      logger65.debug("visual-display", "Playback started - clearing notes");
+      logger65.debug("visual-display", "Playback started - resetting visualization");
       this.visualizationManager.clearNotes();
+      this.visualizationManager.updatePlaybackTime(0);
     });
     logger65.info("visual-display", "Audio engine integration setup complete");
   }
@@ -75998,8 +76030,9 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         currentNotes: audioStatus.currentNotes,
         volume: audioStatus.volume
       });
+      const currentTime = this.temporalAnimator ? this.temporalAnimator.getState().currentTime : 0;
       try {
-        await this.plugin.audioEngine.playNoteImmediate(mapping);
+        await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime);
         logger65.info("audio-success", "Audio note played successfully for node appearance", {
           nodeId: node.id,
           nodeTitle: node.title,
@@ -82619,8 +82652,10 @@ var AudioEngine = class {
   }
   /**
    * Play a note immediately without timing restrictions (for real-time triggering)
+   * @param mapping Note parameters
+   * @param elapsedTime Optional timeline elapsed time for visualization (defaults to audio context time)
    */
-  async playNoteImmediate(mapping) {
+  async playNoteImmediate(mapping, elapsedTime) {
     if (!this.isInitialized) {
       logger75.warn("audio", "Audio engine not initialized for immediate note playback");
       await this.initialize();
@@ -82656,7 +82691,8 @@ var AudioEngine = class {
       const microDelay = Math.random() * 0.01;
       const triggerTime = getContext().currentTime + microDelay;
       synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
-      this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, getContext().currentTime);
+      const timestamp = elapsedTime !== void 0 ? elapsedTime : getContext().currentTime;
+      this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp);
       const durationMs = typeof duration === "number" ? duration * 1e3 : parseFloat(duration) * 1e3;
       setTimeout(() => {
         const current = this.activeNotesPerInstrument.get(instrument) || 0;

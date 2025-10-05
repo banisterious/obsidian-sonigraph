@@ -3195,8 +3195,10 @@ export class AudioEngine {
 
 	/**
 	 * Play a note immediately without timing restrictions (for real-time triggering)
+	 * @param mapping Note parameters
+	 * @param elapsedTime Optional timeline elapsed time for visualization (defaults to audio context time)
 	 */
-	async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }): Promise<void> {
+	async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }, elapsedTime?: number): Promise<void> {
 		if (!this.isInitialized) {
 			logger.warn('audio', 'Audio engine not initialized for immediate note playback');
 			await this.initialize();
@@ -3257,7 +3259,9 @@ export class AudioEngine {
 			synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
 
 			// Emit note event for visualization
-			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, getContext().currentTime);
+			// Use provided elapsedTime if available, otherwise fall back to audio context time
+			const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
+			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp);
 
 			// Schedule counter decrement when note ends
 			// Convert duration to milliseconds (Tone.js uses seconds)
