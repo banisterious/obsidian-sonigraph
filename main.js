@@ -71269,6 +71269,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       this.visualDisplayHeight = (_f = (_e = (_d = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _d.visualDisplay) == null ? void 0 : _e.height) != null ? _f : 250;
       logger65.debug("state", "Initialized visualDisplayHeight from settings", this.visualDisplayHeight);
     }
+    this.updateVisualDisplayState();
     if (viewState.currentTimelinePosition !== void 0 || viewState.animationSpeed !== void 0) {
       this._pendingState = {
         timelinePosition: viewState.currentTimelinePosition,
@@ -71558,6 +71559,29 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       collapseBtn.setText("\u25B2");
       logger65.debug("visual-display", "Visual display collapsed");
     }
+  }
+  /**
+   * Update visual display section state after setState() restores values
+   */
+  updateVisualDisplayState() {
+    if (!this.visualDisplaySection) {
+      logger65.debug("visual-display", "Visual display section not yet created, skipping state update");
+      return;
+    }
+    logger65.info("visual-display", "Updating visual display state after setState", {
+      isVisible: this.isVisualDisplayVisible,
+      height: this.visualDisplayHeight
+    });
+    if (this.isVisualDisplayVisible) {
+      this.visualDisplaySection.removeClass("collapsed");
+      logger65.debug("visual-display", "Removed collapsed class after setState");
+    } else {
+      this.visualDisplaySection.addClass("collapsed");
+      logger65.debug("visual-display", "Added collapsed class after setState");
+    }
+    this.visualDisplaySection.setCssStyles({
+      "--visual-display-height": `${this.visualDisplayHeight}px`
+    });
   }
   /**
    * Initialize the visual note display manager

@@ -205,6 +205,9 @@ export class SonicGraphView extends ItemView {
             logger.debug('state', 'Initialized visualDisplayHeight from settings', this.visualDisplayHeight);
         }
 
+        // Update visual display section if it's already been created (setState called after onOpen)
+        this.updateVisualDisplayState();
+
         // Store timeline position and speed for restoration after graph initialization
         if (viewState.currentTimelinePosition !== undefined || viewState.animationSpeed !== undefined) {
             // We'll apply these values after the UI is fully initialized
@@ -584,6 +587,35 @@ export class SonicGraphView extends ItemView {
             collapseBtn.setText('▲');
             logger.debug('visual-display', 'Visual display collapsed');
         }
+    }
+
+    /**
+     * Update visual display section state after setState() restores values
+     */
+    private updateVisualDisplayState(): void {
+        if (!this.visualDisplaySection) {
+            logger.debug('visual-display', 'Visual display section not yet created, skipping state update');
+            return;
+        }
+
+        logger.info('visual-display', 'Updating visual display state after setState', {
+            isVisible: this.isVisualDisplayVisible,
+            height: this.visualDisplayHeight
+        });
+
+        // Update collapsed state
+        if (this.isVisualDisplayVisible) {
+            this.visualDisplaySection.removeClass('collapsed');
+            logger.debug('visual-display', 'Removed collapsed class after setState');
+        } else {
+            this.visualDisplaySection.addClass('collapsed');
+            logger.debug('visual-display', 'Added collapsed class after setState');
+        }
+
+        // Update height
+        this.visualDisplaySection.setCssStyles({
+            '--visual-display-height': `${this.visualDisplayHeight}px`
+        });
     }
 
     /**
