@@ -225,7 +225,7 @@ export class MaterialControlPanelModal extends Modal {
 		const sonicGraphIcon = createLucideIcon('chart-network', 16);
 		sonicGraphBtn.appendChild(sonicGraphIcon);
 		sonicGraphBtn.appendText('Sonic Graph');
-		sonicGraphBtn.addEventListener('click', () => this.launchSonicGraphModal());
+		sonicGraphBtn.addEventListener('click', () => this.launchSonicGraphView());
 	}
 
 	/**
@@ -1848,7 +1848,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Launch the full Sonic Graph view
 	 */
-	private launchSonicGraphModal(): void {
+	private launchSonicGraphView(): void {
 		logger.debug('ui', 'Launching Sonic Graph view from Control Center');
 
 		// Close Control Center first for smooth transition

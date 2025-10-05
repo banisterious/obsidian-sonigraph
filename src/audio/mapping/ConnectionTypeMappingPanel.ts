@@ -2,7 +2,7 @@
  * ConnectionTypeMappingPanel - Phase 4.4: Connection Type Audio Differentiation UI
  *
  * Provides a comprehensive UI panel for configuring connection type audio mappings.
- * Integrated into the SonicGraphModal settings panel with collapsible sections,
+ * Integrated into the Sonic Graph View settings panel with collapsible sections,
  * preset management, and real-time preview capabilities.
  */
 

@@ -331,7 +331,7 @@ export class GraphRenderer {
     this.renderLinks();
     this.renderNodes();
     
-    // Note: Initial view/zoom is now controlled by the calling component (e.g., SonicGraphModal)
+    // Note: Initial view/zoom is now controlled by the calling component (SonicGraphView)
     // this.setInitialView(); // Removed to prevent zoom conflicts
   }
 
@@ -1015,7 +1015,7 @@ export class GraphRenderer {
    * Set zoom transform
    */
   /**
-   * Public method to set zoom transform (called by SonicGraphModal)
+   * Public method to set zoom transform (called by SonicGraphView)
    */
   setZoomTransform(transform: any): void {
     if (this.config.enableZoom && this.zoom) {

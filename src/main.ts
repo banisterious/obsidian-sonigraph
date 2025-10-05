@@ -56,15 +56,6 @@ export default class SonigraphPlugin extends Plugin {
 			}
 		});
 
-		// Add legacy modal command (temporary during transition)
-		this.addCommand({
-			id: 'open-sonic-graph-modal',
-			name: 'Open Sonic Graph (Modal - Legacy)',
-			callback: () => {
-				this.openSonicGraph();
-			}
-		});
-
 		// Add command to open Control Panel
 		this.addCommand({
 			id: 'open-control-panel',
@@ -238,20 +229,6 @@ export default class SonigraphPlugin extends Plugin {
 			workspace.revealLeaf(leaf);
 			logger.info('ui', 'Sonic Graph view activated and revealed');
 		}
-	}
-
-	/**
-	 * Open Sonic Graph modal (legacy method, kept for transition)
-	 */
-	public openSonicGraph(): void {
-		logger.info('ui', 'Opening Sonic Graph modal (legacy)');
-
-		import('./ui/SonicGraphModal').then(({ SonicGraphModal }) => {
-			const modal = new SonicGraphModal(this.app, this);
-			modal.open();
-		}).catch(error => {
-			logger.error('ui', 'Failed to open Sonic Graph modal:', error);
-		});
 	}
 
 	public openTestSuite(): void {
