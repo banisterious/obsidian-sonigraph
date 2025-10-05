@@ -526,9 +526,15 @@ export class SonicGraphView extends ItemView {
      * Setup divider drag functionality for resizing visual display panel
      */
     private setupDividerDrag(): void {
-        if (!this.visualDivider) return;
+        if (!this.visualDivider) {
+            logger.warn('visual-display', 'Cannot setup divider drag - visualDivider is null');
+            return;
+        }
+
+        logger.info('visual-display', 'Setting up divider drag handlers');
 
         const onMouseDown = (e: MouseEvent) => {
+            logger.debug('visual-display', 'Divider mousedown event triggered');
             this.isDraggingDivider = true;
             document.body.style.cursor = 'ns-resize';
             document.body.style.userSelect = 'none';
@@ -548,9 +554,18 @@ export class SonicGraphView extends ItemView {
             const constrainedHeight = Math.max(150, Math.min(400, newHeight));
 
             this.visualDisplayHeight = constrainedHeight;
-            // Update via CSS custom property
-            this.visualDisplaySection.setCssStyles({
-                '--visual-display-height': `${constrainedHeight}px`
+
+            // Update via CSS custom property using DOM API directly
+            (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${constrainedHeight}px`);
+
+            // Verify the property was set
+            const appliedValue = (this.visualDisplaySection as HTMLElement).style.getPropertyValue('--visual-display-height');
+
+            logger.debug('visual-display', 'Divider dragged - new height', {
+                requested: constrainedHeight,
+                applied: appliedValue,
+                computedMinHeight: getComputedStyle(this.visualDisplaySection as HTMLElement).minHeight,
+                computedMaxHeight: getComputedStyle(this.visualDisplaySection as HTMLElement).maxHeight
             });
         };
 
@@ -561,13 +576,15 @@ export class SonicGraphView extends ItemView {
                 document.body.style.userSelect = '';
 
                 // Save height preference
-                logger.debug('visual-display', 'Saved visual display height', this.visualDisplayHeight);
+                logger.info('visual-display', 'Saved visual display height', this.visualDisplayHeight);
             }
         };
 
-        this.addEventListener(this.visualDivider, 'mousedown', onMouseDown);
-        this.addEventListener(document, 'mousemove', onMouseMove as EventListener);
-        this.addEventListener(document, 'mouseup', onMouseUp);
+        this.registerDomEvent(this.visualDivider, 'mousedown', onMouseDown);
+        this.registerDomEvent(document, 'mousemove', onMouseMove);
+        this.registerDomEvent(document, 'mouseup', onMouseUp);
+
+        logger.info('visual-display', 'Divider drag handlers registered successfully');
     }
 
     /**
@@ -612,10 +629,8 @@ export class SonicGraphView extends ItemView {
             logger.debug('visual-display', 'Added collapsed class after setState');
         }
 
-        // Update height
-        this.visualDisplaySection.setCssStyles({
-            '--visual-display-height': `${this.visualDisplayHeight}px`
-        });
+        // Update height via CSS custom property using DOM API
+        (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
 
         // Update visualization manager config if it exists
         if (this.visualizationManager) {
@@ -917,10 +932,8 @@ export class SonicGraphView extends ItemView {
             this.visualDisplaySection.removeClass('collapsed');
             logger.debug('visual-display', 'Visual display section created as expanded');
         }
-        // Set height via CSS custom property instead of inline style
-        this.visualDisplaySection.setCssStyles({
-            '--visual-display-height': `${this.visualDisplayHeight}px`
-        });
+        // Set height via CSS custom property using DOM API
+        (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
 
         // Visual display header
         const visualHeader = this.visualDisplaySection.createDiv({ cls: 'sonic-graph-visual-display-header' });
@@ -953,7 +966,7 @@ export class SonicGraphView extends ItemView {
             text: this.isVisualDisplayVisible ? '▼' : '▲',
             cls: 'sonic-graph-visual-collapse-btn'
         });
-        this.addEventListener(collapseBtn, 'click', () => this.toggleVisualDisplay(collapseBtn));
+        this.registerDomEvent(collapseBtn, 'click', () => this.toggleVisualDisplay(collapseBtn));
 
         // Visual display content area
         this.visualDisplayContent = this.visualDisplaySection.createDiv({
@@ -986,7 +999,7 @@ export class SonicGraphView extends ItemView {
         this.timelineScrubber.min = '0';
         this.timelineScrubber.max = '100';
         this.timelineScrubber.value = '0';
-        this.addEventListener(this.timelineScrubber, 'input', () => this.handleTimelineScrub());
+        this.registerDomEvent(this.timelineScrubber, 'input', () => this.handleTimelineScrub());
         
         // Unified timeline info with single timeline bar
         this.timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
@@ -1045,7 +1058,7 @@ export class SonicGraphView extends ItemView {
             const option = this.speedSelect.createEl('option', { text: speed, value: speed });
             if (speed === savedSpeedString) option.selected = true;
         });
-        this.addEventListener(this.speedSelect, 'change', () => this.handleSpeedChange());
+        this.registerDomEvent(this.speedSelect, 'change', () => this.handleSpeedChange());
         
         // Center - Stats
         const statsControls = this.controlsContainer.createDiv({ cls: 'sonic-graph-stats-controls' });
@@ -1063,7 +1076,7 @@ export class SonicGraphView extends ItemView {
         const viewModeIcon = createLucideIcon('eye', 16);
         this.viewModeBtn.appendChild(viewModeIcon);
         this.viewModeBtn.appendText('Static View');
-        this.addEventListener(this.viewModeBtn, 'click', () => this.toggleViewMode());
+        this.registerDomEvent(this.viewModeBtn, 'click', () => this.toggleViewMode());
         
         // Reset view button
         const resetViewBtn = viewControls.createEl('button', { 

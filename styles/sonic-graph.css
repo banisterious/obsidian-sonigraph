@@ -3076,7 +3076,7 @@
 
 /* Top section: Graph view */
 .sonic-graph-section {
-  flex: 1;
+  flex: 1 1 auto; /* Allow shrinking when visual display is resized */
   min-height: 200px;
   position: relative;
   overflow: hidden;
@@ -3126,17 +3126,18 @@
 /* Bottom section: Visual display panel */
 .sonic-graph-visual-display-section {
   --visual-display-height: 250px; /* Default height, can be overridden */
-  height: var(--visual-display-height);
+  min-height: var(--visual-display-height);
+  max-height: var(--visual-display-height);
+  flex-shrink: 0;
   background: var(--background-primary);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  transition: height 0.3s ease;
   overflow: hidden;
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 32px !important; /* Header-only height when collapsed */
+  min-height: 32px !important;
+  max-height: 32px !important;
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
