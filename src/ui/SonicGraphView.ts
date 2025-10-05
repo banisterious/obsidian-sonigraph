@@ -38,6 +38,10 @@ export interface SonicGraphViewState {
 
     // View configuration
     detectedSpacing: 'dense' | 'balanced' | 'sparse';
+
+    // Visual display state
+    isVisualDisplayVisible: boolean;
+    visualDisplayHeight: number;
 }
 
 export class SonicGraphView extends ItemView {
@@ -84,6 +88,14 @@ export class SonicGraphView extends ItemView {
     private settingsPanel: HTMLElement;
     private settingsButton: HTMLButtonElement;
     private isSettingsVisible: boolean = false;
+
+    // Visual display panel elements
+    private visualDisplaySection: HTMLElement | null = null;
+    private visualDisplayContent: HTMLElement | null = null;
+    private visualDivider: HTMLElement | null = null;
+    private isVisualDisplayVisible: boolean = false;
+    private visualDisplayHeight: number = 250; // Default height in pixels
+    private isDraggingDivider: boolean = false;
     
     // Audio density tracking for even distribution
     private nodeAppearanceCounter: number = 0;
@@ -173,6 +185,16 @@ export class SonicGraphView extends ItemView {
             logger.debug('state', 'Restored isSettingsVisible', this.isSettingsVisible);
         }
 
+        if (viewState.isVisualDisplayVisible !== undefined) {
+            this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
+            logger.debug('state', 'Restored isVisualDisplayVisible', this.isVisualDisplayVisible);
+        }
+
+        if (viewState.visualDisplayHeight !== undefined) {
+            this.visualDisplayHeight = viewState.visualDisplayHeight;
+            logger.debug('state', 'Restored visualDisplayHeight', this.visualDisplayHeight);
+        }
+
         // Store timeline position and speed for restoration after graph initialization
         if (viewState.currentTimelinePosition !== undefined || viewState.animationSpeed !== undefined) {
             // We'll apply these values after the UI is fully initialized
@@ -223,7 +245,11 @@ export class SonicGraphView extends ItemView {
             isSettingsVisible: this.isSettingsVisible,
 
             // View configuration
-            detectedSpacing: this.detectedSpacing
+            detectedSpacing: this.detectedSpacing,
+
+            // Visual display state
+            isVisualDisplayVisible: this.isVisualDisplayVisible,
+            visualDisplayHeight: this.visualDisplayHeight
         };
 
         logger.info('state', 'Final state being returned from getState()', state);
@@ -477,6 +503,72 @@ export class SonicGraphView extends ItemView {
         }
     }
 
+    /**
+     * Setup divider drag functionality for resizing visual display panel
+     */
+    private setupDividerDrag(): void {
+        if (!this.visualDivider) return;
+
+        const onMouseDown = (e: MouseEvent) => {
+            this.isDraggingDivider = true;
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (!this.isDraggingDivider || !this.visualDisplaySection) return;
+
+            const container = this.visualDisplaySection.parentElement;
+            if (!container) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const newHeight = containerRect.bottom - e.clientY;
+
+            // Constrain height between 150px and 400px
+            const constrainedHeight = Math.max(150, Math.min(400, newHeight));
+
+            this.visualDisplayHeight = constrainedHeight;
+            this.visualDisplaySection.style.height = `${constrainedHeight}px`;
+        };
+
+        const onMouseUp = () => {
+            if (this.isDraggingDivider) {
+                this.isDraggingDivider = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+
+                // Save height preference
+                logger.debug('visual-display', 'Saved visual display height', this.visualDisplayHeight);
+            }
+        };
+
+        this.addEventListener(this.visualDivider, 'mousedown', onMouseDown);
+        this.addEventListener(document, 'mousemove', onMouseMove as EventListener);
+        this.addEventListener(document, 'mouseup', onMouseUp);
+    }
+
+    /**
+     * Toggle visual display panel visibility
+     */
+    private toggleVisualDisplay(collapseBtn: HTMLButtonElement): void {
+        if (!this.visualDisplaySection) return;
+
+        this.isVisualDisplayVisible = !this.isVisualDisplayVisible;
+
+        if (this.isVisualDisplayVisible) {
+            this.visualDisplaySection.removeClass('collapsed');
+            this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
+            collapseBtn.setText('▼');
+            logger.debug('visual-display', 'Visual display expanded');
+        } else {
+            this.visualDisplaySection.addClass('collapsed');
+            this.visualDisplaySection.style.height = '32px'; // Header only
+            collapseBtn.setText('▲');
+            logger.debug('visual-display', 'Visual display collapsed');
+        }
+    }
+
     async onClose() {
         logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
@@ -635,24 +727,84 @@ export class SonicGraphView extends ItemView {
      */
     private createMainContent(container: HTMLElement): void {
         const mainContent = container.createDiv({ cls: 'sonic-graph-main-content' });
-        
-        // Graph area (left side)
-        this.graphContainer = mainContent.createDiv({ cls: 'sonic-graph-container' });
-        
+
+        // Create split container for graph and visual display
+        const splitContainer = mainContent.createDiv({ cls: 'sonic-graph-split-container' });
+
+        // Top section: Graph area
+        const graphSection = splitContainer.createDiv({ cls: 'sonic-graph-section' });
+        this.graphContainer = graphSection.createDiv({ cls: 'sonic-graph-container' });
+
         // Graph canvas
         const graphCanvas = this.graphContainer.createDiv({ cls: 'sonic-graph-canvas' });
         graphCanvas.id = 'sonic-graph-canvas';
-        
+
         // Loading indicator
         const loadingIndicator = this.graphContainer.createDiv({ cls: 'sonic-graph-loading' });
         const loadingIcon = createLucideIcon('loader-2', 24);
         loadingIcon.addClass('sonic-graph-loading-icon');
         loadingIndicator.appendChild(loadingIcon);
         loadingIndicator.createSpan({ text: 'Loading graph...', cls: 'sonic-graph-loading-text' });
-        
+
         // Settings panel (right side, initially hidden)
-        this.settingsPanel = mainContent.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
+        this.settingsPanel = graphSection.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
         this.createSettingsContent();
+
+        // Resizable divider
+        this.visualDivider = splitContainer.createDiv({ cls: 'sonic-graph-visual-divider' });
+        const dividerHandle = this.visualDivider.createDiv({ cls: 'sonic-graph-visual-divider-handle' });
+
+        // Setup divider drag handlers
+        this.setupDividerDrag();
+
+        // Bottom section: Visual display panel
+        this.visualDisplaySection = splitContainer.createDiv({ cls: 'sonic-graph-visual-display-section' });
+        if (!this.isVisualDisplayVisible) {
+            this.visualDisplaySection.addClass('collapsed');
+        }
+        this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
+
+        // Visual display header
+        const visualHeader = this.visualDisplaySection.createDiv({ cls: 'sonic-graph-visual-display-header' });
+
+        const visualTitle = visualHeader.createDiv({ cls: 'sonic-graph-visual-display-title' });
+        visualTitle.createSpan({ text: '📊 Visual Note Display' });
+
+        const visualHeaderControls = visualHeader.createDiv({ cls: 'sonic-graph-visual-display-controls' });
+
+        // Mode tabs
+        const modeTabs = visualHeaderControls.createDiv({ cls: 'sonic-graph-visual-mode-tabs' });
+
+        const pianoRollTab = modeTabs.createEl('button', {
+            text: 'Piano Roll',
+            cls: 'sonic-graph-visual-mode-tab active'
+        });
+
+        const spectrumTab = modeTabs.createEl('button', {
+            text: 'Spectrum',
+            cls: 'sonic-graph-visual-mode-tab'
+        });
+
+        const staffTab = modeTabs.createEl('button', {
+            text: 'Staff',
+            cls: 'sonic-graph-visual-mode-tab'
+        });
+
+        // Collapse button
+        const collapseBtn = visualHeaderControls.createEl('button', {
+            text: this.isVisualDisplayVisible ? '▼' : '▲',
+            cls: 'sonic-graph-visual-collapse-btn'
+        });
+        this.addEventListener(collapseBtn, 'click', () => this.toggleVisualDisplay(collapseBtn));
+
+        // Visual display content area
+        this.visualDisplayContent = this.visualDisplaySection.createDiv({
+            cls: 'sonic-graph-visual-display-content'
+        });
+
+        // Placeholder content (will be replaced with actual visualization)
+        const placeholder = this.visualDisplayContent.createDiv({ cls: 'sonic-graph-visual-placeholder' });
+        placeholder.createSpan({ text: 'Visual note display will appear here during playback' });
     }
 
     /**

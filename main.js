@@ -70393,6 +70393,14 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
     this.wasAnimatingBeforeBackground = false;
     this.detectedSpacing = "balanced";
     this.isSettingsVisible = false;
+    // Visual display panel elements
+    this.visualDisplaySection = null;
+    this.visualDisplayContent = null;
+    this.visualDivider = null;
+    this.isVisualDisplayVisible = false;
+    this.visualDisplayHeight = 250;
+    // Default height in pixels
+    this.isDraggingDivider = false;
     // Audio density tracking for even distribution
     this.nodeAppearanceCounter = 0;
     this.lastAudioNodeIndex = -1;
@@ -70455,6 +70463,14 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
       this.isSettingsVisible = viewState.isSettingsVisible;
       logger62.debug("state", "Restored isSettingsVisible", this.isSettingsVisible);
     }
+    if (viewState.isVisualDisplayVisible !== void 0) {
+      this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
+      logger62.debug("state", "Restored isVisualDisplayVisible", this.isVisualDisplayVisible);
+    }
+    if (viewState.visualDisplayHeight !== void 0) {
+      this.visualDisplayHeight = viewState.visualDisplayHeight;
+      logger62.debug("state", "Restored visualDisplayHeight", this.visualDisplayHeight);
+    }
     if (viewState.currentTimelinePosition !== void 0 || viewState.animationSpeed !== void 0) {
       this._pendingState = {
         timelinePosition: viewState.currentTimelinePosition,
@@ -70494,7 +70510,10 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
       // Settings panel state
       isSettingsVisible: this.isSettingsVisible,
       // View configuration
-      detectedSpacing: this.detectedSpacing
+      detectedSpacing: this.detectedSpacing,
+      // Visual display state
+      isVisualDisplayVisible: this.isVisualDisplayVisible,
+      visualDisplayHeight: this.visualDisplayHeight
     };
     logger62.info("state", "Final state being returned from getState()", state);
     return state;
@@ -70682,6 +70701,61 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
       new import_obsidian24.Notice("Failed to initialize continuous audio layers");
     }
   }
+  /**
+   * Setup divider drag functionality for resizing visual display panel
+   */
+  setupDividerDrag() {
+    if (!this.visualDivider)
+      return;
+    const onMouseDown = (e) => {
+      this.isDraggingDivider = true;
+      document.body.style.cursor = "ns-resize";
+      document.body.style.userSelect = "none";
+      e.preventDefault();
+    };
+    const onMouseMove = (e) => {
+      if (!this.isDraggingDivider || !this.visualDisplaySection)
+        return;
+      const container = this.visualDisplaySection.parentElement;
+      if (!container)
+        return;
+      const containerRect = container.getBoundingClientRect();
+      const newHeight = containerRect.bottom - e.clientY;
+      const constrainedHeight = Math.max(150, Math.min(400, newHeight));
+      this.visualDisplayHeight = constrainedHeight;
+      this.visualDisplaySection.style.height = `${constrainedHeight}px`;
+    };
+    const onMouseUp = () => {
+      if (this.isDraggingDivider) {
+        this.isDraggingDivider = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        logger62.debug("visual-display", "Saved visual display height", this.visualDisplayHeight);
+      }
+    };
+    this.addEventListener(this.visualDivider, "mousedown", onMouseDown);
+    this.addEventListener(document, "mousemove", onMouseMove);
+    this.addEventListener(document, "mouseup", onMouseUp);
+  }
+  /**
+   * Toggle visual display panel visibility
+   */
+  toggleVisualDisplay(collapseBtn) {
+    if (!this.visualDisplaySection)
+      return;
+    this.isVisualDisplayVisible = !this.isVisualDisplayVisible;
+    if (this.isVisualDisplayVisible) {
+      this.visualDisplaySection.removeClass("collapsed");
+      this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
+      collapseBtn.setText("\u25BC");
+      logger62.debug("visual-display", "Visual display expanded");
+    } else {
+      this.visualDisplaySection.addClass("collapsed");
+      this.visualDisplaySection.style.height = "32px";
+      collapseBtn.setText("\u25B2");
+      logger62.debug("visual-display", "Visual display collapsed");
+    }
+  }
   async onClose() {
     logger62.info("ui", "Closing Sonic Graph view - starting cleanup");
     try {
@@ -70805,7 +70879,9 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
    */
   createMainContent(container) {
     const mainContent = container.createDiv({ cls: "sonic-graph-main-content" });
-    this.graphContainer = mainContent.createDiv({ cls: "sonic-graph-container" });
+    const splitContainer = mainContent.createDiv({ cls: "sonic-graph-split-container" });
+    const graphSection = splitContainer.createDiv({ cls: "sonic-graph-section" });
+    this.graphContainer = graphSection.createDiv({ cls: "sonic-graph-container" });
     const graphCanvas = this.graphContainer.createDiv({ cls: "sonic-graph-canvas" });
     graphCanvas.id = "sonic-graph-canvas";
     const loadingIndicator = this.graphContainer.createDiv({ cls: "sonic-graph-loading" });
@@ -70813,8 +70889,43 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
     loadingIcon.addClass("sonic-graph-loading-icon");
     loadingIndicator.appendChild(loadingIcon);
     loadingIndicator.createSpan({ text: "Loading graph...", cls: "sonic-graph-loading-text" });
-    this.settingsPanel = mainContent.createDiv({ cls: "sonic-graph-settings-panel hidden" });
+    this.settingsPanel = graphSection.createDiv({ cls: "sonic-graph-settings-panel hidden" });
     this.createSettingsContent();
+    this.visualDivider = splitContainer.createDiv({ cls: "sonic-graph-visual-divider" });
+    const dividerHandle = this.visualDivider.createDiv({ cls: "sonic-graph-visual-divider-handle" });
+    this.setupDividerDrag();
+    this.visualDisplaySection = splitContainer.createDiv({ cls: "sonic-graph-visual-display-section" });
+    if (!this.isVisualDisplayVisible) {
+      this.visualDisplaySection.addClass("collapsed");
+    }
+    this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
+    const visualHeader = this.visualDisplaySection.createDiv({ cls: "sonic-graph-visual-display-header" });
+    const visualTitle = visualHeader.createDiv({ cls: "sonic-graph-visual-display-title" });
+    visualTitle.createSpan({ text: "\u{1F4CA} Visual Note Display" });
+    const visualHeaderControls = visualHeader.createDiv({ cls: "sonic-graph-visual-display-controls" });
+    const modeTabs = visualHeaderControls.createDiv({ cls: "sonic-graph-visual-mode-tabs" });
+    const pianoRollTab = modeTabs.createEl("button", {
+      text: "Piano Roll",
+      cls: "sonic-graph-visual-mode-tab active"
+    });
+    const spectrumTab = modeTabs.createEl("button", {
+      text: "Spectrum",
+      cls: "sonic-graph-visual-mode-tab"
+    });
+    const staffTab = modeTabs.createEl("button", {
+      text: "Staff",
+      cls: "sonic-graph-visual-mode-tab"
+    });
+    const collapseBtn = visualHeaderControls.createEl("button", {
+      text: this.isVisualDisplayVisible ? "\u25BC" : "\u25B2",
+      cls: "sonic-graph-visual-collapse-btn"
+    });
+    this.addEventListener(collapseBtn, "click", () => this.toggleVisualDisplay(collapseBtn));
+    this.visualDisplayContent = this.visualDisplaySection.createDiv({
+      cls: "sonic-graph-visual-display-content"
+    });
+    const placeholder = this.visualDisplayContent.createDiv({ cls: "sonic-graph-visual-placeholder" });
+    placeholder.createSpan({ text: "Visual note display will appear here during playback" });
   }
   /**
    * Create timeline area (initially hidden)
