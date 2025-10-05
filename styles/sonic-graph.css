@@ -682,15 +682,14 @@
 
 /* Timeline */
 .sonic-graph-timeline {
-  margin-top: -120px;
   padding: var(--osp-spacing-xs) var(--osp-spacing-md);
   height: 115px;
   border-top: 1px solid var(--background-modifier-border);
+  border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
   flex-shrink: 0;
   overflow-y: auto;
   position: relative;
-  z-index: 10; /* Ensure timeline appears above visual display */
 }
 
 .sonic-graph-scrubber-container {

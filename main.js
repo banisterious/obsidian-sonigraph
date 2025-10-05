@@ -71345,12 +71345,9 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       logger65.info("sonic-graph-init", "Creating header");
       this.createHeader(viewContainer);
       logger65.info("sonic-graph-init", "Header created successfully");
-      logger65.info("sonic-graph-init", "Creating main content");
+      logger65.info("sonic-graph-init", "Creating main content (includes timeline)");
       this.createMainContent(viewContainer);
       logger65.info("sonic-graph-init", "Main content created successfully");
-      logger65.info("sonic-graph-init", "Creating timeline area");
-      this.createTimelineArea(viewContainer);
-      logger65.info("sonic-graph-init", "Timeline area created successfully");
       logger65.info("sonic-graph-init", "Creating controls area");
       this.createControlsArea(viewContainer);
       logger65.info("sonic-graph-init", "Controls area created successfully");
@@ -71817,6 +71814,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     loadingIndicator.createSpan({ text: "Loading graph...", cls: "sonic-graph-loading-text" });
     this.settingsPanel = graphSection.createDiv({ cls: "sonic-graph-settings-panel hidden" });
     this.createSettingsContent();
+    this.createTimelineArea(splitContainer);
     this.visualDivider = splitContainer.createDiv({ cls: "sonic-graph-visual-divider" });
     const dividerHandle = this.visualDivider.createDiv({ cls: "sonic-graph-visual-divider-handle" });
     this.setupDividerDrag();

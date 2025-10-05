@@ -297,13 +297,9 @@ export class SonicGraphView extends ItemView {
             this.createHeader(viewContainer);
             logger.info('sonic-graph-init', 'Header created successfully');
             
-            logger.info('sonic-graph-init', 'Creating main content');
+            logger.info('sonic-graph-init', 'Creating main content (includes timeline)');
             this.createMainContent(viewContainer);
             logger.info('sonic-graph-init', 'Main content created successfully');
-
-            logger.info('sonic-graph-init', 'Creating timeline area');
-            this.createTimelineArea(viewContainer);
-            logger.info('sonic-graph-init', 'Timeline area created successfully');
 
             logger.info('sonic-graph-init', 'Creating controls area');
             this.createControlsArea(viewContainer);
@@ -919,6 +915,9 @@ export class SonicGraphView extends ItemView {
         // Settings panel (right side, initially hidden)
         this.settingsPanel = graphSection.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
         this.createSettingsContent();
+
+        // Timeline area (between graph and visual display)
+        this.createTimelineArea(splitContainer);
 
         // Resizable divider
         this.visualDivider = splitContainer.createDiv({ cls: 'sonic-graph-visual-divider' });
