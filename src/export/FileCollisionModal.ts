@@ -36,7 +36,8 @@ export class FileCollisionModal extends Modal {
         super(app);
         this.filePath = filePath;
         this.resolveCallback = resolveCallback;
-        this.existingFile = this.app.vault.getAbstractFileByPath(filePath) as TFile;
+        const file = this.app.vault.getAbstractFileByPath(filePath);
+        this.existingFile = (file && file instanceof TFile) ? file : null;
 
         // Generate suggested alternative filename
         this.suggestedName = this.generateAlternativeName(filePath);

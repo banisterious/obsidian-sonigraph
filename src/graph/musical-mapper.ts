@@ -716,7 +716,7 @@ export class MusicalMapper {
 			const analysisResults: MetadataAnalysisResult[] = [];
 
 			for (const node of nodes) {
-				const file = this.app.vault.getAbstractFileByPath(node.path) as TFile;
+				const file = this.app.vault.getAbstractFileByPath(node.path);
 				if (file && file instanceof TFile) {
 					files.push(file);
 					

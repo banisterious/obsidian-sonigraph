@@ -252,13 +252,16 @@ export class ConnectionTypeMapper {
         link: GraphLink
     ): Promise<ConnectionAnalysis | null> {
         try {
-            const sourceFile = this.app.vault.getAbstractFileByPath(sourceNode.id) as TFile;
-            if (!sourceFile) {
+            const sourceFile = this.app.vault.getAbstractFileByPath(sourceNode.id);
+            if (!sourceFile || !(sourceFile instanceof TFile)) {
                 return null;
             }
 
             const targetFile = targetNode ?
-                this.app.vault.getAbstractFileByPath(targetNode.id) as TFile : null;
+                this.app.vault.getAbstractFileByPath(targetNode.id) : null;
+            if (targetFile && !(targetFile instanceof TFile)) {
+                return null;
+            }
 
             const metadata = this.app.metadataCache.getFileCache(sourceFile);
             if (!metadata) {

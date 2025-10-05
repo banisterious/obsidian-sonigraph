@@ -496,8 +496,8 @@ export class GraphDataExtractor {
     const tagIndex = new Map<string, GraphNode[]>();
     
     for (const node of nodes) {
-      const file = this.vault.getAbstractFileByPath(node.path) as TFile;
-      if (!file) continue;
+      const file = this.vault.getAbstractFileByPath(node.path);
+      if (!file || !(file instanceof TFile)) continue;
       
       const metadata = this.metadataCache.getFileCache(file);
       if (!metadata?.tags) continue;
