@@ -268,8 +268,14 @@ export class SonicGraphView extends ItemView {
 
     async onOpen() {
         logger.info('sonic-graph-init', 'View onOpen() started');
-        
+
         try {
+            // Initialize visual display settings from plugin settings if not already set by setState
+            if (!this.isVisualDisplayVisible && this.plugin.settings.sonicGraphSettings?.visualDisplay?.enabled) {
+                this.isVisualDisplayVisible = true;
+                logger.debug('sonic-graph-init', 'Initialized visual display from settings in onOpen');
+            }
+
             const { contentEl } = this;
             logger.info('sonic-graph-init', 'ContentEl acquired, emptying');
             contentEl.empty();
@@ -611,6 +617,12 @@ export class SonicGraphView extends ItemView {
 
             // Add some demo notes for testing
             this.addDemoNotes();
+
+            // Trigger initial render to show static piano roll with demo notes
+            if (this.isVisualDisplayVisible) {
+                this.visualizationManager.start(0);
+                logger.debug('visual-display', 'Started visualization for initial render');
+            }
 
             logger.info('visual-display', 'Visualization manager initialized successfully');
         } catch (error) {

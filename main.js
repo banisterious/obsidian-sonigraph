@@ -71197,6 +71197,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     return "chart-network";
   }
   async setState(state, result) {
+    var _a, _b, _c, _d, _e, _f;
     logger65.debug("state", "Restoring view state", state);
     await super.setState(state, result);
     if (!state || typeof state !== "object") {
@@ -71222,10 +71223,16 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     if (viewState.isVisualDisplayVisible !== void 0) {
       this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
       logger65.debug("state", "Restored isVisualDisplayVisible", this.isVisualDisplayVisible);
+    } else {
+      this.isVisualDisplayVisible = (_c = (_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.enabled) != null ? _c : true;
+      logger65.debug("state", "Initialized isVisualDisplayVisible from settings", this.isVisualDisplayVisible);
     }
     if (viewState.visualDisplayHeight !== void 0) {
       this.visualDisplayHeight = viewState.visualDisplayHeight;
       logger65.debug("state", "Restored visualDisplayHeight", this.visualDisplayHeight);
+    } else {
+      this.visualDisplayHeight = (_f = (_e = (_d = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _d.visualDisplay) == null ? void 0 : _e.height) != null ? _f : 250;
+      logger65.debug("state", "Initialized visualDisplayHeight from settings", this.visualDisplayHeight);
     }
     if (viewState.currentTimelinePosition !== void 0 || viewState.animationSpeed !== void 0) {
       this._pendingState = {
@@ -71275,8 +71282,13 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     return state;
   }
   async onOpen() {
+    var _a, _b;
     logger65.info("sonic-graph-init", "View onOpen() started");
     try {
+      if (!this.isVisualDisplayVisible && ((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.enabled)) {
+        this.isVisualDisplayVisible = true;
+        logger65.debug("sonic-graph-init", "Initialized visual display from settings in onOpen");
+      }
       const { contentEl } = this;
       logger65.info("sonic-graph-init", "ContentEl acquired, emptying");
       contentEl.empty();
@@ -71516,23 +71528,29 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
    * Initialize the visual note display manager
    */
   initializeVisualizationManager() {
+    var _a, _b, _c, _d;
     if (!this.visualDisplayContent) {
       logger65.warn("visual-display", "Cannot initialize visualization manager without content container");
       return;
     }
     try {
       logger65.info("visual-display", "Initializing visualization manager");
+      const visualSettings = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay;
       this.visualizationManager = new NoteVisualizationManager({
-        mode: "piano-roll",
+        mode: (visualSettings == null ? void 0 : visualSettings.mode) || "piano-roll",
         enabled: this.isVisualDisplayVisible,
-        frameRate: 30,
-        colorScheme: "layer",
-        showLabels: true,
-        showGrid: true,
-        enableTrails: false
+        frameRate: (visualSettings == null ? void 0 : visualSettings.frameRate) || 30,
+        colorScheme: (visualSettings == null ? void 0 : visualSettings.colorScheme) || "layer",
+        showLabels: (_b = visualSettings == null ? void 0 : visualSettings.showLabels) != null ? _b : true,
+        showGrid: (_c = visualSettings == null ? void 0 : visualSettings.showGrid) != null ? _c : true,
+        enableTrails: (_d = visualSettings == null ? void 0 : visualSettings.enableTrails) != null ? _d : false
       });
       this.visualizationManager.initialize(this.visualDisplayContent);
       this.addDemoNotes();
+      if (this.isVisualDisplayVisible) {
+        this.visualizationManager.start(0);
+        logger65.debug("visual-display", "Started visualization for initial render");
+      }
       logger65.info("visual-display", "Visualization manager initialized successfully");
     } catch (error) {
       logger65.error("visual-display", "Failed to initialize visualization manager", error);
