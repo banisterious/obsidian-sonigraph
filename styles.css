@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-05 18:51:40 UTC
+ * - Generated: 2025-10-05 18:53:44 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6675,7 +6675,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 3236 lines, 69.81 KB */
+/* Component Size: 3237 lines, 69.94 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9804,7 +9804,8 @@ details.osp-advanced-settings {
 
 /* Bottom section: Visual display panel */
 .sonic-graph-visual-display-section {
-  height: 250px;
+  --visual-display-height: 250px; /* Default height, can be overridden */
+  height: var(--visual-display-height);
   background: var(--background-primary);
   display: flex;
   flex-direction: column;
@@ -9814,7 +9815,7 @@ details.osp-advanced-settings {
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 40px !important;
+  height: 40px !important; /* Header-only height when collapsed */
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
@@ -11568,10 +11569,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-05 18:51:40 UTC
+ * Build completed: 2025-10-05 18:53:44 UTC
  * Components processed: 20
- * Total lines: 11362
- * Total size: 241.52 KB
+ * Total lines: 11363
+ * Total size: 241.65 KB
  * Build duration: 0.03 seconds
  * 
  * Component breakdown:
@@ -11589,7 +11590,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
- * - sonic-graph.css: 3236 lines, 69.81 KB
+ * - sonic-graph.css: 3237 lines, 69.94 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

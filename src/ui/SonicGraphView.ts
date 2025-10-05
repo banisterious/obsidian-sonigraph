@@ -531,7 +531,10 @@ export class SonicGraphView extends ItemView {
             const constrainedHeight = Math.max(150, Math.min(400, newHeight));
 
             this.visualDisplayHeight = constrainedHeight;
-            this.visualDisplaySection.style.height = `${constrainedHeight}px`;
+            // Update via CSS custom property
+            this.visualDisplaySection.setCssStyles({
+                '--visual-display-height': `${constrainedHeight}px`
+            });
         };
 
         const onMouseUp = () => {
@@ -560,12 +563,10 @@ export class SonicGraphView extends ItemView {
 
         if (this.isVisualDisplayVisible) {
             this.visualDisplaySection.removeClass('collapsed');
-            this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
             collapseBtn.setText('▼');
             logger.debug('visual-display', 'Visual display expanded');
         } else {
             this.visualDisplaySection.addClass('collapsed');
-            this.visualDisplaySection.style.height = '40px'; // Header only
             collapseBtn.setText('▲');
             logger.debug('visual-display', 'Visual display collapsed');
         }
@@ -808,7 +809,10 @@ export class SonicGraphView extends ItemView {
         if (!this.isVisualDisplayVisible) {
             this.visualDisplaySection.addClass('collapsed');
         }
-        this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
+        // Set height via CSS custom property instead of inline style
+        this.visualDisplaySection.setCssStyles({
+            '--visual-display-height': `${this.visualDisplayHeight}px`
+        });
 
         // Visual display header
         const visualHeader = this.visualDisplaySection.createDiv({ cls: 'sonic-graph-visual-display-header' });

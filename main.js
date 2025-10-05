@@ -70939,7 +70939,9 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
       const newHeight = containerRect.bottom - e.clientY;
       const constrainedHeight = Math.max(150, Math.min(400, newHeight));
       this.visualDisplayHeight = constrainedHeight;
-      this.visualDisplaySection.style.height = `${constrainedHeight}px`;
+      this.visualDisplaySection.setCssStyles({
+        "--visual-display-height": `${constrainedHeight}px`
+      });
     };
     const onMouseUp = () => {
       if (this.isDraggingDivider) {
@@ -70962,12 +70964,10 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
     this.isVisualDisplayVisible = !this.isVisualDisplayVisible;
     if (this.isVisualDisplayVisible) {
       this.visualDisplaySection.removeClass("collapsed");
-      this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
       collapseBtn.setText("\u25BC");
       logger63.debug("visual-display", "Visual display expanded");
     } else {
       this.visualDisplaySection.addClass("collapsed");
-      this.visualDisplaySection.style.height = "40px";
       collapseBtn.setText("\u25B2");
       logger63.debug("visual-display", "Visual display collapsed");
     }
@@ -71149,7 +71149,9 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
     if (!this.isVisualDisplayVisible) {
       this.visualDisplaySection.addClass("collapsed");
     }
-    this.visualDisplaySection.style.height = `${this.visualDisplayHeight}px`;
+    this.visualDisplaySection.setCssStyles({
+      "--visual-display-height": `${this.visualDisplayHeight}px`
+    });
     const visualHeader = this.visualDisplaySection.createDiv({ cls: "sonic-graph-visual-display-header" });
     const visualTitle = visualHeader.createDiv({ cls: "sonic-graph-visual-display-title" });
     visualTitle.createSpan({ text: "\u{1F4CA} Visual Note Display" });

@@ -3125,7 +3125,8 @@
 
 /* Bottom section: Visual display panel */
 .sonic-graph-visual-display-section {
-  height: 250px;
+  --visual-display-height: 250px; /* Default height, can be overridden */
+  height: var(--visual-display-height);
   background: var(--background-primary);
   display: flex;
   flex-direction: column;
@@ -3135,7 +3136,7 @@
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 40px !important;
+  height: 40px !important; /* Header-only height when collapsed */
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
