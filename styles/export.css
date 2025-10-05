@@ -131,9 +131,14 @@
 
 /* Custom Range Container */
 .sonigraph-custom-range-container {
+	display: none; /* Hidden by default */
 	margin-top: var(--size-4-3);
 	padding-top: var(--size-4-3);
 	border-top: 1px dashed var(--background-modifier-border);
+}
+
+.sonigraph-custom-range-container--visible {
+	display: block;
 }
 
 /* Collapsible Section Headers (Metadata & Advanced) */
@@ -171,7 +176,13 @@
 
 .sonigraph-export-metadata-content,
 .sonigraph-export-advanced-content {
+	display: none; /* Hidden by default */
 	padding-top: var(--size-4-2);
+}
+
+.sonigraph-export-metadata-content--visible,
+.sonigraph-export-advanced-content--visible {
+	display: block;
 }
 
 /* Action Buttons */
@@ -276,10 +287,15 @@
 
 /* Progress Details (for long exports) */
 .export-progress-details {
+	display: none; /* Hidden by default */
 	margin: var(--size-4-4) 0;
 	padding: var(--size-4-3);
 	background: var(--background-secondary);
 	border-radius: var(--radius-s);
+}
+
+.export-progress-details--visible {
+	display: block;
 }
 
 .export-progress-stage-indicator,

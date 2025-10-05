@@ -233,14 +233,13 @@ export function setLucideIcon(
   
   // Set the icon using Obsidian's setIcon function
   setIcon(element, actualIconName);
-  
-  // Add classes for styling
+
+  // Add classes for styling (layout handled by CSS)
   element.addClass('lucide-icon');
+
+  // Set size dynamically (must remain in JS)
   element.style.width = `${size}px`;
   element.style.height = `${size}px`;
-  element.style.display = 'inline-flex';
-  element.style.alignItems = 'center';
-  element.style.justifyContent = 'center';
 }
 
 /**

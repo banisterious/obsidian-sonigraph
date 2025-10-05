@@ -562,14 +562,13 @@ export class MaterialControlPanelModal extends Modal {
 		// Only show configuration if enabled
 		if (this.plugin.settings.enableFreesoundSamples) {
 			// Description paragraph
-			const descriptionEl = settingsSection.createEl('p', {
+			settingsSection.createEl('p', {
 				text: 'Enter your API key from Freesound.org here. Get your free API key at: https://freesound.org/apiv2/apply/',
 				cls: 'osp-settings-description'
 			});
-			descriptionEl.style.marginBottom = '10px';
 
 			// API Key field with test button
-			const apiKeyContainer = settingsSection.createDiv({ cls: 'osp-settings-item' });
+			const apiKeyContainer = settingsSection.createDiv({ cls: 'osp-settings-item osp-settings-description--wide-input' });
 
 			new Setting(apiKeyContainer)
 				.setName('API key')
@@ -582,8 +581,6 @@ export class MaterialControlPanelModal extends Modal {
 							await this.plugin.saveSettings();
 							logger.info('freesound', 'Freesound API key updated');
 						});
-					text.inputEl.style.width = '400px';
-					text.inputEl.style.fontFamily = 'monospace';
 					text.inputEl.style.fontSize = '13px';
 				})
 				.addButton(button => {
@@ -596,15 +593,11 @@ export class MaterialControlPanelModal extends Modal {
 				});
 
 			// Security note
-			const securityNote = settingsSection.createEl('p', {
+			settingsSection.createEl('p', {
 				text: 'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
 					  'Only share your vault if you trust recipients with API access.',
-				cls: 'osp-settings-note'
+				cls: 'osp-security-note'
 			});
-			securityNote.style.fontSize = '12px';
-			securityNote.style.color = 'var(--text-muted)';
-			securityNote.style.marginTop = '8px';
-			securityNote.style.marginBottom = '16px';
 			// Preloading and Caching Settings
 			new Setting(settingsSection).setHeading().setName('Preloading and caching');
 
@@ -1491,8 +1484,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 		
 		// Export Logs Action Chip
-		const logChipSet = loggingContent.createDiv({ cls: 'ospcc-chip-set' });
-		logChipSet.style.marginTop = 'var(--md-space-4)';
+		const logChipSet = loggingContent.createDiv({ cls: 'ospcc-chip-set osp-logging-chip-set' });
 		
 		const exportLogsChip = new ActionChip({
 			text: 'Export logs',
@@ -1690,8 +1682,7 @@ export class MaterialControlPanelModal extends Modal {
 		`;
 
 		// Settings section
-		const settingsSection = content.createDiv({ cls: 'osp-settings-section' });
-		settingsSection.style.marginBottom = 'var(--md-space-4)';
+		const settingsSection = content.createDiv({ cls: 'osp-settings-section osp-settings-section--spaced' });
 		
 		// Show file names toggle
 		logger.debug('ui', `Creating show file names toggle with initial state: ${this.showFileNames}`);
@@ -1913,8 +1904,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createExclusionFields(container: HTMLElement): void {
 		// Exclude folders section
-		const excludeFoldersSection = container.createDiv({ cls: 'osp-exclusion-section' });
-		excludeFoldersSection.style.marginTop = 'var(--md-space-4)';
+		const excludeFoldersSection = container.createDiv({ cls: 'osp-exclusion-section osp-exclusion-section--spaced' });
 		
 		const foldersLabel = excludeFoldersSection.createDiv({ cls: 'osp-exclusion-label' });
 		foldersLabel.textContent = 'Exclude folders';
@@ -1932,8 +1922,7 @@ export class MaterialControlPanelModal extends Modal {
 		addFolderBtn.addEventListener('click', () => this.openFolderSuggestModal());
 
 		// Exclude files section
-		const excludeFilesSection = container.createDiv({ cls: 'osp-exclusion-section' });
-		excludeFilesSection.style.marginTop = 'var(--md-space-4)';
+		const excludeFilesSection = container.createDiv({ cls: 'osp-exclusion-section osp-exclusion-section--spaced' });
 		
 		const filesLabel = excludeFilesSection.createDiv({ cls: 'osp-exclusion-label' });
 		filesLabel.textContent = 'Exclude files';
@@ -2408,8 +2397,7 @@ export class MaterialControlPanelModal extends Modal {
 		);
 
 		// Status information section
-		const statusSection = content.createDiv({ cls: 'osp-whale-status' });
-		statusSection.style.marginTop = 'var(--md-space-4)';
+		const statusSection = content.createDiv({ cls: 'osp-whale-status osp-whale-status--spaced' });
 
 		// Sample collection status
 		const collectionRow = statusSection.createDiv({ cls: 'osp-info-row' });
@@ -2436,8 +2424,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 
 		// Action buttons section
-		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
-		actionsRow.style.marginTop = 'var(--md-space-4)';
+		const actionsRow = content.createDiv({ cls: 'osp-actions-row osp-actions-row--spaced' });
 
 		// Download samples button
 		const downloadBtn = actionsRow.createEl('button', {

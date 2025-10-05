@@ -2337,7 +2337,7 @@
 .freesound-clear-btn {
   position: absolute;
   right: 108px;
-  display: flex;
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
   padding: 4px;
@@ -2347,6 +2347,10 @@
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
+}
+
+.freesound-clear-btn--visible {
+  display: flex;
 }
 
 .freesound-clear-btn:hover {
@@ -2500,7 +2504,7 @@
 }
 
 .freesound-filter-badge {
-  display: flex;
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
   min-width: 20px;
@@ -2512,6 +2516,10 @@
   font-size: 11px;
   font-weight: 600;
   font-family: var(--font-interface);
+}
+
+.freesound-filter-badge--visible {
+  display: flex;
 }
 
 .freesound-clear-filters-btn {
@@ -2538,6 +2546,10 @@
   grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
   transition: all 0.3s ease;
+}
+
+.freesound-filters-grid--hidden {
+  display: none;
 }
 
 @media (max-width: 700px) {
@@ -2944,4 +2956,108 @@
   height: 20px;
   background: var(--background-modifier-border);
   border-radius: 4px;
+}
+
+/* ===================================
+   SONIC GRAPH MODAL & VIEW UTILITIES
+   ================================== */
+
+/* Display state utilities */
+.sonigraph-hidden {
+  display: none;
+}
+
+.sonigraph-visible {
+  display: block;
+}
+
+.sonigraph-visible-inline {
+  display: inline-flex;
+}
+
+/* Current time indicator */
+.sonigraph-current-indicator {
+  display: none; /* Hidden by default */
+}
+
+.sonigraph-current-indicator--visible {
+  display: block;
+}
+
+/* View mode button */
+.sonigraph-view-mode-btn--visible {
+  display: inline-flex;
+}
+
+/* Timeline markers container */
+.sonigraph-timeline-markers {
+  display: none; /* Hidden by default */
+}
+
+.sonigraph-timeline-markers--visible {
+  display: block;
+}
+
+/* Custom range element */
+.sonigraph-custom-range--visible {
+  display: block;
+}
+
+/* Progress indicator */
+.sonigraph-progress-indicator {
+  display: none; /* Hidden by default */
+}
+
+.sonigraph-progress-indicator--visible {
+  display: flex;
+}
+
+/* Color picker positioning (absolute positioning stays in JS) */
+.sonigraph-color-picker {
+  position: absolute;
+}
+
+/* Group search input */
+.sonigraph-group-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
+.sonigraph-group-search-input--highlighted {
+  background-color: #fef3c7; /* Light yellow background */
+}
+
+/* Autocomplete overlay (positioning stays in JS) */
+.sonigraph-autocomplete-overlay {
+  position: absolute;
+  background-color: var(--background-primary);
+  padding: 8px;
+}
+
+/* Autocomplete option */
+.sonigraph-autocomplete-option {
+  padding: 4px 8px;
+  background: transparent;
+  transition: background-color 0.2s;
+}
+
+.sonigraph-autocomplete-option:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+/* Group label and button colors */
+.sonigraph-group-label {
+  color: var(--text-normal);
+}
+
+.sonigraph-group-remove-btn {
+  color: var(--text-muted);
+  padding: 2px 4px;
+  margin-left: 8px;
+}
+
+/* Color dot background (dynamic, but base styles here) */
+.sonigraph-group-color-dot {
+  /* Background color set dynamically via JS */
 }

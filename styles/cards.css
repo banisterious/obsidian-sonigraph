@@ -415,6 +415,10 @@
   margin-top: 16px;
 }
 
+.sonigraph-onboarding-bordered--dismissed {
+  display: none;
+}
+
 /* ==========================================================================
    MATERIAL DESIGN CARDS
    ========================================================================== */
@@ -434,6 +438,49 @@
 
 .ospcc-card:first-of-type {
   margin-top: 0;
+}
+
+/* Material Design Stat Cards */
+.ospcc-stat-card {
+  padding: var(--md-space-4);
+  border-radius: var(--md-corner-sm);
+  text-align: center;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.ospcc-stat-card--clickable {
+  cursor: pointer;
+}
+
+.ospcc-stat-card--clickable:hover {
+  background: var(--md-surface-container-high);
+}
+
+.ospcc-stat-card__icon {
+  margin-bottom: var(--md-space-2);
+}
+
+.ospcc-stat-card__icon--primary { color: var(--md-primary); }
+.ospcc-stat-card__icon--success { color: var(--md-success); }
+.ospcc-stat-card__icon--warning { color: var(--md-warning); }
+.ospcc-stat-card__icon--error { color: var(--md-error); }
+
+.ospcc-stat-card__value {
+  font-size: var(--md-font-headline-small);
+  font-weight: 700;
+  margin-bottom: var(--md-space-1);
+}
+
+.ospcc-stat-card__value--primary { color: var(--md-primary); }
+.ospcc-stat-card__value--success { color: var(--md-success); }
+.ospcc-stat-card__value--warning { color: var(--md-warning); }
+.ospcc-stat-card__value--error { color: var(--md-error); }
+
+.ospcc-stat-card__label {
+  font-size: var(--md-font-label-medium);
+  color: var(--md-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ospcc-card__header {

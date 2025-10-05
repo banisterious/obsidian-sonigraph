@@ -271,10 +271,6 @@ export class SonicGraphFreesoundSettings {
 
 		// Action buttons section
 		const actionsDiv = content.createDiv({ cls: 'osp-settings-actions' });
-		actionsDiv.style.marginTop = '1rem';
-		actionsDiv.style.display = 'flex';
-		actionsDiv.style.gap = '0.5rem';
-		actionsDiv.style.flexWrap = 'wrap';
 
 		// Note about preset management
 		const noteDiv = content.createDiv({ cls: 'osp-settings-note' });

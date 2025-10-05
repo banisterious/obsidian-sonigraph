@@ -343,7 +343,7 @@ export class SonicGraphModal extends Modal {
         currentLabel.createSpan({ text: '0s', cls: 'sonic-graph-timeline-current-time' });
         
         // Hide current indicator by default - only show during animation
-        currentIndicator.style.display = 'none';
+        currentIndicator.addClass('sonigraph-current-indicator');
     }
 
     /**
@@ -701,7 +701,7 @@ export class SonicGraphModal extends Modal {
             // Show current position indicator during animation
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
             if (currentIndicator) {
-                currentIndicator.style.display = 'block';
+                currentIndicator.addClass('sonigraph-current-indicator--visible');
             }
             
             // Initialize and start continuous layers if enabled
@@ -727,7 +727,7 @@ export class SonicGraphModal extends Modal {
             // Hide current position indicator when animation stops
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
             if (currentIndicator) {
-                currentIndicator.style.display = 'none';
+                currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
             
             if (this.temporalAnimator) {
@@ -764,7 +764,7 @@ export class SonicGraphModal extends Modal {
             const timelineIcon = createLucideIcon('play-circle', 16);
             this.viewModeBtn.appendChild(timelineIcon);
             this.viewModeBtn.appendText('Timeline View');
-            this.viewModeBtn.style.display = 'inline-flex';
+            this.viewModeBtn.addClass('sonigraph-view-mode-btn--visible');
             
             // Show timeline controls
             this.timelineContainer.classList.remove('timeline-hidden');
@@ -788,7 +788,7 @@ export class SonicGraphModal extends Modal {
             
         } else {
             // Static View - hide view mode button since Play button indicates timeline mode
-            this.viewModeBtn.style.display = 'none';
+            this.viewModeBtn.removeClass('sonigraph-view-mode-btn--visible');
             
             // Hide timeline controls
             this.timelineContainer.classList.add('timeline-hidden');
@@ -804,7 +804,7 @@ export class SonicGraphModal extends Modal {
             // Hide current position indicator in Static View
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
             if (currentIndicator) {
-                currentIndicator.style.display = 'none';
+                currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
             
             // Show all nodes
@@ -3793,22 +3793,19 @@ export class SonicGraphModal extends Modal {
                 text: this.formatGroupLabel(group),
                 cls: 'sonic-graph-group-label'
             });
+            groupLabel.addClass('sonigraph-group-label');
             groupLabel.style.flex = '1';
             groupLabel.style.fontSize = '12px';
-            groupLabel.style.color = 'var(--text-normal)';
             
             // Remove button
-            const removeButton = groupItem.createEl('button', { 
+            const removeButton = groupItem.createEl('button', {
                 text: '×',
-                cls: 'sonic-graph-group-remove-btn'
+                cls: 'sonic-graph-group-remove-btn sonigraph-group-remove-btn'
             });
             removeButton.style.background = 'none';
             removeButton.style.border = 'none';
             removeButton.style.fontSize = '14px';
             removeButton.style.cursor = 'pointer';
-            removeButton.style.color = 'var(--text-muted)';
-            removeButton.style.padding = '2px 4px';
-            removeButton.style.marginLeft = '8px';
             
             // Event listeners
             colorDot.addEventListener('click', () => {
@@ -3827,12 +3824,10 @@ export class SonicGraphModal extends Modal {
             placeholder: 'Enter query...',
             cls: 'sonic-graph-group-search-input'
         });
-        searchInput.style.width = '100%';
-        searchInput.style.padding = '8px 12px';
-        searchInput.style.marginTop = '8px';
+        searchInput.addClass('sonigraph-group-search-input');
+        searchInput.addClass('sonigraph-group-search-input--highlighted');
         searchInput.style.border = '1px solid #fbbf24'; // Yellow border
         searchInput.style.borderRadius = '4px';
-        searchInput.style.backgroundColor = '#fef3c7'; // Light yellow background
         searchInput.style.fontSize = '12px';
         
         // Add tooltip to groups search input
@@ -3881,8 +3876,8 @@ export class SonicGraphModal extends Modal {
         // Position the input right beneath the color dot
         const dotRect = colorDot.getBoundingClientRect();
         const modalRect = this.contentEl.getBoundingClientRect();
-        
-        colorInput.style.position = 'absolute';
+
+        colorInput.addClass('sonigraph-color-picker');
         colorInput.style.left = `${dotRect.left - modalRect.left}px`;
         colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`; // 4px gap below the dot
         // Enable pointer events for interaction while keeping it visually hidden
@@ -3958,14 +3953,12 @@ export class SonicGraphModal extends Modal {
         
         const overlay = document.createElement('div');
         overlay.className = 'sonic-graph-search-overlay';
-        overlay.style.position = 'absolute';
+        overlay.addClass('sonigraph-autocomplete-overlay');
         overlay.style.top = (searchInput.offsetTop + searchInput.offsetHeight + 4) + 'px';
         overlay.style.left = searchInput.offsetLeft + 'px';
         overlay.style.width = searchInput.offsetWidth + 'px';
-        overlay.style.backgroundColor = 'var(--background-primary)';
         overlay.style.border = '1px solid var(--background-modifier-border)';
         overlay.style.borderRadius = '4px';
-        overlay.style.padding = '8px';
         overlay.style.fontSize = '12px';
         overlay.style.zIndex = '1000';
         overlay.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
@@ -3981,18 +3974,10 @@ export class SonicGraphModal extends Modal {
         
         options.forEach(option => {
             const optionEl = document.createElement('div');
+            optionEl.addClass('sonigraph-autocomplete-option');
             optionEl.textContent = option;
-            optionEl.style.padding = '4px 8px';
             optionEl.style.cursor = 'pointer';
             optionEl.style.borderRadius = '2px';
-            
-            optionEl.addEventListener('mouseenter', () => {
-                optionEl.style.backgroundColor = 'var(--background-modifier-hover)';
-            });
-            
-            optionEl.addEventListener('mouseleave', () => {
-                optionEl.style.backgroundColor = 'transparent';
-            });
             
             optionEl.addEventListener('click', () => {
                 const prefix = option.split(':')[0];
@@ -4426,11 +4411,11 @@ export class SonicGraphModal extends Modal {
         // Check if markers should be shown
         const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
         if (!showMarkers) {
-            (markersContainer as HTMLElement).style.display = 'none';
+            (markersContainer as HTMLElement).removeClass('sonigraph-timeline-markers--visible');
             return;
         }
-        
-        (markersContainer as HTMLElement).style.display = 'block';
+
+        (markersContainer as HTMLElement).addClass('sonigraph-timeline-markers--visible');
         const duration = timelineInfo.duration;
         
         // Generate time markers based on duration
@@ -5148,7 +5133,11 @@ export class SonicGraphModal extends Modal {
         // Update the timeline markers display
         const markersContainer = this.timelineInfo?.querySelector('.sonic-graph-timeline-markers') as HTMLElement;
         if (markersContainer) {
-            markersContainer.style.display = show ? 'block' : 'none';
+            if (show) {
+                markersContainer.addClass('sonigraph-timeline-markers--visible');
+            } else {
+                markersContainer.removeClass('sonigraph-timeline-markers--visible');
+            }
         }
     }
 
@@ -5240,7 +5229,11 @@ export class SonicGraphModal extends Modal {
         // Show/hide custom range controls based on selection
         const customRangeElement = this.settingsPanel?.querySelector('.sonic-graph-custom-range') as HTMLElement;
         if (customRangeElement) {
-            customRangeElement.style.display = granularity === 'custom' ? '' : 'none';
+            if (granularity === 'custom') {
+                customRangeElement.addClass('sonigraph-custom-range--visible');
+            } else {
+                customRangeElement.removeClass('sonigraph-custom-range--visible');
+            }
         }
         
         // Update temporal animator if available
@@ -5747,12 +5740,12 @@ export class SonicGraphModal extends Modal {
             "></div>
             <span>${message}</span>
         `;
-        this.progressIndicator.style.display = 'flex';
+        this.progressIndicator.addClass('sonigraph-progress-indicator--visible');
     }
 
     private hideProgressIndicator(): void {
         if (this.progressIndicator) {
-            this.progressIndicator.style.display = 'none';
+            this.progressIndicator.removeClass('sonigraph-progress-indicator--visible');
         }
     }
 

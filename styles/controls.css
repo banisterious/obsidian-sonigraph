@@ -451,6 +451,12 @@
   user-select: none;
 }
 
+/* Effect header toggle positioning */
+.effect-header .ospcc-switch {
+  margin-left: auto;
+  transform: scale(0.8);
+}
+
 .ospcc-switch__input {
   cursor: pointer;
 }

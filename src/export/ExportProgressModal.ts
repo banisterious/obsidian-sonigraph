@@ -46,7 +46,6 @@ export class ExportProgressModal extends Modal {
         const progressContainer = contentEl.createDiv('export-progress-container');
         this.progressBar = progressContainer.createDiv('export-progress-bar');
         this.progressFill = this.progressBar.createDiv('export-progress-fill');
-        this.progressFill.style.width = '0%';
 
         // Percentage display
         this.percentageText = contentEl.createDiv('export-progress-percentage');
@@ -58,7 +57,6 @@ export class ExportProgressModal extends Modal {
 
         // Details container (optional, for longer exports)
         this.detailsContainer = contentEl.createDiv('export-progress-details');
-        this.detailsContainer.style.display = 'none';
 
         // Cancel button
         const buttonContainer = contentEl.createDiv('export-progress-buttons');
@@ -137,7 +135,7 @@ export class ExportProgressModal extends Modal {
         // Show details for longer exports (> 30 seconds estimated)
         if (progress.estimatedTimeRemaining && progress.estimatedTimeRemaining > 30) {
             if (this.detailsContainer) {
-                this.detailsContainer.style.display = 'block';
+                this.detailsContainer.addClass('export-progress-details--visible');
                 this.detailsContainer.empty();
 
                 // Stage indicator

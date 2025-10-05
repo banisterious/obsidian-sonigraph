@@ -2,6 +2,13 @@
    Sonigraph Plugin - Utility Classes
    ========================================================================== */
 
+/* Icon Utilities */
+.lucide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Spacing Utilities */
 .osp-m-0 {
   margin: 0;

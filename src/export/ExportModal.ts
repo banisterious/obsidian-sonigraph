@@ -318,7 +318,6 @@ export class ExportModal extends Modal {
 
         // Custom range inputs (initially hidden)
         this.customRangeContainer = section.createDiv('sonigraph-custom-range-container');
-        this.customRangeContainer.style.display = 'none';
 
         new Setting(this.customRangeContainer)
             .setName('Start time')
@@ -516,13 +515,17 @@ export class ExportModal extends Modal {
         header.addClass('clickable');
 
         this.metadataContainer = section.createDiv('sonigraph-export-metadata-content');
-        this.metadataContainer.style.display = 'none';
 
         // Toggle metadata section
         header.addEventListener('click', () => {
-            const isVisible = this.metadataContainer!.style.display !== 'none';
-            this.metadataContainer!.style.display = isVisible ? 'none' : 'block';
-            header.textContent = isVisible ? 'Metadata (Optional) ▼' : 'Metadata (Optional) ▲';
+            const isVisible = this.metadataContainer!.hasClass('sonigraph-export-metadata-content--visible');
+            if (isVisible) {
+                this.metadataContainer!.removeClass('sonigraph-export-metadata-content--visible');
+                header.textContent = 'Metadata (Optional) ▼';
+            } else {
+                this.metadataContainer!.addClass('sonigraph-export-metadata-content--visible');
+                header.textContent = 'Metadata (Optional) ▲';
+            }
         });
 
         // Load last used metadata if available
@@ -1002,9 +1005,9 @@ export class ExportModal extends Modal {
         if (!this.customRangeContainer) return;
 
         if (this.config.scope === 'custom-range') {
-            this.customRangeContainer.style.display = 'block';
+            this.customRangeContainer.addClass('sonigraph-custom-range-container--visible');
         } else {
-            this.customRangeContainer.style.display = 'none';
+            this.customRangeContainer.removeClass('sonigraph-custom-range-container--visible');
         }
     }
 

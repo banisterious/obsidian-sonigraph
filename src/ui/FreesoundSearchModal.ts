@@ -122,8 +122,7 @@ export class FreesoundSearchModal extends Modal {
 		const clearButton = searchContainer.createEl('button', {
 			cls: 'freesound-clear-btn',
 			attr: {
-				'aria-label': 'Clear search',
-				'style': 'display: none;'
+				'aria-label': 'Clear search'
 			}
 		});
 		clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
@@ -177,7 +176,11 @@ export class FreesoundSearchModal extends Modal {
 	private updateClearButton(): void {
 		const clearBtn = this.contentEl.querySelector('.freesound-clear-btn') as HTMLElement;
 		if (clearBtn && this.searchInput) {
-			clearBtn.style.display = this.searchInput.value ? 'flex' : 'none';
+			if (this.searchInput.value) {
+				clearBtn.addClass('freesound-clear-btn--visible');
+			} else {
+				clearBtn.removeClass('freesound-clear-btn--visible');
+			}
 		}
 	}
 
@@ -210,7 +213,7 @@ export class FreesoundSearchModal extends Modal {
 				<polyline points="6 9 12 15 18 9"></polyline>
 			</svg>
 			<h3>Filters</h3>
-			<span class="freesound-filter-badge" style="display: none;">0</span>
+			<span class="freesound-filter-badge">0</span>
 		`;
 
 		headerButton.addEventListener('click', () => {
@@ -219,11 +222,11 @@ export class FreesoundSearchModal extends Modal {
 
 			if (filtersGrid) {
 				if (this.filtersCollapsed) {
-					filtersGrid.style.display = 'none';
+					filtersGrid.addClass('freesound-filters-grid--hidden');
 					this.filtersSection?.addClass('freesound-filters-collapsed');
 					headerButton.setAttribute('aria-expanded', 'false');
 				} else {
-					filtersGrid.style.display = 'grid';
+					filtersGrid.removeClass('freesound-filters-grid--hidden');
 					this.filtersSection?.removeClass('freesound-filters-collapsed');
 					headerButton.setAttribute('aria-expanded', 'true');
 				}
@@ -292,11 +295,11 @@ export class FreesoundSearchModal extends Modal {
 
 		const badge = this.contentEl.querySelector('.freesound-filter-badge') as HTMLElement;
 		if (badge) {
+			badge.textContent = String(count);
 			if (count > 0) {
-				badge.textContent = String(count);
-				badge.style.display = 'flex';
+				badge.addClass('freesound-filter-badge--visible');
 			} else {
-				badge.style.display = 'none';
+				badge.removeClass('freesound-filter-badge--visible');
 			}
 		}
 	}

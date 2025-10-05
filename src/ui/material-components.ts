@@ -214,47 +214,32 @@ export class StatCard {
 
 	private createStatCard(options: StatCardOptions): HTMLElement {
 		const statCard = document.createElement('div');
-		statCard.className = `ospcc-surface-container ${options.className || ''}`;
-		statCard.style.padding = 'var(--md-space-4)';
-		statCard.style.borderRadius = 'var(--md-corner-sm)';
-		statCard.style.textAlign = 'center';
-		statCard.style.transition = 'all var(--md-motion-duration-short4) var(--md-motion-easing-standard)';
+		const classes = ['ospcc-surface-container', 'ospcc-stat-card'];
+		if (options.className) classes.push(options.className);
+		if (options.onClick) classes.push('ospcc-stat-card--clickable');
+		statCard.className = classes.join(' ');
 
 		if (options.onClick) {
-			statCard.style.cursor = 'pointer';
 			statCard.addEventListener('click', options.onClick);
-			statCard.addEventListener('mouseenter', () => {
-				statCard.style.background = 'var(--md-surface-container-high)';
-			});
-			statCard.addEventListener('mouseleave', () => {
-				statCard.style.background = 'var(--md-surface-container)';
-			});
 		}
 
 		// Icon (optional)
 		if (options.iconName) {
 			const iconEl = statCard.createDiv();
-			iconEl.style.marginBottom = 'var(--md-space-2)';
+			iconEl.className = `ospcc-stat-card__icon ospcc-stat-card__icon--${options.color || 'primary'}`;
 			const icon = createLucideIcon(options.iconName, 20);
-			icon.style.color = this.getColorValue(options.color);
 			iconEl.appendChild(icon);
 		}
 
 		// Value
 		const valueEl = statCard.createDiv();
 		valueEl.textContent = options.value;
-		valueEl.style.fontSize = 'var(--md-font-headline-small)';
-		valueEl.style.fontWeight = '700';
-		valueEl.style.color = this.getColorValue(options.color);
-		valueEl.style.marginBottom = 'var(--md-space-1)';
+		valueEl.className = `ospcc-stat-card__value ospcc-stat-card__value--${options.color || 'primary'}`;
 
 		// Label
 		const labelEl = statCard.createDiv();
 		labelEl.textContent = options.label;
-		labelEl.style.fontSize = 'var(--md-font-label-medium)';
-		labelEl.style.color = 'var(--md-on-surface-variant)';
-		labelEl.style.textTransform = 'uppercase';
-		labelEl.style.letterSpacing = '0.5px';
+		labelEl.className = 'ospcc-stat-card__label';
 
 		return statCard;
 	}
@@ -533,8 +518,6 @@ export class EffectSection {
 
 		// Enable toggle
 		const toggleContainer = container.createDiv({ cls: 'ospcc-switch' });
-		toggleContainer.style.marginLeft = 'auto';
-		toggleContainer.style.transform = 'scale(0.8)';
 
 		this.enableSwitch = toggleContainer.createEl('input', {
 			type: 'checkbox',
@@ -636,8 +619,7 @@ export class ActionChip {
 		});
 
 		if (this.options.disabled) {
-			chip.style.opacity = '0.5';
-			chip.style.cursor = 'not-allowed';
+			chip.addClass('ospcc-chip--disabled');
 		}
 
 		return chip;
@@ -746,16 +728,7 @@ export class MaterialSlider {
 			isDragging = false;
 		});
 
-		// Hover effect
-		this.slider.addEventListener('mouseenter', () => {
-			this.thumb.style.transform = 'translate(-50%, -50%) scale(1.1)';
-		});
-
-		this.slider.addEventListener('mouseleave', () => {
-			if (!isDragging) {
-				this.thumb.style.transform = 'translate(-50%, -50%) scale(1)';
-			}
-		});
+		// Note: Hover effect is handled by CSS (.ospcc-slider:hover .ospcc-slider__thumb)
 	}
 
 	private updateDisplay(): void {

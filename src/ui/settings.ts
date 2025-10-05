@@ -30,7 +30,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		const dismissBtn = onboardingActions.createEl('button', { text: 'Dismiss', cls: 'mod-muted' });
 		
 		dismissBtn.addEventListener('click', () => {
-			onboardingSection.style.display = 'none';
+			onboardingSection.addClass('sonigraph-onboarding-bordered--dismissed');
 		});
 
 		// Control Center Setting
