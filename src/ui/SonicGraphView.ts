@@ -190,11 +190,19 @@ export class SonicGraphView extends ItemView {
         if (viewState.isVisualDisplayVisible !== undefined) {
             this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
             logger.debug('state', 'Restored isVisualDisplayVisible', this.isVisualDisplayVisible);
+        } else {
+            // Initialize from plugin settings if no saved state
+            this.isVisualDisplayVisible = this.plugin.settings.sonicGraphSettings?.visualDisplay?.enabled ?? true;
+            logger.debug('state', 'Initialized isVisualDisplayVisible from settings', this.isVisualDisplayVisible);
         }
 
         if (viewState.visualDisplayHeight !== undefined) {
             this.visualDisplayHeight = viewState.visualDisplayHeight;
             logger.debug('state', 'Restored visualDisplayHeight', this.visualDisplayHeight);
+        } else {
+            // Initialize from plugin settings if no saved state
+            this.visualDisplayHeight = this.plugin.settings.sonicGraphSettings?.visualDisplay?.height ?? 250;
+            logger.debug('state', 'Initialized visualDisplayHeight from settings', this.visualDisplayHeight);
         }
 
         // Store timeline position and speed for restoration after graph initialization
@@ -584,15 +592,18 @@ export class SonicGraphView extends ItemView {
         try {
             logger.info('visual-display', 'Initializing visualization manager');
 
-            // Create visualization manager
+            // Get settings for visual display
+            const visualSettings = this.plugin.settings.sonicGraphSettings?.visualDisplay;
+
+            // Create visualization manager with settings or defaults
             this.visualizationManager = new NoteVisualizationManager({
-                mode: 'piano-roll',
+                mode: visualSettings?.mode || 'piano-roll',
                 enabled: this.isVisualDisplayVisible,
-                frameRate: 30,
-                colorScheme: 'layer',
-                showLabels: true,
-                showGrid: true,
-                enableTrails: false
+                frameRate: visualSettings?.frameRate || 30,
+                colorScheme: visualSettings?.colorScheme || 'layer',
+                showLabels: visualSettings?.showLabels ?? true,
+                showGrid: visualSettings?.showGrid ?? true,
+                enableTrails: visualSettings?.enableTrails ?? false
             });
 
             // Initialize with content container
