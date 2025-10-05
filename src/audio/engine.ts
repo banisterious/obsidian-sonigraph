@@ -2227,13 +2227,16 @@ export class AudioEngine {
 			// Use specialized synthesis engines if available
 			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
 				this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
+				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
 				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
+				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else if (this.isEnvironmentalInstrument(instrumentName)) {
 				// Fire and forget - don't block the sequence for external sample loading
 				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch(error => {
 					logger.debug('environmental-sound', `Environmental sound failed for ${instrumentName}`, error);
 				});
+				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else {
 				const synth = this.instruments.get(instrumentName);
 
@@ -2251,15 +2254,7 @@ export class AudioEngine {
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 
 						// Emit note-triggered event for visualization
-						const layer = this.getLayerForInstrument(instrumentName);
-						this.eventEmitter.emit('note-triggered', {
-							pitch: new Frequency(detunedFrequency, 'hz').toMidi(),
-							velocity,
-							duration: typeof duration === 'number' ? duration : parseFloat(duration),
-							layer,
-							timestamp: elapsedTime,
-							instrument: instrumentName
-						});
+						this.emitNoteEvent(instrumentName, detunedFrequency, duration, velocity, elapsedTime);
 
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
@@ -4479,6 +4474,28 @@ export class AudioEngine {
 		// Melodic instruments (lead, solo instruments)
 		// Default for woodwinds, brass, solo strings
 		return 'melodic';
+	}
+
+	/**
+	 * Emit note-triggered event for visualization
+	 * Centralized method to ensure all note triggers emit visualization events
+	 */
+	private emitNoteEvent(instrumentName: string, frequency: number, duration: number, velocity: number, elapsedTime: number): void {
+		try {
+			const layer = this.getLayerForInstrument(instrumentName);
+			const midiPitch = new Frequency(frequency, 'hz').toMidi();
+
+			this.eventEmitter.emit('note-triggered', {
+				pitch: midiPitch,
+				velocity,
+				duration: typeof duration === 'number' ? duration : parseFloat(duration),
+				layer,
+				timestamp: elapsedTime,
+				instrument: instrumentName
+			});
+		} catch (error) {
+			logger.debug('visualization', 'Failed to emit note event', { error, instrumentName });
+		}
 	}
 
 	/**

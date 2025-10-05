@@ -81810,12 +81810,15 @@ var AudioEngine = class {
       }
       if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
         this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
+        this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
       } else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
         this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
+        this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
       } else if (this.isEnvironmentalInstrument(instrumentName)) {
         this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch((error) => {
           logger75.debug("environmental-sound", `Environmental sound failed for ${instrumentName}`, error);
         });
+        this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
       } else {
         const synth = this.instruments.get(instrumentName);
         if (synth) {
@@ -81824,15 +81827,7 @@ var AudioEngine = class {
             const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
             const audioContext = getContext();
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
-            const layer = this.getLayerForInstrument(instrumentName);
-            this.eventEmitter.emit("note-triggered", {
-              pitch: new Frequency(detunedFrequency, "hz").toMidi(),
-              velocity,
-              duration: typeof duration === "number" ? duration : parseFloat(duration),
-              layer,
-              timestamp: elapsedTime,
-              instrument: instrumentName
-            });
+            this.emitNoteEvent(instrumentName, detunedFrequency, duration, velocity, elapsedTime);
             if (this.rhythmicPercussion) {
               const midiNote = new Frequency(frequency, "hz").toMidi();
               logger75.debug("rhythmic-percussion", "Triggering accent", { frequency, midiNote, velocity });
@@ -83629,6 +83624,26 @@ var AudioEngine = class {
       return "ambient";
     }
     return "melodic";
+  }
+  /**
+   * Emit note-triggered event for visualization
+   * Centralized method to ensure all note triggers emit visualization events
+   */
+  emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime) {
+    try {
+      const layer = this.getLayerForInstrument(instrumentName);
+      const midiPitch = new Frequency(frequency, "hz").toMidi();
+      this.eventEmitter.emit("note-triggered", {
+        pitch: midiPitch,
+        velocity,
+        duration: typeof duration === "number" ? duration : parseFloat(duration),
+        layer,
+        timestamp: elapsedTime,
+        instrument: instrumentName
+      });
+    } catch (error) {
+      logger75.debug("visualization", "Failed to emit note event", { error, instrumentName });
+    }
   }
   /**
    * Issue #010 Fix: Get default voice limits to avoid require() in methods
