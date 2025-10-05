@@ -5754,6 +5754,9 @@ export class SonicGraphModal extends Modal {
             this.progressIndicator.removeClass('sonigraph-progress-indicator--visible');
             // Clear content to stop animations and free memory
             this.progressIndicator.empty();
+            // Remove from DOM completely
+            this.progressIndicator.remove();
+            this.progressIndicator = null;
         }
     }
 

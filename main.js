@@ -72315,6 +72315,8 @@ var init_SonicGraphModal = __esm({
         if (this.progressIndicator) {
           this.progressIndicator.removeClass("sonigraph-progress-indicator--visible");
           this.progressIndicator.empty();
+          this.progressIndicator.remove();
+          this.progressIndicator = null;
         }
       }
       /**
@@ -86835,6 +86837,8 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     if (this.progressIndicator) {
       this.progressIndicator.removeClass("sonigraph-progress-indicator--visible");
       this.progressIndicator.empty();
+      this.progressIndicator.remove();
+      this.progressIndicator = null;
     }
   }
   /**
