@@ -85,7 +85,7 @@ export class AudioExporter {
             // Update config with actual extension if encoder provided one
             // (e.g., MP3 may become M4A, WebM, or OGG depending on platform support)
             if (encodeResult.extension) {
-                config.format = encodeResult.extension as any;
+                config.format = encodeResult.extension as AudioFormat;
             }
 
             // Stage 4: Writing
@@ -254,12 +254,12 @@ export class AudioExporter {
     private async encode(audioBuffer: AudioBuffer, config: ExportConfig): Promise<{ data: ArrayBuffer; extension?: string }> {
         switch (config.format) {
             case 'wav':
-                return { data: WavEncoder.encode(audioBuffer, config.quality as any) };
+                return { data: WavEncoder.encode(audioBuffer, config.quality as { sampleRate: number; bitDepth: number }) };
 
             case 'mp3': {
                 const result = await Mp3Encoder.encode(
                     audioBuffer,
-                    config.quality as any,
+                    config.quality as { sampleRate: number; bitRate: number },
                     (percentage) => {
                         // Map encoding progress to 60-90% of total progress
                         const mappedPercentage = 60 + (percentage * 0.3);
@@ -336,7 +336,8 @@ export class AudioExporter {
             // Get file size from written file
             const file = this.app.vault.getAbstractFileByPath(filePath);
             if (file && 'stat' in file) {
-                result.fileSize = (file as any).stat.size;
+                const fileWithStat = file as TFile;
+                result.fileSize = fileWithStat.stat.size;
             }
 
             // Create the note with full plugin settings

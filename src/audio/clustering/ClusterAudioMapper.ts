@@ -713,7 +713,7 @@ export class ClusterAudioMapper {
 
     // Configure the voice options
     polySynth.set({
-      oscillator: { type: oscillatorType as any },
+      oscillator: { type: oscillatorType as Tone.ToneOscillatorType },
       envelope: {
         attack: theme.dynamicsRange.attackTime,
         decay: theme.dynamicsRange.decayTime,

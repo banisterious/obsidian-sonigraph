@@ -608,7 +608,7 @@ export class ExportModal extends Modal {
             .setName('Comment')
             .setDesc('Additional notes or description')
             .addTextArea(text => {
-                this.metadataInputs.comment = text as any;
+                this.metadataInputs.comment = text as unknown as TextComponent;
                 text.setPlaceholder('Generated from Obsidian vault using Sonigraph plugin')
                     .setValue(lastMetadata?.comment || '')
                     .onChange(value => {

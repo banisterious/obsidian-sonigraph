@@ -88,7 +88,7 @@ export class PercussionEngine {
 			});
 			
 			// Store as sampler for compatibility (PolySynth has same interface)
-			this.timpaniSamplers.set(size, synth as any);
+			this.timpaniSamplers.set(size, synth as unknown as Sampler);
 
 			// Advanced pitch shifting for timpani tuning
 			const pitchShifter = new PitchShift({
@@ -105,8 +105,8 @@ export class PercussionEngine {
 
 			// Chain: Synth -> PitchShift -> Reverb -> Master
 			synth.chain(pitchShifter, hallReverb, this.masterVolume);
-			
-			this.timpaniSamplers.set(size, synth as any);
+
+			this.timpaniSamplers.set(size, synth as unknown as Sampler);
 			this.timpaniPitchShifters.set(size, pitchShifter);
 		}
 
@@ -168,9 +168,9 @@ export class PercussionEngine {
 				volume: -8 // Moderate volume for vibraphone character
 			}
 		});
-		
+
 		// Store as sampler for compatibility
-		this.vibraphoneSamplers.set('main', synth as any);
+		this.vibraphoneSamplers.set('main', synth as unknown as Sampler);
 
 		// Motor tremolo LFO
 		const motorLFO = new LFO({
@@ -217,9 +217,9 @@ export class PercussionEngine {
 				volume: -6 // Higher volume for gong character
 			}
 		});
-		
+
 		// Store as sampler for compatibility
-		this.gongSamplers.set('main', synth as any);
+		this.gongSamplers.set('main', synth as unknown as Sampler);
 
 		// Complex resonance filter for metallic shimmer
 		const resonator = new Filter({

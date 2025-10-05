@@ -1274,15 +1274,18 @@ export class MusicalGenreEngine {
   
   private releaseAllNotes(): void {
     if (this.primarySynth && 'releaseAll' in this.primarySynth) {
-      (this.primarySynth as any).releaseAll();
+      interface SynthWithReleaseAll {
+        releaseAll(): void;
+      }
+      (this.primarySynth as unknown as SynthWithReleaseAll).releaseAll();
     }
-    
+
     this.supportingSynths.forEach(synth => {
       if ('releaseAll' in synth) {
         synth.releaseAll();
       }
     });
-    
+
     this.activeNotes.clear();
     this.activeVoices = 0;
   }
@@ -1337,7 +1340,10 @@ export class MusicalGenreEngine {
   private updateModulation(progress: number): void {
     // Update LFO rates based on animation progress
     this.lfos.forEach((lfo) => {
-      const baseRate = (lfo.frequency as any).value as number;
+      interface AudioParamWithValue {
+        value: number;
+      }
+      const baseRate = (lfo.frequency as unknown as AudioParamWithValue).value;
       const modulation = 1 + (progress * 0.5); // Up to 50% faster
       lfo.frequency.rampTo(baseRate * modulation, 3);
     });

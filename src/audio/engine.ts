@@ -239,7 +239,8 @@ export class AudioEngine {
 	}
 
 	set currentQualityLevel(level: string) {
-		this.voiceManager.setQualityLevel(level as any);
+		type QualityLevel = 'low' | 'medium' | 'high';
+		this.voiceManager.setQualityLevel(level as QualityLevel);
 	}
 
 	get lastCPUCheck(): number {
@@ -462,8 +463,8 @@ export class AudioEngine {
 			// Create config from settings
 			const config: MusicalTheoryConfig = {
 				enabled: theorySettings.enforceHarmony ?? true,
-				rootNote: theorySettings.rootNote as any || 'C',
-				scale: theorySettings.scale as any || 'major',
+				rootNote: (theorySettings.rootNote as NoteName) || 'C',
+				scale: (theorySettings.scale as ScaleType) || 'major',
 				enforceHarmony: theorySettings.enforceHarmony ?? true,
 				quantizationStrength: theorySettings.quantizationStrength ?? 0.8,
 				dissonanceThreshold: theorySettings.dissonanceThreshold ?? 0.5,
@@ -678,38 +679,42 @@ export class AudioEngine {
 		});
 	}
 
-	private async createEffectInstance(node: EffectNode): Promise<any> {
+	private async createEffectInstance(node: EffectNode): Promise<unknown> {
+		interface EffectSettings {
+			params: Record<string, unknown>;
+		}
+
 		try {
 			switch (node.type) {
 				case 'reverb':
-					const reverbSettings = node.settings as any;
+					const reverbSettings = node.settings as EffectSettings;
 					const reverb = new Reverb(reverbSettings.params);
 					await reverb.generate();
 					return reverb;
-					
+
 				case 'chorus':
-					const chorusSettings = node.settings as any;
+					const chorusSettings = node.settings as EffectSettings;
 					const chorus = new Chorus(chorusSettings.params);
 					chorus.start();
 					return chorus;
-					
+
 				case 'filter':
-					const filterSettings = node.settings as any;
+					const filterSettings = node.settings as EffectSettings;
 					const filter = new Filter(filterSettings.params);
 					return filter;
-					
+
 				case 'delay':
-					const delaySettings = node.settings as any;
+					const delaySettings = node.settings as EffectSettings;
 					const delay = new Delay(delaySettings.params);
 					return delay;
-					
+
 				case 'distortion':
-					const distortionSettings = node.settings as any;
+					const distortionSettings = node.settings as EffectSettings;
 					const distortion = new Distortion(distortionSettings.params);
 					return distortion;
-					
+
 				case 'compressor':
-					const compressorSettings = node.settings as any;
+					const compressorSettings = node.settings as EffectSettings;
 					const compressor = new Compressor(compressorSettings.params);
 					return compressor;
 					
@@ -2666,7 +2671,7 @@ export class AudioEngine {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
 		const reverb = instrumentEffects?.get('reverb');
 		if (reverb) {
-			const instrumentSettings = (this.settings.instruments as any)[instrument];
+			const instrumentSettings = (this.settings.instruments as Record<string, unknown>)[instrument];
 			const wetLevel = instrumentSettings?.effects?.reverb?.params?.wet as number || 0.25;
 			reverb.wet.value = enabled ? wetLevel : 0;
 			logger.debug('effects', `Reverb ${enabled ? 'enabled' : 'disabled'} for ${instrument}`);
@@ -4233,7 +4238,11 @@ export class AudioEngine {
 
 		try {
 			// Get current audio context state - handle missing properties safely
-			const audioContext = getContext() as any;
+			interface AudioContextWithLatency {
+				baseLatency?: number;
+				outputLatency?: number;
+			}
+			const audioContext = getContext() as unknown as AudioContextWithLatency;
 			const baseLatency = audioContext.baseLatency || 0;
 			const outputLatency = audioContext.outputLatency || 0;
 			const currentLatency = baseLatency + outputLatency;
@@ -5059,7 +5068,11 @@ export class AudioEngine {
 
 		const now = performance.now();
 		const cpuUsage = this.estimateCPUUsage();
-		const latency = (getContext() as any).baseLatency ? (getContext() as any).baseLatency * 1000 : 5; // Convert to ms or use 5ms default
+		interface AudioContextWithLatency {
+			baseLatency?: number;
+		}
+		const ctx = getContext() as unknown as AudioContextWithLatency;
+		const latency = ctx.baseLatency ? ctx.baseLatency * 1000 : 5; // Convert to ms or use 5ms default
 
 		// Update metrics
 		this.performanceMetrics.set('system', { cpuUsage, latency });
@@ -5239,8 +5252,12 @@ export class AudioEngine {
 		});
 
 		// Force garbage collection hint if supported
-		if ('gc' in window && typeof (window as any).gc === 'function') {
-			(window as any).gc();
+		interface WindowWithGC extends Window {
+			gc?: () => void;
+		}
+		const winWithGC = window as WindowWithGC;
+		if ('gc' in window && typeof winWithGC.gc === 'function') {
+			winWithGC.gc();
 		}
 
 		// Get memory stats for monitoring

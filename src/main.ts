@@ -294,12 +294,15 @@ export default class SonigraphPlugin extends Plugin {
 		// Debug the sequence data
 		logger.info('debug', 'Sequence details', {
 			totalNotes: this.currentGraphData.sequence.length,
-			sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note: any) => ({
-				pitch: (note as any).pitch,
-				duration: (note as any).duration,
-				velocity: (note as any).velocity,
-				timing: (note as any).timing
-			}))
+			sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note: unknown) => {
+				const n = note as Record<string, unknown>;
+				return {
+					pitch: n.pitch,
+					duration: n.duration,
+					velocity: n.velocity,
+					timing: n.timing
+				};
+			})
 		});
 
 		// Update audio engine with current settings before playing
@@ -495,11 +498,12 @@ export default class SonigraphPlugin extends Plugin {
 
 		// Check if we have old global effects structure
 		const settingsRecord = this.settings as Record<string, unknown>;
-		if ('effects' in this.settings && !(settingsRecord.effects as any)?.piano) {
+		const effects = settingsRecord.effects as Record<string, unknown> | undefined;
+		if ('effects' in this.settings && !effects?.piano) {
 			logger.info('settings', 'Migrating old effects structure to per-instrument structure');
 			migrationNeeded = true;
 
-			const oldEffects = settingsRecord.effects as Record<string, unknown>;
+			const oldEffects = (settingsRecord.effects as Record<string, unknown>) || {};
 
 			// Remove old global effects
 			delete settingsRecord.effects;

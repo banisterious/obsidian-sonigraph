@@ -55,7 +55,8 @@ export class OfflineRenderer {
 
         // Determine render duration
         const duration = this.calculateDuration(config);
-        const sampleRate = (config.quality as any).sampleRate || 48000;
+        const qualitySettings = config.quality as { sampleRate?: number };
+        const sampleRate = qualitySettings.sampleRate || 48000;
 
         logger.info('offline-renderer', `Starting real-time render: ${duration}s at ${sampleRate}Hz`);
         logger.info('offline-renderer', 'Phase 1: Using real-time recording (1:1 speed)');
@@ -171,7 +172,8 @@ export class OfflineRenderer {
 
                 // Check if animation completed by watching for pause
                 // The animator will auto-pause when complete
-                const isStillPlaying = (this.animator as any).isPlaying;
+                const animatorWithState = this.animator as unknown as { isPlaying: boolean };
+                const isStillPlaying = animatorWithState.isPlaying;
 
                 if (!isStillPlaying) {
                     clearInterval(checkInterval);
@@ -262,7 +264,8 @@ export class OfflineRenderer {
         }
 
         // Access animator duration through config
-        const animConfig = (this.animator as any).config;
+        const animatorWithConfig = this.animator as unknown as { config: { duration: number } };
+        const animConfig = animatorWithConfig.config;
         return animConfig ? animConfig.duration : 60;
     }
 }

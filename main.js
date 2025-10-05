@@ -16264,7 +16264,11 @@ var init_whale_audio_manager = __esm({
         try {
           if (await this.vault.adapter.exists(filePath)) {
             const arrayBuffer = await this.vault.adapter.readBinary(filePath);
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+              throw new Error("AudioContext not supported in this browser");
+            }
+            const audioContext = new AudioContextClass();
             return await audioContext.decodeAudioData(arrayBuffer);
           }
         } catch (error) {
@@ -16684,7 +16688,11 @@ var init_whale_audio_manager = __esm({
             });
             return null;
           }
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) {
+            throw new Error("AudioContext not supported in this browser");
+          }
+          const audioContext = new AudioContextClass();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
           logger18.debug("download", "Audio validation and decode successful", {
             url: originalUrl.substring(0, 60) + "...",
@@ -19111,7 +19119,10 @@ var init_FreesoundSampleLoader = __esm({
         this.totalDownloads = 0;
         this.totalDownloadTime = 0;
         if ("gc" in window) {
-          window.gc();
+          const winWithGC = window;
+          if (winWithGC.gc) {
+            winWithGC.gc();
+          }
         }
       }
       /**
@@ -51382,7 +51393,8 @@ var init_OfflineRenderer = __esm({
       async render(config) {
         const startTime = performance.now();
         const duration = this.calculateDuration(config);
-        const sampleRate = config.quality.sampleRate || 48e3;
+        const qualitySettings = config.quality;
+        const sampleRate = qualitySettings.sampleRate || 48e3;
         logger56.info("offline-renderer", `Starting real-time render: ${duration}s at ${sampleRate}Hz`);
         logger56.info("offline-renderer", "Phase 1: Using real-time recording (1:1 speed)");
         try {
@@ -51459,7 +51471,8 @@ var init_OfflineRenderer = __esm({
               return;
             }
             const animDuration = duration;
-            const isStillPlaying = this.animator.isPlaying;
+            const animatorWithState = this.animator;
+            const isStillPlaying = animatorWithState.isPlaying;
             if (!isStillPlaying) {
               clearInterval(checkInterval);
               logger56.info("offline-renderer", "Animation playback complete");
@@ -51519,7 +51532,8 @@ var init_OfflineRenderer = __esm({
         if (config.scope === "custom-range" && config.customRange) {
           return (config.customRange.end - config.customRange.start) / 1e3;
         }
-        const animConfig = this.animator.config;
+        const animatorWithConfig = this.animator;
+        const animConfig = animatorWithConfig.config;
         return animConfig ? animConfig.duration : 60;
       }
     };
@@ -52197,7 +52211,8 @@ var init_AudioExporter = __esm({
           };
           const file = this.app.vault.getAbstractFileByPath(filePath);
           if (file && "stat" in file) {
-            result.fileSize = file.stat.size;
+            const fileWithStat = file;
+            result.fileSize = fileWithStat.stat.size;
           }
           const notePath = await noteCreator.createNote(config, result, this.animator, this.pluginSettings);
           logger58.info("export", `Export note created: ${notePath}`);
@@ -78852,8 +78867,9 @@ var MemoryMonitor = class {
    * Force garbage collection if available (requires --expose-gc flag)
    */
   forceGarbageCollection() {
-    if (typeof global.gc === "function") {
-      global.gc();
+    const globalWithGC = global;
+    if (typeof globalWithGC.gc === "function") {
+      globalWithGC.gc();
       logger70.debug("garbage-collection", "Manual GC triggered");
       return true;
     }
@@ -83022,7 +83038,8 @@ var AudioEngine = class {
       return;
     const now3 = performance.now();
     const cpuUsage = this.estimateCPUUsage();
-    const latency = getContext().baseLatency ? getContext().baseLatency * 1e3 : 5;
+    const ctx = getContext();
+    const latency = ctx.baseLatency ? ctx.baseLatency * 1e3 : 5;
     this.performanceMetrics.set("system", { cpuUsage, latency });
     if (cpuUsage > 80 && this.currentQualityLevel !== "low") {
       this.reduceQuality();
@@ -83159,8 +83176,9 @@ var AudioEngine = class {
         }
       });
     });
-    if ("gc" in window && typeof window.gc === "function") {
-      window.gc();
+    const winWithGC = window;
+    if ("gc" in window && typeof winWithGC.gc === "function") {
+      winWithGC.gc();
     }
     const memoryStats = this.voiceManager.getMemoryStats();
     logger72.debug("performance", "Memory optimization completed", { voiceManagerStats: memoryStats });
@@ -83725,12 +83743,15 @@ var SonigraphPlugin = class extends import_obsidian25.Plugin {
     });
     logger74.info("debug", "Sequence details", {
       totalNotes: this.currentGraphData.sequence.length,
-      sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note) => ({
-        pitch: note.pitch,
-        duration: note.duration,
-        velocity: note.velocity,
-        timing: note.timing
-      }))
+      sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note) => {
+        const n = note;
+        return {
+          pitch: n.pitch,
+          duration: n.duration,
+          velocity: n.velocity,
+          timing: n.timing
+        };
+      })
     });
     this.audioEngine.updateSettings(this.settings);
     logger74.debug("playback", "Audio engine settings updated before playback");
@@ -83873,20 +83894,21 @@ var SonigraphPlugin = class extends import_obsidian25.Plugin {
    * Migrate settings from old structure to new per-instrument effects structure
    */
   migrateSettings() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
     logger74.info("migration", "migrateSettings() called - checking for needed migrations");
     let migrationNeeded = false;
     const settingsRecord = this.settings;
-    if ("effects" in this.settings && !((_a = settingsRecord.effects) == null ? void 0 : _a.piano)) {
+    const effects = settingsRecord.effects;
+    if ("effects" in this.settings && !(effects == null ? void 0 : effects.piano)) {
       logger74.info("settings", "Migrating old effects structure to per-instrument structure");
       migrationNeeded = true;
-      const oldEffects = settingsRecord.effects;
+      const oldEffects = settingsRecord.effects || {};
       delete settingsRecord.effects;
       if (!this.settings.instruments.piano.effects) {
         this.settings.instruments.piano.effects = {
           reverb: {
-            enabled: ((_b = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _b.enabled) || true,
-            params: { decay: 1.8, preDelay: 0.02, wet: ((_c = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _c.wetness) || 0.25 }
+            enabled: ((_a = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _a.enabled) || true,
+            params: { decay: 1.8, preDelay: 0.02, wet: ((_b = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _b.wetness) || 0.25 }
           },
           chorus: {
             enabled: false,
@@ -83901,11 +83923,11 @@ var SonigraphPlugin = class extends import_obsidian25.Plugin {
       if (!this.settings.instruments.organ.effects) {
         this.settings.instruments.organ.effects = {
           reverb: {
-            enabled: ((_d = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _d.enabled) || true,
-            params: { decay: 2.2, preDelay: 0.03, wet: ((_e = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _e.wetness) || 0.35 }
+            enabled: ((_c = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _c.enabled) || true,
+            params: { decay: 2.2, preDelay: 0.03, wet: ((_d = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _d.wetness) || 0.35 }
           },
           chorus: {
-            enabled: ((_f = oldEffects == null ? void 0 : oldEffects.chorus) == null ? void 0 : _f.enabled) || true,
+            enabled: ((_e = oldEffects == null ? void 0 : oldEffects.chorus) == null ? void 0 : _e.enabled) || true,
             params: { frequency: 0.8, depth: 0.5, delayTime: 4, feedback: 0.05 }
           },
           filter: {
@@ -83917,16 +83939,16 @@ var SonigraphPlugin = class extends import_obsidian25.Plugin {
       if (!this.settings.instruments.strings.effects) {
         this.settings.instruments.strings.effects = {
           reverb: {
-            enabled: ((_g = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _g.enabled) || true,
-            params: { decay: 2.8, preDelay: 0.04, wet: ((_h = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _h.wetness) || 0.45 }
+            enabled: ((_f = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _f.enabled) || true,
+            params: { decay: 2.8, preDelay: 0.04, wet: ((_g = oldEffects == null ? void 0 : oldEffects.reverb) == null ? void 0 : _g.wetness) || 0.45 }
           },
           chorus: {
             enabled: false,
             params: { frequency: 0.6, depth: 0.3, delayTime: 3, feedback: 0.03 }
           },
           filter: {
-            enabled: ((_i = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _i.enabled) || true,
-            params: { frequency: ((_j = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _j.frequency) || 3500, Q: ((_k = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _k.Q) || 0.8, type: ((_l = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _l.type) || "lowpass" }
+            enabled: ((_h = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _h.enabled) || true,
+            params: { frequency: ((_i = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _i.frequency) || 3500, Q: ((_j = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _j.Q) || 0.8, type: ((_k = oldEffects == null ? void 0 : oldEffects.filter) == null ? void 0 : _k.type) || "lowpass" }
           }
         };
       }

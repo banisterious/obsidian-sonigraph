@@ -396,7 +396,14 @@ export class WhaleAudioManager {
         try {
             if (await this.vault.adapter.exists(filePath)) {
                 const arrayBuffer = await this.vault.adapter.readBinary(filePath);
-                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                interface WindowWithWebkit extends Window {
+                    webkitAudioContext?: typeof AudioContext;
+                }
+                const AudioContextClass = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
+                if (!AudioContextClass) {
+                    throw new Error('AudioContext not supported in this browser');
+                }
+                const audioContext = new AudioContextClass();
                 return await audioContext.decodeAudioData(arrayBuffer);
             }
         } catch (error) {
@@ -932,7 +939,14 @@ export class WhaleAudioManager {
             }
             
             // Use Web Audio API to decode
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            interface WindowWithWebkit extends Window {
+                webkitAudioContext?: typeof AudioContext;
+            }
+            const AudioContextClass = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
+            if (!AudioContextClass) {
+                throw new Error('AudioContext not supported in this browser');
+            }
+            const audioContext = new AudioContextClass();
             const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
             
             logger.debug('download', 'Audio validation and decode successful', {
@@ -1183,13 +1197,13 @@ export class WhaleAudioManager {
      * Get current sample collection statistics (cached samples)
      */
     getCollectionStats(): Record<WhaleSpecies, number> {
-        const stats: Record<WhaleSpecies, number> = {} as any;
-        
+        const stats: Partial<Record<WhaleSpecies, number>> = {};
+
         Object.values(['humpback', 'blue', 'orca', 'gray', 'sperm', 'minke', 'fin', 'right', 'sei', 'pilot', 'mixed'] as WhaleSpecies[]).forEach(species => {
             stats[species] = this.cachedSamples.get(species)?.length || 0;
         });
-        
-        return stats;
+
+        return stats as Record<WhaleSpecies, number>;
     }
 
     /**
@@ -1238,13 +1252,13 @@ export class WhaleAudioManager {
      * Export sample URLs for storage in plugin settings
      */
     exportSampleUrls(): Record<WhaleSpecies, string[]> {
-        const exported: Record<WhaleSpecies, string[]> = {} as any;
-        
+        const exported: Partial<Record<WhaleSpecies, string[]>> = {};
+
         this.sampleUrls.forEach((urls, species) => {
             exported[species] = [...urls]; // Clone arrays
         });
-        
-        return exported;
+
+        return exported as Record<WhaleSpecies, string[]>;
     }
 
     /**
@@ -1271,8 +1285,8 @@ export class WhaleAudioManager {
      * Get attribution information for currently loaded samples
      */
     getAttributionInfo(): Record<WhaleSpecies, string[]> {
-        const attribution: Record<WhaleSpecies, string[]> = {} as any;
-        
+        const attribution: Partial<Record<WhaleSpecies, string[]>> = {};
+
         // Map our known sources to attribution strings
         const SOURCE_ATTRIBUTION = {
             'MBARI_MARS': 'Monterey Bay Aquarium Research Institute (MBARI_MARS)',
@@ -1280,7 +1294,7 @@ export class WhaleAudioManager {
             'smithereens': 'Newfoundland field recordings by smithereens',
             'pmel.noaa.gov': 'NOAA Pacific Marine Environmental Laboratory (PMEL)'
         };
-        
+
         this.sampleUrls.forEach((urls, species) => {
             const sources = urls.map(url => {
                 // Extract source from URL
@@ -1289,10 +1303,10 @@ export class WhaleAudioManager {
                 }
                 return 'External source';
             });
-            
+
             attribution[species] = [...new Set(sources)]; // Remove duplicates
         });
-        
-        return attribution;
+
+        return attribution as Record<WhaleSpecies, string[]>;
     }
 }

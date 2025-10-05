@@ -223,10 +223,16 @@ export class FreesoundSampleLoader {
     this.totalCacheHits = 0;
     this.totalDownloads = 0;
     this.totalDownloadTime = 0;
-    
+
     // Force garbage collection if available
     if ('gc' in window) {
-      (window as any).gc();
+      interface WindowWithGC extends Window {
+        gc?: () => void;
+      }
+      const winWithGC = window as WindowWithGC;
+      if (winWithGC.gc) {
+        winWithGC.gc();
+      }
     }
   }
   

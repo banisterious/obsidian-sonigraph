@@ -32,7 +32,14 @@ export class MemoryMonitor {
      * Get current memory metrics
      */
     getCurrentMetrics(): MemoryMetrics {
-        const memory = (performance as any).memory || {
+        interface PerformanceWithMemory {
+            memory?: {
+                usedJSHeapSize: number;
+                totalJSHeapSize: number;
+                jsHeapSizeLimit: number;
+            };
+        }
+        const memory = (performance as unknown as PerformanceWithMemory).memory || {
             usedJSHeapSize: 0,
             totalJSHeapSize: 0,
             jsHeapSizeLimit: 0
@@ -185,8 +192,12 @@ export class MemoryMonitor {
      * Force garbage collection if available (requires --expose-gc flag)
      */
     forceGarbageCollection(): boolean {
-        if (typeof (global as any).gc === 'function') {
-            (global as any).gc();
+        interface GlobalWithGC {
+            gc?: () => void;
+        }
+        const globalWithGC = global as unknown as GlobalWithGC;
+        if (typeof globalWithGC.gc === 'function') {
+            globalWithGC.gc();
             logger.debug('garbage-collection', 'Manual GC triggered');
             return true;
         }
