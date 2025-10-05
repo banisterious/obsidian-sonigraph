@@ -3136,7 +3136,7 @@
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 40px !important; /* Header-only height when collapsed */
+  height: 32px !important; /* Header-only height when collapsed */
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
@@ -3145,15 +3145,15 @@
 
 /* Visual display header */
 .sonic-graph-visual-display-header {
-  padding: 8px 16px;
+  padding: 4px 12px;
   background: var(--background-secondary);
   border-bottom: 1px solid var(--background-modifier-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  min-height: 40px;
-  height: 40px;
+  min-height: 32px;
+  height: 32px;
 }
 
 .sonic-graph-visual-display-title {
@@ -3294,7 +3294,7 @@
 /* Legend */
 .piano-roll-legend {
   position: absolute;
-  bottom: 35px;
+  top: 5px;
   right: 10px;
   display: flex;
   gap: 12px;
