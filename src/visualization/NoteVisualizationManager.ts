@@ -158,6 +158,7 @@ export class NoteVisualizationManager {
             case 'piano-roll':
                 this.renderer = new PianoRollRenderer();
                 this.renderer.initialize(this.container);
+                this.renderer.updateConfig(this.config);
                 break;
 
             case 'spectrum':
