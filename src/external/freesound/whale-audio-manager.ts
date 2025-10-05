@@ -24,7 +24,7 @@ export class WhaleAudioManager {
     private lastDiscoveryTime: number = 0;
     private initializationPromise: Promise<void> | null = null;
     private vault: Vault | null = null;
-    private cacheDir: string = '.obsidian/plugins/sonigraph/cache/whale-samples';
+    private cacheDir: string = ''; // Will be set from vault.configDir
     private legacyCacheDir: string = '.sonigraph-cache/whale-samples';
     private fileCache: Map<string, string> = new Map(); // URL -> file path mapping
     
@@ -131,10 +131,12 @@ export class WhaleAudioManager {
         this.settings = settings;
         this.freesoundClient = new FreesoundAPIClient(clientId, clientSecret);
         this.vault = vault;
-        
-        // Use plugin directory if provided, otherwise default to .obsidian/plugins/sonigraph
+
+        // Use plugin directory if provided, otherwise use vault.configDir
         if (pluginDir) {
             this.cacheDir = `${pluginDir}/cache/whale-samples`;
+        } else if (vault) {
+            this.cacheDir = `${vault.configDir}/plugins/sonigraph/cache/whale-samples`;
         }
         
         this.initializeSeedCollection();

@@ -15951,7 +15951,8 @@ var init_whale_audio_manager = __esm({
         this.lastDiscoveryTime = 0;
         this.initializationPromise = null;
         this.vault = null;
-        this.cacheDir = ".obsidian/plugins/sonigraph/cache/whale-samples";
+        this.cacheDir = "";
+        // Will be set from vault.configDir
         this.legacyCacheDir = ".sonigraph-cache/whale-samples";
         this.fileCache = /* @__PURE__ */ new Map();
         // URL -> file path mapping
@@ -16052,6 +16053,8 @@ var init_whale_audio_manager = __esm({
         this.vault = vault;
         if (pluginDir) {
           this.cacheDir = `${pluginDir}/cache/whale-samples`;
+        } else if (vault) {
+          this.cacheDir = `${vault.configDir}/plugins/sonigraph/cache/whale-samples`;
         }
         this.initializeSeedCollection();
         if (this.vault) {
@@ -20343,7 +20346,7 @@ var init_control_panel = __esm({
             });
           });
           settingsSection.createEl("p", {
-            text: "Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. Only share your vault if you trust recipients with API access.",
+            text: `Note: This key will be stored in plain text in ${this.app.vault.configDir}/plugins/sonigraph/data.json. Only share your vault if you trust recipients with API access.`,
             cls: "osp-security-note"
           });
           new import_obsidian13.Setting(settingsSection).setHeading().setName("Preloading and caching");

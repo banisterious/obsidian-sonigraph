@@ -589,7 +589,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Security note
 			settingsSection.createEl('p', {
-				text: 'Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. ' +
+				text: `Note: This key will be stored in plain text in ${this.app.vault.configDir}/plugins/sonigraph/data.json. ` +
 					  'Only share your vault if you trust recipients with API access.',
 				cls: 'osp-security-note'
 			});
