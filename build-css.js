@@ -37,7 +37,6 @@ const CONFIG = {
     'lists.css',         // List components
     'navigation.css',    // Navigation and drawer components
     'modals.css',        // Modal system and overlays
-    'test-suite.css',    // Test suite modal and testing interface
     'settings.css',      // Settings interface and configuration UI
     'effects.css',       // Effects, presets, and audio components
     'status.css',        // Status displays and real-time feedback

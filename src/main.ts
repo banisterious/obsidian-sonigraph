@@ -2,7 +2,6 @@ import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, SonigraphSettings } from './utils/constants';
 import { SonigraphSettingTab } from './ui/settings';
 import { MaterialControlPanelModal } from './ui/control-panel';
-import { TestSuiteModal } from './testing/TestSuiteModal';
 import { SonicGraphView, VIEW_TYPE_SONIC_GRAPH } from './ui/SonicGraphView';
 import { AudioEngine } from './audio/engine';
 import { GraphParser } from './graph/parser';
@@ -62,15 +61,6 @@ export default class SonigraphPlugin extends Plugin {
 			name: 'Open Control Panel',
 			callback: () => {
 				this.openControlPanel();
-			}
-		});
-
-		// Add test suite command
-		this.addCommand({
-			id: 'open-test-suite',
-			name: 'Open Audio Engine Test Suite',
-			callback: () => {
-				this.openTestSuite();
 			}
 		});
 
@@ -230,19 +220,6 @@ export default class SonigraphPlugin extends Plugin {
 			logger.info('ui', 'Sonic Graph view activated and revealed');
 		}
 	}
-
-	public openTestSuite(): void {
-		logger.info('ui', 'Opening Audio Engine Test Suite');
-
-		if (!this.audioEngine) {
-			logger.error('ui', 'Cannot open test suite: Audio engine not initialized');
-			return;
-		}
-
-		const modal = new TestSuiteModal(this.app, this.audioEngine);
-		modal.open();
-	}
-
 
 	/**
 	 * Parse the current vault and generate musical data
