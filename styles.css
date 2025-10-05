@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-05 18:58:06 UTC
+ * - Generated: 2025-10-05 19:02:05 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6675,7 +6675,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 3237 lines, 69.91 KB */
+/* Component Size: 3326 lines, 71.71 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9914,6 +9914,95 @@ details.osp-advanced-settings {
   font-size: 13px;
 }
 
+/* ===================================================================
+   Piano Roll Renderer
+   =================================================================== */
+
+.piano-roll-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--background-primary-alt);
+  overflow: hidden;
+}
+
+.piano-roll-canvas {
+  position: absolute;
+  left: 40px; /* Space for pitch labels */
+  top: 0;
+  bottom: 30px; /* Space for timeline */
+  background: #1a1a1a;
+}
+
+/* Pitch labels */
+.piano-roll-pitch-labels {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 30px;
+  width: 40px;
+  background: var(--background-secondary);
+  border-right: 1px solid var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.piano-roll-pitch-label {
+  position: absolute;
+  width: 100%;
+  text-align: right;
+  padding-right: 6px;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: 'Courier New', monospace;
+  line-height: 16px;
+}
+
+/* Timeline */
+.piano-roll-timeline {
+  position: absolute;
+  left: 40px;
+  right: 0;
+  bottom: 0;
+  height: 25px;
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* Legend */
+.piano-roll-legend {
+  position: absolute;
+  bottom: 35px;
+  right: 10px;
+  display: flex;
+  gap: 12px;
+  background: rgba(var(--background-primary-rgb), 0.95);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  font-size: 11px;
+  z-index: 10;
+}
+
+.piano-roll-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.piano-roll-legend-color {
+  --legend-color: #888;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--legend-color);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.piano-roll-legend-text {
+  color: var(--text-normal);
+}
+
 
 /* End of sonic-graph.css */
 
@@ -11569,11 +11658,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-05 18:58:06 UTC
+ * Build completed: 2025-10-05 19:02:05 UTC
  * Components processed: 20
- * Total lines: 11363
- * Total size: 241.63 KB
- * Build duration: 0.02 seconds
+ * Total lines: 11452
+ * Total size: 243.42 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -11590,7 +11679,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
- * - sonic-graph.css: 3237 lines, 69.91 KB
+ * - sonic-graph.css: 3326 lines, 71.71 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

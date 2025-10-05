@@ -7,6 +7,7 @@
  */
 
 import { getLogger } from '../logging';
+import { PianoRollRenderer } from './PianoRollRenderer';
 
 const logger = getLogger('NoteVisualizationManager');
 
@@ -150,13 +151,25 @@ export class NoteVisualizationManager {
             this.renderer = null;
         }
 
-        // TODO: Initialize specific renderer based on mode
-        // For now, we'll just log the mode
+        // Initialize specific renderer based on mode
         logger.info('renderer', `Initializing ${this.config.mode} renderer`);
 
-        // Renderer initialization will be added in next phase
-        // this.renderer = new PianoRollRenderer();
-        // this.renderer.initialize(this.container);
+        switch (this.config.mode) {
+            case 'piano-roll':
+                this.renderer = new PianoRollRenderer();
+                this.renderer.initialize(this.container);
+                break;
+
+            case 'spectrum':
+            case 'staff':
+            case 'graph-highlight':
+                // TODO: Implement other renderer types in future phases
+                logger.warn('renderer', `${this.config.mode} renderer not yet implemented`);
+                break;
+
+            default:
+                logger.error('renderer', `Unknown visualization mode: ${this.config.mode}`);
+        }
     }
 
     /**
