@@ -212,8 +212,8 @@ export class SonicGraphFreesoundSettings {
 				.addOption('adaptive', 'Adaptive - Smart balancing')
 				.addOption('predictive', 'Predictive - Pattern based')
 				.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
-				.onChange(async (value) => {
-					this.plugin.settings.freesoundCacheStrategy = value as any;
+				.onChange(async (value: 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive') => {
+					this.plugin.settings.freesoundCacheStrategy = value;
 					await this.plugin.saveSettings();
 					logger.info('freesound-settings', `Cache strategy: ${value}`);
 				})
@@ -261,7 +261,8 @@ export class SonicGraphFreesoundSettings {
 			'different setups for different vaults or workflows.';
 
 		// Current preset display
-		const currentPreset = (this.plugin.settings.sonicGraphSettings as any)?.currentPreset || 'Default';
+		const settingsWithPresets = this.plugin.settings.sonicGraphSettings as { currentPreset?: string; customPresets?: unknown[] } | undefined;
+		const currentPreset = settingsWithPresets?.currentPreset || 'Default';
 		new Setting(content)
 			.setName('Current preset')
 			.setDesc('Currently active configuration preset')
@@ -271,7 +272,7 @@ export class SonicGraphFreesoundSettings {
 			);
 
 		// Preset count info
-		const customPresetCount = (this.plugin.settings.sonicGraphSettings as any)?.customPresets?.length || 0;
+		const customPresetCount = settingsWithPresets?.customPresets?.length || 0;
 		const presetInfo = content.createDiv({ cls: 'osp-settings-note' });
 		const presetP = presetInfo.createEl('p');
 		presetP.style.color = 'var(--text-muted)';

@@ -122,6 +122,7 @@ var init_logging = __esm({
     ContextualLoggerImpl = class extends Logger {
       constructor(component, context2) {
         super(component, context2);
+        this.context = context2;
       }
       getContext() {
         return { ...this.context };
@@ -10419,7 +10420,8 @@ var init_GraphDemoModal = __esm({
       }
       playNodeSound(node) {
         try {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioContextClass();
           const oscillator = audioContext.createOscillator();
           const gainNode = audioContext.createGain();
           const baseFreq = node.type === "note" ? 440 : 330;
@@ -12135,8 +12137,9 @@ var init_SmartClusteringAlgorithms = __esm({
         let totalY = 0;
         let validPositions = 0;
         nodes.forEach((node) => {
-          const x3 = node.x;
-          const y3 = node.y;
+          const d3Node = node;
+          const x3 = d3Node.x;
+          const y3 = d3Node.y;
           if (typeof x3 === "number" && typeof y3 === "number" && !isNaN(x3) && !isNaN(y3)) {
             totalX += x3;
             totalY += y3;
@@ -12174,8 +12177,9 @@ var init_SmartClusteringAlgorithms = __esm({
         let maxDistance = 0;
         let validNodes = 0;
         nodes.forEach((node) => {
-          const x3 = node.x || 0;
-          const y3 = node.y || 0;
+          const d3Node = node;
+          const x3 = d3Node.x || 0;
+          const y3 = d3Node.y || 0;
           if (x3 !== 0 || y3 !== 0) {
             const distance = Math.sqrt((x3 - centroid.x) ** 2 + (y3 - centroid.y) ** 2);
             maxDistance = Math.max(maxDistance, distance);
@@ -94546,11 +94550,12 @@ var SonigraphPlugin = class extends import_obsidian27.Plugin {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     logger79.info("migration", "migrateSettings() called - checking for needed migrations");
     let migrationNeeded = false;
-    if ("effects" in this.settings && !((_a = this.settings.effects) == null ? void 0 : _a.piano)) {
+    const settingsRecord = this.settings;
+    if ("effects" in this.settings && !((_a = settingsRecord.effects) == null ? void 0 : _a.piano)) {
       logger79.info("settings", "Migrating old effects structure to per-instrument structure");
       migrationNeeded = true;
-      const oldEffects = this.settings.effects;
-      delete this.settings.effects;
+      const oldEffects = settingsRecord.effects;
+      delete settingsRecord.effects;
       if (!this.settings.instruments.piano.effects) {
         this.settings.instruments.piano.effects = {
           reverb: {

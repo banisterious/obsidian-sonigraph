@@ -221,16 +221,16 @@ export const EFFECT_ICONS = {
  * @param size - Optional size (defaults to 20)
  */
 export function setLucideIcon(
-  element: HTMLElement, 
-  iconName: string, 
+  element: HTMLElement,
+  iconName: string,
   size: number = 20
 ): void {
   // Clear any existing content
   element.empty();
-  
+
   // Get the actual icon name from our mapping or use the provided name directly
-  const actualIconName = (LUCIDE_ICONS as any)[iconName] || iconName;
-  
+  const actualIconName = (LUCIDE_ICONS as Record<string, string>)[iconName] || iconName;
+
   // Set the icon using Obsidian's setIcon function
   setIcon(element, actualIconName);
 

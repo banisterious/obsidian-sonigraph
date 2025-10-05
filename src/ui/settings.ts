@@ -42,7 +42,10 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.setCta()
 				.onClick(() => {
 					// Close settings before opening Control Center
-					(this.app as any).setting.close();
+					interface AppWithSettings extends App {
+						setting: { close(): void };
+					}
+					(this.app as AppWithSettings).setting.close();
 					this.plugin.openControlPanel();
 				}));
 

@@ -75,10 +75,13 @@ class Logger implements ILogger {
 
 	enrichError(error: Error, context: Record<string, any>): Error {
 		// Add context to error without modifying original
-		const enrichedError = new Error(error.message);
+		interface EnrichedError extends Error {
+			context?: Record<string, any>;
+		}
+		const enrichedError = new Error(error.message) as EnrichedError;
 		enrichedError.name = error.name;
 		enrichedError.stack = error.stack;
-		(enrichedError as any).context = { ...this.context, ...context };
+		enrichedError.context = { ...this.context, ...context };
 		return enrichedError;
 	}
 
@@ -124,12 +127,15 @@ class Logger implements ILogger {
 }
 
 class ContextualLoggerImpl extends Logger implements ContextualLogger {
+	private context: Record<string, any>;
+
 	constructor(component: string, context: Record<string, any>) {
 		super(component, context);
+		this.context = context;
 	}
 
 	getContext(): Record<string, any> {
-		return { ...(this as any).context };
+		return { ...this.context };
 	}
 }
 

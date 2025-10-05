@@ -584,15 +584,22 @@ export class SmartClusteringAlgorithms {
   private calculateCentroid(nodes: GraphNode[]): { x: number; y: number } {
     if (nodes.length === 0) return { x: 0, y: 0 };
 
+    // D3 adds x/y properties to nodes during simulation
+    interface D3Node {
+      x?: number;
+      y?: number;
+    }
+
     let totalX = 0;
     let totalY = 0;
     let validPositions = 0;
 
     nodes.forEach(node => {
-      // Use existing node positions if available
-      const x = (node as any).x;
-      const y = (node as any).y;
-      
+      // Use existing node positions if available (added by D3)
+      const d3Node = node as GraphNode & D3Node;
+      const x = d3Node.x;
+      const y = d3Node.y;
+
       if (typeof x === 'number' && typeof y === 'number' && !isNaN(x) && !isNaN(y)) {
         totalX += x;
         totalY += y;
@@ -631,13 +638,20 @@ export class SmartClusteringAlgorithms {
   private calculateClusterRadius(nodes: GraphNode[], centroid: { x: number; y: number }): number {
     if (nodes.length === 0) return 15; // Small default for empty clusters
 
+    // D3 adds x/y properties to nodes during simulation
+    interface D3Node {
+      x?: number;
+      y?: number;
+    }
+
     let maxDistance = 0;
     let validNodes = 0;
-    
+
     nodes.forEach(node => {
-      const x = (node as any).x || 0;
-      const y = (node as any).y || 0;
-      
+      const d3Node = node as GraphNode & D3Node;
+      const x = d3Node.x || 0;
+      const y = d3Node.y || 0;
+
       // Only consider nodes with valid positions
       if (x !== 0 || y !== 0) {
         const distance = Math.sqrt((x - centroid.x) ** 2 + (y - centroid.y) ** 2);

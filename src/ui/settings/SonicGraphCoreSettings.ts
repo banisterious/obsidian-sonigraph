@@ -341,7 +341,7 @@ export class SonicGraphCoreSettings {
 				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled || false)
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement) {
-						this.plugin.settings.audioEnhancement = {} as any;
+						this.plugin.settings.audioEnhancement = {} as Record<string, unknown>;
 					}
 					if (!this.plugin.settings.audioEnhancement.contentAwareMapping) {
 						this.plugin.settings.audioEnhancement.contentAwareMapping = {

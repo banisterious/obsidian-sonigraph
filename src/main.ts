@@ -341,10 +341,10 @@ export default class SonigraphPlugin extends Plugin {
 		logger.info('debug', 'Sequence details', {
 			totalNotes: this.currentGraphData.sequence.length,
 			sampleNotes: this.currentGraphData.sequence.slice(0, 3).map((note: any) => ({
-				pitch: note.pitch,
-				duration: note.duration,
-				velocity: note.velocity,
-				timing: note.timing
+				pitch: (note as any).pitch,
+				duration: (note as any).duration,
+				velocity: (note as any).velocity,
+				timing: (note as any).timing
 			}))
 		});
 
@@ -525,7 +525,7 @@ export default class SonigraphPlugin extends Plugin {
 				});
 			} else if (key !== 'instruments') {
 				// For non-instrument settings, use saved value
-				(merged as any)[key] = saved[key];
+				(merged as Record<string, unknown>)[key] = saved[key];
 			}
 		});
 		
@@ -540,14 +540,15 @@ export default class SonigraphPlugin extends Plugin {
 		let migrationNeeded = false;
 
 		// Check if we have old global effects structure
-		if ('effects' in this.settings && !(this.settings as any).effects?.piano) {
+		const settingsRecord = this.settings as Record<string, unknown>;
+		if ('effects' in this.settings && !(settingsRecord.effects as any)?.piano) {
 			logger.info('settings', 'Migrating old effects structure to per-instrument structure');
 			migrationNeeded = true;
-			
-			const oldEffects = (this.settings as any).effects;
-			
+
+			const oldEffects = settingsRecord.effects as Record<string, unknown>;
+
 			// Remove old global effects
-			delete (this.settings as any).effects;
+			delete settingsRecord.effects;
 			
 			// Ensure instruments have effect settings
 			if (!this.settings.instruments.piano.effects) {
@@ -803,8 +804,8 @@ export default class SonigraphPlugin extends Plugin {
 	 * Part of Option 3 refactor to remove genre organization
 	 */
 	private flattenGenreBasedSamples(): void {
-		const oldFormat = this.settings.freesoundSamples as any;
-		const flatArray: any[] = [];
+		const oldFormat = this.settings.freesoundSamples as Record<string, unknown[]>;
+		const flatArray: unknown[] = [];
 
 		// Iterate through each genre and collect all samples
 		Object.keys(oldFormat).forEach(genre => {

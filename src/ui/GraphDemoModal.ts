@@ -330,7 +330,11 @@ export class GraphDemoModal extends Modal {
 	private playNodeSound(node: DemoNode) {
 		// Create a simple audio context for demonstration
 		try {
-			const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+			interface WindowWithWebkit extends Window {
+				webkitAudioContext: typeof AudioContext;
+			}
+			const AudioContextClass = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
+			const audioContext = new AudioContextClass();
 			const oscillator = audioContext.createOscillator();
 			const gainNode = audioContext.createGain();
 			

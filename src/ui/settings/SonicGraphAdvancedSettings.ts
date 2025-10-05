@@ -808,9 +808,9 @@ export class SonicGraphAdvancedSettings {
 					.addOption('folder-based', 'Folder-Based - By folder')
 					.addOption('hybrid', 'Hybrid - Combined approach')
 					.setValue(this.plugin.settings.spatialAudio?.mode || 'hybrid')
-					.onChange(async (value) => {
+					.onChange(async (value: string) => {
 						if (this.plugin.settings.spatialAudio) {
-							this.plugin.settings.spatialAudio.mode = value as any;
+							this.plugin.settings.spatialAudio.mode = value as import('../../audio/spatial/types').PanningMode;
 							await this.plugin.saveSettings();
 
 							// Re-render spatial audio section to show/hide hybrid weights card
