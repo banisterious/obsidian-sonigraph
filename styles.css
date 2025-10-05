@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-04 20:07:31 UTC
+ * - Generated: 2025-10-05 16:54:26 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -1140,11 +1140,18 @@
    COMPONENT: UTILITIES.CSS
    ========================================================================== */
 
-/* Component Size: 283 lines, 3.57 KB */
+/* Component Size: 290 lines, 3.68 KB */
 
 /* ==========================================================================
    Sonigraph Plugin - Utility Classes
    ========================================================================== */
+
+/* Icon Utilities */
+.lucide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Spacing Utilities */
 .osp-m-0 {
@@ -1882,7 +1889,7 @@
    COMPONENT: CONTROLS.CSS
    ========================================================================== */
 
-/* Component Size: 710 lines, 15.78 KB */
+/* Component Size: 716 lines, 15.89 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROLS STYLESHEET
@@ -2337,6 +2344,12 @@
   user-select: none;
 }
 
+/* Effect header toggle positioning */
+.effect-header .ospcc-switch {
+  margin-left: auto;
+  transform: scale(0.8);
+}
+
 .ospcc-switch__input {
   cursor: pointer;
 }
@@ -2601,7 +2614,7 @@
    COMPONENT: CARDS.CSS
    ========================================================================== */
 
-/* Component Size: 611 lines, 13.86 KB */
+/* Component Size: 658 lines, 15.11 KB */
 
 /* ==========================================================================
    SONIGRAPH CARDS & CONTAINERS
@@ -3020,6 +3033,10 @@
   margin-top: 16px;
 }
 
+.sonigraph-onboarding-bordered--dismissed {
+  display: none;
+}
+
 /* ==========================================================================
    MATERIAL DESIGN CARDS
    ========================================================================== */
@@ -3039,6 +3056,49 @@
 
 .ospcc-card:first-of-type {
   margin-top: 0;
+}
+
+/* Material Design Stat Cards */
+.ospcc-stat-card {
+  padding: var(--md-space-4);
+  border-radius: var(--md-corner-sm);
+  text-align: center;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+}
+
+.ospcc-stat-card--clickable {
+  cursor: pointer;
+}
+
+.ospcc-stat-card--clickable:hover {
+  background: var(--md-surface-container-high);
+}
+
+.ospcc-stat-card__icon {
+  margin-bottom: var(--md-space-2);
+}
+
+.ospcc-stat-card__icon--primary { color: var(--md-primary); }
+.ospcc-stat-card__icon--success { color: var(--md-success); }
+.ospcc-stat-card__icon--warning { color: var(--md-warning); }
+.ospcc-stat-card__icon--error { color: var(--md-error); }
+
+.ospcc-stat-card__value {
+  font-size: var(--md-font-headline-small);
+  font-weight: 700;
+  margin-bottom: var(--md-space-1);
+}
+
+.ospcc-stat-card__value--primary { color: var(--md-primary); }
+.ospcc-stat-card__value--success { color: var(--md-success); }
+.ospcc-stat-card__value--warning { color: var(--md-warning); }
+.ospcc-stat-card__value--error { color: var(--md-error); }
+
+.ospcc-stat-card__label {
+  font-size: var(--md-font-label-medium);
+  color: var(--md-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ospcc-card__header {
@@ -5366,7 +5426,7 @@
    COMPONENT: SETTINGS.CSS
    ========================================================================== */
 
-/* Component Size: 198 lines, 4.57 KB */
+/* Component Size: 206 lines, 4.7 KB */
 
 /* ==========================================================================
    SONIGRAPH SETTINGS & CONFIGURATION UI
@@ -5391,6 +5451,14 @@ details.osp-advanced-settings {
 /* ==========================================================================
    SETTINGS INTEGRATION
    ========================================================================== */
+
+/* Settings action buttons */
+.osp-settings-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 
 /* Ensure settings toggles have proper spacing */
 .sonigraph-settings .setting-item {
@@ -6304,7 +6372,7 @@ details.osp-advanced-settings {
    COMPONENT: CONTROLCENTER.CSS
    ========================================================================== */
 
-/* Component Size: 815 lines, 19.73 KB */
+/* Component Size: 868 lines, 20.75 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROL CENTER FRAMEWORK
@@ -6689,6 +6757,12 @@ details.osp-advanced-settings {
   background: var(--md-primary);
   color: var(--md-on-primary);
   border-color: var(--md-primary);
+}
+
+.ospcc-chip--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Note: Switch components are defined in controls.css */
@@ -7121,6 +7195,53 @@ details.osp-advanced-settings {
   color: var(--md-on-surface);
 }
 
+/* ==========================================================================
+   CONTROL PANEL UTILITY CLASSES
+   ========================================================================== */
+
+/* Settings description */
+.osp-settings-description {
+  margin-bottom: 10px;
+}
+
+.osp-settings-description--wide-input input {
+  width: 400px;
+  font-family: monospace;
+}
+
+/* Security note */
+.osp-security-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+/* Logging section */
+.osp-logging-chip-set {
+  margin-top: var(--md-space-4);
+}
+
+/* Settings sections with spacing */
+.osp-settings-section--spaced {
+  margin-bottom: var(--md-space-4);
+}
+
+/* Exclusion sections */
+.osp-exclusion-section--spaced {
+  margin-top: var(--md-space-4);
+}
+
+/* Whale status section */
+.osp-whale-status--spaced {
+  margin-top: var(--md-space-4);
+}
+
+/* Actions row */
+.osp-actions-row--spaced {
+  margin-top: var(--md-space-4);
+}
+
 
 /* End of controlcenter.css */
 
@@ -7128,7 +7249,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 2948 lines, 63.89 KB */
+/* Component Size: 3064 lines, 66.09 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9469,7 +9590,7 @@ details.osp-advanced-settings {
 .freesound-clear-btn {
   position: absolute;
   right: 108px;
-  display: flex;
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
   padding: 4px;
@@ -9479,6 +9600,10 @@ details.osp-advanced-settings {
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
+}
+
+.freesound-clear-btn--visible {
+  display: flex;
 }
 
 .freesound-clear-btn:hover {
@@ -9632,7 +9757,7 @@ details.osp-advanced-settings {
 }
 
 .freesound-filter-badge {
-  display: flex;
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
   min-width: 20px;
@@ -9644,6 +9769,10 @@ details.osp-advanced-settings {
   font-size: 11px;
   font-weight: 600;
   font-family: var(--font-interface);
+}
+
+.freesound-filter-badge--visible {
+  display: flex;
 }
 
 .freesound-clear-filters-btn {
@@ -9670,6 +9799,10 @@ details.osp-advanced-settings {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
   transition: all 0.3s ease;
+}
+
+.freesound-filters-grid--hidden {
+  display: none;
 }
 
 @media (max-width: 700px) {
@@ -10076,6 +10209,110 @@ details.osp-advanced-settings {
   height: 20px;
   background: var(--background-modifier-border);
   border-radius: 4px;
+}
+
+/* ===================================
+   SONIC GRAPH MODAL & VIEW UTILITIES
+   ================================== */
+
+/* Display state utilities */
+.sonigraph-hidden {
+  display: none;
+}
+
+.sonigraph-visible {
+  display: block;
+}
+
+.sonigraph-visible-inline {
+  display: inline-flex;
+}
+
+/* Current time indicator */
+.sonigraph-current-indicator {
+  display: none; /* Hidden by default */
+}
+
+.sonigraph-current-indicator--visible {
+  display: block;
+}
+
+/* View mode button */
+.sonigraph-view-mode-btn--visible {
+  display: inline-flex;
+}
+
+/* Timeline markers container */
+.sonigraph-timeline-markers {
+  display: none; /* Hidden by default */
+}
+
+.sonigraph-timeline-markers--visible {
+  display: block;
+}
+
+/* Custom range element */
+.sonigraph-custom-range--visible {
+  display: block;
+}
+
+/* Progress indicator */
+.sonigraph-progress-indicator {
+  display: none; /* Hidden by default */
+}
+
+.sonigraph-progress-indicator--visible {
+  display: flex;
+}
+
+/* Color picker positioning (absolute positioning stays in JS) */
+.sonigraph-color-picker {
+  position: absolute;
+}
+
+/* Group search input */
+.sonigraph-group-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
+.sonigraph-group-search-input--highlighted {
+  background-color: #fef3c7; /* Light yellow background */
+}
+
+/* Autocomplete overlay (positioning stays in JS) */
+.sonigraph-autocomplete-overlay {
+  position: absolute;
+  background-color: var(--background-primary);
+  padding: 8px;
+}
+
+/* Autocomplete option */
+.sonigraph-autocomplete-option {
+  padding: 4px 8px;
+  background: transparent;
+  transition: background-color 0.2s;
+}
+
+.sonigraph-autocomplete-option:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+/* Group label and button colors */
+.sonigraph-group-label {
+  color: var(--text-normal);
+}
+
+.sonigraph-group-remove-btn {
+  color: var(--text-muted);
+  padding: 2px 4px;
+  margin-left: 8px;
+}
+
+/* Color dot background (dynamic, but base styles here) */
+.sonigraph-group-color-dot {
+  /* Background color set dynamically via JS */
 }
 
 
@@ -10529,7 +10766,7 @@ details.osp-advanced-settings {
    COMPONENT: EXPORT.CSS
    ========================================================================== */
 
-/* Component Size: 614 lines, 14.8 KB */
+/* Component Size: 630 lines, 15.16 KB */
 
 /**
  * Export Feature Styles
@@ -10664,9 +10901,14 @@ details.osp-advanced-settings {
 
 /* Custom Range Container */
 .sonigraph-custom-range-container {
+	display: none; /* Hidden by default */
 	margin-top: var(--size-4-3);
 	padding-top: var(--size-4-3);
 	border-top: 1px dashed var(--background-modifier-border);
+}
+
+.sonigraph-custom-range-container--visible {
+	display: block;
 }
 
 /* Collapsible Section Headers (Metadata & Advanced) */
@@ -10704,7 +10946,13 @@ details.osp-advanced-settings {
 
 .sonigraph-export-metadata-content,
 .sonigraph-export-advanced-content {
+	display: none; /* Hidden by default */
 	padding-top: var(--size-4-2);
+}
+
+.sonigraph-export-metadata-content--visible,
+.sonigraph-export-advanced-content--visible {
+	display: block;
 }
 
 /* Action Buttons */
@@ -10809,10 +11057,15 @@ details.osp-advanced-settings {
 
 /* Progress Details (for long exports) */
 .export-progress-details {
+	display: none; /* Hidden by default */
 	margin: var(--size-4-4) 0;
 	padding: var(--size-4-3);
 	background: var(--background-secondary);
 	border-radius: var(--radius-s);
+}
+
+.export-progress-details--visible {
+	display: block;
 }
 
 .export-progress-stage-indicator,
@@ -11717,31 +11970,31 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-04 20:07:31 UTC
+ * Build completed: 2025-10-05 16:54:26 UTC
  * Components processed: 21
- * Total lines: 11502
- * Total size: 244.58 KB
+ * Total lines: 11755
+ * Total size: 249.76 KB
  * Build duration: 0.02 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
  * - base.css: 78 lines, 1.2 KB
  * - layout.css: 933 lines, 13.56 KB
- * - utilities.css: 283 lines, 3.57 KB
+ * - utilities.css: 290 lines, 3.68 KB
  * - buttons.css: 441 lines, 10.78 KB
- * - controls.css: 710 lines, 15.78 KB
- * - cards.css: 611 lines, 13.86 KB
+ * - controls.css: 716 lines, 15.89 KB
+ * - cards.css: 658 lines, 15.11 KB
  * - lists.css: 136 lines, 3.11 KB
  * - navigation.css: 337 lines, 7.72 KB
  * - modals.css: 1071 lines, 21.53 KB
  * - test-suite.css: 565 lines, 11.96 KB
- * - settings.css: 198 lines, 4.57 KB
+ * - settings.css: 206 lines, 4.7 KB
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
- * - controlcenter.css: 815 lines, 19.73 KB
- * - sonic-graph.css: 2948 lines, 63.89 KB
+ * - controlcenter.css: 868 lines, 20.75 KB
+ * - sonic-graph.css: 3064 lines, 66.09 KB
  * - sample-table.css: 435 lines, 8.63 KB
- * - export.css: 614 lines, 14.8 KB
+ * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB
  * - responsive.css: 180 lines, 4.08 KB
  * - theme.css: 120 lines, 2.88 KB

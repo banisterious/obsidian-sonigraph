@@ -58,13 +58,14 @@ export class SonicGraphLayersSettings {
 
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
-		description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Continuous layers add ambient background audio that responds to vault size, activity,
-				and animation progress. Unlike node-based audio which plays when nodes appear, continuous
-				layers provide a persistent soundscape that evolves over time.
-			</p>
-		`;
+		const descP = description.createEl('p');
+		descP.style.color = 'var(--text-muted)';
+		descP.style.fontSize = '13px';
+		descP.style.lineHeight = '1.5';
+		descP.style.marginBottom = '1rem';
+		descP.textContent = 'Continuous layers add ambient background audio that responds to vault size, activity, ' +
+			'and animation progress. Unlike node-based audio which plays when nodes appear, continuous ' +
+			'layers provide a persistent soundscape that evolves over time.';
 
 		// Enable toggle
 		new Setting(content)
@@ -152,11 +153,11 @@ export class SonicGraphLayersSettings {
 
 		// Performance note
 		const perfNote = content.createDiv({ cls: 'osp-settings-note' });
-		perfNote.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; font-style: italic;">
-				Target: <5% additional CPU usage. Layers work alongside existing node-based audio.
-			</p>
-		`;
+		const perfP = perfNote.createEl('p');
+		perfP.style.color = 'var(--text-muted)';
+		perfP.style.fontSize = '12px';
+		perfP.style.fontStyle = 'italic';
+		perfP.textContent = 'Target: <5% additional CPU usage. Layers work alongside existing node-based audio.';
 
 		container.appendChild(card.getElement());
 	}
@@ -273,12 +274,13 @@ export class SonicGraphLayersSettings {
 
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
-		description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers
-				that respond to vault activity and cluster dynamics.
-			</p>
-		`;
+		const descP = description.createEl('p');
+		descP.style.color = 'var(--text-muted)';
+		descP.style.fontSize = '13px';
+		descP.style.lineHeight = '1.5';
+		descP.style.marginBottom = '1rem';
+		descP.textContent = 'Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers ' +
+			'that respond to vault activity and cluster dynamics.';
 
 		// Rhythmic layer toggle
 		new Setting(content)
@@ -544,12 +546,14 @@ export class SonicGraphLayersSettings {
 
 		// Info note
 		const note = content.createDiv({ cls: 'osp-settings-note' });
-		note.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Note:</strong> These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic).
-				For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.
-			</p>
-		`;
+		const noteP = note.createEl('p');
+		noteP.style.color = 'var(--text-muted)';
+		noteP.style.fontSize = '12px';
+		noteP.style.lineHeight = '1.5';
+		noteP.style.marginTop = '1rem';
+		noteP.createEl('strong', { text: 'Note:' });
+		noteP.appendText(' These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic). ' +
+			'For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.');
 
 		container.appendChild(card.getElement());
 	}
@@ -583,16 +587,21 @@ export class SonicGraphLayersSettings {
 
 		// Info note
 		const note = content.createDiv({ cls: 'osp-settings-note' });
-		note.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 0.5rem;">
-				<strong>Adaptive Behavior:</strong> When enabled, layers respond to:
-			</p>
-			<ul style="color: var(--text-muted); font-size: 12px; margin: 0.5rem 0 0 1.5rem;">
-				<li>Vault size (more files = richer textures)</li>
-				<li>Animation progress (evolves through timeline)</li>
-				<li>Node activity (quieter during busy moments)</li>
-			</ul>
-		`;
+		const noteP = note.createEl('p');
+		noteP.style.color = 'var(--text-muted)';
+		noteP.style.fontSize = '12px';
+		noteP.style.lineHeight = '1.5';
+		noteP.style.marginTop = '0.5rem';
+		noteP.createEl('strong', { text: 'Adaptive Behavior:' });
+		noteP.appendText(' When enabled, layers respond to:');
+
+		const noteUl = note.createEl('ul');
+		noteUl.style.color = 'var(--text-muted)';
+		noteUl.style.fontSize = '12px';
+		noteUl.style.margin = '0.5rem 0 0 1.5rem';
+		noteUl.createEl('li', { text: 'Vault size (more files = richer textures)' });
+		noteUl.createEl('li', { text: 'Animation progress (evolves through timeline)' });
+		noteUl.createEl('li', { text: 'Node activity (quieter during busy moments)' });
 
 		container.appendChild(card.getElement());
 	}

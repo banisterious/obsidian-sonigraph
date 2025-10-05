@@ -430,24 +430,19 @@ export class MaterialControlPanelModal extends Modal {
 		const statsRow = content.createDiv({ cls: 'osp-stats-row' });
 		
 		const cpuStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		cpuStat.innerHTML = `
-			<span class="osp-stat-value">12%</span>
-			<span class="osp-stat-label">CPU</span>
-		`;
+		cpuStat.createSpan({ cls: 'osp-stat-value', text: '12%' });
+		cpuStat.createSpan({ cls: 'osp-stat-label', text: 'CPU' });
 		
 		const voicesStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		voicesStat.innerHTML = `
-			<span class="osp-stat-value">${status.audio.currentNotes || 0}</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
+		voicesStat.createSpan({ cls: 'osp-stat-value', text: `${status.audio.currentNotes || 0}` });
+		voicesStat.createSpan({ cls: 'osp-stat-label', text: 'Voices' });
 		
 		const contextStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
 		const contextValue = status.audio.audioContext || 'Suspended';
 		const contextColor = contextValue === 'running' ? 'var(--text-success)' : 'var(--text-warning)';
-		contextStat.innerHTML = `
-			<span class="osp-stat-value" style="color: ${contextColor}">${contextValue}</span>
-			<span class="osp-stat-label">Context</span>
-		`;
+		const contextValueSpan = contextStat.createSpan({ cls: 'osp-stat-value', text: contextValue });
+		contextValueSpan.style.color = contextColor;
+		contextStat.createSpan({ cls: 'osp-stat-label', text: 'Context' });
 
 		this.contentContainer.appendChild(card.getElement());
 	}
@@ -1546,22 +1541,17 @@ export class MaterialControlPanelModal extends Modal {
 		const perfStatsRow = perfContent.createDiv({ cls: 'osp-stats-row' });
 		
 		const cpuStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
-		cpuStat.innerHTML = `
-			<span class="osp-stat-value">23%</span>
-			<span class="osp-stat-label">CPU usage</span>
-		`;
+		cpuStat.createSpan({ cls: 'osp-stat-value', text: '23%' });
+		cpuStat.createSpan({ cls: 'osp-stat-label', text: 'CPU usage' });
 		
 		const voicesStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
-		voicesStat.innerHTML = `
-			<span class="osp-stat-value">47/128</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
+		voicesStat.createSpan({ cls: 'osp-stat-value', text: '47/128' });
+		voicesStat.createSpan({ cls: 'osp-stat-label', text: 'Voices' });
 		
 		const qualityStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
-		qualityStat.innerHTML = `
-			<span class="osp-stat-value" style="color: var(--color-green)">High</span>
-			<span class="osp-stat-label">Audio quality</span>
-		`;
+		const qualityValueSpan = qualityStat.createSpan({ cls: 'osp-stat-value', text: 'High' });
+		qualityValueSpan.style.color = 'var(--color-green)';
+		qualityStat.createSpan({ cls: 'osp-stat-label', text: 'Audio quality' });
 		
 		this.contentContainer.appendChild(masterEffectsCard.getElement());
 		this.contentContainer.appendChild(performanceCard.getElement());
@@ -1677,9 +1667,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Description
 		const description = content.createDiv({ cls: 'osp-control-description' });
-		description.innerHTML = `
-			<p>Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.</p>
-		`;
+		description.createEl('p', { text: 'Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.' });
 
 		// Settings section
 		const settingsSection = content.createDiv({ cls: 'osp-settings-section osp-settings-section--spaced' });
@@ -1710,16 +1698,12 @@ export class MaterialControlPanelModal extends Modal {
 		const statsContainer = content.createDiv({ cls: 'osp-stats-row' });
 		
 		const filesStat = statsContainer.createDiv({ cls: 'osp-stat-compact' });
-		filesStat.innerHTML = `
-			<span class="osp-stat-value">—</span>
-			<span class="osp-stat-label">Files</span>
-		`;
+		filesStat.createSpan({ cls: 'osp-stat-value', text: '—' });
+		filesStat.createSpan({ cls: 'osp-stat-label', text: 'Files' });
 		
 		const linksStat = statsContainer.createDiv({ cls: 'osp-stat-compact' });
-		linksStat.innerHTML = `
-			<span class="osp-stat-value">—</span>
-			<span class="osp-stat-label">Links</span>
-		`;
+		linksStat.createSpan({ cls: 'osp-stat-value', text: '—' });
+		linksStat.createSpan({ cls: 'osp-stat-label', text: 'Links' });
 
 		// Update stats asynchronously
 		this.updateSonicGraphStats(filesStat, linksStat);
@@ -2160,22 +2144,16 @@ export class MaterialControlPanelModal extends Modal {
 		const statsRow = content.createDiv({ cls: 'osp-stats-row' });
 		
 		const enabledStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		enabledStat.innerHTML = `
-			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}</span>
-			<span class="osp-stat-label">Enabled</span>
-		`;
+		enabledStat.createSpan({ cls: 'osp-stat-value', text: `${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}` });
+		enabledStat.createSpan({ cls: 'osp-stat-label', text: 'Enabled' });
 		
 		const voicesStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		voicesStat.innerHTML = `
-			<span class="osp-stat-value">${this.getActiveVoices(familyId)}</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
+		voicesStat.createSpan({ cls: 'osp-stat-value', text: `${this.getActiveVoices(familyId)}` });
+		voicesStat.createSpan({ cls: 'osp-stat-label', text: 'Voices' });
 		
 		const avgVolumeStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		avgVolumeStat.innerHTML = `
-			<span class="osp-stat-value">0.7</span>
-			<span class="osp-stat-label">Avg Vol</span>
-		`;
+		avgVolumeStat.createSpan({ cls: 'osp-stat-value', text: '0.7' });
+		avgVolumeStat.createSpan({ cls: 'osp-stat-label', text: 'Avg Vol' });
 		
 		// Compact bulk actions
 		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
@@ -3263,8 +3241,8 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Use proper instrument name from INSTRUMENT_INFO instead of capitalizeWords
 		const instrumentInfo = INSTRUMENT_INFO[instrumentName as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
-		const titleWithStatus = this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo);
-		title.innerHTML += titleWithStatus;
+		const titleSpan = title.createSpan();
+		this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo, titleSpan);
 		
 		// Enable toggle
 		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
@@ -3568,17 +3546,16 @@ export class MaterialControlPanelModal extends Modal {
 		return !requiresHighQuality;
 	}
 
-	private createInstrumentTitleWithStatus(instrumentKey: string, instrumentInfo: { name: string; icon: string; description: string; defaultFrequencyRange: string }): string {
-		let titleText = `${instrumentInfo.icon} ${instrumentInfo.name}`;
-		
+	private createInstrumentTitleWithStatus(instrumentKey: string, instrumentInfo: { name: string; icon: string; description: string; defaultFrequencyRange: string }, container: HTMLElement): void {
+		container.appendText(`${instrumentInfo.icon} ${instrumentInfo.name}`);
+
 		// Add download status for high-quality instruments
 		if (this.instrumentRequiresHighQuality(instrumentKey)) {
 			const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
 			const statusText = isDownloaded ? '(downloaded)' : '(not downloaded)';
-			titleText += ` <em>${statusText}</em>`;
+			container.appendText(' ');
+			container.createEl('em', { text: statusText });
 		}
-		
-		return titleText;
 	}
 
 	private checkIfSampleDownloaded(instrumentKey: string): boolean {

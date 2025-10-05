@@ -171,12 +171,13 @@ export class SonicGraphAdvancedSettings {
 
 			// Note about detailed settings
 			const note = content.createDiv({ cls: 'osp-settings-note' });
-			note.innerHTML = `
-				<p style="color: var(--text-muted); font-size: 12px; margin-top: 0.5rem;">
-					<strong>Note:</strong> Detailed per-cluster-type settings (tag-based, temporal, link-dense,
-					community, topical) are available in the Sonic Graph modal's settings panel.
-				</p>
-			`;
+			const noteP = note.createEl('p');
+			noteP.style.color = 'var(--text-muted)';
+			noteP.style.fontSize = '12px';
+			noteP.style.marginTop = '0.5rem';
+			noteP.createEl('strong', { text: 'Note:' });
+			noteP.appendText(' Detailed per-cluster-type settings (tag-based, temporal, link-dense, ' +
+				'community, topical) are available in the Sonic Graph modal\'s settings panel.');
 		}
 
 		cardContainer.appendChild(card.getElement());
@@ -527,12 +528,14 @@ export class SonicGraphAdvancedSettings {
 
 			// Hub instrument preference
 			const instrumentsNote = content.createDiv({ cls: 'osp-settings-note' });
-			instrumentsNote.innerHTML = `
-				<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-					<strong>Hub Instrument Preference:</strong> Hub nodes will preferentially use piano, strings,
-					and brass instruments to emphasize their prominence in the network.
-				</p>
-			`;
+			const instrumentsP = instrumentsNote.createEl('p');
+			instrumentsP.style.color = 'var(--text-muted)';
+			instrumentsP.style.fontSize = '12px';
+			instrumentsP.style.lineHeight = '1.5';
+			instrumentsP.style.marginTop = '1rem';
+			instrumentsP.createEl('strong', { text: 'Hub Instrument Preference:' });
+			instrumentsP.appendText(' Hub nodes will preferentially use piano, strings, ' +
+				'and brass instruments to emphasize their prominence in the network.');
 		}
 
 		cardContainer.appendChild(card.getElement());
@@ -681,16 +684,23 @@ export class SonicGraphAdvancedSettings {
 
 			// Info note about complexity tiers
 			const note = content.createDiv({ cls: 'osp-settings-note' });
-			note.innerHTML = `
-				<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-					<strong>Complexity Tiers:</strong> The system automatically adjusts orchestration based on vault size:
-					<br>• Minimal (0-100 nodes): Basic instruments only
-					<br>• Simple (100-500): Add rhythmic layers
-					<br>• Moderate (500-1000): Add harmonic pads
-					<br>• Complex (1000-5000): Full orchestral arrangement
-					<br>• Extensive (5000+): Maximum complexity
-				</p>
-			`;
+			const noteP = note.createEl('p');
+			noteP.style.color = 'var(--text-muted)';
+			noteP.style.fontSize = '12px';
+			noteP.style.lineHeight = '1.5';
+			noteP.style.marginTop = '1rem';
+			noteP.createEl('strong', { text: 'Complexity Tiers:' });
+			noteP.appendText(' The system automatically adjusts orchestration based on vault size:');
+			noteP.createEl('br');
+			noteP.appendText('• Minimal (0-100 nodes): Basic instruments only');
+			noteP.createEl('br');
+			noteP.appendText('• Simple (100-500): Add rhythmic layers');
+			noteP.createEl('br');
+			noteP.appendText('• Moderate (500-1000): Add harmonic pads');
+			noteP.createEl('br');
+			noteP.appendText('• Complex (1000-5000): Full orchestral arrangement');
+			noteP.createEl('br');
+			noteP.appendText('• Extensive (5000+): Maximum complexity');
 		}
 
 		cardContainer.appendChild(card.getElement());

@@ -252,7 +252,9 @@ export class GraphDemoModal extends Modal {
 
 		// Info text
 		const infoText = controlsContainer.createDiv('info-text');
-		infoText.innerHTML = 'Blue = Notes, Orange = Images<br/>Node size = text length + connections';
+		infoText.appendText('Blue = Notes, Orange = Images');
+		infoText.createEl('br');
+		infoText.appendText('Node size = text length + connections');
 	}
 
 	private startTemporalAnimation() {

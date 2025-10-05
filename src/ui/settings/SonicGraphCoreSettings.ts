@@ -321,13 +321,14 @@ export class SonicGraphCoreSettings {
 
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
-		description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Content-aware mapping automatically selects instruments based on file types, tags,
-				folder structure, and frontmatter metadata. This creates semantic correlation between
-				your vault's content and its musical representation.
-			</p>
-		`;
+		const descP = description.createEl('p');
+		descP.style.color = 'var(--text-muted)';
+		descP.style.fontSize = '13px';
+		descP.style.lineHeight = '1.5';
+		descP.style.marginBottom = '1rem';
+		descP.textContent = 'Content-aware mapping automatically selects instruments based on file types, tags, ' +
+			'folder structure, and frontmatter metadata. This creates semantic correlation between ' +
+			'your vault\'s content and its musical representation.';
 
 		// Create wrapper for detailed settings (will be dynamically shown/hidden)
 		const detailsWrapper = content.createDiv({ cls: 'osp-settings-details-wrapper' });
@@ -428,12 +429,14 @@ export class SonicGraphCoreSettings {
 
 		// Info note about advanced settings
 		const advancedNote = content.createDiv({ cls: 'osp-settings-note' });
-		advancedNote.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Note:</strong> Advanced file type, tag, and folder mappings
-				can be configured in the instrument settings. Connection type audio differentiation
-				is available in the Spatial Audio tab.
-			</p>
-		`;
+		const advancedP = advancedNote.createEl('p');
+		advancedP.style.color = 'var(--text-muted)';
+		advancedP.style.fontSize = '12px';
+		advancedP.style.lineHeight = '1.5';
+		advancedP.style.marginTop = '1rem';
+		advancedP.createEl('strong', { text: 'Note:' });
+		advancedP.appendText(' Advanced file type, tag, and folder mappings ' +
+			'can be configured in the instrument settings. Connection type audio differentiation ' +
+			'is available in the Spatial Audio tab.');
 	}
 }

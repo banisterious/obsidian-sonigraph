@@ -125,7 +125,7 @@ export class FreesoundSearchModal extends Modal {
 				'aria-label': 'Clear search'
 			}
 		});
-		clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+		setIcon(clearButton, 'x');
 		clearButton.addEventListener('click', () => {
 			if (this.searchInput) {
 				this.searchInput.value = '';
@@ -140,7 +140,8 @@ export class FreesoundSearchModal extends Modal {
 			attr: { 'aria-label': 'Search' }
 		});
 
-		searchButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg><span>Search</span>`;
+		setIcon(searchButton, 'search');
+		searchButton.createSpan({ text: 'Search' });
 		searchButton.addEventListener('click', () => this.performSearch());
 
 		// Quick search suggestions
@@ -156,10 +157,11 @@ export class FreesoundSearchModal extends Modal {
 			});
 
 			// Add icon based on suggestion type
-			const icon = this.getSearchIcon(suggestion);
-			if (icon) {
-				suggestionBtn.innerHTML = `${icon}<span>${suggestion}</span>`;
+			const iconName = this.getSearchIconName(suggestion);
+			if (iconName) {
+				setIcon(suggestionBtn, iconName);
 			}
+			suggestionBtn.createSpan({ text: suggestion });
 
 			suggestionBtn.addEventListener('click', () => {
 				suggestionBtn.addClass('freesound-suggestion-active');
@@ -184,17 +186,17 @@ export class FreesoundSearchModal extends Modal {
 		}
 	}
 
-	private getSearchIcon(suggestion: string): string {
+	private getSearchIconName(suggestion: string): string | null {
 		const iconMap: Record<string, string> = {
-			'ambient': '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
-			'pad': '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
-			'texture': '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
-			'ocean': '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M2 12c3.667-3 7.333-3 11 0s7.333 3 11 0"></path></svg>',
-			'water': '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>',
+			'ambient': 'music',
+			'pad': 'music',
+			'texture': 'square',
+			'ocean': 'waves',
+			'water': 'droplet',
 		};
 
-		// Return icon if exact match, otherwise return generic music icon
-		return iconMap[suggestion.toLowerCase()] || '';
+		// Return icon name if exact match
+		return iconMap[suggestion.toLowerCase()] || null;
 	}
 
 	private createFiltersSection(container: HTMLElement): void {
@@ -208,13 +210,10 @@ export class FreesoundSearchModal extends Modal {
 			attr: { 'aria-expanded': 'true', 'aria-label': 'Toggle filters' }
 		});
 
-		headerButton.innerHTML = `
-			<svg class="freesound-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="6 9 12 15 18 9"></polyline>
-			</svg>
-			<h3>Filters</h3>
-			<span class="freesound-filter-badge">0</span>
-		`;
+		const chevronIcon = headerButton.createDiv({ cls: 'freesound-chevron' });
+		setIcon(chevronIcon, 'chevron-down');
+		headerButton.createEl('h3', { text: 'Filters' });
+		headerButton.createSpan({ text: '0', cls: 'freesound-filter-badge' });
 
 		headerButton.addEventListener('click', () => {
 			this.filtersCollapsed = !this.filtersCollapsed;
@@ -407,14 +406,9 @@ export class FreesoundSearchModal extends Modal {
 		if (this.searchResults.length === 0) {
 			// Enhanced empty state
 			const emptyState = this.resultsContainer.createDiv({ cls: 'freesound-empty-state' });
-			emptyState.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.35-4.35"></path>
-				</svg>
-				<p>No results found</p>
-				<span>Try different search terms or adjust your filters</span>
-			`;
+			setIcon(emptyState, 'search');
+			emptyState.createEl('p', { text: 'No results found' });
+			emptyState.createEl('span', { text: 'Try different search terms or adjust your filters' });
 			return;
 		}
 
@@ -423,13 +417,7 @@ export class FreesoundSearchModal extends Modal {
 
 			// Waveform/Thumbnail placeholder (visual indicator)
 			const thumbnail = resultItem.createDiv({ cls: 'freesound-result-thumbnail' });
-			thumbnail.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-					<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-					<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-				</svg>
-			`;
+			setIcon(thumbnail, 'volume-2');
 
 			// Result content
 			const contentSection = resultItem.createDiv({ cls: 'freesound-result-content' });
@@ -442,7 +430,8 @@ export class FreesoundSearchModal extends Modal {
 			const badgesEl = headerSection.createDiv({ cls: 'freesound-result-badges' });
 
 			const durationBadge = badgesEl.createDiv({ cls: 'freesound-badge freesound-badge-duration' });
-			durationBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>${result.duration.toFixed(1)}s</span>`;
+			setIcon(durationBadge, 'clock');
+			durationBadge.createSpan({ text: `${result.duration.toFixed(1)}s` });
 
 			const licenseBadge = badgesEl.createDiv({ cls: 'freesound-badge freesound-badge-license' });
 			licenseBadge.textContent = this.formatLicense(result.license);
@@ -466,7 +455,8 @@ export class FreesoundSearchModal extends Modal {
 
 			// Footer with attribution
 			const footerEl = contentSection.createDiv({ cls: 'freesound-result-footer' });
-			footerEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>by ${result.username}</span>`;
+			setIcon(footerEl, 'user');
+			footerEl.createSpan({ text: `by ${result.username}` });
 
 			// Action buttons
 			const actionsSection = resultItem.createDiv({ cls: 'freesound-result-actions' });
@@ -476,7 +466,8 @@ export class FreesoundSearchModal extends Modal {
 				cls: 'freesound-action-btn freesound-preview-btn',
 				attr: { 'aria-label': `Preview ${result.name}` }
 			});
-			previewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Preview</span>`;
+			setIcon(previewBtn, 'play');
+			previewBtn.createSpan({ text: 'Preview' });
 			previewBtn.addEventListener('click', () => this.previewSample(result, previewBtn));
 
 			// Add to library button
@@ -484,7 +475,8 @@ export class FreesoundSearchModal extends Modal {
 				cls: 'freesound-action-btn freesound-add-btn',
 				attr: { 'aria-label': `Add ${result.name} to library` }
 			});
-			addBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Add to Library</span>`;
+			setIcon(addBtn, 'plus');
+			addBtn.createSpan({ text: 'Add to Library' });
 			addBtn.addEventListener('click', () => this.addSampleToLibrary(result));
 		});
 	}
@@ -518,9 +510,42 @@ export class FreesoundSearchModal extends Modal {
 		return licenseMap[license] || license;
 	}
 
+	private updatePreviewButton(button: HTMLButtonElement, state: 'play' | 'stop' | 'loading' | 'error'): void {
+		button.empty();
+
+		switch (state) {
+			case 'play':
+				setIcon(button, 'play');
+				button.createSpan({ text: 'Preview' });
+				button.disabled = false;
+				button.removeClass('freesound-btn-loading');
+				button.removeClass('freesound-btn-playing');
+				button.removeClass('freesound-btn-error');
+				break;
+			case 'stop':
+				setIcon(button, 'square');
+				button.createSpan({ text: 'Stop' });
+				button.disabled = false;
+				button.removeClass('freesound-btn-loading');
+				button.addClass('freesound-btn-playing');
+				break;
+			case 'loading':
+				setIcon(button, 'loader-2');
+				button.createSpan({ text: 'Loading...' });
+				button.disabled = true;
+				button.addClass('freesound-btn-loading');
+				break;
+			case 'error':
+				setIcon(button, 'alert-circle');
+				button.createSpan({ text: 'Error' });
+				button.addClass('freesound-btn-error');
+				break;
+		}
+	}
+
 	private async previewSample(result: FreesoundSearchResult, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
-		if (button.querySelector('.freesound-stop-icon')) {
+		if (button.hasClass('freesound-btn-playing')) {
 			this.stopPreview();
 			return;
 		}
@@ -530,15 +555,9 @@ export class FreesoundSearchModal extends Modal {
 			this.stopPreview();
 		}
 
-		const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-		const stopIcon = '<svg class="freesound-stop-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg>';
-		const loadingIcon = '<svg class="freesound-loading-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
-
 		try {
 			// Show loading
-			button.innerHTML = `${loadingIcon}<span>Loading...</span>`;
-			button.disabled = true;
-			button.addClass('freesound-btn-loading');
+			this.updatePreviewButton(button, 'loading');
 
 			// Create and play audio
 			const audio = new Audio(result.previews['preview-lq-mp3']);
@@ -553,15 +572,11 @@ export class FreesoundSearchModal extends Modal {
 
 			await audio.play();
 
-			button.innerHTML = `${stopIcon}<span>Stop</span>`;
-			button.disabled = false;
-			button.removeClass('freesound-btn-loading');
-			button.addClass('freesound-btn-playing');
+			this.updatePreviewButton(button, 'stop');
 
 			audio.addEventListener('ended', () => {
 				if (this.currentPreviewButton) {
-					this.currentPreviewButton.innerHTML = `${playIcon}<span>Preview</span>`;
-					this.currentPreviewButton.removeClass('freesound-btn-playing');
+					this.updatePreviewButton(this.currentPreviewButton, 'play');
 				}
 				this.currentAudio = null;
 				this.currentPreviewButton = null;
@@ -569,14 +584,10 @@ export class FreesoundSearchModal extends Modal {
 
 		} catch (error) {
 			logger.error('preview', `Failed to preview sample ${result.id}`, error);
-			button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span>Error</span>`;
-			button.addClass('freesound-btn-error');
+			this.updatePreviewButton(button, 'error');
 
 			setTimeout(() => {
-				button.innerHTML = `${playIcon}<span>Preview</span>`;
-				button.disabled = false;
-				button.removeClass('freesound-btn-loading');
-				button.removeClass('freesound-btn-error');
+				this.updatePreviewButton(button, 'play');
 			}, 2000);
 			this.currentAudio = null;
 			this.currentPreviewButton = null;
@@ -584,8 +595,6 @@ export class FreesoundSearchModal extends Modal {
 	}
 
 	private stopPreview(): void {
-		const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-
 		if (this.currentAudio) {
 			this.currentAudio.pause();
 			this.currentAudio.currentTime = 0;
@@ -593,8 +602,7 @@ export class FreesoundSearchModal extends Modal {
 		}
 
 		if (this.currentPreviewButton) {
-			this.currentPreviewButton.innerHTML = `${playIcon}<span>Preview</span>`;
-			this.currentPreviewButton.removeClass('freesound-btn-playing');
+			this.updatePreviewButton(this.currentPreviewButton, 'play');
 			this.currentPreviewButton = null;
 		}
 	}
@@ -622,15 +630,11 @@ export class FreesoundSearchModal extends Modal {
 		this.resultsContainer.empty();
 
 		const errorState = this.resultsContainer.createDiv({ cls: 'freesound-error-state' });
-		errorState.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="10"></circle>
-				<line x1="12" y1="8" x2="12" y2="12"></line>
-				<line x1="12" y1="16" x2="12.01" y2="16"></line>
-			</svg>
-			<p>Search Error</p>
-			<span>${error.message || 'Failed to search Freesound. Please check your API key and connection.'}</span>
-		`;
+		setIcon(errorState, 'alert-circle');
+		errorState.createEl('p', { text: 'Search Error' });
+		errorState.createEl('span', {
+			text: error.message || 'Failed to search Freesound. Please check your API key and connection.'
+		});
 
 		const retryBtn = errorState.createEl('button', {
 			text: 'Try Again',
@@ -642,14 +646,15 @@ export class FreesoundSearchModal extends Modal {
 	private updateSearchButton(text: string): void {
 		const button = this.contentEl.querySelector('.freesound-search-button') as HTMLButtonElement;
 		if (button) {
-			const searchIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>';
-			const loadingIcon = '<svg class="freesound-loading-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+			button.empty();
 
 			if (this.isSearching) {
-				button.innerHTML = `${loadingIcon}<span>${text}</span>`;
+				setIcon(button, 'loader-2');
+				button.createSpan({ text });
 				button.addClass('freesound-btn-loading');
 			} else {
-				button.innerHTML = `${searchIcon}<span>${text}</span>`;
+				setIcon(button, 'search');
+				button.createSpan({ text });
 				button.removeClass('freesound-btn-loading');
 			}
 			button.disabled = this.isSearching;
@@ -664,15 +669,12 @@ export class FreesoundSearchModal extends Modal {
 		// Create 3 skeleton cards
 		for (let i = 0; i < 3; i++) {
 			const skeleton = this.resultsContainer.createDiv({ cls: 'freesound-result-skeleton' });
-			skeleton.innerHTML = `
-				<div class="freesound-skeleton-thumbnail"></div>
-				<div class="freesound-skeleton-content">
-					<div class="freesound-skeleton-title"></div>
-					<div class="freesound-skeleton-badges"></div>
-					<div class="freesound-skeleton-description"></div>
-					<div class="freesound-skeleton-tags"></div>
-				</div>
-			`;
+			skeleton.createDiv({ cls: 'freesound-skeleton-thumbnail' });
+			const content = skeleton.createDiv({ cls: 'freesound-skeleton-content' });
+			content.createDiv({ cls: 'freesound-skeleton-title' });
+			content.createDiv({ cls: 'freesound-skeleton-badges' });
+			content.createDiv({ cls: 'freesound-skeleton-description' });
+			content.createDiv({ cls: 'freesound-skeleton-tags' });
 		}
 	}
 

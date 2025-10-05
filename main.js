@@ -3366,9 +3366,6 @@ function setLucideIcon(element, iconName, size = 20) {
   element.addClass("lucide-icon");
   element.style.width = `${size}px`;
   element.style.height = `${size}px`;
-  element.style.display = "inline-flex";
-  element.style.alignItems = "center";
-  element.style.justifyContent = "center";
 }
 function createLucideIcon(iconName, size = 20) {
   const iconElement = document.createElement("span");
@@ -3753,8 +3750,6 @@ var init_material_components = __esm({
         title.appendChild(icon);
         title.appendText(this.options.effectName);
         const toggleContainer = container.createDiv({ cls: "ospcc-switch" });
-        toggleContainer.style.marginLeft = "auto";
-        toggleContainer.style.transform = "scale(0.8)";
         this.enableSwitch = toggleContainer.createEl("input", {
           type: "checkbox",
           cls: "ospcc-switch__input"
@@ -3829,8 +3824,7 @@ var init_material_components = __esm({
           }
         });
         if (this.options.disabled) {
-          chip.style.opacity = "0.5";
-          chip.style.cursor = "not-allowed";
+          chip.addClass("ospcc-chip--disabled");
         }
         return chip;
       }
@@ -3903,14 +3897,6 @@ var init_material_components = __esm({
         });
         document.addEventListener("mouseup", () => {
           isDragging = false;
-        });
-        this.slider.addEventListener("mouseenter", () => {
-          this.thumb.style.transform = "translate(-50%, -50%) scale(1.1)";
-        });
-        this.slider.addEventListener("mouseleave", () => {
-          if (!isDragging) {
-            this.thumb.style.transform = "translate(-50%, -50%) scale(1)";
-          }
         });
       }
       updateDisplay() {
@@ -10384,7 +10370,9 @@ var init_GraphDemoModal = __esm({
         const resetBtn = controlsContainer.createEl("button", { text: "Reset View" });
         resetBtn.onclick = () => this.resetView();
         const infoText = controlsContainer.createDiv("info-text");
-        infoText.innerHTML = "Blue = Notes, Orange = Images<br/>Node size = text length + connections";
+        infoText.appendText("Blue = Notes, Orange = Images");
+        infoText.createEl("br");
+        infoText.appendText("Node size = text length + connections");
       }
       startTemporalAnimation() {
         if (!this.svg || !this.simulation)
@@ -14294,13 +14282,12 @@ var init_SonicGraphCoreSettings = __esm({
         });
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
-        description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Content-aware mapping automatically selects instruments based on file types, tags,
-				folder structure, and frontmatter metadata. This creates semantic correlation between
-				your vault's content and its musical representation.
-			</p>
-		`;
+        const descP = description.createEl("p");
+        descP.style.color = "var(--text-muted)";
+        descP.style.fontSize = "13px";
+        descP.style.lineHeight = "1.5";
+        descP.style.marginBottom = "1rem";
+        descP.textContent = "Content-aware mapping automatically selects instruments based on file types, tags, folder structure, and frontmatter metadata. This creates semantic correlation between your vault's content and its musical representation.";
         const detailsWrapper = content.createDiv({ cls: "osp-settings-details-wrapper" });
         new import_obsidian6.Setting(content).setName("Enable content-aware mapping").setDesc("Automatically map file properties to musical parameters").addToggle(
           (toggle) => {
@@ -14381,13 +14368,13 @@ var init_SonicGraphCoreSettings = __esm({
           }
         );
         const advancedNote = content.createDiv({ cls: "osp-settings-note" });
-        advancedNote.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Note:</strong> Advanced file type, tag, and folder mappings
-				can be configured in the instrument settings. Connection type audio differentiation
-				is available in the Spatial Audio tab.
-			</p>
-		`;
+        const advancedP = advancedNote.createEl("p");
+        advancedP.style.color = "var(--text-muted)";
+        advancedP.style.fontSize = "12px";
+        advancedP.style.lineHeight = "1.5";
+        advancedP.style.marginTop = "1rem";
+        advancedP.createEl("strong", { text: "Note:" });
+        advancedP.appendText(" Advanced file type, tag, and folder mappings can be configured in the instrument settings. Connection type audio differentiation is available in the Spatial Audio tab.");
       }
     };
   }
@@ -14524,12 +14511,12 @@ var init_SonicGraphAdvancedSettings = __esm({
             }
           );
           const note = content.createDiv({ cls: "osp-settings-note" });
-          note.innerHTML = `
-				<p style="color: var(--text-muted); font-size: 12px; margin-top: 0.5rem;">
-					<strong>Note:</strong> Detailed per-cluster-type settings (tag-based, temporal, link-dense,
-					community, topical) are available in the Sonic Graph modal's settings panel.
-				</p>
-			`;
+          const noteP = note.createEl("p");
+          noteP.style.color = "var(--text-muted)";
+          noteP.style.fontSize = "12px";
+          noteP.style.marginTop = "0.5rem";
+          noteP.createEl("strong", { text: "Note:" });
+          noteP.appendText(" Detailed per-cluster-type settings (tag-based, temporal, link-dense, community, topical) are available in the Sonic Graph modal's settings panel.");
         }
         cardContainer.appendChild(card.getElement());
       }
@@ -14791,12 +14778,13 @@ var init_SonicGraphAdvancedSettings = __esm({
             }
           );
           const instrumentsNote = content.createDiv({ cls: "osp-settings-note" });
-          instrumentsNote.innerHTML = `
-				<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-					<strong>Hub Instrument Preference:</strong> Hub nodes will preferentially use piano, strings,
-					and brass instruments to emphasize their prominence in the network.
-				</p>
-			`;
+          const instrumentsP = instrumentsNote.createEl("p");
+          instrumentsP.style.color = "var(--text-muted)";
+          instrumentsP.style.fontSize = "12px";
+          instrumentsP.style.lineHeight = "1.5";
+          instrumentsP.style.marginTop = "1rem";
+          instrumentsP.createEl("strong", { text: "Hub Instrument Preference:" });
+          instrumentsP.appendText(" Hub nodes will preferentially use piano, strings, and brass instruments to emphasize their prominence in the network.");
         }
         cardContainer.appendChild(card.getElement());
       }
@@ -14908,16 +14896,23 @@ var init_SonicGraphAdvancedSettings = __esm({
             }
           );
           const note = content.createDiv({ cls: "osp-settings-note" });
-          note.innerHTML = `
-				<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-					<strong>Complexity Tiers:</strong> The system automatically adjusts orchestration based on vault size:
-					<br>\u2022 Minimal (0-100 nodes): Basic instruments only
-					<br>\u2022 Simple (100-500): Add rhythmic layers
-					<br>\u2022 Moderate (500-1000): Add harmonic pads
-					<br>\u2022 Complex (1000-5000): Full orchestral arrangement
-					<br>\u2022 Extensive (5000+): Maximum complexity
-				</p>
-			`;
+          const noteP = note.createEl("p");
+          noteP.style.color = "var(--text-muted)";
+          noteP.style.fontSize = "12px";
+          noteP.style.lineHeight = "1.5";
+          noteP.style.marginTop = "1rem";
+          noteP.createEl("strong", { text: "Complexity Tiers:" });
+          noteP.appendText(" The system automatically adjusts orchestration based on vault size:");
+          noteP.createEl("br");
+          noteP.appendText("\u2022 Minimal (0-100 nodes): Basic instruments only");
+          noteP.createEl("br");
+          noteP.appendText("\u2022 Simple (100-500): Add rhythmic layers");
+          noteP.createEl("br");
+          noteP.appendText("\u2022 Moderate (500-1000): Add harmonic pads");
+          noteP.createEl("br");
+          noteP.appendText("\u2022 Complex (1000-5000): Full orchestral arrangement");
+          noteP.createEl("br");
+          noteP.appendText("\u2022 Extensive (5000+): Maximum complexity");
         }
         cardContainer.appendChild(card.getElement());
       }
@@ -17334,11 +17329,10 @@ var init_FreesoundSearchModal = __esm({
         const clearButton = searchContainer.createEl("button", {
           cls: "freesound-clear-btn",
           attr: {
-            "aria-label": "Clear search",
-            "style": "display: none;"
+            "aria-label": "Clear search"
           }
         });
-        clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        setIcon(clearButton, "x");
         clearButton.addEventListener("click", () => {
           if (this.searchInput) {
             this.searchInput.value = "";
@@ -17350,7 +17344,8 @@ var init_FreesoundSearchModal = __esm({
           cls: "freesound-search-button",
           attr: { "aria-label": "Search" }
         });
-        searchButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg><span>Search</span>`;
+        setIcon(searchButton, "search");
+        searchButton.createSpan({ text: "Search" });
         searchButton.addEventListener("click", () => this.performSearch());
         const suggestionsEl = searchSection.createDiv({ cls: "freesound-search-suggestions" });
         suggestionsEl.createEl("span", { text: "Quick searches: ", cls: "freesound-suggestions-label" });
@@ -17361,10 +17356,11 @@ var init_FreesoundSearchModal = __esm({
             cls: "freesound-suggestion-btn",
             attr: { "aria-label": `Search for ${suggestion}` }
           });
-          const icon = this.getSearchIcon(suggestion);
-          if (icon) {
-            suggestionBtn.innerHTML = `${icon}<span>${suggestion}</span>`;
+          const iconName = this.getSearchIconName(suggestion);
+          if (iconName) {
+            setIcon(suggestionBtn, iconName);
           }
+          suggestionBtn.createSpan({ text: suggestion });
           suggestionBtn.addEventListener("click", () => {
             suggestionBtn.addClass("freesound-suggestion-active");
             setTimeout(() => suggestionBtn.removeClass("freesound-suggestion-active"), 300);
@@ -17378,18 +17374,22 @@ var init_FreesoundSearchModal = __esm({
       updateClearButton() {
         const clearBtn = this.contentEl.querySelector(".freesound-clear-btn");
         if (clearBtn && this.searchInput) {
-          clearBtn.style.display = this.searchInput.value ? "flex" : "none";
+          if (this.searchInput.value) {
+            clearBtn.addClass("freesound-clear-btn--visible");
+          } else {
+            clearBtn.removeClass("freesound-clear-btn--visible");
+          }
         }
       }
-      getSearchIcon(suggestion) {
+      getSearchIconName(suggestion) {
         const iconMap = {
-          "ambient": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
-          "pad": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
-          "texture": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
-          "ocean": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M2 12c3.667-3 7.333-3 11 0s7.333 3 11 0"></path></svg>',
-          "water": '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>'
+          "ambient": "music",
+          "pad": "music",
+          "texture": "square",
+          "ocean": "waves",
+          "water": "droplet"
         };
-        return iconMap[suggestion.toLowerCase()] || "";
+        return iconMap[suggestion.toLowerCase()] || null;
       }
       createFiltersSection(container) {
         this.filtersSection = container.createDiv({ cls: "freesound-filters-section" });
@@ -17398,24 +17398,21 @@ var init_FreesoundSearchModal = __esm({
           cls: "freesound-filters-toggle",
           attr: { "aria-expanded": "true", "aria-label": "Toggle filters" }
         });
-        headerButton.innerHTML = `
-			<svg class="freesound-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="6 9 12 15 18 9"></polyline>
-			</svg>
-			<h3>Filters</h3>
-			<span class="freesound-filter-badge" style="display: none;">0</span>
-		`;
+        const chevronIcon = headerButton.createDiv({ cls: "freesound-chevron" });
+        setIcon(chevronIcon, "chevron-down");
+        headerButton.createEl("h3", { text: "Filters" });
+        headerButton.createSpan({ text: "0", cls: "freesound-filter-badge" });
         headerButton.addEventListener("click", () => {
           var _a, _b, _c;
           this.filtersCollapsed = !this.filtersCollapsed;
           const filtersGrid2 = (_a = this.filtersSection) == null ? void 0 : _a.querySelector(".freesound-filters-grid");
           if (filtersGrid2) {
             if (this.filtersCollapsed) {
-              filtersGrid2.style.display = "none";
+              filtersGrid2.addClass("freesound-filters-grid--hidden");
               (_b = this.filtersSection) == null ? void 0 : _b.addClass("freesound-filters-collapsed");
               headerButton.setAttribute("aria-expanded", "false");
             } else {
-              filtersGrid2.style.display = "grid";
+              filtersGrid2.removeClass("freesound-filters-grid--hidden");
               (_c = this.filtersSection) == null ? void 0 : _c.removeClass("freesound-filters-collapsed");
               headerButton.setAttribute("aria-expanded", "true");
             }
@@ -17458,11 +17455,11 @@ var init_FreesoundSearchModal = __esm({
         this.activeFilterCount = count;
         const badge = this.contentEl.querySelector(".freesound-filter-badge");
         if (badge) {
+          badge.textContent = String(count);
           if (count > 0) {
-            badge.textContent = String(count);
-            badge.style.display = "flex";
+            badge.addClass("freesound-filter-badge--visible");
           } else {
-            badge.style.display = "none";
+            badge.removeClass("freesound-filter-badge--visible");
           }
         }
       }
@@ -17546,32 +17543,22 @@ var init_FreesoundSearchModal = __esm({
         this.resultsContainer.empty();
         if (this.searchResults.length === 0) {
           const emptyState = this.resultsContainer.createDiv({ cls: "freesound-empty-state" });
-          emptyState.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.35-4.35"></path>
-				</svg>
-				<p>No results found</p>
-				<span>Try different search terms or adjust your filters</span>
-			`;
+          setIcon(emptyState, "search");
+          emptyState.createEl("p", { text: "No results found" });
+          emptyState.createEl("span", { text: "Try different search terms or adjust your filters" });
           return;
         }
         this.searchResults.forEach((result) => {
           const resultItem = this.resultsContainer.createDiv({ cls: "freesound-result-item" });
           const thumbnail = resultItem.createDiv({ cls: "freesound-result-thumbnail" });
-          thumbnail.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-					<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-					<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-				</svg>
-			`;
+          setIcon(thumbnail, "volume-2");
           const contentSection = resultItem.createDiv({ cls: "freesound-result-content" });
           const headerSection = contentSection.createDiv({ cls: "freesound-result-header" });
           headerSection.createEl("h4", { text: result.name, cls: "freesound-result-title" });
           const badgesEl = headerSection.createDiv({ cls: "freesound-result-badges" });
           const durationBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-duration" });
-          durationBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>${result.duration.toFixed(1)}s</span>`;
+          setIcon(durationBadge, "clock");
+          durationBadge.createSpan({ text: `${result.duration.toFixed(1)}s` });
           const licenseBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-license" });
           licenseBadge.textContent = this.formatLicense(result.license);
           if (result.description) {
@@ -17588,19 +17575,22 @@ var init_FreesoundSearchModal = __esm({
             }
           }
           const footerEl = contentSection.createDiv({ cls: "freesound-result-footer" });
-          footerEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>by ${result.username}</span>`;
+          setIcon(footerEl, "user");
+          footerEl.createSpan({ text: `by ${result.username}` });
           const actionsSection = resultItem.createDiv({ cls: "freesound-result-actions" });
           const previewBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-preview-btn",
             attr: { "aria-label": `Preview ${result.name}` }
           });
-          previewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Preview</span>`;
+          setIcon(previewBtn, "play");
+          previewBtn.createSpan({ text: "Preview" });
           previewBtn.addEventListener("click", () => this.previewSample(result, previewBtn));
           const addBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-add-btn",
             attr: { "aria-label": `Add ${result.name} to library` }
           });
-          addBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Add to Library</span>`;
+          setIcon(addBtn, "plus");
+          addBtn.createSpan({ text: "Add to Library" });
           addBtn.addEventListener("click", () => this.addSampleToLibrary(result));
         });
       }
@@ -17636,21 +17626,47 @@ var init_FreesoundSearchModal = __esm({
         };
         return licenseMap[license] || license;
       }
+      updatePreviewButton(button, state) {
+        button.empty();
+        switch (state) {
+          case "play":
+            setIcon(button, "play");
+            button.createSpan({ text: "Preview" });
+            button.disabled = false;
+            button.removeClass("freesound-btn-loading");
+            button.removeClass("freesound-btn-playing");
+            button.removeClass("freesound-btn-error");
+            break;
+          case "stop":
+            setIcon(button, "square");
+            button.createSpan({ text: "Stop" });
+            button.disabled = false;
+            button.removeClass("freesound-btn-loading");
+            button.addClass("freesound-btn-playing");
+            break;
+          case "loading":
+            setIcon(button, "loader-2");
+            button.createSpan({ text: "Loading..." });
+            button.disabled = true;
+            button.addClass("freesound-btn-loading");
+            break;
+          case "error":
+            setIcon(button, "alert-circle");
+            button.createSpan({ text: "Error" });
+            button.addClass("freesound-btn-error");
+            break;
+        }
+      }
       async previewSample(result, button) {
-        if (button.querySelector(".freesound-stop-icon")) {
+        if (button.hasClass("freesound-btn-playing")) {
           this.stopPreview();
           return;
         }
         if (this.currentAudio) {
           this.stopPreview();
         }
-        const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        const stopIcon = '<svg class="freesound-stop-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg>';
-        const loadingIcon = '<svg class="freesound-loading-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
         try {
-          button.innerHTML = `${loadingIcon}<span>Loading...</span>`;
-          button.disabled = true;
-          button.addClass("freesound-btn-loading");
+          this.updatePreviewButton(button, "loading");
           const audio = new Audio(result.previews["preview-lq-mp3"]);
           this.currentAudio = audio;
           this.currentPreviewButton = button;
@@ -17660,42 +17676,32 @@ var init_FreesoundSearchModal = __esm({
             audio.load();
           });
           await audio.play();
-          button.innerHTML = `${stopIcon}<span>Stop</span>`;
-          button.disabled = false;
-          button.removeClass("freesound-btn-loading");
-          button.addClass("freesound-btn-playing");
+          this.updatePreviewButton(button, "stop");
           audio.addEventListener("ended", () => {
             if (this.currentPreviewButton) {
-              this.currentPreviewButton.innerHTML = `${playIcon}<span>Preview</span>`;
-              this.currentPreviewButton.removeClass("freesound-btn-playing");
+              this.updatePreviewButton(this.currentPreviewButton, "play");
             }
             this.currentAudio = null;
             this.currentPreviewButton = null;
           });
         } catch (error) {
           logger18.error("preview", `Failed to preview sample ${result.id}`, error);
-          button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span>Error</span>`;
-          button.addClass("freesound-btn-error");
+          this.updatePreviewButton(button, "error");
           setTimeout(() => {
-            button.innerHTML = `${playIcon}<span>Preview</span>`;
-            button.disabled = false;
-            button.removeClass("freesound-btn-loading");
-            button.removeClass("freesound-btn-error");
+            this.updatePreviewButton(button, "play");
           }, 2e3);
           this.currentAudio = null;
           this.currentPreviewButton = null;
         }
       }
       stopPreview() {
-        const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
         if (this.currentAudio) {
           this.currentAudio.pause();
           this.currentAudio.currentTime = 0;
           this.currentAudio = null;
         }
         if (this.currentPreviewButton) {
-          this.currentPreviewButton.innerHTML = `${playIcon}<span>Preview</span>`;
-          this.currentPreviewButton.removeClass("freesound-btn-playing");
+          this.updatePreviewButton(this.currentPreviewButton, "play");
           this.currentPreviewButton = null;
         }
       }
@@ -17720,15 +17726,11 @@ var init_FreesoundSearchModal = __esm({
           return;
         this.resultsContainer.empty();
         const errorState = this.resultsContainer.createDiv({ cls: "freesound-error-state" });
-        errorState.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="10"></circle>
-				<line x1="12" y1="8" x2="12" y2="12"></line>
-				<line x1="12" y1="16" x2="12.01" y2="16"></line>
-			</svg>
-			<p>Search Error</p>
-			<span>${error.message || "Failed to search Freesound. Please check your API key and connection."}</span>
-		`;
+        setIcon(errorState, "alert-circle");
+        errorState.createEl("p", { text: "Search Error" });
+        errorState.createEl("span", {
+          text: error.message || "Failed to search Freesound. Please check your API key and connection."
+        });
         const retryBtn = errorState.createEl("button", {
           text: "Try Again",
           cls: "freesound-retry-btn"
@@ -17738,13 +17740,14 @@ var init_FreesoundSearchModal = __esm({
       updateSearchButton(text) {
         const button = this.contentEl.querySelector(".freesound-search-button");
         if (button) {
-          const searchIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>';
-          const loadingIcon = '<svg class="freesound-loading-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+          button.empty();
           if (this.isSearching) {
-            button.innerHTML = `${loadingIcon}<span>${text}</span>`;
+            setIcon(button, "loader-2");
+            button.createSpan({ text });
             button.addClass("freesound-btn-loading");
           } else {
-            button.innerHTML = `${searchIcon}<span>${text}</span>`;
+            setIcon(button, "search");
+            button.createSpan({ text });
             button.removeClass("freesound-btn-loading");
           }
           button.disabled = this.isSearching;
@@ -17756,15 +17759,12 @@ var init_FreesoundSearchModal = __esm({
         this.resultsContainer.empty();
         for (let i = 0; i < 3; i++) {
           const skeleton = this.resultsContainer.createDiv({ cls: "freesound-result-skeleton" });
-          skeleton.innerHTML = `
-				<div class="freesound-skeleton-thumbnail"></div>
-				<div class="freesound-skeleton-content">
-					<div class="freesound-skeleton-title"></div>
-					<div class="freesound-skeleton-badges"></div>
-					<div class="freesound-skeleton-description"></div>
-					<div class="freesound-skeleton-tags"></div>
-				</div>
-			`;
+          skeleton.createDiv({ cls: "freesound-skeleton-thumbnail" });
+          const content = skeleton.createDiv({ cls: "freesound-skeleton-content" });
+          content.createDiv({ cls: "freesound-skeleton-title" });
+          content.createDiv({ cls: "freesound-skeleton-badges" });
+          content.createDiv({ cls: "freesound-skeleton-description" });
+          content.createDiv({ cls: "freesound-skeleton-tags" });
         }
       }
       getGenreSuggestions(genre) {
@@ -18474,13 +18474,12 @@ var init_SonicGraphLayersSettings = __esm({
         });
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
-        description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Continuous layers add ambient background audio that responds to vault size, activity,
-				and animation progress. Unlike node-based audio which plays when nodes appear, continuous
-				layers provide a persistent soundscape that evolves over time.
-			</p>
-		`;
+        const descP = description.createEl("p");
+        descP.style.color = "var(--text-muted)";
+        descP.style.fontSize = "13px";
+        descP.style.lineHeight = "1.5";
+        descP.style.marginBottom = "1rem";
+        descP.textContent = "Continuous layers add ambient background audio that responds to vault size, activity, and animation progress. Unlike node-based audio which plays when nodes appear, continuous layers provide a persistent soundscape that evolves over time.";
         new import_obsidian10.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside node-based synthesis").addToggle(
           (toggle) => {
             var _a, _b;
@@ -18557,11 +18556,11 @@ var init_SonicGraphLayersSettings = __esm({
           }
         );
         const perfNote = content.createDiv({ cls: "osp-settings-note" });
-        perfNote.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; font-style: italic;">
-				Target: <5% additional CPU usage. Layers work alongside existing node-based audio.
-			</p>
-		`;
+        const perfP = perfNote.createEl("p");
+        perfP.style.color = "var(--text-muted)";
+        perfP.style.fontSize = "12px";
+        perfP.style.fontStyle = "italic";
+        perfP.textContent = "Target: <5% additional CPU usage. Layers work alongside existing node-based audio.";
         container.appendChild(card.getElement());
       }
       /**
@@ -18664,12 +18663,12 @@ var init_SonicGraphLayersSettings = __esm({
         });
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
-        description.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 1rem;">
-				Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers
-				that respond to vault activity and cluster dynamics.
-			</p>
-		`;
+        const descP = description.createEl("p");
+        descP.style.color = "var(--text-muted)";
+        descP.style.fontSize = "13px";
+        descP.style.lineHeight = "1.5";
+        descP.style.marginBottom = "1rem";
+        descP.textContent = "Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers that respond to vault activity and cluster dynamics.";
         new import_obsidian10.Setting(content).setName("Enable rhythmic layer").setDesc("Add activity-based percussion patterns").addToggle(
           (toggle) => {
             var _a2, _b2;
@@ -18876,12 +18875,13 @@ var init_SonicGraphLayersSettings = __esm({
           }
         );
         const note = content.createDiv({ cls: "osp-settings-note" });
-        note.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Note:</strong> These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic).
-				For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.
-			</p>
-		`;
+        const noteP = note.createEl("p");
+        noteP.style.color = "var(--text-muted)";
+        noteP.style.fontSize = "12px";
+        noteP.style.lineHeight = "1.5";
+        noteP.style.marginTop = "1rem";
+        noteP.createEl("strong", { text: "Note:" });
+        noteP.appendText(" These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic). For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.");
         container.appendChild(card.getElement());
       }
       /**
@@ -18909,16 +18909,20 @@ var init_SonicGraphLayersSettings = __esm({
           }
         );
         const note = content.createDiv({ cls: "osp-settings-note" });
-        note.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 0.5rem;">
-				<strong>Adaptive Behavior:</strong> When enabled, layers respond to:
-			</p>
-			<ul style="color: var(--text-muted); font-size: 12px; margin: 0.5rem 0 0 1.5rem;">
-				<li>Vault size (more files = richer textures)</li>
-				<li>Animation progress (evolves through timeline)</li>
-				<li>Node activity (quieter during busy moments)</li>
-			</ul>
-		`;
+        const noteP = note.createEl("p");
+        noteP.style.color = "var(--text-muted)";
+        noteP.style.fontSize = "12px";
+        noteP.style.lineHeight = "1.5";
+        noteP.style.marginTop = "0.5rem";
+        noteP.createEl("strong", { text: "Adaptive Behavior:" });
+        noteP.appendText(" When enabled, layers respond to:");
+        const noteUl = note.createEl("ul");
+        noteUl.style.color = "var(--text-muted)";
+        noteUl.style.fontSize = "12px";
+        noteUl.style.margin = "0.5rem 0 0 1.5rem";
+        noteUl.createEl("li", { text: "Vault size (more files = richer textures)" });
+        noteUl.createEl("li", { text: "Animation progress (evolves through timeline)" });
+        noteUl.createEl("li", { text: "Node activity (quieter during busy moments)" });
         container.appendChild(card.getElement());
       }
     };
@@ -20234,22 +20238,17 @@ var init_control_panel = __esm({
         const status = this.plugin.getStatus();
         const statsRow = content.createDiv({ cls: "osp-stats-row" });
         const cpuStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-        cpuStat.innerHTML = `
-			<span class="osp-stat-value">12%</span>
-			<span class="osp-stat-label">CPU</span>
-		`;
+        cpuStat.createSpan({ cls: "osp-stat-value", text: "12%" });
+        cpuStat.createSpan({ cls: "osp-stat-label", text: "CPU" });
         const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-        voicesStat.innerHTML = `
-			<span class="osp-stat-value">${status.audio.currentNotes || 0}</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
+        voicesStat.createSpan({ cls: "osp-stat-value", text: `${status.audio.currentNotes || 0}` });
+        voicesStat.createSpan({ cls: "osp-stat-label", text: "Voices" });
         const contextStat = statsRow.createDiv({ cls: "osp-stat-compact" });
         const contextValue = status.audio.audioContext || "Suspended";
         const contextColor = contextValue === "running" ? "var(--text-success)" : "var(--text-warning)";
-        contextStat.innerHTML = `
-			<span class="osp-stat-value" style="color: ${contextColor}">${contextValue}</span>
-			<span class="osp-stat-label">Context</span>
-		`;
+        const contextValueSpan = contextStat.createSpan({ cls: "osp-stat-value", text: contextValue });
+        contextValueSpan.style.color = contextColor;
+        contextStat.createSpan({ cls: "osp-stat-label", text: "Context" });
         this.contentContainer.appendChild(card.getElement());
       }
       getEnabledInstrumentsList() {
@@ -20325,34 +20324,27 @@ var init_control_panel = __esm({
           })
         );
         if (this.plugin.settings.enableFreesoundSamples) {
-          const descriptionEl = settingsSection.createEl("p", {
+          settingsSection.createEl("p", {
             text: "Enter your API key from Freesound.org here. Get your free API key at: https://freesound.org/apiv2/apply/",
             cls: "osp-settings-description"
           });
-          descriptionEl.style.marginBottom = "10px";
-          const apiKeyContainer = settingsSection.createDiv({ cls: "osp-settings-item" });
+          const apiKeyContainer = settingsSection.createDiv({ cls: "osp-settings-item osp-settings-description--wide-input" });
           new import_obsidian12.Setting(apiKeyContainer).setName("API key").addText((text) => {
             text.setPlaceholder("Enter your Freesound API key (32 characters)").setValue(this.plugin.settings.freesoundApiKey || "").onChange(async (value) => {
               this.plugin.settings.freesoundApiKey = value;
               await this.plugin.saveSettings();
               logger23.info("freesound", "Freesound API key updated");
             });
-            text.inputEl.style.width = "400px";
-            text.inputEl.style.fontFamily = "monospace";
             text.inputEl.style.fontSize = "13px";
           }).addButton((button) => {
             button.setButtonText("Test connection").setTooltip("Test API key and connection to Freesound").onClick(async () => {
               await this.testFreesoundConnection(button.buttonEl);
             });
           });
-          const securityNote = settingsSection.createEl("p", {
+          settingsSection.createEl("p", {
             text: "Note: This key will be stored in plain text in .obsidian/plugins/sonigraph/data.json. Only share your vault if you trust recipients with API access.",
-            cls: "osp-settings-note"
+            cls: "osp-security-note"
           });
-          securityNote.style.fontSize = "12px";
-          securityNote.style.color = "var(--text-muted)";
-          securityNote.style.marginTop = "8px";
-          securityNote.style.marginBottom = "16px";
           new import_obsidian12.Setting(settingsSection).setHeading().setName("Preloading and caching");
           new import_obsidian12.Setting(settingsSection).setName("Predictive preloading").setDesc("Automatically preload samples for genres you use frequently").addToggle(
             (toggle) => toggle.setValue(this.plugin.settings.freesoundPredictivePreload !== false).onChange(async (value) => {
@@ -21009,8 +21001,7 @@ var init_control_panel = __esm({
             persisted: true
           });
         });
-        const logChipSet = loggingContent.createDiv({ cls: "ospcc-chip-set" });
-        logChipSet.style.marginTop = "var(--md-space-4)";
+        const logChipSet = loggingContent.createDiv({ cls: "ospcc-chip-set osp-logging-chip-set" });
         const exportLogsChip = new ActionChip({
           text: "Export logs",
           iconName: "download",
@@ -21071,20 +21062,15 @@ var init_control_panel = __esm({
         const perfContent = performanceCard.getContent();
         const perfStatsRow = perfContent.createDiv({ cls: "osp-stats-row" });
         const cpuStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
-        cpuStat.innerHTML = `
-			<span class="osp-stat-value">23%</span>
-			<span class="osp-stat-label">CPU usage</span>
-		`;
+        cpuStat.createSpan({ cls: "osp-stat-value", text: "23%" });
+        cpuStat.createSpan({ cls: "osp-stat-label", text: "CPU usage" });
         const voicesStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
-        voicesStat.innerHTML = `
-			<span class="osp-stat-value">47/128</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
+        voicesStat.createSpan({ cls: "osp-stat-value", text: "47/128" });
+        voicesStat.createSpan({ cls: "osp-stat-label", text: "Voices" });
         const qualityStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
-        qualityStat.innerHTML = `
-			<span class="osp-stat-value" style="color: var(--color-green)">High</span>
-			<span class="osp-stat-label">Audio quality</span>
-		`;
+        const qualityValueSpan = qualityStat.createSpan({ cls: "osp-stat-value", text: "High" });
+        qualityValueSpan.style.color = "var(--color-green)";
+        qualityStat.createSpan({ cls: "osp-stat-label", text: "Audio quality" });
         this.contentContainer.appendChild(masterEffectsCard.getElement());
         this.contentContainer.appendChild(performanceCard.getElement());
       }
@@ -21170,11 +21156,8 @@ var init_control_panel = __esm({
         });
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-control-description" });
-        description.innerHTML = `
-			<p>Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.</p>
-		`;
-        const settingsSection = content.createDiv({ cls: "osp-settings-section" });
-        settingsSection.style.marginBottom = "var(--md-space-4)";
+        description.createEl("p", { text: "Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections." });
+        const settingsSection = content.createDiv({ cls: "osp-settings-section osp-settings-section--spaced" });
         logger23.debug("ui", `Creating show file names toggle with initial state: ${this.showFileNames}`);
         createObsidianToggle(
           settingsSection,
@@ -21191,15 +21174,11 @@ var init_control_panel = __esm({
         this.createExclusionFields(settingsSection);
         const statsContainer = content.createDiv({ cls: "osp-stats-row" });
         const filesStat = statsContainer.createDiv({ cls: "osp-stat-compact" });
-        filesStat.innerHTML = `
-			<span class="osp-stat-value">\u2014</span>
-			<span class="osp-stat-label">Files</span>
-		`;
+        filesStat.createSpan({ cls: "osp-stat-value", text: "\u2014" });
+        filesStat.createSpan({ cls: "osp-stat-label", text: "Files" });
         const linksStat = statsContainer.createDiv({ cls: "osp-stat-compact" });
-        linksStat.innerHTML = `
-			<span class="osp-stat-value">\u2014</span>
-			<span class="osp-stat-label">Links</span>
-		`;
+        linksStat.createSpan({ cls: "osp-stat-value", text: "\u2014" });
+        linksStat.createSpan({ cls: "osp-stat-label", text: "Links" });
         this.updateSonicGraphStats(filesStat, linksStat);
         this.contentContainer.appendChild(card.getElement());
       }
@@ -21338,8 +21317,7 @@ var init_control_panel = __esm({
        * Create exclusion fields for folders and files
        */
       createExclusionFields(container) {
-        const excludeFoldersSection = container.createDiv({ cls: "osp-exclusion-section" });
-        excludeFoldersSection.style.marginTop = "var(--md-space-4)";
+        const excludeFoldersSection = container.createDiv({ cls: "osp-exclusion-section osp-exclusion-section--spaced" });
         const foldersLabel = excludeFoldersSection.createDiv({ cls: "osp-exclusion-label" });
         foldersLabel.textContent = "Exclude folders";
         const foldersDescription = excludeFoldersSection.createDiv({ cls: "osp-exclusion-description" });
@@ -21351,8 +21329,7 @@ var init_control_panel = __esm({
           text: "Add folder"
         });
         addFolderBtn.addEventListener("click", () => this.openFolderSuggestModal());
-        const excludeFilesSection = container.createDiv({ cls: "osp-exclusion-section" });
-        excludeFilesSection.style.marginTop = "var(--md-space-4)";
+        const excludeFilesSection = container.createDiv({ cls: "osp-exclusion-section osp-exclusion-section--spaced" });
         const filesLabel = excludeFilesSection.createDiv({ cls: "osp-exclusion-label" });
         filesLabel.textContent = "Exclude files";
         const filesDescription = excludeFilesSection.createDiv({ cls: "osp-exclusion-description" });
@@ -21526,20 +21503,14 @@ var init_control_panel = __esm({
         const content = card.getContent();
         const statsRow = content.createDiv({ cls: "osp-stats-row" });
         const enabledStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-        enabledStat.innerHTML = `
-			<span class="osp-stat-value">${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}</span>
-			<span class="osp-stat-label">Enabled</span>
-		`;
+        enabledStat.createSpan({ cls: "osp-stat-value", text: `${this.getEnabledCount(familyId)}/${this.getTotalCount(familyId)}` });
+        enabledStat.createSpan({ cls: "osp-stat-label", text: "Enabled" });
         const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-        voicesStat.innerHTML = `
-			<span class="osp-stat-value">${this.getActiveVoices(familyId)}</span>
-			<span class="osp-stat-label">Voices</span>
-		`;
+        voicesStat.createSpan({ cls: "osp-stat-value", text: `${this.getActiveVoices(familyId)}` });
+        voicesStat.createSpan({ cls: "osp-stat-label", text: "Voices" });
         const avgVolumeStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-        avgVolumeStat.innerHTML = `
-			<span class="osp-stat-value">0.7</span>
-			<span class="osp-stat-label">Avg Vol</span>
-		`;
+        avgVolumeStat.createSpan({ cls: "osp-stat-value", text: "0.7" });
+        avgVolumeStat.createSpan({ cls: "osp-stat-label", text: "Avg Vol" });
         const actionsRow = content.createDiv({ cls: "osp-actions-row" });
         const enableAllBtn = actionsRow.createEl("button", {
           cls: "osp-action-btn osp-action-btn--primary",
@@ -21705,8 +21676,7 @@ var init_control_panel = __esm({
             description: "Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions"
           }
         );
-        const statusSection = content.createDiv({ cls: "osp-whale-status" });
-        statusSection.style.marginTop = "var(--md-space-4)";
+        const statusSection = content.createDiv({ cls: "osp-whale-status osp-whale-status--spaced" });
         const collectionRow = statusSection.createDiv({ cls: "osp-info-row" });
         collectionRow.createSpan({ text: "Sample collection:", cls: "osp-info-label" });
         const collectionStatus = collectionRow.createSpan({
@@ -21725,8 +21695,7 @@ var init_control_panel = __esm({
           text: whaleIntegration2.sources.join(", "),
           cls: "osp-info-value"
         });
-        const actionsRow = content.createDiv({ cls: "osp-actions-row" });
-        actionsRow.style.marginTop = "var(--md-space-4)";
+        const actionsRow = content.createDiv({ cls: "osp-actions-row osp-actions-row--spaced" });
         const downloadBtn = actionsRow.createEl("button", {
           cls: "osp-action-btn osp-action-btn--primary",
           text: "Download samples"
@@ -22373,8 +22342,8 @@ var init_control_panel = __esm({
         const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
         title.appendChild(icon);
         const instrumentInfo = INSTRUMENT_INFO[instrumentName] || INSTRUMENT_INFO.piano;
-        const titleWithStatus = this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo);
-        title.innerHTML += titleWithStatus;
+        const titleSpan = title.createSpan();
+        this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo, titleSpan);
         const toggleContainer = header.createDiv({ cls: "ospcc-switch" });
         toggleContainer.setAttribute("data-tooltip", `Toggle ${instrumentInfo.name} on/off`);
         toggleContainer.setAttribute("title", `Toggle ${instrumentInfo.name} on/off`);
@@ -22591,14 +22560,14 @@ var init_control_panel = __esm({
         const requiresHighQuality = this.instrumentRequiresHighQuality(instrumentKey);
         return !requiresHighQuality;
       }
-      createInstrumentTitleWithStatus(instrumentKey, instrumentInfo) {
-        let titleText = `${instrumentInfo.icon} ${instrumentInfo.name}`;
+      createInstrumentTitleWithStatus(instrumentKey, instrumentInfo, container) {
+        container.appendText(`${instrumentInfo.icon} ${instrumentInfo.name}`);
         if (this.instrumentRequiresHighQuality(instrumentKey)) {
           const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
           const statusText = isDownloaded ? "(downloaded)" : "(not downloaded)";
-          titleText += ` <em>${statusText}</em>`;
+          container.appendText(" ");
+          container.createEl("em", { text: statusText });
         }
-        return titleText;
       }
       checkIfSampleDownloaded(instrumentKey) {
         try {
@@ -66792,13 +66761,11 @@ var init_ExportProgressModal = __esm({
         const progressContainer = contentEl.createDiv("export-progress-container");
         this.progressBar = progressContainer.createDiv("export-progress-bar");
         this.progressFill = this.progressBar.createDiv("export-progress-fill");
-        this.progressFill.style.width = "0%";
         this.percentageText = contentEl.createDiv("export-progress-percentage");
         this.percentageText.textContent = "0%";
         this.stageText = contentEl.createDiv("export-progress-stage");
         this.stageText.textContent = "Preparing export...";
         this.detailsContainer = contentEl.createDiv("export-progress-details");
-        this.detailsContainer.style.display = "none";
         const buttonContainer = contentEl.createDiv("export-progress-buttons");
         this.cancelButton = buttonContainer.createEl("button", {
           text: "Cancel",
@@ -66856,7 +66823,7 @@ var init_ExportProgressModal = __esm({
         }
         if (progress.estimatedTimeRemaining && progress.estimatedTimeRemaining > 30) {
           if (this.detailsContainer) {
-            this.detailsContainer.style.display = "block";
+            this.detailsContainer.addClass("export-progress-details--visible");
             this.detailsContainer.empty();
             const stageIndicator = this.detailsContainer.createDiv("export-progress-stage-indicator");
             stageIndicator.createEl("strong", { text: "Stage: " });
@@ -67428,7 +67395,6 @@ var init_ExportModal = __esm({
           });
         });
         this.customRangeContainer = section.createDiv("sonigraph-custom-range-container");
-        this.customRangeContainer.style.display = "none";
         new import_obsidian22.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
           this.startTimeInput = text;
           text.setPlaceholder("0").setValue("0").onChange((value) => {
@@ -67536,11 +67502,15 @@ var init_ExportModal = __esm({
         header.createEl("span", { text: "Metadata (Optional) \u25BC" });
         header.addClass("clickable");
         this.metadataContainer = section.createDiv("sonigraph-export-metadata-content");
-        this.metadataContainer.style.display = "none";
         header.addEventListener("click", () => {
-          const isVisible = this.metadataContainer.style.display !== "none";
-          this.metadataContainer.style.display = isVisible ? "none" : "block";
-          header.textContent = isVisible ? "Metadata (Optional) \u25BC" : "Metadata (Optional) \u25B2";
+          const isVisible = this.metadataContainer.hasClass("sonigraph-export-metadata-content--visible");
+          if (isVisible) {
+            this.metadataContainer.removeClass("sonigraph-export-metadata-content--visible");
+            header.textContent = "Metadata (Optional) \u25BC";
+          } else {
+            this.metadataContainer.addClass("sonigraph-export-metadata-content--visible");
+            header.textContent = "Metadata (Optional) \u25B2";
+          }
         });
         const lastMetadata = (_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.lastMetadata;
         new import_obsidian22.Setting(this.metadataContainer).setName("Title").setDesc("Song or export title").addText((text) => {
@@ -67902,9 +67872,9 @@ var init_ExportModal = __esm({
         if (!this.customRangeContainer)
           return;
         if (this.config.scope === "custom-range") {
-          this.customRangeContainer.style.display = "block";
+          this.customRangeContainer.addClass("sonigraph-custom-range-container--visible");
         } else {
-          this.customRangeContainer.style.display = "none";
+          this.customRangeContainer.removeClass("sonigraph-custom-range-container--visible");
         }
       }
       /**
@@ -68187,7 +68157,7 @@ var init_SonicGraphModal = __esm({
         const currentLabel = currentIndicator.createEl("div", { cls: "sonic-graph-timeline-current-label" });
         currentLabel.createSpan({ text: "Current: \u2014", cls: "sonic-graph-timeline-current-year" });
         currentLabel.createSpan({ text: "0s", cls: "sonic-graph-timeline-current-time" });
-        currentIndicator.style.display = "none";
+        currentIndicator.addClass("sonigraph-current-indicator");
       }
       /**
        * Create controls area with play button, stats, and navigation
@@ -68454,7 +68424,7 @@ var init_SonicGraphModal = __esm({
           this.timelineContainer.classList.add("timeline-visible");
           const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
           if (currentIndicator) {
-            currentIndicator.style.display = "block";
+            currentIndicator.addClass("sonigraph-current-indicator--visible");
           }
           if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) {
             await this.initializeContinuousLayers();
@@ -68470,7 +68440,7 @@ var init_SonicGraphModal = __esm({
           this.playButton.setButtonText("Play");
           const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
           if (currentIndicator) {
-            currentIndicator.style.display = "none";
+            currentIndicator.removeClass("sonigraph-current-indicator--visible");
           }
           if (this.temporalAnimator) {
             this.temporalAnimator.pause();
@@ -68495,11 +68465,11 @@ var init_SonicGraphModal = __esm({
        */
       updateViewMode() {
         if (this.isTimelineView) {
-          this.viewModeBtn.innerHTML = "";
+          this.viewModeBtn.empty();
           const timelineIcon = createLucideIcon("play-circle", 16);
           this.viewModeBtn.appendChild(timelineIcon);
           this.viewModeBtn.appendText("Timeline View");
-          this.viewModeBtn.style.display = "inline-flex";
+          this.viewModeBtn.addClass("sonigraph-view-mode-btn--visible");
           this.timelineContainer.classList.remove("timeline-hidden");
           this.timelineContainer.classList.add("timeline-visible");
           if (!this.temporalAnimator) {
@@ -68515,7 +68485,7 @@ var init_SonicGraphModal = __esm({
             }
           }
         } else {
-          this.viewModeBtn.style.display = "none";
+          this.viewModeBtn.removeClass("sonigraph-view-mode-btn--visible");
           this.timelineContainer.classList.add("timeline-hidden");
           this.timelineContainer.classList.remove("timeline-visible");
           if (this.temporalAnimator) {
@@ -68525,7 +68495,7 @@ var init_SonicGraphModal = __esm({
           this.playButton.setButtonText("Play");
           const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
           if (currentIndicator) {
-            currentIndicator.style.display = "none";
+            currentIndicator.removeClass("sonigraph-current-indicator--visible");
           }
           if (this.graphRenderer) {
             this.graphDataExtractor.extractGraphData().then((graphData) => {
@@ -68600,33 +68570,33 @@ var init_SonicGraphModal = __esm({
       createControlCenterLink(container) {
         const linkSection = container.createDiv({ cls: "sonic-graph-settings-section control-center-link-section" });
         const infoBox = linkSection.createDiv({ cls: "sonic-graph-control-center-notice" });
-        infoBox.innerHTML = `
-            <div style="padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--interactive-accent); margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--interactive-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                    <strong style="color: var(--text-normal); font-size: 14px;">Advanced Settings Moved</strong>
-                </div>
-                <p style="margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
-                    Audio layers, musical theory, spatial audio, and other advanced features are now in the
-                    <strong>Control Center</strong> for a better experience with organized tabs.
-                </p>
-            </div>
-        `;
+        const noticeContainer = infoBox.createDiv();
+        noticeContainer.style.padding = "1rem";
+        noticeContainer.style.background = "var(--background-secondary)";
+        noticeContainer.style.borderRadius = "8px";
+        noticeContainer.style.borderLeft = "4px solid var(--interactive-accent)";
+        noticeContainer.style.marginBottom = "1.5rem";
+        const headerDiv = noticeContainer.createDiv();
+        headerDiv.style.display = "flex";
+        headerDiv.style.alignItems = "center";
+        headerDiv.style.gap = "0.75rem";
+        headerDiv.style.marginBottom = "0.5rem";
+        setIcon(headerDiv, "info");
+        headerDiv.createEl("strong", {
+          text: "Advanced Settings Moved",
+          attr: { style: "color: var(--text-normal); font-size: 14px;" }
+        });
+        const description = noticeContainer.createEl("p", {
+          attr: { style: "margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;" }
+        });
+        description.appendText("Audio layers, musical theory, spatial audio, and other advanced features are now in the ");
+        description.createEl("strong", { text: "Control Center" });
+        description.appendText(" for a better experience with organized tabs.");
         const button = linkSection.createEl("button", {
           cls: "sonic-graph-control-center-button"
         });
-        button.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-            Open Control Center for Advanced Settings
-        `;
-        button.addClass("sonic-graph-control-center-button");
+        setIcon(button, "layout-panel-left");
+        button.appendText("Open Control Center for Advanced Settings");
         button.addEventListener("click", () => {
           this.close();
           this.app.workspace.trigger("sonigraph:open-control-center");
@@ -68709,11 +68679,19 @@ var init_SonicGraphModal = __esm({
         const { stats } = filteredData;
         const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
         const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
-        adaptiveStatsEl.innerHTML = `
-            <div class="adaptive-detail-level sonic-graph-small-text">Detail: ${filteredData.level}</div>
-            <div class="adaptive-detail-nodes sonic-graph-small-text">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
-            <div class="adaptive-detail-links sonic-graph-small-text">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
-        `;
+        adaptiveStatsEl.empty();
+        adaptiveStatsEl.createDiv({
+          cls: "adaptive-detail-level sonic-graph-small-text",
+          text: `Detail: ${filteredData.level}`
+        });
+        adaptiveStatsEl.createDiv({
+          cls: "adaptive-detail-nodes sonic-graph-small-text",
+          text: `Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)`
+        });
+        adaptiveStatsEl.createDiv({
+          cls: "adaptive-detail-links sonic-graph-small-text",
+          text: `Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)`
+        });
       }
       /**
        * Create content-aware positioning settings section
@@ -70767,20 +70745,17 @@ var init_SonicGraphModal = __esm({
             text: this.formatGroupLabel(group),
             cls: "sonic-graph-group-label"
           });
+          groupLabel.addClass("sonigraph-group-label");
           groupLabel.style.flex = "1";
           groupLabel.style.fontSize = "12px";
-          groupLabel.style.color = "var(--text-normal)";
           const removeButton = groupItem.createEl("button", {
             text: "\xD7",
-            cls: "sonic-graph-group-remove-btn"
+            cls: "sonic-graph-group-remove-btn sonigraph-group-remove-btn"
           });
           removeButton.style.background = "none";
           removeButton.style.border = "none";
           removeButton.style.fontSize = "14px";
           removeButton.style.cursor = "pointer";
-          removeButton.style.color = "var(--text-muted)";
-          removeButton.style.padding = "2px 4px";
-          removeButton.style.marginLeft = "8px";
           colorDot.addEventListener("click", () => {
             this.showColorPicker(index2, colorDot);
           });
@@ -70794,12 +70769,10 @@ var init_SonicGraphModal = __esm({
           placeholder: "Enter query...",
           cls: "sonic-graph-group-search-input"
         });
-        searchInput.style.width = "100%";
-        searchInput.style.padding = "8px 12px";
-        searchInput.style.marginTop = "8px";
+        searchInput.addClass("sonigraph-group-search-input");
+        searchInput.addClass("sonigraph-group-search-input--highlighted");
         searchInput.style.border = "1px solid #fbbf24";
         searchInput.style.borderRadius = "4px";
-        searchInput.style.backgroundColor = "#fef3c7";
         searchInput.style.fontSize = "12px";
         (0, import_obsidian24.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
           placement: "top"
@@ -70837,7 +70810,7 @@ var init_SonicGraphModal = __esm({
         colorInput.className = "sonic-graph-hidden-color-picker";
         const dotRect = colorDot.getBoundingClientRect();
         const modalRect = this.contentEl.getBoundingClientRect();
-        colorInput.style.position = "absolute";
+        colorInput.addClass("sonigraph-color-picker");
         colorInput.style.left = `${dotRect.left - modalRect.left}px`;
         colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`;
         colorInput.style.pointerEvents = "auto";
@@ -70889,14 +70862,12 @@ var init_SonicGraphModal = __esm({
         }
         const overlay = document.createElement("div");
         overlay.className = "sonic-graph-search-overlay";
-        overlay.style.position = "absolute";
+        overlay.addClass("sonigraph-autocomplete-overlay");
         overlay.style.top = searchInput.offsetTop + searchInput.offsetHeight + 4 + "px";
         overlay.style.left = searchInput.offsetLeft + "px";
         overlay.style.width = searchInput.offsetWidth + "px";
-        overlay.style.backgroundColor = "var(--background-primary)";
         overlay.style.border = "1px solid var(--background-modifier-border)";
         overlay.style.borderRadius = "4px";
-        overlay.style.padding = "8px";
         overlay.style.fontSize = "12px";
         overlay.style.zIndex = "1000";
         overlay.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
@@ -70910,16 +70881,10 @@ var init_SonicGraphModal = __esm({
         ];
         options.forEach((option) => {
           const optionEl = document.createElement("div");
+          optionEl.addClass("sonigraph-autocomplete-option");
           optionEl.textContent = option;
-          optionEl.style.padding = "4px 8px";
           optionEl.style.cursor = "pointer";
           optionEl.style.borderRadius = "2px";
-          optionEl.addEventListener("mouseenter", () => {
-            optionEl.style.backgroundColor = "var(--background-modifier-hover)";
-          });
-          optionEl.addEventListener("mouseleave", () => {
-            optionEl.style.backgroundColor = "transparent";
-          });
           optionEl.addEventListener("click", () => {
             const prefix = option.split(":")[0];
             searchInput.value = prefix + ":";
@@ -71245,13 +71210,13 @@ var init_SonicGraphModal = __esm({
         const markersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-markers");
         if (!markersContainer)
           return;
-        markersContainer.innerHTML = "";
+        markersContainer.empty();
         const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
         if (!showMarkers) {
-          markersContainer.style.display = "none";
+          markersContainer.removeClass("sonigraph-timeline-markers--visible");
           return;
         }
-        markersContainer.style.display = "block";
+        markersContainer.addClass("sonigraph-timeline-markers--visible");
         const duration = timelineInfo.duration;
         const timeIntervals = [];
         if (duration <= 30) {
@@ -71867,7 +71832,11 @@ var init_SonicGraphModal = __esm({
         logger72.debug("settings", "Updated timeline markers visibility", { show });
         const markersContainer = (_a = this.timelineInfo) == null ? void 0 : _a.querySelector(".sonic-graph-timeline-markers");
         if (markersContainer) {
-          markersContainer.style.display = show ? "block" : "none";
+          if (show) {
+            markersContainer.addClass("sonigraph-timeline-markers--visible");
+          } else {
+            markersContainer.removeClass("sonigraph-timeline-markers--visible");
+          }
         }
       }
       /**
@@ -71933,7 +71902,11 @@ var init_SonicGraphModal = __esm({
         logger72.debug("settings", "Updated timeline granularity", { granularity });
         const customRangeElement = (_a = this.settingsPanel) == null ? void 0 : _a.querySelector(".sonic-graph-custom-range");
         if (customRangeElement) {
-          customRangeElement.style.display = granularity === "custom" ? "" : "none";
+          if (granularity === "custom") {
+            customRangeElement.addClass("sonigraph-custom-range--visible");
+          } else {
+            customRangeElement.removeClass("sonigraph-custom-range--visible");
+          }
         }
         if (this.temporalAnimator) {
           this.applyTimelineGranularityChange(granularity);
@@ -72328,22 +72301,20 @@ var init_SonicGraphModal = __esm({
             cls: "sonic-graph-progress-indicator"
           });
         }
-        this.progressIndicator.innerHTML = `
-            <div class="sonic-graph-spinner" style="
-                width: 20px;
-                height: 20px;
-                border: 2px solid var(--background-modifier-border);
-                border-top: 2px solid var(--interactive-accent);
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            "></div>
-            <span>${message}</span>
-        `;
-        this.progressIndicator.style.display = "flex";
+        this.progressIndicator.empty();
+        const spinner = this.progressIndicator.createDiv({ cls: "sonic-graph-spinner" });
+        spinner.style.width = "20px";
+        spinner.style.height = "20px";
+        spinner.style.border = "2px solid var(--background-modifier-border)";
+        spinner.style.borderTop = "2px solid var(--interactive-accent)";
+        spinner.style.borderRadius = "50%";
+        spinner.style.animation = "spin 1s linear infinite";
+        this.progressIndicator.createSpan({ text: message });
+        this.progressIndicator.addClass("sonigraph-progress-indicator--visible");
       }
       hideProgressIndicator() {
         if (this.progressIndicator) {
-          this.progressIndicator.style.display = "none";
+          this.progressIndicator.removeClass("sonigraph-progress-indicator--visible");
         }
       }
       /**
@@ -75131,23 +75102,31 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     const onboardingActions = onboardingContent.createEl("div", { cls: "sonigraph-onboarding-actions" });
     const dismissBtn = onboardingActions.createEl("button", { text: "Dismiss", cls: "mod-muted" });
     dismissBtn.addEventListener("click", () => {
-      onboardingSection.style.display = "none";
+      onboardingSection.addClass("sonigraph-onboarding-bordered--dismissed");
     });
     new import_obsidian.Setting(containerEl).setName("Control center").setDesc("Open the Sonigraph Audio Control Center to configure all plugin settings").addButton((button) => button.setButtonText("Open Control Center").setCta().onClick(() => {
       this.app.setting.close();
       this.plugin.openControlPanel();
     }));
     const sonicGraphNote = containerEl.createDiv({ cls: "osp-settings-note" });
-    sonicGraphNote.innerHTML = `
-			<p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 1rem;">
-				<strong>Note:</strong> Sonic Graph settings (adaptive detail, content-aware positioning, smart clustering, animation duration)
-				are now available in:
-			</p>
-			<ul style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0.5rem 0 0 1.5rem;">
-				<li><strong>Control Center > Sonic Graph tab</strong> for comprehensive settings</li>
-				<li><strong>Sonic Graph settings panel</strong> (\u2699\uFE0F icon) for quick visualization controls</li>
-			</ul>
-		`;
+    const noteP = sonicGraphNote.createEl("p");
+    noteP.style.color = "var(--text-muted)";
+    noteP.style.fontSize = "13px";
+    noteP.style.lineHeight = "1.5";
+    noteP.style.marginTop = "1rem";
+    noteP.createEl("strong", { text: "Note:" });
+    noteP.appendText(" Sonic Graph settings (adaptive detail, content-aware positioning, smart clustering, animation duration) are now available in:");
+    const noteUl = sonicGraphNote.createEl("ul");
+    noteUl.style.color = "var(--text-muted)";
+    noteUl.style.fontSize = "13px";
+    noteUl.style.lineHeight = "1.5";
+    noteUl.style.margin = "0.5rem 0 0 1.5rem";
+    const li1 = noteUl.createEl("li");
+    li1.createEl("strong", { text: "Control Center > Sonic Graph tab" });
+    li1.appendText(" for comprehensive settings");
+    const li2 = noteUl.createEl("li");
+    li2.createEl("strong", { text: "Sonic Graph settings panel" });
+    li2.appendText(" (\u2699\uFE0F icon) for quick visualization controls");
     const advancedSection = containerEl.createEl("details", { cls: "osp-advanced-settings" });
     advancedSection.createEl("summary", { text: "Advanced", cls: "osp-advanced-summary" });
     advancedSection.open = false;
@@ -81463,7 +81442,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     const currentLabel = currentIndicator.createEl("div", { cls: "sonic-graph-timeline-current-label" });
     currentLabel.createSpan({ text: "Current: \u2014", cls: "sonic-graph-timeline-current-year" });
     currentLabel.createSpan({ text: "0s", cls: "sonic-graph-timeline-current-time" });
-    currentIndicator.style.display = "none";
+    currentIndicator.addClass("sonigraph-current-indicator");
   }
   /**
    * Create controls area with play button, stats, and navigation
@@ -81734,7 +81713,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
       this.timelineContainer.classList.add("timeline-visible");
       const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
       if (currentIndicator) {
-        currentIndicator.style.display = "block";
+        currentIndicator.addClass("sonigraph-current-indicator--visible");
       }
       if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) {
         await this.initializeContinuousLayers();
@@ -81750,7 +81729,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
       this.playButton.setButtonText("Play");
       const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
       if (currentIndicator) {
-        currentIndicator.style.display = "none";
+        currentIndicator.removeClass("sonigraph-current-indicator--visible");
       }
       if (this.temporalAnimator) {
         this.temporalAnimator.pause();
@@ -81812,11 +81791,11 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
    */
   updateViewMode() {
     if (this.isTimelineView) {
-      this.viewModeBtn.innerHTML = "";
+      this.viewModeBtn.empty();
       const timelineIcon = createLucideIcon("play-circle", 16);
       this.viewModeBtn.appendChild(timelineIcon);
       this.viewModeBtn.appendText("Timeline View");
-      this.viewModeBtn.style.display = "inline-flex";
+      this.viewModeBtn.addClass("sonigraph-view-mode-btn--visible");
       this.timelineContainer.classList.remove("timeline-hidden");
       this.timelineContainer.classList.add("timeline-visible");
       if (!this.temporalAnimator) {
@@ -81832,7 +81811,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
         }
       }
     } else {
-      this.viewModeBtn.style.display = "none";
+      this.viewModeBtn.removeClass("sonigraph-view-mode-btn--visible");
       this.timelineContainer.classList.add("timeline-hidden");
       this.timelineContainer.classList.remove("timeline-visible");
       if (this.temporalAnimator) {
@@ -81842,7 +81821,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
       this.playButton.setButtonText("Play");
       const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
       if (currentIndicator) {
-        currentIndicator.style.display = "none";
+        currentIndicator.removeClass("sonigraph-current-indicator--visible");
       }
       if (this.graphRenderer) {
         this.graphDataExtractor.extractGraphData().then((graphData) => {
@@ -81920,13 +81899,8 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     const button = linkSection.createEl("button", {
       cls: "sonic-graph-control-center-button"
     });
-    button.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-            Control Center
-        `;
+    setIcon(button, "layout-panel-left");
+    button.appendText("Control Center");
     button.addEventListener("click", () => {
       this.toggleSettings();
       this.plugin.openControlPanel();
@@ -82009,11 +81983,19 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     const { stats } = filteredData;
     const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
     const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
-    adaptiveStatsEl.innerHTML = `
-            <div class="adaptive-detail-level sonic-graph-small-text">Detail: ${filteredData.level}</div>
-            <div class="adaptive-detail-nodes sonic-graph-small-text">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
-            <div class="adaptive-detail-links sonic-graph-small-text">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
-        `;
+    adaptiveStatsEl.empty();
+    adaptiveStatsEl.createDiv({
+      cls: "adaptive-detail-level sonic-graph-small-text",
+      text: `Detail: ${filteredData.level}`
+    });
+    adaptiveStatsEl.createDiv({
+      cls: "adaptive-detail-nodes sonic-graph-small-text",
+      text: `Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)`
+    });
+    adaptiveStatsEl.createDiv({
+      cls: "adaptive-detail-links sonic-graph-small-text",
+      text: `Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)`
+    });
   }
   /**
    * Create content-aware positioning settings section
@@ -84975,20 +84957,17 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
         text: this.formatGroupLabel(group),
         cls: "sonic-graph-group-label"
       });
+      groupLabel.addClass("sonigraph-group-label");
       groupLabel.style.flex = "1";
       groupLabel.style.fontSize = "12px";
-      groupLabel.style.color = "var(--text-normal)";
       const removeButton = groupItem.createEl("button", {
         text: "\xD7",
-        cls: "sonic-graph-group-remove-btn"
+        cls: "sonic-graph-group-remove-btn sonigraph-group-remove-btn"
       });
       removeButton.style.background = "none";
       removeButton.style.border = "none";
       removeButton.style.fontSize = "14px";
       removeButton.style.cursor = "pointer";
-      removeButton.style.color = "var(--text-muted)";
-      removeButton.style.padding = "2px 4px";
-      removeButton.style.marginLeft = "8px";
       colorDot.addEventListener("click", () => {
         this.showColorPicker(index2, colorDot);
       });
@@ -85002,12 +84981,10 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
       placeholder: "Enter query...",
       cls: "sonic-graph-group-search-input"
     });
-    searchInput.style.width = "100%";
-    searchInput.style.padding = "8px 12px";
-    searchInput.style.marginTop = "8px";
+    searchInput.addClass("sonigraph-group-search-input");
+    searchInput.addClass("sonigraph-group-search-input--highlighted");
     searchInput.style.border = "1px solid #fbbf24";
     searchInput.style.borderRadius = "4px";
-    searchInput.style.backgroundColor = "#fef3c7";
     searchInput.style.fontSize = "12px";
     (0, import_obsidian23.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
       placement: "top"
@@ -85045,7 +85022,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     colorInput.className = "sonic-graph-hidden-color-picker";
     const dotRect = colorDot.getBoundingClientRect();
     const modalRect = this.contentEl.getBoundingClientRect();
-    colorInput.style.position = "absolute";
+    colorInput.addClass("sonigraph-color-picker");
     colorInput.style.left = `${dotRect.left - modalRect.left}px`;
     colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`;
     colorInput.style.pointerEvents = "auto";
@@ -85097,14 +85074,12 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     }
     const overlay = document.createElement("div");
     overlay.className = "sonic-graph-search-overlay";
-    overlay.style.position = "absolute";
+    overlay.addClass("sonigraph-autocomplete-overlay");
     overlay.style.top = searchInput.offsetTop + searchInput.offsetHeight + 4 + "px";
     overlay.style.left = searchInput.offsetLeft + "px";
     overlay.style.width = searchInput.offsetWidth + "px";
-    overlay.style.backgroundColor = "var(--background-primary)";
     overlay.style.border = "1px solid var(--background-modifier-border)";
     overlay.style.borderRadius = "4px";
-    overlay.style.padding = "8px";
     overlay.style.fontSize = "12px";
     overlay.style.zIndex = "1000";
     overlay.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
@@ -85118,16 +85093,10 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     ];
     options.forEach((option) => {
       const optionEl = document.createElement("div");
+      optionEl.addClass("sonigraph-autocomplete-option");
       optionEl.textContent = option;
-      optionEl.style.padding = "4px 8px";
       optionEl.style.cursor = "pointer";
       optionEl.style.borderRadius = "2px";
-      optionEl.addEventListener("mouseenter", () => {
-        optionEl.style.backgroundColor = "var(--background-modifier-hover)";
-      });
-      optionEl.addEventListener("mouseleave", () => {
-        optionEl.style.backgroundColor = "transparent";
-      });
       optionEl.addEventListener("click", () => {
         const prefix = option.split(":")[0];
         searchInput.value = prefix + ":";
@@ -85460,13 +85429,13 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     const markersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-markers");
     if (!markersContainer)
       return;
-    markersContainer.innerHTML = "";
+    markersContainer.empty();
     const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
     if (!showMarkers) {
-      markersContainer.style.display = "none";
+      markersContainer.removeClass("sonigraph-timeline-markers--visible");
       return;
     }
-    markersContainer.style.display = "block";
+    markersContainer.addClass("sonigraph-timeline-markers--visible");
     const duration = timelineInfo.duration;
     const timeIntervals = [];
     if (duration <= 30) {
@@ -86307,7 +86276,11 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     logger60.debug("settings", "Updated timeline markers visibility", { show });
     const markersContainer = (_a = this.timelineInfo) == null ? void 0 : _a.querySelector(".sonic-graph-timeline-markers");
     if (markersContainer) {
-      markersContainer.style.display = show ? "block" : "none";
+      if (show) {
+        markersContainer.addClass("sonigraph-timeline-markers--visible");
+      } else {
+        markersContainer.removeClass("sonigraph-timeline-markers--visible");
+      }
     }
   }
   /**
@@ -86373,7 +86346,11 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     logger60.debug("settings", "Updated timeline granularity", { granularity });
     const customRangeElement = (_a = this.settingsPanel) == null ? void 0 : _a.querySelector(".sonic-graph-custom-range");
     if (customRangeElement) {
-      customRangeElement.style.display = granularity === "custom" ? "" : "none";
+      if (granularity === "custom") {
+        customRangeElement.addClass("sonigraph-custom-range--visible");
+      } else {
+        customRangeElement.removeClass("sonigraph-custom-range--visible");
+      }
     }
     if (this.temporalAnimator) {
       this.applyTimelineGranularityChange(granularity);
@@ -86847,22 +86824,20 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
         cls: "sonic-graph-progress-indicator"
       });
     }
-    this.progressIndicator.innerHTML = `
-            <div class="sonic-graph-spinner" style="
-                width: 20px;
-                height: 20px;
-                border: 2px solid var(--background-modifier-border);
-                border-top: 2px solid var(--interactive-accent);
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            "></div>
-            <span>${message}</span>
-        `;
-    this.progressIndicator.style.display = "flex";
+    this.progressIndicator.empty();
+    const spinner = this.progressIndicator.createDiv({ cls: "sonic-graph-spinner" });
+    spinner.style.width = "20px";
+    spinner.style.height = "20px";
+    spinner.style.border = "2px solid var(--background-modifier-border)";
+    spinner.style.borderTop = "2px solid var(--interactive-accent)";
+    spinner.style.borderRadius = "50%";
+    spinner.style.animation = "spin 1s linear infinite";
+    this.progressIndicator.createSpan({ text: message });
+    this.progressIndicator.addClass("sonigraph-progress-indicator--visible");
   }
   hideProgressIndicator() {
     if (this.progressIndicator) {
-      this.progressIndicator.style.display = "none";
+      this.progressIndicator.removeClass("sonigraph-progress-indicator--visible");
     }
   }
   /**

@@ -760,7 +760,7 @@ export class SonicGraphModal extends Modal {
     private updateViewMode(): void {
         if (this.isTimelineView) {
             // Timeline View - show animation controls, hide all nodes initially
-            this.viewModeBtn.innerHTML = '';
+            this.viewModeBtn.empty();
             const timelineIcon = createLucideIcon('play-circle', 16);
             this.viewModeBtn.appendChild(timelineIcon);
             this.viewModeBtn.appendText('Timeline View');
@@ -908,35 +908,37 @@ export class SonicGraphModal extends Modal {
 
         // Prominent info box
         const infoBox = linkSection.createDiv({ cls: 'sonic-graph-control-center-notice' });
-        infoBox.innerHTML = `
-            <div style="padding: 1rem; background: var(--background-secondary); border-radius: 8px; border-left: 4px solid var(--interactive-accent); margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--interactive-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                    <strong style="color: var(--text-normal); font-size: 14px;">Advanced Settings Moved</strong>
-                </div>
-                <p style="margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
-                    Audio layers, musical theory, spatial audio, and other advanced features are now in the
-                    <strong>Control Center</strong> for a better experience with organized tabs.
-                </p>
-            </div>
-        `;
+        const noticeContainer = infoBox.createDiv();
+        noticeContainer.style.padding = '1rem';
+        noticeContainer.style.background = 'var(--background-secondary)';
+        noticeContainer.style.borderRadius = '8px';
+        noticeContainer.style.borderLeft = '4px solid var(--interactive-accent)';
+        noticeContainer.style.marginBottom = '1.5rem';
+
+        const headerDiv = noticeContainer.createDiv();
+        headerDiv.style.display = 'flex';
+        headerDiv.style.alignItems = 'center';
+        headerDiv.style.gap = '0.75rem';
+        headerDiv.style.marginBottom = '0.5rem';
+        setIcon(headerDiv, 'info');
+        headerDiv.createEl('strong', {
+            text: 'Advanced Settings Moved',
+            attr: { style: 'color: var(--text-normal); font-size: 14px;' }
+        });
+
+        const description = noticeContainer.createEl('p', {
+            attr: { style: 'margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;' }
+        });
+        description.appendText('Audio layers, musical theory, spatial audio, and other advanced features are now in the ');
+        description.createEl('strong', { text: 'Control Center' });
+        description.appendText(' for a better experience with organized tabs.');
 
         // Large button to open Control Center
         const button = linkSection.createEl('button', {
             cls: 'sonic-graph-control-center-button'
         });
-        button.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-            Open Control Center for Advanced Settings
-        `;
-        button.addClass('sonic-graph-control-center-button');
+        setIcon(button, 'layout-panel-left');
+        button.appendText('Open Control Center for Advanced Settings');
         button.addEventListener('click', () => {
             // Close this modal and open Control Center
             this.close();
@@ -1051,11 +1053,19 @@ export class SonicGraphModal extends Modal {
         const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
         const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
 
-        adaptiveStatsEl.innerHTML = `
-            <div class="adaptive-detail-level sonic-graph-small-text">Detail: ${filteredData.level}</div>
-            <div class="adaptive-detail-nodes sonic-graph-small-text">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
-            <div class="adaptive-detail-links sonic-graph-small-text">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
-        `;
+        adaptiveStatsEl.empty();
+        adaptiveStatsEl.createDiv({
+            cls: 'adaptive-detail-level sonic-graph-small-text',
+            text: `Detail: ${filteredData.level}`
+        });
+        adaptiveStatsEl.createDiv({
+            cls: 'adaptive-detail-nodes sonic-graph-small-text',
+            text: `Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)`
+        });
+        adaptiveStatsEl.createDiv({
+            cls: 'adaptive-detail-links sonic-graph-small-text',
+            text: `Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)`
+        });
     }
 
     /**
@@ -4404,9 +4414,9 @@ export class SonicGraphModal extends Modal {
     private updateTimeMarkers(timelineInfo: any): void {
         const markersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-markers');
         if (!markersContainer) return;
-        
+
         // Clear all existing markers (both time and year markers)
-        markersContainer.innerHTML = '';
+        markersContainer.empty();
         
         // Check if markers should be shown
         const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
@@ -5729,17 +5739,17 @@ export class SonicGraphModal extends Modal {
             });
         }
         
-        this.progressIndicator.innerHTML = `
-            <div class="sonic-graph-spinner" style="
-                width: 20px;
-                height: 20px;
-                border: 2px solid var(--background-modifier-border);
-                border-top: 2px solid var(--interactive-accent);
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            "></div>
-            <span>${message}</span>
-        `;
+        this.progressIndicator.empty();
+
+        const spinner = this.progressIndicator.createDiv({ cls: 'sonic-graph-spinner' });
+        spinner.style.width = '20px';
+        spinner.style.height = '20px';
+        spinner.style.border = '2px solid var(--background-modifier-border)';
+        spinner.style.borderTop = '2px solid var(--interactive-accent)';
+        spinner.style.borderRadius = '50%';
+        spinner.style.animation = 'spin 1s linear infinite';
+
+        this.progressIndicator.createSpan({ text: message });
         this.progressIndicator.addClass('sonigraph-progress-indicator--visible');
     }
 

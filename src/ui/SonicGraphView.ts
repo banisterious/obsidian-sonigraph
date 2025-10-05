@@ -1167,7 +1167,7 @@ export class SonicGraphView extends ItemView {
     private updateViewMode(): void {
         if (this.isTimelineView) {
             // Timeline View - show animation controls, hide all nodes initially
-            this.viewModeBtn.innerHTML = '';
+            this.viewModeBtn.empty();
             const timelineIcon = createLucideIcon('play-circle', 16);
             this.viewModeBtn.appendChild(timelineIcon);
             this.viewModeBtn.appendText('Timeline View');
@@ -1324,13 +1324,8 @@ export class SonicGraphView extends ItemView {
         const button = linkSection.createEl('button', {
             cls: 'sonic-graph-control-center-button'
         });
-        button.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-            Control Center
-        `;
+        setIcon(button, 'layout-panel-left');
+        button.appendText('Control Center');
 
         button.addEventListener('click', () => {
             // Close the settings panel
@@ -1447,11 +1442,19 @@ export class SonicGraphView extends ItemView {
         const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
         const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
 
-        adaptiveStatsEl.innerHTML = `
-            <div class="adaptive-detail-level sonic-graph-small-text">Detail: ${filteredData.level}</div>
-            <div class="adaptive-detail-nodes sonic-graph-small-text">Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)</div>
-            <div class="adaptive-detail-links sonic-graph-small-text">Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)</div>
-        `;
+        adaptiveStatsEl.empty();
+        adaptiveStatsEl.createDiv({
+            cls: 'adaptive-detail-level sonic-graph-small-text',
+            text: `Detail: ${filteredData.level}`
+        });
+        adaptiveStatsEl.createDiv({
+            cls: 'adaptive-detail-nodes sonic-graph-small-text',
+            text: `Nodes: ${stats.visibleNodes}/${stats.totalNodes} (-${nodeReduction}%)`
+        });
+        adaptiveStatsEl.createDiv({
+            cls: 'adaptive-detail-links sonic-graph-small-text',
+            text: `Links: ${stats.visibleLinks}/${stats.totalLinks} (-${linkReduction}%)`
+        });
     }
 
     /**
@@ -5845,9 +5848,9 @@ export class SonicGraphView extends ItemView {
     private updateTimeMarkers(timelineInfo: any): void {
         const markersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-markers');
         if (!markersContainer) return;
-        
+
         // Clear all existing markers (both time and year markers)
-        markersContainer.innerHTML = '';
+        markersContainer.empty();
         
         // Check if markers should be shown
         const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
@@ -7543,17 +7546,17 @@ export class SonicGraphView extends ItemView {
             });
         }
         
-        this.progressIndicator.innerHTML = `
-            <div class="sonic-graph-spinner" style="
-                width: 20px;
-                height: 20px;
-                border: 2px solid var(--background-modifier-border);
-                border-top: 2px solid var(--interactive-accent);
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            "></div>
-            <span>${message}</span>
-        `;
+        this.progressIndicator.empty();
+
+        const spinner = this.progressIndicator.createDiv({ cls: 'sonic-graph-spinner' });
+        spinner.style.width = '20px';
+        spinner.style.height = '20px';
+        spinner.style.border = '2px solid var(--background-modifier-border)';
+        spinner.style.borderTop = '2px solid var(--interactive-accent)';
+        spinner.style.borderRadius = '50%';
+        spinner.style.animation = 'spin 1s linear infinite';
+
+        this.progressIndicator.createSpan({ text: message });
         this.progressIndicator.addClass('sonigraph-progress-indicator--visible');
     }
 
