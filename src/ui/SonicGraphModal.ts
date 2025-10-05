@@ -6,7 +6,7 @@
  * Includes timeline controls, settings panel, and cross-navigation to Control Center.
  */
 
-import { App, Modal, ButtonComponent, Notice, setTooltip, Setting } from 'obsidian';
+import { App, Modal, ButtonComponent, Notice, setTooltip, Setting, setIcon } from 'obsidian';
 import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';

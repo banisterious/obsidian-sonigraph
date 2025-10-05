@@ -5,7 +5,7 @@
  * Allows users to search, filter, preview, and add samples to their library.
  */
 
-import { App, Modal, Setting, Notice } from 'obsidian';
+import { App, Modal, Setting, Notice, setIcon } from 'obsidian';
 import { getLogger } from '../logging';
 import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
 

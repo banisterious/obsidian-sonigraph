@@ -17332,7 +17332,7 @@ var init_FreesoundSearchModal = __esm({
             "aria-label": "Clear search"
           }
         });
-        setIcon(clearButton, "x");
+        (0, import_obsidian8.setIcon)(clearButton, "x");
         clearButton.addEventListener("click", () => {
           if (this.searchInput) {
             this.searchInput.value = "";
@@ -17344,7 +17344,7 @@ var init_FreesoundSearchModal = __esm({
           cls: "freesound-search-button",
           attr: { "aria-label": "Search" }
         });
-        setIcon(searchButton, "search");
+        (0, import_obsidian8.setIcon)(searchButton, "search");
         searchButton.createSpan({ text: "Search" });
         searchButton.addEventListener("click", () => this.performSearch());
         const suggestionsEl = searchSection.createDiv({ cls: "freesound-search-suggestions" });
@@ -17358,7 +17358,7 @@ var init_FreesoundSearchModal = __esm({
           });
           const iconName = this.getSearchIconName(suggestion);
           if (iconName) {
-            setIcon(suggestionBtn, iconName);
+            (0, import_obsidian8.setIcon)(suggestionBtn, iconName);
           }
           suggestionBtn.createSpan({ text: suggestion });
           suggestionBtn.addEventListener("click", () => {
@@ -17399,7 +17399,7 @@ var init_FreesoundSearchModal = __esm({
           attr: { "aria-expanded": "true", "aria-label": "Toggle filters" }
         });
         const chevronIcon = headerButton.createDiv({ cls: "freesound-chevron" });
-        setIcon(chevronIcon, "chevron-down");
+        (0, import_obsidian8.setIcon)(chevronIcon, "chevron-down");
         headerButton.createEl("h3", { text: "Filters" });
         headerButton.createSpan({ text: "0", cls: "freesound-filter-badge" });
         headerButton.addEventListener("click", () => {
@@ -17543,7 +17543,7 @@ var init_FreesoundSearchModal = __esm({
         this.resultsContainer.empty();
         if (this.searchResults.length === 0) {
           const emptyState = this.resultsContainer.createDiv({ cls: "freesound-empty-state" });
-          setIcon(emptyState, "search");
+          (0, import_obsidian8.setIcon)(emptyState, "search");
           emptyState.createEl("p", { text: "No results found" });
           emptyState.createEl("span", { text: "Try different search terms or adjust your filters" });
           return;
@@ -17551,13 +17551,13 @@ var init_FreesoundSearchModal = __esm({
         this.searchResults.forEach((result) => {
           const resultItem = this.resultsContainer.createDiv({ cls: "freesound-result-item" });
           const thumbnail = resultItem.createDiv({ cls: "freesound-result-thumbnail" });
-          setIcon(thumbnail, "volume-2");
+          (0, import_obsidian8.setIcon)(thumbnail, "volume-2");
           const contentSection = resultItem.createDiv({ cls: "freesound-result-content" });
           const headerSection = contentSection.createDiv({ cls: "freesound-result-header" });
           headerSection.createEl("h4", { text: result.name, cls: "freesound-result-title" });
           const badgesEl = headerSection.createDiv({ cls: "freesound-result-badges" });
           const durationBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-duration" });
-          setIcon(durationBadge, "clock");
+          (0, import_obsidian8.setIcon)(durationBadge, "clock");
           durationBadge.createSpan({ text: `${result.duration.toFixed(1)}s` });
           const licenseBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-license" });
           licenseBadge.textContent = this.formatLicense(result.license);
@@ -17575,21 +17575,21 @@ var init_FreesoundSearchModal = __esm({
             }
           }
           const footerEl = contentSection.createDiv({ cls: "freesound-result-footer" });
-          setIcon(footerEl, "user");
+          (0, import_obsidian8.setIcon)(footerEl, "user");
           footerEl.createSpan({ text: `by ${result.username}` });
           const actionsSection = resultItem.createDiv({ cls: "freesound-result-actions" });
           const previewBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-preview-btn",
             attr: { "aria-label": `Preview ${result.name}` }
           });
-          setIcon(previewBtn, "play");
+          (0, import_obsidian8.setIcon)(previewBtn, "play");
           previewBtn.createSpan({ text: "Preview" });
           previewBtn.addEventListener("click", () => this.previewSample(result, previewBtn));
           const addBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-add-btn",
             attr: { "aria-label": `Add ${result.name} to library` }
           });
-          setIcon(addBtn, "plus");
+          (0, import_obsidian8.setIcon)(addBtn, "plus");
           addBtn.createSpan({ text: "Add to Library" });
           addBtn.addEventListener("click", () => this.addSampleToLibrary(result));
         });
@@ -17630,7 +17630,7 @@ var init_FreesoundSearchModal = __esm({
         button.empty();
         switch (state) {
           case "play":
-            setIcon(button, "play");
+            (0, import_obsidian8.setIcon)(button, "play");
             button.createSpan({ text: "Preview" });
             button.disabled = false;
             button.removeClass("freesound-btn-loading");
@@ -17638,20 +17638,20 @@ var init_FreesoundSearchModal = __esm({
             button.removeClass("freesound-btn-error");
             break;
           case "stop":
-            setIcon(button, "square");
+            (0, import_obsidian8.setIcon)(button, "square");
             button.createSpan({ text: "Stop" });
             button.disabled = false;
             button.removeClass("freesound-btn-loading");
             button.addClass("freesound-btn-playing");
             break;
           case "loading":
-            setIcon(button, "loader-2");
+            (0, import_obsidian8.setIcon)(button, "loader-2");
             button.createSpan({ text: "Loading..." });
             button.disabled = true;
             button.addClass("freesound-btn-loading");
             break;
           case "error":
-            setIcon(button, "alert-circle");
+            (0, import_obsidian8.setIcon)(button, "alert-circle");
             button.createSpan({ text: "Error" });
             button.addClass("freesound-btn-error");
             break;
@@ -17726,7 +17726,7 @@ var init_FreesoundSearchModal = __esm({
           return;
         this.resultsContainer.empty();
         const errorState = this.resultsContainer.createDiv({ cls: "freesound-error-state" });
-        setIcon(errorState, "alert-circle");
+        (0, import_obsidian8.setIcon)(errorState, "alert-circle");
         errorState.createEl("p", { text: "Search Error" });
         errorState.createEl("span", {
           text: error.message || "Failed to search Freesound. Please check your API key and connection."
@@ -17742,11 +17742,11 @@ var init_FreesoundSearchModal = __esm({
         if (button) {
           button.empty();
           if (this.isSearching) {
-            setIcon(button, "loader-2");
+            (0, import_obsidian8.setIcon)(button, "loader-2");
             button.createSpan({ text });
             button.addClass("freesound-btn-loading");
           } else {
-            setIcon(button, "search");
+            (0, import_obsidian8.setIcon)(button, "search");
             button.createSpan({ text });
             button.removeClass("freesound-btn-loading");
           }
@@ -68581,7 +68581,7 @@ var init_SonicGraphModal = __esm({
         headerDiv.style.alignItems = "center";
         headerDiv.style.gap = "0.75rem";
         headerDiv.style.marginBottom = "0.5rem";
-        setIcon(headerDiv, "info");
+        (0, import_obsidian24.setIcon)(headerDiv, "info");
         headerDiv.createEl("strong", {
           text: "Advanced Settings Moved",
           attr: { style: "color: var(--text-normal); font-size: 14px;" }
@@ -68595,7 +68595,7 @@ var init_SonicGraphModal = __esm({
         const button = linkSection.createEl("button", {
           cls: "sonic-graph-control-center-button"
         });
-        setIcon(button, "layout-panel-left");
+        (0, import_obsidian24.setIcon)(button, "layout-panel-left");
         button.appendText("Open Control Center for Advanced Settings");
         button.addEventListener("click", () => {
           this.close();
@@ -81899,7 +81899,7 @@ var SonicGraphView = class extends import_obsidian23.ItemView {
     const button = linkSection.createEl("button", {
       cls: "sonic-graph-control-center-button"
     });
-    setIcon(button, "layout-panel-left");
+    (0, import_obsidian23.setIcon)(button, "layout-panel-left");
     button.appendText("Control Center");
     button.addEventListener("click", () => {
       this.toggleSettings();
