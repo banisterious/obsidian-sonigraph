@@ -240,6 +240,17 @@ export interface SonicGraphSettings {
 		timelineMarkersEnabled: boolean; // Enable timeline year markers
 		loopAnimation: boolean;     // Enable loop animation
 	};
+	// Visual Note Display Settings (Accessibility Feature)
+	visualDisplay: {
+		enabled: boolean;           // Master toggle for visual note display
+		mode: 'piano-roll' | 'spectrum' | 'staff' | 'graph-highlight'; // Visualization mode
+		frameRate: number;          // Target frame rate for rendering (15-60 fps)
+		colorScheme: 'layer' | 'pitch' | 'intensity' | 'high-contrast'; // Color coding mode
+		showLabels: boolean;        // Show note labels (pitch names)
+		showGrid: boolean;          // Show grid lines
+		enableTrails: boolean;      // Show note trails/fade effect
+		height: number;             // Panel height in pixels (150-400)
+	};
 	navigation: {
 		enableControlCenter: boolean; // Show Control Center button
 		enableReset: boolean;         // Show Reset View button
@@ -866,6 +877,17 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			connectionOpacity: 0.6,
 			timelineMarkersEnabled: true,
 			loopAnimation: false
+		},
+		// Visual Note Display (Accessibility Feature) - Default Settings
+		visualDisplay: {
+			enabled: true,              // Enabled by default for accessibility
+			mode: 'piano-roll',         // Piano roll is most intuitive for note visualization
+			frameRate: 30,              // 30 fps for smooth animation with good performance
+			colorScheme: 'layer',       // Color by layer (rhythmic, harmonic, melodic, etc.)
+			showLabels: true,           // Show note labels for accessibility
+			showGrid: true,             // Show grid lines for better orientation
+			enableTrails: false,        // Trails off by default to reduce visual clutter
+			height: 250                 // 250px default height (resizable 150-400px)
 		},
 		navigation: {
 			enableControlCenter: true,
