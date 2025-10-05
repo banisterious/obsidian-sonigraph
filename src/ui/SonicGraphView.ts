@@ -565,7 +565,7 @@ export class SonicGraphView extends ItemView {
             logger.debug('visual-display', 'Visual display expanded');
         } else {
             this.visualDisplaySection.addClass('collapsed');
-            this.visualDisplaySection.style.height = '32px'; // Header only
+            this.visualDisplaySection.style.height = '40px'; // Header only
             collapseBtn.setText('▲');
             logger.debug('visual-display', 'Visual display collapsed');
         }

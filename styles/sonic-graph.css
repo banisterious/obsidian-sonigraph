@@ -3135,7 +3135,7 @@
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 32px !important;
+  height: 40px !important;
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
@@ -3144,14 +3144,15 @@
 
 /* Visual display header */
 .sonic-graph-visual-display-header {
-  padding: 6px 16px;
+  padding: 8px 16px;
   background: var(--background-secondary);
   border-bottom: 1px solid var(--background-modifier-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  min-height: 32px;
+  min-height: 40px;
+  height: 40px;
 }
 
 .sonic-graph-visual-display-title {

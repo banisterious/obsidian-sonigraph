@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-05 18:48:27 UTC
+ * - Generated: 2025-10-05 18:51:40 UTC
  * - Components: 20 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -6675,7 +6675,7 @@ details.osp-advanced-settings {
    COMPONENT: SONIC-GRAPH.CSS
    ========================================================================== */
 
-/* Component Size: 3235 lines, 69.79 KB */
+/* Component Size: 3236 lines, 69.81 KB */
 
 /* ===================================
    SONIC GRAPH VISUALIZATION STYLES
@@ -9814,7 +9814,7 @@ details.osp-advanced-settings {
 }
 
 .sonic-graph-visual-display-section.collapsed {
-  height: 32px !important;
+  height: 40px !important;
 }
 
 .sonic-graph-visual-display-section.collapsed .sonic-graph-visual-display-content {
@@ -9823,14 +9823,15 @@ details.osp-advanced-settings {
 
 /* Visual display header */
 .sonic-graph-visual-display-header {
-  padding: 6px 16px;
+  padding: 8px 16px;
   background: var(--background-secondary);
   border-bottom: 1px solid var(--background-modifier-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  min-height: 32px;
+  min-height: 40px;
+  height: 40px;
 }
 
 .sonic-graph-visual-display-title {
@@ -11567,11 +11568,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-05 18:48:27 UTC
+ * Build completed: 2025-10-05 18:51:40 UTC
  * Components processed: 20
- * Total lines: 11361
- * Total size: 241.5 KB
- * Build duration: 0.02 seconds
+ * Total lines: 11362
+ * Total size: 241.52 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -11588,7 +11589,7 @@ details.osp-advanced-settings {
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
- * - sonic-graph.css: 3235 lines, 69.79 KB
+ * - sonic-graph.css: 3236 lines, 69.81 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

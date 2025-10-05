@@ -70967,7 +70967,7 @@ var SonicGraphView = class extends import_obsidian24.ItemView {
       logger63.debug("visual-display", "Visual display expanded");
     } else {
       this.visualDisplaySection.addClass("collapsed");
-      this.visualDisplaySection.style.height = "32px";
+      this.visualDisplaySection.style.height = "40px";
       collapseBtn.setText("\u25B2");
       logger63.debug("visual-display", "Visual display collapsed");
     }
