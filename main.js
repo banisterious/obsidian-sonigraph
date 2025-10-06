@@ -70709,11 +70709,10 @@ var PianoRollRenderer = class {
       logger55.debug("initialization", `Container has no dimensions yet (attempt ${attempts + 1}/20), retrying...`);
       requestAnimationFrame(() => this.waitForContainerAndResize(attempts + 1));
     } else {
-      logger55.error("initialization", "Container never got dimensions after 20 attempts", {
+      logger55.debug("initialization", "Container has no dimensions after 20 attempts (likely collapsed), will resize on expand", {
         width: rect.width,
         height: rect.height
       });
-      this.resizeCanvas();
     }
   }
   /**

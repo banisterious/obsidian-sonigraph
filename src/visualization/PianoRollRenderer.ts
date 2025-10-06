@@ -154,13 +154,12 @@ export class PianoRollRenderer implements VisualizationRenderer {
             logger.debug('initialization', `Container has no dimensions yet (attempt ${attempts + 1}/20), retrying...`);
             requestAnimationFrame(() => this.waitForContainerAndResize(attempts + 1));
         } else {
-            // Give up after 20 attempts
-            logger.error('initialization', 'Container never got dimensions after 20 attempts', {
+            // Container likely collapsed - will resize when expanded via forceResize()
+            logger.debug('initialization', 'Container has no dimensions after 20 attempts (likely collapsed), will resize on expand', {
                 width: rect.width,
                 height: rect.height
             });
-            // Try to resize anyway with fallback
-            this.resizeCanvas();
+            // Don't try to resize with 0 dimensions - wait for forceResize() call
         }
     }
 
