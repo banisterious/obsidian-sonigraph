@@ -9,6 +9,7 @@
 import { getLogger } from '../logging';
 import { PianoRollRenderer } from './PianoRollRenderer';
 import { SpectrumRenderer } from './SpectrumRenderer';
+import { StaffRenderer } from './StaffRenderer';
 
 const logger = getLogger('NoteVisualizationManager');
 
@@ -169,8 +170,13 @@ export class NoteVisualizationManager {
                 break;
 
             case 'staff':
+                this.renderer = new StaffRenderer();
+                this.renderer.initialize(this.container);
+                this.renderer.updateConfig(this.config);
+                break;
+
             case 'graph-highlight':
-                // TODO: Implement other renderer types in future phases
+                // TODO: Implement graph-highlight renderer in future phase
                 logger.warn('renderer', `${this.config.mode} renderer not yet implemented`);
                 break;
 
