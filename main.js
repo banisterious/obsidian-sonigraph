@@ -71676,33 +71676,166 @@ var StaffRenderer = class {
       "ambient": "#10B981",
       "percussion": "#EF4444"
     };
-    events.forEach((event) => {
-      const x3 = event.timestamp / timelineDuration * this.canvas.width;
-      const y3 = this.getStaffYPosition(event.pitch);
-      const color2 = layerColors[event.layer] || "#888888";
-      const noteEndTime = event.timestamp + event.duration;
-      const isPlaying = currentTime >= event.timestamp && currentTime <= noteEndTime;
+    const chordGroups = this.groupNotesIntoChords(events, 20);
+    chordGroups.forEach((group) => {
+      const isChord = group.length > 1;
+      const x3 = group[0].timestamp / timelineDuration * this.canvas.width;
+      const noteEndTime = group[0].timestamp + group[0].duration;
+      const isPlaying = currentTime >= group[0].timestamp && currentTime <= noteEndTime;
+      if (isChord) {
+        this.drawChord(group, x3, currentTime, layerColors);
+      } else {
+        const event = group[0];
+        const y3 = this.getStaffYPosition(event.pitch);
+        const color2 = layerColors[event.layer] || "#888888";
+        this.ctx.fillStyle = isPlaying ? this.adjustBrightness(color2, 40) : color2;
+        this.ctx.beginPath();
+        this.ctx.arc(x3, y3, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
+        this.ctx.fill();
+        if (isPlaying) {
+          this.ctx.shadowColor = color2;
+          this.ctx.shadowBlur = 10;
+          this.ctx.beginPath();
+          this.ctx.arc(x3, y3, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.shadowBlur = 0;
+        }
+        if (event.duration >= 0.25) {
+          this.ctx.strokeStyle = color2;
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.moveTo(x3 + this.staffConfig.noteSize / 2, y3);
+          this.ctx.lineTo(x3 + this.staffConfig.noteSize / 2, y3 - 30);
+          this.ctx.stroke();
+        }
+      }
+    });
+  }
+  /**
+   * Group notes that occur at nearly the same time into chords
+   */
+  groupNotesIntoChords(events, thresholdMs = 20) {
+    if (events.length === 0)
+      return [];
+    const sorted = [...events].sort((a2, b) => a2.timestamp - b.timestamp);
+    const groups = [];
+    let currentGroup = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++) {
+      const timeDiff = Math.abs(sorted[i].timestamp - currentGroup[0].timestamp) * 1e3;
+      if (timeDiff <= thresholdMs) {
+        currentGroup.push(sorted[i]);
+      } else {
+        groups.push(currentGroup);
+        currentGroup = [sorted[i]];
+      }
+    }
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup);
+    }
+    return groups;
+  }
+  /**
+   * Draw a chord (multiple notes stacked vertically)
+   */
+  drawChord(notes, x3, currentTime, layerColors) {
+    if (!this.ctx)
+      return;
+    const sortedNotes = [...notes].sort((a2, b) => {
+      const pitchA = typeof a2.pitch === "number" ? a2.pitch : 60;
+      const pitchB = typeof b.pitch === "number" ? b.pitch : 60;
+      return pitchA - pitchB;
+    });
+    const noteEndTime = sortedNotes[0].timestamp + sortedNotes[0].duration;
+    const isPlaying = currentTime >= sortedNotes[0].timestamp && currentTime <= noteEndTime;
+    const notePositions = sortedNotes.map((note) => ({
+      y: this.getStaffYPosition(note.pitch),
+      color: layerColors[note.layer] || "#888888",
+      note
+    }));
+    const highestY = Math.min(...notePositions.map((p) => p.y));
+    const lowestY = Math.max(...notePositions.map((p) => p.y));
+    notePositions.forEach(({ y: y3, color: color2, note }) => {
       this.ctx.fillStyle = isPlaying ? this.adjustBrightness(color2, 40) : color2;
       this.ctx.beginPath();
       this.ctx.arc(x3, y3, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
       this.ctx.fill();
       if (isPlaying) {
         this.ctx.shadowColor = color2;
-        this.ctx.shadowBlur = 10;
+        this.ctx.shadowBlur = 8;
         this.ctx.beginPath();
         this.ctx.arc(x3, y3, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.shadowBlur = 0;
       }
-      if (event.duration >= 0.25) {
-        this.ctx.strokeStyle = color2;
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(x3 + this.staffConfig.noteSize / 2, y3);
-        this.ctx.lineTo(x3 + this.staffConfig.noteSize / 2, y3 - 30);
-        this.ctx.stroke();
-      }
     });
+    if (sortedNotes[0].duration >= 0.25) {
+      const stemColor = notePositions[0].color;
+      this.ctx.strokeStyle = isPlaying ? this.adjustBrightness(stemColor, 40) : stemColor;
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x3 + this.staffConfig.noteSize / 2, lowestY);
+      this.ctx.lineTo(x3 + this.staffConfig.noteSize / 2, highestY - 30);
+      this.ctx.stroke();
+    }
+    if (this.config.showLabels && notes.length >= 2) {
+      const chordType = this.detectChordType(sortedNotes);
+      if (chordType) {
+        this.ctx.fillStyle = "#cccccc";
+        this.ctx.font = "12px sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(chordType, x3, highestY - 45);
+        this.ctx.textAlign = "left";
+      }
+    }
+  }
+  /**
+   * Detect chord type from a group of notes
+   */
+  detectChordType(notes) {
+    if (notes.length < 2)
+      return null;
+    const pitches = notes.map((note) => {
+      if (typeof note.pitch === "number") {
+        return note.pitch;
+      }
+      return Math.round(12 * Math.log2(note.pitch / 440) + 69);
+    }).sort((a2, b) => a2 - b);
+    const root2 = pitches[0];
+    const intervals = pitches.map((p) => (p - root2) % 12);
+    const intervalsStr = intervals.join(",");
+    const noteNames = ["C", "C\u266F", "D", "D\u266F", "E", "F", "F\u266F", "G", "G\u266F", "A", "A\u266F", "B"];
+    const rootName = noteNames[root2 % 12];
+    if (this.matchesIntervals(intervals, [0, 4, 7]))
+      return `${rootName}`;
+    if (this.matchesIntervals(intervals, [0, 3, 7]))
+      return `${rootName}m`;
+    if (this.matchesIntervals(intervals, [0, 3, 6]))
+      return `${rootName}\xB0`;
+    if (this.matchesIntervals(intervals, [0, 4, 8]))
+      return `${rootName}+`;
+    if (this.matchesIntervals(intervals, [0, 4, 7, 11]))
+      return `${rootName}maj7`;
+    if (this.matchesIntervals(intervals, [0, 3, 7, 10]))
+      return `${rootName}m7`;
+    if (this.matchesIntervals(intervals, [0, 4, 7, 10]))
+      return `${rootName}7`;
+    if (this.matchesIntervals(intervals, [0, 5, 7]))
+      return `${rootName}sus4`;
+    if (this.matchesIntervals(intervals, [0, 2, 7]))
+      return `${rootName}sus2`;
+    return `${rootName} (${notes.length})`;
+  }
+  /**
+   * Check if a set of intervals matches a chord pattern
+   */
+  matchesIntervals(intervals, pattern) {
+    if (intervals.length < pattern.length)
+      return false;
+    for (const p of pattern) {
+      if (!intervals.includes(p))
+        return false;
+    }
+    return true;
   }
   /**
    * Get Y position on staff for a given pitch
