@@ -2298,6 +2298,11 @@ var init_constants = __esm({
           // 50ms window for truly simultaneous notes (increase if notes aren't grouping)
           minimumNotes: 2,
           // At least 2 notes to form a chord
+          // Temporal grouping settings for timeline-based chord fusion
+          temporalGrouping: "realtime",
+          // 'realtime' | 'day' | 'week' | 'month' | 'year'
+          maxChordNotes: 6,
+          // Maximum notes to include in a temporal chord
           // Per-layer defaults (harmonic, rhythmic, ambient enabled)
           layerSettings: {
             melodic: false,
@@ -21270,6 +21275,37 @@ var init_control_panel = __esm({
               if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
                 return;
               this.plugin.settings.audioEnhancement.chordFusion.timingWindow = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        container.createEl("h4", { text: "Temporal grouping", cls: "osp-section-heading" });
+        new import_obsidian14.Setting(container).setName("Group notes by").setDesc('Group notes from the same time period into chords. "Real-time" uses millisecond timing, while day/week/month groups notes by their temporal date.').addDropdown(
+          (dropdown) => {
+            var _a2, _b2;
+            return dropdown.addOption("realtime", "Real-time (milliseconds)").addOption("day", "Same day").addOption("week", "Same week").addOption("month", "Same month").addOption("year", "Same year").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.temporalGrouping) || "realtime").onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.temporalGrouping = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        new import_obsidian14.Setting(container).setName("Maximum chord notes").setDesc("Maximum number of notes to include in a temporal chord (prevents overly dense chords)").addSlider(
+          (slider) => {
+            var _a2, _b2;
+            return slider.setLimits(2, 12, 1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.maxChordNotes) || 6).setDynamicTooltip().onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.maxChordNotes = value;
               await this.plugin.saveSettings();
               if (this.plugin.audioEngine) {
                 await this.plugin.audioEngine.updateSettings(this.plugin.settings);
@@ -81778,6 +81814,7 @@ var AudioEngine = class {
     // Real-time chord fusion buffer
     this.chordBuffer = [];
     this.chordFlushTimer = null;
+    this.temporalChordBuckets = /* @__PURE__ */ new Map();
     // Active note tracking for polyphony management (per-instrument)
     this.activeNotesPerInstrument = /* @__PURE__ */ new Map();
     this.MAX_NOTES_PER_INSTRUMENT = 3;
@@ -84561,16 +84598,67 @@ var AudioEngine = class {
   }
   /**
    * Buffer a note for chord fusion processing in real-time playback
-   * Notes are buffered and grouped based on timing window
+   * Notes are buffered and grouped based on temporal grouping setting
    */
   bufferNoteForChordFusion(mapping, nodeId, nodeTitle, elapsedTime) {
+    var _a;
+    const settings = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.chordFusion;
+    if (!settings)
+      return;
+    const temporalMode = settings.temporalGrouping || "realtime";
+    if (temporalMode === "realtime") {
+      this.bufferNoteRealtime(mapping, nodeId, nodeTitle, elapsedTime);
+      return;
+    }
+    const bucketKey = this.getTemporalBucketKey(nodeId, temporalMode);
+    if (!bucketKey) {
+      this.playBufferedNote(mapping, elapsedTime);
+      return;
+    }
+    if (!this.temporalChordBuckets.has(bucketKey)) {
+      this.temporalChordBuckets.set(bucketKey, []);
+    }
+    const bucket = this.temporalChordBuckets.get(bucketKey);
+    bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId });
+    logger79.debug("chord-fusion", "Note added to temporal bucket", {
+      pitch: mapping.pitch,
+      instrument: mapping.instrument,
+      bucketKey,
+      bucketSize: bucket.length,
+      temporalMode
+    });
+    const maxNotes = settings.maxChordNotes || 6;
+    if (bucket.length >= settings.minimumNotes && bucket.length <= maxNotes) {
+      logger79.info("chord-fusion", "Temporal bucket ready for chord", {
+        bucketKey,
+        noteCount: bucket.length,
+        temporalMode
+      });
+      this.triggerTemporalChord(bucketKey, elapsedTime);
+    } else if (bucket.length === 1) {
+      this.playBufferedNote(bucket[0].mapping, elapsedTime);
+    } else if (bucket.length > maxNotes) {
+      logger79.info("chord-fusion", "Temporal bucket exceeded max size", {
+        bucketKey,
+        noteCount: bucket.length,
+        maxNotes
+      });
+      this.triggerTemporalChord(bucketKey, elapsedTime);
+    }
+  }
+  /**
+   * Real-time buffering for millisecond-based chord detection
+   */
+  bufferNoteRealtime(mapping, nodeId, nodeTitle, elapsedTime) {
     var _a, _b;
     const now3 = Date.now();
     this.chordBuffer.push({
       mapping: { ...mapping, nodeId, nodeTitle },
-      timestamp: now3
+      timestamp: now3,
+      elapsedTime,
+      nodeId
     });
-    logger79.debug("chord-fusion", "Note buffered for chord detection", {
+    logger79.debug("chord-fusion", "Note buffered for chord detection (realtime)", {
       pitch: mapping.pitch,
       instrument: mapping.instrument,
       bufferSize: this.chordBuffer.length,
@@ -84592,10 +84680,84 @@ var AudioEngine = class {
     if (this.chordFlushTimer !== null) {
       clearTimeout(this.chordFlushTimer);
     }
-    const timingWindow = ((_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.chordFusion) == null ? void 0 : _b.timingWindow) || 200;
+    const timingWindow = ((_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.chordFusion) == null ? void 0 : _b.timingWindow) || 50;
     this.chordFlushTimer = window.setTimeout(() => {
       this.flushChordBuffer(elapsedTime);
     }, timingWindow);
+  }
+  /**
+   * Get temporal bucket key for a node based on grouping mode
+   */
+  getTemporalBucketKey(nodeId, mode) {
+    if (!nodeId || !this.app)
+      return null;
+    const file = this.app.vault.getAbstractFileByPath(nodeId);
+    if (!file || !("stat" in file))
+      return null;
+    const date = new Date(file.stat.mtime);
+    switch (mode) {
+      case "day":
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      case "week":
+        const oneJan = new Date(date.getFullYear(), 0, 1);
+        const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1e3));
+        const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
+        return `${date.getFullYear()}-W${String(weekNumber).padStart(2, "0")}`;
+      case "month":
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      case "year":
+        return `${date.getFullYear()}`;
+      default:
+        return null;
+    }
+  }
+  /**
+   * Trigger a chord from a temporal bucket
+   */
+  triggerTemporalChord(bucketKey, elapsedTime) {
+    var _a;
+    const bucket = this.temporalChordBuckets.get(bucketKey);
+    if (!bucket || bucket.length === 0)
+      return;
+    const settings = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.chordFusion;
+    if (!settings)
+      return;
+    const notesByLayer = /* @__PURE__ */ new Map();
+    bucket.forEach((item) => {
+      const instrument = item.mapping.instrument.toLowerCase();
+      let layer = "harmonic";
+      if (instrument.includes("melodic") || instrument.includes("lead") || instrument.includes("melody")) {
+        layer = "melodic";
+      } else if (instrument.includes("bass") || instrument.includes("rhythm")) {
+        layer = "rhythmic";
+      } else if (instrument.includes("pad") || instrument.includes("ambient")) {
+        layer = "ambient";
+      }
+      if (!notesByLayer.has(layer)) {
+        notesByLayer.set(layer, []);
+      }
+      notesByLayer.get(layer).push(item);
+    });
+    notesByLayer.forEach((notes, layer) => {
+      var _a2;
+      const layerEnabled = (_a2 = settings.layerSettings) == null ? void 0 : _a2[layer];
+      if (!layerEnabled || notes.length < settings.minimumNotes) {
+        notes.forEach((item) => this.playBufferedNote(item.mapping, elapsedTime));
+        return;
+      }
+      logger79.info("chord-fusion", "Creating temporal chord", {
+        bucketKey,
+        layer,
+        noteCount: notes.length,
+        mode: settings.mode
+      });
+      if (settings.mode === "smart") {
+        this.triggerSmartChord(notes, settings, elapsedTime);
+      } else {
+        this.triggerDirectChord(notes, elapsedTime);
+      }
+    });
+    this.temporalChordBuckets.delete(bucketKey);
   }
   /**
    * Flush the chord buffer and trigger notes/chords

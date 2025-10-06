@@ -2703,6 +2703,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			timingWindow: 50, // 50ms window for truly simultaneous notes (increase if notes aren't grouping)
 			minimumNotes: 2, // At least 2 notes to form a chord
 
+			// Temporal grouping settings for timeline-based chord fusion
+			temporalGrouping: 'realtime', // 'realtime' | 'day' | 'week' | 'month' | 'year'
+			maxChordNotes: 6, // Maximum notes to include in a temporal chord
+
 			// Per-layer defaults (harmonic, rhythmic, ambient enabled)
 			layerSettings: {
 				melodic: false, // Keep melodies monophonic by default

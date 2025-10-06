@@ -1411,6 +1411,48 @@ export class MaterialControlPanelModal extends Modal {
 				})
 			);
 
+		// Temporal grouping heading
+		container.createEl('h4', { text: 'Temporal grouping', cls: 'osp-section-heading' });
+
+		// Temporal grouping mode
+		new Setting(container)
+			.setName('Group notes by')
+			.setDesc('Group notes from the same time period into chords. "Real-time" uses millisecond timing, while day/week/month groups notes by their temporal date.')
+			.addDropdown(dropdown => dropdown
+				.addOption('realtime', 'Real-time (milliseconds)')
+				.addOption('day', 'Same day')
+				.addOption('week', 'Same week')
+				.addOption('month', 'Same month')
+				.addOption('year', 'Same year')
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.temporalGrouping || 'realtime')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.temporalGrouping = value as 'realtime' | 'day' | 'week' | 'month' | 'year';
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Max chord notes
+		new Setting(container)
+			.setName('Maximum chord notes')
+			.setDesc('Maximum number of notes to include in a temporal chord (prevents overly dense chords)')
+			.addSlider(slider => slider
+				.setLimits(2, 12, 1)
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.maxChordNotes || 6)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.maxChordNotes = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
 		// Layer-specific settings heading
 		container.createEl('h4', { text: 'Layer-specific chord fusion', cls: 'osp-section-heading' });
 
