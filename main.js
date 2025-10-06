@@ -84612,6 +84612,12 @@ var AudioEngine = class {
     }
     const bucketKey = this.getTemporalBucketKey(nodeId, temporalMode);
     if (!bucketKey) {
+      logger79.debug("chord-fusion", "Could not determine temporal bucket, playing immediately", {
+        nodeId,
+        temporalMode,
+        hasNodeId: !!nodeId,
+        hasApp: !!this.app
+      });
       this.playBufferedNote(mapping, elapsedTime);
       return;
     }
@@ -84689,12 +84695,28 @@ var AudioEngine = class {
    * Get temporal bucket key for a node based on grouping mode
    */
   getTemporalBucketKey(nodeId, mode) {
-    if (!nodeId || !this.app)
+    if (!nodeId || !this.app) {
+      logger79.debug("chord-fusion", "Cannot get temporal bucket - missing nodeId or app", {
+        hasNodeId: !!nodeId,
+        hasApp: !!this.app
+      });
       return null;
+    }
     const file = this.app.vault.getAbstractFileByPath(nodeId);
-    if (!file || !("stat" in file))
+    if (!file || !("stat" in file)) {
+      logger79.debug("chord-fusion", "Cannot get temporal bucket - file not found or no stats", {
+        nodeId,
+        hasFile: !!file,
+        hasStat: file && "stat" in file
+      });
       return null;
+    }
     const date = new Date(file.stat.mtime);
+    logger79.debug("chord-fusion", "Got file modification date", {
+      nodeId,
+      mtime: file.stat.mtime,
+      date: date.toISOString()
+    });
     switch (mode) {
       case "day":
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
