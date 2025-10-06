@@ -1,5 +1,6 @@
 // Import Tone.js with ESM-compatible approach
 import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, Frequency } from 'tone';
+import { App } from 'obsidian';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
@@ -94,8 +95,10 @@ export class AudioEngine {
 	
 	// Master Effects Processing - moved to EffectBusManager
 
-	constructor(private settings: SonigraphSettings) {
-		logger.debug('initialization', 'AudioEngine created');
+	constructor(private settings: SonigraphSettings, private app?: App) {
+		logger.debug('initialization', 'AudioEngine created', {
+			hasApp: !!app
+		});
 		this.voiceManager = new VoiceManager(true); // Enable adaptive quality by default
 		this.effectBusManager = new EffectBusManager();
 		this.instrumentConfigLoader = new InstrumentConfigLoader({

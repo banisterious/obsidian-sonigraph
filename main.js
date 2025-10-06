@@ -81766,8 +81766,9 @@ var ChordFusionEngine = class {
 var logger79 = getLogger("audio-engine");
 var AudioEngine = class {
   // Master Effects Processing - moved to EffectBusManager
-  constructor(settings) {
+  constructor(settings, app) {
     this.settings = settings;
+    this.app = app;
     this.instruments = /* @__PURE__ */ new Map();
     this.instrumentVolumes = /* @__PURE__ */ new Map();
     this.instrumentEffects = /* @__PURE__ */ new Map();
@@ -81824,7 +81825,9 @@ var AudioEngine = class {
     this.eventEmitter = new PlaybackEventEmitter();
     this.sequenceStartTime = 0;
     this.sequenceProgressTimer = null;
-    logger79.debug("initialization", "AudioEngine created");
+    logger79.debug("initialization", "AudioEngine created", {
+      hasApp: !!app
+    });
     this.voiceManager = new VoiceManager(true);
     this.effectBusManager = new EffectBusManager();
     this.instrumentConfigLoader = new InstrumentConfigLoader({
@@ -87045,7 +87048,7 @@ var SonigraphPlugin = class extends import_obsidian26.Plugin {
   }
   initializeComponents() {
     logger81.debug("initialization", "Initializing plugin components");
-    this.audioEngine = new AudioEngine(this.settings);
+    this.audioEngine = new AudioEngine(this.settings, this.app);
     this.graphParser = new GraphParser(this.app.vault, this.app.metadataCache);
     this.musicalMapper = new MusicalMapper(this.settings);
     logger81.debug("initialization", "All components initialized");
