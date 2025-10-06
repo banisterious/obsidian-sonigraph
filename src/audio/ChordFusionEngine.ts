@@ -6,9 +6,11 @@
  * and "direct" mode (play notes as-is).
  */
 
-import { logger } from '../utils/logger';
+import { getLogger } from '../logging';
 import { SonigraphSettings } from '../utils/constants';
 import { HarmonicEngine } from './harmonic-engine';
+
+const logger = getLogger('chord-fusion');
 
 export interface NoteEvent {
 	note: string;

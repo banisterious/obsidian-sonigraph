@@ -15,6 +15,7 @@ import { MemoryMonitor } from './optimizations/MemoryMonitor';
 import { AudioGraphCleaner } from './optimizations/AudioGraphCleaner';
 import { MusicalTheoryEngine } from './theory/MusicalTheoryEngine';
 import { MusicalTheoryConfig } from './theory/types';
+import { ChordFusionEngine, NoteEvent as ChordNoteEvent, ChordGroup } from './ChordFusionEngine';
 
 const logger = getLogger('audio-engine');
 
@@ -73,6 +74,9 @@ export class AudioEngine {
 	// Phase 3: Frequency detuning for phase conflict resolution
 	private frequencyHistory: Map<number, number> = new Map(); // frequency -> last used time
 
+	// Chord Fusion Engine
+	private chordFusionEngine: ChordFusionEngine | null = null;
+
 	// Active note tracking for polyphony management (per-instrument)
 	private activeNotesPerInstrument: Map<string, number> = new Map();
 	private readonly MAX_NOTES_PER_INSTRUMENT = 3; // Match Tone.js maxPolyphony limit
@@ -101,6 +105,9 @@ export class AudioEngine {
 		this.playbackOptimizer = new PlaybackOptimizer();
 		this.memoryMonitor = new MemoryMonitor();
 		this.audioGraphCleaner = new AudioGraphCleaner();
+
+		// Initialize chord fusion engine
+		this.chordFusionEngine = new ChordFusionEngine(settings);
 	}
 
 	// === DELEGATE METHODS FOR EFFECT MANAGEMENT ===
@@ -1986,8 +1993,16 @@ export class AudioEngine {
 			try {
 				logger.debug('playback', 'Processing musical sequence', { noteCount: sequence.length });
 
-				// Process sequence directly without harmonic engine for now
-				const processedSequence = sequence;
+				// Apply chord fusion if enabled
+				let processedSequence = sequence;
+				if (this.chordFusionEngine && this.settings.audioEnhancement?.chordFusion?.enabled) {
+					processedSequence = this.applyChordFusion(sequence);
+					logger.info('chord-fusion', 'Chord fusion applied to sequence', {
+						originalNotes: sequence.length,
+						processedNotes: processedSequence.length,
+						reduction: sequence.length - processedSequence.length
+					});
+				}
 
 				// Notes are now tracked in PlaybackOptimizer without modifying original objects
 				logger.debug('playback', 'Preparing sequence for playback', {
@@ -2487,6 +2502,12 @@ export class AudioEngine {
 			}
 		}
 
+		// Update chord fusion engine if it exists
+		if (this.chordFusionEngine) {
+			this.chordFusionEngine.updateSettings(settings);
+			logger.debug('chord-fusion', 'Chord fusion engine settings updated');
+		}
+
 		this.updateVolume();
 
 		// Apply effect settings if engine is initialized
@@ -2932,6 +2953,187 @@ export class AudioEngine {
 		this.isPlaying = false;
 		this.currentSequence = [];
 		this.scheduledEvents = [];
+	}
+
+	/**
+	 * Apply chord fusion to a musical sequence
+	 * Groups simultaneous notes into chords based on timing window
+	 */
+	private applyChordFusion(sequence: MusicalMapping[]): MusicalMapping[] {
+		if (!this.chordFusionEngine) {
+			return sequence;
+		}
+
+		const chordSettings = this.settings.audioEnhancement?.chordFusion;
+		if (!chordSettings?.enabled) {
+			return sequence;
+		}
+
+		logger.debug('chord-fusion', 'Starting chord fusion processing', {
+			sequenceLength: sequence.length,
+			timingWindow: chordSettings.timingWindow,
+			mode: chordSettings.mode
+		});
+
+		// Sort sequence by timing
+		const sorted = [...sequence].sort((a, b) => a.timing - b.timing);
+
+		// Group notes by timing window
+		const groups: MusicalMapping[][] = [];
+		let currentGroup: MusicalMapping[] = [];
+		let currentGroupStart = -1;
+
+		for (const note of sorted) {
+			if (currentGroup.length === 0) {
+				// Start new group
+				currentGroup = [note];
+				currentGroupStart = note.timing;
+			} else {
+				const timeDiff = Math.abs(note.timing - currentGroupStart) * 1000; // Convert to ms
+				const timingWindow = chordSettings.timingWindow || 200;
+
+				if (timeDiff <= timingWindow) {
+					// Add to current group
+					currentGroup.push(note);
+				} else {
+					// Save current group and start new one
+					groups.push(currentGroup);
+					currentGroup = [note];
+					currentGroupStart = note.timing;
+				}
+			}
+		}
+
+		// Don't forget the last group
+		if (currentGroup.length > 0) {
+			groups.push(currentGroup);
+		}
+
+		logger.debug('chord-fusion', 'Grouped notes by timing', {
+			originalNotes: sequence.length,
+			groups: groups.length,
+			groupSizes: groups.map(g => g.length)
+		});
+
+		// Process each group - combine into chords or keep as individual notes
+		const processed: MusicalMapping[] = [];
+		const minimumNotes = chordSettings.minimumNotes || 2;
+
+		for (const group of groups) {
+			if (group.length < minimumNotes) {
+				// Not enough notes for a chord - keep individual notes
+				processed.push(...group);
+				continue;
+			}
+
+			// Check if any note in the group has chord fusion enabled for its layer
+			const hasEnabledLayer = group.some(note => {
+				const layer = this.getNoteLayer(note);
+				return layer && this.isLayerEnabledForChordFusion(layer, chordSettings);
+			});
+
+			if (!hasEnabledLayer) {
+				// No enabled layers in this group - keep individual notes
+				processed.push(...group);
+				continue;
+			}
+
+			// Create a chord from this group
+			const chordNote = this.createChordNote(group, chordSettings);
+			processed.push(chordNote);
+
+			logger.debug('chord-fusion', 'Created chord', {
+				notesInChord: group.length,
+				rootPitch: chordNote.pitch,
+				timing: chordNote.timing
+			});
+		}
+
+		logger.info('chord-fusion', 'Chord fusion complete', {
+			originalNotes: sequence.length,
+			processedNotes: processed.length,
+			chordsCreated: groups.filter(g => g.length >= minimumNotes).length
+		});
+
+		return processed;
+	}
+
+	/**
+	 * Determine the musical layer for a note based on its properties
+	 */
+	private getNoteLayer(note: MusicalMapping): 'melodic' | 'harmonic' | 'rhythmic' | 'ambient' | null {
+		// This is a heuristic - in the future, we might want to add explicit layer tagging
+		const instrument = note.instrument || '';
+		const pitch = note.pitch;
+		const duration = note.duration;
+
+		// Ambient layer: long sustained notes, typically pads/strings
+		if (duration > 2.0 && (instrument.includes('pad') || instrument.includes('string'))) {
+			return 'ambient';
+		}
+
+		// Rhythmic layer: short notes, high velocity
+		if (duration < 0.5 && note.velocity > 0.7) {
+			return 'rhythmic';
+		}
+
+		// Harmonic layer: keyboard/piano instruments with moderate duration
+		if ((instrument.includes('piano') || instrument.includes('keyboard')) && duration > 0.5) {
+			return 'harmonic';
+		}
+
+		// Melodic layer: everything else (leads, woodwinds, brass)
+		return 'melodic';
+	}
+
+	/**
+	 * Check if a layer has chord fusion enabled
+	 */
+	private isLayerEnabledForChordFusion(layer: string, settings: any): boolean {
+		return settings.layerSettings?.[layer] || false;
+	}
+
+	/**
+	 * Create a single note mapping that represents a chord
+	 */
+	private createChordNote(notes: MusicalMapping[], settings: any): MusicalMapping {
+		// Use the first note as the base
+		const baseNote = notes[0];
+
+		// Calculate average pitch (weighted by velocity)
+		let totalPitch = 0;
+		let totalWeight = 0;
+		for (const note of notes) {
+			totalPitch += note.pitch * note.velocity;
+			totalWeight += note.velocity;
+		}
+		const averagePitch = totalPitch / totalWeight;
+
+		// Use the longest duration
+		const maxDuration = Math.max(...notes.map(n => n.duration));
+
+		// Use the average velocity
+		const avgVelocity = notes.reduce((sum, n) => sum + n.velocity, 0) / notes.length;
+
+		// Create the chord note with special metadata
+		const chordNote: MusicalMapping = {
+			...baseNote,
+			pitch: averagePitch,
+			duration: maxDuration,
+			velocity: avgVelocity,
+			// Store original notes as metadata (for visualization)
+			metadata: {
+				isChord: true,
+				chordNotes: notes.map(n => ({
+					pitch: n.pitch,
+					velocity: n.velocity,
+					instrument: n.instrument
+				})),
+				chordSize: notes.length
+			}
+		};
+
+		return chordNote;
 	}
 
 	private getDefaultInstrument(mapping: MusicalMapping): string {
