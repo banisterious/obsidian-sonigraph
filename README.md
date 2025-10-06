@@ -100,6 +100,37 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 
 *Export your sonic graphs as shareable audio files with professional quality settings.*
 
+### 🎹 Visual Note Display (v0.15.0)
+
+- **Piano Roll Visualization**: Timeline-based scrolling display with real-time note tracking
+  - **Moving Playhead**: Video-editor style playhead sweeps across fixed note positions
+  - **MIDI Pitch Mapping**: Notes positioned vertically by pitch (C0 to C6+) with dynamic labels
+  - **Layer Color Coding**: Distinct colors for rhythmic, harmonic, melodic, ambient, and percussion layers
+  - **Live Note Highlighting**: Notes glow with increased brightness when actively playing
+  - **Adaptive Grid System**: Octave-based horizontal lines and time-based vertical markers
+  - **Timeline Markers**: MM:SS format time labels for easy navigation
+
+- **Spectrum Analyzer**: Real-time frequency visualization of audio output
+  - **64 Frequency Bars**: Logarithmic spacing across the frequency spectrum
+  - **Web Audio Integration**: Direct connection to Tone.js master output via AnalyserNode
+  - **Color Gradient**: Visual frequency representation from red (low) to blue (high)
+  - **Smooth Animation**: 60fps rendering for fluid real-time response
+
+- **Staff Notation**: Traditional musical staff with treble and bass clefs
+  - **Proper Note Positioning**: MIDI pitch automatically mapped to staff line positions
+  - **Musical Notation**: Note heads with stems for quarter notes
+  - **Dual Clefs**: Treble clef (high notes) and bass clef (low notes) with middle C reference
+  - **Layer Color Coding**: Consistent color scheme matching other visualization modes
+
+- **Seamless Integration**
+  - **Resizable Split View**: Adjustable panel height via drag handle
+  - **Mode Switching**: Instant tab switching between Piano Roll, Spectrum, and Staff
+  - **Timeline Sync**: All visualizations synchronized with timeline playback position
+  - **Graph Node Highlighting**: Visual nodes pulse when their associated notes play
+  - **Collapsible Panel**: Toggle visibility to maximize graph viewing area
+
+*Experience your sonic graphs visually with three complementary real-time visualization modes.*
+
 ## 📦 Installation
 
 **Recommended:** Install via [BRAT Plugin](https://github.com/TfTHacker/obsidian42-brat)

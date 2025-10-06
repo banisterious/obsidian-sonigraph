@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-10-06
+
+### Added - Visual Note Display System 🎵
+
+**Three Visualization Modes**
+- **Piano Roll**: Timeline-based scrolling display with moving playhead
+  - Notes positioned by timestamp (X-axis) and MIDI pitch (Y-axis)
+  - Real-time note highlighting with glow effects during playback
+  - Adaptive grid system (octave-based horizontal, time-based vertical)
+  - Dynamic pitch labels (C0, C1, C2...) and timeline markers (MM:SS format)
+  - Layer-based color coding (rhythmic, harmonic, melodic, ambient, percussion)
+
+- **Spectrum Analyzer**: Real-time frequency visualization
+  - 64 frequency bars with logarithmic spacing
+  - Web Audio API AnalyserNode integration
+  - Smooth 60fps animation
+  - Color gradient from red (low) to blue (high frequencies)
+  - Connected to Tone.js master output
+
+- **Staff Notation**: Traditional musical staff display
+  - Treble and bass clefs with proper note positioning
+  - MIDI pitch to staff line position mapping
+  - Note heads with stems for quarter notes
+  - Layer-based color coding matching other modes
+  - Supports both MIDI numbers and string note names (e.g., "C4", "G#5")
+
+**UI Integration**
+- Resizable split-view panel below graph visualization
+- Tab switching between Piano Roll, Spectrum, and Staff modes
+- Divider drag handle for height adjustment
+- Timeline position synchronization with audio playback
+- Graph node highlighting synchronized with note playback
+- Proper z-index layering with timeline controls
+
+**Architecture**
+- `NoteVisualizationManager` for centralized coordination
+- `VisualizationRenderer` interface for extensibility
+- Real-time event collection from audio engine
+- Performance-optimized rendering loops (30-60fps)
+- Proper lifecycle management and cleanup
+- Smart resize handling when toggling panel visibility
+
+### Changed - UI Streamlining
+
+**Header Reorganization**
+- Moved Play/Pause button to header (centered play controls section)
+- Moved Speed control to header (next to Play/Pause)
+- Moved Settings (⚙️) button to header button group
+- Consolidated all primary controls in top header
+
+**Bottom Controls Simplification**
+- Removed redundant Export arrow button (Export already in header)
+- Removed Timeline View button (replaced by Visual Note Display)
+- Removed Reset View button (less frequently used)
+- Reduced to single centered stats line only
+- Reduced height from 52px to 36px for more compact layout
+
+**Timeline Polish**
+- Reduced timeline height from 115px to 85px
+- Refined scrubber styling with smoother transitions
+- Smaller, more polished thumb handle (14px, grows to 16px on hover)
+- Improved timeline track with subtle gradient and inset shadow
+- Lighter grid lines (30% opacity) for cleaner appearance
+- Optimized spacing and typography throughout (11px labels, 10px markers)
+- Better current time indicator styling with compact tooltip
+
+### Fixed
+
+- **Visual Display Resize**: Fixed canvas sizing when toggling modes while panel collapsed
+  - Added `forceResize()` method to all visualization renderers
+  - Proper resize trigger when expanding collapsed panel
+  - Fixed pitch labels appearing outside display area
+
+- **Control References**: Removed orphaned `viewModeBtn` references after UI cleanup
+  - Fixed "Cannot read properties of undefined" error on initialization
+
+- **Container Dimensions**: Changed error to debug log for collapsed panel state
+  - Container having 0 dimensions on init is expected when panel starts collapsed
+  - Visualization properly resizes when panel is expanded
+
 ## [0.14.1] - 2025-10-04
 
 ### Fixed
