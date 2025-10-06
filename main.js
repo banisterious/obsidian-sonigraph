@@ -70682,7 +70682,7 @@ var PianoRollRenderer = class {
     }
   }
   /**
-   * Create pitch labels on left side
+   * Create pitch labels container
    */
   createPitchLabels() {
     if (!this.container)
@@ -70690,24 +70690,34 @@ var PianoRollRenderer = class {
     this.pitchLabelsContainer = this.container.createDiv({
       cls: "piano-roll-pitch-labels"
     });
-    const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
+  }
+  /**
+   * Update pitch labels based on current canvas height
+   */
+  updatePitchLabels() {
+    if (!this.pitchLabelsContainer || !this.canvas)
+      return;
+    this.pitchLabelsContainer.empty();
     const noteName = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    for (let i = 0; i < pitchCount; i++) {
-      const pitch = this.pianoRollConfig.maxPitch - i;
-      const octave = Math.floor(pitch / 12) - 1;
+    const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
+    const octaveCount = Math.floor(pitchRange / 12);
+    for (let octave = 0; octave <= octaveCount; octave++) {
+      const pitch = this.pianoRollConfig.minPitch + octave * 12;
+      if (pitch > this.pianoRollConfig.maxPitch)
+        break;
+      const octaveNum = Math.floor(pitch / 12) - 1;
       const note = noteName[pitch % 12];
-      if (pitch % 12 === 0 || i % 4 === 0) {
-        const label = this.pitchLabelsContainer.createDiv({
-          cls: "piano-roll-pitch-label",
-          text: `${note}${octave}`
-        });
-        const topPosition = i * this.pianoRollConfig.pitchRowHeight;
-        label.style.top = `${topPosition}px`;
-      }
+      const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
+      const y3 = (1 - pitchNormalized) * this.canvas.height;
+      const label = this.pitchLabelsContainer.createDiv({
+        cls: "piano-roll-pitch-label",
+        text: `${note}${octaveNum}`
+      });
+      label.style.top = `${y3 - 8}px`;
     }
   }
   /**
-   * Create timeline with time markers
+   * Create timeline container
    */
   createTimeline() {
     if (!this.container)
@@ -70715,6 +70725,34 @@ var PianoRollRenderer = class {
     this.timelineContainer = this.container.createDiv({
       cls: "piano-roll-timeline"
     });
+  }
+  /**
+   * Update timeline markers based on current timeline duration
+   */
+  updateTimelineMarkers(timelineDuration) {
+    if (!this.timelineContainer || !this.canvas)
+      return;
+    this.timelineContainer.empty();
+    let gridInterval = 10;
+    if (timelineDuration < 60) {
+      gridInterval = 5;
+    } else if (timelineDuration < 120) {
+      gridInterval = 10;
+    } else {
+      gridInterval = 30;
+    }
+    const gridCount = Math.ceil(timelineDuration / gridInterval);
+    for (let i = 0; i <= gridCount; i++) {
+      const time = i * gridInterval;
+      const x3 = time / timelineDuration * this.canvas.width;
+      const marker = this.timelineContainer.createDiv({
+        cls: "piano-roll-time-marker"
+      });
+      const minutes = Math.floor(time / 60);
+      const seconds = time % 60;
+      marker.setText(`${minutes}:${seconds.toString().padStart(2, "0")}`);
+      marker.style.left = `${x3}px`;
+    }
   }
   /**
    * Create legend showing layer colors
@@ -70756,6 +70794,7 @@ var PianoRollRenderer = class {
       canvasWidth: this.canvas.width,
       canvasHeight: this.canvas.height
     });
+    this.updatePitchLabels();
     if (this.ctx && this.canvas.width > 0 && this.canvas.height > 0) {
       this.ctx.fillStyle = "#1a1a1a";
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -70768,9 +70807,12 @@ var PianoRollRenderer = class {
   render(events, currentTime) {
     if (!this.ctx || !this.canvas)
       return;
+    const maxTimestamp = events.length > 0 ? Math.max(...events.map((e) => e.timestamp + e.duration)) : currentTime + this.pianoRollConfig.timeWindow;
+    const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+    this.updateTimelineMarkers(timelineDuration);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (this.config.showGrid) {
-      this.drawGrid();
+      this.drawGrid(currentTime, events);
     }
     this.drawNotes(events, currentTime);
     this.drawPlayhead(currentTime, events);
@@ -70778,28 +70820,68 @@ var PianoRollRenderer = class {
   /**
    * Draw grid lines
    */
-  drawGrid() {
+  drawGrid(currentTime, events) {
     if (!this.ctx || !this.canvas)
       return;
     const ctx = this.ctx;
-    const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    const maxTimestamp = events.length > 0 ? Math.max(...events.map((e) => e.timestamp + e.duration)) : currentTime + this.pianoRollConfig.timeWindow;
+    const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
     ctx.lineWidth = 1;
-    for (let i = 0; i <= pitchCount; i++) {
-      const y3 = i * this.pianoRollConfig.pitchRowHeight;
+    const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
+    const octaveCount = Math.floor(pitchRange / 12);
+    for (let octave = 0; octave <= octaveCount; octave++) {
+      const pitch = this.pianoRollConfig.minPitch + octave * 12;
+      const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
+      const y3 = (1 - pitchNormalized) * this.canvas.height;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, y3);
       ctx.lineTo(this.canvas.width, y3);
       ctx.stroke();
+      if (octave < octaveCount) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        for (let semitone = 1; semitone < 12; semitone++) {
+          const semitonePitch = pitch + semitone;
+          const semitonePitchNormalized = (semitonePitch - this.pianoRollConfig.minPitch) / pitchRange;
+          const semitoneY = (1 - semitonePitchNormalized) * this.canvas.height;
+          ctx.beginPath();
+          ctx.moveTo(0, semitoneY);
+          ctx.lineTo(this.canvas.width, semitoneY);
+          ctx.stroke();
+        }
+      }
     }
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-    const secondWidth = this.pianoRollConfig.pixelsPerSecond;
-    for (let i = 0; i < this.canvas.width / secondWidth; i++) {
-      const x3 = i * secondWidth;
+    let gridInterval = 10;
+    if (timelineDuration < 60) {
+      gridInterval = 5;
+    } else if (timelineDuration < 120) {
+      gridInterval = 10;
+    } else {
+      gridInterval = 30;
+    }
+    const gridCount = Math.ceil(timelineDuration / gridInterval);
+    for (let i = 0; i <= gridCount; i++) {
+      const time = i * gridInterval;
+      const x3 = time / timelineDuration * this.canvas.width;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x3, 0);
       ctx.lineTo(x3, this.canvas.height);
       ctx.stroke();
+      if (i < gridCount) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        for (let j = 1; j < 5; j++) {
+          const subTime = time + j * gridInterval / 5;
+          const subX = subTime / timelineDuration * this.canvas.width;
+          ctx.beginPath();
+          ctx.moveTo(subX, 0);
+          ctx.lineTo(subX, this.canvas.height);
+          ctx.stroke();
+        }
+      }
     }
   }
   /**
@@ -70844,7 +70926,12 @@ var PianoRollRenderer = class {
           canvasHeight: this.canvas.height
         });
       }
-      const color2 = LAYER_COLORS[event.layer] || "#888888";
+      const noteEndTime = event.timestamp + event.duration;
+      const isPlaying = currentTime >= event.timestamp && currentTime <= noteEndTime;
+      let color2 = LAYER_COLORS[event.layer] || "#888888";
+      if (isPlaying) {
+        color2 = this.adjustBrightness(color2, 30);
+      }
       const gradient = ctx.createLinearGradient(x3, y3, x3 + width, y3);
       gradient.addColorStop(0, color2);
       gradient.addColorStop(1, this.adjustBrightness(color2, -20));
@@ -70853,9 +70940,11 @@ var PianoRollRenderer = class {
       ctx.strokeStyle = color2;
       ctx.lineWidth = 1;
       ctx.strokeRect(x3, y3 + 1, width, height);
-      if (event.isPlaying) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-        ctx.fillRect(x3, y3 + 1, width, height);
+      if (isPlaying) {
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = color2;
+        ctx.strokeRect(x3, y3 + 1, width, height);
+        ctx.shadowBlur = 0;
       }
     });
   }

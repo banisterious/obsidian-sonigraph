@@ -165,7 +165,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
     }
 
     /**
-     * Create pitch labels on left side
+     * Create pitch labels container
      */
     private createPitchLabels(): void {
         if (!this.container) return;
@@ -173,30 +173,43 @@ export class PianoRollRenderer implements VisualizationRenderer {
         this.pitchLabelsContainer = this.container.createDiv({
             cls: 'piano-roll-pitch-labels'
         });
+    }
 
-        const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
+    /**
+     * Update pitch labels based on current canvas height
+     */
+    private updatePitchLabels(): void {
+        if (!this.pitchLabelsContainer || !this.canvas) return;
+
+        // Clear existing labels
+        this.pitchLabelsContainer.empty();
+
         const noteName = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
 
-        for (let i = 0; i < pitchCount; i++) {
-            const pitch = this.pianoRollConfig.maxPitch - i;
-            const octave = Math.floor(pitch / 12) - 1;
+        // Show octave markers (C notes)
+        const octaveCount = Math.floor(pitchRange / 12);
+        for (let octave = 0; octave <= octaveCount; octave++) {
+            const pitch = this.pianoRollConfig.minPitch + (octave * 12);
+            if (pitch > this.pianoRollConfig.maxPitch) break;
+
+            const octaveNum = Math.floor(pitch / 12) - 1;
             const note = noteName[pitch % 12];
 
-            // Only show C notes and octave markers for clarity
-            if (pitch % 12 === 0 || i % 4 === 0) {
-                const label = this.pitchLabelsContainer.createDiv({
-                    cls: 'piano-roll-pitch-label',
-                    text: `${note}${octave}`
-                });
+            const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
+            const y = (1 - pitchNormalized) * this.canvas.height;
 
-                const topPosition = i * this.pianoRollConfig.pitchRowHeight;
-                label.style.top = `${topPosition}px`;
-            }
+            const label = this.pitchLabelsContainer.createDiv({
+                cls: 'piano-roll-pitch-label',
+                text: `${note}${octaveNum}`
+            });
+
+            label.style.top = `${y - 8}px`; // Center label on grid line (-8px for half font height)
         }
     }
 
     /**
-     * Create timeline with time markers
+     * Create timeline container
      */
     private createTimeline(): void {
         if (!this.container) return;
@@ -204,8 +217,44 @@ export class PianoRollRenderer implements VisualizationRenderer {
         this.timelineContainer = this.container.createDiv({
             cls: 'piano-roll-timeline'
         });
+    }
 
-        // Timeline markers will be drawn on canvas
+    /**
+     * Update timeline markers based on current timeline duration
+     */
+    private updateTimelineMarkers(timelineDuration: number): void {
+        if (!this.timelineContainer || !this.canvas) return;
+
+        // Clear existing markers
+        this.timelineContainer.empty();
+
+        // Determine grid spacing
+        let gridInterval = 10; // seconds
+        if (timelineDuration < 60) {
+            gridInterval = 5;
+        } else if (timelineDuration < 120) {
+            gridInterval = 10;
+        } else {
+            gridInterval = 30;
+        }
+
+        const gridCount = Math.ceil(timelineDuration / gridInterval);
+
+        // Add time markers
+        for (let i = 0; i <= gridCount; i++) {
+            const time = i * gridInterval;
+            const x = (time / timelineDuration) * this.canvas.width;
+
+            const marker = this.timelineContainer.createDiv({
+                cls: 'piano-roll-time-marker'
+            });
+
+            // Format time as MM:SS
+            const minutes = Math.floor(time / 60);
+            const seconds = time % 60;
+            marker.setText(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            marker.style.left = `${x}px`;
+        }
     }
 
     /**
@@ -257,6 +306,9 @@ export class PianoRollRenderer implements VisualizationRenderer {
             canvasHeight: this.canvas.height
         });
 
+        // Update pitch labels to match new canvas height
+        this.updatePitchLabels();
+
         // Draw background immediately after resize to test visibility
         if (this.ctx && this.canvas.width > 0 && this.canvas.height > 0) {
             this.ctx.fillStyle = '#1a1a1a';
@@ -271,12 +323,21 @@ export class PianoRollRenderer implements VisualizationRenderer {
     public render(events: NoteEvent[], currentTime: number): void {
         if (!this.ctx || !this.canvas) return;
 
+        // Calculate timeline duration
+        const maxTimestamp = events.length > 0
+            ? Math.max(...events.map(e => e.timestamp + e.duration))
+            : currentTime + this.pianoRollConfig.timeWindow;
+        const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+
+        // Update timeline markers
+        this.updateTimelineMarkers(timelineDuration);
+
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Draw grid if enabled
         if (this.config.showGrid) {
-            this.drawGrid();
+            this.drawGrid(currentTime, events);
         }
 
         // Draw notes
@@ -289,34 +350,90 @@ export class PianoRollRenderer implements VisualizationRenderer {
     /**
      * Draw grid lines
      */
-    private drawGrid(): void {
+    private drawGrid(currentTime: number, events: NoteEvent[]): void {
         if (!this.ctx || !this.canvas) return;
 
         const ctx = this.ctx;
-        const pitchCount = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch + 1;
 
-        // Horizontal pitch lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // Calculate timeline duration
+        const maxTimestamp = events.length > 0
+            ? Math.max(...events.map(e => e.timestamp + e.duration))
+            : currentTime + this.pianoRollConfig.timeWindow;
+        const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+
+        // Horizontal pitch lines (every 12 semitones = 1 octave)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
         ctx.lineWidth = 1;
 
-        for (let i = 0; i <= pitchCount; i++) {
-            const y = i * this.pianoRollConfig.pitchRowHeight;
+        const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
+        const octaveCount = Math.floor(pitchRange / 12);
+
+        for (let octave = 0; octave <= octaveCount; octave++) {
+            const pitch = this.pianoRollConfig.minPitch + (octave * 12);
+            const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
+            const y = (1 - pitchNormalized) * this.canvas.height;
+
+            // Draw octave line (slightly thicker)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(this.canvas.width, y);
             ctx.stroke();
+
+            // Draw individual semitone lines within octave
+            if (octave < octaveCount) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                for (let semitone = 1; semitone < 12; semitone++) {
+                    const semitonePitch = pitch + semitone;
+                    const semitonePitchNormalized = (semitonePitch - this.pianoRollConfig.minPitch) / pitchRange;
+                    const semitoneY = (1 - semitonePitchNormalized) * this.canvas.height;
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, semitoneY);
+                    ctx.lineTo(this.canvas.width, semitoneY);
+                    ctx.stroke();
+                }
+            }
         }
 
-        // Vertical time lines (every second)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        const secondWidth = this.pianoRollConfig.pixelsPerSecond;
+        // Vertical time lines
+        // Determine grid spacing based on timeline duration
+        let gridInterval = 10; // seconds
+        if (timelineDuration < 60) {
+            gridInterval = 5;
+        } else if (timelineDuration < 120) {
+            gridInterval = 10;
+        } else {
+            gridInterval = 30;
+        }
 
-        for (let i = 0; i < this.canvas.width / secondWidth; i++) {
-            const x = i * secondWidth;
+        const gridCount = Math.ceil(timelineDuration / gridInterval);
+
+        for (let i = 0; i <= gridCount; i++) {
+            const time = i * gridInterval;
+            const x = (time / timelineDuration) * this.canvas.width;
+
+            // Major grid lines (every gridInterval)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, this.canvas.height);
             ctx.stroke();
+
+            // Minor grid lines (subdivisions)
+            if (i < gridCount) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                for (let j = 1; j < 5; j++) {
+                    const subTime = time + (j * gridInterval / 5);
+                    const subX = (subTime / timelineDuration) * this.canvas.width;
+                    ctx.beginPath();
+                    ctx.moveTo(subX, 0);
+                    ctx.lineTo(subX, this.canvas.height);
+                    ctx.stroke();
+                }
+            }
         }
     }
 
@@ -381,8 +498,17 @@ export class PianoRollRenderer implements VisualizationRenderer {
                 });
             }
 
+            // Check if note is currently playing (playhead is over it)
+            const noteEndTime = event.timestamp + event.duration;
+            const isPlaying = currentTime >= event.timestamp && currentTime <= noteEndTime;
+
             // Get color based on layer
-            const color = LAYER_COLORS[event.layer] || '#888888';
+            let color = LAYER_COLORS[event.layer] || '#888888';
+
+            // Brighten color if playing (brightness 1.3x like mockup)
+            if (isPlaying) {
+                color = this.adjustBrightness(color, 30);
+            }
 
             // Draw note bar with gradient
             const gradient = ctx.createLinearGradient(x, y, x + width, y);
@@ -397,10 +523,12 @@ export class PianoRollRenderer implements VisualizationRenderer {
             ctx.lineWidth = 1;
             ctx.strokeRect(x, y + 1, width, height);
 
-            // Highlight if currently playing
-            if (event.isPlaying) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.fillRect(x, y + 1, width, height);
+            // Add glow effect if playing
+            if (isPlaying) {
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = color;
+                ctx.strokeRect(x, y + 1, width, height);
+                ctx.shadowBlur = 0;
             }
         });
     }
