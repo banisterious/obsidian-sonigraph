@@ -2287,6 +2287,40 @@ var init_constants = __esm({
           // Classic progression
           dynamicScaleModulation: false
           // Static scale by default
+        },
+        // Chord Fusion settings
+        chordFusion: {
+          enabled: false,
+          // Disabled by default
+          mode: "smart",
+          // Use smart chord fitting by default
+          timingWindow: 200,
+          // 200ms window for simultaneous notes
+          minimumNotes: 2,
+          // At least 2 notes to form a chord
+          // Per-layer defaults (harmonic, rhythmic, ambient enabled)
+          layerSettings: {
+            melodic: false,
+            // Keep melodies monophonic by default
+            harmonic: true,
+            // Harmonic layer should use chords
+            rhythmic: true,
+            // Rhythmic chords for impact
+            ambient: true
+            // Ambient chord washes
+          },
+          // Connection-based chords (disabled by default)
+          connectionChords: false,
+          contextualHarmony: false,
+          // Advanced settings
+          chordComplexity: 3,
+          // Triads by default (3 voices)
+          progressionSpeed: 0.5,
+          // Moderate progression speed
+          dissonanceLevel: 0.3,
+          // Low-moderate dissonance
+          voicingStrategy: "compact"
+          // Compact voicings by default
         }
       },
       // Kept for backward compatibility - use audioEnhancement.musicalTheory instead
@@ -20547,6 +20581,7 @@ var init_control_panel = __esm({
        */
       createMusicalTab() {
         this.createScaleKeyCard();
+        this.createChordFusionCard();
         this.createTempoTimingCard();
         this.createMasterTuningCard();
       }
@@ -21106,6 +21141,277 @@ var init_control_panel = __esm({
           }
         );
         this.contentContainer.appendChild(card.getElement());
+      }
+      createChordFusionCard() {
+        var _a, _b;
+        const card = new MaterialCard({
+          title: "Chord fusion",
+          iconName: "music-4",
+          subtitle: "Combine simultaneous notes into chords",
+          elevation: 1
+        });
+        const content = card.getContent();
+        new import_obsidian14.Setting(content).setName("Enable chord fusion").setDesc("Automatically combine notes that trigger simultaneously into chords").addToggle(
+          (toggle) => {
+            var _a2, _b2;
+            return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.chordFusion) {
+                this.plugin.settings.audioEnhancement.chordFusion = {
+                  enabled: value,
+                  mode: "smart",
+                  timingWindow: 200,
+                  minimumNotes: 2,
+                  layerSettings: {
+                    melodic: false,
+                    harmonic: true,
+                    rhythmic: true,
+                    ambient: true
+                  },
+                  connectionChords: false,
+                  contextualHarmony: false,
+                  chordComplexity: 3,
+                  progressionSpeed: 0.5,
+                  dissonanceLevel: 0.3,
+                  voicingStrategy: "compact"
+                };
+              } else {
+                this.plugin.settings.audioEnhancement.chordFusion.enabled = value;
+              }
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+              content.empty();
+              this.createChordFusionSettings(content);
+            });
+          }
+        );
+        if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.chordFusion) == null ? void 0 : _b.enabled) {
+          this.createChordFusionSettings(content);
+        }
+        this.contentContainer.appendChild(card.getElement());
+      }
+      createChordFusionSettings(container) {
+        var _a, _b;
+        new import_obsidian14.Setting(container).setName("Enable chord fusion").setDesc("Automatically combine notes that trigger simultaneously into chords").addToggle(
+          (toggle) => {
+            var _a2, _b2;
+            return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.enabled = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+              container.empty();
+              this.createChordFusionSettings(container);
+            });
+          }
+        );
+        if (!((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.chordFusion) == null ? void 0 : _b.enabled)) {
+          return;
+        }
+        const settingsGrid = createGrid("2-col");
+        container.appendChild(settingsGrid);
+        const modeGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
+        modeGroup.createEl("label", { text: "Chord mode", cls: "osp-control-label" });
+        const modeSelect = modeGroup.createEl("select", { cls: "osp-select" });
+        const modes = [
+          { value: "smart", label: "Smart (fit to chord patterns)" },
+          { value: "direct", label: "Direct (play as-is)" }
+        ];
+        modes.forEach((mode) => {
+          var _a2, _b2;
+          const option = modeSelect.createEl("option", { value: mode.value, text: mode.label });
+          if (((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.mode) === mode.value) {
+            option.selected = true;
+          }
+        });
+        modeSelect.addEventListener("change", async () => {
+          var _a2;
+          if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
+            return;
+          this.plugin.settings.audioEnhancement.chordFusion.mode = modeSelect.value;
+          await this.plugin.saveSettings();
+          if (this.plugin.audioEngine) {
+            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+          }
+        });
+        const minNotesGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
+        minNotesGroup.createEl("label", { text: "Minimum notes", cls: "osp-control-label" });
+        const minNotesSelect = minNotesGroup.createEl("select", { cls: "osp-select" });
+        [2, 3, 4].forEach((num) => {
+          var _a2, _b2;
+          const option = minNotesSelect.createEl("option", { value: num.toString(), text: num.toString() });
+          if (((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.minimumNotes) === num) {
+            option.selected = true;
+          }
+        });
+        minNotesSelect.addEventListener("change", async () => {
+          var _a2;
+          if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
+            return;
+          this.plugin.settings.audioEnhancement.chordFusion.minimumNotes = parseInt(minNotesSelect.value);
+          await this.plugin.saveSettings();
+          if (this.plugin.audioEngine) {
+            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+          }
+        });
+        new import_obsidian14.Setting(container).setName("Timing window").setDesc("Notes within this time window will be grouped into chords (milliseconds)").addSlider(
+          (slider) => {
+            var _a2, _b2;
+            return slider.setLimits(50, 500, 50).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 200).setDynamicTooltip().onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.timingWindow = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        container.createEl("h4", { text: "Layer-specific chord fusion", cls: "osp-section-heading" });
+        new import_obsidian14.Setting(container).setName("Melodic layer").setDesc("Enable chord fusion for melodic notes").addToggle(
+          (toggle) => {
+            var _a2, _b2, _c;
+            return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.melodic) || false).onChange(async (value) => {
+              var _a3, _b3;
+              if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion) == null ? void 0 : _b3.layerSettings))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.layerSettings.melodic = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        new import_obsidian14.Setting(container).setName("Harmonic layer").setDesc("Enable chord fusion for harmonic notes").addToggle(
+          (toggle) => {
+            var _a2, _b2, _c;
+            return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.harmonic) || false).onChange(async (value) => {
+              var _a3, _b3;
+              if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion) == null ? void 0 : _b3.layerSettings))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.layerSettings.harmonic = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        new import_obsidian14.Setting(container).setName("Rhythmic layer").setDesc("Enable chord fusion for rhythmic notes").addToggle(
+          (toggle) => {
+            var _a2, _b2, _c;
+            return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.rhythmic) || false).onChange(async (value) => {
+              var _a3, _b3;
+              if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion) == null ? void 0 : _b3.layerSettings))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.layerSettings.rhythmic = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        new import_obsidian14.Setting(container).setName("Ambient layer").setDesc("Enable chord fusion for ambient notes").addToggle(
+          (toggle) => {
+            var _a2, _b2, _c;
+            return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.ambient) || false).onChange(async (value) => {
+              var _a3, _b3;
+              if (!((_b3 = (_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion) == null ? void 0 : _b3.layerSettings))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.layerSettings.ambient = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        container.createEl("h4", { text: "Advanced chord settings", cls: "osp-section-heading" });
+        new import_obsidian14.Setting(container).setName("Chord complexity").setDesc("Maximum number of voices per chord (2-6)").addSlider(
+          (slider) => {
+            var _a2, _b2;
+            return slider.setLimits(2, 6, 1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.chordComplexity) || 3).setDynamicTooltip().onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.chordComplexity = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        const voicingGrid = createGrid("1-col");
+        container.appendChild(voicingGrid);
+        const voicingGroup = voicingGrid.createDiv({ cls: "osp-control-group" });
+        voicingGroup.createEl("label", { text: "Voicing strategy", cls: "osp-control-label" });
+        const voicingSelect = voicingGroup.createEl("select", { cls: "osp-select" });
+        const voicings = [
+          { value: "compact", label: "Compact (notes close together)" },
+          { value: "spread", label: "Spread (wide spacing)" },
+          { value: "drop2", label: "Drop-2 (jazz voicing)" },
+          { value: "drop3", label: "Drop-3 (jazz voicing)" }
+        ];
+        voicings.forEach((voicing) => {
+          var _a2, _b2;
+          const option = voicingSelect.createEl("option", { value: voicing.value, text: voicing.label });
+          if (((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.voicingStrategy) === voicing.value) {
+            option.selected = true;
+          }
+        });
+        voicingSelect.addEventListener("change", async () => {
+          var _a2;
+          if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
+            return;
+          this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value;
+          await this.plugin.saveSettings();
+          if (this.plugin.audioEngine) {
+            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+          }
+        });
+        new import_obsidian14.Setting(container).setName("Connection chords").setDesc("Enable chord progressions for connection events").addToggle(
+          (toggle) => {
+            var _a2, _b2;
+            return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.connectionChords) || false).onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.connectionChords = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
+        new import_obsidian14.Setting(container).setName("Contextual harmony").setDesc("Harmonize based on connected note content").addToggle(
+          (toggle) => {
+            var _a2, _b2;
+            return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.contextualHarmony) || false).onChange(async (value) => {
+              var _a3;
+              if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
+                return;
+              this.plugin.settings.audioEnhancement.chordFusion.contextualHarmony = value;
+              await this.plugin.saveSettings();
+              if (this.plugin.audioEngine) {
+                await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+              }
+            });
+          }
+        );
       }
       createTempoTimingCard() {
         const card = new MaterialCard({
