@@ -682,64 +682,85 @@
 
 /* Timeline */
 .sonic-graph-timeline {
-  padding: var(--osp-spacing-xs) var(--osp-spacing-md);
-  height: 115px;
+  padding: 8px var(--osp-spacing-md);
+  height: 85px;
   border-top: 1px solid var(--background-modifier-border);
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
   flex-shrink: 0;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
 }
 
 .sonic-graph-scrubber-container {
   display: flex;
   align-items: center;
-  gap: var(--osp-spacing-md);
-  margin-bottom: var(--osp-spacing-xs);
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .sonic-graph-scrubber-label {
-  font-size: var(--osp-font-size-small);
-  font-weight: 500;
-  color: var(--text-normal);
-  min-width: 60px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 55px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .sonic-graph-scrubber {
   flex: 1;
-  height: 4px;
-  border-radius: 2px;
+  height: 3px;
+  border-radius: 1.5px;
   background: var(--background-modifier-border);
   outline: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sonic-graph-scrubber:hover {
+  height: 4px;
 }
 
 .sonic-graph-scrubber::-webkit-slider-thumb {
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--osp-primary);
+  background: var(--interactive-accent);
   cursor: pointer;
   border: 2px solid var(--background-primary);
-  box-shadow: var(--osp-shadow-sm);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.sonic-graph-scrubber::-webkit-slider-thumb:hover {
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .sonic-graph-scrubber::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--osp-primary);
+  background: var(--interactive-accent);
   cursor: pointer;
   border: 2px solid var(--background-primary);
-  box-shadow: var(--osp-shadow-sm);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.sonic-graph-scrubber::-moz-range-thumb:hover {
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .sonic-graph-timeline-info {
   position: relative;
-  padding: var(--osp-spacing-xs) 0;
-  font-size: var(--osp-font-size-small);
+  padding: 4px 0 0 0;
+  font-size: 11px;
   color: var(--text-muted);
   z-index: 10; /* Ensure timeline info appears above visual display */
 }
@@ -748,19 +769,20 @@
 /* Unified timeline track */
 .sonic-graph-timeline-track-unified {
   position: relative;
-  height: 40px;
+  height: 32px;
   display: flex;
   align-items: center;
-  margin-bottom: var(--osp-spacing-xs);
+  margin-bottom: 4px;
 }
 
 .sonic-graph-timeline-line-unified {
   position: relative;
   width: 100%;
-  height: 6px;
-  background: var(--background-secondary);
-  border-radius: var(--osp-border-radius-sm);
-  border: 1px solid var(--background-modifier-border);
+  height: 5px;
+  background: linear-gradient(to bottom, var(--background-modifier-border), var(--background-secondary));
+  border-radius: 2.5px;
+  border: 1px solid var(--background-modifier-border-hover);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Timeline markers - span across all tracks */
@@ -784,8 +806,8 @@
 .sonic-graph-timeline-marker-line {
   width: 1px;
   height: 100%;
-  background: var(--text-muted);
-  opacity: 0.4;
+  background: var(--text-faint);
+  opacity: 0.3;
   margin: 0 auto;
 }
 
@@ -794,19 +816,19 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: var(--osp-font-size-xs);
+  font-size: 10px;
   color: var(--text-muted);
   white-space: nowrap;
-  margin-top: 4px;
-  background: var(--background-secondary);
-  padding: 1px 4px;
-  border-radius: var(--osp-border-radius-xs);
+  margin-top: 2px;
+  background: transparent;
+  padding: 0 2px;
+  font-weight: 500;
 }
 
 /* Time marker styling */
 .sonic-graph-timeline-marker.time-marker .sonic-graph-timeline-marker-label {
   color: var(--text-normal);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Current position indicator */
@@ -814,7 +836,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 3px;
+  width: 2px;
   transform: translateX(-50%);
   z-index: 20; /* Higher z-index to ensure visibility above visual display */
   pointer-events: none;
@@ -822,34 +844,39 @@
 
 .sonic-graph-timeline-current-line {
   width: 100%;
-  height: calc(100% - 40px);
+  height: calc(100% - 32px);
   background: var(--interactive-accent);
-  border-radius: 2px;
-  box-shadow: 0 0 8px var(--interactive-accent);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(var(--interactive-accent-rgb), 0.5);
 }
 
 .sonic-graph-timeline-current-label {
   position: absolute;
-  top: calc(100% - 35px);
+  top: calc(100% - 28px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--interactive-accent);
   color: var(--text-on-accent);
-  padding: var(--osp-spacing-xs) var(--osp-spacing-sm);
-  border-radius: var(--osp-border-radius-sm);
-  font-size: var(--osp-font-size-xs);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  line-height: 1.3;
 }
 
 .sonic-graph-timeline-current-label span {
-  display: block;
-  line-height: 1.2;
+  display: inline;
+}
+
+.sonic-graph-timeline-current-label span:not(:last-child)::after {
+  content: ' ';
 }
 
 .sonic-graph-timeline-current-time {
-  opacity: 0.9;
+  opacity: 0.95;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Controls - Now includes stats and navigation */
