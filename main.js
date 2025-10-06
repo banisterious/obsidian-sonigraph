@@ -72433,7 +72433,29 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     const titleIcon = createLucideIcon("chart-network", 20);
     titleContainer.appendChild(titleIcon);
     titleContainer.createEl("h1", { text: "Sonic Graph", cls: "sonic-graph-title" });
+    const playControlsGroup = this.headerContainer.createDiv({ cls: "sonic-graph-header-play-controls" });
+    const playButtonContainer = playControlsGroup.createDiv({ cls: "sonic-graph-play-button-container" });
+    this.playButton = new import_obsidian25.ButtonComponent(playButtonContainer);
+    this.playButton.setButtonText("Pause Animation").onClick(() => this.toggleAnimation());
+    const speedContainer = playControlsGroup.createDiv({ cls: "sonic-graph-speed-container" });
+    speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
+    this.speedSelect = speedContainer.createEl("select", { cls: "sonic-graph-speed-select" });
+    const savedSpeed = this.plugin.settings.sonicGraphAnimationSpeed || 1;
+    const savedSpeedString = `${savedSpeed}x`;
+    ["0.1x", "0.25x", "0.5x", "1x", "2x", "5x", "10x", "20x", "50x"].forEach((speed) => {
+      const option = this.speedSelect.createEl("option", { text: speed, value: speed });
+      if (speed === savedSpeedString)
+        option.selected = true;
+    });
+    this.registerDomEvent(this.speedSelect, "change", () => this.handleSpeedChange());
     const buttonGroup = this.headerContainer.createDiv({ cls: "sonic-graph-header-button-group" });
+    this.settingsButton = buttonGroup.createEl("button", {
+      cls: "sonic-graph-header-btn sonic-graph-settings-btn",
+      text: "Settings"
+    });
+    const settingsIcon = createLucideIcon("sliders", 16);
+    this.settingsButton.insertBefore(settingsIcon, this.settingsButton.firstChild);
+    this.settingsButton.addEventListener("click", () => this.toggleSettings());
     const pluginSettingsBtn = buttonGroup.createEl("button", {
       cls: "sonic-graph-header-btn sonic-graph-plugin-settings-btn",
       text: "Plugin Settings"
@@ -72556,50 +72578,8 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
    */
   createControlsArea(container) {
     this.controlsContainer = container.createDiv({ cls: "sonic-graph-controls" });
-    const playControls = this.controlsContainer.createDiv({ cls: "sonic-graph-play-controls" });
-    const playButtonContainer = playControls.createDiv({ cls: "sonic-graph-play-button-container" });
-    this.playButton = new import_obsidian25.ButtonComponent(playButtonContainer);
-    this.playButton.setButtonText("Play").onClick(() => this.toggleAnimation());
-    const exportButtonContainer = playControls.createDiv({ cls: "sonic-graph-export-button-container" });
-    const exportButton = new import_obsidian25.ButtonComponent(exportButtonContainer);
-    exportButton.setButtonText("Export").setCta().setIcon("download").onClick(() => this.openExportModal());
-    const speedContainer = playControls.createDiv({ cls: "sonic-graph-speed-container" });
-    speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
-    this.speedSelect = speedContainer.createEl("select", { cls: "sonic-graph-speed-select" });
-    const savedSpeed = this.plugin.settings.sonicGraphAnimationSpeed || 1;
-    const savedSpeedString = `${savedSpeed}x`;
-    ["0.1x", "0.25x", "0.5x", "1x", "2x", "5x", "10x", "20x", "50x"].forEach((speed) => {
-      const option = this.speedSelect.createEl("option", { text: speed, value: speed });
-      if (speed === savedSpeedString)
-        option.selected = true;
-    });
-    this.registerDomEvent(this.speedSelect, "change", () => this.handleSpeedChange());
-    const statsControls = this.controlsContainer.createDiv({ cls: "sonic-graph-stats-controls" });
-    this.statsContainer = statsControls.createDiv({ cls: "sonic-graph-stats" });
+    this.statsContainer = this.controlsContainer.createDiv({ cls: "sonic-graph-stats" });
     this.updateStats();
-    const viewControls = this.controlsContainer.createDiv({ cls: "sonic-graph-view-controls" });
-    const viewModeContainer = viewControls.createDiv({ cls: "sonic-graph-view-mode-container" });
-    this.viewModeBtn = viewModeContainer.createEl("button", {
-      cls: "sonic-graph-control-btn sonic-graph-view-mode-btn"
-    });
-    const viewModeIcon = createLucideIcon("eye", 16);
-    this.viewModeBtn.appendChild(viewModeIcon);
-    this.viewModeBtn.appendText("Static View");
-    this.registerDomEvent(this.viewModeBtn, "click", () => this.toggleViewMode());
-    const resetViewBtn = viewControls.createEl("button", {
-      cls: "sonic-graph-control-btn"
-    });
-    const resetIcon = createLucideIcon("maximize-2", 16);
-    resetViewBtn.appendChild(resetIcon);
-    resetViewBtn.appendText("Reset View");
-    resetViewBtn.addEventListener("click", () => this.resetGraphView());
-    this.settingsButton = viewControls.createEl("button", {
-      cls: "sonic-graph-control-btn sonic-graph-control-btn--secondary"
-    });
-    const settingsIcon = createLucideIcon("sliders", 16);
-    this.settingsButton.appendChild(settingsIcon);
-    this.settingsButton.appendText("Settings");
-    this.settingsButton.addEventListener("click", () => this.toggleSettings());
   }
   /**
    * Initialize the graph visualization
