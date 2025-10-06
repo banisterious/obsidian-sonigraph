@@ -20,9 +20,6 @@ export class SpectrumRenderer implements VisualizationRenderer {
     private dataArray: Uint8Array | null = null;
     private bufferLength: number = 0;
 
-    // Animation
-    private animationId: number | null = null;
-
     constructor() {
         this.config = {
             mode: 'spectrum',
@@ -70,7 +67,7 @@ export class SpectrumRenderer implements VisualizationRenderer {
     /**
      * Connect to Web Audio API for real-time spectrum analysis
      */
-    public connectToAudioContext(audioContext: AudioContext, sourceNode?: AudioNode): void {
+    public connectToAudioContext(audioContext: AudioContext, sourceNode?: any): void {
         if (!audioContext) {
             logger.warn('audio', 'No audio context provided for spectrum analyzer');
             return;
@@ -85,13 +82,21 @@ export class SpectrumRenderer implements VisualizationRenderer {
         this.dataArray = new Uint8Array(this.bufferLength);
 
         // Connect source to analyser if provided
+        // sourceNode might be a Tone.js node, so we need to handle both cases
         if (sourceNode) {
-            sourceNode.connect(this.analyser);
+            try {
+                // Tone.js nodes have a 'connect' method that works with native Web Audio nodes
+                sourceNode.connect(this.analyser);
+                logger.info('audio', 'Connected source node to spectrum analyzer');
+            } catch (error) {
+                logger.error('audio', 'Failed to connect source to analyzer', error);
+            }
         }
 
-        logger.info('audio', 'Spectrum analyzer connected to audio context', {
+        logger.info('audio', 'Spectrum analyzer initialized', {
             fftSize: this.analyser.fftSize,
-            bufferLength: this.bufferLength
+            bufferLength: this.bufferLength,
+            hasSourceNode: !!sourceNode
         });
     }
 
@@ -113,50 +118,30 @@ export class SpectrumRenderer implements VisualizationRenderer {
     }
 
     /**
-     * Start visualization (begins animation loop)
-     */
-    public start(startTime: number): void {
-        logger.info('lifecycle', 'Spectrum analyzer started');
-        this.animate();
-    }
-
-    /**
-     * Stop visualization
-     */
-    public stop(): void {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
-        logger.info('lifecycle', 'Spectrum analyzer stopped');
-    }
-
-    /**
-     * Render spectrum (called from animation loop)
+     * Render spectrum visualization
+     * Called by NoteVisualizationManager's render loop
      */
     public render(events: NoteEvent[], currentTime: number): void {
-        if (!this.ctx || !this.canvas || !this.analyser || !this.dataArray) return;
+        if (!this.ctx || !this.canvas) return;
 
-        // Get frequency data from analyser
-        this.analyser.getByteFrequencyData(this.dataArray);
-
-        // Clear canvas
+        // Clear canvas with dark background
         this.ctx.fillStyle = '#1a1a1a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw frequency bars
-        this.drawFrequencyBars();
-    }
+        // Only draw frequency data if analyser is connected
+        if (this.analyser && this.dataArray) {
+            // Get frequency data from analyser
+            this.analyser.getByteFrequencyData(this.dataArray);
 
-    /**
-     * Animation loop
-     */
-    private animate(): void {
-        if (!this.analyser) return;
-
-        this.render([], 0); // Spectrum doesn't need note events
-
-        this.animationId = requestAnimationFrame(() => this.animate());
+            // Draw frequency bars
+            this.drawFrequencyBars();
+        } else {
+            // Draw placeholder message if not connected
+            this.ctx.fillStyle = '#888888';
+            this.ctx.font = '14px sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('No audio connected', this.canvas.width / 2, this.canvas.height / 2);
+        }
     }
 
     /**
@@ -202,8 +187,6 @@ export class SpectrumRenderer implements VisualizationRenderer {
      * Cleanup resources
      */
     public destroy(): void {
-        this.stop();
-
         // Disconnect analyser
         if (this.analyser) {
             this.analyser.disconnect();

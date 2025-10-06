@@ -71085,8 +71085,6 @@ var SpectrumRenderer = class {
     this.analyser = null;
     this.dataArray = null;
     this.bufferLength = 0;
-    // Animation
-    this.animationId = null;
     this.config = {
       mode: "spectrum",
       enabled: true,
@@ -71132,11 +71130,17 @@ var SpectrumRenderer = class {
     this.bufferLength = this.analyser.frequencyBinCount;
     this.dataArray = new Uint8Array(this.bufferLength);
     if (sourceNode) {
-      sourceNode.connect(this.analyser);
+      try {
+        sourceNode.connect(this.analyser);
+        logger56.info("audio", "Connected source node to spectrum analyzer");
+      } catch (error) {
+        logger56.error("audio", "Failed to connect source to analyzer", error);
+      }
     }
-    logger56.info("audio", "Spectrum analyzer connected to audio context", {
+    logger56.info("audio", "Spectrum analyzer initialized", {
       fftSize: this.analyser.fftSize,
-      bufferLength: this.bufferLength
+      bufferLength: this.bufferLength,
+      hasSourceNode: !!sourceNode
     });
   }
   /**
@@ -71154,41 +71158,23 @@ var SpectrumRenderer = class {
     });
   }
   /**
-   * Start visualization (begins animation loop)
-   */
-  start(startTime) {
-    logger56.info("lifecycle", "Spectrum analyzer started");
-    this.animate();
-  }
-  /**
-   * Stop visualization
-   */
-  stop() {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-      this.animationId = null;
-    }
-    logger56.info("lifecycle", "Spectrum analyzer stopped");
-  }
-  /**
-   * Render spectrum (called from animation loop)
+   * Render spectrum visualization
+   * Called by NoteVisualizationManager's render loop
    */
   render(events, currentTime) {
-    if (!this.ctx || !this.canvas || !this.analyser || !this.dataArray)
+    if (!this.ctx || !this.canvas)
       return;
-    this.analyser.getByteFrequencyData(this.dataArray);
     this.ctx.fillStyle = "#1a1a1a";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawFrequencyBars();
-  }
-  /**
-   * Animation loop
-   */
-  animate() {
-    if (!this.analyser)
-      return;
-    this.render([], 0);
-    this.animationId = requestAnimationFrame(() => this.animate());
+    if (this.analyser && this.dataArray) {
+      this.analyser.getByteFrequencyData(this.dataArray);
+      this.drawFrequencyBars();
+    } else {
+      this.ctx.fillStyle = "#888888";
+      this.ctx.font = "14px sans-serif";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("No audio connected", this.canvas.width / 2, this.canvas.height / 2);
+    }
   }
   /**
    * Draw frequency bars
@@ -71222,7 +71208,6 @@ var SpectrumRenderer = class {
    * Cleanup resources
    */
   destroy() {
-    this.stop();
     if (this.analyser) {
       this.analyser.disconnect();
       this.analyser = null;
