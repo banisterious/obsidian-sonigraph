@@ -603,6 +603,34 @@ export class SonicGraphView extends ItemView {
     }
 
     /**
+     * Switch visualization mode (piano-roll, spectrum, staff)
+     */
+    private switchVisualizationMode(mode: 'piano-roll' | 'spectrum' | 'staff', tabs: HTMLButtonElement[]): void {
+        if (!this.visualizationManager) return;
+
+        logger.info('visual-display', `Switching visualization mode to ${mode}`);
+
+        // Update tab active states
+        tabs.forEach(tab => tab.removeClass('active'));
+        const activeTabIndex = mode === 'piano-roll' ? 0 : mode === 'spectrum' ? 1 : 2;
+        tabs[activeTabIndex].addClass('active');
+
+        // Update visualization manager mode
+        this.visualizationManager.updateConfig({ mode });
+
+        // If switching to spectrum mode, connect to audio
+        if (mode === 'spectrum') {
+            const audioContext = this.plugin.audioEngine.getTestAudioContext();
+            const masterVolume = this.plugin.audioEngine.getMasterVolume();
+
+            if (audioContext && masterVolume) {
+                this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+                logger.info('visual-display', 'Connected spectrum analyzer to audio after mode switch');
+            }
+        }
+    }
+
+    /**
      * Update visual display section state after setState() restores values
      */
     private updateVisualDisplayState(): void {
@@ -671,6 +699,18 @@ export class SonicGraphView extends ItemView {
 
             // Initialize with content container
             this.visualizationManager.initialize(this.visualDisplayContent);
+
+            // Connect spectrum analyzer to audio if in spectrum mode
+            const visualConfig = this.visualizationManager.getConfig();
+            if (visualConfig.mode === 'spectrum') {
+                const audioContext = this.plugin.audioEngine.getTestAudioContext();
+                const masterVolume = this.plugin.audioEngine.getMasterVolume();
+
+                if (audioContext && masterVolume) {
+                    this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+                    logger.info('visual-display', 'Connected spectrum analyzer to audio');
+                }
+            }
 
             // Connect to audio engine note events
             this.setupAudioEngineIntegration();
@@ -981,6 +1021,19 @@ export class SonicGraphView extends ItemView {
         const staffTab = modeTabs.createEl('button', {
             text: 'Staff',
             cls: 'sonic-graph-visual-mode-tab'
+        });
+
+        // Mode switching handlers
+        this.registerDomEvent(pianoRollTab, 'click', () => {
+            this.switchVisualizationMode('piano-roll', [pianoRollTab, spectrumTab, staffTab]);
+        });
+
+        this.registerDomEvent(spectrumTab, 'click', () => {
+            this.switchVisualizationMode('spectrum', [pianoRollTab, spectrumTab, staffTab]);
+        });
+
+        this.registerDomEvent(staffTab, 'click', () => {
+            this.switchVisualizationMode('staff', [pianoRollTab, spectrumTab, staffTab]);
         });
 
         // Collapse button

@@ -8,6 +8,7 @@
 
 import { getLogger } from '../logging';
 import { PianoRollRenderer } from './PianoRollRenderer';
+import { SpectrumRenderer } from './SpectrumRenderer';
 
 const logger = getLogger('NoteVisualizationManager');
 
@@ -162,6 +163,11 @@ export class NoteVisualizationManager {
                 break;
 
             case 'spectrum':
+                this.renderer = new SpectrumRenderer();
+                this.renderer.initialize(this.container);
+                this.renderer.updateConfig(this.config);
+                break;
+
             case 'staff':
             case 'graph-highlight':
                 // TODO: Implement other renderer types in future phases
@@ -255,6 +261,19 @@ export class NoteVisualizationManager {
         }
 
         logger.info('lifecycle', 'Visualization stopped');
+    }
+
+    /**
+     * Connect spectrum analyzer to audio context
+     * Should be called after initialization when using spectrum mode
+     */
+    public connectSpectrumToAudio(audioContext: AudioContext, sourceNode?: AudioNode): void {
+        if (this.renderer instanceof SpectrumRenderer) {
+            this.renderer.connectToAudioContext(audioContext, sourceNode);
+            logger.info('audio', 'Spectrum analyzer connected to audio context');
+        } else {
+            logger.warn('audio', `Cannot connect audio to ${this.config.mode} renderer - only spectrum supports audio connection`);
+        }
     }
 
     /**
