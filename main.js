@@ -83442,7 +83442,7 @@ var AudioEngine = class {
     } catch (e) {
     }
     this.realtimeTimer = setInterval(() => {
-      var _a, _b, _c, _d, _e, _f, _g;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i;
       if (!this.isPlaying) {
         if (this.realtimeTimer !== null) {
           clearInterval(this.realtimeTimer);
@@ -83487,6 +83487,30 @@ var AudioEngine = class {
       const mapping = notesToPlay[0];
       this.lastTriggerTime = elapsedTime;
       this.playbackOptimizer.markNoteTriggered(mapping);
+      if (((_a = mapping.metadata) == null ? void 0 : _a.isChord) && ((_b = mapping.metadata) == null ? void 0 : _b.chordNotes)) {
+        logger79.info("chord-fusion", "Triggering chord", {
+          chordSize: mapping.metadata.chordSize,
+          chordNotes: mapping.metadata.chordNotes.length
+        });
+        const instrumentName2 = mapping.instrument || this.getDefaultInstrument(mapping);
+        const synth = this.instruments.get(instrumentName2);
+        if (synth) {
+          mapping.metadata.chordNotes.forEach((chordNote, index2) => {
+            const microDelay = index2 * 2e-3;
+            const triggerTime = getContext().currentTime + microDelay;
+            const quantizedFreq = this.quantizeFrequency(chordNote.pitch);
+            const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
+            synth.triggerAttackRelease(detunedFreq, mapping.duration, triggerTime, chordNote.velocity);
+            logger79.debug("chord-fusion", "Chord note triggered", {
+              pitch: chordNote.pitch,
+              index: index2,
+              microDelay
+            });
+          });
+          this.emitNoteEvent(instrumentName2, mapping.pitch, mapping.duration, mapping.velocity, elapsedTime, mapping.nodeId);
+        }
+        return;
+      }
       const frequency = mapping.pitch;
       const duration = mapping.duration;
       const velocity = mapping.velocity;
@@ -83565,13 +83589,13 @@ var AudioEngine = class {
             logger79.info("issue-006-debug", "Audio pipeline verification", {
               instrumentName,
               volumeNodeExists: !!volumeNode,
-              volumeValue: (_b = (_a = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _a.value) != null ? _b : "no-volume-value",
-              volumeMuted: (_c = volumeNode == null ? void 0 : volumeNode.mute) != null ? _c : "no-mute-property",
-              volumeConstructor: ((_d = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _d.name) || "no-constructor",
+              volumeValue: (_d = (_c = volumeNode == null ? void 0 : volumeNode.volume) == null ? void 0 : _c.value) != null ? _d : "no-volume-value",
+              volumeMuted: (_e = volumeNode == null ? void 0 : volumeNode.mute) != null ? _e : "no-mute-property",
+              volumeConstructor: ((_f = volumeNode == null ? void 0 : volumeNode.constructor) == null ? void 0 : _f.name) || "no-constructor",
               effectsCount: (effectsMap == null ? void 0 : effectsMap.size) || 0,
               instrumentOutputs: synth.numberOfOutputs,
-              masterVolumeValue: ((_f = (_e = this.volume) == null ? void 0 : _e.volume) == null ? void 0 : _f.value) || "no-master-volume",
-              masterVolumeMuted: ((_g = this.volume) == null ? void 0 : _g.mute) || false,
+              masterVolumeValue: ((_h = (_g = this.volume) == null ? void 0 : _g.volume) == null ? void 0 : _h.value) || "no-master-volume",
+              masterVolumeMuted: ((_i = this.volume) == null ? void 0 : _i.mute) || false,
               masterVolumeExists: !!this.volume,
               action: "audio-pipeline-verification"
             });

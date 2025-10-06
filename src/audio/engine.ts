@@ -2189,9 +2189,45 @@ export class AudioEngine {
 			
 			const mapping = notesToPlay[0];
 			this.lastTriggerTime = elapsedTime;
-			
+
 			// Mark as triggered to prevent re-triggering
 			this.playbackOptimizer.markNoteTriggered(mapping);
+
+			// Check if this is a chord note (from chord fusion)
+			if (mapping.metadata?.isChord && mapping.metadata?.chordNotes) {
+				logger.info('chord-fusion', 'Triggering chord', {
+					chordSize: mapping.metadata.chordSize,
+					chordNotes: mapping.metadata.chordNotes.length
+				});
+
+				// Trigger all notes in the chord simultaneously
+				const instrumentName = mapping.instrument || this.getDefaultInstrument(mapping);
+				const synth = this.instruments.get(instrumentName);
+
+				if (synth) {
+					mapping.metadata.chordNotes.forEach((chordNote, index) => {
+						// Small micro-delay to prevent phase issues (0-2ms spread)
+						const microDelay = index * 0.002;
+						const triggerTime = getContext().currentTime + microDelay;
+
+						const quantizedFreq = this.quantizeFrequency(chordNote.pitch);
+						const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
+
+						synth.triggerAttackRelease(detunedFreq, mapping.duration, triggerTime, chordNote.velocity);
+
+						logger.debug('chord-fusion', 'Chord note triggered', {
+							pitch: chordNote.pitch,
+							index,
+							microDelay
+						});
+					});
+
+					// Emit visualization event for the chord
+					this.emitNoteEvent(instrumentName, mapping.pitch, mapping.duration, mapping.velocity, elapsedTime, mapping.nodeId);
+				}
+
+				return; // Don't process as single note
+			}
 
 			const frequency = mapping.pitch;
 			const duration = mapping.duration;
