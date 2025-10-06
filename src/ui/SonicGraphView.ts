@@ -930,7 +930,7 @@ export class SonicGraphView extends ItemView {
         const playButtonContainer = playControlsGroup.createDiv({ cls: 'sonic-graph-play-button-container' });
         this.playButton = new ButtonComponent(playButtonContainer);
         this.playButton
-            .setButtonText('Pause Animation')
+            .setButtonText('Play')
             .onClick(() => this.toggleAnimation());
 
         // Speed control

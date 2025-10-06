@@ -73035,7 +73035,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
     const playControlsGroup = this.headerContainer.createDiv({ cls: "sonic-graph-header-play-controls" });
     const playButtonContainer = playControlsGroup.createDiv({ cls: "sonic-graph-play-button-container" });
     this.playButton = new import_obsidian25.ButtonComponent(playButtonContainer);
-    this.playButton.setButtonText("Pause Animation").onClick(() => this.toggleAnimation());
+    this.playButton.setButtonText("Play").onClick(() => this.toggleAnimation());
     const speedContainer = playControlsGroup.createDiv({ cls: "sonic-graph-speed-container" });
     speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
     this.speedSelect = speedContainer.createEl("select", { cls: "sonic-graph-speed-select" });
