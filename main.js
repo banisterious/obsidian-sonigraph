@@ -21262,10 +21262,10 @@ var init_control_panel = __esm({
             await this.plugin.audioEngine.updateSettings(this.plugin.settings);
           }
         });
-        new import_obsidian14.Setting(container).setName("Timing window").setDesc("Notes within this time window will be grouped into chords (milliseconds)").addSlider(
+        new import_obsidian14.Setting(container).setName("Timing window").setDesc("Notes within this time window will be grouped into chords (milliseconds). Try 500-1000ms if notes aren't grouping.").addSlider(
           (slider) => {
             var _a2, _b2;
-            return slider.setLimits(50, 500, 50).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 200).setDynamicTooltip().onChange(async (value) => {
+            return slider.setLimits(50, 2e3, 50).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 200).setDynamicTooltip().onChange(async (value) => {
               var _a3;
               if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
                 return;

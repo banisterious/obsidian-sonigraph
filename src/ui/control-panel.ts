@@ -1396,9 +1396,9 @@ export class MaterialControlPanelModal extends Modal {
 		// Timing window
 		new Setting(container)
 			.setName('Timing window')
-			.setDesc('Notes within this time window will be grouped into chords (milliseconds)')
+			.setDesc('Notes within this time window will be grouped into chords (milliseconds). Try 500-1000ms if notes aren\'t grouping.')
 			.addSlider(slider => slider
-				.setLimits(50, 500, 50)
+				.setLimits(50, 2000, 50)
 				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.timingWindow || 200)
 				.setDynamicTooltip()
 				.onChange(async (value) => {
