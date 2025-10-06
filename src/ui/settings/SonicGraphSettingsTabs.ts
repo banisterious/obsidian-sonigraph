@@ -14,11 +14,12 @@ import { SonicGraphCoreSettings } from './SonicGraphCoreSettings';
 import { SonicGraphLayersSettings } from './SonicGraphLayersSettings';
 import { SonicGraphAdvancedSettings } from './SonicGraphAdvancedSettings';
 import { SonicGraphFreesoundSettings } from './SonicGraphFreesoundSettings';
+import { SonicGraphVisualDisplaySettings } from './SonicGraphVisualDisplaySettings';
 
 const logger = getLogger('SonicGraphSettingsTabs');
 
 export interface SonicGraphTabConfig {
-	id: 'core' | 'clustering' | 'musical' | 'spatial';
+	id: 'core' | 'clustering' | 'musical' | 'spatial' | 'visual-display';
 	label: string;
 	icon: LucideIconName;
 	description: string;
@@ -35,7 +36,7 @@ export class SonicGraphSettingsTabs {
 	private container: HTMLElement;
 	private tabNavigation: HTMLElement;
 	private tabContent: HTMLElement;
-	private activeTabId: 'core' | 'clustering' | 'musical' | 'spatial' = 'core';
+	private activeTabId: 'core' | 'clustering' | 'musical' | 'spatial' | 'visual-display' = 'core';
 	private tabs: SonicGraphTabConfig[];
 
 	constructor(app: App, plugin: SonigraphPlugin, container: HTMLElement) {
@@ -51,6 +52,13 @@ export class SonicGraphSettingsTabs {
 				icon: 'settings',
 				description: 'Essential graph, audio, and content mapping settings',
 				renderContent: (container) => this.renderCoreSettings(container)
+			},
+			{
+				id: 'visual-display',
+				label: 'Visual Display',
+				icon: 'eye',
+				description: 'Accessibility feature for visual note display during playback',
+				renderContent: (container) => this.renderVisualDisplaySettings(container)
 			},
 			{
 				id: 'clustering',
@@ -117,7 +125,7 @@ export class SonicGraphSettingsTabs {
 	/**
 	 * Switch to a different tab
 	 */
-	private switchTab(tabId: 'core' | 'layers' | 'advanced' | 'freesound'): void {
+	private switchTab(tabId: 'core' | 'clustering' | 'musical' | 'spatial' | 'visual-display'): void {
 		if (tabId === this.activeTabId) return;
 
 		logger.debug('tabs', `Switching from ${this.activeTabId} to ${tabId}`);
@@ -180,6 +188,17 @@ export class SonicGraphSettingsTabs {
 	}
 
 	/**
+	 * Visual Display Tab Content
+	 */
+	private renderVisualDisplaySettings(container: HTMLElement): void {
+		logger.debug('tabs', 'Rendering Visual Display tab');
+
+		// Render visual display settings
+		const visualDisplaySettings = new SonicGraphVisualDisplaySettings(this.app, this.plugin);
+		visualDisplaySettings.render(container);
+	}
+
+	/**
 	 * Smart Clustering Tab Content
 	 */
 	private renderClusteringSettings(container: HTMLElement): void {
@@ -214,7 +233,7 @@ export class SonicGraphSettingsTabs {
 	/**
 	 * Public API: Switch to a specific tab programmatically
 	 */
-	public showTab(tabId: 'core' | 'clustering' | 'musical' | 'spatial'): void {
+	public showTab(tabId: 'core' | 'clustering' | 'musical' | 'spatial' | 'visual-display'): void {
 		this.switchTab(tabId);
 	}
 

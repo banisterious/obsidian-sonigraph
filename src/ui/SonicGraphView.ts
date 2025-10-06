@@ -18,6 +18,7 @@ import { SonicGraphSettings } from '../utils/constants';
 import * as d3 from 'd3';
 import type SonigraphPlugin from '../main';
 import { ContinuousLayerManager } from '../audio/layers/ContinuousLayerManager';
+import { NoteVisualizationManager } from '../visualization/NoteVisualizationManager';
 
 const logger = getLogger('SonicGraphView');
 
@@ -38,6 +39,10 @@ export interface SonicGraphViewState {
 
     // View configuration
     detectedSpacing: 'dense' | 'balanced' | 'sparse';
+
+    // Visual display state
+    isVisualDisplayVisible: boolean;
+    visualDisplayHeight: number;
 }
 
 export class SonicGraphView extends ItemView {
@@ -48,6 +53,7 @@ export class SonicGraphView extends ItemView {
     private musicalMapper: MusicalMapper | null = null;
     private adaptiveDetailManager: AdaptiveDetailManager | null = null;
     private continuousLayerManager: ContinuousLayerManager | null = null;
+    private visualizationManager: NoteVisualizationManager | null = null;
     private isAnimating: boolean = false;
     private isTimelineView: boolean = false; // false = Static View, true = Timeline View
     
@@ -84,6 +90,14 @@ export class SonicGraphView extends ItemView {
     private settingsPanel: HTMLElement;
     private settingsButton: HTMLButtonElement;
     private isSettingsVisible: boolean = false;
+
+    // Visual display panel elements
+    private visualDisplaySection: HTMLElement | null = null;
+    private visualDisplayContent: HTMLElement | null = null;
+    private visualDivider: HTMLElement | null = null;
+    private isVisualDisplayVisible: boolean = false;
+    private visualDisplayHeight: number = 250; // Default height in pixels
+    private isDraggingDivider: boolean = false;
     
     // Audio density tracking for even distribution
     private nodeAppearanceCounter: number = 0;
@@ -173,6 +187,27 @@ export class SonicGraphView extends ItemView {
             logger.debug('state', 'Restored isSettingsVisible', this.isSettingsVisible);
         }
 
+        if (viewState.isVisualDisplayVisible !== undefined) {
+            this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
+            logger.debug('state', 'Restored isVisualDisplayVisible', this.isVisualDisplayVisible);
+        } else {
+            // Initialize from plugin settings if no saved state
+            this.isVisualDisplayVisible = this.plugin.settings.sonicGraphSettings?.visualDisplay?.enabled ?? true;
+            logger.debug('state', 'Initialized isVisualDisplayVisible from settings', this.isVisualDisplayVisible);
+        }
+
+        if (viewState.visualDisplayHeight !== undefined) {
+            this.visualDisplayHeight = viewState.visualDisplayHeight;
+            logger.debug('state', 'Restored visualDisplayHeight', this.visualDisplayHeight);
+        } else {
+            // Initialize from plugin settings if no saved state
+            this.visualDisplayHeight = this.plugin.settings.sonicGraphSettings?.visualDisplay?.height ?? 250;
+            logger.debug('state', 'Initialized visualDisplayHeight from settings', this.visualDisplayHeight);
+        }
+
+        // Update visual display section if it's already been created (setState called after onOpen)
+        this.updateVisualDisplayState();
+
         // Store timeline position and speed for restoration after graph initialization
         if (viewState.currentTimelinePosition !== undefined || viewState.animationSpeed !== undefined) {
             // We'll apply these values after the UI is fully initialized
@@ -223,7 +258,11 @@ export class SonicGraphView extends ItemView {
             isSettingsVisible: this.isSettingsVisible,
 
             // View configuration
-            detectedSpacing: this.detectedSpacing
+            detectedSpacing: this.detectedSpacing,
+
+            // Visual display state
+            isVisualDisplayVisible: this.isVisualDisplayVisible,
+            visualDisplayHeight: this.visualDisplayHeight
         };
 
         logger.info('state', 'Final state being returned from getState()', state);
@@ -232,8 +271,14 @@ export class SonicGraphView extends ItemView {
 
     async onOpen() {
         logger.info('sonic-graph-init', 'View onOpen() started');
-        
+
         try {
+            // Initialize visual display settings from plugin settings if not already set by setState
+            if (!this.isVisualDisplayVisible && this.plugin.settings.sonicGraphSettings?.visualDisplay?.enabled) {
+                this.isVisualDisplayVisible = true;
+                logger.debug('sonic-graph-init', 'Initialized visual display from settings in onOpen');
+            }
+
             const { contentEl } = this;
             logger.info('sonic-graph-init', 'ContentEl acquired, emptying');
             contentEl.empty();
@@ -252,13 +297,9 @@ export class SonicGraphView extends ItemView {
             this.createHeader(viewContainer);
             logger.info('sonic-graph-init', 'Header created successfully');
             
-            logger.info('sonic-graph-init', 'Creating main content');
+            logger.info('sonic-graph-init', 'Creating main content (includes timeline)');
             this.createMainContent(viewContainer);
             logger.info('sonic-graph-init', 'Main content created successfully');
-
-            logger.info('sonic-graph-init', 'Creating timeline area');
-            this.createTimelineArea(viewContainer);
-            logger.info('sonic-graph-init', 'Timeline area created successfully');
 
             logger.info('sonic-graph-init', 'Creating controls area');
             this.createControlsArea(viewContainer);
@@ -477,6 +518,270 @@ export class SonicGraphView extends ItemView {
         }
     }
 
+    /**
+     * Setup divider drag functionality for resizing visual display panel
+     */
+    private setupDividerDrag(): void {
+        if (!this.visualDivider) {
+            logger.warn('visual-display', 'Cannot setup divider drag - visualDivider is null');
+            return;
+        }
+
+        logger.info('visual-display', 'Setting up divider drag handlers');
+
+        const onMouseDown = (e: MouseEvent) => {
+            logger.debug('visual-display', 'Divider mousedown event triggered');
+            this.isDraggingDivider = true;
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (!this.isDraggingDivider || !this.visualDisplaySection) return;
+
+            const container = this.visualDisplaySection.parentElement;
+            if (!container) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const newHeight = containerRect.bottom - e.clientY;
+
+            // Constrain height between 150px and 400px
+            const constrainedHeight = Math.max(150, Math.min(400, newHeight));
+
+            this.visualDisplayHeight = constrainedHeight;
+
+            // Update via CSS custom property using DOM API directly
+            (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${constrainedHeight}px`);
+
+            // Verify the property was set
+            const appliedValue = (this.visualDisplaySection as HTMLElement).style.getPropertyValue('--visual-display-height');
+
+            logger.debug('visual-display', 'Divider dragged - new height', {
+                requested: constrainedHeight,
+                applied: appliedValue,
+                computedMinHeight: getComputedStyle(this.visualDisplaySection as HTMLElement).minHeight,
+                computedMaxHeight: getComputedStyle(this.visualDisplaySection as HTMLElement).maxHeight
+            });
+        };
+
+        const onMouseUp = () => {
+            if (this.isDraggingDivider) {
+                this.isDraggingDivider = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+
+                // Save height preference
+                logger.info('visual-display', 'Saved visual display height', this.visualDisplayHeight);
+            }
+        };
+
+        this.registerDomEvent(this.visualDivider, 'mousedown', onMouseDown);
+        this.registerDomEvent(document, 'mousemove', onMouseMove);
+        this.registerDomEvent(document, 'mouseup', onMouseUp);
+
+        logger.info('visual-display', 'Divider drag handlers registered successfully');
+    }
+
+    /**
+     * Toggle visual display panel visibility
+     */
+    private toggleVisualDisplay(collapseBtn: HTMLButtonElement): void {
+        if (!this.visualDisplaySection) return;
+
+        this.isVisualDisplayVisible = !this.isVisualDisplayVisible;
+
+        if (this.isVisualDisplayVisible) {
+            this.visualDisplaySection.removeClass('collapsed');
+            collapseBtn.setText('▼');
+            logger.debug('visual-display', 'Visual display expanded');
+        } else {
+            this.visualDisplaySection.addClass('collapsed');
+            collapseBtn.setText('▲');
+            logger.debug('visual-display', 'Visual display collapsed');
+        }
+    }
+
+    /**
+     * Switch visualization mode (piano-roll, spectrum, staff)
+     */
+    private switchVisualizationMode(mode: 'piano-roll' | 'spectrum' | 'staff', tabs: HTMLButtonElement[]): void {
+        if (!this.visualizationManager) return;
+
+        logger.info('visual-display', `Switching visualization mode to ${mode}`);
+
+        // Update tab active states
+        tabs.forEach(tab => tab.removeClass('active'));
+        const activeTabIndex = mode === 'piano-roll' ? 0 : mode === 'spectrum' ? 1 : 2;
+        tabs[activeTabIndex].addClass('active');
+
+        // Update visualization manager mode
+        this.visualizationManager.updateConfig({ mode });
+
+        // If switching to spectrum mode, connect to audio
+        if (mode === 'spectrum') {
+            const audioContext = this.plugin.audioEngine.getTestAudioContext();
+            const masterVolume = this.plugin.audioEngine.getMasterVolume();
+
+            if (audioContext && masterVolume) {
+                this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+                logger.info('visual-display', 'Connected spectrum analyzer to audio after mode switch');
+            }
+        }
+    }
+
+    /**
+     * Update visual display section state after setState() restores values
+     */
+    private updateVisualDisplayState(): void {
+        if (!this.visualDisplaySection) {
+            logger.debug('visual-display', 'Visual display section not yet created, skipping state update');
+            return;
+        }
+
+        logger.info('visual-display', 'Updating visual display state after setState', {
+            isVisible: this.isVisualDisplayVisible,
+            height: this.visualDisplayHeight
+        });
+
+        // Update collapsed state
+        if (this.isVisualDisplayVisible) {
+            this.visualDisplaySection.removeClass('collapsed');
+            logger.debug('visual-display', 'Removed collapsed class after setState');
+        } else {
+            this.visualDisplaySection.addClass('collapsed');
+            logger.debug('visual-display', 'Added collapsed class after setState');
+        }
+
+        // Update height via CSS custom property using DOM API
+        (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
+
+        // Update visualization manager config if it exists
+        if (this.visualizationManager) {
+            logger.debug('visual-display', 'Updating visualization manager enabled state', this.isVisualDisplayVisible);
+            this.visualizationManager.updateConfig({
+                enabled: this.isVisualDisplayVisible
+            });
+
+            // If now visible, start it (start() will check if already running)
+            if (this.isVisualDisplayVisible) {
+                logger.debug('visual-display', 'Starting visualization after setState');
+                this.visualizationManager.start(0);
+            }
+        }
+    }
+
+    /**
+     * Initialize the visual note display manager
+     */
+    private initializeVisualizationManager(): void {
+        if (!this.visualDisplayContent) {
+            logger.warn('visual-display', 'Cannot initialize visualization manager without content container');
+            return;
+        }
+
+        try {
+            logger.info('visual-display', 'Initializing visualization manager');
+
+            // Get settings for visual display
+            const visualSettings = this.plugin.settings.sonicGraphSettings?.visualDisplay;
+
+            // Create visualization manager with settings or defaults
+            this.visualizationManager = new NoteVisualizationManager({
+                mode: visualSettings?.mode || 'piano-roll',
+                enabled: this.isVisualDisplayVisible,
+                frameRate: visualSettings?.frameRate || 30,
+                colorScheme: visualSettings?.colorScheme || 'layer',
+                showLabels: visualSettings?.showLabels ?? true,
+                showGrid: visualSettings?.showGrid ?? true,
+                enableTrails: visualSettings?.enableTrails ?? false
+            });
+
+            // Initialize with content container
+            this.visualizationManager.initialize(this.visualDisplayContent);
+
+            // Connect spectrum analyzer to audio if in spectrum mode
+            const visualConfig = this.visualizationManager.getConfig();
+            if (visualConfig.mode === 'spectrum') {
+                const audioContext = this.plugin.audioEngine.getTestAudioContext();
+                const masterVolume = this.plugin.audioEngine.getMasterVolume();
+
+                if (audioContext && masterVolume) {
+                    this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+                    logger.info('visual-display', 'Connected spectrum analyzer to audio');
+                }
+            }
+
+            // Connect to audio engine note events
+            this.setupAudioEngineIntegration();
+
+            // Trigger initial render to show empty piano roll
+            if (this.isVisualDisplayVisible) {
+                this.visualizationManager.start(0);
+                logger.debug('visual-display', 'Started visualization for initial render');
+            }
+
+            logger.info('visual-display', 'Visualization manager initialized successfully');
+        } catch (error) {
+            logger.error('visual-display', 'Failed to initialize visualization manager', error);
+            new Notice('Failed to initialize visual note display');
+        }
+    }
+
+    /**
+     * Setup audio engine integration for visual display
+     * Listens to note-triggered events from the audio engine
+     */
+    private setupAudioEngineIntegration(): void {
+        if (!this.visualizationManager) {
+            logger.warn('visual-display', 'Cannot setup audio integration - no visualization manager');
+            return;
+        }
+
+        // Listen for note-triggered events from audio engine
+        this.plugin.audioEngine.on('note-triggered', (data: any) => {
+            if (!this.visualizationManager) {
+                logger.warn('visual-display', 'Received note event but no visualization manager');
+                return;
+            }
+
+            logger.info('visual-display', 'Received note-triggered event from audio engine', {
+                pitch: data.pitch,
+                layer: data.layer,
+                timestamp: data.timestamp,
+                instrument: data.instrument,
+                nodeId: data.nodeId,
+                nodeTitle: data.nodeTitle
+            });
+
+            // Add note to piano roll visualization
+            this.visualizationManager.addNoteEvent({
+                pitch: data.pitch,
+                velocity: data.velocity,
+                duration: data.duration,
+                layer: data.layer,
+                timestamp: data.timestamp, // Use timestamp from audio engine
+                isPlaying: false
+            });
+
+            // Highlight graph node if node ID is provided
+            if (data.nodeId && this.graphRenderer) {
+                const highlightDuration = data.duration * 1000; // Convert to milliseconds
+                this.graphRenderer.highlightNode(data.nodeId, data.layer, highlightDuration);
+            }
+        });
+
+        // Listen for playback-started to reset visualization
+        this.plugin.audioEngine.on('playback-started', () => {
+            if (!this.visualizationManager) return;
+            logger.debug('visual-display', 'Playback started - resetting visualization');
+            this.visualizationManager.clearNotes();
+            this.visualizationManager.updatePlaybackTime(0); // Reset playback time to 0
+        });
+
+        logger.info('visual-display', 'Audio engine integration setup complete');
+    }
+
     async onClose() {
         logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
@@ -560,6 +865,17 @@ export class SonicGraphView extends ItemView {
         }
 
         try {
+            // Cleanup visualization manager
+            logger.debug('ui', 'Destroying visualization manager');
+            if (this.visualizationManager) {
+                this.visualizationManager.destroy();
+                this.visualizationManager = null;
+            }
+        } catch (error) {
+            logger.error('ui', 'Error destroying visualization manager:', error);
+        }
+
+        try {
             // Cleanup resize observer
             logger.debug('ui', 'Disconnecting resize observer');
             if (this.resizeObserver) {
@@ -635,24 +951,109 @@ export class SonicGraphView extends ItemView {
      */
     private createMainContent(container: HTMLElement): void {
         const mainContent = container.createDiv({ cls: 'sonic-graph-main-content' });
-        
-        // Graph area (left side)
-        this.graphContainer = mainContent.createDiv({ cls: 'sonic-graph-container' });
-        
+
+        // Create split container for graph and visual display
+        const splitContainer = mainContent.createDiv({ cls: 'sonic-graph-split-container' });
+
+        // Top section: Graph area
+        const graphSection = splitContainer.createDiv({ cls: 'sonic-graph-section' });
+        this.graphContainer = graphSection.createDiv({ cls: 'sonic-graph-container' });
+
         // Graph canvas
         const graphCanvas = this.graphContainer.createDiv({ cls: 'sonic-graph-canvas' });
         graphCanvas.id = 'sonic-graph-canvas';
-        
+
         // Loading indicator
         const loadingIndicator = this.graphContainer.createDiv({ cls: 'sonic-graph-loading' });
         const loadingIcon = createLucideIcon('loader-2', 24);
         loadingIcon.addClass('sonic-graph-loading-icon');
         loadingIndicator.appendChild(loadingIcon);
         loadingIndicator.createSpan({ text: 'Loading graph...', cls: 'sonic-graph-loading-text' });
-        
+
         // Settings panel (right side, initially hidden)
-        this.settingsPanel = mainContent.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
+        this.settingsPanel = graphSection.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
         this.createSettingsContent();
+
+        // Timeline area (between graph and visual display)
+        this.createTimelineArea(splitContainer);
+
+        // Resizable divider
+        this.visualDivider = splitContainer.createDiv({ cls: 'sonic-graph-visual-divider' });
+        const dividerHandle = this.visualDivider.createDiv({ cls: 'sonic-graph-visual-divider-handle' });
+
+        // Setup divider drag handlers
+        this.setupDividerDrag();
+
+        // Bottom section: Visual display panel
+        this.visualDisplaySection = splitContainer.createDiv({ cls: 'sonic-graph-visual-display-section' });
+        // Explicitly set collapsed state based on visibility
+        if (!this.isVisualDisplayVisible) {
+            this.visualDisplaySection.addClass('collapsed');
+            logger.debug('visual-display', 'Visual display section created as collapsed');
+        } else {
+            this.visualDisplaySection.removeClass('collapsed');
+            logger.debug('visual-display', 'Visual display section created as expanded');
+        }
+        // Set height via CSS custom property using DOM API
+        (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
+
+        // Visual display header
+        const visualHeader = this.visualDisplaySection.createDiv({ cls: 'sonic-graph-visual-display-header' });
+
+        const visualTitle = visualHeader.createDiv({ cls: 'sonic-graph-visual-display-title' });
+        visualTitle.createSpan({ text: '📊 Visual Note Display' });
+
+        const visualHeaderControls = visualHeader.createDiv({ cls: 'sonic-graph-visual-display-controls' });
+
+        // Mode tabs
+        const modeTabs = visualHeaderControls.createDiv({ cls: 'sonic-graph-visual-mode-tabs' });
+
+        const pianoRollTab = modeTabs.createEl('button', {
+            text: 'Piano Roll',
+            cls: 'sonic-graph-visual-mode-tab active'
+        });
+
+        const spectrumTab = modeTabs.createEl('button', {
+            text: 'Spectrum',
+            cls: 'sonic-graph-visual-mode-tab'
+        });
+
+        const staffTab = modeTabs.createEl('button', {
+            text: 'Staff',
+            cls: 'sonic-graph-visual-mode-tab'
+        });
+
+        // Mode switching handlers
+        this.registerDomEvent(pianoRollTab, 'click', () => {
+            this.switchVisualizationMode('piano-roll', [pianoRollTab, spectrumTab, staffTab]);
+        });
+
+        this.registerDomEvent(spectrumTab, 'click', () => {
+            this.switchVisualizationMode('spectrum', [pianoRollTab, spectrumTab, staffTab]);
+        });
+
+        this.registerDomEvent(staffTab, 'click', () => {
+            this.switchVisualizationMode('staff', [pianoRollTab, spectrumTab, staffTab]);
+        });
+
+        // Collapse button
+        const collapseBtn = visualHeaderControls.createEl('button', {
+            text: this.isVisualDisplayVisible ? '▼' : '▲',
+            cls: 'sonic-graph-visual-collapse-btn'
+        });
+        this.registerDomEvent(collapseBtn, 'click', () => this.toggleVisualDisplay(collapseBtn));
+
+        // Visual display content area
+        this.visualDisplayContent = this.visualDisplaySection.createDiv({
+            cls: 'sonic-graph-visual-display-content'
+        });
+
+        // Placeholder content (will be replaced with actual visualization)
+        const placeholder = this.visualDisplayContent.createDiv({ cls: 'sonic-graph-visual-placeholder' });
+        placeholder.createSpan({ text: 'Visual note display will appear here during playback' });
+
+        // Initialize visualization manager
+        this.initializeVisualizationManager();
     }
 
     /**
@@ -673,7 +1074,7 @@ export class SonicGraphView extends ItemView {
         this.timelineScrubber.min = '0';
         this.timelineScrubber.max = '100';
         this.timelineScrubber.value = '0';
-        this.addEventListener(this.timelineScrubber, 'input', () => this.handleTimelineScrub());
+        this.registerDomEvent(this.timelineScrubber, 'input', () => this.handleTimelineScrub());
         
         // Unified timeline info with single timeline bar
         this.timelineInfo = this.timelineContainer.createDiv({ cls: 'sonic-graph-timeline-info' });
@@ -732,7 +1133,7 @@ export class SonicGraphView extends ItemView {
             const option = this.speedSelect.createEl('option', { text: speed, value: speed });
             if (speed === savedSpeedString) option.selected = true;
         });
-        this.addEventListener(this.speedSelect, 'change', () => this.handleSpeedChange());
+        this.registerDomEvent(this.speedSelect, 'change', () => this.handleSpeedChange());
         
         // Center - Stats
         const statsControls = this.controlsContainer.createDiv({ cls: 'sonic-graph-stats-controls' });
@@ -750,7 +1151,7 @@ export class SonicGraphView extends ItemView {
         const viewModeIcon = createLucideIcon('eye', 16);
         this.viewModeBtn.appendChild(viewModeIcon);
         this.viewModeBtn.appendText('Static View');
-        this.addEventListener(this.viewModeBtn, 'click', () => this.toggleViewMode());
+        this.registerDomEvent(this.viewModeBtn, 'click', () => this.toggleViewMode());
         
         // Reset view button
         const resetViewBtn = viewControls.createEl('button', { 
@@ -1075,22 +1476,34 @@ export class SonicGraphView extends ItemView {
             });
             
             this.temporalAnimator.play();
-            
+
+            // Start visual note display if enabled
+            if (this.visualizationManager && this.isVisualDisplayVisible) {
+                this.visualizationManager.start(0);
+                logger.debug('visual-display', 'Visualization started');
+            }
+
             logger.info('ui', 'Starting Sonic Graph temporal animation');
             new Notice('Sonic Graph animation started');
-            
+
         } else {
             // Pause animation
             this.playButton.setButtonText('Play');
-            
+
             // Hide current position indicator when animation stops
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
             if (currentIndicator) {
                 currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
-            
+
             if (this.temporalAnimator) {
                 this.temporalAnimator.pause();
+            }
+
+            // Stop visual note display
+            if (this.visualizationManager) {
+                this.visualizationManager.stop();
+                logger.debug('visual-display', 'Visualization stopped');
             }
             
             // Stop continuous layers if running
@@ -5816,11 +6229,16 @@ export class SonicGraphView extends ItemView {
         if (this.timelineScrubber) {
             this.timelineScrubber.value = (progress * 100).toString();
         }
-        
+
         // Update timeline info
         if (this.timelineInfo && this.temporalAnimator) {
             this.updateTimelineMarkers();
             this.updateCurrentPosition(currentTime, progress);
+        }
+
+        // Update visualization playback time
+        if (this.visualizationManager) {
+            this.visualizationManager.updatePlaybackTime(currentTime);
         }
     }
 
@@ -6002,9 +6420,12 @@ export class SonicGraphView extends ItemView {
                 volume: audioStatus.volume
             });
             
+            // Get current timeline elapsed time for visualization
+            const currentTime = this.temporalAnimator ? this.temporalAnimator.getState().currentTime : 0;
+
             // Play the note immediately using the new immediate playback method
             try {
-                await this.plugin.audioEngine.playNoteImmediate(mapping);
+                await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime, node.id, node.title);
                 logger.info('audio-success', 'Audio note played successfully for node appearance', { 
                     nodeId: node.id,
                     nodeTitle: node.title,

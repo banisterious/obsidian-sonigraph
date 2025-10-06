@@ -2227,13 +2227,16 @@ export class AudioEngine {
 			// Use specialized synthesis engines if available
 			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
 				this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
+				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
 				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
+				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else if (this.isEnvironmentalInstrument(instrumentName)) {
 				// Fire and forget - don't block the sequence for external sample loading
 				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch(error => {
 					logger.debug('environmental-sound', `Environmental sound failed for ${instrumentName}`, error);
 				});
+				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else {
 				const synth = this.instruments.get(instrumentName);
 
@@ -2249,6 +2252,9 @@ export class AudioEngine {
 						const audioContext = getContext();
 
 						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+
+						// Emit note-triggered event for visualization
+						this.emitNoteEvent(instrumentName, detunedFrequency, duration, velocity, elapsedTime);
 
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
@@ -3189,8 +3195,17 @@ export class AudioEngine {
 
 	/**
 	 * Play a note immediately without timing restrictions (for real-time triggering)
+	 * @param mapping Note parameters
+	 * @param elapsedTime Optional timeline elapsed time for visualization (defaults to audio context time)
+	 * @param nodeId Optional node ID for graph highlighting
+	 * @param nodeTitle Optional node title for logging
 	 */
-	async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }): Promise<void> {
+	async playNoteImmediate(
+		mapping: { pitch: number; duration: number; velocity: number; instrument: string },
+		elapsedTime?: number,
+		nodeId?: string,
+		nodeTitle?: string
+	): Promise<void> {
 		if (!this.isInitialized) {
 			logger.warn('audio', 'Audio engine not initialized for immediate note playback');
 			await this.initialize();
@@ -3249,6 +3264,11 @@ export class AudioEngine {
 
 			// Trigger the note with micro-stagger
 			synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
+
+			// Emit note event for visualization
+			// Use provided elapsedTime if available, otherwise fall back to audio context time
+			const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
+			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
 
 			// Schedule counter decrement when note ends
 			// Convert duration to milliseconds (Tone.js uses seconds)
@@ -4438,6 +4458,68 @@ export class AudioEngine {
 
 	private isEnvironmentalInstrument(instrumentName: string): boolean {
 		return ['whaleHumpback'].includes(instrumentName);
+	}
+
+	/**
+	 * Map instrument name to visualization layer
+	 * Used for color-coding notes in the visual display
+	 */
+	private getLayerForInstrument(instrumentName: string): 'rhythmic' | 'harmonic' | 'melodic' | 'ambient' | 'percussion' {
+		// Percussion instruments
+		if (this.isPercussionInstrument(instrumentName)) {
+			return 'percussion';
+		}
+
+		// Rhythmic instruments (bass, drums, rhythm section)
+		if (['contrabass', 'bassSynth', 'tuba'].includes(instrumentName)) {
+			return 'rhythmic';
+		}
+
+		// Harmonic instruments (chords, accompaniment)
+		if (['piano', 'organ', 'harpsichord', 'harp', 'strings'].includes(instrumentName)) {
+			return 'harmonic';
+		}
+
+		// Ambient/atmospheric instruments
+		if (this.isEnvironmentalInstrument(instrumentName) || this.isElectronicInstrument(instrumentName)) {
+			return 'ambient';
+		}
+
+		// Melodic instruments (lead, solo instruments)
+		// Default for woodwinds, brass, solo strings
+		return 'melodic';
+	}
+
+	/**
+	 * Emit note-triggered event for visualization
+	 * Centralized method to ensure all note triggers emit visualization events
+	 */
+	private emitNoteEvent(
+		instrumentName: string,
+		frequency: number,
+		duration: number,
+		velocity: number,
+		elapsedTime: number,
+		nodeId?: string,
+		nodeTitle?: string
+	): void {
+		try {
+			const layer = this.getLayerForInstrument(instrumentName);
+			const midiPitch = new Frequency(frequency, 'hz').toMidi();
+
+			this.eventEmitter.emit('note-triggered', {
+				pitch: midiPitch,
+				velocity,
+				duration: typeof duration === 'number' ? duration : parseFloat(duration),
+				layer,
+				timestamp: elapsedTime,
+				instrument: instrumentName,
+				nodeId,
+				nodeTitle
+			});
+		} catch (error) {
+			logger.debug('visualization', 'Failed to emit note event', { error, instrumentName });
+		}
 	}
 
 	/**
