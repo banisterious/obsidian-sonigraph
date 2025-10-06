@@ -43,6 +43,8 @@ export interface NoteTriggeredData {
 	layer: 'rhythmic' | 'harmonic' | 'melodic' | 'ambient' | 'percussion';
 	timestamp: number;
 	instrument: string;
+	nodeId?: string; // Optional node ID for graph highlighting
+	nodeTitle?: string; // Optional node title for logging
 }
 
 /**

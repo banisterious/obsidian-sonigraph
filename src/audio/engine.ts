@@ -3197,8 +3197,15 @@ export class AudioEngine {
 	 * Play a note immediately without timing restrictions (for real-time triggering)
 	 * @param mapping Note parameters
 	 * @param elapsedTime Optional timeline elapsed time for visualization (defaults to audio context time)
+	 * @param nodeId Optional node ID for graph highlighting
+	 * @param nodeTitle Optional node title for logging
 	 */
-	async playNoteImmediate(mapping: { pitch: number; duration: number; velocity: number; instrument: string }, elapsedTime?: number): Promise<void> {
+	async playNoteImmediate(
+		mapping: { pitch: number; duration: number; velocity: number; instrument: string },
+		elapsedTime?: number,
+		nodeId?: string,
+		nodeTitle?: string
+	): Promise<void> {
 		if (!this.isInitialized) {
 			logger.warn('audio', 'Audio engine not initialized for immediate note playback');
 			await this.initialize();
@@ -3261,7 +3268,7 @@ export class AudioEngine {
 			// Emit note event for visualization
 			// Use provided elapsedTime if available, otherwise fall back to audio context time
 			const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
-			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp);
+			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
 
 			// Schedule counter decrement when note ends
 			// Convert duration to milliseconds (Tone.js uses seconds)
@@ -4487,7 +4494,15 @@ export class AudioEngine {
 	 * Emit note-triggered event for visualization
 	 * Centralized method to ensure all note triggers emit visualization events
 	 */
-	private emitNoteEvent(instrumentName: string, frequency: number, duration: number, velocity: number, elapsedTime: number): void {
+	private emitNoteEvent(
+		instrumentName: string,
+		frequency: number,
+		duration: number,
+		velocity: number,
+		elapsedTime: number,
+		nodeId?: string,
+		nodeTitle?: string
+	): void {
 		try {
 			const layer = this.getLayerForInstrument(instrumentName);
 			const midiPitch = new Frequency(frequency, 'hz').toMidi();
@@ -4498,7 +4513,9 @@ export class AudioEngine {
 				duration: typeof duration === 'number' ? duration : parseFloat(duration),
 				layer,
 				timestamp: elapsedTime,
-				instrument: instrumentName
+				instrument: instrumentName,
+				nodeId,
+				nodeTitle
 			});
 		} catch (error) {
 			logger.debug('visualization', 'Failed to emit note event', { error, instrumentName });

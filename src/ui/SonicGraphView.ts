@@ -709,9 +709,12 @@ export class SonicGraphView extends ItemView {
                 pitch: data.pitch,
                 layer: data.layer,
                 timestamp: data.timestamp,
-                instrument: data.instrument
+                instrument: data.instrument,
+                nodeId: data.nodeId,
+                nodeTitle: data.nodeTitle
             });
 
+            // Add note to piano roll visualization
             this.visualizationManager.addNoteEvent({
                 pitch: data.pitch,
                 velocity: data.velocity,
@@ -720,6 +723,12 @@ export class SonicGraphView extends ItemView {
                 timestamp: data.timestamp, // Use timestamp from audio engine
                 isPlaying: false
             });
+
+            // Highlight graph node if node ID is provided
+            if (data.nodeId && this.graphRenderer) {
+                const highlightDuration = data.duration * 1000; // Convert to milliseconds
+                this.graphRenderer.highlightNode(data.nodeId, data.layer, highlightDuration);
+            }
         });
 
         // Listen for playback-started to reset visualization
@@ -6363,7 +6372,7 @@ export class SonicGraphView extends ItemView {
 
             // Play the note immediately using the new immediate playback method
             try {
-                await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime);
+                await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime, node.id, node.title);
                 logger.info('audio-success', 'Audio note played successfully for node appearance', { 
                     nodeId: node.id,
                     nodeTitle: node.title,

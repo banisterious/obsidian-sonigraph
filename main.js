@@ -13973,6 +13973,41 @@ var init_GraphRenderer = __esm({
         return removedCount;
       }
       /**
+       * Highlight a node with glow effect for visual note display
+       * @param nodeId The ID of the node to highlight
+       * @param layer The audio layer (for color coding)
+       * @param duration How long to show the highlight (ms)
+       */
+      highlightNode(nodeId, layer, duration = 300) {
+        if (!this.svg)
+          return;
+        const nodeElement = this.svg.select(`circle[data-id="${nodeId}"]`);
+        if (nodeElement.empty())
+          return;
+        const layerColors = {
+          "rhythmic": "#FF6B35",
+          "harmonic": "#4ECDC4",
+          "melodic": "#A78BFA",
+          "ambient": "#10B981",
+          "percussion": "#EF4444"
+        };
+        const color2 = layerColors[layer] || "#888888";
+        nodeElement.classed("note-active", true);
+        nodeElement.classed(`note-active-${layer}`, true);
+        nodeElement.transition().duration(50).attr("stroke", color2).attr("stroke-width", 3).style("filter", `drop-shadow(0 0 8px ${color2}) drop-shadow(0 0 16px ${color2})`).transition().duration(duration).attr("stroke-width", 1.5).style("filter", null).on("end", () => {
+          nodeElement.classed("note-active", false);
+          nodeElement.classed(`note-active-${layer}`, false);
+        });
+      }
+      /**
+       * Clear all node highlights
+       */
+      clearHighlights() {
+        if (!this.svg)
+          return;
+        this.svg.selectAll("circle").classed("note-active", false).classed("note-active-rhythmic", false).classed("note-active-harmonic", false).classed("note-active-melodic", false).classed("note-active-ambient", false).classed("note-active-percussion", false).attr("stroke-width", 1.5).style("filter", null);
+      }
+      /**
        * Cleanup resources
        */
       destroy() {
@@ -71777,7 +71812,9 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         pitch: data.pitch,
         layer: data.layer,
         timestamp: data.timestamp,
-        instrument: data.instrument
+        instrument: data.instrument,
+        nodeId: data.nodeId,
+        nodeTitle: data.nodeTitle
       });
       this.visualizationManager.addNoteEvent({
         pitch: data.pitch,
@@ -71788,6 +71825,10 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         // Use timestamp from audio engine
         isPlaying: false
       });
+      if (data.nodeId && this.graphRenderer) {
+        const highlightDuration = data.duration * 1e3;
+        this.graphRenderer.highlightNode(data.nodeId, data.layer, highlightDuration);
+      }
     });
     this.plugin.audioEngine.on("playback-started", () => {
       if (!this.visualizationManager)
@@ -76121,7 +76162,7 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       });
       const currentTime = this.temporalAnimator ? this.temporalAnimator.getState().currentTime : 0;
       try {
-        await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime);
+        await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime, node.id, node.title);
         logger65.info("audio-success", "Audio note played successfully for node appearance", {
           nodeId: node.id,
           nodeTitle: node.title,
@@ -82743,8 +82784,10 @@ var AudioEngine = class {
    * Play a note immediately without timing restrictions (for real-time triggering)
    * @param mapping Note parameters
    * @param elapsedTime Optional timeline elapsed time for visualization (defaults to audio context time)
+   * @param nodeId Optional node ID for graph highlighting
+   * @param nodeTitle Optional node title for logging
    */
-  async playNoteImmediate(mapping, elapsedTime) {
+  async playNoteImmediate(mapping, elapsedTime, nodeId, nodeTitle) {
     if (!this.isInitialized) {
       logger75.warn("audio", "Audio engine not initialized for immediate note playback");
       await this.initialize();
@@ -82781,7 +82824,7 @@ var AudioEngine = class {
       const triggerTime = getContext().currentTime + microDelay;
       synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
       const timestamp = elapsedTime !== void 0 ? elapsedTime : getContext().currentTime;
-      this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp);
+      this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
       const durationMs = typeof duration === "number" ? duration * 1e3 : parseFloat(duration) * 1e3;
       setTimeout(() => {
         const current = this.activeNotesPerInstrument.get(instrument) || 0;
@@ -83762,7 +83805,7 @@ var AudioEngine = class {
    * Emit note-triggered event for visualization
    * Centralized method to ensure all note triggers emit visualization events
    */
-  emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime) {
+  emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime, nodeId, nodeTitle) {
     try {
       const layer = this.getLayerForInstrument(instrumentName);
       const midiPitch = new Frequency(frequency, "hz").toMidi();
@@ -83772,7 +83815,9 @@ var AudioEngine = class {
         duration: typeof duration === "number" ? duration : parseFloat(duration),
         layer,
         timestamp: elapsedTime,
-        instrument: instrumentName
+        instrument: instrumentName,
+        nodeId,
+        nodeTitle
       });
     } catch (error) {
       logger75.debug("visualization", "Failed to emit note event", { error, instrumentName });

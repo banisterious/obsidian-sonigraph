@@ -2162,6 +2162,68 @@ export class GraphRenderer {
   }
 
   /**
+   * Highlight a node with glow effect for visual note display
+   * @param nodeId The ID of the node to highlight
+   * @param layer The audio layer (for color coding)
+   * @param duration How long to show the highlight (ms)
+   */
+  highlightNode(nodeId: string, layer: string, duration: number = 300): void {
+    if (!this.svg) return;
+
+    // Find the node element
+    const nodeElement = this.svg.select(`circle[data-id="${nodeId}"]`);
+    if (nodeElement.empty()) return;
+
+    // Layer colors from visual-note-display spec
+    const layerColors: Record<string, string> = {
+      'rhythmic': '#FF6B35',
+      'harmonic': '#4ECDC4',
+      'melodic': '#A78BFA',
+      'ambient': '#10B981',
+      'percussion': '#EF4444'
+    };
+
+    const color = layerColors[layer] || '#888888';
+
+    // Add active class for CSS animations
+    nodeElement.classed('note-active', true);
+    nodeElement.classed(`note-active-${layer}`, true);
+
+    // Apply glow effect
+    nodeElement
+      .transition()
+      .duration(50)
+      .attr('stroke', color)
+      .attr('stroke-width', 3)
+      .style('filter', `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color})`)
+      .transition()
+      .duration(duration)
+      .attr('stroke-width', 1.5)
+      .style('filter', null)
+      .on('end', () => {
+        nodeElement.classed('note-active', false);
+        nodeElement.classed(`note-active-${layer}`, false);
+      });
+  }
+
+  /**
+   * Clear all node highlights
+   */
+  clearHighlights(): void {
+    if (!this.svg) return;
+
+    this.svg.selectAll('circle')
+      .classed('note-active', false)
+      .classed('note-active-rhythmic', false)
+      .classed('note-active-harmonic', false)
+      .classed('note-active-melodic', false)
+      .classed('note-active-ambient', false)
+      .classed('note-active-percussion', false)
+      .attr('stroke-width', 1.5)
+      .style('filter', null);
+  }
+
+  /**
    * Cleanup resources
    */
   destroy(): void {
