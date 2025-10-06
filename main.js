@@ -70813,6 +70813,13 @@ var PianoRollRenderer = class {
     });
   }
   /**
+   * Force resize (public method for when container visibility changes)
+   */
+  forceResize() {
+    logger55.info("resize", "Force resize requested");
+    this.resizeCanvas();
+  }
+  /**
    * Resize canvas to match container
    */
   resizeCanvas() {
@@ -71144,6 +71151,13 @@ var SpectrumRenderer = class {
     });
   }
   /**
+   * Force resize (public method for when container visibility changes)
+   */
+  forceResize() {
+    logger56.info("resize", "Force resize requested");
+    this.resizeCanvas();
+  }
+  /**
    * Resize canvas to match container
    */
   resizeCanvas() {
@@ -71265,6 +71279,13 @@ var StaffRenderer = class {
     this.resizeCanvas();
     window.addEventListener("resize", () => this.resizeCanvas());
     logger57.info("initialization", "StaffRenderer initialized");
+  }
+  /**
+   * Force resize (public method for when container visibility changes)
+   */
+  forceResize() {
+    logger57.info("resize", "Force resize requested");
+    this.resizeCanvas();
   }
   /**
    * Resize canvas to match container
@@ -71724,6 +71745,16 @@ var NoteVisualizationManager = class {
     return this.activeNotes.size;
   }
   /**
+   * Force resize of current renderer
+   * Useful when container visibility changes (e.g., panel collapse/expand)
+   */
+  forceResize() {
+    if (this.renderer && this.renderer.forceResize) {
+      logger58.debug("lifecycle", "Forcing renderer resize");
+      this.renderer.forceResize();
+    }
+  }
+  /**
    * Clean up resources
    */
   destroy() {
@@ -72147,6 +72178,13 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
       this.visualDisplaySection.removeClass("collapsed");
       collapseBtn.setText("\u25BC");
       logger67.debug("visual-display", "Visual display expanded");
+      if (this.visualizationManager) {
+        requestAnimationFrame(() => {
+          var _a;
+          (_a = this.visualizationManager) == null ? void 0 : _a.forceResize();
+          logger67.debug("visual-display", "Forced visualization resize after expand");
+        });
+      }
     } else {
       this.visualDisplaySection.addClass("collapsed");
       collapseBtn.setText("\u25B2");

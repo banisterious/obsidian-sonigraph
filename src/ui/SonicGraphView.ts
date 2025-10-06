@@ -595,6 +595,15 @@ export class SonicGraphView extends ItemView {
             this.visualDisplaySection.removeClass('collapsed');
             collapseBtn.setText('▼');
             logger.debug('visual-display', 'Visual display expanded');
+
+            // Force resize of visualization after expanding (fixes sizing issues when toggling modes while collapsed)
+            if (this.visualizationManager) {
+                // Use requestAnimationFrame to ensure DOM has updated before resizing
+                requestAnimationFrame(() => {
+                    this.visualizationManager?.forceResize();
+                    logger.debug('visual-display', 'Forced visualization resize after expand');
+                });
+            }
         } else {
             this.visualDisplaySection.addClass('collapsed');
             collapseBtn.setText('▲');

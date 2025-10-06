@@ -80,6 +80,14 @@ export class StaffRenderer implements VisualizationRenderer {
     }
 
     /**
+     * Force resize (public method for when container visibility changes)
+     */
+    public forceResize(): void {
+        logger.info('resize', 'Force resize requested');
+        this.resizeCanvas();
+    }
+
+    /**
      * Resize canvas to match container
      */
     private resizeCanvas(): void {

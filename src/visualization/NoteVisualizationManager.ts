@@ -83,6 +83,9 @@ export interface VisualizationRenderer {
     /** Update renderer configuration */
     updateConfig(config: Partial<VisualizationConfig>): void;
 
+    /** Force resize of renderer (useful when container visibility changes) */
+    forceResize?(): void;
+
     /** Clean up renderer resources */
     destroy(): void;
 }
@@ -401,6 +404,17 @@ export class NoteVisualizationManager {
      */
     public getActiveNoteCount(): number {
         return this.activeNotes.size;
+    }
+
+    /**
+     * Force resize of current renderer
+     * Useful when container visibility changes (e.g., panel collapse/expand)
+     */
+    public forceResize(): void {
+        if (this.renderer && this.renderer.forceResize) {
+            logger.debug('lifecycle', 'Forcing renderer resize');
+            this.renderer.forceResize();
+        }
     }
 
     /**
