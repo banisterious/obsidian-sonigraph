@@ -71240,6 +71240,12 @@ var PianoRollRenderer = class {
     const ctx = this.ctx;
     const maxTimestamp = events.length > 0 ? Math.max(...events.map((e) => e.timestamp + e.duration)) : currentTime + this.pianoRollConfig.timeWindow;
     const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
+    const chordGroups = this.groupNotesIntoChords(events, 20);
+    chordGroups.forEach((group) => {
+      if (group.length > 1) {
+        this.drawChordBracket(group, timelineDuration, currentTime);
+      }
+    });
     events.forEach((event) => {
       const x3 = event.timestamp / timelineDuration * this.canvas.width;
       const width = event.duration / timelineDuration * this.canvas.width;
@@ -71382,6 +71388,125 @@ var PianoRollRenderer = class {
     this.timelineContainer = null;
     this.legendContainer = null;
     logger55.debug("lifecycle", "PianoRollRenderer destroyed");
+  }
+  /**
+   * Group notes that occur at nearly the same time into chords
+   */
+  groupNotesIntoChords(events, thresholdMs = 20) {
+    if (events.length === 0)
+      return [];
+    const sorted = [...events].sort((a2, b) => a2.timestamp - b.timestamp);
+    const groups = [];
+    let currentGroup = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++) {
+      const timeDiff = Math.abs(sorted[i].timestamp - currentGroup[0].timestamp) * 1e3;
+      if (timeDiff <= thresholdMs) {
+        currentGroup.push(sorted[i]);
+      } else {
+        groups.push(currentGroup);
+        currentGroup = [sorted[i]];
+      }
+    }
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup);
+    }
+    return groups;
+  }
+  /**
+   * Draw a bracket connecting chord notes
+   */
+  drawChordBracket(notes, timelineDuration, currentTime) {
+    if (!this.ctx || !this.canvas)
+      return;
+    const ctx = this.ctx;
+    const notePositions = notes.map((note) => {
+      const pitch = typeof note.pitch === "number" ? note.pitch : this.noteToPitch(note.pitch);
+      const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
+      const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
+      const y3 = (1 - pitchNormalized) * this.canvas.height;
+      const x4 = note.timestamp / timelineDuration * this.canvas.width;
+      return { x: x4, y: y3, note };
+    });
+    const topY = Math.min(...notePositions.map((p) => p.y));
+    const bottomY = Math.max(...notePositions.map((p) => p.y));
+    const x3 = notePositions[0].x;
+    const noteEndTime = notes[0].timestamp + notes[0].duration;
+    const isPlaying = currentTime >= notes[0].timestamp && currentTime <= noteEndTime;
+    ctx.fillStyle = isPlaying ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.03)";
+    const bracketWidth = 3;
+    ctx.fillRect(x3 - bracketWidth, topY - 4, bracketWidth, bottomY - topY + 8);
+    ctx.strokeStyle = isPlaying ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 0.2)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x3 - bracketWidth, topY);
+    ctx.lineTo(x3 - bracketWidth, bottomY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x3 - bracketWidth, topY);
+    ctx.lineTo(x3 - bracketWidth / 2, topY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x3 - bracketWidth, bottomY);
+    ctx.lineTo(x3 - bracketWidth / 2, bottomY);
+    ctx.stroke();
+    if (this.config.showLabels && notes.length >= 2) {
+      const chordType = this.detectChordType(notes);
+      if (chordType) {
+        ctx.fillStyle = isPlaying ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.5)";
+        ctx.font = "11px sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(chordType, x3 - bracketWidth - 4, topY - 4);
+        ctx.textAlign = "left";
+      }
+    }
+  }
+  /**
+   * Detect chord type from a group of notes
+   */
+  detectChordType(notes) {
+    if (notes.length < 2)
+      return null;
+    const pitches = notes.map((note) => {
+      if (typeof note.pitch === "number") {
+        return note.pitch;
+      }
+      return this.noteToPitch(note.pitch);
+    }).sort((a2, b) => a2 - b);
+    const root2 = pitches[0];
+    const intervals = pitches.map((p) => (p - root2) % 12);
+    const noteNames = ["C", "C\u266F", "D", "D\u266F", "E", "F", "F\u266F", "G", "G\u266F", "A", "A\u266F", "B"];
+    const rootName = noteNames[root2 % 12];
+    if (this.matchesIntervals(intervals, [0, 4, 7]))
+      return `${rootName}`;
+    if (this.matchesIntervals(intervals, [0, 3, 7]))
+      return `${rootName}m`;
+    if (this.matchesIntervals(intervals, [0, 3, 6]))
+      return `${rootName}\xB0`;
+    if (this.matchesIntervals(intervals, [0, 4, 8]))
+      return `${rootName}+`;
+    if (this.matchesIntervals(intervals, [0, 4, 7, 11]))
+      return `${rootName}maj7`;
+    if (this.matchesIntervals(intervals, [0, 3, 7, 10]))
+      return `${rootName}m7`;
+    if (this.matchesIntervals(intervals, [0, 4, 7, 10]))
+      return `${rootName}7`;
+    if (this.matchesIntervals(intervals, [0, 5, 7]))
+      return `${rootName}sus4`;
+    if (this.matchesIntervals(intervals, [0, 2, 7]))
+      return `${rootName}sus2`;
+    return `${rootName} (${notes.length})`;
+  }
+  /**
+   * Check if a set of intervals matches a chord pattern
+   */
+  matchesIntervals(intervals, pattern) {
+    if (intervals.length < pattern.length)
+      return false;
+    for (const p of pattern) {
+      if (!intervals.includes(p))
+        return false;
+    }
+    return true;
   }
 };
 
