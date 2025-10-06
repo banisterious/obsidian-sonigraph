@@ -2294,8 +2294,8 @@ var init_constants = __esm({
           // Disabled by default
           mode: "smart",
           // Use smart chord fitting by default
-          timingWindow: 200,
-          // 200ms window for simultaneous notes
+          timingWindow: 50,
+          // 50ms window for truly simultaneous notes (increase if notes aren't grouping)
           minimumNotes: 2,
           // At least 2 notes to form a chord
           // Per-layer defaults (harmonic, rhythmic, ambient enabled)
@@ -21262,10 +21262,10 @@ var init_control_panel = __esm({
             await this.plugin.audioEngine.updateSettings(this.plugin.settings);
           }
         });
-        new import_obsidian14.Setting(container).setName("Timing window").setDesc("Notes within this time window will be grouped into chords (milliseconds). Try 500-1000ms if notes aren't grouping.").addSlider(
+        new import_obsidian14.Setting(container).setName("Timing window").setDesc("Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. WARNING: Values over 200ms will group sequential notes into large chords.").addSlider(
           (slider) => {
             var _a2, _b2;
-            return slider.setLimits(50, 2e3, 50).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 200).setDynamicTooltip().onChange(async (value) => {
+            return slider.setLimits(20, 500, 10).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 50).setDynamicTooltip().onChange(async (value) => {
               var _a3;
               if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.chordFusion))
                 return;

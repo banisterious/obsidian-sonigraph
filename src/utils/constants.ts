@@ -2700,7 +2700,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		chordFusion: {
 			enabled: false, // Disabled by default
 			mode: 'smart', // Use smart chord fitting by default
-			timingWindow: 200, // 200ms window for simultaneous notes
+			timingWindow: 50, // 50ms window for truly simultaneous notes (increase if notes aren't grouping)
 			minimumNotes: 2, // At least 2 notes to form a chord
 
 			// Per-layer defaults (harmonic, rhythmic, ambient enabled)
