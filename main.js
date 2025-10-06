@@ -84576,6 +84576,19 @@ var AudioEngine = class {
       bufferSize: this.chordBuffer.length,
       timestamp: now3
     });
+    const MAX_BUFFER_SIZE = 12;
+    if (this.chordBuffer.length >= MAX_BUFFER_SIZE) {
+      logger79.info("chord-fusion", "Buffer reached maximum size, flushing immediately", {
+        bufferSize: this.chordBuffer.length,
+        maxSize: MAX_BUFFER_SIZE
+      });
+      if (this.chordFlushTimer !== null) {
+        clearTimeout(this.chordFlushTimer);
+        this.chordFlushTimer = null;
+      }
+      this.flushChordBuffer(elapsedTime);
+      return;
+    }
     if (this.chordFlushTimer !== null) {
       clearTimeout(this.chordFlushTimer);
     }

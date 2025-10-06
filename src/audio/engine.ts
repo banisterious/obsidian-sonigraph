@@ -3576,6 +3576,22 @@ export class AudioEngine {
 			timestamp: now
 		});
 
+		// Maximum buffer size to prevent infinite buffering
+		const MAX_BUFFER_SIZE = 12;
+		if (this.chordBuffer.length >= MAX_BUFFER_SIZE) {
+			logger.info('chord-fusion', 'Buffer reached maximum size, flushing immediately', {
+				bufferSize: this.chordBuffer.length,
+				maxSize: MAX_BUFFER_SIZE
+			});
+			// Flush immediately without waiting for timer
+			if (this.chordFlushTimer !== null) {
+				clearTimeout(this.chordFlushTimer);
+				this.chordFlushTimer = null;
+			}
+			this.flushChordBuffer(elapsedTime);
+			return;
+		}
+
 		// Clear existing timer if present
 		if (this.chordFlushTimer !== null) {
 			clearTimeout(this.chordFlushTimer);
