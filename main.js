@@ -72882,11 +72882,6 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
    */
   updateViewMode() {
     if (this.isTimelineView) {
-      this.viewModeBtn.empty();
-      const timelineIcon = createLucideIcon("play-circle", 16);
-      this.viewModeBtn.appendChild(timelineIcon);
-      this.viewModeBtn.appendText("Timeline View");
-      this.viewModeBtn.addClass("sonigraph-view-mode-btn--visible");
       this.timelineContainer.classList.remove("timeline-hidden");
       this.timelineContainer.classList.add("timeline-visible");
       if (!this.temporalAnimator) {
@@ -72902,7 +72897,6 @@ var SonicGraphView = class extends import_obsidian25.ItemView {
         }
       }
     } else {
-      this.viewModeBtn.removeClass("sonigraph-view-mode-btn--visible");
       this.timelineContainer.classList.add("timeline-hidden");
       this.timelineContainer.classList.remove("timeline-visible");
       if (this.temporalAnimator) {

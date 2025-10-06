@@ -85,7 +85,6 @@ export class SonicGraphView extends ItemView {
     private speedSelect: HTMLSelectElement;
     private timelineScrubber: HTMLInputElement;
     private timelineInfo: HTMLElement;
-    private viewModeBtn: HTMLButtonElement;
     private detectedSpacing: 'dense' | 'balanced' | 'sparse' = 'balanced';
     private settingsPanel: HTMLElement;
     private settingsButton: HTMLButtonElement;
@@ -1553,16 +1552,11 @@ export class SonicGraphView extends ItemView {
     private updateViewMode(): void {
         if (this.isTimelineView) {
             // Timeline View - show animation controls, hide all nodes initially
-            this.viewModeBtn.empty();
-            const timelineIcon = createLucideIcon('play-circle', 16);
-            this.viewModeBtn.appendChild(timelineIcon);
-            this.viewModeBtn.appendText('Timeline View');
-            this.viewModeBtn.addClass('sonigraph-view-mode-btn--visible');
-            
+
             // Show timeline controls
             this.timelineContainer.classList.remove('timeline-hidden');
             this.timelineContainer.classList.add('timeline-visible');
-            
+
             // Initialize temporal animator if needed
             if (!this.temporalAnimator) {
                 this.initializeTemporalAnimator().catch(error => {
@@ -1578,11 +1572,10 @@ export class SonicGraphView extends ItemView {
                     this.graphRenderer.updateVisibleNodes(new Set());
                 }
             }
-            
+
         } else {
-            // Static View - hide view mode button since Play button indicates timeline mode
-            this.viewModeBtn.removeClass('sonigraph-view-mode-btn--visible');
-            
+            // Static View
+
             // Hide timeline controls
             this.timelineContainer.classList.add('timeline-hidden');
             this.timelineContainer.classList.remove('timeline-visible');
