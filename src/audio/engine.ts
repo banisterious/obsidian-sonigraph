@@ -77,6 +77,10 @@ export class AudioEngine {
 	// Chord Fusion Engine
 	private chordFusionEngine: ChordFusionEngine | null = null;
 
+	// Real-time chord fusion buffer
+	private chordBuffer: Array<{ mapping: any; timestamp: number }> = [];
+	private chordFlushTimer: number | null = null;
+
 	// Active note tracking for polyphony management (per-instrument)
 	private activeNotesPerInstrument: Map<string, number> = new Map();
 	private readonly MAX_NOTES_PER_INSTRUMENT = 3; // Match Tone.js maxPolyphony limit
@@ -3449,6 +3453,12 @@ export class AudioEngine {
 			await this.initialize();
 		}
 
+		// Check if chord fusion is enabled for real-time playback
+		if (this.settings.audioEnhancement?.chordFusion?.enabled) {
+			this.bufferNoteForChordFusion(mapping, nodeId, nodeTitle, elapsedTime);
+			return; // Note will be played when buffer is flushed
+		}
+
 		try {
 			const { pitch, duration, velocity, instrument } = mapping;
 
@@ -3538,6 +3548,337 @@ export class AudioEngine {
 		} catch (error) {
 			logger.error('Failed to play immediate note', (error as Error).message);
 			throw error;
+		}
+	}
+
+	/**
+	 * Buffer a note for chord fusion processing in real-time playback
+	 * Notes are buffered and grouped based on timing window
+	 */
+	private bufferNoteForChordFusion(
+		mapping: { pitch: number; duration: number; velocity: number; instrument: string },
+		nodeId?: string,
+		nodeTitle?: string,
+		elapsedTime?: number
+	): void {
+		const now = Date.now();
+
+		// Add note to buffer with timestamp
+		this.chordBuffer.push({
+			mapping: { ...mapping, nodeId, nodeTitle },
+			timestamp: now
+		});
+
+		logger.debug('chord-fusion', 'Note buffered for chord detection', {
+			pitch: mapping.pitch,
+			instrument: mapping.instrument,
+			bufferSize: this.chordBuffer.length,
+			timestamp: now
+		});
+
+		// Clear existing timer if present
+		if (this.chordFlushTimer !== null) {
+			clearTimeout(this.chordFlushTimer);
+		}
+
+		// Set new timer based on timing window setting
+		const timingWindow = this.settings.audioEnhancement?.chordFusion?.timingWindow || 200;
+		this.chordFlushTimer = window.setTimeout(() => {
+			this.flushChordBuffer(elapsedTime);
+		}, timingWindow);
+	}
+
+	/**
+	 * Flush the chord buffer and trigger notes/chords
+	 */
+	private flushChordBuffer(elapsedTime?: number): void {
+		if (this.chordBuffer.length === 0) {
+			return;
+		}
+
+		const settings = this.settings.audioEnhancement?.chordFusion;
+		if (!settings) {
+			logger.warn('chord-fusion', 'Chord fusion settings not found during buffer flush');
+			this.chordBuffer = [];
+			return;
+		}
+
+		logger.info('chord-fusion', 'Flushing chord buffer', {
+			bufferedNotes: this.chordBuffer.length,
+			timingWindow: settings.timingWindow
+		});
+
+		// Group notes by layer
+		const notesByLayer: Map<string, typeof this.chordBuffer> = new Map();
+		this.chordBuffer.forEach(item => {
+			// Determine layer from instrument name
+			const instrument = item.mapping.instrument.toLowerCase();
+			let layer = 'harmonic'; // default
+
+			if (instrument.includes('melodic') || instrument.includes('lead') || instrument.includes('melody')) {
+				layer = 'melodic';
+			} else if (instrument.includes('bass') || instrument.includes('rhythm')) {
+				layer = 'rhythmic';
+			} else if (instrument.includes('pad') || instrument.includes('ambient')) {
+				layer = 'ambient';
+			}
+
+			if (!notesByLayer.has(layer)) {
+				notesByLayer.set(layer, []);
+			}
+			notesByLayer.get(layer)!.push(item);
+		});
+
+		// Process each layer
+		notesByLayer.forEach((notes, layer) => {
+			// Check if this layer has chord fusion enabled
+			const layerEnabled = settings.layerSettings?.[layer as keyof typeof settings.layerSettings];
+
+			if (!layerEnabled) {
+				// Play notes individually if chord fusion disabled for this layer
+				logger.debug('chord-fusion', `Layer ${layer} has chord fusion disabled, playing notes individually`);
+				notes.forEach(item => {
+					this.playBufferedNote(item.mapping, elapsedTime);
+				});
+				return;
+			}
+
+			// Check minimum notes threshold
+			const minimumNotes = settings.minimumNotes || 2;
+			if (notes.length < minimumNotes) {
+				logger.debug('chord-fusion', `Not enough notes for chord (${notes.length} < ${minimumNotes})`);
+				notes.forEach(item => {
+					this.playBufferedNote(item.mapping, elapsedTime);
+				});
+				return;
+			}
+
+			// Create chord from buffered notes
+			logger.info('chord-fusion', 'Creating chord from buffered notes', {
+				layer,
+				noteCount: notes.length,
+				mode: settings.mode
+			});
+
+			if (settings.mode === 'smart') {
+				// Smart mode: analyze and harmonize
+				this.triggerSmartChord(notes, settings, elapsedTime);
+			} else {
+				// Direct mode: play all notes as-is
+				this.triggerDirectChord(notes, elapsedTime);
+			}
+		});
+
+		// Clear buffer and timer
+		this.chordBuffer = [];
+		this.chordFlushTimer = null;
+	}
+
+	/**
+	 * Play a single buffered note
+	 */
+	private playBufferedNote(mapping: any, elapsedTime?: number): void {
+		try {
+			const { pitch, duration, velocity, instrument, nodeId, nodeTitle } = mapping;
+
+			const synth = this.instruments.get(instrument);
+			if (!synth) {
+				logger.warn('chord-fusion', `Instrument not found for buffered note: ${instrument}`);
+				return;
+			}
+
+			// Apply same processing as immediate playback
+			const quantizedFrequency = this.quantizeFrequency(pitch);
+			const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
+
+			// Trigger the note
+			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
+
+			// Emit visualization event
+			const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
+			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
+
+			logger.debug('chord-fusion', 'Buffered note played', {
+				instrument,
+				pitch: detunedFrequency.toFixed(2)
+			});
+		} catch (error) {
+			logger.error('chord-fusion', 'Failed to play buffered note', error);
+		}
+	}
+
+	/**
+	 * Trigger a smart chord with harmonization
+	 */
+	private triggerSmartChord(notes: typeof this.chordBuffer, settings: any, elapsedTime?: number): void {
+		// Extract pitches and find root (lowest pitch)
+		const pitches = notes.map(n => n.mapping.pitch).sort((a, b) => a - b);
+		const rootPitch = pitches[0];
+
+		// Convert to MIDI for chord analysis
+		const midiPitches = pitches.map(p => new Frequency(p, 'hz').toMidi());
+		const rootMidi = Math.round(midiPitches[0]);
+
+		// Calculate intervals from root
+		const intervals = midiPitches.map(p => Math.round(p) - rootMidi);
+
+		// Detect chord type
+		const chordType = this.detectChordTypeFromIntervals(intervals);
+
+		logger.info('chord-fusion', 'Smart chord detected', {
+			rootPitch: rootPitch.toFixed(2),
+			chordType,
+			intervals,
+			noteCount: notes.length
+		});
+
+		// Apply voicing strategy
+		const voicedNotes = this.applyVoicingStrategy(notes, settings.voicingStrategy || 'compact');
+
+		// Trigger all notes in the chord
+		voicedNotes.forEach((item, index) => {
+			const { pitch, duration, velocity, instrument, nodeId, nodeTitle } = item.mapping;
+			const synth = this.instruments.get(instrument);
+
+			if (synth) {
+				// Micro-delay to prevent phase cancellation (0-2ms per note)
+				const microDelay = index * 0.002;
+				const triggerTime = getContext().currentTime + microDelay;
+
+				const quantizedFreq = this.quantizeFrequency(pitch);
+				const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
+
+				synth.triggerAttackRelease(detunedFreq, duration, triggerTime, velocity);
+
+				// Emit visualization event
+				const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
+				this.emitNoteEvent(instrument, detunedFreq, duration, velocity, timestamp, nodeId, nodeTitle);
+			}
+		});
+	}
+
+	/**
+	 * Trigger a direct chord (play notes exactly as buffered)
+	 */
+	private triggerDirectChord(notes: typeof this.chordBuffer, elapsedTime?: number): void {
+		logger.info('chord-fusion', 'Triggering direct chord', {
+			noteCount: notes.length
+		});
+
+		notes.forEach((item, index) => {
+			const { pitch, duration, velocity, instrument, nodeId, nodeTitle } = item.mapping;
+			const synth = this.instruments.get(instrument);
+
+			if (synth) {
+				// Micro-delay to prevent phase cancellation
+				const microDelay = index * 0.002;
+				const triggerTime = getContext().currentTime + microDelay;
+
+				const quantizedFreq = this.quantizeFrequency(pitch);
+				const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
+
+				synth.triggerAttackRelease(detunedFreq, duration, triggerTime, velocity);
+
+				// Emit visualization event
+				const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
+				this.emitNoteEvent(instrument, detunedFreq, duration, velocity, timestamp, nodeId, nodeTitle);
+			}
+		});
+	}
+
+	/**
+	 * Detect chord type from intervals
+	 */
+	private detectChordTypeFromIntervals(intervals: number[]): string {
+		// Chord patterns (intervals from root)
+		const patterns = [
+			{ name: 'major', intervals: [0, 4, 7] },
+			{ name: 'minor', intervals: [0, 3, 7] },
+			{ name: 'diminished', intervals: [0, 3, 6] },
+			{ name: 'augmented', intervals: [0, 4, 8] },
+			{ name: 'major7', intervals: [0, 4, 7, 11] },
+			{ name: 'minor7', intervals: [0, 3, 7, 10] },
+			{ name: 'dominant7', intervals: [0, 4, 7, 10] },
+			{ name: 'sus2', intervals: [0, 2, 7] },
+			{ name: 'sus4', intervals: [0, 5, 7] }
+		];
+
+		// Find matching pattern
+		for (const pattern of patterns) {
+			if (this.intervalsMatch(intervals, pattern.intervals)) {
+				return pattern.name;
+			}
+		}
+
+		return 'unknown';
+	}
+
+	/**
+	 * Check if intervals match a chord pattern
+	 */
+	private intervalsMatch(intervals: number[], pattern: number[]): boolean {
+		if (intervals.length < pattern.length) return false;
+
+		// Check if all pattern intervals are present
+		return pattern.every(p => intervals.includes(p));
+	}
+
+	/**
+	 * Apply voicing strategy to chord notes
+	 */
+	private applyVoicingStrategy(notes: typeof this.chordBuffer, strategy: string): typeof this.chordBuffer {
+		// Sort by pitch
+		const sorted = [...notes].sort((a, b) => a.mapping.pitch - b.mapping.pitch);
+
+		switch (strategy) {
+			case 'compact':
+				// Keep notes close together (already sorted)
+				return sorted;
+
+			case 'spread':
+				// Spread notes across octaves
+				return sorted.map((note, i) => ({
+					...note,
+					mapping: {
+						...note.mapping,
+						pitch: note.mapping.pitch * Math.pow(2, Math.floor(i / 3))
+					}
+				}));
+
+			case 'drop2':
+				// Drop the second-highest note by an octave (jazz voicing)
+				if (sorted.length >= 3) {
+					const result = [...sorted];
+					const secondHighest = result[result.length - 2];
+					result[result.length - 2] = {
+						...secondHighest,
+						mapping: {
+							...secondHighest.mapping,
+							pitch: secondHighest.mapping.pitch / 2
+						}
+					};
+					return result;
+				}
+				return sorted;
+
+			case 'drop3':
+				// Drop the third-highest note by an octave
+				if (sorted.length >= 4) {
+					const result = [...sorted];
+					const thirdHighest = result[result.length - 3];
+					result[result.length - 3] = {
+						...thirdHighest,
+						mapping: {
+							...thirdHighest.mapping,
+							pitch: thirdHighest.mapping.pitch / 2
+						}
+					};
+					return result;
+				}
+				return sorted;
+
+			default:
+				return sorted;
 		}
 	}
 
