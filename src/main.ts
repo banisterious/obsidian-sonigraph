@@ -134,8 +134,8 @@ export default class SonigraphPlugin extends Plugin {
 	private initializeComponents(): void {
 		logger.debug('initialization', 'Initializing plugin components');
 
-		// Initialize audio engine
-		this.audioEngine = new AudioEngine(this.settings);
+		// Initialize audio engine with app reference for temporal chord fusion
+		this.audioEngine = new AudioEngine(this.settings, this.app);
 
 		// Initialize graph parser
 		this.graphParser = new GraphParser(this.app.vault, this.app.metadataCache);

@@ -472,10 +472,13 @@ export class MaterialControlPanelModal extends Modal {
 	private createMusicalTab(): void {
 		// Scale & Key Settings Card
 		this.createScaleKeyCard();
-		
+
+		// Chord Fusion Card
+		this.createChordFusionCard();
+
 		// Tempo & Timing Card
 		this.createTempoTimingCard();
-		
+
 		// Master Tuning Card
 		this.createMasterTuningCard();
 	}
@@ -1252,6 +1255,354 @@ export class MaterialControlPanelModal extends Modal {
 			);
 
 		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private createChordFusionCard(): void {
+		const card = new MaterialCard({
+			title: 'Chord fusion',
+			iconName: 'music-4',
+			subtitle: 'Combine simultaneous notes into chords',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Master enable toggle
+		new Setting(content)
+			.setName('Enable chord fusion')
+			.setDesc('Automatically combine notes that trigger simultaneously into chords')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement) {
+						this.plugin.settings.audioEnhancement = {} as any;
+					}
+					if (!this.plugin.settings.audioEnhancement.chordFusion) {
+						this.plugin.settings.audioEnhancement.chordFusion = {
+							enabled: value,
+							mode: 'smart',
+							timingWindow: 200,
+							minimumNotes: 2,
+							layerSettings: {
+								melodic: false,
+								harmonic: true,
+								rhythmic: true,
+								ambient: true
+							},
+							connectionChords: false,
+							contextualHarmony: false,
+							chordComplexity: 3,
+							progressionSpeed: 0.5,
+							dissonanceLevel: 0.3,
+							voicingStrategy: 'compact'
+						};
+					} else {
+						this.plugin.settings.audioEnhancement.chordFusion.enabled = value;
+					}
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+
+					// Refresh to show/hide detailed settings
+					content.empty();
+					this.createChordFusionSettings(content);
+				})
+			);
+
+		// Show detailed settings only if enabled
+		if (this.plugin.settings.audioEnhancement?.chordFusion?.enabled) {
+			this.createChordFusionSettings(content);
+		}
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private createChordFusionSettings(container: HTMLElement): void {
+		// Re-create the enable toggle
+		new Setting(container)
+			.setName('Enable chord fusion')
+			.setDesc('Automatically combine notes that trigger simultaneously into chords')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.enabled || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.enabled = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+
+					// Refresh to show/hide detailed settings
+					container.empty();
+					this.createChordFusionSettings(container);
+				})
+			);
+
+		if (!this.plugin.settings.audioEnhancement?.chordFusion?.enabled) {
+			return; // Don't show settings if disabled
+		}
+
+		const settingsGrid = createGrid('2-col');
+		container.appendChild(settingsGrid);
+
+		// Chord mode
+		const modeGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
+		modeGroup.createEl('label', { text: 'Chord mode', cls: 'osp-control-label' });
+		const modeSelect = modeGroup.createEl('select', { cls: 'osp-select' });
+
+		const modes = [
+			{ value: 'smart', label: 'Smart (fit to chord patterns)' },
+			{ value: 'direct', label: 'Direct (play as-is)' }
+		];
+
+		modes.forEach(mode => {
+			const option = modeSelect.createEl('option', { value: mode.value, text: mode.label });
+			if (this.plugin.settings.audioEnhancement?.chordFusion?.mode === mode.value) {
+				option.selected = true;
+			}
+		});
+
+		modeSelect.addEventListener('change', async () => {
+			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+			this.plugin.settings.audioEnhancement.chordFusion.mode = modeSelect.value as 'smart' | 'direct';
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			}
+		});
+
+		// Minimum notes
+		const minNotesGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
+		minNotesGroup.createEl('label', { text: 'Minimum notes', cls: 'osp-control-label' });
+		const minNotesSelect = minNotesGroup.createEl('select', { cls: 'osp-select' });
+
+		[2, 3, 4].forEach(num => {
+			const option = minNotesSelect.createEl('option', { value: num.toString(), text: num.toString() });
+			if (this.plugin.settings.audioEnhancement?.chordFusion?.minimumNotes === num) {
+				option.selected = true;
+			}
+		});
+
+		minNotesSelect.addEventListener('change', async () => {
+			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+			this.plugin.settings.audioEnhancement.chordFusion.minimumNotes = parseInt(minNotesSelect.value);
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			}
+		});
+
+		// Timing window
+		new Setting(container)
+			.setName('Timing window')
+			.setDesc('Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. WARNING: Values over 200ms will group sequential notes into large chords.')
+			.addSlider(slider => slider
+				.setLimits(20, 500, 10)
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.timingWindow || 50)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.timingWindow = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Temporal grouping heading
+		container.createEl('h4', { text: 'Temporal grouping', cls: 'osp-section-heading' });
+
+		// Temporal grouping mode
+		new Setting(container)
+			.setName('Group notes by')
+			.setDesc('Group notes from the same time period into chords. "Real-time" uses millisecond timing, while day/week/month groups notes by their temporal date.')
+			.addDropdown(dropdown => dropdown
+				.addOption('realtime', 'Real-time (milliseconds)')
+				.addOption('day', 'Same day')
+				.addOption('week', 'Same week')
+				.addOption('month', 'Same month')
+				.addOption('year', 'Same year')
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.temporalGrouping || 'realtime')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.temporalGrouping = value as 'realtime' | 'day' | 'week' | 'month' | 'year';
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Max chord notes
+		new Setting(container)
+			.setName('Maximum chord notes')
+			.setDesc('Maximum number of notes to include in a temporal chord (prevents overly dense chords)')
+			.addSlider(slider => slider
+				.setLimits(2, 12, 1)
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.maxChordNotes || 6)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.maxChordNotes = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Layer-specific settings heading
+		container.createEl('h4', { text: 'Layer-specific chord fusion', cls: 'osp-section-heading' });
+
+		// Melodic layer
+		new Setting(container)
+			.setName('Melodic layer')
+			.setDesc('Enable chord fusion for melodic notes')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings?.melodic || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings) return;
+					this.plugin.settings.audioEnhancement.chordFusion.layerSettings.melodic = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Harmonic layer
+		new Setting(container)
+			.setName('Harmonic layer')
+			.setDesc('Enable chord fusion for harmonic notes')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings?.harmonic || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings) return;
+					this.plugin.settings.audioEnhancement.chordFusion.layerSettings.harmonic = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Rhythmic layer
+		new Setting(container)
+			.setName('Rhythmic layer')
+			.setDesc('Enable chord fusion for rhythmic notes')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings?.rhythmic || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings) return;
+					this.plugin.settings.audioEnhancement.chordFusion.layerSettings.rhythmic = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Ambient layer
+		new Setting(container)
+			.setName('Ambient layer')
+			.setDesc('Enable chord fusion for ambient notes')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings?.ambient || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion?.layerSettings) return;
+					this.plugin.settings.audioEnhancement.chordFusion.layerSettings.ambient = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Advanced settings heading
+		container.createEl('h4', { text: 'Advanced chord settings', cls: 'osp-section-heading' });
+
+		// Chord complexity
+		new Setting(container)
+			.setName('Chord complexity')
+			.setDesc('Maximum number of voices per chord (2-6)')
+			.addSlider(slider => slider
+				.setLimits(2, 6, 1)
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.chordComplexity || 3)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.chordComplexity = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Voicing strategy
+		const voicingGrid = createGrid('1-col');
+		container.appendChild(voicingGrid);
+
+		const voicingGroup = voicingGrid.createDiv({ cls: 'osp-control-group' });
+		voicingGroup.createEl('label', { text: 'Voicing strategy', cls: 'osp-control-label' });
+		const voicingSelect = voicingGroup.createEl('select', { cls: 'osp-select' });
+
+		const voicings = [
+			{ value: 'compact', label: 'Compact (notes close together)' },
+			{ value: 'spread', label: 'Spread (wide spacing)' },
+			{ value: 'drop2', label: 'Drop-2 (jazz voicing)' },
+			{ value: 'drop3', label: 'Drop-3 (jazz voicing)' }
+		];
+
+		voicings.forEach(voicing => {
+			const option = voicingSelect.createEl('option', { value: voicing.value, text: voicing.label });
+			if (this.plugin.settings.audioEnhancement?.chordFusion?.voicingStrategy === voicing.value) {
+				option.selected = true;
+			}
+		});
+
+		voicingSelect.addEventListener('change', async () => {
+			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+			this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value as any;
+			await this.plugin.saveSettings();
+			if (this.plugin.audioEngine) {
+				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			}
+		});
+
+		// Connection-based chords
+		new Setting(container)
+			.setName('Connection chords')
+			.setDesc('Enable chord progressions for connection events')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.connectionChords || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.connectionChords = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
+
+		// Contextual harmony
+		new Setting(container)
+			.setName('Contextual harmony')
+			.setDesc('Harmonize based on connected note content')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.contextualHarmony || false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+					this.plugin.settings.audioEnhancement.chordFusion.contextualHarmony = value;
+					await this.plugin.saveSettings();
+					if (this.plugin.audioEngine) {
+						await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+					}
+				})
+			);
 	}
 
 	private createTempoTimingCard(): void {

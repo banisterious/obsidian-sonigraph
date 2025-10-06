@@ -29,6 +29,16 @@ export interface MusicalMapping {
 	timing: number;
 	instrument?: string;
 	hasBeenTriggered?: boolean;
+	metadata?: {
+		isChord?: boolean;
+		chordNotes?: Array<{
+			pitch: number;
+			velocity: number;
+			instrument?: string;
+		}>;
+		chordSize?: number;
+		[key: string]: any; // Allow additional metadata
+	};
 }
 
 export interface GraphStats {

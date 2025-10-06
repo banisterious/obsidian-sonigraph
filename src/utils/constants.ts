@@ -723,6 +723,32 @@ export interface SonigraphSettings {
 		dynamicScaleModulation: boolean; // Change scale based on vault state
 	};
 
+	// Chord Fusion: Combine simultaneous notes into chords
+	chordFusion?: {
+		enabled: boolean; // Master toggle for chord fusion
+		mode: 'smart' | 'direct'; // Smart=fit to chord patterns, Direct=play as-is
+		timingWindow: number; // Milliseconds - notes within this window are grouped
+		minimumNotes: number; // 2-4, minimum simultaneous notes to form a chord
+
+		// Per-layer chord fusion controls
+		layerSettings: {
+			melodic: boolean; // Enable chord fusion for melodic layer
+			harmonic: boolean; // Enable chord fusion for harmonic layer
+			rhythmic: boolean; // Enable chord fusion for rhythmic layer
+			ambient: boolean; // Enable chord fusion for ambient layer
+		};
+
+		// Connection-based chord settings (moved from connectionTypeMapping)
+		connectionChords: boolean; // Enable chords for connection events
+		contextualHarmony: boolean; // Harmonize based on connected content
+
+		// Advanced chord settings
+		chordComplexity: number; // 2-6, maximum voices per chord
+		progressionSpeed: number; // 0-1, how fast chord progressions evolve
+		dissonanceLevel: number; // 0-1, harmonic tension/complexity
+		voicingStrategy: 'compact' | 'spread' | 'drop2' | 'drop3'; // Chord voicing approach
+	};
+
 	// Phase 6.2: Dynamic Orchestration
 	dynamicOrchestration?: {
 		enabled: boolean;
@@ -2668,6 +2694,36 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			quantizationStrength: 0.8, // Strong quantization to scale
 			preferredChordProgression: 'I-IV-V-I', // Classic progression
 			dynamicScaleModulation: false // Static scale by default
+		},
+
+		// Chord Fusion settings
+		chordFusion: {
+			enabled: false, // Disabled by default
+			mode: 'smart', // Use smart chord fitting by default
+			timingWindow: 50, // 50ms window for truly simultaneous notes (increase if notes aren't grouping)
+			minimumNotes: 2, // At least 2 notes to form a chord
+
+			// Temporal grouping settings for timeline-based chord fusion
+			temporalGrouping: 'realtime', // 'realtime' | 'day' | 'week' | 'month' | 'year'
+			maxChordNotes: 6, // Maximum notes to include in a temporal chord
+
+			// Per-layer defaults (harmonic, rhythmic, ambient enabled)
+			layerSettings: {
+				melodic: false, // Keep melodies monophonic by default
+				harmonic: true, // Harmonic layer should use chords
+				rhythmic: true, // Rhythmic chords for impact
+				ambient: true // Ambient chord washes
+			},
+
+			// Connection-based chords (disabled by default)
+			connectionChords: false,
+			contextualHarmony: false,
+
+			// Advanced settings
+			chordComplexity: 3, // Triads by default (3 voices)
+			progressionSpeed: 0.5, // Moderate progression speed
+			dissonanceLevel: 0.3, // Low-moderate dissonance
+			voicingStrategy: 'compact' // Compact voicings by default
 		}
 	},
 
