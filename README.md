@@ -12,7 +12,7 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 <em>Control Center: 30-Instrument Orchestra Management</em>
 </td>
 <td align="center" width="50%">
-<img src="docs/images/sonigraph-sonic-graph/Obsidian-Sonigraph-Sonic-Graph-v0.16.0.gif" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
+<img src="docs/images/Obsidian-Sonigraph-Sonic-Graph-v0.16.0.gif" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
 <br/>
 <em>Exploring the Sonic Graph interface</em>
 </td>
@@ -306,5 +306,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 **Note**: This plugin is not affiliated with or endorsed by Obsidian.md. 
+
 
 
