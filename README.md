@@ -2,19 +2,19 @@
 
 **Transform your knowledge graph into immersive orchestral soundscapes.**
 
-Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge graph to rich musical parameters, creating dynamic orchestral compositions with 34 instruments, continuous audio layers, advanced effects processing, and real-time audio synthesis. Features Freesound.org integration for high-quality environmental samples and intelligent content-aware mapping.
+Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge graph to rich musical parameters, creating dynamic orchestral compositions with 30 instruments, continuous audio layers, advanced effects processing, and real-time audio synthesis. Features Freesound.org integration for high-quality environmental samples and intelligent content-aware mapping.
 
 <table align="center">
 <tr>
 <td align="center" width="50%">
-<img src="docs/images/sonigraph-sonic-graph/sonigraph-sonic-graph.png" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
+<img src="docs/images/Obsidian-Sonigraph-Control-Center-v0.16.0.gif" alt="Animated demonstration of the Sonigraph Control Center" width="100%" style="max-width: 600px;"/>
 <br/>
-<em>Sonic Graph: Smart Clustering & Visual Enhancement</em>
+<em>Control Center: 30-Instrument Orchestra Management</em>
 </td>
 <td align="center" width="50%">
-<img src="docs/images/sonigraph-control-center.gif" alt="Animated demonstration of the Sonigraph Control Center" width="100%" style="max-width: 600px;"/>
+<img src="docs/images/sonigraph-sonic-graph/Obsidian-Sonigraph-Sonic-Graph-v0.16.0.gif" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
 <br/>
-<em>Control Center: 34-Instrument Orchestra Management</em>
+<em>Exploring the Sonic Graph interface</em>
 </td>
 </tr>
 </table>
@@ -306,4 +306,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 **Note**: This plugin is not affiliated with or endorsed by Obsidian.md. 
+
 
