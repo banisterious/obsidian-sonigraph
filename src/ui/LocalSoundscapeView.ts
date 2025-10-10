@@ -11,6 +11,7 @@
 import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
 import { getLogger } from '../logging';
 import { LocalSoundscapeExtractor, LocalSoundscapeData } from '../graph/LocalSoundscapeExtractor';
+import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
 import type SonigraphPlugin from '../main';
 
 const logger = getLogger('LocalSoundscapeView');
@@ -32,6 +33,7 @@ export class LocalSoundscapeView extends ItemView {
 	private currentDepth: number = 2; // Default depth
 	private graphData: LocalSoundscapeData | null = null;
 	private extractor: LocalSoundscapeExtractor;
+	private renderer: LocalSoundscapeRenderer | null = null;
 
 	// UI containers
 	private containerEl: HTMLElement;
@@ -84,7 +86,12 @@ export class LocalSoundscapeView extends ItemView {
 	async onClose(): Promise<void> {
 		logger.info('view-close', 'Closing Local Soundscape view');
 
-		// Cleanup will go here in later phases
+		// Cleanup renderer
+		if (this.renderer) {
+			this.renderer.dispose();
+			this.renderer = null;
+		}
+
 		this.containerEl.empty();
 	}
 
@@ -287,6 +294,12 @@ export class LocalSoundscapeView extends ItemView {
 		logger.info('set-depth', 'Setting depth', { oldDepth: this.currentDepth, newDepth: depth });
 		this.currentDepth = depth;
 
+		// Dispose renderer so it gets recreated with new data
+		if (this.renderer) {
+			this.renderer.dispose();
+			this.renderer = null;
+		}
+
 		// Re-extract and render graph with new depth
 		if (this.centerFile) {
 			this.extractAndRenderGraph();
@@ -338,43 +351,25 @@ export class LocalSoundscapeView extends ItemView {
 			// Clear loading indicator
 			this.graphContainer.empty();
 
-			// Display extraction stats
+			// Display extraction stats in sidebar
 			this.displayGraphStats();
 
-			// TODO: Implement radial layout algorithm
-			// TODO: Create LocalSoundscapeRenderer and render graph
-
-			// Temporary: Show extracted data
-			const statsDiv = this.graphContainer.createDiv({ cls: 'graph-stats-temp' });
-			statsDiv.createEl('h4', { text: 'Graph Data Extracted' });
-
-			const statsList = statsDiv.createEl('ul');
-			statsList.createEl('li', { text: `Total Nodes: ${this.graphData.stats.totalNodes}` });
-			statsList.createEl('li', { text: `Total Links: ${this.graphData.stats.totalLinks}` });
-			statsList.createEl('li', { text: `Incoming: ${this.graphData.stats.incomingCount}` });
-			statsList.createEl('li', { text: `Outgoing: ${this.graphData.stats.outgoingCount}` });
-			statsList.createEl('li', { text: `Bidirectional: ${this.graphData.stats.bidirectionalCount}` });
-
-			// Show nodes by depth
-			for (let d = 0; d <= this.currentDepth; d++) {
-				const nodesAtDepth = this.extractor.getNodesAtDepth(this.graphData, d);
-				if (nodesAtDepth.length > 0) {
-					const depthSection = statsDiv.createDiv({ cls: 'depth-section' });
-					depthSection.createEl('h5', { text: `Depth ${d} (${nodesAtDepth.length} nodes)` });
-
-					const nodeList = depthSection.createEl('ul', { cls: 'node-list' });
-					nodesAtDepth.slice(0, 10).forEach(node => {
-						const nodeItem = nodeList.createEl('li');
-						nodeItem.textContent = `${node.basename} [${node.direction}]`;
-					});
-
-					if (nodesAtDepth.length > 10) {
-						nodeList.createEl('li', { text: `... and ${nodesAtDepth.length - 10} more` });
-					}
-				}
+			// Initialize renderer if not already created
+			if (!this.renderer) {
+				const rendererConfig: Partial<RendererConfig> = {
+					width: this.graphContainer.clientWidth || 800,
+					height: this.graphContainer.clientHeight || 600,
+					nodeRadius: 8,
+					showLabels: true,
+					enableZoom: true
+				};
+				this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
 			}
 
-			logger.info('extract-complete', 'Graph extraction and display complete');
+			// Render the graph
+			this.renderer.render(this.graphData);
+
+			logger.info('extract-complete', 'Graph extraction and rendering complete');
 
 		} catch (error) {
 			logger.error('extract-error', 'Failed to extract graph', error as Error);
