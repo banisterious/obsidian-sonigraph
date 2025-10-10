@@ -1,0 +1,20 @@
+# Commit Message Guidelines (see CLAUDE.md)
+#
+# Rules:
+# - Keep message concise (a few lines maximum)
+# - NO AI references (Claude, Claude Code, AI, LLM, Co-Authored-By, etc.)
+# - Write as human author describing the change
+# - Focus on WHAT changed and WHY
+#
+# Good example:
+#   Fix memory leak in audio engine
+#
+#   VoiceManager wasn't releasing voices after playback.
+#   Added proper cleanup in dispose method.
+#
+# Bad example:
+#   Update audio engine features
+#
+#   Generated with Claude Code
+#   Co-Authored-By: Claude <noreply@anthropic.com>
+#
