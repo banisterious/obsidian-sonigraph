@@ -1,10 +1,10 @@
 # Note Journey - Implementation Plan
 
-**Document Version:** 1.1
-**Date:** October 4, 2025
-**Updated:** October 10, 2025
-**Status:** Planning / Design Phase
-**Target Version:** v0.18.0 or v0.19.0 (After Local Soundscape)
+- **Document Version:** 1.1
+- **Date:** October 4, 2025
+- **Updated:** October 10, 2025
+- **Status:** Planning / Design Phase
+- **Target Version:** v0.18.0 or v0.19.0 (After Local Soundscape)
 
 ---
 
@@ -485,3 +485,4 @@ noteJourney: {
 4. Create proof-of-concept for basic Note Journey
 5. User testing with prototype
 6. Full implementation in dedicated branch
+
