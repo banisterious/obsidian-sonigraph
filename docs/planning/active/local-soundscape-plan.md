@@ -204,9 +204,12 @@ this.registerEvent(
 - Staleness indicator text line ("Up-to-date" or "Graph data is stale")
 
 **Graph Canvas:**
-- Interactive nodes (hover for details, click to open note or re-center)
-- Zoom/pan controls
-- Visual indicators (depth rings, link arrows, node sizes)
+- Interactive nodes with multiple interaction modes:
+  - Hover: Show basic node info
+  - Left-click: Display tooltip with detailed note information
+  - Right-click: Open context menu with actions (Open note, Re-center soundscape, etc.)
+- Zoom/pan controls (mouse wheel, drag)
+- Visual indicators (depth rings, link arrows, node sizes, playing node pulse effects)
 
 **Bottom Audio Panel:**
 - Standard playback controls
@@ -289,7 +292,11 @@ Local Soundscape will establish the musical mapping engine that Note Journey wil
 - [ ] Filter support (tags, folders, file types)
 - [ ] Groups/clustering
 - [ ] Refresh button
-- [ ] Node interaction (hover, click to re-center)
+- [ ] Node interaction:
+  - [ ] Hover tooltips (basic info)
+  - [ ] Left-click detailed tooltips (note metadata, connections, etc.)
+  - [ ] Right-click context menu (Open note, Re-center soundscape)
+- [ ] Staleness indicator
 
 **Deliverable:** Fully interactive graph with synced audio
 
@@ -539,8 +546,8 @@ localSoundscape: {
    - **ANSWERED:** Default depth 2
 3. ~~Auto-refresh on vault changes: enabled or disabled by default?~~
    - **ANSWERED:** Enabled by default
-4. Should clicking a node in the graph re-center, open the note, or both (with modifier key)?
-   - **PENDING:** TBD during implementation
+4. ~~Should clicking a node in the graph re-center, open the note, or both (with modifier key)?~~
+   - **ANSWERED:** Left-click shows tooltip with note info. Right-click opens context menu with option to open note.
 
 ### Technical
 1. ~~Canvas vs SVG vs WebGL for rendering?~~
