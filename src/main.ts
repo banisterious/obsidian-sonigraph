@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Plugin, WorkspaceLeaf, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS, SonigraphSettings } from './utils/constants';
 import { SonigraphSettingTab } from './ui/settings';
 import { MaterialControlPanelModal } from './ui/control-panel';
@@ -79,6 +79,23 @@ export default class SonigraphPlugin extends Plugin {
 				this.openControlPanel();
 			}
 		});
+
+		// Add context menu item for Local Soundscape
+		this.registerEvent(
+			this.app.workspace.on('file-menu', (menu, file) => {
+				// Only add menu item for actual files (not folders)
+				if (file instanceof TFile) {
+					menu.addItem((item) => {
+						item
+							.setTitle('Open in Local Soundscape')
+							.setIcon('radio-tower')
+							.onClick(async () => {
+								await this.activateLocalSoundscapeViewForFile(file);
+							});
+					});
+				}
+			})
+		);
 
 		// Add setting tab
 		this.addSettingTab(new SonigraphSettingTab(this.app, this));
@@ -286,6 +303,52 @@ export default class SonigraphPlugin extends Plugin {
 		if (leaf) {
 			workspace.revealLeaf(leaf);
 			logger.info('ui', 'Local Soundscape view activated and revealed');
+		}
+	}
+
+	/**
+	 * Activate Local Soundscape view for a specific file (used by context menu)
+	 */
+	async activateLocalSoundscapeViewForFile(file: TFile): Promise<void> {
+		logger.info('ui', 'Activating Local Soundscape view for file', { file: file.path });
+
+		const { workspace } = this.app;
+
+		// Check if view already exists
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_LOCAL_SOUNDSCAPE);
+
+		if (leaves.length > 0) {
+			// View already exists, use it and update center file
+			leaf = leaves[0];
+			logger.debug('ui', 'Local Soundscape view already exists, updating center file');
+
+			const view = leaf.view;
+			if (view instanceof LocalSoundscapeView) {
+				await view.setCenterFile(file);
+			}
+		} else {
+			// Create new leaf in right sidebar
+			leaf = workspace.getRightLeaf(false);
+			if (leaf) {
+				await leaf.setViewState({
+					type: VIEW_TYPE_LOCAL_SOUNDSCAPE,
+					active: true
+				});
+				logger.debug('ui', 'Created new Local Soundscape view in right sidebar');
+
+				// Set the center file
+				const view = leaf.view;
+				if (view instanceof LocalSoundscapeView) {
+					await view.setCenterFile(file);
+				}
+			}
+		}
+
+		// Reveal the leaf
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+			logger.info('ui', 'Local Soundscape view activated and revealed for file', { file: file.path });
 		}
 	}
 

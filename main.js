@@ -87927,6 +87927,17 @@ var SonigraphPlugin = class extends import_obsidian28.Plugin {
         this.openControlPanel();
       }
     });
+    this.registerEvent(
+      this.app.workspace.on("file-menu", (menu, file) => {
+        if (file instanceof import_obsidian28.TFile) {
+          menu.addItem((item) => {
+            item.setTitle("Open in Local Soundscape").setIcon("radio-tower").onClick(async () => {
+              await this.activateLocalSoundscapeViewForFile(file);
+            });
+          });
+        }
+      })
+    );
     this.addSettingTab(new SonigraphSettingTab(this.app, this));
     logger85.info("lifecycle", "Sonigraph plugin loaded successfully", {
       settingsLoaded: true,
@@ -88083,6 +88094,40 @@ var SonigraphPlugin = class extends import_obsidian28.Plugin {
     if (leaf) {
       workspace.revealLeaf(leaf);
       logger85.info("ui", "Local Soundscape view activated and revealed");
+    }
+  }
+  /**
+   * Activate Local Soundscape view for a specific file (used by context menu)
+   */
+  async activateLocalSoundscapeViewForFile(file) {
+    logger85.info("ui", "Activating Local Soundscape view for file", { file: file.path });
+    const { workspace } = this.app;
+    let leaf = null;
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_LOCAL_SOUNDSCAPE);
+    if (leaves.length > 0) {
+      leaf = leaves[0];
+      logger85.debug("ui", "Local Soundscape view already exists, updating center file");
+      const view = leaf.view;
+      if (view instanceof LocalSoundscapeView) {
+        await view.setCenterFile(file);
+      }
+    } else {
+      leaf = workspace.getRightLeaf(false);
+      if (leaf) {
+        await leaf.setViewState({
+          type: VIEW_TYPE_LOCAL_SOUNDSCAPE,
+          active: true
+        });
+        logger85.debug("ui", "Created new Local Soundscape view in right sidebar");
+        const view = leaf.view;
+        if (view instanceof LocalSoundscapeView) {
+          await view.setCenterFile(file);
+        }
+      }
+    }
+    if (leaf) {
+      workspace.revealLeaf(leaf);
+      logger85.info("ui", "Local Soundscape view activated and revealed for file", { file: file.path });
     }
   }
   /**
