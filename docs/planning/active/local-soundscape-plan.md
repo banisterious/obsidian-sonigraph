@@ -53,7 +53,7 @@ A standalone view that can be opened for any note, creating an immersive soundsc
 User right-clicks a note and selects "Open in Local Soundscape." A pane opens showing all connections at depth 2. User adjusts depth, filters, and plays sonification to experience the note's sonic neighborhood and understand its role in their vault.
 
 ### 2. Comparison
-User opens Local Soundscape for two different notes (in split panes). By listening to both soundscapes, they can compare how different notes are positioned in the knowledge graph - one might be a dense hub, the other a quiet leaf.
+User opens Local Soundscape for one note, listens to its soundscape, then opens Local Soundscape for a different note (which updates the view). By listening to both soundscapes sequentially, they can compare how different notes are positioned in the knowledge graph - one might be a dense hub, the other a quiet leaf.
 
 ### 3. Structure Exploration
 User is trying to understand a complex topic area. They open Local Soundscape for the main topic note, increase depth to 3, and enable groups. The immersive audio-visual environment reveals clusters and sub-topics.
@@ -148,6 +148,7 @@ this.registerEvent(
 ┌────────────────────────────────────────────────────┐
 │ Local Soundscape: "Machine Learning"               │
 │ [Depth: 2] [🔍 Filter] [🎨 Groups] [🔄 Refresh]  │
+│ Status: Up-to-date                                 │
 ├────────────────────────────────────────────────────┤
 │                                                    │
 │              ┌─────────────┐                      │
@@ -179,11 +180,12 @@ this.registerEvent(
 
 **Top Toolbar:**
 - Note title (clickable to open note)
-- Depth slider/selector (1-5)
+- Depth slider/selector (1-5, default: 2)
 - Filter button (opens filter menu)
 - Groups toggle
 - Refresh button (re-extract graph data)
 - Settings gear
+- Staleness indicator text line ("Up-to-date" or "Graph data is stale")
 
 **Graph Canvas:**
 - Interactive nodes (hover for details, click to open note or re-center)
@@ -357,10 +359,12 @@ Local Soundscape will establish the musical mapping engine that Note Journey wil
 
 ## Settings
 
+**Note:** Local Soundscape settings are independent from Note Journey settings.
+
 ```typescript
 localSoundscape: {
   // Display
-  defaultDepth: number; // Default depth when opening (1-5)
+  defaultDepth: number; // Default depth when opening (default: 2, range: 1-5)
   maxDepth: number; // Maximum allowed depth
   layout: 'radial' | 'force-directed' | 'hierarchical';
 
@@ -381,7 +385,7 @@ localSoundscape: {
   };
 
   // Audio
-  autoStartAudio: boolean; // Play when view opens
+  autoStartAudio: boolean; // Play when view opens (default: TBD)
   mappingMode: 'structure-only' | 'tag-influenced' | 'hybrid';
   maxVoices: number; // Default: 16
 
@@ -392,8 +396,9 @@ localSoundscape: {
 
   // Performance
   maxNodesPerDepth: number; // Limit complexity
-  autoRefresh: boolean; // Update when vault changes
+  autoRefresh: boolean; // Update when vault changes (default: true)
   refreshDebounce: number; // ms to wait before auto-refresh
+  showStalenessIndicator: boolean; // Show "Up-to-date" / "Graph data is stale" (default: true)
 
   // UI
   showToolbar: boolean;
@@ -401,6 +406,11 @@ localSoundscape: {
   compactMode: boolean;
 }
 ```
+
+**Behavior Notes:**
+- Only one Local Soundscape view is supported at a time
+- Opening a Local Soundscape for a different note updates the existing view (rather than creating a new one)
+- Staleness indicator appears when vault metadata has changed since graph was last rendered
 
 ---
 
@@ -430,14 +440,14 @@ localSoundscape: {
 9. User explores several nodes this way
 ```
 
-### Scenario 3: Comparison
+### Scenario 3: Note Switching
 ```
-1. User splits workspace vertically
-2. Opens Local Soundscape for "Classical Physics" (left pane)
-3. Opens Local Soundscape for "Quantum Physics" (right pane)
-4. Plays audio in left pane - simple, sparse connections
-5. Plays audio in right pane (mutes left) - complex, dense connections
-6. User understands: quantum physics note is more central/connected
+1. User opens Local Soundscape for "Classical Physics"
+2. Plays audio - simple, sparse connections
+3. User right-clicks "Quantum Physics" note and selects "Open in Local Soundscape"
+4. View updates to show Quantum Physics (only one Local Soundscape at a time)
+5. User plays audio - complex, dense connections
+6. User understands: quantum physics note is more central/connected than classical physics
 ```
 
 ---
@@ -494,22 +504,34 @@ localSoundscape: {
 ## Open Questions
 
 ### Design
-1. Should Local Soundscape and Note Journey share settings or be independent?
-2. Default depth: 2 or 3?
-3. Auto-refresh on vault changes: enabled or disabled by default?
+1. ~~Should Local Soundscape and Note Journey share settings or be independent?~~
+   - **ANSWERED:** Independent settings for each feature
+2. ~~Default depth: 2 or 3?~~
+   - **ANSWERED:** Default depth 2
+3. ~~Auto-refresh on vault changes: enabled or disabled by default?~~
+   - **ANSWERED:** Enabled by default
 4. Should clicking a node in the graph re-center, open the note, or both (with modifier key)?
+   - **PENDING:** TBD during implementation
 
 ### Technical
 1. Canvas vs SVG vs WebGL for rendering?
+   - **PENDING:** TBD during Phase 1
 2. Simple radial layout vs force-directed as default?
+   - **PENDING:** TBD during Phase 1
 3. How to handle very large graphs (100+ nodes)?
+   - **PENDING:** TBD during implementation
 4. Should we cache rendered graphs for performance?
+   - **PENDING:** TBD based on performance testing
 
 ### User Experience
-1. Should Local Soundscape be available from ribbon icon or just context menu?
-2. How to indicate when graph data is stale (vault has changed)?
-3. Support multiple Local Soundscapes open simultaneously?
-4. Should audio auto-start when view opens?
+1. ~~Should Local Soundscape be available from ribbon icon or just context menu?~~
+   - **ANSWERED:** Context menu and Command Palette only (no ribbon icon)
+2. ~~How to indicate when graph data is stale (vault has changed)?~~
+   - **ANSWERED:** Display text line indicating staleness ("Graph data is stale" or "Up-to-date")
+3. ~~Support multiple Local Soundscapes open simultaneously?~~
+   - **ANSWERED:** No - only one Local Soundscape supported. Changes when different note is opened.
+4. ~~Should audio auto-start when view opens?~~
+   - **ANSWERED:** Setting-controlled with default TBD (see Settings section)
 
 ---
 
