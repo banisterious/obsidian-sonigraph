@@ -4,7 +4,7 @@
 **Date:** October 4, 2025
 **Updated:** October 10, 2025
 **Status:** Planning / Design Phase
-**Target Phase:** 7 or 8 (Post-Continuous Layers Stabilization)
+**Target Version:** v0.18.0 or v0.19.0 (After Local Soundscape)
 
 ---
 
