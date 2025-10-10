@@ -1,8 +1,8 @@
 # Rhythmic Percussion Accent Layer
 
-**Status:** In Development
-**Branch:** `feature/rhythmic-percussion`
-**Goal:** Add synthesized drum sounds as an accent layer that supplements melodic instruments
+- **Status:** In Development
+- **Branch:** `feature/rhythmic-percussion`
+- **Goal:** Add synthesized drum sounds as an accent layer that supplements melodic instruments
 
 ---
 
@@ -196,3 +196,4 @@ class PercussionEngine {
 ---
 
 **Next Step:** Implement drum synthesis in PercussionEngine class
+
