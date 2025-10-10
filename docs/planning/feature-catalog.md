@@ -1,20 +1,44 @@
 # Sonigraph Feature Catalog
 
-**Purpose**: Comprehensive specifications for all Sonigraph features  
-**Audience**: Developers, contributors, and detailed planning  
-**Last Updated**: 2025-06-18
+**Purpose**: Comprehensive specifications for all Sonigraph features
+**Audience**: Developers, contributors, and detailed planning
+**Last Updated**: 2025-10-10 (v0.16.0)
 
 ## Table of Contents
 
+- [Feature Status Summary](#feature-status-summary)
 - [1. Audio Engine Features](#1-audio-engine-features)
 - [2. User Interface Features](#2-user-interface-features)
 - [3. Performance Features](#3-performance-features)
 - [4. Integration Features](#4-integration-features)
 - [5. Advanced Features](#5-advanced-features)
+- [6. Visualization Features](#6-visualization-features)
+- [7. Upcoming Features](#7-upcoming-features)
 
 ---
 
-**Instrument Specifications**: For comprehensive details on all 34 current instruments and 55+ planned instruments, see [Instruments Catalog](instruments-catalog.md).
+## Feature Status Summary
+
+### ✅ Complete & Production Ready (v0.16.0)
+- **Timeline Mode**: Chronological playback through vault history
+- **30 Active Instruments**: Full orchestral palette (keyboard, strings, woodwinds, brass, percussion, synths)
+- **Continuous Layers**: Genre-based ambient, rhythmic, and harmonic background layers
+- **Sonic Graph Visualization**: Interactive graph with temporal animation, timeline controls, and granularity system
+- **Visual Note Display**: Piano Roll, Spectrum Analyzer, and Staff Notation modes
+- **Audio Export**: Multi-format export (WAV, M4A, WebM, OGG, FLAC) with metadata
+- **Freesound Integration**: Professional sample browser with 114 curated samples
+- **Content-Aware Mapping**: File type, tag, folder, and frontmatter-based instrument assignment
+- **Effect Presets**: 11 professional acoustic environment presets
+- **Master Effects Bus**: Reverb, 3-band EQ, compression, limiting
+
+### 🔄 In Stabilization
+- **Continuous Layers System**: Performance tuning and refinement
+
+### 📋 Planned (v0.17-19)
+- **Local Soundscape** (v0.17-18): Immersive audio-visual note connection analysis
+- **Note Journey** (v0.18-19): Dynamic navigation-based sonification mode
+
+**Instrument Specifications**: For comprehensive details on all instruments, see [Instruments Catalog](instruments-catalog.md).
 
 ## 1. Audio Engine Features
 
@@ -267,6 +291,127 @@
 - **Hotkey Integration**: Custom hotkeys for quick OSP actions
 - **Workspace Integration**: OSP controls integrated into Obsidian's workspace
 - **Plugin API**: Expose OSP functionality for other plugin developers
+
+---
+
+## 6. Visualization Features
+
+### 6.1. Sonic Graph (✅ Complete v0.15.0)
+**Purpose**: Interactive graph visualization with temporal animation and professional settings
+**Status**: Production ready
+
+**Features**:
+- **Static Graph View**: D3.js force simulation with all vault files and connections
+- **Timeline Animation**: Audio-synchronized chronological node appearance
+- **Timeline Granularity**: Multi-level time controls (Year, Month, Week, Day, Hour, Custom)
+- **Time Window Filtering**: Focus on specific periods (All time, Past year, Past month, etc.)
+- **Smart Event Spacing**: Intelligent audio distribution to prevent crackling
+- **Performance Optimization**: MetadataCache integration for instant loading
+- **Advanced Filtering**: Content exclusion with Obsidian autocomplete
+- **Professional Settings**: 21+ configuration options with tooltips
+- **Cross-Modal Navigation**: Seamless integration with Control Center
+
+### 6.2. Visual Note Display (✅ Complete v0.15.0)
+**Purpose**: Multiple visualization modes for note playback and analysis
+**Status**: Production ready
+
+**Modes**:
+- **Piano Roll**: Timeline-based scrolling display
+  - Real-time note highlighting with glow effects
+  - Adaptive grid (octave horizontal, time vertical)
+  - Dynamic pitch labels (C0, C1, C2...)
+  - Layer-based color coding (rhythmic, harmonic, melodic, ambient, percussion)
+
+- **Spectrum Analyzer**: Real-time frequency visualization
+  - 64 frequency bars with logarithmic spacing
+  - Web Audio API AnalyserNode integration
+  - 60fps smooth animation
+  - Color gradient from red (low) to blue (high)
+
+- **Staff Notation**: Traditional musical staff display
+  - Treble and bass clefs with proper positioning
+  - MIDI pitch to staff line mapping
+  - Note heads with stems
+  - Layer-based color coding
+
+**UI Integration**:
+- Resizable split-view panel below graph
+- Tab switching between modes
+- Drag handle for height adjustment
+- Timeline synchronization with audio
+- Graph node highlighting synchronized with playback
+
+### 6.3. Audio Export (✅ Complete v0.14.0)
+**Purpose**: Professional audio export with multiple formats and metadata
+**Status**: Production ready
+
+**Features**:
+- **Multiple Formats**: WAV (lossless), M4A/AAC, WebM/Opus, OGG/Vorbis, FLAC
+- **Quality Presets**: High Quality, Standard, Small Size (128-320 kbps)
+- **Custom Time Ranges**: Export specific timeline portions
+- **Metadata Support**: Title, artist, album, year, genre, comments
+- **Export Presets**: Save and load custom configurations
+- **Automatic Documentation**: Generate markdown notes with all settings
+- **Progress Tracking**: Real-time feedback with cancellation
+- **File Management**: Intelligent collision handling and vault organization
+
+---
+
+## 7. Upcoming Features
+
+### 7.1. Local Soundscape (📋 Planned v0.17-18)
+**Purpose**: Immersive audio-visual note connection analysis
+**Effort**: 7-9 weeks | **Priority**: High | **User Impact**: Very High
+
+**Features**:
+- **Custom Graph Visualization**: Canvas/SVG rendering of note connections
+- **Context Menu Integration**: Right-click → "Open in Local Soundscape"
+- **Interactive Controls**: Depth slider, filters (tags, folders, file types), groups
+- **Layout Options**: Radial, force-directed, hierarchical
+- **Integrated Sonification**: Built-in play/pause/stop controls
+- **Visual Feedback**: Playing nodes pulse, audio activity indicators
+- **Musical Mapping Foundation**: Establishes architecture for Note Journey
+- **Node Interaction**: Hover for details, click to re-center or open note
+- **Export Capabilities**: Save graph as image or audio file
+
+**Technical Details**:
+- Dedicated view pane (can be opened in sidebar or splits)
+- Uses Obsidian's MetadataCache for link extraction
+- Depth traversal algorithm (1-5 levels configurable)
+- Max nodes per depth to control complexity
+- Smooth transitions when graph updates
+
+👉 [Full Implementation Plan](active/local-soundscape-plan.md)
+
+### 7.2. Note Journey (📋 Planned v0.18-19)
+**Purpose**: Dynamic sonification that follows link-based navigation
+**Effort**: 6-8 weeks | **Priority**: High | **User Impact**: Very High
+
+**Features**:
+- **Navigation-Based Updates**: Music changes as you click between notes
+- **Real-Time Connection Analysis**: Continuous assessment of note relationships
+- **Smooth Transitions**: Audio crossfades between note contexts (500-800ms)
+- **Depth-Based Layering**: Similar to Local Soundscape but updates automatically
+- **Directional Mapping**: Incoming vs outgoing links affect audio characteristics
+- **Tag/Folder Integration**: Optional content-aware instrument selection
+- **Three Mapping Modes**: Structure-only, Tag-influenced, Hybrid
+- **Performance Optimized**: Debouncing, voice limits, smart updates
+
+**User Experience**:
+- Click "Start Note Journey" in Control Center
+- Navigate vault by clicking links in notes
+- Music smoothly transitions with each click
+- Visual indicators show current note's connections
+- Stop anytime or switch to different mode
+
+**Technical Details**:
+- Reuses Local Soundscape's musical mapping engine
+- Active note change detection via Obsidian API
+- Update throttle (100-200ms) to prevent audio stuttering
+- Voice pooling for efficient transitions
+- Compatible with existing timeline and continuous layer systems
+
+👉 [Full Implementation Plan](active/note-journey-plan.md)
 
 ---
 

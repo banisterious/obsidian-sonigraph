@@ -1,8 +1,8 @@
 # Sonigraph Development Roadmap
 
 - **Project**: Obsidian Sonigraph Plugin
-- **Version**: 0.12.0
-- **Last Updated**: September 30, 2025
+- **Version**: 0.16.0
+- **Last Updated**: October 10, 2025
 
 ---
 
@@ -38,6 +38,8 @@ Core specifications and catalogs that remain current:
 
 ### 🔄 Active Implementation Plans
 Plans currently in progress or ready to start:
+- **[Local Soundscape](active/local-soundscape-plan.md)** - Immersive audio-visual note connection analysis (v0.17-18)
+- **[Note Journey](active/note-journey-plan.md)** - Dynamic navigation-based sonification mode (v0.18-19)
 - **[Effect Presets Implementation](active/effect-presets-implementation-plan.md)** - Backend complete, UI needed
 - **[User Experience Improvements](active/user-experience-improvements-plan.md)** - Documentation, tutorials, and preset library
 
@@ -56,11 +58,11 @@ Superseded or experimental plans (historical reference):
 
 ## Executive Summary
 
-**Current Status**: 34-instrument orchestral system complete with advanced synthesis and performance optimization  
-**Next Priority**: Orchestral Intelligence & Workflow automation  
-**Active Issues**: 0 critical (Recently resolved Issues #005 and #006)  
-**Architecture**: Modular, performance-optimized, fully documented  
-**System Status**: Fully functional - audio engine and UI workflow operational
+**Current Status**: Timeline Mode feature complete, continuous layers system stabilizing (v0.16.0)
+**Next Priority**: Local Soundscape (v0.17-18), then Note Journey (v0.18-19)
+**Active Issues**: 0 critical
+**Architecture**: Modular, performance-optimized, fully documented
+**System Status**: Fully functional - 30 active instruments, timeline playback, continuous layers
 
 ---
 
@@ -71,6 +73,28 @@ Superseded or experimental plans (historical reference):
 ---
 
 ## Current Sprint
+
+### 🚀 **Next Major Features**
+
+**Local Soundscape (v0.17.0-v0.18.0)**
+**Priority**: High | **Effort**: 7-9 weeks | **User Impact**: Very High
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed
+**Description**: Immersive audio-visual view for analyzing connections around a single note
+- Custom graph visualization (Canvas/SVG rendering)
+- Right-click context menu: "Open in Local Soundscape"
+- Interactive depth control, filters, and layout options
+- Establishes musical mapping foundation for Note Journey
+👉 [Implementation Plan](active/local-soundscape-plan.md)
+
+**Note Journey (v0.18.0-v0.19.0)**
+**Priority**: High | **Effort**: 6-8 weeks | **User Impact**: Very High
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed
+**Description**: Dynamic sonification mode that follows link-based navigation
+- Music updates as you click between notes
+- Real-time connection analysis
+- Smooth transitions between note contexts
+- Reuses Local Soundscape's musical mapping engine
+👉 [Implementation Plan](active/note-journey-plan.md)
 
 ### ✅ **Recently Resolved Issues**
 
