@@ -455,17 +455,19 @@ export class LocalSoundscapeView extends ItemView {
 	 * Display graph statistics in sidebar
 	 */
 	private displayGraphStats(): void {
-		if (!this.graphData) return;
+		if (!this.graphData || !this.playbackContentContainer) return;
 
-		// Find playback tab content
-		const playbackContent = this.sidebarContainer.querySelector('[data-content="playback"]');
-		if (!playbackContent) return;
+		// Find or create stats section (don't clear the whole playback content!)
+		let statsSection = this.playbackContentContainer.querySelector('.stats-section') as HTMLElement;
 
-		// Clear placeholder
-		playbackContent.empty();
+		if (!statsSection) {
+			// Create stats section if it doesn't exist
+			statsSection = this.playbackContentContainer.createDiv({ cls: 'stats-section' });
+		} else {
+			// Clear existing stats
+			statsSection.empty();
+		}
 
-		// Add stats section
-		const statsSection = playbackContent.createDiv({ cls: 'stats-section' });
 		statsSection.createEl('h4', { text: 'Graph Statistics' });
 
 		const statsList = statsSection.createEl('ul', { cls: 'stats-list' });

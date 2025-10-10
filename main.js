@@ -79566,13 +79566,14 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    * Display graph statistics in sidebar
    */
   displayGraphStats() {
-    if (!this.graphData)
+    if (!this.graphData || !this.playbackContentContainer)
       return;
-    const playbackContent = this.sidebarContainer.querySelector('[data-content="playback"]');
-    if (!playbackContent)
-      return;
-    playbackContent.empty();
-    const statsSection = playbackContent.createDiv({ cls: "stats-section" });
+    let statsSection = this.playbackContentContainer.querySelector(".stats-section");
+    if (!statsSection) {
+      statsSection = this.playbackContentContainer.createDiv({ cls: "stats-section" });
+    } else {
+      statsSection.empty();
+    }
     statsSection.createEl("h4", { text: "Graph Statistics" });
     const statsList = statsSection.createEl("ul", { cls: "stats-list" });
     statsList.createEl("li", { text: `Nodes: ${this.graphData.stats.totalNodes}` });
