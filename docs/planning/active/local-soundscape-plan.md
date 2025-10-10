@@ -1,9 +1,9 @@
 # Local Soundscape - Implementation Plan
 
-**Document Version:** 1.0
-**Date:** October 10, 2025
-**Status:** Planning / Design Phase
-**Target Version:** v0.17.0 or v0.18.0 (Before Note Journey)
+- **Document Version:** 1.0
+- **Date:** October 10, 2025
+- **Status:** Planning / Design Phase
+- **Target Version:** v0.17.0 or v0.18.0 (Before Note Journey)
 
 **Background:** Original plan was to integrate with Obsidian's native Local Graph view, but Obsidian does not expose Graph APIs. This plan describes a custom visualization designed specifically for creating an immersive audio-visual "soundscape" around a note.
 
@@ -579,3 +579,4 @@ None identified - all APIs are official and stable
 8. User testing with prototype
 9. Full implementation
 10. Use learnings to implement Note Journey later
+
