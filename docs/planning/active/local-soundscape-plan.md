@@ -574,7 +574,7 @@ localSoundscape: {
 ## Dependencies
 
 ### Required Before Implementation
-- [ ] Continuous layers stabilized (Phase 3 complete)
+- [x] Continuous layers stabilized: **Complete (v0.16.0)**
 - [x] Graph rendering library chosen: **D3.js** (already in use by Sonic Graph)
 - [ ] Performance baseline established
 - [ ] User feedback on desired features
@@ -612,7 +612,8 @@ None identified - all APIs are official and stable
 - Phase 3 (Interactive): 2 weeks
 - Phase 4 (Polish): 1-2 weeks
 
-**Recommended Start:** After continuous layers are stable (v0.17.0 timeframe)
+**Recommended Start:** Ready to begin (continuous layers complete in v0.16.0)
+**Target Version:** v0.17.0 or v0.18.0
 **Note:** This will be implemented BEFORE Note Journey, as it establishes the foundational musical mapping system
 
 ---
@@ -627,7 +628,7 @@ None identified - all APIs are official and stable
 ---
 
 **Next Steps:**
-1. Stabilize continuous layers (Phase 3)
+1. ✅ ~~Stabilize continuous layers~~ **DONE: Complete in v0.16.0**
 2. User research: is this feature desired?
 3. ✅ ~~Choose graph rendering approach~~ **DONE: D3.js + SVG (same as Sonic Graph)**
 4. ✅ ~~Create UI/UX mockup~~ **DONE: [local-soundscape-mockup.html](../ui-mockups/local-soundscape-mockup.html)**
