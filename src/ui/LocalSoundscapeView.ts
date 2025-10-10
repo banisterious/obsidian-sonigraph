@@ -10,6 +10,7 @@
 
 import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
 import { getLogger } from '../logging';
+import { LocalSoundscapeExtractor, LocalSoundscapeData } from '../graph/LocalSoundscapeExtractor';
 import type SonigraphPlugin from '../main';
 
 const logger = getLogger('LocalSoundscapeView');
@@ -29,6 +30,8 @@ export class LocalSoundscapeView extends ItemView {
 	private plugin: SonigraphPlugin;
 	private centerFile: TFile | null = null;
 	private currentDepth: number = 2; // Default depth
+	private graphData: LocalSoundscapeData | null = null;
+	private extractor: LocalSoundscapeExtractor;
 
 	// UI containers
 	private containerEl: HTMLElement;
@@ -39,6 +42,7 @@ export class LocalSoundscapeView extends ItemView {
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
 		this.plugin = plugin;
+		this.extractor = new LocalSoundscapeExtractor(this.app);
 
 		logger.info('view-init', 'LocalSoundscapeView initialized');
 	}
@@ -320,20 +324,99 @@ export class LocalSoundscapeView extends ItemView {
 		// Clear existing graph
 		this.graphContainer.empty();
 
-		// Placeholder message
-		const placeholder = this.graphContainer.createDiv({ cls: 'graph-placeholder' });
-		placeholder.createEl('p', {
-			text: `Graph extraction for "${this.centerFile.basename}" at depth ${this.currentDepth}`,
-			cls: 'placeholder-text'
-		});
-		placeholder.createEl('p', {
-			text: 'Graph rendering will be implemented next',
-			cls: 'placeholder-hint'
-		});
+		// Show loading indicator
+		const loadingIndicator = this.graphContainer.createDiv({ cls: 'loading-indicator' });
+		loadingIndicator.createEl('p', { text: 'Extracting graph data...' });
 
-		// TODO: Implement graph data extraction using MetadataCache
-		// TODO: Implement radial layout algorithm
-		// TODO: Create LocalSoundscapeRenderer
+		try {
+			// Extract graph data using MetadataCache
+			this.graphData = await this.extractor.extractFromCenter(
+				this.centerFile,
+				this.currentDepth
+			);
+
+			// Clear loading indicator
+			this.graphContainer.empty();
+
+			// Display extraction stats
+			this.displayGraphStats();
+
+			// TODO: Implement radial layout algorithm
+			// TODO: Create LocalSoundscapeRenderer and render graph
+
+			// Temporary: Show extracted data
+			const statsDiv = this.graphContainer.createDiv({ cls: 'graph-stats-temp' });
+			statsDiv.createEl('h4', { text: 'Graph Data Extracted' });
+
+			const statsList = statsDiv.createEl('ul');
+			statsList.createEl('li', { text: `Total Nodes: ${this.graphData.stats.totalNodes}` });
+			statsList.createEl('li', { text: `Total Links: ${this.graphData.stats.totalLinks}` });
+			statsList.createEl('li', { text: `Incoming: ${this.graphData.stats.incomingCount}` });
+			statsList.createEl('li', { text: `Outgoing: ${this.graphData.stats.outgoingCount}` });
+			statsList.createEl('li', { text: `Bidirectional: ${this.graphData.stats.bidirectionalCount}` });
+
+			// Show nodes by depth
+			for (let d = 0; d <= this.currentDepth; d++) {
+				const nodesAtDepth = this.extractor.getNodesAtDepth(this.graphData, d);
+				if (nodesAtDepth.length > 0) {
+					const depthSection = statsDiv.createDiv({ cls: 'depth-section' });
+					depthSection.createEl('h5', { text: `Depth ${d} (${nodesAtDepth.length} nodes)` });
+
+					const nodeList = depthSection.createEl('ul', { cls: 'node-list' });
+					nodesAtDepth.slice(0, 10).forEach(node => {
+						const nodeItem = nodeList.createEl('li');
+						nodeItem.textContent = `${node.basename} [${node.direction}]`;
+					});
+
+					if (nodesAtDepth.length > 10) {
+						nodeList.createEl('li', { text: `... and ${nodesAtDepth.length - 10} more` });
+					}
+				}
+			}
+
+			logger.info('extract-complete', 'Graph extraction and display complete');
+
+		} catch (error) {
+			logger.error('extract-error', 'Failed to extract graph', error as Error);
+
+			this.graphContainer.empty();
+			const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
+			errorDiv.createEl('p', { text: 'Failed to extract graph data' });
+			errorDiv.createEl('p', {
+				text: (error as Error).message,
+				cls: 'error-details'
+			});
+
+			new Notice('Failed to extract graph data');
+		}
+	}
+
+	/**
+	 * Display graph statistics in sidebar
+	 */
+	private displayGraphStats(): void {
+		if (!this.graphData) return;
+
+		// Find playback tab content
+		const playbackContent = this.sidebarContainer.querySelector('[data-content="playback"]');
+		if (!playbackContent) return;
+
+		// Clear placeholder
+		playbackContent.empty();
+
+		// Add stats section
+		const statsSection = playbackContent.createDiv({ cls: 'stats-section' });
+		statsSection.createEl('h4', { text: 'Graph Statistics' });
+
+		const statsList = statsSection.createEl('ul', { cls: 'stats-list' });
+		statsList.createEl('li', { text: `Nodes: ${this.graphData.stats.totalNodes}` });
+		statsList.createEl('li', { text: `Links: ${this.graphData.stats.totalLinks}` });
+		statsList.createEl('li', { text: `Incoming: ${this.graphData.stats.incomingCount}` });
+		statsList.createEl('li', { text: `Outgoing: ${this.graphData.stats.outgoingCount}` });
+
+		// Placeholder for audio controls (Phase 2)
+		const audioPlaceholder = playbackContent.createDiv({ cls: 'placeholder-message' });
+		audioPlaceholder.createEl('p', { text: 'Audio controls will appear here in Phase 2' });
 	}
 
 	/**
