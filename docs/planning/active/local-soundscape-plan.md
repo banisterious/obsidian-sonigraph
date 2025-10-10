@@ -220,7 +220,7 @@ this.registerEvent(
 
 ---
 
-## Musical Mapping
+## Musical Mapping Architecture
 
 ### Foundation for Note Journey
 
@@ -229,31 +229,337 @@ Local Soundscape will establish the musical mapping engine that Note Journey wil
 - **Local Soundscape:** Mapping updates when user adjusts depth/filters/refresh (implemented first)
 - **Note Journey:** Will reuse this mapping, triggered when user navigates (implemented later)
 
-### Mapping Strategy
+### Core Concept: Depth-Based Layered Mapping
 
-**Center Note:**
-- Lead melody, most prominent
-- Middle pitch range
-- 100% volume (relative to master)
+Unlike existing mapping approaches (content-aware, cluster-based, spatial), this new system maps notes based on their **graph distance (depth)** from a center node and their **link direction**.
 
-**Depth 1:**
-- Harmonic support (chords, pads)
-- 80% volume
-- Surround center note pitch
+**Key Innovation:** Creates an immersive "soundscape" where the sonic environment reflects the structure around a focal note.
 
-**Depth 2:**
-- Bass/rhythmic foundation
-- 60% volume
-- Lower register
+### Technical Architecture
 
-**Depth 3+:**
-- Atmospheric textures
-- 40% volume
-- Ambient drones
+#### New Component: `DepthBasedMapper`
 
-**Directionality:**
-- Incoming links → left-panned, lower pitch
-- Outgoing links → right-panned, higher pitch
+A new mapper class that extends/integrates with the existing `MusicalMapper`:
+
+```typescript
+// src/audio/mapping/DepthBasedMapper.ts
+
+export interface DepthMappingConfig {
+  // Instrument assignment by depth
+  instrumentsByDepth: {
+    center: string[];       // Lead instruments (piano, organ, leadSynth)
+    depth1: string[];       // Harmony (strings, electricPiano, pad)
+    depth2: string[];       // Rhythm/Bass (bass, timpani, cello)
+    depth3Plus: string[];   // Ambient (pad, drone, atmosphericSynth)
+  };
+
+  // Volume attenuation by depth
+  volumeByDepth: {
+    center: number;      // 1.0 (100%)
+    depth1: number;      // 0.8 (80%)
+    depth2: number;      // 0.6 (60%)
+    depth3Plus: number;  // 0.4 (40%)
+  };
+
+  // Pitch ranges by depth (in semitones relative to root)
+  pitchRangesByDepth: {
+    center: { min: 0, max: 12 };      // Middle register (1 octave)
+    depth1: { min: -5, max: 7 };      // Surrounding center
+    depth2: { min: -12, max: 0 };     // Lower register
+    depth3Plus: { min: -24, max: -12 }; // Very low (ambient)
+  };
+
+  // Directional panning based on link type
+  directionalPanning: {
+    enabled: boolean;
+    incomingLinks: number;   // -0.7 (left channel)
+    outgoingLinks: number;   // +0.7 (right channel)
+    bidirectional: number;   // 0.0 (center)
+  };
+
+  // Transition behavior when re-centering
+  transitionSettings: {
+    enabled: boolean;
+    fadeOutTime: number;  // ms to fade out old center
+    fadeInTime: number;   // ms to fade in new center
+    crossfadeOverlap: number; // ms of overlap
+  };
+
+  // Maximum nodes per depth (performance)
+  maxNodesPerDepth: number; // Default: 20-30
+}
+
+export class DepthBasedMapper {
+  private config: DepthMappingConfig;
+  private musicalMapper: MusicalMapper; // Reuse existing mapper
+  private currentCenterNodeId: string | null = null;
+  private currentMapping: Map<string, DepthMapping> = new Map();
+
+  constructor(config: DepthMappingConfig, musicalMapper: MusicalMapper) {
+    this.config = config;
+    this.musicalMapper = musicalMapper;
+  }
+
+  /**
+   * Create depth-based mapping from a center node
+   */
+  mapFromCenterNode(
+    centerNodeId: string,
+    graph: ConnectionGraph,
+    maxDepth: number
+  ): DepthMapping[] {
+    // 1. Traverse graph from center, collecting nodes at each depth
+    const nodesByDepth = this.traverseByDepth(centerNodeId, graph, maxDepth);
+
+    // 2. Classify links as incoming/outgoing for directionality
+    const linkDirections = this.classifyLinkDirections(centerNodeId, graph);
+
+    // 3. Create mappings for each node based on depth and direction
+    const mappings: DepthMapping[] = [];
+
+    for (const [depth, nodes] of nodesByDepth) {
+      // Limit nodes per depth for performance
+      const limitedNodes = this.selectMostImportantNodes(
+        nodes,
+        this.config.maxNodesPerDepth
+      );
+
+      for (const node of limitedNodes) {
+        const mapping = this.createDepthMapping(
+          node,
+          depth,
+          linkDirections.get(node.id),
+          graph
+        );
+        mappings.push(mapping);
+      }
+    }
+
+    this.currentCenterNodeId = centerNodeId;
+    this.updateCurrentMapping(mappings);
+
+    return mappings;
+  }
+
+  /**
+   * Recalculate mapping with new center node (smooth transition)
+   */
+  async recenterMapping(newCenterNodeId: string): Promise<DepthMapping[]> {
+    if (!this.config.transitionSettings.enabled) {
+      // Instant switch
+      return this.mapFromCenterNode(newCenterNodeId, ...);
+    }
+
+    // Smooth transition:
+    // 1. Fade out current mappings
+    // 2. Calculate new mappings
+    // 3. Crossfade to new mappings
+    // 4. Update audio engine
+
+    return newMappings;
+  }
+
+  /**
+   * Traverse graph by depth using BFS
+   */
+  private traverseByDepth(
+    centerNodeId: string,
+    graph: ConnectionGraph,
+    maxDepth: number
+  ): Map<number, GraphNode[]> {
+    const nodesByDepth = new Map<number, GraphNode[]>();
+    const visited = new Set<string>();
+    const queue: Array<{node: GraphNode, depth: number}> = [];
+
+    // Start with center node at depth 0
+    const centerNode = graph.nodes.get(centerNodeId);
+    if (!centerNode) return nodesByDepth;
+
+    queue.push({node: centerNode, depth: 0});
+    visited.add(centerNodeId);
+
+    while (queue.length > 0) {
+      const {node, depth} = queue.shift()!;
+
+      if (depth > maxDepth) continue;
+
+      // Add to depth map
+      if (!nodesByDepth.has(depth)) {
+        nodesByDepth.set(depth, []);
+      }
+      nodesByDepth.get(depth)!.push(node);
+
+      // Add connected nodes to queue
+      for (const linkId of node.links) {
+        const link = graph.links.get(linkId);
+        if (!link) continue;
+
+        const nextNodeId = link.source === node.id ? link.target : link.source;
+        if (!visited.has(nextNodeId)) {
+          const nextNode = graph.nodes.get(nextNodeId);
+          if (nextNode) {
+            queue.push({node: nextNode, depth: depth + 1});
+            visited.add(nextNodeId);
+          }
+        }
+      }
+    }
+
+    return nodesByDepth;
+  }
+
+  /**
+   * Classify each node's relationship to center (incoming/outgoing/both)
+   */
+  private classifyLinkDirections(
+    centerNodeId: string,
+    graph: ConnectionGraph
+  ): Map<string, 'incoming' | 'outgoing' | 'bidirectional'> {
+    // Implementation: Check if node links TO center (incoming/backlink)
+    // or center links TO node (outgoing/forward link)
+    // or both (bidirectional)
+  }
+
+  /**
+   * Create musical mapping for a single node based on depth
+   */
+  private createDepthMapping(
+    node: GraphNode,
+    depth: number,
+    direction: 'incoming' | 'outgoing' | 'bidirectional',
+    graph: ConnectionGraph
+  ): DepthMapping {
+    // 1. Select instrument based on depth
+    const instrument = this.selectInstrumentByDepth(depth, node);
+
+    // 2. Calculate pitch based on depth range
+    const pitch = this.calculatePitchByDepth(depth, node);
+
+    // 3. Apply volume attenuation by depth
+    const volume = this.config.volumeByDepth[this.getDepthKey(depth)];
+
+    // 4. Apply directional panning
+    const pan = this.calculateDirectionalPan(direction);
+
+    // 5. Calculate duration (can use existing MusicalMapper logic)
+    const duration = this.musicalMapper.mapWordCountToDuration(node.wordCount);
+
+    // 6. Calculate timing
+    const timing = this.calculateDepthTiming(depth);
+
+    return {
+      nodeId: node.id,
+      depth,
+      direction,
+      instrument,
+      pitch,
+      volume,
+      pan,
+      duration,
+      timing
+    };
+  }
+}
+
+interface DepthMapping {
+  nodeId: string;
+  depth: number;
+  direction: 'incoming' | 'outgoing' | 'bidirectional';
+  instrument: string;
+  pitch: number;
+  volume: number;
+  pan: number;
+  duration: number;
+  timing: number;
+}
+```
+
+### Integration with Existing Systems
+
+**Leverages:**
+- Existing `MusicalMapper` for base calculations (pitch, duration, velocity)
+- Existing instrument selection logic (respects enabled instruments)
+- Existing spatial audio system (can combine with depth-based panning)
+- Existing `AudioEngine` for playback
+
+**Extends:**
+- Adds depth-based layer concept (new)
+- Adds directional panning based on graph topology (new)
+- Adds smooth re-centering transitions (new)
+
+### Mapping Strategy Details
+
+**Center Node (Depth 0):**
+- **Role:** Lead melody, focal point of soundscape
+- **Instruments:** Piano, organ, leadSynth (clear, prominent timbres)
+- **Pitch Range:** Middle register (C4-C5), most prominent
+- **Volume:** 100% (relative to master)
+- **Pan:** Center (0.0)
+- **Character:** Clear, sustained, attention-grabbing
+
+**Depth 1 (Direct Connections):**
+- **Role:** Harmonic support, immediate context
+- **Instruments:** Strings, electricPiano, pad (harmonic, blending timbres)
+- **Pitch Range:** Surrounding center (G3-G4), creates harmonic bed
+- **Volume:** 80%
+- **Pan:** Directional (-0.7 for incoming, +0.7 for outgoing)
+- **Character:** Supportive, harmonic, contextual
+
+**Depth 2 (Secondary Connections):**
+- **Role:** Rhythmic/bass foundation
+- **Instruments:** Bass, timpani, cello (low, rhythmic timbres)
+- **Pitch Range:** Lower register (C2-C3), foundational
+- **Volume:** 60%
+- **Pan:** Directional based on relationship to center
+- **Character:** Grounding, rhythmic pulse, structural
+
+**Depth 3+ (Distant Connections):**
+- **Role:** Atmospheric textures, ambient environment
+- **Instruments:** Pad, drone, atmosphericSynth (sustained, textural)
+- **Pitch Range:** Very low (C1-C2), subliminal
+- **Volume:** 40% (fades further with each additional depth)
+- **Pan:** Wide stereo field for spatial depth
+- **Character:** Ambient, atmospheric, environmental
+
+**Directional Panning:**
+- **Incoming links** (backlinks) → Pan left (-0.7), slightly lower pitch
+  - *Semantic meaning:* "What references this note"
+  - *Sonic character:* Bass-heavy, supportive foundation
+- **Outgoing links** (forward links) → Pan right (+0.7), slightly higher pitch
+  - *Semantic meaning:* "What this note references"
+  - *Sonic character:* Melodic, exploratory, forward-moving
+- **Bidirectional** → Center pan (0.0)
+  - *Semantic meaning:* Mutual references
+  - *Sonic character:* Balanced, integrated
+
+### Re-Centering Behavior
+
+When user clicks a node or selects "Re-center soundscape":
+
+1. **Fade out current soundscape** (config: `fadeOutTime`)
+2. **Calculate new depth mappings** from new center
+3. **Cross-fade to new soundscape** (config: `crossfadeOverlap`)
+4. **Update visual indicators** (graph re-centers, new depth rings)
+
+**Transition smoothness:** Prevents jarring audio cuts, creates fluid exploration experience
+
+### Settings Integration
+
+Add to `SonigraphSettings`:
+
+```typescript
+depthBasedMapping: {
+  enabled: boolean;
+  defaultDepth: number; // 2
+  maxDepth: number; // 5
+  instrumentsByDepth: {...};
+  volumeByDepth: {...};
+  pitchRangesByDepth: {...};
+  directionalPanning: {...};
+  transitionSettings: {...};
+  maxNodesPerDepth: number; // 20-30
+}
+```
 
 ---
 
@@ -576,9 +882,9 @@ localSoundscape: {
 ### Required Before Implementation
 - [x] Continuous layers stabilized: **Complete (v0.16.0)**
 - [x] Graph rendering library chosen: **D3.js** (already in use by Sonic Graph)
+- [x] Musical mapping architecture designed: **Complete** (see Musical Mapping Architecture section)
 - [ ] Performance baseline established
 - [ ] User feedback on desired features
-- [ ] Musical mapping architecture designed (will be reused by Note Journey)
 
 ### External Dependencies
 - MetadataCache API (official Obsidian API)
@@ -629,14 +935,15 @@ None identified - all APIs are official and stable
 
 **Next Steps:**
 1. ✅ ~~Stabilize continuous layers~~ **DONE: Complete in v0.16.0**
-2. User research: is this feature desired?
-3. ✅ ~~Choose graph rendering approach~~ **DONE: D3.js + SVG (same as Sonic Graph)**
-4. ✅ ~~Create UI/UX mockup~~ **DONE: [local-soundscape-mockup.html](../ui-mockups/local-soundscape-mockup.html)**
-5. Design musical mapping architecture (will be foundation for Note Journey)
+2. ✅ ~~Choose graph rendering approach~~ **DONE: D3.js + SVG (same as Sonic Graph)**
+3. ✅ ~~Create UI/UX mockup~~ **DONE: [local-soundscape-mockup.html](../ui-mockups/local-soundscape-mockup.html)**
+4. ✅ ~~Design musical mapping architecture~~ **DONE: DepthBasedMapper architecture documented**
+5. User research: is this feature desired?
 6. Prototype radial layout algorithm
-7. Create `LocalSoundscapeView` and `LocalSoundscapeRenderer`
-8. Integrate with audio engine
-9. User testing with prototype
-10. Full implementation
-11. Use learnings to implement Note Journey later
+7. Create `DepthBasedMapper` class in `src/audio/mapping/`
+8. Create `LocalSoundscapeView` and `LocalSoundscapeRenderer`
+9. Integrate DepthBasedMapper with AudioEngine
+10. User testing with prototype
+11. Full implementation
+12. Use learnings to implement Note Journey later
 
