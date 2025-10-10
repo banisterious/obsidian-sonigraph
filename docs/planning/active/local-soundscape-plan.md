@@ -67,15 +67,31 @@ User keeps Local Soundscape open while writing. As they add new links to the cur
 
 ### Custom Graph Rendering
 
-Since we can't use Obsidian's graph, we build our own.
+Since we can't use Obsidian's graph, we build our own using the same proven technology as Sonic Graph.
 
-**Rendering Options:**
-1. **HTML Canvas** (preferred for performance)
-2. **SVG** (easier manipulation, slower with many nodes)
-3. **Force-directed layout** using D3.js or similar
-4. **Simple radial layout** (center node in middle, depth rings around it)
+**Rendering Approach: D3.js + SVG**
 
-**Recommended Approach:** Start with simple radial layout using Canvas, optimize later.
+We will use the same rendering technology as the existing Sonic Graph feature:
+- **D3.js** for graph layout and manipulation
+- **SVG** for rendering nodes and links
+- **Radial layout** (center node in middle, depth rings around it) instead of force-directed
+- Reuse existing `GraphRenderer` class or extend it for Local Soundscape-specific needs
+
+**Why D3 + SVG:**
+1. ✅ **Proven in codebase** - Sonic Graph already uses this successfully
+2. ✅ **Code reuse** - Can leverage existing GraphRenderer, ContentAwarePositioning, SmartClustering
+3. ✅ **Interactive by default** - SVG elements naturally support hover, click, etc.
+4. ✅ **Performance optimizations already implemented** - Viewport culling, adaptive detail, frame skipping
+5. ✅ **Handles 50-100+ nodes** with existing optimizations (adaptive filtering, debouncing)
+6. ✅ **Consistent UX** - Users familiar with Sonic Graph will understand Local Soundscape
+
+**Implementation Strategy:**
+- Extend or adapt existing `GraphRenderer` class
+- Replace force-directed simulation with simpler radial layout algorithm
+- Reuse viewport culling, adaptive detail, and performance optimizations
+- Keep same zoom/pan behavior users are familiar with
+
+**No need for Canvas or WebGL** - SVG implementation already handles the scale and performance requirements.
 
 ### Data Extraction
 
@@ -243,14 +259,17 @@ Local Soundscape will establish the musical mapping engine that Note Journey wil
 ### Phase 1: Basic View & Rendering (2-3 weeks)
 **Goal:** Can open view and see basic graph
 
-- [ ] Register custom view type
-- [ ] Implement basic graph data extraction (depth 1-2)
-- [ ] Render simple radial layout (Canvas)
-- [ ] Add depth control
-- [ ] Command to open for active note
-- [ ] Context menu integration
+- [ ] Register custom view type (`LocalSoundscapeView`)
+- [ ] Implement basic graph data extraction (depth 1-2) using `MetadataCache`
+- [ ] Create `LocalSoundscapeRenderer` extending `GraphRenderer`
+- [ ] Implement radial layout algorithm (replace force-directed)
+- [ ] Add depth control in UI
+- [ ] Command to open for active note (Command Palette)
+- [ ] Context menu integration (right-click note)
 
-**Deliverable:** Can open view, see connections visually
+**Deliverable:** Can open view, see connections visually in radial layout
+
+**Code Reuse:** Leverage `GraphRenderer`, `GraphDataExtractor`, viewport culling, zoom/pan
 
 ### Phase 2: Sonification Integration (2 weeks)
 **Goal:** Audio works with visualization
@@ -293,16 +312,19 @@ Local Soundscape will establish the musical mapping engine that Note Journey wil
 ## Challenges & Solutions
 
 ### Challenge 1: Graph Layout Performance
-**Problem:** Force-directed layouts can be slow with 50+ nodes
+**Problem:** Rendering can be slow with 100+ nodes
 
 **Solutions:**
-- Start with simple radial layout (faster)
-- Offer force-directed as advanced option
-- Limit max nodes per depth
-- Use Canvas for rendering (faster than SVG)
-- Implement viewport culling (only render visible area)
+- Use radial layout (simpler than force-directed, no physics simulation)
+- Reuse existing performance optimizations from Sonic Graph:
+  - Viewport culling (only render visible nodes)
+  - Adaptive detail filtering (reduce nodes at lower zoom)
+  - Frame skipping for dense graphs
+  - Update debouncing
+- Limit max nodes per depth (e.g., 20-30 per depth)
+- D3 + SVG proven to handle 50-100+ nodes in Sonic Graph
 
-**Risk Level:** Medium
+**Risk Level:** Low (solutions already implemented in Sonic Graph)
 
 ### Challenge 2: Overlap with Note Journey
 **Problem:** Users might be confused about when to use each feature
@@ -349,11 +371,18 @@ Local Soundscape will establish the musical mapping engine that Note Journey wil
 - **Instrument Mappings:** Tag/folder mappings apply
 
 ### New Components
-- **LocalSoundscapeView:** Custom view class
-- **SoundscapeRenderer:** Canvas-based rendering engine
-- **ConnectionExtractor:** Traverses vault for connections
-- **LayoutEngine:** Positions nodes (radial or force-directed)
+- **LocalSoundscapeView:** Custom view class (extends `ItemView`)
+- **LocalSoundscapeRenderer:** Extends or adapts `GraphRenderer` with radial layout
+- **ConnectionExtractor:** Traverses vault for connections (uses `MetadataCache`)
+- **RadialLayoutAlgorithm:** Positions nodes in concentric circles by depth
 - **SoundscapeAudioSync:** Keeps audio synchronized with visual state
+
+### Reused Components
+- **GraphRenderer:** Base rendering engine (D3 + SVG)
+- **ContentAwarePositioning:** Intelligent node positioning (from Sonic Graph)
+- **SmartClusteringAlgorithms:** Community detection (from Sonic Graph)
+- **AdaptiveDetailManager:** Dynamic filtering based on zoom (from Sonic Graph)
+- **GraphDataExtractor:** Core graph data extraction utilities
 
 ---
 
@@ -514,10 +543,10 @@ localSoundscape: {
    - **PENDING:** TBD during implementation
 
 ### Technical
-1. Canvas vs SVG vs WebGL for rendering?
-   - **PENDING:** TBD during Phase 1
-2. Simple radial layout vs force-directed as default?
-   - **PENDING:** TBD during Phase 1
+1. ~~Canvas vs SVG vs WebGL for rendering?~~
+   - **ANSWERED:** D3.js + SVG (same as Sonic Graph) - proven, interactive, good performance
+2. ~~Simple radial layout vs force-directed as default?~~
+   - **ANSWERED:** Radial layout (simpler, easier to understand depth visualization)
 3. How to handle very large graphs (100+ nodes)?
    - **PENDING:** TBD during implementation
 4. Should we cache rendered graphs for performance?
@@ -539,16 +568,16 @@ localSoundscape: {
 
 ### Required Before Implementation
 - [ ] Continuous layers stabilized (Phase 3 complete)
-- [ ] Graph rendering library chosen (D3.js, vis.js, or custom)
+- [x] Graph rendering library chosen: **D3.js** (already in use by Sonic Graph)
 - [ ] Performance baseline established
 - [ ] User feedback on desired features
 - [ ] Musical mapping architecture designed (will be reused by Note Journey)
 
 ### External Dependencies
-- MetadataCache API (official)
-- Workspace leaf API (official)
-- Canvas API (web standard)
-- Optional: Graph layout library (D3, etc.)
+- MetadataCache API (official Obsidian API)
+- Workspace leaf API (official Obsidian API)
+- **D3.js** (already included in project dependencies)
+- SVG rendering (web standard)
 
 ---
 
@@ -593,12 +622,13 @@ None identified - all APIs are official and stable
 **Next Steps:**
 1. Stabilize continuous layers (Phase 3)
 2. User research: is this feature desired?
-3. Choose graph rendering approach (Canvas + simple layout vs D3.js)
-4. Create UI/UX mockup
+3. ✅ ~~Choose graph rendering approach~~ **DONE: D3.js + SVG (same as Sonic Graph)**
+4. ✅ ~~Create UI/UX mockup~~ **DONE: [local-soundscape-mockup.html](../ui-mockups/local-soundscape-mockup.html)**
 5. Design musical mapping architecture (will be foundation for Note Journey)
-6. Prototype basic rendering
-7. Integrate with audio engine
-8. User testing with prototype
-9. Full implementation
-10. Use learnings to implement Note Journey later
+6. Prototype radial layout algorithm
+7. Create `LocalSoundscapeView` and `LocalSoundscapeRenderer`
+8. Integrate with audio engine
+9. User testing with prototype
+10. Full implementation
+11. Use learnings to implement Note Journey later
 
