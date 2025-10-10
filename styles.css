@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-10 21:53:28 UTC
+ * - Generated: 2025-10-10 23:07:52 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -10049,7 +10049,7 @@ details.osp-advanced-settings {
    COMPONENT: LOCAL-SOUNDSCAPE.CSS
    ========================================================================== */
 
-/* Component Size: 282 lines, 5.11 KB */
+/* Component Size: 365 lines, 6.68 KB */
 
 /* ================================================================
    Local Soundscape View Styles
@@ -10234,6 +10234,89 @@ details.osp-advanced-settings {
 
 .sidebar-content.active {
 	display: block;
+}
+
+/* Playback controls */
+.playback-buttons {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.playback-button {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 16px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.playback-button:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.playback-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.playback-button.playing {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.playback-button svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* Playback stats */
+.playback-stats {
+	margin-bottom: 16px;
+	padding: 12px;
+	background: var(--background-primary-alt);
+	border-radius: 6px;
+}
+
+.playback-stats .stat-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 0;
+}
+
+.playback-stats .stat-item:not(:last-child) {
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.playback-stats .stat-label {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.playback-stats .stat-value {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.playback-stats .voice-count {
+	color: var(--color-green);
+}
+
+.playback-stats .volume-level {
+	color: var(--color-cyan);
 }
 
 /* Graph statistics */
@@ -11988,11 +12071,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-10 21:53:28 UTC
+ * Build completed: 2025-10-10 23:07:52 UTC
  * Components processed: 21
- * Total lines: 11773
- * Total size: 249.22 KB
- * Build duration: 0.02 seconds
+ * Total lines: 11856
+ * Total size: 250.79 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -12010,7 +12093,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 868 lines, 20.75 KB
  * - sonic-graph.css: 3365 lines, 72.4 KB
- * - local-soundscape.css: 282 lines, 5.11 KB
+ * - local-soundscape.css: 365 lines, 6.68 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

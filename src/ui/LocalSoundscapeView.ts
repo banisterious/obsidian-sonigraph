@@ -35,11 +35,23 @@ export class LocalSoundscapeView extends ItemView {
 	private extractor: LocalSoundscapeExtractor;
 	private renderer: LocalSoundscapeRenderer | null = null;
 
+	// Audio state
+	private isPlaying: boolean = false;
+	private currentVoiceCount: number = 0;
+	private currentVolume: number = 0;
+
 	// UI containers
 	private containerEl: HTMLElement;
 	private headerContainer: HTMLElement;
 	private graphContainer: HTMLElement;
 	private sidebarContainer: HTMLElement;
+	private playbackContentContainer: HTMLElement | null = null;
+
+	// Playback controls
+	private playButton: HTMLButtonElement | null = null;
+	private stopButton: HTMLButtonElement | null = null;
+	private voiceCountDisplay: HTMLElement | null = null;
+	private volumeDisplay: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
@@ -231,11 +243,11 @@ export class LocalSoundscapeView extends ItemView {
 			if (content) content.classList.add('active');
 		});
 
-		// Populate playback tab (placeholder for now)
-		playbackContent.createDiv({
-			cls: 'placeholder-message',
-			text: 'Audio controls will appear here in Phase 2'
-		});
+		// Store playback content container for later updates
+		this.playbackContentContainer = playbackContent as HTMLElement;
+
+		// Create playback controls
+		this.createPlaybackControls(playbackContent as HTMLElement);
 
 		// Populate settings tab (placeholder for now)
 		settingsContent.createDiv({
@@ -244,6 +256,59 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		logger.debug('sidebar-created', 'Sidebar created with tabs');
+	}
+
+	/**
+	 * Create playback controls in sidebar
+	 */
+	private createPlaybackControls(container: HTMLElement): void {
+		// Playback buttons section
+		const buttonSection = container.createDiv({ cls: 'playback-buttons' });
+
+		// Play/Pause button
+		this.playButton = buttonSection.createEl('button', {
+			cls: 'playback-button play-button',
+			attr: { 'aria-label': 'Play soundscape' }
+		});
+		this.playButton.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polygon points="5 3 19 12 5 21 5 3"></polygon>
+			</svg>
+			<span>Play</span>
+		`;
+		this.playButton.addEventListener('click', () => this.togglePlayback());
+
+		// Stop button
+		this.stopButton = buttonSection.createEl('button', {
+			cls: 'playback-button stop-button',
+			attr: { 'aria-label': 'Stop soundscape', 'disabled': '' }
+		});
+		this.stopButton.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<rect x="3" y="3" width="18" height="18"></rect>
+			</svg>
+			<span>Stop</span>
+		`;
+		this.stopButton.addEventListener('click', () => this.stopPlayback());
+
+		// Voice count and volume display
+		const statsSection = container.createDiv({ cls: 'playback-stats' });
+
+		const voiceCountContainer = statsSection.createDiv({ cls: 'stat-item' });
+		voiceCountContainer.createSpan({ text: 'Active Voices:', cls: 'stat-label' });
+		this.voiceCountDisplay = voiceCountContainer.createSpan({
+			text: '0',
+			cls: 'stat-value voice-count'
+		});
+
+		const volumeContainer = statsSection.createDiv({ cls: 'stat-item' });
+		volumeContainer.createSpan({ text: 'Volume:', cls: 'stat-label' });
+		this.volumeDisplay = volumeContainer.createSpan({
+			text: '0%',
+			cls: 'stat-value volume-level'
+		});
+
+		logger.debug('playback-controls-created', 'Playback controls initialized');
 	}
 
 	/**
@@ -408,10 +473,108 @@ export class LocalSoundscapeView extends ItemView {
 		statsList.createEl('li', { text: `Links: ${this.graphData.stats.totalLinks}` });
 		statsList.createEl('li', { text: `Incoming: ${this.graphData.stats.incomingCount}` });
 		statsList.createEl('li', { text: `Outgoing: ${this.graphData.stats.outgoingCount}` });
+	}
 
-		// Placeholder for audio controls (Phase 2)
-		const audioPlaceholder = playbackContent.createDiv({ cls: 'placeholder-message' });
-		audioPlaceholder.createEl('p', { text: 'Audio controls will appear here in Phase 2' });
+	/**
+	 * Toggle playback state
+	 */
+	private async togglePlayback(): Promise<void> {
+		if (!this.graphData || !this.centerFile) {
+			logger.warn('toggle-playback', 'No graph data or center file');
+			return;
+		}
+
+		if (this.isPlaying) {
+			await this.pausePlayback();
+		} else {
+			await this.startPlayback();
+		}
+	}
+
+	/**
+	 * Start audio playback
+	 */
+	private async startPlayback(): Promise<void> {
+		logger.info('playback-start', 'Starting soundscape playback');
+
+		// TODO: Implement audio integration in next step
+		// For now, just update UI state
+
+		this.isPlaying = true;
+		this.updatePlaybackUI();
+
+		logger.info('playback-started', 'Soundscape playback started');
+	}
+
+	/**
+	 * Pause audio playback
+	 */
+	private async pausePlayback(): Promise<void> {
+		logger.info('playback-pause', 'Pausing soundscape playback');
+
+		// TODO: Implement audio integration in next step
+
+		this.isPlaying = false;
+		this.updatePlaybackUI();
+
+		logger.info('playback-paused', 'Soundscape playback paused');
+	}
+
+	/**
+	 * Stop audio playback
+	 */
+	private async stopPlayback(): Promise<void> {
+		logger.info('playback-stop', 'Stopping soundscape playback');
+
+		// TODO: Implement audio integration in next step
+
+		this.isPlaying = false;
+		this.currentVoiceCount = 0;
+		this.currentVolume = 0;
+		this.updatePlaybackUI();
+
+		logger.info('playback-stopped', 'Soundscape playback stopped');
+	}
+
+	/**
+	 * Update playback UI based on current state
+	 */
+	private updatePlaybackUI(): void {
+		if (!this.playButton || !this.stopButton) return;
+
+		if (this.isPlaying) {
+			// Update play button to show pause icon
+			this.playButton.innerHTML = `
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="6" y="4" width="4" height="16"></rect>
+					<rect x="14" y="4" width="4" height="16"></rect>
+				</svg>
+				<span>Pause</span>
+			`;
+			this.playButton.classList.add('playing');
+			this.stopButton.removeAttribute('disabled');
+		} else {
+			// Update play button to show play icon
+			this.playButton.innerHTML = `
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polygon points="5 3 19 12 5 21 5 3"></polygon>
+				</svg>
+				<span>Play</span>
+			`;
+			this.playButton.classList.remove('playing');
+
+			if (this.currentVoiceCount === 0) {
+				this.stopButton.setAttribute('disabled', '');
+			}
+		}
+
+		// Update voice count and volume displays
+		if (this.voiceCountDisplay) {
+			this.voiceCountDisplay.textContent = this.currentVoiceCount.toString();
+		}
+		if (this.volumeDisplay) {
+			this.volumeDisplay.textContent = `${Math.round(this.currentVolume * 100)}%`;
+		}
 	}
 
 	/**

@@ -36,6 +36,10 @@ export {
     BUILT_IN_PRESETS
 } from './ConnectionTypeMappingConfig';
 
+// Local Soundscape / Note Journey: Depth-Based Mapping
+export { DepthBasedMapper } from './DepthBasedMapper';
+export type { DepthMappingConfig, DepthMapping } from './DepthBasedMapper';
+
 // Re-export types for external use
 export type {
     FileMetadataMapping,

@@ -183,6 +183,89 @@
 	display: block;
 }
 
+/* Playback controls */
+.playback-buttons {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.playback-button {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 16px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.playback-button:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.playback-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.playback-button.playing {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.playback-button svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* Playback stats */
+.playback-stats {
+	margin-bottom: 16px;
+	padding: 12px;
+	background: var(--background-primary-alt);
+	border-radius: 6px;
+}
+
+.playback-stats .stat-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 0;
+}
+
+.playback-stats .stat-item:not(:last-child) {
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.playback-stats .stat-label {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.playback-stats .stat-value {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.playback-stats .voice-count {
+	color: var(--color-green);
+}
+
+.playback-stats .volume-level {
+	color: var(--color-cyan);
+}
+
 /* Graph statistics */
 .stats-section {
 	margin-bottom: 16px;
