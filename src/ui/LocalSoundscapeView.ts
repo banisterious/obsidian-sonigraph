@@ -107,6 +107,11 @@ export class LocalSoundscapeView extends ItemView {
 		container.empty();
 		container.addClass('local-soundscape-view');
 
+		// Ensure container has height (ItemView sometimes doesn't set this automatically)
+		if (!container.style.height) {
+			container.style.height = '100%';
+		}
+
 		// Create main layout structure
 		this.createLayout();
 
@@ -116,6 +121,10 @@ export class LocalSoundscapeView extends ItemView {
 				this.markAsStale();
 			})
 		);
+
+		// Wait for the workspace leaf to have dimensions before proceeding
+		// The leaf container needs to be sized before our flex layout can work
+		await this.waitForLeafReady();
 
 		// Initialize with active file if available
 		const activeFile = this.app.workspace.getActiveFile();
@@ -230,7 +239,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Staleness indicator
 		this.stalenessIndicator = controlsSection.createDiv({
-			cls: 'staleness-indicator',
+			cls: 'staleness-indicator up-to-date',
 			text: 'Up-to-date'
 		});
 
@@ -387,13 +396,8 @@ export class LocalSoundscapeView extends ItemView {
 		logger.info('set-center', 'Setting center file', { file: file.path });
 
 		// Stop any playing audio when switching to a new center file
-		if (this.isPlaying && this.plugin.audioEngine) {
-			this.plugin.audioEngine.stop();
-			this.isPlaying = false;
-			this.currentMappings = [];
-			this.currentVoiceCount = 0;
-			this.currentVolume = 0;
-			this.updatePlaybackUI();
+		if (this.isPlaying) {
+			await this.stopPlayback();
 		}
 
 		this.centerFile = file;
@@ -404,11 +408,57 @@ export class LocalSoundscapeView extends ItemView {
 			centerNoteName.textContent = file.basename;
 		}
 
-		// Wait for container to have dimensions (fixes first-load issue)
-		await this.waitForContainerReady();
+		try {
+			// Wait for container to have dimensions (fixes first-load issue)
+			await this.waitForContainerReady();
 
-		// Extract and render graph
-		await this.extractAndRenderGraph();
+			// Extract and render graph
+			await this.extractAndRenderGraph();
+		} catch (error) {
+			logger.error('set-center-error', 'Failed to set center file', { error: String(error) });
+			new Notice('Failed to load graph. Please try again or reload Obsidian.');
+
+			// Show error in graph container
+			this.graphContainer.empty();
+			const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
+			errorDiv.createEl('p', { text: 'Failed to load graph. Container not ready.' });
+			errorDiv.createEl('p', { text: 'Please try connecting again.' });
+		}
+	}
+
+	/**
+	 * Wait for the workspace leaf to be sized by Obsidian
+	 * This must happen before our flex containers can calculate their dimensions
+	 */
+	private async waitForLeafReady(): Promise<void> {
+		const maxAttempts = 50;
+		const delayMs = 100;
+
+		for (let i = 0; i < maxAttempts; i++) {
+			const leafContainer = this.containerEl.parentElement;
+			const width = leafContainer?.clientWidth || 0;
+			const height = leafContainer?.clientHeight || 0;
+
+			if (width > 0 && height > 0) {
+				logger.info('leaf-ready', 'Workspace leaf ready', { width, height, attempts: i + 1 });
+				return;
+			}
+
+			if (i === 0 || i % 10 === 0) {
+				logger.debug('leaf-wait', 'Waiting for workspace leaf dimensions', {
+					attempt: i + 1,
+					leafWidth: width,
+					leafHeight: height,
+					containerElWidth: this.containerEl.clientWidth,
+					containerElHeight: this.containerEl.clientHeight
+				});
+			}
+
+			await new Promise(resolve => setTimeout(resolve, delayMs));
+		}
+
+		logger.warn('leaf-timeout', 'Workspace leaf not ready after timeout');
+		// Don't throw - allow view to try anyway
 	}
 
 	/**
@@ -416,26 +466,69 @@ export class LocalSoundscapeView extends ItemView {
 	 * Fixes issue where graph doesn't appear on first load
 	 */
 	private async waitForContainerReady(): Promise<void> {
-		const maxAttempts = 20;
-		const delayMs = 50;
+		const maxAttempts = 50;
+		const delayMs = 100;
 
 		for (let i = 0; i < maxAttempts; i++) {
 			const width = this.graphContainer.clientWidth;
 			const height = this.graphContainer.clientHeight;
 
+			// Check if container is actually visible and has dimensions
 			if (width > 0 && height > 0) {
-				logger.debug('container-ready', 'Container ready', { width, height, attempts: i + 1 });
-				return;
+				// Additional check: make sure parent chain is visible
+				const computedStyle = window.getComputedStyle(this.graphContainer);
+				const isVisible = computedStyle.display !== 'none' && computedStyle.visibility !== 'hidden';
+
+				if (isVisible) {
+					logger.info('container-ready', 'Container ready', { width, height, attempts: i + 1 });
+					return;
+				}
 			}
 
-			logger.debug('container-wait', 'Waiting for container dimensions', { attempt: i + 1, width, height });
+			// On first few attempts, force layout reflow to help flex containers calculate
+			if (i < 5) {
+				// Force a reflow by reading offsetHeight
+				void this.containerEl.offsetHeight;
+			}
+
+			if (i === 0 || i % 10 === 0) {
+				// Log parent container dimensions for debugging
+				const contentContainer = this.graphContainer.parentElement;
+				const mainContainer = contentContainer?.parentElement;
+				const viewContainer = this.containerEl;
+				const leafContainer = viewContainer.parentElement;
+
+				logger.debug('container-wait', 'Waiting for container dimensions', {
+					attempt: i + 1,
+					graphWidth: width,
+					graphHeight: height,
+					graphDisplay: window.getComputedStyle(this.graphContainer).display,
+					contentWidth: contentContainer?.clientWidth || 0,
+					contentHeight: contentContainer?.clientHeight || 0,
+					contentDisplay: contentContainer ? window.getComputedStyle(contentContainer).display : 'N/A',
+					mainWidth: mainContainer?.clientWidth || 0,
+					mainHeight: mainContainer?.clientHeight || 0,
+					mainDisplay: mainContainer ? window.getComputedStyle(mainContainer).display : 'N/A',
+					containerElWidth: viewContainer.clientWidth,
+					containerElHeight: viewContainer.clientHeight,
+					containerElDisplay: window.getComputedStyle(viewContainer).display,
+					leafWidth: leafContainer?.clientWidth || 0,
+					leafHeight: leafContainer?.clientHeight || 0
+				});
+			}
+
 			await new Promise(resolve => setTimeout(resolve, delayMs));
 		}
 
-		logger.warn('container-timeout', 'Container dimensions not ready after timeout', {
+		logger.error('container-timeout', 'Container dimensions not ready after timeout', {
 			width: this.graphContainer.clientWidth,
-			height: this.graphContainer.clientHeight
+			height: this.graphContainer.clientHeight,
+			display: window.getComputedStyle(this.graphContainer).display,
+			visibility: window.getComputedStyle(this.graphContainer).visibility
 		});
+
+		// Throw error so caller knows container isn't ready
+		throw new Error('Container not ready after timeout');
 	}
 
 	/**
@@ -458,13 +551,8 @@ export class LocalSoundscapeView extends ItemView {
 		// Show user feedback
 		new Notice(`Updating to depth ${depth}...`);
 
-		// Dispose renderer so it gets recreated with new data
-		if (this.renderer) {
-			this.renderer.dispose();
-			this.renderer = null;
-		}
-
 		// Re-extract and render graph with new depth
+		// (extractAndRenderGraph will dispose the old renderer automatically)
 		if (this.centerFile) {
 			await this.extractAndRenderGraph();
 
@@ -493,13 +581,21 @@ export class LocalSoundscapeView extends ItemView {
 				await this.stopPlayback();
 			}
 
-			// Re-extract and render
-			await this.extractAndRenderGraph();
+			try {
+				// Wait for container to be ready (in case view was resized or hidden)
+				await this.waitForContainerReady();
 
-			// Mark as up-to-date
-			this.markAsUpToDate();
+				// Re-extract and render
+				await this.extractAndRenderGraph();
 
-			new Notice('Graph refreshed');
+				// Mark as up-to-date
+				this.markAsUpToDate();
+
+				new Notice('Graph refreshed');
+			} catch (error) {
+				logger.error('refresh-error', 'Failed to refresh graph', { error: String(error) });
+				new Notice('Failed to refresh graph. Please try again.');
+			}
 		} else {
 			new Notice('No note selected');
 		}
@@ -511,19 +607,26 @@ export class LocalSoundscapeView extends ItemView {
 	private markAsStale(): void {
 		// Only mark as stale if we have graph data and enough time has passed since extraction
 		if (!this.graphData || !this.lastExtractionTime) {
+			logger.debug('staleness', 'Skipping stale mark - no graph data or extraction time');
 			return;
 		}
 
-		// Don't mark stale if extracted very recently (< 1 second ago)
+		// Don't mark stale if extracted very recently (< 2 seconds ago)
+		// This prevents marking stale due to metadata changes triggered by the extraction itself
 		const timeSinceExtraction = Date.now() - this.lastExtractionTime;
-		if (timeSinceExtraction < 1000) {
+		if (timeSinceExtraction < 2000) {
+			logger.debug('staleness', 'Skipping stale mark - extraction too recent', {
+				timeSinceExtraction: `${(timeSinceExtraction / 1000).toFixed(1)}s`
+			});
 			return;
 		}
 
 		if (!this.isStale) {
 			this.isStale = true;
 			this.updateStalenessIndicator();
-			logger.info('staleness', 'Graph marked as stale');
+			logger.info('staleness', 'Graph marked as stale', {
+				timeSinceExtraction: `${(timeSinceExtraction / 1000).toFixed(1)}s`
+			});
 		}
 	}
 
@@ -593,6 +696,12 @@ export class LocalSoundscapeView extends ItemView {
 			depth: this.currentDepth
 		});
 
+		// Dispose existing renderer if it exists (we'll create a new one)
+		if (this.renderer) {
+			this.renderer.dispose();
+			this.renderer = null;
+		}
+
 		// Clear existing graph
 		this.graphContainer.empty();
 
@@ -619,26 +728,39 @@ export class LocalSoundscapeView extends ItemView {
 			// Display extraction stats in sidebar
 			this.displayGraphStats();
 
-			// Initialize renderer if not already created
-			if (!this.renderer) {
-				const rendererConfig: Partial<RendererConfig> = {
-					width: this.graphContainer.clientWidth || 800,
-					height: this.graphContainer.clientHeight || 600,
-					nodeRadius: 8,
-					showLabels: true,
-					enableZoom: true
-				};
-				this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
+			// Get container dimensions - must be valid at this point
+			const width = this.graphContainer.clientWidth;
+			const height = this.graphContainer.clientHeight;
 
-				// Set up node interaction callbacks
-				this.renderer.setCallbacks(
-					(node) => this.handleNodeOpen(node),
-					(node) => this.handleNodeRecenter(node)
-				);
+			if (width === 0 || height === 0) {
+				logger.error('render-error', 'Container has no dimensions, cannot render', { width, height });
+				const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
+				errorDiv.createEl('p', { text: 'Error: Container not ready. Please try connecting again.' });
+				return;
 			}
 
+			// Always create a new renderer for each graph
+			const rendererConfig: Partial<RendererConfig> = {
+				width,
+				height,
+				nodeRadius: 8,
+				showLabels: true,
+				enableZoom: true
+			};
+
+			logger.info('renderer-init', 'Initializing renderer', { width, height });
+			this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
+
+			// Set up node interaction callbacks
+			this.renderer.setCallbacks(
+				(node) => this.handleNodeOpen(node),
+				(node) => this.handleNodeRecenter(node)
+			);
+
 			// Render the graph
+			logger.info('render-start', 'Starting graph render');
 			this.renderer.render(this.graphData);
+			logger.info('render-complete', 'Graph render complete');
 
 			// Mark as up-to-date after successful extraction
 			this.markAsUpToDate();

@@ -79768,11 +79768,11 @@ var LocalSoundscapeRenderer = class {
    * Create tooltip element
    */
   createTooltip() {
-    this.tooltip = this.container.createDiv({ cls: "local-soundscape-tooltip" });
+    this.tooltip = document.body.createDiv({ cls: "local-soundscape-tooltip" });
     this.tooltip.style.position = "fixed";
     this.tooltip.style.display = "none";
     this.tooltip.style.pointerEvents = "none";
-    this.tooltip.style.zIndex = "1000";
+    this.tooltip.style.zIndex = "10000";
   }
   /**
    * Show tooltip with node info
@@ -79806,10 +79806,10 @@ var LocalSoundscapeRenderer = class {
    * Create context menu element
    */
   createContextMenu() {
-    this.contextMenu = this.container.createDiv({ cls: "local-soundscape-context-menu" });
+    this.contextMenu = document.body.createDiv({ cls: "local-soundscape-context-menu" });
     this.contextMenu.style.position = "fixed";
     this.contextMenu.style.display = "none";
-    this.contextMenu.style.zIndex = "1000";
+    this.contextMenu.style.zIndex = "10000";
     document.addEventListener("click", () => {
       this.hideContextMenu();
     });
@@ -79947,12 +79947,16 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     const container = this.containerEl;
     container.empty();
     container.addClass("local-soundscape-view");
+    if (!container.style.height) {
+      container.style.height = "100%";
+    }
     this.createLayout();
     this.registerEvent(
       this.app.metadataCache.on("changed", () => {
         this.markAsStale();
       })
     );
+    await this.waitForLeafReady();
     const activeFile = this.app.workspace.getActiveFile();
     if (activeFile) {
       await this.setCenterFile(activeFile);
@@ -80031,7 +80035,7 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
       this.refresh();
     });
     this.stalenessIndicator = controlsSection.createDiv({
-      cls: "staleness-indicator",
+      cls: "staleness-indicator up-to-date",
       text: "Up-to-date"
     });
     logger72.debug("header-created", "Header created with controls");
@@ -80151,43 +80155,107 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    */
   async setCenterFile(file) {
     logger72.info("set-center", "Setting center file", { file: file.path });
-    if (this.isPlaying && this.plugin.audioEngine) {
-      this.plugin.audioEngine.stop();
-      this.isPlaying = false;
-      this.currentMappings = [];
-      this.currentVoiceCount = 0;
-      this.currentVolume = 0;
-      this.updatePlaybackUI();
+    if (this.isPlaying) {
+      await this.stopPlayback();
     }
     this.centerFile = file;
     const centerNoteName = this.headerContainer.querySelector(".center-note-name");
     if (centerNoteName) {
       centerNoteName.textContent = file.basename;
     }
-    await this.waitForContainerReady();
-    await this.extractAndRenderGraph();
+    try {
+      await this.waitForContainerReady();
+      await this.extractAndRenderGraph();
+    } catch (error) {
+      logger72.error("set-center-error", "Failed to set center file", { error: String(error) });
+      new import_obsidian28.Notice("Failed to load graph. Please try again or reload Obsidian.");
+      this.graphContainer.empty();
+      const errorDiv = this.graphContainer.createDiv({ cls: "error-message" });
+      errorDiv.createEl("p", { text: "Failed to load graph. Container not ready." });
+      errorDiv.createEl("p", { text: "Please try connecting again." });
+    }
+  }
+  /**
+   * Wait for the workspace leaf to be sized by Obsidian
+   * This must happen before our flex containers can calculate their dimensions
+   */
+  async waitForLeafReady() {
+    const maxAttempts = 50;
+    const delayMs = 100;
+    for (let i = 0; i < maxAttempts; i++) {
+      const leafContainer = this.containerEl.parentElement;
+      const width = (leafContainer == null ? void 0 : leafContainer.clientWidth) || 0;
+      const height = (leafContainer == null ? void 0 : leafContainer.clientHeight) || 0;
+      if (width > 0 && height > 0) {
+        logger72.info("leaf-ready", "Workspace leaf ready", { width, height, attempts: i + 1 });
+        return;
+      }
+      if (i === 0 || i % 10 === 0) {
+        logger72.debug("leaf-wait", "Waiting for workspace leaf dimensions", {
+          attempt: i + 1,
+          leafWidth: width,
+          leafHeight: height,
+          containerElWidth: this.containerEl.clientWidth,
+          containerElHeight: this.containerEl.clientHeight
+        });
+      }
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    logger72.warn("leaf-timeout", "Workspace leaf not ready after timeout");
   }
   /**
    * Wait for graph container to have valid dimensions
    * Fixes issue where graph doesn't appear on first load
    */
   async waitForContainerReady() {
-    const maxAttempts = 20;
-    const delayMs = 50;
+    const maxAttempts = 50;
+    const delayMs = 100;
     for (let i = 0; i < maxAttempts; i++) {
       const width = this.graphContainer.clientWidth;
       const height = this.graphContainer.clientHeight;
       if (width > 0 && height > 0) {
-        logger72.debug("container-ready", "Container ready", { width, height, attempts: i + 1 });
-        return;
+        const computedStyle = window.getComputedStyle(this.graphContainer);
+        const isVisible = computedStyle.display !== "none" && computedStyle.visibility !== "hidden";
+        if (isVisible) {
+          logger72.info("container-ready", "Container ready", { width, height, attempts: i + 1 });
+          return;
+        }
       }
-      logger72.debug("container-wait", "Waiting for container dimensions", { attempt: i + 1, width, height });
+      if (i < 5) {
+        void this.containerEl.offsetHeight;
+      }
+      if (i === 0 || i % 10 === 0) {
+        const contentContainer = this.graphContainer.parentElement;
+        const mainContainer = contentContainer == null ? void 0 : contentContainer.parentElement;
+        const viewContainer = this.containerEl;
+        const leafContainer = viewContainer.parentElement;
+        logger72.debug("container-wait", "Waiting for container dimensions", {
+          attempt: i + 1,
+          graphWidth: width,
+          graphHeight: height,
+          graphDisplay: window.getComputedStyle(this.graphContainer).display,
+          contentWidth: (contentContainer == null ? void 0 : contentContainer.clientWidth) || 0,
+          contentHeight: (contentContainer == null ? void 0 : contentContainer.clientHeight) || 0,
+          contentDisplay: contentContainer ? window.getComputedStyle(contentContainer).display : "N/A",
+          mainWidth: (mainContainer == null ? void 0 : mainContainer.clientWidth) || 0,
+          mainHeight: (mainContainer == null ? void 0 : mainContainer.clientHeight) || 0,
+          mainDisplay: mainContainer ? window.getComputedStyle(mainContainer).display : "N/A",
+          containerElWidth: viewContainer.clientWidth,
+          containerElHeight: viewContainer.clientHeight,
+          containerElDisplay: window.getComputedStyle(viewContainer).display,
+          leafWidth: (leafContainer == null ? void 0 : leafContainer.clientWidth) || 0,
+          leafHeight: (leafContainer == null ? void 0 : leafContainer.clientHeight) || 0
+        });
+      }
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
-    logger72.warn("container-timeout", "Container dimensions not ready after timeout", {
+    logger72.error("container-timeout", "Container dimensions not ready after timeout", {
       width: this.graphContainer.clientWidth,
-      height: this.graphContainer.clientHeight
+      height: this.graphContainer.clientHeight,
+      display: window.getComputedStyle(this.graphContainer).display,
+      visibility: window.getComputedStyle(this.graphContainer).visibility
     });
+    throw new Error("Container not ready after timeout");
   }
   /**
    * Set the depth level
@@ -80204,10 +80272,6 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     }
     this.currentDepth = depth;
     new import_obsidian28.Notice(`Updating to depth ${depth}...`);
-    if (this.renderer) {
-      this.renderer.dispose();
-      this.renderer = null;
-    }
     if (this.centerFile) {
       await this.extractAndRenderGraph();
       if (wasPlaying && this.graphData) {
@@ -80228,9 +80292,15 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
       if (this.isPlaying) {
         await this.stopPlayback();
       }
-      await this.extractAndRenderGraph();
-      this.markAsUpToDate();
-      new import_obsidian28.Notice("Graph refreshed");
+      try {
+        await this.waitForContainerReady();
+        await this.extractAndRenderGraph();
+        this.markAsUpToDate();
+        new import_obsidian28.Notice("Graph refreshed");
+      } catch (error) {
+        logger72.error("refresh-error", "Failed to refresh graph", { error: String(error) });
+        new import_obsidian28.Notice("Failed to refresh graph. Please try again.");
+      }
     } else {
       new import_obsidian28.Notice("No note selected");
     }
@@ -80240,16 +80310,22 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    */
   markAsStale() {
     if (!this.graphData || !this.lastExtractionTime) {
+      logger72.debug("staleness", "Skipping stale mark - no graph data or extraction time");
       return;
     }
     const timeSinceExtraction = Date.now() - this.lastExtractionTime;
-    if (timeSinceExtraction < 1e3) {
+    if (timeSinceExtraction < 2e3) {
+      logger72.debug("staleness", "Skipping stale mark - extraction too recent", {
+        timeSinceExtraction: `${(timeSinceExtraction / 1e3).toFixed(1)}s`
+      });
       return;
     }
     if (!this.isStale) {
       this.isStale = true;
       this.updateStalenessIndicator();
-      logger72.info("staleness", "Graph marked as stale");
+      logger72.info("staleness", "Graph marked as stale", {
+        timeSinceExtraction: `${(timeSinceExtraction / 1e3).toFixed(1)}s`
+      });
     }
   }
   /**
@@ -80309,6 +80385,10 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
       center: this.centerFile.path,
       depth: this.currentDepth
     });
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer = null;
+    }
     this.graphContainer.empty();
     const loadingIndicator = this.graphContainer.createDiv({ cls: "loading-indicator" });
     loadingIndicator.createEl("p", { text: "Extracting graph data..." });
@@ -80324,21 +80404,30 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
       });
       this.graphContainer.empty();
       this.displayGraphStats();
-      if (!this.renderer) {
-        const rendererConfig = {
-          width: this.graphContainer.clientWidth || 800,
-          height: this.graphContainer.clientHeight || 600,
-          nodeRadius: 8,
-          showLabels: true,
-          enableZoom: true
-        };
-        this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
-        this.renderer.setCallbacks(
-          (node) => this.handleNodeOpen(node),
-          (node) => this.handleNodeRecenter(node)
-        );
+      const width = this.graphContainer.clientWidth;
+      const height = this.graphContainer.clientHeight;
+      if (width === 0 || height === 0) {
+        logger72.error("render-error", "Container has no dimensions, cannot render", { width, height });
+        const errorDiv = this.graphContainer.createDiv({ cls: "error-message" });
+        errorDiv.createEl("p", { text: "Error: Container not ready. Please try connecting again." });
+        return;
       }
+      const rendererConfig = {
+        width,
+        height,
+        nodeRadius: 8,
+        showLabels: true,
+        enableZoom: true
+      };
+      logger72.info("renderer-init", "Initializing renderer", { width, height });
+      this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
+      this.renderer.setCallbacks(
+        (node) => this.handleNodeOpen(node),
+        (node) => this.handleNodeRecenter(node)
+      );
+      logger72.info("render-start", "Starting graph render");
       this.renderer.render(this.graphData);
+      logger72.info("render-complete", "Graph render complete");
       this.markAsUpToDate();
       logger72.info("extract-complete", "Graph extraction and rendering complete");
     } catch (error) {

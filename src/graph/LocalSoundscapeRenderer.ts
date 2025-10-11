@@ -402,11 +402,12 @@ export class LocalSoundscapeRenderer {
 	 * Create tooltip element
 	 */
 	private createTooltip(): void {
-		this.tooltip = this.container.createDiv({ cls: 'local-soundscape-tooltip' });
+		// Create tooltip at body level to avoid container overflow issues
+		this.tooltip = document.body.createDiv({ cls: 'local-soundscape-tooltip' });
 		this.tooltip.style.position = 'fixed';
 		this.tooltip.style.display = 'none';
 		this.tooltip.style.pointerEvents = 'none';
-		this.tooltip.style.zIndex = '1000';
+		this.tooltip.style.zIndex = '10000';
 	}
 
 	/**
@@ -449,10 +450,11 @@ export class LocalSoundscapeRenderer {
 	 * Create context menu element
 	 */
 	private createContextMenu(): void {
-		this.contextMenu = this.container.createDiv({ cls: 'local-soundscape-context-menu' });
+		// Create context menu at body level to avoid container overflow issues
+		this.contextMenu = document.body.createDiv({ cls: 'local-soundscape-context-menu' });
 		this.contextMenu.style.position = 'fixed';
 		this.contextMenu.style.display = 'none';
-		this.contextMenu.style.zIndex = '1000';
+		this.contextMenu.style.zIndex = '10000';
 
 		// Close context menu when clicking elsewhere
 		document.addEventListener('click', () => {
