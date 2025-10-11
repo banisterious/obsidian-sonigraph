@@ -78666,7 +78666,7 @@ var LocalSoundscapeExtractor = class {
     const links = [];
     const visitedNodes = /* @__PURE__ */ new Set();
     const nodeDirections = /* @__PURE__ */ new Map();
-    const centerNode = await this.createNode(centerFile, 0, "center");
+    const centerNode = this.createNode(centerFile, 0, "center");
     allNodes.push(centerNode);
     visitedNodes.add(centerFile.path);
     nodesByDepth.set(0, [centerNode]);
@@ -78720,7 +78720,7 @@ var LocalSoundscapeExtractor = class {
             }
           }
           nodeDirections.set(linkedFile.path, direction);
-          const node = await this.createNode(linkedFile, depth + 1, direction);
+          const node = this.createNode(linkedFile, depth + 1, direction);
           allNodes.push(node);
           if (!nodesByDepth.has(depth + 1)) {
             nodesByDepth.set(depth + 1, []);
@@ -78767,7 +78767,7 @@ var LocalSoundscapeExtractor = class {
               }
             }
             nodeDirections.set(backlinkPath, direction);
-            const node = await this.createNode(backlinkFile, depth + 1, direction);
+            const node = this.createNode(backlinkFile, depth + 1, direction);
             allNodes.push(node);
             if (!nodesByDepth.has(depth + 1)) {
               nodesByDepth.set(depth + 1, []);
@@ -78821,10 +78821,10 @@ var LocalSoundscapeExtractor = class {
   }
   /**
    * Create a node from a file
+   * Note: Word count is approximated from file size to avoid slow file reads
    */
-  async createNode(file, depth, direction) {
-    const content = await this.app.vault.cachedRead(file);
-    const wordCount = content.split(/\s+/).length;
+  createNode(file, depth, direction) {
+    const wordCount = Math.floor(file.stat.size / 5);
     return {
       id: file.path,
       path: file.path,
@@ -79419,7 +79419,12 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    * Create playback controls in sidebar
    */
   createPlaybackControls(container) {
+    logger72.info("create-playback-controls", "Creating playback controls", {
+      containerExists: !!container,
+      containerClass: container.className
+    });
     const buttonSection = container.createDiv({ cls: "playback-buttons" });
+    logger72.debug("playback-buttons-created", "Button section created");
     this.playButton = buttonSection.createEl("button", {
       cls: "playback-button play-button",
       attr: { "aria-label": "Play soundscape" }

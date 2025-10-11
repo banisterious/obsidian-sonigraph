@@ -262,8 +262,14 @@ export class LocalSoundscapeView extends ItemView {
 	 * Create playback controls in sidebar
 	 */
 	private createPlaybackControls(container: HTMLElement): void {
+		logger.info('create-playback-controls', 'Creating playback controls', {
+			containerExists: !!container,
+			containerClass: container.className
+		});
+
 		// Playback buttons section
 		const buttonSection = container.createDiv({ cls: 'playback-buttons' });
+		logger.debug('playback-buttons-created', 'Button section created');
 
 		// Play/Pause button
 		this.playButton = buttonSection.createEl('button', {

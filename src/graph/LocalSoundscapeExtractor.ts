@@ -71,7 +71,7 @@ export class LocalSoundscapeExtractor {
 		const nodeDirections = new Map<string, 'incoming' | 'outgoing' | 'bidirectional'>();
 
 		// Create center node
-		const centerNode = await this.createNode(centerFile, 0, 'center');
+		const centerNode = this.createNode(centerFile, 0, 'center');
 		allNodes.push(centerNode);
 		visitedNodes.add(centerFile.path);
 		nodesByDepth.set(0, [centerNode]);
@@ -146,7 +146,7 @@ export class LocalSoundscapeExtractor {
 					nodeDirections.set(linkedFile.path, direction);
 
 					// Create node
-					const node = await this.createNode(linkedFile, depth + 1, direction);
+					const node = this.createNode(linkedFile, depth + 1, direction);
 					allNodes.push(node);
 
 					if (!nodesByDepth.has(depth + 1)) {
@@ -209,7 +209,7 @@ export class LocalSoundscapeExtractor {
 						nodeDirections.set(backlinkPath, direction);
 
 						// Create node
-						const node = await this.createNode(backlinkFile, depth + 1, direction);
+						const node = this.createNode(backlinkFile, depth + 1, direction);
 						allNodes.push(node);
 
 						if (!nodesByDepth.has(depth + 1)) {
@@ -275,15 +275,16 @@ export class LocalSoundscapeExtractor {
 
 	/**
 	 * Create a node from a file
+	 * Note: Word count is approximated from file size to avoid slow file reads
 	 */
-	private async createNode(
+	private createNode(
 		file: TFile,
 		depth: number,
 		direction: 'center' | 'incoming' | 'outgoing' | 'bidirectional'
-	): Promise<LocalSoundscapeNode> {
-		// Get word count (approximate)
-		const content = await this.app.vault.cachedRead(file);
-		const wordCount = content.split(/\s+/).length;
+	): LocalSoundscapeNode {
+		// Approximate word count from file size (avg ~5 bytes per word)
+		// This is MUCH faster than reading every file
+		const wordCount = Math.floor(file.stat.size / 5);
 
 		return {
 			id: file.path,
