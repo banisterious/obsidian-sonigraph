@@ -586,16 +586,29 @@ depthBasedMapping: {
 - Color-coded nodes: pink (incoming), cyan (outgoing), purple (bidirectional)
 - Zoom/pan functionality with automatic fit-to-content
 
-### Phase 2: Sonification Integration (2 weeks)
+### Phase 2: Sonification Integration ✅ COMPLETE
 **Goal:** Audio works with visualization
 
-- [ ] Integrate with existing AudioEngine
-- [ ] Reuse Note Journey musical mapper
-- [ ] Add play/pause/stop controls
-- [ ] Sync audio with visible nodes
-- [ ] Volume and voice count display
+- [x] Integrate with existing AudioEngine
+- [x] Create DepthBasedMapper for depth-based musical mapping
+- [x] Add play/pause/stop controls
+- [x] Sync audio with visible nodes (setTimeout + playNoteImmediate pattern)
+- [x] Volume and voice count display
+- [x] Control Center integration with three settings cards
+- [x] Configurable maxNodesPerDepth performance setting (10-200 or 'all')
+- [x] Instrument mapping by depth with enabled instrument filtering
+- [x] Volume attenuation and directional panning controls
+- [x] Sustained note durations (2-6 seconds) for harmonic texture
 
-**Deliverable:** Can play audio based on visible graph
+**Deliverable:** ✅ Can play audio based on visible graph with Control Center configuration
+
+**Implementation Notes:**
+- Switched from playSequence() to setTimeout + playNoteImmediate() for reliable triggering
+- DepthBasedMapper queries AudioEngine for enabled instruments dynamically
+- Frequency conversion from semitone offsets to Hz for proper playback
+- 0.4 second intervals for smooth, flowing soundscape
+- Default maxNodesPerDepth increased to 100 (was 30), supports unlimited with 'all'
+- Proper timeout cleanup on pause/stop for resource management
 
 ### Phase 3: Interactive Controls (2 weeks)
 **Goal:** User can manipulate view and audio updates
