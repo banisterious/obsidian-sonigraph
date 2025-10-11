@@ -630,6 +630,11 @@ depthBasedMapping: {
 - ✅ Refresh button: Manual graph update with audio stop
 - ✅ Staleness detection: Tracks metadata changes, visual indicator with pulse animation
 - ✅ Node interaction: Hover tooltips, click to open, context menu with re-center option
+- ✅ Fixed rendering lifecycle issues:
+  - Tooltip/context menu now visible (document.body level, z-index 10000)
+  - Graph renders consistently on file switch (renderer dispose/create cycle)
+  - Container dimensions properly awaited (workspace leaf ready check)
+  - Staleness indicator correctly initialized and timed (2s grace period)
 
 ### Phase 4: Visual Polish & Settings (1-2 weeks)
 **Goal:** Production-ready feature
