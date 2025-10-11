@@ -851,6 +851,29 @@ export interface SonigraphSettings {
 		};
 		eventThrottleMs: number;
 	};
+
+	// Phase 2: Local Soundscape - Depth-based audio mapping
+	localSoundscape?: {
+		instrumentsByDepth?: {
+			center?: string[];
+			depth1?: string[];
+			depth2?: string[];
+			depth3Plus?: string[];
+		};
+		volumeByDepth?: {
+			center?: number;
+			depth1?: number;
+			depth2?: number;
+			depth3Plus?: number;
+		};
+		directionalPanning?: {
+			enabled?: boolean;
+			incomingLinks?: number;
+			outgoingLinks?: number;
+			bidirectional?: number;
+		};
+		maxNodesPerDepth?: number | 'all'; // Maximum nodes to sonify per depth level (default: 100, 'all' for unlimited)
+	};
 }
 
 export const DEFAULT_SETTINGS: SonigraphSettings = {

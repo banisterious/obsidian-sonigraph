@@ -44,6 +44,7 @@ export class LocalSoundscapeView extends ItemView {
 	private isPlaying: boolean = false;
 	private currentVoiceCount: number = 0;
 	private currentVolume: number = 0;
+	private scheduledTimeouts: number[] = []; // Store timeout IDs for cleanup
 
 	// UI containers
 	private containerEl: HTMLElement;
@@ -66,11 +67,12 @@ export class LocalSoundscapeView extends ItemView {
 		// Initialize DepthBasedMapper if we have a musical mapper
 		if (this.plugin.musicalMapper) {
 			this.depthMapper = new DepthBasedMapper(
-				{}, // Use default config
+				this.plugin.settings.localSoundscape || {}, // Use settings from Control Center
 				this.plugin.musicalMapper,
-				this.app
+				this.app,
+				this.plugin.audioEngine // Pass audio engine for enabled instruments
 			);
-			logger.info('view-init', 'DepthBasedMapper initialized');
+			logger.info('view-init', 'DepthBasedMapper initialized with Control Center settings and enabled instruments');
 		} else {
 			logger.warn('view-init', 'MusicalMapper not available, audio will not work');
 		}
@@ -114,6 +116,11 @@ export class LocalSoundscapeView extends ItemView {
 
 	async onClose(): Promise<void> {
 		logger.info('view-close', 'Closing Local Soundscape view');
+
+		// Stop audio playback
+		if (this.isPlaying && this.plugin.audioEngine) {
+			this.plugin.audioEngine.stop();
+		}
 
 		// Cleanup renderer
 		if (this.renderer) {
@@ -361,6 +368,16 @@ export class LocalSoundscapeView extends ItemView {
 	async setCenterFile(file: TFile): Promise<void> {
 		logger.info('set-center', 'Setting center file', { file: file.path });
 
+		// Stop any playing audio when switching to a new center file
+		if (this.isPlaying && this.plugin.audioEngine) {
+			this.plugin.audioEngine.stop();
+			this.isPlaying = false;
+			this.currentMappings = [];
+			this.currentVoiceCount = 0;
+			this.currentVolume = 0;
+			this.updatePlaybackUI();
+		}
+
 		this.centerFile = file;
 
 		// Update title
@@ -436,6 +453,12 @@ export class LocalSoundscapeView extends ItemView {
 				this.currentDepth
 			);
 
+			logger.info('extract-success', 'Graph data extracted successfully', {
+				totalNodes: this.graphData.stats.totalNodes,
+				maxDepth: this.graphData.stats.maxDepth,
+				centerNode: this.graphData.centerNode.basename
+			});
+
 			// Clear loading indicator
 			this.graphContainer.empty();
 
@@ -504,8 +527,16 @@ export class LocalSoundscapeView extends ItemView {
 	 * Toggle playback state
 	 */
 	private async togglePlayback(): Promise<void> {
+		console.log('🔵 PLAY BUTTON CLICKED - togglePlayback called');
+		logger.info('toggle-playback', 'Play button clicked', {
+			hasGraphData: !!this.graphData,
+			hasCenterFile: !!this.centerFile,
+			isPlaying: this.isPlaying
+		});
+
 		if (!this.graphData || !this.centerFile) {
 			logger.warn('toggle-playback', 'No graph data or center file');
+			new Notice('Please open a note in Local Soundscape first');
 			return;
 		}
 
@@ -533,30 +564,87 @@ export class LocalSoundscapeView extends ItemView {
 		logger.info('playback-start', 'Starting soundscape playback');
 
 		try {
+			// Initialize audio engine first
+			const audioStatus = this.plugin.audioEngine.getStatus();
+			if (!audioStatus.isInitialized) {
+				logger.info('audio-init', 'Initializing audio engine for playback');
+				await this.plugin.audioEngine.initialize();
+				logger.info('audio-init', 'Audio engine initialized successfully');
+			}
+
 			// Create depth-based musical mappings
 			this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
 
 			logger.info('mappings-created', 'Created depth-based musical mappings', {
-				count: this.currentMappings.length
+				count: this.currentMappings.length,
+				instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', ')
 			});
 
-			// Start audio playback using the audio engine
-			// Note: AudioEngine expects MusicalMapping[], and DepthMapping extends MusicalMapping
-			// TODO: We need to actually trigger the audio engine to play these mappings
-			// For now, just mark as playing and update voice count
+			if (this.currentMappings.length === 0) {
+				new Notice('No mappings created - check that instruments are enabled in Control Center');
+				logger.warn('playback-start', 'No mappings created from graph data');
+				return;
+			}
+
+			// Play notes individually using setTimeout (like Sonic Graph does)
+			// This bypasses the playback optimizer which was causing timing issues
 			this.isPlaying = true;
 			this.currentVoiceCount = this.currentMappings.length;
 			this.currentVolume = 0.7; // Average volume
 
 			this.updatePlaybackUI();
 
-			logger.info('playback-started', 'Soundscape playback started', {
-				voices: this.currentVoiceCount
+			logger.info('playback-started', 'Soundscape playback started - scheduling notes', {
+				voices: this.currentVoiceCount,
+				totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
+				firstNoteTiming: this.currentMappings[0].timing + 's',
+				lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + 's'
 			});
+
+			new Notice(`Playing ${this.currentVoiceCount} notes`);
+
+			// Schedule each note to play at its designated time
+			for (let i = 0; i < this.currentMappings.length; i++) {
+				const mapping = this.currentMappings[i];
+				const timeoutId = window.setTimeout(async () => {
+					if (!this.isPlaying) {
+						logger.debug('note-skip', 'Skipping note - playback stopped', { index: i, nodeId: mapping.nodeId });
+						return;
+					}
+
+					logger.debug('note-play', 'Playing note', {
+						index: i,
+						total: this.currentMappings.length,
+						nodeId: mapping.nodeId,
+						timing: mapping.timing,
+						instrument: mapping.instrument,
+						pitch: mapping.pitch.toFixed(2)
+					});
+
+					try {
+						await this.plugin.audioEngine.playNoteImmediate({
+							pitch: mapping.pitch,
+							duration: mapping.duration,
+							velocity: mapping.velocity,
+							instrument: mapping.instrument
+						}, mapping.timing, mapping.nodeId);
+					} catch (error) {
+						logger.warn('note-playback-error', 'Failed to play note', {
+							index: i,
+							nodeId: mapping.nodeId,
+							error: (error as Error).message
+						});
+					}
+				}, mapping.timing * 1000); // Convert seconds to milliseconds
+
+				this.scheduledTimeouts.push(timeoutId);
+			}
+
+			logger.info('notes-scheduled', `Scheduled ${this.scheduledTimeouts.length} notes for playback`);
 
 		} catch (error) {
 			logger.error('playback-error', 'Failed to start playback', error as Error);
-			new Notice('Failed to start audio playback');
+			new Notice(`Failed to start audio: ${error.message}`);
 			this.isPlaying = false;
 			this.updatePlaybackUI();
 		}
@@ -566,10 +654,21 @@ export class LocalSoundscapeView extends ItemView {
 	 * Pause audio playback
 	 */
 	private async pausePlayback(): Promise<void> {
+		if (!this.plugin.audioEngine) {
+			logger.warn('playback-pause', 'Cannot pause - audio engine not available');
+			return;
+		}
+
 		logger.info('playback-pause', 'Pausing soundscape playback');
 
-		// TODO: Pause audio engine playback
-		// For now, just mark as paused
+		// Clear all scheduled timeouts
+		for (const timeoutId of this.scheduledTimeouts) {
+			window.clearTimeout(timeoutId);
+		}
+		this.scheduledTimeouts = [];
+
+		// Stop the audio engine (AudioEngine doesn't have a pause method, so we stop)
+		this.plugin.audioEngine.stop();
 		this.isPlaying = false;
 		this.updatePlaybackUI();
 
@@ -580,10 +679,23 @@ export class LocalSoundscapeView extends ItemView {
 	 * Stop audio playback
 	 */
 	private async stopPlayback(): Promise<void> {
+		if (!this.plugin.audioEngine) {
+			logger.warn('playback-stop', 'Cannot stop - audio engine not available');
+			return;
+		}
+
 		logger.info('playback-stop', 'Stopping soundscape playback');
 
-		// TODO: Stop audio engine playback
-		// Clear mappings
+		// Clear all scheduled timeouts
+		for (const timeoutId of this.scheduledTimeouts) {
+			window.clearTimeout(timeoutId);
+		}
+		this.scheduledTimeouts = [];
+
+		// Stop audio engine playback
+		this.plugin.audioEngine.stop();
+
+		// Clear mappings and reset state
 		this.currentMappings = [];
 		this.isPlaying = false;
 		this.currentVoiceCount = 0;

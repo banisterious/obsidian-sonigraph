@@ -371,6 +371,12 @@ export const TAB_CONFIGS = [
     name: 'Sonic Graph',
     icon: 'globe',
     description: 'Knowledge graph visualization with temporal animation'
+  },
+  {
+    id: 'local-soundscape',
+    name: 'Local Soundscape',
+    icon: 'compass',
+    description: 'Depth-based audio mapping for note exploration'
   }
 ] as const;
 

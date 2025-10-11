@@ -865,3 +865,36 @@
 .osp-actions-row--spaced {
   margin-top: var(--md-space-4);
 }
+
+/* ==========================================================================
+   LOCAL SOUNDSCAPE SETTINGS
+   ========================================================================== */
+
+/* Warning message for no enabled instruments */
+.osp-warning-message {
+  padding: var(--md-space-3);
+  margin: var(--md-space-4) 0;
+  background: var(--background-modifier-error);
+  border-left: 3px solid var(--md-error);
+  border-radius: var(--radius-s);
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+}
+
+/* Info message for available instruments */
+.osp-info-message {
+  padding: var(--md-space-3);
+  margin: var(--md-space-4) 0;
+  background: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+/* Instrument list styling */
+.osp-instrument-list {
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+}

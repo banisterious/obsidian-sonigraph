@@ -347,6 +347,9 @@ export class MaterialControlPanelModal extends Modal {
 			case 'sonic-graph':
 				this.createSonicGraphTab();
 				break;
+			case 'local-soundscape':
+				this.createLocalSoundscapeTab();
+				break;
 			case 'keyboard':
 			case 'strings':
 			case 'woodwinds':
@@ -492,6 +495,20 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Sonic Graph Settings Tabs (Phase 8.1)
 		this.createSonicGraphSettingsTabs();
+	}
+
+	/**
+	 * Create Local Soundscape tab content
+	 */
+	private createLocalSoundscapeTab(): void {
+		// Depth-based instrument mapping card
+		this.createDepthInstrumentMappingCard();
+
+		// Volume and panning settings card
+		this.createDepthVolumeAndPanningCard();
+
+		// Performance settings card
+		this.createLocalSoundscapePerformanceCard();
 	}
 
 	/**
@@ -4258,5 +4275,318 @@ All whale samples are authentic recordings from marine research institutions and
 			logger.error('freesound', `Connection test exception: ${errorMessage}`);
 			logger.debug('freesound', `Stack trace: ${stackTrace}`);
 		}
+	}
+
+	/**
+	 * Create depth-based instrument mapping card for Local Soundscape
+	 */
+	private createDepthInstrumentMappingCard(): void {
+		const card = new MaterialCard({
+			title: 'Instrument mapping by depth',
+			iconName: 'compass',
+			subtitle: 'Assign instruments to different depth levels from center note',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Get available enabled instruments
+		const enabledInstruments = this.getEnabledInstrumentsList();
+		const instrumentNames = enabledInstruments.map(inst => inst.name);
+
+		// Helper to create instrument selector for a depth level
+		const createDepthSetting = (
+			label: string,
+			description: string,
+			settingKey: 'center' | 'depth1' | 'depth2' | 'depth3Plus',
+			defaultInstruments: string[]
+		) => {
+			const setting = new Setting(content)
+				.setName(label)
+				.setDesc(description);
+
+			// Get current value or use defaults
+			const currentValue = this.plugin.settings.localSoundscape?.instrumentsByDepth?.[settingKey] || defaultInstruments;
+
+			setting.addText(text => {
+				text.setValue(currentValue.join(', '))
+					.setPlaceholder('e.g., piano, organ, leadSynth')
+					.onChange(async (value) => {
+						// Initialize settings structure if needed
+						if (!this.plugin.settings.localSoundscape) {
+							this.plugin.settings.localSoundscape = { instrumentsByDepth: {} };
+						}
+						if (!this.plugin.settings.localSoundscape.instrumentsByDepth) {
+							this.plugin.settings.localSoundscape.instrumentsByDepth = {};
+						}
+
+						// Parse comma-separated list
+						const instruments = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+						this.plugin.settings.localSoundscape.instrumentsByDepth[settingKey] = instruments;
+
+						await this.plugin.saveSettings();
+						logger.info('local-soundscape', `Updated ${settingKey} instruments`, { instruments });
+					});
+			});
+		};
+
+		// Center node (depth 0)
+		createDepthSetting(
+			'Center (Depth 0)',
+			'Lead instruments for the center note',
+			'center',
+			['piano', 'organ', 'leadSynth']
+		);
+
+		// Depth 1
+		createDepthSetting(
+			'Depth 1',
+			'Harmony instruments for notes 1 step away',
+			'depth1',
+			['strings', 'electricPiano', 'pad']
+		);
+
+		// Depth 2
+		createDepthSetting(
+			'Depth 2',
+			'Rhythm/bass instruments for notes 2 steps away',
+			'depth2',
+			['bass', 'timpani', 'cello']
+		);
+
+		// Depth 3+
+		createDepthSetting(
+			'Depth 3+',
+			'Ambient instruments for notes 3+ steps away',
+			'depth3Plus',
+			['pad', 'drone', 'atmosphericSynth']
+		);
+
+		// Info message about enabled instruments
+		if (enabledInstruments.length === 0) {
+			content.createDiv({
+				cls: 'osp-warning-message',
+				text: '⚠️ No instruments are currently enabled. Enable instruments in their respective tabs to use Local Soundscape.'
+			});
+		} else {
+			const infoDiv = content.createDiv({ cls: 'osp-info-message' });
+			infoDiv.createSpan({ text: 'Available instruments: ' });
+			infoDiv.createSpan({
+				text: instrumentNames.join(', '),
+				cls: 'osp-instrument-list'
+			});
+		}
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create volume and panning settings card for Local Soundscape
+	 */
+	private createDepthVolumeAndPanningCard(): void {
+		const card = new MaterialCard({
+			title: 'Volume & panning',
+			iconName: 'sliders-horizontal',
+			subtitle: 'Volume attenuation and directional panning settings',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Volume by depth section
+		new Setting(content).setHeading().setName('Volume by depth');
+
+		const createVolumeSetting = (
+			label: string,
+			settingKey: 'center' | 'depth1' | 'depth2' | 'depth3Plus',
+			defaultValue: number
+		) => {
+			const currentValue = this.plugin.settings.localSoundscape?.volumeByDepth?.[settingKey] ?? defaultValue;
+
+			new Setting(content)
+				.setName(label)
+				.setDesc(`${(currentValue * 100).toFixed(0)}%`)
+				.addSlider(slider => {
+					slider
+						.setLimits(0, 1, 0.1)
+						.setValue(currentValue)
+						.onChange(async (value) => {
+							// Initialize settings structure
+							if (!this.plugin.settings.localSoundscape) {
+								this.plugin.settings.localSoundscape = { volumeByDepth: {} };
+							}
+							if (!this.plugin.settings.localSoundscape.volumeByDepth) {
+								this.plugin.settings.localSoundscape.volumeByDepth = {};
+							}
+
+							this.plugin.settings.localSoundscape.volumeByDepth[settingKey] = value;
+							await this.plugin.saveSettings();
+
+							// Update description
+							slider.sliderEl.parentElement?.querySelector('.setting-item-description')?.setText(`${(value * 100).toFixed(0)}%`);
+
+							logger.info('local-soundscape', `Updated ${settingKey} volume`, { value });
+						});
+				});
+		};
+
+		createVolumeSetting('Center (Depth 0)', 'center', 1.0);
+		createVolumeSetting('Depth 1', 'depth1', 0.8);
+		createVolumeSetting('Depth 2', 'depth2', 0.6);
+		createVolumeSetting('Depth 3+', 'depth3Plus', 0.4);
+
+		// Directional panning section
+		new Setting(content).setHeading().setName('Directional panning');
+
+		// Enable panning toggle
+		const panningEnabled = this.plugin.settings.localSoundscape?.directionalPanning?.enabled ?? true;
+		new Setting(content)
+			.setName('Enable directional panning')
+			.setDesc('Pan incoming links left, outgoing links right')
+			.addToggle(toggle => {
+				toggle
+					.setValue(panningEnabled)
+					.onChange(async (value) => {
+						if (!this.plugin.settings.localSoundscape) {
+							this.plugin.settings.localSoundscape = { directionalPanning: {} };
+						}
+						if (!this.plugin.settings.localSoundscape.directionalPanning) {
+							this.plugin.settings.localSoundscape.directionalPanning = {};
+						}
+
+						this.plugin.settings.localSoundscape.directionalPanning.enabled = value;
+						await this.plugin.saveSettings();
+
+						// Refresh tab to show/hide panning controls
+						this.showTab('local-soundscape');
+
+						logger.info('local-soundscape', 'Updated panning enabled', { value });
+					});
+			});
+
+		// Only show panning controls if enabled
+		if (panningEnabled) {
+			const createPanningSetting = (
+				label: string,
+				settingKey: 'incomingLinks' | 'outgoingLinks' | 'bidirectional',
+				defaultValue: number
+			) => {
+				const currentValue = this.plugin.settings.localSoundscape?.directionalPanning?.[settingKey] ?? defaultValue;
+
+				new Setting(content)
+					.setName(label)
+					.setDesc(`${currentValue > 0 ? 'R' : currentValue < 0 ? 'L' : 'C'}${Math.abs(currentValue * 100).toFixed(0)}`)
+					.addSlider(slider => {
+						slider
+							.setLimits(-1, 1, 0.1)
+							.setValue(currentValue)
+							.onChange(async (value) => {
+								if (!this.plugin.settings.localSoundscape?.directionalPanning) {
+									this.plugin.settings.localSoundscape = {
+										directionalPanning: { enabled: true }
+									};
+								}
+
+								this.plugin.settings.localSoundscape.directionalPanning[settingKey] = value;
+								await this.plugin.saveSettings();
+
+								// Update description (L/R/C + percentage)
+								const desc = `${value > 0 ? 'R' : value < 0 ? 'L' : 'C'}${Math.abs(value * 100).toFixed(0)}`;
+								slider.sliderEl.parentElement?.querySelector('.setting-item-description')?.setText(desc);
+
+								logger.info('local-soundscape', `Updated ${settingKey} panning`, { value });
+							});
+					});
+			};
+
+			createPanningSetting('Incoming links', 'incomingLinks', -0.7);
+			createPanningSetting('Outgoing links', 'outgoingLinks', 0.7);
+			createPanningSetting('Bidirectional', 'bidirectional', 0.0);
+		}
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create performance settings card for Local Soundscape
+	 */
+	private createLocalSoundscapePerformanceCard(): void {
+		const card = new MaterialCard({
+			title: 'Performance settings',
+			iconName: 'gauge',
+			subtitle: 'Control how many nodes are included in the soundscape',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Get current value
+		const currentValue = this.plugin.settings.localSoundscape?.maxNodesPerDepth ?? 100;
+		const isUnlimited = currentValue === 'all';
+		const numericValue = isUnlimited ? 100 : (typeof currentValue === 'number' ? currentValue : 100);
+
+		// Description
+		content.createEl('p', {
+			text: 'Limit the number of notes per depth level. Higher values create longer, more detailed soundscapes but may impact performance.',
+			cls: 'setting-item-description'
+		});
+
+		// Max nodes per depth slider
+		const sliderSetting = new Setting(content)
+			.setName('Max nodes per depth')
+			.setDesc(isUnlimited ? 'Unlimited (all nodes)' : `${numericValue} nodes`)
+			.addSlider(slider => {
+				slider
+					.setLimits(10, 200, 10)
+					.setValue(numericValue)
+					.setDisabled(isUnlimited)
+					.onChange(async (value) => {
+						if (!this.plugin.settings.localSoundscape) {
+							this.plugin.settings.localSoundscape = {};
+						}
+
+						this.plugin.settings.localSoundscape.maxNodesPerDepth = value;
+						await this.plugin.saveSettings();
+
+						// Update description
+						slider.sliderEl.parentElement?.querySelector('.setting-item-description')?.setText(`${value} nodes`);
+
+						logger.info('local-soundscape', 'Updated maxNodesPerDepth', { value });
+					});
+			});
+
+		// "All nodes" toggle
+		new Setting(content)
+			.setName('Include all nodes')
+			.setDesc('Include every node in the soundscape (no limit)')
+			.addToggle(toggle => {
+				toggle
+					.setValue(isUnlimited)
+					.onChange(async (value) => {
+						if (!this.plugin.settings.localSoundscape) {
+							this.plugin.settings.localSoundscape = {};
+						}
+
+						if (value) {
+							this.plugin.settings.localSoundscape.maxNodesPerDepth = 'all';
+						} else {
+							this.plugin.settings.localSoundscape.maxNodesPerDepth = numericValue;
+						}
+						await this.plugin.saveSettings();
+
+						// Refresh tab to update slider state
+						this.showTab('local-soundscape');
+
+						logger.info('local-soundscape', 'Updated maxNodesPerDepth to all', { value });
+					});
+			});
+
+		// Info message about total duration
+		content.createDiv({
+			cls: 'osp-info-message',
+			text: `⏱️ With all nodes enabled, larger graphs will create longer soundscapes. Notes play at 0.4 second intervals, so 227 nodes = ~90 seconds of audio.`
+		});
+
+		this.contentContainer.appendChild(card.getElement());
 	}
 }

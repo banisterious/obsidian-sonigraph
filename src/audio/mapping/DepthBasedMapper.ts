@@ -15,6 +15,7 @@ import { MusicalMapping } from '../../graph/types';
 import { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
 import { App, TFile } from 'obsidian';
+import { AudioEngine } from '../engine';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -52,7 +53,7 @@ export interface DepthMappingConfig {
 	};
 
 	// Maximum nodes per depth (performance limit)
-	maxNodesPerDepth: number; // Default: 30
+	maxNodesPerDepth: number | 'all'; // Default: 100, 'all' for unlimited
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -64,34 +65,59 @@ export class DepthBasedMapper {
 	private config: DepthMappingConfig;
 	private musicalMapper: MusicalMapper;
 	private app: App;
+	private audioEngine: AudioEngine | null;
 	private currentCenterNodePath: string | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
 		musicalMapper: MusicalMapper,
-		app: App
+		app: App,
+		audioEngine?: AudioEngine
 	) {
+		this.audioEngine = audioEngine || null;
 		this.config = this.mergeWithDefaults(config);
 		this.musicalMapper = musicalMapper;
 		this.app = app;
 
 		logger.info('mapper-init', 'DepthBasedMapper initialized', {
 			maxNodesPerDepth: this.config.maxNodesPerDepth,
-			panningEnabled: this.config.directionalPanning.enabled
+			panningEnabled: this.config.directionalPanning.enabled,
+			hasAudioEngine: !!this.audioEngine
 		});
 	}
 
 	/**
 	 * Merge provided config with sensible defaults
+	 * Uses enabled instruments from Control Center if available
 	 */
 	private mergeWithDefaults(config: Partial<DepthMappingConfig>): DepthMappingConfig {
+		// Get enabled instruments from audio engine
+		const enabledInstruments = this.audioEngine?.getEnabledInstrumentsForTesting() || [];
+
+		// Filter instruments for each depth, only using enabled ones
+		const getInstrumentsForDepth = (preferred: string[]): string[] => {
+			if (enabledInstruments.length === 0) {
+				// Fallback to preferred list if no instruments enabled (shouldn't happen)
+				return preferred;
+			}
+
+			// Filter preferred instruments to only include enabled ones
+			const available = preferred.filter(inst => enabledInstruments.includes(inst));
+
+			// If none of the preferred are enabled, use all enabled instruments
+			return available.length > 0 ? available : enabledInstruments;
+		};
+
+		// Define default preferred instruments (will be filtered to enabled only)
+		const defaultInstrumentsByDepth = config.instrumentsByDepth || {
+			center: getInstrumentsForDepth(['piano', 'organ', 'leadSynth']),
+			depth1: getInstrumentsForDepth(['strings', 'electricPiano']),
+			depth2: getInstrumentsForDepth(['bassSynth', 'timpani', 'cello']),
+			depth3Plus: getInstrumentsForDepth(['arpSynth', 'vibraphone'])
+		};
+
 		return {
-			instrumentsByDepth: config.instrumentsByDepth || {
-				center: ['piano', 'organ', 'leadSynth'],
-				depth1: ['strings', 'electricPiano', 'pad'],
-				depth2: ['bass', 'timpani', 'cello'],
-				depth3Plus: ['pad', 'drone', 'atmosphericSynth']
-			},
+			instrumentsByDepth: defaultInstrumentsByDepth,
 			volumeByDepth: config.volumeByDepth || {
 				center: 1.0,
 				depth1: 0.8,
@@ -110,7 +136,7 @@ export class DepthBasedMapper {
 				outgoingLinks: 0.7,
 				bidirectional: 0.0
 			},
-			maxNodesPerDepth: config.maxNodesPerDepth || 30
+			maxNodesPerDepth: config.maxNodesPerDepth || 100 // Default to 100, can be 'all' for unlimited
 		};
 	}
 
@@ -156,15 +182,48 @@ export class DepthBasedMapper {
 			}
 		}
 
+		// Calculate timing for each mapping based on depth
+		// Center note plays first, then spread each depth level's notes
+		this.calculateTimingForMappings(mappings);
+
 		const duration = performance.now() - startTime;
 
 		logger.info('mapping-complete', 'Soundscape mapping complete', {
 			mappingsCreated: mappings.length,
 			duration: `${duration.toFixed(2)}ms`,
-			avgVolume: mappings.reduce((sum, m) => sum + m.volume, 0) / mappings.length
+			avgVolume: mappings.reduce((sum, m) => sum + m.volume, 0) / mappings.length,
+			timingRange: mappings.length > 0 ?
+				`${mappings[0].timing.toFixed(2)}s - ${mappings[mappings.length - 1].timing.toFixed(2)}s` : 'N/A'
 		});
 
 		return mappings;
+	}
+
+	/**
+	 * Calculate timing for mappings based on depth
+	 * Spreads notes evenly across time for a flowing sequence
+	 */
+	private calculateTimingForMappings(mappings: DepthMapping[]): void {
+		// Use exact 0.4 second intervals to match the real-time timer (400ms)
+		// This ensures every timer tick finds exactly one note
+		const noteInterval = 0.4; // Match AudioEngine timer interval
+		const totalDuration = mappings.length * noteInterval;
+
+		mappings.forEach((mapping, index) => {
+			// Exact timing aligned with timer ticks
+			mapping.timing = index * noteInterval;
+		});
+
+		// Sort by timing for proper playback order
+		mappings.sort((a, b) => a.timing - b.timing);
+
+		logger.debug('timing-calculated', 'Timing calculated for all mappings', {
+			totalMappings: mappings.length,
+			totalDuration: totalDuration.toFixed(1),
+			noteInterval: noteInterval.toFixed(3),
+			firstNote: mappings[0]?.timing.toFixed(3),
+			lastNote: mappings[mappings.length - 1]?.timing.toFixed(3)
+		});
 	}
 
 	/**
@@ -205,14 +264,21 @@ export class DepthBasedMapper {
 			// Calculate velocity based on modification recency
 			const velocity = this.calculateVelocity(node);
 
+			// Convert semitone offset to frequency (Hz)
+			// Formula: frequency = rootFreq * 2^(semitones/12)
+			// Get root frequency from musical mapper (defaults to C4 = 261.63 Hz)
+			const rootFreq = 261.63; // C4
+			const frequency = rootFreq * Math.pow(2, pitchOffset / 12);
+
 			const mapping: DepthMapping = {
 				nodeId: node.id,
-				pitch: pitchOffset,
+				pitch: frequency, // Convert offset to Hz
 				duration: duration,
 				volume: baseVolume,
 				velocity: velocity,
 				instrument: instrument,
 				panning: panning,
+				timing: 0, // Will be calculated after all mappings are created
 				delay: 0, // Will be set during playback scheduling
 				depth: depth,
 				direction: node.direction
@@ -309,9 +375,10 @@ export class DepthBasedMapper {
 	 * Calculate note duration based on word count
 	 */
 	private calculateDuration(node: LocalSoundscapeNode): number {
-		// Base duration: 0.5 to 2.0 seconds based on word count
-		const minDuration = 0.5;
-		const maxDuration = 2.0;
+		// Longer durations to create sustained, flowing soundscape
+		// Base duration: 2.0 to 6.0 seconds based on word count
+		const minDuration = 2.0;
+		const maxDuration = 6.0;
 
 		const wordCountNormalized = Math.min(node.wordCount / 500, 1); // Cap at 500 words
 		const duration = minDuration + (wordCountNormalized * (maxDuration - minDuration));
@@ -341,9 +408,10 @@ export class DepthBasedMapper {
 	 */
 	private selectMostImportantNodes(
 		nodes: LocalSoundscapeNode[],
-		limit: number
+		limit: number | 'all'
 	): LocalSoundscapeNode[] {
-		if (nodes.length <= limit) {
+		// If 'all', return all nodes
+		if (limit === 'all' || nodes.length <= limit) {
 			return nodes;
 		}
 

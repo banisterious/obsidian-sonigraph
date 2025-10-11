@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-11 02:01:44 UTC
+ * - Generated: 2025-10-11 04:33:33 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -5798,7 +5798,7 @@ details.osp-advanced-settings {
    COMPONENT: CONTROLCENTER.CSS
    ========================================================================== */
 
-/* Component Size: 868 lines, 20.75 KB */
+/* Component Size: 901 lines, 21.72 KB */
 
 /* ==========================================================================
    SONIGRAPH CONTROL CENTER FRAMEWORK
@@ -6666,6 +6666,39 @@ details.osp-advanced-settings {
 /* Actions row */
 .osp-actions-row--spaced {
   margin-top: var(--md-space-4);
+}
+
+/* ==========================================================================
+   LOCAL SOUNDSCAPE SETTINGS
+   ========================================================================== */
+
+/* Warning message for no enabled instruments */
+.osp-warning-message {
+  padding: var(--md-space-3);
+  margin: var(--md-space-4) 0;
+  background: var(--background-modifier-error);
+  border-left: 3px solid var(--md-error);
+  border-radius: var(--radius-s);
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+}
+
+/* Info message for available instruments */
+.osp-info-message {
+  padding: var(--md-space-3);
+  margin: var(--md-space-4) 0;
+  background: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+/* Instrument list styling */
+.osp-instrument-list {
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
 }
 
 
@@ -12071,11 +12104,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-11 02:01:44 UTC
+ * Build completed: 2025-10-11 04:33:33 UTC
  * Components processed: 21
- * Total lines: 11856
- * Total size: 250.79 KB
- * Build duration: 0.04 seconds
+ * Total lines: 11889
+ * Total size: 251.75 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -12091,7 +12124,7 @@ details.osp-advanced-settings {
  * - settings.css: 206 lines, 4.7 KB
  * - effects.css: 567 lines, 12.66 KB
  * - status.css: 146 lines, 3.54 KB
- * - controlcenter.css: 868 lines, 20.75 KB
+ * - controlcenter.css: 901 lines, 21.72 KB
  * - sonic-graph.css: 3365 lines, 72.4 KB
  * - local-soundscape.css: 365 lines, 6.68 KB
  * - sample-table.css: 435 lines, 8.63 KB

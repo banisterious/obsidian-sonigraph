@@ -3693,6 +3693,12 @@ var init_lucide_icons = __esm({
         name: "Sonic Graph",
         icon: "globe",
         description: "Knowledge graph visualization with temporal animation"
+      },
+      {
+        id: "local-soundscape",
+        name: "Local Soundscape",
+        icon: "compass",
+        description: "Depth-based audio mapping for note exploration"
       }
     ];
   }
@@ -20495,6 +20501,9 @@ var init_control_panel = __esm({
           case "sonic-graph":
             this.createSonicGraphTab();
             break;
+          case "local-soundscape":
+            this.createLocalSoundscapeTab();
+            break;
           case "keyboard":
           case "strings":
           case "woodwinds":
@@ -20596,6 +20605,14 @@ var init_control_panel = __esm({
       createSonicGraphTab() {
         this.createGraphPreviewCard();
         this.createSonicGraphSettingsTabs();
+      }
+      /**
+       * Create Local Soundscape tab content
+       */
+      createLocalSoundscapeTab() {
+        this.createDepthInstrumentMappingCard();
+        this.createDepthVolumeAndPanningCard();
+        this.createLocalSoundscapePerformanceCard();
       }
       /**
        * Create Layers tab - Continuous layers and Freesound integration
@@ -23461,6 +23478,207 @@ All whale samples are authentic recordings from marine research institutions and
           logger26.error("freesound", `Connection test exception: ${errorMessage}`);
           logger26.debug("freesound", `Stack trace: ${stackTrace}`);
         }
+      }
+      /**
+       * Create depth-based instrument mapping card for Local Soundscape
+       */
+      createDepthInstrumentMappingCard() {
+        const card = new MaterialCard({
+          title: "Instrument mapping by depth",
+          iconName: "compass",
+          subtitle: "Assign instruments to different depth levels from center note",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const enabledInstruments = this.getEnabledInstrumentsList();
+        const instrumentNames = enabledInstruments.map((inst) => inst.name);
+        const createDepthSetting = (label, description, settingKey, defaultInstruments) => {
+          var _a, _b;
+          const setting = new import_obsidian14.Setting(content).setName(label).setDesc(description);
+          const currentValue = ((_b = (_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.instrumentsByDepth) == null ? void 0 : _b[settingKey]) || defaultInstruments;
+          setting.addText((text) => {
+            text.setValue(currentValue.join(", ")).setPlaceholder("e.g., piano, organ, leadSynth").onChange(async (value) => {
+              if (!this.plugin.settings.localSoundscape) {
+                this.plugin.settings.localSoundscape = { instrumentsByDepth: {} };
+              }
+              if (!this.plugin.settings.localSoundscape.instrumentsByDepth) {
+                this.plugin.settings.localSoundscape.instrumentsByDepth = {};
+              }
+              const instruments = value.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+              this.plugin.settings.localSoundscape.instrumentsByDepth[settingKey] = instruments;
+              await this.plugin.saveSettings();
+              logger26.info("local-soundscape", `Updated ${settingKey} instruments`, { instruments });
+            });
+          });
+        };
+        createDepthSetting(
+          "Center (Depth 0)",
+          "Lead instruments for the center note",
+          "center",
+          ["piano", "organ", "leadSynth"]
+        );
+        createDepthSetting(
+          "Depth 1",
+          "Harmony instruments for notes 1 step away",
+          "depth1",
+          ["strings", "electricPiano", "pad"]
+        );
+        createDepthSetting(
+          "Depth 2",
+          "Rhythm/bass instruments for notes 2 steps away",
+          "depth2",
+          ["bass", "timpani", "cello"]
+        );
+        createDepthSetting(
+          "Depth 3+",
+          "Ambient instruments for notes 3+ steps away",
+          "depth3Plus",
+          ["pad", "drone", "atmosphericSynth"]
+        );
+        if (enabledInstruments.length === 0) {
+          content.createDiv({
+            cls: "osp-warning-message",
+            text: "\u26A0\uFE0F No instruments are currently enabled. Enable instruments in their respective tabs to use Local Soundscape."
+          });
+        } else {
+          const infoDiv = content.createDiv({ cls: "osp-info-message" });
+          infoDiv.createSpan({ text: "Available instruments: " });
+          infoDiv.createSpan({
+            text: instrumentNames.join(", "),
+            cls: "osp-instrument-list"
+          });
+        }
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create volume and panning settings card for Local Soundscape
+       */
+      createDepthVolumeAndPanningCard() {
+        var _a, _b, _c;
+        const card = new MaterialCard({
+          title: "Volume & panning",
+          iconName: "sliders-horizontal",
+          subtitle: "Volume attenuation and directional panning settings",
+          elevation: 1
+        });
+        const content = card.getContent();
+        new import_obsidian14.Setting(content).setHeading().setName("Volume by depth");
+        const createVolumeSetting = (label, settingKey, defaultValue) => {
+          var _a2, _b2, _c2;
+          const currentValue = (_c2 = (_b2 = (_a2 = this.plugin.settings.localSoundscape) == null ? void 0 : _a2.volumeByDepth) == null ? void 0 : _b2[settingKey]) != null ? _c2 : defaultValue;
+          new import_obsidian14.Setting(content).setName(label).setDesc(`${(currentValue * 100).toFixed(0)}%`).addSlider((slider) => {
+            slider.setLimits(0, 1, 0.1).setValue(currentValue).onChange(async (value) => {
+              var _a3, _b3;
+              if (!this.plugin.settings.localSoundscape) {
+                this.plugin.settings.localSoundscape = { volumeByDepth: {} };
+              }
+              if (!this.plugin.settings.localSoundscape.volumeByDepth) {
+                this.plugin.settings.localSoundscape.volumeByDepth = {};
+              }
+              this.plugin.settings.localSoundscape.volumeByDepth[settingKey] = value;
+              await this.plugin.saveSettings();
+              (_b3 = (_a3 = slider.sliderEl.parentElement) == null ? void 0 : _a3.querySelector(".setting-item-description")) == null ? void 0 : _b3.setText(`${(value * 100).toFixed(0)}%`);
+              logger26.info("local-soundscape", `Updated ${settingKey} volume`, { value });
+            });
+          });
+        };
+        createVolumeSetting("Center (Depth 0)", "center", 1);
+        createVolumeSetting("Depth 1", "depth1", 0.8);
+        createVolumeSetting("Depth 2", "depth2", 0.6);
+        createVolumeSetting("Depth 3+", "depth3Plus", 0.4);
+        new import_obsidian14.Setting(content).setHeading().setName("Directional panning");
+        const panningEnabled = (_c = (_b = (_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.directionalPanning) == null ? void 0 : _b.enabled) != null ? _c : true;
+        new import_obsidian14.Setting(content).setName("Enable directional panning").setDesc("Pan incoming links left, outgoing links right").addToggle((toggle) => {
+          toggle.setValue(panningEnabled).onChange(async (value) => {
+            if (!this.plugin.settings.localSoundscape) {
+              this.plugin.settings.localSoundscape = { directionalPanning: {} };
+            }
+            if (!this.plugin.settings.localSoundscape.directionalPanning) {
+              this.plugin.settings.localSoundscape.directionalPanning = {};
+            }
+            this.plugin.settings.localSoundscape.directionalPanning.enabled = value;
+            await this.plugin.saveSettings();
+            this.showTab("local-soundscape");
+            logger26.info("local-soundscape", "Updated panning enabled", { value });
+          });
+        });
+        if (panningEnabled) {
+          const createPanningSetting = (label, settingKey, defaultValue) => {
+            var _a2, _b2, _c2;
+            const currentValue = (_c2 = (_b2 = (_a2 = this.plugin.settings.localSoundscape) == null ? void 0 : _a2.directionalPanning) == null ? void 0 : _b2[settingKey]) != null ? _c2 : defaultValue;
+            new import_obsidian14.Setting(content).setName(label).setDesc(`${currentValue > 0 ? "R" : currentValue < 0 ? "L" : "C"}${Math.abs(currentValue * 100).toFixed(0)}`).addSlider((slider) => {
+              slider.setLimits(-1, 1, 0.1).setValue(currentValue).onChange(async (value) => {
+                var _a3, _b3, _c3;
+                if (!((_a3 = this.plugin.settings.localSoundscape) == null ? void 0 : _a3.directionalPanning)) {
+                  this.plugin.settings.localSoundscape = {
+                    directionalPanning: { enabled: true }
+                  };
+                }
+                this.plugin.settings.localSoundscape.directionalPanning[settingKey] = value;
+                await this.plugin.saveSettings();
+                const desc = `${value > 0 ? "R" : value < 0 ? "L" : "C"}${Math.abs(value * 100).toFixed(0)}`;
+                (_c3 = (_b3 = slider.sliderEl.parentElement) == null ? void 0 : _b3.querySelector(".setting-item-description")) == null ? void 0 : _c3.setText(desc);
+                logger26.info("local-soundscape", `Updated ${settingKey} panning`, { value });
+              });
+            });
+          };
+          createPanningSetting("Incoming links", "incomingLinks", -0.7);
+          createPanningSetting("Outgoing links", "outgoingLinks", 0.7);
+          createPanningSetting("Bidirectional", "bidirectional", 0);
+        }
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create performance settings card for Local Soundscape
+       */
+      createLocalSoundscapePerformanceCard() {
+        var _a, _b;
+        const card = new MaterialCard({
+          title: "Performance settings",
+          iconName: "gauge",
+          subtitle: "Control how many nodes are included in the soundscape",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const currentValue = (_b = (_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.maxNodesPerDepth) != null ? _b : 100;
+        const isUnlimited = currentValue === "all";
+        const numericValue = isUnlimited ? 100 : typeof currentValue === "number" ? currentValue : 100;
+        content.createEl("p", {
+          text: "Limit the number of notes per depth level. Higher values create longer, more detailed soundscapes but may impact performance.",
+          cls: "setting-item-description"
+        });
+        const sliderSetting = new import_obsidian14.Setting(content).setName("Max nodes per depth").setDesc(isUnlimited ? "Unlimited (all nodes)" : `${numericValue} nodes`).addSlider((slider) => {
+          slider.setLimits(10, 200, 10).setValue(numericValue).setDisabled(isUnlimited).onChange(async (value) => {
+            var _a2, _b2;
+            if (!this.plugin.settings.localSoundscape) {
+              this.plugin.settings.localSoundscape = {};
+            }
+            this.plugin.settings.localSoundscape.maxNodesPerDepth = value;
+            await this.plugin.saveSettings();
+            (_b2 = (_a2 = slider.sliderEl.parentElement) == null ? void 0 : _a2.querySelector(".setting-item-description")) == null ? void 0 : _b2.setText(`${value} nodes`);
+            logger26.info("local-soundscape", "Updated maxNodesPerDepth", { value });
+          });
+        });
+        new import_obsidian14.Setting(content).setName("Include all nodes").setDesc("Include every node in the soundscape (no limit)").addToggle((toggle) => {
+          toggle.setValue(isUnlimited).onChange(async (value) => {
+            if (!this.plugin.settings.localSoundscape) {
+              this.plugin.settings.localSoundscape = {};
+            }
+            if (value) {
+              this.plugin.settings.localSoundscape.maxNodesPerDepth = "all";
+            } else {
+              this.plugin.settings.localSoundscape.maxNodesPerDepth = numericValue;
+            }
+            await this.plugin.saveSettings();
+            this.showTab("local-soundscape");
+            logger26.info("local-soundscape", "Updated maxNodesPerDepth to all", { value });
+          });
+        });
+        content.createDiv({
+          cls: "osp-info-message",
+          text: `\u23F1\uFE0F With all nodes enabled, larger graphs will create longer soundscapes. Notes play at 0.4 second intervals, so 227 nodes = ~90 seconds of audio.`
+        });
+        this.contentContainer.appendChild(card.getElement());
       }
     };
   }
@@ -61619,27 +61837,40 @@ init_logging();
 var import_obsidian19 = require("obsidian");
 var logger40 = getLogger("DepthBasedMapper");
 var DepthBasedMapper = class {
-  constructor(config, musicalMapper, app) {
+  constructor(config, musicalMapper, app, audioEngine) {
     this.currentCenterNodePath = null;
+    this.audioEngine = audioEngine || null;
     this.config = this.mergeWithDefaults(config);
     this.musicalMapper = musicalMapper;
     this.app = app;
     logger40.info("mapper-init", "DepthBasedMapper initialized", {
       maxNodesPerDepth: this.config.maxNodesPerDepth,
-      panningEnabled: this.config.directionalPanning.enabled
+      panningEnabled: this.config.directionalPanning.enabled,
+      hasAudioEngine: !!this.audioEngine
     });
   }
   /**
    * Merge provided config with sensible defaults
+   * Uses enabled instruments from Control Center if available
    */
   mergeWithDefaults(config) {
+    var _a;
+    const enabledInstruments = ((_a = this.audioEngine) == null ? void 0 : _a.getEnabledInstrumentsForTesting()) || [];
+    const getInstrumentsForDepth = (preferred) => {
+      if (enabledInstruments.length === 0) {
+        return preferred;
+      }
+      const available = preferred.filter((inst) => enabledInstruments.includes(inst));
+      return available.length > 0 ? available : enabledInstruments;
+    };
+    const defaultInstrumentsByDepth = config.instrumentsByDepth || {
+      center: getInstrumentsForDepth(["piano", "organ", "leadSynth"]),
+      depth1: getInstrumentsForDepth(["strings", "electricPiano"]),
+      depth2: getInstrumentsForDepth(["bassSynth", "timpani", "cello"]),
+      depth3Plus: getInstrumentsForDepth(["arpSynth", "vibraphone"])
+    };
     return {
-      instrumentsByDepth: config.instrumentsByDepth || {
-        center: ["piano", "organ", "leadSynth"],
-        depth1: ["strings", "electricPiano", "pad"],
-        depth2: ["bass", "timpani", "cello"],
-        depth3Plus: ["pad", "drone", "atmosphericSynth"]
-      },
+      instrumentsByDepth: defaultInstrumentsByDepth,
       volumeByDepth: config.volumeByDepth || {
         center: 1,
         depth1: 0.8,
@@ -61662,7 +61893,8 @@ var DepthBasedMapper = class {
         outgoingLinks: 0.7,
         bidirectional: 0
       },
-      maxNodesPerDepth: config.maxNodesPerDepth || 30
+      maxNodesPerDepth: config.maxNodesPerDepth || 100
+      // Default to 100, can be 'all' for unlimited
     };
   }
   /**
@@ -61695,13 +61927,35 @@ var DepthBasedMapper = class {
         }
       }
     }
+    this.calculateTimingForMappings(mappings);
     const duration = performance.now() - startTime;
     logger40.info("mapping-complete", "Soundscape mapping complete", {
       mappingsCreated: mappings.length,
       duration: `${duration.toFixed(2)}ms`,
-      avgVolume: mappings.reduce((sum, m2) => sum + m2.volume, 0) / mappings.length
+      avgVolume: mappings.reduce((sum, m2) => sum + m2.volume, 0) / mappings.length,
+      timingRange: mappings.length > 0 ? `${mappings[0].timing.toFixed(2)}s - ${mappings[mappings.length - 1].timing.toFixed(2)}s` : "N/A"
     });
     return mappings;
+  }
+  /**
+   * Calculate timing for mappings based on depth
+   * Spreads notes evenly across time for a flowing sequence
+   */
+  calculateTimingForMappings(mappings) {
+    var _a, _b;
+    const noteInterval = 0.4;
+    const totalDuration = mappings.length * noteInterval;
+    mappings.forEach((mapping, index2) => {
+      mapping.timing = index2 * noteInterval;
+    });
+    mappings.sort((a2, b) => a2.timing - b.timing);
+    logger40.debug("timing-calculated", "Timing calculated for all mappings", {
+      totalMappings: mappings.length,
+      totalDuration: totalDuration.toFixed(1),
+      noteInterval: noteInterval.toFixed(3),
+      firstNote: (_a = mappings[0]) == null ? void 0 : _a.timing.toFixed(3),
+      lastNote: (_b = mappings[mappings.length - 1]) == null ? void 0 : _b.timing.toFixed(3)
+    });
   }
   /**
    * Map a single node to musical parameters
@@ -61721,14 +61975,19 @@ var DepthBasedMapper = class {
       const panning = this.calculatePanning(node);
       const duration = this.calculateDuration(node);
       const velocity = this.calculateVelocity(node);
+      const rootFreq = 261.63;
+      const frequency = rootFreq * Math.pow(2, pitchOffset / 12);
       const mapping = {
         nodeId: node.id,
-        pitch: pitchOffset,
+        pitch: frequency,
+        // Convert offset to Hz
         duration,
         volume: baseVolume,
         velocity,
         instrument,
         panning,
+        timing: 0,
+        // Will be calculated after all mappings are created
         delay: 0,
         // Will be set during playback scheduling
         depth,
@@ -61817,8 +62076,8 @@ var DepthBasedMapper = class {
    * Calculate note duration based on word count
    */
   calculateDuration(node) {
-    const minDuration = 0.5;
-    const maxDuration = 2;
+    const minDuration = 2;
+    const maxDuration = 6;
     const wordCountNormalized = Math.min(node.wordCount / 500, 1);
     const duration = minDuration + wordCountNormalized * (maxDuration - minDuration);
     return duration;
@@ -61837,7 +62096,7 @@ var DepthBasedMapper = class {
    * Priority: word count, modification recency
    */
   selectMostImportantNodes(nodes, limit) {
-    if (nodes.length <= limit) {
+    if (limit === "all" || nodes.length <= limit) {
       return nodes;
     }
     const scoredNodes = nodes.map((node) => ({
@@ -79534,6 +79793,7 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     this.isPlaying = false;
     this.currentVoiceCount = 0;
     this.currentVolume = 0;
+    this.scheduledTimeouts = [];
     this.playbackContentContainer = null;
     // Playback controls
     this.playButton = null;
@@ -79544,12 +79804,14 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     this.extractor = new LocalSoundscapeExtractor(this.app);
     if (this.plugin.musicalMapper) {
       this.depthMapper = new DepthBasedMapper(
-        {},
-        // Use default config
+        this.plugin.settings.localSoundscape || {},
+        // Use settings from Control Center
         this.plugin.musicalMapper,
-        this.app
+        this.app,
+        this.plugin.audioEngine
+        // Pass audio engine for enabled instruments
       );
-      logger72.info("view-init", "DepthBasedMapper initialized");
+      logger72.info("view-init", "DepthBasedMapper initialized with Control Center settings and enabled instruments");
     } else {
       logger72.warn("view-init", "MusicalMapper not available, audio will not work");
     }
@@ -79582,6 +79844,9 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
   }
   async onClose() {
     logger72.info("view-close", "Closing Local Soundscape view");
+    if (this.isPlaying && this.plugin.audioEngine) {
+      this.plugin.audioEngine.stop();
+    }
     if (this.renderer) {
       this.renderer.dispose();
       this.renderer = null;
@@ -79764,6 +80029,14 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    */
   async setCenterFile(file) {
     logger72.info("set-center", "Setting center file", { file: file.path });
+    if (this.isPlaying && this.plugin.audioEngine) {
+      this.plugin.audioEngine.stop();
+      this.isPlaying = false;
+      this.currentMappings = [];
+      this.currentVoiceCount = 0;
+      this.currentVolume = 0;
+      this.updatePlaybackUI();
+    }
     this.centerFile = file;
     const centerNoteName = this.headerContainer.querySelector(".center-note-name");
     if (centerNoteName) {
@@ -79819,6 +80092,11 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
         this.centerFile,
         this.currentDepth
       );
+      logger72.info("extract-success", "Graph data extracted successfully", {
+        totalNodes: this.graphData.stats.totalNodes,
+        maxDepth: this.graphData.stats.maxDepth,
+        centerNode: this.graphData.centerNode.basename
+      });
       this.graphContainer.empty();
       this.displayGraphStats();
       if (!this.renderer) {
@@ -79868,8 +80146,15 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    * Toggle playback state
    */
   async togglePlayback() {
+    console.log("\u{1F535} PLAY BUTTON CLICKED - togglePlayback called");
+    logger72.info("toggle-playback", "Play button clicked", {
+      hasGraphData: !!this.graphData,
+      hasCenterFile: !!this.centerFile,
+      isPlaying: this.isPlaying
+    });
     if (!this.graphData || !this.centerFile) {
       logger72.warn("toggle-playback", "No graph data or center file");
+      new import_obsidian28.Notice("Please open a note in Local Soundscape first");
       return;
     }
     if (this.isPlaying) {
@@ -79893,20 +80178,69 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     }
     logger72.info("playback-start", "Starting soundscape playback");
     try {
+      const audioStatus = this.plugin.audioEngine.getStatus();
+      if (!audioStatus.isInitialized) {
+        logger72.info("audio-init", "Initializing audio engine for playback");
+        await this.plugin.audioEngine.initialize();
+        logger72.info("audio-init", "Audio engine initialized successfully");
+      }
       this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
       logger72.info("mappings-created", "Created depth-based musical mappings", {
-        count: this.currentMappings.length
+        count: this.currentMappings.length,
+        instruments: [...new Set(this.currentMappings.map((m2) => m2.instrument))].join(", ")
       });
+      if (this.currentMappings.length === 0) {
+        new import_obsidian28.Notice("No mappings created - check that instruments are enabled in Control Center");
+        logger72.warn("playback-start", "No mappings created from graph data");
+        return;
+      }
       this.isPlaying = true;
       this.currentVoiceCount = this.currentMappings.length;
       this.currentVolume = 0.7;
       this.updatePlaybackUI();
-      logger72.info("playback-started", "Soundscape playback started", {
-        voices: this.currentVoiceCount
+      logger72.info("playback-started", "Soundscape playback started - scheduling notes", {
+        voices: this.currentVoiceCount,
+        totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + "s",
+        firstNoteTiming: this.currentMappings[0].timing + "s",
+        lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + "s"
       });
+      new import_obsidian28.Notice(`Playing ${this.currentVoiceCount} notes`);
+      for (let i = 0; i < this.currentMappings.length; i++) {
+        const mapping = this.currentMappings[i];
+        const timeoutId = window.setTimeout(async () => {
+          if (!this.isPlaying) {
+            logger72.debug("note-skip", "Skipping note - playback stopped", { index: i, nodeId: mapping.nodeId });
+            return;
+          }
+          logger72.debug("note-play", "Playing note", {
+            index: i,
+            total: this.currentMappings.length,
+            nodeId: mapping.nodeId,
+            timing: mapping.timing,
+            instrument: mapping.instrument,
+            pitch: mapping.pitch.toFixed(2)
+          });
+          try {
+            await this.plugin.audioEngine.playNoteImmediate({
+              pitch: mapping.pitch,
+              duration: mapping.duration,
+              velocity: mapping.velocity,
+              instrument: mapping.instrument
+            }, mapping.timing, mapping.nodeId);
+          } catch (error) {
+            logger72.warn("note-playback-error", "Failed to play note", {
+              index: i,
+              nodeId: mapping.nodeId,
+              error: error.message
+            });
+          }
+        }, mapping.timing * 1e3);
+        this.scheduledTimeouts.push(timeoutId);
+      }
+      logger72.info("notes-scheduled", `Scheduled ${this.scheduledTimeouts.length} notes for playback`);
     } catch (error) {
       logger72.error("playback-error", "Failed to start playback", error);
-      new import_obsidian28.Notice("Failed to start audio playback");
+      new import_obsidian28.Notice(`Failed to start audio: ${error.message}`);
       this.isPlaying = false;
       this.updatePlaybackUI();
     }
@@ -79915,7 +80249,16 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    * Pause audio playback
    */
   async pausePlayback() {
+    if (!this.plugin.audioEngine) {
+      logger72.warn("playback-pause", "Cannot pause - audio engine not available");
+      return;
+    }
     logger72.info("playback-pause", "Pausing soundscape playback");
+    for (const timeoutId of this.scheduledTimeouts) {
+      window.clearTimeout(timeoutId);
+    }
+    this.scheduledTimeouts = [];
+    this.plugin.audioEngine.stop();
     this.isPlaying = false;
     this.updatePlaybackUI();
     logger72.info("playback-paused", "Soundscape playback paused");
@@ -79924,7 +80267,16 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    * Stop audio playback
    */
   async stopPlayback() {
+    if (!this.plugin.audioEngine) {
+      logger72.warn("playback-stop", "Cannot stop - audio engine not available");
+      return;
+    }
     logger72.info("playback-stop", "Stopping soundscape playback");
+    for (const timeoutId of this.scheduledTimeouts) {
+      window.clearTimeout(timeoutId);
+    }
+    this.scheduledTimeouts = [];
+    this.plugin.audioEngine.stop();
     this.currentMappings = [];
     this.isPlaying = false;
     this.currentVoiceCount = 0;
