@@ -80047,17 +80047,31 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
   /**
    * Set the depth level
    */
-  setDepth(depth) {
+  async setDepth(depth) {
+    var _a;
     if (depth === this.currentDepth)
       return;
     logger72.info("set-depth", "Setting depth", { oldDepth: this.currentDepth, newDepth: depth });
+    const wasPlaying = this.isPlaying;
+    if (this.isPlaying) {
+      logger72.info("set-depth", "Stopping playback for depth change");
+      await this.stopPlayback();
+    }
     this.currentDepth = depth;
+    new import_obsidian28.Notice(`Updating to depth ${depth}...`);
     if (this.renderer) {
       this.renderer.dispose();
       this.renderer = null;
     }
     if (this.centerFile) {
-      this.extractAndRenderGraph();
+      await this.extractAndRenderGraph();
+      if (wasPlaying && this.graphData) {
+        logger72.info("set-depth", "Restarting playback with new depth", {
+          newNodeCount: this.graphData.stats.totalNodes
+        });
+        await this.startPlayback();
+      }
+      new import_obsidian28.Notice(`Depth ${depth}: ${((_a = this.graphData) == null ? void 0 : _a.stats.totalNodes) || 0} nodes`);
     }
   }
   /**

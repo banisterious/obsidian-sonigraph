@@ -393,11 +393,22 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Set the depth level
 	 */
-	private setDepth(depth: number): void {
+	private async setDepth(depth: number): Promise<void> {
 		if (depth === this.currentDepth) return;
 
 		logger.info('set-depth', 'Setting depth', { oldDepth: this.currentDepth, newDepth: depth });
+
+		// Stop audio playback if currently playing
+		const wasPlaying = this.isPlaying;
+		if (this.isPlaying) {
+			logger.info('set-depth', 'Stopping playback for depth change');
+			await this.stopPlayback();
+		}
+
 		this.currentDepth = depth;
+
+		// Show user feedback
+		new Notice(`Updating to depth ${depth}...`);
 
 		// Dispose renderer so it gets recreated with new data
 		if (this.renderer) {
@@ -407,7 +418,18 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Re-extract and render graph with new depth
 		if (this.centerFile) {
-			this.extractAndRenderGraph();
+			await this.extractAndRenderGraph();
+
+			// If audio was playing before depth change, restart it with new depth
+			if (wasPlaying && this.graphData) {
+				logger.info('set-depth', 'Restarting playback with new depth', {
+					newNodeCount: this.graphData.stats.totalNodes
+				});
+				await this.startPlayback();
+			}
+
+			// Show completion feedback
+			new Notice(`Depth ${depth}: ${this.graphData?.stats.totalNodes || 0} nodes`);
 		}
 	}
 
