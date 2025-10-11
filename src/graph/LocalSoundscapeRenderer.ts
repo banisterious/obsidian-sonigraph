@@ -35,8 +35,18 @@ export class LocalSoundscapeRenderer {
 	private nodeGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 	private labelGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 
+	// Tooltip
+	private tooltip: HTMLElement | null = null;
+
+	// Context menu
+	private contextMenu: HTMLElement | null = null;
+
 	// Current data
 	private data: LocalSoundscapeData | null = null;
+
+	// Callbacks
+	private onNodeOpen?: (node: LocalSoundscapeNode) => void;
+	private onNodeRecenter?: (node: LocalSoundscapeNode) => void;
 
 	constructor(container: HTMLElement, config: Partial<RendererConfig> = {}) {
 		this.container = container;
@@ -62,6 +72,12 @@ export class LocalSoundscapeRenderer {
 
 		// Initialize SVG
 		this.initializeSVG();
+
+		// Create tooltip
+		this.createTooltip();
+
+		// Create context menu
+		this.createContextMenu();
 
 		logger.info('renderer-init', 'LocalSoundscapeRenderer initialized', this.config);
 	}
@@ -301,8 +317,10 @@ export class LocalSoundscapeRenderer {
 		event.stopPropagation();
 		logger.info('node-clicked', 'Node clicked', { node: node.basename });
 
-		// TODO Phase 1: Show tooltip with node info
-		// TODO Phase 2: Implement re-centering when right-click menu option selected
+		// Left-click opens the note
+		if (this.onNodeOpen) {
+			this.onNodeOpen(node);
+		}
 	}
 
 	/**
@@ -313,17 +331,21 @@ export class LocalSoundscapeRenderer {
 		event.stopPropagation();
 		logger.info('node-right-clicked', 'Node right-clicked', { node: node.basename });
 
-		// TODO Phase 1: Show context menu with "Open note", "Re-center soundscape"
+		// Show context menu
+		this.showContextMenu(event, node);
 	}
 
 	/**
 	 * Handle node hover
 	 */
 	private handleNodeHover(event: MouseEvent, node: LocalSoundscapeNode): void {
-		// Highlight node and connections
+		// Highlight node
 		d3.select(event.target as any)
 			.attr('r', (d: any) => (d.depth === 0 ? this.config.nodeRadius * 2 : this.config.nodeRadius * 1.3))
 			.attr('stroke-width', 4);
+
+		// Show tooltip
+		this.showTooltip(event, node);
 
 		logger.debug('node-hover', 'Node hovered', { node: node.basename });
 	}
@@ -336,6 +358,9 @@ export class LocalSoundscapeRenderer {
 		d3.select(event.target as any)
 			.attr('r', (d: any) => (d.depth === 0 ? this.config.nodeRadius * 1.5 : this.config.nodeRadius))
 			.attr('stroke-width', (d: any) => (d.depth === 0 ? 3 : 2));
+
+		// Hide tooltip
+		this.hideTooltip();
 	}
 
 	/**
@@ -371,6 +396,124 @@ export class LocalSoundscapeRenderer {
 	private resetZoom(): void {
 		const transform = d3.zoomIdentity.translate(0, 0).scale(1);
 		this.svg.call(this.zoom.transform, transform);
+	}
+
+	/**
+	 * Create tooltip element
+	 */
+	private createTooltip(): void {
+		this.tooltip = this.container.createDiv({ cls: 'local-soundscape-tooltip' });
+		this.tooltip.style.position = 'absolute';
+		this.tooltip.style.display = 'none';
+		this.tooltip.style.pointerEvents = 'none';
+	}
+
+	/**
+	 * Show tooltip with node info
+	 */
+	private showTooltip(event: MouseEvent, node: LocalSoundscapeNode): void {
+		if (!this.tooltip) return;
+
+		// Build tooltip content
+		const directionLabel = node.direction === 'incoming' ? 'Incoming' :
+		                       node.direction === 'outgoing' ? 'Outgoing' :
+		                       node.direction === 'bidirectional' ? 'Bidirectional' : 'Center';
+
+		this.tooltip.innerHTML = `
+			<div class="tooltip-title">${node.basename}</div>
+			<div class="tooltip-info">
+				<div>Depth: ${node.depth}</div>
+				<div>Direction: ${directionLabel}</div>
+				<div>Links: ${node.linkCount}</div>
+				<div>Words: ${node.wordCount}</div>
+			</div>
+		`;
+
+		// Position tooltip near cursor
+		this.tooltip.style.left = `${event.clientX + 10}px`;
+		this.tooltip.style.top = `${event.clientY + 10}px`;
+		this.tooltip.style.display = 'block';
+	}
+
+	/**
+	 * Hide tooltip
+	 */
+	private hideTooltip(): void {
+		if (this.tooltip) {
+			this.tooltip.style.display = 'none';
+		}
+	}
+
+	/**
+	 * Create context menu element
+	 */
+	private createContextMenu(): void {
+		this.contextMenu = this.container.createDiv({ cls: 'local-soundscape-context-menu' });
+		this.contextMenu.style.position = 'absolute';
+		this.contextMenu.style.display = 'none';
+
+		// Close context menu when clicking elsewhere
+		document.addEventListener('click', () => {
+			this.hideContextMenu();
+		});
+	}
+
+	/**
+	 * Show context menu for node
+	 */
+	private showContextMenu(event: MouseEvent, node: LocalSoundscapeNode): void {
+		if (!this.contextMenu) return;
+
+		// Build context menu
+		this.contextMenu.empty();
+
+		const menu = this.contextMenu.createDiv({ cls: 'context-menu-items' });
+
+		// Open note option
+		const openItem = menu.createDiv({ cls: 'context-menu-item' });
+		openItem.textContent = 'Open note';
+		openItem.addEventListener('click', (e) => {
+			e.stopPropagation();
+			if (this.onNodeOpen) {
+				this.onNodeOpen(node);
+			}
+			this.hideContextMenu();
+		});
+
+		// Re-center soundscape option (only if not already center)
+		if (node.depth !== 0) {
+			const recenterItem = menu.createDiv({ cls: 'context-menu-item' });
+			recenterItem.textContent = 'Re-center soundscape here';
+			recenterItem.addEventListener('click', (e) => {
+				e.stopPropagation();
+				if (this.onNodeRecenter) {
+					this.onNodeRecenter(node);
+				}
+				this.hideContextMenu();
+			});
+		}
+
+		// Position context menu
+		this.contextMenu.style.left = `${event.clientX}px`;
+		this.contextMenu.style.top = `${event.clientY}px`;
+		this.contextMenu.style.display = 'block';
+	}
+
+	/**
+	 * Hide context menu
+	 */
+	private hideContextMenu(): void {
+		if (this.contextMenu) {
+			this.contextMenu.style.display = 'none';
+		}
+	}
+
+	/**
+	 * Set callbacks for node interactions
+	 */
+	setCallbacks(onNodeOpen?: (node: LocalSoundscapeNode) => void, onNodeRecenter?: (node: LocalSoundscapeNode) => void): void {
+		this.onNodeOpen = onNodeOpen;
+		this.onNodeRecenter = onNodeRecenter;
 	}
 
 	/**

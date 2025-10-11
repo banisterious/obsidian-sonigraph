@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-11 14:45:40 UTC
+ * - Generated: 2025-10-11 16:58:14 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -10082,7 +10082,7 @@ details.osp-advanced-settings {
    COMPONENT: LOCAL-SOUNDSCAPE.CSS
    ========================================================================== */
 
-/* Component Size: 394 lines, 7.28 KB */
+/* Component Size: 454 lines, 8.73 KB */
 
 /* ================================================================
    Local Soundscape View Styles
@@ -10476,6 +10476,66 @@ details.osp-advanced-settings {
 	font-family: var(--font-monospace);
 	margin-top: 8px;
 	opacity: 0.8;
+}
+
+/* ================================================================
+   Node Interaction Styles
+   ================================================================ */
+
+/* Tooltip */
+.local-soundscape-tooltip {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 8px 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+	max-width: 250px;
+}
+
+.local-soundscape-tooltip .tooltip-title {
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
+.local-soundscape-tooltip .tooltip-info {
+	font-size: 11px;
+	color: var(--text-muted);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* Context Menu */
+.local-soundscape-context-menu {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+	z-index: 1000;
+	min-width: 180px;
+}
+
+.local-soundscape-context-menu .context-menu-items {
+	padding: 4px 0;
+}
+
+.local-soundscape-context-menu .context-menu-item {
+	padding: 6px 12px;
+	cursor: pointer;
+	font-size: 13px;
+	color: var(--text-normal);
+	transition: background-color 0.1s ease;
+}
+
+.local-soundscape-context-menu .context-menu-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.local-soundscape-context-menu .context-menu-item:active {
+	background: var(--background-modifier-active-hover);
 }
 
 
@@ -12133,10 +12193,10 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-11 14:45:40 UTC
+ * Build completed: 2025-10-11 16:58:14 UTC
  * Components processed: 21
- * Total lines: 11918
- * Total size: 252.36 KB
+ * Total lines: 11978
+ * Total size: 253.81 KB
  * Build duration: 0.04 seconds
  * 
  * Component breakdown:
@@ -12155,7 +12215,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 901 lines, 21.72 KB
  * - sonic-graph.css: 3365 lines, 72.4 KB
- * - local-soundscape.css: 394 lines, 7.28 KB
+ * - local-soundscape.css: 454 lines, 8.73 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

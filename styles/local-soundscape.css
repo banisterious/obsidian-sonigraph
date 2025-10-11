@@ -391,3 +391,63 @@
 	margin-top: 8px;
 	opacity: 0.8;
 }
+
+/* ================================================================
+   Node Interaction Styles
+   ================================================================ */
+
+/* Tooltip */
+.local-soundscape-tooltip {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 8px 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+	max-width: 250px;
+}
+
+.local-soundscape-tooltip .tooltip-title {
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
+.local-soundscape-tooltip .tooltip-info {
+	font-size: 11px;
+	color: var(--text-muted);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* Context Menu */
+.local-soundscape-context-menu {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+	z-index: 1000;
+	min-width: 180px;
+}
+
+.local-soundscape-context-menu .context-menu-items {
+	padding: 4px 0;
+}
+
+.local-soundscape-context-menu .context-menu-item {
+	padding: 6px 12px;
+	cursor: pointer;
+	font-size: 13px;
+	color: var(--text-normal);
+	transition: background-color 0.1s ease;
+}
+
+.local-soundscape-context-menu .context-menu-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.local-soundscape-context-menu .context-menu-item:active {
+	background: var(--background-modifier-active-hover);
+}

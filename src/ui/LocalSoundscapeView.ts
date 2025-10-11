@@ -524,6 +524,31 @@ export class LocalSoundscapeView extends ItemView {
 	}
 
 	/**
+	 * Handle node open (left-click or context menu)
+	 */
+	private handleNodeOpen(node: LocalSoundscapeNode): void {
+		logger.info('node-open', 'Opening note', { path: node.path });
+
+		// Open the note in a new leaf
+		const file = this.app.vault.getAbstractFileByPath(node.path);
+		if (file instanceof TFile) {
+			this.app.workspace.getLeaf(false).openFile(file);
+		}
+	}
+
+	/**
+	 * Handle node re-center (context menu option)
+	 */
+	private async handleNodeRecenter(node: LocalSoundscapeNode): Promise<void> {
+		logger.info('node-recenter', 'Re-centering soundscape', { path: node.path });
+
+		const file = this.app.vault.getAbstractFileByPath(node.path);
+		if (file instanceof TFile) {
+			await this.setCenterFile(file);
+		}
+	}
+
+	/**
 	 * Extract graph data and render visualization
 	 * Phase 1: Placeholder - will implement graph extraction and rendering
 	 */
@@ -574,6 +599,12 @@ export class LocalSoundscapeView extends ItemView {
 					enableZoom: true
 				};
 				this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
+
+				// Set up node interaction callbacks
+				this.renderer.setCallbacks(
+					(node) => this.handleNodeOpen(node),
+					(node) => this.handleNodeRecenter(node)
+				);
 			}
 
 			// Render the graph

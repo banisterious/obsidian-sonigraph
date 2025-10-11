@@ -79548,6 +79548,10 @@ init_logging();
 var logger71 = getLogger("LocalSoundscapeRenderer");
 var LocalSoundscapeRenderer = class {
   constructor(container, config = {}) {
+    // Tooltip
+    this.tooltip = null;
+    // Context menu
+    this.contextMenu = null;
     // Current data
     this.data = null;
     this.container = container;
@@ -79568,6 +79572,8 @@ var LocalSoundscapeRenderer = class {
     };
     this.layoutAlgorithm = new RadialLayoutAlgorithm(layoutConfig);
     this.initializeSVG();
+    this.createTooltip();
+    this.createContextMenu();
     logger71.info("renderer-init", "LocalSoundscapeRenderer initialized", this.config);
   }
   /**
@@ -79707,6 +79713,9 @@ var LocalSoundscapeRenderer = class {
   handleNodeClick(event, node) {
     event.stopPropagation();
     logger71.info("node-clicked", "Node clicked", { node: node.basename });
+    if (this.onNodeOpen) {
+      this.onNodeOpen(node);
+    }
   }
   /**
    * Handle node right-click
@@ -79715,12 +79724,14 @@ var LocalSoundscapeRenderer = class {
     event.preventDefault();
     event.stopPropagation();
     logger71.info("node-right-clicked", "Node right-clicked", { node: node.basename });
+    this.showContextMenu(event, node);
   }
   /**
    * Handle node hover
    */
   handleNodeHover(event, node) {
     select_default2(event.target).attr("r", (d) => d.depth === 0 ? this.config.nodeRadius * 2 : this.config.nodeRadius * 1.3).attr("stroke-width", 4);
+    this.showTooltip(event, node);
     logger71.debug("node-hover", "Node hovered", { node: node.basename });
   }
   /**
@@ -79728,6 +79739,7 @@ var LocalSoundscapeRenderer = class {
    */
   handleNodeMouseOut(event, node) {
     select_default2(event.target).attr("r", (d) => d.depth === 0 ? this.config.nodeRadius * 1.5 : this.config.nodeRadius).attr("stroke-width", (d) => d.depth === 0 ? 3 : 2);
+    this.hideTooltip();
   }
   /**
    * Fit graph to content
@@ -79751,6 +79763,101 @@ var LocalSoundscapeRenderer = class {
   resetZoom() {
     const transform2 = identity2.translate(0, 0).scale(1);
     this.svg.call(this.zoom.transform, transform2);
+  }
+  /**
+   * Create tooltip element
+   */
+  createTooltip() {
+    this.tooltip = this.container.createDiv({ cls: "local-soundscape-tooltip" });
+    this.tooltip.style.position = "absolute";
+    this.tooltip.style.display = "none";
+    this.tooltip.style.pointerEvents = "none";
+  }
+  /**
+   * Show tooltip with node info
+   */
+  showTooltip(event, node) {
+    if (!this.tooltip)
+      return;
+    const directionLabel = node.direction === "incoming" ? "Incoming" : node.direction === "outgoing" ? "Outgoing" : node.direction === "bidirectional" ? "Bidirectional" : "Center";
+    this.tooltip.innerHTML = `
+			<div class="tooltip-title">${node.basename}</div>
+			<div class="tooltip-info">
+				<div>Depth: ${node.depth}</div>
+				<div>Direction: ${directionLabel}</div>
+				<div>Links: ${node.linkCount}</div>
+				<div>Words: ${node.wordCount}</div>
+			</div>
+		`;
+    this.tooltip.style.left = `${event.clientX + 10}px`;
+    this.tooltip.style.top = `${event.clientY + 10}px`;
+    this.tooltip.style.display = "block";
+  }
+  /**
+   * Hide tooltip
+   */
+  hideTooltip() {
+    if (this.tooltip) {
+      this.tooltip.style.display = "none";
+    }
+  }
+  /**
+   * Create context menu element
+   */
+  createContextMenu() {
+    this.contextMenu = this.container.createDiv({ cls: "local-soundscape-context-menu" });
+    this.contextMenu.style.position = "absolute";
+    this.contextMenu.style.display = "none";
+    document.addEventListener("click", () => {
+      this.hideContextMenu();
+    });
+  }
+  /**
+   * Show context menu for node
+   */
+  showContextMenu(event, node) {
+    if (!this.contextMenu)
+      return;
+    this.contextMenu.empty();
+    const menu = this.contextMenu.createDiv({ cls: "context-menu-items" });
+    const openItem = menu.createDiv({ cls: "context-menu-item" });
+    openItem.textContent = "Open note";
+    openItem.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (this.onNodeOpen) {
+        this.onNodeOpen(node);
+      }
+      this.hideContextMenu();
+    });
+    if (node.depth !== 0) {
+      const recenterItem = menu.createDiv({ cls: "context-menu-item" });
+      recenterItem.textContent = "Re-center soundscape here";
+      recenterItem.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (this.onNodeRecenter) {
+          this.onNodeRecenter(node);
+        }
+        this.hideContextMenu();
+      });
+    }
+    this.contextMenu.style.left = `${event.clientX}px`;
+    this.contextMenu.style.top = `${event.clientY}px`;
+    this.contextMenu.style.display = "block";
+  }
+  /**
+   * Hide context menu
+   */
+  hideContextMenu() {
+    if (this.contextMenu) {
+      this.contextMenu.style.display = "none";
+    }
+  }
+  /**
+   * Set callbacks for node interactions
+   */
+  setCallbacks(onNodeOpen, onNodeRecenter) {
+    this.onNodeOpen = onNodeOpen;
+    this.onNodeRecenter = onNodeRecenter;
   }
   /**
    * Update configuration
@@ -80145,6 +80252,26 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     }
   }
   /**
+   * Handle node open (left-click or context menu)
+   */
+  handleNodeOpen(node) {
+    logger72.info("node-open", "Opening note", { path: node.path });
+    const file = this.app.vault.getAbstractFileByPath(node.path);
+    if (file instanceof import_obsidian28.TFile) {
+      this.app.workspace.getLeaf(false).openFile(file);
+    }
+  }
+  /**
+   * Handle node re-center (context menu option)
+   */
+  async handleNodeRecenter(node) {
+    logger72.info("node-recenter", "Re-centering soundscape", { path: node.path });
+    const file = this.app.vault.getAbstractFileByPath(node.path);
+    if (file instanceof import_obsidian28.TFile) {
+      await this.setCenterFile(file);
+    }
+  }
+  /**
    * Extract graph data and render visualization
    * Phase 1: Placeholder - will implement graph extraction and rendering
    */
@@ -80181,6 +80308,10 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
           enableZoom: true
         };
         this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
+        this.renderer.setCallbacks(
+          (node) => this.handleNodeOpen(node),
+          (node) => this.handleNodeRecenter(node)
+        );
       }
       this.renderer.render(this.graphData);
       this.markAsUpToDate();
