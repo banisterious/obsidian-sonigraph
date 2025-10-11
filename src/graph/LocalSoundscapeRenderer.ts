@@ -403,9 +403,10 @@ export class LocalSoundscapeRenderer {
 	 */
 	private createTooltip(): void {
 		this.tooltip = this.container.createDiv({ cls: 'local-soundscape-tooltip' });
-		this.tooltip.style.position = 'absolute';
+		this.tooltip.style.position = 'fixed';
 		this.tooltip.style.display = 'none';
 		this.tooltip.style.pointerEvents = 'none';
+		this.tooltip.style.zIndex = '1000';
 	}
 
 	/**
@@ -449,8 +450,9 @@ export class LocalSoundscapeRenderer {
 	 */
 	private createContextMenu(): void {
 		this.contextMenu = this.container.createDiv({ cls: 'local-soundscape-context-menu' });
-		this.contextMenu.style.position = 'absolute';
+		this.contextMenu.style.position = 'fixed';
 		this.contextMenu.style.display = 'none';
+		this.contextMenu.style.zIndex = '1000';
 
 		// Close context menu when clicking elsewhere
 		document.addEventListener('click', () => {

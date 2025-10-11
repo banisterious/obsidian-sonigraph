@@ -79769,9 +79769,10 @@ var LocalSoundscapeRenderer = class {
    */
   createTooltip() {
     this.tooltip = this.container.createDiv({ cls: "local-soundscape-tooltip" });
-    this.tooltip.style.position = "absolute";
+    this.tooltip.style.position = "fixed";
     this.tooltip.style.display = "none";
     this.tooltip.style.pointerEvents = "none";
+    this.tooltip.style.zIndex = "1000";
   }
   /**
    * Show tooltip with node info
@@ -79806,8 +79807,9 @@ var LocalSoundscapeRenderer = class {
    */
   createContextMenu() {
     this.contextMenu = this.container.createDiv({ cls: "local-soundscape-context-menu" });
-    this.contextMenu.style.position = "absolute";
+    this.contextMenu.style.position = "fixed";
     this.contextMenu.style.display = "none";
+    this.contextMenu.style.zIndex = "1000";
     document.addEventListener("click", () => {
       this.hideContextMenu();
     });
@@ -80162,7 +80164,30 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     if (centerNoteName) {
       centerNoteName.textContent = file.basename;
     }
+    await this.waitForContainerReady();
     await this.extractAndRenderGraph();
+  }
+  /**
+   * Wait for graph container to have valid dimensions
+   * Fixes issue where graph doesn't appear on first load
+   */
+  async waitForContainerReady() {
+    const maxAttempts = 20;
+    const delayMs = 50;
+    for (let i = 0; i < maxAttempts; i++) {
+      const width = this.graphContainer.clientWidth;
+      const height = this.graphContainer.clientHeight;
+      if (width > 0 && height > 0) {
+        logger72.debug("container-ready", "Container ready", { width, height, attempts: i + 1 });
+        return;
+      }
+      logger72.debug("container-wait", "Waiting for container dimensions", { attempt: i + 1, width, height });
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    logger72.warn("container-timeout", "Container dimensions not ready after timeout", {
+      width: this.graphContainer.clientWidth,
+      height: this.graphContainer.clientHeight
+    });
   }
   /**
    * Set the depth level

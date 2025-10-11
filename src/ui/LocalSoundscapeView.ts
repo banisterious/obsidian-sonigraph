@@ -404,8 +404,38 @@ export class LocalSoundscapeView extends ItemView {
 			centerNoteName.textContent = file.basename;
 		}
 
-		// Extract and render graph (Phase 1 task - to be implemented)
+		// Wait for container to have dimensions (fixes first-load issue)
+		await this.waitForContainerReady();
+
+		// Extract and render graph
 		await this.extractAndRenderGraph();
+	}
+
+	/**
+	 * Wait for graph container to have valid dimensions
+	 * Fixes issue where graph doesn't appear on first load
+	 */
+	private async waitForContainerReady(): Promise<void> {
+		const maxAttempts = 20;
+		const delayMs = 50;
+
+		for (let i = 0; i < maxAttempts; i++) {
+			const width = this.graphContainer.clientWidth;
+			const height = this.graphContainer.clientHeight;
+
+			if (width > 0 && height > 0) {
+				logger.debug('container-ready', 'Container ready', { width, height, attempts: i + 1 });
+				return;
+			}
+
+			logger.debug('container-wait', 'Waiting for container dimensions', { attempt: i + 1, width, height });
+			await new Promise(resolve => setTimeout(resolve, delayMs));
+		}
+
+		logger.warn('container-timeout', 'Container dimensions not ready after timeout', {
+			width: this.graphContainer.clientWidth,
+			height: this.graphContainer.clientHeight
+		});
 	}
 
 	/**
