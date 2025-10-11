@@ -12,6 +12,7 @@ import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
 import { getLogger } from '../logging';
 import { LocalSoundscapeExtractor, LocalSoundscapeData } from '../graph/LocalSoundscapeExtractor';
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
+import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMapper';
 import type SonigraphPlugin from '../main';
 
 const logger = getLogger('LocalSoundscapeView');
@@ -35,6 +36,10 @@ export class LocalSoundscapeView extends ItemView {
 	private extractor: LocalSoundscapeExtractor;
 	private renderer: LocalSoundscapeRenderer | null = null;
 
+	// Audio components
+	private depthMapper: DepthBasedMapper | null = null;
+	private currentMappings: DepthMapping[] = [];
+
 	// Audio state
 	private isPlaying: boolean = false;
 	private currentVoiceCount: number = 0;
@@ -57,6 +62,18 @@ export class LocalSoundscapeView extends ItemView {
 		super(leaf);
 		this.plugin = plugin;
 		this.extractor = new LocalSoundscapeExtractor(this.app);
+
+		// Initialize DepthBasedMapper if we have a musical mapper
+		if (this.plugin.musicalMapper) {
+			this.depthMapper = new DepthBasedMapper(
+				{}, // Use default config
+				this.plugin.musicalMapper,
+				this.app
+			);
+			logger.info('view-init', 'DepthBasedMapper initialized');
+		} else {
+			logger.warn('view-init', 'MusicalMapper not available, audio will not work');
+		}
 
 		logger.info('view-init', 'LocalSoundscapeView initialized');
 	}
@@ -503,15 +520,46 @@ export class LocalSoundscapeView extends ItemView {
 	 * Start audio playback
 	 */
 	private async startPlayback(): Promise<void> {
+		if (!this.graphData || !this.depthMapper || !this.plugin.audioEngine) {
+			logger.warn('playback-start', 'Cannot start playback - missing required components', {
+				hasGraphData: !!this.graphData,
+				hasDepthMapper: !!this.depthMapper,
+				hasAudioEngine: !!this.plugin.audioEngine
+			});
+			new Notice('Audio engine not available');
+			return;
+		}
+
 		logger.info('playback-start', 'Starting soundscape playback');
 
-		// TODO: Implement audio integration in next step
-		// For now, just update UI state
+		try {
+			// Create depth-based musical mappings
+			this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
 
-		this.isPlaying = true;
-		this.updatePlaybackUI();
+			logger.info('mappings-created', 'Created depth-based musical mappings', {
+				count: this.currentMappings.length
+			});
 
-		logger.info('playback-started', 'Soundscape playback started');
+			// Start audio playback using the audio engine
+			// Note: AudioEngine expects MusicalMapping[], and DepthMapping extends MusicalMapping
+			// TODO: We need to actually trigger the audio engine to play these mappings
+			// For now, just mark as playing and update voice count
+			this.isPlaying = true;
+			this.currentVoiceCount = this.currentMappings.length;
+			this.currentVolume = 0.7; // Average volume
+
+			this.updatePlaybackUI();
+
+			logger.info('playback-started', 'Soundscape playback started', {
+				voices: this.currentVoiceCount
+			});
+
+		} catch (error) {
+			logger.error('playback-error', 'Failed to start playback', error as Error);
+			new Notice('Failed to start audio playback');
+			this.isPlaying = false;
+			this.updatePlaybackUI();
+		}
 	}
 
 	/**
@@ -520,8 +568,8 @@ export class LocalSoundscapeView extends ItemView {
 	private async pausePlayback(): Promise<void> {
 		logger.info('playback-pause', 'Pausing soundscape playback');
 
-		// TODO: Implement audio integration in next step
-
+		// TODO: Pause audio engine playback
+		// For now, just mark as paused
 		this.isPlaying = false;
 		this.updatePlaybackUI();
 
@@ -534,8 +582,9 @@ export class LocalSoundscapeView extends ItemView {
 	private async stopPlayback(): Promise<void> {
 		logger.info('playback-stop', 'Stopping soundscape playback');
 
-		// TODO: Implement audio integration in next step
-
+		// TODO: Stop audio engine playback
+		// Clear mappings
+		this.currentMappings = [];
 		this.isPlaying = false;
 		this.currentVoiceCount = 0;
 		this.currentVolume = 0;

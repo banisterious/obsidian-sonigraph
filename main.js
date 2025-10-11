@@ -61618,6 +61618,270 @@ var logger39 = getLogger("connection-type-preset-manager");
 init_logging();
 var import_obsidian19 = require("obsidian");
 var logger40 = getLogger("DepthBasedMapper");
+var DepthBasedMapper = class {
+  constructor(config, musicalMapper, app) {
+    this.currentCenterNodePath = null;
+    this.config = this.mergeWithDefaults(config);
+    this.musicalMapper = musicalMapper;
+    this.app = app;
+    logger40.info("mapper-init", "DepthBasedMapper initialized", {
+      maxNodesPerDepth: this.config.maxNodesPerDepth,
+      panningEnabled: this.config.directionalPanning.enabled
+    });
+  }
+  /**
+   * Merge provided config with sensible defaults
+   */
+  mergeWithDefaults(config) {
+    return {
+      instrumentsByDepth: config.instrumentsByDepth || {
+        center: ["piano", "organ", "leadSynth"],
+        depth1: ["strings", "electricPiano", "pad"],
+        depth2: ["bass", "timpani", "cello"],
+        depth3Plus: ["pad", "drone", "atmosphericSynth"]
+      },
+      volumeByDepth: config.volumeByDepth || {
+        center: 1,
+        depth1: 0.8,
+        depth2: 0.6,
+        depth3Plus: 0.4
+      },
+      pitchRangesByDepth: config.pitchRangesByDepth || {
+        center: { min: 0, max: 12 },
+        // C4 to C5
+        depth1: { min: -5, max: 7 },
+        // G3 to G4
+        depth2: { min: -12, max: 0 },
+        // C3 to C4
+        depth3Plus: { min: -24, max: -12 }
+        // C2 to C3
+      },
+      directionalPanning: config.directionalPanning || {
+        enabled: true,
+        incomingLinks: -0.7,
+        outgoingLinks: 0.7,
+        bidirectional: 0
+      },
+      maxNodesPerDepth: config.maxNodesPerDepth || 30
+    };
+  }
+  /**
+   * Map Local Soundscape data to musical parameters
+   */
+  async mapSoundscapeToMusic(data) {
+    const startTime = performance.now();
+    logger40.info("mapping-start", "Mapping soundscape to music", {
+      totalNodes: data.stats.totalNodes,
+      maxDepth: data.stats.maxDepth,
+      centerNode: data.centerNode.basename
+    });
+    this.currentCenterNodePath = data.centerNode.path;
+    const mappings = [];
+    const centerMapping = await this.mapNode(data.centerNode, 0);
+    if (centerMapping) {
+      mappings.push(centerMapping);
+    }
+    for (let depth = 1; depth <= data.stats.maxDepth; depth++) {
+      const nodesAtDepth = data.nodesByDepth.get(depth) || [];
+      const limitedNodes = this.selectMostImportantNodes(nodesAtDepth, this.config.maxNodesPerDepth);
+      logger40.debug("mapping-depth", `Mapping depth ${depth}`, {
+        totalNodes: nodesAtDepth.length,
+        selectedNodes: limitedNodes.length
+      });
+      for (const node of limitedNodes) {
+        const mapping = await this.mapNode(node, depth);
+        if (mapping) {
+          mappings.push(mapping);
+        }
+      }
+    }
+    const duration = performance.now() - startTime;
+    logger40.info("mapping-complete", "Soundscape mapping complete", {
+      mappingsCreated: mappings.length,
+      duration: `${duration.toFixed(2)}ms`,
+      avgVolume: mappings.reduce((sum, m2) => sum + m2.volume, 0) / mappings.length
+    });
+    return mappings;
+  }
+  /**
+   * Map a single node to musical parameters
+   */
+  async mapNode(node, depth) {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(node.path);
+      if (!(file instanceof import_obsidian19.TFile)) {
+        logger40.warn("file-not-found", `File not found: ${node.path}`);
+        return null;
+      }
+      const baseVolume = this.getVolumeForDepth(depth);
+      const pitchRange = this.getPitchRangeForDepth(depth);
+      const pitchOffset = this.calculatePitchOffset(node, pitchRange);
+      const instruments = this.getInstrumentsForDepth(depth);
+      const instrument = this.selectInstrument(node, instruments);
+      const panning = this.calculatePanning(node);
+      const duration = this.calculateDuration(node);
+      const velocity = this.calculateVelocity(node);
+      const mapping = {
+        nodeId: node.id,
+        pitch: pitchOffset,
+        duration,
+        volume: baseVolume,
+        velocity,
+        instrument,
+        panning,
+        delay: 0,
+        // Will be set during playback scheduling
+        depth,
+        direction: node.direction
+      };
+      return mapping;
+    } catch (error) {
+      logger40.error("mapping-error", `Error mapping node ${node.path}`, error);
+      return null;
+    }
+  }
+  /**
+   * Get volume multiplier for a given depth
+   */
+  getVolumeForDepth(depth) {
+    if (depth === 0)
+      return this.config.volumeByDepth.center;
+    if (depth === 1)
+      return this.config.volumeByDepth.depth1;
+    if (depth === 2)
+      return this.config.volumeByDepth.depth2;
+    return this.config.volumeByDepth.depth3Plus;
+  }
+  /**
+   * Get pitch range for a given depth
+   */
+  getPitchRangeForDepth(depth) {
+    if (depth === 0)
+      return this.config.pitchRangesByDepth.center;
+    if (depth === 1)
+      return this.config.pitchRangesByDepth.depth1;
+    if (depth === 2)
+      return this.config.pitchRangesByDepth.depth2;
+    return this.config.pitchRangesByDepth.depth3Plus;
+  }
+  /**
+   * Calculate pitch offset within range based on node properties
+   */
+  calculatePitchOffset(node, range2) {
+    const wordCountNormalized = Math.min(node.wordCount / 1e3, 1);
+    const rangeSpan = range2.max - range2.min;
+    const offset = range2.min + wordCountNormalized * rangeSpan;
+    return Math.round(offset);
+  }
+  /**
+   * Get instrument pool for a given depth
+   */
+  getInstrumentsForDepth(depth) {
+    if (depth === 0)
+      return this.config.instrumentsByDepth.center;
+    if (depth === 1)
+      return this.config.instrumentsByDepth.depth1;
+    if (depth === 2)
+      return this.config.instrumentsByDepth.depth2;
+    return this.config.instrumentsByDepth.depth3Plus;
+  }
+  /**
+   * Select instrument from pool based on node properties
+   */
+  selectInstrument(node, instruments) {
+    const hash = this.hashString(node.id);
+    const index2 = hash % instruments.length;
+    return instruments[index2];
+  }
+  /**
+   * Calculate stereo panning based on link direction
+   */
+  calculatePanning(node) {
+    if (!this.config.directionalPanning.enabled) {
+      return 0;
+    }
+    switch (node.direction) {
+      case "center":
+        return 0;
+      case "incoming":
+        return this.config.directionalPanning.incomingLinks;
+      case "outgoing":
+        return this.config.directionalPanning.outgoingLinks;
+      case "bidirectional":
+        return this.config.directionalPanning.bidirectional;
+      default:
+        return 0;
+    }
+  }
+  /**
+   * Calculate note duration based on word count
+   */
+  calculateDuration(node) {
+    const minDuration = 0.5;
+    const maxDuration = 2;
+    const wordCountNormalized = Math.min(node.wordCount / 500, 1);
+    const duration = minDuration + wordCountNormalized * (maxDuration - minDuration);
+    return duration;
+  }
+  /**
+   * Calculate velocity based on modification recency
+   */
+  calculateVelocity(node) {
+    const now3 = Date.now();
+    const daysSinceModified = (now3 - node.modified) / (1e3 * 60 * 60 * 24);
+    const velocity = Math.max(0.3, 1 - daysSinceModified / 30 * 0.7);
+    return velocity;
+  }
+  /**
+   * Select most important nodes from a depth level
+   * Priority: word count, modification recency
+   */
+  selectMostImportantNodes(nodes, limit) {
+    if (nodes.length <= limit) {
+      return nodes;
+    }
+    const scoredNodes = nodes.map((node) => ({
+      node,
+      score: this.calculateImportanceScore(node)
+    }));
+    scoredNodes.sort((a2, b) => b.score - a2.score);
+    return scoredNodes.slice(0, limit).map((item) => item.node);
+  }
+  /**
+   * Calculate importance score for node selection
+   */
+  calculateImportanceScore(node) {
+    const wordCountScore = Math.min(node.wordCount / 100, 10);
+    const daysSinceModified = (Date.now() - node.modified) / (1e3 * 60 * 60 * 24);
+    const recencyScore = Math.max(0, 10 - daysSinceModified / 3);
+    return wordCountScore + recencyScore;
+  }
+  /**
+   * Simple string hash function for deterministic instrument selection
+   */
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  }
+  /**
+   * Update configuration
+   */
+  updateConfig(config) {
+    this.config = this.mergeWithDefaults({ ...this.config, ...config });
+    logger40.info("config-updated", "DepthBasedMapper config updated");
+  }
+  /**
+   * Get current configuration
+   */
+  getConfig() {
+    return { ...this.config };
+  }
+};
 
 // src/audio/clustering/ClusterAudioMapper.ts
 init_logging();
@@ -79263,6 +79527,9 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     // Default depth
     this.graphData = null;
     this.renderer = null;
+    // Audio components
+    this.depthMapper = null;
+    this.currentMappings = [];
     // Audio state
     this.isPlaying = false;
     this.currentVoiceCount = 0;
@@ -79275,6 +79542,17 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     this.volumeDisplay = null;
     this.plugin = plugin;
     this.extractor = new LocalSoundscapeExtractor(this.app);
+    if (this.plugin.musicalMapper) {
+      this.depthMapper = new DepthBasedMapper(
+        {},
+        // Use default config
+        this.plugin.musicalMapper,
+        this.app
+      );
+      logger72.info("view-init", "DepthBasedMapper initialized");
+    } else {
+      logger72.warn("view-init", "MusicalMapper not available, audio will not work");
+    }
     logger72.info("view-init", "LocalSoundscapeView initialized");
   }
   getViewType() {
@@ -79604,10 +79882,34 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    * Start audio playback
    */
   async startPlayback() {
+    if (!this.graphData || !this.depthMapper || !this.plugin.audioEngine) {
+      logger72.warn("playback-start", "Cannot start playback - missing required components", {
+        hasGraphData: !!this.graphData,
+        hasDepthMapper: !!this.depthMapper,
+        hasAudioEngine: !!this.plugin.audioEngine
+      });
+      new import_obsidian28.Notice("Audio engine not available");
+      return;
+    }
     logger72.info("playback-start", "Starting soundscape playback");
-    this.isPlaying = true;
-    this.updatePlaybackUI();
-    logger72.info("playback-started", "Soundscape playback started");
+    try {
+      this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
+      logger72.info("mappings-created", "Created depth-based musical mappings", {
+        count: this.currentMappings.length
+      });
+      this.isPlaying = true;
+      this.currentVoiceCount = this.currentMappings.length;
+      this.currentVolume = 0.7;
+      this.updatePlaybackUI();
+      logger72.info("playback-started", "Soundscape playback started", {
+        voices: this.currentVoiceCount
+      });
+    } catch (error) {
+      logger72.error("playback-error", "Failed to start playback", error);
+      new import_obsidian28.Notice("Failed to start audio playback");
+      this.isPlaying = false;
+      this.updatePlaybackUI();
+    }
   }
   /**
    * Pause audio playback
@@ -79623,6 +79925,7 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
    */
   async stopPlayback() {
     logger72.info("playback-stop", "Stopping soundscape playback");
+    this.currentMappings = [];
     this.isPlaying = false;
     this.currentVoiceCount = 0;
     this.currentVolume = 0;
