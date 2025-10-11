@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-10-11 07:55:25 UTC
+ * - Generated: 2025-10-11 14:45:40 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -10082,7 +10082,7 @@ details.osp-advanced-settings {
    COMPONENT: LOCAL-SOUNDSCAPE.CSS
    ========================================================================== */
 
-/* Component Size: 365 lines, 6.68 KB */
+/* Component Size: 394 lines, 7.28 KB */
 
 /* ================================================================
    Local Soundscape View Styles
@@ -10189,6 +10189,35 @@ details.osp-advanced-settings {
 .local-soundscape-header .header-button svg {
 	width: 16px;
 	height: 16px;
+}
+
+/* Staleness indicator */
+.local-soundscape-header .staleness-indicator {
+	font-size: 11px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	white-space: nowrap;
+	transition: all 0.2s ease;
+}
+
+.local-soundscape-header .staleness-indicator.up-to-date {
+	background: var(--background-modifier-success);
+	color: var(--text-success);
+}
+
+.local-soundscape-header .staleness-indicator.stale {
+	background: var(--background-modifier-error);
+	color: var(--text-error);
+	animation: pulse-stale 2s ease-in-out infinite;
+}
+
+@keyframes pulse-stale {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
 }
 
 /* Content area (graph + sidebar) */
@@ -12104,11 +12133,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-10-11 07:55:25 UTC
+ * Build completed: 2025-10-11 14:45:40 UTC
  * Components processed: 21
- * Total lines: 11889
- * Total size: 251.75 KB
- * Build duration: 0.02 seconds
+ * Total lines: 11918
+ * Total size: 252.36 KB
+ * Build duration: 0.04 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -12126,7 +12155,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 901 lines, 21.72 KB
  * - sonic-graph.css: 3365 lines, 72.4 KB
- * - local-soundscape.css: 365 lines, 6.68 KB
+ * - local-soundscape.css: 394 lines, 7.28 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

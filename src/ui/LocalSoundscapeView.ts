@@ -59,6 +59,11 @@ export class LocalSoundscapeView extends ItemView {
 	private voiceCountDisplay: HTMLElement | null = null;
 	private volumeDisplay: HTMLElement | null = null;
 
+	// Staleness tracking
+	private lastExtractionTime: number = 0;
+	private isStale: boolean = false;
+	private stalenessIndicator: HTMLElement | null = null;
+
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
 		this.plugin = plugin;
@@ -104,6 +109,13 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Create main layout structure
 		this.createLayout();
+
+		// Register metadata change listener for staleness detection
+		this.registerEvent(
+			this.app.metadataCache.on('changed', () => {
+				this.markAsStale();
+			})
+		);
 
 		// Initialize with active file if available
 		const activeFile = this.app.workspace.getActiveFile();
@@ -214,6 +226,12 @@ export class LocalSoundscapeView extends ItemView {
 		refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>';
 		refreshButton.addEventListener('click', () => {
 			this.refresh();
+		});
+
+		// Staleness indicator
+		this.stalenessIndicator = controlsSection.createDiv({
+			cls: 'staleness-indicator',
+			text: 'Up-to-date'
 		});
 
 		logger.debug('header-created', 'Header created with controls');
@@ -436,13 +454,72 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Refresh the graph
 	 */
-	private refresh(): void {
+	private async refresh(): Promise<void> {
 		logger.info('refresh', 'Refreshing graph');
 
 		if (this.centerFile) {
-			this.extractAndRenderGraph();
+			// Stop audio if playing
+			if (this.isPlaying) {
+				await this.stopPlayback();
+			}
+
+			// Re-extract and render
+			await this.extractAndRenderGraph();
+
+			// Mark as up-to-date
+			this.markAsUpToDate();
+
+			new Notice('Graph refreshed');
 		} else {
 			new Notice('No note selected');
+		}
+	}
+
+	/**
+	 * Mark graph as stale (vault data has changed)
+	 */
+	private markAsStale(): void {
+		// Only mark as stale if we have graph data and enough time has passed since extraction
+		if (!this.graphData || !this.lastExtractionTime) {
+			return;
+		}
+
+		// Don't mark stale if extracted very recently (< 1 second ago)
+		const timeSinceExtraction = Date.now() - this.lastExtractionTime;
+		if (timeSinceExtraction < 1000) {
+			return;
+		}
+
+		if (!this.isStale) {
+			this.isStale = true;
+			this.updateStalenessIndicator();
+			logger.info('staleness', 'Graph marked as stale');
+		}
+	}
+
+	/**
+	 * Mark graph as up-to-date (just refreshed)
+	 */
+	private markAsUpToDate(): void {
+		this.isStale = false;
+		this.lastExtractionTime = Date.now();
+		this.updateStalenessIndicator();
+	}
+
+	/**
+	 * Update staleness indicator UI
+	 */
+	private updateStalenessIndicator(): void {
+		if (!this.stalenessIndicator) return;
+
+		if (this.isStale) {
+			this.stalenessIndicator.textContent = 'Graph data is stale';
+			this.stalenessIndicator.addClass('stale');
+			this.stalenessIndicator.removeClass('up-to-date');
+		} else {
+			this.stalenessIndicator.textContent = 'Up-to-date';
+			this.stalenessIndicator.removeClass('stale');
+			this.stalenessIndicator.addClass('up-to-date');
 		}
 	}
 
@@ -501,6 +578,9 @@ export class LocalSoundscapeView extends ItemView {
 
 			// Render the graph
 			this.renderer.render(this.graphData);
+
+			// Mark as up-to-date after successful extraction
+			this.markAsUpToDate();
 
 			logger.info('extract-complete', 'Graph extraction and rendering complete');
 

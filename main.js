@@ -79800,6 +79800,10 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     this.stopButton = null;
     this.voiceCountDisplay = null;
     this.volumeDisplay = null;
+    // Staleness tracking
+    this.lastExtractionTime = 0;
+    this.isStale = false;
+    this.stalenessIndicator = null;
     this.plugin = plugin;
     this.extractor = new LocalSoundscapeExtractor(this.app);
     if (this.plugin.musicalMapper) {
@@ -79835,6 +79839,11 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     container.empty();
     container.addClass("local-soundscape-view");
     this.createLayout();
+    this.registerEvent(
+      this.app.metadataCache.on("changed", () => {
+        this.markAsStale();
+      })
+    );
     const activeFile = this.app.workspace.getActiveFile();
     if (activeFile) {
       await this.setCenterFile(activeFile);
@@ -79911,6 +79920,10 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
     refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>';
     refreshButton.addEventListener("click", () => {
       this.refresh();
+    });
+    this.stalenessIndicator = controlsSection.createDiv({
+      cls: "staleness-indicator",
+      text: "Up-to-date"
     });
     logger72.debug("header-created", "Header created with controls");
   }
@@ -80077,12 +80090,58 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
   /**
    * Refresh the graph
    */
-  refresh() {
+  async refresh() {
     logger72.info("refresh", "Refreshing graph");
     if (this.centerFile) {
-      this.extractAndRenderGraph();
+      if (this.isPlaying) {
+        await this.stopPlayback();
+      }
+      await this.extractAndRenderGraph();
+      this.markAsUpToDate();
+      new import_obsidian28.Notice("Graph refreshed");
     } else {
       new import_obsidian28.Notice("No note selected");
+    }
+  }
+  /**
+   * Mark graph as stale (vault data has changed)
+   */
+  markAsStale() {
+    if (!this.graphData || !this.lastExtractionTime) {
+      return;
+    }
+    const timeSinceExtraction = Date.now() - this.lastExtractionTime;
+    if (timeSinceExtraction < 1e3) {
+      return;
+    }
+    if (!this.isStale) {
+      this.isStale = true;
+      this.updateStalenessIndicator();
+      logger72.info("staleness", "Graph marked as stale");
+    }
+  }
+  /**
+   * Mark graph as up-to-date (just refreshed)
+   */
+  markAsUpToDate() {
+    this.isStale = false;
+    this.lastExtractionTime = Date.now();
+    this.updateStalenessIndicator();
+  }
+  /**
+   * Update staleness indicator UI
+   */
+  updateStalenessIndicator() {
+    if (!this.stalenessIndicator)
+      return;
+    if (this.isStale) {
+      this.stalenessIndicator.textContent = "Graph data is stale";
+      this.stalenessIndicator.addClass("stale");
+      this.stalenessIndicator.removeClass("up-to-date");
+    } else {
+      this.stalenessIndicator.textContent = "Up-to-date";
+      this.stalenessIndicator.removeClass("stale");
+      this.stalenessIndicator.addClass("up-to-date");
     }
   }
   /**
@@ -80124,6 +80183,7 @@ var LocalSoundscapeView = class extends import_obsidian28.ItemView {
         this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
       }
       this.renderer.render(this.graphData);
+      this.markAsUpToDate();
       logger72.info("extract-complete", "Graph extraction and rendering complete");
     } catch (error) {
       logger72.error("extract-error", "Failed to extract graph", error);

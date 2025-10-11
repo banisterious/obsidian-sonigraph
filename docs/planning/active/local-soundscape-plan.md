@@ -613,17 +613,22 @@ depthBasedMapping: {
 ### Phase 3: Interactive Controls (2 weeks)
 **Goal:** User can manipulate view and audio updates
 
-- [ ] Depth adjustment (audio updates)
+- [x] Depth adjustment (audio updates)
+- [x] Refresh button
+- [x] Staleness indicator
 - [ ] Filter support (tags, folders, file types)
 - [ ] Groups/clustering
-- [ ] Refresh button
 - [ ] Node interaction:
   - [ ] Hover tooltips (basic info)
   - [ ] Left-click detailed tooltips (note metadata, connections, etc.)
   - [ ] Right-click context menu (Open note, Re-center soundscape)
-- [ ] Staleness indicator
 
 **Deliverable:** Fully interactive graph with synced audio
+
+**Progress:**
+- ✅ Depth adjustment: Dynamic re-extraction and audio restart
+- ✅ Refresh button: Manual graph update with audio stop
+- ✅ Staleness detection: Tracks metadata changes, visual indicator with pulse animation
 
 ### Phase 4: Visual Polish & Settings (1-2 weeks)
 **Goal:** Production-ready feature

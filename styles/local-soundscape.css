@@ -105,6 +105,35 @@
 	height: 16px;
 }
 
+/* Staleness indicator */
+.local-soundscape-header .staleness-indicator {
+	font-size: 11px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	white-space: nowrap;
+	transition: all 0.2s ease;
+}
+
+.local-soundscape-header .staleness-indicator.up-to-date {
+	background: var(--background-modifier-success);
+	color: var(--text-success);
+}
+
+.local-soundscape-header .staleness-indicator.stale {
+	background: var(--background-modifier-error);
+	color: var(--text-error);
+	animation: pulse-stale 2s ease-in-out infinite;
+}
+
+@keyframes pulse-stale {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
 /* Content area (graph + sidebar) */
 .local-soundscape-content {
 	display: flex;
