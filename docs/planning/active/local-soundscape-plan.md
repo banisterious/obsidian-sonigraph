@@ -620,7 +620,11 @@ depthBasedMapping: {
   - [x] Hover tooltips (basic info)
   - [x] Left-click opens note
   - [x] Right-click context menu (Open note, Re-center soundscape)
-- [ ] Filter support (tags, folders, file types)
+- [x] Filter support:
+  - [x] Tag filters (include/exclude)
+  - [x] Folder filters (include/exclude)
+  - [x] File type filters (md, pdf, image, audio, video)
+  - [x] Link direction filters (incoming, outgoing, bidirectional)
 - [ ] Groups/clustering
 
 **Deliverable:** Fully interactive graph with synced audio
@@ -630,6 +634,13 @@ depthBasedMapping: {
 - ✅ Refresh button: Manual graph update with audio stop
 - ✅ Staleness detection: Tracks metadata changes, visual indicator with pulse animation
 - ✅ Node interaction: Hover tooltips, click to open, context menu with re-center option
+- ✅ Filter system: Comprehensive filtering with modal UI
+  - Filter button in header opens modal
+  - Tag filters (include/exclude with tag cloud)
+  - Folder filters (include/exclude with folder cloud)
+  - File type checkboxes (md, pdf, image, audio, video)
+  - Link direction checkboxes (incoming, outgoing, bidirectional)
+  - Applied during graph extraction in real-time
 - ✅ Fixed rendering lifecycle issues:
   - Tooltip/context menu now visible (document.body level, z-index 10000)
   - Graph renders consistently on file switch (renderer dispose/create cycle)
