@@ -85,10 +85,12 @@ export default class SonigraphPlugin extends Plugin {
 			this.app.workspace.on('file-menu', (menu, file) => {
 				// Only add menu item for actual files (not folders)
 				if (file instanceof TFile) {
+					// Add with priority 50 to appear in the middle section, far from "Delete file"
 					menu.addItem((item) => {
 						item
 							.setTitle('Open in Local Soundscape')
 							.setIcon('radio-tower')
+							.setSection('action')  // Place in the action section
 							.onClick(async () => {
 								await this.activateLocalSoundscapeViewForFile(file);
 							});

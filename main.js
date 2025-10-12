@@ -89629,7 +89629,7 @@ var SonigraphPlugin = class extends import_obsidian30.Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         if (file instanceof import_obsidian30.TFile) {
           menu.addItem((item) => {
-            item.setTitle("Open in Local Soundscape").setIcon("radio-tower").onClick(async () => {
+            item.setTitle("Open in Local Soundscape").setIcon("radio-tower").setSection("action").onClick(async () => {
               await this.activateLocalSoundscapeViewForFile(file);
             });
           });
