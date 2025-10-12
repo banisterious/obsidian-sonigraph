@@ -10,9 +10,14 @@
 
 import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
 import { getLogger } from '../logging';
-import { LocalSoundscapeExtractor, LocalSoundscapeData } from '../graph/LocalSoundscapeExtractor';
+import {
+	LocalSoundscapeExtractor,
+	LocalSoundscapeData,
+	LocalSoundscapeFilters as ExtractorFilters
+} from '../graph/LocalSoundscapeExtractor';
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
 import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMapper';
+import { LocalSoundscapeFilterModal, LocalSoundscapeFilters } from './LocalSoundscapeFilterModal';
 import type SonigraphPlugin from '../main';
 
 const logger = getLogger('LocalSoundscapeView');
@@ -45,6 +50,16 @@ export class LocalSoundscapeView extends ItemView {
 	private currentVoiceCount: number = 0;
 	private currentVolume: number = 0;
 	private scheduledTimeouts: number[] = []; // Store timeout IDs for cleanup
+
+	// Filters
+	private filters: LocalSoundscapeFilters = {
+		includeTags: [],
+		excludeTags: [],
+		includeFolders: [],
+		excludeFolders: [],
+		includeFileTypes: [],
+		linkDirections: []
+	};
 
 	// UI containers
 	private containerEl: HTMLElement;
@@ -225,6 +240,16 @@ export class LocalSoundscapeView extends ItemView {
 			const newDepth = parseInt(target.value);
 			depthValue.textContent = newDepth.toString();
 			this.setDepth(newDepth);
+		});
+
+		// Filter button
+		const filterButton = controlsSection.createEl('button', {
+			cls: 'header-button filter-button',
+			attr: { 'aria-label': 'Filter graph' }
+		});
+		filterButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+		filterButton.addEventListener('click', () => {
+			this.openFilterModal();
 		});
 
 		// Refresh button
@@ -602,6 +627,27 @@ export class LocalSoundscapeView extends ItemView {
 	}
 
 	/**
+	 * Open filter modal
+	 */
+	private openFilterModal(): void {
+		const modal = new LocalSoundscapeFilterModal(
+			this.plugin.app,
+			this.filters,
+			async (newFilters) => {
+				this.filters = newFilters;
+				logger.info('filters-changed', 'Filters updated', newFilters);
+
+				// Re-extract and render with new filters
+				if (this.centerFile) {
+					await this.extractAndRenderGraph();
+					new Notice('Filters applied');
+				}
+			}
+		);
+		modal.open();
+	}
+
+	/**
 	 * Mark graph as stale (vault data has changed)
 	 */
 	private markAsStale(): void {
@@ -693,8 +739,12 @@ export class LocalSoundscapeView extends ItemView {
 
 		logger.info('extract-graph', 'Extracting graph data', {
 			center: this.centerFile.path,
-			depth: this.currentDepth
+			depth: this.currentDepth,
+			filtersActive: Object.values(this.filters).some(f => f && f.length > 0)
 		});
+
+		// Apply filters to extractor
+		this.extractor.setFilters(this.filters);
 
 		// Dispose existing renderer if it exists (we'll create a new one)
 		if (this.renderer) {

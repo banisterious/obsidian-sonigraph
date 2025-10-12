@@ -45,11 +45,30 @@ export interface LocalSoundscapeData {
 	};
 }
 
+export interface LocalSoundscapeFilters {
+	includeTags?: string[];
+	excludeTags?: string[];
+	includeFolders?: string[];
+	excludeFolders?: string[];
+	includeFileTypes?: string[];
+	linkDirections?: ('incoming' | 'outgoing' | 'bidirectional')[];
+}
+
 export class LocalSoundscapeExtractor {
 	private app: App;
+	private filters: LocalSoundscapeFilters;
 
 	constructor(app: App) {
 		this.app = app;
+		this.filters = {};
+	}
+
+	/**
+	 * Set filters for extraction
+	 */
+	setFilters(filters: LocalSoundscapeFilters): void {
+		this.filters = filters;
+		logger.info('filters-set', 'Filters configured', filters);
 	}
 
 	/**
@@ -121,8 +140,6 @@ export class LocalSoundscapeExtractor {
 				if (pathFromCenter.includes(linkedFile.path)) continue; // Avoid cycles
 
 				if (!visitedNodes.has(linkedFile.path)) {
-					visitedNodes.add(linkedFile.path);
-
 					// Determine direction relative to center
 					let direction: 'incoming' | 'outgoing' | 'bidirectional' = 'outgoing';
 
@@ -143,6 +160,13 @@ export class LocalSoundscapeExtractor {
 						}
 					}
 
+					// Check if node passes filters
+					if (!this.shouldIncludeNode(linkedFile, direction)) {
+						visitedNodes.add(linkedFile.path); // Mark as visited but don't include
+						continue;
+					}
+
+					visitedNodes.add(linkedFile.path);
 					nodeDirections.set(linkedFile.path, direction);
 
 					// Create node
@@ -184,8 +208,6 @@ export class LocalSoundscapeExtractor {
 					if (pathFromCenter.includes(backlinkPath)) continue; // Avoid cycles
 
 					if (!visitedNodes.has(backlinkPath)) {
-						visitedNodes.add(backlinkPath);
-
 						// Determine direction relative to center
 						let direction: 'incoming' | 'outgoing' | 'bidirectional' = 'incoming';
 
@@ -206,6 +228,13 @@ export class LocalSoundscapeExtractor {
 							}
 						}
 
+						// Check if node passes filters
+						if (!this.shouldIncludeNode(backlinkFile, direction)) {
+							visitedNodes.add(backlinkPath); // Mark as visited but don't include
+							continue;
+						}
+
+						visitedNodes.add(backlinkPath);
 						nodeDirections.set(backlinkPath, direction);
 
 						// Create node
@@ -296,6 +325,135 @@ export class LocalSoundscapeExtractor {
 			created: file.stat.ctime,
 			modified: file.stat.mtime
 		};
+	}
+
+	/**
+	 * Check if a node should be included based on filters
+	 */
+	private shouldIncludeNode(
+		file: TFile,
+		direction: 'center' | 'incoming' | 'outgoing' | 'bidirectional'
+	): boolean {
+		const cache = this.app.metadataCache.getFileCache(file);
+
+		// Link direction filter
+		if (this.filters.linkDirections && this.filters.linkDirections.length > 0) {
+			// Center node is always included
+			if (direction !== 'center' && !this.filters.linkDirections.includes(direction)) {
+				logger.debug('filter-direction', 'Node filtered by direction', {
+					file: file.path,
+					direction,
+					allowed: this.filters.linkDirections
+				});
+				return false;
+			}
+		}
+
+		// File type filter
+		if (this.filters.includeFileTypes && this.filters.includeFileTypes.length > 0) {
+			const fileType = this.getFileType(file);
+			if (!this.filters.includeFileTypes.includes(fileType)) {
+				logger.debug('filter-filetype', 'Node filtered by file type', {
+					file: file.path,
+					type: fileType,
+					allowed: this.filters.includeFileTypes
+				});
+				return false;
+			}
+		}
+
+		// Folder filters
+		if (this.filters.excludeFolders && this.filters.excludeFolders.length > 0) {
+			for (const excludeFolder of this.filters.excludeFolders) {
+				if (file.path.startsWith(excludeFolder + '/') || file.path === excludeFolder) {
+					logger.debug('filter-folder-exclude', 'Node filtered by excluded folder', {
+						file: file.path,
+						excludeFolder
+					});
+					return false;
+				}
+			}
+		}
+
+		if (this.filters.includeFolders && this.filters.includeFolders.length > 0) {
+			let included = false;
+			for (const includeFolder of this.filters.includeFolders) {
+				if (file.path.startsWith(includeFolder + '/') || file.path === includeFolder) {
+					included = true;
+					break;
+				}
+			}
+			if (!included) {
+				logger.debug('filter-folder-include', 'Node filtered by included folders', {
+					file: file.path,
+					includeFolders: this.filters.includeFolders
+				});
+				return false;
+			}
+		}
+
+		// Tag filters
+		const fileTags = new Set<string>();
+		if (cache?.tags) {
+			cache.tags.forEach(tagCache => {
+				const tag = tagCache.tag.startsWith('#') ? tagCache.tag.slice(1) : tagCache.tag;
+				fileTags.add(tag);
+			});
+		}
+		if (cache?.frontmatter?.tags) {
+			const fmTags = cache.frontmatter.tags;
+			if (Array.isArray(fmTags)) {
+				fmTags.forEach(tag => fileTags.add(tag));
+			} else if (typeof fmTags === 'string') {
+				fileTags.add(fmTags);
+			}
+		}
+
+		// Exclude tags
+		if (this.filters.excludeTags && this.filters.excludeTags.length > 0) {
+			for (const excludeTag of this.filters.excludeTags) {
+				if (fileTags.has(excludeTag)) {
+					logger.debug('filter-tag-exclude', 'Node filtered by excluded tag', {
+						file: file.path,
+						tag: excludeTag
+					});
+					return false;
+				}
+			}
+		}
+
+		// Include tags
+		if (this.filters.includeTags && this.filters.includeTags.length > 0) {
+			let hasIncludedTag = false;
+			for (const includeTag of this.filters.includeTags) {
+				if (fileTags.has(includeTag)) {
+					hasIncludedTag = true;
+					break;
+				}
+			}
+			if (!hasIncludedTag) {
+				logger.debug('filter-tag-include', 'Node filtered by included tags', {
+					file: file.path,
+					includeTags: this.filters.includeTags
+				});
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get file type based on extension
+	 */
+	private getFileType(file: TFile): string {
+		const ext = file.extension.toLowerCase();
+		if (ext === 'md') return 'md';
+		if (ext === 'pdf') return 'pdf';
+		if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return 'image';
+		if (['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext)) return 'audio';
+		if (['mp4', 'webm', 'ogv', 'mov', 'avi'].includes(ext)) return 'video';
+		return 'other';
 	}
 
 	/**

@@ -873,6 +873,14 @@ export interface SonigraphSettings {
 			bidirectional?: number;
 		};
 		maxNodesPerDepth?: number | 'all'; // Maximum nodes to sonify per depth level (default: 100, 'all' for unlimited)
+		filters?: {
+			includeTags?: string[]; // Only include notes with these tags (empty = all)
+			excludeTags?: string[]; // Exclude notes with these tags
+			includeFolders?: string[]; // Only include notes from these folders (empty = all)
+			excludeFolders?: string[]; // Exclude notes from these folders
+			includeFileTypes?: string[]; // Only include these file types (empty = all: md, pdf, image, etc.)
+			linkDirections?: ('incoming' | 'outgoing' | 'bidirectional')[]; // Which link directions to show (empty = all)
+		};
 	};
 }
 

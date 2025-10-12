@@ -451,3 +451,107 @@
 .local-soundscape-context-menu .context-menu-item:active {
 	background: var(--background-modifier-active-hover);
 }
+
+/* Filter Modal */
+.local-soundscape-filter-modal {
+	padding: 20px;
+}
+
+.local-soundscape-filter-modal h2 {
+	margin: 0 0 20px 0;
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.local-soundscape-filter-modal .filter-section {
+	margin-bottom: 30px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.local-soundscape-filter-modal .filter-section:last-of-type {
+	border-bottom: none;
+}
+
+.local-soundscape-filter-modal .filter-section h3 {
+	margin: 0 0 15px 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.local-soundscape-filter-modal .filter-checkbox-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.local-soundscape-filter-modal .filter-checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	color: var(--text-normal);
+	font-size: 14px;
+}
+
+.local-soundscape-filter-modal .filter-checkbox-label:hover {
+	color: var(--text-accent);
+}
+
+.local-soundscape-filter-modal .filter-tag-list,
+.local-soundscape-filter-modal .filter-folder-list {
+	margin-top: 12px;
+	padding: 10px;
+	background: var(--background-secondary);
+	border-radius: 4px;
+}
+
+.local-soundscape-filter-modal .filter-list-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-bottom: 8px;
+}
+
+.local-soundscape-filter-modal .filter-tag-cloud,
+.local-soundscape-filter-modal .filter-folder-cloud {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.local-soundscape-filter-modal .filter-tag,
+.local-soundscape-filter-modal .filter-folder {
+	padding: 4px 10px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 12px;
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.local-soundscape-filter-modal .filter-tag:hover,
+.local-soundscape-filter-modal .filter-folder:hover {
+	background: var(--interactive-accent-hover);
+	transform: scale(1.05);
+}
+
+.local-soundscape-filter-modal .filter-tag-more,
+.local-soundscape-filter-modal .filter-folder-more {
+	padding: 4px 10px;
+	color: var(--text-muted);
+	font-size: 12px;
+	font-style: italic;
+}
+
+.local-soundscape-filter-modal .modal-button-container {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid var(--background-modifier-border);
+}
