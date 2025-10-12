@@ -21,6 +21,8 @@ export interface LocalSoundscapeNode {
 	modified: number;
 	x?: number;  // Will be set by layout algorithm
 	y?: number;  // Will be set by layout algorithm
+	cluster?: string;  // Cluster ID this node belongs to
+	linkCount?: number;  // Number of links (for community detection)
 }
 
 export interface LocalSoundscapeLink {
@@ -30,11 +32,19 @@ export interface LocalSoundscapeLink {
 	direction: 'incoming' | 'outgoing' | 'bidirectional';
 }
 
+export interface LocalSoundscapeCluster {
+	id: string;
+	label: string;
+	nodes: string[];  // Node IDs in this cluster
+	color: string;    // Color for visualization
+}
+
 export interface LocalSoundscapeData {
 	centerNode: LocalSoundscapeNode;
 	nodesByDepth: Map<number, LocalSoundscapeNode[]>;
 	allNodes: LocalSoundscapeNode[];
 	links: LocalSoundscapeLink[];
+	clusters?: LocalSoundscapeCluster[];  // Optional cluster data
 	stats: {
 		totalNodes: number;
 		totalLinks: number;
@@ -54,9 +64,12 @@ export interface LocalSoundscapeFilters {
 	linkDirections?: ('incoming' | 'outgoing' | 'bidirectional')[];
 }
 
+export type ClusteringMethod = 'none' | 'folder' | 'tag' | 'depth' | 'community';
+
 export class LocalSoundscapeExtractor {
 	private app: App;
 	private filters: LocalSoundscapeFilters;
+	private clusteringMethod: ClusteringMethod = 'none';
 
 	constructor(app: App) {
 		this.app = app;
@@ -69,6 +82,14 @@ export class LocalSoundscapeExtractor {
 	setFilters(filters: LocalSoundscapeFilters): void {
 		this.filters = filters;
 		logger.info('filters-set', 'Filters configured', filters);
+	}
+
+	/**
+	 * Set clustering method
+	 */
+	setClusteringMethod(method: ClusteringMethod): void {
+		this.clusteringMethod = method;
+		logger.info('clustering-method-set', 'Clustering method configured', { method });
 	}
 
 	/**
@@ -268,6 +289,16 @@ export class LocalSoundscapeExtractor {
 			}
 		}
 
+		// Add link counts to nodes for community detection
+		allNodes.forEach(node => {
+			node.linkCount = links.filter(l => l.source === node.id || l.target === node.id).length;
+		});
+
+		// Apply clustering if enabled
+		const clusters = this.clusteringMethod !== 'none'
+			? this.computeClusters(allNodes, links, this.clusteringMethod)
+			: undefined;
+
 		// Calculate stats
 		const incomingCount = allNodes.filter(n => n.direction === 'incoming').length;
 		const outgoingCount = allNodes.filter(n => n.direction === 'outgoing').length;
@@ -280,6 +311,7 @@ export class LocalSoundscapeExtractor {
 			nodesByDepth,
 			allNodes,
 			links,
+			clusters,
 			stats: {
 				totalNodes: allNodes.length,
 				totalLinks: links.length,
@@ -454,6 +486,239 @@ export class LocalSoundscapeExtractor {
 		if (['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext)) return 'audio';
 		if (['mp4', 'webm', 'ogv', 'mov', 'avi'].includes(ext)) return 'video';
 		return 'other';
+	}
+
+	/**
+	 * Compute clusters based on the specified method
+	 */
+	private computeClusters(
+		nodes: LocalSoundscapeNode[],
+		links: LocalSoundscapeLink[],
+		method: ClusteringMethod
+	): LocalSoundscapeCluster[] {
+		logger.info('compute-clusters', 'Computing clusters', { method, nodeCount: nodes.length });
+
+		switch (method) {
+			case 'folder':
+				return this.clusterByFolder(nodes);
+			case 'tag':
+				return this.clusterByTag(nodes);
+			case 'depth':
+				return this.clusterByDepth(nodes);
+			case 'community':
+				return this.clusterByCommunity(nodes, links);
+			default:
+				return [];
+		}
+	}
+
+	/**
+	 * Cluster nodes by folder
+	 */
+	private clusterByFolder(nodes: LocalSoundscapeNode[]): LocalSoundscapeCluster[] {
+		const clusterMap = new Map<string, string[]>();
+
+		nodes.forEach(node => {
+			const folder = node.path.substring(0, node.path.lastIndexOf('/')) || '/';
+			if (!clusterMap.has(folder)) {
+				clusterMap.set(folder, []);
+			}
+			clusterMap.get(folder)!.push(node.id);
+			node.cluster = folder;
+		});
+
+		const colors = this.generateClusterColors(clusterMap.size);
+		const clusters: LocalSoundscapeCluster[] = [];
+		let colorIndex = 0;
+
+		clusterMap.forEach((nodeIds, folder) => {
+			clusters.push({
+				id: folder,
+				label: folder === '/' ? 'Root' : folder.split('/').pop() || folder,
+				nodes: nodeIds,
+				color: colors[colorIndex++ % colors.length]
+			});
+		});
+
+		logger.info('folder-clustering', `Created ${clusters.length} folder-based clusters`);
+		return clusters;
+	}
+
+	/**
+	 * Cluster nodes by primary tag
+	 */
+	private clusterByTag(nodes: LocalSoundscapeNode[]): LocalSoundscapeCluster[] {
+		const clusterMap = new Map<string, string[]>();
+
+		nodes.forEach(node => {
+			const file = this.app.vault.getAbstractFileByPath(node.path);
+			if (!(file instanceof TFile)) return;
+
+			const cache = this.app.metadataCache.getFileCache(file);
+			let primaryTag = 'untagged';
+
+			// Get first tag from document or frontmatter
+			if (cache?.tags && cache.tags.length > 0) {
+				primaryTag = cache.tags[0].tag.startsWith('#')
+					? cache.tags[0].tag.slice(1)
+					: cache.tags[0].tag;
+			} else if (cache?.frontmatter?.tags) {
+				const fmTags = cache.frontmatter.tags;
+				if (Array.isArray(fmTags) && fmTags.length > 0) {
+					primaryTag = fmTags[0];
+				} else if (typeof fmTags === 'string') {
+					primaryTag = fmTags;
+				}
+			}
+
+			if (!clusterMap.has(primaryTag)) {
+				clusterMap.set(primaryTag, []);
+			}
+			clusterMap.get(primaryTag)!.push(node.id);
+			node.cluster = primaryTag;
+		});
+
+		const colors = this.generateClusterColors(clusterMap.size);
+		const clusters: LocalSoundscapeCluster[] = [];
+		let colorIndex = 0;
+
+		clusterMap.forEach((nodeIds, tag) => {
+			clusters.push({
+				id: tag,
+				label: tag,
+				nodes: nodeIds,
+				color: colors[colorIndex++ % colors.length]
+			});
+		});
+
+		logger.info('tag-clustering', `Created ${clusters.length} tag-based clusters`);
+		return clusters;
+	}
+
+	/**
+	 * Cluster nodes by depth level
+	 */
+	private clusterByDepth(nodes: LocalSoundscapeNode[]): LocalSoundscapeCluster[] {
+		const clusterMap = new Map<number, string[]>();
+
+		nodes.forEach(node => {
+			if (!clusterMap.has(node.depth)) {
+				clusterMap.set(node.depth, []);
+			}
+			clusterMap.get(node.depth)!.push(node.id);
+			node.cluster = `depth-${node.depth}`;
+		});
+
+		const colors = this.generateClusterColors(clusterMap.size);
+		const clusters: LocalSoundscapeCluster[] = [];
+		let colorIndex = 0;
+
+		clusterMap.forEach((nodeIds, depth) => {
+			clusters.push({
+				id: `depth-${depth}`,
+				label: depth === 0 ? 'Center' : `Depth ${depth}`,
+				nodes: nodeIds,
+				color: colors[colorIndex++ % colors.length]
+			});
+		});
+
+		logger.info('depth-clustering', `Created ${clusters.length} depth-based clusters`);
+		return clusters;
+	}
+
+	/**
+	 * Cluster nodes by community detection (simplified Louvain-like algorithm)
+	 */
+	private clusterByCommunity(nodes: LocalSoundscapeNode[], links: LocalSoundscapeLink[]): LocalSoundscapeCluster[] {
+		// Build adjacency map
+		const adjacency = new Map<string, Set<string>>();
+		nodes.forEach(node => adjacency.set(node.id, new Set()));
+
+		links.forEach(link => {
+			adjacency.get(link.source)?.add(link.target);
+			adjacency.get(link.target)?.add(link.source);
+		});
+
+		// Simple greedy clustering based on link density
+		const nodeClusters = new Map<string, number>();
+		let nextClusterId = 0;
+
+		nodes.forEach(node => {
+			if (nodeClusters.has(node.id)) return;
+
+			// Start new cluster
+			const clusterId = nextClusterId++;
+			const queue = [node.id];
+			nodeClusters.set(node.id, clusterId);
+
+			// BFS to find tightly connected nodes
+			while (queue.length > 0 && nodeClusters.size < nodes.length) {
+				const current = queue.shift()!;
+				const neighbors = adjacency.get(current) || new Set();
+
+				neighbors.forEach(neighbor => {
+					if (!nodeClusters.has(neighbor)) {
+						// Check if neighbor is well-connected to this cluster
+						const neighborConnections = adjacency.get(neighbor) || new Set();
+						const clusterNodes = Array.from(nodeClusters.entries())
+							.filter(([, cid]) => cid === clusterId)
+							.map(([nid]) => nid);
+
+						const connectionsToCluster = clusterNodes.filter(cn => neighborConnections.has(cn)).length;
+
+						// If more than 30% of connections are to this cluster, add to cluster
+						if (connectionsToCluster / neighborConnections.size > 0.3) {
+							nodeClusters.set(neighbor, clusterId);
+							queue.push(neighbor);
+						}
+					}
+				});
+			}
+		});
+
+		// Build cluster objects
+		const clusterMap = new Map<number, string[]>();
+		nodeClusters.forEach((clusterId, nodeId) => {
+			if (!clusterMap.has(clusterId)) {
+				clusterMap.set(clusterId, []);
+			}
+			clusterMap.get(clusterId)!.push(nodeId);
+			const node = nodes.find(n => n.id === nodeId);
+			if (node) node.cluster = `community-${clusterId}`;
+		});
+
+		const colors = this.generateClusterColors(clusterMap.size);
+		const clusters: LocalSoundscapeCluster[] = [];
+		let colorIndex = 0;
+
+		clusterMap.forEach((nodeIds, clusterId) => {
+			clusters.push({
+				id: `community-${clusterId}`,
+				label: `Community ${clusterId + 1}`,
+				nodes: nodeIds,
+				color: colors[colorIndex++ % colors.length]
+			});
+		});
+
+		logger.info('community-clustering', `Created ${clusters.length} community-based clusters`);
+		return clusters;
+	}
+
+	/**
+	 * Generate visually distinct colors for clusters
+	 */
+	private generateClusterColors(count: number): string[] {
+		const colors: string[] = [];
+		const hueStep = 360 / Math.max(count, 1);
+
+		for (let i = 0; i < count; i++) {
+			const hue = Math.floor(i * hueStep);
+			const saturation = 65 + (i % 3) * 10; // Vary saturation slightly
+			const lightness = 55 + (i % 2) * 5;   // Vary lightness slightly
+			colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+		}
+
+		return colors;
 	}
 
 	/**

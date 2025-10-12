@@ -79173,6 +79173,7 @@ init_logging();
 var logger69 = getLogger("LocalSoundscapeExtractor");
 var LocalSoundscapeExtractor = class {
   constructor(app) {
+    this.clusteringMethod = "none";
     this.app = app;
     this.filters = {};
   }
@@ -79182,6 +79183,13 @@ var LocalSoundscapeExtractor = class {
   setFilters(filters) {
     this.filters = filters;
     logger69.info("filters-set", "Filters configured", filters);
+  }
+  /**
+   * Set clustering method
+   */
+  setClusteringMethod(method) {
+    this.clusteringMethod = method;
+    logger69.info("clustering-method-set", "Clustering method configured", { method });
   }
   /**
    * Extract graph data centered on a specific file
@@ -79330,6 +79338,10 @@ var LocalSoundscapeExtractor = class {
         }
       }
     }
+    allNodes.forEach((node) => {
+      node.linkCount = links.filter((l) => l.source === node.id || l.target === node.id).length;
+    });
+    const clusters = this.clusteringMethod !== "none" ? this.computeClusters(allNodes, links, this.clusteringMethod) : void 0;
     const incomingCount = allNodes.filter((n) => n.direction === "incoming").length;
     const outgoingCount = allNodes.filter((n) => n.direction === "outgoing").length;
     const bidirectionalCount = allNodes.filter((n) => n.direction === "bidirectional").length;
@@ -79339,6 +79351,7 @@ var LocalSoundscapeExtractor = class {
       nodesByDepth,
       allNodes,
       links,
+      clusters,
       stats: {
         totalNodes: allNodes.length,
         totalLinks: links.length,
@@ -79489,6 +79502,192 @@ var LocalSoundscapeExtractor = class {
     if (["mp4", "webm", "ogv", "mov", "avi"].includes(ext))
       return "video";
     return "other";
+  }
+  /**
+   * Compute clusters based on the specified method
+   */
+  computeClusters(nodes, links, method) {
+    logger69.info("compute-clusters", "Computing clusters", { method, nodeCount: nodes.length });
+    switch (method) {
+      case "folder":
+        return this.clusterByFolder(nodes);
+      case "tag":
+        return this.clusterByTag(nodes);
+      case "depth":
+        return this.clusterByDepth(nodes);
+      case "community":
+        return this.clusterByCommunity(nodes, links);
+      default:
+        return [];
+    }
+  }
+  /**
+   * Cluster nodes by folder
+   */
+  clusterByFolder(nodes) {
+    const clusterMap = /* @__PURE__ */ new Map();
+    nodes.forEach((node) => {
+      const folder = node.path.substring(0, node.path.lastIndexOf("/")) || "/";
+      if (!clusterMap.has(folder)) {
+        clusterMap.set(folder, []);
+      }
+      clusterMap.get(folder).push(node.id);
+      node.cluster = folder;
+    });
+    const colors = this.generateClusterColors(clusterMap.size);
+    const clusters = [];
+    let colorIndex = 0;
+    clusterMap.forEach((nodeIds, folder) => {
+      clusters.push({
+        id: folder,
+        label: folder === "/" ? "Root" : folder.split("/").pop() || folder,
+        nodes: nodeIds,
+        color: colors[colorIndex++ % colors.length]
+      });
+    });
+    logger69.info("folder-clustering", `Created ${clusters.length} folder-based clusters`);
+    return clusters;
+  }
+  /**
+   * Cluster nodes by primary tag
+   */
+  clusterByTag(nodes) {
+    const clusterMap = /* @__PURE__ */ new Map();
+    nodes.forEach((node) => {
+      var _a;
+      const file = this.app.vault.getAbstractFileByPath(node.path);
+      if (!(file instanceof import_obsidian27.TFile))
+        return;
+      const cache = this.app.metadataCache.getFileCache(file);
+      let primaryTag = "untagged";
+      if ((cache == null ? void 0 : cache.tags) && cache.tags.length > 0) {
+        primaryTag = cache.tags[0].tag.startsWith("#") ? cache.tags[0].tag.slice(1) : cache.tags[0].tag;
+      } else if ((_a = cache == null ? void 0 : cache.frontmatter) == null ? void 0 : _a.tags) {
+        const fmTags = cache.frontmatter.tags;
+        if (Array.isArray(fmTags) && fmTags.length > 0) {
+          primaryTag = fmTags[0];
+        } else if (typeof fmTags === "string") {
+          primaryTag = fmTags;
+        }
+      }
+      if (!clusterMap.has(primaryTag)) {
+        clusterMap.set(primaryTag, []);
+      }
+      clusterMap.get(primaryTag).push(node.id);
+      node.cluster = primaryTag;
+    });
+    const colors = this.generateClusterColors(clusterMap.size);
+    const clusters = [];
+    let colorIndex = 0;
+    clusterMap.forEach((nodeIds, tag) => {
+      clusters.push({
+        id: tag,
+        label: tag,
+        nodes: nodeIds,
+        color: colors[colorIndex++ % colors.length]
+      });
+    });
+    logger69.info("tag-clustering", `Created ${clusters.length} tag-based clusters`);
+    return clusters;
+  }
+  /**
+   * Cluster nodes by depth level
+   */
+  clusterByDepth(nodes) {
+    const clusterMap = /* @__PURE__ */ new Map();
+    nodes.forEach((node) => {
+      if (!clusterMap.has(node.depth)) {
+        clusterMap.set(node.depth, []);
+      }
+      clusterMap.get(node.depth).push(node.id);
+      node.cluster = `depth-${node.depth}`;
+    });
+    const colors = this.generateClusterColors(clusterMap.size);
+    const clusters = [];
+    let colorIndex = 0;
+    clusterMap.forEach((nodeIds, depth) => {
+      clusters.push({
+        id: `depth-${depth}`,
+        label: depth === 0 ? "Center" : `Depth ${depth}`,
+        nodes: nodeIds,
+        color: colors[colorIndex++ % colors.length]
+      });
+    });
+    logger69.info("depth-clustering", `Created ${clusters.length} depth-based clusters`);
+    return clusters;
+  }
+  /**
+   * Cluster nodes by community detection (simplified Louvain-like algorithm)
+   */
+  clusterByCommunity(nodes, links) {
+    const adjacency = /* @__PURE__ */ new Map();
+    nodes.forEach((node) => adjacency.set(node.id, /* @__PURE__ */ new Set()));
+    links.forEach((link) => {
+      var _a, _b;
+      (_a = adjacency.get(link.source)) == null ? void 0 : _a.add(link.target);
+      (_b = adjacency.get(link.target)) == null ? void 0 : _b.add(link.source);
+    });
+    const nodeClusters = /* @__PURE__ */ new Map();
+    let nextClusterId = 0;
+    nodes.forEach((node) => {
+      if (nodeClusters.has(node.id))
+        return;
+      const clusterId = nextClusterId++;
+      const queue = [node.id];
+      nodeClusters.set(node.id, clusterId);
+      while (queue.length > 0 && nodeClusters.size < nodes.length) {
+        const current = queue.shift();
+        const neighbors = adjacency.get(current) || /* @__PURE__ */ new Set();
+        neighbors.forEach((neighbor) => {
+          if (!nodeClusters.has(neighbor)) {
+            const neighborConnections = adjacency.get(neighbor) || /* @__PURE__ */ new Set();
+            const clusterNodes = Array.from(nodeClusters.entries()).filter(([, cid]) => cid === clusterId).map(([nid]) => nid);
+            const connectionsToCluster = clusterNodes.filter((cn) => neighborConnections.has(cn)).length;
+            if (connectionsToCluster / neighborConnections.size > 0.3) {
+              nodeClusters.set(neighbor, clusterId);
+              queue.push(neighbor);
+            }
+          }
+        });
+      }
+    });
+    const clusterMap = /* @__PURE__ */ new Map();
+    nodeClusters.forEach((clusterId, nodeId) => {
+      if (!clusterMap.has(clusterId)) {
+        clusterMap.set(clusterId, []);
+      }
+      clusterMap.get(clusterId).push(nodeId);
+      const node = nodes.find((n) => n.id === nodeId);
+      if (node)
+        node.cluster = `community-${clusterId}`;
+    });
+    const colors = this.generateClusterColors(clusterMap.size);
+    const clusters = [];
+    let colorIndex = 0;
+    clusterMap.forEach((nodeIds, clusterId) => {
+      clusters.push({
+        id: `community-${clusterId}`,
+        label: `Community ${clusterId + 1}`,
+        nodes: nodeIds,
+        color: colors[colorIndex++ % colors.length]
+      });
+    });
+    logger69.info("community-clustering", `Created ${clusters.length} community-based clusters`);
+    return clusters;
+  }
+  /**
+   * Generate visually distinct colors for clusters
+   */
+  generateClusterColors(count) {
+    const colors = [];
+    const hueStep = 360 / Math.max(count, 1);
+    for (let i = 0; i < count; i++) {
+      const hue = Math.floor(i * hueStep);
+      const saturation = 65 + i % 3 * 10;
+      const lightness = 55 + i % 2 * 5;
+      colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+    }
+    return colors;
   }
   /**
    * Get nodes at a specific depth

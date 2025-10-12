@@ -881,6 +881,12 @@ export interface SonigraphSettings {
 			includeFileTypes?: string[]; // Only include these file types (empty = all: md, pdf, image, etc.)
 			linkDirections?: ('incoming' | 'outgoing' | 'bidirectional')[]; // Which link directions to show (empty = all)
 		};
+		clustering?: {
+			enabled?: boolean; // Enable/disable clustering visualization
+			method?: 'none' | 'folder' | 'tag' | 'depth' | 'community'; // Clustering method
+			showLabels?: boolean; // Show cluster labels
+			showBackgrounds?: boolean; // Show cluster background shapes
+		};
 	};
 }
 
