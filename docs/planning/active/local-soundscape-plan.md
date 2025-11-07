@@ -928,6 +928,24 @@ localSoundscape: {
 - **Per-node playback:** Click node to hear just that note
 - **Path sonification:** Play audio following a specific path
 - **Temporal mode:** Hear how graph evolved over time
+- **Context-aware modifiers:** Dynamic audio influenced by environmental factors
+  - **Season-based**: Different timbres/moods for Spring/Summer/Fall/Winter
+  - **Time-based**: Dawn/day/dusk/night variations (brighter vs darker sounds)
+  - **Weather-based**: Clear/rainy/stormy/snowy atmospheres (via weather API)
+  - **Theme-based**: Light mode vs dark mode influences brightness/warmth
+  - **Combination modes**:
+    - "Context-influenced" - blend note properties with environmental factors
+    - "Context-only" - purely environmental, ignoring note properties
+  - **Configuration**:
+    - Enable/disable individual context factors
+    - Adjust influence weight (0-100%) for each factor
+    - Override automatic detection (manually set season, time, weather)
+  - **Technical approach**:
+    - Seasonal mapping: Spring (bright, major keys), Summer (warm, energetic), Fall (mellow, minor keys), Winter (cold, sparse)
+    - Time mapping: Morning (rising pitch), Afternoon (stable), Evening (descending), Night (ambient, reverb)
+    - Weather mapping: Clear (clean), Cloudy (muted), Rain (rhythmic elements), Storm (dramatic), Snow (crystalline)
+    - Theme mapping: Light mode (higher octaves, brighter timbres), Dark mode (lower octaves, warmer tones)
+    - Context weights applied to: instrument selection, pitch offset, velocity, reverb/effects
 
 ---
 
