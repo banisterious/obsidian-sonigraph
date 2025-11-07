@@ -215,13 +215,13 @@ export class DepthBasedMapper {
 		// Use max duration (not average) to be extra safe
 		const maxDuration = Math.max(...mappings.map(m => m.duration));
 		const avgDuration = mappings.reduce((sum, m) => sum + m.duration, 0) / mappings.length;
-		const maxSafePolyphony = 12; // Very conservative - AudioEngine can handle 32 but leave headroom
+		const maxSafePolyphony = 6; // Reduced from 12 to prevent CPU overload and crackling
 
 		// Calculate minimum interval needed to prevent polyphony issues
 		// Use max duration to ensure worst case is still safe
 		const minSafeInterval = maxDuration / maxSafePolyphony;
 
-		// Use at least the safe interval (don't use 0.4 if it's too small)
+		// Use at least 0.5s spacing to ensure clear note separation
 		const noteInterval = Math.max(0.5, minSafeInterval);
 
 		const totalDuration = mappings.length * noteInterval;
@@ -414,10 +414,11 @@ export class DepthBasedMapper {
 	 * Calculate note duration based on word count
 	 */
 	private calculateDuration(node: LocalSoundscapeNode): number {
-		// Longer durations to create sustained, flowing soundscape
-		// Base duration: 2.0 to 6.0 seconds based on word count
-		const minDuration = 2.0;
-		const maxDuration = 6.0;
+		// Reduced durations to prevent CPU overload and audio crackling
+		// Base duration: 1.0 to 3.0 seconds based on word count
+		// This allows up to 6 overlapping voices per instrument (3s / 0.5s spacing)
+		const minDuration = 1.0;
+		const maxDuration = 3.0;
 
 		const wordCountNormalized = Math.min(node.wordCount / 500, 1); // Cap at 500 words
 		const duration = minDuration + (wordCountNormalized * (maxDuration - minDuration));

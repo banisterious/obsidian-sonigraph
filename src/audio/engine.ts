@@ -5346,24 +5346,25 @@ export class AudioEngine {
 	private getInstrumentPolyphonyLimit(instrumentName: string): number {
 		// Use the DEFAULT_VOICE_LIMITS from types
 		const { DEFAULT_VOICE_LIMITS } = this.getDefaultVoiceLimits();
-		
+
 		// Check if this instrument has a specific voice limit
 		const specificLimit = DEFAULT_VOICE_LIMITS[instrumentName as keyof typeof DEFAULT_VOICE_LIMITS];
 		if (specificLimit) {
 			return specificLimit;
 		}
-		
-		// Use default based on instrument category
+
+		// Optimized limits for Local Soundscape (1-3s durations, 0.5s spacing)
+		// Max 6 overlapping voices per instrument (3s / 0.5s) to prevent CPU overload
 		if (['piano', 'organ', 'harpsichord', 'harp'].includes(instrumentName)) {
-			return 8; // High polyphony for keyboard and choral instruments
+			return 8; // High polyphony for keyboard instruments
 		} else if (['strings', 'violin', 'viola', 'cello', 'contrabass'].includes(instrumentName)) {
-			return 4; // Medium polyphony for strings
+			return 8; // Moderate polyphony with headroom
 		} else if (['trumpet', 'horn', 'trombone', 'flute', 'oboe', 'clarinet', 'bassoon'].includes(instrumentName)) {
-			return 3; // Lower polyphony for wind instruments
+			return 8; // Sufficient for 6 voices + headroom
 		} else if (['timpani', 'tuba'].includes(instrumentName)) {
-			return 2; // Very low polyphony for bass instruments
+			return 8; // Consistent limit across all instruments
 		} else {
-			return 4; // Default safe limit
+			return 8; // Default with 33% headroom over target (6 → 8)
 		}
 	}
 

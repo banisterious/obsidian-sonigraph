@@ -52,7 +52,14 @@ export class LocalSoundscapeView extends ItemView {
 	private isPlaying: boolean = false;
 	private currentVoiceCount: number = 0;
 	private currentVolume: number = 0;
-	private scheduledTimeouts: number[] = []; // Store timeout IDs for cleanup
+
+	// Real-time playback system (single polling loop pattern like main Sonic Graph)
+	private realtimeTimer: NodeJS.Timeout | null = null;
+	private realtimeStartTime: number = 0;
+	private nextNoteIndex: number = 0; // Track which notes have been triggered
+
+	// Track active highlights for cleanup (no setTimeout needed!)
+	private activeHighlights: Map<string, number> = new Map(); // nodeId -> end time
 
 	// Music variation history (re-roll feature)
 	private variationHistory: Map<string, number[]> = new Map(); // centerNodePath -> [seed1, seed2, ...]
@@ -648,11 +655,11 @@ export class LocalSoundscapeView extends ItemView {
 				<polyline points="7 10 12 15 17 10"></polyline>
 				<line x1="12" y1="15" x2="12" y2="3"></line>
 			</svg>
-			<span>Export Audio</span>
+			<span>Export audio</span>
 		`;
 		this.exportAudioButton.addEventListener('click', () => this.exportSoundscapeAudio());
 
-		// Variation controls (Re-roll feature)
+		// Variation controls (Re-roll feature) - aligned as a button in the same row
 		const variationSection = buttonSection.createDiv({ cls: 'variation-controls' });
 
 		// Previous variation button
@@ -690,14 +697,30 @@ export class LocalSoundscapeView extends ItemView {
 		const statsSection = container.createDiv({ cls: 'playback-stats' });
 
 		const voiceCountContainer = statsSection.createDiv({ cls: 'stat-item' });
-		voiceCountContainer.createSpan({ text: 'Active Voices:', cls: 'stat-label' });
+		const voiceLabel = voiceCountContainer.createSpan({ cls: 'stat-label' });
+		voiceLabel.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
+				<path d="M9 18V5l12-2v13"></path>
+				<circle cx="6" cy="18" r="3"></circle>
+				<circle cx="18" cy="16" r="3"></circle>
+			</svg>
+			<span>Active Voices</span>
+		`;
 		this.voiceCountDisplay = voiceCountContainer.createSpan({
 			text: '0',
 			cls: 'stat-value voice-count'
 		});
 
 		const volumeContainer = statsSection.createDiv({ cls: 'stat-item' });
-		volumeContainer.createSpan({ text: 'Volume:', cls: 'stat-label' });
+		const volumeLabel = volumeContainer.createSpan({ cls: 'stat-label' });
+		volumeLabel.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
+				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+				<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+				<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+			</svg>
+			<span>Volume</span>
+		`;
 		this.volumeDisplay = volumeContainer.createSpan({
 			text: '0%',
 			cls: 'stat-value volume-level'
@@ -1155,6 +1178,14 @@ export class LocalSoundscapeView extends ItemView {
 		if (!this.centerFile || !this.graphData) {
 			logger.warn('reroll', 'Cannot re-roll - no center file or graph data');
 			return;
+		}
+
+		// Add animation class
+		if (this.rerollButton) {
+			this.rerollButton.addClass('rerolling');
+			setTimeout(() => {
+				this.rerollButton?.removeClass('rerolling');
+			}, 1000);
 		}
 
 		// Generate new random seed
@@ -1782,7 +1813,7 @@ export class LocalSoundscapeView extends ItemView {
 				logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
 			}
 
-			logger.info('playback-started', 'Soundscape playback started - scheduling notes', {
+			logger.info('playback-started', 'Soundscape playback started - using real-time polling loop', {
 				voices: this.currentVoiceCount,
 				totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
 				firstNoteTiming: this.currentMappings[0].timing + 's',
@@ -1791,63 +1822,8 @@ export class LocalSoundscapeView extends ItemView {
 
 			new Notice(`Playing ${this.currentVoiceCount} notes`);
 
-			// Schedule each note to play at its designated time
-			for (let i = 0; i < this.currentMappings.length; i++) {
-				const mapping = this.currentMappings[i];
-				const timeoutId = window.setTimeout(async () => {
-					if (!this.isPlaying) {
-						logger.debug('note-skip', 'Skipping note - playback stopped', { index: i, nodeId: mapping.nodeId });
-						return;
-					}
-
-					logger.debug('note-play', 'Playing note', {
-						index: i,
-						total: this.currentMappings.length,
-						nodeId: mapping.nodeId,
-						timing: mapping.timing,
-						instrument: mapping.instrument,
-						pitch: mapping.pitch.toFixed(2)
-					});
-
-					try {
-						// Highlight node as playing (only if pulse is enabled)
-						if (this.renderer && this.pulsePlayingNodes) {
-							this.renderer.highlightPlayingNode(mapping.nodeId);
-						}
-
-						// Group all notes by 500ms windows for visualization
-						// Add 1.0s offset so notes appear to the right of clefs
-						const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1.0;
-
-						await this.plugin.audioEngine.playNoteImmediate({
-							pitch: mapping.pitch,
-							duration: mapping.duration,
-							velocity: mapping.velocity,
-							instrument: mapping.instrument
-						}, visualTimestamp, mapping.nodeId);
-
-						// Unhighlight node after duration (only if pulse was enabled)
-						const unhighlightTimeoutId = window.setTimeout(() => {
-							if (this.renderer && this.pulsePlayingNodes) {
-								this.renderer.unhighlightPlayingNode(mapping.nodeId);
-							}
-						}, mapping.duration * 1000);
-
-						this.scheduledTimeouts.push(unhighlightTimeoutId);
-
-					} catch (error) {
-						logger.warn('note-playback-error', 'Failed to play note', {
-							index: i,
-							nodeId: mapping.nodeId,
-							error: (error as Error).message
-						});
-					}
-				}, mapping.timing * 1000); // Convert seconds to milliseconds
-
-				this.scheduledTimeouts.push(timeoutId);
-			}
-
-			logger.info('notes-scheduled', `Scheduled ${this.scheduledTimeouts.length} notes for playback`);
+			// Start real-time playback using single polling loop (memory-efficient pattern like main Sonic Graph)
+			this.startRealtimePlayback();
 
 		} catch (error) {
 			logger.error('playback-error', 'Failed to start playback', error as Error);
@@ -1868,11 +1844,14 @@ export class LocalSoundscapeView extends ItemView {
 
 		logger.info('playback-pause', 'Pausing soundscape playback');
 
-		// Clear all scheduled timeouts
-		for (const timeoutId of this.scheduledTimeouts) {
-			window.clearTimeout(timeoutId);
+		// Clear the realtime polling loop
+		if (this.realtimeTimer !== null) {
+			clearInterval(this.realtimeTimer);
+			this.realtimeTimer = null;
 		}
-		this.scheduledTimeouts = [];
+
+		// Clear active highlight tracking (no timeouts to clear!)
+		this.activeHighlights.clear();
 
 		// Clear visual highlights
 		if (this.renderer) {
@@ -1898,11 +1877,14 @@ export class LocalSoundscapeView extends ItemView {
 
 		logger.info('playback-stop', 'Stopping soundscape playback');
 
-		// Clear all scheduled timeouts
-		for (const timeoutId of this.scheduledTimeouts) {
-			window.clearTimeout(timeoutId);
+		// Clear the realtime polling loop
+		if (this.realtimeTimer !== null) {
+			clearInterval(this.realtimeTimer);
+			this.realtimeTimer = null;
 		}
-		this.scheduledTimeouts = [];
+
+		// Clear active highlight tracking (no timeouts to clear!)
+		this.activeHighlights.clear();
 
 		// Clear visual highlights
 		if (this.renderer) {
@@ -1917,6 +1899,7 @@ export class LocalSoundscapeView extends ItemView {
 		this.isPlaying = false;
 		this.currentVoiceCount = 0;
 		this.currentVolume = 0;
+		this.nextNoteIndex = 0; // Reset note tracking
 		this.updatePlaybackUI();
 
 		// Stop visualization
@@ -1926,6 +1909,140 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		logger.info('playback-stopped', 'Soundscape playback stopped');
+	}
+
+	/**
+	 * Start real-time playback using single polling loop (memory-efficient pattern)
+	 * This replaces the previous approach of creating 187 setTimeout callbacks upfront
+	 */
+	private startRealtimePlayback(): void {
+		const { getContext } = require('tone');
+
+		logger.info('playback', 'Starting real-time polling loop for Local Soundscape', {
+			noteCount: this.currentMappings.length,
+			maxDuration: this.currentMappings.length > 0
+				? Math.max(...this.currentMappings.map(m => m.timing + m.duration))
+				: 0
+		});
+
+		// Clear any existing timer
+		if (this.realtimeTimer !== null) {
+			clearInterval(this.realtimeTimer);
+		}
+
+		// Reset playback tracking
+		this.nextNoteIndex = 0;
+		this.realtimeStartTime = getContext().currentTime;
+
+		// Start the audio context if suspended
+		if (getContext().state === 'suspended') {
+			getContext().resume();
+			logger.debug('context', 'Resumed suspended audio context for Local Soundscape playback');
+		}
+
+		// Use 100ms polling interval for responsive note triggering
+		// (400ms works for main Sonic Graph with dense sequences, 100ms better for Local Soundscape with sparser notes)
+		this.realtimeTimer = setInterval(() => {
+			if (!this.isPlaying) {
+				if (this.realtimeTimer !== null) {
+					clearInterval(this.realtimeTimer);
+					this.realtimeTimer = null;
+				}
+				return;
+			}
+
+			const currentTime = getContext().currentTime;
+			const elapsedTime = currentTime - this.realtimeStartTime;
+
+			// Find notes that should play NOW (trigger when their time has arrived)
+			while (this.nextNoteIndex < this.currentMappings.length) {
+				const mapping = this.currentMappings[this.nextNoteIndex];
+
+				// Check if this note's time has arrived (with small tolerance for timing precision)
+				const tolerance = 0.05; // 50ms tolerance
+				if (mapping.timing <= elapsedTime + tolerance) {
+					// Move to next note FIRST to prevent re-triggering on next poll
+					const noteIndex = this.nextNoteIndex;
+					this.nextNoteIndex++;
+
+					logger.debug('note-play', 'Triggering note from polling loop', {
+						index: noteIndex,
+						total: this.currentMappings.length,
+						nodeId: mapping.nodeId,
+						scheduledTiming: mapping.timing.toFixed(3),
+						actualElapsed: elapsedTime.toFixed(3),
+						timingDiff: (elapsedTime - mapping.timing).toFixed(3),
+						instrument: mapping.instrument,
+						pitch: mapping.pitch.toFixed(2)
+					});
+
+					// Trigger the note immediately (polling loop ensures we trigger "just in time")
+					this.playNoteFromPollingLoop(mapping, currentTime);
+				} else {
+					// No more notes ready to play yet, break until next poll
+					break;
+				}
+			}
+
+			// Clean up expired highlights (replaces setTimeout approach!)
+			if (this.renderer && this.pulsePlayingNodes) {
+				for (const [nodeId, endTime] of this.activeHighlights.entries()) {
+					if (currentTime >= endTime) {
+						this.renderer.unhighlightPlayingNode(nodeId);
+						this.activeHighlights.delete(nodeId);
+					}
+				}
+			}
+
+			// Check if playback is complete
+			if (this.nextNoteIndex >= this.currentMappings.length) {
+				// All notes triggered, check if we should stop
+				const lastNote = this.currentMappings[this.currentMappings.length - 1];
+				const playbackComplete = elapsedTime > (lastNote.timing + lastNote.duration + 0.5); // Add 0.5s buffer
+
+				if (playbackComplete) {
+					logger.info('playback-complete', 'Local Soundscape playback completed');
+					this.stopPlayback();
+				}
+			}
+		}, 100); // 100ms polling interval
+
+		logger.info('playback-loop-started', 'Real-time polling loop started');
+	}
+
+	/**
+	 * Play a single note from the polling loop (triggers immediately)
+	 * No setTimeout needed - polling loop handles unhighlighting!
+	 */
+	private async playNoteFromPollingLoop(mapping: DepthMapping, currentTime: number): Promise<void> {
+		try {
+			// Highlight node as playing (only if pulse is enabled)
+			if (this.renderer && this.pulsePlayingNodes) {
+				this.renderer.highlightPlayingNode(mapping.nodeId);
+
+				// Track when this highlight should end (polling loop will clean it up)
+				const endTime = currentTime + mapping.duration;
+				this.activeHighlights.set(mapping.nodeId, endTime);
+			}
+
+			// Group all notes by 500ms windows for visualization
+			// Add 1.0s offset so notes appear to the right of clefs
+			const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1.0;
+
+			// Play the note immediately (polling loop has already determined it's time to play)
+			await this.plugin.audioEngine.playNoteImmediate({
+				pitch: mapping.pitch,
+				duration: mapping.duration,
+				velocity: mapping.velocity,
+				instrument: mapping.instrument
+			}, visualTimestamp, mapping.nodeId);
+
+		} catch (error) {
+			logger.warn('note-playback-error', 'Failed to play note from polling loop', {
+				nodeId: mapping.nodeId,
+				error: (error as Error).message
+			});
+		}
 	}
 
 	/**
