@@ -169,6 +169,68 @@
 	overflow: hidden;
 }
 
+/* Sidebar stats container (at top, before tabs) */
+.sidebar-stats-container {
+	padding: 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	min-height: 40px;
+}
+
+.stats-placeholder {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-style: italic;
+	text-align: center;
+	padding: 8px 0;
+}
+
+.stats-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	cursor: pointer;
+	user-select: none;
+	padding: 4px 0;
+}
+
+.stats-header:hover {
+	background: var(--background-modifier-hover);
+	border-radius: 4px;
+	padding: 4px 8px;
+	margin: 0 -8px;
+}
+
+.stats-header h4 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.stats-toggle {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 12px;
+	cursor: pointer;
+	padding: 0;
+	line-height: 1;
+	transition: transform 0.2s ease;
+}
+
+.stats-content {
+	overflow: hidden;
+	transition: max-height 0.3s ease, opacity 0.3s ease;
+	max-height: 500px;
+	opacity: 1;
+}
+
+.stats-content.collapsed {
+	max-height: 0;
+	opacity: 0;
+}
+
 /* Sidebar tabs */
 .sidebar-tabs {
 	display: flex;
@@ -255,6 +317,39 @@
 .playback-button svg {
 	width: 20px;
 	height: 20px;
+}
+
+/* Variation controls */
+.variation-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary-alt);
+	margin-top: 8px;
+}
+
+.variation-button {
+	flex: unset !important;
+	padding: 6px 10px !important;
+	min-width: unset !important;
+	border-radius: 4px;
+}
+
+.variation-button svg {
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.variation-display {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-muted);
+	min-width: 100px;
+	text-align: center;
+	user-select: none;
 }
 
 /* Playback stats */
@@ -554,4 +649,412 @@
 	margin-top: 20px;
 	padding-top: 20px;
 	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* ================================================================
+   Clustering Controls and Visualization
+   ================================================================ */
+
+/* Clustering control in header */
+.local-soundscape-header .clustering-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.local-soundscape-header .clustering-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.local-soundscape-header .clustering-select {
+	padding: 4px 8px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.local-soundscape-header .clustering-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.local-soundscape-header .clustering-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* Layout control in header */
+.local-soundscape-header .layout-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.local-soundscape-header .layout-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.local-soundscape-header .layout-select {
+	padding: 4px 8px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.local-soundscape-header .layout-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.local-soundscape-header .layout-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* Cluster visualization styles */
+.local-soundscape-svg .clusters {
+	pointer-events: none;
+}
+
+.local-soundscape-svg .cluster {
+	pointer-events: none;
+}
+
+.local-soundscape-svg .cluster-background {
+	transition: all 0.3s ease;
+}
+
+.local-soundscape-svg .cluster-label {
+	font-family: var(--font-interface);
+	pointer-events: none;
+	user-select: none;
+}
+
+/* ================================================================
+   Playing Node Visual Indicators
+   ================================================================ */
+
+/* Playing node pulse animation */
+.local-soundscape-svg circle.playing {
+	animation: node-pulse 1s ease-in-out infinite;
+	filter: drop-shadow(0 0 6px currentColor);
+}
+
+@keyframes node-pulse {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.7;
+		transform: scale(1.1);
+	}
+}
+
+/* ================================================================
+   Settings Panel Styles
+   ================================================================ */
+
+.settings-section {
+	margin-bottom: 24px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.settings-section:last-child {
+	border-bottom: none;
+	margin-bottom: 0;
+}
+
+.settings-heading {
+	margin: 0 0 12px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.setting-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 0;
+	gap: 12px;
+}
+
+.setting-label {
+	font-size: 13px;
+	color: var(--text-normal);
+	flex: 1;
+}
+
+.setting-checkbox {
+	cursor: pointer;
+}
+
+.setting-select {
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	min-width: 150px;
+}
+
+.setting-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.setting-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+.setting-info {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.setting-description {
+	margin: 0;
+	font-size: 12px;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+.setting-button {
+	padding: 8px 16px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: 4px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	width: 100%;
+	margin-top: 8px;
+}
+
+.setting-button:hover {
+	background: var(--interactive-accent-hover);
+}
+
+/* ================================================================
+   Fullwidth Sidebar Layout (Single Column)
+   ================================================================ */
+
+.local-soundscape-sidebar-fullwidth {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	background: var(--background-secondary);
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+/* ================================================================
+   Collapsible Graph Section
+   ================================================================ */
+
+.graph-section {
+	border-bottom: 2px solid var(--background-modifier-border);
+	background: var(--background-primary);
+}
+
+.graph-section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 12px 16px;
+	cursor: pointer;
+	user-select: none;
+	background: var(--background-primary);
+}
+
+.graph-section-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.graph-section-header h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+	flex: 1; /* Take up remaining space */
+	pointer-events: none; /* Let clicks pass through to header */
+}
+
+.graph-section-toggle {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 14px;
+	cursor: pointer;
+	padding: 4px 8px;
+	line-height: 1;
+	transition: transform 0.2s ease;
+	pointer-events: none; /* Let clicks pass through to header */
+}
+
+.graph-section-content {
+	overflow: hidden;
+	transition: max-height 0.3s ease, opacity 0.3s ease;
+	max-height: 2000px;
+	opacity: 1;
+}
+
+.graph-section-content.collapsed {
+	max-height: 0;
+	opacity: 0;
+}
+
+/* Graph canvas within collapsible section */
+.graph-section-content .local-soundscape-graph {
+	width: 100%;
+	height: 400px;
+	position: relative;
+	overflow: hidden;
+	background: var(--background-primary);
+	border: none;
+}
+
+/* Graph controls (Group, Layout, buttons) */
+.local-soundscape-graph-controls {
+	padding: 12px;
+	margin: 12px 12px 12px 18px;
+	background: transparent;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	position: relative;
+	width: calc(100% - 30px);
+	box-sizing: border-box;
+}
+
+.local-soundscape-graph-controls .clustering-control,
+.local-soundscape-graph-controls .layout-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.local-soundscape-graph-controls .clustering-label,
+.local-soundscape-graph-controls .layout-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.local-soundscape-graph-controls .clustering-select,
+.local-soundscape-graph-controls .layout-select {
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.local-soundscape-graph-controls .clustering-select:hover,
+.local-soundscape-graph-controls .layout-select:hover {
+	background: var(--background-modifier-hover);
+}
+
+.local-soundscape-graph-actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.local-soundscape-graph-button {
+	padding: 6px 10px;
+	background: transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.local-soundscape-graph-button:hover {
+	background: var(--background-modifier-hover);
+}
+
+.local-soundscape-graph-button svg {
+	width: 16px;
+	height: 16px;
+}
+
+.local-soundscape-graph-controls .staleness-indicator {
+	font-size: 11px;
+	padding: 4px 8px;
+	border-radius: 3px;
+	background: transparent;
+	margin-left: auto;
+}
+
+/* ================================================================
+   Visualization Section
+   ================================================================ */
+
+.local-soundscape-visualization-section {
+	margin-top: 20px;
+	padding: 16px 0;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.visualization-mode-selector {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+	padding: 0 16px;
+}
+
+.visualization-mode-selector .mode-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.visualization-mode-selector .mode-select {
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.local-soundscape-visualization-container {
+	width: 100%;
+	height: 200px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	overflow: hidden;
+	position: relative;
 }

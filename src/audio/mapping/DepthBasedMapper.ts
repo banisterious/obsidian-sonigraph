@@ -67,6 +67,7 @@ export class DepthBasedMapper {
 	private app: App;
 	private audioEngine: AudioEngine | null;
 	private currentCenterNodePath: string | null = null;
+	private randomizationSeed: number | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -142,14 +143,19 @@ export class DepthBasedMapper {
 
 	/**
 	 * Map Local Soundscape data to musical parameters
+	 * @param seed Optional randomization seed for reproducible variations
 	 */
-	async mapSoundscapeToMusic(data: LocalSoundscapeData): Promise<DepthMapping[]> {
+	async mapSoundscapeToMusic(data: LocalSoundscapeData, seed?: number): Promise<DepthMapping[]> {
 		const startTime = performance.now();
+
+		// Set randomization seed (null means default/no randomization)
+		this.randomizationSeed = seed ?? null;
 
 		logger.info('mapping-start', 'Mapping soundscape to music', {
 			totalNodes: data.stats.totalNodes,
 			maxDepth: data.stats.maxDepth,
-			centerNode: data.centerNode.basename
+			centerNode: data.centerNode.basename,
+			randomizationSeed: this.randomizationSeed
 		});
 
 		this.currentCenterNodePath = data.centerNode.path;
@@ -191,7 +197,7 @@ export class DepthBasedMapper {
 		logger.info('mapping-complete', 'Soundscape mapping complete', {
 			mappingsCreated: mappings.length,
 			duration: `${duration.toFixed(2)}ms`,
-			avgVolume: mappings.reduce((sum, m) => sum + m.volume, 0) / mappings.length,
+			avgVelocity: mappings.reduce((sum, m) => sum + m.velocity, 0) / mappings.length,
 			timingRange: mappings.length > 0 ?
 				`${mappings[0].timing.toFixed(2)}s - ${mappings[mappings.length - 1].timing.toFixed(2)}s` : 'N/A'
 		});
@@ -202,27 +208,52 @@ export class DepthBasedMapper {
 	/**
 	 * Calculate timing for mappings based on depth
 	 * Spreads notes evenly across time for a flowing sequence
+	 * Applies ±50ms timing jitter if seed is set
 	 */
 	private calculateTimingForMappings(mappings: DepthMapping[]): void {
-		// Use exact 0.4 second intervals to match the real-time timer (400ms)
-		// This ensures every timer tick finds exactly one note
-		const noteInterval = 0.4; // Match AudioEngine timer interval
+		// Calculate safe interval based on note duration and max polyphony
+		// Use max duration (not average) to be extra safe
+		const maxDuration = Math.max(...mappings.map(m => m.duration));
+		const avgDuration = mappings.reduce((sum, m) => sum + m.duration, 0) / mappings.length;
+		const maxSafePolyphony = 12; // Very conservative - AudioEngine can handle 32 but leave headroom
+
+		// Calculate minimum interval needed to prevent polyphony issues
+		// Use max duration to ensure worst case is still safe
+		const minSafeInterval = maxDuration / maxSafePolyphony;
+
+		// Use at least the safe interval (don't use 0.4 if it's too small)
+		const noteInterval = Math.max(0.5, minSafeInterval);
+
 		const totalDuration = mappings.length * noteInterval;
 
 		mappings.forEach((mapping, index) => {
-			// Exact timing aligned with timer ticks
-			mapping.timing = index * noteInterval;
+			// Base timing aligned with intervals
+			let timing = index * noteInterval;
+
+			// Apply timing jitter if seed is set (±50ms)
+			if (this.randomizationSeed !== null) {
+				const randomValue = this.seededRandom(mapping.nodeId, 'timing');
+				const jitter = (randomValue - 0.5) * 0.1; // Range: -0.05s to +0.05s (±50ms)
+				timing += jitter;
+			}
+
+			mapping.timing = Math.max(0, timing); // Ensure non-negative
 		});
 
 		// Sort by timing for proper playback order
 		mappings.sort((a, b) => a.timing - b.timing);
 
-		logger.debug('timing-calculated', 'Timing calculated for all mappings', {
+		logger.info('timing-calculated', 'Timing calculated for all mappings', {
 			totalMappings: mappings.length,
-			totalDuration: totalDuration.toFixed(1),
+			maxDuration: maxDuration.toFixed(2),
+			avgDuration: avgDuration.toFixed(2),
+			minSafeInterval: minSafeInterval.toFixed(3),
 			noteInterval: noteInterval.toFixed(3),
+			totalDuration: totalDuration.toFixed(1),
 			firstNote: mappings[0]?.timing.toFixed(3),
-			lastNote: mappings[mappings.length - 1]?.timing.toFixed(3)
+			lastNote: mappings[mappings.length - 1]?.timing.toFixed(3),
+			estimatedMaxPolyphony: Math.ceil(maxDuration / noteInterval),
+			hasJitter: this.randomizationSeed !== null
 		});
 	}
 
@@ -241,9 +272,6 @@ export class DepthBasedMapper {
 				return null;
 			}
 
-			// Get base volume for this depth
-			const baseVolume = this.getVolumeForDepth(depth);
-
 			// Get pitch range for this depth
 			const pitchRange = this.getPitchRangeForDepth(depth);
 
@@ -254,9 +282,6 @@ export class DepthBasedMapper {
 			// Get instrument pool for this depth
 			const instruments = this.getInstrumentsForDepth(depth);
 			const instrument = this.selectInstrument(node, instruments);
-
-			// Calculate panning based on direction
-			const panning = this.calculatePanning(node);
 
 			// Calculate duration based on word count (longer notes = more content)
 			const duration = this.calculateDuration(node);
@@ -274,12 +299,9 @@ export class DepthBasedMapper {
 				nodeId: node.id,
 				pitch: frequency, // Convert offset to Hz
 				duration: duration,
-				volume: baseVolume,
 				velocity: velocity,
 				instrument: instrument,
-				panning: panning,
 				timing: 0, // Will be calculated after all mappings are created
-				delay: 0, // Will be set during playback scheduling
 				depth: depth,
 				direction: node.direction
 			};
@@ -314,6 +336,7 @@ export class DepthBasedMapper {
 
 	/**
 	 * Calculate pitch offset within range based on node properties
+	 * Applies ±2 semitone randomization if seed is set
 	 */
 	private calculatePitchOffset(
 		node: LocalSoundscapeNode,
@@ -324,7 +347,14 @@ export class DepthBasedMapper {
 		const wordCountNormalized = Math.min(node.wordCount / 1000, 1); // Cap at 1000 words
 
 		const rangeSpan = range.max - range.min;
-		const offset = range.min + (wordCountNormalized * rangeSpan);
+		let offset = range.min + (wordCountNormalized * rangeSpan);
+
+		// Apply randomization if seed is set (±2 semitones)
+		if (this.randomizationSeed !== null) {
+			const randomValue = this.seededRandom(node.id, 'pitch');
+			const pitchShift = (randomValue - 0.5) * 4; // Range: -2 to +2 semitones
+			offset += pitchShift;
+		}
 
 		return Math.round(offset);
 	}
@@ -341,10 +371,19 @@ export class DepthBasedMapper {
 
 	/**
 	 * Select instrument from pool based on node properties
+	 * Applies randomization if seed is set
 	 */
 	private selectInstrument(node: LocalSoundscapeNode, instruments: string[]): string {
-		// Use node ID hash to deterministically select instrument
-		const hash = this.hashString(node.id);
+		// Base instrument selection using node ID hash
+		let hash = this.hashString(node.id);
+
+		// Apply randomization if seed is set
+		if (this.randomizationSeed !== null) {
+			const randomOffset = this.seededRandom(node.id, 'instrument');
+			// Add random offset (0-1) scaled to instrument count
+			hash += Math.floor(randomOffset * instruments.length);
+		}
+
 		const index = hash % instruments.length;
 		return instruments[index];
 	}
@@ -454,6 +493,28 @@ export class DepthBasedMapper {
 			hash = hash & hash; // Convert to 32-bit integer
 		}
 		return Math.abs(hash);
+	}
+
+	/**
+	 * Seeded pseudo-random number generator (LCG algorithm)
+	 * Returns a deterministic random number between 0 and 1
+	 */
+	private seededRandom(nodeId: string, context: string): number {
+		if (this.randomizationSeed === null) {
+			// No randomization - return 0 (neutral value)
+			return 0;
+		}
+
+		// Combine seed, nodeId, and context for unique but deterministic values
+		const combinedSeed = this.randomizationSeed + this.hashString(nodeId + context);
+
+		// Linear Congruential Generator (LCG) - produces values in [0, 1)
+		const a = 1664525;
+		const c = 1013904223;
+		const m = Math.pow(2, 32);
+		const value = ((a * combinedSeed + c) % m) / m;
+
+		return value;
 	}
 
 	/**

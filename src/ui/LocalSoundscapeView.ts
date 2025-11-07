@@ -16,8 +16,11 @@ import {
 	LocalSoundscapeFilters as ExtractorFilters
 } from '../graph/LocalSoundscapeExtractor';
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
+import { ForceDirectedLayout } from '../graph/ForceDirectedLayout';
 import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMapper';
 import { LocalSoundscapeFilterModal, LocalSoundscapeFilters } from './LocalSoundscapeFilterModal';
+import { NoteVisualizationManager, VisualizationMode } from '../visualization/NoteVisualizationManager';
+import { createLucideIcon } from './lucide-icons';
 import type SonigraphPlugin from '../main';
 
 const logger = getLogger('LocalSoundscapeView');
@@ -51,6 +54,11 @@ export class LocalSoundscapeView extends ItemView {
 	private currentVolume: number = 0;
 	private scheduledTimeouts: number[] = []; // Store timeout IDs for cleanup
 
+	// Music variation history (re-roll feature)
+	private variationHistory: Map<string, number[]> = new Map(); // centerNodePath -> [seed1, seed2, ...]
+	private currentVariationIndex: number = 0;
+	private maxVariationHistory: number = 10; // Keep last 10 variations
+
 	// Filters
 	private filters: LocalSoundscapeFilters = {
 		includeTags: [],
@@ -60,6 +68,12 @@ export class LocalSoundscapeView extends ItemView {
 		includeFileTypes: [],
 		linkDirections: []
 	};
+
+	// Clustering
+	private clusteringMethod: 'none' | 'folder' | 'tag' | 'depth' | 'community' = 'none';
+
+	// Layout
+	private layoutType: 'radial' | 'force' = 'force';
 
 	// UI containers
 	private containerEl: HTMLElement;
@@ -71,13 +85,27 @@ export class LocalSoundscapeView extends ItemView {
 	// Playback controls
 	private playButton: HTMLButtonElement | null = null;
 	private stopButton: HTMLButtonElement | null = null;
+	private exportAudioButton: HTMLButtonElement | null = null;
+	private prevVariationButton: HTMLButtonElement | null = null;
+	private rerollButton: HTMLButtonElement | null = null;
+	private variationDisplay: HTMLElement | null = null;
 	private voiceCountDisplay: HTMLElement | null = null;
 	private volumeDisplay: HTMLElement | null = null;
+
+	// Visualization
+	private visualizationManager: NoteVisualizationManager | null = null;
+	private visualizationContainer: HTMLElement | null = null;
+	private visualizationMode: VisualizationMode = 'piano-roll';
 
 	// Staleness tracking
 	private lastExtractionTime: number = 0;
 	private isStale: boolean = false;
 	private stalenessIndicator: HTMLElement | null = null;
+
+	// View settings
+	private pulsePlayingNodes: boolean = true;
+	private nodeSizeMode: 'uniform' | 'link-count' | 'content-length' = 'uniform';
+	private autoStartAudio: boolean = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
@@ -176,18 +204,12 @@ export class LocalSoundscapeView extends ItemView {
 		// Main container with flex layout
 		const mainContainer = container.createDiv({ cls: 'local-soundscape-main' });
 
-		// Header section (top bar with controls)
+		// Header section (top bar with controls - only depth and filter now)
 		this.headerContainer = mainContainer.createDiv({ cls: 'local-soundscape-header' });
 		this.createHeader();
 
-		// Content area (graph + sidebar)
-		const contentContainer = mainContainer.createDiv({ cls: 'local-soundscape-content' });
-
-		// Graph canvas area
-		this.graphContainer = contentContainer.createDiv({ cls: 'local-soundscape-graph' });
-
-		// Sidebar panel
-		this.sidebarContainer = contentContainer.createDiv({ cls: 'local-soundscape-sidebar' });
+		// Single sidebar container (no left/right split)
+		this.sidebarContainer = mainContainer.createDiv({ cls: 'local-soundscape-sidebar-fullwidth' });
 		this.createSidebar();
 
 		logger.debug('layout-created', 'Layout structure created');
@@ -247,36 +269,158 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'header-button filter-button',
 			attr: { 'aria-label': 'Filter graph' }
 		});
-		filterButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+		this.createFilterIcon(filterButton);
 		filterButton.addEventListener('click', () => {
 			this.openFilterModal();
 		});
 
-		// Refresh button
-		const refreshButton = controlsSection.createEl('button', {
-			cls: 'header-button refresh-button',
-			attr: { 'aria-label': 'Refresh graph' }
+		// Control Center button
+		const controlCenterButton = controlsSection.createEl('button', {
+			cls: 'header-button control-center-button',
+			attr: { 'aria-label': 'Open Control Center' }
 		});
-		refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>';
-		refreshButton.addEventListener('click', () => {
-			this.refresh();
-		});
-
-		// Staleness indicator
-		this.stalenessIndicator = controlsSection.createDiv({
-			cls: 'staleness-indicator up-to-date',
-			text: 'Up-to-date'
+		const controlCenterIcon = createLucideIcon('keyboard-music', 16);
+		controlCenterButton.appendChild(controlCenterIcon);
+		controlCenterButton.addEventListener('click', () => {
+			this.openControlCenter();
 		});
 
-		logger.debug('header-created', 'Header created with controls');
+		logger.debug('header-created', 'Header created with depth and filter controls');
 	}
 
 	/**
-	 * Create sidebar with tabs
+	 * Create sidebar with collapsible graph section and tabs
 	 */
 	private createSidebar(): void {
 		const sidebar = this.sidebarContainer;
 
+		// ===== COLLAPSIBLE GRAPH SECTION =====
+		const graphSection = sidebar.createDiv({ cls: 'graph-section' });
+
+		// Graph section header (clickable to collapse/expand)
+		const graphHeader = graphSection.createDiv({ cls: 'graph-section-header' });
+		graphHeader.createEl('h3', { text: 'Graph' });
+
+		const toggleButton = graphHeader.createEl('button', {
+			cls: 'graph-section-toggle',
+			attr: { 'aria-label': 'Toggle graph section' }
+		});
+		toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+
+		// Graph section content (collapsed by default)
+		const graphContent = graphSection.createDiv({ cls: 'graph-section-content collapsed' });
+
+		// Graph canvas container
+		this.graphContainer = graphContent.createDiv({ cls: 'local-soundscape-graph' });
+
+		// Graph controls container
+		const graphControls = graphContent.createDiv({ cls: 'local-soundscape-graph-controls' });
+
+		// Group dropdown
+		const clusteringContainer = graphControls.createDiv({ cls: 'clustering-control' });
+		clusteringContainer.createSpan({ text: 'Group:', cls: 'clustering-label' });
+		const clusteringSelect = clusteringContainer.createEl('select', { cls: 'clustering-select' });
+
+		const clusterOptions: Array<{value: typeof this.clusteringMethod, label: string}> = [
+			{ value: 'none', label: 'None' },
+			{ value: 'folder', label: 'Folder' },
+			{ value: 'tag', label: 'Tag' },
+			{ value: 'depth', label: 'Depth' },
+			{ value: 'community', label: 'Community' }
+		];
+
+		clusterOptions.forEach(option => {
+			const optionEl = clusteringSelect.createEl('option', {
+				value: option.value,
+				text: option.label
+			});
+			if (option.value === this.clusteringMethod) {
+				optionEl.selected = true;
+			}
+		});
+
+		clusteringSelect.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			this.clusteringMethod = target.value as typeof this.clusteringMethod;
+			this.onClusteringMethodChanged();
+		});
+
+		// Layout dropdown
+		const layoutContainer = graphControls.createDiv({ cls: 'layout-control' });
+		layoutContainer.createSpan({ text: 'Layout:', cls: 'layout-label' });
+		const layoutSelect = layoutContainer.createEl('select', { cls: 'layout-select' });
+
+		const layoutOptions: Array<{value: typeof this.layoutType, label: string}> = [
+			{ value: 'radial', label: 'Radial' },
+			{ value: 'force', label: 'Force' }
+		];
+
+		layoutOptions.forEach(option => {
+			const optionEl = layoutSelect.createEl('option', {
+				value: option.value,
+				text: option.label
+			});
+			if (option.value === this.layoutType) {
+				optionEl.selected = true;
+			}
+		});
+
+		layoutSelect.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			this.layoutType = target.value as typeof this.layoutType;
+			this.onLayoutTypeChanged();
+		});
+
+		// Graph action buttons
+		const graphActions = graphControls.createDiv({ cls: 'local-soundscape-graph-actions' });
+
+		// Refresh button
+		const refreshButton = graphActions.createEl('button', {
+			cls: 'local-soundscape-graph-button refresh-button',
+			attr: { 'aria-label': 'Refresh graph' }
+		});
+		this.createRefreshIcon(refreshButton);
+		refreshButton.addEventListener('click', () => {
+			this.refresh();
+		});
+
+		// Export button
+		const exportButton = graphActions.createEl('button', {
+			cls: 'local-soundscape-graph-button export-button',
+			attr: { 'aria-label': 'Export graph as image' }
+		});
+		this.createExportIcon(exportButton);
+		exportButton.addEventListener('click', () => {
+			this.exportGraph();
+		});
+
+		// Staleness indicator
+		this.stalenessIndicator = graphControls.createDiv({
+			cls: 'staleness-indicator up-to-date',
+			text: 'Up-to-date'
+		});
+
+		// Graph statistics (will be populated by displayGraphStats)
+		const statsContainer = graphContent.createDiv({ cls: 'sidebar-stats-container' });
+
+		// Toggle collapse/expand
+		graphHeader.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const isCollapsed = graphContent.classList.contains('collapsed');
+			logger.debug('graph-toggle', `Toggle clicked. Currently collapsed: ${isCollapsed}`);
+
+			if (isCollapsed) {
+				graphContent.classList.remove('collapsed');
+				toggleButton.innerHTML = '▲'; // Up arrow (expanded state)
+				logger.debug('graph-toggle', 'Graph section expanded');
+			} else {
+				graphContent.classList.add('collapsed');
+				toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+				logger.debug('graph-toggle', 'Graph section collapsed');
+			}
+		});
+
+		// ===== PLAYBACK/SETTINGS TABS =====
 		// Tab navigation
 		const tabsContainer = sidebar.createDiv({ cls: 'sidebar-tabs' });
 
@@ -325,13 +469,133 @@ export class LocalSoundscapeView extends ItemView {
 		// Create playback controls
 		this.createPlaybackControls(playbackContent as HTMLElement);
 
-		// Populate settings tab (placeholder for now)
-		settingsContent.createDiv({
-			cls: 'placeholder-message',
-			text: 'Settings will appear here'
-		});
+		// Create settings panel
+		this.createSettingsPanel(settingsContent as HTMLElement);
 
 		logger.debug('sidebar-created', 'Sidebar created with tabs');
+	}
+
+	/**
+	 * Create settings panel in sidebar
+	 */
+	private createSettingsPanel(container: HTMLElement): void {
+		// Display Settings
+		const displaySection = container.createDiv({ cls: 'settings-section' });
+		displaySection.createEl('h4', { text: 'Display', cls: 'settings-heading' });
+
+		// Show node labels toggle
+		const labelsToggle = displaySection.createDiv({ cls: 'setting-item' });
+		labelsToggle.createSpan({ text: 'Show node labels', cls: 'setting-label' });
+		const labelsCheckbox = labelsToggle.createEl('input', {
+			type: 'checkbox',
+			cls: 'setting-checkbox'
+		});
+		labelsCheckbox.checked = true;
+		labelsCheckbox.addEventListener('change', () => {
+			if (this.renderer) {
+				this.renderer.updateConfig({ showLabels: labelsCheckbox.checked });
+			}
+		});
+
+		// Node size mode selector
+		const nodeSizeControl = displaySection.createDiv({ cls: 'setting-item' });
+		nodeSizeControl.createSpan({ text: 'Node size mode', cls: 'setting-label' });
+		const nodeSizeSelect = nodeSizeControl.createEl('select', { cls: 'setting-select' });
+
+		const sizeOptions: Array<{value: typeof this.nodeSizeMode, label: string}> = [
+			{ value: 'uniform', label: 'Uniform' },
+			{ value: 'link-count', label: 'By link count' },
+			{ value: 'content-length', label: 'By content length' }
+		];
+
+		sizeOptions.forEach(option => {
+			const optionEl = nodeSizeSelect.createEl('option', {
+				value: option.value,
+				text: option.label
+			});
+			if (option.value === this.nodeSizeMode) {
+				optionEl.selected = true;
+			}
+		});
+
+		nodeSizeSelect.addEventListener('change', () => {
+			this.nodeSizeMode = nodeSizeSelect.value as typeof this.nodeSizeMode;
+			logger.info('setting-node-size', 'Node size mode changed', { mode: this.nodeSizeMode });
+
+			// Re-render graph with new node sizes
+			if (this.graphData && this.renderer) {
+				this.renderer.render(this.graphData);
+			}
+		});
+
+		// Audio Settings
+		const audioSection = container.createDiv({ cls: 'settings-section' });
+		audioSection.createEl('h4', { text: 'Audio', cls: 'settings-heading' });
+
+		// Auto-start audio toggle
+		const autoStartToggle = audioSection.createDiv({ cls: 'setting-item' });
+		autoStartToggle.createSpan({ text: 'Auto-play when opening', cls: 'setting-label' });
+		const autoStartCheckbox = autoStartToggle.createEl('input', {
+			type: 'checkbox',
+			cls: 'setting-checkbox'
+		});
+		autoStartCheckbox.checked = this.autoStartAudio;
+		autoStartCheckbox.addEventListener('change', () => {
+			this.autoStartAudio = autoStartCheckbox.checked;
+			logger.info('setting-autostart', 'Auto-start audio setting changed', { enabled: this.autoStartAudio });
+		});
+
+		// Visual Effects Settings
+		const effectsSection = container.createDiv({ cls: 'settings-section' });
+		effectsSection.createEl('h4', { text: 'Visual Effects', cls: 'settings-heading' });
+
+		// Pulse playing nodes toggle
+		const pulseToggle = effectsSection.createDiv({ cls: 'setting-item' });
+		pulseToggle.createSpan({ text: 'Pulse playing nodes', cls: 'setting-label' });
+		const pulseCheckbox = pulseToggle.createEl('input', {
+			type: 'checkbox',
+			cls: 'setting-checkbox'
+		});
+		pulseCheckbox.checked = this.pulsePlayingNodes;
+		pulseCheckbox.addEventListener('change', () => {
+			this.pulsePlayingNodes = pulseCheckbox.checked;
+			logger.info('setting-pulse', 'Pulse playing nodes setting changed', { enabled: this.pulsePlayingNodes });
+
+			// Update currently playing nodes if any
+			if (!this.pulsePlayingNodes && this.renderer) {
+				// Remove pulse from all playing nodes
+				this.renderer.clearAllPlayingHighlights();
+			}
+		});
+
+		// Info Section
+		const infoSection = container.createDiv({ cls: 'settings-section' });
+		infoSection.createEl('h4', { text: 'About', cls: 'settings-heading' });
+
+		const infoText = infoSection.createDiv({ cls: 'setting-info' });
+		infoText.createEl('p', {
+			text: 'Local Soundscape creates an immersive audio-visual environment centered on a note.',
+			cls: 'setting-description'
+		});
+		infoText.createEl('p', {
+			text: 'Use depth control to explore connections. Apply filters to focus on specific content. Enable clustering to visualize groups.',
+			cls: 'setting-description'
+		});
+
+		// Global Settings Link
+		const globalLink = infoSection.createDiv({ cls: 'setting-item' });
+		const linkButton = globalLink.createEl('button', {
+			text: 'Open Global Settings',
+			cls: 'setting-button'
+		});
+		linkButton.addEventListener('click', () => {
+			// @ts-ignore - Obsidian internal API
+			this.app.setting.open();
+			// @ts-ignore
+			this.app.setting.openTabById('sonigraph');
+		});
+
+		logger.debug('settings-panel-created', 'Settings panel populated');
 	}
 
 	/**
@@ -350,7 +614,7 @@ export class LocalSoundscapeView extends ItemView {
 		// Play/Pause button
 		this.playButton = buttonSection.createEl('button', {
 			cls: 'playback-button play-button',
-			attr: { 'aria-label': 'Play soundscape' }
+			attr: { 'aria-label': 'Play soundscape', 'disabled': '' }
 		});
 		this.playButton.innerHTML = `
 			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -373,6 +637,55 @@ export class LocalSoundscapeView extends ItemView {
 		`;
 		this.stopButton.addEventListener('click', () => this.stopPlayback());
 
+		// Export Audio button
+		this.exportAudioButton = buttonSection.createEl('button', {
+			cls: 'playback-button export-audio-button',
+			attr: { 'aria-label': 'Export soundscape as audio file', 'disabled': '' }
+		});
+		this.exportAudioButton.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+				<polyline points="7 10 12 15 17 10"></polyline>
+				<line x1="12" y1="15" x2="12" y2="3"></line>
+			</svg>
+			<span>Export Audio</span>
+		`;
+		this.exportAudioButton.addEventListener('click', () => this.exportSoundscapeAudio());
+
+		// Variation controls (Re-roll feature)
+		const variationSection = buttonSection.createDiv({ cls: 'variation-controls' });
+
+		// Previous variation button
+		this.prevVariationButton = variationSection.createEl('button', {
+			cls: 'playback-button variation-button prev-variation',
+			attr: { 'aria-label': 'Previous musical variation', 'disabled': '' }
+		});
+		this.prevVariationButton.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polyline points="15 18 9 12 15 6"></polyline>
+			</svg>
+		`;
+		this.prevVariationButton.addEventListener('click', () => this.previousVariation());
+
+		// Variation display
+		this.variationDisplay = variationSection.createSpan({
+			cls: 'variation-display',
+			text: 'Variation 1/1'
+		});
+
+		// Re-roll button
+		this.rerollButton = variationSection.createEl('button', {
+			cls: 'playback-button variation-button reroll-button',
+			attr: { 'aria-label': 'Re-roll musical variation', 'disabled': '' }
+		});
+		this.rerollButton.innerHTML = `
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polyline points="23 4 23 10 17 10"></polyline>
+				<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+			</svg>
+		`;
+		this.rerollButton.addEventListener('click', () => this.rerollVariation());
+
 		// Voice count and volume display
 		const statsSection = container.createDiv({ cls: 'playback-stats' });
 
@@ -390,7 +703,168 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'stat-value volume-level'
 		});
 
-		logger.debug('playback-controls-created', 'Playback controls initialized');
+		// Visualization section
+		const visualizationSection = container.createDiv({ cls: 'local-soundscape-visualization-section' });
+
+		// Visualization mode selector
+		const modeSelector = visualizationSection.createDiv({ cls: 'visualization-mode-selector' });
+		modeSelector.createSpan({ text: 'Visualization:', cls: 'mode-label' });
+
+		const modeSelect = modeSelector.createEl('select', { cls: 'mode-select' });
+		const modes: Array<{value: VisualizationMode, label: string}> = [
+			{ value: 'piano-roll', label: 'Piano Roll' },
+			{ value: 'spectrum', label: 'Spectrum' },
+			{ value: 'staff', label: 'Staff' }
+		];
+
+		modes.forEach(mode => {
+			const option = modeSelect.createEl('option', {
+				value: mode.value,
+				text: mode.label
+			});
+			if (mode.value === this.visualizationMode) {
+				option.selected = true;
+			}
+		});
+
+		modeSelect.addEventListener('change', (e) => {
+			const target = e.target as HTMLSelectElement;
+			this.visualizationMode = target.value as VisualizationMode;
+			this.updateVisualizationMode();
+		});
+
+		// Visualization container
+		this.visualizationContainer = visualizationSection.createDiv({
+			cls: 'local-soundscape-visualization-container'
+		});
+
+		// Initialize visualization manager
+		this.initializeVisualization();
+
+		logger.debug('playback-controls-created', 'Playback controls initialized with visualization');
+	}
+
+	/**
+	 * Initialize visualization manager
+	 */
+	private initializeVisualization(): void {
+		if (!this.visualizationContainer) {
+			logger.warn('init-visualization', 'No visualization container available');
+			return;
+		}
+
+		try {
+			// Create visualization manager
+			this.visualizationManager = new NoteVisualizationManager({
+				mode: this.visualizationMode,
+				enabled: true,
+				frameRate: 30,
+				colorScheme: 'layer',
+				showLabels: true,
+				showGrid: true,
+				enableTrails: false
+			});
+
+			// Initialize with container
+			this.visualizationManager.initialize(this.visualizationContainer);
+
+			// Connect spectrum analyzer if in spectrum mode
+			if (this.visualizationMode === 'spectrum') {
+				const audioContext = this.plugin.audioEngine.getTestAudioContext();
+				const masterVolume = this.plugin.audioEngine.getMasterVolume();
+
+				if (audioContext && masterVolume) {
+					this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+					logger.info('init-visualization', 'Connected spectrum analyzer to audio');
+				}
+			}
+
+			// Setup audio engine integration
+			this.setupVisualizationAudioIntegration();
+
+			logger.info('init-visualization', 'Visualization manager initialized successfully');
+		} catch (error) {
+			logger.error('init-visualization', 'Failed to initialize visualization', error);
+			new Notice('Failed to initialize visualization');
+		}
+	}
+
+	/**
+	 * Update visualization mode
+	 */
+	private updateVisualizationMode(): void {
+		if (!this.visualizationManager) {
+			logger.warn('update-visualization', 'No visualization manager available');
+			return;
+		}
+
+		try {
+			// Update mode in manager
+			this.visualizationManager.updateConfig({
+				mode: this.visualizationMode
+			});
+
+			// Connect spectrum analyzer if switching to spectrum mode
+			if (this.visualizationMode === 'spectrum') {
+				const audioContext = this.plugin.audioEngine.getTestAudioContext();
+				const masterVolume = this.plugin.audioEngine.getMasterVolume();
+
+				if (audioContext && masterVolume) {
+					this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+					logger.info('update-visualization', 'Connected spectrum analyzer for spectrum mode');
+				}
+			}
+
+			// Restart visualization if currently playing
+			if (this.isPlaying) {
+				this.visualizationManager.start(0);
+			}
+
+			logger.info('update-visualization', 'Visualization mode updated', {
+				mode: this.visualizationMode
+			});
+		} catch (error) {
+			logger.error('update-visualization', 'Failed to update visualization mode', error);
+		}
+	}
+
+	/**
+	 * Setup audio engine integration for visualization
+	 */
+	private setupVisualizationAudioIntegration(): void {
+		if (!this.visualizationManager) {
+			logger.warn('setup-audio-integration', 'No visualization manager available');
+			return;
+		}
+
+		// Listen to note events from audio engine
+		this.plugin.audioEngine.on('note-triggered', (noteData: any) => {
+			logger.debug('viz-note-received', 'Received note-triggered event', {
+				pitch: noteData.pitch,
+				layer: noteData.layer,
+				instrument: noteData.instrument,
+				isPlaying: this.isPlaying,
+				hasVizManager: !!this.visualizationManager
+			});
+
+			if (this.visualizationManager && this.isPlaying) {
+				this.visualizationManager.addNoteEvent({
+					pitch: noteData.pitch,
+					velocity: noteData.velocity || 0.5,
+					duration: noteData.duration || 1.0,
+					layer: noteData.layer || 'harmonic',
+					timestamp: noteData.timestamp,
+					nodeId: noteData.nodeId,
+					isPlaying: true
+				});
+				logger.debug('viz-note-added', 'Note added to visualization', {
+					pitch: noteData.pitch,
+					timestamp: noteData.timestamp
+				});
+			}
+		});
+
+		logger.info('setup-audio-integration', 'Audio engine integration setup complete');
 	}
 
 	/**
@@ -627,6 +1101,315 @@ export class LocalSoundscapeView extends ItemView {
 	}
 
 	/**
+	 * Handle clustering method change
+	 */
+	private async onClusteringMethodChanged(): Promise<void> {
+		logger.info('clustering-changed', 'Clustering method changed', { method: this.clusteringMethod });
+
+		if (this.centerFile) {
+			await this.extractAndRenderGraph();
+			new Notice(`Clustering: ${this.clusteringMethod}`);
+		}
+	}
+
+	/**
+	 * Handle layout type change
+	 */
+	private async onLayoutTypeChanged(): Promise<void> {
+		logger.info('layout-changed', 'Layout type changed', { layout: this.layoutType });
+
+		if (this.centerFile) {
+			await this.extractAndRenderGraph();
+			new Notice(`Layout: ${this.layoutType === 'radial' ? 'Radial' : 'Force-Directed'}`);
+		}
+	}
+
+	/**
+	 * Export soundscape audio
+	 */
+	private async exportSoundscapeAudio(): Promise<void> {
+		if (!this.currentMappings || this.currentMappings.length === 0) {
+			new Notice('No soundscape to export. Please play the soundscape first.');
+			return;
+		}
+
+		new Notice('Audio export feature coming soon! For now, you can record your system audio while playing the soundscape.');
+
+		// TODO: Implement offline audio rendering
+		// This would require:
+		// 1. Render all notes using the audio engine's offline mode
+		// 2. Encode to WAV/MP3
+		// 3. Save to file
+
+		logger.info('audio-export', 'Audio export requested', {
+			nodeCount: this.currentMappings.length,
+			centerNote: this.centerFile?.basename
+		});
+	}
+
+	/**
+	 * Re-roll musical variation
+	 * Generates a new random seed and re-maps audio with randomization
+	 */
+	private async rerollVariation(): Promise<void> {
+		if (!this.centerFile || !this.graphData) {
+			logger.warn('reroll', 'Cannot re-roll - no center file or graph data');
+			return;
+		}
+
+		// Generate new random seed
+		const newSeed = Date.now();
+
+		// Get or create variation history for this center note
+		const centerPath = this.centerFile.path;
+		if (!this.variationHistory.has(centerPath)) {
+			// Initialize with original (no seed = null, represented as 0)
+			this.variationHistory.set(centerPath, [0]);
+		}
+
+		const history = this.variationHistory.get(centerPath)!;
+
+		// If we're not at the end of history, truncate everything after current index
+		if (this.currentVariationIndex < history.length - 1) {
+			history.splice(this.currentVariationIndex + 1);
+		}
+
+		// Add new seed to history
+		history.push(newSeed);
+
+		// Limit history size
+		if (history.length > this.maxVariationHistory) {
+			history.shift();
+			// Adjust index if we removed the first item
+			if (this.currentVariationIndex > 0) {
+				this.currentVariationIndex--;
+			}
+		}
+
+		// Move to new variation
+		this.currentVariationIndex = history.length - 1;
+
+		// Remap and replay with new seed
+		await this.remapAndPlay(newSeed);
+
+		logger.info('reroll', 'Re-rolled musical variation', {
+			seed: newSeed,
+			variationIndex: this.currentVariationIndex + 1,
+			totalVariations: history.length
+		});
+	}
+
+	/**
+	 * Go to previous musical variation
+	 */
+	private async previousVariation(): Promise<void> {
+		if (!this.centerFile || !this.graphData) {
+			logger.warn('prev-variation', 'Cannot go to previous - no center file or graph data');
+			return;
+		}
+
+		const centerPath = this.centerFile.path;
+		const history = this.variationHistory.get(centerPath);
+
+		if (!history || this.currentVariationIndex <= 0) {
+			logger.debug('prev-variation', 'Already at first variation');
+			return;
+		}
+
+		// Move to previous variation
+		this.currentVariationIndex--;
+		const seed = history[this.currentVariationIndex];
+
+		// Remap and replay with previous seed (0 means original/no seed)
+		await this.remapAndPlay(seed === 0 ? undefined : seed);
+
+		logger.info('prev-variation', 'Moved to previous variation', {
+			variationIndex: this.currentVariationIndex + 1,
+			totalVariations: history.length,
+			seed: seed
+		});
+	}
+
+	/**
+	 * Remap audio with a specific seed and start playback
+	 */
+	private async remapAndPlay(seed?: number): Promise<void> {
+		if (!this.graphData || !this.depthMapper || !this.plugin.audioEngine) {
+			logger.warn('remap-play', 'Cannot remap - missing required components');
+			return;
+		}
+
+		// Stop current playback if playing
+		const wasPlaying = this.isPlaying;
+		if (wasPlaying) {
+			this.stopPlayback();
+		}
+
+		try {
+			// Re-map with new seed
+			this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData, seed);
+
+			logger.info('remap-complete', 'Remapped with seed', {
+				seed: seed ?? 'none (original)',
+				mappingCount: this.currentMappings.length
+			});
+
+			// Update variation display
+			this.updateVariationDisplay();
+
+			// If was playing, restart playback
+			if (wasPlaying) {
+				await this.startPlayback();
+			}
+
+			new Notice(`Variation ${this.currentVariationIndex + 1}`);
+		} catch (error) {
+			logger.error('remap-error', 'Error remapping with seed', error as Error);
+			new Notice('Failed to generate variation');
+		}
+	}
+
+	/**
+	 * Update variation display in UI
+	 */
+	private updateVariationDisplay(): void {
+		if (!this.variationDisplay || !this.centerFile) return;
+
+		const history = this.variationHistory.get(this.centerFile.path);
+		const totalVariations = history?.length ?? 1;
+		const currentVariation = this.currentVariationIndex + 1;
+
+		this.variationDisplay.textContent = `Variation ${currentVariation}/${totalVariations}`;
+
+		// Update button states
+		if (this.prevVariationButton) {
+			if (this.currentVariationIndex > 0) {
+				this.prevVariationButton.removeAttribute('disabled');
+			} else {
+				this.prevVariationButton.setAttribute('disabled', '');
+			}
+		}
+	}
+
+	/**
+	 * Initialize variation history for current center note
+	 */
+	private initializeVariationHistory(): void {
+		if (!this.centerFile) return;
+
+		const centerPath = this.centerFile.path;
+		if (!this.variationHistory.has(centerPath)) {
+			// Initialize with original variation (seed = 0)
+			this.variationHistory.set(centerPath, [0]);
+			this.currentVariationIndex = 0;
+		} else {
+			// Restore to last used variation for this note
+			const history = this.variationHistory.get(centerPath)!;
+			this.currentVariationIndex = history.length - 1;
+		}
+
+		this.updateVariationDisplay();
+	}
+
+	/**
+	 * Export graph as PNG image
+	 */
+	private async exportGraph(): Promise<void> {
+		if (!this.graphData || !this.centerFile) {
+			new Notice('No graph to export');
+			return;
+		}
+
+		logger.info('export-start', 'Exporting graph as image');
+
+		try {
+			// Find the SVG element
+			const svgElement = this.graphContainer.querySelector('svg') as SVGSVGElement;
+			if (!svgElement) {
+				throw new Error('No SVG element found');
+			}
+
+			// Clone the SVG to avoid modifying the original
+			const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+
+			// Get SVG dimensions
+			const bbox = svgElement.getBoundingClientRect();
+			const width = bbox.width;
+			const height = bbox.height;
+
+			// Set explicit dimensions on cloned SVG
+			clonedSvg.setAttribute('width', width.toString());
+			clonedSvg.setAttribute('height', height.toString());
+
+			// Convert SVG to data URL
+			const svgData = new XMLSerializer().serializeToString(clonedSvg);
+			const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+			const svgUrl = URL.createObjectURL(svgBlob);
+
+			// Create an image element to render the SVG
+			const img = new Image();
+			img.width = width;
+			img.height = height;
+
+			img.onload = () => {
+				// Create canvas to convert to PNG
+				const canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				const ctx = canvas.getContext('2d');
+
+				if (!ctx) {
+					throw new Error('Failed to get canvas context');
+				}
+
+				// Draw white background
+				ctx.fillStyle = '#ffffff';
+				ctx.fillRect(0, 0, width, height);
+
+				// Draw the SVG image
+				ctx.drawImage(img, 0, 0);
+
+				// Convert to PNG blob
+				canvas.toBlob((blob) => {
+					if (!blob) {
+						throw new Error('Failed to create PNG blob');
+					}
+
+					// Create download link
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+
+					// Generate filename from center note name and timestamp
+					const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+					const noteName = this.centerFile!.basename;
+					a.download = `local-soundscape-${noteName}-${timestamp}.png`;
+
+					// Trigger download
+					a.click();
+
+					// Cleanup
+					URL.revokeObjectURL(url);
+					URL.revokeObjectURL(svgUrl);
+
+					logger.info('export-complete', 'Graph exported successfully', { filename: a.download });
+					new Notice('Graph exported successfully!');
+				}, 'image/png');
+			};
+
+			img.onerror = () => {
+				throw new Error('Failed to load SVG image');
+			};
+
+			img.src = svgUrl;
+
+		} catch (error) {
+			logger.error('export-error', 'Failed to export graph', error as Error);
+			new Notice('Failed to export graph. Please try again.');
+		}
+	}
+
+	/**
 	 * Open filter modal
 	 */
 	private openFilterModal(): void {
@@ -645,6 +1428,16 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		);
 		modal.open();
+	}
+
+	/**
+	 * Open Control Center
+	 */
+	private openControlCenter(): void {
+		import('./control-panel').then(({ MaterialControlPanelModal }) => {
+			const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
+			controlCenter.open();
+		});
 	}
 
 	/**
@@ -740,11 +1533,13 @@ export class LocalSoundscapeView extends ItemView {
 		logger.info('extract-graph', 'Extracting graph data', {
 			center: this.centerFile.path,
 			depth: this.currentDepth,
-			filtersActive: Object.values(this.filters).some(f => f && f.length > 0)
+			filtersActive: Object.values(this.filters).some(f => f && f.length > 0),
+			clusteringMethod: this.clusteringMethod
 		});
 
-		// Apply filters to extractor
+		// Apply filters and clustering to extractor
 		this.extractor.setFilters(this.filters);
+		this.extractor.setClusteringMethod(this.clusteringMethod);
 
 		// Dispose existing renderer if it exists (we'll create a new one)
 		if (this.renderer) {
@@ -772,6 +1567,9 @@ export class LocalSoundscapeView extends ItemView {
 				centerNode: this.graphData.centerNode.basename
 			});
 
+			// Initialize variation history for this center note
+			this.initializeVariationHistory();
+
 			// Clear loading indicator
 			this.graphContainer.empty();
 
@@ -795,7 +1593,8 @@ export class LocalSoundscapeView extends ItemView {
 				height,
 				nodeRadius: 8,
 				showLabels: true,
-				enableZoom: true
+				enableZoom: true,
+				nodeSizeMode: this.nodeSizeMode
 			};
 
 			logger.info('renderer-init', 'Initializing renderer', { width, height });
@@ -807,6 +1606,19 @@ export class LocalSoundscapeView extends ItemView {
 				(node) => this.handleNodeRecenter(node)
 			);
 
+			// Apply layout based on selected type
+			if (this.layoutType === 'force') {
+				logger.info('apply-layout', 'Applying force-directed layout');
+				const forceLayout = new ForceDirectedLayout({
+					width,
+					height,
+					centerX: width / 2,
+					centerY: height / 2
+				});
+				forceLayout.applyLayout(this.graphData);
+			}
+			// Radial layout is applied by the renderer by default
+
 			// Render the graph
 			logger.info('render-start', 'Starting graph render');
 			this.renderer.render(this.graphData);
@@ -814,6 +1626,18 @@ export class LocalSoundscapeView extends ItemView {
 
 			// Mark as up-to-date after successful extraction
 			this.markAsUpToDate();
+
+			// Update playback UI to enable Play button
+			this.updatePlaybackUI();
+
+			// Auto-start audio if enabled
+			if (this.autoStartAudio && !this.isPlaying) {
+				logger.info('auto-start', 'Auto-starting audio playback');
+				// Small delay to let rendering complete
+				setTimeout(() => {
+					this.startPlayback();
+				}, 500);
+			}
 
 			logger.info('extract-complete', 'Graph extraction and rendering complete');
 
@@ -836,26 +1660,44 @@ export class LocalSoundscapeView extends ItemView {
 	 * Display graph statistics in sidebar
 	 */
 	private displayGraphStats(): void {
-		if (!this.graphData || !this.playbackContentContainer) return;
+		if (!this.graphData) return;
 
-		// Find or create stats section (don't clear the whole playback content!)
-		let statsSection = this.playbackContentContainer.querySelector('.stats-section') as HTMLElement;
+		// Find the stats container (created in createSidebar)
+		const statsContainer = this.sidebarContainer.querySelector('.sidebar-stats-container') as HTMLElement;
+		if (!statsContainer) return;
 
-		if (!statsSection) {
-			// Create stats section if it doesn't exist
-			statsSection = this.playbackContentContainer.createDiv({ cls: 'stats-section' });
-		} else {
-			// Clear existing stats
-			statsSection.empty();
-		}
+		// Clear existing stats
+		statsContainer.empty();
 
-		statsSection.createEl('h4', { text: 'Graph Statistics' });
+		// Create collapsible section
+		const statsHeader = statsContainer.createDiv({ cls: 'stats-header' });
+		statsHeader.createEl('h4', { text: 'Graph Statistics' });
 
-		const statsList = statsSection.createEl('ul', { cls: 'stats-list' });
+		const toggleButton = statsHeader.createEl('button', {
+			cls: 'stats-toggle',
+			attr: { 'aria-label': 'Toggle statistics' }
+		});
+		toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+
+		const statsContent = statsContainer.createDiv({ cls: 'stats-content collapsed' });
+
+		const statsList = statsContent.createEl('ul', { cls: 'stats-list' });
 		statsList.createEl('li', { text: `Nodes: ${this.graphData.stats.totalNodes}` });
 		statsList.createEl('li', { text: `Links: ${this.graphData.stats.totalLinks}` });
 		statsList.createEl('li', { text: `Incoming: ${this.graphData.stats.incomingCount}` });
 		statsList.createEl('li', { text: `Outgoing: ${this.graphData.stats.outgoingCount}` });
+
+		// Toggle collapse/expand
+		statsHeader.addEventListener('click', () => {
+			const isCollapsed = statsContent.classList.contains('collapsed');
+			if (isCollapsed) {
+				statsContent.classList.remove('collapsed');
+				toggleButton.innerHTML = '▲'; // Up arrow (expanded state)
+			} else {
+				statsContent.classList.add('collapsed');
+				toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+			}
+		});
 	}
 
 	/**
@@ -929,6 +1771,17 @@ export class LocalSoundscapeView extends ItemView {
 
 			this.updatePlaybackUI();
 
+			// Start visualization and time tracking
+			const playbackStartTime = Date.now();
+			if (this.visualizationManager) {
+				// For Local Soundscape, keep playback time fixed at 1.0s
+				// All notes are positioned around this time, so keeping cursor here keeps them visible
+				this.visualizationManager.start(1.0);
+				this.visualizationManager.updatePlaybackTime(1.0);
+
+				logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
+			}
+
 			logger.info('playback-started', 'Soundscape playback started - scheduling notes', {
 				voices: this.currentVoiceCount,
 				totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
@@ -957,12 +1810,31 @@ export class LocalSoundscapeView extends ItemView {
 					});
 
 					try {
+						// Highlight node as playing (only if pulse is enabled)
+						if (this.renderer && this.pulsePlayingNodes) {
+							this.renderer.highlightPlayingNode(mapping.nodeId);
+						}
+
+						// Group all notes by 500ms windows for visualization
+						// Add 1.0s offset so notes appear to the right of clefs
+						const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1.0;
+
 						await this.plugin.audioEngine.playNoteImmediate({
 							pitch: mapping.pitch,
 							duration: mapping.duration,
 							velocity: mapping.velocity,
 							instrument: mapping.instrument
-						}, mapping.timing, mapping.nodeId);
+						}, visualTimestamp, mapping.nodeId);
+
+						// Unhighlight node after duration (only if pulse was enabled)
+						const unhighlightTimeoutId = window.setTimeout(() => {
+							if (this.renderer && this.pulsePlayingNodes) {
+								this.renderer.unhighlightPlayingNode(mapping.nodeId);
+							}
+						}, mapping.duration * 1000);
+
+						this.scheduledTimeouts.push(unhighlightTimeoutId);
+
 					} catch (error) {
 						logger.warn('note-playback-error', 'Failed to play note', {
 							index: i,
@@ -1002,6 +1874,11 @@ export class LocalSoundscapeView extends ItemView {
 		}
 		this.scheduledTimeouts = [];
 
+		// Clear visual highlights
+		if (this.renderer) {
+			this.renderer.clearAllPlayingHighlights();
+		}
+
 		// Stop the audio engine (AudioEngine doesn't have a pause method, so we stop)
 		this.plugin.audioEngine.stop();
 		this.isPlaying = false;
@@ -1027,6 +1904,11 @@ export class LocalSoundscapeView extends ItemView {
 		}
 		this.scheduledTimeouts = [];
 
+		// Clear visual highlights
+		if (this.renderer) {
+			this.renderer.clearAllPlayingHighlights();
+		}
+
 		// Stop audio engine playback
 		this.plugin.audioEngine.stop();
 
@@ -1036,6 +1918,12 @@ export class LocalSoundscapeView extends ItemView {
 		this.currentVoiceCount = 0;
 		this.currentVolume = 0;
 		this.updatePlaybackUI();
+
+		// Stop visualization
+		if (this.visualizationManager) {
+			this.visualizationManager.stop();
+			logger.debug('playback-stop', 'Visualization stopped');
+		}
 
 		logger.info('playback-stopped', 'Soundscape playback stopped');
 	}
@@ -1057,6 +1945,11 @@ export class LocalSoundscapeView extends ItemView {
 			`;
 			this.playButton.classList.add('playing');
 			this.stopButton.removeAttribute('disabled');
+
+			// Enable export button when playing (so user can export current soundscape)
+			if (this.exportAudioButton) {
+				this.exportAudioButton.removeAttribute('disabled');
+			}
 		} else {
 			// Update play button to show play icon
 			this.playButton.innerHTML = `
@@ -1067,8 +1960,39 @@ export class LocalSoundscapeView extends ItemView {
 			`;
 			this.playButton.classList.remove('playing');
 
-			if (this.currentVoiceCount === 0) {
-				this.stopButton.setAttribute('disabled', '');
+			// Enable Play button if we have graph data with nodes, disable if no data
+			if (this.graphData && this.graphData.allNodes.length > 0) {
+				this.playButton.removeAttribute('disabled');
+			} else {
+				this.playButton.setAttribute('disabled', '');
+			}
+
+			// Stop button should be disabled when not playing
+			this.stopButton.setAttribute('disabled', '');
+
+			// Export button enabled if we have mappings (can export last played soundscape)
+			if (this.exportAudioButton) {
+				if (this.currentMappings && this.currentMappings.length > 0) {
+					this.exportAudioButton.removeAttribute('disabled');
+				} else {
+					this.exportAudioButton.setAttribute('disabled', '');
+				}
+			}
+
+			// Variation buttons enabled if we have graph data
+			if (this.rerollButton) {
+				if (this.graphData && this.graphData.allNodes.length > 0) {
+					this.rerollButton.removeAttribute('disabled');
+				} else {
+					this.rerollButton.setAttribute('disabled', '');
+				}
+			}
+			if (this.prevVariationButton) {
+				if (this.graphData && this.graphData.allNodes.length > 0 && this.currentVariationIndex > 0) {
+					this.prevVariationButton.removeAttribute('disabled');
+				} else {
+					this.prevVariationButton.setAttribute('disabled', '');
+				}
 			}
 		}
 
@@ -1108,5 +2032,77 @@ export class LocalSoundscapeView extends ItemView {
 				await this.setCenterFile(file);
 			}
 		}
+	}
+
+	/**
+	 * Create filter icon using safe DOM API
+	 */
+	private createFilterIcon(container: HTMLElement): void {
+		const svg = container.createSvg('svg', {
+			attr: {
+				xmlns: 'http://www.w3.org/2000/svg',
+				width: '16',
+				height: '16',
+				viewBox: '0 0 24 24',
+				fill: 'none',
+				stroke: 'currentColor',
+				'stroke-width': '2',
+				'stroke-linecap': 'round',
+				'stroke-linejoin': 'round'
+			}
+		});
+		svg.createSvg('polygon', {
+			attr: { points: '22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3' }
+		});
+	}
+
+	/**
+	 * Create refresh icon using safe DOM API
+	 */
+	private createRefreshIcon(container: HTMLElement): void {
+		const svg = container.createSvg('svg', {
+			attr: {
+				xmlns: 'http://www.w3.org/2000/svg',
+				width: '16',
+				height: '16',
+				viewBox: '0 0 24 24',
+				fill: 'none',
+				stroke: 'currentColor',
+				'stroke-width': '2',
+				'stroke-linecap': 'round',
+				'stroke-linejoin': 'round'
+			}
+		});
+		svg.createSvg('path', {
+			attr: { d: 'M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2' }
+		});
+	}
+
+	/**
+	 * Create export icon using safe DOM API
+	 */
+	private createExportIcon(container: HTMLElement): void {
+		const svg = container.createSvg('svg', {
+			attr: {
+				xmlns: 'http://www.w3.org/2000/svg',
+				width: '16',
+				height: '16',
+				viewBox: '0 0 24 24',
+				fill: 'none',
+				stroke: 'currentColor',
+				'stroke-width': '2',
+				'stroke-linecap': 'round',
+				'stroke-linejoin': 'round'
+			}
+		});
+		svg.createSvg('path', {
+			attr: { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }
+		});
+		svg.createSvg('polyline', {
+			attr: { points: '7 10 12 15 17 10' }
+		});
+		svg.createSvg('line', {
+			attr: { x1: '12', y1: '15', x2: '12', y2: '3' }
+		});
 	}
 }
