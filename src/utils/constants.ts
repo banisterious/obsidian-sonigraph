@@ -921,6 +921,32 @@ export interface SonigraphSettings {
 				headingCount?: number;  // Weight for heading count in velocity calculation (0-1)
 			};
 		};
+		// Context-aware modifiers - Environmental influences on audio
+		contextAware?: {
+			enabled?: boolean; // Master enable/disable for all context modifiers (default: false)
+			mode?: 'influenced' | 'only'; // 'influenced' = blend with note properties, 'only' = purely environmental
+			influenceWeight?: number; // Overall weight of context modifiers (0-100%, default: 50%)
+
+			// Individual context factors
+			season?: {
+				enabled?: boolean; // Enable season-based modifiers
+				override?: 'spring' | 'summer' | 'fall' | 'winter' | null; // Manual override, null = auto-detect
+			};
+			timeOfDay?: {
+				enabled?: boolean; // Enable time-based modifiers
+				override?: 'dawn' | 'day' | 'dusk' | 'night' | null; // Manual override, null = auto-detect
+			};
+			weather?: {
+				enabled?: boolean; // Enable weather-based modifiers
+				override?: 'clear' | 'cloudy' | 'rain' | 'storm' | 'snow' | null; // Manual override, null = use API
+				apiKey?: string; // Optional weather API key
+				location?: string; // Optional location (city name or coordinates)
+			};
+			theme?: {
+				enabled?: boolean; // Enable theme-based modifiers (light/dark mode)
+				override?: 'light' | 'dark' | null; // Manual override, null = auto-detect from Obsidian
+			};
+		};
 	};
 }
 

@@ -705,6 +705,18 @@ depthBasedMapping: {
   - Lucide icon integration for buttons (music icon for Play Active Note)
   - Proper Setting component usage throughout
   - Consistent with Obsidian's native UI patterns
+- ✅ Context-aware modifiers (Phase 4 Enhancement):
+  - ContextualModifier utility class for environmental context detection
+  - Four context types: Season, Time of day, Weather, Theme (light/dark)
+  - Two modes: 'influenced' (blend) and 'only' (pure environmental)
+  - Configurable influence weight (0-100%)
+  - Individual enable/disable for each context factor
+  - Auto-detection: season from month, time from hour, theme from Obsidian
+  - Weather support (manual override, API integration ready)
+  - Modifiers affect: instrument selection bias, pitch offset, velocity multiplier, reverb amount, brightness
+  - Integrated into DepthBasedMapper mapping pipeline
+  - Complete settings UI in Local Soundscape view
+  - Logging for debugging context state
 
 **Total Estimate:** 7-9 weeks
 
@@ -928,24 +940,28 @@ localSoundscape: {
 - **Per-node playback:** Click node to hear just that note
 - **Path sonification:** Play audio following a specific path
 - **Temporal mode:** Hear how graph evolved over time
-- **Context-aware modifiers:** Dynamic audio influenced by environmental factors
+- ✅ **Context-aware modifiers (IMPLEMENTED):** Dynamic audio influenced by environmental factors
   - **Season-based**: Different timbres/moods for Spring/Summer/Fall/Winter
   - **Time-based**: Dawn/day/dusk/night variations (brighter vs darker sounds)
-  - **Weather-based**: Clear/rainy/stormy/snowy atmospheres (via weather API)
+  - **Weather-based**: Clear/rainy/stormy/snowy atmospheres (manual override, API integration ready)
   - **Theme-based**: Light mode vs dark mode influences brightness/warmth
   - **Combination modes**:
-    - "Context-influenced" - blend note properties with environmental factors
+    - "Context-influenced" - blend note properties with environmental factors (default)
     - "Context-only" - purely environmental, ignoring note properties
   - **Configuration**:
-    - Enable/disable individual context factors
-    - Adjust influence weight (0-100%) for each factor
-    - Override automatic detection (manually set season, time, weather)
-  - **Technical approach**:
-    - Seasonal mapping: Spring (bright, major keys), Summer (warm, energetic), Fall (mellow, minor keys), Winter (cold, sparse)
-    - Time mapping: Morning (rising pitch), Afternoon (stable), Evening (descending), Night (ambient, reverb)
-    - Weather mapping: Clear (clean), Cloudy (muted), Rain (rhythmic elements), Storm (dramatic), Snow (crystalline)
-    - Theme mapping: Light mode (higher octaves, brighter timbres), Dark mode (lower octaves, warmer tones)
-    - Context weights applied to: instrument selection, pitch offset, velocity, reverb/effects
+    - Master enable/disable toggle
+    - Individual enable/disable for each context factor (season, time, weather, theme)
+    - Adjustable influence weight slider (0-100%, default 50%)
+    - Mode selector (influenced/only)
+  - **Implementation**:
+    - ContextualModifier class in [src/audio/mapping/ContextualModifier.ts](../../src/audio/mapping/ContextualModifier.ts)
+    - Seasonal mapping: Spring (bright, +2 semitones), Summer (warm, +3 semitones), Fall (mellow, -2 semitones), Winter (cold, -4 semitones)
+    - Time mapping: Dawn (+1 semitone), Day (neutral), Dusk (-1 semitone), Night (-2 semitones, heavy reverb)
+    - Weather mapping: Clear (bright), Cloudy (muted), Rain (rhythmic), Storm (dramatic, +2 semitones), Snow (crystalline, +3 semitones)
+    - Theme mapping: Light mode (+2 semitones, bright), Dark mode (-2 semitones, warm)
+    - Context modifiers applied to: instrument selection bias, pitch offset, velocity multiplier, reverb amount, brightness
+    - Integrated into DepthBasedMapper mapping pipeline
+    - Settings UI in Local Soundscape view
 
 ---
 

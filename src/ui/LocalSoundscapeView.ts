@@ -124,10 +124,11 @@ export class LocalSoundscapeView extends ItemView {
 		// Initialize DepthBasedMapper if we have a musical mapper
 		if (this.plugin.musicalMapper) {
 			this.depthMapper = new DepthBasedMapper(
-				this.plugin.settings.localSoundscape || {}, // Use settings from Control Center
+				(this.plugin.settings.localSoundscape || {}) as any, // Use settings from Control Center
 				this.plugin.musicalMapper,
 				this.app,
-				this.plugin.audioEngine // Pass audio engine for enabled instruments
+				this.plugin.audioEngine, // Pass audio engine for enabled instruments
+				this.plugin.settings // Pass full settings for context-aware modifiers
 			);
 			logger.info('view-init', 'DepthBasedMapper initialized with Control Center settings and enabled instruments');
 		} else {
@@ -692,6 +693,152 @@ export class LocalSoundscapeView extends ItemView {
 						// Remove pulse from all playing nodes
 						this.renderer.clearAllPlayingHighlights();
 					}
+				}));
+
+		// Context-Aware Modifiers Settings
+		const contextSection = container.createDiv({ cls: 'settings-section' });
+		contextSection.createEl('h4', { text: 'Context-aware modifiers', cls: 'settings-heading' });
+
+		// Master enable toggle
+		new Setting(contextSection)
+			.setName('Enable context-aware audio')
+			.setDesc('Allow environmental factors to influence the soundscape')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.enabled ?? false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-context-enabled', 'Context-aware audio enabled changed', { enabled: value });
+				}));
+
+		// Mode selector
+		new Setting(contextSection)
+			.setName('Context mode')
+			.setDesc('How context influences the audio')
+			.addDropdown(dropdown => dropdown
+				.addOption('influenced', 'Influenced - Blend with note properties')
+				.addOption('only', 'Only - Purely environmental')
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.mode || 'influenced')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.mode = value as 'influenced' | 'only';
+					await this.plugin.saveSettings();
+					logger.info('setting-context-mode', 'Context mode changed', { mode: value });
+				}));
+
+		// Influence weight slider
+		new Setting(contextSection)
+			.setName('Influence weight')
+			.setDesc('How much context affects the sound (0-100%)')
+			.addSlider(slider => slider
+				.setLimits(0, 100, 5)
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.influenceWeight ?? 50)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.influenceWeight = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-context-weight', 'Context influence weight changed', { weight: value });
+				}));
+
+		// Season toggle
+		new Setting(contextSection)
+			.setName('Season influence')
+			.setDesc('Let seasonal changes affect the mood')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.season?.enabled ?? false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware.season) {
+						this.plugin.settings.localSoundscape.contextAware.season = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.season.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-context-season', 'Season influence changed', { enabled: value });
+				}));
+
+		// Time of day toggle
+		new Setting(contextSection)
+			.setName('Time of day influence')
+			.setDesc('Let time affect brightness and energy')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.timeOfDay?.enabled ?? false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware.timeOfDay) {
+						this.plugin.settings.localSoundscape.contextAware.timeOfDay = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.timeOfDay.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-context-time', 'Time of day influence changed', { enabled: value });
+				}));
+
+		// Weather toggle
+		new Setting(contextSection)
+			.setName('Weather influence')
+			.setDesc('Let weather conditions affect atmosphere')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.weather?.enabled ?? false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware.weather) {
+						this.plugin.settings.localSoundscape.contextAware.weather = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.weather.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-context-weather', 'Weather influence changed', { enabled: value });
+				}));
+
+		// Theme toggle
+		new Setting(contextSection)
+			.setName('Theme influence')
+			.setDesc('Let light/dark mode affect tone')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.localSoundscape?.contextAware?.theme?.enabled ?? false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware) {
+						this.plugin.settings.localSoundscape.contextAware = {};
+					}
+					if (!this.plugin.settings.localSoundscape.contextAware.theme) {
+						this.plugin.settings.localSoundscape.contextAware.theme = {};
+					}
+					this.plugin.settings.localSoundscape.contextAware.theme.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-context-theme', 'Theme influence changed', { enabled: value });
 				}));
 
 		// Info Section

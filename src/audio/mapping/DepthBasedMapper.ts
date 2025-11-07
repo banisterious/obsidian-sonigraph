@@ -16,6 +16,7 @@ import { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
 import { App, TFile } from 'obsidian';
 import { AudioEngine } from '../engine';
+import { ContextualModifier, ContextModifiers } from './ContextualModifier';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -110,22 +111,32 @@ export class DepthBasedMapper {
 	private audioEngine: AudioEngine | null;
 	private currentCenterNodePath: string | null = null;
 	private randomizationSeed: number | null = null;
+	private contextualModifier: ContextualModifier | null = null;
+	private settings: SonigraphSettings;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
 		musicalMapper: MusicalMapper,
 		app: App,
-		audioEngine?: AudioEngine
+		audioEngine?: AudioEngine,
+		settings?: SonigraphSettings
 	) {
 		this.audioEngine = audioEngine || null;
 		this.config = this.mergeWithDefaults(config);
 		this.musicalMapper = musicalMapper;
 		this.app = app;
+		this.settings = settings || {} as SonigraphSettings;
+
+		// Initialize contextual modifier if settings provided
+		if (settings) {
+			this.contextualModifier = new ContextualModifier(settings);
+		}
 
 		logger.info('mapper-init', 'DepthBasedMapper initialized', {
 			maxNodesPerDepth: this.config.maxNodesPerDepth,
 			panningEnabled: this.config.directionalPanning.enabled,
-			hasAudioEngine: !!this.audioEngine
+			hasAudioEngine: !!this.audioEngine,
+			contextAwareEnabled: !!settings?.localSoundscape?.contextAware?.enabled
 		});
 	}
 
@@ -219,11 +230,18 @@ export class DepthBasedMapper {
 		// Set randomization seed (null means default/no randomization)
 		this.randomizationSeed = seed ?? null;
 
+		// Calculate context modifiers if enabled
+		const contextModifiers = this.contextualModifier?.calculateModifiers();
+		if (contextModifiers && this.contextualModifier) {
+			this.contextualModifier.logContext();
+		}
+
 		logger.info('mapping-start', 'Mapping soundscape to music', {
 			totalNodes: data.stats.totalNodes,
 			maxDepth: data.stats.maxDepth,
 			centerNode: data.centerNode.basename,
-			randomizationSeed: this.randomizationSeed
+			randomizationSeed: this.randomizationSeed,
+			contextAwareEnabled: !!contextModifiers
 		});
 
 		this.currentCenterNodePath = data.centerNode.path;
@@ -231,7 +249,7 @@ export class DepthBasedMapper {
 		const mappings: DepthMapping[] = [];
 
 		// Map center node
-		const centerMapping = await this.mapNode(data.centerNode, 0);
+		const centerMapping = await this.mapNode(data.centerNode, 0, contextModifiers);
 		if (centerMapping) {
 			mappings.push(centerMapping);
 		}
@@ -249,7 +267,7 @@ export class DepthBasedMapper {
 			});
 
 			for (const node of limitedNodes) {
-				const mapping = await this.mapNode(node, depth);
+				const mapping = await this.mapNode(node, depth, contextModifiers);
 				if (mapping) {
 					mappings.push(mapping);
 				}
@@ -330,7 +348,8 @@ export class DepthBasedMapper {
 	 */
 	private async mapNode(
 		node: LocalSoundscapeNode,
-		depth: number
+		depth: number,
+		contextModifiers?: ContextModifiers
 	): Promise<DepthMapping | null> {
 		try {
 			// Get file for metadata analysis
@@ -345,17 +364,17 @@ export class DepthBasedMapper {
 
 			// Calculate pitch based on node properties
 			// Use word count and connection density to vary pitch within range
-			const pitchOffset = this.calculatePitchOffset(node, pitchRange);
+			const pitchOffset = this.calculatePitchOffset(node, pitchRange, contextModifiers);
 
 			// Get instrument pool for this depth
 			const instruments = this.getInstrumentsForDepth(depth);
-			const instrument = this.selectInstrument(node, instruments);
+			const instrument = this.selectInstrument(node, instruments, contextModifiers);
 
 			// Calculate duration based on word count (longer notes = more content)
 			const duration = this.calculateDuration(node);
 
 			// Calculate velocity based on modification recency
-			const velocity = this.calculateVelocity(node);
+			const velocity = this.calculateVelocity(node, contextModifiers);
 
 			// Convert semitone offset to frequency (Hz)
 			// Formula: frequency = rootFreq * 2^(semitones/12)
@@ -406,10 +425,12 @@ export class DepthBasedMapper {
 	 * Calculate pitch offset within range using weighted combination of node properties
 	 * Uses configurable weights from mappingWeights.pitch
 	 * Applies ±2 semitone randomization if seed is set
+	 * Applies context-aware modifiers if enabled
 	 */
 	private calculatePitchOffset(
 		node: LocalSoundscapeNode,
-		range: { min: number; max: number }
+		range: { min: number; max: number },
+		contextModifiers?: ContextModifiers
 	): number {
 		const weights = this.config.mappingWeights!.pitch;
 
@@ -448,6 +469,11 @@ export class DepthBasedMapper {
 			offset += pitchShift;
 		}
 
+		// Apply context-aware pitch offset if available
+		if (contextModifiers) {
+			offset += contextModifiers.pitchOffset;
+		}
+
 		return Math.round(offset);
 	}
 
@@ -465,8 +491,9 @@ export class DepthBasedMapper {
 	 * Select instrument from pool using weighted combination of node properties
 	 * Uses configurable weights from mappingWeights.instrument
 	 * Applies randomization if seed is set
+	 * Applies context-aware bias if enabled
 	 */
-	private selectInstrument(node: LocalSoundscapeNode, instruments: string[]): string {
+	private selectInstrument(node: LocalSoundscapeNode, instruments: string[], contextModifiers?: ContextModifiers): string {
 		const weights = this.config.mappingWeights!.instrument;
 
 		// Calculate normalized factors (0-1 range)
@@ -483,12 +510,19 @@ export class DepthBasedMapper {
 		const nodeIdHashFactor = (this.hashString(node.id) % 1000) / 1000; // Normalize hash to 0-1
 
 		// Weighted combination
-		const combinedFactor = (
+		let combinedFactor = (
 			(depthFactor * weights.depth) +
 			(tagCountFactor * weights.tagCount) +
 			(folderDepthFactor * weights.folderDepth) +
 			(nodeIdHashFactor * weights.nodeIdHash)
 		);
+
+		// Apply context-aware bias if available
+		// instrumentBias ranges from -1 to +1, shifts index toward beginning or end of array
+		if (contextModifiers) {
+			combinedFactor += contextModifiers.instrumentBias * 0.3; // 30% influence on instrument selection
+			combinedFactor = Math.max(0, Math.min(1, combinedFactor)); // Clamp to 0-1 range
+		}
 
 		// Convert combined factor to instrument index
 		let index = Math.floor(combinedFactor * instruments.length);
@@ -562,8 +596,9 @@ export class DepthBasedMapper {
 	/**
 	 * Calculate velocity using weighted combination of node properties
 	 * Uses configurable weights from mappingWeights.velocity
+	 * Applies context-aware multiplier if enabled
 	 */
-	private calculateVelocity(node: LocalSoundscapeNode): number {
+	private calculateVelocity(node: LocalSoundscapeNode, contextModifiers?: ContextModifiers): number {
 		const weights = this.config.mappingWeights!.velocity;
 
 		// Calculate normalized factors (0-1 range)
@@ -590,7 +625,13 @@ export class DepthBasedMapper {
 		);
 
 		// Map to 0.3 to 1.0 range (minimum velocity to ensure audibility)
-		const velocity = 0.3 + (combinedFactor * 0.7);
+		let velocity = 0.3 + (combinedFactor * 0.7);
+
+		// Apply context-aware velocity multiplier if available
+		if (contextModifiers) {
+			velocity *= contextModifiers.velocityMultiplier;
+			velocity = Math.max(0.1, Math.min(1.0, velocity)); // Clamp to 0.1-1.0 range
+		}
 
 		return velocity;
 	}
