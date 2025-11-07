@@ -12,7 +12,8 @@
     "lint:css:fix": "stylelint \"styles/**/*.css\" --fix",
     "format:css": "prettier --write \"styles/**/*.css\"",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
-    "clean:css": "rm -f styles.css.map"
+    "clean:css": "rm -f styles.css.map",
+    "deploy": "npm run build && cp main.js styles.css manifest.json /mnt/d/Vaults/Banister/.obsidian/plugins/sonigraph/ && echo '✅ Deployed to vault! Reload Obsidian (Ctrl+R) to see changes.'"
   },
   "keywords": [
     "obsidian",

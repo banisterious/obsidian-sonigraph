@@ -8,7 +8,7 @@
  * Phase 2: Audio integration with depth-based mapping
  */
 
-import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
+import { ItemView, WorkspaceLeaf, TFile, Notice, Setting } from 'obsidian';
 import { getLogger } from '../logging';
 import {
 	LocalSoundscapeExtractor,
@@ -21,6 +21,7 @@ import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMappe
 import { LocalSoundscapeFilterModal, LocalSoundscapeFilters } from './LocalSoundscapeFilterModal';
 import { NoteVisualizationManager, VisualizationMode } from '../visualization/NoteVisualizationManager';
 import { createLucideIcon } from './lucide-icons';
+import { stringToMusicalKey, ROOT_NOTES } from '../utils/constants';
 import type SonigraphPlugin from '../main';
 
 const logger = getLogger('LocalSoundscapeView');
@@ -113,6 +114,7 @@ export class LocalSoundscapeView extends ItemView {
 	private pulsePlayingNodes: boolean = true;
 	private nodeSizeMode: 'uniform' | 'link-count' | 'content-length' = 'uniform';
 	private autoStartAudio: boolean = false;
+	private keyDisplayElement: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
@@ -169,6 +171,13 @@ export class LocalSoundscapeView extends ItemView {
 		this.registerEvent(
 			this.app.metadataCache.on('changed', () => {
 				this.markAsStale();
+			})
+		);
+
+		// Register active file change listener for auto-play feature
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', () => {
+				this.handleActiveFileChange();
 			})
 		);
 
@@ -491,18 +500,15 @@ export class LocalSoundscapeView extends ItemView {
 		displaySection.createEl('h4', { text: 'Display', cls: 'settings-heading' });
 
 		// Show node labels toggle
-		const labelsToggle = displaySection.createDiv({ cls: 'setting-item' });
-		labelsToggle.createSpan({ text: 'Show node labels', cls: 'setting-label' });
-		const labelsCheckbox = labelsToggle.createEl('input', {
-			type: 'checkbox',
-			cls: 'setting-checkbox'
-		});
-		labelsCheckbox.checked = true;
-		labelsCheckbox.addEventListener('change', () => {
-			if (this.renderer) {
-				this.renderer.updateConfig({ showLabels: labelsCheckbox.checked });
-			}
-		});
+		new Setting(displaySection)
+			.setName('Show node labels')
+			.addToggle(toggle => toggle
+				.setValue(true)
+				.onChange((value) => {
+					if (this.renderer) {
+						this.renderer.updateConfig({ showLabels: value });
+					}
+				}));
 
 		// Node size mode selector
 		const nodeSizeControl = displaySection.createDiv({ cls: 'setting-item' });
@@ -540,40 +546,153 @@ export class LocalSoundscapeView extends ItemView {
 		audioSection.createEl('h4', { text: 'Audio', cls: 'settings-heading' });
 
 		// Auto-start audio toggle
-		const autoStartToggle = audioSection.createDiv({ cls: 'setting-item' });
-		autoStartToggle.createSpan({ text: 'Auto-play when opening', cls: 'setting-label' });
-		const autoStartCheckbox = autoStartToggle.createEl('input', {
-			type: 'checkbox',
-			cls: 'setting-checkbox'
+		new Setting(audioSection)
+			.setName('Auto-play when opening')
+			.addToggle(toggle => toggle
+				.setValue(this.autoStartAudio)
+				.onChange((value) => {
+					this.autoStartAudio = value;
+					logger.info('setting-autostart', 'Auto-start audio setting changed', { enabled: value });
+				}));
+
+		// Auto-play active note toggle
+		new Setting(audioSection)
+			.setName('Auto-play active note')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.localSoundscape?.autoPlayActiveNote ?? false)
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					this.plugin.settings.localSoundscape.autoPlayActiveNote = value;
+					await this.plugin.saveSettings();
+					logger.info('setting-autoplay-active', 'Auto-play active note setting changed', {
+						enabled: value
+					});
+				}));
+
+		// Musical Key Settings
+		const keySection = container.createDiv({ cls: 'settings-section' });
+		keySection.createEl('h4', { text: 'Musical key', cls: 'settings-heading' });
+
+		// Key selection mode dropdown
+		new Setting(keySection)
+			.setName('Key based on')
+			.setDesc('How to determine the musical key for this soundscape')
+			.addDropdown(dropdown => dropdown
+				.addOption('vault-name', 'Vault name')
+				.addOption('root-folder', 'Root folder')
+				.addOption('folder-path', 'Folder at specific depth')
+				.addOption('full-path', 'Full folder path')
+				.addOption('file-name', 'File name')
+				.addOption('custom', 'Custom (manual)')
+				.setValue(this.plugin.settings.localSoundscape?.keySelection?.mode || 'vault-name')
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.keySelection) {
+						this.plugin.settings.localSoundscape.keySelection = {};
+					}
+					this.plugin.settings.localSoundscape.keySelection.mode = value as any;
+					await this.plugin.saveSettings();
+
+					// Update key display
+					this.updateKeyDisplay();
+
+					logger.info('setting-key-mode', 'Key selection mode changed', { mode: value });
+				}));
+
+		// Folder depth setting (only shown when folder-path mode is selected)
+		const folderDepthSetting = new Setting(keySection)
+			.setName('Folder depth')
+			.setDesc('Which folder level to use (0 = root, 1 = first subfolder, etc.)')
+			.addSlider(slider => slider
+				.setLimits(0, 5, 1)
+				.setValue(this.plugin.settings.localSoundscape?.keySelection?.folderDepth ?? 0)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					if (!this.plugin.settings.localSoundscape.keySelection) {
+						this.plugin.settings.localSoundscape.keySelection = {};
+					}
+					this.plugin.settings.localSoundscape.keySelection.folderDepth = value;
+					await this.plugin.saveSettings();
+
+					// Update key display
+					this.updateKeyDisplay();
+
+					logger.info('setting-key-folder-depth', 'Folder depth changed', { depth: value });
+				}));
+
+		// Custom key dropdown (only shown when custom mode is selected)
+		const customKeySetting = new Setting(keySection)
+			.setName('Custom key')
+			.setDesc('Select a specific musical key')
+			.addDropdown(dropdown => {
+				ROOT_NOTES.forEach(note => {
+					dropdown.addOption(note, note);
+				});
+				return dropdown
+					.setValue(this.plugin.settings.localSoundscape?.keySelection?.customKey || 'C')
+					.onChange(async (value) => {
+						if (!this.plugin.settings.localSoundscape) {
+							this.plugin.settings.localSoundscape = {};
+						}
+						if (!this.plugin.settings.localSoundscape.keySelection) {
+							this.plugin.settings.localSoundscape.keySelection = {};
+						}
+						this.plugin.settings.localSoundscape.keySelection.customKey = value;
+						await this.plugin.saveSettings();
+
+						// Update key display
+						this.updateKeyDisplay();
+
+						logger.info('setting-key-custom', 'Custom key changed', { key: value });
+					});
+			});
+
+		// Show/hide conditional settings based on mode
+		const updateKeySettingsVisibility = () => {
+			const mode = this.plugin.settings.localSoundscape?.keySelection?.mode || 'vault-name';
+			folderDepthSetting.settingEl.style.display = mode === 'folder-path' ? '' : 'none';
+			customKeySetting.settingEl.style.display = mode === 'custom' ? '' : 'none';
+		};
+		updateKeySettingsVisibility();
+
+		// Current key display
+		const keyDisplay = new Setting(keySection)
+			.setName('Current key')
+			.setDesc('The musical key determined by the current settings');
+		const keyDisplayValue = keyDisplay.controlEl.createSpan({
+			cls: 'setting-value-display',
+			text: this.determineMusicalKey()
 		});
-		autoStartCheckbox.checked = this.autoStartAudio;
-		autoStartCheckbox.addEventListener('change', () => {
-			this.autoStartAudio = autoStartCheckbox.checked;
-			logger.info('setting-autostart', 'Auto-start audio setting changed', { enabled: this.autoStartAudio });
-		});
+
+		// Store reference to update display
+		this.keyDisplayElement = keyDisplayValue;
 
 		// Visual Effects Settings
 		const effectsSection = container.createDiv({ cls: 'settings-section' });
-		effectsSection.createEl('h4', { text: 'Visual Effects', cls: 'settings-heading' });
+		effectsSection.createEl('h4', { text: 'Visual effects', cls: 'settings-heading' });
 
 		// Pulse playing nodes toggle
-		const pulseToggle = effectsSection.createDiv({ cls: 'setting-item' });
-		pulseToggle.createSpan({ text: 'Pulse playing nodes', cls: 'setting-label' });
-		const pulseCheckbox = pulseToggle.createEl('input', {
-			type: 'checkbox',
-			cls: 'setting-checkbox'
-		});
-		pulseCheckbox.checked = this.pulsePlayingNodes;
-		pulseCheckbox.addEventListener('change', () => {
-			this.pulsePlayingNodes = pulseCheckbox.checked;
-			logger.info('setting-pulse', 'Pulse playing nodes setting changed', { enabled: this.pulsePlayingNodes });
+		new Setting(effectsSection)
+			.setName('Pulse playing nodes')
+			.addToggle(toggle => toggle
+				.setValue(this.pulsePlayingNodes)
+				.onChange((value) => {
+					this.pulsePlayingNodes = value;
+					logger.info('setting-pulse', 'Pulse playing nodes setting changed', { enabled: value });
 
-			// Update currently playing nodes if any
-			if (!this.pulsePlayingNodes && this.renderer) {
-				// Remove pulse from all playing nodes
-				this.renderer.clearAllPlayingHighlights();
-			}
-		});
+					// Update currently playing nodes if any
+					if (!value && this.renderer) {
+						// Remove pulse from all playing nodes
+						this.renderer.clearAllPlayingHighlights();
+					}
+				}));
 
 		// Info Section
 		const infoSection = container.createDiv({ cls: 'settings-section' });
@@ -658,6 +777,16 @@ export class LocalSoundscapeView extends ItemView {
 			<span>Export audio</span>
 		`;
 		this.exportAudioButton.addEventListener('click', () => this.exportSoundscapeAudio());
+
+		// Play Active Note button
+		const playActiveNoteButton = buttonSection.createEl('button', {
+			cls: 'playback-button play-active-note-button',
+			attr: { 'aria-label': 'Play the currently active note' }
+		});
+		const playActiveNoteIcon = createLucideIcon('music', 20);
+		playActiveNoteButton.appendChild(playActiveNoteIcon);
+		playActiveNoteButton.appendChild(createSpan({ text: 'Play active note' }));
+		playActiveNoteButton.addEventListener('click', () => this.playActiveNote());
 
 		// Variation controls (Re-roll feature) - aligned as a button in the same row
 		const variationSection = buttonSection.createDiv({ cls: 'variation-controls' });
@@ -1501,6 +1630,124 @@ export class LocalSoundscapeView extends ItemView {
 	}
 
 	/**
+	 * Handle active file change for auto-play feature
+	 */
+	private async handleActiveFileChange(): Promise<void> {
+		// Check if auto-play is enabled in settings
+		const autoPlay = this.plugin.settings.localSoundscape?.autoPlayActiveNote ?? false;
+		if (!autoPlay) {
+			return;
+		}
+
+		// Get the currently active file
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) {
+			return;
+		}
+
+		// Don't trigger if the active file is already the center file
+		if (this.centerFile?.path === activeFile.path) {
+			return;
+		}
+
+		logger.info('auto-play-trigger', 'Auto-playing active note', {
+			activeFile: activeFile.basename
+		});
+
+		// Set the active file as center and start playing
+		await this.setCenterFile(activeFile);
+
+		// Auto-start playback
+		if (this.graphData && !this.isPlaying) {
+			await this.startPlayback();
+		}
+	}
+
+	/**
+	 * Play the currently active note's soundscape manually
+	 */
+	async playActiveNote(): Promise<void> {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) {
+			new Notice('No active note to play');
+			return;
+		}
+
+		logger.info('manual-play-active', 'Manually playing active note', {
+			activeFile: activeFile.basename
+		});
+
+		// Set the active file as center
+		await this.setCenterFile(activeFile);
+
+		// Start playback
+		if (this.graphData && !this.isPlaying) {
+			await this.startPlayback();
+		}
+	}
+
+	/**
+	 * Determine the musical key based on the key selection settings
+	 */
+	private determineMusicalKey(): string {
+		const keySettings = this.plugin.settings.localSoundscape?.keySelection;
+		const mode = keySettings?.mode || 'vault-name';
+
+		if (!this.centerFile) {
+			return 'C'; // Default if no center file
+		}
+
+		switch (mode) {
+			case 'vault-name': {
+				const vaultName = this.app.vault.getName();
+				return stringToMusicalKey(vaultName);
+			}
+
+			case 'root-folder': {
+				const pathParts = this.centerFile.path.split('/');
+				const rootFolder = pathParts.length > 1 ? pathParts[0] : '';
+				return stringToMusicalKey(rootFolder || 'root');
+			}
+
+			case 'folder-path': {
+				const depth = keySettings?.folderDepth ?? 0;
+				const pathParts = this.centerFile.path.split('/');
+				const folderAtDepth = depth < pathParts.length - 1 ? pathParts[depth] : pathParts[pathParts.length - 2] || '';
+				return stringToMusicalKey(folderAtDepth || 'root');
+			}
+
+			case 'full-path': {
+				const folderPath = this.centerFile.parent?.path || '';
+				return stringToMusicalKey(folderPath || 'root');
+			}
+
+			case 'file-name': {
+				return stringToMusicalKey(this.centerFile.basename);
+			}
+
+			case 'custom': {
+				const customKey = keySettings?.customKey || 'C';
+				// Validate that it's a valid root note
+				return ROOT_NOTES.includes(customKey) ? customKey : 'C';
+			}
+
+			default:
+				return 'C';
+		}
+	}
+
+	/**
+	 * Update the key display element with the current key
+	 */
+	private updateKeyDisplay(): void {
+		if (this.keyDisplayElement) {
+			const key = this.determineMusicalKey();
+			this.keyDisplayElement.textContent = key;
+			logger.debug('key-display-updated', 'Key display updated', { key });
+		}
+	}
+
+	/**
 	 * Mark graph as up-to-date (just refreshed)
 	 */
 	private markAsUpToDate(): void {
@@ -1586,6 +1833,10 @@ export class LocalSoundscapeView extends ItemView {
 		loadingIndicator.createEl('p', { text: 'Extracting graph data...' });
 
 		try {
+			// Configure rich metadata extraction if enabled in settings
+			const enableRichMetadata = this.plugin.settings.localSoundscape?.enableRichMetadata ?? false;
+			this.extractor.setRichMetadataExtraction(enableRichMetadata);
+
 			// Extract graph data using MetadataCache
 			this.graphData = await this.extractor.extractFromCenter(
 				this.centerFile,

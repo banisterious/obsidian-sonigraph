@@ -19,6 +19,45 @@ import { AudioEngine } from '../engine';
 
 const logger = getLogger('DepthBasedMapper');
 
+/**
+ * MappingWeights - Configurable weights for musical parameter calculation
+ * Each property weight determines how much that property influences the final value
+ * All weights are normalized (0-1 range) and sum to 1.0 for each parameter type
+ */
+export interface MappingWeights {
+	// Duration calculation weights
+	duration: {
+		wordCount: number;        // Default: 0.4 (40%)
+		charCount: number;        // Default: 0.3 (30%)
+		headingCount: number;     // Default: 0.2 (20%)
+		linkCount: number;        // Default: 0.1 (10%)
+	};
+
+	// Pitch offset calculation weights
+	pitch: {
+		wordCount: number;        // Default: 0.3 (30%)
+		charCount: number;        // Default: 0.2 (20%)
+		headingLevel: number;     // Default: 0.25 (25%) - avg heading level
+		linkDensity: number;      // Default: 0.25 (25%) - links per word
+	};
+
+	// Instrument selection weights
+	instrument: {
+		depth: number;            // Default: 0.5 (50%) - primary factor
+		tagCount: number;         // Default: 0.2 (20%)
+		folderDepth: number;      // Default: 0.15 (15%)
+		nodeIdHash: number;       // Default: 0.15 (15%) - for variation
+	};
+
+	// Velocity calculation weights
+	velocity: {
+		recency: number;          // Default: 0.4 (40%) - modification time
+		wordCount: number;        // Default: 0.3 (30%)
+		linkCount: number;        // Default: 0.2 (20%)
+		headingCount: number;     // Default: 0.1 (10%)
+	};
+}
+
 export interface DepthMappingConfig {
 	// Instrument assignment by depth
 	instrumentsByDepth: {
@@ -54,6 +93,9 @@ export interface DepthMappingConfig {
 
 	// Maximum nodes per depth (performance limit)
 	maxNodesPerDepth: number | 'all'; // Default: 100, 'all' for unlimited
+
+	// Configurable mapping weights for extensible musical mapping
+	mappingWeights?: MappingWeights;
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -137,7 +179,33 @@ export class DepthBasedMapper {
 				outgoingLinks: 0.7,
 				bidirectional: 0.0
 			},
-			maxNodesPerDepth: config.maxNodesPerDepth || 100 // Default to 100, can be 'all' for unlimited
+			maxNodesPerDepth: config.maxNodesPerDepth || 100, // Default to 100, can be 'all' for unlimited
+			mappingWeights: config.mappingWeights || {
+				duration: {
+					wordCount: 0.4,
+					charCount: 0.3,
+					headingCount: 0.2,
+					linkCount: 0.1
+				},
+				pitch: {
+					wordCount: 0.3,
+					charCount: 0.2,
+					headingLevel: 0.25,
+					linkDensity: 0.25
+				},
+				instrument: {
+					depth: 0.5,
+					tagCount: 0.2,
+					folderDepth: 0.15,
+					nodeIdHash: 0.15
+				},
+				velocity: {
+					recency: 0.4,
+					wordCount: 0.3,
+					linkCount: 0.2,
+					headingCount: 0.1
+				}
+			}
 		};
 	}
 
@@ -335,19 +403,43 @@ export class DepthBasedMapper {
 	}
 
 	/**
-	 * Calculate pitch offset within range based on node properties
+	 * Calculate pitch offset within range using weighted combination of node properties
+	 * Uses configurable weights from mappingWeights.pitch
 	 * Applies ±2 semitone randomization if seed is set
 	 */
 	private calculatePitchOffset(
 		node: LocalSoundscapeNode,
 		range: { min: number; max: number }
 	): number {
-		// Use word count to determine pitch within range
-		// More words = higher pitch within the range
-		const wordCountNormalized = Math.min(node.wordCount / 1000, 1); // Cap at 1000 words
+		const weights = this.config.mappingWeights!.pitch;
+
+		// Calculate normalized factors (0-1 range)
+		const wordCountFactor = Math.min(node.wordCount / 1000, 1); // Cap at 1000 words
+		const charCountFactor = node.charCount ? Math.min(node.charCount / 5000, 1) : 0; // Cap at 5000 chars
+
+		// Average heading level (1-6 normalized to 0-1)
+		let headingLevelFactor = 0;
+		if (node.headings && node.headings.count > 0) {
+			const avgLevel = node.headings.levels.reduce((sum, level) => sum + level, 0) / node.headings.count;
+			headingLevelFactor = 1 - (avgLevel / 6); // H1 = 1.0, H6 = 0.0
+		}
+
+		// Link density (links per word)
+		let linkDensityFactor = 0;
+		if (node.linkCount && node.wordCount > 0) {
+			linkDensityFactor = Math.min(node.linkCount / node.wordCount * 10, 1); // Cap at 10% link density
+		}
+
+		// Weighted combination
+		const combinedFactor = (
+			(wordCountFactor * weights.wordCount) +
+			(charCountFactor * weights.charCount) +
+			(headingLevelFactor * weights.headingLevel) +
+			(linkDensityFactor * weights.linkDensity)
+		);
 
 		const rangeSpan = range.max - range.min;
-		let offset = range.min + (wordCountNormalized * rangeSpan);
+		let offset = range.min + (combinedFactor * rangeSpan);
 
 		// Apply randomization if seed is set (±2 semitones)
 		if (this.randomizationSeed !== null) {
@@ -370,21 +462,47 @@ export class DepthBasedMapper {
 	}
 
 	/**
-	 * Select instrument from pool based on node properties
+	 * Select instrument from pool using weighted combination of node properties
+	 * Uses configurable weights from mappingWeights.instrument
 	 * Applies randomization if seed is set
 	 */
 	private selectInstrument(node: LocalSoundscapeNode, instruments: string[]): string {
-		// Base instrument selection using node ID hash
-		let hash = this.hashString(node.id);
+		const weights = this.config.mappingWeights!.instrument;
+
+		// Calculate normalized factors (0-1 range)
+		// Depth factor (already 0-3, normalize to 0-1)
+		const depthFactor = node.depth / 3;
+
+		// Tag count factor
+		const tagCountFactor = node.tags ? Math.min(node.tags.length / 5, 1) : 0; // Cap at 5 tags
+
+		// Folder depth factor (path separators)
+		const folderDepthFactor = Math.min(node.path.split('/').length / 5, 1); // Cap at 5 levels
+
+		// Node ID hash factor (for variation)
+		const nodeIdHashFactor = (this.hashString(node.id) % 1000) / 1000; // Normalize hash to 0-1
+
+		// Weighted combination
+		const combinedFactor = (
+			(depthFactor * weights.depth) +
+			(tagCountFactor * weights.tagCount) +
+			(folderDepthFactor * weights.folderDepth) +
+			(nodeIdHashFactor * weights.nodeIdHash)
+		);
+
+		// Convert combined factor to instrument index
+		let index = Math.floor(combinedFactor * instruments.length);
 
 		// Apply randomization if seed is set
 		if (this.randomizationSeed !== null) {
 			const randomOffset = this.seededRandom(node.id, 'instrument');
 			// Add random offset (0-1) scaled to instrument count
-			hash += Math.floor(randomOffset * instruments.length);
+			index += Math.floor(randomOffset * instruments.length);
 		}
 
-		const index = hash % instruments.length;
+		// Ensure index is within bounds
+		index = index % instruments.length;
+
 		return instruments[index];
 	}
 
@@ -411,33 +529,68 @@ export class DepthBasedMapper {
 	}
 
 	/**
-	 * Calculate note duration based on word count
+	 * Calculate note duration using weighted combination of node properties
+	 * Uses configurable weights from mappingWeights.duration
 	 */
 	private calculateDuration(node: LocalSoundscapeNode): number {
-		// Reduced durations to prevent CPU overload and audio crackling
-		// Base duration: 1.0 to 3.0 seconds based on word count
+		// Duration range: 1.0 to 3.0 seconds
 		// This allows up to 6 overlapping voices per instrument (3s / 0.5s spacing)
 		const minDuration = 1.0;
 		const maxDuration = 3.0;
 
-		const wordCountNormalized = Math.min(node.wordCount / 500, 1); // Cap at 500 words
-		const duration = minDuration + (wordCountNormalized * (maxDuration - minDuration));
+		const weights = this.config.mappingWeights!.duration;
+
+		// Calculate normalized factors (0-1 range)
+		const wordCountFactor = Math.min(node.wordCount / 500, 1); // Cap at 500 words
+		const charCountFactor = node.charCount ? Math.min(node.charCount / 2500, 1) : 0; // Cap at 2500 chars
+		const headingCountFactor = node.headings ? Math.min(node.headings.count / 10, 1) : 0; // Cap at 10 headings
+		const linkCountFactor = node.linkCount ? Math.min(node.linkCount / 20, 1) : 0; // Cap at 20 links
+
+		// Weighted combination
+		const combinedFactor = (
+			(wordCountFactor * weights.wordCount) +
+			(charCountFactor * weights.charCount) +
+			(headingCountFactor * weights.headingCount) +
+			(linkCountFactor * weights.linkCount)
+		);
+
+		const duration = minDuration + (combinedFactor * (maxDuration - minDuration));
 
 		return duration;
 	}
 
 	/**
-	 * Calculate velocity based on modification recency
+	 * Calculate velocity using weighted combination of node properties
+	 * Uses configurable weights from mappingWeights.velocity
 	 */
 	private calculateVelocity(node: LocalSoundscapeNode): number {
-		// Recent modifications = higher velocity (louder/brighter)
+		const weights = this.config.mappingWeights!.velocity;
+
+		// Calculate normalized factors (0-1 range)
+		// Recency factor (recently modified = higher velocity)
 		const now = Date.now();
 		const daysSinceModified = (now - node.modified) / (1000 * 60 * 60 * 24);
+		const recencyFactor = Math.max(0, 1.0 - (daysSinceModified / 30)); // Fresh (0 days) = 1.0, Old (30+ days) = 0.0
 
-		// Map to 0.3 to 1.0 range
-		// Fresh (0 days) = 1.0
-		// Old (30+ days) = 0.3
-		const velocity = Math.max(0.3, 1.0 - (daysSinceModified / 30) * 0.7);
+		// Word count factor
+		const wordCountFactor = Math.min(node.wordCount / 500, 1); // Cap at 500 words
+
+		// Link count factor
+		const linkCountFactor = node.linkCount ? Math.min(node.linkCount / 20, 1) : 0; // Cap at 20 links
+
+		// Heading count factor
+		const headingCountFactor = node.headings ? Math.min(node.headings.count / 10, 1) : 0; // Cap at 10 headings
+
+		// Weighted combination
+		const combinedFactor = (
+			(recencyFactor * weights.recency) +
+			(wordCountFactor * weights.wordCount) +
+			(linkCountFactor * weights.linkCount) +
+			(headingCountFactor * weights.headingCount)
+		);
+
+		// Map to 0.3 to 1.0 range (minimum velocity to ensure audibility)
+		const velocity = 0.3 + (combinedFactor * 0.7);
 
 		return velocity;
 	}

@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-11-06 01:16:02 UTC
+ * - Generated: 2025-11-07 22:08:41 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -10082,7 +10082,7 @@ details.osp-advanced-settings {
    COMPONENT: LOCAL-SOUNDSCAPE.CSS
    ========================================================================== */
 
-/* Component Size: 1061 lines, 21.94 KB */
+/* Component Size: 1180 lines, 25.02 KB */
 
 /* ================================================================
    Local Soundscape View Styles
@@ -10326,7 +10326,7 @@ details.osp-advanced-settings {
 
 .sidebar-tab {
 	flex: 1;
-	padding: 10px;
+	padding: 12px 16px;
 	border: none;
 	background: transparent;
 	color: var(--text-muted);
@@ -10334,16 +10334,18 @@ details.osp-advanced-settings {
 	font-size: 13px;
 	font-weight: 500;
 	transition: all 0.2s ease;
-	border-bottom: 2px solid transparent;
+	border-bottom: 3px solid transparent;
+	position: relative;
 }
 
-.sidebar-tab:hover {
+.sidebar-tab:hover:not(.active) {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
 .sidebar-tab.active {
-	color: var(--text-normal);
+	color: var(--interactive-accent);
+	font-weight: 600;
 	border-bottom-color: var(--interactive-accent);
 	background: var(--background-primary);
 }
@@ -10352,7 +10354,7 @@ details.osp-advanced-settings {
 .sidebar-content {
 	display: none;
 	flex: 1;
-	padding: 16px;
+	padding: 20px 18px;
 	overflow-y: auto;
 }
 
@@ -10363,8 +10365,8 @@ details.osp-advanced-settings {
 /* Playback controls */
 .playback-buttons {
 	display: flex;
-	gap: 8px;
-	margin-bottom: 16px;
+	gap: 10px;
+	margin-bottom: 20px;
 }
 
 .playback-button {
@@ -10372,8 +10374,8 @@ details.osp-advanced-settings {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	padding: 10px 16px;
+	gap: 8px;
+	padding: 12px 18px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
 	background: var(--background-primary);
@@ -10384,20 +10386,63 @@ details.osp-advanced-settings {
 	transition: all 0.2s ease;
 }
 
+/* Primary button style (Play) */
+.playback-button.play-button:not(:disabled):not(.playing) {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	font-weight: 600;
+}
+
+.playback-button.play-button:not(:disabled):not(.playing):hover {
+	background: var(--interactive-accent-hover);
+	border-color: var(--interactive-accent-hover);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Secondary button style (Stop) */
+.playback-button.stop-button:not(:disabled) {
+	background: transparent;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.playback-button.stop-button:not(:disabled):hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--text-muted);
+}
+
+/* Tertiary button style (Export Audio - not yet functional) */
+.playback-button.export-audio-button {
+	background: transparent;
+	border: 1px solid var(--background-modifier-border);
+	opacity: 0.7;
+}
+
+.playback-button.export-audio-button:not(:disabled):hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+	opacity: 1;
+}
+
 .playback-button:hover:not(:disabled) {
 	background: var(--background-modifier-hover);
 	border-color: var(--interactive-accent);
 }
 
 .playback-button:disabled {
-	opacity: 0.5;
+	opacity: 0.4;
 	cursor: not-allowed;
 }
 
 .playback-button.playing {
-	background: var(--interactive-accent);
+	background: var(--background-modifier-error);
 	color: var(--text-on-accent);
-	border-color: var(--interactive-accent);
+	border-color: var(--background-modifier-error);
+}
+
+.playback-button.playing:hover {
+	background: var(--background-modifier-error-hover);
 }
 
 .playback-button svg {
@@ -10405,23 +10450,52 @@ details.osp-advanced-settings {
 	height: 20px;
 }
 
-/* Variation controls */
+/* Variation controls - inline with playback buttons */
 .variation-controls {
+	flex: 1;
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 8px 12px;
+	padding: 12px 14px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
 	background: var(--background-primary-alt);
-	margin-top: 8px;
+	transition: all 0.2s ease;
+}
+
+.variation-controls:hover {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
 }
 
 .variation-button {
 	flex: unset !important;
-	padding: 6px 10px !important;
+	padding: 8px 12px !important;
 	min-width: unset !important;
 	border-radius: 4px;
+	background: var(--background-primary) !important;
+	transition: all 0.15s ease !important;
+}
+
+.variation-button:not(:disabled):hover {
+	transform: scale(1.05);
+	background: var(--interactive-accent) !important;
+	color: var(--text-on-accent) !important;
+}
+
+.variation-button:disabled {
+	opacity: 0.25 !important;
+	cursor: not-allowed !important;
+	filter: grayscale(0.5);
+}
+
+.reroll-button.rerolling {
+	animation: rotate 1s ease-in-out;
+}
+
+@keyframes rotate {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }
 
 .variation-button svg {
@@ -10430,27 +10504,29 @@ details.osp-advanced-settings {
 }
 
 .variation-display {
-	font-size: 12px;
-	font-weight: 500;
-	color: var(--text-muted);
-	min-width: 100px;
+	flex: 1;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
 	text-align: center;
 	user-select: none;
+	letter-spacing: 0.3px;
 }
 
 /* Playback stats */
 .playback-stats {
-	margin-bottom: 16px;
-	padding: 12px;
+	margin-bottom: 20px;
+	padding: 14px 16px;
 	background: var(--background-primary-alt);
 	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
 }
 
 .playback-stats .stat-item {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 6px 0;
+	padding: 8px 0;
 }
 
 .playback-stats .stat-item:not(:last-child) {
@@ -10458,18 +10534,44 @@ details.osp-advanced-settings {
 }
 
 .playback-stats .stat-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
 	font-size: 12px;
+	font-weight: 500;
 	color: var(--text-muted);
 }
 
+.playback-stats .stat-icon {
+	flex-shrink: 0;
+	opacity: 0.7;
+}
+
 .playback-stats .stat-value {
-	font-size: 14px;
-	font-weight: 600;
+	font-size: 15px;
+	font-weight: 700;
 	color: var(--text-normal);
+	font-variant-numeric: tabular-nums;
 }
 
 .playback-stats .voice-count {
 	color: var(--color-green);
+}
+
+.playback-stats .voice-count:not(:empty)::before {
+	content: '';
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--color-green);
+	margin-right: 6px;
+	animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
 }
 
 .playback-stats .volume-level {
@@ -11106,33 +11208,49 @@ details.osp-advanced-settings {
    ================================================================ */
 
 .local-soundscape-visualization-section {
-	margin-top: 20px;
-	padding: 16px 0;
-	border-top: 1px solid var(--background-modifier-border);
+	margin-top: 24px;
+	padding-top: 20px;
+	border-top: 2px solid var(--background-modifier-border);
 }
 
 .visualization-mode-selector {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	margin-bottom: 12px;
-	padding: 0 16px;
+	gap: 12px;
+	margin-bottom: 16px;
 }
 
 .visualization-mode-selector .mode-label {
-	font-size: 12px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 	color: var(--text-muted);
 	white-space: nowrap;
 }
 
 .visualization-mode-selector .mode-select {
-	padding: 4px 8px;
+	flex: 1;
+	padding: 6px 10px;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
+	border-radius: 6px;
 	background: var(--background-primary);
 	color: var(--text-normal);
-	font-size: 12px;
+	font-size: 13px;
+	font-weight: 500;
 	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.visualization-mode-selector .mode-select:hover {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.visualization-mode-selector .mode-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-hover);
 }
 
 .local-soundscape-visualization-container {
@@ -11140,9 +11258,10 @@ details.osp-advanced-settings {
 	height: 200px;
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
+	border-radius: 6px;
 	overflow: hidden;
 	position: relative;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -12800,11 +12919,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-11-06 01:16:02 UTC
+ * Build completed: 2025-11-07 22:08:41 UTC
  * Components processed: 21
- * Total lines: 12585
- * Total size: 267.02 KB
- * Build duration: 0.02 seconds
+ * Total lines: 12704
+ * Total size: 270.1 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -12822,7 +12941,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 901 lines, 21.72 KB
  * - sonic-graph.css: 3365 lines, 72.4 KB
- * - local-soundscape.css: 1061 lines, 21.94 KB
+ * - local-soundscape.css: 1180 lines, 25.02 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB

@@ -199,8 +199,23 @@ export class StaffRenderer implements VisualizationRenderer {
             'percussion': '#EF4444'
         };
 
-        // Group events by timestamp to detect chords (within 20ms)
-        const chordGroups = this.groupNotesIntoChords(events, 20);
+        // Group events by timestamp to detect chords (within 100ms for more tolerance)
+        const chordGroups = this.groupNotesIntoChords(events, 100);
+
+        // Debug: Log chord detection and timestamps
+        const chordsFound = chordGroups.filter(g => g.length > 1).length;
+        if (events.length > 1) {
+            const timestamps = events.slice(0, 10).map(e => e.timestamp.toFixed(3)).join(', ');
+            const sortedEvents = [...events].sort((a, b) => a.timestamp - b.timestamp);
+            const timeDiffs = sortedEvents.length > 1
+                ? sortedEvents.slice(1).map((e, i) => ((e.timestamp - sortedEvents[i].timestamp) * 1000).toFixed(1) + 'ms')
+                : [];
+            logger.debug('staff-chords', `Events: ${events.length}, Chords found: ${chordsFound}, Groups: ${chordGroups.length}`);
+            logger.debug('staff-timestamps', `First 10 timestamps: [${timestamps}]`);
+            if (timeDiffs.length > 0) {
+                logger.debug('staff-time-diffs', `First 10 time differences: [${timeDiffs.slice(0, 10).join(', ')}]`);
+            }
+        }
 
         chordGroups.forEach(group => {
             const isChord = group.length > 1;

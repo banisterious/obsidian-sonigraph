@@ -854,6 +854,12 @@ export interface SonigraphSettings {
 
 	// Phase 2: Local Soundscape - Depth-based audio mapping
 	localSoundscape?: {
+		autoPlayActiveNote?: boolean; // Automatically play soundscape when active note changes (default: false)
+		keySelection?: {
+			mode?: 'vault-name' | 'root-folder' | 'folder-path' | 'full-path' | 'file-name' | 'custom'; // How to determine musical key
+			folderDepth?: number; // When mode is 'folder-path', which depth level to use (0 = root, 1 = first subfolder, etc.)
+			customKey?: string; // When mode is 'custom', the user-specified key (e.g., 'C', 'D', 'F#')
+		};
 		instrumentsByDepth?: {
 			center?: string[];
 			depth1?: string[];
@@ -886,6 +892,34 @@ export interface SonigraphSettings {
 			method?: 'none' | 'folder' | 'tag' | 'depth' | 'community'; // Clustering method
 			showLabels?: boolean; // Show cluster labels
 			showBackgrounds?: boolean; // Show cluster background shapes
+		};
+		// Phase 2 Enhancement: Extensible Musical Mapping System
+		enableRichMetadata?: boolean; // Enable extraction of extended node properties (charCount, headings, links, tags)
+		mappingWeights?: {
+			duration?: {
+				wordCount?: number;    // Weight for word count in duration calculation (0-1)
+				charCount?: number;    // Weight for character count in duration calculation (0-1)
+				headingCount?: number; // Weight for heading count in duration calculation (0-1)
+				linkCount?: number;    // Weight for link count in duration calculation (0-1)
+			};
+			pitch?: {
+				wordCount?: number;     // Weight for word count in pitch calculation (0-1)
+				charCount?: number;     // Weight for character count in pitch calculation (0-1)
+				headingLevel?: number;  // Weight for average heading level in pitch calculation (0-1)
+				linkDensity?: number;   // Weight for link density in pitch calculation (0-1)
+			};
+			instrument?: {
+				depth?: number;        // Weight for depth in instrument selection (0-1)
+				tagCount?: number;     // Weight for tag count in instrument selection (0-1)
+				folderDepth?: number;  // Weight for folder depth in instrument selection (0-1)
+				nodeIdHash?: number;   // Weight for node ID hash (variation) in instrument selection (0-1)
+			};
+			velocity?: {
+				recency?: number;       // Weight for modification recency in velocity calculation (0-1)
+				wordCount?: number;     // Weight for word count in velocity calculation (0-1)
+				linkCount?: number;     // Weight for link count in velocity calculation (0-1)
+				headingCount?: number;  // Weight for heading count in velocity calculation (0-1)
+			};
 		};
 	};
 }
@@ -2892,6 +2926,28 @@ export const MUSICAL_SCALES = {
 };
 
 export const ROOT_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+/**
+ * Convert a string to a musical key (root note)
+ * Uses a simple hash algorithm to deterministically map strings to keys
+ */
+export function stringToMusicalKey(input: string): string {
+	if (!input || input.length === 0) {
+		return 'C'; // Default to C if no input
+	}
+
+	// Simple hash function
+	let hash = 0;
+	for (let i = 0; i < input.length; i++) {
+		const char = input.charCodeAt(i);
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash; // Convert to 32-bit integer
+	}
+
+	// Map hash to root note index (0-11)
+	const index = Math.abs(hash) % ROOT_NOTES.length;
+	return ROOT_NOTES[index];
+}
 
 export const TRAVERSAL_METHODS = ['breadth-first', 'depth-first', 'sequential'];
 

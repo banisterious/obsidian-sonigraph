@@ -676,9 +676,10 @@ depthBasedMapping: {
   - Node updates: 500ms easeCubicInOut for graph changes
 - ✅ Export audio: UI button added with placeholder for future offline rendering
 - ✅ Settings panel enhancements:
-  - Audio section: Auto-play toggle
+  - Audio section: Auto-play toggle, Auto-play active note toggle
   - Display section: Node size mode selector
-  - Visual Effects section: Functional pulse toggle
+  - Musical key section: Configurable key selection with 6 modes
+  - Visual effects section: Functional pulse toggle (using Obsidian-style toggles)
   - Clean, organized layout with proper styling
 - ✅ Musical variation system (re-roll feature):
   - Seeded randomization in DepthBasedMapper (instruments, pitch ±2 semitones, timing ±50ms)
@@ -686,6 +687,24 @@ depthBasedMapping: {
   - UI controls: Previous button, Re-roll button, variation counter
   - Per-note persistence of variation history
   - Reproducible variations using timestamp-based seeds
+- ✅ Auto-play active note feature:
+  - Monitors active-leaf-change events to detect focus changes
+  - Manual "Play Active Note" button with Lucide music icon
+  - Optional auto-play setting (opt-in, default disabled)
+  - Smart duplicate prevention (doesn't retrigger if already center)
+  - Seamless integration with existing playback system
+- ✅ Musical key selection system:
+  - Six determination modes: vault-name, root-folder, folder-path, full-path, file-name, custom
+  - Deterministic string-to-key hashing algorithm (all 12 keys)
+  - Folder depth slider for folder-path mode (0-5 levels)
+  - Custom key dropdown for manual selection
+  - Real-time key display with automatic updates
+  - Smart UI: conditional visibility based on selected mode
+- ✅ UI improvements:
+  - Converted all checkboxes to Obsidian-style toggle switches
+  - Lucide icon integration for buttons (music icon for Play Active Note)
+  - Proper Setting component usage throughout
+  - Consistent with Obsidian's native UI patterns
 
 **Total Estimate:** 7-9 weeks
 

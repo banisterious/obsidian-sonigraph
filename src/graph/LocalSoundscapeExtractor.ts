@@ -23,6 +23,20 @@ export interface LocalSoundscapeNode {
 	y?: number;  // Will be set by layout algorithm
 	cluster?: string;  // Cluster ID this node belongs to
 	linkCount?: number;  // Number of links (for community detection)
+
+	// Extended properties for configurable musical mapping
+	charCount?: number;  // Character count of note content
+	headings?: {
+		count: number;
+		levels: number[];  // Heading levels (1-6)
+		text: string[];    // Heading text content
+	};
+	links?: {
+		incoming: Array<{path: string; text: string}>;
+		outgoing: Array<{path: string; text: string}>;
+	};
+	tags?: string[];  // All tags (from body and frontmatter)
+	frontmatter?: Record<string, any>;  // Frontmatter properties
 }
 
 export interface LocalSoundscapeLink {
@@ -70,10 +84,21 @@ export class LocalSoundscapeExtractor {
 	private app: App;
 	private filters: LocalSoundscapeFilters;
 	private clusteringMethod: ClusteringMethod = 'none';
+	private enableRichMetadata: boolean = false;  // Enable extended property extraction
 
 	constructor(app: App) {
 		this.app = app;
 		this.filters = {};
+	}
+
+	/**
+	 * Enable or disable rich metadata extraction
+	 * When enabled, extracts charCount, headings, detailed links, tags, and frontmatter
+	 * When disabled, uses fast approximation (default)
+	 */
+	setRichMetadataExtraction(enabled: boolean): void {
+		this.enableRichMetadata = enabled;
+		logger.info('rich-metadata-config', 'Rich metadata extraction configured', { enabled });
 	}
 
 	/**
@@ -111,7 +136,7 @@ export class LocalSoundscapeExtractor {
 		const nodeDirections = new Map<string, 'incoming' | 'outgoing' | 'bidirectional'>();
 
 		// Create center node
-		const centerNode = this.createNode(centerFile, 0, 'center');
+		const centerNode = await this.createNode(centerFile, 0, 'center');
 		allNodes.push(centerNode);
 		visitedNodes.add(centerFile.path);
 		nodesByDepth.set(0, [centerNode]);
@@ -191,7 +216,7 @@ export class LocalSoundscapeExtractor {
 					nodeDirections.set(linkedFile.path, direction);
 
 					// Create node
-					const node = this.createNode(linkedFile, depth + 1, direction);
+					const node = await this.createNode(linkedFile, depth + 1, direction);
 					allNodes.push(node);
 
 					if (!nodesByDepth.has(depth + 1)) {
@@ -259,7 +284,7 @@ export class LocalSoundscapeExtractor {
 						nodeDirections.set(backlinkPath, direction);
 
 						// Create node
-						const node = this.createNode(backlinkFile, depth + 1, direction);
+						const node = await this.createNode(backlinkFile, depth + 1, direction);
 						allNodes.push(node);
 
 						if (!nodesByDepth.has(depth + 1)) {
@@ -336,27 +361,135 @@ export class LocalSoundscapeExtractor {
 
 	/**
 	 * Create a node from a file
-	 * Note: Word count is approximated from file size to avoid slow file reads
+	 * Note: Word count is approximated from file size by default to avoid slow file reads
+	 * When rich metadata is enabled, reads file content to extract extended properties
 	 */
-	private createNode(
+	private async createNode(
 		file: TFile,
 		depth: number,
 		direction: 'center' | 'incoming' | 'outgoing' | 'bidirectional'
-	): LocalSoundscapeNode {
-		// Approximate word count from file size (avg ~5 bytes per word)
-		// This is MUCH faster than reading every file
-		const wordCount = Math.floor(file.stat.size / 5);
-
-		return {
+	): Promise<LocalSoundscapeNode> {
+		// Base node with fast approximation
+		const node: LocalSoundscapeNode = {
 			id: file.path,
 			path: file.path,
 			basename: file.basename,
 			depth,
 			direction,
-			wordCount,
+			wordCount: Math.floor(file.stat.size / 5),  // Fast approximation (avg ~5 bytes per word)
 			created: file.stat.ctime,
 			modified: file.stat.mtime
 		};
+
+		// If rich metadata extraction is disabled, return fast version
+		if (!this.enableRichMetadata) {
+			return node;
+		}
+
+		// Rich metadata extraction - read file content
+		try {
+			const content = await this.app.vault.read(file);
+			const cache = this.app.metadataCache.getFileCache(file);
+
+			// Accurate character count
+			node.charCount = content.length;
+
+			// Accurate word count (override approximation)
+			node.wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+
+			// Extract headings
+			if (cache?.headings && cache.headings.length > 0) {
+				node.headings = {
+					count: cache.headings.length,
+					levels: cache.headings.map(h => h.level),
+					text: cache.headings.map(h => h.heading)
+				};
+			}
+
+			// Extract detailed link information
+			const incomingLinks: Array<{path: string; text: string}> = [];
+			const outgoingLinks: Array<{path: string; text: string}> = [];
+
+			// Outgoing links
+			if (cache?.links) {
+				for (const link of cache.links) {
+					const linkedFile = this.app.metadataCache.getFirstLinkpathDest(link.link, file.path);
+					if (linkedFile) {
+						outgoingLinks.push({
+							path: linkedFile.path,
+							text: link.displayText || link.link
+						});
+					}
+				}
+			}
+
+			// Incoming links (backlinks)
+			const backlinks = this.app.metadataCache.getBacklinksForFile(file);
+			if (backlinks) {
+				for (const [backlinkPath, backlinkData] of backlinks.entries()) {
+					const backlinkFile = this.app.vault.getAbstractFileByPath(backlinkPath);
+					if (backlinkFile instanceof TFile) {
+						// Get link text from backlink file cache
+						const backlinkCache = this.app.metadataCache.getFileCache(backlinkFile);
+						let linkText = file.basename;  // Default to basename
+
+						if (backlinkCache?.links) {
+							const linkToThisFile = backlinkCache.links.find(l => {
+								const dest = this.app.metadataCache.getFirstLinkpathDest(l.link, backlinkPath);
+								return dest?.path === file.path;
+							});
+							if (linkToThisFile) {
+								linkText = linkToThisFile.displayText || linkToThisFile.link;
+							}
+						}
+
+						incomingLinks.push({
+							path: backlinkPath,
+							text: linkText
+						});
+					}
+				}
+			}
+
+			if (incomingLinks.length > 0 || outgoingLinks.length > 0) {
+				node.links = { incoming: incomingLinks, outgoing: outgoingLinks };
+			}
+
+			// Extract all tags (from body and frontmatter)
+			const allTags = new Set<string>();
+			if (cache?.tags) {
+				cache.tags.forEach(tagCache => {
+					const tag = tagCache.tag.startsWith('#') ? tagCache.tag.slice(1) : tagCache.tag;
+					allTags.add(tag);
+				});
+			}
+			if (cache?.frontmatter?.tags) {
+				const fmTags = cache.frontmatter.tags;
+				if (Array.isArray(fmTags)) {
+					fmTags.forEach(tag => allTags.add(tag));
+				} else if (typeof fmTags === 'string') {
+					allTags.add(fmTags);
+				}
+			}
+			if (allTags.size > 0) {
+				node.tags = Array.from(allTags);
+			}
+
+			// Extract frontmatter
+			if (cache?.frontmatter && Object.keys(cache.frontmatter).length > 0) {
+				// Clone frontmatter to avoid reference issues
+				node.frontmatter = { ...cache.frontmatter };
+			}
+
+		} catch (error) {
+			logger.warn('rich-metadata-extraction-failed', 'Failed to extract rich metadata', {
+				file: file.path,
+				error: (error as Error).message
+			});
+			// Return base node with fast approximation if extraction fails
+		}
+
+		return node;
 	}
 
 	/**

@@ -9,7 +9,7 @@
  */
 
 import * as d3 from 'd3';
-import { LocalSoundscapeData, LocalSoundscapeNode, LocalSoundscapeLink } from './LocalSoundscapeExtractor';
+import { LocalSoundscapeData, LocalSoundscapeNode, LocalSoundscapeLink, LocalSoundscapeCluster } from './LocalSoundscapeExtractor';
 import { RadialLayoutAlgorithm, RadialLayoutConfig } from './RadialLayoutAlgorithm';
 import { getLogger } from '../logging';
 
@@ -21,6 +21,7 @@ export interface RendererConfig {
 	nodeRadius: number;
 	showLabels: boolean;
 	enableZoom: boolean;
+	nodeSizeMode?: 'uniform' | 'link-count' | 'content-length';
 }
 
 export class LocalSoundscapeRenderer {
@@ -31,6 +32,7 @@ export class LocalSoundscapeRenderer {
 	private config: RendererConfig;
 	private layoutAlgorithm: RadialLayoutAlgorithm;
 
+	private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 	private linkGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 	private nodeGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 	private labelGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
@@ -101,6 +103,7 @@ export class LocalSoundscapeRenderer {
 		this.g = this.svg.append('g');
 
 		// Create groups for rendering (order matters for z-index)
+		this.clusterGroup = this.g.append('g').attr('class', 'clusters');
 		this.linkGroup = this.g.append('g').attr('class', 'links');
 		this.nodeGroup = this.g.append('g').attr('class', 'nodes');
 		this.labelGroup = this.g.append('g').attr('class', 'labels');
@@ -135,8 +138,18 @@ export class LocalSoundscapeRenderer {
 
 		this.data = data;
 
-		// Apply layout to position nodes
-		this.layoutAlgorithm.applyLayout(data);
+		// Apply layout to position nodes (only if nodes don't already have positions)
+		const needsLayout = data.allNodes.some(n => n.x === undefined || n.y === undefined);
+		if (needsLayout) {
+			this.layoutAlgorithm.applyLayout(data);
+		} else {
+			logger.debug('skip-layout', 'Nodes already have positions, skipping layout');
+		}
+
+		// Render clusters if available (before links and nodes for proper layering)
+		if (data.clusters && data.clusters.length > 0) {
+			this.renderClusters(data.clusters, data.allNodes);
+		}
 
 		// Render links
 		this.renderLinks(data.links);
@@ -169,33 +182,43 @@ export class LocalSoundscapeRenderer {
 			.selectAll('line')
 			.data(links, (d: any) => d.id);
 
-		// Enter + Update
-		linkSelection.enter()
+		// Enter (new links)
+		const linkEnter = linkSelection.enter()
 			.append('line')
-			.merge(linkSelection as any)
 			.attr('class', (d) => `link link-${d.direction}`)
-			.attr('x1', (d) => {
+			.attr('stroke', (d) => this.getLinkColor(d.direction))
+			.attr('stroke-width', 1.5)
+			.attr('stroke-opacity', 0); // Start invisible
+
+		// Update (enter + existing links)
+		linkEnter.merge(linkSelection as any)
+			.transition()
+			.duration(500)
+			.ease(d3.easeCubicInOut)
+			.attr('x1', (d: any) => {
 				const source = this.findNode(d.source);
 				return source?.x || 0;
 			})
-			.attr('y1', (d) => {
+			.attr('y1', (d: any) => {
 				const source = this.findNode(d.source);
 				return source?.y || 0;
 			})
-			.attr('x2', (d) => {
+			.attr('x2', (d: any) => {
 				const target = this.findNode(d.target);
 				return target?.x || 0;
 			})
-			.attr('y2', (d) => {
+			.attr('y2', (d: any) => {
 				const target = this.findNode(d.target);
 				return target?.y || 0;
 			})
-			.attr('stroke', (d) => this.getLinkColor(d.direction))
-			.attr('stroke-width', 1.5)
 			.attr('stroke-opacity', 0.4);
 
-		// Exit
-		linkSelection.exit().remove();
+		// Exit (removed links)
+		linkSelection.exit()
+			.transition()
+			.duration(300)
+			.attr('stroke-opacity', 0)
+			.remove();
 
 		logger.debug('links-rendered', `Rendered ${links.length} links`);
 	}
@@ -208,25 +231,42 @@ export class LocalSoundscapeRenderer {
 			.selectAll('circle')
 			.data(nodes, (d: any) => d.id);
 
-		// Enter + Update
-		nodeSelection.enter()
+		// Enter (new nodes)
+		const nodeEnter = nodeSelection.enter()
 			.append('circle')
-			.merge(nodeSelection as any)
 			.attr('class', (d) => `node node-${d.direction} node-depth-${d.depth}`)
 			.attr('cx', (d) => d.x || 0)
 			.attr('cy', (d) => d.y || 0)
-			.attr('r', (d) => d.depth === 0 ? this.config.nodeRadius * 1.5 : this.config.nodeRadius)
+			.attr('r', 0) // Start at size 0
 			.attr('fill', (d) => this.getNodeColor(d))
 			.attr('stroke', (d) => this.getNodeStroke(d))
 			.attr('stroke-width', (d) => d.depth === 0 ? 3 : 2)
 			.style('cursor', 'pointer')
+			.style('opacity', 0) // Start invisible
 			.on('click', (event, d) => this.handleNodeClick(event, d))
 			.on('contextmenu', (event, d) => this.handleNodeRightClick(event, d))
 			.on('mouseover', (event, d) => this.handleNodeHover(event, d))
 			.on('mouseout', (event, d) => this.handleNodeMouseOut(event, d));
 
-		// Exit
-		nodeSelection.exit().remove();
+		// Update (enter + existing nodes)
+		nodeEnter.merge(nodeSelection as any)
+			.transition()
+			.duration(500)
+			.ease(d3.easeCubicInOut)
+			.attr('cx', (d: any) => d.x || 0)
+			.attr('cy', (d: any) => d.y || 0)
+			.attr('r', (d: any) => this.getNodeRadius(d))
+			.attr('fill', (d: any) => this.getNodeColor(d))
+			.attr('stroke', (d: any) => this.getNodeStroke(d))
+			.style('opacity', 1);
+
+		// Exit (removed nodes)
+		nodeSelection.exit()
+			.transition()
+			.duration(300)
+			.attr('r', 0)
+			.style('opacity', 0)
+			.remove();
 
 		logger.debug('nodes-rendered', `Rendered ${nodes.length} nodes`);
 	}
@@ -239,22 +279,194 @@ export class LocalSoundscapeRenderer {
 			.selectAll('text')
 			.data(nodes, (d: any) => d.id);
 
-		// Enter + Update
-		labelSelection.enter()
+		// Enter (new labels)
+		const labelEnter = labelSelection.enter()
 			.append('text')
-			.merge(labelSelection as any)
 			.attr('class', 'node-label')
 			.attr('x', (d) => d.x || 0)
 			.attr('y', (d) => (d.y || 0) + this.config.nodeRadius + 12)
 			.attr('text-anchor', 'middle')
 			.attr('font-size', '11px')
 			.attr('fill', 'var(--text-muted)')
+			.style('opacity', 0) // Start invisible
 			.text((d) => d.basename);
 
-		// Exit
-		labelSelection.exit().remove();
+		// Update (enter + existing labels)
+		labelEnter.merge(labelSelection as any)
+			.transition()
+			.duration(500)
+			.ease(d3.easeCubicInOut)
+			.attr('x', (d: any) => d.x || 0)
+			.attr('y', (d: any) => (d.y || 0) + this.config.nodeRadius + 12)
+			.style('opacity', 1);
+
+		// Exit (removed labels)
+		labelSelection.exit()
+			.transition()
+			.duration(300)
+			.style('opacity', 0)
+			.remove();
 
 		logger.debug('labels-rendered', `Rendered ${nodes.length} labels`);
+	}
+
+	/**
+	 * Render clusters
+	 */
+	private renderClusters(clusters: LocalSoundscapeCluster[], nodes: LocalSoundscapeNode[]): void {
+		// Calculate bounding boxes for each cluster
+		interface ClusterBounds {
+			cluster: LocalSoundscapeCluster;
+			minX: number;
+			minY: number;
+			maxX: number;
+			maxY: number;
+			centerX: number;
+			centerY: number;
+		}
+
+		const clusterBounds: ClusterBounds[] = clusters.map(cluster => {
+			// Get all nodes in this cluster
+			const clusterNodes = nodes.filter(n => cluster.nodes.includes(n.id));
+
+			if (clusterNodes.length === 0) {
+				return {
+					cluster,
+					minX: 0,
+					minY: 0,
+					maxX: 0,
+					maxY: 0,
+					centerX: 0,
+					centerY: 0
+				};
+			}
+
+			// Calculate bounds with padding
+			const padding = 30;
+			const minX = Math.min(...clusterNodes.map(n => (n.x || 0) - this.config.nodeRadius)) - padding;
+			const minY = Math.min(...clusterNodes.map(n => (n.y || 0) - this.config.nodeRadius)) - padding;
+			const maxX = Math.max(...clusterNodes.map(n => (n.x || 0) + this.config.nodeRadius)) + padding;
+			const maxY = Math.max(...clusterNodes.map(n => (n.y || 0) + this.config.nodeRadius)) + padding;
+
+			const centerX = (minX + maxX) / 2;
+			const centerY = (minY + maxY) / 2;
+
+			return {
+				cluster,
+				minX,
+				minY,
+				maxX,
+				maxY,
+				centerX,
+				centerY
+			};
+		});
+
+		// Render cluster backgrounds
+		const clusterSelection = this.clusterGroup
+			.selectAll('g.cluster')
+			.data(clusterBounds, (d: any) => d.cluster.id);
+
+		// Enter (new clusters)
+		const clusterEnter = clusterSelection.enter()
+			.append('g')
+			.attr('class', 'cluster');
+
+		// Add background rectangle with initial state
+		clusterEnter.append('rect')
+			.attr('class', 'cluster-background')
+			.attr('x', (d: ClusterBounds) => d.centerX)
+			.attr('y', (d: ClusterBounds) => d.centerY)
+			.attr('width', 0)
+			.attr('height', 0)
+			.attr('rx', 12)
+			.attr('ry', 12)
+			.attr('fill-opacity', 0)
+			.attr('stroke-opacity', 0);
+
+		// Add label with initial state
+		clusterEnter.append('text')
+			.attr('class', 'cluster-label')
+			.style('opacity', 0);
+
+		// Update (both enter and existing)
+		const clusterUpdate = clusterEnter.merge(clusterSelection as any);
+
+		// Update background with transition
+		clusterUpdate.select('rect.cluster-background')
+			.transition()
+			.duration(500)
+			.ease(d3.easeCubicInOut)
+			.attr('x', (d: ClusterBounds) => d.minX)
+			.attr('y', (d: ClusterBounds) => d.minY)
+			.attr('width', (d: ClusterBounds) => d.maxX - d.minX)
+			.attr('height', (d: ClusterBounds) => d.maxY - d.minY)
+			.attr('fill', (d: ClusterBounds) => d.cluster.color)
+			.attr('fill-opacity', 0.15)
+			.attr('stroke', (d: ClusterBounds) => d.cluster.color)
+			.attr('stroke-width', 2)
+			.attr('stroke-opacity', 0.4);
+
+		// Update label with transition
+		clusterUpdate.select('text.cluster-label')
+			.transition()
+			.duration(500)
+			.ease(d3.easeCubicInOut)
+			.attr('x', (d: ClusterBounds) => d.centerX)
+			.attr('y', (d: ClusterBounds) => d.minY - 8)
+			.attr('text-anchor', 'middle')
+			.attr('font-size', '13px')
+			.attr('font-weight', 'bold')
+			.attr('fill', (d: ClusterBounds) => d.cluster.color)
+			.attr('fill-opacity', 0.8)
+			.style('opacity', 1)
+			.text((d: ClusterBounds) => d.cluster.label);
+
+		// Exit (removed clusters) with fade out
+		clusterSelection.exit()
+			.transition()
+			.duration(300)
+			.style('opacity', 0)
+			.remove();
+
+		logger.debug('clusters-rendered', `Rendered ${clusters.length} clusters`);
+	}
+
+	/**
+	 * Calculate node radius based on size mode
+	 */
+	private getNodeRadius(node: LocalSoundscapeNode): number {
+		const baseRadius = this.config.nodeRadius;
+		const mode = this.config.nodeSizeMode || 'uniform';
+
+		// Center node is always larger
+		if (node.depth === 0) {
+			return baseRadius * 1.5;
+		}
+
+		switch (mode) {
+			case 'uniform':
+				return baseRadius;
+
+			case 'link-count': {
+				// Scale based on link count (1-3x base radius)
+				const linkCount = node.linkCount || 1;
+				const maxLinks = 20; // Reasonable maximum for scaling
+				const scale = 1 + Math.min(linkCount / maxLinks, 1) * 2; // 1x to 3x
+				return baseRadius * scale;
+			}
+
+			case 'content-length': {
+				// Scale based on word count (1-2.5x base radius)
+				const wordCount = node.wordCount || 100;
+				const maxWords = 2000; // Reasonable maximum for scaling
+				const scale = 1 + Math.min(wordCount / maxWords, 1) * 1.5; // 1x to 2.5x
+				return baseRadius * scale;
+			}
+
+			default:
+				return baseRadius;
+		}
 	}
 
 	/**
@@ -339,9 +551,12 @@ export class LocalSoundscapeRenderer {
 	 * Handle node hover
 	 */
 	private handleNodeHover(event: MouseEvent, node: LocalSoundscapeNode): void {
-		// Highlight node
+		// Highlight node with smooth transition (increase size by 30%)
 		d3.select(event.target as any)
-			.attr('r', (d: any) => (d.depth === 0 ? this.config.nodeRadius * 2 : this.config.nodeRadius * 1.3))
+			.transition()
+			.duration(200)
+			.ease(d3.easeBackOut.overshoot(1.5))
+			.attr('r', (d: any) => this.getNodeRadius(d) * 1.3)
 			.attr('stroke-width', 4);
 
 		// Show tooltip
@@ -354,9 +569,12 @@ export class LocalSoundscapeRenderer {
 	 * Handle node mouse out
 	 */
 	private handleNodeMouseOut(event: MouseEvent, node: LocalSoundscapeNode): void {
-		// Reset node appearance
+		// Reset node appearance with smooth transition
 		d3.select(event.target as any)
-			.attr('r', (d: any) => (d.depth === 0 ? this.config.nodeRadius * 1.5 : this.config.nodeRadius))
+			.transition()
+			.duration(200)
+			.ease(d3.easeCubicOut)
+			.attr('r', (d: any) => this.getNodeRadius(d))
 			.attr('stroke-width', (d: any) => (d.depth === 0 ? 3 : 2));
 
 		// Hide tooltip
@@ -380,12 +598,16 @@ export class LocalSoundscapeRenderer {
 		const translateX = (this.config.width - bounds.width * scale) / 2 - bounds.minX * scale;
 		const translateY = (this.config.height - bounds.height * scale) / 2 - bounds.minY * scale;
 
-		// Apply transform
+		// Apply transform with smooth transition
 		const transform = d3.zoomIdentity
 			.translate(translateX, translateY)
 			.scale(scale);
 
-		this.svg.call(this.zoom.transform, transform);
+		this.svg
+			.transition()
+			.duration(750)
+			.ease(d3.easeCubicInOut)
+			.call(this.zoom.transform, transform);
 
 		logger.debug('fit-to-content', 'Graph fitted to content', { scale, translateX, translateY });
 	}
@@ -510,6 +732,55 @@ export class LocalSoundscapeRenderer {
 		if (this.contextMenu) {
 			this.contextMenu.style.display = 'none';
 		}
+	}
+
+	/**
+	 * Highlight a node as currently playing
+	 */
+	highlightPlayingNode(nodeId: string): void {
+		// Find the node element and add playing class with smooth transition (increase size by 50%)
+		this.nodeGroup
+			.selectAll('circle')
+			.filter((d: any) => d.id === nodeId)
+			.classed('playing', true)
+			.transition()
+			.duration(150)
+			.ease(d3.easeBackOut)
+			.attr('r', (d: any) => this.getNodeRadius(d) * 1.5);
+
+		logger.debug('node-highlight', 'Node highlighted as playing', { nodeId });
+	}
+
+	/**
+	 * Remove highlight from a playing node
+	 */
+	unhighlightPlayingNode(nodeId: string): void {
+		// Find the node element and remove playing class with smooth transition
+		this.nodeGroup
+			.selectAll('circle')
+			.filter((d: any) => d.id === nodeId)
+			.classed('playing', false)
+			.transition()
+			.duration(200)
+			.ease(d3.easeCubicOut)
+			.attr('r', (d: any) => this.getNodeRadius(d));
+
+		logger.debug('node-unhighlight', 'Node unhighlighted', { nodeId });
+	}
+
+	/**
+	 * Clear all playing node highlights
+	 */
+	clearAllPlayingHighlights(): void {
+		this.nodeGroup
+			.selectAll('circle.playing')
+			.classed('playing', false)
+			.transition()
+			.duration(200)
+			.ease(d3.easeCubicOut)
+			.attr('r', (d: any) => this.getNodeRadius(d));
+
+		logger.debug('clear-highlights', 'Cleared all playing node highlights');
 	}
 
 	/**

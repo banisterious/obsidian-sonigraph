@@ -458,8 +458,8 @@ export class PianoRollRenderer implements VisualizationRenderer {
             : currentTime + this.pianoRollConfig.timeWindow;
         const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
 
-        // Group notes into chords (within 20ms)
-        const chordGroups = this.groupNotesIntoChords(events, 20);
+        // Group notes into chords (within 100ms for more tolerance)
+        const chordGroups = this.groupNotesIntoChords(events, 100);
 
         // Draw chord brackets first (so they're behind notes)
         chordGroups.forEach(group => {
