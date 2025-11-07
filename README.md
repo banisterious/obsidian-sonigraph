@@ -131,6 +131,32 @@ Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge
 
 *Experience your sonic graphs visually with three complementary real-time visualization modes.*
 
+### 🌐 Local Soundscape (v0.17.0)
+
+- **Context-Aware Exploration**: Interactive view for exploring notes and their connections
+  - **Depth-Based Visualization**: Radial layout showing connections at multiple depths (0-3)
+  - **Force-Directed Layout**: Physics-based graph arrangement with collision detection
+  - **Smart Clustering**: Automatic grouping by folder, tag, depth, or community detection
+  - **Rich Filtering**: Include/exclude by tags, folders, file types, and link directions
+  - **Musical Variation System**: Re-roll feature for exploring different sonic interpretations
+
+- **Context-Aware Modifiers**: Environmental influences on audio playback
+  - **Season-Based**: Spring (bright, +2 semitones), Summer (energetic, +3), Fall (mellow, -2), Winter (cold, -4)
+  - **Time-Based**: Dawn (+1), Day (neutral), Dusk (-1), Night (-2, ambient with heavy reverb)
+  - **Weather Modifiers**: Clear (bright), Cloudy (muted), Rain (rhythmic), Storm (dramatic), Snow (crystalline)
+  - **Theme Integration**: Light mode (+2, bright timbres), Dark mode (-2, warm tones)
+  - **Configurable Modes**: 'Influenced' (blend with note properties) or 'Only' (pure environmental)
+  - **Adjustable Influence**: 0-100% weight slider with individual factor toggles
+
+- **Advanced Features**
+  - **Auto-Play System**: Automatically play when opening or when focus changes
+  - **Musical Key Selection**: 6 modes (vault name, root folder, folder path, full path, file name, custom)
+  - **Depth-Based Mapping**: Sophisticated audio mapping using node properties and graph structure
+  - **Real-Time Settings**: Comprehensive settings panel with instant updates
+  - **Graph Highlighting**: Visual feedback showing which nodes are currently playing
+
+*Explore your knowledge graph's local context with adaptive, environment-aware soundscapes.*
+
 ## 📦 Installation
 
 **Recommended:** Install via [BRAT Plugin](https://github.com/TfTHacker/obsidian42-brat)
@@ -152,7 +178,14 @@ If you find this plugin useful, please consider supporting its development!
 
 ## 🎯 Current Status
 
-**Current Version**: 0.12.1 (Production Ready)
+**Current Version**: 0.17.0 (Production Ready)
+
+✅ **Latest Features (v0.17.0)**
+- **Local Soundscape**: Interactive depth-based graph exploration with context-aware audio
+- **Context-Aware Modifiers**: Environmental influences (season, time, weather, theme) on audio playback
+- **Auto-Play System**: Automatic soundscape playback when opening or switching notes
+- **Musical Key Selection**: 6 flexible modes for determining the musical key
+- **Musical Variation System**: Re-roll functionality for exploring different sonic interpretations
 
 ✅ **Complete Audio Enhancement System**
 - **Continuous Audio Layers**: Ambient, rhythmic, and harmonic background layers with 13 musical genres
@@ -163,7 +196,8 @@ If you find this plugin useful, please consider supporting its development!
 - **Advanced Synthesis Engines**: Percussion physics, electronic modulation, and sample-based orchestral voices
 - **Master Effects Processing**: Orchestral-grade reverb, EQ, and compression with 11 professional presets
 - **Performance Optimization**: Adaptive quality control, voice pooling, and resolved audio quality issues
-- **Audio Export**: Professional audio export with WAV and compressed formats, metadata, and presets (v0.12.1)
+- **Audio Export**: Professional audio export with WAV and compressed formats, metadata, and presets
+- **Visual Note Display**: Piano roll, spectrum analyzer, and staff notation visualizations
 
 
 ## 🎼 Orchestral Instrument Families
@@ -278,6 +312,7 @@ Continuous audio layers use high-quality samples from Freesound.org:
 - **Percussion**: Percussion family (timpani, xylophone, vibraphone, gongs)
 - **Electronic**: Electronic family (lead synth, bass synth, arp synth)
 - **Sonic Graph**: Knowledge graph visualization with temporal animation
+- **Local Soundscape**: Depth-based exploration view with context-aware modifiers (access via "Open in Local Soundscape" context menu)
 
 ## 🤝 Contributing
 
