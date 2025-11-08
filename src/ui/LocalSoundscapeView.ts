@@ -1163,6 +1163,76 @@ export class LocalSoundscapeView extends ItemView {
 			await this.updateQuantizationStrength(value / 100);
 		});
 
+		// Adaptive Pitch Ranges toggle (Phase 2)
+		const adaptivePitchRow = container.createDiv({ cls: 'musical-setting-row' });
+		adaptivePitchRow.createSpan({ text: 'Adaptive Pitch Ranges:', cls: 'setting-label' });
+
+		const adaptivePitchCheckbox = adaptivePitchRow.createEl('input', {
+			type: 'checkbox',
+			cls: 'musical-setting-checkbox'
+		});
+		adaptivePitchCheckbox.checked = this.depthMapper?.getConfig().adaptivePitch?.enabled || false;
+		adaptivePitchCheckbox.addEventListener('change', async () => {
+			await this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
+		});
+
+		const adaptivePitchDesc = container.createDiv({
+			cls: 'musical-setting-description',
+			text: 'Pitch ranges adapt to selected key for better harmonic integration'
+		});
+
+		// Chord Voicing toggle (Phase 2)
+		const chordVoicingRow = container.createDiv({ cls: 'musical-setting-row' });
+		chordVoicingRow.createSpan({ text: 'Chord Voicing:', cls: 'setting-label' });
+
+		const chordVoicingCheckbox = chordVoicingRow.createEl('input', {
+			type: 'checkbox',
+			cls: 'musical-setting-checkbox'
+		});
+		chordVoicingCheckbox.checked = this.depthMapper?.getConfig().chordVoicing?.enabled || false;
+		chordVoicingCheckbox.addEventListener('change', async () => {
+			await this.toggleChordVoicing(chordVoicingCheckbox.checked);
+		});
+
+		const chordVoicingDesc = container.createDiv({
+			cls: 'musical-setting-description',
+			text: 'Add harmonic richness with depth-based polyphonic voicing'
+		});
+
+		// Voicing density slider (only shown when chord voicing enabled)
+		const densityRow = container.createDiv({ cls: 'musical-setting-row slider-row' });
+		densityRow.createSpan({ text: 'Voicing Density:', cls: 'setting-label' });
+
+		const densitySliderContainer = densityRow.createDiv({ cls: 'slider-container' });
+		const densitySlider = densitySliderContainer.createEl('input', {
+			type: 'range',
+			cls: 'musical-setting-slider',
+			attr: {
+				min: '0',
+				max: '100',
+				step: '10'
+			}
+		});
+		const currentDensity = (this.depthMapper?.getConfig().chordVoicing?.voicingDensity || 0.5) * 100;
+		densitySlider.value = currentDensity.toString();
+
+		const densityValue = densitySliderContainer.createSpan({
+			text: `${currentDensity}%`,
+			cls: 'slider-value'
+		});
+
+		densitySlider.addEventListener('input', async () => {
+			const value = parseInt(densitySlider.value);
+			densityValue.textContent = `${value}%`;
+			await this.updateVoicingDensity(value / 100);
+		});
+
+		// Show/hide density slider based on chord voicing state
+		densityRow.style.display = chordVoicingCheckbox.checked ? 'flex' : 'none';
+		chordVoicingCheckbox.addEventListener('change', () => {
+			densityRow.style.display = chordVoicingCheckbox.checked ? 'flex' : 'none';
+		});
+
 		logger.debug('musical-controls-created', 'Musical scale controls initialized');
 	}
 
@@ -1249,6 +1319,83 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		logger.debug('update-quantization-strength', `Quantization strength updated to ${strength}`);
+	}
+
+	/**
+	 * Toggle adaptive pitch ranges on/off (Phase 2)
+	 */
+	private async toggleAdaptivePitch(enabled: boolean): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('toggle-adaptive-pitch', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			adaptivePitch: {
+				...config.adaptivePitch,
+				enabled: enabled
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		new Notice(`Adaptive pitch ranges ${enabled ? 'enabled' : 'disabled'}`);
+		logger.info('toggle-adaptive-pitch', `Adaptive pitch ranges ${enabled ? 'enabled' : 'disabled'}`);
+	}
+
+	/**
+	 * Toggle chord voicing on/off (Phase 2)
+	 */
+	private async toggleChordVoicing(enabled: boolean): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('toggle-chord-voicing', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			chordVoicing: {
+				...config.chordVoicing,
+				enabled: enabled
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		new Notice(`Chord voicing ${enabled ? 'enabled' : 'disabled'}`);
+		logger.info('toggle-chord-voicing', `Chord voicing ${enabled ? 'enabled' : 'disabled'}`);
+	}
+
+	/**
+	 * Update voicing density (Phase 2)
+	 */
+	private async updateVoicingDensity(density: number): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('update-voicing-density', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			chordVoicing: {
+				...config.chordVoicing,
+				voicingDensity: density
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		logger.debug('update-voicing-density', `Voicing density updated to ${density}`);
 	}
 
 	/**

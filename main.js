@@ -86338,7 +86338,7 @@ var LocalSoundscapeView = class extends import_obsidian29.ItemView {
    * Create musical scale quantization controls
    */
   createMusicalScaleControls(container) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     const header = container.createDiv({ cls: "musical-settings-header" });
     header.createSpan({ text: "Musical Scale Settings", cls: "settings-header-text" });
     const enableToggle = container.createDiv({ cls: "musical-setting-row" });
@@ -86433,6 +86433,61 @@ var LocalSoundscapeView = class extends import_obsidian29.ItemView {
       strengthValue.textContent = `${value}%`;
       await this.updateQuantizationStrength(value / 100);
     });
+    const adaptivePitchRow = container.createDiv({ cls: "musical-setting-row" });
+    adaptivePitchRow.createSpan({ text: "Adaptive Pitch Ranges:", cls: "setting-label" });
+    const adaptivePitchCheckbox = adaptivePitchRow.createEl("input", {
+      type: "checkbox",
+      cls: "musical-setting-checkbox"
+    });
+    adaptivePitchCheckbox.checked = ((_f = (_e = this.depthMapper) == null ? void 0 : _e.getConfig().adaptivePitch) == null ? void 0 : _f.enabled) || false;
+    adaptivePitchCheckbox.addEventListener("change", async () => {
+      await this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
+    });
+    const adaptivePitchDesc = container.createDiv({
+      cls: "musical-setting-description",
+      text: "Pitch ranges adapt to selected key for better harmonic integration"
+    });
+    const chordVoicingRow = container.createDiv({ cls: "musical-setting-row" });
+    chordVoicingRow.createSpan({ text: "Chord Voicing:", cls: "setting-label" });
+    const chordVoicingCheckbox = chordVoicingRow.createEl("input", {
+      type: "checkbox",
+      cls: "musical-setting-checkbox"
+    });
+    chordVoicingCheckbox.checked = ((_h = (_g = this.depthMapper) == null ? void 0 : _g.getConfig().chordVoicing) == null ? void 0 : _h.enabled) || false;
+    chordVoicingCheckbox.addEventListener("change", async () => {
+      await this.toggleChordVoicing(chordVoicingCheckbox.checked);
+    });
+    const chordVoicingDesc = container.createDiv({
+      cls: "musical-setting-description",
+      text: "Add harmonic richness with depth-based polyphonic voicing"
+    });
+    const densityRow = container.createDiv({ cls: "musical-setting-row slider-row" });
+    densityRow.createSpan({ text: "Voicing Density:", cls: "setting-label" });
+    const densitySliderContainer = densityRow.createDiv({ cls: "slider-container" });
+    const densitySlider = densitySliderContainer.createEl("input", {
+      type: "range",
+      cls: "musical-setting-slider",
+      attr: {
+        min: "0",
+        max: "100",
+        step: "10"
+      }
+    });
+    const currentDensity = (((_j = (_i = this.depthMapper) == null ? void 0 : _i.getConfig().chordVoicing) == null ? void 0 : _j.voicingDensity) || 0.5) * 100;
+    densitySlider.value = currentDensity.toString();
+    const densityValue = densitySliderContainer.createSpan({
+      text: `${currentDensity}%`,
+      cls: "slider-value"
+    });
+    densitySlider.addEventListener("input", async () => {
+      const value = parseInt(densitySlider.value);
+      densityValue.textContent = `${value}%`;
+      await this.updateVoicingDensity(value / 100);
+    });
+    densityRow.style.display = chordVoicingCheckbox.checked ? "flex" : "none";
+    chordVoicingCheckbox.addEventListener("change", () => {
+      densityRow.style.display = chordVoicingCheckbox.checked ? "flex" : "none";
+    });
     logger76.debug("musical-controls-created", "Musical scale controls initialized");
   }
   /**
@@ -86502,6 +86557,68 @@ var LocalSoundscapeView = class extends import_obsidian29.ItemView {
       await this.generateMappingsFromGraph();
     }
     logger76.debug("update-quantization-strength", `Quantization strength updated to ${strength}`);
+  }
+  /**
+   * Toggle adaptive pitch ranges on/off (Phase 2)
+   */
+  async toggleAdaptivePitch(enabled) {
+    if (!this.depthMapper) {
+      logger76.warn("toggle-adaptive-pitch", "No depth mapper available");
+      return;
+    }
+    const config = this.depthMapper.getConfig();
+    this.depthMapper.updateConfig({
+      adaptivePitch: {
+        ...config.adaptivePitch,
+        enabled
+      }
+    });
+    if (this.graphData) {
+      await this.generateMappingsFromGraph();
+    }
+    new import_obsidian29.Notice(`Adaptive pitch ranges ${enabled ? "enabled" : "disabled"}`);
+    logger76.info("toggle-adaptive-pitch", `Adaptive pitch ranges ${enabled ? "enabled" : "disabled"}`);
+  }
+  /**
+   * Toggle chord voicing on/off (Phase 2)
+   */
+  async toggleChordVoicing(enabled) {
+    if (!this.depthMapper) {
+      logger76.warn("toggle-chord-voicing", "No depth mapper available");
+      return;
+    }
+    const config = this.depthMapper.getConfig();
+    this.depthMapper.updateConfig({
+      chordVoicing: {
+        ...config.chordVoicing,
+        enabled
+      }
+    });
+    if (this.graphData) {
+      await this.generateMappingsFromGraph();
+    }
+    new import_obsidian29.Notice(`Chord voicing ${enabled ? "enabled" : "disabled"}`);
+    logger76.info("toggle-chord-voicing", `Chord voicing ${enabled ? "enabled" : "disabled"}`);
+  }
+  /**
+   * Update voicing density (Phase 2)
+   */
+  async updateVoicingDensity(density) {
+    if (!this.depthMapper) {
+      logger76.warn("update-voicing-density", "No depth mapper available");
+      return;
+    }
+    const config = this.depthMapper.getConfig();
+    this.depthMapper.updateConfig({
+      chordVoicing: {
+        ...config.chordVoicing,
+        voicingDensity: density
+      }
+    });
+    if (this.graphData) {
+      await this.generateMappingsFromGraph();
+    }
+    logger76.debug("update-voicing-density", `Voicing density updated to ${density}`);
   }
   /**
    * Initialize visualization manager
