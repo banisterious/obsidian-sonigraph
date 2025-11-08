@@ -19,6 +19,7 @@ import { AudioEngine } from '../engine';
 import { ContextualModifier, ContextModifiers } from './ContextualModifier';
 import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
 import { NoteName, ScaleType, ModalScale } from '../theory/types';
+import { ChordVoicingStrategy, ChordVoicingConfig } from './ChordVoicingStrategy';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -107,11 +108,19 @@ export interface DepthMappingConfig {
 		rootNote: NoteName;
 		quantizationStrength: number;  // 0-1, how strongly to quantize pitches to scale
 	};
+
+	// Chord voicing for polyphonic richness (Phase 2)
+	chordVoicing?: ChordVoicingConfig;
 }
 
 export interface DepthMapping extends MusicalMapping {
 	depth: number;
 	direction: 'center' | 'incoming' | 'outgoing' | 'bidirectional';
+
+	// Polyphonic voicing support (Phase 2)
+	chordFrequencies?: number[];  // All frequencies in chord (if voicing enabled)
+	voiceCount?: number;          // Number of voices in chord
+	isChordVoiced?: boolean;      // Whether this mapping has chord voicing
 }
 
 export class DepthBasedMapper {
@@ -124,6 +133,7 @@ export class DepthBasedMapper {
 	private contextualModifier: ContextualModifier | null = null;
 	private settings: SonigraphSettings;
 	private musicalTheoryEngine: MusicalTheoryEngine | null = null;
+	private chordVoicingStrategy: ChordVoicingStrategy | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -155,6 +165,14 @@ export class DepthBasedMapper {
 				quantizationStrength: this.config.musicalTheory.quantizationStrength,
 				dynamicScaleModulation: false
 			});
+
+			// Initialize chord voicing strategy if both theory engine and voicing are enabled
+			if (this.config.chordVoicing?.enabled && this.musicalTheoryEngine) {
+				this.chordVoicingStrategy = new ChordVoicingStrategy(
+					this.config.chordVoicing,
+					this.musicalTheoryEngine
+				);
+			}
 		}
 
 		logger.info('mapper-init', 'DepthBasedMapper initialized', {
@@ -163,6 +181,7 @@ export class DepthBasedMapper {
 			hasAudioEngine: !!this.audioEngine,
 			contextAwareEnabled: !!settings?.localSoundscape?.contextAware?.enabled,
 			musicalTheoryEnabled: !!this.musicalTheoryEngine,
+			chordVoicingEnabled: !!this.chordVoicingStrategy,
 			scale: this.config.musicalTheory ? `${this.config.musicalTheory.rootNote} ${this.config.musicalTheory.scale}` : 'none'
 		});
 	}
@@ -249,6 +268,27 @@ export class DepthBasedMapper {
 				scale: 'major',
 				rootNote: 'C',
 				quantizationStrength: 0.8
+			},
+			chordVoicing: config.chordVoicing || {
+				enabled: false,
+				strategy: 'depth-based',
+				voicesByDepth: {
+					center: 1,      // Melody only
+					depth1: 2,      // Dyad
+					depth2: 3,      // Triad
+					depth3Plus: 4   // Seventh chord
+				},
+				chordQuality: {
+					preferMajor: true,
+					preferMinor: false,
+					allowDiminished: false,
+					allowAugmented: false,
+					allowSevenths: true,
+					allowExtensions: false
+				},
+				maxVoiceSpread: 19,
+				minVoiceSpacing: 3,
+				voicingDensity: 0.5
 			}
 		};
 	}
@@ -427,6 +467,29 @@ export class DepthBasedMapper {
 				});
 			}
 
+			// Generate chord voicing if enabled (Phase 2)
+			let chordFrequencies: number[] | undefined;
+			let voiceCount = 1;
+			let isChordVoiced = false;
+
+			if (this.chordVoicingStrategy) {
+				const voicing = this.chordVoicingStrategy.generateVoicing(frequency, depth);
+
+				if (voicing.voiceCount > 1) {
+					chordFrequencies = voicing.frequencies;
+					voiceCount = voicing.voiceCount;
+					isChordVoiced = true;
+
+					logger.debug('chord-voicing', `Generated chord voicing for node ${node.basename}`, {
+						depth,
+						voices: voiceCount,
+						quality: voicing.chordQuality,
+						rootFreq: frequency.toFixed(2),
+						intervals: voicing.intervals.join(', ')
+					});
+				}
+			}
+
 			const mapping: DepthMapping = {
 				nodeId: node.id,
 				pitch: frequency, // Convert offset to Hz (quantized if enabled)
@@ -435,7 +498,11 @@ export class DepthBasedMapper {
 				instrument: instrument,
 				timing: 0, // Will be calculated after all mappings are created
 				depth: depth,
-				direction: node.direction
+				direction: node.direction,
+				// Polyphonic voicing data
+				chordFrequencies,
+				voiceCount,
+				isChordVoiced
 			};
 
 			return mapping;
@@ -785,9 +852,37 @@ export class DepthBasedMapper {
 					scale: `${this.config.musicalTheory.rootNote} ${this.config.musicalTheory.scale}`,
 					quantizationStrength: this.config.musicalTheory.quantizationStrength
 				});
+
+				// Reinitialize chord voicing if enabled and theory engine exists
+				if (this.config.chordVoicing?.enabled && this.musicalTheoryEngine) {
+					this.chordVoicingStrategy = new ChordVoicingStrategy(
+						this.config.chordVoicing,
+						this.musicalTheoryEngine
+					);
+					logger.info('chord-voicing-updated', 'Chord voicing strategy updated');
+				}
 			} else {
 				this.musicalTheoryEngine = null;
+				this.chordVoicingStrategy = null;
 				logger.info('music-theory-disabled', 'Musical theory engine disabled');
+			}
+		}
+
+		// Update chord voicing if config changed (and theory engine exists)
+		if (config.chordVoicing && this.musicalTheoryEngine) {
+			if (this.config.chordVoicing?.enabled) {
+				this.chordVoicingStrategy = new ChordVoicingStrategy(
+					this.config.chordVoicing,
+					this.musicalTheoryEngine
+				);
+				logger.info('chord-voicing-enabled', 'Chord voicing enabled', {
+					strategy: this.config.chordVoicing.strategy,
+					centerVoices: this.config.chordVoicing.voicesByDepth.center,
+					depth3Voices: this.config.chordVoicing.voicesByDepth.depth3Plus
+				});
+			} else {
+				this.chordVoicingStrategy = null;
+				logger.info('chord-voicing-disabled', 'Chord voicing disabled');
 			}
 		}
 
