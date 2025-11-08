@@ -3,6 +3,7 @@ node_modules
 .cursor/rules
 ui-mockups
 logs/
+osp-logs-*.json
 
 # AI assistant files
 .claude/

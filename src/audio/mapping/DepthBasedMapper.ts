@@ -17,6 +17,8 @@ import { getLogger } from '../../logging';
 import { App, TFile } from 'obsidian';
 import { AudioEngine } from '../engine';
 import { ContextualModifier, ContextModifiers } from './ContextualModifier';
+import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
+import { NoteName, ScaleType, ModalScale } from '../theory/types';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -97,6 +99,14 @@ export interface DepthMappingConfig {
 
 	// Configurable mapping weights for extensible musical mapping
 	mappingWeights?: MappingWeights;
+
+	// Musical theory integration for harmonic consonance
+	musicalTheory?: {
+		enabled: boolean;
+		scale: ScaleType | ModalScale;
+		rootNote: NoteName;
+		quantizationStrength: number;  // 0-1, how strongly to quantize pitches to scale
+	};
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -113,6 +123,7 @@ export class DepthBasedMapper {
 	private randomizationSeed: number | null = null;
 	private contextualModifier: ContextualModifier | null = null;
 	private settings: SonigraphSettings;
+	private musicalTheoryEngine: MusicalTheoryEngine | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -132,11 +143,27 @@ export class DepthBasedMapper {
 			this.contextualModifier = new ContextualModifier(settings);
 		}
 
+		// Initialize musical theory engine if enabled in config
+		if (this.config.musicalTheory?.enabled) {
+			this.musicalTheoryEngine = new MusicalTheoryEngine({
+				enabled: true,
+				scale: this.config.musicalTheory.scale,
+				rootNote: this.config.musicalTheory.rootNote,
+				enforceHarmony: true,
+				allowChromaticPassing: false,
+				dissonanceThreshold: 0.3,
+				quantizationStrength: this.config.musicalTheory.quantizationStrength,
+				dynamicScaleModulation: false
+			});
+		}
+
 		logger.info('mapper-init', 'DepthBasedMapper initialized', {
 			maxNodesPerDepth: this.config.maxNodesPerDepth,
 			panningEnabled: this.config.directionalPanning.enabled,
 			hasAudioEngine: !!this.audioEngine,
-			contextAwareEnabled: !!settings?.localSoundscape?.contextAware?.enabled
+			contextAwareEnabled: !!settings?.localSoundscape?.contextAware?.enabled,
+			musicalTheoryEnabled: !!this.musicalTheoryEngine,
+			scale: this.config.musicalTheory ? `${this.config.musicalTheory.rootNote} ${this.config.musicalTheory.scale}` : 'none'
 		});
 	}
 
@@ -216,6 +243,12 @@ export class DepthBasedMapper {
 					linkCount: 0.2,
 					headingCount: 0.1
 				}
+			},
+			musicalTheory: config.musicalTheory || {
+				enabled: false,
+				scale: 'major',
+				rootNote: 'C',
+				quantizationStrength: 0.8
 			}
 		};
 	}
@@ -380,11 +413,23 @@ export class DepthBasedMapper {
 			// Formula: frequency = rootFreq * 2^(semitones/12)
 			// Get root frequency from musical mapper (defaults to C4 = 261.63 Hz)
 			const rootFreq = 261.63; // C4
-			const frequency = rootFreq * Math.pow(2, pitchOffset / 12);
+			let frequency = rootFreq * Math.pow(2, pitchOffset / 12);
+
+			// Apply scale quantization if musical theory engine is enabled
+			if (this.musicalTheoryEngine) {
+				frequency = this.musicalTheoryEngine.constrainPitchToScale(frequency);
+
+				logger.debug('pitch-quantization', `Quantized pitch for node ${node.basename}`, {
+					originalFreq: (rootFreq * Math.pow(2, pitchOffset / 12)).toFixed(2),
+					quantizedFreq: frequency.toFixed(2),
+					scale: this.musicalTheoryEngine.getCurrentScale().type,
+					rootNote: this.musicalTheoryEngine.getCurrentScale().root
+				});
+			}
 
 			const mapping: DepthMapping = {
 				nodeId: node.id,
-				pitch: frequency, // Convert offset to Hz
+				pitch: frequency, // Convert offset to Hz (quantized if enabled)
 				duration: duration,
 				velocity: velocity,
 				instrument: instrument,
@@ -488,56 +533,61 @@ export class DepthBasedMapper {
 	}
 
 	/**
-	 * Select instrument from pool using weighted combination of node properties
-	 * Uses configurable weights from mappingWeights.instrument
-	 * Applies randomization if seed is set
-	 * Applies context-aware bias if enabled
+	 * Select instrument from pool with depth-layer consistency
+	 *
+	 * Strategy:
+	 * - All nodes at the same depth use the SAME primary instrument for timbral consistency
+	 * - When randomization is enabled, allows subtle variation within instrument pool (max ±1 instrument)
+	 * - Context-aware modifiers can shift the primary instrument choice
+	 *
+	 * This creates coherent depth layers (e.g., all depth-1 nodes = strings) while allowing
+	 * slight variation when desired.
 	 */
 	private selectInstrument(node: LocalSoundscapeNode, instruments: string[], contextModifiers?: ContextModifiers): string {
-		const weights = this.config.mappingWeights!.instrument;
-
-		// Calculate normalized factors (0-1 range)
-		// Depth factor (already 0-3, normalize to 0-1)
-		const depthFactor = node.depth / 3;
-
-		// Tag count factor
-		const tagCountFactor = node.tags ? Math.min(node.tags.length / 5, 1) : 0; // Cap at 5 tags
-
-		// Folder depth factor (path separators)
-		const folderDepthFactor = Math.min(node.path.split('/').length / 5, 1); // Cap at 5 levels
-
-		// Node ID hash factor (for variation)
-		const nodeIdHashFactor = (this.hashString(node.id) % 1000) / 1000; // Normalize hash to 0-1
-
-		// Weighted combination
-		let combinedFactor = (
-			(depthFactor * weights.depth) +
-			(tagCountFactor * weights.tagCount) +
-			(folderDepthFactor * weights.folderDepth) +
-			(nodeIdHashFactor * weights.nodeIdHash)
-		);
-
-		// Apply context-aware bias if available
-		// instrumentBias ranges from -1 to +1, shifts index toward beginning or end of array
-		if (contextModifiers) {
-			combinedFactor += contextModifiers.instrumentBias * 0.3; // 30% influence on instrument selection
-			combinedFactor = Math.max(0, Math.min(1, combinedFactor)); // Clamp to 0-1 range
+		if (instruments.length === 0) {
+			logger.warn('no-instruments', 'No instruments available for depth', { depth: node.depth });
+			return 'piano'; // Fallback
 		}
 
-		// Convert combined factor to instrument index
-		let index = Math.floor(combinedFactor * instruments.length);
+		// Use depth as the primary factor for instrument selection (85% weight)
+		// This ensures all nodes at same depth get same instrument
+		let primaryIndex = Math.floor(node.depth % instruments.length);
 
-		// Apply randomization if seed is set
-		if (this.randomizationSeed !== null) {
-			const randomOffset = this.seededRandom(node.id, 'instrument');
-			// Add random offset (0-1) scaled to instrument count
-			index += Math.floor(randomOffset * instruments.length);
+		// Apply context-aware bias if available (shifts instrument choice for all nodes at this depth)
+		if (contextModifiers && contextModifiers.instrumentBias !== 0) {
+			// Bias ranges from -1 to +1, can shift instrument by ±1 position
+			const biasShift = Math.round(contextModifiers.instrumentBias);
+			primaryIndex = (primaryIndex + biasShift + instruments.length) % instruments.length;
 		}
 
-		// Ensure index is within bounds
-		index = index % instruments.length;
+		// Apply LIMITED randomization if seed is set (±1 instrument maximum)
+		// This allows subtle variation while maintaining depth-layer consistency
+		if (this.randomizationSeed !== null && instruments.length > 1) {
+			const randomValue = this.seededRandom(node.id, 'instrument');
 
-		return instruments[index];
+			// Map 0-1 random value to -1, 0, or +1 instrument shift
+			// This gives: 33% chance of -1, 33% chance of 0, 33% chance of +1
+			let shift = 0;
+			if (randomValue < 0.33) {
+				shift = -1;
+			} else if (randomValue > 0.67) {
+				shift = 1;
+			}
+
+			primaryIndex = (primaryIndex + shift + instruments.length) % instruments.length;
+		}
+
+		const selectedInstrument = instruments[primaryIndex];
+
+		logger.debug('instrument-selection', `Selected instrument for node`, {
+			nodeId: node.id.slice(0, 8),
+			depth: node.depth,
+			instrument: selectedInstrument,
+			poolSize: instruments.length,
+			hasRandomization: this.randomizationSeed !== null
+		});
+
+		return selectedInstrument;
 	}
 
 	/**
@@ -717,6 +767,30 @@ export class DepthBasedMapper {
 	 */
 	updateConfig(config: Partial<DepthMappingConfig>): void {
 		this.config = this.mergeWithDefaults({ ...this.config, ...config });
+
+		// Reinitialize musical theory engine if config changed
+		if (config.musicalTheory) {
+			if (this.config.musicalTheory?.enabled) {
+				this.musicalTheoryEngine = new MusicalTheoryEngine({
+					enabled: true,
+					scale: this.config.musicalTheory.scale,
+					rootNote: this.config.musicalTheory.rootNote,
+					enforceHarmony: true,
+					allowChromaticPassing: false,
+					dissonanceThreshold: 0.3,
+					quantizationStrength: this.config.musicalTheory.quantizationStrength,
+					dynamicScaleModulation: false
+				});
+				logger.info('music-theory-updated', 'Musical theory engine updated', {
+					scale: `${this.config.musicalTheory.rootNote} ${this.config.musicalTheory.scale}`,
+					quantizationStrength: this.config.musicalTheory.quantizationStrength
+				});
+			} else {
+				this.musicalTheoryEngine = null;
+				logger.info('music-theory-disabled', 'Musical theory engine disabled');
+			}
+		}
+
 		logger.info('config-updated', 'DepthBasedMapper config updated');
 	}
 
