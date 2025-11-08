@@ -1002,6 +1002,10 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'stat-value volume-level'
 		});
 
+		// Musical settings section (Scale Quantization controls)
+		const musicalSettingsSection = container.createDiv({ cls: 'musical-settings-section' });
+		this.createMusicalScaleControls(musicalSettingsSection);
+
 		// Visualization section
 		const visualizationSection = container.createDiv({ cls: 'local-soundscape-visualization-section' });
 
@@ -1041,6 +1045,210 @@ export class LocalSoundscapeView extends ItemView {
 		this.initializeVisualization();
 
 		logger.debug('playback-controls-created', 'Playback controls initialized with visualization');
+	}
+
+	/**
+	 * Create musical scale quantization controls
+	 */
+	private createMusicalScaleControls(container: HTMLElement): void {
+		// Section header
+		const header = container.createDiv({ cls: 'musical-settings-header' });
+		header.createSpan({ text: 'Musical Scale Settings', cls: 'settings-header-text' });
+
+		// Enable/disable toggle
+		const enableToggle = container.createDiv({ cls: 'musical-setting-row' });
+		enableToggle.createSpan({ text: 'Scale Quantization:', cls: 'setting-label' });
+
+		const enableCheckbox = enableToggle.createEl('input', {
+			type: 'checkbox',
+			cls: 'musical-setting-checkbox'
+		});
+		enableCheckbox.checked = this.depthMapper?.getConfig().musicalTheory?.enabled || false;
+		enableCheckbox.addEventListener('change', async () => {
+			await this.toggleScaleQuantization(enableCheckbox.checked);
+		});
+
+		// Root note selector
+		const rootNoteRow = container.createDiv({ cls: 'musical-setting-row' });
+		rootNoteRow.createSpan({ text: 'Root Note:', cls: 'setting-label' });
+
+		const rootNoteSelect = rootNoteRow.createEl('select', { cls: 'musical-setting-select' });
+		const rootNotes: Array<{value: string, label: string}> = [
+			{ value: 'C', label: 'C' },
+			{ value: 'C#', label: 'C# / D♭' },
+			{ value: 'D', label: 'D' },
+			{ value: 'D#', label: 'D# / E♭' },
+			{ value: 'E', label: 'E' },
+			{ value: 'F', label: 'F' },
+			{ value: 'F#', label: 'F# / G♭' },
+			{ value: 'G', label: 'G' },
+			{ value: 'G#', label: 'G# / A♭' },
+			{ value: 'A', label: 'A' },
+			{ value: 'A#', label: 'A# / B♭' },
+			{ value: 'B', label: 'B' }
+		];
+
+		rootNotes.forEach(note => {
+			const option = rootNoteSelect.createEl('option', {
+				value: note.value,
+				text: note.label
+			});
+			if (note.value === (this.depthMapper?.getConfig().musicalTheory?.rootNote || 'C')) {
+				option.selected = true;
+			}
+		});
+
+		rootNoteSelect.addEventListener('change', async () => {
+			await this.updateMusicalScale(rootNoteSelect.value as any, undefined);
+		});
+
+		// Scale type selector
+		const scaleTypeRow = container.createDiv({ cls: 'musical-setting-row' });
+		scaleTypeRow.createSpan({ text: 'Scale Type:', cls: 'setting-label' });
+
+		const scaleTypeSelect = scaleTypeRow.createEl('select', { cls: 'musical-setting-select' });
+		const scaleTypes: Array<{value: string, label: string, description: string}> = [
+			{ value: 'major', label: 'Major', description: 'Bright, happy' },
+			{ value: 'minor', label: 'Natural Minor', description: 'Dark, melancholic' },
+			{ value: 'harmonic-minor', label: 'Harmonic Minor', description: 'Exotic, dramatic' },
+			{ value: 'melodic-minor', label: 'Melodic Minor', description: 'Bright minor' },
+			{ value: 'pentatonic-major', label: 'Pentatonic Major', description: 'Simple, folk' },
+			{ value: 'pentatonic-minor', label: 'Pentatonic Minor', description: 'Blues, rock' },
+			{ value: 'blues', label: 'Blues', description: 'Blues with blue notes' },
+			{ value: 'dorian', label: 'Dorian', description: 'Jazz, modern' },
+			{ value: 'phrygian', label: 'Phrygian', description: 'Spanish, dark' },
+			{ value: 'lydian', label: 'Lydian', description: 'Dreamy, floating' },
+			{ value: 'mixolydian', label: 'Mixolydian', description: 'Folk, bluegrass' }
+		];
+
+		scaleTypes.forEach(scale => {
+			const option = scaleTypeSelect.createEl('option', {
+				value: scale.value,
+				text: `${scale.label} (${scale.description})`
+			});
+			if (scale.value === (this.depthMapper?.getConfig().musicalTheory?.scale || 'major')) {
+				option.selected = true;
+			}
+		});
+
+		scaleTypeSelect.addEventListener('change', async () => {
+			await this.updateMusicalScale(undefined, scaleTypeSelect.value as any);
+		});
+
+		// Quantization strength slider
+		const quantStrengthRow = container.createDiv({ cls: 'musical-setting-row slider-row' });
+		quantStrengthRow.createSpan({ text: 'Quantization Strength:', cls: 'setting-label' });
+
+		const sliderContainer = quantStrengthRow.createDiv({ cls: 'slider-container' });
+		const quantStrengthSlider = sliderContainer.createEl('input', {
+			type: 'range',
+			cls: 'musical-setting-slider',
+			attr: {
+				min: '0',
+				max: '100',
+				step: '5'
+			}
+		});
+		const currentStrength = (this.depthMapper?.getConfig().musicalTheory?.quantizationStrength || 0.8) * 100;
+		quantStrengthSlider.value = currentStrength.toString();
+
+		const strengthValue = sliderContainer.createSpan({
+			text: `${currentStrength}%`,
+			cls: 'slider-value'
+		});
+
+		quantStrengthSlider.addEventListener('input', async () => {
+			const value = parseInt(quantStrengthSlider.value);
+			strengthValue.textContent = `${value}%`;
+			await this.updateQuantizationStrength(value / 100);
+		});
+
+		logger.debug('musical-controls-created', 'Musical scale controls initialized');
+	}
+
+	/**
+	 * Toggle scale quantization on/off
+	 */
+	private async toggleScaleQuantization(enabled: boolean): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('toggle-quantization', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			musicalTheory: {
+				...config.musicalTheory,
+				enabled: enabled
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		new Notice(`Scale quantization ${enabled ? 'enabled' : 'disabled'}`);
+		logger.info('toggle-quantization', `Scale quantization ${enabled ? 'enabled' : 'disabled'}`);
+	}
+
+	/**
+	 * Update musical scale (root note and/or scale type)
+	 */
+	private async updateMusicalScale(
+		rootNote?: 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B',
+		scaleType?: 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian'
+	): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('update-scale', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			musicalTheory: {
+				...config.musicalTheory,
+				rootNote: rootNote || config.musicalTheory?.rootNote || 'C',
+				scale: scaleType || config.musicalTheory?.scale || 'major'
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		const newConfig = this.depthMapper.getConfig();
+		new Notice(`Scale changed to ${newConfig.musicalTheory?.rootNote} ${newConfig.musicalTheory?.scale}`);
+		logger.info('update-scale', 'Musical scale updated', {
+			rootNote: newConfig.musicalTheory?.rootNote,
+			scaleType: newConfig.musicalTheory?.scale
+		});
+	}
+
+	/**
+	 * Update quantization strength
+	 */
+	private async updateQuantizationStrength(strength: number): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('update-quantization-strength', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			musicalTheory: {
+				...config.musicalTheory,
+				quantizationStrength: strength
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		logger.debug('update-quantization-strength', `Quantization strength updated to ${strength}`);
 	}
 
 	/**
