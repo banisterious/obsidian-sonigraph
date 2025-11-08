@@ -67301,6 +67301,20 @@ var DepthBasedMapper = class {
         rootNote: "C",
         quantizationStrength: 0.8
       },
+      adaptivePitch: config.adaptivePitch || {
+        enabled: false,
+        adaptationMode: "transpose",
+        rangesByDepth: {
+          center: { minDegree: 0, maxDegree: 7 },
+          // Root to octave
+          depth1: { minDegree: -2, maxDegree: 5 },
+          // Below root to fifth
+          depth2: { minDegree: -7, maxDegree: 0 },
+          // Octave below to root
+          depth3Plus: { minDegree: -14, maxDegree: -7 }
+          // Two octaves down
+        }
+      },
       chordVoicing: config.chordVoicing || {
         enabled: false,
         strategy: "depth-based",
@@ -67494,8 +67508,13 @@ var DepthBasedMapper = class {
   }
   /**
    * Get pitch range for a given depth
+   * Supports adaptive key-relative ranges if enabled
    */
   getPitchRangeForDepth(depth) {
+    var _a;
+    if (((_a = this.config.adaptivePitch) == null ? void 0 : _a.enabled) && this.musicalTheoryEngine) {
+      return this.calculateAdaptivePitchRange(depth);
+    }
     if (depth === 0)
       return this.config.pitchRangesByDepth.center;
     if (depth === 1)
@@ -67503,6 +67522,41 @@ var DepthBasedMapper = class {
     if (depth === 2)
       return this.config.pitchRangesByDepth.depth2;
     return this.config.pitchRangesByDepth.depth3Plus;
+  }
+  /**
+   * Calculate adaptive pitch range based on scale degrees
+   * Converts scale degrees to semitone offsets relative to current scale
+   */
+  calculateAdaptivePitchRange(depth) {
+    if (!this.musicalTheoryEngine || !this.config.adaptivePitch) {
+      return this.getPitchRangeForDepth(depth);
+    }
+    const scale = this.musicalTheoryEngine.getCurrentScale();
+    const degreeRanges = this.config.adaptivePitch.rangesByDepth;
+    const range2 = depth === 0 ? degreeRanges.center : depth === 1 ? degreeRanges.depth1 : depth === 2 ? degreeRanges.depth2 : degreeRanges.depth3Plus;
+    const minSemitones = this.scaleDegreesToSemitones(range2.minDegree, scale);
+    const maxSemitones = this.scaleDegreesToSemitones(range2.maxDegree, scale);
+    logger43.debug("adaptive-pitch-range", `Calculated adaptive range for depth ${depth}`, {
+      scale: `${scale.root} ${scale.type}`,
+      minDegree: range2.minDegree,
+      maxDegree: range2.maxDegree,
+      minSemitones,
+      maxSemitones
+    });
+    return { min: minSemitones, max: maxSemitones };
+  }
+  /**
+   * Convert scale degree to semitone offset
+   * Handles negative degrees (below root) and positive degrees (above root)
+   */
+  scaleDegreesToSemitones(degree, scale) {
+    const scaleIntervals = scale.definition.intervals;
+    const scaleLength = scaleIntervals.length;
+    const octaves = Math.floor(degree / scaleLength);
+    const degreeInOctave = (degree % scaleLength + scaleLength) % scaleLength;
+    const semitonesInOctave = scaleIntervals[degreeInOctave];
+    const totalSemitones = octaves * 12 + semitonesInOctave;
+    return totalSemitones;
   }
   /**
    * Calculate pitch offset within range using weighted combination of node properties
