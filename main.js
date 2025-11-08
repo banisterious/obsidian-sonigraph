@@ -87642,12 +87642,29 @@ var LocalSoundscapeView = class extends import_obsidian29.ItemView {
         this.activeHighlights.set(mapping.nodeId, endTime);
       }
       const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1;
-      await this.plugin.audioEngine.playNoteImmediate({
-        pitch: mapping.pitch,
-        duration: mapping.duration,
-        velocity: mapping.velocity,
-        instrument: mapping.instrument
-      }, visualTimestamp, mapping.nodeId);
+      if (mapping.isChordVoiced && mapping.chordFrequencies && mapping.chordFrequencies.length > 1) {
+        const voiceVelocity = mapping.velocity * 0.8;
+        for (const voiceFrequency of mapping.chordFrequencies) {
+          await this.plugin.audioEngine.playNoteImmediate({
+            pitch: voiceFrequency,
+            duration: mapping.duration,
+            velocity: voiceVelocity,
+            instrument: mapping.instrument
+          }, visualTimestamp, mapping.nodeId);
+        }
+        logger76.debug("polyphonic-playback", `Played chord with ${mapping.voiceCount} voices`, {
+          nodeId: mapping.nodeId,
+          rootPitch: mapping.pitch.toFixed(2),
+          voices: mapping.chordFrequencies.map((f) => f.toFixed(2)).join(", ")
+        });
+      } else {
+        await this.plugin.audioEngine.playNoteImmediate({
+          pitch: mapping.pitch,
+          duration: mapping.duration,
+          velocity: mapping.velocity,
+          instrument: mapping.instrument
+        }, visualTimestamp, mapping.nodeId);
+      }
     } catch (error) {
       logger76.warn("note-playback-error", "Failed to play note from polling loop", {
         nodeId: mapping.nodeId,

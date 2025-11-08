@@ -2782,13 +2782,34 @@ export class LocalSoundscapeView extends ItemView {
 			// Add 1.0s offset so notes appear to the right of clefs
 			const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1.0;
 
-			// Play the note immediately (polling loop has already determined it's time to play)
-			await this.plugin.audioEngine.playNoteImmediate({
-				pitch: mapping.pitch,
-				duration: mapping.duration,
-				velocity: mapping.velocity,
-				instrument: mapping.instrument
-			}, visualTimestamp, mapping.nodeId);
+			// Check if this mapping has chord voicing (Phase 2)
+			if (mapping.isChordVoiced && mapping.chordFrequencies && mapping.chordFrequencies.length > 1) {
+				// Play all voices in the chord
+				const voiceVelocity = mapping.velocity * 0.8; // Reduce per-voice volume to prevent clipping
+
+				for (const voiceFrequency of mapping.chordFrequencies) {
+					await this.plugin.audioEngine.playNoteImmediate({
+						pitch: voiceFrequency,
+						duration: mapping.duration,
+						velocity: voiceVelocity,
+						instrument: mapping.instrument
+					}, visualTimestamp, mapping.nodeId);
+				}
+
+				logger.debug('polyphonic-playback', `Played chord with ${mapping.voiceCount} voices`, {
+					nodeId: mapping.nodeId,
+					rootPitch: mapping.pitch.toFixed(2),
+					voices: mapping.chordFrequencies.map(f => f.toFixed(2)).join(', ')
+				});
+			} else {
+				// Play single note (monophonic fallback)
+				await this.plugin.audioEngine.playNoteImmediate({
+					pitch: mapping.pitch,
+					duration: mapping.duration,
+					velocity: mapping.velocity,
+					instrument: mapping.instrument
+				}, visualTimestamp, mapping.nodeId);
+			}
 
 		} catch (error) {
 			logger.warn('note-playback-error', 'Failed to play note from polling loop', {
