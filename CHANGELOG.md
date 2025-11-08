@@ -7,6 +7,145 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned - Local Soundscape Aesthetic Enhancements 🎼
+
+A comprehensive set of musical enhancements to transform Local Soundscape into a fully musical experience. See [docs/design/local-soundscape-aesthetic-enhancements.md](docs/design/local-soundscape-aesthetic-enhancements.md) for complete design.
+
+**Eight Proposed Enhancements:**
+1. **Scale Quantization** - Harmonic consonance through musical theory integration
+2. **Chord Voicing System** - Polyphonic richness with depth-based harmony layers
+3. **Melodic Arc & Tension Tracking** - Musical narrative with emotional contours
+4. **Smart Instrument Selection** - Timbral consistency through depth-layer assignment
+5. **Rhythmic Pattern System** - Temporal organization with musical patterns (arpeggios, ostinatos, pulses)
+6. **Dynamic Panning Enhancements** - Sophisticated spatial audio positioning
+7. **Adaptive Pitch Ranges** - Key-relative depth ranges for harmonic integration
+8. **Instrument Turn-Taking** - Call-and-response patterns for musical dialogue and textural clarity
+
+**Implementation Phases:**
+- Phase 1: Scale Quantization + Instrument Selection (6-10 hours)
+- Phase 2: Chord Voicing + Adaptive Pitch (12-18 hours)
+- Phase 3: Tension Arc + Rhythm + Panning + Turn-Taking (40-54 hours)
+
+**Total Estimated Effort:** 58-82 hours of development
+
+## [0.17.0] - 2025-11-08
+
+### Added - Local Soundscape 🌊
+
+**Complete Audio-Visual Exploration System**
+- **Dedicated View**: Right-click any note → "Open in Local Soundscape" or use Command Palette
+- **Radial Graph Visualization**: D3.js + SVG rendering with depth-based rings
+  - Center note in middle, connections radiating outward by depth (1-5 levels)
+  - Color-coded by direction: incoming (pink), outgoing (cyan), bidirectional (purple)
+  - Interactive zoom/pan with automatic fit-to-content
+  - Hover tooltips with note metadata
+  - Click to open note, right-click for context menu
+
+**Depth-Based Musical Mapping**
+- **Layered Instrumentation**: Different instrument pools per depth
+  - Center (depth 0): Piano, organ, lead synth (prominent melody)
+  - Depth 1: Strings, electric piano (harmonic support)
+  - Depth 2: Bass synth, timpani, cello (rhythmic foundation)
+  - Depth 3+: Arp synth, vibraphone, pads (ambient atmosphere)
+- **Spatial Audio**: Directional panning based on link direction
+  - Incoming links pan left (-0.7)
+  - Outgoing links pan right (+0.7)
+  - Bidirectional centered (0.0)
+- **Volume Attenuation**: Depth-based volume (center 100% → depth 3+ 40%)
+- **Pitch Ranges**: Depth-specific registers (center: C4-C5, depth 3+: C2-C3)
+- **Dynamic Duration**: Note length based on content (word count, headings, links)
+- **Recency-Based Velocity**: Recently modified notes play louder
+
+**Musical Variation System**
+- **Seeded Randomization**: Reproducible variations per center note
+  - ±2 semitone pitch variation
+  - Instrument selection randomization
+  - ±50ms timing jitter
+- **Variation History**: Up to 10 variations per note with Re-roll button
+- **Previous/Next Navigation**: Cycle through variation history
+
+**Interactive Controls**
+- **Depth Adjustment**: Slider (1-5) with real-time graph update
+- **Filtering System**: Comprehensive modal with:
+  - Tag filters (include/exclude with tag cloud)
+  - Folder filters (include/exclude with folder cloud)
+  - File type filters (markdown, PDF, image, audio, video)
+  - Link direction filters (incoming, outgoing, bidirectional)
+- **Clustering Modes**: Four algorithms with visual cluster rendering
+  - Folder-based clustering
+  - Tag-based clustering
+  - Depth-based clustering
+  - Community detection (Louvain-like algorithm)
+- **Node Size Modes**: Three display options
+  - Uniform size
+  - By link count (hub emphasis)
+  - By content length (substance emphasis)
+- **Refresh Button**: Manual graph update with staleness indicator
+
+**Context-Aware Modifiers** 🌤️
+- **Environmental Influence**: Four context dimensions affect sound
+  - **Season**: Spring (bright +2), Summer (energetic +3), Fall (mellow -2), Winter (cold -4)
+  - **Time of Day**: Dawn (+1), Day (neutral), Dusk (-1), Night (-2, reverb)
+  - **Weather**: Clear (bright), Cloudy (muted), Rain (rhythmic), Storm (dramatic +2), Snow (crystalline +3)
+  - **Theme**: Light mode (+2, bright), Dark mode (-2, warm)
+- **Modulation Modes**:
+  - "Influenced" (blend note properties with environment)
+  - "Context-only" (pure environmental, ignore note structure)
+- **Adjustable Influence**: Weight slider (0-100%) to control blend amount
+- **Individual Toggles**: Enable/disable each context factor independently
+
+**Musical Key Selection** 🎹
+- **Six Determination Modes**:
+  - Vault name hash
+  - Root folder name
+  - Folder path (with depth slider 0-5)
+  - Full file path
+  - File name
+  - Custom manual selection
+- **Deterministic Mapping**: String-to-key hashing covers all 12 keys
+- **Real-Time Display**: Shows current key with automatic updates
+
+**Auto-Play Features**
+- **Auto-Start Audio**: Optional auto-play when opening soundscape
+- **Auto-Play Active Note**: Monitors active file and updates soundscape automatically
+  - Manual "Play Active Note" button with Lucide music icon
+  - Optional auto-play setting (opt-in, default disabled)
+  - Smart duplicate prevention
+
+**Visual Effects**
+- **Playing Node Pulse**: CSS-based glow animation with enable/disable toggle
+- **Smooth Transitions**: Fluid animations for all interactions
+  - Hover: 200ms with easeBackOut (bouncy)
+  - Playing highlights: 150ms easeBackOut on, 200ms easeCubicOut off
+  - Zoom/pan: 750ms easeCubicInOut
+  - Node updates: 500ms easeCubicInOut
+- **Layout Options**: Radial (default) and force-directed algorithms
+- **Export**: PNG image export of current graph view
+
+**Settings Integration**
+- **Three Control Center Cards**:
+  - Audio Settings (auto-play, musical key)
+  - Display Settings (node size, clustering, visual effects)
+  - Advanced Settings (depth limits, context-aware modifiers)
+- **Obsidian-Style Toggles**: Native toggle switches throughout
+- **Lucide Icons**: Consistent icon system integration
+
+**Performance Optimization**
+- **Configurable Node Limits**: maxNodesPerDepth (10-200 or 'all')
+- **Enabled Instrument Filtering**: Only uses instruments enabled in Control Center
+- **Efficient BFS Traversal**: MetadataCache-optimized graph extraction
+- **Timeout Management**: Proper cleanup on pause/stop
+
+### Technical Architecture
+- **New Files**:
+  - `src/ui/LocalSoundscapeView.ts` - Main view class
+  - `src/graph/LocalSoundscapeExtractor.ts` - BFS graph traversal
+  - `src/graph/LocalSoundscapeRenderer.ts` - D3/SVG visualization
+  - `src/audio/mapping/DepthBasedMapper.ts` - Musical parameter mapping
+  - `src/audio/mapping/ContextualModifier.ts` - Environmental context detection
+- **Integration**: Extends existing AudioEngine, MusicalMapper, and settings systems
+- **Reusable Components**: Foundation for future Note Journey feature
+
 ## [0.15.0] - 2025-10-06
 
 ### Added - Visual Note Display System 🎵

@@ -2,8 +2,9 @@
 
 - **Document Version:** 1.0
 - **Date:** October 10, 2025
-- **Status:** Planning / Design Phase
-- **Target Version:** v0.17.0 or v0.18.0 (Before Note Journey)
+- **Status:** ✅ COMPLETED
+- **Completed:** v0.17.0
+- **Date Completed:** November 8, 2025
 
 **Background:** Original plan was to integrate with Obsidian's native Local Graph view, but Obsidian does not expose Graph APIs. This plan describes a custom visualization designed specifically for creating an immersive audio-visual "soundscape" around a note.
 
