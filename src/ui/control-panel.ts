@@ -546,11 +546,13 @@ export class MaterialControlPanelModal extends Modal {
 		const helpContent = helpCard.getContent();
 		const helpList = helpContent.createEl('ul', { cls: 'osp-guide-help' });
 
-		helpList.createEl('li').innerHTML = '<strong>User Guides:</strong> Check the plugin\'s documentation folder for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.';
+		helpList.createEl('li').innerHTML = '<strong>Documentation:</strong> Visit the <a href="https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides">GitHub repository</a> for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.';
 
-		helpList.createEl('li').innerHTML = '<strong>Settings Tab:</strong> Each Control Center tab has configuration options. Hover over controls for tooltips.';
+		helpList.createEl('li').innerHTML = '<strong>Settings:</strong> Each Control Center tab has configuration options. Hover over controls for tooltips.';
 
-		helpList.createEl('li').innerHTML = '<strong>Command Palette:</strong> Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.';
+		helpList.createEl('li').innerHTML = '<strong>Commands:</strong> Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.';
+
+		helpList.createEl('li').innerHTML = '<strong>Issues & Feedback:</strong> Report bugs or request features on <a href="https://github.com/banisterious/obsidian-sonigraph/issues">GitHub Issues</a>.';
 
 		this.contentContainer.appendChild(helpCard.getElement());
 	}
