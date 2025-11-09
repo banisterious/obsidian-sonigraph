@@ -3629,6 +3629,12 @@ var init_lucide_icons = __esm({
     };
     TAB_CONFIGS = [
       {
+        id: "guide",
+        name: "Guide",
+        icon: "book-open",
+        description: "Getting started guide and feature overview"
+      },
+      {
         id: "status",
         name: "Status",
         icon: "bar-chart-3",
@@ -21064,6 +21070,9 @@ var init_control_panel = __esm({
       showTab(tabId) {
         this.contentContainer.empty();
         switch (tabId) {
+          case "guide":
+            this.createGuideTab();
+            break;
           case "status":
             this.createStatusTab();
             break;
@@ -21094,6 +21103,140 @@ var init_control_panel = __esm({
           default:
             this.createPlaceholderTab(tabId);
         }
+      }
+      /**
+       * Create Guide tab content - Getting started guide and feature overview
+       */
+      createGuideTab() {
+        const welcomeCard = new MaterialCard({
+          title: "Welcome to Sonigraph",
+          iconName: "book-open",
+          subtitle: "Transform your Obsidian vault into an interactive soundscape",
+          elevation: 1
+        });
+        const welcomeContent = welcomeCard.getContent();
+        welcomeContent.createEl("p", {
+          text: "Sonigraph brings your knowledge graph to life through sound. Notes become musical instruments, links create harmonies, and your vault transforms into an immersive audio experience.",
+          cls: "osp-guide-text"
+        });
+        this.contentContainer.appendChild(welcomeCard.getElement());
+        const quickStartCard = new MaterialCard({
+          title: "Quick Start",
+          iconName: "zap",
+          subtitle: "Get up and running in 3 steps",
+          elevation: 1
+        });
+        const quickStartContent = quickStartCard.getContent();
+        const stepsList = quickStartContent.createEl("ol", { cls: "osp-guide-steps" });
+        stepsList.createEl("li", {
+          text: "Enable Instruments: Go to the Keyboard, Strings, or Electronic tabs and enable 3-5 instruments you like. Start with Piano, Strings, and Lead Synth for a balanced sound."
+        });
+        stepsList.createEl("li", {
+          text: "Configure Musical Settings: Visit the Musical tab to set your preferred scale (try C Major) and tempo (60-120 BPM works well for most vaults)."
+        });
+        stepsList.createEl("li", {
+          text: 'Try Local Soundscape: Right-click any note in your vault and select "Open in Local Soundscape" to hear how it connects to other notes.'
+        });
+        this.contentContainer.appendChild(quickStartCard.getElement());
+        const featuresCard = new MaterialCard({
+          title: "Key Features",
+          iconName: "star",
+          subtitle: "What you can do with Sonigraph",
+          elevation: 1
+        });
+        const featuresContent = featuresCard.getContent();
+        const featuresList = featuresContent.createEl("div", { cls: "osp-guide-features" });
+        const lsFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
+        lsFeature.createEl("strong", { text: "Local Soundscape" });
+        lsFeature.createEl("p", {
+          text: "Visualize and sonify a single note and its connections. Notes at different depths play different instrument families, creating layers of harmony. Enable Musical Enhancements in the Local Soundscape tab for richer, more musical results."
+        });
+        const sgFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
+        sgFeature.createEl("strong", { text: "Sonic Graph" });
+        sgFeature.createEl("p", {
+          text: "See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion."
+        });
+        const meFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
+        meFeature.createEl("strong", { text: "Musical Enhancements" });
+        meFeature.createEl("p", {
+          text: "Transform basic sonification into rich musical experiences with Scale Quantization, Chord Voicing, Rhythmic Patterns, Tension Tracking, Turn-Taking, and Dynamic Panning. Configure these in the Local Soundscape tab."
+        });
+        const clFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
+        clFeature.createEl("strong", { text: "Continuous Layers" });
+        clFeature.createEl("p", {
+          text: "Add ambient background soundscapes from curated audio libraries. Browse and preview samples from Freesound.org to create the perfect atmosphere for focused work."
+        });
+        this.contentContainer.appendChild(featuresCard.getElement());
+        const meGuideCard = new MaterialCard({
+          title: "Musical Enhancements Guide",
+          iconName: "music",
+          subtitle: "Making your soundscapes more musical",
+          elevation: 1
+        });
+        const meGuideContent = meGuideCard.getContent();
+        meGuideContent.createEl("p", {
+          text: "Musical Enhancements transform raw sonification into expressive, harmonic compositions. Here are recommended settings for different goals:",
+          cls: "osp-guide-text"
+        });
+        const preset1 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
+        preset1.createEl("strong", { text: "For Harmonic Beauty:" });
+        const preset1List = preset1.createEl("ul");
+        preset1List.createEl("li", { text: "Enable Scale Quantization (C Major, 80% strength)" });
+        preset1List.createEl("li", { text: "Enable Adaptive Pitch Ranges" });
+        preset1List.createEl("li", { text: "Enable Chord Voicing (50% density)" });
+        const preset2 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
+        preset2.createEl("strong", { text: "For Rhythmic Interest:" });
+        const preset2List = preset2.createEl("ul");
+        preset2List.createEl("li", { text: "Enable Rhythmic Patterns (60 BPM)" });
+        preset2List.createEl("li", { text: "Enable Tension Tracking (Rise-Fall arc, 60% peak)" });
+        const preset3 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
+        preset3.createEl("strong", { text: "For Spatial Clarity:" });
+        const preset3List = preset3.createEl("ul");
+        preset3List.createEl("li", { text: "Enable Turn-Taking (Call-Response, 4 beats)" });
+        preset3List.createEl("li", { text: "Enable Dynamic Panning (30% smoothing, 2x speed)" });
+        const preset4 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
+        preset4.createEl("strong", { text: "For Full Musical Experience:" });
+        preset4.createEl("p", { text: "Enable all of the above for maximum musicality and expressiveness." });
+        this.contentContainer.appendChild(meGuideCard.getElement());
+        const tipsCard = new MaterialCard({
+          title: "Tips & Best Practices",
+          iconName: "lightbulb",
+          subtitle: "Get the most out of Sonigraph",
+          elevation: 1
+        });
+        const tipsContent = tipsCard.getContent();
+        const tipsList = tipsContent.createEl("ul", { cls: "osp-guide-tips" });
+        tipsList.createEl("li", {
+          text: "Start Simple: Enable 3-5 instruments initially. Too many instruments can create sonic clutter."
+        });
+        tipsList.createEl("li", {
+          text: "Mix Instrument Types: Combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound."
+        });
+        tipsList.createEl("li", {
+          text: "Use Scale Quantization: This is the single most impactful Musical Enhancement for making soundscapes harmonious."
+        });
+        tipsList.createEl("li", {
+          text: "Adjust Depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming."
+        });
+        tipsList.createEl("li", {
+          text: "Monitor Performance: Check the Status tab to see active voices and ensure your system isn't overloaded."
+        });
+        tipsList.createEl("li", {
+          text: "Experiment with Turn-Taking: Call-Response and Solos patterns dramatically reduce sonic congestion while adding musical dialogue."
+        });
+        this.contentContainer.appendChild(tipsCard.getElement());
+        const helpCard = new MaterialCard({
+          title: "Help & Resources",
+          iconName: "help-circle",
+          subtitle: "Need more information?",
+          elevation: 1
+        });
+        const helpContent = helpCard.getContent();
+        const helpList = helpContent.createEl("ul", { cls: "osp-guide-help" });
+        helpList.createEl("li").innerHTML = "<strong>User Guides:</strong> Check the plugin's documentation folder for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.";
+        helpList.createEl("li").innerHTML = "<strong>Settings Tab:</strong> Each Control Center tab has configuration options. Hover over controls for tooltips.";
+        helpList.createEl("li").innerHTML = `<strong>Command Palette:</strong> Search "Sonigraph" in Obsidian's command palette (Ctrl/Cmd + P) to see all available commands.`;
+        this.contentContainer.appendChild(helpCard.getElement());
       }
       /**
        * Create Status tab content
