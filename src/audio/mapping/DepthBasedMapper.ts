@@ -298,13 +298,15 @@ export class DepthBasedMapper {
 				}
 			},
 			musicalTheory: config.musicalTheory || {
-				enabled: false,
-				scale: 'major',
-				rootNote: 'C',
-				quantizationStrength: 0.8
+				// Use musicalEnhancements settings if available, otherwise defaults
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.scaleQuantization?.enabled || false,
+				scale: (this.settings?.localSoundscape?.musicalEnhancements?.scaleQuantization?.scale as ScaleType) || 'major',
+				rootNote: (this.settings?.localSoundscape?.musicalEnhancements?.scaleQuantization?.rootNote as NoteName) || 'C',
+				quantizationStrength: this.settings?.localSoundscape?.musicalEnhancements?.scaleQuantization?.quantizationStrength || 0.8
 			},
 			adaptivePitch: config.adaptivePitch || {
-				enabled: false,
+				// Use musicalEnhancements settings if available
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.adaptivePitch?.enabled || false,
 				adaptationMode: 'transpose',
 				rangesByDepth: {
 					center: { minDegree: 0, maxDegree: 7 },          // Root to octave
@@ -314,7 +316,8 @@ export class DepthBasedMapper {
 				}
 			},
 			chordVoicing: config.chordVoicing || {
-				enabled: false,
+				// Use musicalEnhancements settings if available, otherwise defaults
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.chordVoicing?.enabled || false,
 				strategy: 'depth-based',
 				voicesByDepth: {
 					center: 1,      // Melody only
@@ -332,17 +335,18 @@ export class DepthBasedMapper {
 				},
 				maxVoiceSpread: 19,
 				minVoiceSpacing: 3,
-				voicingDensity: 0.5
+				voicingDensity: this.settings?.localSoundscape?.musicalEnhancements?.chordVoicing?.voicingDensity ?? 0.5
 			},
 			rhythmic: config.rhythmic || {
-				enabled: false,
+				// Use musicalEnhancements settings if available, otherwise defaults
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.rhythmicPatterns?.enabled || false,
 				patternPerDepth: {
 					center: 'sequential',
 					depth1: 'arpeggio',
 					depth2: 'pulse',
 					depth3Plus: 'sequential'
 				},
-				tempo: 60,
+				tempo: this.settings?.localSoundscape?.musicalEnhancements?.rhythmicPatterns?.tempo ?? 60,
 				timeSignature: [4, 4],
 				patterns: {
 					arpeggio: {

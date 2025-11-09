@@ -68032,7 +68032,7 @@ var DepthBasedMapper = class {
    * Uses enabled instruments from Control Center if available
    */
   mergeWithDefaults(config) {
-    var _a;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M;
     const enabledInstruments = ((_a = this.audioEngine) == null ? void 0 : _a.getEnabledInstrumentsForTesting()) || [];
     const getInstrumentsForDepth = (preferred) => {
       if (enabledInstruments.length === 0) {
@@ -68100,13 +68100,15 @@ var DepthBasedMapper = class {
         }
       },
       musicalTheory: config.musicalTheory || {
-        enabled: false,
-        scale: "major",
-        rootNote: "C",
-        quantizationStrength: 0.8
+        // Use musicalEnhancements settings if available, otherwise defaults
+        enabled: ((_e = (_d = (_c = (_b = this.settings) == null ? void 0 : _b.localSoundscape) == null ? void 0 : _c.musicalEnhancements) == null ? void 0 : _d.scaleQuantization) == null ? void 0 : _e.enabled) || false,
+        scale: ((_i = (_h = (_g = (_f = this.settings) == null ? void 0 : _f.localSoundscape) == null ? void 0 : _g.musicalEnhancements) == null ? void 0 : _h.scaleQuantization) == null ? void 0 : _i.scale) || "major",
+        rootNote: ((_m = (_l = (_k = (_j = this.settings) == null ? void 0 : _j.localSoundscape) == null ? void 0 : _k.musicalEnhancements) == null ? void 0 : _l.scaleQuantization) == null ? void 0 : _m.rootNote) || "C",
+        quantizationStrength: ((_q = (_p = (_o = (_n = this.settings) == null ? void 0 : _n.localSoundscape) == null ? void 0 : _o.musicalEnhancements) == null ? void 0 : _p.scaleQuantization) == null ? void 0 : _q.quantizationStrength) || 0.8
       },
       adaptivePitch: config.adaptivePitch || {
-        enabled: false,
+        // Use musicalEnhancements settings if available
+        enabled: ((_u = (_t = (_s = (_r = this.settings) == null ? void 0 : _r.localSoundscape) == null ? void 0 : _s.musicalEnhancements) == null ? void 0 : _t.adaptivePitch) == null ? void 0 : _u.enabled) || false,
         adaptationMode: "transpose",
         rangesByDepth: {
           center: { minDegree: 0, maxDegree: 7 },
@@ -68120,7 +68122,8 @@ var DepthBasedMapper = class {
         }
       },
       chordVoicing: config.chordVoicing || {
-        enabled: false,
+        // Use musicalEnhancements settings if available, otherwise defaults
+        enabled: ((_y = (_x = (_w = (_v = this.settings) == null ? void 0 : _v.localSoundscape) == null ? void 0 : _w.musicalEnhancements) == null ? void 0 : _x.chordVoicing) == null ? void 0 : _y.enabled) || false,
         strategy: "depth-based",
         voicesByDepth: {
           center: 1,
@@ -68142,17 +68145,18 @@ var DepthBasedMapper = class {
         },
         maxVoiceSpread: 19,
         minVoiceSpacing: 3,
-        voicingDensity: 0.5
+        voicingDensity: (_D = (_C = (_B = (_A = (_z = this.settings) == null ? void 0 : _z.localSoundscape) == null ? void 0 : _A.musicalEnhancements) == null ? void 0 : _B.chordVoicing) == null ? void 0 : _C.voicingDensity) != null ? _D : 0.5
       },
       rhythmic: config.rhythmic || {
-        enabled: false,
+        // Use musicalEnhancements settings if available, otherwise defaults
+        enabled: ((_H = (_G = (_F = (_E = this.settings) == null ? void 0 : _E.localSoundscape) == null ? void 0 : _F.musicalEnhancements) == null ? void 0 : _G.rhythmicPatterns) == null ? void 0 : _H.enabled) || false,
         patternPerDepth: {
           center: "sequential",
           depth1: "arpeggio",
           depth2: "pulse",
           depth3Plus: "sequential"
         },
-        tempo: 60,
+        tempo: (_M = (_L = (_K = (_J = (_I = this.settings) == null ? void 0 : _I.localSoundscape) == null ? void 0 : _J.musicalEnhancements) == null ? void 0 : _K.rhythmicPatterns) == null ? void 0 : _L.tempo) != null ? _M : 60,
         timeSignature: [4, 4],
         patterns: {
           arpeggio: {
