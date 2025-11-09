@@ -59736,16 +59736,268 @@ var init_OfflineRenderer = __esm({
   }
 });
 
+// src/audio/playback/NoteCentricPlayer.ts
+var NoteCentricPlayer_exports = {};
+__export(NoteCentricPlayer_exports, {
+  NoteCentricPlayer: () => NoteCentricPlayer
+});
+var logger72, NoteCentricPlayer;
+var init_NoteCentricPlayer = __esm({
+  "src/audio/playback/NoteCentricPlayer.ts"() {
+    init_logging();
+    logger72 = getLogger("NoteCentricPlayer");
+    NoteCentricPlayer = class {
+      constructor(audioEngine) {
+        this.isPlaying = false;
+        this.playingNotes = [];
+        this.animationFrameId = null;
+        this.startTime = 0;
+        this.embellishmentCounts = {};
+        this.audioEngine = audioEngine;
+      }
+      /**
+       * Play a note-centric mapping
+       */
+      async play(mapping) {
+        if (this.isPlaying) {
+          logger72.warn("already-playing", "Already playing, stopping first");
+          this.stop();
+        }
+        logger72.info("playback-start", "Starting note-centric playback", {
+          centerPhraseLength: mapping.centerPhrase.melody.length,
+          embellishments: mapping.embellishments.length,
+          tempo: mapping.centerPhrase.tempo,
+          audioEngineStatus: this.audioEngine.getStatus()
+        });
+        this.isPlaying = true;
+        this.startTime = Date.now();
+        this.embellishmentCounts = {
+          "harmonic-response": 0,
+          "rhythmic-counterpoint": 0,
+          "ambient-texture": 0
+        };
+        logger72.debug("play-center", "Playing center phrase");
+        await this.playPhrase(mapping.centerPhrase, "center", 0);
+        logger72.debug("play-embellishments", "Playing embellishments", {
+          count: mapping.embellishments.length
+        });
+        for (const embellishment of mapping.embellishments) {
+          const delay = this.getDelayForEmbellishment(embellishment.type);
+          await this.playPhrase(embellishment.phrase, embellishment.type, delay);
+        }
+        logger72.debug("start-animation", "Starting animation loop");
+        this.startAnimationLoop();
+        logger72.info("playback-scheduled", "All notes scheduled", {
+          totalNotes: this.playingNotes.length
+        });
+      }
+      /**
+       * Stop playback
+       */
+      stop() {
+        if (!this.isPlaying) {
+          return;
+        }
+        logger72.info("playback-stop", "Stopping note-centric playback");
+        this.playingNotes = [];
+        this.isPlaying = false;
+        if (this.animationFrameId !== null) {
+          cancelAnimationFrame(this.animationFrameId);
+          this.animationFrameId = null;
+        }
+      }
+      /**
+       * Check if currently playing
+       */
+      getIsPlaying() {
+        return this.isPlaying;
+      }
+      /**
+       * Get count of currently active voices
+       */
+      getActiveVoiceCount() {
+        return this.playingNotes.length;
+      }
+      /**
+       * Play a musical phrase
+       */
+      async playPhrase(phrase, role, startDelay) {
+        const instrument = this.getInstrumentForRole(role);
+        logger72.debug("phrase-play", "Playing phrase", {
+          role,
+          instrument,
+          length: phrase.melody.length,
+          tempo: phrase.tempo,
+          startDelay
+        });
+        const beatDuration = 60 / phrase.tempo * 1e3;
+        let currentTime = startDelay;
+        const isPlayingRef = () => this.isPlaying;
+        for (let i = 0; i < phrase.melody.length; i++) {
+          if (!this.isPlaying) {
+            break;
+          }
+          const pitchOffset = phrase.melody[i];
+          const chordRoot = phrase.harmony[i];
+          const duration = phrase.rhythm[i];
+          const velocity = phrase.velocities[i];
+          const baseFreq = 261.63;
+          const totalOffset = chordRoot + pitchOffset;
+          const frequency = baseFreq * Math.pow(2, totalOffset / 12);
+          const humanization = Math.random() * 150 - 75 + (Math.random() * 150 - 75);
+          const humanizedTime = currentTime + humanization;
+          logger72.debug("schedule-note", "Scheduling note", {
+            index: i,
+            delay: humanizedTime,
+            humanization: humanization.toFixed(2),
+            frequency: frequency.toFixed(2),
+            role,
+            instrument
+          });
+          setTimeout(async () => {
+            logger72.debug("timeout-fired", "Note timeout fired", {
+              index: i,
+              isPlaying: this.isPlaying
+            });
+            if (!this.isPlaying) {
+              return;
+            }
+            try {
+              let finalFreq = frequency;
+              if (this.audioEngine.musicalTheoryEngine) {
+                finalFreq = this.audioEngine.musicalTheoryEngine.constrainPitchToScale(frequency);
+              }
+              const durationSeconds = duration * beatDuration / 1e3;
+              await this.audioEngine.playNoteImmediate({
+                pitch: finalFreq,
+                duration: durationSeconds,
+                velocity,
+                instrument
+              });
+              const stopTime = Date.now() + duration * beatDuration;
+              this.playingNotes.push({
+                instrumentName: instrument,
+                frequency: finalFreq,
+                stopTime
+              });
+              logger72.debug("note-play", "Note started", {
+                instrument,
+                frequency: finalFreq.toFixed(2),
+                velocity: velocity.toFixed(2),
+                duration: durationSeconds.toFixed(2)
+              });
+            } catch (error) {
+              logger72.warn("note-play-error", "Error playing note", {
+                instrument,
+                frequency: frequency.toFixed(2),
+                error: error instanceof Error ? error.message : String(error),
+                errorStack: error instanceof Error ? error.stack : void 0
+              });
+            }
+          }, Math.max(0, humanizedTime));
+          currentTime += duration * beatDuration;
+        }
+      }
+      /**
+       * Get instrument for a role
+       */
+      getInstrumentForRole(role) {
+        const enabledInstruments = this.audioEngine.getEnabledInstruments();
+        if (enabledInstruments.length === 0) {
+          logger72.warn("no-instruments", "No instruments enabled, cannot play note-centric audio");
+          return "piano";
+        }
+        const preferredInstruments = {
+          "center": ["piano", "organ", "electricpiano", "harpsichord", "marimba"],
+          "harmonic-response": ["electricpiano", "organ", "vibraphone", "harp", "celeste"],
+          "rhythmic-counterpoint": ["cello", "bassElectric", "bassoon", "trombone", "tuba"],
+          "ambient-texture": ["pad", "organ", "frenchHorn", "clarinet", "flute"]
+        };
+        const preferences = preferredInstruments[role] || preferredInstruments["center"];
+        for (const preferred of preferences) {
+          if (enabledInstruments.includes(preferred)) {
+            return preferred;
+          }
+        }
+        logger72.debug("instrument-fallback", "Using fallback instrument for role", {
+          role,
+          instrument: enabledInstruments[0]
+        });
+        return enabledInstruments[0];
+      }
+      /**
+       * Get delay for embellishment type with phrase-sensitive timing and overlap
+       */
+      getDelayForEmbellishment(type2) {
+        if (!this.embellishmentCounts) {
+          this.embellishmentCounts = {
+            "harmonic-response": 0,
+            "rhythmic-counterpoint": 0,
+            "ambient-texture": 0
+          };
+        }
+        const baseDelays = {
+          "harmonic-response": 1e3 + Math.random() * 1e3,
+          // 1-2s (IMMEDIATE overlap!)
+          "rhythmic-counterpoint": 2500 + Math.random() * 1500,
+          // 2.5-4s (much earlier)
+          "ambient-texture": 0 + Math.random() * 300
+          // 0-0.3s (essentially immediate)
+        };
+        const staggerDelay = {
+          "harmonic-response": 1500 + Math.random() * 1e3,
+          // 1.5-2.5s more each time
+          "rhythmic-counterpoint": 2e3 + Math.random() * 1e3,
+          // 2-3s more each time
+          "ambient-texture": 1e3 + Math.random() * 500
+          // 1-1.5s for ambient
+        };
+        const baseDelay = baseDelays[type2] || 0;
+        const count = this.embellishmentCounts[type2] || 0;
+        const stagger = (staggerDelay[type2] || 0) * count;
+        this.embellishmentCounts[type2] = count + 1;
+        return Math.round((baseDelay + stagger) / 100) * 100;
+      }
+      /**
+       * Animation loop to clean up finished notes
+       */
+      startAnimationLoop() {
+        const loop = () => {
+          if (!this.isPlaying) {
+            return;
+          }
+          const now3 = Date.now();
+          this.playingNotes = this.playingNotes.filter((note) => {
+            return now3 < note.stopTime;
+          });
+          const timeSinceStart = now3 - this.startTime;
+          if (this.playingNotes.length === 0 && timeSinceStart > 1e3) {
+            logger72.info("playback-complete", "All notes finished, stopping playback naturally");
+            this.isPlaying = false;
+            if (this.animationFrameId !== null) {
+              cancelAnimationFrame(this.animationFrameId);
+              this.animationFrameId = null;
+            }
+            return;
+          }
+          this.animationFrameId = requestAnimationFrame(loop);
+        };
+        this.animationFrameId = requestAnimationFrame(loop);
+      }
+    };
+  }
+});
+
 // src/export/ExportNoteCreator.ts
 var ExportNoteCreator_exports = {};
 __export(ExportNoteCreator_exports, {
   ExportNoteCreator: () => ExportNoteCreator
 });
-var logger72, ExportNoteCreator;
+var logger73, ExportNoteCreator;
 var init_ExportNoteCreator = __esm({
   "src/export/ExportNoteCreator.ts"() {
     init_logging();
-    logger72 = getLogger("export-note");
+    logger73 = getLogger("export-note");
     ExportNoteCreator = class {
       constructor(app, pluginVersion = "0.14.2") {
         this.app = app;
@@ -59756,7 +60008,7 @@ var init_ExportNoteCreator = __esm({
        */
       async createNote(config, result, animator, pluginSettings) {
         try {
-          logger72.info("export-note", "Creating export note", {
+          logger73.info("export-note", "Creating export note", {
             filename: config.filename,
             createNote: config.createNote
           });
@@ -59771,10 +60023,10 @@ var init_ExportNoteCreator = __esm({
             counter++;
           }
           const file = await this.app.vault.create(finalPath, noteContent);
-          logger72.info("export-note", "Export note created", { path: finalPath });
+          logger73.info("export-note", "Export note created", { path: finalPath });
           return finalPath;
         } catch (error) {
-          logger72.error("export-note", "Failed to create export note:", error);
+          logger73.error("export-note", "Failed to create export note:", error);
           throw error;
         }
       }
@@ -60173,7 +60425,7 @@ ${audioConfig}
 });
 
 // src/export/AudioExporter.ts
-var import_obsidian24, logger73, AudioExporter;
+var import_obsidian24, logger74, AudioExporter;
 var init_AudioExporter = __esm({
   "src/export/AudioExporter.ts"() {
     import_obsidian24 = require("obsidian");
@@ -60181,10 +60433,11 @@ var init_AudioExporter = __esm({
     init_Mp3Encoder();
     init_OfflineRenderer();
     init_logging();
-    logger73 = getLogger("export");
+    logger74 = getLogger("export");
     AudioExporter = class {
       constructor(app, audioEngine, pluginSettings, pluginVersion = "0.14.2") {
         this.animator = null;
+        this.noteCentricMapping = null;
         this.isCancelled = false;
         this.app = app;
         this.audioEngine = audioEngine;
@@ -60196,6 +60449,12 @@ var init_AudioExporter = __esm({
        */
       setAnimator(animator) {
         this.animator = animator;
+      }
+      /**
+       * Set note-centric mapping for static graph exports
+       */
+      setNoteCentricMapping(mapping) {
+        this.noteCentricMapping = mapping;
       }
       /**
        * Set progress callback for real-time updates
@@ -60243,7 +60502,7 @@ var init_AudioExporter = __esm({
             notePath
           };
         } catch (error) {
-          logger73.error("export", "Export failed:", error);
+          logger74.error("export", "Export failed:", error);
           return {
             success: false,
             error: this.createError("unknown", error.message, error)
@@ -60258,7 +60517,7 @@ var init_AudioExporter = __esm({
         if (this.currentRenderer) {
           this.currentRenderer.cancel();
         }
-        logger73.info("export", "Export cancelled by user");
+        logger74.info("export", "Export cancelled by user");
       }
       /**
        * Validate export configuration
@@ -60266,7 +60525,7 @@ var init_AudioExporter = __esm({
       async validate(config) {
         const masterVolume = this.audioEngine.getMasterVolume();
         if (!masterVolume) {
-          logger73.info("export", "Audio engine not initialized, initializing now");
+          logger74.info("export", "Audio engine not initialized, initializing now");
           try {
             await this.audioEngine.initialize();
           } catch (error) {
@@ -60304,7 +60563,7 @@ var init_AudioExporter = __esm({
         if (exists && config.onCollision === "cancel") {
           throw new Error(`File already exists: ${fullPath}`);
         }
-        logger73.info("export", "Export configuration validated");
+        logger74.info("export", "Export configuration validated");
       }
       /**
        * Render audio based on export scope
@@ -60337,10 +60596,160 @@ var init_AudioExporter = __esm({
         return renderer.render(config);
       }
       /**
-       * Render static graph state
+       * Render static graph state using note-centric playback
        */
       async renderStaticGraph(config) {
-        throw new Error("Static graph export not yet implemented");
+        if (!this.noteCentricMapping) {
+          throw new Error("Note-centric mapping not set for static graph export");
+        }
+        logger74.info("offline-renderer", "Starting note-centric static graph render");
+        const { NoteCentricPlayer: NoteCentricPlayer2 } = (init_NoteCentricPlayer(), __toCommonJS(NoteCentricPlayer_exports));
+        const player = new NoteCentricPlayer2(this.audioEngine);
+        const duration = this.estimateNoteCentricDuration(this.noteCentricMapping);
+        const qualitySettings = config.quality;
+        const sampleRate = qualitySettings.sampleRate || 48e3;
+        logger74.info("offline-renderer", `Rendering note-centric audio: ${duration.toFixed(1)}s at ${sampleRate}Hz`);
+        try {
+          const audioBuffer = await this.recordNoteCentricPlayback(
+            player,
+            this.noteCentricMapping,
+            duration,
+            sampleRate
+          );
+          logger74.info("offline-renderer", "Note-centric render complete");
+          return audioBuffer;
+        } catch (error) {
+          logger74.error("offline-renderer", "Note-centric render failed:", error);
+          throw error;
+        }
+      }
+      /**
+       * Estimate duration of note-centric mapping in seconds
+       */
+      estimateNoteCentricDuration(mapping) {
+        const centerDuration = mapping.centerPhrase.totalBeats / mapping.centerPhrase.tempo * 60;
+        let maxEmbellishmentDuration = 0;
+        for (const embellishment of mapping.embellishments) {
+          const duration = embellishment.phrase.totalBeats / embellishment.phrase.tempo * 60;
+          maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+        }
+        return Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+      }
+      /**
+       * Record note-centric playback using MediaRecorder
+       */
+      async recordNoteCentricPlayback(player, mapping, duration, targetSampleRate) {
+        const { getContext: getContext3 } = (init_esm(), __toCommonJS(esm_exports));
+        const audioContext = getContext3().rawContext;
+        if (!audioContext) {
+          throw new Error("Audio context not available");
+        }
+        if (!("createMediaStreamDestination" in audioContext)) {
+          throw new Error("Audio context does not support MediaStream recording");
+        }
+        const webAudioContext = audioContext;
+        const masterVolume = this.audioEngine.getMasterVolume();
+        if (!masterVolume) {
+          throw new Error("Could not access audio engine master volume");
+        }
+        const destination = webAudioContext.createMediaStreamDestination();
+        const volumeNode = masterVolume.output;
+        volumeNode.connect(destination);
+        const mediaRecorder = new MediaRecorder(destination.stream, {
+          mimeType: "audio/webm;codecs=opus"
+        });
+        const chunks = [];
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+        const recordingPromise = new Promise((resolve, reject) => {
+          mediaRecorder.onstop = () => {
+            const blob2 = new Blob(chunks, { type: "audio/webm" });
+            logger74.info("offline-renderer", `Recording stopped, captured ${blob2.size} bytes`);
+            resolve(blob2);
+          };
+          mediaRecorder.onerror = (error) => {
+            reject(new Error(`MediaRecorder error: ${error}`));
+          };
+        });
+        mediaRecorder.start(100);
+        logger74.info("offline-renderer", "Recording started");
+        const progressStartTime = Date.now();
+        const progressInterval = setInterval(() => {
+          if (this.isCancelled) {
+            clearInterval(progressInterval);
+            return;
+          }
+          const elapsed = (Date.now() - progressStartTime) / 1e3;
+          const progress = Math.min(95, elapsed / duration * 50);
+          if (this.progressCallback) {
+            this.progressCallback(10 + progress);
+          }
+        }, 100);
+        await player.play(mapping);
+        logger74.info("offline-renderer", "Note-centric playback started");
+        await new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (this.isCancelled) {
+              clearInterval(checkInterval);
+              player.stop();
+              logger74.info("offline-renderer", "Render cancelled by user");
+              reject(new Error("Export cancelled by user"));
+              return;
+            }
+            if (!player.getIsPlaying()) {
+              clearInterval(checkInterval);
+              logger74.info("offline-renderer", "Note-centric playback complete");
+              resolve();
+            }
+          }, 100);
+          setTimeout(() => {
+            if (!this.isCancelled) {
+              clearInterval(checkInterval);
+              logger74.info("offline-renderer", "Playback timeout reached");
+              resolve();
+            }
+          }, (duration + 2) * 1e3);
+        });
+        clearInterval(progressInterval);
+        logger74.info("offline-renderer", "Stopping recording...");
+        mediaRecorder.stop();
+        const blob = await recordingPromise;
+        volumeNode.disconnect(destination);
+        if (this.progressCallback) {
+          this.progressCallback(70);
+        }
+        logger74.info("offline-renderer", "Converting recorded audio to AudioBuffer");
+        const arrayBuffer = await blob.arrayBuffer();
+        if (this.progressCallback) {
+          this.progressCallback(80);
+        }
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        logger74.info("offline-renderer", `Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+        if (audioBuffer.sampleRate !== targetSampleRate) {
+          logger74.info("offline-renderer", `Resampling from ${audioBuffer.sampleRate}Hz to ${targetSampleRate}Hz`);
+          return await this.resampleBuffer(audioBuffer, targetSampleRate);
+        }
+        return audioBuffer;
+      }
+      /**
+       * Resample audio buffer to target sample rate
+       */
+      async resampleBuffer(sourceBuffer, targetSampleRate) {
+        const offlineContext = new OfflineAudioContext(
+          sourceBuffer.numberOfChannels,
+          Math.ceil(sourceBuffer.duration * targetSampleRate),
+          targetSampleRate
+        );
+        const source = offlineContext.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineContext.destination);
+        source.start(0);
+        const resampled = await offlineContext.startRendering();
+        logger74.info("offline-renderer", "Resampling complete");
+        return resampled;
       }
       /**
        * Encode audio buffer to target format
@@ -60390,7 +60799,7 @@ var init_AudioExporter = __esm({
         } else {
           throw new Error("System location export not yet implemented");
         }
-        logger73.info("export", `File written: ${fullPath} (${data.byteLength} bytes)`);
+        logger74.info("export", `File written: ${fullPath} (${data.byteLength} bytes)`);
         return fullPath;
       }
       /**
@@ -60411,10 +60820,10 @@ var init_AudioExporter = __esm({
             result.fileSize = fileWithStat.stat.size;
           }
           const notePath = await noteCreator.createNote(config, result, this.animator, this.pluginSettings);
-          logger73.info("export", `Export note created: ${notePath}`);
+          logger74.info("export", `Export note created: ${notePath}`);
           return notePath;
         } catch (error) {
-          logger73.error("export", "Failed to create export note:", error);
+          logger74.error("export", "Failed to create export note:", error);
           return "";
         }
       }
@@ -60428,10 +60837,10 @@ var init_AudioExporter = __esm({
           const file = this.app.vault.getAbstractFileByPath(filePath);
           if (file instanceof import_obsidian24.TFile) {
             await this.app.fileManager.trashFile(file);
-            logger73.info("export", `Cleaned up partial file: ${filePath}`);
+            logger74.info("export", `Cleaned up partial file: ${filePath}`);
           }
         } catch (error) {
-          logger73.error("export", `Failed to cleanup file: ${filePath}`, error);
+          logger74.error("export", `Failed to cleanup file: ${filePath}`, error);
         }
       }
       /**
@@ -60457,6 +60866,9 @@ var init_AudioExporter = __esm({
         }
         if (this.animator) {
           return this.animator.config.duration;
+        }
+        if (this.noteCentricMapping) {
+          return this.estimateNoteCentricDuration(this.noteCentricMapping);
         }
         return 10;
       }
@@ -60500,12 +60912,12 @@ var init_AudioExporter = __esm({
 });
 
 // src/export/ExportProgressModal.ts
-var import_obsidian25, logger74, ExportProgressModal;
+var import_obsidian25, logger75, ExportProgressModal;
 var init_ExportProgressModal = __esm({
   "src/export/ExportProgressModal.ts"() {
     import_obsidian25 = require("obsidian");
     init_logging();
-    logger74 = getLogger("export-progress");
+    logger75 = getLogger("export-progress");
     ExportProgressModal = class extends import_obsidian25.Modal {
       constructor(app, exporter, config) {
         super(app);
@@ -60551,14 +60963,14 @@ var init_ExportProgressModal = __esm({
           const result = await this.exporter.export(this.config);
           if (this.isCancelled) {
             new import_obsidian25.Notice("Export cancelled");
-            logger74.info("export-progress", "Export cancelled by user");
+            logger75.info("export-progress", "Export cancelled by user");
           } else if (result.success) {
             this.showSuccess(result);
           } else {
             this.showError(result);
           }
         } catch (error) {
-          logger74.error("export-progress", "Export failed:", error);
+          logger75.error("export-progress", "Export failed:", error);
           new import_obsidian25.Notice(`Export failed: ${error.message}`);
         } finally {
           setTimeout(() => {
@@ -60612,7 +61024,7 @@ var init_ExportProgressModal = __esm({
         }
         const fileSizeMB = result.fileSize ? (result.fileSize / (1024 * 1024)).toFixed(1) : "?";
         new import_obsidian25.Notice(`Export complete: ${result.filePath} (${fileSizeMB} MB)`);
-        logger74.info("export-progress", `Export successful: ${result.filePath}`, {
+        logger75.info("export-progress", `Export successful: ${result.filePath}`, {
           fileSize: result.fileSize,
           duration: result.duration,
           notePath: result.notePath
@@ -60632,7 +61044,7 @@ var init_ExportProgressModal = __esm({
           this.cancelButton.classList.remove("mod-warning");
         }
         new import_obsidian25.Notice(`Export failed: ${((_b = result.error) == null ? void 0 : _b.message) || "Unknown error"}`);
-        logger74.error("export-progress", "Export failed:", result.error);
+        logger75.error("export-progress", "Export failed:", result.error);
       }
       /**
        * Cancel export
@@ -60649,7 +61061,7 @@ var init_ExportProgressModal = __esm({
           this.cancelButton.disabled = true;
           this.cancelButton.textContent = "Cancelling...";
         }
-        logger74.info("export-progress", "User requested export cancellation");
+        logger75.info("export-progress", "User requested export cancellation");
       }
       /**
        * Format stage name for display
@@ -60697,12 +61109,12 @@ var FileCollisionModal_exports = {};
 __export(FileCollisionModal_exports, {
   FileCollisionModal: () => FileCollisionModal
 });
-var import_obsidian26, logger75, FileCollisionModal;
+var import_obsidian26, logger76, FileCollisionModal;
 var init_FileCollisionModal = __esm({
   "src/export/FileCollisionModal.ts"() {
     import_obsidian26 = require("obsidian");
     init_logging();
-    logger75 = getLogger("file-collision");
+    logger76 = getLogger("file-collision");
     FileCollisionModal = class extends import_obsidian26.Modal {
       constructor(app, filePath, resolveCallback) {
         super(app);
@@ -60864,7 +61276,7 @@ var init_FileCollisionModal = __esm({
        * Resolve the collision
        */
       resolve(resolution) {
-        logger75.info("file-collision", "Collision resolved", { resolution });
+        logger76.info("file-collision", "Collision resolved", { resolution });
         this.resolveCallback(resolution);
         this.close();
       }
@@ -60938,16 +61350,16 @@ var ExportModal_exports = {};
 __export(ExportModal_exports, {
   ExportModal: () => ExportModal
 });
-var import_obsidian27, logger76, ExportModal;
+var import_obsidian27, logger77, ExportModal;
 var init_ExportModal = __esm({
   "src/export/ExportModal.ts"() {
     import_obsidian27 = require("obsidian");
     init_AudioExporter();
     init_ExportProgressModal();
     init_logging();
-    logger76 = getLogger("export-modal");
+    logger77 = getLogger("export-modal");
     ExportModal = class extends import_obsidian27.Modal {
-      constructor(app, plugin, audioEngine, animator) {
+      constructor(app, plugin, audioEngine, animator, noteCentricMapping = null) {
         super(app);
         // Configuration state
         this.config = {};
@@ -60955,9 +61367,13 @@ var init_ExportModal = __esm({
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
+        this.noteCentricMapping = noteCentricMapping;
         this.exporter = new AudioExporter(app, audioEngine, plugin.settings, plugin.manifest.version);
         if (animator) {
           this.exporter.setAnimator(animator);
+        }
+        if (noteCentricMapping) {
+          this.exporter.setNoteCentricMapping(noteCentricMapping);
         }
         this.initializeConfig();
       }
@@ -61122,8 +61538,9 @@ var init_ExportModal = __esm({
        */
       initializeConfig() {
         const exportSettings = this.plugin.settings.exportSettings;
+        const defaultScope = this.animator ? "full-timeline" : "static-graph";
         this.config = {
-          scope: "full-timeline",
+          scope: defaultScope,
           format: (exportSettings == null ? void 0 : exportSettings.defaultFormat) || "wav",
           quality: this.getQualityForFormat((exportSettings == null ? void 0 : exportSettings.defaultFormat) || "wav", exportSettings),
           locationType: (exportSettings == null ? void 0 : exportSettings.lastExportType) || "vault",
@@ -61147,9 +61564,12 @@ var init_ExportModal = __esm({
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "What to export" });
         new import_obsidian27.Setting(section).setName("Export scope").setDesc("Choose what portion of the timeline to export").addDropdown((dropdown) => {
-          var _a;
           this.scopeDropdown = dropdown;
-          dropdown.addOption("full-timeline", `Full Timeline Animation (${((_a = this.animator) == null ? void 0 : _a.config.duration) || 60}s)`).addOption("custom-range", "Custom Time Range").addOption("static-graph", "Current Static Graph").setValue(this.config.scope || "full-timeline").onChange((value) => {
+          if (this.animator) {
+            dropdown.addOption("full-timeline", `Full Timeline Animation (${this.animator.config.duration}s)`).addOption("custom-range", "Custom Time Range");
+          }
+          dropdown.addOption("static-graph", "Current Static Graph");
+          dropdown.setValue(this.config.scope || "static-graph").onChange((value) => {
             this.config.scope = value;
             this.updateCustomRangeVisibility();
             this.updateEstimate();
@@ -61388,14 +61808,14 @@ var init_ExportModal = __esm({
           const fullPath = `${exportConfig.location}/${exportConfig.filename}.${extension}`;
           const fileExists = this.app.vault.getAbstractFileByPath(fullPath);
           if (fileExists) {
-            logger76.info("export-modal", "File collision detected, showing resolution modal");
+            logger77.info("export-modal", "File collision detected, showing resolution modal");
             const { FileCollisionModal: FileCollisionModal2 } = (init_FileCollisionModal(), __toCommonJS(FileCollisionModal_exports));
             const collisionModal = new FileCollisionModal2(
               this.app,
               fullPath,
               (resolution) => {
                 if (!resolution) {
-                  logger76.info("export-modal", "Export cancelled by user (file collision)");
+                  logger77.info("export-modal", "Export cancelled by user (file collision)");
                   return;
                 }
                 if (resolution.action === "rename" && resolution.newFilename) {
@@ -61408,7 +61828,7 @@ var init_ExportModal = __esm({
                 } else {
                   exportConfig.onCollision = resolution.action;
                 }
-                logger76.info("export-modal", "File collision resolved", { resolution, newFilename: exportConfig.filename });
+                logger77.info("export-modal", "File collision resolved", { resolution, newFilename: exportConfig.filename });
                 this.proceedWithExport(exportConfig);
               }
             );
@@ -61417,7 +61837,7 @@ var init_ExportModal = __esm({
           }
           await this.proceedWithExport(exportConfig);
         } catch (error) {
-          logger76.error("export-modal", "Export start failed:", error);
+          logger77.error("export-modal", "Export start failed:", error);
           new import_obsidian27.Notice(`Export failed: ${error.message}`);
         }
       }
@@ -61425,7 +61845,7 @@ var init_ExportModal = __esm({
        * Proceed with export after collision resolution (if any)
        */
       async proceedWithExport(exportConfig) {
-        logger76.info("export-modal", "Starting export with config:", exportConfig);
+        logger77.info("export-modal", "Starting export with config:", exportConfig);
         this.close();
         const progressModal = new ExportProgressModal(this.app, this.exporter, exportConfig);
         progressModal.open();
@@ -80284,7 +80704,7 @@ var NoteVisualizationManager = class {
 };
 
 // src/ui/SonicGraphView.ts
-var logger77 = getLogger("SonicGraphView");
+var logger78 = getLogger("SonicGraphView");
 var VIEW_TYPE_SONIC_GRAPH = "sonic-graph-view";
 var SonicGraphView = class extends import_obsidian28.ItemView {
   // Musical phrase length
@@ -80331,26 +80751,26 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.currentChordProgression = [];
     this.notesInCurrentPhrase = 0;
     this.phraseLengthInNotes = 8;
-    logger77.debug("ui", "SonicGraphView constructor started");
+    logger78.debug("ui", "SonicGraphView constructor started");
     this.plugin = plugin;
-    logger77.debug("ui", "Plugin assigned");
+    logger78.debug("ui", "Plugin assigned");
     try {
       const excludeFolders = plugin.settings.sonicGraphExcludeFolders || [];
       const excludeFiles = plugin.settings.sonicGraphExcludeFiles || [];
       const filterSettings = this.getSonicGraphSettings().layout.filters;
-      logger77.debug("ui", "Creating GraphDataExtractor with exclusions and filters:", { excludeFolders, excludeFiles, filterSettings });
+      logger78.debug("ui", "Creating GraphDataExtractor with exclusions and filters:", { excludeFolders, excludeFiles, filterSettings });
       this.graphDataExtractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache, {
         excludeFolders,
         excludeFiles,
         filterSettings
       });
-      logger77.debug("ui", "GraphDataExtractor created successfully");
+      logger78.debug("ui", "GraphDataExtractor created successfully");
     } catch (error) {
-      logger77.error("ui", "Failed to create GraphDataExtractor:", error.message);
-      logger77.error("ui", "GraphDataExtractor error stack:", error.stack);
+      logger78.error("ui", "Failed to create GraphDataExtractor:", error.message);
+      logger78.error("ui", "GraphDataExtractor error stack:", error.stack);
       throw error;
     }
-    logger77.debug("ui", "SonicGraphView constructor completed");
+    logger78.debug("ui", "SonicGraphView constructor completed");
   }
   getViewType() {
     return VIEW_TYPE_SONIC_GRAPH;
@@ -80363,41 +80783,41 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   }
   async setState(state, result) {
     var _a, _b, _c, _d, _e, _f;
-    logger77.debug("state", "Restoring view state", state);
+    logger78.debug("state", "Restoring view state", state);
     await super.setState(state, result);
     if (!state || typeof state !== "object") {
-      logger77.debug("state", "No valid state to restore");
+      logger78.debug("state", "No valid state to restore");
       return;
     }
     const viewState = state;
     if (viewState.isTimelineView !== void 0) {
       this.isTimelineView = viewState.isTimelineView;
-      logger77.debug("state", "Restored isTimelineView", this.isTimelineView);
+      logger78.debug("state", "Restored isTimelineView", this.isTimelineView);
     }
     if (viewState.isAnimating !== void 0) {
-      logger77.debug("state", "Animation state was", viewState.isAnimating);
+      logger78.debug("state", "Animation state was", viewState.isAnimating);
     }
     if (viewState.detectedSpacing !== void 0) {
       this.detectedSpacing = viewState.detectedSpacing;
-      logger77.debug("state", "Restored detectedSpacing", this.detectedSpacing);
+      logger78.debug("state", "Restored detectedSpacing", this.detectedSpacing);
     }
     if (viewState.isSettingsVisible !== void 0) {
       this.isSettingsVisible = viewState.isSettingsVisible;
-      logger77.debug("state", "Restored isSettingsVisible", this.isSettingsVisible);
+      logger78.debug("state", "Restored isSettingsVisible", this.isSettingsVisible);
     }
     if (viewState.isVisualDisplayVisible !== void 0) {
       this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
-      logger77.debug("state", "Restored isVisualDisplayVisible", this.isVisualDisplayVisible);
+      logger78.debug("state", "Restored isVisualDisplayVisible", this.isVisualDisplayVisible);
     } else {
       this.isVisualDisplayVisible = (_c = (_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.enabled) != null ? _c : true;
-      logger77.debug("state", "Initialized isVisualDisplayVisible from settings", this.isVisualDisplayVisible);
+      logger78.debug("state", "Initialized isVisualDisplayVisible from settings", this.isVisualDisplayVisible);
     }
     if (viewState.visualDisplayHeight !== void 0) {
       this.visualDisplayHeight = viewState.visualDisplayHeight;
-      logger77.debug("state", "Restored visualDisplayHeight", this.visualDisplayHeight);
+      logger78.debug("state", "Restored visualDisplayHeight", this.visualDisplayHeight);
     } else {
       this.visualDisplayHeight = (_f = (_e = (_d = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _d.visualDisplay) == null ? void 0 : _e.height) != null ? _f : 250;
-      logger77.debug("state", "Initialized visualDisplayHeight from settings", this.visualDisplayHeight);
+      logger78.debug("state", "Initialized visualDisplayHeight from settings", this.visualDisplayHeight);
     }
     this.updateVisualDisplayState();
     if (viewState.currentTimelinePosition !== void 0 || viewState.animationSpeed !== void 0) {
@@ -80405,13 +80825,13 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         timelinePosition: viewState.currentTimelinePosition,
         animationSpeed: viewState.animationSpeed
       };
-      logger77.debug("state", "Stored pending timeline state for post-initialization");
+      logger78.debug("state", "Stored pending timeline state for post-initialization");
     }
-    logger77.info("state", "View state restoration complete");
+    logger78.info("state", "View state restoration complete");
   }
   getState() {
     var _a, _b;
-    logger77.info("state", "getState() called - capturing view state", {
+    logger78.info("state", "getState() called - capturing view state", {
       isTimelineView: this.isTimelineView,
       hasScrubber: !!this.timelineScrubber,
       hasAnimator: !!this.temporalAnimator,
@@ -80422,9 +80842,9 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     let currentTimelinePosition = 0;
     if (this.timelineScrubber) {
       currentTimelinePosition = parseFloat(this.timelineScrubber.value) || 0;
-      logger77.info("state", "Captured timeline position from scrubber", { currentTimelinePosition });
+      logger78.info("state", "Captured timeline position from scrubber", { currentTimelinePosition });
     } else if (this.isTimelineView) {
-      logger77.warn("state", "isTimelineView is true but scrubber does not exist - cannot capture position");
+      logger78.warn("state", "isTimelineView is true but scrubber does not exist - cannot capture position");
     }
     let animationSpeed = 1;
     if (this.speedSelect) {
@@ -80444,43 +80864,43 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       isVisualDisplayVisible: this.isVisualDisplayVisible,
       visualDisplayHeight: this.visualDisplayHeight
     };
-    logger77.info("state", "Final state being returned from getState()", state);
+    logger78.info("state", "Final state being returned from getState()", state);
     return state;
   }
   async onOpen() {
     var _a, _b;
-    logger77.info("sonic-graph-init", "View onOpen() started");
+    logger78.info("sonic-graph-init", "View onOpen() started");
     try {
       if (!this.isVisualDisplayVisible && ((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.enabled)) {
         this.isVisualDisplayVisible = true;
-        logger77.debug("sonic-graph-init", "Initialized visual display from settings in onOpen");
+        logger78.debug("sonic-graph-init", "Initialized visual display from settings in onOpen");
       }
       const { contentEl } = this;
-      logger77.info("sonic-graph-init", "ContentEl acquired, emptying");
+      logger78.info("sonic-graph-init", "ContentEl acquired, emptying");
       contentEl.empty();
-      logger77.info("sonic-graph-init", "ContentEl emptied successfully");
-      logger77.info("sonic-graph-init", "Adding view CSS classes");
+      logger78.info("sonic-graph-init", "ContentEl emptied successfully");
+      logger78.info("sonic-graph-init", "Adding view CSS classes");
       contentEl.addClass("sonic-graph-view");
-      logger77.info("sonic-graph-init", "Creating view container");
+      logger78.info("sonic-graph-init", "Creating view container");
       const viewContainer = contentEl.createDiv({ cls: "sonic-graph-view-container" });
-      logger77.info("sonic-graph-init", "Creating header");
+      logger78.info("sonic-graph-init", "Creating header");
       this.createHeader(viewContainer);
-      logger77.info("sonic-graph-init", "Header created successfully");
-      logger77.info("sonic-graph-init", "Creating main content (includes timeline)");
+      logger78.info("sonic-graph-init", "Header created successfully");
+      logger78.info("sonic-graph-init", "Creating main content (includes timeline)");
       this.createMainContent(viewContainer);
-      logger77.info("sonic-graph-init", "Main content created successfully");
-      logger77.info("sonic-graph-init", "Creating controls area");
+      logger78.info("sonic-graph-init", "Main content created successfully");
+      logger78.info("sonic-graph-init", "Creating controls area");
       this.createControlsArea(viewContainer);
-      logger77.info("sonic-graph-init", "Controls area created successfully");
-      logger77.info("sonic-graph-init", "Starting graph initialization - THIS IS THE CRITICAL STEP");
+      logger78.info("sonic-graph-init", "Controls area created successfully");
+      logger78.info("sonic-graph-init", "Starting graph initialization - THIS IS THE CRITICAL STEP");
       this.initializeGraph().catch((error) => {
-        logger77.error("sonic-graph-init", "Graph initialization failed:", error);
+        logger78.error("sonic-graph-init", "Graph initialization failed:", error);
         new import_obsidian28.Notice("Failed to initialize Sonic Graph: " + error.message);
       });
       this.registerWorkspaceListener();
     } catch (error) {
-      logger77.error("ui", "Error opening Sonic Graph view:", error.message);
-      logger77.error("ui", "Error stack:", error.stack);
+      logger78.error("ui", "Error opening Sonic Graph view:", error.message);
+      logger78.error("ui", "Error stack:", error.stack);
       new import_obsidian28.Notice("Failed to open Sonic Graph view: " + error.message);
     }
   }
@@ -80497,7 +80917,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         }
       })
     );
-    logger77.debug("background-state", "Workspace listener registered for background state handling");
+    logger78.debug("background-state", "Workspace listener registered for background state handling");
   }
   /**
    * Handle view becoming active (brought to foreground)
@@ -80506,15 +80926,15 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     if (this.isViewActive) {
       return;
     }
-    logger77.info("background-state", "View activated - resuming operations");
+    logger78.info("background-state", "View activated - resuming operations");
     this.isViewActive = true;
     if (this.wasAnimatingBeforeBackground && this.temporalAnimator) {
-      logger77.debug("background-state", "Resuming animation");
+      logger78.debug("background-state", "Resuming animation");
       this.temporalAnimator.play();
       this.isAnimating = true;
       this.wasAnimatingBeforeBackground = false;
     }
-    logger77.debug("background-state", "View activation complete");
+    logger78.debug("background-state", "View activation complete");
   }
   /**
    * Handle view becoming inactive (moved to background)
@@ -80523,14 +80943,14 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     if (!this.isViewActive) {
       return;
     }
-    logger77.info("background-state", "View deactivated - pausing operations for performance");
+    logger78.info("background-state", "View deactivated - pausing operations for performance");
     this.isViewActive = false;
     if (this.isAnimating && this.temporalAnimator) {
-      logger77.debug("background-state", "Pausing animation");
+      logger78.debug("background-state", "Pausing animation");
       this.temporalAnimator.pause();
       this.wasAnimatingBeforeBackground = true;
     }
-    logger77.debug("background-state", "View deactivation complete (audio continues)");
+    logger78.debug("background-state", "View deactivation complete (audio continues)");
   }
   /**
    * Apply pending state after view initialization
@@ -80538,13 +80958,13 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   async applyPendingState() {
     const pendingState = this._pendingState;
     if (!pendingState) {
-      logger77.debug("state", "No pending state to apply");
+      logger78.debug("state", "No pending state to apply");
       return;
     }
-    logger77.debug("state", "Applying pending state", pendingState);
+    logger78.debug("state", "Applying pending state", pendingState);
     try {
       if (this.isTimelineView && !this.temporalAnimator) {
-        logger77.debug("state", "Timeline view is active but animator not initialized yet - waiting");
+        logger78.debug("state", "Timeline view is active but animator not initialized yet - waiting");
         await this.waitForTemporalAnimator();
       }
       if (pendingState.timelinePosition !== void 0 && this.timelineScrubber && this.temporalAnimator) {
@@ -80553,25 +80973,25 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         const timelineInfo = this.temporalAnimator.getTimelineInfo();
         const time = position / 100 * timelineInfo.duration;
         this.temporalAnimator.seekTo(time);
-        logger77.debug("state", "Restored timeline position to", { position, time });
+        logger78.debug("state", "Restored timeline position to", { position, time });
       }
       if (pendingState.animationSpeed !== void 0 && this.speedSelect) {
         this.speedSelect.value = pendingState.animationSpeed.toString();
         if (this.temporalAnimator) {
           this.temporalAnimator.setSpeed(pendingState.animationSpeed);
         }
-        logger77.debug("state", "Restored animation speed", pendingState.animationSpeed);
+        logger78.debug("state", "Restored animation speed", pendingState.animationSpeed);
       }
       if (this.isSettingsVisible && this.settingsPanel) {
         this.settingsPanel.removeClass("hidden");
         if (this.settingsButton) {
           this.settingsButton.addClass("active");
         }
-        logger77.debug("state", "Restored settings panel visibility");
+        logger78.debug("state", "Restored settings panel visibility");
       }
-      logger77.info("state", "Pending state applied successfully");
+      logger78.info("state", "Pending state applied successfully");
     } catch (error) {
-      logger77.error("state", "Failed to apply pending state", error);
+      logger78.error("state", "Failed to apply pending state", error);
     } finally {
       delete this._pendingState;
     }
@@ -80586,12 +81006,12 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const startTime = Date.now();
     while (!this.temporalAnimator) {
       if (Date.now() - startTime > maxWaitTime) {
-        logger77.error("state", "Timeout waiting for temporal animator initialization");
+        logger78.error("state", "Timeout waiting for temporal animator initialization");
         throw new Error("Temporal animator initialization timeout");
       }
       await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
-    logger77.debug("state", "Temporal animator is ready");
+    logger78.debug("state", "Temporal animator is ready");
   }
   /**
    * Initialize continuous layers for Phase 3
@@ -80599,14 +81019,14 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   async initializeContinuousLayers() {
     var _a;
     try {
-      logger77.info("continuous-layers", "Initializing continuous layers");
+      logger78.info("continuous-layers", "Initializing continuous layers");
       const layerConfig = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers;
       if (!(layerConfig == null ? void 0 : layerConfig.enabled)) {
-        logger77.info("continuous-layers", "Continuous layers disabled, skipping initialization");
+        logger78.info("continuous-layers", "Continuous layers disabled, skipping initialization");
         return;
       }
       if (!this.continuousLayerManager) {
-        logger77.info("continuous-layers", "Layer config", {
+        logger78.info("continuous-layers", "Layer config", {
           enabled: layerConfig == null ? void 0 : layerConfig.enabled,
           genre: layerConfig == null ? void 0 : layerConfig.genre,
           hasConfig: !!layerConfig
@@ -80626,9 +81046,9 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         currentAnimationProgress: 0,
         vaultActivityLevel: 0
       });
-      logger77.info("continuous-layers", "Continuous layers initialized successfully");
+      logger78.info("continuous-layers", "Continuous layers initialized successfully");
     } catch (error) {
-      logger77.error("continuous-layers", "Failed to initialize continuous layers", error);
+      logger78.error("continuous-layers", "Failed to initialize continuous layers", error);
       new import_obsidian28.Notice("Failed to initialize continuous audio layers");
     }
   }
@@ -80637,12 +81057,12 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   setupDividerDrag() {
     if (!this.visualDivider) {
-      logger77.warn("visual-display", "Cannot setup divider drag - visualDivider is null");
+      logger78.warn("visual-display", "Cannot setup divider drag - visualDivider is null");
       return;
     }
-    logger77.info("visual-display", "Setting up divider drag handlers");
+    logger78.info("visual-display", "Setting up divider drag handlers");
     const onMouseDown = (e) => {
-      logger77.debug("visual-display", "Divider mousedown event triggered");
+      logger78.debug("visual-display", "Divider mousedown event triggered");
       this.isDraggingDivider = true;
       document.body.style.cursor = "ns-resize";
       document.body.style.userSelect = "none";
@@ -80660,7 +81080,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.visualDisplayHeight = constrainedHeight;
       this.visualDisplaySection.style.setProperty("--visual-display-height", `${constrainedHeight}px`);
       const appliedValue = this.visualDisplaySection.style.getPropertyValue("--visual-display-height");
-      logger77.debug("visual-display", "Divider dragged - new height", {
+      logger78.debug("visual-display", "Divider dragged - new height", {
         requested: constrainedHeight,
         applied: appliedValue,
         computedMinHeight: getComputedStyle(this.visualDisplaySection).minHeight,
@@ -80672,13 +81092,13 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         this.isDraggingDivider = false;
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
-        logger77.info("visual-display", "Saved visual display height", this.visualDisplayHeight);
+        logger78.info("visual-display", "Saved visual display height", this.visualDisplayHeight);
       }
     };
     this.registerDomEvent(this.visualDivider, "mousedown", onMouseDown);
     this.registerDomEvent(document, "mousemove", onMouseMove);
     this.registerDomEvent(document, "mouseup", onMouseUp);
-    logger77.info("visual-display", "Divider drag handlers registered successfully");
+    logger78.info("visual-display", "Divider drag handlers registered successfully");
   }
   /**
    * Toggle visual display panel visibility
@@ -80690,18 +81110,18 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     if (this.isVisualDisplayVisible) {
       this.visualDisplaySection.removeClass("collapsed");
       collapseBtn.setText("\u25BC");
-      logger77.debug("visual-display", "Visual display expanded");
+      logger78.debug("visual-display", "Visual display expanded");
       if (this.visualizationManager) {
         requestAnimationFrame(() => {
           var _a;
           (_a = this.visualizationManager) == null ? void 0 : _a.forceResize();
-          logger77.debug("visual-display", "Forced visualization resize after expand");
+          logger78.debug("visual-display", "Forced visualization resize after expand");
         });
       }
     } else {
       this.visualDisplaySection.addClass("collapsed");
       collapseBtn.setText("\u25B2");
-      logger77.debug("visual-display", "Visual display collapsed");
+      logger78.debug("visual-display", "Visual display collapsed");
     }
   }
   /**
@@ -80710,7 +81130,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   switchVisualizationMode(mode, tabs) {
     if (!this.visualizationManager)
       return;
-    logger77.info("visual-display", `Switching visualization mode to ${mode}`);
+    logger78.info("visual-display", `Switching visualization mode to ${mode}`);
     tabs.forEach((tab) => tab.removeClass("active"));
     const activeTabIndex = mode === "piano-roll" ? 0 : mode === "spectrum" ? 1 : 2;
     tabs[activeTabIndex].addClass("active");
@@ -80720,7 +81140,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       const masterVolume = this.plugin.audioEngine.getMasterVolume();
       if (audioContext && masterVolume) {
         this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
-        logger77.info("visual-display", "Connected spectrum analyzer to audio after mode switch");
+        logger78.info("visual-display", "Connected spectrum analyzer to audio after mode switch");
       }
     }
   }
@@ -80729,28 +81149,28 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   updateVisualDisplayState() {
     if (!this.visualDisplaySection) {
-      logger77.debug("visual-display", "Visual display section not yet created, skipping state update");
+      logger78.debug("visual-display", "Visual display section not yet created, skipping state update");
       return;
     }
-    logger77.info("visual-display", "Updating visual display state after setState", {
+    logger78.info("visual-display", "Updating visual display state after setState", {
       isVisible: this.isVisualDisplayVisible,
       height: this.visualDisplayHeight
     });
     if (this.isVisualDisplayVisible) {
       this.visualDisplaySection.removeClass("collapsed");
-      logger77.debug("visual-display", "Removed collapsed class after setState");
+      logger78.debug("visual-display", "Removed collapsed class after setState");
     } else {
       this.visualDisplaySection.addClass("collapsed");
-      logger77.debug("visual-display", "Added collapsed class after setState");
+      logger78.debug("visual-display", "Added collapsed class after setState");
     }
     this.visualDisplaySection.style.setProperty("--visual-display-height", `${this.visualDisplayHeight}px`);
     if (this.visualizationManager) {
-      logger77.debug("visual-display", "Updating visualization manager enabled state", this.isVisualDisplayVisible);
+      logger78.debug("visual-display", "Updating visualization manager enabled state", this.isVisualDisplayVisible);
       this.visualizationManager.updateConfig({
         enabled: this.isVisualDisplayVisible
       });
       if (this.isVisualDisplayVisible) {
-        logger77.debug("visual-display", "Starting visualization after setState");
+        logger78.debug("visual-display", "Starting visualization after setState");
         this.visualizationManager.start(0);
       }
     }
@@ -80761,11 +81181,11 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   initializeVisualizationManager() {
     var _a, _b, _c, _d;
     if (!this.visualDisplayContent) {
-      logger77.warn("visual-display", "Cannot initialize visualization manager without content container");
+      logger78.warn("visual-display", "Cannot initialize visualization manager without content container");
       return;
     }
     try {
-      logger77.info("visual-display", "Initializing visualization manager");
+      logger78.info("visual-display", "Initializing visualization manager");
       const visualSettings = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay;
       this.visualizationManager = new NoteVisualizationManager({
         mode: (visualSettings == null ? void 0 : visualSettings.mode) || "piano-roll",
@@ -80783,17 +81203,17 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         const masterVolume = this.plugin.audioEngine.getMasterVolume();
         if (audioContext && masterVolume) {
           this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
-          logger77.info("visual-display", "Connected spectrum analyzer to audio");
+          logger78.info("visual-display", "Connected spectrum analyzer to audio");
         }
       }
       this.setupAudioEngineIntegration();
       if (this.isVisualDisplayVisible) {
         this.visualizationManager.start(0);
-        logger77.debug("visual-display", "Started visualization for initial render");
+        logger78.debug("visual-display", "Started visualization for initial render");
       }
-      logger77.info("visual-display", "Visualization manager initialized successfully");
+      logger78.info("visual-display", "Visualization manager initialized successfully");
     } catch (error) {
-      logger77.error("visual-display", "Failed to initialize visualization manager", error);
+      logger78.error("visual-display", "Failed to initialize visualization manager", error);
       new import_obsidian28.Notice("Failed to initialize visual note display");
     }
   }
@@ -80803,15 +81223,15 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   setupAudioEngineIntegration() {
     if (!this.visualizationManager) {
-      logger77.warn("visual-display", "Cannot setup audio integration - no visualization manager");
+      logger78.warn("visual-display", "Cannot setup audio integration - no visualization manager");
       return;
     }
     this.plugin.audioEngine.on("note-triggered", (data) => {
       if (!this.visualizationManager) {
-        logger77.warn("visual-display", "Received note event but no visualization manager");
+        logger78.warn("visual-display", "Received note event but no visualization manager");
         return;
       }
-      logger77.info("visual-display", "Received note-triggered event from audio engine", {
+      logger78.info("visual-display", "Received note-triggered event from audio engine", {
         pitch: data.pitch,
         layer: data.layer,
         timestamp: data.timestamp,
@@ -80836,22 +81256,22 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.plugin.audioEngine.on("playback-started", () => {
       if (!this.visualizationManager)
         return;
-      logger77.debug("visual-display", "Playback started - resetting visualization");
+      logger78.debug("visual-display", "Playback started - resetting visualization");
       this.visualizationManager.clearNotes();
       this.visualizationManager.updatePlaybackTime(0);
     });
-    logger77.info("visual-display", "Audio engine integration setup complete");
+    logger78.info("visual-display", "Audio engine integration setup complete");
   }
   async onClose() {
-    logger77.info("ui", "Closing Sonic Graph view - starting cleanup");
+    logger78.info("ui", "Closing Sonic Graph view - starting cleanup");
     try {
-      logger77.debug("ui", "Removing event listeners");
+      logger78.debug("ui", "Removing event listeners");
       this.removeAllEventListeners();
     } catch (error) {
-      logger77.error("ui", "Error removing event listeners:", error);
+      logger78.error("ui", "Error removing event listeners:", error);
     }
     try {
-      logger77.debug("ui", "Clearing timeouts");
+      logger78.debug("ui", "Clearing timeouts");
       if (this.settingsUpdateTimeout) {
         clearTimeout(this.settingsUpdateTimeout);
         this.settingsUpdateTimeout = null;
@@ -80862,70 +81282,70 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       }
       this.pendingSettingsUpdates.clear();
     } catch (error) {
-      logger77.error("ui", "Error clearing timeouts:", error);
+      logger78.error("ui", "Error clearing timeouts:", error);
     }
     try {
-      logger77.debug("ui", "Stopping continuous layers");
+      logger78.debug("ui", "Stopping continuous layers");
       if (this.continuousLayerManager) {
         this.continuousLayerManager.stop();
         this.continuousLayerManager = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error stopping continuous layers:", error);
+      logger78.error("ui", "Error stopping continuous layers:", error);
     }
     try {
-      logger77.debug("ui", "Destroying temporal animator");
+      logger78.debug("ui", "Destroying temporal animator");
       if (this.temporalAnimator) {
         this.temporalAnimator.destroy();
         this.temporalAnimator = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error destroying temporal animator:", error);
+      logger78.error("ui", "Error destroying temporal animator:", error);
     }
     try {
-      logger77.debug("ui", "Disposing musical mapper");
+      logger78.debug("ui", "Disposing musical mapper");
       if (this.musicalMapper) {
         this.musicalMapper.dispose();
         this.musicalMapper = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error disposing musical mapper:", error);
+      logger78.error("ui", "Error disposing musical mapper:", error);
     }
     try {
-      logger77.debug("ui", "Destroying graph renderer");
+      logger78.debug("ui", "Destroying graph renderer");
       if (this.graphRenderer) {
         this.graphRenderer.destroy();
         this.graphRenderer = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error destroying graph renderer:", error);
+      logger78.error("ui", "Error destroying graph renderer:", error);
     }
     try {
-      logger77.debug("ui", "Destroying adaptive detail manager");
+      logger78.debug("ui", "Destroying adaptive detail manager");
       if (this.adaptiveDetailManager) {
         this.adaptiveDetailManager.destroy();
         this.adaptiveDetailManager = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error destroying adaptive detail manager:", error);
+      logger78.error("ui", "Error destroying adaptive detail manager:", error);
     }
     try {
-      logger77.debug("ui", "Destroying visualization manager");
+      logger78.debug("ui", "Destroying visualization manager");
       if (this.visualizationManager) {
         this.visualizationManager.destroy();
         this.visualizationManager = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error destroying visualization manager:", error);
+      logger78.error("ui", "Error destroying visualization manager:", error);
     }
     try {
-      logger77.debug("ui", "Disconnecting resize observer");
+      logger78.debug("ui", "Disconnecting resize observer");
       if (this.resizeObserver) {
         this.resizeObserver.disconnect();
         this.resizeObserver = null;
       }
     } catch (error) {
-      logger77.error("ui", "Error disconnecting resize observer:", error);
+      logger78.error("ui", "Error disconnecting resize observer:", error);
     }
     try {
       this.isAnimating = false;
@@ -80933,9 +81353,9 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       const { contentEl } = this;
       contentEl.empty();
     } catch (error) {
-      logger77.error("ui", "Error clearing content:", error);
+      logger78.error("ui", "Error clearing content:", error);
     }
-    logger77.info("ui", "Sonic Graph view closed successfully");
+    logger78.info("ui", "Sonic Graph view closed successfully");
   }
   /**
    * Create view header with title only (sticky)
@@ -81015,10 +81435,10 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.visualDisplaySection = splitContainer.createDiv({ cls: "sonic-graph-visual-display-section" });
     if (!this.isVisualDisplayVisible) {
       this.visualDisplaySection.addClass("collapsed");
-      logger77.debug("visual-display", "Visual display section created as collapsed");
+      logger78.debug("visual-display", "Visual display section created as collapsed");
     } else {
       this.visualDisplaySection.removeClass("collapsed");
-      logger77.debug("visual-display", "Visual display section created as expanded");
+      logger78.debug("visual-display", "Visual display section created as expanded");
     }
     this.visualDisplaySection.style.setProperty("--visual-display-height", `${this.visualDisplayHeight}px`);
     const visualHeader = this.visualDisplaySection.createDiv({ cls: "sonic-graph-visual-display-header" });
@@ -81099,57 +81519,57 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   async initializeGraph() {
     try {
-      logger77.info("sonic-graph-data", "Starting graph initialization");
+      logger78.info("sonic-graph-data", "Starting graph initialization");
       this.showProgressIndicator("Extracting graph data...");
-      logger77.info("sonic-graph-data", "Beginning graph data extraction");
-      logger77.debug("ui", "GraphDataExtractor configuration:", {
+      logger78.info("sonic-graph-data", "Beginning graph data extraction");
+      logger78.debug("ui", "GraphDataExtractor configuration:", {
         excludeFolders: this.graphDataExtractor["excludeFolders"],
         excludeFiles: this.graphDataExtractor["excludeFiles"]
       });
       const graphData = await this.executeWhenIdle(async () => {
         return await this.graphDataExtractor.extractGraphData();
       });
-      logger77.info("sonic-graph-data", `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
+      logger78.info("sonic-graph-data", `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
       if (graphData.nodes.length === 0) {
-        logger77.warn("ui", "No nodes found in graph data - possibly all files excluded");
+        logger78.warn("ui", "No nodes found in graph data - possibly all files excluded");
         throw new Error("No graph data found. Check your exclusion settings.");
       }
-      logger77.info("sonic-graph-adaptive", "Initializing adaptive detail manager");
+      logger78.info("sonic-graph-adaptive", "Initializing adaptive detail manager");
       const adaptiveSettings = this.getSonicGraphSettings().adaptiveDetail;
       this.adaptiveDetailManager = new AdaptiveDetailManager(adaptiveSettings);
       this.adaptiveDetailManager.setGraphData(graphData.nodes, graphData.links);
-      logger77.info("sonic-graph-adaptive", "Adaptive detail manager initialized", {
+      logger78.info("sonic-graph-adaptive", "Adaptive detail manager initialized", {
         enabled: adaptiveSettings.enabled,
         mode: adaptiveSettings.mode,
         nodeCount: graphData.nodes.length,
         linkCount: graphData.links.length
       });
-      logger77.info("sonic-graph-clustering", "Starting temporal clustering detection");
+      logger78.info("sonic-graph-clustering", "Starting temporal clustering detection");
       const detection = this.detectTemporalClustering(graphData.nodes);
       this.detectedSpacing = detection.type;
-      logger77.info("sonic-graph-clustering", "Temporal clustering detected", {
+      logger78.info("sonic-graph-clustering", "Temporal clustering detected", {
         type: detection.type,
         confidence: detection.confidence,
         reason: detection.reason
       });
-      logger77.info("sonic-graph-renderer", "Looking for canvas element");
+      logger78.info("sonic-graph-renderer", "Looking for canvas element");
       const canvasElement = document.getElementById("sonic-graph-canvas");
       if (!canvasElement) {
-        logger77.error("sonic-graph-renderer", "Graph canvas element not found");
+        logger78.error("sonic-graph-renderer", "Graph canvas element not found");
         throw new Error("Graph canvas element not found");
       }
-      logger77.info("sonic-graph-renderer", "Canvas element found", {
+      logger78.info("sonic-graph-renderer", "Canvas element found", {
         width: canvasElement.clientWidth,
         height: canvasElement.clientHeight,
         offsetWidth: canvasElement.offsetWidth,
         offsetHeight: canvasElement.offsetHeight
       });
       this.showProgressIndicator("Initializing renderer...");
-      logger77.info("sonic-graph-renderer", "Creating GraphRenderer instance");
+      logger78.info("sonic-graph-renderer", "Creating GraphRenderer instance");
       this.graphRenderer = await this.executeWhenIdle(() => {
         const width = canvasElement.clientWidth || canvasElement.offsetWidth || 800;
         const height = canvasElement.clientHeight || canvasElement.offsetHeight || 600;
-        logger77.info("sonic-graph-responsive", "Using responsive dimensions", {
+        logger78.info("sonic-graph-responsive", "Using responsive dimensions", {
           width,
           height,
           clientWidth: canvasElement.clientWidth,
@@ -81162,11 +81582,11 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           showLabels: false
         });
       });
-      logger77.info("sonic-graph-renderer", "GraphRenderer created successfully");
-      logger77.info("sonic-graph-adaptive", "Setting up zoom change callback for adaptive detail");
+      logger78.info("sonic-graph-renderer", "GraphRenderer created successfully");
+      logger78.info("sonic-graph-adaptive", "Setting up zoom change callback for adaptive detail");
       this.adaptiveDetailManager.setDetailLevelChangedCallback((filteredData2) => {
         this.applyFilteredData(filteredData2);
-        logger77.debug("sonic-graph-adaptive", "Detail level changed via callback", {
+        logger78.debug("sonic-graph-adaptive", "Detail level changed via callback", {
           level: filteredData2.level,
           visibleNodes: filteredData2.nodes.length,
           visibleLinks: filteredData2.links.length
@@ -81176,7 +81596,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         if (this.adaptiveDetailManager) {
           const filteredData2 = this.adaptiveDetailManager.handleZoomChange(zoomLevel);
           this.applyFilteredData(filteredData2);
-          logger77.debug("sonic-graph-adaptive", "Zoom change processed", {
+          logger78.debug("sonic-graph-adaptive", "Zoom change processed", {
             zoomLevel,
             level: filteredData2.level,
             visibleNodes: filteredData2.nodes.length,
@@ -81187,24 +81607,24 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.setupResizeObserver(canvasElement);
       this.showProgressIndicator("Applying layout settings...");
       try {
-        logger77.info("sonic-graph-layout", "Getting layout settings");
+        logger78.info("sonic-graph-layout", "Getting layout settings");
         const layoutSettings = this.getSonicGraphSettings().layout;
-        logger77.info("sonic-graph-layout", "Applying layout settings to renderer", layoutSettings);
+        logger78.info("sonic-graph-layout", "Applying layout settings to renderer", layoutSettings);
         await this.executeWhenIdle(() => {
           this.graphRenderer.updateLayoutSettings(layoutSettings);
           this.graphRenderer.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
           this.graphRenderer.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
         });
-        logger77.info("sonic-graph-layout", "Layout settings applied successfully");
+        logger78.info("sonic-graph-layout", "Layout settings applied successfully");
       } catch (layoutError) {
-        logger77.error("sonic-graph-layout", "Failed to apply layout settings:", layoutError.message);
-        logger77.error("sonic-graph-layout", "Layout error stack:", layoutError.stack);
+        logger78.error("sonic-graph-layout", "Failed to apply layout settings:", layoutError.message);
+        logger78.error("sonic-graph-layout", "Layout error stack:", layoutError.stack);
         throw new Error(`Layout configuration failed: ${layoutError.message}`);
       }
-      logger77.info("sonic-graph-adaptive", "Applying initial adaptive detail filtering");
+      logger78.info("sonic-graph-adaptive", "Applying initial adaptive detail filtering");
       const initialZoom = 0.3;
       const filteredData = this.adaptiveDetailManager.handleZoomChange(initialZoom);
-      logger77.info("sonic-graph-adaptive", "Initial filtering applied", {
+      logger78.info("sonic-graph-adaptive", "Initial filtering applied", {
         level: filteredData.level,
         originalNodes: graphData.nodes.length,
         filteredNodes: filteredData.nodes.length,
@@ -81213,8 +81633,8 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         filterReason: filteredData.stats.filterReason
       });
       try {
-        logger77.info("sonic-graph-render", "Starting graph render process");
-        logger77.info("sonic-graph-render", "Render data summary", {
+        logger78.info("sonic-graph-render", "Starting graph render process");
+        logger78.info("sonic-graph-render", "Render data summary", {
           nodeCount: filteredData.nodes.length,
           linkCount: filteredData.links.length,
           detailLevel: filteredData.level,
@@ -81222,15 +81642,15 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           sampleLinks: filteredData.links.slice(0, 3).map((l) => ({ source: l.source, target: l.target, type: l.type }))
         });
         this.graphRenderer.render(filteredData.nodes, filteredData.links);
-        logger77.info("sonic-graph-render", "Graph render completed successfully");
+        logger78.info("sonic-graph-render", "Graph render completed successfully");
         setTimeout(() => {
-          logger77.info("sonic-graph-spacing", "Applying improved node spacing");
+          logger78.info("sonic-graph-spacing", "Applying improved node spacing");
           this.graphRenderer.applyBetterSpacing();
-          logger77.info("sonic-graph-spacing", "Improved node spacing applied");
+          logger78.info("sonic-graph-spacing", "Improved node spacing applied");
         }, 100);
       } catch (renderError) {
-        logger77.error("sonic-graph-render", "Graph rendering failed:", renderError.message);
-        logger77.error("sonic-graph-render", "Render error stack:", renderError.stack);
+        logger78.error("sonic-graph-render", "Graph rendering failed:", renderError.message);
+        logger78.error("sonic-graph-render", "Render error stack:", renderError.stack);
         throw new Error(`Graph rendering failed: ${renderError.message}`);
       }
       const canvasRect = canvasElement.getBoundingClientRect();
@@ -81245,11 +81665,11 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.hideProgressIndicator();
       this.updateStats();
       this.updateViewMode();
-      logger77.debug("ui", "Sonic Graph initialized successfully");
+      logger78.debug("ui", "Sonic Graph initialized successfully");
       this.applyPendingState();
     } catch (error) {
-      logger77.error("ui", "Failed to initialize Sonic Graph:", error.message);
-      logger77.error("ui", "Initialization error stack:", error.stack);
+      logger78.error("ui", "Failed to initialize Sonic Graph:", error.message);
+      logger78.error("ui", "Initialization error stack:", error.stack);
       this.hideProgressIndicator();
       const loadingIndicators = this.graphContainer.querySelectorAll(".sonic-graph-loading");
       loadingIndicators.forEach((indicator) => indicator.remove());
@@ -81275,23 +81695,23 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       try {
         const status = this.plugin.audioEngine.getStatus();
         if (!status.isInitialized) {
-          logger77.info("audio", "Audio engine not initialized - initializing for animation");
+          logger78.info("audio", "Audio engine not initialized - initializing for animation");
           await this.plugin.audioEngine.initialize();
           new import_obsidian28.Notice("Audio engine initialized");
         } else {
-          logger77.info("audio", "Reinitializing audio engine for animation to ensure fresh state");
+          logger78.info("audio", "Reinitializing audio engine for animation to ensure fresh state");
           await this.plugin.audioEngine.initialize();
           const enabledInstruments = this.getEnabledInstruments();
-          logger77.info("audio", "Audio engine reinitialized for animation", {
+          logger78.info("audio", "Audio engine reinitialized for animation", {
             enabledInstruments,
             enabledCount: enabledInstruments.length,
             audioContext: this.plugin.audioEngine.getStatus().audioContext
           });
           new import_obsidian28.Notice("Audio engine ready for animation");
         }
-        logger77.info("audio", "Audio engine ready for Sonic Graph animation");
+        logger78.info("audio", "Audio engine ready for Sonic Graph animation");
       } catch (audioError) {
-        logger77.warn("Failed to check audio engine for animation", audioError.message);
+        logger78.warn("Failed to check audio engine for animation", audioError.message);
         new import_obsidian28.Notice("Audio check failed - animation may be silent");
       }
       if (!this.temporalAnimator) {
@@ -81314,16 +81734,16 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) {
         await this.initializeContinuousLayers();
       }
-      logger77.info("ui", "About to call temporalAnimator.play()", {
+      logger78.info("ui", "About to call temporalAnimator.play()", {
         hasTemporalAnimator: !!this.temporalAnimator,
         temporalAnimatorType: (_c = this.temporalAnimator) == null ? void 0 : _c.constructor.name
       });
       this.temporalAnimator.play();
       if (this.visualizationManager && this.isVisualDisplayVisible) {
         this.visualizationManager.start(0);
-        logger77.debug("visual-display", "Visualization started");
+        logger78.debug("visual-display", "Visualization started");
       }
-      logger77.info("ui", "Starting Sonic Graph temporal animation");
+      logger78.info("ui", "Starting Sonic Graph temporal animation");
       new import_obsidian28.Notice("Sonic Graph animation started");
     } else {
       this.playButton.setButtonText("Play");
@@ -81336,12 +81756,12 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       }
       if (this.visualizationManager) {
         this.visualizationManager.stop();
-        logger77.debug("visual-display", "Visualization stopped");
+        logger78.debug("visual-display", "Visualization stopped");
       }
       if (this.continuousLayerManager) {
         this.continuousLayerManager.stop();
       }
-      logger77.info("ui", "Pausing Sonic Graph animation");
+      logger78.info("ui", "Pausing Sonic Graph animation");
       new import_obsidian28.Notice("Animation paused");
     }
   }
@@ -81350,11 +81770,11 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   async openExportModal() {
     if (!this.temporalAnimator) {
-      logger77.debug("ui", "Initializing temporal animator for export");
+      logger78.debug("ui", "Initializing temporal animator for export");
       try {
         await this.initializeTemporalAnimator();
       } catch (error) {
-        logger77.error("Failed to initialize temporal animator for export", error);
+        logger78.error("Failed to initialize temporal animator for export", error);
         new import_obsidian28.Notice("Failed to initialize timeline for export. Please try switching to Timeline View first.");
         return;
       }
@@ -81371,7 +81791,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.temporalAnimator
     );
     modal.open();
-    logger77.info("ui", "Opened export modal");
+    logger78.info("ui", "Opened export modal");
   }
   /**
    * Toggle between Static View and Timeline View
@@ -81379,7 +81799,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   toggleViewMode() {
     this.isTimelineView = !this.isTimelineView;
     this.updateViewMode();
-    logger77.debug("ui", `View mode toggled: ${this.isTimelineView ? "Timeline" : "Static"}`);
+    logger78.debug("ui", `View mode toggled: ${this.isTimelineView ? "Timeline" : "Static"}`);
     this.requestSave();
   }
   /**
@@ -81388,7 +81808,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   requestSave() {
     this.app.workspace.requestSaveLayout();
-    logger77.debug("state", "Requested workspace save");
+    logger78.debug("state", "Requested workspace save");
   }
   /**
    * Update UI based on current view mode
@@ -81399,7 +81819,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.timelineContainer.classList.add("timeline-visible");
       if (!this.temporalAnimator) {
         this.initializeTemporalAnimator().catch((error) => {
-          logger77.error("Failed to initialize temporal animator for timeline view", error);
+          logger78.error("Failed to initialize temporal animator for timeline view", error);
           this.isTimelineView = false;
           this.updateViewMode();
         });
@@ -81446,7 +81866,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       } else {
         this.graphRenderer.setZoomTransform(identity2.scale(0.4));
       }
-      logger77.debug("ui", "Graph view reset");
+      logger78.debug("ui", "Graph view reset");
     }
   }
   /**
@@ -81524,7 +81944,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
             this.applyFilteredData(filteredData);
           }
         }
-        logger77.info("adaptive-detail-override", "Session override toggled", {
+        logger78.info("adaptive-detail-override", "Session override toggled", {
           overridden: isOverridden,
           meaning: isOverridden ? "Show all (disabled)" : "Adaptive filtering (enabled)"
         });
@@ -81547,13 +81967,13 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   applyFilteredData(filteredData) {
     if (!this.graphRenderer) {
-      logger77.warn("adaptive-detail", "Cannot apply filtered data: GraphRenderer not initialized");
+      logger78.warn("adaptive-detail", "Cannot apply filtered data: GraphRenderer not initialized");
       return;
     }
     try {
       this.graphRenderer.render(filteredData.nodes, filteredData.links);
       this.updateStatsWithFilteredData(filteredData);
-      logger77.debug("adaptive-detail", "Filtered data applied successfully", {
+      logger78.debug("adaptive-detail", "Filtered data applied successfully", {
         level: filteredData.level,
         visibleNodes: filteredData.stats.visibleNodes,
         totalNodes: filteredData.stats.totalNodes,
@@ -81562,7 +81982,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         filterReason: filteredData.stats.filterReason
       });
     } catch (error) {
-      logger77.error("adaptive-detail", "Failed to apply filtered data", {
+      logger78.error("adaptive-detail", "Failed to apply filtered data", {
         error: error.message,
         level: filteredData.level
       });
@@ -81967,11 +82387,11 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
             currentSettings.connectionTypeMapping.enabled = value;
           }
           await this.plugin.saveSettings();
-          logger77.info("connection-type-mapping", "Connection type mapping toggled", {
+          logger78.info("connection-type-mapping", "Connection type mapping toggled", {
             enabled: value
           });
         } catch (error) {
-          logger77.error("connection-type-mapping", "Failed to toggle connection type mapping", error);
+          logger78.error("connection-type-mapping", "Failed to toggle connection type mapping", error);
         }
       })
     );
@@ -82044,7 +82464,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     settings.connectionTypeMapping[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     this.plugin.saveSettings();
-    logger77.debug("connection-type-mapping", `Updated config: ${key} = ${value}`);
+    logger78.debug("connection-type-mapping", `Updated config: ${key} = ${value}`);
   }
   /**
    * Update connection type mapping global setting
@@ -82057,7 +82477,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     settings.connectionTypeMapping.globalSettings[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     this.plugin.saveSettings();
-    logger77.debug("connection-type-mapping", `Updated global setting: ${key} = ${value}`);
+    logger78.debug("connection-type-mapping", `Updated global setting: ${key} = ${value}`);
   }
   /**
    * Update specific connection type mapping
@@ -82073,7 +82493,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     mapping[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     this.plugin.saveSettings();
-    logger77.debug("connection-type-mapping", `Updated ${connectionType} mapping: ${key} = ${value}`);
+    logger78.debug("connection-type-mapping", `Updated ${connectionType} mapping: ${key} = ${value}`);
   }
   /**
    * Helper method to create weight sliders for clustering factors
@@ -82422,7 +82842,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           }
           this.plugin.settings.audioEnhancement.contentAwareMapping.enabled = value;
           await this.plugin.saveSettings();
-          logger77.info("audio-enhancement", "Content-aware mapping toggled", {
+          logger78.info("audio-enhancement", "Content-aware mapping toggled", {
             enabled: value
           });
         });
@@ -82497,7 +82917,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           }
           this.plugin.settings.audioEnhancement.continuousLayers.enabled = value;
           await this.plugin.saveSettings();
-          logger77.info("continuous-layers", "Continuous layers toggled", { enabled: value });
+          logger78.info("continuous-layers", "Continuous layers toggled", { enabled: value });
           this.refreshContinuousLayerSettings();
         });
       }
@@ -82521,7 +82941,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           }
           this.plugin.settings.audioEnhancement.continuousLayers.genre = value;
           await this.plugin.saveSettings();
-          logger77.info("continuous-layers", "Genre changed", { genre: value });
+          logger78.info("continuous-layers", "Genre changed", { genre: value });
         });
       }
     );
@@ -84340,7 +84760,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       const target = e.target;
       const value = target.value;
       LoggerFactory.setLogLevel(value);
-      logger77.info("settings-change", "Log level changed", { level: value });
+      logger78.info("settings-change", "Log level changed", { level: value });
     });
     const exportItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     exportItem.createEl("label", { text: "Export logs", cls: "sonic-graph-setting-label" });
@@ -84366,7 +84786,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       a2.click();
       document.body.removeChild(a2);
       URL.revokeObjectURL(url);
-      logger77.info("export", "Logs exported", { filename });
+      logger78.info("export", "Logs exported", { filename });
     });
   }
   /**
@@ -84515,7 +84935,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   updateLayoutSetting(key, value) {
     this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
-    logger77.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
+    logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
   }
   /**
    * Update filter setting
@@ -84530,7 +84950,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
       this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
     }
-    logger77.debug("filter-setting", `Updated filter setting: ${String(key)} = ${value}`);
+    logger78.debug("filter-setting", `Updated filter setting: ${String(key)} = ${value}`);
   }
   /**
    * Create groups settings section
@@ -84740,7 +85160,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.graphRenderer.updateLayoutSettings(currentSettings.layout);
       this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
     }
-    logger77.debug("path-grouping", "Added new group from search:", newGroup);
+    logger78.debug("path-grouping", "Added new group from search:", newGroup);
   }
   /**
    * Get random color for new groups
@@ -84762,7 +85182,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
       this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
     }
-    logger77.debug("path-grouping", `Updated group ${groupIndex} ${property}:`, value);
+    logger78.debug("path-grouping", `Updated group ${groupIndex} ${property}:`, value);
   }
   /**
    * Remove a group
@@ -84777,7 +85197,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
       this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
     }
-    logger77.debug("path-grouping", `Removed group at index ${groupIndex}`);
+    logger78.debug("path-grouping", `Removed group at index ${groupIndex}`);
   }
   /**
    * Refresh the path groups settings UI
@@ -84801,7 +85221,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       this.settingsPanel.addClass("hidden");
       this.settingsButton.removeClass("active");
     }
-    logger77.debug("ui", "Settings panel toggled", {
+    logger78.debug("ui", "Settings panel toggled", {
       visible: this.isSettingsVisible
     });
   }
@@ -84824,7 +85244,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   getSpacingConfiguration() {
     const actualSpacing = this.detectedSpacing;
-    logger77.debug("temporal-spacing", "Getting spacing configuration", {
+    logger78.debug("temporal-spacing", "Getting spacing configuration", {
       detectedSpacing: this.detectedSpacing,
       actualSpacing
     });
@@ -84879,7 +85299,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       cls: "sonic-graph-error-retry"
     });
     retryBtn.addEventListener("click", async () => {
-      logger77.debug("ui", "Retry button clicked - attempting to reinitialize graph");
+      logger78.debug("ui", "Retry button clicked - attempting to reinitialize graph");
       try {
         retryBtn.textContent = "Retrying...";
         retryBtn.disabled = true;
@@ -84891,7 +85311,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         loadingIndicator.createSpan({ text: "Retrying...", cls: "sonic-graph-loading-text" });
         await this.initializeGraph();
       } catch (retryError) {
-        logger77.error("ui", "Retry failed:", retryError.message);
+        logger78.error("ui", "Retry failed:", retryError.message);
       }
     });
     const debugBtn = errorContainer.createEl("button", {
@@ -84915,7 +85335,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   async initializeTemporalAnimator() {
     try {
-      logger77.debug("ui", "Initializing temporal animator");
+      logger78.debug("ui", "Initializing temporal animator");
       const graphData = await this.graphDataExtractor.extractGraphData();
       const spacingConfig = this.getSpacingConfiguration();
       this.temporalAnimator = new TemporalGraphAnimator(
@@ -84942,7 +85362,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         this.handleAnimationEnd();
       });
       this.temporalAnimator.onNodeAppeared((node) => {
-        logger77.debug("temporal-callback", "onNodeAppeared callback invoked", {
+        logger78.debug("temporal-callback", "onNodeAppeared callback invoked", {
           nodeId: node.id,
           nodeTitle: node.title,
           nodeType: node.type,
@@ -84950,20 +85370,20 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         });
         this.handleNodeAppearance(node);
       });
-      logger77.info("ui", "Temporal animator callbacks registered");
+      logger78.info("ui", "Temporal animator callbacks registered");
       this.updateTimelineMarkers();
       this.updateCurrentPosition(0, 0);
       const timelineInfo = this.temporalAnimator.getTimelineInfo();
-      logger77.info("ui", "Temporal animator timeline info", {
+      logger78.info("ui", "Temporal animator timeline info", {
         eventCount: timelineInfo.eventCount,
         duration: timelineInfo.duration,
         startDate: timelineInfo.startDate.toISOString(),
         endDate: timelineInfo.endDate.toISOString()
       });
       this.musicalMapper = new MusicalMapper(this.plugin.settings, this.plugin.app);
-      logger77.info("ui", "Temporal animator initialized successfully");
+      logger78.info("ui", "Temporal animator initialized successfully");
     } catch (error) {
-      logger77.error("Failed to initialize temporal animator", error.message);
+      logger78.error("Failed to initialize temporal animator", error.message);
       throw error;
     }
   }
@@ -84978,7 +85398,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     if (this.temporalAnimator) {
       this.temporalAnimator.setSpeed(speed);
     }
-    logger77.debug("ui", "Animation speed changed", { speed });
+    logger78.debug("ui", "Animation speed changed", { speed });
   }
   /**
    * Handle timeline scrubber input
@@ -84990,7 +85410,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const timelineInfo = this.temporalAnimator.getTimelineInfo();
     const targetTime = progress * timelineInfo.duration;
     this.temporalAnimator.seekTo(targetTime);
-    logger77.debug("ui", "Timeline scrubbed", { progress, targetTime });
+    logger78.debug("ui", "Timeline scrubbed", { progress, targetTime });
     if (this.scrubSaveTimeout) {
       clearTimeout(this.scrubSaveTimeout);
     }
@@ -85095,14 +85515,14 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     if (currentIndicator) {
       currentIndicator.style.display = "none";
     }
-    logger77.info("ui", "Sonic Graph animation completed");
+    logger78.info("ui", "Sonic Graph animation completed");
     new import_obsidian28.Notice("Animation completed");
   }
   /**
    * Handle node appearance for audio synchronization
    */
   async handleNodeAppearance(node) {
-    logger77.debug("audio-sync", "Node appearance triggered in temporal animation", {
+    logger78.debug("audio-sync", "Node appearance triggered in temporal animation", {
       nodeId: node.id,
       nodeTitle: node.title,
       nodeType: node.type,
@@ -85110,24 +85530,24 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       timestamp: Date.now()
     });
     if (!this.plugin.audioEngine) {
-      logger77.warn("audio", "No audio engine available for node appearance");
+      logger78.warn("audio", "No audio engine available for node appearance");
       return;
     }
     try {
       const status = this.plugin.audioEngine.getStatus();
       if (!status.isInitialized) {
-        logger77.debug("audio", "Initializing audio engine for node appearance");
+        logger78.debug("audio", "Initializing audio engine for node appearance");
         await this.plugin.audioEngine.initialize();
       }
       const mapping = this.createMusicalMappingForNode(node);
       if (mapping === null) {
-        logger77.debug("audio", "Note skipped due to audio density setting", {
+        logger78.debug("audio", "Note skipped due to audio density setting", {
           nodeId: node.id,
           nodeTitle: node.title
         });
         return;
       }
-      logger77.info("audio-playback", "Attempting to play note for node appearance", {
+      logger78.info("audio-playback", "Attempting to play note for node appearance", {
         nodeId: node.id,
         nodeTitle: node.title,
         nodeType: node.type,
@@ -85139,7 +85559,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         mappingData: mapping
       });
       const audioStatus = this.plugin.audioEngine.getStatus();
-      logger77.info("audio-verification", "Verifying audio engine readiness before playback", {
+      logger78.info("audio-verification", "Verifying audio engine readiness before playback", {
         requestedInstrument: mapping.instrument,
         audioEngineInitialized: audioStatus.isInitialized,
         audioContext: audioStatus.audioContext,
@@ -85149,7 +85569,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       const currentTime = this.temporalAnimator ? this.temporalAnimator.getState().currentTime : 0;
       try {
         await this.plugin.audioEngine.playNoteImmediate(mapping, currentTime, node.id, node.title);
-        logger77.info("audio-success", "Audio note played successfully for node appearance", {
+        logger78.info("audio-success", "Audio note played successfully for node appearance", {
           nodeId: node.id,
           nodeTitle: node.title,
           instrument: mapping.instrument,
@@ -85160,7 +85580,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           timestamp: Date.now()
         });
       } catch (playError) {
-        logger77.warn("audio-playback-error", "Immediate playback failed for node appearance", {
+        logger78.warn("audio-playback-error", "Immediate playback failed for node appearance", {
           nodeId: node.id,
           nodeTitle: node.title,
           instrument: mapping.instrument,
@@ -85171,14 +85591,14 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         });
         try {
           await this.plugin.audioEngine.playTestNote(mapping.pitch);
-          logger77.info("audio-fallback-success", "Fallback test note played successfully", {
+          logger78.info("audio-fallback-success", "Fallback test note played successfully", {
             nodeId: node.id,
             pitch: mapping.pitch.toFixed(2),
             playbackMethod: "test-note",
             timestamp: Date.now()
           });
         } catch (testError) {
-          logger77.error("audio-complete-failure", "Both sequence and test note playback failed", {
+          logger78.error("audio-complete-failure", "Both sequence and test note playback failed", {
             nodeId: node.id,
             instrument: mapping.instrument,
             sequenceError: playError.message,
@@ -85189,13 +85609,13 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
           throw testError;
         }
       }
-      logger77.info("audio", "Successfully played note for node appearance", {
+      logger78.info("audio", "Successfully played note for node appearance", {
         nodeId: node.id,
         nodeTitle: node.title
       });
     } catch (error) {
-      logger77.error("Failed to play audio for node appearance", error.message);
-      logger77.warn("audio-playback", "Audio playback failed:", error);
+      logger78.error("Failed to play audio for node appearance", error.message);
+      logger78.warn("audio-playback", "Audio playback failed:", error);
     }
   }
   /**
@@ -85208,7 +85628,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const interval2 = Math.max(1, Math.round(100 / density));
     const nodesSinceLastAudio = this.nodeAppearanceCounter - this.lastAudioNodeIndex - 1;
     const shouldPlay = nodesSinceLastAudio >= interval2 || this.lastAudioNodeIndex === -1;
-    logger77.debug("audio-density", "Audio density filtering (even spacing)", {
+    logger78.debug("audio-density", "Audio density filtering (even spacing)", {
       nodeId: node.id,
       densitySetting: density,
       interval: interval2,
@@ -85218,7 +85638,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       shouldPlay
     });
     if (!shouldPlay) {
-      logger77.debug("audio-density", "Note skipped due to audio density", {
+      logger78.debug("audio-density", "Note skipped due to audio density", {
         nodeId: node.id,
         nodesSinceLastAudio,
         requiredInterval: interval2
@@ -85228,13 +85648,13 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.lastAudioNodeIndex = this.nodeAppearanceCounter;
     const enabledInstruments = this.getEnabledInstruments();
     if (enabledInstruments.length === 0) {
-      logger77.warn("audio", "No instruments enabled for temporal animation");
+      logger78.warn("audio", "No instruments enabled for temporal animation");
       return this.createFallbackMapping(node, "piano");
     }
     const selectedInstrument = this.selectInstrumentForFileType(node.type, enabledInstruments);
     const instruments = this.plugin.settings.instruments;
     const instrumentConfig = instruments[selectedInstrument];
-    logger77.debug("instrument-selection", "Instrument selected for node", {
+    logger78.debug("instrument-selection", "Instrument selected for node", {
       nodeId: node.id,
       nodeType: node.type,
       selectedInstrument,
@@ -85244,7 +85664,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       instrumentVolume: instrumentConfig == null ? void 0 : instrumentConfig.volume
     });
     if (!instrumentConfig || !instrumentConfig.enabled) {
-      logger77.warn("instrument-fallback", "Selected instrument not properly configured, using piano fallback", {
+      logger78.warn("instrument-fallback", "Selected instrument not properly configured, using piano fallback", {
         nodeId: node.id,
         selectedInstrument,
         hasConfig: !!instrumentConfig,
@@ -85257,7 +85677,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const velocity = this.calculateDynamicVelocity(node, settings);
     const currentPosition = this.notesInCurrentPhrase % this.phraseLengthInNotes;
     this.notesInCurrentPhrase++;
-    logger77.info("musical-structure", "\u{1F3B5} Note generated with full musical context", {
+    logger78.info("musical-structure", "\u{1F3B5} Note generated with full musical context", {
       nodeId: node.id,
       nodeTitle: node.title,
       nodeType: node.type,
@@ -85344,7 +85764,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const hashSeed = fileNameHash % 100;
     if (isStartOfPhrase) {
       scaleDegree = currentChord[0];
-      logger77.debug("phrase-boundary", "Starting new phrase on tonic", {
+      logger78.debug("phrase-boundary", "Starting new phrase on tonic", {
         scaleDegree,
         chordIndex: this.currentChordIndex,
         phraseNumber: Math.floor(this.notesInCurrentPhrase / this.phraseLengthInNotes)
@@ -85356,7 +85776,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       } else {
         scaleDegree = currentChord[hashSeed % 2 === 0 ? 0 : 2];
       }
-      logger77.debug("phrase-boundary", "Ending phrase with cadence", {
+      logger78.debug("phrase-boundary", "Ending phrase with cadence", {
         scaleDegree,
         isFinalChord,
         chordIndex: this.currentChordIndex
@@ -85386,7 +85806,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     if (this.nodeAppearanceCounter % notesInChord === 0) {
       this.currentChordIndex = (this.currentChordIndex + 1) % this.currentChordProgression.length;
     }
-    logger77.debug("scale-aware-pitch", "Generated melodic pitch with musical structure", {
+    logger78.debug("scale-aware-pitch", "Generated melodic pitch with musical structure", {
       nodeId: node.id,
       scale,
       rootNote,
@@ -85435,14 +85855,14 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const restChance = (fileNameHash >> 8) % 100;
     if (restChance < 10 && !isStartOfPhrase && !isEndOfPhrase) {
       duration = 0.05;
-      logger77.debug("rhythm", "Inserted musical rest", {
+      logger78.debug("rhythm", "Inserted musical rest", {
         nodeId: node.id,
         positionInPhrase,
         restChance
       });
     }
     duration = Math.min(Math.max(duration, 0.05), 3);
-    logger77.debug("rhythm", "Calculated rhythmic duration", {
+    logger78.debug("rhythm", "Calculated rhythmic duration", {
       nodeId: node.id,
       baseDuration,
       positionInPhrase,
@@ -85489,7 +85909,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const randomVariation = (fileNameHash % 10 - 5) / 100;
     velocity += randomVariation;
     velocity = Math.min(Math.max(velocity, 0.1), 1);
-    logger77.debug("dynamics", "Calculated dynamic velocity", {
+    logger78.debug("dynamics", "Calculated dynamic velocity", {
       nodeId: node.id,
       baseVelocity,
       positionInPhrase,
@@ -85838,7 +86258,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.audio.density = density;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated audio density", { density });
+    logger78.debug("settings", "Updated audio density", { density });
   }
   /**
    * Update note duration setting and save to plugin settings
@@ -85849,7 +86269,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.audio.noteDuration = duration;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated note duration", { duration });
+    logger78.debug("settings", "Updated note duration", { duration });
   }
   /**
    * Update show file names setting and save to plugin settings
@@ -85860,7 +86280,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.visual.showFileNames = show;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated show file names", { show });
+    logger78.debug("settings", "Updated show file names", { show });
     if (this.graphRenderer) {
       this.graphRenderer.updateFileNameVisibility(show);
     }
@@ -85875,7 +86295,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.visual.timelineMarkersEnabled = show;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated timeline markers visibility", { show });
+    logger78.debug("settings", "Updated timeline markers visibility", { show });
     const markersContainer = (_a = this.timelineInfo) == null ? void 0 : _a.querySelector(".sonic-graph-timeline-markers");
     if (markersContainer) {
       if (show) {
@@ -85894,7 +86314,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.visual.animationStyle = style;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated animation style", { style });
+    logger78.debug("settings", "Updated animation style", { style });
     if (this.graphRenderer) {
       this.graphRenderer.setAnimationStyle(style);
     }
@@ -85908,7 +86328,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.visual.loopAnimation = enabled;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated loop animation", { enabled });
+    logger78.debug("settings", "Updated loop animation", { enabled });
     if (this.temporalAnimator) {
       this.temporalAnimator.setLoop(enabled);
     }
@@ -85919,7 +86339,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   updateAnimationDuration(duration) {
     this.plugin.settings.sonicGraphAnimationDuration = duration;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated animation duration", { duration });
+    logger78.debug("settings", "Updated animation duration", { duration });
   }
   /**
    * Update time window setting
@@ -85930,7 +86350,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.timeline.timeWindow = timeWindow;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated time window", { timeWindow });
+    logger78.debug("settings", "Updated time window", { timeWindow });
     if (this.temporalAnimator) {
       this.applyTimeWindowChange(timeWindow);
     }
@@ -85945,7 +86365,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.timeline.granularity = granularity;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated timeline granularity", { granularity });
+    logger78.debug("settings", "Updated timeline granularity", { granularity });
     const customRangeElement = (_a = this.settingsPanel) == null ? void 0 : _a.querySelector(".sonic-graph-custom-range");
     if (customRangeElement) {
       if (granularity === "custom") {
@@ -85967,7 +86387,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.timeline.customRange = { value, unit };
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated custom range", { value, unit });
+    logger78.debug("settings", "Updated custom range", { value, unit });
     if (this.temporalAnimator && this.plugin.settings.sonicGraphSettings.timeline.granularity === "custom") {
       this.applyTimelineGranularityChange("custom");
     }
@@ -85981,7 +86401,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     this.plugin.settings.sonicGraphSettings.timeline.eventSpreadingMode = mode;
     this.plugin.saveSettings();
-    logger77.debug("settings", "Updated event spreading mode", { mode });
+    logger78.debug("settings", "Updated event spreading mode", { mode });
     if (this.temporalAnimator) {
       this.applyEventSpreadingChange(mode);
     }
@@ -85991,14 +86411,14 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   applyTimeWindowChange(timeWindow) {
     if (!this.temporalAnimator) {
-      logger77.debug("timeline", "No temporal animator available for time window change", { timeWindow });
+      logger78.debug("timeline", "No temporal animator available for time window change", { timeWindow });
       return;
     }
     const settings = this.getSonicGraphSettings();
     this.temporalAnimator.updateTimelineSettings(settings.timeline);
     this.setAnimatorLoggingContext();
     if (this.isAnimating) {
-      logger77.info("timelapse-interaction", "Settings modified during playback", {
+      logger78.info("timelapse-interaction", "Settings modified during playback", {
         setting: "timeWindow",
         from: "previous",
         to: timeWindow,
@@ -86011,12 +86431,12 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   applyTimelineGranularityChange(granularity) {
     if (!this.temporalAnimator) {
-      logger77.debug("timeline", "No temporal animator available for granularity change", { granularity });
+      logger78.debug("timeline", "No temporal animator available for granularity change", { granularity });
       return;
     }
     const settings = this.getSonicGraphSettings();
     this.temporalAnimator.updateTimelineSettings(settings.timeline);
-    logger77.info("timeline", "Timeline granularity change applied to temporal animator", {
+    logger78.info("timeline", "Timeline granularity change applied to temporal animator", {
       granularity,
       customRange: settings.timeline.customRange,
       eventSpreadingMode: settings.timeline.eventSpreadingMode
@@ -86027,7 +86447,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   applyEventSpreadingChange(mode) {
     if (!this.temporalAnimator) {
-      logger77.debug("timeline", "No temporal animator available for event spreading change", { mode });
+      logger78.debug("timeline", "No temporal animator available for event spreading change", { mode });
       return;
     }
     const previousMode = this.getSonicGraphSettings().timeline.eventSpreadingMode;
@@ -86035,7 +86455,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.temporalAnimator.updateTimelineSettings(settings.timeline);
     this.setAnimatorLoggingContext();
     if (this.isAnimating) {
-      logger77.info("timelapse-interaction", "Settings modified during playback", {
+      logger78.info("timelapse-interaction", "Settings modified during playback", {
         setting: "eventSpreadingMode",
         from: previousMode,
         to: mode,
@@ -86082,7 +86502,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         return Object.entries(instruments).filter(([_, config]) => config.enabled).map(([name, _]) => name);
       }
     } catch (error) {
-      logger77.debug("ui", "Could not get active instruments", error);
+      logger78.debug("ui", "Could not get active instruments", error);
     }
     return ["unknown"];
   }
@@ -86092,7 +86512,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   getEnabledInstruments() {
     const enabled = [];
     Object.entries(this.plugin.settings.instruments).forEach(([instrumentName, settings]) => {
-      logger77.debug("audio", "Checking instrument", {
+      logger78.debug("audio", "Checking instrument", {
         instrumentName,
         enabled: settings == null ? void 0 : settings.enabled,
         settings
@@ -86101,7 +86521,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         enabled.push(instrumentName);
       }
     });
-    logger77.debug("instrument-detection", "Found enabled instruments for temporal animation", {
+    logger78.debug("instrument-detection", "Found enabled instruments for temporal animation", {
       enabledCount: enabled.length,
       enabledInstruments: enabled,
       totalInstrumentsChecked: Object.keys(this.plugin.settings.instruments).length,
@@ -86144,7 +86564,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         const fileHash2 = this.hashString(fileType + category);
         const selectedIndex = fileHash2 % availableInCategory.length;
         const selected = availableInCategory[selectedIndex];
-        logger77.debug("audio", "Selected instrument from preferred category", {
+        logger78.debug("audio", "Selected instrument from preferred category", {
           fileType,
           category,
           availableInCategory,
@@ -86161,7 +86581,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       const fileHash2 = this.hashString(fileType + "uncategorized");
       const selectedIndex = fileHash2 % uncategorizedInstruments.length;
       const selected = uncategorizedInstruments[selectedIndex];
-      logger77.debug("audio", "Selected uncategorized instrument", {
+      logger78.debug("audio", "Selected uncategorized instrument", {
         fileType,
         uncategorizedInstruments,
         selected,
@@ -86172,7 +86592,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const fileHash = this.hashString(fileType);
     const fallbackIndex = fileHash % enabledInstruments.length;
     const fallback = enabledInstruments[fallbackIndex];
-    logger77.debug("audio", "Using final fallback instrument selection", {
+    logger78.debug("audio", "Using final fallback instrument selection", {
       fileType,
       enabledInstruments,
       fallback
@@ -86215,7 +86635,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const clusteringRatio = largestDayCluster / nodes.length;
     const spanInDays = Math.max(1, totalSpan / oneDay);
     const averageNodesPerDay = nodes.length / spanInDays;
-    logger77.debug("temporal-detection", "Analyzing temporal distribution", {
+    logger78.debug("temporal-detection", "Analyzing temporal distribution", {
       totalNodes: nodes.length,
       spanInDays: spanInDays.toFixed(1),
       largestDayCluster,
@@ -86334,7 +86754,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     progression = progression.map(
       (chord) => chord.map((degree) => degree % scaleIntervals.length)
     );
-    logger77.debug("chord-progression", "Generated chord progression", {
+    logger78.debug("chord-progression", "Generated chord progression", {
       scale: scaleName,
       progressionLength: progression.length,
       chords: progression
@@ -86364,7 +86784,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         const newWidth = entry.contentRect.width;
         const newHeight = entry.contentRect.height;
         if (newWidth > 0 && newHeight > 0 && this.graphRenderer) {
-          logger77.debug("responsive-resize", "Container resized, updating graph", {
+          logger78.debug("responsive-resize", "Container resized, updating graph", {
             newWidth,
             newHeight,
             previousWidth: this.graphRenderer.getZoomTransform().k,
@@ -86375,7 +86795,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       }
     });
     this.resizeObserver.observe(canvasElement);
-    logger77.debug("responsive-setup", "Resize observer set up for responsive graph sizing");
+    logger78.debug("responsive-setup", "Resize observer set up for responsive graph sizing");
   }
   scheduleSettingsUpdate(key, value) {
     this.pendingSettingsUpdates.set(key, value);
@@ -86450,28 +86870,28 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   updateTagInfluenceWeight(weight) {
     this.scheduleSettingsUpdate("contentAwarePositioning.tagInfluence.weight", weight);
-    logger77.debug("content-aware-positioning", "Tag influence weight updated", { weight });
+    logger78.debug("content-aware-positioning", "Tag influence weight updated", { weight });
   }
   /**
    * Update temporal positioning weight and save to plugin settings
    */
   updateTemporalPositioningWeight(weight) {
     this.scheduleSettingsUpdate("contentAwarePositioning.temporalPositioning.weight", weight);
-    logger77.debug("content-aware-positioning", "Temporal positioning weight updated", { weight });
+    logger78.debug("content-aware-positioning", "Temporal positioning weight updated", { weight });
   }
   /**
    * Update hub centrality weight and save to plugin settings
    */
   updateHubCentralityWeight(weight) {
     this.scheduleSettingsUpdate("contentAwarePositioning.hubCentrality.weight", weight);
-    logger77.debug("content-aware-positioning", "Hub centrality weight updated", { weight });
+    logger78.debug("content-aware-positioning", "Hub centrality weight updated", { weight });
   }
   /**
    * Update debug visualization setting and save to plugin settings
    */
   updateDebugVisualization(enabled) {
     this.scheduleSettingsUpdate("contentAwarePositioning.debugVisualization", enabled);
-    logger77.debug("content-aware-positioning", "Debug visualization updated", { enabled });
+    logger78.debug("content-aware-positioning", "Debug visualization updated", { enabled });
   }
   /**
    * Apply content-aware weight changes immediately for real-time preview
@@ -86490,7 +86910,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       previewSettings.hubCentrality.weight = weight;
     }
     this.graphRenderer.updateContentAwareSettings(previewSettings);
-    logger77.debug("content-aware-preview", "Real-time weight preview applied", {
+    logger78.debug("content-aware-preview", "Real-time weight preview applied", {
       weightType,
       weight,
       immediate: true
@@ -86507,7 +86927,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     const previewSettings = JSON.parse(JSON.stringify(currentSettings));
     previewSettings.debugVisualization = enabled;
     this.graphRenderer.updateContentAwareSettings(previewSettings);
-    logger77.debug("content-aware-preview", "Real-time debug visualization preview applied", {
+    logger78.debug("content-aware-preview", "Real-time debug visualization preview applied", {
       enabled,
       immediate: true
     });
@@ -86517,35 +86937,35 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    */
   updateClusteringAlgorithm(algorithm) {
     this.scheduleSettingsUpdate("smartClustering.algorithm", algorithm);
-    logger77.debug("smart-clustering", "Clustering algorithm updated", { algorithm });
+    logger78.debug("smart-clustering", "Clustering algorithm updated", { algorithm });
   }
   /**
    * Update clustering weight and save to plugin settings
    */
   updateClusteringWeight(weightType, weight) {
     this.scheduleSettingsUpdate(`smartClustering.weights.${weightType}`, weight);
-    logger77.debug("smart-clustering", "Clustering weight updated", { weightType, weight });
+    logger78.debug("smart-clustering", "Clustering weight updated", { weightType, weight });
   }
   /**
    * Update clustering parameter and save to plugin settings
    */
   updateClusteringParameter(paramType, value) {
     this.scheduleSettingsUpdate(`smartClustering.clustering.${paramType}`, value);
-    logger77.debug("smart-clustering", "Clustering parameter updated", { paramType, value });
+    logger78.debug("smart-clustering", "Clustering parameter updated", { paramType, value });
   }
   /**
    * Update clustering visualization setting and save to plugin settings
    */
   updateClusteringVisualization(vizType, value) {
     this.scheduleSettingsUpdate(`smartClustering.visualization.${vizType}`, value);
-    logger77.debug("smart-clustering", "Clustering visualization updated", { vizType, value });
+    logger78.debug("smart-clustering", "Clustering visualization updated", { vizType, value });
   }
   /**
    * Update clustering debugging setting and save to plugin settings
    */
   updateClusteringDebugging(debugType, value) {
     this.scheduleSettingsUpdate(`smartClustering.debugging.${debugType}`, value);
-    logger77.debug("smart-clustering", "Clustering debugging updated", { debugType, value });
+    logger78.debug("smart-clustering", "Clustering debugging updated", { debugType, value });
   }
 };
 
@@ -86556,7 +86976,7 @@ init_logging();
 // src/graph/LocalSoundscapeExtractor.ts
 var import_obsidian29 = require("obsidian");
 init_logging();
-var logger78 = getLogger("LocalSoundscapeExtractor");
+var logger79 = getLogger("LocalSoundscapeExtractor");
 var LocalSoundscapeExtractor = class {
   // Enable extended property extraction
   constructor(app) {
@@ -86572,28 +86992,28 @@ var LocalSoundscapeExtractor = class {
    */
   setRichMetadataExtraction(enabled) {
     this.enableRichMetadata = enabled;
-    logger78.info("rich-metadata-config", "Rich metadata extraction configured", { enabled });
+    logger79.info("rich-metadata-config", "Rich metadata extraction configured", { enabled });
   }
   /**
    * Set filters for extraction
    */
   setFilters(filters) {
     this.filters = filters;
-    logger78.info("filters-set", "Filters configured", filters);
+    logger79.info("filters-set", "Filters configured", filters);
   }
   /**
    * Set clustering method
    */
   setClusteringMethod(method) {
     this.clusteringMethod = method;
-    logger78.info("clustering-method-set", "Clustering method configured", { method });
+    logger79.info("clustering-method-set", "Clustering method configured", { method });
   }
   /**
    * Extract graph data centered on a specific file
    */
   async extractFromCenter(centerFile, maxDepth) {
     const startTime = performance.now();
-    logger78.info("extract-start", "Extracting local soundscape", {
+    logger79.info("extract-start", "Extracting local soundscape", {
       center: centerFile.path,
       maxDepth
     });
@@ -86758,7 +87178,7 @@ var LocalSoundscapeExtractor = class {
         bidirectionalCount
       }
     };
-    logger78.info("extract-complete", "Local soundscape extraction complete", {
+    logger79.info("extract-complete", "Local soundscape extraction complete", {
       totalNodes: result.stats.totalNodes,
       totalLinks: result.stats.totalLinks,
       incomingCount,
@@ -86862,7 +87282,7 @@ var LocalSoundscapeExtractor = class {
         node.frontmatter = { ...cache.frontmatter };
       }
     } catch (error) {
-      logger78.warn("rich-metadata-extraction-failed", "Failed to extract rich metadata", {
+      logger79.warn("rich-metadata-extraction-failed", "Failed to extract rich metadata", {
         file: file.path,
         error: error.message
       });
@@ -86877,7 +87297,7 @@ var LocalSoundscapeExtractor = class {
     const cache = this.app.metadataCache.getFileCache(file);
     if (this.filters.linkDirections && this.filters.linkDirections.length > 0) {
       if (direction !== "center" && !this.filters.linkDirections.includes(direction)) {
-        logger78.debug("filter-direction", "Node filtered by direction", {
+        logger79.debug("filter-direction", "Node filtered by direction", {
           file: file.path,
           direction,
           allowed: this.filters.linkDirections
@@ -86888,7 +87308,7 @@ var LocalSoundscapeExtractor = class {
     if (this.filters.includeFileTypes && this.filters.includeFileTypes.length > 0) {
       const fileType = this.getFileType(file);
       if (!this.filters.includeFileTypes.includes(fileType)) {
-        logger78.debug("filter-filetype", "Node filtered by file type", {
+        logger79.debug("filter-filetype", "Node filtered by file type", {
           file: file.path,
           type: fileType,
           allowed: this.filters.includeFileTypes
@@ -86899,7 +87319,7 @@ var LocalSoundscapeExtractor = class {
     if (this.filters.excludeFolders && this.filters.excludeFolders.length > 0) {
       for (const excludeFolder of this.filters.excludeFolders) {
         if (file.path.startsWith(excludeFolder + "/") || file.path === excludeFolder) {
-          logger78.debug("filter-folder-exclude", "Node filtered by excluded folder", {
+          logger79.debug("filter-folder-exclude", "Node filtered by excluded folder", {
             file: file.path,
             excludeFolder
           });
@@ -86916,7 +87336,7 @@ var LocalSoundscapeExtractor = class {
         }
       }
       if (!included) {
-        logger78.debug("filter-folder-include", "Node filtered by included folders", {
+        logger79.debug("filter-folder-include", "Node filtered by included folders", {
           file: file.path,
           includeFolders: this.filters.includeFolders
         });
@@ -86941,7 +87361,7 @@ var LocalSoundscapeExtractor = class {
     if (this.filters.excludeTags && this.filters.excludeTags.length > 0) {
       for (const excludeTag of this.filters.excludeTags) {
         if (fileTags.has(excludeTag)) {
-          logger78.debug("filter-tag-exclude", "Node filtered by excluded tag", {
+          logger79.debug("filter-tag-exclude", "Node filtered by excluded tag", {
             file: file.path,
             tag: excludeTag
           });
@@ -86958,7 +87378,7 @@ var LocalSoundscapeExtractor = class {
         }
       }
       if (!hasIncludedTag) {
-        logger78.debug("filter-tag-include", "Node filtered by included tags", {
+        logger79.debug("filter-tag-include", "Node filtered by included tags", {
           file: file.path,
           includeTags: this.filters.includeTags
         });
@@ -86988,7 +87408,7 @@ var LocalSoundscapeExtractor = class {
    * Compute clusters based on the specified method
    */
   computeClusters(nodes, links, method) {
-    logger78.info("compute-clusters", "Computing clusters", { method, nodeCount: nodes.length });
+    logger79.info("compute-clusters", "Computing clusters", { method, nodeCount: nodes.length });
     switch (method) {
       case "folder":
         return this.clusterByFolder(nodes);
@@ -87026,7 +87446,7 @@ var LocalSoundscapeExtractor = class {
         color: colors[colorIndex++ % colors.length]
       });
     });
-    logger78.info("folder-clustering", `Created ${clusters.length} folder-based clusters`);
+    logger79.info("folder-clustering", `Created ${clusters.length} folder-based clusters`);
     return clusters;
   }
   /**
@@ -87068,7 +87488,7 @@ var LocalSoundscapeExtractor = class {
         color: colors[colorIndex++ % colors.length]
       });
     });
-    logger78.info("tag-clustering", `Created ${clusters.length} tag-based clusters`);
+    logger79.info("tag-clustering", `Created ${clusters.length} tag-based clusters`);
     return clusters;
   }
   /**
@@ -87094,7 +87514,7 @@ var LocalSoundscapeExtractor = class {
         color: colors[colorIndex++ % colors.length]
       });
     });
-    logger78.info("depth-clustering", `Created ${clusters.length} depth-based clusters`);
+    logger79.info("depth-clustering", `Created ${clusters.length} depth-based clusters`);
     return clusters;
   }
   /**
@@ -87153,7 +87573,7 @@ var LocalSoundscapeExtractor = class {
         color: colors[colorIndex++ % colors.length]
       });
     });
-    logger78.info("community-clustering", `Created ${clusters.length} community-based clusters`);
+    logger79.info("community-clustering", `Created ${clusters.length} community-based clusters`);
     return clusters;
   }
   /**
@@ -87191,7 +87611,7 @@ init_src31();
 
 // src/graph/RadialLayoutAlgorithm.ts
 init_logging();
-var logger79 = getLogger("RadialLayoutAlgorithm");
+var logger80 = getLogger("RadialLayoutAlgorithm");
 var RadialLayoutAlgorithm = class {
   constructor(config = {}) {
     this.config = {
@@ -87208,7 +87628,7 @@ var RadialLayoutAlgorithm = class {
    */
   applyLayout(data) {
     const startTime = performance.now();
-    logger79.info("layout-start", "Applying radial layout", {
+    logger80.info("layout-start", "Applying radial layout", {
       totalNodes: data.stats.totalNodes,
       maxDepth: data.stats.maxDepth
     });
@@ -87225,7 +87645,7 @@ var RadialLayoutAlgorithm = class {
       }
     }
     const layoutTime = performance.now() - startTime;
-    logger79.info("layout-complete", "Radial layout applied", {
+    logger80.info("layout-complete", "Radial layout applied", {
       layoutTime: layoutTime.toFixed(2) + "ms"
     });
   }
@@ -87289,7 +87709,7 @@ var RadialLayoutAlgorithm = class {
       const angleRad = angleDeg * Math.PI / 180;
       node.x = this.config.centerX + radius * Math.cos(angleRad);
       node.y = this.config.centerY + radius * Math.sin(angleRad);
-      logger79.debug("node-positioned", `Positioned node: ${node.basename}`, {
+      logger80.debug("node-positioned", `Positioned node: ${node.basename}`, {
         depth: node.depth,
         direction: node.direction,
         angle: angleDeg.toFixed(1),
@@ -87306,7 +87726,7 @@ var RadialLayoutAlgorithm = class {
       ...this.config,
       ...config
     };
-    logger79.debug("config-updated", "Radial layout config updated", this.config);
+    logger80.debug("config-updated", "Radial layout config updated", this.config);
   }
   /**
    * Get current configuration
@@ -87356,7 +87776,7 @@ var RadialLayoutAlgorithm = class {
 
 // src/graph/LocalSoundscapeRenderer.ts
 init_logging();
-var logger80 = getLogger("LocalSoundscapeRenderer");
+var logger81 = getLogger("LocalSoundscapeRenderer");
 var LocalSoundscapeRenderer = class {
   constructor(container, config = {}) {
     // Tooltip
@@ -87385,7 +87805,7 @@ var LocalSoundscapeRenderer = class {
     this.initializeSVG();
     this.createTooltip();
     this.createContextMenu();
-    logger80.info("renderer-init", "LocalSoundscapeRenderer initialized", this.config);
+    logger81.info("renderer-init", "LocalSoundscapeRenderer initialized", this.config);
   }
   /**
    * Initialize SVG container and groups
@@ -87405,14 +87825,14 @@ var LocalSoundscapeRenderer = class {
       this.svg.call(this.zoom);
       this.resetZoom();
     }
-    logger80.debug("svg-initialized", "SVG structure created");
+    logger81.debug("svg-initialized", "SVG structure created");
   }
   /**
    * Render graph data
    */
   render(data) {
     const startTime = performance.now();
-    logger80.info("render-start", "Rendering graph", {
+    logger81.info("render-start", "Rendering graph", {
       nodes: data.stats.totalNodes,
       links: data.stats.totalLinks
     });
@@ -87421,7 +87841,7 @@ var LocalSoundscapeRenderer = class {
     if (needsLayout) {
       this.layoutAlgorithm.applyLayout(data);
     } else {
-      logger80.debug("skip-layout", "Nodes already have positions, skipping layout");
+      logger81.debug("skip-layout", "Nodes already have positions, skipping layout");
     }
     if (data.clusters && data.clusters.length > 0) {
       this.renderClusters(data.clusters, data.allNodes);
@@ -87435,7 +87855,7 @@ var LocalSoundscapeRenderer = class {
       this.fitToContent();
     }
     const renderTime = performance.now() - startTime;
-    logger80.info("render-complete", "Graph rendered", {
+    logger81.info("render-complete", "Graph rendered", {
       renderTime: renderTime.toFixed(2) + "ms"
     });
   }
@@ -87459,7 +87879,7 @@ var LocalSoundscapeRenderer = class {
       return (target == null ? void 0 : target.y) || 0;
     }).attr("stroke-opacity", 0.4);
     linkSelection.exit().transition().duration(300).attr("stroke-opacity", 0).remove();
-    logger80.debug("links-rendered", `Rendered ${links.length} links`);
+    logger81.debug("links-rendered", `Rendered ${links.length} links`);
   }
   /**
    * Render nodes
@@ -87469,7 +87889,7 @@ var LocalSoundscapeRenderer = class {
     const nodeEnter = nodeSelection.enter().append("circle").attr("class", (d) => `node node-${d.direction} node-depth-${d.depth}`).attr("cx", (d) => d.x || 0).attr("cy", (d) => d.y || 0).attr("r", 0).attr("fill", (d) => this.getNodeColor(d)).attr("stroke", (d) => this.getNodeStroke(d)).attr("stroke-width", (d) => d.depth === 0 ? 3 : 2).style("cursor", "pointer").style("opacity", 0).on("click", (event, d) => this.handleNodeClick(event, d)).on("contextmenu", (event, d) => this.handleNodeRightClick(event, d)).on("mouseover", (event, d) => this.handleNodeHover(event, d)).on("mouseout", (event, d) => this.handleNodeMouseOut(event, d));
     nodeEnter.merge(nodeSelection).transition().duration(500).ease(cubicInOut).attr("cx", (d) => d.x || 0).attr("cy", (d) => d.y || 0).attr("r", (d) => this.getNodeRadius(d)).attr("fill", (d) => this.getNodeColor(d)).attr("stroke", (d) => this.getNodeStroke(d)).style("opacity", 1);
     nodeSelection.exit().transition().duration(300).attr("r", 0).style("opacity", 0).remove();
-    logger80.debug("nodes-rendered", `Rendered ${nodes.length} nodes`);
+    logger81.debug("nodes-rendered", `Rendered ${nodes.length} nodes`);
   }
   /**
    * Render labels
@@ -87479,7 +87899,7 @@ var LocalSoundscapeRenderer = class {
     const labelEnter = labelSelection.enter().append("text").attr("class", "node-label").attr("x", (d) => d.x || 0).attr("y", (d) => (d.y || 0) + this.config.nodeRadius + 12).attr("text-anchor", "middle").attr("font-size", "11px").attr("fill", "var(--text-muted)").style("opacity", 0).text((d) => d.basename);
     labelEnter.merge(labelSelection).transition().duration(500).ease(cubicInOut).attr("x", (d) => d.x || 0).attr("y", (d) => (d.y || 0) + this.config.nodeRadius + 12).style("opacity", 1);
     labelSelection.exit().transition().duration(300).style("opacity", 0).remove();
-    logger80.debug("labels-rendered", `Rendered ${nodes.length} labels`);
+    logger81.debug("labels-rendered", `Rendered ${nodes.length} labels`);
   }
   /**
    * Render clusters
@@ -87523,7 +87943,7 @@ var LocalSoundscapeRenderer = class {
     clusterUpdate.select("rect.cluster-background").transition().duration(500).ease(cubicInOut).attr("x", (d) => d.minX).attr("y", (d) => d.minY).attr("width", (d) => d.maxX - d.minX).attr("height", (d) => d.maxY - d.minY).attr("fill", (d) => d.cluster.color).attr("fill-opacity", 0.15).attr("stroke", (d) => d.cluster.color).attr("stroke-width", 2).attr("stroke-opacity", 0.4);
     clusterUpdate.select("text.cluster-label").transition().duration(500).ease(cubicInOut).attr("x", (d) => d.centerX).attr("y", (d) => d.minY - 8).attr("text-anchor", "middle").attr("font-size", "13px").attr("font-weight", "bold").attr("fill", (d) => d.cluster.color).attr("fill-opacity", 0.8).style("opacity", 1).text((d) => d.cluster.label);
     clusterSelection.exit().transition().duration(300).style("opacity", 0).remove();
-    logger80.debug("clusters-rendered", `Rendered ${clusters.length} clusters`);
+    logger81.debug("clusters-rendered", `Rendered ${clusters.length} clusters`);
   }
   /**
    * Calculate node radius based on size mode
@@ -87607,7 +88027,7 @@ var LocalSoundscapeRenderer = class {
    */
   handleNodeClick(event, node) {
     event.stopPropagation();
-    logger80.info("node-clicked", "Node clicked", { node: node.basename });
+    logger81.info("node-clicked", "Node clicked", { node: node.basename });
     if (this.onNodeOpen) {
       this.onNodeOpen(node);
     }
@@ -87618,7 +88038,7 @@ var LocalSoundscapeRenderer = class {
   handleNodeRightClick(event, node) {
     event.preventDefault();
     event.stopPropagation();
-    logger80.info("node-right-clicked", "Node right-clicked", { node: node.basename });
+    logger81.info("node-right-clicked", "Node right-clicked", { node: node.basename });
     this.showContextMenu(event, node);
   }
   /**
@@ -87627,7 +88047,7 @@ var LocalSoundscapeRenderer = class {
   handleNodeHover(event, node) {
     select_default2(event.target).transition().duration(200).ease(backOut.overshoot(1.5)).attr("r", (d) => this.getNodeRadius(d) * 1.3).attr("stroke-width", 4);
     this.showTooltip(event, node);
-    logger80.debug("node-hover", "Node hovered", { node: node.basename });
+    logger81.debug("node-hover", "Node hovered", { node: node.basename });
   }
   /**
    * Handle node mouse out
@@ -87650,7 +88070,7 @@ var LocalSoundscapeRenderer = class {
     const translateY = (this.config.height - bounds.height * scale) / 2 - bounds.minY * scale;
     const transform2 = identity2.translate(translateX, translateY).scale(scale);
     this.svg.transition().duration(750).ease(cubicInOut).call(this.zoom.transform, transform2);
-    logger80.debug("fit-to-content", "Graph fitted to content", { scale, translateX, translateY });
+    logger81.debug("fit-to-content", "Graph fitted to content", { scale, translateX, translateY });
   }
   /**
    * Reset zoom to default
@@ -87754,21 +88174,21 @@ var LocalSoundscapeRenderer = class {
    */
   highlightPlayingNode(nodeId) {
     this.nodeGroup.selectAll("circle").filter((d) => d.id === nodeId).classed("playing", true).transition().duration(150).ease(backOut).attr("r", (d) => this.getNodeRadius(d) * 1.5);
-    logger80.debug("node-highlight", "Node highlighted as playing", { nodeId });
+    logger81.debug("node-highlight", "Node highlighted as playing", { nodeId });
   }
   /**
    * Remove highlight from a playing node
    */
   unhighlightPlayingNode(nodeId) {
     this.nodeGroup.selectAll("circle").filter((d) => d.id === nodeId).classed("playing", false).transition().duration(200).ease(cubicOut).attr("r", (d) => this.getNodeRadius(d));
-    logger80.debug("node-unhighlight", "Node unhighlighted", { nodeId });
+    logger81.debug("node-unhighlight", "Node unhighlighted", { nodeId });
   }
   /**
    * Clear all playing node highlights
    */
   clearAllPlayingHighlights() {
     this.nodeGroup.selectAll("circle.playing").classed("playing", false).transition().duration(200).ease(cubicOut).attr("r", (d) => this.getNodeRadius(d));
-    logger80.debug("clear-highlights", "Cleared all playing node highlights");
+    logger81.debug("clear-highlights", "Cleared all playing node highlights");
   }
   /**
    * Set callbacks for node interactions
@@ -87785,7 +88205,7 @@ var LocalSoundscapeRenderer = class {
       ...this.config,
       ...config
     };
-    logger80.debug("config-updated", "Renderer config updated", this.config);
+    logger81.debug("config-updated", "Renderer config updated", this.config);
     if (this.data) {
       this.render(this.data);
     }
@@ -87796,14 +88216,14 @@ var LocalSoundscapeRenderer = class {
   dispose() {
     select_default2(this.container).selectAll("*").remove();
     this.data = null;
-    logger80.debug("renderer-disposed", "Renderer disposed");
+    logger81.debug("renderer-disposed", "Renderer disposed");
   }
 };
 
 // src/graph/ForceDirectedLayout.ts
 init_src31();
 init_logging();
-var logger81 = getLogger("ForceDirectedLayout");
+var logger82 = getLogger("ForceDirectedLayout");
 var ForceDirectedLayout = class {
   constructor(config = {}) {
     this.config = {
@@ -87817,14 +88237,14 @@ var ForceDirectedLayout = class {
       centerStrength: 0.1,
       ...config
     };
-    logger81.debug("force-layout-init", "ForceDirectedLayout initialized", this.config);
+    logger82.debug("force-layout-init", "ForceDirectedLayout initialized", this.config);
   }
   /**
    * Apply force-directed layout to graph data
    */
   applyLayout(data) {
     const startTime = performance.now();
-    logger81.info("layout-start", "Applying force-directed layout", {
+    logger82.info("layout-start", "Applying force-directed layout", {
       nodes: data.allNodes.length,
       links: data.links.length
     });
@@ -87846,7 +88266,7 @@ var ForceDirectedLayout = class {
       delete centerNode.fy;
     }
     const duration = performance.now() - startTime;
-    logger81.info("layout-complete", "Force-directed layout complete", {
+    logger82.info("layout-complete", "Force-directed layout complete", {
       duration: duration.toFixed(2) + "ms",
       iterations
     });
@@ -87879,7 +88299,7 @@ var ForceDirectedLayout = class {
       ...this.config,
       ...config
     };
-    logger81.debug("config-updated", "Force layout config updated", this.config);
+    logger82.debug("config-updated", "Force layout config updated", this.config);
   }
 };
 
@@ -87887,7 +88307,7 @@ var ForceDirectedLayout = class {
 var import_obsidian30 = require("obsidian");
 init_ProseAnalyzer();
 init_logging();
-var logger82 = getLogger("NoteCentricMapper");
+var logger83 = getLogger("NoteCentricMapper");
 var NoteCentricMapper = class {
   constructor(app, settings) {
     this.app = app;
@@ -87897,18 +88317,18 @@ var NoteCentricMapper = class {
    * Map a local soundscape to note-centric music
    */
   async map(data) {
-    logger82.info("mapping-start", "Generating note-centric music", {
+    logger83.info("mapping-start", "Generating note-centric music", {
       centerNode: data.centerNode.basename,
       connectedNodes: data.stats.totalNodes - 1
     });
     const proseAnalysis = await this.analyzeCenterNote(data.centerNode);
     if (!proseAnalysis) {
-      logger82.warn("mapping-failed", "Could not analyze center note");
+      logger83.warn("mapping-failed", "Could not analyze center note");
       return null;
     }
     const centerPhrase = this.generatePhraseFromProse(proseAnalysis);
     const embellishments = this.generateEmbellishments(data, proseAnalysis, centerPhrase);
-    logger82.info("mapping-complete", "Note-centric mapping complete", {
+    logger83.info("mapping-complete", "Note-centric mapping complete", {
       phraseLength: centerPhrase.melody.length,
       tempo: centerPhrase.tempo,
       embellishments: embellishments.length
@@ -87924,26 +88344,26 @@ var NoteCentricMapper = class {
    */
   async analyzeCenterNote(node) {
     try {
-      logger82.debug("analyze-start", "Starting prose analysis", {
+      logger83.debug("analyze-start", "Starting prose analysis", {
         path: node.path,
         basename: node.basename
       });
       const file = this.app.vault.getAbstractFileByPath(node.path);
       if (!(file instanceof import_obsidian30.TFile)) {
-        logger82.warn("file-not-found", `File not found: ${node.path}`);
+        logger83.warn("file-not-found", `File not found: ${node.path}`);
         return null;
       }
-      logger82.debug("file-found", "File found, reading content", {
+      logger83.debug("file-found", "File found, reading content", {
         path: file.path,
         name: file.name
       });
       const content = await this.app.vault.cachedRead(file);
-      logger82.debug("content-read", "Content read successfully", {
+      logger83.debug("content-read", "Content read successfully", {
         length: content.length,
         firstChars: content.substring(0, 100)
       });
       const analysis = ProseAnalyzer.analyze(content);
-      logger82.info("prose-analysis", "Analyzed center note prose", {
+      logger83.info("prose-analysis", "Analyzed center note prose", {
         contentType: analysis.contentType,
         complexity: analysis.overallComplexity.toFixed(2),
         expressiveness: analysis.musicalExpressiveness.toFixed(2),
@@ -87951,7 +88371,7 @@ var NoteCentricMapper = class {
       });
       return analysis;
     } catch (error) {
-      logger82.error("prose-analysis-error", "Failed to analyze prose", error);
+      logger83.error("prose-analysis-error", "Failed to analyze prose", error);
       return null;
     }
   }
@@ -88598,248 +89018,8 @@ var NoteCentricMapper = class {
   }
 };
 
-// src/audio/playback/NoteCentricPlayer.ts
-init_logging();
-var logger83 = getLogger("NoteCentricPlayer");
-var NoteCentricPlayer = class {
-  constructor(audioEngine) {
-    this.isPlaying = false;
-    this.playingNotes = [];
-    this.animationFrameId = null;
-    this.startTime = 0;
-    this.embellishmentCounts = {};
-    this.audioEngine = audioEngine;
-  }
-  /**
-   * Play a note-centric mapping
-   */
-  async play(mapping) {
-    if (this.isPlaying) {
-      logger83.warn("already-playing", "Already playing, stopping first");
-      this.stop();
-    }
-    logger83.info("playback-start", "Starting note-centric playback", {
-      centerPhraseLength: mapping.centerPhrase.melody.length,
-      embellishments: mapping.embellishments.length,
-      tempo: mapping.centerPhrase.tempo,
-      audioEngineStatus: this.audioEngine.getStatus()
-    });
-    this.isPlaying = true;
-    this.startTime = Date.now();
-    this.embellishmentCounts = {
-      "harmonic-response": 0,
-      "rhythmic-counterpoint": 0,
-      "ambient-texture": 0
-    };
-    logger83.debug("play-center", "Playing center phrase");
-    await this.playPhrase(mapping.centerPhrase, "center", 0);
-    logger83.debug("play-embellishments", "Playing embellishments", {
-      count: mapping.embellishments.length
-    });
-    for (const embellishment of mapping.embellishments) {
-      const delay = this.getDelayForEmbellishment(embellishment.type);
-      await this.playPhrase(embellishment.phrase, embellishment.type, delay);
-    }
-    logger83.debug("start-animation", "Starting animation loop");
-    this.startAnimationLoop();
-    logger83.info("playback-scheduled", "All notes scheduled", {
-      totalNotes: this.playingNotes.length
-    });
-  }
-  /**
-   * Stop playback
-   */
-  stop() {
-    if (!this.isPlaying) {
-      return;
-    }
-    logger83.info("playback-stop", "Stopping note-centric playback");
-    this.playingNotes = [];
-    this.isPlaying = false;
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-  }
-  /**
-   * Check if currently playing
-   */
-  getIsPlaying() {
-    return this.isPlaying;
-  }
-  /**
-   * Get count of currently active voices
-   */
-  getActiveVoiceCount() {
-    return this.playingNotes.length;
-  }
-  /**
-   * Play a musical phrase
-   */
-  async playPhrase(phrase, role, startDelay) {
-    const instrument = this.getInstrumentForRole(role);
-    logger83.debug("phrase-play", "Playing phrase", {
-      role,
-      instrument,
-      length: phrase.melody.length,
-      tempo: phrase.tempo,
-      startDelay
-    });
-    const beatDuration = 60 / phrase.tempo * 1e3;
-    let currentTime = startDelay;
-    const isPlayingRef = () => this.isPlaying;
-    for (let i = 0; i < phrase.melody.length; i++) {
-      if (!this.isPlaying) {
-        break;
-      }
-      const pitchOffset = phrase.melody[i];
-      const chordRoot = phrase.harmony[i];
-      const duration = phrase.rhythm[i];
-      const velocity = phrase.velocities[i];
-      const baseFreq = 261.63;
-      const totalOffset = chordRoot + pitchOffset;
-      const frequency = baseFreq * Math.pow(2, totalOffset / 12);
-      const humanization = Math.random() * 150 - 75 + (Math.random() * 150 - 75);
-      const humanizedTime = currentTime + humanization;
-      logger83.debug("schedule-note", "Scheduling note", {
-        index: i,
-        delay: humanizedTime,
-        humanization: humanization.toFixed(2),
-        frequency: frequency.toFixed(2),
-        role,
-        instrument
-      });
-      setTimeout(async () => {
-        logger83.debug("timeout-fired", "Note timeout fired", {
-          index: i,
-          isPlaying: this.isPlaying
-        });
-        if (!this.isPlaying) {
-          return;
-        }
-        try {
-          let finalFreq = frequency;
-          if (this.audioEngine.musicalTheoryEngine) {
-            finalFreq = this.audioEngine.musicalTheoryEngine.constrainPitchToScale(frequency);
-          }
-          const durationSeconds = duration * beatDuration / 1e3;
-          await this.audioEngine.playNoteImmediate({
-            pitch: finalFreq,
-            duration: durationSeconds,
-            velocity,
-            instrument
-          });
-          const stopTime = Date.now() + duration * beatDuration;
-          this.playingNotes.push({
-            instrumentName: instrument,
-            frequency: finalFreq,
-            stopTime
-          });
-          logger83.debug("note-play", "Note started", {
-            instrument,
-            frequency: finalFreq.toFixed(2),
-            velocity: velocity.toFixed(2),
-            duration: durationSeconds.toFixed(2)
-          });
-        } catch (error) {
-          logger83.warn("note-play-error", "Error playing note", {
-            instrument,
-            frequency: frequency.toFixed(2),
-            error: error instanceof Error ? error.message : String(error),
-            errorStack: error instanceof Error ? error.stack : void 0
-          });
-        }
-      }, Math.max(0, humanizedTime));
-      currentTime += duration * beatDuration;
-    }
-  }
-  /**
-   * Get instrument for a role
-   */
-  getInstrumentForRole(role) {
-    const enabledInstruments = this.audioEngine.getEnabledInstruments();
-    if (enabledInstruments.length === 0) {
-      logger83.warn("no-instruments", "No instruments enabled, cannot play note-centric audio");
-      return "piano";
-    }
-    const preferredInstruments = {
-      "center": ["piano", "organ", "electricpiano", "harpsichord", "marimba"],
-      "harmonic-response": ["electricpiano", "organ", "vibraphone", "harp", "celeste"],
-      "rhythmic-counterpoint": ["cello", "bassElectric", "bassoon", "trombone", "tuba"],
-      "ambient-texture": ["pad", "organ", "frenchHorn", "clarinet", "flute"]
-    };
-    const preferences = preferredInstruments[role] || preferredInstruments["center"];
-    for (const preferred of preferences) {
-      if (enabledInstruments.includes(preferred)) {
-        return preferred;
-      }
-    }
-    logger83.debug("instrument-fallback", "Using fallback instrument for role", {
-      role,
-      instrument: enabledInstruments[0]
-    });
-    return enabledInstruments[0];
-  }
-  /**
-   * Get delay for embellishment type with phrase-sensitive timing and overlap
-   */
-  getDelayForEmbellishment(type2) {
-    if (!this.embellishmentCounts) {
-      this.embellishmentCounts = {
-        "harmonic-response": 0,
-        "rhythmic-counterpoint": 0,
-        "ambient-texture": 0
-      };
-    }
-    const baseDelays = {
-      "harmonic-response": 1e3 + Math.random() * 1e3,
-      // 1-2s (IMMEDIATE overlap!)
-      "rhythmic-counterpoint": 2500 + Math.random() * 1500,
-      // 2.5-4s (much earlier)
-      "ambient-texture": 0 + Math.random() * 300
-      // 0-0.3s (essentially immediate)
-    };
-    const staggerDelay = {
-      "harmonic-response": 1500 + Math.random() * 1e3,
-      // 1.5-2.5s more each time
-      "rhythmic-counterpoint": 2e3 + Math.random() * 1e3,
-      // 2-3s more each time
-      "ambient-texture": 1e3 + Math.random() * 500
-      // 1-1.5s for ambient
-    };
-    const baseDelay = baseDelays[type2] || 0;
-    const count = this.embellishmentCounts[type2] || 0;
-    const stagger = (staggerDelay[type2] || 0) * count;
-    this.embellishmentCounts[type2] = count + 1;
-    return Math.round((baseDelay + stagger) / 100) * 100;
-  }
-  /**
-   * Animation loop to clean up finished notes
-   */
-  startAnimationLoop() {
-    const loop = () => {
-      if (!this.isPlaying) {
-        return;
-      }
-      const now3 = Date.now();
-      this.playingNotes = this.playingNotes.filter((note) => {
-        return now3 < note.stopTime;
-      });
-      const timeSinceStart = now3 - this.startTime;
-      if (this.playingNotes.length === 0 && timeSinceStart > 1e3) {
-        logger83.info("playback-complete", "All notes finished, stopping playback naturally");
-        this.isPlaying = false;
-        if (this.animationFrameId !== null) {
-          cancelAnimationFrame(this.animationFrameId);
-          this.animationFrameId = null;
-        }
-        return;
-      }
-      this.animationFrameId = requestAnimationFrame(loop);
-    };
-    this.animationFrameId = requestAnimationFrame(loop);
-  }
-};
+// src/ui/LocalSoundscapeView.ts
+init_NoteCentricPlayer();
 
 // src/ui/LocalSoundscapeFilterModal.ts
 var import_obsidian31 = require("obsidian");
@@ -90201,21 +90381,29 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
    */
   async exportSoundscapeAudio() {
     var _a;
-    if (!this.currentMappings || this.currentMappings.length === 0) {
+    const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
+    const hasNoteCentricData = this.currentNoteCentricMapping !== null;
+    if (!hasGraphCentricData && !hasNoteCentricData) {
       new import_obsidian32.Notice("No soundscape to export. Please play the soundscape first.");
       return;
     }
+    const mode = hasNoteCentricData ? "note-centric" : "graph-centric";
     logger85.info("audio-export", "Opening export modal for Local Soundscape", {
-      nodeCount: this.currentMappings.length,
-      centerNote: (_a = this.centerFile) == null ? void 0 : _a.basename
+      mode,
+      nodeCount: hasGraphCentricData ? this.currentMappings.length : 0,
+      centerNote: (_a = this.centerFile) == null ? void 0 : _a.basename,
+      hasNoteCentricData,
+      hasGraphCentricData
     });
     const { ExportModal: ExportModal2 } = (init_ExportModal(), __toCommonJS(ExportModal_exports));
     const modal = new ExportModal2(
       this.app,
       this.plugin,
       this.plugin.audioEngine,
-      null
+      null,
       // No temporal animator for Local Soundscape (static graph)
+      this.currentNoteCentricMapping
+      // Pass note-centric mapping if available
     );
     modal.open();
   }
@@ -91136,7 +91324,9 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       }
       this.stopButton.setAttribute("disabled", "");
       if (this.exportAudioButton) {
-        if (this.currentMappings && this.currentMappings.length > 0) {
+        const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
+        const hasNoteCentricData = this.currentNoteCentricMapping !== null;
+        if (hasGraphCentricData || hasNoteCentricData) {
           this.exportAudioButton.removeAttribute("disabled");
         } else {
           this.exportAudioButton.setAttribute("disabled", "");

@@ -1519,14 +1519,24 @@ export class LocalSoundscapeView extends ItemView {
 	 * Export soundscape audio
 	 */
 	private async exportSoundscapeAudio(): Promise<void> {
-		if (!this.currentMappings || this.currentMappings.length === 0) {
+		// Check if we have either playback mode's data
+		const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
+		const hasNoteCentricData = this.currentNoteCentricMapping !== null;
+
+		if (!hasGraphCentricData && !hasNoteCentricData) {
 			new Notice('No soundscape to export. Please play the soundscape first.');
 			return;
 		}
 
+		// Determine export mode
+		const mode = hasNoteCentricData ? 'note-centric' : 'graph-centric';
+
 		logger.info('audio-export', 'Opening export modal for Local Soundscape', {
-			nodeCount: this.currentMappings.length,
-			centerNote: this.centerFile?.basename
+			mode,
+			nodeCount: hasGraphCentricData ? this.currentMappings.length : 0,
+			centerNote: this.centerFile?.basename,
+			hasNoteCentricData,
+			hasGraphCentricData
 		});
 
 		// Use the existing export modal - pass null for animator since Local Soundscape is static
@@ -1535,7 +1545,8 @@ export class LocalSoundscapeView extends ItemView {
 			this.app,
 			this.plugin,
 			this.plugin.audioEngine,
-			null  // No temporal animator for Local Soundscape (static graph)
+			null,  // No temporal animator for Local Soundscape (static graph)
+			this.currentNoteCentricMapping  // Pass note-centric mapping if available
 		);
 		modal.open();
 	}
@@ -2789,9 +2800,12 @@ export class LocalSoundscapeView extends ItemView {
 			// Stop button should be disabled when not playing
 			this.stopButton.setAttribute('disabled', '');
 
-			// Export button enabled if we have mappings (can export last played soundscape)
+			// Export button enabled if we have mappings from either playback mode
 			if (this.exportAudioButton) {
-				if (this.currentMappings && this.currentMappings.length > 0) {
+				const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
+				const hasNoteCentricData = this.currentNoteCentricMapping !== null;
+
+				if (hasGraphCentricData || hasNoteCentricData) {
 					this.exportAudioButton.removeAttribute('disabled');
 				} else {
 					this.exportAudioButton.setAttribute('disabled', '');

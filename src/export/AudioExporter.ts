@@ -17,6 +17,7 @@ import {
 import { WavEncoder } from './WavEncoder';
 import { Mp3Encoder } from './Mp3Encoder';
 import { OfflineRenderer } from './OfflineRenderer';
+import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
 import { getLogger } from '../logging';
 
 const logger = getLogger('export');
@@ -28,6 +29,7 @@ export class AudioExporter {
     private app: App;
     private audioEngine: AudioEngine;
     private animator: TemporalGraphAnimator | null = null;
+    private noteCentricMapping: NoteCentricMapping | null = null;
     private isCancelled = false;
     private progressCallback?: (progress: ExportProgress) => void;
     private currentRenderer?: OfflineRenderer;
@@ -46,6 +48,13 @@ export class AudioExporter {
      */
     setAnimator(animator: TemporalGraphAnimator): void {
         this.animator = animator;
+    }
+
+    /**
+     * Set note-centric mapping for static graph exports
+     */
+    setNoteCentricMapping(mapping: NoteCentricMapping): void {
+        this.noteCentricMapping = mapping;
     }
 
     /**
@@ -239,12 +248,235 @@ export class AudioExporter {
     }
 
     /**
-     * Render static graph state
+     * Render static graph state using note-centric playback
      */
     private async renderStaticGraph(config: ExportConfig): Promise<AudioBuffer> {
-        // TODO: Implement static graph rendering
-        // This will trigger all visible nodes at once
-        throw new Error('Static graph export not yet implemented');
+        if (!this.noteCentricMapping) {
+            throw new Error('Note-centric mapping not set for static graph export');
+        }
+
+        logger.info('offline-renderer', 'Starting note-centric static graph render');
+
+        // Import NoteCentricPlayer
+        const { NoteCentricPlayer } = require('../audio/playback/NoteCentricPlayer');
+        const player = new NoteCentricPlayer(this.audioEngine);
+
+        // Calculate total duration from note-centric mapping
+        const duration = this.estimateNoteCentricDuration(this.noteCentricMapping);
+
+        const qualitySettings = config.quality as { sampleRate?: number };
+        const sampleRate = qualitySettings.sampleRate || 48000;
+
+        logger.info('offline-renderer', `Rendering note-centric audio: ${duration.toFixed(1)}s at ${sampleRate}Hz`);
+
+        try {
+            // Record the note-centric playback in real-time
+            const audioBuffer = await this.recordNoteCentricPlayback(
+                player,
+                this.noteCentricMapping,
+                duration,
+                sampleRate
+            );
+
+            logger.info('offline-renderer', 'Note-centric render complete');
+            return audioBuffer;
+        } catch (error) {
+            logger.error('offline-renderer', 'Note-centric render failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Estimate duration of note-centric mapping in seconds
+     */
+    private estimateNoteCentricDuration(mapping: NoteCentricMapping): number {
+        // Calculate center phrase duration
+        const centerDuration = (mapping.centerPhrase.totalBeats / mapping.centerPhrase.tempo) * 60;
+
+        // Find longest embellishment duration
+        let maxEmbellishmentDuration = 0;
+        for (const embellishment of mapping.embellishments) {
+            const duration = (embellishment.phrase.totalBeats / embellishment.phrase.tempo) * 60;
+            maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+        }
+
+        // Total duration is the longer of the two, plus 2s buffer for reverb tails
+        return Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+    }
+
+    /**
+     * Record note-centric playback using MediaRecorder
+     */
+    private async recordNoteCentricPlayback(
+        player: any,
+        mapping: NoteCentricMapping,
+        duration: number,
+        targetSampleRate: number
+    ): Promise<AudioBuffer> {
+        // Get Tone.js audio context
+        const { getContext } = require('tone');
+        const audioContext = getContext().rawContext as BaseAudioContext;
+
+        if (!audioContext) {
+            throw new Error('Audio context not available');
+        }
+
+        if (!('createMediaStreamDestination' in audioContext)) {
+            throw new Error('Audio context does not support MediaStream recording');
+        }
+
+        const webAudioContext = audioContext as AudioContext;
+
+        // Access the audio engine's master volume node
+        const masterVolume = this.audioEngine.getMasterVolume();
+        if (!masterVolume) {
+            throw new Error('Could not access audio engine master volume');
+        }
+
+        // Create MediaStreamDestination to capture audio
+        const destination = webAudioContext.createMediaStreamDestination();
+
+        // Connect master volume to recording destination
+        const volumeNode = masterVolume.output;
+        volumeNode.connect(destination);
+
+        // Create MediaRecorder
+        const mediaRecorder = new MediaRecorder(destination.stream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+
+        const chunks: Blob[] = [];
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                chunks.push(event.data);
+            }
+        };
+
+        // Track recording state
+        const recordingPromise = new Promise<Blob>((resolve, reject) => {
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                logger.info('offline-renderer', `Recording stopped, captured ${blob.size} bytes`);
+                resolve(blob);
+            };
+
+            mediaRecorder.onerror = (error) => {
+                reject(new Error(`MediaRecorder error: ${error}`));
+            };
+        });
+
+        // Start recording
+        mediaRecorder.start(100);
+        logger.info('offline-renderer', 'Recording started');
+
+        // Progress tracking
+        const progressStartTime = Date.now();
+        const progressInterval = setInterval(() => {
+            if (this.isCancelled) {
+                clearInterval(progressInterval);
+                return;
+            }
+            const elapsed = (Date.now() - progressStartTime) / 1000;
+            const progress = Math.min(95, (elapsed / duration) * 50);
+            if (this.progressCallback) {
+                this.progressCallback(10 + progress);
+            }
+        }, 100);
+
+        // Start playback
+        await player.play(mapping);
+        logger.info('offline-renderer', 'Note-centric playback started');
+
+        // Wait for playback to complete or cancellation
+        await new Promise<void>((resolve, reject) => {
+            const checkInterval = setInterval(() => {
+                // Check for cancellation
+                if (this.isCancelled) {
+                    clearInterval(checkInterval);
+                    player.stop();
+                    logger.info('offline-renderer', 'Render cancelled by user');
+                    reject(new Error('Export cancelled by user'));
+                    return;
+                }
+
+                // Check if playback finished
+                if (!player.getIsPlaying()) {
+                    clearInterval(checkInterval);
+                    logger.info('offline-renderer', 'Note-centric playback complete');
+                    resolve();
+                }
+            }, 100);
+
+            // Fallback timeout
+            setTimeout(() => {
+                if (!this.isCancelled) {
+                    clearInterval(checkInterval);
+                    logger.info('offline-renderer', 'Playback timeout reached');
+                    resolve();
+                }
+            }, (duration + 2) * 1000);
+        });
+
+        // Stop recording
+        clearInterval(progressInterval);
+        logger.info('offline-renderer', 'Stopping recording...');
+        mediaRecorder.stop();
+
+        // Wait for recording to finish
+        const blob = await recordingPromise;
+
+        // Disconnect from destination
+        volumeNode.disconnect(destination);
+
+        // Update progress
+        if (this.progressCallback) {
+            this.progressCallback(70);
+        }
+
+        // Convert blob to ArrayBuffer
+        logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
+        const arrayBuffer = await blob.arrayBuffer();
+
+        if (this.progressCallback) {
+            this.progressCallback(80);
+        }
+
+        // Decode audio data
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        logger.info('offline-renderer', `Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+
+        // Resample if needed
+        if (audioBuffer.sampleRate !== targetSampleRate) {
+            logger.info('offline-renderer', `Resampling from ${audioBuffer.sampleRate}Hz to ${targetSampleRate}Hz`);
+            return await this.resampleBuffer(audioBuffer, targetSampleRate);
+        }
+
+        return audioBuffer;
+    }
+
+    /**
+     * Resample audio buffer to target sample rate
+     */
+    private async resampleBuffer(sourceBuffer: AudioBuffer, targetSampleRate: number): Promise<AudioBuffer> {
+        // Create offline context with target sample rate
+        const offlineContext = new OfflineAudioContext(
+            sourceBuffer.numberOfChannels,
+            Math.ceil(sourceBuffer.duration * targetSampleRate),
+            targetSampleRate
+        );
+
+        // Create buffer source
+        const source = offlineContext.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineContext.destination);
+        source.start(0);
+
+        // Render
+        const resampled = await offlineContext.startRendering();
+        logger.info('offline-renderer', 'Resampling complete');
+
+        return resampled;
     }
 
     /**
@@ -395,6 +627,11 @@ export class AudioExporter {
 
         if (this.animator) {
             return this.animator.config.duration;
+        }
+
+        // Use note-centric mapping duration if available
+        if (this.noteCentricMapping) {
+            return this.estimateNoteCentricDuration(this.noteCentricMapping);
         }
 
         // Default estimate for static graph
