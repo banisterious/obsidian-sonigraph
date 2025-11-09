@@ -265,7 +265,7 @@ export class NoteCentricPlayer {
 	}
 
 	/**
-	 * Get delay for embellishment type
+	 * Get delay for embellishment type with phrase-sensitive timing
 	 */
 	private getDelayForEmbellishment(type: string): number {
 		// Stagger embellishments to create a longer, unfolding composition
@@ -278,16 +278,17 @@ export class NoteCentricPlayer {
 			};
 		}
 
+		// More varied base delays with some randomness for organic feel
 		const baseDelays: Record<string, number> = {
-			'harmonic-response': 8000,      // Start 8 seconds after center
-			'rhythmic-counterpoint': 16000,  // Start 16 seconds after center
-			'ambient-texture': 0             // Start immediately (long sustains)
+			'harmonic-response': 6000 + (Math.random() * 3000),      // 6-9s (after first phrase)
+			'rhythmic-counterpoint': 12000 + (Math.random() * 4000),  // 12-16s (after second phrase)
+			'ambient-texture': 0 + (Math.random() * 1000)             // 0-1s (almost immediate, with tiny offset)
 		};
 
 		const staggerDelay: Record<string, number> = {
-			'harmonic-response': 6000,      // Each additional one waits 6s more
-			'rhythmic-counterpoint': 8000,  // Each additional one waits 8s more
-			'ambient-texture': 0            // No stagger for ambient
+			'harmonic-response': 5000 + (Math.random() * 2000),      // 5-7s more each time
+			'rhythmic-counterpoint': 6000 + (Math.random() * 3000),  // 6-9s more each time
+			'ambient-texture': 3000 + (Math.random() * 2000)         // 3-5s for ambient (changed from 0)
 		};
 
 		const baseDelay = baseDelays[type] || 0;
@@ -296,7 +297,8 @@ export class NoteCentricPlayer {
 
 		this.embellishmentCounts[type] = count + 1;
 
-		return baseDelay + stagger;
+		// Round to nearest 100ms for cleaner timing
+		return Math.round((baseDelay + stagger) / 100) * 100;
 	}
 
 	/**
