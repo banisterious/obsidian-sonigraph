@@ -195,6 +195,15 @@ export class AudioExporter {
                 // Try to create folder
                 await this.app.vault.createFolder(config.location);
             }
+        } else {
+            // System location - ensure directory exists
+            const fs = require('fs');
+            const path = require('path');
+            const dirPath = path.isAbsolute(config.location) ? config.location : path.resolve(config.location);
+
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
         }
 
         // Check for file collision
@@ -541,9 +550,27 @@ export class AudioExporter {
             const uint8Array = new Uint8Array(data);
             await this.app.vault.createBinary(fullPath, uint8Array);
         } else {
-            // Write to system location
-            // TODO: Implement system file writing using Electron's fs
-            throw new Error('System location export not yet implemented');
+            // Write to system location using Node.js fs
+            const uint8Array = new Uint8Array(data);
+            const fs = require('fs');
+            const path = require('path');
+
+            // Ensure directory exists
+            const dirPath = path.dirname(fullPath);
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
+
+            // Write file
+            await new Promise<void>((resolve, reject) => {
+                fs.writeFile(fullPath, uint8Array, (err: Error | null) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
         }
 
         logger.info('export', `File written: ${fullPath} (${data.byteLength} bytes)`);
@@ -606,15 +633,33 @@ export class AudioExporter {
      */
     private getFullPath(config: ExportConfig): string {
         const extension = config.format;
+
+        // Use path.join for system paths to handle path separators correctly
+        if (config.locationType === 'system') {
+            const path = require('path');
+            return path.join(config.location, `${config.filename}.${extension}`);
+        }
+
+        // Vault paths use forward slash
         return `${config.location}/${config.filename}.${extension}`;
     }
 
     /**
-     * Check if file exists
+     * Check if file exists (supports both vault and system paths)
      */
     private async fileExists(path: string): Promise<boolean> {
-        const file = this.app.vault.getAbstractFileByPath(path);
-        return file !== null;
+        // Check if it's a vault path (relative) or system path (absolute)
+        const isSystemPath = require('path').isAbsolute(path);
+
+        if (isSystemPath) {
+            // System path - use fs
+            const fs = require('fs');
+            return fs.existsSync(path);
+        } else {
+            // Vault path - use Obsidian API
+            const file = this.app.vault.getAbstractFileByPath(path);
+            return file !== null;
+        }
     }
 
     /**

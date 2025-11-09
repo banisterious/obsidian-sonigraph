@@ -60557,6 +60557,13 @@ var init_AudioExporter = __esm({
           if (!folder) {
             await this.app.vault.createFolder(config.location);
           }
+        } else {
+          const fs = require("fs");
+          const path = require("path");
+          const dirPath = path.isAbsolute(config.location) ? config.location : path.resolve(config.location);
+          if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+          }
         }
         const fullPath = this.getFullPath(config);
         const exists = await this.fileExists(fullPath);
@@ -60797,7 +60804,22 @@ var init_AudioExporter = __esm({
           const uint8Array = new Uint8Array(data);
           await this.app.vault.createBinary(fullPath, uint8Array);
         } else {
-          throw new Error("System location export not yet implemented");
+          const uint8Array = new Uint8Array(data);
+          const fs = require("fs");
+          const path = require("path");
+          const dirPath = path.dirname(fullPath);
+          if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+          }
+          await new Promise((resolve, reject) => {
+            fs.writeFile(fullPath, uint8Array, (err) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          });
         }
         logger74.info("export", `File written: ${fullPath} (${data.byteLength} bytes)`);
         return fullPath;
@@ -60848,14 +60870,24 @@ var init_AudioExporter = __esm({
        */
       getFullPath(config) {
         const extension = config.format;
+        if (config.locationType === "system") {
+          const path = require("path");
+          return path.join(config.location, `${config.filename}.${extension}`);
+        }
         return `${config.location}/${config.filename}.${extension}`;
       }
       /**
-       * Check if file exists
+       * Check if file exists (supports both vault and system paths)
        */
       async fileExists(path) {
-        const file = this.app.vault.getAbstractFileByPath(path);
-        return file !== null;
+        const isSystemPath = require("path").isAbsolute(path);
+        if (isSystemPath) {
+          const fs = require("fs");
+          return fs.existsSync(path);
+        } else {
+          const file = this.app.vault.getAbstractFileByPath(path);
+          return file !== null;
+        }
       }
       /**
        * Estimate export duration in seconds
