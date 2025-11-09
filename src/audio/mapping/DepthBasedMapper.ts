@@ -22,6 +22,7 @@ import { NoteName, ScaleType, ModalScale } from '../theory/types';
 import { ChordVoicingStrategy, ChordVoicingConfig } from './ChordVoicingStrategy';
 import { RhythmicPatternGenerator, RhythmicConfig } from './RhythmicPatternGenerator';
 import { TensionArcController, TensionTrackingConfig } from './TensionArcController';
+import { TurnTakingEngine, TurnTakingConfig } from './TurnTakingEngine';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -140,6 +141,9 @@ export interface DepthMappingConfig {
 
 	// Tension tracking for emotional narrative (Phase 3)
 	tensionTracking?: TensionTrackingConfig;
+
+	// Turn-taking for instrument dialogue patterns (Phase 3)
+	turnTaking?: TurnTakingConfig;
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -150,6 +154,11 @@ export interface DepthMapping extends MusicalMapping {
 	chordFrequencies?: number[];  // All frequencies in chord (if voicing enabled)
 	voiceCount?: number;          // Number of voices in chord
 	isChordVoiced?: boolean;      // Whether this mapping has chord voicing
+
+	// Turn-taking support (Phase 3)
+	isSolo?: boolean;             // This note is featured/prominent
+	isAccompaniment?: boolean;    // This note is background support
+	turnIndex?: number;           // Which turn this belongs to
 }
 
 export class DepthBasedMapper {
@@ -165,6 +174,7 @@ export class DepthBasedMapper {
 	private chordVoicingStrategy: ChordVoicingStrategy | null = null;
 	private rhythmicPatternGenerator: RhythmicPatternGenerator | null = null;
 	private tensionArcController: TensionArcController | null = null;
+	private turnTakingEngine: TurnTakingEngine | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -217,6 +227,13 @@ export class DepthBasedMapper {
 		if (this.config.tensionTracking?.enabled) {
 			this.tensionArcController = new TensionArcController(
 				this.config.tensionTracking
+			);
+		}
+
+		// Initialize turn-taking engine if enabled
+		if (this.config.turnTaking?.enabled) {
+			this.turnTakingEngine = new TurnTakingEngine(
+				this.config.turnTaking
 			);
 		}
 
@@ -398,6 +415,13 @@ export class DepthBasedMapper {
 				pitchModulation: 5,
 				velocityModulation: 1.3,
 				durationModulation: 1.2
+			},
+			turnTaking: config.turnTaking || {
+				// Use musicalEnhancements settings if available, otherwise defaults
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.enabled || false,
+				pattern: (this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.pattern as any) || 'call-response',
+				turnLength: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.turnLength ?? 4,
+				accompanimentReduction: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.accompanimentReduction ?? 0.4
 			}
 		};
 	}
@@ -463,6 +487,11 @@ export class DepthBasedMapper {
 		// Apply tension arc modulation if enabled
 		if (this.tensionArcController) {
 			this.applyTensionModulation(mappings);
+		}
+
+		// Apply turn-taking patterns if enabled
+		if (this.turnTakingEngine) {
+			this.applyTurnTakingPattern(mappings);
 		}
 
 		const duration = performance.now() - startTime;
@@ -659,6 +688,35 @@ export class DepthBasedMapper {
 			totalMappings: mappings.length,
 			avgVelocity: avgVelocity.toFixed(2),
 			arcShape: this.tensionArcController.getConfig().arcShape
+		});
+	}
+
+	/**
+	 * Apply turn-taking pattern to mappings
+	 * Creates instrument dialogue by organizing turns instead of simultaneous playback
+	 */
+	private applyTurnTakingPattern(mappings: DepthMapping[]): void {
+		if (!this.turnTakingEngine || mappings.length === 0) {
+			return;
+		}
+
+		logger.debug('turn-taking-start', 'Applying turn-taking pattern', {
+			totalMappings: mappings.length,
+			pattern: this.turnTakingEngine.getConfig().pattern
+		});
+
+		// Apply the pattern (modifies mappings in place)
+		this.turnTakingEngine.applyPattern(mappings);
+
+		// Count solo vs accompaniment notes
+		const soloCount = mappings.filter(m => m.isSolo).length;
+		const accompCount = mappings.filter(m => m.isAccompaniment).length;
+
+		logger.info('turn-taking-complete', 'Turn-taking pattern applied', {
+			totalMappings: mappings.length,
+			soloNotes: soloCount,
+			accompanimentNotes: accompCount,
+			pattern: this.turnTakingEngine.getConfig().pattern
 		});
 	}
 
@@ -1244,6 +1302,22 @@ export class DepthBasedMapper {
 			} else {
 				this.tensionArcController = null;
 				logger.info('tension-tracking-disabled', 'Tension arc controller disabled');
+			}
+		}
+
+		// Update turn-taking engine if config changed
+		if (config.turnTaking) {
+			if (this.config.turnTaking?.enabled) {
+				this.turnTakingEngine = new TurnTakingEngine(
+					this.config.turnTaking
+				);
+				logger.info('turn-taking-enabled', 'Turn-taking engine enabled', {
+					pattern: this.config.turnTaking.pattern,
+					turnLength: this.config.turnTaking.turnLength
+				});
+			} else {
+				this.turnTakingEngine = null;
+				logger.info('turn-taking-disabled', 'Turn-taking engine disabled');
 			}
 		}
 
