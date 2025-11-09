@@ -21,6 +21,7 @@ import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
 import { NoteName, ScaleType, ModalScale } from '../theory/types';
 import { ChordVoicingStrategy, ChordVoicingConfig } from './ChordVoicingStrategy';
 import { RhythmicPatternGenerator, RhythmicConfig } from './RhythmicPatternGenerator';
+import { TensionArcController, TensionTrackingConfig } from './TensionArcController';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -136,6 +137,9 @@ export interface DepthMappingConfig {
 
 	// Rhythmic patterns for temporal organization (Phase 3)
 	rhythmic?: RhythmicConfig;
+
+	// Tension tracking for emotional narrative (Phase 3)
+	tensionTracking?: TensionTrackingConfig;
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -160,6 +164,7 @@ export class DepthBasedMapper {
 	private musicalTheoryEngine: MusicalTheoryEngine | null = null;
 	private chordVoicingStrategy: ChordVoicingStrategy | null = null;
 	private rhythmicPatternGenerator: RhythmicPatternGenerator | null = null;
+	private tensionArcController: TensionArcController | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -208,6 +213,13 @@ export class DepthBasedMapper {
 			);
 		}
 
+		// Initialize tension arc controller if enabled
+		if (this.config.tensionTracking?.enabled) {
+			this.tensionArcController = new TensionArcController(
+				this.config.tensionTracking
+			);
+		}
+
 		logger.info('mapper-init', 'DepthBasedMapper initialized', {
 			maxNodesPerDepth: this.config.maxNodesPerDepth,
 			panningEnabled: this.config.directionalPanning.enabled,
@@ -216,6 +228,7 @@ export class DepthBasedMapper {
 			musicalTheoryEnabled: !!this.musicalTheoryEngine,
 			chordVoicingEnabled: !!this.chordVoicingStrategy,
 			rhythmicPatternsEnabled: !!this.rhythmicPatternGenerator,
+			tensionTrackingEnabled: !!this.tensionArcController,
 			scale: this.config.musicalTheory ? `${this.config.musicalTheory.rootNote} ${this.config.musicalTheory.scale}` : 'none'
 		});
 	}
@@ -376,6 +389,15 @@ export class DepthBasedMapper {
 					}
 				},
 				depthGapDuration: 1.0
+			},
+			tensionTracking: config.tensionTracking || {
+				// Use musicalEnhancements settings if available, otherwise defaults
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.enabled || false,
+				arcShape: (this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.arcShape as any) || 'rise-fall',
+				peakPosition: this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.peakPosition ?? 0.6,
+				pitchModulation: 5,
+				velocityModulation: 1.3,
+				durationModulation: 1.2
 			}
 		};
 	}
@@ -437,6 +459,11 @@ export class DepthBasedMapper {
 		// Calculate timing for each mapping based on depth
 		// Center note plays first, then spread each depth level's notes
 		this.calculateTimingForMappings(mappings);
+
+		// Apply tension arc modulation if enabled
+		if (this.tensionArcController) {
+			this.applyTensionModulation(mappings);
+		}
 
 		const duration = performance.now() - startTime;
 
@@ -578,6 +605,60 @@ export class DepthBasedMapper {
 			firstNote: mappings[0]?.timing.toFixed(3),
 			lastNote: mappings[mappings.length - 1]?.timing.toFixed(3),
 			avgVelocity: (mappings.reduce((sum, m) => sum + m.velocity, 0) / mappings.length).toFixed(2)
+		});
+	}
+
+	/**
+	 * Apply tension arc modulation to all mappings
+	 * Modulates pitch, velocity, and duration based on position in sequence
+	 */
+	private applyTensionModulation(mappings: DepthMapping[]): void {
+		if (!this.tensionArcController || mappings.length === 0) {
+			return;
+		}
+
+		// Calculate total duration for position calculation
+		const lastMapping = mappings[mappings.length - 1];
+		const totalDuration = lastMapping.timing + lastMapping.duration;
+
+		logger.debug('tension-start', 'Applying tension modulation', {
+			totalMappings: mappings.length,
+			totalDuration: totalDuration.toFixed(2)
+		});
+
+		mappings.forEach((mapping, index) => {
+			// Calculate position in sequence (0-1)
+			const position = mapping.timing / totalDuration;
+
+			// Get modulation for this position
+			const modulation = this.tensionArcController!.getModulation(position);
+
+			// Apply pitch modulation
+			mapping.pitch += Math.round(modulation.pitchOffset);
+
+			// Apply velocity modulation
+			mapping.velocity *= modulation.velocityMultiplier;
+			mapping.velocity = Math.max(0.1, Math.min(1.0, mapping.velocity)); // Clamp 0.1-1.0
+
+			// Apply duration modulation
+			mapping.duration *= modulation.durationMultiplier;
+
+			if (index === 0 || index === Math.floor(mappings.length / 2) || index === mappings.length - 1) {
+				logger.debug('tension-sample', `Tension at position ${(position * 100).toFixed(0)}%`, {
+					tensionLevel: (modulation.tensionLevel * 100).toFixed(0) + '%',
+					pitchOffset: modulation.pitchOffset > 0 ? '+' + modulation.pitchOffset.toFixed(1) : modulation.pitchOffset.toFixed(1),
+					velocityMult: modulation.velocityMultiplier.toFixed(2),
+					durationMult: modulation.durationMultiplier.toFixed(2)
+				});
+			}
+		});
+
+		const avgVelocity = mappings.reduce((sum, m) => sum + m.velocity, 0) / mappings.length;
+
+		logger.info('tension-complete', 'Tension modulation applied', {
+			totalMappings: mappings.length,
+			avgVelocity: avgVelocity.toFixed(2),
+			arcShape: this.tensionArcController.getConfig().arcShape
 		});
 	}
 
@@ -1147,6 +1228,22 @@ export class DepthBasedMapper {
 			} else {
 				this.rhythmicPatternGenerator = null;
 				logger.info('rhythmic-patterns-disabled', 'Rhythmic pattern generator disabled');
+			}
+		}
+
+		// Update tension arc controller if config changed
+		if (config.tensionTracking) {
+			if (this.config.tensionTracking?.enabled) {
+				this.tensionArcController = new TensionArcController(
+					this.config.tensionTracking
+				);
+				logger.info('tension-tracking-enabled', 'Tension arc controller enabled', {
+					arcShape: this.config.tensionTracking.arcShape,
+					peakPosition: this.config.tensionTracking.peakPosition
+				});
+			} else {
+				this.tensionArcController = null;
+				logger.info('tension-tracking-disabled', 'Tension arc controller disabled');
 			}
 		}
 
