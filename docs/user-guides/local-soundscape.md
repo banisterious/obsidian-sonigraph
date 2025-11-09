@@ -222,7 +222,157 @@ Access the Settings tab in the sidebar to configure the view:
 - **Show node labels**: Toggle visibility of note names below nodes
 
 ### Visual Effects
-- **Pulse playing nodes**: Enable/disable the pulse animation for playing notes
+- **Pulse playing nodes**: Enable/disable the pulse animation for playing nodes
+
+### Musical Enhancements
+
+Transform your soundscapes from basic sonification into rich, musical experiences with these advanced features:
+
+#### Scale Quantization
+Constrains all pitches to a selected musical scale for harmonic consonance.
+
+**Settings:**
+- **Enable**: Turn scale quantization on/off
+- **Root Note**: Select the tonic (C, D, E, etc.)
+- **Scale Type**: Choose from 11 scales:
+  - Major (bright, happy)
+  - Natural Minor (dark, melancholic)
+  - Harmonic Minor (exotic, dramatic)
+  - Melodic Minor (bright minor)
+  - Pentatonic Major (simple, folk)
+  - Pentatonic Minor (blues, rock)
+  - Blues (blue notes)
+  - Dorian (jazz, modern)
+  - Phrygian (Spanish, dark)
+  - Lydian (dreamy, floating)
+  - Mixolydian (folk, bluegrass)
+- **Quantization Strength**: How strictly pitches snap to scale (0-100%)
+
+**Use Case:** Makes dissonant soundscapes harmonious. Try C Major for bright soundscapes, D Minor for melancholic tones.
+
+#### Adaptive Pitch Ranges
+Automatically adjusts pitch ranges for each depth layer relative to your selected musical key.
+
+**Settings:**
+- **Enable**: Pitch ranges adapt to selected key
+
+**Use Case:** Ensures harmonic integration across depth layers. Works automatically with Scale Quantization.
+
+#### Chord Voicing
+Adds harmonic richness by generating polyphonic chord structures based on depth.
+
+**Settings:**
+- **Enable**: Turn chord voicing on/off
+- **Voicing Density**: How many harmonic notes to add (0-100%)
+  - 0% = Minimal (dyads)
+  - 50% = Moderate (triads)
+  - 100% = Full (seventh chords)
+
+**How it works:**
+- Center notes (depth 0): Melody only
+- Depth 1: Dyads (2 notes)
+- Depth 2: Triads (3 notes)
+- Depth 3+: Seventh chords (4 notes)
+
+**Use Case:** Creates richer, more complex harmonies. Start with 50% density.
+
+#### Rhythmic Patterns
+Organizes note timing into musical patterns instead of random spacing.
+
+**Settings:**
+- **Enable**: Turn rhythmic patterns on/off
+- **Tempo (BPM)**: Sets the speed (40-200 beats per minute)
+
+**Patterns by Depth:**
+- Center: Sequential (even spacing)
+- Depth 1: Arpeggio (rapid ascending notes)
+- Depth 2: Pulse (rhythmic accents)
+- Depth 3+: Sequential
+
+**Use Case:** Adds rhythmic momentum and organization. Try 60 BPM for contemplative, 120 BPM for energetic.
+
+#### Tension Tracking
+Creates emotional narrative arcs through pitch, velocity, and duration modulation.
+
+**Settings:**
+- **Enable**: Turn tension tracking on/off
+- **Arc Shape**: Choose the emotional journey:
+  - Rise-Fall: Builds to climax, then releases (classic dramatic arc)
+  - Build: Increasing tension (crescendo)
+  - Release: Decreasing tension (decrescendo)
+  - Wave: Multiple peaks (undulating)
+  - Plateau: Sustained high tension (dramatic)
+- **Peak Position**: Where tension peaks in the sequence (0-100%)
+  - Only shown for Rise-Fall and Wave shapes
+
+**How it works:**
+- Modulates pitch (higher = more tension)
+- Adjusts velocity (louder = more tension)
+- Changes duration (longer = more tension)
+
+**Use Case:** Adds musical storytelling. "Rise-Fall" with 60% peak position creates satisfying narrative arcs.
+
+#### Turn-Taking
+Creates musical dialogue by organizing instruments into conversational patterns instead of simultaneous playback.
+
+**Settings:**
+- **Enable**: Turn turn-taking on/off
+- **Turn-Taking Pattern**: Choose dialogue style:
+  - None: All together (traditional)
+  - Sequential: One instrument at a time
+  - Call-Response: Alternating groups (center vs periphery)
+  - Solos: Featured instrument with accompaniment
+  - Layered Entry: Progressive build-up
+  - Conversation: Graph-based dialogue
+  - Fugue: Imitative staggered entries
+  - Antiphonal: Stereo alternation (left vs right)
+- **Turn Length**: Duration of each turn in beats (1-16)
+- **Accompaniment Reduction**: Volume reduction for non-featured instruments (0-100%)
+
+**How it works:**
+- Reduces sonic congestion
+- Creates call-and-response musical dialogue
+- Guides listener attention
+- Adds rhythmic variety
+
+**Use Case:** Improves clarity in complex soundscapes. "Call-Response" with 4-beat turns creates engaging dialogue.
+
+#### Dynamic Panning
+Creates smooth spatial transitions for an immersive stereo field.
+
+**Settings:**
+- **Enable**: Turn dynamic panning on/off
+- **Smoothing Factor**: How gradual transitions are (0-100%)
+  - 0% = Instant position changes
+  - 100% = Very smooth transitions
+- **Animation Speed**: How fast stereo field evolves (0.5x-5x)
+  - 1x = Normal speed
+  - 2x = Twice as fast (default)
+
+**How it works:**
+- Smooth interpolation between pan positions
+- Temporal animation of stereo field over sequence
+- Depth-based spatial spread (deeper = wider placement)
+
+**Use Case:** Creates evolving spatial landscapes. 30% smoothing with 2x speed adds movement without distraction.
+
+### Musical Enhancement Presets
+
+**For Harmonic Beauty:**
+1. Enable Scale Quantization (C Major, 80% strength)
+2. Enable Adaptive Pitch Ranges
+3. Enable Chord Voicing (50% density)
+
+**For Rhythmic Interest:**
+1. Enable Rhythmic Patterns (60 BPM)
+2. Enable Tension Tracking (Rise-Fall arc)
+
+**For Spatial Clarity:**
+1. Enable Turn-Taking (Call-Response, 4 beats)
+2. Enable Dynamic Panning (30% smoothing, 2x speed)
+
+**For Full Musical Experience (all features):**
+- All of the above combined for maximum musicality
 
 ### About
 - Feature description
