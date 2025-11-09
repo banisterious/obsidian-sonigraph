@@ -279,12 +279,14 @@
 /* Playback controls */
 .playback-buttons {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 10px;
 	margin-bottom: 20px;
 }
 
 .playback-button {
 	flex: 1;
+	min-width: 140px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -367,6 +369,7 @@
 /* Variation controls - inline with playback buttons */
 .variation-controls {
 	flex: 1;
+	min-width: 200px;
 	display: flex;
 	align-items: center;
 	gap: 8px;
