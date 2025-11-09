@@ -948,6 +948,42 @@ export interface SonigraphSettings {
 				override?: 'light' | 'dark' | null; // Manual override, null = auto-detect from Obsidian
 			};
 		};
+		// Phase 3 Enhancement: Musical Enhancements
+		musicalEnhancements?: {
+			scaleQuantization?: {
+				enabled?: boolean;
+				rootNote?: string;
+				scale?: string;
+				quantizationStrength?: number;
+			};
+			adaptivePitch?: {
+				enabled?: boolean;
+			};
+			chordVoicing?: {
+				enabled?: boolean;
+				voicingDensity?: number;
+			};
+			rhythmicPatterns?: {
+				enabled?: boolean;
+				tempo?: number;
+			};
+			tensionTracking?: {
+				enabled?: boolean;
+				arcShape?: 'rise-fall' | 'build' | 'release' | 'wave' | 'plateau';
+				peakPosition?: number;
+			};
+			dynamicPanning?: {
+				enabled?: boolean;
+				smoothingFactor?: number;
+				animationSpeed?: number;
+			};
+			turnTaking?: {
+				enabled?: boolean;
+				pattern?: 'none' | 'sequential' | 'call-response' | 'solos' | 'layered-entry' | 'conversation' | 'fugue' | 'antiphonal';
+				turnLength?: number;
+				accompanimentReduction?: number;
+			};
+		};
 	};
 }
 

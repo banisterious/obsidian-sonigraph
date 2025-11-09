@@ -327,7 +327,7 @@ export class LocalSoundscapeSettings {
 
 	/**
 	 * Section 4: Musical Theory & Enhancements (Phase 2/3)
-	 * Scale quantization, chord voicing, rhythmic patterns, etc.
+	 * Scale quantization, chord voicing, adaptive pitch, rhythmic patterns
 	 */
 	private renderMusicalEnhancementsSettings(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -339,104 +339,415 @@ export class LocalSoundscapeSettings {
 
 		const content = card.getContent();
 
-		// Note: These settings are configured per-soundscape instance via the DepthBasedMapper
-		// They are not stored in plugin settings, but provided here for reference/documentation
-
-		const infoText = content.createEl('div', {
-			cls: 'setting-item-description',
-			text: 'Musical enhancements are currently configured programmatically. UI controls for scale quantization, chord voicing, adaptive pitch ranges, and rhythmic patterns will be added in a future update.'
-		});
-		infoText.style.padding = '10px';
-		infoText.style.marginBottom = '15px';
-		infoText.style.opacity = '0.8';
-		infoText.style.fontStyle = 'italic';
-
-		// List of available enhancements with status
-		const enhancementsList = content.createEl('div', { cls: 'enhancements-list' });
-
-		const enhancements = [
-			{
-				name: 'Scale Quantization',
-				status: 'Available',
-				description: 'Constrains pitches to musical scales for harmonic consonance'
-			},
-			{
-				name: 'Chord Voicing',
-				status: 'Available',
-				description: 'Adds polyphonic richness with depth-based harmonic layers'
-			},
-			{
-				name: 'Adaptive Pitch Ranges',
-				status: 'Available',
-				description: 'Key-relative pitch ranges for better harmonic integration'
-			},
-			{
-				name: 'Rhythmic Patterns',
-				status: 'Implemented',
-				description: 'Temporal organization with multiple pattern types (arpeggio, pulse, etc.)'
-			},
-			{
-				name: 'Tension Tracking',
-				status: 'Planned',
-				description: 'Melodic arc and tension/release for emotional narrative'
-			},
-			{
-				name: 'Dynamic Panning',
-				status: 'Planned',
-				description: 'Smooth spatial transitions for immersive stereo field'
-			},
-			{
-				name: 'Turn-Taking',
-				status: 'Planned',
-				description: 'Instrument dialogue patterns for textural clarity'
+		// Initialize musicalEnhancements if it doesn't exist
+		if (!this.plugin.settings.localSoundscape?.musicalEnhancements) {
+			if (!this.plugin.settings.localSoundscape) {
+				this.plugin.settings.localSoundscape = {};
 			}
-		];
+			this.plugin.settings.localSoundscape.musicalEnhancements = {
+				scaleQuantization: {
+					enabled: false,
+					rootNote: 'C',
+					scale: 'major',
+					quantizationStrength: 0.8
+				},
+				adaptivePitch: {
+					enabled: false
+				},
+				chordVoicing: {
+					enabled: false,
+					voicingDensity: 0.5
+				},
+				rhythmicPatterns: {
+					enabled: false,
+					tempo: 60
+				},
+				tensionTracking: {
+					enabled: false,
+					arcShape: 'rise-fall',
+					peakPosition: 0.6
+				},
+				dynamicPanning: {
+					enabled: false,
+					smoothingFactor: 0.3,
+					animationSpeed: 2.0
+				},
+				turnTaking: {
+					enabled: false,
+					pattern: 'call-response',
+					turnLength: 4,
+					accompanimentReduction: 0.4
+				}
+			};
+		}
 
-		enhancements.forEach(enhancement => {
-			const item = enhancementsList.createEl('div', { cls: 'enhancement-item' });
-			item.style.padding = '8px 12px';
-			item.style.marginBottom = '6px';
-			item.style.borderLeft = '3px solid var(--interactive-accent)';
-			item.style.backgroundColor = 'var(--background-secondary)';
+		const enhancements = this.plugin.settings.localSoundscape.musicalEnhancements;
 
-			const header = item.createEl('div', { cls: 'enhancement-header' });
-			header.style.display = 'flex';
-			header.style.justifyContent = 'space-between';
-			header.style.alignItems = 'center';
-			header.style.marginBottom = '4px';
+		// Scale Quantization toggle
+		new Setting(content)
+			.setName('Scale quantization')
+			.setDesc('Constrain pitches to musical scales for harmonic consonance')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.scaleQuantization?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.scaleQuantization = enhancements.scaleQuantization || {
+						rootNote: 'C',
+						scale: 'major',
+						quantizationStrength: 0.8
+					};
+					enhancements.scaleQuantization.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Scale quantization: ${value}`);
 
-			const name = header.createEl('span', {
-				text: enhancement.name,
-				cls: 'enhancement-name'
-			});
-			name.style.fontWeight = '600';
+					// Re-render to show/hide sub-settings
+					this.render(container);
+				})
+			);
 
-			const statusBadge = header.createEl('span', {
-				text: enhancement.status,
-				cls: 'enhancement-status'
-			});
-			statusBadge.style.padding = '2px 8px';
-			statusBadge.style.borderRadius = '4px';
-			statusBadge.style.fontSize = '0.85em';
-			statusBadge.style.fontWeight = '500';
+		// Show scale settings only if quantization enabled
+		if (enhancements.scaleQuantization?.enabled) {
+			// Root note selector
+			new Setting(content)
+				.setName('Root note')
+				.setDesc('The root note of the musical scale')
+				.addDropdown(dropdown => {
+					const rootNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+					rootNotes.forEach(note => dropdown.addOption(note, note));
 
-			if (enhancement.status === 'Implemented') {
-				statusBadge.style.backgroundColor = 'var(--interactive-success)';
-				statusBadge.style.color = 'var(--text-on-accent)';
-			} else if (enhancement.status === 'Available') {
-				statusBadge.style.backgroundColor = 'var(--interactive-accent)';
-				statusBadge.style.color = 'var(--text-on-accent)';
-			} else {
-				statusBadge.style.backgroundColor = 'var(--background-modifier-border)';
+					return dropdown
+						.setValue(enhancements.scaleQuantization?.rootNote || 'C')
+						.onChange(async (value) => {
+							enhancements.scaleQuantization!.rootNote = value as any;
+							await this.plugin.saveSettings();
+							logger.info('musical-enhancements', `Root note: ${value}`);
+						});
+				});
+
+			// Scale type selector
+			new Setting(content)
+				.setName('Scale type')
+				.setDesc('The type of musical scale to use')
+				.addDropdown(dropdown => {
+					const scales = [
+						{ value: 'major', label: 'Major (bright, happy)' },
+						{ value: 'minor', label: 'Natural Minor (dark, melancholic)' },
+						{ value: 'harmonic-minor', label: 'Harmonic Minor (exotic, dramatic)' },
+						{ value: 'melodic-minor', label: 'Melodic Minor (bright minor)' },
+						{ value: 'pentatonic-major', label: 'Pentatonic Major (simple, folk)' },
+						{ value: 'pentatonic-minor', label: 'Pentatonic Minor (blues, rock)' },
+						{ value: 'blues', label: 'Blues (blue notes)' },
+						{ value: 'dorian', label: 'Dorian (jazz, modern)' },
+						{ value: 'phrygian', label: 'Phrygian (Spanish, dark)' },
+						{ value: 'lydian', label: 'Lydian (dreamy, floating)' },
+						{ value: 'mixolydian', label: 'Mixolydian (folk, bluegrass)' }
+					];
+
+					scales.forEach(scale => dropdown.addOption(scale.value, scale.label));
+
+					return dropdown
+						.setValue(enhancements.scaleQuantization?.scale || 'major')
+						.onChange(async (value) => {
+							enhancements.scaleQuantization!.scale = value as any;
+							await this.plugin.saveSettings();
+							logger.info('musical-enhancements', `Scale type: ${value}`);
+						});
+				});
+
+			// Quantization strength slider
+			new Setting(content)
+				.setName('Quantization strength')
+				.setDesc('How strongly pitches are pulled to scale notes (0% = off, 100% = strict)')
+				.addSlider(slider => slider
+					.setLimits(0, 100, 5)
+					.setValue((enhancements.scaleQuantization?.quantizationStrength || 0.8) * 100)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.scaleQuantization!.quantizationStrength = value / 100;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Quantization strength: ${value}%`);
+					})
+				);
+		}
+
+		// Adaptive Pitch Ranges toggle
+		new Setting(content)
+			.setName('Adaptive pitch ranges')
+			.setDesc('Pitch ranges adapt to selected key for better harmonic integration')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.adaptivePitch?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.adaptivePitch = enhancements.adaptivePitch || {};
+					enhancements.adaptivePitch.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Adaptive pitch: ${value}`);
+				})
+			);
+
+		// Chord Voicing toggle
+		new Setting(content)
+			.setName('Chord voicing')
+			.setDesc('Add harmonic richness with depth-based polyphonic voicing')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.chordVoicing?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.chordVoicing = enhancements.chordVoicing || { voicingDensity: 0.5 };
+					enhancements.chordVoicing.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Chord voicing: ${value}`);
+
+					// Re-render to show/hide voicing density
+					this.render(container);
+				})
+			);
+
+		// Voicing density slider (only shown when chord voicing enabled)
+		if (enhancements.chordVoicing?.enabled) {
+			new Setting(content)
+				.setName('Voicing density')
+				.setDesc('How many additional harmonic notes to add (0% = minimal, 100% = full)')
+				.addSlider(slider => slider
+					.setLimits(0, 100, 10)
+					.setValue((enhancements.chordVoicing?.voicingDensity || 0.5) * 100)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.chordVoicing!.voicingDensity = value / 100;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Voicing density: ${value}%`);
+					})
+				);
+		}
+
+		// Rhythmic Patterns toggle
+		new Setting(content)
+			.setName('Rhythmic patterns')
+			.setDesc('Organize note timing into musical patterns (arpeggio, pulse, etc.)')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.rhythmicPatterns?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.rhythmicPatterns = enhancements.rhythmicPatterns || { tempo: 60 };
+					enhancements.rhythmicPatterns.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Rhythmic patterns: ${value}`);
+
+					// Re-render to show/hide tempo
+					this.render(container);
+				})
+			);
+
+		// Tempo slider (only shown when rhythmic patterns enabled)
+		if (enhancements.rhythmicPatterns?.enabled) {
+			new Setting(content)
+				.setName('Tempo (BPM)')
+				.setDesc('The tempo for rhythmic patterns in beats per minute')
+				.addSlider(slider => slider
+					.setLimits(40, 200, 5)
+					.setValue(enhancements.rhythmicPatterns?.tempo || 60)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.rhythmicPatterns!.tempo = value;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Tempo: ${value} BPM`);
+					})
+				);
+		}
+
+		// Tension Tracking toggle (Phase 3 - Planned)
+		new Setting(content)
+			.setName('Tension tracking')
+			.setDesc('Create melodic arcs with tension and release for emotional narrative')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.tensionTracking?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.tensionTracking = enhancements.tensionTracking || {
+						arcShape: 'rise-fall',
+						peakPosition: 0.6
+					};
+					enhancements.tensionTracking.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Tension tracking: ${value}`);
+
+					// Re-render to show/hide sub-settings
+					this.render(container);
+				})
+			);
+
+		// Tension tracking sub-settings (only shown when enabled)
+		if (enhancements.tensionTracking?.enabled) {
+			// Arc shape selector
+			new Setting(content)
+				.setName('Arc shape')
+				.setDesc('The emotional journey of the soundscape')
+				.addDropdown(dropdown => {
+					const shapes = [
+						{ value: 'rise-fall', label: 'Rise-Fall (climax in middle)' },
+						{ value: 'build', label: 'Build (increasing tension)' },
+						{ value: 'release', label: 'Release (decreasing tension)' },
+						{ value: 'wave', label: 'Wave (multiple peaks)' },
+						{ value: 'plateau', label: 'Plateau (sustained tension)' }
+					];
+
+					shapes.forEach(shape => dropdown.addOption(shape.value, shape.label));
+
+					return dropdown
+						.setValue(enhancements.tensionTracking?.arcShape || 'rise-fall')
+						.onChange(async (value) => {
+							enhancements.tensionTracking!.arcShape = value as any;
+							await this.plugin.saveSettings();
+							logger.info('musical-enhancements', `Arc shape: ${value}`);
+						});
+				});
+
+			// Peak position slider (only for rise-fall and wave)
+			if (enhancements.tensionTracking.arcShape === 'rise-fall' || enhancements.tensionTracking.arcShape === 'wave') {
+				new Setting(content)
+					.setName('Peak position')
+					.setDesc('Where in the sequence the tension peaks (0% = start, 100% = end)')
+					.addSlider(slider => slider
+						.setLimits(0, 100, 5)
+						.setValue((enhancements.tensionTracking?.peakPosition || 0.6) * 100)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							enhancements.tensionTracking!.peakPosition = value / 100;
+							await this.plugin.saveSettings();
+							logger.info('musical-enhancements', `Peak position: ${value}%`);
+						})
+					);
 			}
+		}
 
-			const description = item.createEl('div', {
-				text: enhancement.description,
-				cls: 'enhancement-description'
-			});
-			description.style.fontSize = '0.9em';
-			description.style.opacity = '0.8';
-		});
+		// Dynamic Panning toggle (Phase 3 - Planned)
+		new Setting(content)
+			.setName('Dynamic panning')
+			.setDesc('Smooth spatial transitions for immersive stereo field')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.dynamicPanning?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.dynamicPanning = enhancements.dynamicPanning || {
+						smoothingFactor: 0.3,
+						animationSpeed: 2.0
+					};
+					enhancements.dynamicPanning.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Dynamic panning: ${value}`);
+
+					// Re-render to show/hide sub-settings
+					this.render(container);
+				})
+			);
+
+		// Dynamic panning sub-settings (only shown when enabled)
+		if (enhancements.dynamicPanning?.enabled) {
+			// Smoothing factor slider
+			new Setting(content)
+				.setName('Smoothing factor')
+				.setDesc('How smoothly panning transitions occur (0% = instant, 100% = very gradual)')
+				.addSlider(slider => slider
+					.setLimits(0, 100, 5)
+					.setValue((enhancements.dynamicPanning?.smoothingFactor || 0.3) * 100)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.dynamicPanning!.smoothingFactor = value / 100;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Smoothing factor: ${value}%`);
+					})
+				);
+
+			// Animation speed slider
+			new Setting(content)
+				.setName('Animation speed')
+				.setDesc('How quickly the stereo field evolves (0.5x = slow, 5x = fast)')
+				.addSlider(slider => slider
+					.setLimits(0.5, 5.0, 0.5)
+					.setValue(enhancements.dynamicPanning?.animationSpeed || 2.0)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.dynamicPanning!.animationSpeed = value;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Animation speed: ${value}x`);
+					})
+				);
+		}
+
+		// Turn-Taking toggle (Phase 3 - Planned)
+		new Setting(content)
+			.setName('Turn-taking')
+			.setDesc('Instrument dialogue patterns for textural clarity')
+			.addToggle(toggle => toggle
+				.setValue(enhancements.turnTaking?.enabled || false)
+				.onChange(async (value) => {
+					enhancements.turnTaking = enhancements.turnTaking || {
+						pattern: 'call-response',
+						turnLength: 4,
+						accompanimentReduction: 0.4
+					};
+					enhancements.turnTaking.enabled = value;
+					await this.plugin.saveSettings();
+					logger.info('musical-enhancements', `Turn-taking: ${value}`);
+
+					// Re-render to show/hide sub-settings
+					this.render(container);
+				})
+			);
+
+		// Turn-taking sub-settings (only shown when enabled)
+		if (enhancements.turnTaking?.enabled) {
+			// Pattern selector
+			new Setting(content)
+				.setName('Turn-taking pattern')
+				.setDesc('How instruments take turns')
+				.addDropdown(dropdown => {
+					const patterns = [
+						{ value: 'none', label: 'None (all together)' },
+						{ value: 'sequential', label: 'Sequential (one at a time)' },
+						{ value: 'call-response', label: 'Call-Response (alternating groups)' },
+						{ value: 'solos', label: 'Solos (featured instrument)' },
+						{ value: 'layered-entry', label: 'Layered Entry (progressive build)' },
+						{ value: 'conversation', label: 'Conversation (graph-based dialogue)' },
+						{ value: 'fugue', label: 'Fugue (imitative entries)' },
+						{ value: 'antiphonal', label: 'Antiphonal (stereo alternation)' }
+					];
+
+					patterns.forEach(pattern => dropdown.addOption(pattern.value, pattern.label));
+
+					return dropdown
+						.setValue(enhancements.turnTaking?.pattern || 'call-response')
+						.onChange(async (value) => {
+							enhancements.turnTaking!.pattern = value as any;
+							await this.plugin.saveSettings();
+							logger.info('musical-enhancements', `Turn-taking pattern: ${value}`);
+						});
+				});
+
+			// Turn length slider
+			new Setting(content)
+				.setName('Turn length')
+				.setDesc('Duration of each turn in beats (2 = short phrases, 8 = long phrases)')
+				.addSlider(slider => slider
+					.setLimits(1, 16, 1)
+					.setValue(enhancements.turnTaking?.turnLength || 4)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.turnTaking!.turnLength = value;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Turn length: ${value} beats`);
+					})
+				);
+
+			// Accompaniment reduction slider
+			new Setting(content)
+				.setName('Accompaniment reduction')
+				.setDesc('How much to reduce non-featured instruments (0% = equal, 100% = silent)')
+				.addSlider(slider => slider
+					.setLimits(0, 100, 5)
+					.setValue((enhancements.turnTaking?.accompanimentReduction || 0.4) * 100)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						enhancements.turnTaking!.accompanimentReduction = value / 100;
+						await this.plugin.saveSettings();
+						logger.info('musical-enhancements', `Accompaniment reduction: ${value}%`);
+					})
+				);
+		}
 
 		container.appendChild(card.getElement());
 	}

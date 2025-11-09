@@ -259,10 +259,10 @@ export class DepthBasedMapper {
 				depth3Plus: 0.4
 			},
 			pitchRangesByDepth: config.pitchRangesByDepth || {
-				center: { min: 0, max: 12 },      // C4 to C5
-				depth1: { min: -5, max: 7 },      // G3 to G4
-				depth2: { min: -12, max: 0 },     // C3 to C4
-				depth3Plus: { min: -24, max: -12 } // C2 to C3
+				center: { min: 0, max: 19 },      // C4 to G5 (expanded from C5)
+				depth1: { min: -7, max: 12 },     // F3 to C5 (expanded range)
+				depth2: { min: -12, max: 7 },     // C3 to G4 (expanded upward)
+				depth3Plus: { min: -24, max: 0 }  // C2 to C4 (expanded upward)
 			},
 			directionalPanning: config.directionalPanning || {
 				enabled: true,
@@ -785,12 +785,19 @@ export class DepthBasedMapper {
 			linkDensityFactor = Math.min(node.linkCount / node.wordCount * 10, 1); // Cap at 10% link density
 		}
 
-		// Weighted combination
+		// Add node path variation factor for melodic diversity
+		// Use hash of node path to create consistent but unique pitch variations
+		const pathHash = this.hashStringToFactor(node.id);
+		const pathVariationFactor = pathHash;  // 0-1 range
+
+		// Combine all factors with weights, adding path variation
+		// Reduce the influence of similar metrics (wordCount, charCount) and increase diversity
 		const combinedFactor = (
-			(wordCountFactor * weights.wordCount) +
-			(charCountFactor * weights.charCount) +
+			(wordCountFactor * weights.wordCount * 0.5) +      // Reduced from full weight
+			(charCountFactor * weights.charCount * 0.5) +      // Reduced from full weight
 			(headingLevelFactor * weights.headingLevel) +
-			(linkDensityFactor * weights.linkDensity)
+			(linkDensityFactor * weights.linkDensity) +
+			(pathVariationFactor * 0.4)                        // New path-based variation
 		);
 
 		const rangeSpan = range.max - range.min;
@@ -809,6 +816,20 @@ export class DepthBasedMapper {
 		}
 
 		return Math.round(offset);
+	}
+
+	/**
+	 * Hash a string to a consistent 0-1 factor for pitch variation
+	 */
+	private hashStringToFactor(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i);
+			hash = ((hash << 5) - hash) + char;
+			hash = hash & hash; // Convert to 32-bit integer
+		}
+		// Convert to 0-1 range
+		return Math.abs(hash % 1000) / 1000;
 	}
 
 	/**
