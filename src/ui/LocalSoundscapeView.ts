@@ -1524,18 +1524,20 @@ export class LocalSoundscapeView extends ItemView {
 			return;
 		}
 
-		new Notice('Audio export feature coming soon! For now, you can record your system audio while playing the soundscape.');
-
-		// TODO: Implement offline audio rendering
-		// This would require:
-		// 1. Render all notes using the audio engine's offline mode
-		// 2. Encode to WAV/MP3
-		// 3. Save to file
-
-		logger.info('audio-export', 'Audio export requested', {
+		logger.info('audio-export', 'Opening export modal for Local Soundscape', {
 			nodeCount: this.currentMappings.length,
 			centerNote: this.centerFile?.basename
 		});
+
+		// Use the existing export modal - pass null for animator since Local Soundscape is static
+		const { ExportModal } = require('../export/ExportModal');
+		const modal = new ExportModal(
+			this.app,
+			this.plugin,
+			this.plugin.audioEngine,
+			null  // No temporal animator for Local Soundscape (static graph)
+		);
+		modal.open();
 	}
 
 	/**

@@ -90205,11 +90205,19 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       new import_obsidian32.Notice("No soundscape to export. Please play the soundscape first.");
       return;
     }
-    new import_obsidian32.Notice("Audio export feature coming soon! For now, you can record your system audio while playing the soundscape.");
-    logger85.info("audio-export", "Audio export requested", {
+    logger85.info("audio-export", "Opening export modal for Local Soundscape", {
       nodeCount: this.currentMappings.length,
       centerNote: (_a = this.centerFile) == null ? void 0 : _a.basename
     });
+    const { ExportModal: ExportModal2 } = (init_ExportModal(), __toCommonJS(ExportModal_exports));
+    const modal = new ExportModal2(
+      this.app,
+      this.plugin,
+      this.plugin.audioEngine,
+      null
+      // No temporal animator for Local Soundscape (static graph)
+    );
+    modal.open();
   }
   /**
    * Re-roll musical variation
