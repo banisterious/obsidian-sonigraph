@@ -23,6 +23,7 @@ import { ChordVoicingStrategy, ChordVoicingConfig } from './ChordVoicingStrategy
 import { RhythmicPatternGenerator, RhythmicConfig } from './RhythmicPatternGenerator';
 import { TensionArcController, TensionTrackingConfig } from './TensionArcController';
 import { TurnTakingEngine, TurnTakingConfig } from './TurnTakingEngine';
+import { DynamicPanningController, DynamicPanningConfig } from './DynamicPanningController';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -144,6 +145,9 @@ export interface DepthMappingConfig {
 
 	// Turn-taking for instrument dialogue patterns (Phase 3)
 	turnTaking?: TurnTakingConfig;
+
+	// Dynamic panning for immersive stereo field (Phase 3)
+	dynamicPanning?: DynamicPanningConfig;
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -175,6 +179,7 @@ export class DepthBasedMapper {
 	private rhythmicPatternGenerator: RhythmicPatternGenerator | null = null;
 	private tensionArcController: TensionArcController | null = null;
 	private turnTakingEngine: TurnTakingEngine | null = null;
+	private dynamicPanningController: DynamicPanningController | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -234,6 +239,13 @@ export class DepthBasedMapper {
 		if (this.config.turnTaking?.enabled) {
 			this.turnTakingEngine = new TurnTakingEngine(
 				this.config.turnTaking
+			);
+		}
+
+		// Initialize dynamic panning controller if enabled
+		if (this.config.dynamicPanning?.enabled) {
+			this.dynamicPanningController = new DynamicPanningController(
+				this.config.dynamicPanning
 			);
 		}
 
@@ -422,6 +434,12 @@ export class DepthBasedMapper {
 				pattern: (this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.pattern as any) || 'call-response',
 				turnLength: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.turnLength ?? 4,
 				accompanimentReduction: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.accompanimentReduction ?? 0.4
+			},
+			dynamicPanning: config.dynamicPanning || {
+				// Use musicalEnhancements settings if available, otherwise defaults
+				enabled: this.settings?.localSoundscape?.musicalEnhancements?.dynamicPanning?.enabled || false,
+				smoothingFactor: this.settings?.localSoundscape?.musicalEnhancements?.dynamicPanning?.smoothingFactor ?? 0.3,
+				animationSpeed: this.settings?.localSoundscape?.musicalEnhancements?.dynamicPanning?.animationSpeed ?? 2.0
 			}
 		};
 	}
@@ -492,6 +510,11 @@ export class DepthBasedMapper {
 		// Apply turn-taking patterns if enabled
 		if (this.turnTakingEngine) {
 			this.applyTurnTakingPattern(mappings);
+		}
+
+		// Apply dynamic panning if enabled
+		if (this.dynamicPanningController) {
+			this.applyDynamicPanning(mappings);
 		}
 
 		const duration = performance.now() - startTime;
@@ -717,6 +740,33 @@ export class DepthBasedMapper {
 			soloNotes: soloCount,
 			accompanimentNotes: accompCount,
 			pattern: this.turnTakingEngine.getConfig().pattern
+		});
+	}
+
+	/**
+	 * Apply dynamic panning to mappings
+	 * Creates smooth spatial transitions for immersive stereo field
+	 */
+	private applyDynamicPanning(mappings: DepthMapping[]): void {
+		if (!this.dynamicPanningController || mappings.length === 0) {
+			return;
+		}
+
+		logger.debug('dynamic-panning-start', 'Applying dynamic panning', {
+			totalMappings: mappings.length
+		});
+
+		// Apply dynamic panning (modifies mappings in place)
+		this.dynamicPanningController.applyDynamicPanning(mappings);
+
+		// Log statistics
+		const avgPan = mappings.reduce((sum, m) => sum + Math.abs(m.pan), 0) / mappings.length;
+
+		logger.info('dynamic-panning-complete', 'Dynamic panning applied', {
+			totalMappings: mappings.length,
+			avgPanSpread: avgPan.toFixed(2),
+			smoothingFactor: this.dynamicPanningController.getConfig().smoothingFactor,
+			animationSpeed: this.dynamicPanningController.getConfig().animationSpeed
 		});
 	}
 
@@ -1318,6 +1368,22 @@ export class DepthBasedMapper {
 			} else {
 				this.turnTakingEngine = null;
 				logger.info('turn-taking-disabled', 'Turn-taking engine disabled');
+			}
+		}
+
+		// Update dynamic panning controller if config changed
+		if (config.dynamicPanning) {
+			if (this.config.dynamicPanning?.enabled) {
+				this.dynamicPanningController = new DynamicPanningController(
+					this.config.dynamicPanning
+				);
+				logger.info('dynamic-panning-enabled', 'Dynamic panning controller enabled', {
+					smoothingFactor: this.config.dynamicPanning.smoothingFactor,
+					animationSpeed: this.config.dynamicPanning.animationSpeed
+				});
+			} else {
+				this.dynamicPanningController = null;
+				logger.info('dynamic-panning-disabled', 'Dynamic panning controller disabled');
 			}
 		}
 
