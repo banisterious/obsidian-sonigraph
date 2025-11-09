@@ -696,14 +696,31 @@ export class ExportModal extends Modal {
                 metadata: this.config.metadata
             };
 
-            // Save metadata for next time if user wants to remember it
-            if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
-                if (!this.plugin.settings.exportSettings) {
-                    this.plugin.settings.exportSettings = {} as any;
-                }
-                this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
-                await this.plugin.saveSettings();
+            // Save export preferences for next time
+            if (!this.plugin.settings.exportSettings) {
+                this.plugin.settings.exportSettings = {} as any;
             }
+
+            // Save metadata if provided
+            if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
+                this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
+            }
+
+            // Save location preferences
+            if (this.config.location) {
+                this.plugin.settings.exportSettings.lastExportLocation = this.config.location;
+                this.plugin.settings.exportSettings.exportFolder = this.config.location;
+            }
+            if (this.config.locationType) {
+                this.plugin.settings.exportSettings.lastExportType = this.config.locationType;
+            }
+
+            // Save format preference
+            if (this.config.format) {
+                this.plugin.settings.exportSettings.defaultFormat = this.config.format;
+            }
+
+            await this.plugin.saveSettings();
 
             // Check for file collision before starting export
             const extension = exportConfig.format;

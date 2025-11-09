@@ -61829,13 +61829,23 @@ var init_ExportModal = __esm({
             // Include metadata if provided
             metadata: this.config.metadata
           };
-          if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
-            if (!this.plugin.settings.exportSettings) {
-              this.plugin.settings.exportSettings = {};
-            }
-            this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
-            await this.plugin.saveSettings();
+          if (!this.plugin.settings.exportSettings) {
+            this.plugin.settings.exportSettings = {};
           }
+          if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
+            this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
+          }
+          if (this.config.location) {
+            this.plugin.settings.exportSettings.lastExportLocation = this.config.location;
+            this.plugin.settings.exportSettings.exportFolder = this.config.location;
+          }
+          if (this.config.locationType) {
+            this.plugin.settings.exportSettings.lastExportType = this.config.locationType;
+          }
+          if (this.config.format) {
+            this.plugin.settings.exportSettings.defaultFormat = this.config.format;
+          }
+          await this.plugin.saveSettings();
           const extension = exportConfig.format;
           const fullPath = `${exportConfig.location}/${exportConfig.filename}.${extension}`;
           const fileExists = this.app.vault.getAbstractFileByPath(fullPath);
