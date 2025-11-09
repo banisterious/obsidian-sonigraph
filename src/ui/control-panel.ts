@@ -697,19 +697,29 @@ export class MaterialControlPanelModal extends Modal {
 		import('./settings/LocalSoundscapeSettings').then(({ LocalSoundscapeSettings }) => {
 			const lsSettings = new LocalSoundscapeSettings(this.app, this.plugin);
 			lsSettings.render(this.contentContainer);
+
+			// Render remaining cards AFTER LocalSoundscapeSettings (which calls container.empty())
+			// Depth-based instrument mapping card
+			this.createDepthInstrumentMappingCard();
+
+			// Volume and panning settings card
+			this.createDepthVolumeAndPanningCard();
+
+			// Continuous layers settings
+			import('./settings/LocalSoundscapeLayersSettings').then(({ LocalSoundscapeLayersSettings }) => {
+				const layersSettings = new LocalSoundscapeLayersSettings(this.app, this.plugin);
+				layersSettings.render(this.contentContainer);
+			});
+
+			// Performance settings card
+			this.createLocalSoundscapePerformanceCard();
+
+			// Tips & Best Practices card
+			this.createLocalSoundscapeTipsCard();
+
+			// FAQ card
+			this.createLocalSoundscapeFAQCard();
 		});
-
-		// Depth-based instrument mapping card
-		this.createDepthInstrumentMappingCard();
-
-		// Volume and panning settings card
-		this.createDepthVolumeAndPanningCard();
-
-		// Performance settings card
-		this.createLocalSoundscapePerformanceCard();
-
-		// Tips & Best Practices card
-		this.createLocalSoundscapeTipsCard();
 	}
 
 	/**
@@ -4825,6 +4835,91 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// Tip 7: Workflow integration
 		tipsList.createEl('li').innerHTML = '<strong>Daily Review Workflow:</strong> Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.';
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create FAQ card for Local Soundscape
+	 */
+	private createLocalSoundscapeFAQCard(): void {
+		const card = new MaterialCard({
+			title: 'Frequently asked questions',
+			iconName: 'help-circle',
+			subtitle: 'Common questions about Local Soundscape',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// FAQ 1: Why does the music sound simplistic?
+		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
+		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
+		q1.innerHTML = '<strong>Q: Why does the music sound simplistic or repetitive?</strong>';
+
+		const a1 = faq1.createEl('div', { cls: 'osp-faq-answer' });
+		a1.innerHTML = `
+			<p><strong>A:</strong> By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:</p>
+			<ul>
+				<li><strong>All markdown syntax counts:</strong> Links, headings, callouts, and formatting inflate word counts</li>
+				<li><strong>Notes sound similar:</strong> Similar file sizes produce similar durations and pitches</li>
+				<li><strong>No content differentiation:</strong> Callouts, code blocks, and lists are treated the same as regular text</li>
+			</ul>
+			<p><strong>To get richer, more varied soundscapes:</strong></p>
+			<ol>
+				<li><strong>Enable Musical Enhancements</strong> (above) - This is the most impactful change:
+					<ul>
+						<li>Scale Quantization creates harmonic consonance</li>
+						<li>Chord Voicing adds polyphonic richness</li>
+						<li>Rhythmic Patterns organize timing musically</li>
+						<li>Tension Tracking creates emotional arcs</li>
+						<li>Turn-Taking reduces congestion through dialogue</li>
+					</ul>
+				</li>
+				<li><strong>Use diverse instruments</strong> - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type</li>
+				<li><strong>Apply filters</strong> - Focus on specific tags or folders to create more thematically coherent soundscapes</li>
+				<li><strong>Experiment with clustering</strong> - Different clustering methods reveal different organizational patterns in your vault</li>
+			</ol>
+			<p><em>Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.</em></p>
+		`;
+
+		// FAQ 2: Why only one node / sparse vault issue
+		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
+		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
+		q2.innerHTML = '<strong>Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?</strong>';
+
+		const a2 = faq2.createEl('div', { cls: 'osp-faq-answer' });
+		a2.innerHTML = `
+			<p><strong>A:</strong> Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.</p>
+
+			<p><strong>Why this happens:</strong></p>
+			<ul>
+				<li><strong>Sparse connections:</strong> Your note has few or no links to other notes at shallow depths (1-2)</li>
+				<li><strong>Low depth setting:</strong> The depth slider is set to 1, limiting the graph to immediate connections only</li>
+				<li><strong>Filters too restrictive:</strong> Tag/folder filters are excluding connected notes</li>
+			</ul>
+
+			<p><strong>What Musical Enhancements need to work:</strong></p>
+			<ul>
+				<li><strong>Turn-Taking:</strong> Needs 3+ notes at different depths to create call-response dialogue</li>
+				<li><strong>Chord Voicing:</strong> Needs 2+ notes at same depth to build harmonies</li>
+				<li><strong>Rhythmic Patterns:</strong> Needs 4+ notes to organize into musical patterns</li>
+				<li><strong>Tension Tracking:</strong> Needs 5+ notes to create narrative arcs</li>
+				<li><strong>Scale Quantization:</strong> Works with any number of notes, but more varied with higher counts</li>
+			</ul>
+
+			<p><strong>How to fix:</strong></p>
+			<ol>
+				<li><strong>Enable Continuous Layers:</strong> Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. <strong>Important:</strong> You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.</li>
+				<li><strong>Increase depth:</strong> Slide the depth control to 3-5 to explore more connection levels</li>
+				<li><strong>Choose more connected notes:</strong> Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"</li>
+				<li><strong>Build more connections:</strong> Add links between related notes in your vault to create richer graph structure</li>
+				<li><strong>Check filters:</strong> Ensure Include/Exclude filters aren't hiding connected notes</li>
+				<li><strong>Try bidirectional links:</strong> Notes with two-way connections create denser graphs than one-way links</li>
+			</ol>
+
+			<p><strong>For sparse vaults:</strong> If your vault generally has limited connections, <strong>Continuous Layers</strong> are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.</p>
+		`;
 
 		this.contentContainer.appendChild(card.getElement());
 	}

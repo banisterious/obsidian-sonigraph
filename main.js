@@ -88182,10 +88182,11 @@ var NoteCentricMapper = class {
     const baseProgression = progressionChoices[progressionIndex];
     const fullProgression = [];
     const repetitions = Math.ceil(chordChanges / baseProgression.length);
+    let harmonicSeed = Math.floor(prose.musicalExpressiveness * 97);
     for (let rep = 0; rep < repetitions; rep++) {
       for (let j = 0; j < baseProgression.length; j++) {
         let chord = baseProgression[j];
-        if (prose.musicalExpressiveness > 0.7 && j % 2 === 1) {
+        if (prose.musicalExpressiveness > 0.1) {
           const colorOptions = [
             chord,
             // Original
@@ -88193,25 +88194,54 @@ var NoteCentricMapper = class {
             // Add 9th
             chord === 7 ? 10 : chord,
             // V7 becomes dominant 7th
-            chord === 5 ? 9 : chord
+            chord === 5 ? 9 : chord,
             // IV becomes secondary dominant
+            chord === 0 ? -3 : chord,
+            // Modal interchange: I becomes bVI (parallel minor)
+            chord === 5 ? 8 : chord,
+            // IV becomes #IVdim (lydian color)
+            chord - 1,
+            // Sus4 tendency (chromatic lower neighbor)
+            chord + 1,
+            // Sus2 tendency (chromatic upper neighbor)
+            chord + 6,
+            // Tritone substitution
+            chord === 0 ? 3 : chord
+            // Modal interchange: I becomes III (phrygian)
           ];
-          const colorIdx = Math.floor(prose.musicalExpressiveness * colorOptions.length);
-          chord = colorOptions[Math.min(colorIdx, colorOptions.length - 1)];
+          const colorIdx = (harmonicSeed + j * 17 + rep * 7) % colorOptions.length;
+          chord = colorOptions[colorIdx];
         }
         if (fullProgression.length > 0) {
           const prevChord = fullProgression[fullProgression.length - 1];
           const interval2 = Math.abs(chord - prevChord);
-          if (interval2 > 4 && interval2 < 12) {
+          if (interval2 > 2 && interval2 < 12) {
             let passingChord;
-            if (prevChord < chord) {
-              passingChord = prevChord + Math.floor(interval2 / 2);
+            if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) {
+              if (prevChord < chord) {
+                passingChord = chord - 1;
+              } else {
+                passingChord = chord + 1;
+              }
             } else {
-              passingChord = prevChord - Math.floor(interval2 / 2);
+              if (prevChord < chord) {
+                passingChord = prevChord + Math.floor(interval2 / 2);
+              } else {
+                passingChord = prevChord - Math.floor(interval2 / 2);
+              }
             }
             fullProgression.push(passingChord);
           }
+          if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) {
+            const tritoneSubstitute = chord + 6;
+            fullProgression.push(tritoneSubstitute);
+          }
+          if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) {
+            const augSixth = chord - 1;
+            fullProgression.push(augSixth);
+          }
         }
+        harmonicSeed = (harmonicSeed * 1.05 + j * 11) % 1e3;
         const isPhraseFinal = j === baseProgression.length - 1;
         if (isPhraseFinal && rep < repetitions - 1) {
           if (chord === 0) {
@@ -88310,42 +88340,49 @@ var NoteCentricMapper = class {
     return rhythm;
   }
   /**
-   * Generate velocity curve with micro-dynamics and phrase shaping
+   * Generate velocity curve with EXPANDED dynamics and phrase shaping
    */
   generateVelocityCurve(prose, length) {
     const velocities = [];
-    const baseVelocity = 0.25 + prose.musicalExpressiveness * 0.6;
+    const baseVelocity = 0.2 + prose.musicalExpressiveness * 0.7;
     let seed = Math.floor(prose.linguistic.avgWordLength * 50);
     for (let i = 0; i < length; i++) {
       const position = i / (length - 1 || 1);
       let velocity = baseVelocity;
       if (prose.overallComplexity > 0.5) {
         const arcPosition = position * 1.5;
-        velocity *= 0.6 + Math.sin(Math.min(arcPosition, 1) * Math.PI) * 0.4;
+        velocity *= 0.25 + Math.sin(Math.min(arcPosition, 1) * Math.PI) * 0.75;
       } else {
-        velocity *= 0.8 + Math.sin(position * Math.PI) * 0.2;
+        velocity *= 0.5 + Math.sin(position * Math.PI) * 0.5;
       }
       const phraseLength = 6;
       const posInPhrase = i % phraseLength / phraseLength;
-      const phraseDynamics = 0.9 + Math.sin(posInPhrase * Math.PI) * 0.15;
+      const phraseDynamics = 0.75 + Math.sin(posInPhrase * Math.PI) * 0.35;
       velocity *= phraseDynamics;
       if (i % 4 === 0) {
-        velocity *= 1.1;
+        velocity *= 1.25;
       } else if (i % 2 === 0) {
-        velocity *= 1.05;
+        velocity *= 1.12;
       }
       if (prose.linguistic.questionRatio > 0.2) {
         if (position > 0.7) {
-          velocity *= 0.85 + (position - 0.7) * 1;
+          velocity *= 0.6 + (position - 0.7) * 1.8;
         }
       }
-      const microVariation = ((seed + i * 13) % 16 - 8) / 100;
+      const microVariation = ((seed + i * 13) % 30 - 15) / 100;
       velocity *= 1 + microVariation;
       if (prose.musicalExpressiveness > 0.6) {
         const deviation = velocity - baseVelocity;
-        velocity = baseVelocity + deviation * 1.2;
+        velocity = baseVelocity + deviation * 2;
       }
-      velocity = Math.max(0.15, Math.min(0.95, velocity));
+      if ((seed + i) % 10 === 0) {
+        velocity = Math.min(velocity, 0.12);
+      } else if ((seed + i) % 8 === 0) {
+        velocity = Math.max(velocity, 0.95);
+      } else if ((seed + i) % 12 === 0) {
+        velocity = Math.min(velocity, 0.4);
+      }
+      velocity = Math.max(0.08, Math.min(0.99, velocity));
       velocities.push(velocity);
       seed = (seed + i * 7) % 1e3;
     }
@@ -88402,23 +88439,49 @@ var NoteCentricMapper = class {
   generateHarmonicResponse(centerPhrase, prose) {
     const length = Math.round(centerPhrase.melody.length * 0.7);
     const melody = [];
-    const centerRange = Math.max(...centerPhrase.melody) - Math.min(...centerPhrase.melody);
     const centerAvg = centerPhrase.melody.reduce((a2, b) => a2 + b, 0) / centerPhrase.melody.length;
+    let seed = Math.floor(prose.linguistic.avgWordLength * 73);
     for (let i = 0; i < length; i++) {
       const centerPitch = centerPhrase.melody[Math.min(i, centerPhrase.melody.length - 1)];
       const invertedPitch = centerAvg - (centerPitch - centerAvg);
-      const harmonicPitch = invertedPitch + 4;
-      const independence = i * 19 % 7 - 3;
-      melody.push(Math.round(harmonicPitch + independence));
+      let harmonicPitch = invertedPitch * 0.2 + centerPitch * 0.2;
+      harmonicPitch += 4;
+      const melodicFreedom = (seed + i * 23) % 17 - 8;
+      harmonicPitch += melodicFreedom;
+      const directionSeed = (seed + i * 17) % 100;
+      if (directionSeed < 40) {
+        harmonicPitch += Math.floor(i * 0.8);
+      } else if (directionSeed < 80) {
+        harmonicPitch -= Math.floor(i * 0.8);
+      }
+      if (i > 0 && (seed + i * 29) % 3 === 0) {
+        const leap = (seed + i) % 2 === 0 ? 7 : -7;
+        harmonicPitch += leap;
+      }
+      if (i > 0 && (seed + i * 31) % 7 === 0) {
+        const octaveLeap = (seed + i) % 2 === 0 ? 12 : -12;
+        harmonicPitch += octaveLeap;
+      }
+      melody.push(Math.round(harmonicPitch));
+      seed = (seed * 1.1 + i * 7) % 1e4;
     }
     const rhythm = [];
     for (let i = 0; i < length; i++) {
       const centerRhythm = centerPhrase.rhythm[Math.min(i, centerPhrase.rhythm.length - 1)];
       const inverted = centerRhythm > 2 ? 0.75 : 2;
-      rhythm.push(inverted);
+      const rhythmVariation = ((seed + i * 11) % 20 - 10) / 100;
+      rhythm.push(inverted * (1 + rhythmVariation));
     }
     const harmony = centerPhrase.harmony.slice(0, length);
-    const velocities = centerPhrase.velocities.slice(0, length).map((v) => v * 0.65);
+    const velocities = centerPhrase.velocities.slice(0, length).map((v, i) => {
+      if ((seed + i) % 7 === 0) {
+        return v * 0.35;
+      } else if ((seed + i) % 11 === 0) {
+        return v * 1.15;
+      } else {
+        return v * 0.6;
+      }
+    });
     return {
       melody,
       harmony,
@@ -88434,29 +88497,68 @@ var NoteCentricMapper = class {
   generateRhythmicCounterpoint(centerPhrase, prose) {
     const length = centerPhrase.melody.length;
     const melody = [];
+    let seed = Math.floor(prose.density.contentDensity * 83);
     for (let i = 0; i < length; i++) {
       const chordRoot = centerPhrase.harmony[i];
+      const nextChord = i < length - 1 ? centerPhrase.harmony[i + 1] : chordRoot;
       if (i % 4 === 0) {
         melody.push(chordRoot - 12);
       } else if (i % 2 === 0) {
-        melody.push(chordRoot - 5);
+        const chordToneOptions = [
+          chordRoot - 5,
+          // Fifth (fourth down)
+          chordRoot - 8,
+          // Third (sixth down)
+          chordRoot - 2
+          // Seventh
+        ];
+        const toneIndex = (seed + i) % chordToneOptions.length;
+        melody.push(chordToneOptions[toneIndex] - 12);
       } else {
-        if (i < length - 1) {
-          const nextChord = centerPhrase.harmony[i + 1];
-          const approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
-          melody.push(approach - 12);
+        const interval2 = nextChord - chordRoot;
+        let approach;
+        if ((seed + i) % 2 === 0) {
+          approach = nextChord - 1;
         } else {
-          melody.push(chordRoot - 12);
+          approach = nextChord + 1;
         }
+        if ((seed + i * 19) % 7 === 0 && prose.musicalExpressiveness > 0.6) {
+          approach = nextChord + 6;
+        }
+        if ((seed + i * 23) % 5 === 0) {
+          approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
+        }
+        melody.push(approach - 12);
       }
+      seed = (seed * 1.05 + i * 11) % 1e3;
     }
     const rhythm = [];
-    const bassMotif = [1, 0.75, 1.25, 1];
+    const bassMotifs = [
+      [1, 0.75, 1.25, 1],
+      // Original syncopated
+      [1.5, 0.5, 1, 1],
+      // Anticipation
+      [0.75, 0.75, 1.5, 1]
+      // Delayed emphasis
+    ];
+    const motifIndex = Math.floor(prose.overallComplexity * bassMotifs.length);
+    const bassMotif = bassMotifs[Math.min(motifIndex, bassMotifs.length - 1)];
     for (let i = 0; i < length; i++) {
-      rhythm.push(bassMotif[i % bassMotif.length]);
+      let duration = bassMotif[i % bassMotif.length];
+      const variation = ((seed + i * 13) % 20 - 10) / 100;
+      duration *= 1 + variation;
+      rhythm.push(duration);
     }
     const harmony = centerPhrase.harmony;
-    const velocities = centerPhrase.velocities.map((v) => v * 0.7);
+    const velocities = centerPhrase.velocities.map((v, i) => {
+      if ((seed + i) % 9 === 0) {
+        return v * 0.4;
+      } else if ((seed + i) % 13 === 0) {
+        return v * 1.25;
+      } else {
+        return v * 0.75;
+      }
+    });
     return {
       melody,
       harmony,
@@ -88597,9 +88699,12 @@ var NoteCentricPlayer = class {
       const baseFreq = 261.63;
       const totalOffset = chordRoot + pitchOffset;
       const frequency = baseFreq * Math.pow(2, totalOffset / 12);
+      const humanization = Math.random() * 150 - 75 + (Math.random() * 150 - 75);
+      const humanizedTime = currentTime + humanization;
       logger83.debug("schedule-note", "Scheduling note", {
         index: i,
-        delay: currentTime,
+        delay: humanizedTime,
+        humanization: humanization.toFixed(2),
         frequency: frequency.toFixed(2),
         role,
         instrument
@@ -88644,7 +88749,7 @@ var NoteCentricPlayer = class {
             errorStack: error instanceof Error ? error.stack : void 0
           });
         }
-      }, currentTime);
+      }, Math.max(0, humanizedTime));
       currentTime += duration * beatDuration;
     }
   }
@@ -88676,7 +88781,7 @@ var NoteCentricPlayer = class {
     return enabledInstruments[0];
   }
   /**
-   * Get delay for embellishment type with phrase-sensitive timing
+   * Get delay for embellishment type with phrase-sensitive timing and overlap
    */
   getDelayForEmbellishment(type2) {
     if (!this.embellishmentCounts) {
@@ -88687,20 +88792,20 @@ var NoteCentricPlayer = class {
       };
     }
     const baseDelays = {
-      "harmonic-response": 6e3 + Math.random() * 3e3,
-      // 6-9s (after first phrase)
-      "rhythmic-counterpoint": 12e3 + Math.random() * 4e3,
-      // 12-16s (after second phrase)
-      "ambient-texture": 0 + Math.random() * 1e3
-      // 0-1s (almost immediate, with tiny offset)
+      "harmonic-response": 1e3 + Math.random() * 1e3,
+      // 1-2s (IMMEDIATE overlap!)
+      "rhythmic-counterpoint": 2500 + Math.random() * 1500,
+      // 2.5-4s (much earlier)
+      "ambient-texture": 0 + Math.random() * 300
+      // 0-0.3s (essentially immediate)
     };
     const staggerDelay = {
-      "harmonic-response": 5e3 + Math.random() * 2e3,
-      // 5-7s more each time
-      "rhythmic-counterpoint": 6e3 + Math.random() * 3e3,
-      // 6-9s more each time
-      "ambient-texture": 3e3 + Math.random() * 2e3
-      // 3-5s for ambient (changed from 0)
+      "harmonic-response": 1500 + Math.random() * 1e3,
+      // 1.5-2.5s more each time
+      "rhythmic-counterpoint": 2e3 + Math.random() * 1e3,
+      // 2-3s more each time
+      "ambient-texture": 1e3 + Math.random() * 500
+      // 1-1.5s for ambient
     };
     const baseDelay = baseDelays[type2] || 0;
     const count = this.embellishmentCounts[type2] || 0;

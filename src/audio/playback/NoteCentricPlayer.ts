@@ -160,15 +160,21 @@ export class NoteCentricPlayer {
 			const totalOffset = chordRoot + pitchOffset;
 			const frequency = baseFreq * Math.pow(2, totalOffset / 12);
 
+			// Add EXTREME micro-timing humanization (±100-150ms random offset)
+			// This creates VERY noticeable "falling off the piano bench" groove looseness
+			const humanization = (Math.random() * 150 - 75) + (Math.random() * 150 - 75); // ±100-150ms
+			const humanizedTime = currentTime + humanization;
+
 			logger.debug('schedule-note', 'Scheduling note', {
 				index: i,
-				delay: currentTime,
+				delay: humanizedTime,
+				humanization: humanization.toFixed(2),
 				frequency: frequency.toFixed(2),
 				role,
 				instrument
 			});
 
-			// Schedule note to start
+			// Schedule note to start with humanized timing
 			setTimeout(async () => {
 				logger.debug('timeout-fired', 'Note timeout fired', {
 					index: i,
@@ -218,7 +224,7 @@ export class NoteCentricPlayer {
 						errorStack: error instanceof Error ? error.stack : undefined
 					});
 				}
-			}, currentTime);
+			}, Math.max(0, humanizedTime)); // Use humanized time, ensure non-negative
 
 			currentTime += duration * beatDuration;
 		}
@@ -265,11 +271,11 @@ export class NoteCentricPlayer {
 	}
 
 	/**
-	 * Get delay for embellishment type with phrase-sensitive timing
+	 * Get delay for embellishment type with phrase-sensitive timing and overlap
 	 */
 	private getDelayForEmbellishment(type: string): number {
-		// Stagger embellishments to create a longer, unfolding composition
-		// Track how many of each type we've seen to progressively delay them
+		// Create temporal overlap for richer polyphonic texture
+		// Embellishments now start EARLIER to overlap with center phrase
 		if (!this.embellishmentCounts) {
 			this.embellishmentCounts = {
 				'harmonic-response': 0,
@@ -278,17 +284,18 @@ export class NoteCentricPlayer {
 			};
 		}
 
-		// More varied base delays with some randomness for organic feel
+		// VERY EARLY base delays for MAXIMUM overlap and polyphonic density
 		const baseDelays: Record<string, number> = {
-			'harmonic-response': 6000 + (Math.random() * 3000),      // 6-9s (after first phrase)
-			'rhythmic-counterpoint': 12000 + (Math.random() * 4000),  // 12-16s (after second phrase)
-			'ambient-texture': 0 + (Math.random() * 1000)             // 0-1s (almost immediate, with tiny offset)
+			'harmonic-response': 1000 + (Math.random() * 1000),      // 1-2s (IMMEDIATE overlap!)
+			'rhythmic-counterpoint': 2500 + (Math.random() * 1500),  // 2.5-4s (much earlier)
+			'ambient-texture': 0 + (Math.random() * 300)             // 0-0.3s (essentially immediate)
 		};
 
+		// VERY SMALL stagger delays for DENSE polyphonic texture
 		const staggerDelay: Record<string, number> = {
-			'harmonic-response': 5000 + (Math.random() * 2000),      // 5-7s more each time
-			'rhythmic-counterpoint': 6000 + (Math.random() * 3000),  // 6-9s more each time
-			'ambient-texture': 3000 + (Math.random() * 2000)         // 3-5s for ambient (changed from 0)
+			'harmonic-response': 1500 + (Math.random() * 1000),      // 1.5-2.5s more each time
+			'rhythmic-counterpoint': 2000 + (Math.random() * 1000),  // 2-3s more each time
+			'ambient-texture': 1000 + (Math.random() * 500)          // 1-1.5s for ambient
 		};
 
 		const baseDelay = baseDelays[type] || 0;

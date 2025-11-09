@@ -429,42 +429,78 @@ export class NoteCentricMapper {
 		const fullProgression: number[] = [];
 		const repetitions = Math.ceil(chordChanges / baseProgression.length);
 
+		// Seed for harmonic variation
+		let harmonicSeed = Math.floor(prose.musicalExpressiveness * 97);
+
 		for (let rep = 0; rep < repetitions; rep++) {
 			for (let j = 0; j < baseProgression.length; j++) {
 				let chord = baseProgression[j];
 
-				// Add harmonic color based on prose features
-				if (prose.musicalExpressiveness > 0.7 && j % 2 === 1) {
-					// High expressiveness: add secondary dominants or modal interchange
+				// Add EXTREMELY ADVENTUROUS harmonic color (VERY low threshold)
+				if (prose.musicalExpressiveness > 0.1) { // DRASTICALLY LOWERED from 0.3
+					// More frequent color with more options
 					const colorOptions = [
-						chord,           // Original
-						chord + 2,       // Add 9th
-						chord === 7 ? 10 : chord,  // V7 becomes dominant 7th
-						chord === 5 ? 9 : chord    // IV becomes secondary dominant
+						chord,                                    // Original
+						chord + 2,                                // Add 9th
+						chord === 7 ? 10 : chord,                // V7 becomes dominant 7th
+						chord === 5 ? 9 : chord,                 // IV becomes secondary dominant
+						chord === 0 ? -3 : chord,                // Modal interchange: I becomes bVI (parallel minor)
+						chord === 5 ? 8 : chord,                 // IV becomes #IVdim (lydian color)
+						chord - 1,                                // Sus4 tendency (chromatic lower neighbor)
+						chord + 1,                                // Sus2 tendency (chromatic upper neighbor)
+						chord + 6,                                // Tritone substitution
+						chord === 0 ? 3 : chord                  // Modal interchange: I becomes III (phrygian)
 					];
-					const colorIdx = Math.floor(prose.musicalExpressiveness * colorOptions.length);
-					chord = colorOptions[Math.min(colorIdx, colorOptions.length - 1)];
+
+					// Use seed for reproducible variation - MORE VARIATION
+					const colorIdx = (harmonicSeed + j * 17 + rep * 7) % colorOptions.length;
+					chord = colorOptions[colorIdx];
 				}
 
-				// Add smooth voice leading with passing chords
+				// Add MUCH MORE CHROMATIC voice leading
 				if (fullProgression.length > 0) {
 					const prevChord = fullProgression[fullProgression.length - 1];
 					const interval = Math.abs(chord - prevChord);
 
-					// Add passing chord for smoother motion
-					if (interval > 4 && interval < 12) {
-						// Choose passing chord that creates stepwise bass motion
+					// Add chromatic passing chords VERY frequently (threshold lowered to 2)
+					if (interval > 2 && interval < 12) { // Was > 3
+						// Choose passing chord that creates CHROMATIC bass motion
 						let passingChord: number;
-						if (prevChord < chord) {
-							// Ascending: use chord in between
-							passingChord = prevChord + Math.floor(interval / 2);
+
+						// ULTRA FREQUENT chromatic approaches (was % 2, now ALWAYS if expressiveness > 0.2)
+						if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) { // DRASTICALLY lowered from 0.4
+							// Chromatic approach from below or above
+							if (prevChord < chord) {
+								passingChord = chord - 1; // Chromatic approach from below
+							} else {
+								passingChord = chord + 1; // Chromatic approach from above
+							}
 						} else {
-							// Descending: use chord in between
-							passingChord = prevChord - Math.floor(interval / 2);
+							// Diatonic passing chord (original behavior)
+							if (prevChord < chord) {
+								passingChord = prevChord + Math.floor(interval / 2);
+							} else {
+								passingChord = prevChord - Math.floor(interval / 2);
+							}
 						}
 						fullProgression.push(passingChord);
 					}
+
+					// EXTREMELY FREQUENT TRITONE substitutions (was % 7, now % 5)
+					if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) { // MUCH lower: was 0.5
+						// Add tritone substitute (diminished 5th away)
+						const tritoneSubstitute = chord + 6;
+						fullProgression.push(tritoneSubstitute);
+					}
+
+					// MUCH MORE augmented sixth chords for EXTREME spice (was % 9, now % 6)
+					if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) { // Lower from 0.6
+						const augSixth = chord - 1; // German sixth flavor
+						fullProgression.push(augSixth);
+					}
 				}
+
+				harmonicSeed = (harmonicSeed * 1.05 + j * 11) % 1000;
 
 				// Strengthen cadences at phrase ends
 				const isPhraseFinal = (j === baseProgression.length - 1);
@@ -607,13 +643,13 @@ export class NoteCentricMapper {
 	}
 
 	/**
-	 * Generate velocity curve with micro-dynamics and phrase shaping
+	 * Generate velocity curve with EXPANDED dynamics and phrase shaping
 	 */
 	private generateVelocityCurve(prose: ProseAnalysis, length: number): number[] {
 		const velocities: number[] = [];
 
-		// Base velocity from musical expressiveness (0.25 - 0.85 for more range)
-		const baseVelocity = 0.25 + prose.musicalExpressiveness * 0.6;
+		// EXPANDED base velocity range (0.20 - 0.90 instead of 0.25 - 0.85)
+		const baseVelocity = 0.20 + prose.musicalExpressiveness * 0.7;
 
 		// Seed for consistent micro-variations
 		let seed = Math.floor(prose.linguistic.avgWordLength * 50);
@@ -624,52 +660,64 @@ export class NoteCentricMapper {
 			// Start with base
 			let velocity = baseVelocity;
 
-			// Macro phrase shape - overall arc
+			// EXTREMELY DRAMATIC macro phrase shape - FORCE extreme ranges
 			if (prose.overallComplexity > 0.5) {
-				// Dramatic arc: soft start, crescendo to 60%, decrescendo to end
+				// ULTRA dramatic arc: whisper soft start (0.25), huge crescendo, then decrescendo
 				const arcPosition = position * 1.5; // Shift peak earlier
-				velocity *= 0.6 + Math.sin(Math.min(arcPosition, 1.0) * Math.PI) * 0.4;
+				velocity *= 0.25 + Math.sin(Math.min(arcPosition, 1.0) * Math.PI) * 0.75; // WIDER: 0.25-1.0 range
 			} else {
-				// Gentle arc
-				velocity *= 0.8 + Math.sin(position * Math.PI) * 0.2;
+				// Even "gentle" arcs are now dramatic
+				velocity *= 0.5 + Math.sin(position * Math.PI) * 0.5; // 0.5-1.0 range
 			}
 
-			// Phrase-level micro-dynamics (4-8 note phrases)
+			// MUCH STRONGER phrase-level micro-dynamics
 			const phraseLength = 6;
 			const posInPhrase = (i % phraseLength) / phraseLength;
 
-			// Each phrase has slight crescendo-decrescendo
-			const phraseDynamics = 0.9 + Math.sin(posInPhrase * Math.PI) * 0.15;
+			// Each phrase has DRAMATIC crescendo-decrescendo
+			const phraseDynamics = 0.75 + Math.sin(posInPhrase * Math.PI) * 0.35; // Much wider: ±0.35
 			velocity *= phraseDynamics;
 
-			// Accent strong beats
+			// MUCH STRONGER accents on strong beats
 			if (i % 4 === 0) {
-				velocity *= 1.1; // Downbeat accent
+				velocity *= 1.25; // MUCH louder downbeats (was 1.15)
 			} else if (i % 2 === 0) {
-				velocity *= 1.05; // Medium beat slight accent
+				velocity *= 1.12; // Increased from 1.08
 			}
 
-			// Question-like rising at end
+			// Question-like rising at end with HUGE crescendo
 			if (prose.linguistic.questionRatio > 0.2) {
-				// Gradual crescendo in last 30%
+				// Massive crescendo in last 30%
 				if (position > 0.7) {
-					velocity *= 0.85 + (position - 0.7) * 1.0;
+					velocity *= 0.6 + (position - 0.7) * 1.8; // Massive increase
 				}
 			}
 
-			// Add natural micro-variations (±8%)
-			const microVariation = ((seed + i * 13) % 16 - 8) / 100;
+			// Add larger natural micro-variations (±15% instead of ±10%)
+			const microVariation = ((seed + i * 13) % 30 - 15) / 100;
 			velocity *= (1 + microVariation);
 
-			// Expressive content has more dynamic contrast
+			// Expressive content has EXTREME dynamic contrast
 			if (prose.musicalExpressiveness > 0.6) {
-				// Exaggerate dynamics slightly
+				// Exaggerate dynamics MASSIVELY
 				const deviation = velocity - baseVelocity;
-				velocity = baseVelocity + (deviation * 1.2);
+				velocity = baseVelocity + (deviation * 2.0); // DOUBLED exaggeration (was 1.5)
 			}
 
-			// Constrain to playable range (0.15 - 0.95)
-			velocity = Math.max(0.15, Math.min(0.95, velocity));
+			// FORCE MANY MORE notes to extremes (true pp and ff) - MUCH MORE FREQUENT
+			if ((seed + i) % 10 === 0) {
+				// Every 10th note: force to pianissimo
+				velocity = Math.min(velocity, 0.12);
+			} else if ((seed + i) % 8 === 0) {
+				// Every 8th note: force to fortissimo
+				velocity = Math.max(velocity, 0.95);
+			} else if ((seed + i) % 12 === 0) {
+				// Every 12th note: force to mezzo-piano
+				velocity = Math.min(velocity, 0.40);
+			}
+
+			// WIDER playable range (0.08 - 0.99 for even more extremes)
+			velocity = Math.max(0.08, Math.min(0.99, velocity));
 
 			velocities.push(velocity);
 
@@ -743,24 +791,54 @@ export class NoteCentricMapper {
 	 * Generate harmonic response phrase - independent melodic answer
 	 */
 	private generateHarmonicResponse(centerPhrase: MusicalPhrase, prose: ProseAnalysis): MusicalPhrase {
-		// Create a complementary melodic line that responds harmonically
+		// Create a MORE independent melodic line that responds harmonically
 		const length = Math.round(centerPhrase.melody.length * 0.7); // Shorter response
 		const melody: number[] = [];
 
-		// Use inverted contour from center phrase (mirror image)
-		const centerRange = Math.max(...centerPhrase.melody) - Math.min(...centerPhrase.melody);
+		// Use inverted contour as starting point, but add much more variation
 		const centerAvg = centerPhrase.melody.reduce((a, b) => a + b, 0) / centerPhrase.melody.length;
+		let seed = Math.floor(prose.linguistic.avgWordLength * 73);
 
 		for (let i = 0; i < length; i++) {
 			const centerPitch = centerPhrase.melody[Math.min(i, centerPhrase.melody.length - 1)];
 
-			// Invert around the average pitch, then transpose up a third
+			// Start with VERY loose inversion (only 20% influence - mostly independent!)
 			const invertedPitch = centerAvg - (centerPitch - centerAvg);
-			const harmonicPitch = invertedPitch + 4; // Up a major third
+			let harmonicPitch = invertedPitch * 0.2 + centerPitch * 0.2; // Was 0.5 each
 
-			// Add some independence - not slavishly following inversion
-			const independence = ((i * 19) % 7) - 3; // Small melodic variation
-			melody.push(Math.round(harmonicPitch + independence));
+			// Transpose up a third for harmonic support
+			harmonicPitch += 4;
+
+			// Add MUCH MORE melodic independence
+			// 1. HUGE random variations (±8 semitones instead of ±5)
+			const melodicFreedom = ((seed + i * 23) % 17) - 8; // -8 to +8
+			harmonicPitch += melodicFreedom;
+
+			// 2. Add STRONG melodic direction independent of center (MORE LIKELY)
+			const directionSeed = (seed + i * 17) % 100;
+			if (directionSeed < 40) { // INCREASED from 30
+				// Ascending motion - STRONGER
+				harmonicPitch += Math.floor(i * 0.8); // Was 0.5
+			} else if (directionSeed < 80) { // INCREASED from 60
+				// Descending motion - STRONGER
+				harmonicPitch -= Math.floor(i * 0.8); // Was 0.5
+			}
+			// else: static/oscillating (now rarer)
+
+			// 3. MORE FREQUENT leaps for interest (every 3rd note instead of 5th)
+			if (i > 0 && (seed + i * 29) % 3 === 0) { // Was % 5
+				const leap = ((seed + i) % 2 === 0 ? 7 : -7); // Perfect fifth leap
+				harmonicPitch += leap;
+			}
+
+			// 4. NEW: Occasional OCTAVE leaps for drama
+			if (i > 0 && (seed + i * 31) % 7 === 0) {
+				const octaveLeap = ((seed + i) % 2 === 0 ? 12 : -12);
+				harmonicPitch += octaveLeap;
+			}
+
+			melody.push(Math.round(harmonicPitch));
+			seed = (seed * 1.1 + i * 7) % 10000;
 		}
 
 		// Use complementary rhythm - fill in gaps where center has longer notes
@@ -770,11 +848,24 @@ export class NoteCentricMapper {
 
 			// Inverse rhythm - short when center is long, long when center is short
 			const inverted = centerRhythm > 2.0 ? 0.75 : 2.0;
-			rhythm.push(inverted);
+
+			// Add rhythmic variation
+			const rhythmVariation = ((seed + i * 11) % 20 - 10) / 100; // ±10%
+			rhythm.push(inverted * (1 + rhythmVariation));
 		}
 
 		const harmony = centerPhrase.harmony.slice(0, length);
-		const velocities = centerPhrase.velocities.slice(0, length).map(v => v * 0.65); // Quieter
+
+		// DRAMATIC velocity contrast - some harmonic responses MUCH quieter, some LOUDER
+		const velocities = centerPhrase.velocities.slice(0, length).map((v, i) => {
+			if ((seed + i) % 7 === 0) {
+				return v * 0.35; // VERY quiet whispers
+			} else if ((seed + i) % 11 === 0) {
+				return v * 1.15; // LOUDER than center for accent
+			} else {
+				return v * 0.60; // Generally quieter
+			}
+		});
 
 		return {
 			melody,
@@ -790,43 +881,92 @@ export class NoteCentricMapper {
 	 * Generate rhythmic counterpoint phrase - independent bass line
 	 */
 	private generateRhythmicCounterpoint(centerPhrase: MusicalPhrase, prose: ProseAnalysis): MusicalPhrase {
-		// Create a walking bass line that outlines the harmony
+		// Create a MORE chromatic walking bass line with unexpected approach tones
 		const length = centerPhrase.melody.length;
 		const melody: number[] = [];
+		let seed = Math.floor(prose.density.contentDensity * 83);
 
-		// Build bass line from chord roots and passing tones
+		// Build bass line from chord roots and chromatic passing tones
 		for (let i = 0; i < length; i++) {
 			const chordRoot = centerPhrase.harmony[i];
+			const nextChord = i < length - 1 ? centerPhrase.harmony[i + 1] : chordRoot;
 
-			// Bass movement: roots, fifths, and stepwise approach
+			// Bass movement: roots, fifths, chromatic approaches, and surprising leaps
 			if (i % 4 === 0) {
-				// On strong beats: play root
+				// On strong beats: play root (stable)
 				melody.push(chordRoot - 12); // Octave lower
 			} else if (i % 2 === 0) {
-				// On medium beats: play fifth
-				melody.push(chordRoot - 5); // Fourth down (= fifth up from octave below)
+				// On medium beats: more variety - fifth, third, or seventh
+				const chordToneOptions = [
+					chordRoot - 5,  // Fifth (fourth down)
+					chordRoot - 8,  // Third (sixth down)
+					chordRoot - 2   // Seventh
+				];
+				const toneIndex = (seed + i) % chordToneOptions.length;
+				melody.push(chordToneOptions[toneIndex] - 12);
 			} else {
-				// On weak beats: chromatic or stepwise approach to next chord
-				if (i < length - 1) {
-					const nextChord = centerPhrase.harmony[i + 1];
-					const approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
-					melody.push(approach - 12);
+				// On weak beats: MORE chromatic and unexpected approaches
+				const interval = nextChord - chordRoot;
+				let approach: number;
+
+				// Chromatic approach from above or below (50% more chromaticism)
+				if ((seed + i) % 2 === 0) {
+					// Chromatic approach from below
+					approach = nextChord - 1;
 				} else {
-					melody.push(chordRoot - 12);
+					// Chromatic approach from above
+					approach = nextChord + 1;
 				}
+
+				// Occasionally add tritone substitutions for jazz flavor
+				if ((seed + i * 19) % 7 === 0 && prose.musicalExpressiveness > 0.6) {
+					approach = nextChord + 6; // Tritone away
+				}
+
+				// Occasionally add scalar approach instead of chromatic
+				if ((seed + i * 23) % 5 === 0) {
+					approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
+				}
+
+				melody.push(approach - 12);
 			}
+
+			seed = (seed * 1.05 + i * 11) % 1000;
 		}
 
-		// Rhythmic counterpoint - different pattern from center
+		// Rhythmic counterpoint - more varied syncopation
 		const rhythm: number[] = [];
-		const bassMotif = [1.0, 0.75, 1.25, 1.0]; // Syncopated walking pattern
+		const bassMotifs = [
+			[1.0, 0.75, 1.25, 1.0],       // Original syncopated
+			[1.5, 0.5, 1.0, 1.0],         // Anticipation
+			[0.75, 0.75, 1.5, 1.0]        // Delayed emphasis
+		];
+
+		const motifIndex = Math.floor(prose.overallComplexity * bassMotifs.length);
+		const bassMotif = bassMotifs[Math.min(motifIndex, bassMotifs.length - 1)];
 
 		for (let i = 0; i < length; i++) {
-			rhythm.push(bassMotif[i % bassMotif.length]);
+			let duration = bassMotif[i % bassMotif.length];
+
+			// Add micro-variations to rhythm
+			const variation = ((seed + i * 13) % 20 - 10) / 100; // ±10%
+			duration *= (1 + variation);
+
+			rhythm.push(duration);
 		}
 
 		const harmony = centerPhrase.harmony;
-		const velocities = centerPhrase.velocities.map(v => v * 0.7); // Slightly quieter
+
+		// DRAMATIC velocity contrast - bass can be whisper quiet or THUNDERING
+		const velocities = centerPhrase.velocities.map((v, i) => {
+			if ((seed + i) % 9 === 0) {
+				return v * 0.40; // Very quiet bass (pedal tone effect)
+			} else if ((seed + i) % 13 === 0) {
+				return v * 1.25; // MUCH LOUDER bass (accent)
+			} else {
+				return v * 0.75; // Moderate bass
+			}
+		});
 
 		return {
 			melody,

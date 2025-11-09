@@ -374,6 +374,62 @@ Creates smooth spatial transitions for an immersive stereo field.
 **For Full Musical Experience (all features):**
 - All of the above combined for maximum musicality
 
+### Note-Centric Playback Refinements
+
+The note-centric playback system (used when playing prose-heavy center notes) includes extensive musical refinements for organic, expressive performances:
+
+#### Harmonic Sophistication
+- **Extremely adventurous harmony**: Low expressiveness thresholds (0.1-0.4) trigger exotic chord colors
+- **Frequent chromatic voice leading**: Every 2nd chord when expressiveness > 0.2
+- **Jazz harmony**: Tritone substitutions (5% frequency), augmented sixth chords (6% frequency)
+- **Modal interchange**: Borrows chords from parallel modes (major ↔ minor)
+- **10+ harmonic color options** per chord position for maximum variety
+
+#### Dynamic Expression
+- **Extreme velocity forcing**: Every 8th, 10th, and 12th notes forced to extremes
+- **Wide dynamic range**: 0.08-0.99 velocity (from whisper-soft to thundering)
+- **Forced dynamics**: Pianissimo (0.12), Fortissimo (0.95), Mezzo-piano (0.40)
+- **Dramatic embellishment contrasts**:
+  - Harmonic response: 0.35× (whispers) to 1.15× (accents)
+  - Rhythmic counterpoint: 0.40× (pedal tones) to 1.25× (bass thunder)
+
+#### Temporal Characteristics
+- **Extreme micro-timing**: ±100-150ms humanization per note (very loose groove)
+- **"Falling off the piano bench" effect**: Highly noticeable timing imperfections
+- **Immediate embellishment overlap** for rich polyphonic density:
+  - Harmonic response: 1-2s delays (overlaps immediately with center)
+  - Rhythmic counterpoint: 2.5-4s delays
+  - Ambient texture: 0-0.3s delays (essentially simultaneous)
+- **Dense polyphonic texture**: Small stagger delays create thick layering
+
+#### Melodic Independence
+- **High embellishment freedom**: ±8 semitones variation (not tightly coupled to center)
+- **Only 20% center influence**: Embellishments are largely independent melodies
+- **Strong directional motion**: 40% ascending, 40% descending tendencies
+- **Frequent leaps**: Melodic jumps every 3rd note, dramatic octave leaps every 7th
+- **Chromatic color**: Based on vocabulary diversity and prose complexity
+
+#### Musical Context
+- **Prose-driven variation**: All parameters seeded from prose analysis
+- **Reproducible randomness**: Same prose always generates same music
+- **Content-type awareness**: Different contours for research, creative, technical, etc.
+- **Phrase-based structure**: 4-8 note phrases with distinct musical shapes
+- **Natural cadences**: Proper musical phrase endings with harmonic resolution
+
+**What This Means:**
+When you play a center note with substantial prose content, you'll hear:
+- Rich, jazz-influenced harmony with unexpected chromatic colors
+- Dramatically varied dynamics from pianissimo whispers to fortissimo accents
+- Very loose, human-like timing that feels organic and improvisational
+- Multiple independent melodic voices creating dense polyphonic texture
+- Musical phrases that tell a story with clear beginnings, middles, and endings
+
+**Technical Notes:**
+- All refinements work automatically based on prose `musicalExpressiveness` value
+- Higher expressiveness (>0.4) unlocks the most exotic harmonies
+- Scale quantization (if enabled) is applied after all calculations
+- No user controls needed - the system adapts to your content automatically
+
 ### About
 - Feature description
 - Quick tips
