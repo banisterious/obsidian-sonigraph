@@ -18821,6 +18821,7 @@ var init_LocalSoundscapeSettings = __esm({
        */
       render(container) {
         logger23.debug("ls-settings", "Rendering Local Soundscape settings");
+        container.empty();
         this.renderAutoPlaySettings(container);
         this.renderMusicalKeySettings(container);
         this.renderContextAwareSettings(container);

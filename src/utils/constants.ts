@@ -854,6 +854,7 @@ export interface SonigraphSettings {
 
 	// Phase 2: Local Soundscape - Depth-based audio mapping
 	localSoundscape?: {
+		autoPlay?: boolean; // Automatically start playback when opening Local Soundscape view (default: false)
 		autoPlayActiveNote?: boolean; // Automatically play soundscape when active note changes (default: false)
 		keySelection?: {
 			mode?: 'vault-name' | 'root-folder' | 'folder-path' | 'full-path' | 'file-name' | 'custom'; // How to determine musical key

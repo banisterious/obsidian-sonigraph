@@ -29,6 +29,9 @@ export class LocalSoundscapeSettings {
 	public render(container: HTMLElement): void {
 		logger.debug('ls-settings', 'Rendering Local Soundscape settings');
 
+		// Clear container to prevent duplicates on re-render
+		container.empty();
+
 		// Section 1: Auto-play Settings
 		this.renderAutoPlaySettings(container);
 
