@@ -854,6 +854,7 @@ export interface SonigraphSettings {
 
 	// Phase 2: Local Soundscape - Depth-based audio mapping
 	localSoundscape?: {
+		playbackMode?: 'graph-centric' | 'note-centric'; // Audio generation approach (default: 'note-centric')
 		autoPlay?: boolean; // Automatically start playback when opening Local Soundscape view (default: false)
 		autoPlayActiveNote?: boolean; // Automatically play soundscape when active note changes (default: false)
 		keySelection?: {
@@ -947,6 +948,14 @@ export interface SonigraphSettings {
 				enabled?: boolean; // Enable theme-based modifiers (light/dark mode)
 				override?: 'light' | 'dark' | null; // Manual override, null = auto-detect from Obsidian
 			};
+			proseStructure?: {
+				enabled?: boolean; // Enable prose structure analysis
+				sensitivity?: number; // How strongly structure affects audio (0-100%, default: 50%)
+				affectPitch?: boolean; // Allow structure to modulate pitch range
+				affectDuration?: boolean; // Allow structure to modulate note durations
+				affectVelocity?: boolean; // Allow structure to modulate velocities
+				affectTimbre?: boolean; // Allow structure to affect instrument selection
+			};
 		};
 		// Phase 3 Enhancement: Musical Enhancements
 		musicalEnhancements?: {
@@ -983,6 +992,15 @@ export interface SonigraphSettings {
 				turnLength?: number;
 				accompanimentReduction?: number;
 			};
+		};
+		// Continuous audio layers for sparse soundscapes
+		continuousLayers?: {
+			enabled?: boolean; // Enable continuous layers (default: false)
+			intensity?: number; // Overall intensity of layers (0-1, default: 0.5)
+			ambientEnabled?: boolean; // Enable ambient drone layer (default: true)
+			harmonicEnabled?: boolean; // Enable harmonic pad layer (default: true)
+			rhythmicEnabled?: boolean; // Enable rhythmic pulse layer (default: false)
+			volume?: number; // Layer volume in dB (default: -12)
 		};
 	};
 }

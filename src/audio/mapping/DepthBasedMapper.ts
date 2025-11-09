@@ -460,12 +460,38 @@ export class DepthBasedMapper {
 			this.contextualModifier.logContext();
 		}
 
+		// Analyze prose structure of center node if enabled
+		let proseAnalysis = null;
+		if (this.settings?.localSoundscape?.contextAware?.proseStructure?.enabled) {
+			try {
+				const { ProseAnalyzer } = await import('../../utils/ProseAnalyzer');
+				const centerFile = this.app.vault.getAbstractFileByPath(data.centerNode.path);
+				if (centerFile && 'cachedRead' in centerFile) {
+					const content = await this.app.vault.cachedRead(centerFile);
+					proseAnalysis = ProseAnalyzer.analyze(content);
+					logger.info('prose-analysis', 'Analyzed prose structure', {
+						contentType: proseAnalysis.contentType,
+						complexity: proseAnalysis.overallComplexity.toFixed(2),
+						expressiveness: proseAnalysis.musicalExpressiveness.toFixed(2)
+					});
+				} else {
+					logger.warn('prose-analysis', 'Could not read center node file', {
+						path: data.centerNode.path,
+						fileFound: !!centerFile
+					});
+				}
+			} catch (error) {
+				logger.error('prose-analysis', 'Failed to analyze prose structure', error as Error);
+			}
+		}
+
 		logger.info('mapping-start', 'Mapping soundscape to music', {
 			totalNodes: data.stats.totalNodes,
 			maxDepth: data.stats.maxDepth,
 			centerNode: data.centerNode.basename,
 			randomizationSeed: this.randomizationSeed,
-			contextAwareEnabled: !!contextModifiers
+			contextAwareEnabled: !!contextModifiers,
+			proseAnalysisEnabled: !!proseAnalysis
 		});
 
 		this.currentCenterNodePath = data.centerNode.path;
@@ -473,7 +499,7 @@ export class DepthBasedMapper {
 		const mappings: DepthMapping[] = [];
 
 		// Map center node
-		const centerMapping = await this.mapNode(data.centerNode, 0, contextModifiers);
+		const centerMapping = await this.mapNode(data.centerNode, 0, contextModifiers, proseAnalysis);
 		if (centerMapping) {
 			mappings.push(centerMapping);
 		}
@@ -491,7 +517,7 @@ export class DepthBasedMapper {
 			});
 
 			for (const node of limitedNodes) {
-				const mapping = await this.mapNode(node, depth, contextModifiers);
+				const mapping = await this.mapNode(node, depth, contextModifiers, proseAnalysis);
 				if (mapping) {
 					mappings.push(mapping);
 				}
@@ -776,7 +802,8 @@ export class DepthBasedMapper {
 	private async mapNode(
 		node: LocalSoundscapeNode,
 		depth: number,
-		contextModifiers?: ContextModifiers
+		contextModifiers?: ContextModifiers,
+		proseAnalysis?: any
 	): Promise<DepthMapping | null> {
 		try {
 			// Get file for metadata analysis
@@ -787,7 +814,25 @@ export class DepthBasedMapper {
 			}
 
 			// Get pitch range for this depth
-			const pitchRange = this.getPitchRangeForDepth(depth);
+			let pitchRange = this.getPitchRangeForDepth(depth);
+
+			// Apply prose structure modifiers to pitch range if enabled
+			if (proseAnalysis && this.settings?.localSoundscape?.contextAware?.proseStructure?.affectPitch) {
+				const sensitivity = this.settings.localSoundscape.contextAware.proseStructure.sensitivity || 0.5;
+				// More complex prose = wider pitch range (amplified effect with 2x multiplier)
+				const rangeMultiplier = 1 + (proseAnalysis.overallComplexity - 0.5) * sensitivity * 2;
+				pitchRange = {
+					min: pitchRange.min,
+					max: pitchRange.min + (pitchRange.max - pitchRange.min) * rangeMultiplier
+				};
+				logger.debug('prose-pitch-mod', 'Applied prose pitch modulation', {
+					complexity: proseAnalysis.overallComplexity.toFixed(2),
+					sensitivity,
+					rangeMultiplier: rangeMultiplier.toFixed(2),
+					originalRange: `${pitchRange.min}-${pitchRange.max}`,
+					modifiedRange: `${pitchRange.min}-${(pitchRange.min + (pitchRange.max - pitchRange.min) * rangeMultiplier).toFixed(1)}`
+				});
+			}
 
 			// Calculate pitch based on node properties
 			// Use word count and connection density to vary pitch within range
@@ -795,13 +840,29 @@ export class DepthBasedMapper {
 
 			// Get instrument pool for this depth
 			const instruments = this.getInstrumentsForDepth(depth);
-			const instrument = this.selectInstrument(node, instruments, contextModifiers);
+			const instrument = this.selectInstrument(node, instruments, contextModifiers, proseAnalysis);
 
 			// Calculate duration based on word count (longer notes = more content)
-			const duration = this.calculateDuration(node);
+			let duration = this.calculateDuration(node);
+
+			// Apply prose structure modifiers to duration if enabled
+			if (proseAnalysis && this.settings?.localSoundscape?.contextAware?.proseStructure?.affectDuration) {
+				const sensitivity = this.settings.localSoundscape.contextAware.proseStructure.sensitivity || 0.5;
+				// Dense prose = longer durations (amplified effect with 2x multiplier)
+				const durationMultiplier = 1 + (proseAnalysis.density.contentDensity - 0.5) * sensitivity * 2;
+				duration = duration * durationMultiplier;
+			}
 
 			// Calculate velocity based on modification recency
-			const velocity = this.calculateVelocity(node, contextModifiers);
+			let velocity = this.calculateVelocity(node, contextModifiers);
+
+			// Apply prose structure modifiers to velocity if enabled
+			if (proseAnalysis && this.settings?.localSoundscape?.contextAware?.proseStructure?.affectVelocity) {
+				const sensitivity = this.settings.localSoundscape.contextAware.proseStructure.sensitivity || 0.5;
+				// More expressive prose = higher velocities (amplified effect with 2x multiplier)
+				const velocityMultiplier = 1 + (proseAnalysis.musicalExpressiveness - 0.5) * sensitivity * 2;
+				velocity = Math.min(1, velocity * velocityMultiplier);
+			}
 
 			// Convert semitone offset to frequency (Hz)
 			// Formula: frequency = rootFreq * 2^(semitones/12)
@@ -1046,7 +1107,7 @@ export class DepthBasedMapper {
 	 * This creates coherent depth layers (e.g., all depth-1 nodes = strings) while allowing
 	 * slight variation when desired.
 	 */
-	private selectInstrument(node: LocalSoundscapeNode, instruments: string[], contextModifiers?: ContextModifiers): string {
+	private selectInstrument(node: LocalSoundscapeNode, instruments: string[], contextModifiers?: ContextModifiers, proseAnalysis?: any): string {
 		if (instruments.length === 0) {
 			logger.warn('no-instruments', 'No instruments available for depth', { depth: node.depth });
 			return 'piano'; // Fallback
@@ -1060,6 +1121,17 @@ export class DepthBasedMapper {
 		if (contextModifiers && contextModifiers.instrumentBias !== 0) {
 			// Bias ranges from -1 to +1, can shift instrument by ±1 position
 			const biasShift = Math.round(contextModifiers.instrumentBias);
+			primaryIndex = (primaryIndex + biasShift + instruments.length) % instruments.length;
+		}
+
+		// Apply prose structure bias if enabled and timbre affecting is on
+		if (proseAnalysis && this.settings?.localSoundscape?.contextAware?.proseStructure?.affectTimbre) {
+			const sensitivity = this.settings.localSoundscape.contextAware.proseStructure.sensitivity || 0.5;
+			// Content type influences instrument preference
+			// Technical/structured content → shift toward precise instruments (higher index)
+			// Creative/flowing content → shift toward expressive instruments (lower index)
+			const timbreBias = (proseAnalysis.structure.complexityScore - 0.5) * sensitivity * 2;
+			const biasShift = Math.round(timbreBias);
 			primaryIndex = (primaryIndex + biasShift + instruments.length) % instruments.length;
 		}
 

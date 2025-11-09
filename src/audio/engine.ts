@@ -3207,7 +3207,7 @@ export class AudioEngine {
 		}
 	}
 
-	private getEnabledInstruments(): string[] {
+	public getEnabledInstruments(): string[] {
 		// Phase 2.2: Optimized with caching to eliminate O(n) operation on every note trigger
 		if (this.instrumentCacheValid) {
 			// O(1) cache hit - this should be the common path after Phase 2.2 optimization

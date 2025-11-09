@@ -18,6 +18,8 @@ import {
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
 import { ForceDirectedLayout } from '../graph/ForceDirectedLayout';
 import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMapper';
+import { NoteCentricMapper, NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
+import { NoteCentricPlayer } from '../audio/playback/NoteCentricPlayer';
 import { LocalSoundscapeFilterModal, LocalSoundscapeFilters } from './LocalSoundscapeFilterModal';
 import { NoteVisualizationManager, VisualizationMode } from '../visualization/NoteVisualizationManager';
 import { createLucideIcon } from './lucide-icons';
@@ -47,7 +49,11 @@ export class LocalSoundscapeView extends ItemView {
 
 	// Audio components
 	private depthMapper: DepthBasedMapper | null = null;
+	private noteCentricMapper: NoteCentricMapper | null = null;
+	private noteCentricPlayer: NoteCentricPlayer | null = null;
+	private currentNoteCentricMapping: NoteCentricMapping | null = null;
 	private currentMappings: DepthMapping[] = [];
+	private continuousLayerManager: any = null; // ContinuousLayerManager (lazily loaded)
 
 	// Audio state
 	private isPlaying: boolean = false;
@@ -199,6 +205,17 @@ export class LocalSoundscapeView extends ItemView {
 		// Stop audio playback
 		if (this.isPlaying && this.plugin.audioEngine) {
 			this.plugin.audioEngine.stop();
+		}
+
+		// Stop and cleanup continuous layers
+		this.stopContinuousLayers();
+		if (this.continuousLayerManager) {
+			try {
+				await this.continuousLayerManager.dispose();
+			} catch (error) {
+				logger.warn('view-close', 'Error disposing layer manager', error as Error);
+			}
+			this.continuousLayerManager = null;
 		}
 
 		// Cleanup renderer
@@ -2222,17 +2239,19 @@ export class LocalSoundscapeView extends ItemView {
 	 * Start audio playback
 	 */
 	private async startPlayback(): Promise<void> {
-		if (!this.graphData || !this.depthMapper || !this.plugin.audioEngine) {
+		if (!this.graphData || !this.plugin.audioEngine) {
 			logger.warn('playback-start', 'Cannot start playback - missing required components', {
 				hasGraphData: !!this.graphData,
-				hasDepthMapper: !!this.depthMapper,
 				hasAudioEngine: !!this.plugin.audioEngine
 			});
 			new Notice('Audio engine not available');
 			return;
 		}
 
-		logger.info('playback-start', 'Starting soundscape playback');
+		// Determine playback mode
+		const playbackMode = this.plugin.settings.localSoundscape?.playbackMode || 'note-centric';
+
+		logger.info('playback-start', 'Starting soundscape playback', { mode: playbackMode });
 
 		try {
 			// Initialize audio engine first
@@ -2243,60 +2262,12 @@ export class LocalSoundscapeView extends ItemView {
 				logger.info('audio-init', 'Audio engine initialized successfully');
 			}
 
-			// Create depth-based musical mappings
-			this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
-
-			// Debug: Log detailed timing information
-			const timingDistribution = new Map<string, number>();
-			this.currentMappings.forEach(m => {
-				const roundedTiming = m.timing.toFixed(1);
-				timingDistribution.set(roundedTiming, (timingDistribution.get(roundedTiming) || 0) + 1);
-			});
-
-			logger.info('mappings-created', 'Created depth-based musical mappings', {
-				count: this.currentMappings.length,
-				instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', '),
-				firstTenTimings: this.currentMappings.slice(0, 10).map(m => m.timing.toFixed(3)).join(', '),
-				firstTenPitches: this.currentMappings.slice(0, 10).map(m => m.pitch.toFixed(2)).join(', '),
-				timingDistribution: Array.from(timingDistribution.entries()).slice(0, 10).map(([t, count]) => `${t}s:${count}`).join(', ')
-			});
-
-			if (this.currentMappings.length === 0) {
-				new Notice('No mappings created - check that instruments are enabled in Control Center');
-				logger.warn('playback-start', 'No mappings created from graph data');
-				return;
+			// Route to appropriate playback system
+			if (playbackMode === 'note-centric') {
+				await this.startNoteCentricPlayback();
+			} else {
+				await this.startGraphCentricPlayback();
 			}
-
-			// Play notes individually using setTimeout (like Sonic Graph does)
-			// This bypasses the playback optimizer which was causing timing issues
-			this.isPlaying = true;
-			this.currentVoiceCount = this.currentMappings.length;
-			this.currentVolume = 0.7; // Average volume
-
-			this.updatePlaybackUI();
-
-			// Start visualization and time tracking
-			const playbackStartTime = Date.now();
-			if (this.visualizationManager) {
-				// For Local Soundscape, keep playback time fixed at 1.0s
-				// All notes are positioned around this time, so keeping cursor here keeps them visible
-				this.visualizationManager.start(1.0);
-				this.visualizationManager.updatePlaybackTime(1.0);
-
-				logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
-			}
-
-			logger.info('playback-started', 'Soundscape playback started - using real-time polling loop', {
-				voices: this.currentVoiceCount,
-				totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
-				firstNoteTiming: this.currentMappings[0].timing + 's',
-				lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + 's'
-			});
-
-			new Notice(`Playing ${this.currentVoiceCount} notes`);
-
-			// Start real-time playback using single polling loop (memory-efficient pattern like main Sonic Graph)
-			this.startRealtimePlayback();
 
 		} catch (error) {
 			logger.error('playback-error', 'Failed to start playback', error as Error);
@@ -2304,6 +2275,161 @@ export class LocalSoundscapeView extends ItemView {
 			this.isPlaying = false;
 			this.updatePlaybackUI();
 		}
+	}
+
+	/**
+	 * Start note-centric playback (generates musical phrases from prose)
+	 */
+	private async startNoteCentricPlayback(): Promise<void> {
+		// Initialize note-centric mapper if needed
+		if (!this.noteCentricMapper) {
+			this.noteCentricMapper = new NoteCentricMapper(this.app, this.plugin.settings);
+		}
+
+		// Initialize player if needed
+		if (!this.noteCentricPlayer) {
+			this.noteCentricPlayer = new NoteCentricPlayer(this.plugin.audioEngine);
+		}
+
+		// Generate note-centric mapping
+		this.currentNoteCentricMapping = await this.noteCentricMapper.map(this.graphData);
+
+		if (!this.currentNoteCentricMapping) {
+			new Notice('Could not analyze center note for playback');
+			logger.warn('note-centric-playback', 'Failed to create note-centric mapping');
+			return;
+		}
+
+		logger.info('note-centric-mapping-created', 'Created note-centric mapping', {
+			phraseLength: this.currentNoteCentricMapping.centerPhrase.melody.length,
+			embellishments: this.currentNoteCentricMapping.embellishments.length,
+			contentType: this.currentNoteCentricMapping.proseAnalysis.contentType,
+			tempo: this.currentNoteCentricMapping.centerPhrase.tempo
+		});
+
+		// Start playback
+		this.isPlaying = true;
+		this.updatePlaybackUI();
+
+		// Play the note-centric mapping
+		await this.noteCentricPlayer.play(this.currentNoteCentricMapping);
+
+		// Start continuous layers if enabled
+		await this.startContinuousLayers();
+
+		// Start UI update loop for voice count tracking
+		this.startNoteCentricUIUpdateLoop();
+
+		new Notice(`Playing note-centric soundscape (${this.currentNoteCentricMapping.centerPhrase.melody.length} notes)`);
+	}
+
+	/**
+	 * Start UI update loop for note-centric playback
+	 */
+	private startNoteCentricUIUpdateLoop(): void {
+		logger.debug('ui-update-loop', 'Starting UI update loop for note-centric playback');
+
+		// Poll voice count every 100ms to keep UI synchronized
+		const updateInterval = setInterval(() => {
+			if (!this.isPlaying || !this.noteCentricPlayer) {
+				logger.debug('ui-update-loop', 'Stopping UI update loop (not playing or no player)');
+				clearInterval(updateInterval);
+				return;
+			}
+
+			// Update voice count from player
+			this.currentVoiceCount = this.noteCentricPlayer.getActiveVoiceCount();
+
+			// Log periodically for debugging
+			if (Math.random() < 0.1) {  // 10% of the time
+				logger.debug('ui-update-poll', 'UI update poll', {
+					voiceCount: this.currentVoiceCount,
+					isPlaying: this.noteCentricPlayer.getIsPlaying()
+				});
+			}
+
+			// Update UI
+			if (this.voiceCountDisplay) {
+				this.voiceCountDisplay.textContent = this.currentVoiceCount.toString();
+			}
+
+			// Check if playback finished (no more playing notes and player stopped)
+			if (this.currentVoiceCount === 0 && !this.noteCentricPlayer.getIsPlaying()) {
+				logger.info('note-centric-complete', 'Note-centric playback completed naturally');
+				clearInterval(updateInterval);
+				this.isPlaying = false;
+				this.updatePlaybackUI();
+			}
+		}, 100);
+	}
+
+	/**
+	 * Start graph-centric playback (traditional multi-node approach)
+	 */
+	private async startGraphCentricPlayback(): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('graph-centric-playback', 'Depth mapper not initialized');
+			new Notice('Graph-centric playback not available');
+			return;
+		}
+
+		// Create depth-based musical mappings
+		this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
+
+		// Debug: Log detailed timing information
+		const timingDistribution = new Map<string, number>();
+		this.currentMappings.forEach(m => {
+			const roundedTiming = m.timing.toFixed(1);
+			timingDistribution.set(roundedTiming, (timingDistribution.get(roundedTiming) || 0) + 1);
+		});
+
+		logger.info('mappings-created', 'Created depth-based musical mappings', {
+			count: this.currentMappings.length,
+			instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', '),
+			firstTenTimings: this.currentMappings.slice(0, 10).map(m => m.timing.toFixed(3)).join(', '),
+			firstTenPitches: this.currentMappings.slice(0, 10).map(m => m.pitch.toFixed(2)).join(', '),
+			timingDistribution: Array.from(timingDistribution.entries()).slice(0, 10).map(([t, count]) => `${t}s:${count}`).join(', ')
+		});
+
+		if (this.currentMappings.length === 0) {
+			new Notice('No mappings created - check that instruments are enabled in Control Center');
+			logger.warn('playback-start', 'No mappings created from graph data');
+			return;
+		}
+
+		// Play notes individually using setTimeout (like Sonic Graph does)
+		// This bypasses the playback optimizer which was causing timing issues
+		this.isPlaying = true;
+		this.currentVoiceCount = this.currentMappings.length;
+		this.currentVolume = 0.7; // Average volume
+
+		this.updatePlaybackUI();
+
+		// Start visualization and time tracking
+		const playbackStartTime = Date.now();
+		if (this.visualizationManager) {
+			// For Local Soundscape, keep playback time fixed at 1.0s
+			// All notes are positioned around this time, so keeping cursor here keeps them visible
+			this.visualizationManager.start(1.0);
+			this.visualizationManager.updatePlaybackTime(1.0);
+
+			logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
+		}
+
+		logger.info('playback-started', 'Soundscape playback started - using real-time polling loop', {
+			voices: this.currentVoiceCount,
+			totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
+			firstNoteTiming: this.currentMappings[0].timing + 's',
+			lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + 's'
+		});
+
+		new Notice(`Playing ${this.currentVoiceCount} notes`);
+
+		// Start real-time playback using single polling loop (memory-efficient pattern like main Sonic Graph)
+		this.startRealtimePlayback();
+
+		// Start continuous layers if enabled
+		await this.startContinuousLayers();
 	}
 
 	/**
@@ -2350,7 +2476,12 @@ export class LocalSoundscapeView extends ItemView {
 
 		logger.info('playback-stop', 'Stopping soundscape playback');
 
-		// Clear the realtime polling loop
+		// Stop note-centric player if active
+		if (this.noteCentricPlayer && this.noteCentricPlayer.getIsPlaying()) {
+			this.noteCentricPlayer.stop();
+		}
+
+		// Clear the realtime polling loop (for graph-centric mode)
 		if (this.realtimeTimer !== null) {
 			clearInterval(this.realtimeTimer);
 			this.realtimeTimer = null;
@@ -2367,6 +2498,9 @@ export class LocalSoundscapeView extends ItemView {
 		// Stop audio engine playback
 		this.plugin.audioEngine.stop();
 
+		// Stop continuous layers if running
+		this.stopContinuousLayers();
+
 		// Clear mappings and reset state
 		this.currentMappings = [];
 		this.isPlaying = false;
@@ -2382,6 +2516,78 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		logger.info('playback-stopped', 'Soundscape playback stopped');
+	}
+
+	/**
+	 * Start continuous audio layers if enabled in settings
+	 */
+	private async startContinuousLayers(): Promise<void> {
+		// Check if continuous layers are enabled
+		const layersEnabled = this.plugin.settings.localSoundscape?.continuousLayers?.enabled;
+		if (!layersEnabled) {
+			logger.debug('layers', 'Continuous layers disabled in settings');
+			return;
+		}
+
+		logger.info('layers', 'Starting continuous layers for Local Soundscape');
+
+		try {
+			// Lazy-load ContinuousLayerManager
+			if (!this.continuousLayerManager) {
+				const { ContinuousLayerManager } = await import('../audio/layers/ContinuousLayerManager');
+
+				// Build config from Local Soundscape settings
+				const layerSettings = this.plugin.settings.localSoundscape.continuousLayers;
+				const musicalEnhancements = this.plugin.settings.localSoundscape.musicalEnhancements;
+
+				const layerConfig = {
+					enabled: layerSettings.enabled,
+					genre: 'ambient' as const, // Default to ambient for Local Soundscape
+					intensity: layerSettings.intensity || 0.5,
+					evolutionRate: 0.3,
+					baseVolume: layerSettings.volume || -12,
+					adaptiveIntensity: false, // Don't adapt to vault size for Local Soundscape
+					rhythmicEnabled: layerSettings.rhythmicEnabled || false,
+					harmonicEnabled: layerSettings.harmonicEnabled !== false, // Default true
+					ambientEnabled: layerSettings.ambientEnabled !== false, // Default true
+					// Pass musical context from Musical Enhancements
+					scale: musicalEnhancements?.scaleQuantization?.scale || 'major',
+					key: musicalEnhancements?.scaleQuantization?.rootNote || 'C'
+				};
+
+				this.continuousLayerManager = new ContinuousLayerManager(
+					this.plugin.settings,
+					layerConfig
+				);
+
+				await this.continuousLayerManager.initialize();
+				logger.info('layers', 'ContinuousLayerManager initialized', layerConfig);
+			}
+
+			// Start playback
+			await this.continuousLayerManager.start();
+			logger.info('layers', 'Continuous layers started successfully');
+
+		} catch (error) {
+			logger.error('layers', 'Failed to start continuous layers', error as Error);
+			// Don't block main playback if layers fail
+		}
+	}
+
+	/**
+	 * Stop continuous audio layers
+	 */
+	private stopContinuousLayers(): void {
+		if (!this.continuousLayerManager) {
+			return;
+		}
+
+		try {
+			this.continuousLayerManager.stop();
+			logger.info('layers', 'Continuous layers stopped');
+		} catch (error) {
+			logger.error('layers', 'Error stopping continuous layers', error as Error);
+		}
 	}
 
 	/**

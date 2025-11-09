@@ -50,13 +50,49 @@ export class LocalSoundscapeSettings {
 	 */
 	private renderAutoPlaySettings(container: HTMLElement): void {
 		const card = new MaterialCard({
-			title: 'Auto-play settings',
+			title: 'Playback settings',
 			iconName: 'play',
-			subtitle: 'Control automatic playback behavior',
+			subtitle: 'Control playback mode and automatic behavior',
 			elevation: 1
 		});
 
 		const content = card.getContent();
+
+		// Playback mode selection
+		new Setting(content)
+			.setName('Playback mode')
+			.setDesc('Choose audio generation approach')
+			.addDropdown(dropdown => dropdown
+				.addOption('note-centric', 'Note-Centric (Rich single-note sonification)')
+				.addOption('graph-centric', 'Graph-Centric (Traditional multi-node approach)')
+				.setValue(this.plugin.settings.localSoundscape?.playbackMode || 'note-centric')
+				.onChange(async (value: 'graph-centric' | 'note-centric') => {
+					if (!this.plugin.settings.localSoundscape) {
+						this.plugin.settings.localSoundscape = {};
+					}
+					this.plugin.settings.localSoundscape.playbackMode = value;
+					await this.plugin.saveSettings();
+					logger.info('playback-mode', `Playback mode: ${value}`);
+				})
+			);
+
+		// Add description of each mode
+		const modeDesc = content.createDiv({ cls: 'osp-settings-description' });
+		modeDesc.style.marginBottom = '1rem';
+		modeDesc.style.padding = '8px 12px';
+		modeDesc.style.backgroundColor = 'var(--background-secondary)';
+		modeDesc.style.borderRadius = '4px';
+		modeDesc.style.fontSize = '12px';
+		modeDesc.style.lineHeight = '1.5';
+		modeDesc.innerHTML = `
+			<strong>Note-Centric</strong> (recommended): Generates rich musical phrases from the center note's prose structure.
+			Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.<br><br>
+			<strong>Graph-Centric</strong> (traditional): Maps each connected node to individual notes.
+			Requires multiple connections for interesting audio. Best for dense, well-connected graphs.
+		`;
+
+		// Add visual separator
+		content.createEl('hr', { cls: 'osp-settings-separator' });
 
 		// Auto-play when opening toggle
 		new Setting(content)
@@ -320,6 +356,117 @@ export class LocalSoundscapeSettings {
 						logger.info('context-aware', `Theme: ${value}`);
 					})
 				);
+
+			// Add visual separator before prose structure
+			content.createEl('hr', { cls: 'osp-settings-separator' });
+
+			// Prose structure header
+			const proseHeader = content.createEl('h4');
+			proseHeader.style.marginTop = 'var(--size-4-4)';
+			proseHeader.style.marginBottom = 'var(--size-4-2)';
+			proseHeader.style.fontSize = 'var(--font-ui-medium)';
+			proseHeader.style.fontWeight = '600';
+			proseHeader.textContent = 'Prose structure analysis';
+
+			const proseDesc = content.createEl('p');
+			proseDesc.style.color = 'var(--text-muted)';
+			proseDesc.style.fontSize = 'var(--font-ui-small)';
+			proseDesc.style.marginBottom = 'var(--size-4-3)';
+			proseDesc.textContent = 'Analyze note content (density, structure, linguistic features) to create more expressive, content-aware soundscapes.';
+
+			// Prose structure toggle
+			new Setting(content)
+				.setName('Enable prose analysis')
+				.setDesc('Analyze content structure to modulate musical parameters')
+				.addToggle(toggle => toggle
+					.setValue(contextAware.proseStructure?.enabled || false)
+					.onChange(async (value) => {
+						if (!contextAware.proseStructure) {
+							contextAware.proseStructure = {
+								enabled: value,
+								sensitivity: 0.5,
+								affectPitch: true,
+								affectDuration: true,
+								affectVelocity: true,
+								affectTimbre: false
+							};
+						} else {
+							contextAware.proseStructure.enabled = value;
+						}
+						await this.plugin.saveSettings();
+						logger.info('context-aware', `Prose structure: ${value}`);
+
+						// Re-render to show/hide sub-settings
+						this.render(container);
+					})
+				);
+
+			// Prose structure sub-settings (only shown when enabled)
+			if (contextAware.proseStructure?.enabled) {
+				// Sensitivity slider
+				new Setting(content)
+					.setName('Analysis sensitivity')
+					.setDesc('How strongly prose structure affects audio (0% = minimal, 100% = strong)')
+					.addSlider(slider => slider
+						.setLimits(0, 100, 5)
+						.setValue((contextAware.proseStructure?.sensitivity || 0.5) * 100)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							contextAware.proseStructure!.sensitivity = value / 100;
+							await this.plugin.saveSettings();
+							logger.info('context-aware', `Prose sensitivity: ${value}%`);
+						})
+					);
+
+				// Parameter toggles
+				new Setting(content)
+					.setName('Affect pitch range')
+					.setDesc('Content complexity modulates pitch range width')
+					.addToggle(toggle => toggle
+						.setValue(contextAware.proseStructure?.affectPitch !== false)
+						.onChange(async (value) => {
+							contextAware.proseStructure!.affectPitch = value;
+							await this.plugin.saveSettings();
+							logger.info('context-aware', `Prose affect pitch: ${value}`);
+						})
+					);
+
+				new Setting(content)
+					.setName('Affect note duration')
+					.setDesc('Prose density modulates note lengths (dense = longer)')
+					.addToggle(toggle => toggle
+						.setValue(contextAware.proseStructure?.affectDuration !== false)
+						.onChange(async (value) => {
+							contextAware.proseStructure!.affectDuration = value;
+							await this.plugin.saveSettings();
+							logger.info('context-aware', `Prose affect duration: ${value}`);
+						})
+					);
+
+				new Setting(content)
+					.setName('Affect velocity')
+					.setDesc('Content expressiveness modulates note dynamics')
+					.addToggle(toggle => toggle
+						.setValue(contextAware.proseStructure?.affectVelocity !== false)
+						.onChange(async (value) => {
+							contextAware.proseStructure!.affectVelocity = value;
+							await this.plugin.saveSettings();
+							logger.info('context-aware', `Prose affect velocity: ${value}`);
+						})
+					);
+
+				new Setting(content)
+					.setName('Affect timbre')
+					.setDesc('Content type influences instrument selection preference')
+					.addToggle(toggle => toggle
+						.setValue(contextAware.proseStructure?.affectTimbre || false)
+						.onChange(async (value) => {
+							contextAware.proseStructure!.affectTimbre = value;
+							await this.plugin.saveSettings();
+							logger.info('context-aware', `Prose affect timbre: ${value}`);
+						})
+					);
+			}
 		}
 
 		container.appendChild(card.getElement());
