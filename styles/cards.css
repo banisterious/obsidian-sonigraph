@@ -509,7 +509,7 @@
 }
 
 .ospcc-card__content {
-  padding: var(--md-space-6);
+  padding: 0 var(--md-space-6) var(--md-space-6) var(--md-space-6);
 }
 
 /* ==========================================================================

@@ -21339,6 +21339,7 @@ var init_control_panel = __esm({
         this.createDepthInstrumentMappingCard();
         this.createDepthVolumeAndPanningCard();
         this.createLocalSoundscapePerformanceCard();
+        this.createLocalSoundscapeTipsCard();
       }
       /**
        * Create Layers tab - Continuous layers and Freesound integration
@@ -24404,6 +24405,27 @@ All whale samples are authentic recordings from marine research institutions and
           cls: "osp-info-message",
           text: `\u23F1\uFE0F With all nodes enabled, larger graphs will create longer soundscapes. Notes play at 0.4 second intervals, so 227 nodes = ~90 seconds of audio.`
         });
+        this.contentContainer.appendChild(card.getElement());
+      }
+      /**
+       * Create tips and best practices card for Local Soundscape
+       */
+      createLocalSoundscapeTipsCard() {
+        const card = new MaterialCard({
+          title: "Tips & best practices",
+          iconName: "lightbulb",
+          subtitle: "Get the most out of Local Soundscape",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const tipsList = content.createEl("ul", { cls: "osp-guide-tips" });
+        tipsList.createEl("li").innerHTML = "<strong>Start with Depth 2:</strong> This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.";
+        tipsList.createEl("li").innerHTML = "<strong>Enable Scale Quantization:</strong> This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.";
+        tipsList.createEl("li").innerHTML = "<strong>Use Clustering to Discover Patterns:</strong> Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.";
+        tipsList.createEl("li").innerHTML = "<strong>Reduce Sonic Congestion:</strong> Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.";
+        tipsList.createEl("li").innerHTML = "<strong>Filter by Tags/Folders:</strong> Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.";
+        tipsList.createEl("li").innerHTML = "<strong>Manage Performance:</strong> For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.";
+        tipsList.createEl("li").innerHTML = `<strong>Daily Review Workflow:</strong> Right-click your daily note and "Open in Local Soundscape" to hear what you're connecting to. This reveals emerging themes in your thinking.`;
         this.contentContainer.appendChild(card.getElement());
       }
     };
