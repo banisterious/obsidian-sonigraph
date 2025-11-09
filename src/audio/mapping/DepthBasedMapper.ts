@@ -20,6 +20,7 @@ import { ContextualModifier, ContextModifiers } from './ContextualModifier';
 import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
 import { NoteName, ScaleType, ModalScale } from '../theory/types';
 import { ChordVoicingStrategy, ChordVoicingConfig } from './ChordVoicingStrategy';
+import { RhythmicPatternGenerator, RhythmicConfig } from './RhythmicPatternGenerator';
 
 const logger = getLogger('DepthBasedMapper');
 
@@ -132,6 +133,9 @@ export interface DepthMappingConfig {
 
 	// Chord voicing for polyphonic richness (Phase 2)
 	chordVoicing?: ChordVoicingConfig;
+
+	// Rhythmic patterns for temporal organization (Phase 3)
+	rhythmic?: RhythmicConfig;
 }
 
 export interface DepthMapping extends MusicalMapping {
@@ -155,6 +159,7 @@ export class DepthBasedMapper {
 	private settings: SonigraphSettings;
 	private musicalTheoryEngine: MusicalTheoryEngine | null = null;
 	private chordVoicingStrategy: ChordVoicingStrategy | null = null;
+	private rhythmicPatternGenerator: RhythmicPatternGenerator | null = null;
 
 	constructor(
 		config: Partial<DepthMappingConfig>,
@@ -196,6 +201,13 @@ export class DepthBasedMapper {
 			}
 		}
 
+		// Initialize rhythmic pattern generator if enabled
+		if (this.config.rhythmic?.enabled) {
+			this.rhythmicPatternGenerator = new RhythmicPatternGenerator(
+				this.config.rhythmic
+			);
+		}
+
 		logger.info('mapper-init', 'DepthBasedMapper initialized', {
 			maxNodesPerDepth: this.config.maxNodesPerDepth,
 			panningEnabled: this.config.directionalPanning.enabled,
@@ -203,6 +215,7 @@ export class DepthBasedMapper {
 			contextAwareEnabled: !!settings?.localSoundscape?.contextAware?.enabled,
 			musicalTheoryEnabled: !!this.musicalTheoryEngine,
 			chordVoicingEnabled: !!this.chordVoicingStrategy,
+			rhythmicPatternsEnabled: !!this.rhythmicPatternGenerator,
 			scale: this.config.musicalTheory ? `${this.config.musicalTheory.rootNote} ${this.config.musicalTheory.scale}` : 'none'
 		});
 	}
@@ -320,6 +333,45 @@ export class DepthBasedMapper {
 				maxVoiceSpread: 19,
 				minVoiceSpacing: 3,
 				voicingDensity: 0.5
+			},
+			rhythmic: config.rhythmic || {
+				enabled: false,
+				patternPerDepth: {
+					center: 'sequential',
+					depth1: 'arpeggio',
+					depth2: 'pulse',
+					depth3Plus: 'sequential'
+				},
+				tempo: 60,
+				timeSignature: [4, 4],
+				patterns: {
+					arpeggio: {
+						direction: 'ascending',
+						noteValue: '8th'
+					},
+					ostinato: {
+						pattern: [1, 0.5, 0.5, 1],
+						repeat: 4
+					},
+					pulse: {
+						accentPattern: [1, 0, 0, 0],
+						accentMultiplier: 1.3
+					},
+					decay: {
+						initialInterval: 0.25,
+						finalInterval: 2.0,
+						curve: 'exponential'
+					},
+					accelerando: {
+						initialInterval: 2.0,
+						finalInterval: 0.25,
+						curve: 'exponential'
+					},
+					cluster: {
+						spread: 0.1
+					}
+				},
+				depthGapDuration: 1.0
 			}
 		};
 	}
@@ -397,40 +449,37 @@ export class DepthBasedMapper {
 
 	/**
 	 * Calculate timing for mappings based on depth
-	 * Spreads notes evenly across time for a flowing sequence
-	 * Applies ±50ms timing jitter if seed is set
+	 * Uses rhythmic pattern generator if enabled, otherwise spreads notes evenly
+	 * Applies ±50ms timing jitter if seed is set (fallback mode only)
 	 */
 	private calculateTimingForMappings(mappings: DepthMapping[]): void {
-		// Calculate safe interval based on note duration and max polyphony
-		// Use max duration (not average) to be extra safe
+		// Use rhythmic patterns if enabled
+		if (this.rhythmicPatternGenerator) {
+			this.calculateTimingWithRhythmicPatterns(mappings);
+			return;
+		}
+
+		// Fallback to original linear timing
 		const maxDuration = Math.max(...mappings.map(m => m.duration));
 		const avgDuration = mappings.reduce((sum, m) => sum + m.duration, 0) / mappings.length;
-		const maxSafePolyphony = 6; // Reduced from 12 to prevent CPU overload and crackling
+		const maxSafePolyphony = 6;
 
-		// Calculate minimum interval needed to prevent polyphony issues
-		// Use max duration to ensure worst case is still safe
 		const minSafeInterval = maxDuration / maxSafePolyphony;
-
-		// Use at least 0.5s spacing to ensure clear note separation
 		const noteInterval = Math.max(0.5, minSafeInterval);
-
 		const totalDuration = mappings.length * noteInterval;
 
 		mappings.forEach((mapping, index) => {
-			// Base timing aligned with intervals
 			let timing = index * noteInterval;
 
-			// Apply timing jitter if seed is set (±50ms)
 			if (this.randomizationSeed !== null) {
 				const randomValue = this.seededRandom(mapping.nodeId, 'timing');
-				const jitter = (randomValue - 0.5) * 0.1; // Range: -0.05s to +0.05s (±50ms)
+				const jitter = (randomValue - 0.5) * 0.1;
 				timing += jitter;
 			}
 
-			mapping.timing = Math.max(0, timing); // Ensure non-negative
+			mapping.timing = Math.max(0, timing);
 		});
 
-		// Sort by timing for proper playback order
 		mappings.sort((a, b) => a.timing - b.timing);
 
 		logger.info('timing-calculated', 'Timing calculated for all mappings', {
@@ -444,6 +493,87 @@ export class DepthBasedMapper {
 			lastNote: mappings[mappings.length - 1]?.timing.toFixed(3),
 			estimatedMaxPolyphony: Math.ceil(maxDuration / noteInterval),
 			hasJitter: this.randomizationSeed !== null
+		});
+	}
+
+	/**
+	 * Calculate timing using rhythmic pattern generator
+	 * Groups mappings by depth and applies appropriate pattern to each layer
+	 */
+	private calculateTimingWithRhythmicPatterns(mappings: DepthMapping[]): void {
+		if (!this.rhythmicPatternGenerator) {
+			return;
+		}
+
+		// Group mappings by depth
+		const byDepth = new Map<number, DepthMapping[]>();
+		mappings.forEach(m => {
+			const group = byDepth.get(m.depth) || [];
+			group.push(m);
+			byDepth.set(m.depth, group);
+		});
+
+		// Sort depths numerically
+		const sortedDepths = Array.from(byDepth.keys()).sort((a, b) => a - b);
+
+		let globalTime = 0;
+
+		// Generate timings per depth layer
+		for (const depth of sortedDepths) {
+			const group = byDepth.get(depth)!;
+			const pattern = this.rhythmicPatternGenerator.getPatternForDepth(depth);
+
+			logger.debug('rhythmic-timing', `Generating rhythmic pattern for depth ${depth}`, {
+				nodeCount: group.length,
+				pattern,
+				startTime: globalTime.toFixed(3)
+			});
+
+			// Generate timing results for this depth layer
+			const timingResults = this.rhythmicPatternGenerator.generateTimings(
+				group.length,
+				pattern,
+				globalTime
+			);
+
+			// Apply timings and velocity multipliers to mappings
+			group.forEach((mapping, i) => {
+				mapping.timing = timingResults[i].timing;
+
+				// Apply velocity multiplier if present (for accent patterns)
+				if (timingResults[i].velocityMultiplier) {
+					mapping.velocity *= timingResults[i].velocityMultiplier;
+					// Clamp velocity to valid range
+					mapping.velocity = Math.max(0.1, Math.min(1.0, mapping.velocity));
+				}
+			});
+
+			// Update global time for next depth layer
+			// Find latest timing in this layer and add gap duration
+			const latestTiming = Math.max(...timingResults.map(t => t.timing));
+			globalTime = latestTiming + this.rhythmicPatternGenerator.getDepthGapDuration();
+
+			logger.debug('rhythmic-layer-complete', `Completed rhythmic pattern for depth ${depth}`, {
+				firstNote: timingResults[0].timing.toFixed(3),
+				lastNote: timingResults[timingResults.length - 1].timing.toFixed(3),
+				nextLayerStart: globalTime.toFixed(3)
+			});
+		}
+
+		// Sort all mappings by timing for proper playback order
+		mappings.sort((a, b) => a.timing - b.timing);
+
+		const maxDuration = Math.max(...mappings.map(m => m.duration));
+		const totalDuration = mappings[mappings.length - 1].timing + maxDuration;
+
+		logger.info('rhythmic-timing-complete', 'Rhythmic timing calculated for all mappings', {
+			totalMappings: mappings.length,
+			depthLayers: sortedDepths.length,
+			depths: sortedDepths.join(', '),
+			totalDuration: totalDuration.toFixed(1),
+			firstNote: mappings[0]?.timing.toFixed(3),
+			lastNote: mappings[mappings.length - 1]?.timing.toFixed(3),
+			avgVelocity: (mappings.reduce((sum, m) => sum + m.velocity, 0) / mappings.length).toFixed(2)
 		});
 	}
 
@@ -975,6 +1105,23 @@ export class DepthBasedMapper {
 			} else {
 				this.chordVoicingStrategy = null;
 				logger.info('chord-voicing-disabled', 'Chord voicing disabled');
+			}
+		}
+
+		// Update rhythmic pattern generator if config changed
+		if (config.rhythmic) {
+			if (this.config.rhythmic?.enabled) {
+				this.rhythmicPatternGenerator = new RhythmicPatternGenerator(
+					this.config.rhythmic
+				);
+				logger.info('rhythmic-patterns-enabled', 'Rhythmic pattern generator enabled', {
+					tempo: this.config.rhythmic.tempo,
+					centerPattern: this.config.rhythmic.patternPerDepth.center,
+					depth1Pattern: this.config.rhythmic.patternPerDepth.depth1
+				});
+			} else {
+				this.rhythmicPatternGenerator = null;
+				logger.info('rhythmic-patterns-disabled', 'Rhythmic pattern generator disabled');
 			}
 		}
 

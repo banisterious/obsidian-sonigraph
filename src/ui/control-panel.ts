@@ -501,6 +501,12 @@ export class MaterialControlPanelModal extends Modal {
 	 * Create Local Soundscape tab content
 	 */
 	private createLocalSoundscapeTab(): void {
+		// Import and render LocalSoundscapeSettings class (auto-play, key, context-aware, musical enhancements)
+		import('./settings/LocalSoundscapeSettings').then(({ LocalSoundscapeSettings }) => {
+			const lsSettings = new LocalSoundscapeSettings(this.app, this.plugin);
+			lsSettings.render(this.contentContainer);
+		});
+
 		// Depth-based instrument mapping card
 		this.createDepthInstrumentMappingCard();
 

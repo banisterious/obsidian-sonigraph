@@ -113,8 +113,6 @@ export class LocalSoundscapeView extends ItemView {
 	// View settings
 	private pulsePlayingNodes: boolean = true;
 	private nodeSizeMode: 'uniform' | 'link-count' | 'content-length' = 'uniform';
-	private autoStartAudio: boolean = false;
-	private keyDisplayElement: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
@@ -542,139 +540,6 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		});
 
-		// Audio Settings
-		const audioSection = container.createDiv({ cls: 'settings-section' });
-		audioSection.createEl('h4', { text: 'Audio', cls: 'settings-heading' });
-
-		// Auto-start audio toggle
-		new Setting(audioSection)
-			.setName('Auto-play when opening')
-			.addToggle(toggle => toggle
-				.setValue(this.autoStartAudio)
-				.onChange((value) => {
-					this.autoStartAudio = value;
-					logger.info('setting-autostart', 'Auto-start audio setting changed', { enabled: value });
-				}));
-
-		// Auto-play active note toggle
-		new Setting(audioSection)
-			.setName('Auto-play active note')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.autoPlayActiveNote ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					this.plugin.settings.localSoundscape.autoPlayActiveNote = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-autoplay-active', 'Auto-play active note setting changed', {
-						enabled: value
-					});
-				}));
-
-		// Musical Key Settings
-		const keySection = container.createDiv({ cls: 'settings-section' });
-		keySection.createEl('h4', { text: 'Musical key', cls: 'settings-heading' });
-
-		// Key selection mode dropdown
-		new Setting(keySection)
-			.setName('Key based on')
-			.setDesc('How to determine the musical key for this soundscape')
-			.addDropdown(dropdown => dropdown
-				.addOption('vault-name', 'Vault name')
-				.addOption('root-folder', 'Root folder')
-				.addOption('folder-path', 'Folder at specific depth')
-				.addOption('full-path', 'Full folder path')
-				.addOption('file-name', 'File name')
-				.addOption('custom', 'Custom (manual)')
-				.setValue(this.plugin.settings.localSoundscape?.keySelection?.mode || 'vault-name')
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.keySelection) {
-						this.plugin.settings.localSoundscape.keySelection = {};
-					}
-					this.plugin.settings.localSoundscape.keySelection.mode = value as any;
-					await this.plugin.saveSettings();
-
-					// Update key display
-					this.updateKeyDisplay();
-
-					logger.info('setting-key-mode', 'Key selection mode changed', { mode: value });
-				}));
-
-		// Folder depth setting (only shown when folder-path mode is selected)
-		const folderDepthSetting = new Setting(keySection)
-			.setName('Folder depth')
-			.setDesc('Which folder level to use (0 = root, 1 = first subfolder, etc.)')
-			.addSlider(slider => slider
-				.setLimits(0, 5, 1)
-				.setValue(this.plugin.settings.localSoundscape?.keySelection?.folderDepth ?? 0)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.keySelection) {
-						this.plugin.settings.localSoundscape.keySelection = {};
-					}
-					this.plugin.settings.localSoundscape.keySelection.folderDepth = value;
-					await this.plugin.saveSettings();
-
-					// Update key display
-					this.updateKeyDisplay();
-
-					logger.info('setting-key-folder-depth', 'Folder depth changed', { depth: value });
-				}));
-
-		// Custom key dropdown (only shown when custom mode is selected)
-		const customKeySetting = new Setting(keySection)
-			.setName('Custom key')
-			.setDesc('Select a specific musical key')
-			.addDropdown(dropdown => {
-				ROOT_NOTES.forEach(note => {
-					dropdown.addOption(note, note);
-				});
-				return dropdown
-					.setValue(this.plugin.settings.localSoundscape?.keySelection?.customKey || 'C')
-					.onChange(async (value) => {
-						if (!this.plugin.settings.localSoundscape) {
-							this.plugin.settings.localSoundscape = {};
-						}
-						if (!this.plugin.settings.localSoundscape.keySelection) {
-							this.plugin.settings.localSoundscape.keySelection = {};
-						}
-						this.plugin.settings.localSoundscape.keySelection.customKey = value;
-						await this.plugin.saveSettings();
-
-						// Update key display
-						this.updateKeyDisplay();
-
-						logger.info('setting-key-custom', 'Custom key changed', { key: value });
-					});
-			});
-
-		// Show/hide conditional settings based on mode
-		const updateKeySettingsVisibility = () => {
-			const mode = this.plugin.settings.localSoundscape?.keySelection?.mode || 'vault-name';
-			folderDepthSetting.settingEl.style.display = mode === 'folder-path' ? '' : 'none';
-			customKeySetting.settingEl.style.display = mode === 'custom' ? '' : 'none';
-		};
-		updateKeySettingsVisibility();
-
-		// Current key display
-		const keyDisplay = new Setting(keySection)
-			.setName('Current key')
-			.setDesc('The musical key determined by the current settings');
-		const keyDisplayValue = keyDisplay.controlEl.createSpan({
-			cls: 'setting-value-display',
-			text: this.determineMusicalKey()
-		});
-
-		// Store reference to update display
-		this.keyDisplayElement = keyDisplayValue;
-
 		// Visual Effects Settings
 		const effectsSection = container.createDiv({ cls: 'settings-section' });
 		effectsSection.createEl('h4', { text: 'Visual effects', cls: 'settings-heading' });
@@ -695,152 +560,6 @@ export class LocalSoundscapeView extends ItemView {
 					}
 				}));
 
-		// Context-Aware Modifiers Settings
-		const contextSection = container.createDiv({ cls: 'settings-section' });
-		contextSection.createEl('h4', { text: 'Context-aware modifiers', cls: 'settings-heading' });
-
-		// Master enable toggle
-		new Setting(contextSection)
-			.setName('Enable context-aware audio')
-			.setDesc('Allow environmental factors to influence the soundscape')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-enabled', 'Context-aware audio enabled changed', { enabled: value });
-				}));
-
-		// Mode selector
-		new Setting(contextSection)
-			.setName('Context mode')
-			.setDesc('How context influences the audio')
-			.addDropdown(dropdown => dropdown
-				.addOption('influenced', 'Influenced - Blend with note properties')
-				.addOption('only', 'Only - Purely environmental')
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.mode || 'influenced')
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.mode = value as 'influenced' | 'only';
-					await this.plugin.saveSettings();
-					logger.info('setting-context-mode', 'Context mode changed', { mode: value });
-				}));
-
-		// Influence weight slider
-		new Setting(contextSection)
-			.setName('Influence weight')
-			.setDesc('How much context affects the sound (0-100%)')
-			.addSlider(slider => slider
-				.setLimits(0, 100, 5)
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.influenceWeight ?? 50)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.influenceWeight = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-weight', 'Context influence weight changed', { weight: value });
-				}));
-
-		// Season toggle
-		new Setting(contextSection)
-			.setName('Season influence')
-			.setDesc('Let seasonal changes affect the mood')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.season?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.season) {
-						this.plugin.settings.localSoundscape.contextAware.season = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.season.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-season', 'Season influence changed', { enabled: value });
-				}));
-
-		// Time of day toggle
-		new Setting(contextSection)
-			.setName('Time of day influence')
-			.setDesc('Let time affect brightness and energy')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.timeOfDay?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.timeOfDay) {
-						this.plugin.settings.localSoundscape.contextAware.timeOfDay = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.timeOfDay.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-time', 'Time of day influence changed', { enabled: value });
-				}));
-
-		// Weather toggle
-		new Setting(contextSection)
-			.setName('Weather influence')
-			.setDesc('Let weather conditions affect atmosphere')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.weather?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.weather) {
-						this.plugin.settings.localSoundscape.contextAware.weather = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.weather.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-weather', 'Weather influence changed', { enabled: value });
-				}));
-
-		// Theme toggle
-		new Setting(contextSection)
-			.setName('Theme influence')
-			.setDesc('Let light/dark mode affect tone')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.theme?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.theme) {
-						this.plugin.settings.localSoundscape.contextAware.theme = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.theme.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-theme', 'Theme influence changed', { enabled: value });
-				}));
-
 		// Info Section
 		const infoSection = container.createDiv({ cls: 'settings-section' });
 		infoSection.createEl('h4', { text: 'About', cls: 'settings-heading' });
@@ -855,17 +574,19 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'setting-description'
 		});
 
-		// Global Settings Link
-		const globalLink = infoSection.createDiv({ cls: 'setting-item' });
-		const linkButton = globalLink.createEl('button', {
-			text: 'Open Global Settings',
+		// Audio Settings Link
+		const audioSettingsInfo = infoSection.createDiv({ cls: 'setting-item' });
+		audioSettingsInfo.createEl('p', {
+			text: 'Audio settings (auto-play, musical key, context-aware modifiers) are configured in the Control Center.',
+			cls: 'setting-description'
+		});
+		const linkButton = audioSettingsInfo.createEl('button', {
+			text: 'Open Control Center',
 			cls: 'setting-button'
 		});
 		linkButton.addEventListener('click', () => {
-			// @ts-ignore - Obsidian internal API
-			this.app.setting.open();
-			// @ts-ignore
-			this.app.setting.openTabById('sonigraph');
+			// Open Control Center modal via ribbon icon command
+			this.plugin.openControlCenter();
 		});
 
 		logger.debug('settings-panel-created', 'Settings panel populated');
@@ -1002,9 +723,8 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'stat-value volume-level'
 		});
 
-		// Musical settings section (Scale Quantization controls)
-		const musicalSettingsSection = container.createDiv({ cls: 'musical-settings-section' });
-		this.createMusicalScaleControls(musicalSettingsSection);
+		// Musical settings now configured in Control Center > Local Soundscape > Musical Enhancements
+		// (Scale Quantization, Adaptive Pitch, Chord Voicing moved to centralized settings)
 
 		// Visualization section
 		const visualizationSection = container.createDiv({ cls: 'local-soundscape-visualization-section' });
@@ -2238,16 +1958,6 @@ export class LocalSoundscapeView extends ItemView {
 		}
 	}
 
-	/**
-	 * Update the key display element with the current key
-	 */
-	private updateKeyDisplay(): void {
-		if (this.keyDisplayElement) {
-			const key = this.determineMusicalKey();
-			this.keyDisplayElement.textContent = key;
-			logger.debug('key-display-updated', 'Key display updated', { key });
-		}
-	}
 
 	/**
 	 * Mark graph as up-to-date (just refreshed)
@@ -2415,7 +2125,7 @@ export class LocalSoundscapeView extends ItemView {
 			this.updatePlaybackUI();
 
 			// Auto-start audio if enabled
-			if (this.autoStartAudio && !this.isPlaying) {
+			if (this.plugin.settings.localSoundscape?.autoPlay && !this.isPlaying) {
 				logger.info('auto-start', 'Auto-starting audio playback');
 				// Small delay to let rendering complete
 				setTimeout(() => {
