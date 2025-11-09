@@ -2246,9 +2246,19 @@ export class LocalSoundscapeView extends ItemView {
 			// Create depth-based musical mappings
 			this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
 
+			// Debug: Log detailed timing information
+			const timingDistribution = new Map<string, number>();
+			this.currentMappings.forEach(m => {
+				const roundedTiming = m.timing.toFixed(1);
+				timingDistribution.set(roundedTiming, (timingDistribution.get(roundedTiming) || 0) + 1);
+			});
+
 			logger.info('mappings-created', 'Created depth-based musical mappings', {
 				count: this.currentMappings.length,
-				instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', ')
+				instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', '),
+				firstTenTimings: this.currentMappings.slice(0, 10).map(m => m.timing.toFixed(3)).join(', '),
+				firstTenPitches: this.currentMappings.slice(0, 10).map(m => m.pitch.toFixed(2)).join(', '),
+				timingDistribution: Array.from(timingDistribution.entries()).slice(0, 10).map(([t, count]) => `${t}s:${count}`).join(', ')
 			});
 
 			if (this.currentMappings.length === 0) {

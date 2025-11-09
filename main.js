@@ -87976,9 +87976,17 @@ var LocalSoundscapeView = class extends import_obsidian30.ItemView {
         logger78.info("audio-init", "Audio engine initialized successfully");
       }
       this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
+      const timingDistribution = /* @__PURE__ */ new Map();
+      this.currentMappings.forEach((m2) => {
+        const roundedTiming = m2.timing.toFixed(1);
+        timingDistribution.set(roundedTiming, (timingDistribution.get(roundedTiming) || 0) + 1);
+      });
       logger78.info("mappings-created", "Created depth-based musical mappings", {
         count: this.currentMappings.length,
-        instruments: [...new Set(this.currentMappings.map((m2) => m2.instrument))].join(", ")
+        instruments: [...new Set(this.currentMappings.map((m2) => m2.instrument))].join(", "),
+        firstTenTimings: this.currentMappings.slice(0, 10).map((m2) => m2.timing.toFixed(3)).join(", "),
+        firstTenPitches: this.currentMappings.slice(0, 10).map((m2) => m2.pitch.toFixed(2)).join(", "),
+        timingDistribution: Array.from(timingDistribution.entries()).slice(0, 10).map(([t, count]) => `${t}s:${count}`).join(", ")
       });
       if (this.currentMappings.length === 0) {
         new import_obsidian30.Notice("No mappings created - check that instruments are enabled in Control Center");
