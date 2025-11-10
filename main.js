@@ -59841,6 +59841,21 @@ var init_NoteCentricPlayer = __esm({
           const chordRoot = phrase.harmony[i];
           const duration = phrase.rhythm[i];
           const velocity = phrase.velocities[i];
+          if (isNaN(pitchOffset) || isNaN(chordRoot) || isNaN(duration) || isNaN(velocity)) {
+            logger72.error("invalid-note-data", "NaN detected in phrase data", {
+              index: i,
+              pitchOffset,
+              chordRoot,
+              duration,
+              velocity,
+              role,
+              melodyLength: phrase.melody.length,
+              harmonyLength: phrase.harmony.length,
+              rhythmLength: phrase.rhythm.length,
+              velocitiesLength: phrase.velocities.length
+            });
+            continue;
+          }
           const baseFreq = 261.63;
           const totalOffset = chordRoot + pitchOffset;
           const frequency = baseFreq * Math.pow(2, totalOffset / 12);
@@ -88977,6 +88992,16 @@ var NoteCentricMapper = class {
     for (let i = 0; i < length; i++) {
       const chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
       const nextChord = i < length - 1 ? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)] : chordRoot;
+      if (chordRoot == null || isNaN(chordRoot) || nextChord == null || isNaN(nextChord)) {
+        logger83.error("invalid-chord-data", "Invalid chord in rhythmic counterpoint", {
+          index: i,
+          chordRoot,
+          nextChord,
+          harmonyLength: centerPhrase.harmony.length
+        });
+        melody.push(0 - 12);
+        continue;
+      }
       if (i % 4 === 0) {
         melody.push(chordRoot - 12);
       } else if (i % 2 === 0) {

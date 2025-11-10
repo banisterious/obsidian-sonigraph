@@ -154,6 +154,23 @@ export class NoteCentricPlayer {
 			const duration = phrase.rhythm[i];
 			const velocity = phrase.velocities[i];
 
+			// Validate all values before frequency calculation
+			if (isNaN(pitchOffset) || isNaN(chordRoot) || isNaN(duration) || isNaN(velocity)) {
+				logger.error('invalid-note-data', 'NaN detected in phrase data', {
+					index: i,
+					pitchOffset,
+					chordRoot,
+					duration,
+					velocity,
+					role,
+					melodyLength: phrase.melody.length,
+					harmonyLength: phrase.harmony.length,
+					rhythmLength: phrase.rhythm.length,
+					velocitiesLength: phrase.velocities.length
+				});
+				continue; // Skip this note
+			}
+
 			// Calculate frequency from pitch offset and chord root
 			// Use C4 (261.63 Hz) as base
 			const baseFreq = 261.63;

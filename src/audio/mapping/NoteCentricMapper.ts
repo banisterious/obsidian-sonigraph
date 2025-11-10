@@ -950,6 +950,19 @@ export class NoteCentricMapper {
 				? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)]
 				: chordRoot;
 
+			// Validate chord values
+			if (chordRoot == null || isNaN(chordRoot) || nextChord == null || isNaN(nextChord)) {
+				logger.error('invalid-chord-data', 'Invalid chord in rhythmic counterpoint', {
+					index: i,
+					chordRoot,
+					nextChord,
+					harmonyLength: centerPhrase.harmony.length
+				});
+				// Use fallback: tonic in bass register
+				melody.push(0 - 12);
+				continue;
+			}
+
 			// Bass movement: roots, fifths, chromatic approaches, and surprising leaps
 			if (i % 4 === 0) {
 				// On strong beats: play root (stable)
