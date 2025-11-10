@@ -89000,8 +89000,7 @@ var NoteCentricMapper = class {
         }
         if ((seed + i * 19) % 7 === 0 && prose.musicalExpressiveness > 0.6) {
           approach = nextChord + 6;
-        }
-        if ((seed + i * 23) % 5 === 0) {
+        } else if ((seed + i * 23) % 5 === 0) {
           approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
         }
         melody.push(approach - 12);
@@ -89057,7 +89056,10 @@ var NoteCentricMapper = class {
     const melody = [];
     const harmony = [];
     const rhythm = [];
-    const chordRoots = [...new Set(centerPhrase.harmony)].slice(0, length);
+    let chordRoots = [...new Set(centerPhrase.harmony)].slice(0, length);
+    if (chordRoots.length === 0) {
+      chordRoots = [0];
+    }
     for (let i = 0; i < length; i++) {
       const chord = chordRoots[i % chordRoots.length];
       const chordTone = i % 3 === 0 ? chord : i % 3 === 1 ? chord + 4 : chord + 7;

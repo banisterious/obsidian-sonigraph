@@ -983,7 +983,7 @@ export class NoteCentricMapper {
 				}
 
 				// Occasionally add scalar approach instead of chromatic
-				if ((seed + i * 23) % 5 === 0) {
+				else if ((seed + i * 23) % 5 === 0) {
 					approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
 				}
 
@@ -1054,7 +1054,12 @@ export class NoteCentricMapper {
 		const rhythm: number[] = [];
 
 		// Extract unique chord roots from center phrase
-		const chordRoots = [...new Set(centerPhrase.harmony)].slice(0, length);
+		let chordRoots = [...new Set(centerPhrase.harmony)].slice(0, length);
+
+		// Ensure we have at least one chord root (fallback to tonic if empty)
+		if (chordRoots.length === 0) {
+			chordRoots = [0]; // Default to tonic
+		}
 
 		for (let i = 0; i < length; i++) {
 			const chord = chordRoots[i % chordRoots.length];
