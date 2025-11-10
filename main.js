@@ -89058,6 +89058,128 @@ var NoteCentricMapper = class {
       totalBeats: rhythm.reduce((sum, d) => sum + d, 0)
     };
   }
+  /**
+   * Extract motifs from a melody and rhythm
+   */
+  extractMotifs(melody, rhythm) {
+    var _a, _b;
+    const motifs = [];
+    const motifALength = Math.min(4, melody.length);
+    motifs.push({
+      pitchPattern: this.toIntervals(melody.slice(0, motifALength)),
+      rhythmPattern: rhythm.slice(0, motifALength),
+      id: "motif-A",
+      sourcePhrase: 0
+    });
+    if (melody.length >= 8) {
+      const distinctiveIndex = this.findMostDistinctiveGesture(melody);
+      const motifBLength = Math.min(4, melody.length - distinctiveIndex);
+      if (motifBLength >= 3) {
+        motifs.push({
+          pitchPattern: this.toIntervals(melody.slice(distinctiveIndex, distinctiveIndex + motifBLength)),
+          rhythmPattern: rhythm.slice(distinctiveIndex, distinctiveIndex + motifBLength),
+          id: "motif-B",
+          sourcePhrase: 0
+        });
+      }
+    }
+    logger83.info("motif-extraction", "Extracted motifs", {
+      count: motifs.length,
+      motifA: (_a = motifs[0]) == null ? void 0 : _a.pitchPattern,
+      motifB: (_b = motifs[1]) == null ? void 0 : _b.pitchPattern
+    });
+    return motifs;
+  }
+  /**
+   * Convert absolute pitches to intervals (relative to first note)
+   */
+  toIntervals(pitches) {
+    if (pitches.length === 0)
+      return [];
+    const intervals = [0];
+    const referencePitch = pitches[0];
+    for (let i = 1; i < pitches.length; i++) {
+      intervals.push(pitches[i] - referencePitch);
+    }
+    return intervals;
+  }
+  /**
+   * Find the most distinctive melodic gesture (largest interval or directional change)
+   */
+  findMostDistinctiveGesture(melody) {
+    let maxInterest = 0;
+    let bestIndex = 0;
+    for (let i = 1; i < melody.length - 2; i++) {
+      const interval1 = Math.abs(melody[i] - melody[i - 1]);
+      const interval2 = Math.abs(melody[i + 1] - melody[i]);
+      const dir1 = Math.sign(melody[i] - melody[i - 1]);
+      const dir2 = Math.sign(melody[i + 1] - melody[i]);
+      const directionChange = dir1 !== dir2 ? 1.5 : 1;
+      const interest = (interval1 + interval2) * directionChange;
+      if (interest > maxInterest) {
+        maxInterest = interest;
+        bestIndex = i - 1;
+      }
+    }
+    return bestIndex;
+  }
+  /**
+   * Develop a motif using various transformations
+   */
+  developMotif(motif, transformation, transposition = 0) {
+    switch (transformation) {
+      case "repeat":
+        return {
+          melody: motif.pitchPattern.map((p) => p + transposition),
+          rhythm: [...motif.rhythmPattern]
+        };
+      case "transpose":
+        return {
+          melody: motif.pitchPattern.map((p) => p + 7),
+          rhythm: [...motif.rhythmPattern]
+        };
+      case "invert":
+        return {
+          melody: motif.pitchPattern.map((p) => -p),
+          rhythm: [...motif.rhythmPattern]
+        };
+      case "augment":
+        return {
+          melody: [...motif.pitchPattern],
+          rhythm: motif.rhythmPattern.map((d) => d * 2)
+        };
+      case "fragment":
+        const fragmentLength = Math.min(3, motif.pitchPattern.length);
+        return {
+          melody: motif.pitchPattern.slice(0, fragmentLength),
+          rhythm: motif.rhythmPattern.slice(0, fragmentLength)
+        };
+      default:
+        return {
+          melody: [...motif.pitchPattern],
+          rhythm: [...motif.rhythmPattern]
+        };
+    }
+  }
+  /**
+   * Choose appropriate transformation based on usage and context
+   */
+  chooseTransformation(memory, motif) {
+    const usageCount = memory.usageCount.get(motif.id) || 0;
+    const lastTransform = memory.lastTransform.get(motif.id);
+    if (usageCount === 0) {
+      return "repeat";
+    } else if (usageCount === 1 && lastTransform !== "transpose") {
+      return "transpose";
+    } else if (usageCount === 2 && lastTransform !== "invert") {
+      return "invert";
+    } else if (usageCount === 3 && lastTransform !== "fragment") {
+      return "fragment";
+    } else if (usageCount >= 4 && lastTransform !== "augment") {
+      return "augment";
+    }
+    return usageCount % 2 === 0 ? "repeat" : "transpose";
+  }
 };
 
 // src/ui/LocalSoundscapeView.ts

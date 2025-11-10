@@ -44,6 +44,40 @@ export interface MusicalPhrase {
 }
 
 /**
+ * Musical motif - A short melodic/rhythmic pattern that can be developed
+ */
+export interface MusicalMotif {
+	// 3-5 note melodic pattern (relative intervals)
+	pitchPattern: number[];
+
+	// Rhythmic pattern (note durations in beats)
+	rhythmPattern: number[];
+
+	// Motif identity
+	id: string;
+
+	// Which phrase index it came from
+	sourcePhrase: number;
+}
+
+/**
+ * Musical memory for motivic development
+ */
+export interface MusicalMemory {
+	// Primary motifs extracted from composition
+	primaryMotifs: MusicalMotif[];
+
+	// How many times each motif has been used
+	usageCount: Map<string, number>;
+
+	// Last transformation applied to each motif
+	lastTransform: Map<string, string>;
+
+	// Current phrase index
+	currentPhrase: number;
+}
+
+/**
  * Note-centric mapping result
  */
 export interface NoteCentricMapping {
@@ -60,6 +94,9 @@ export interface NoteCentricMapping {
 
 	// Prose analysis that generated this
 	proseAnalysis: ProseAnalysis;
+
+	// Musical memory for this composition (optional - used for extended compositions)
+	memory?: MusicalMemory;
 }
 
 /**
@@ -1016,5 +1053,167 @@ export class NoteCentricMapper {
 			tempo: centerPhrase.tempo * 0.5, // Half tempo (slower)
 			totalBeats: rhythm.reduce((sum, d) => sum + d, 0)
 		};
+	}
+
+	/**
+	 * Extract motifs from a melody and rhythm
+	 */
+	private extractMotifs(melody: number[], rhythm: number[]): MusicalMotif[] {
+		const motifs: MusicalMotif[] = [];
+
+		// Motif A: First 3-5 notes (opening gesture)
+		const motifALength = Math.min(4, melody.length);
+		motifs.push({
+			pitchPattern: this.toIntervals(melody.slice(0, motifALength)),
+			rhythmPattern: rhythm.slice(0, motifALength),
+			id: 'motif-A',
+			sourcePhrase: 0
+		});
+
+		// Motif B: Most distinctive gesture (largest leap or turn)
+		if (melody.length >= 8) {
+			const distinctiveIndex = this.findMostDistinctiveGesture(melody);
+			const motifBLength = Math.min(4, melody.length - distinctiveIndex);
+			if (motifBLength >= 3) {
+				motifs.push({
+					pitchPattern: this.toIntervals(melody.slice(distinctiveIndex, distinctiveIndex + motifBLength)),
+					rhythmPattern: rhythm.slice(distinctiveIndex, distinctiveIndex + motifBLength),
+					id: 'motif-B',
+					sourcePhrase: 0
+				});
+			}
+		}
+
+		logger.info('motif-extraction', 'Extracted motifs', {
+			count: motifs.length,
+			motifA: motifs[0]?.pitchPattern,
+			motifB: motifs[1]?.pitchPattern
+		});
+
+		return motifs;
+	}
+
+	/**
+	 * Convert absolute pitches to intervals (relative to first note)
+	 */
+	private toIntervals(pitches: number[]): number[] {
+		if (pitches.length === 0) return [];
+
+		const intervals = [0]; // First note is reference point
+		const referencePitch = pitches[0];
+
+		for (let i = 1; i < pitches.length; i++) {
+			intervals.push(pitches[i] - referencePitch);
+		}
+
+		return intervals;
+	}
+
+	/**
+	 * Find the most distinctive melodic gesture (largest interval or directional change)
+	 */
+	private findMostDistinctiveGesture(melody: number[]): number {
+		let maxInterest = 0;
+		let bestIndex = 0;
+
+		for (let i = 1; i < melody.length - 2; i++) {
+			// Calculate "interest" as combination of leap size and direction change
+			const interval1 = Math.abs(melody[i] - melody[i - 1]);
+			const interval2 = Math.abs(melody[i + 1] - melody[i]);
+
+			// Check for direction change
+			const dir1 = Math.sign(melody[i] - melody[i - 1]);
+			const dir2 = Math.sign(melody[i + 1] - melody[i]);
+			const directionChange = dir1 !== dir2 ? 1.5 : 1.0;
+
+			const interest = (interval1 + interval2) * directionChange;
+
+			if (interest > maxInterest) {
+				maxInterest = interest;
+				bestIndex = i - 1;
+			}
+		}
+
+		return bestIndex;
+	}
+
+	/**
+	 * Develop a motif using various transformations
+	 */
+	private developMotif(
+		motif: MusicalMotif,
+		transformation: 'repeat' | 'transpose' | 'invert' | 'augment' | 'fragment',
+		transposition: number = 0
+	): { melody: number[], rhythm: number[] } {
+		switch (transformation) {
+			case 'repeat':
+				// Exact repetition at new pitch level
+				return {
+					melody: motif.pitchPattern.map(p => p + transposition),
+					rhythm: [...motif.rhythmPattern]
+				};
+
+			case 'transpose':
+				// Move to new key area (up a fifth = +7 semitones)
+				return {
+					melody: motif.pitchPattern.map(p => p + 7),
+					rhythm: [...motif.rhythmPattern]
+				};
+
+			case 'invert':
+				// Mirror intervals (ascending becomes descending)
+				return {
+					melody: motif.pitchPattern.map(p => -p),
+					rhythm: [...motif.rhythmPattern]
+				};
+
+			case 'augment':
+				// Stretch rhythm (2x slower for dramatic effect)
+				return {
+					melody: [...motif.pitchPattern],
+					rhythm: motif.rhythmPattern.map(d => d * 2)
+				};
+
+			case 'fragment':
+				// Use only first 2-3 notes (fragmentation creates tension)
+				const fragmentLength = Math.min(3, motif.pitchPattern.length);
+				return {
+					melody: motif.pitchPattern.slice(0, fragmentLength),
+					rhythm: motif.rhythmPattern.slice(0, fragmentLength)
+				};
+
+			default:
+				return {
+					melody: [...motif.pitchPattern],
+					rhythm: [...motif.rhythmPattern]
+				};
+		}
+	}
+
+	/**
+	 * Choose appropriate transformation based on usage and context
+	 */
+	private chooseTransformation(
+		memory: MusicalMemory,
+		motif: MusicalMotif
+	): 'repeat' | 'transpose' | 'invert' | 'augment' | 'fragment' {
+		const usageCount = memory.usageCount.get(motif.id) || 0;
+		const lastTransform = memory.lastTransform.get(motif.id);
+
+		// Cycle through transformations to maintain variety
+		if (usageCount === 0) {
+			return 'repeat'; // First use: exact repetition
+		} else if (usageCount === 1 && lastTransform !== 'transpose') {
+			return 'transpose'; // Second use: transpose for contrast
+		} else if (usageCount === 2 && lastTransform !== 'invert') {
+			return 'invert'; // Third use: inversion for development
+		} else if (usageCount === 3 && lastTransform !== 'fragment') {
+			return 'fragment'; // Fourth use: fragmentation
+		} else if (usageCount >= 4 && lastTransform !== 'augment') {
+			return 'augment'; // Later uses: augmentation
+		}
+
+		// Default: alternate between repeat and transpose
+		return usageCount % 2 === 0 ? 'repeat' : 'transpose';
 	}
 }
