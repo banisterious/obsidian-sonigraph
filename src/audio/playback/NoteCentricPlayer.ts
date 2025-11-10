@@ -28,6 +28,9 @@ export class NoteCentricPlayer {
 	private animationFrameId: number | null = null;
 	private startTime: number = 0;
 	private embellishmentCounts: Record<string, number> = {};
+	private hasPlayedAnyNotes: boolean = false;
+	private scheduledNoteCount: number = 0;
+	private completedNoteCount: number = 0;
 
 	constructor(audioEngine: AudioEngine) {
 		this.audioEngine = audioEngine;
@@ -51,6 +54,9 @@ export class NoteCentricPlayer {
 
 		this.isPlaying = true;
 		this.startTime = Date.now();
+		this.hasPlayedAnyNotes = false;
+		this.scheduledNoteCount = 0;
+		this.completedNoteCount = 0;
 
 		// Reset embellishment counts for staggering
 		this.embellishmentCounts = {
@@ -77,7 +83,8 @@ export class NoteCentricPlayer {
 		this.startAnimationLoop();
 
 		logger.info('playback-scheduled', 'All notes scheduled', {
-			totalNotes: this.playingNotes.length
+			scheduledNotes: this.scheduledNoteCount,
+			currentlyPlaying: this.playingNotes.length
 		});
 	}
 
@@ -155,8 +162,9 @@ export class NoteCentricPlayer {
 			const velocity = phrase.velocities[i];
 
 			// Validate all values before frequency calculation
-			if (isNaN(pitchOffset) || isNaN(chordRoot) || isNaN(duration) || isNaN(velocity)) {
-				logger.error('invalid-note-data', 'NaN detected in phrase data', {
+			if (pitchOffset == null || chordRoot == null || duration == null || velocity == null ||
+			    isNaN(pitchOffset) || isNaN(chordRoot) || isNaN(duration) || isNaN(velocity)) {
+				logger.error('invalid-note-data', 'Invalid or NaN detected in phrase data', {
 					index: i,
 					pitchOffset,
 					chordRoot,
@@ -190,6 +198,9 @@ export class NoteCentricPlayer {
 				role,
 				instrument
 			});
+
+			// Increment scheduled count
+			this.scheduledNoteCount++;
 
 			// Schedule note to start with humanized timing
 			setTimeout(async () => {
@@ -226,6 +237,18 @@ export class NoteCentricPlayer {
 						frequency: finalFreq,
 						stopTime
 					});
+
+					// Mark that we've played at least one note
+					this.hasPlayedAnyNotes = true;
+
+					// Schedule completion tracking when note finishes
+					setTimeout(() => {
+						this.completedNoteCount++;
+						logger.debug('note-complete', 'Note completed', {
+							completed: this.completedNoteCount,
+							scheduled: this.scheduledNoteCount
+						});
+					}, duration * beatDuration);
 
 					logger.debug('note-play', 'Note started', {
 						instrument,
@@ -341,11 +364,20 @@ export class NoteCentricPlayer {
 				return now < note.stopTime;
 			});
 
-			// If all notes have finished, stop playback
-			// Wait a bit after scheduling completes to ensure no more notes incoming
+			// If all scheduled notes have completed, stop playback
+			// Check that:
+			// 1. We've played at least one note (prevents premature stopping before timeouts fire)
+			// 2. All scheduled notes have completed playing
+			// 3. At least 1 second has elapsed since start
 			const timeSinceStart = now - this.startTime;
-			if (this.playingNotes.length === 0 && timeSinceStart > 1000) {
-				logger.info('playback-complete', 'All notes finished, stopping playback naturally');
+			const allNotesCompleted = this.scheduledNoteCount > 0 &&
+			                          this.completedNoteCount >= this.scheduledNoteCount;
+
+			if (this.hasPlayedAnyNotes && allNotesCompleted && timeSinceStart > 1000) {
+				logger.info('playback-complete', 'All notes finished, stopping playback naturally', {
+					scheduled: this.scheduledNoteCount,
+					completed: this.completedNoteCount
+				});
 				this.isPlaying = false;
 				if (this.animationFrameId !== null) {
 					cancelAnimationFrame(this.animationFrameId);

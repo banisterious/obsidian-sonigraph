@@ -469,11 +469,24 @@ export class NoteCentricMapper {
 		const progressionChoices = baseProgressions[prose.contentType] || baseProgressions['mixed'];
 
 		// Select progression based on complexity
+		const complexityValue = isNaN(prose.overallComplexity) ? 0.5 : prose.overallComplexity;
 		const progressionIndex = Math.min(
-			Math.floor(prose.overallComplexity * progressionChoices.length),
+			Math.floor(complexityValue * progressionChoices.length),
 			progressionChoices.length - 1
 		);
 		const baseProgression = progressionChoices[progressionIndex];
+
+		// Validate baseProgression
+		if (!baseProgression || !Array.isArray(baseProgression) || baseProgression.length === 0) {
+			logger.error('invalid-base-progression', 'baseProgression is invalid', {
+				progressionIndex,
+				complexityValue,
+				contentType: prose.contentType,
+				progressionChoicesLength: progressionChoices.length
+			});
+			// Use fallback progression
+			return this.generateSimpleCenterPhrase(length, prose);
+		}
 
 		// Build harmonic structure with voice leading and stronger cadences
 		const fullProgression: number[] = [];
@@ -486,8 +499,21 @@ export class NoteCentricMapper {
 			for (let j = 0; j < baseProgression.length; j++) {
 				let chord = baseProgression[j];
 
+				// Validate initial chord value from base progression
+				if (chord == null || isNaN(chord)) {
+					logger.error('invalid-base-chord', 'Invalid chord from baseProgression', {
+						j,
+						chord,
+						baseProgressionLength: baseProgression.length,
+						contentType: prose.contentType,
+						progressionIndex
+					});
+					chord = 0; // Fallback to tonic
+				}
+
 				// Add EXTREMELY ADVENTUROUS harmonic color (VERY low threshold)
-				if (prose.musicalExpressiveness > 0.1) { // DRASTICALLY LOWERED from 0.3
+				// Only apply color variations if we have a valid chord value
+				if (prose.musicalExpressiveness > 0.1 && chord != null && !isNaN(chord)) { // DRASTICALLY LOWERED from 0.3
 					// More frequent color with more options
 					const colorOptions = [
 						chord,                                    // Original
@@ -503,50 +529,72 @@ export class NoteCentricMapper {
 					];
 
 					// Use seed for reproducible variation - MORE VARIATION
-					const colorIdx = (harmonicSeed + j * 17 + rep * 7) % colorOptions.length;
+					const colorIdx = Math.floor(harmonicSeed + j * 17 + rep * 7) % colorOptions.length;
 					chord = colorOptions[colorIdx];
+
+					// Validate chord after color application
+					if (chord == null || isNaN(chord)) {
+						logger.error('invalid-chord-after-color', 'Chord became invalid after color application', {
+							j,
+							chord,
+							colorIdx,
+							rep
+						});
+						chord = 0; // Fallback to tonic
+					}
 				}
 
 				// Add MUCH MORE CHROMATIC voice leading
 				if (fullProgression.length > 0) {
 					const prevChord = fullProgression[fullProgression.length - 1];
-					const interval = Math.abs(chord - prevChord);
 
-					// Add chromatic passing chords VERY frequently (threshold lowered to 2)
-					if (interval > 2 && interval < 12) { // Was > 3
-						// Choose passing chord that creates CHROMATIC bass motion
-						let passingChord: number;
+					// Validate prevChord and chord before using
+					if (prevChord == null || isNaN(prevChord) || chord == null || isNaN(chord)) {
+						logger.error('invalid-progression-value', 'Invalid prevChord or chord in voice leading', {
+							prevChord,
+							chord,
+							progressionLength: fullProgression.length
+						});
+						// Skip voice leading for this invalid chord but continue processing
+					} else {
+						const interval = Math.abs(chord - prevChord);
 
-						// ULTRA FREQUENT chromatic approaches (was % 2, now ALWAYS if expressiveness > 0.2)
-						if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) { // DRASTICALLY lowered from 0.4
-							// Chromatic approach from below or above
-							if (prevChord < chord) {
-								passingChord = chord - 1; // Chromatic approach from below
+						// Add chromatic passing chords VERY frequently (threshold lowered to 2)
+						if (interval > 2 && interval < 12) { // Was > 3
+							// Choose passing chord that creates CHROMATIC bass motion
+							let passingChord: number;
+
+							// ULTRA FREQUENT chromatic approaches (was % 2, now ALWAYS if expressiveness > 0.2)
+							if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) { // DRASTICALLY lowered from 0.4
+								// Chromatic approach from below or above
+								if (prevChord < chord) {
+									passingChord = chord - 1; // Chromatic approach from below
+								} else {
+									passingChord = chord + 1; // Chromatic approach from above
+								}
 							} else {
-								passingChord = chord + 1; // Chromatic approach from above
+								// Diatonic passing chord (original behavior)
+								if (prevChord < chord) {
+									passingChord = prevChord + Math.floor(interval / 2);
+								} else {
+									passingChord = prevChord - Math.floor(interval / 2);
+								}
 							}
-						} else {
-							// Diatonic passing chord (original behavior)
-							if (prevChord < chord) {
-								passingChord = prevChord + Math.floor(interval / 2);
-							} else {
-								passingChord = prevChord - Math.floor(interval / 2);
-							}
+							fullProgression.push(passingChord);
 						}
-						fullProgression.push(passingChord);
-					}
 
-					// EXTREMELY FREQUENT TRITONE substitutions (was % 7, now % 5)
-					if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) { // MUCH lower: was 0.5
-						// Add tritone substitute (diminished 5th away)
-						const tritoneSubstitute = chord + 6;
-						fullProgression.push(tritoneSubstitute);
-					}
+						// EXTREMELY FREQUENT TRITONE substitutions (was % 7, now % 5)
+						if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) { // MUCH lower: was 0.5
+							// Add tritone substitute (diminished 5th away)
+							const tritoneSubstitute = chord + 6;
+							fullProgression.push(tritoneSubstitute);
+						}
 
-					// MUCH MORE augmented sixth chords for EXTREME spice (was % 9, now % 6)
-					if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) { // Lower from 0.6
-						const augSixth = chord - 1; // German sixth flavor
-						fullProgression.push(augSixth);
+						// MUCH MORE augmented sixth chords for EXTREME spice (was % 9, now % 6)
+						if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) { // Lower from 0.6
+							const augSixth = chord - 1; // German sixth flavor
+							fullProgression.push(augSixth);
+						}
 					}
 				}
 
@@ -569,11 +617,27 @@ export class NoteCentricMapper {
 					}
 				}
 
-				fullProgression.push(chord);
+				// Validate chord before pushing
+				if (chord == null || isNaN(chord)) {
+					logger.error('invalid-final-chord', 'Invalid chord value before final push', {
+						chord,
+						baseProgressionIndex: j,
+						repetition: rep
+					});
+					fullProgression.push(0); // Fallback to tonic
+				} else {
+					fullProgression.push(chord);
+				}
 			}
 		}
 
 		// Fill harmony array with varied note durations per chord
+		// Ensure we have at least one chord in progression
+		if (fullProgression.length === 0) {
+			logger.error('empty-progression', 'fullProgression is empty, using tonic fallback');
+			fullProgression.push(0); // Add tonic as fallback
+		}
+
 		let chordIdx = 0;
 		for (let i = 0; i < length; i++) {
 			// More complex prose = more frequent chord changes
@@ -581,7 +645,20 @@ export class NoteCentricMapper {
 			const adjustedNotesPerChord = Math.max(1, Math.floor(notesPerChord * chordChangeFactor));
 
 			chordIdx = Math.floor(i / adjustedNotesPerChord) % fullProgression.length;
-			harmony.push(fullProgression[chordIdx]);
+			const chordValue = fullProgression[chordIdx];
+
+			// Validate before pushing
+			if (chordValue == null || isNaN(chordValue)) {
+				logger.error('invalid-chord-value', 'Invalid chord in fullProgression', {
+					index: i,
+					chordIdx,
+					chordValue,
+					progressionLength: fullProgression.length
+				});
+				harmony.push(0); // Fallback to tonic
+			} else {
+				harmony.push(chordValue);
+			}
 		}
 
 		return harmony;
@@ -907,7 +984,21 @@ export class NoteCentricMapper {
 		// Ensure harmony array matches melody length
 		const harmony: number[] = [];
 		for (let i = 0; i < length; i++) {
-			harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+			const harmonyIndex = Math.min(i, centerPhrase.harmony.length - 1);
+			const harmonyValue = centerPhrase.harmony[harmonyIndex];
+
+			// Validate before pushing
+			if (harmonyValue == null || isNaN(harmonyValue)) {
+				logger.error('invalid-harmony-from-center', 'Invalid harmony value from centerPhrase', {
+					index: i,
+					harmonyIndex,
+					harmonyValue,
+					centerHarmonyLength: centerPhrase.harmony.length
+				});
+				harmony.push(0); // Fallback to tonic
+			} else {
+				harmony.push(harmonyValue);
+			}
 		}
 
 		// DRAMATIC velocity contrast - some harmonic responses MUCH quieter, some LOUDER
@@ -945,22 +1036,28 @@ export class NoteCentricMapper {
 		// Build bass line from chord roots and chromatic passing tones
 		for (let i = 0; i < length; i++) {
 			// Safely access harmony array with bounds checking
-			const chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
-			const nextChord = i < length - 1
+			let chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
+			let nextChord = i < length - 1
 				? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)]
 				: chordRoot;
 
-			// Validate chord values
-			if (chordRoot == null || isNaN(chordRoot) || nextChord == null || isNaN(nextChord)) {
-				logger.error('invalid-chord-data', 'Invalid chord in rhythmic counterpoint', {
+			// Validate chord values - use fallback if invalid (don't skip iteration)
+			if (chordRoot == null || isNaN(chordRoot)) {
+				logger.error('invalid-chord-data', 'Invalid chordRoot in rhythmic counterpoint', {
 					index: i,
 					chordRoot,
+					harmonyLength: centerPhrase.harmony.length
+				});
+				chordRoot = 0; // Fallback to tonic
+			}
+
+			if (nextChord == null || isNaN(nextChord)) {
+				logger.error('invalid-chord-data', 'Invalid nextChord in rhythmic counterpoint', {
+					index: i,
 					nextChord,
 					harmonyLength: centerPhrase.harmony.length
 				});
-				// Use fallback: tonic in bass register
-				melody.push(0 - 12);
-				continue;
+				nextChord = chordRoot; // Fallback to current chord
 			}
 
 			// Bass movement: roots, fifths, chromatic approaches, and surprising leaps
@@ -974,7 +1071,7 @@ export class NoteCentricMapper {
 					chordRoot - 8,  // Third (sixth down)
 					chordRoot - 2   // Seventh
 				];
-				const toneIndex = (seed + i) % chordToneOptions.length;
+				const toneIndex = Math.floor(seed + i) % chordToneOptions.length;
 				melody.push(chordToneOptions[toneIndex] - 12);
 			} else {
 				// On weak beats: MORE chromatic and unexpected approaches
@@ -1022,7 +1119,21 @@ export class NoteCentricMapper {
 		// Ensure harmony array matches melody length
 		const harmony: number[] = [];
 		for (let i = 0; i < length; i++) {
-			harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+			const harmonyIndex = Math.min(i, centerPhrase.harmony.length - 1);
+			const harmonyValue = centerPhrase.harmony[harmonyIndex];
+
+			// Validate before pushing
+			if (harmonyValue == null || isNaN(harmonyValue)) {
+				logger.error('invalid-harmony-from-center', 'Invalid harmony value from centerPhrase', {
+					index: i,
+					harmonyIndex,
+					harmonyValue,
+					centerHarmonyLength: centerPhrase.harmony.length
+				});
+				harmony.push(0); // Fallback to tonic
+			} else {
+				harmony.push(harmonyValue);
+			}
 		}
 
 		// DRAMATIC velocity contrast - bass can be whisper quiet or THUNDERING

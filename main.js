@@ -59753,6 +59753,9 @@ var init_NoteCentricPlayer = __esm({
         this.animationFrameId = null;
         this.startTime = 0;
         this.embellishmentCounts = {};
+        this.hasPlayedAnyNotes = false;
+        this.scheduledNoteCount = 0;
+        this.completedNoteCount = 0;
         this.audioEngine = audioEngine;
       }
       /**
@@ -59771,6 +59774,9 @@ var init_NoteCentricPlayer = __esm({
         });
         this.isPlaying = true;
         this.startTime = Date.now();
+        this.hasPlayedAnyNotes = false;
+        this.scheduledNoteCount = 0;
+        this.completedNoteCount = 0;
         this.embellishmentCounts = {
           "harmonic-response": 0,
           "rhythmic-counterpoint": 0,
@@ -59788,7 +59794,8 @@ var init_NoteCentricPlayer = __esm({
         logger72.debug("start-animation", "Starting animation loop");
         this.startAnimationLoop();
         logger72.info("playback-scheduled", "All notes scheduled", {
-          totalNotes: this.playingNotes.length
+          scheduledNotes: this.scheduledNoteCount,
+          currentlyPlaying: this.playingNotes.length
         });
       }
       /**
@@ -59841,8 +59848,8 @@ var init_NoteCentricPlayer = __esm({
           const chordRoot = phrase.harmony[i];
           const duration = phrase.rhythm[i];
           const velocity = phrase.velocities[i];
-          if (isNaN(pitchOffset) || isNaN(chordRoot) || isNaN(duration) || isNaN(velocity)) {
-            logger72.error("invalid-note-data", "NaN detected in phrase data", {
+          if (pitchOffset == null || chordRoot == null || duration == null || velocity == null || isNaN(pitchOffset) || isNaN(chordRoot) || isNaN(duration) || isNaN(velocity)) {
+            logger72.error("invalid-note-data", "Invalid or NaN detected in phrase data", {
               index: i,
               pitchOffset,
               chordRoot,
@@ -59869,6 +59876,7 @@ var init_NoteCentricPlayer = __esm({
             role,
             instrument
           });
+          this.scheduledNoteCount++;
           setTimeout(async () => {
             logger72.debug("timeout-fired", "Note timeout fired", {
               index: i,
@@ -59895,6 +59903,14 @@ var init_NoteCentricPlayer = __esm({
                 frequency: finalFreq,
                 stopTime
               });
+              this.hasPlayedAnyNotes = true;
+              setTimeout(() => {
+                this.completedNoteCount++;
+                logger72.debug("note-complete", "Note completed", {
+                  completed: this.completedNoteCount,
+                  scheduled: this.scheduledNoteCount
+                });
+              }, duration * beatDuration);
               logger72.debug("note-play", "Note started", {
                 instrument,
                 frequency: finalFreq.toFixed(2),
@@ -59986,8 +60002,12 @@ var init_NoteCentricPlayer = __esm({
             return now3 < note.stopTime;
           });
           const timeSinceStart = now3 - this.startTime;
-          if (this.playingNotes.length === 0 && timeSinceStart > 1e3) {
-            logger72.info("playback-complete", "All notes finished, stopping playback naturally");
+          const allNotesCompleted = this.scheduledNoteCount > 0 && this.completedNoteCount >= this.scheduledNoteCount;
+          if (this.hasPlayedAnyNotes && allNotesCompleted && timeSinceStart > 1e3) {
+            logger72.info("playback-complete", "All notes finished, stopping playback naturally", {
+              scheduled: this.scheduledNoteCount,
+              completed: this.completedNoteCount
+            });
             this.isPlaying = false;
             if (this.animationFrameId !== null) {
               cancelAnimationFrame(this.animationFrameId);
@@ -60029,8 +60049,24 @@ var init_ExportNoteCreator = __esm({
           });
           const noteContent = this.generateNoteContent(config, result, animator, pluginSettings);
           const noteName = `${config.filename}-export`;
-          const noteFolder = config.exportNoteFolder || config.location;
+          let noteFolder;
+          if (config.exportNoteFolder) {
+            noteFolder = config.exportNoteFolder;
+          } else if (config.locationType === "system") {
+            noteFolder = "Sonigraph Exports";
+          } else {
+            noteFolder = config.location;
+          }
           const notePath = `${noteFolder}/${noteName}.md`;
+          const folderExists = this.app.vault.getAbstractFileByPath(noteFolder);
+          if (!folderExists) {
+            try {
+              await this.app.vault.createFolder(noteFolder);
+              logger73.info("export-note", `Created folder: ${noteFolder}`);
+            } catch (error) {
+              logger73.debug("export-note", `Folder creation failed (may already exist): ${noteFolder}`);
+            }
+          }
           let finalPath = notePath;
           let counter = 1;
           while (this.app.vault.getAbstractFileByPath(finalPath)) {
@@ -60649,13 +60685,32 @@ var init_AudioExporter = __esm({
        * Estimate duration of note-centric mapping in seconds
        */
       estimateNoteCentricDuration(mapping) {
-        const centerDuration = mapping.centerPhrase.totalBeats / mapping.centerPhrase.tempo * 60;
+        const centerBeats = mapping.centerPhrase.totalBeats || 0;
+        const centerTempo = mapping.centerPhrase.tempo || 120;
+        const centerDuration = centerBeats / centerTempo * 60;
+        if (isNaN(centerDuration) || centerDuration <= 0) {
+          logger74.warn("duration-estimate", "Invalid center phrase duration, using default", {
+            totalBeats: centerBeats,
+            tempo: centerTempo
+          });
+          return 10;
+        }
         let maxEmbellishmentDuration = 0;
         for (const embellishment of mapping.embellishments) {
-          const duration = embellishment.phrase.totalBeats / embellishment.phrase.tempo * 60;
-          maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+          const beats = embellishment.phrase.totalBeats || 0;
+          const tempo = embellishment.phrase.tempo || 120;
+          const duration = beats / tempo * 60;
+          if (!isNaN(duration) && duration > 0) {
+            maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+          }
         }
-        return Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+        const totalDuration = Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+        logger74.info("duration-estimate", "Estimated note-centric duration", {
+          centerDuration: centerDuration.toFixed(1),
+          maxEmbellishmentDuration: maxEmbellishmentDuration.toFixed(1),
+          totalDuration: totalDuration.toFixed(1)
+        });
+        return totalDuration;
       }
       /**
        * Record note-centric playback using MediaRecorder
@@ -60705,9 +60760,10 @@ var init_AudioExporter = __esm({
             return;
           }
           const elapsed = (Date.now() - progressStartTime) / 1e3;
-          const progress = Math.min(95, elapsed / duration * 50);
-          if (this.progressCallback) {
-            this.progressCallback(10 + progress);
+          const validDuration = Math.max(1, duration || 10);
+          const progress = Math.min(95, elapsed / validDuration * 50);
+          if (!isNaN(progress)) {
+            this.updateProgress("rendering", 10 + progress, "Recording audio");
           }
         }, 100);
         await player.play(mapping);
@@ -60740,14 +60796,10 @@ var init_AudioExporter = __esm({
         mediaRecorder.stop();
         const blob = await recordingPromise;
         volumeNode.disconnect(destination);
-        if (this.progressCallback) {
-          this.progressCallback(70);
-        }
+        this.updateProgress("rendering", 70, "Converting audio format");
         logger74.info("offline-renderer", "Converting recorded audio to AudioBuffer");
         const arrayBuffer = await blob.arrayBuffer();
-        if (this.progressCallback) {
-          this.progressCallback(80);
-        }
+        this.updateProgress("rendering", 80, "Decoding audio data");
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         logger74.info("offline-renderer", `Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
         if (audioBuffer.sampleRate !== targetSampleRate) {
@@ -60851,10 +60903,20 @@ var init_AudioExporter = __esm({
             filePath,
             duration: this.estimateDuration(config)
           };
-          const file = this.app.vault.getAbstractFileByPath(filePath);
-          if (file && "stat" in file) {
-            const fileWithStat = file;
-            result.fileSize = fileWithStat.stat.size;
+          if (config.locationType === "system") {
+            try {
+              const fs = require("fs");
+              const stats = fs.statSync(filePath);
+              result.fileSize = stats.size;
+            } catch (error) {
+              logger74.warn("export", "Could not get file size from system location", error);
+            }
+          } else {
+            const file = this.app.vault.getAbstractFileByPath(filePath);
+            if (file && "stat" in file) {
+              const fileWithStat = file;
+              result.fileSize = fileWithStat.stat.size;
+            }
           }
           const notePath = await noteCreator.createNote(config, result, this.animator, this.pluginSettings);
           logger74.info("export", `Export note created: ${notePath}`);
@@ -88661,18 +88723,38 @@ var NoteCentricMapper = class {
       ]
     };
     const progressionChoices = baseProgressions[prose.contentType] || baseProgressions["mixed"];
+    const complexityValue = isNaN(prose.overallComplexity) ? 0.5 : prose.overallComplexity;
     const progressionIndex = Math.min(
-      Math.floor(prose.overallComplexity * progressionChoices.length),
+      Math.floor(complexityValue * progressionChoices.length),
       progressionChoices.length - 1
     );
     const baseProgression = progressionChoices[progressionIndex];
+    if (!baseProgression || !Array.isArray(baseProgression) || baseProgression.length === 0) {
+      logger83.error("invalid-base-progression", "baseProgression is invalid", {
+        progressionIndex,
+        complexityValue,
+        contentType: prose.contentType,
+        progressionChoicesLength: progressionChoices.length
+      });
+      return this.generateSimpleCenterPhrase(length, prose);
+    }
     const fullProgression = [];
     const repetitions = Math.ceil(chordChanges / baseProgression.length);
     let harmonicSeed = Math.floor(prose.musicalExpressiveness * 97);
     for (let rep = 0; rep < repetitions; rep++) {
       for (let j = 0; j < baseProgression.length; j++) {
         let chord = baseProgression[j];
-        if (prose.musicalExpressiveness > 0.1) {
+        if (chord == null || isNaN(chord)) {
+          logger83.error("invalid-base-chord", "Invalid chord from baseProgression", {
+            j,
+            chord,
+            baseProgressionLength: baseProgression.length,
+            contentType: prose.contentType,
+            progressionIndex
+          });
+          chord = 0;
+        }
+        if (prose.musicalExpressiveness > 0.1 && chord != null && !isNaN(chord)) {
           const colorOptions = [
             chord,
             // Original
@@ -88695,36 +88777,53 @@ var NoteCentricMapper = class {
             chord === 0 ? 3 : chord
             // Modal interchange: I becomes III (phrygian)
           ];
-          const colorIdx = (harmonicSeed + j * 17 + rep * 7) % colorOptions.length;
+          const colorIdx = Math.floor(harmonicSeed + j * 17 + rep * 7) % colorOptions.length;
           chord = colorOptions[colorIdx];
+          if (chord == null || isNaN(chord)) {
+            logger83.error("invalid-chord-after-color", "Chord became invalid after color application", {
+              j,
+              chord,
+              colorIdx,
+              rep
+            });
+            chord = 0;
+          }
         }
         if (fullProgression.length > 0) {
           const prevChord = fullProgression[fullProgression.length - 1];
-          const interval2 = Math.abs(chord - prevChord);
-          if (interval2 > 2 && interval2 < 12) {
-            let passingChord;
-            if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) {
-              if (prevChord < chord) {
-                passingChord = chord - 1;
+          if (prevChord == null || isNaN(prevChord) || chord == null || isNaN(chord)) {
+            logger83.error("invalid-progression-value", "Invalid prevChord or chord in voice leading", {
+              prevChord,
+              chord,
+              progressionLength: fullProgression.length
+            });
+          } else {
+            const interval2 = Math.abs(chord - prevChord);
+            if (interval2 > 2 && interval2 < 12) {
+              let passingChord;
+              if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) {
+                if (prevChord < chord) {
+                  passingChord = chord - 1;
+                } else {
+                  passingChord = chord + 1;
+                }
               } else {
-                passingChord = chord + 1;
+                if (prevChord < chord) {
+                  passingChord = prevChord + Math.floor(interval2 / 2);
+                } else {
+                  passingChord = prevChord - Math.floor(interval2 / 2);
+                }
               }
-            } else {
-              if (prevChord < chord) {
-                passingChord = prevChord + Math.floor(interval2 / 2);
-              } else {
-                passingChord = prevChord - Math.floor(interval2 / 2);
-              }
+              fullProgression.push(passingChord);
             }
-            fullProgression.push(passingChord);
-          }
-          if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) {
-            const tritoneSubstitute = chord + 6;
-            fullProgression.push(tritoneSubstitute);
-          }
-          if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) {
-            const augSixth = chord - 1;
-            fullProgression.push(augSixth);
+            if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) {
+              const tritoneSubstitute = chord + 6;
+              fullProgression.push(tritoneSubstitute);
+            }
+            if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) {
+              const augSixth = chord - 1;
+              fullProgression.push(augSixth);
+            }
           }
         }
         harmonicSeed = (harmonicSeed * 1.05 + j * 11) % 1e3;
@@ -88739,15 +88838,39 @@ var NoteCentricMapper = class {
             chord = 0;
           }
         }
-        fullProgression.push(chord);
+        if (chord == null || isNaN(chord)) {
+          logger83.error("invalid-final-chord", "Invalid chord value before final push", {
+            chord,
+            baseProgressionIndex: j,
+            repetition: rep
+          });
+          fullProgression.push(0);
+        } else {
+          fullProgression.push(chord);
+        }
       }
+    }
+    if (fullProgression.length === 0) {
+      logger83.error("empty-progression", "fullProgression is empty, using tonic fallback");
+      fullProgression.push(0);
     }
     let chordIdx = 0;
     for (let i = 0; i < length; i++) {
       const chordChangeFactor = prose.overallComplexity > 0.5 ? 0.8 : 1;
       const adjustedNotesPerChord = Math.max(1, Math.floor(notesPerChord * chordChangeFactor));
       chordIdx = Math.floor(i / adjustedNotesPerChord) % fullProgression.length;
-      harmony.push(fullProgression[chordIdx]);
+      const chordValue = fullProgression[chordIdx];
+      if (chordValue == null || isNaN(chordValue)) {
+        logger83.error("invalid-chord-value", "Invalid chord in fullProgression", {
+          index: i,
+          chordIdx,
+          chordValue,
+          progressionLength: fullProgression.length
+        });
+        harmony.push(0);
+      } else {
+        harmony.push(chordValue);
+      }
     }
     return harmony;
   }
@@ -88960,7 +89083,19 @@ var NoteCentricMapper = class {
     }
     const harmony = [];
     for (let i = 0; i < length; i++) {
-      harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+      const harmonyIndex = Math.min(i, centerPhrase.harmony.length - 1);
+      const harmonyValue = centerPhrase.harmony[harmonyIndex];
+      if (harmonyValue == null || isNaN(harmonyValue)) {
+        logger83.error("invalid-harmony-from-center", "Invalid harmony value from centerPhrase", {
+          index: i,
+          harmonyIndex,
+          harmonyValue,
+          centerHarmonyLength: centerPhrase.harmony.length
+        });
+        harmony.push(0);
+      } else {
+        harmony.push(harmonyValue);
+      }
     }
     const velocities = [];
     for (let i = 0; i < length; i++) {
@@ -88990,17 +89125,23 @@ var NoteCentricMapper = class {
     const melody = [];
     let seed = Math.floor(prose.density.contentDensity * 83);
     for (let i = 0; i < length; i++) {
-      const chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
-      const nextChord = i < length - 1 ? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)] : chordRoot;
-      if (chordRoot == null || isNaN(chordRoot) || nextChord == null || isNaN(nextChord)) {
-        logger83.error("invalid-chord-data", "Invalid chord in rhythmic counterpoint", {
+      let chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
+      let nextChord = i < length - 1 ? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)] : chordRoot;
+      if (chordRoot == null || isNaN(chordRoot)) {
+        logger83.error("invalid-chord-data", "Invalid chordRoot in rhythmic counterpoint", {
           index: i,
           chordRoot,
+          harmonyLength: centerPhrase.harmony.length
+        });
+        chordRoot = 0;
+      }
+      if (nextChord == null || isNaN(nextChord)) {
+        logger83.error("invalid-chord-data", "Invalid nextChord in rhythmic counterpoint", {
+          index: i,
           nextChord,
           harmonyLength: centerPhrase.harmony.length
         });
-        melody.push(0 - 12);
-        continue;
+        nextChord = chordRoot;
       }
       if (i % 4 === 0) {
         melody.push(chordRoot - 12);
@@ -89013,7 +89154,7 @@ var NoteCentricMapper = class {
           chordRoot - 2
           // Seventh
         ];
-        const toneIndex = (seed + i) % chordToneOptions.length;
+        const toneIndex = Math.floor(seed + i) % chordToneOptions.length;
         melody.push(chordToneOptions[toneIndex] - 12);
       } else {
         const interval2 = nextChord - chordRoot;
@@ -89046,7 +89187,19 @@ var NoteCentricMapper = class {
     }
     const harmony = [];
     for (let i = 0; i < length; i++) {
-      harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+      const harmonyIndex = Math.min(i, centerPhrase.harmony.length - 1);
+      const harmonyValue = centerPhrase.harmony[harmonyIndex];
+      if (harmonyValue == null || isNaN(harmonyValue)) {
+        logger83.error("invalid-harmony-from-center", "Invalid harmony value from centerPhrase", {
+          index: i,
+          harmonyIndex,
+          harmonyValue,
+          centerHarmonyLength: centerPhrase.harmony.length
+        });
+        harmony.push(0);
+      } else {
+        harmony.push(harmonyValue);
+      }
     }
     const velocities = [];
     for (let i = 0; i < length; i++) {

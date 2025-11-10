@@ -299,18 +299,42 @@ export class AudioExporter {
      * Estimate duration of note-centric mapping in seconds
      */
     private estimateNoteCentricDuration(mapping: NoteCentricMapping): number {
-        // Calculate center phrase duration
-        const centerDuration = (mapping.centerPhrase.totalBeats / mapping.centerPhrase.tempo) * 60;
+        // Calculate center phrase duration with validation
+        const centerBeats = mapping.centerPhrase.totalBeats || 0;
+        const centerTempo = mapping.centerPhrase.tempo || 120;
+        const centerDuration = (centerBeats / centerTempo) * 60;
+
+        // Validate center duration
+        if (isNaN(centerDuration) || centerDuration <= 0) {
+            logger.warn('duration-estimate', 'Invalid center phrase duration, using default', {
+                totalBeats: centerBeats,
+                tempo: centerTempo
+            });
+            return 10; // Fallback to 10 seconds
+        }
 
         // Find longest embellishment duration
         let maxEmbellishmentDuration = 0;
         for (const embellishment of mapping.embellishments) {
-            const duration = (embellishment.phrase.totalBeats / embellishment.phrase.tempo) * 60;
-            maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+            const beats = embellishment.phrase.totalBeats || 0;
+            const tempo = embellishment.phrase.tempo || 120;
+            const duration = (beats / tempo) * 60;
+
+            if (!isNaN(duration) && duration > 0) {
+                maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+            }
         }
 
         // Total duration is the longer of the two, plus 2s buffer for reverb tails
-        return Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+        const totalDuration = Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+
+        logger.info('duration-estimate', 'Estimated note-centric duration', {
+            centerDuration: centerDuration.toFixed(1),
+            maxEmbellishmentDuration: maxEmbellishmentDuration.toFixed(1),
+            totalDuration: totalDuration.toFixed(1)
+        });
+
+        return totalDuration;
     }
 
     /**
@@ -386,9 +410,11 @@ export class AudioExporter {
                 return;
             }
             const elapsed = (Date.now() - progressStartTime) / 1000;
-            const progress = Math.min(95, (elapsed / duration) * 50);
-            if (this.progressCallback) {
-                this.progressCallback(10 + progress);
+            // Ensure duration is valid to prevent NaN
+            const validDuration = Math.max(1, duration || 10);
+            const progress = Math.min(95, (elapsed / validDuration) * 50);
+            if (!isNaN(progress)) {
+                this.updateProgress('rendering', 10 + progress, 'Recording audio');
             }
         }, 100);
 
@@ -438,17 +464,13 @@ export class AudioExporter {
         volumeNode.disconnect(destination);
 
         // Update progress
-        if (this.progressCallback) {
-            this.progressCallback(70);
-        }
+        this.updateProgress('rendering', 70, 'Converting audio format');
 
         // Convert blob to ArrayBuffer
         logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
         const arrayBuffer = await blob.arrayBuffer();
 
-        if (this.progressCallback) {
-            this.progressCallback(80);
-        }
+        this.updateProgress('rendering', 80, 'Decoding audio data');
 
         // Decode audio data
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -593,10 +615,22 @@ export class AudioExporter {
             };
 
             // Get file size from written file
-            const file = this.app.vault.getAbstractFileByPath(filePath);
-            if (file && 'stat' in file) {
-                const fileWithStat = file as TFile;
-                result.fileSize = fileWithStat.stat.size;
+            if (config.locationType === 'system') {
+                // System location - use fs.statSync
+                try {
+                    const fs = require('fs');
+                    const stats = fs.statSync(filePath);
+                    result.fileSize = stats.size;
+                } catch (error) {
+                    logger.warn('export', 'Could not get file size from system location', error);
+                }
+            } else {
+                // Vault location - use Obsidian API
+                const file = this.app.vault.getAbstractFileByPath(filePath);
+                if (file && 'stat' in file) {
+                    const fileWithStat = file as TFile;
+                    result.fileSize = fileWithStat.stat.size;
+                }
             }
 
             // Create the note with full plugin settings
