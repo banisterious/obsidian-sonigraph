@@ -904,18 +904,24 @@ export class NoteCentricMapper {
 			rhythm.push(inverted * (1 + rhythmVariation));
 		}
 
-		const harmony = centerPhrase.harmony.slice(0, length);
+		// Ensure harmony array matches melody length
+		const harmony: number[] = [];
+		for (let i = 0; i < length; i++) {
+			harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+		}
 
 		// DRAMATIC velocity contrast - some harmonic responses MUCH quieter, some LOUDER
-		const velocities = centerPhrase.velocities.slice(0, length).map((v, i) => {
+		const velocities: number[] = [];
+		for (let i = 0; i < length; i++) {
+			const v = centerPhrase.velocities[Math.min(i, centerPhrase.velocities.length - 1)];
 			if ((seed + i) % 7 === 0) {
-				return v * 0.35; // VERY quiet whispers
+				velocities.push(v * 0.35); // VERY quiet whispers
 			} else if ((seed + i) % 11 === 0) {
-				return v * 1.15; // LOUDER than center for accent
+				velocities.push(v * 1.15); // LOUDER than center for accent
 			} else {
-				return v * 0.60; // Generally quieter
+				velocities.push(v * 0.60); // Generally quieter
 			}
-		});
+		}
 
 		return {
 			melody,
@@ -938,8 +944,11 @@ export class NoteCentricMapper {
 
 		// Build bass line from chord roots and chromatic passing tones
 		for (let i = 0; i < length; i++) {
-			const chordRoot = centerPhrase.harmony[i];
-			const nextChord = i < length - 1 ? centerPhrase.harmony[i + 1] : chordRoot;
+			// Safely access harmony array with bounds checking
+			const chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
+			const nextChord = i < length - 1
+				? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)]
+				: chordRoot;
 
 			// Bass movement: roots, fifths, chromatic approaches, and surprising leaps
 			if (i % 4 === 0) {
@@ -1005,18 +1014,24 @@ export class NoteCentricMapper {
 			rhythm.push(duration);
 		}
 
-		const harmony = centerPhrase.harmony;
+		// Ensure harmony array matches melody length
+		const harmony: number[] = [];
+		for (let i = 0; i < length; i++) {
+			harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+		}
 
 		// DRAMATIC velocity contrast - bass can be whisper quiet or THUNDERING
-		const velocities = centerPhrase.velocities.map((v, i) => {
+		const velocities: number[] = [];
+		for (let i = 0; i < length; i++) {
+			const v = centerPhrase.velocities[Math.min(i, centerPhrase.velocities.length - 1)];
 			if ((seed + i) % 9 === 0) {
-				return v * 0.40; // Very quiet bass (pedal tone effect)
+				velocities.push(v * 0.40); // Very quiet bass (pedal tone effect)
 			} else if ((seed + i) % 13 === 0) {
-				return v * 1.25; // MUCH LOUDER bass (accent)
+				velocities.push(v * 1.25); // MUCH LOUDER bass (accent)
 			} else {
-				return v * 0.75; // Moderate bass
+				velocities.push(v * 0.75); // Moderate bass
 			}
-		});
+		}
 
 		return {
 			melody,
@@ -1152,38 +1167,50 @@ export class NoteCentricMapper {
 
 	/**
 	 * Develop a motif using various transformations
+	 *
+	 * @param motif - The motif to develop (contains interval patterns)
+	 * @param transformation - Type of transformation to apply
+	 * @param basePitch - Starting pitch for the motif (converts intervals to absolute pitches)
+	 * @param transposition - Additional transposition in semitones (default 0)
+	 * @returns Object with absolute pitch melody and rhythm arrays
 	 */
 	private developMotif(
 		motif: MusicalMotif,
 		transformation: 'repeat' | 'transpose' | 'invert' | 'augment' | 'fragment',
+		basePitch: number,
 		transposition: number = 0
 	): { melody: number[], rhythm: number[] } {
+		// First convert interval pattern to absolute pitches based on basePitch
+		// motif.pitchPattern is [0, 2, 4] (intervals), basePitch is 5 -> [5, 7, 9] (absolute)
+		const absoluteMelody = motif.pitchPattern.map(interval => basePitch + interval);
+
 		switch (transformation) {
 			case 'repeat':
 				// Exact repetition at new pitch level
 				return {
-					melody: motif.pitchPattern.map(p => p + transposition),
+					melody: absoluteMelody.map(p => p + transposition),
 					rhythm: [...motif.rhythmPattern]
 				};
 
 			case 'transpose':
 				// Move to new key area (up a fifth = +7 semitones)
 				return {
-					melody: motif.pitchPattern.map(p => p + 7),
+					melody: absoluteMelody.map(p => p + 7 + transposition),
 					rhythm: [...motif.rhythmPattern]
 				};
 
 			case 'invert':
 				// Mirror intervals (ascending becomes descending)
+				// For inversion, we invert around the base pitch
 				return {
-					melody: motif.pitchPattern.map(p => -p),
+					melody: motif.pitchPattern.map(interval => basePitch - interval + transposition),
 					rhythm: [...motif.rhythmPattern]
 				};
 
 			case 'augment':
 				// Stretch rhythm (2x slower for dramatic effect)
 				return {
-					melody: [...motif.pitchPattern],
+					melody: absoluteMelody.map(p => p + transposition),
 					rhythm: motif.rhythmPattern.map(d => d * 2)
 				};
 
@@ -1191,13 +1218,13 @@ export class NoteCentricMapper {
 				// Use only first 2-3 notes (fragmentation creates tension)
 				const fragmentLength = Math.min(3, motif.pitchPattern.length);
 				return {
-					melody: motif.pitchPattern.slice(0, fragmentLength),
+					melody: absoluteMelody.slice(0, fragmentLength).map(p => p + transposition),
 					rhythm: motif.rhythmPattern.slice(0, fragmentLength)
 				};
 
 			default:
 				return {
-					melody: [...motif.pitchPattern],
+					melody: absoluteMelody.map(p => p + transposition),
 					rhythm: [...motif.rhythmPattern]
 				};
 		}

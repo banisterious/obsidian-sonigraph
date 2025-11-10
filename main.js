@@ -88943,16 +88943,21 @@ var NoteCentricMapper = class {
       const rhythmVariation = ((seed + i * 11) % 20 - 10) / 100;
       rhythm.push(inverted * (1 + rhythmVariation));
     }
-    const harmony = centerPhrase.harmony.slice(0, length);
-    const velocities = centerPhrase.velocities.slice(0, length).map((v, i) => {
+    const harmony = [];
+    for (let i = 0; i < length; i++) {
+      harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+    }
+    const velocities = [];
+    for (let i = 0; i < length; i++) {
+      const v = centerPhrase.velocities[Math.min(i, centerPhrase.velocities.length - 1)];
       if ((seed + i) % 7 === 0) {
-        return v * 0.35;
+        velocities.push(v * 0.35);
       } else if ((seed + i) % 11 === 0) {
-        return v * 1.15;
+        velocities.push(v * 1.15);
       } else {
-        return v * 0.6;
+        velocities.push(v * 0.6);
       }
-    });
+    }
     return {
       melody,
       harmony,
@@ -88970,8 +88975,8 @@ var NoteCentricMapper = class {
     const melody = [];
     let seed = Math.floor(prose.density.contentDensity * 83);
     for (let i = 0; i < length; i++) {
-      const chordRoot = centerPhrase.harmony[i];
-      const nextChord = i < length - 1 ? centerPhrase.harmony[i + 1] : chordRoot;
+      const chordRoot = centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)];
+      const nextChord = i < length - 1 ? centerPhrase.harmony[Math.min(i + 1, centerPhrase.harmony.length - 1)] : chordRoot;
       if (i % 4 === 0) {
         melody.push(chordRoot - 12);
       } else if (i % 2 === 0) {
@@ -89020,16 +89025,21 @@ var NoteCentricMapper = class {
       duration *= 1 + variation;
       rhythm.push(duration);
     }
-    const harmony = centerPhrase.harmony;
-    const velocities = centerPhrase.velocities.map((v, i) => {
+    const harmony = [];
+    for (let i = 0; i < length; i++) {
+      harmony.push(centerPhrase.harmony[Math.min(i, centerPhrase.harmony.length - 1)]);
+    }
+    const velocities = [];
+    for (let i = 0; i < length; i++) {
+      const v = centerPhrase.velocities[Math.min(i, centerPhrase.velocities.length - 1)];
       if ((seed + i) % 9 === 0) {
-        return v * 0.4;
+        velocities.push(v * 0.4);
       } else if ((seed + i) % 13 === 0) {
-        return v * 1.25;
+        velocities.push(v * 1.25);
       } else {
-        return v * 0.75;
+        velocities.push(v * 0.75);
       }
-    });
+    }
     return {
       melody,
       harmony,
@@ -89134,38 +89144,45 @@ var NoteCentricMapper = class {
   }
   /**
    * Develop a motif using various transformations
+   *
+   * @param motif - The motif to develop (contains interval patterns)
+   * @param transformation - Type of transformation to apply
+   * @param basePitch - Starting pitch for the motif (converts intervals to absolute pitches)
+   * @param transposition - Additional transposition in semitones (default 0)
+   * @returns Object with absolute pitch melody and rhythm arrays
    */
-  developMotif(motif, transformation, transposition = 0) {
+  developMotif(motif, transformation, basePitch, transposition = 0) {
+    const absoluteMelody = motif.pitchPattern.map((interval2) => basePitch + interval2);
     switch (transformation) {
       case "repeat":
         return {
-          melody: motif.pitchPattern.map((p) => p + transposition),
+          melody: absoluteMelody.map((p) => p + transposition),
           rhythm: [...motif.rhythmPattern]
         };
       case "transpose":
         return {
-          melody: motif.pitchPattern.map((p) => p + 7),
+          melody: absoluteMelody.map((p) => p + 7 + transposition),
           rhythm: [...motif.rhythmPattern]
         };
       case "invert":
         return {
-          melody: motif.pitchPattern.map((p) => -p),
+          melody: motif.pitchPattern.map((interval2) => basePitch - interval2 + transposition),
           rhythm: [...motif.rhythmPattern]
         };
       case "augment":
         return {
-          melody: [...motif.pitchPattern],
+          melody: absoluteMelody.map((p) => p + transposition),
           rhythm: motif.rhythmPattern.map((d) => d * 2)
         };
       case "fragment":
         const fragmentLength = Math.min(3, motif.pitchPattern.length);
         return {
-          melody: motif.pitchPattern.slice(0, fragmentLength),
+          melody: absoluteMelody.slice(0, fragmentLength).map((p) => p + transposition),
           rhythm: motif.rhythmPattern.slice(0, fragmentLength)
         };
       default:
         return {
-          melody: [...motif.pitchPattern],
+          melody: absoluteMelody.map((p) => p + transposition),
           rhythm: [...motif.rhythmPattern]
         };
     }
