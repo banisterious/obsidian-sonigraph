@@ -130,19 +130,32 @@ export class NoteCentricMapper {
 		// Step 2: Generate musical phrase from prose
 		const centerPhrase = this.generatePhraseFromProse(proseAnalysis);
 
-		// Step 3: Generate embellishments from connected nodes (optional)
+		// Step 3: Extract motifs from center phrase for future musical development
+		const motifs = this.extractMotifs(centerPhrase.melody, centerPhrase.rhythm);
+
+		// Initialize musical memory with extracted motifs
+		const memory: MusicalMemory = {
+			primaryMotifs: motifs,
+			usageCount: new Map(),
+			lastTransform: new Map(),
+			currentPhrase: 0
+		};
+
+		// Step 4: Generate embellishments from connected nodes (optional)
 		const embellishments = this.generateEmbellishments(data, proseAnalysis, centerPhrase);
 
 		logger.info('mapping-complete', 'Note-centric mapping complete', {
 			phraseLength: centerPhrase.melody.length,
 			tempo: centerPhrase.tempo,
-			embellishments: embellishments.length
+			embellishments: embellishments.length,
+			motifsExtracted: motifs.length
 		});
 
 		return {
 			centerPhrase,
 			embellishments,
-			proseAnalysis
+			proseAnalysis,
+			memory
 		};
 	}
 

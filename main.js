@@ -88369,16 +88369,25 @@ var NoteCentricMapper = class {
       return null;
     }
     const centerPhrase = this.generatePhraseFromProse(proseAnalysis);
+    const motifs = this.extractMotifs(centerPhrase.melody, centerPhrase.rhythm);
+    const memory = {
+      primaryMotifs: motifs,
+      usageCount: /* @__PURE__ */ new Map(),
+      lastTransform: /* @__PURE__ */ new Map(),
+      currentPhrase: 0
+    };
     const embellishments = this.generateEmbellishments(data, proseAnalysis, centerPhrase);
     logger83.info("mapping-complete", "Note-centric mapping complete", {
       phraseLength: centerPhrase.melody.length,
       tempo: centerPhrase.tempo,
-      embellishments: embellishments.length
+      embellishments: embellishments.length,
+      motifsExtracted: motifs.length
     });
     return {
       centerPhrase,
       embellishments,
-      proseAnalysis
+      proseAnalysis,
+      memory
     };
   }
   /**
