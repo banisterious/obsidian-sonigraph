@@ -979,23 +979,15 @@ export class NoteCentricMapper {
 			} else {
 				// On weak beats: MORE chromatic and unexpected approaches
 				const interval = nextChord - chordRoot;
-				let approach: number;
 
-				// Chromatic approach from above or below (50% more chromaticism)
-				if ((seed + i) % 2 === 0) {
-					// Chromatic approach from below
-					approach = nextChord - 1;
-				} else {
-					// Chromatic approach from above
-					approach = nextChord + 1;
-				}
+				// Start with default chromatic approach
+				let approach = (seed + i) % 2 === 0 ? nextChord - 1 : nextChord + 1;
 
-				// Occasionally add tritone substitutions for jazz flavor
+				// Override with tritone substitutions for jazz flavor (if conditions met)
 				if ((seed + i * 19) % 7 === 0 && prose.musicalExpressiveness > 0.6) {
 					approach = nextChord + 6; // Tritone away
 				}
-
-				// Occasionally add scalar approach instead of chromatic
+				// Or override with scalar approach (if tritone not used and conditions met)
 				else if ((seed + i * 23) % 5 === 0) {
 					approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
 				}

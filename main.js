@@ -89017,12 +89017,7 @@ var NoteCentricMapper = class {
         melody.push(chordToneOptions[toneIndex] - 12);
       } else {
         const interval2 = nextChord - chordRoot;
-        let approach;
-        if ((seed + i) % 2 === 0) {
-          approach = nextChord - 1;
-        } else {
-          approach = nextChord + 1;
-        }
+        let approach = (seed + i) % 2 === 0 ? nextChord - 1 : nextChord + 1;
         if ((seed + i * 19) % 7 === 0 && prose.musicalExpressiveness > 0.6) {
           approach = nextChord + 6;
         } else if ((seed + i * 23) % 5 === 0) {
