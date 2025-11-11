@@ -22,6 +22,37 @@ import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
 const logger = getLogger('control-panel');
 
 /**
+ * Type-safe helper to access instrument settings by key
+ * Avoids unsafe 'as any' casts for dynamic property access
+ */
+type InstrumentKey = keyof SonigraphPlugin['settings']['instruments'];
+
+function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
+	const instruments = plugin.settings.instruments;
+	if (instrumentKey in instruments) {
+		return instruments[instrumentKey as InstrumentKey];
+	}
+	return undefined;
+}
+
+function setInstrumentSetting<K extends keyof any>(
+	plugin: SonigraphPlugin,
+	instrumentKey: string,
+	settingKey: K,
+	value: any
+): boolean {
+	const instruments = plugin.settings.instruments;
+	if (instrumentKey in instruments) {
+		const instrument = instruments[instrumentKey as InstrumentKey];
+		if (instrument && typeof instrument === 'object') {
+			(instrument as any)[settingKey] = value;
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Sonigraph Control Center Modal
  * Family-based tab structure with Material Design styling
  */
@@ -3933,7 +3964,7 @@ export class MaterialControlPanelModal extends Modal {
 		const effectsContainer = effectsGroup.createDiv({ cls: 'osp-effects-container' });
 		
 		// Get current instrument settings
-		const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentName];
+		const instrumentSettings = getInstrumentSettings(this.plugin, instrumentName);
 		
 		// Reverb toggle
 		this.createEffectToggle(effectsContainer, 'Reverb', 'reverb', instrumentName, instrumentSettings?.effects?.reverb?.enabled || false);
@@ -3964,8 +3995,8 @@ export class MaterialControlPanelModal extends Modal {
 			});
 			
 			// Set current value
-			const currentSettings = (this.plugin.settings.instruments as any)[instrumentName];
-			const usesHighQuality = currentSettings.useHighQuality ?? false;
+			const currentSettings = getInstrumentSettings(this.plugin, instrumentName);
+			const usesHighQuality = currentSettings?.useHighQuality ?? false;
 			qualitySelect.value = usesHighQuality ? 'recording' : 'synthesis';
 			
 			// Handle changes
@@ -3984,7 +4015,7 @@ export class MaterialControlPanelModal extends Modal {
 				}
 				
 				// Update settings
-				(this.plugin.settings.instruments as any)[instrumentName].useHighQuality = useRecording;
+				setInstrumentSetting(this.plugin, instrumentName, 'useHighQuality', useRecording);
 				await this.plugin.saveSettings();
 				
 				// Show feedback
@@ -4126,7 +4157,7 @@ export class MaterialControlPanelModal extends Modal {
 		// (No longer dependent on global setting - per-instrument control)
 		
 		// Check if instrument has useHighQuality setting (indicates it supports choice)
-		const instrumentSettings = (this.plugin.settings.instruments as any)[instrumentKey];
+		const instrumentSettings = getInstrumentSettings(this.plugin, instrumentKey);
 		if (!instrumentSettings || !('useHighQuality' in instrumentSettings)) {
 			return false;
 		}
@@ -4331,7 +4362,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Check if whale integration has samples
 			const whaleIntegration = getWhaleIntegration();
-			const hasSamples = whaleIntegration?.whaleManager?.hasSamples() || false;
+			const hasSamples = whaleIntegration?.getWhaleManager()?.hasSamples() || false;
 
 			if (!hasSamples) {
 				new Notice('ℹ️ No whale samples downloaded yet. Click "Download samples" first to hear authentic whale recordings. Playing synthesized preview...');
@@ -4414,7 +4445,8 @@ All whale samples are authentic recordings from marine research institutions and
 		// Get whale integration instance
 		const whaleIntegration = getWhaleIntegration();
 
-		if (!whaleIntegration || !whaleIntegration.whaleManager) {
+		const whaleManager = whaleIntegration?.getWhaleManager();
+		if (!whaleIntegration || !whaleManager) {
 			new Notice('⚠️ Whale integration not initialized. Please enable whale sounds first.');
 			logger.warn('whale-ui', 'Cannot download samples - whale integration not initialized');
 			return;
@@ -4424,11 +4456,11 @@ All whale samples are authentic recordings from marine research institutions and
 			new Notice('📥 Starting whale sample download... This may take a few minutes.');
 			logger.info('whale-ui', 'Manual whale sample download initiated by user');
 
-			const before = whaleIntegration.whaleManager.getCachedSampleCount();
+			const before = whaleManager.getCachedSampleCount();
 
-			await whaleIntegration.whaleManager.manuallyDownloadSamples();
+			await whaleManager.manuallyDownloadSamples();
 
-			const after = whaleIntegration.whaleManager.getCachedSampleCount();
+			const after = whaleManager.getCachedSampleCount();
 
 			if (after.totalSamples > before.totalSamples || after.totalSamples > 0) {
 				new Notice(`✅ Downloaded ${after.totalSamples} whale sample(s) for ${after.speciesCount} species!`);

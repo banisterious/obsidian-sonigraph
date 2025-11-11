@@ -138,4 +138,33 @@ export interface AudioMappingConfig {
 		freesoundApiKey: string;
 		enableFreesoundSamples: boolean;
 	};
+	chordFusion?: {
+		enabled: boolean;
+		mode: string;
+		timingWindow: number;
+		minimumNotes: number;
+		temporalGrouping: string;
+		maxChordNotes: number;
+		layerSettings: {
+			melodic: boolean;
+			harmonic: boolean;
+			rhythmic: boolean;
+			ambient: boolean;
+		};
+		connectionChords: boolean;
+		contextualHarmony: boolean;
+		chordComplexity: number;
+		progressionSpeed: number;
+		dissonanceLevel: number;
+		voicingStrategy: string;
+	};
+	noteCentricMusicality?: {
+		preset: string;
+		timingHumanization: number;
+		harmonicAdventurousness: number;
+		dynamicRange: string;
+		polyphonicDensity: string;
+		melodicIndependence: number;
+		voiceLeadingStyle: string;
+	};
 } 

@@ -17630,6 +17630,12 @@ var init_whale_integration = __esm({
       getSettings() {
         return { ...this.settings };
       }
+      /**
+       * Get whale manager instance (for UI access)
+       */
+      getWhaleManager() {
+        return this.whaleManager;
+      }
     };
     WhaleIntegration = _WhaleIntegration;
     // Default settings based on the integration plan
@@ -21134,6 +21140,24 @@ var control_panel_exports = {};
 __export(control_panel_exports, {
   MaterialControlPanelModal: () => MaterialControlPanelModal
 });
+function getInstrumentSettings(plugin, instrumentKey) {
+  const instruments = plugin.settings.instruments;
+  if (instrumentKey in instruments) {
+    return instruments[instrumentKey];
+  }
+  return void 0;
+}
+function setInstrumentSetting(plugin, instrumentKey, settingKey, value) {
+  const instruments = plugin.settings.instruments;
+  if (instrumentKey in instruments) {
+    const instrument = instruments[instrumentKey];
+    if (instrument && typeof instrument === "object") {
+      instrument[settingKey] = value;
+      return true;
+    }
+  }
+  return false;
+}
 var import_obsidian16, logger28, MaterialControlPanelModal;
 var init_control_panel = __esm({
   "src/ui/control-panel.ts"() {
@@ -24083,7 +24107,7 @@ var init_control_panel = __esm({
         const effectsLabel = effectsGroup.createDiv({ cls: "osp-param-label" });
         effectsLabel.textContent = "Effects";
         const effectsContainer = effectsGroup.createDiv({ cls: "osp-effects-container" });
-        const instrumentSettings = this.plugin.settings.instruments[instrumentName];
+        const instrumentSettings = getInstrumentSettings(this.plugin, instrumentName);
         this.createEffectToggle(effectsContainer, "Reverb", "reverb", instrumentName, ((_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.enabled) || false);
         this.createEffectToggle(effectsContainer, "Chorus", "chorus", instrumentName, ((_d = (_c = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _c.chorus) == null ? void 0 : _d.enabled) || false);
         this.createEffectToggle(effectsContainer, "Filter", "filter", instrumentName, ((_f = (_e = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _e.filter) == null ? void 0 : _f.enabled) || false);
@@ -24101,8 +24125,8 @@ var init_control_panel = __esm({
             value: "recording",
             text: "Use recording"
           });
-          const currentSettings = this.plugin.settings.instruments[instrumentName];
-          const usesHighQuality = (_g = currentSettings.useHighQuality) != null ? _g : false;
+          const currentSettings = getInstrumentSettings(this.plugin, instrumentName);
+          const usesHighQuality = (_g = currentSettings == null ? void 0 : currentSettings.useHighQuality) != null ? _g : false;
           qualitySelect.value = usesHighQuality ? "recording" : "synthesis";
           qualitySelect.addEventListener("change", async () => {
             const useRecording = qualitySelect.value === "recording";
@@ -24114,7 +24138,7 @@ var init_control_panel = __esm({
                 return;
               }
             }
-            this.plugin.settings.instruments[instrumentName].useHighQuality = useRecording;
+            setInstrumentSetting(this.plugin, instrumentName, "useHighQuality", useRecording);
             await this.plugin.saveSettings();
             const modeText = useRecording ? "recording" : "synthesis";
             new import_obsidian16.Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
@@ -24224,7 +24248,7 @@ var init_control_panel = __esm({
         return synthesisOnlyInstruments.includes(instrumentKey);
       }
       instrumentSupportsQualityChoice(instrumentKey) {
-        const instrumentSettings = this.plugin.settings.instruments[instrumentKey];
+        const instrumentSettings = getInstrumentSettings(this.plugin, instrumentKey);
         if (!instrumentSettings || !("useHighQuality" in instrumentSettings)) {
           return false;
         }
@@ -24378,7 +24402,7 @@ var init_control_panel = __esm({
             return;
           }
           const whaleIntegration2 = getWhaleIntegration();
-          const hasSamples = ((_b = whaleIntegration2 == null ? void 0 : whaleIntegration2.whaleManager) == null ? void 0 : _b.hasSamples()) || false;
+          const hasSamples = ((_b = whaleIntegration2 == null ? void 0 : whaleIntegration2.getWhaleManager()) == null ? void 0 : _b.hasSamples()) || false;
           if (!hasSamples) {
             new import_obsidian16.Notice('\u2139\uFE0F No whale samples downloaded yet. Click "Download samples" first to hear authentic whale recordings. Playing synthesized preview...');
             logger28.info("whale-ui", "No cached whale samples available, playing synthesis");
@@ -24448,7 +24472,8 @@ All whale samples are authentic recordings from marine research institutions and
        */
       async handleWhaleDownload() {
         const whaleIntegration2 = getWhaleIntegration();
-        if (!whaleIntegration2 || !whaleIntegration2.whaleManager) {
+        const whaleManager = whaleIntegration2 == null ? void 0 : whaleIntegration2.getWhaleManager();
+        if (!whaleIntegration2 || !whaleManager) {
           new import_obsidian16.Notice("\u26A0\uFE0F Whale integration not initialized. Please enable whale sounds first.");
           logger28.warn("whale-ui", "Cannot download samples - whale integration not initialized");
           return;
@@ -24456,9 +24481,9 @@ All whale samples are authentic recordings from marine research institutions and
         try {
           new import_obsidian16.Notice("\u{1F4E5} Starting whale sample download... This may take a few minutes.");
           logger28.info("whale-ui", "Manual whale sample download initiated by user");
-          const before = whaleIntegration2.whaleManager.getCachedSampleCount();
-          await whaleIntegration2.whaleManager.manuallyDownloadSamples();
-          const after = whaleIntegration2.whaleManager.getCachedSampleCount();
+          const before = whaleManager.getCachedSampleCount();
+          await whaleManager.manuallyDownloadSamples();
+          const after = whaleManager.getCachedSampleCount();
           if (after.totalSamples > before.totalSamples || after.totalSamples > 0) {
             new import_obsidian16.Notice(`\u2705 Downloaded ${after.totalSamples} whale sample(s) for ${after.speciesCount} species!`);
             logger28.info("whale-ui", "Whale sample download completed", {

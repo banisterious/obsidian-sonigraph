@@ -278,6 +278,13 @@ export class WhaleIntegration {
     getSettings(): WhaleIntegrationSettings {
         return { ...this.settings };
     }
+
+    /**
+     * Get whale manager instance (for UI access)
+     */
+    getWhaleManager(): WhaleAudioManager | null {
+        return this.whaleManager;
+    }
 }
 
 // Global whale integration instance
