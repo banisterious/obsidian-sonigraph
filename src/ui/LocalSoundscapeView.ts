@@ -18,6 +18,8 @@ import {
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
 import { ForceDirectedLayout } from '../graph/ForceDirectedLayout';
 import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMapper';
+import { NoteCentricMapper, NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
+import { NoteCentricPlayer } from '../audio/playback/NoteCentricPlayer';
 import { LocalSoundscapeFilterModal, LocalSoundscapeFilters } from './LocalSoundscapeFilterModal';
 import { NoteVisualizationManager, VisualizationMode } from '../visualization/NoteVisualizationManager';
 import { createLucideIcon } from './lucide-icons';
@@ -47,7 +49,11 @@ export class LocalSoundscapeView extends ItemView {
 
 	// Audio components
 	private depthMapper: DepthBasedMapper | null = null;
+	private noteCentricMapper: NoteCentricMapper | null = null;
+	private noteCentricPlayer: NoteCentricPlayer | null = null;
+	private currentNoteCentricMapping: NoteCentricMapping | null = null;
 	private currentMappings: DepthMapping[] = [];
+	private continuousLayerManager: any = null; // ContinuousLayerManager (lazily loaded)
 
 	// Audio state
 	private isPlaying: boolean = false;
@@ -113,8 +119,6 @@ export class LocalSoundscapeView extends ItemView {
 	// View settings
 	private pulsePlayingNodes: boolean = true;
 	private nodeSizeMode: 'uniform' | 'link-count' | 'content-length' = 'uniform';
-	private autoStartAudio: boolean = false;
-	private keyDisplayElement: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
 		super(leaf);
@@ -201,6 +205,17 @@ export class LocalSoundscapeView extends ItemView {
 		// Stop audio playback
 		if (this.isPlaying && this.plugin.audioEngine) {
 			this.plugin.audioEngine.stop();
+		}
+
+		// Stop and cleanup continuous layers
+		this.stopContinuousLayers();
+		if (this.continuousLayerManager) {
+			try {
+				await this.continuousLayerManager.dispose();
+			} catch (error) {
+				logger.warn('view-close', 'Error disposing layer manager', error as Error);
+			}
+			this.continuousLayerManager = null;
 		}
 
 		// Cleanup renderer
@@ -542,139 +557,6 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		});
 
-		// Audio Settings
-		const audioSection = container.createDiv({ cls: 'settings-section' });
-		audioSection.createEl('h4', { text: 'Audio', cls: 'settings-heading' });
-
-		// Auto-start audio toggle
-		new Setting(audioSection)
-			.setName('Auto-play when opening')
-			.addToggle(toggle => toggle
-				.setValue(this.autoStartAudio)
-				.onChange((value) => {
-					this.autoStartAudio = value;
-					logger.info('setting-autostart', 'Auto-start audio setting changed', { enabled: value });
-				}));
-
-		// Auto-play active note toggle
-		new Setting(audioSection)
-			.setName('Auto-play active note')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.autoPlayActiveNote ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					this.plugin.settings.localSoundscape.autoPlayActiveNote = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-autoplay-active', 'Auto-play active note setting changed', {
-						enabled: value
-					});
-				}));
-
-		// Musical Key Settings
-		const keySection = container.createDiv({ cls: 'settings-section' });
-		keySection.createEl('h4', { text: 'Musical key', cls: 'settings-heading' });
-
-		// Key selection mode dropdown
-		new Setting(keySection)
-			.setName('Key based on')
-			.setDesc('How to determine the musical key for this soundscape')
-			.addDropdown(dropdown => dropdown
-				.addOption('vault-name', 'Vault name')
-				.addOption('root-folder', 'Root folder')
-				.addOption('folder-path', 'Folder at specific depth')
-				.addOption('full-path', 'Full folder path')
-				.addOption('file-name', 'File name')
-				.addOption('custom', 'Custom (manual)')
-				.setValue(this.plugin.settings.localSoundscape?.keySelection?.mode || 'vault-name')
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.keySelection) {
-						this.plugin.settings.localSoundscape.keySelection = {};
-					}
-					this.plugin.settings.localSoundscape.keySelection.mode = value as any;
-					await this.plugin.saveSettings();
-
-					// Update key display
-					this.updateKeyDisplay();
-
-					logger.info('setting-key-mode', 'Key selection mode changed', { mode: value });
-				}));
-
-		// Folder depth setting (only shown when folder-path mode is selected)
-		const folderDepthSetting = new Setting(keySection)
-			.setName('Folder depth')
-			.setDesc('Which folder level to use (0 = root, 1 = first subfolder, etc.)')
-			.addSlider(slider => slider
-				.setLimits(0, 5, 1)
-				.setValue(this.plugin.settings.localSoundscape?.keySelection?.folderDepth ?? 0)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.keySelection) {
-						this.plugin.settings.localSoundscape.keySelection = {};
-					}
-					this.plugin.settings.localSoundscape.keySelection.folderDepth = value;
-					await this.plugin.saveSettings();
-
-					// Update key display
-					this.updateKeyDisplay();
-
-					logger.info('setting-key-folder-depth', 'Folder depth changed', { depth: value });
-				}));
-
-		// Custom key dropdown (only shown when custom mode is selected)
-		const customKeySetting = new Setting(keySection)
-			.setName('Custom key')
-			.setDesc('Select a specific musical key')
-			.addDropdown(dropdown => {
-				ROOT_NOTES.forEach(note => {
-					dropdown.addOption(note, note);
-				});
-				return dropdown
-					.setValue(this.plugin.settings.localSoundscape?.keySelection?.customKey || 'C')
-					.onChange(async (value) => {
-						if (!this.plugin.settings.localSoundscape) {
-							this.plugin.settings.localSoundscape = {};
-						}
-						if (!this.plugin.settings.localSoundscape.keySelection) {
-							this.plugin.settings.localSoundscape.keySelection = {};
-						}
-						this.plugin.settings.localSoundscape.keySelection.customKey = value;
-						await this.plugin.saveSettings();
-
-						// Update key display
-						this.updateKeyDisplay();
-
-						logger.info('setting-key-custom', 'Custom key changed', { key: value });
-					});
-			});
-
-		// Show/hide conditional settings based on mode
-		const updateKeySettingsVisibility = () => {
-			const mode = this.plugin.settings.localSoundscape?.keySelection?.mode || 'vault-name';
-			folderDepthSetting.settingEl.style.display = mode === 'folder-path' ? '' : 'none';
-			customKeySetting.settingEl.style.display = mode === 'custom' ? '' : 'none';
-		};
-		updateKeySettingsVisibility();
-
-		// Current key display
-		const keyDisplay = new Setting(keySection)
-			.setName('Current key')
-			.setDesc('The musical key determined by the current settings');
-		const keyDisplayValue = keyDisplay.controlEl.createSpan({
-			cls: 'setting-value-display',
-			text: this.determineMusicalKey()
-		});
-
-		// Store reference to update display
-		this.keyDisplayElement = keyDisplayValue;
-
 		// Visual Effects Settings
 		const effectsSection = container.createDiv({ cls: 'settings-section' });
 		effectsSection.createEl('h4', { text: 'Visual effects', cls: 'settings-heading' });
@@ -695,152 +577,6 @@ export class LocalSoundscapeView extends ItemView {
 					}
 				}));
 
-		// Context-Aware Modifiers Settings
-		const contextSection = container.createDiv({ cls: 'settings-section' });
-		contextSection.createEl('h4', { text: 'Context-aware modifiers', cls: 'settings-heading' });
-
-		// Master enable toggle
-		new Setting(contextSection)
-			.setName('Enable context-aware audio')
-			.setDesc('Allow environmental factors to influence the soundscape')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-enabled', 'Context-aware audio enabled changed', { enabled: value });
-				}));
-
-		// Mode selector
-		new Setting(contextSection)
-			.setName('Context mode')
-			.setDesc('How context influences the audio')
-			.addDropdown(dropdown => dropdown
-				.addOption('influenced', 'Influenced - Blend with note properties')
-				.addOption('only', 'Only - Purely environmental')
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.mode || 'influenced')
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.mode = value as 'influenced' | 'only';
-					await this.plugin.saveSettings();
-					logger.info('setting-context-mode', 'Context mode changed', { mode: value });
-				}));
-
-		// Influence weight slider
-		new Setting(contextSection)
-			.setName('Influence weight')
-			.setDesc('How much context affects the sound (0-100%)')
-			.addSlider(slider => slider
-				.setLimits(0, 100, 5)
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.influenceWeight ?? 50)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.influenceWeight = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-weight', 'Context influence weight changed', { weight: value });
-				}));
-
-		// Season toggle
-		new Setting(contextSection)
-			.setName('Season influence')
-			.setDesc('Let seasonal changes affect the mood')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.season?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.season) {
-						this.plugin.settings.localSoundscape.contextAware.season = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.season.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-season', 'Season influence changed', { enabled: value });
-				}));
-
-		// Time of day toggle
-		new Setting(contextSection)
-			.setName('Time of day influence')
-			.setDesc('Let time affect brightness and energy')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.timeOfDay?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.timeOfDay) {
-						this.plugin.settings.localSoundscape.contextAware.timeOfDay = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.timeOfDay.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-time', 'Time of day influence changed', { enabled: value });
-				}));
-
-		// Weather toggle
-		new Setting(contextSection)
-			.setName('Weather influence')
-			.setDesc('Let weather conditions affect atmosphere')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.weather?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.weather) {
-						this.plugin.settings.localSoundscape.contextAware.weather = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.weather.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-weather', 'Weather influence changed', { enabled: value });
-				}));
-
-		// Theme toggle
-		new Setting(contextSection)
-			.setName('Theme influence')
-			.setDesc('Let light/dark mode affect tone')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.localSoundscape?.contextAware?.theme?.enabled ?? false)
-				.onChange(async (value) => {
-					if (!this.plugin.settings.localSoundscape) {
-						this.plugin.settings.localSoundscape = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware) {
-						this.plugin.settings.localSoundscape.contextAware = {};
-					}
-					if (!this.plugin.settings.localSoundscape.contextAware.theme) {
-						this.plugin.settings.localSoundscape.contextAware.theme = {};
-					}
-					this.plugin.settings.localSoundscape.contextAware.theme.enabled = value;
-					await this.plugin.saveSettings();
-					logger.info('setting-context-theme', 'Theme influence changed', { enabled: value });
-				}));
-
 		// Info Section
 		const infoSection = container.createDiv({ cls: 'settings-section' });
 		infoSection.createEl('h4', { text: 'About', cls: 'settings-heading' });
@@ -855,17 +591,19 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'setting-description'
 		});
 
-		// Global Settings Link
-		const globalLink = infoSection.createDiv({ cls: 'setting-item' });
-		const linkButton = globalLink.createEl('button', {
-			text: 'Open Global Settings',
+		// Audio Settings Link
+		const audioSettingsInfo = infoSection.createDiv({ cls: 'setting-item' });
+		audioSettingsInfo.createEl('p', {
+			text: 'Audio settings (auto-play, musical key, context-aware modifiers) are configured in the Control Center.',
+			cls: 'setting-description'
+		});
+		const linkButton = audioSettingsInfo.createEl('button', {
+			text: 'Open Control Center',
 			cls: 'setting-button'
 		});
 		linkButton.addEventListener('click', () => {
-			// @ts-ignore - Obsidian internal API
-			this.app.setting.open();
-			// @ts-ignore
-			this.app.setting.openTabById('sonigraph');
+			// Open Control Center modal via ribbon icon command
+			this.plugin.openControlCenter();
 		});
 
 		logger.debug('settings-panel-created', 'Settings panel populated');
@@ -1002,6 +740,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'stat-value volume-level'
 		});
 
+		// Musical settings now configured in Control Center > Local Soundscape > Musical Enhancements
+		// (Scale Quantization, Adaptive Pitch, Chord Voicing moved to centralized settings)
+
 		// Visualization section
 		const visualizationSection = container.createDiv({ cls: 'local-soundscape-visualization-section' });
 
@@ -1041,6 +782,357 @@ export class LocalSoundscapeView extends ItemView {
 		this.initializeVisualization();
 
 		logger.debug('playback-controls-created', 'Playback controls initialized with visualization');
+	}
+
+	/**
+	 * Create musical scale quantization controls
+	 */
+	private createMusicalScaleControls(container: HTMLElement): void {
+		// Section header
+		const header = container.createDiv({ cls: 'musical-settings-header' });
+		header.createSpan({ text: 'Musical Scale Settings', cls: 'settings-header-text' });
+
+		// Enable/disable toggle
+		const enableToggle = container.createDiv({ cls: 'musical-setting-row' });
+		enableToggle.createSpan({ text: 'Scale Quantization:', cls: 'setting-label' });
+
+		const enableCheckbox = enableToggle.createEl('input', {
+			type: 'checkbox',
+			cls: 'musical-setting-checkbox'
+		});
+		enableCheckbox.checked = this.depthMapper?.getConfig().musicalTheory?.enabled || false;
+		enableCheckbox.addEventListener('change', async () => {
+			await this.toggleScaleQuantization(enableCheckbox.checked);
+		});
+
+		// Root note selector
+		const rootNoteRow = container.createDiv({ cls: 'musical-setting-row' });
+		rootNoteRow.createSpan({ text: 'Root Note:', cls: 'setting-label' });
+
+		const rootNoteSelect = rootNoteRow.createEl('select', { cls: 'musical-setting-select' });
+		const rootNotes: Array<{value: string, label: string}> = [
+			{ value: 'C', label: 'C' },
+			{ value: 'C#', label: 'C# / D♭' },
+			{ value: 'D', label: 'D' },
+			{ value: 'D#', label: 'D# / E♭' },
+			{ value: 'E', label: 'E' },
+			{ value: 'F', label: 'F' },
+			{ value: 'F#', label: 'F# / G♭' },
+			{ value: 'G', label: 'G' },
+			{ value: 'G#', label: 'G# / A♭' },
+			{ value: 'A', label: 'A' },
+			{ value: 'A#', label: 'A# / B♭' },
+			{ value: 'B', label: 'B' }
+		];
+
+		rootNotes.forEach(note => {
+			const option = rootNoteSelect.createEl('option', {
+				value: note.value,
+				text: note.label
+			});
+			if (note.value === (this.depthMapper?.getConfig().musicalTheory?.rootNote || 'C')) {
+				option.selected = true;
+			}
+		});
+
+		rootNoteSelect.addEventListener('change', async () => {
+			await this.updateMusicalScale(rootNoteSelect.value as any, undefined);
+		});
+
+		// Scale type selector
+		const scaleTypeRow = container.createDiv({ cls: 'musical-setting-row' });
+		scaleTypeRow.createSpan({ text: 'Scale Type:', cls: 'setting-label' });
+
+		const scaleTypeSelect = scaleTypeRow.createEl('select', { cls: 'musical-setting-select' });
+		const scaleTypes: Array<{value: string, label: string, description: string}> = [
+			{ value: 'major', label: 'Major', description: 'Bright, happy' },
+			{ value: 'minor', label: 'Natural Minor', description: 'Dark, melancholic' },
+			{ value: 'harmonic-minor', label: 'Harmonic Minor', description: 'Exotic, dramatic' },
+			{ value: 'melodic-minor', label: 'Melodic Minor', description: 'Bright minor' },
+			{ value: 'pentatonic-major', label: 'Pentatonic Major', description: 'Simple, folk' },
+			{ value: 'pentatonic-minor', label: 'Pentatonic Minor', description: 'Blues, rock' },
+			{ value: 'blues', label: 'Blues', description: 'Blues with blue notes' },
+			{ value: 'dorian', label: 'Dorian', description: 'Jazz, modern' },
+			{ value: 'phrygian', label: 'Phrygian', description: 'Spanish, dark' },
+			{ value: 'lydian', label: 'Lydian', description: 'Dreamy, floating' },
+			{ value: 'mixolydian', label: 'Mixolydian', description: 'Folk, bluegrass' }
+		];
+
+		scaleTypes.forEach(scale => {
+			const option = scaleTypeSelect.createEl('option', {
+				value: scale.value,
+				text: `${scale.label} (${scale.description})`
+			});
+			if (scale.value === (this.depthMapper?.getConfig().musicalTheory?.scale || 'major')) {
+				option.selected = true;
+			}
+		});
+
+		scaleTypeSelect.addEventListener('change', async () => {
+			await this.updateMusicalScale(undefined, scaleTypeSelect.value as any);
+		});
+
+		// Quantization strength slider
+		const quantStrengthRow = container.createDiv({ cls: 'musical-setting-row slider-row' });
+		quantStrengthRow.createSpan({ text: 'Quantization Strength:', cls: 'setting-label' });
+
+		const sliderContainer = quantStrengthRow.createDiv({ cls: 'slider-container' });
+		const quantStrengthSlider = sliderContainer.createEl('input', {
+			type: 'range',
+			cls: 'musical-setting-slider',
+			attr: {
+				min: '0',
+				max: '100',
+				step: '5'
+			}
+		});
+		const currentStrength = (this.depthMapper?.getConfig().musicalTheory?.quantizationStrength || 0.8) * 100;
+		quantStrengthSlider.value = currentStrength.toString();
+
+		const strengthValue = sliderContainer.createSpan({
+			text: `${currentStrength}%`,
+			cls: 'slider-value'
+		});
+
+		quantStrengthSlider.addEventListener('input', async () => {
+			const value = parseInt(quantStrengthSlider.value);
+			strengthValue.textContent = `${value}%`;
+			await this.updateQuantizationStrength(value / 100);
+		});
+
+		// Adaptive Pitch Ranges toggle (Phase 2)
+		const adaptivePitchRow = container.createDiv({ cls: 'musical-setting-row' });
+		adaptivePitchRow.createSpan({ text: 'Adaptive Pitch Ranges:', cls: 'setting-label' });
+
+		const adaptivePitchCheckbox = adaptivePitchRow.createEl('input', {
+			type: 'checkbox',
+			cls: 'musical-setting-checkbox'
+		});
+		adaptivePitchCheckbox.checked = this.depthMapper?.getConfig().adaptivePitch?.enabled || false;
+		adaptivePitchCheckbox.addEventListener('change', async () => {
+			await this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
+		});
+
+		const adaptivePitchDesc = container.createDiv({
+			cls: 'musical-setting-description',
+			text: 'Pitch ranges adapt to selected key for better harmonic integration'
+		});
+
+		// Chord Voicing toggle (Phase 2)
+		const chordVoicingRow = container.createDiv({ cls: 'musical-setting-row' });
+		chordVoicingRow.createSpan({ text: 'Chord Voicing:', cls: 'setting-label' });
+
+		const chordVoicingCheckbox = chordVoicingRow.createEl('input', {
+			type: 'checkbox',
+			cls: 'musical-setting-checkbox'
+		});
+		chordVoicingCheckbox.checked = this.depthMapper?.getConfig().chordVoicing?.enabled || false;
+		chordVoicingCheckbox.addEventListener('change', async () => {
+			await this.toggleChordVoicing(chordVoicingCheckbox.checked);
+		});
+
+		const chordVoicingDesc = container.createDiv({
+			cls: 'musical-setting-description',
+			text: 'Add harmonic richness with depth-based polyphonic voicing'
+		});
+
+		// Voicing density slider (only shown when chord voicing enabled)
+		const densityRow = container.createDiv({ cls: 'musical-setting-row slider-row' });
+		densityRow.createSpan({ text: 'Voicing Density:', cls: 'setting-label' });
+
+		const densitySliderContainer = densityRow.createDiv({ cls: 'slider-container' });
+		const densitySlider = densitySliderContainer.createEl('input', {
+			type: 'range',
+			cls: 'musical-setting-slider',
+			attr: {
+				min: '0',
+				max: '100',
+				step: '10'
+			}
+		});
+		const currentDensity = (this.depthMapper?.getConfig().chordVoicing?.voicingDensity || 0.5) * 100;
+		densitySlider.value = currentDensity.toString();
+
+		const densityValue = densitySliderContainer.createSpan({
+			text: `${currentDensity}%`,
+			cls: 'slider-value'
+		});
+
+		densitySlider.addEventListener('input', async () => {
+			const value = parseInt(densitySlider.value);
+			densityValue.textContent = `${value}%`;
+			await this.updateVoicingDensity(value / 100);
+		});
+
+		// Show/hide density slider based on chord voicing state
+		densityRow.style.display = chordVoicingCheckbox.checked ? 'flex' : 'none';
+		chordVoicingCheckbox.addEventListener('change', () => {
+			densityRow.style.display = chordVoicingCheckbox.checked ? 'flex' : 'none';
+		});
+
+		logger.debug('musical-controls-created', 'Musical scale controls initialized');
+	}
+
+	/**
+	 * Toggle scale quantization on/off
+	 */
+	private async toggleScaleQuantization(enabled: boolean): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('toggle-quantization', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			musicalTheory: {
+				...config.musicalTheory,
+				enabled: enabled
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		new Notice(`Scale quantization ${enabled ? 'enabled' : 'disabled'}`);
+		logger.info('toggle-quantization', `Scale quantization ${enabled ? 'enabled' : 'disabled'}`);
+	}
+
+	/**
+	 * Update musical scale (root note and/or scale type)
+	 */
+	private async updateMusicalScale(
+		rootNote?: 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B',
+		scaleType?: 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian'
+	): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('update-scale', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			musicalTheory: {
+				...config.musicalTheory,
+				rootNote: rootNote || config.musicalTheory?.rootNote || 'C',
+				scale: scaleType || config.musicalTheory?.scale || 'major'
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		const newConfig = this.depthMapper.getConfig();
+		new Notice(`Scale changed to ${newConfig.musicalTheory?.rootNote} ${newConfig.musicalTheory?.scale}`);
+		logger.info('update-scale', 'Musical scale updated', {
+			rootNote: newConfig.musicalTheory?.rootNote,
+			scaleType: newConfig.musicalTheory?.scale
+		});
+	}
+
+	/**
+	 * Update quantization strength
+	 */
+	private async updateQuantizationStrength(strength: number): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('update-quantization-strength', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			musicalTheory: {
+				...config.musicalTheory,
+				quantizationStrength: strength
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		logger.debug('update-quantization-strength', `Quantization strength updated to ${strength}`);
+	}
+
+	/**
+	 * Toggle adaptive pitch ranges on/off (Phase 2)
+	 */
+	private async toggleAdaptivePitch(enabled: boolean): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('toggle-adaptive-pitch', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			adaptivePitch: {
+				...config.adaptivePitch,
+				enabled: enabled
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		new Notice(`Adaptive pitch ranges ${enabled ? 'enabled' : 'disabled'}`);
+		logger.info('toggle-adaptive-pitch', `Adaptive pitch ranges ${enabled ? 'enabled' : 'disabled'}`);
+	}
+
+	/**
+	 * Toggle chord voicing on/off (Phase 2)
+	 */
+	private async toggleChordVoicing(enabled: boolean): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('toggle-chord-voicing', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			chordVoicing: {
+				...config.chordVoicing,
+				enabled: enabled
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		new Notice(`Chord voicing ${enabled ? 'enabled' : 'disabled'}`);
+		logger.info('toggle-chord-voicing', `Chord voicing ${enabled ? 'enabled' : 'disabled'}`);
+	}
+
+	/**
+	 * Update voicing density (Phase 2)
+	 */
+	private async updateVoicingDensity(density: number): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('update-voicing-density', 'No depth mapper available');
+			return;
+		}
+
+		const config = this.depthMapper.getConfig();
+		this.depthMapper.updateConfig({
+			chordVoicing: {
+				...config.chordVoicing,
+				voicingDensity: density
+			}
+		});
+
+		// Regenerate mappings if we have graph data
+		if (this.graphData) {
+			await this.generateMappingsFromGraph();
+		}
+
+		logger.debug('update-voicing-density', `Voicing density updated to ${density}`);
 	}
 
 	/**
@@ -1427,23 +1519,36 @@ export class LocalSoundscapeView extends ItemView {
 	 * Export soundscape audio
 	 */
 	private async exportSoundscapeAudio(): Promise<void> {
-		if (!this.currentMappings || this.currentMappings.length === 0) {
+		// Check if we have either playback mode's data
+		const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
+		const hasNoteCentricData = this.currentNoteCentricMapping !== null;
+
+		if (!hasGraphCentricData && !hasNoteCentricData) {
 			new Notice('No soundscape to export. Please play the soundscape first.');
 			return;
 		}
 
-		new Notice('Audio export feature coming soon! For now, you can record your system audio while playing the soundscape.');
+		// Determine export mode
+		const mode = hasNoteCentricData ? 'note-centric' : 'graph-centric';
 
-		// TODO: Implement offline audio rendering
-		// This would require:
-		// 1. Render all notes using the audio engine's offline mode
-		// 2. Encode to WAV/MP3
-		// 3. Save to file
-
-		logger.info('audio-export', 'Audio export requested', {
-			nodeCount: this.currentMappings.length,
-			centerNote: this.centerFile?.basename
+		logger.info('audio-export', 'Opening export modal for Local Soundscape', {
+			mode,
+			nodeCount: hasGraphCentricData ? this.currentMappings.length : 0,
+			centerNote: this.centerFile?.basename,
+			hasNoteCentricData,
+			hasGraphCentricData
 		});
+
+		// Use the existing export modal - pass null for animator since Local Soundscape is static
+		const { ExportModal } = require('../export/ExportModal');
+		const modal = new ExportModal(
+			this.app,
+			this.plugin,
+			this.plugin.audioEngine,
+			null,  // No temporal animator for Local Soundscape (static graph)
+			this.currentNoteCentricMapping  // Pass note-centric mapping if available
+		);
+		modal.open();
 	}
 
 	/**
@@ -1883,16 +1988,6 @@ export class LocalSoundscapeView extends ItemView {
 		}
 	}
 
-	/**
-	 * Update the key display element with the current key
-	 */
-	private updateKeyDisplay(): void {
-		if (this.keyDisplayElement) {
-			const key = this.determineMusicalKey();
-			this.keyDisplayElement.textContent = key;
-			logger.debug('key-display-updated', 'Key display updated', { key });
-		}
-	}
 
 	/**
 	 * Mark graph as up-to-date (just refreshed)
@@ -2060,7 +2155,7 @@ export class LocalSoundscapeView extends ItemView {
 			this.updatePlaybackUI();
 
 			// Auto-start audio if enabled
-			if (this.autoStartAudio && !this.isPlaying) {
+			if (this.plugin.settings.localSoundscape?.autoPlay && !this.isPlaying) {
 				logger.info('auto-start', 'Auto-starting audio playback');
 				// Small delay to let rendering complete
 				setTimeout(() => {
@@ -2157,17 +2252,19 @@ export class LocalSoundscapeView extends ItemView {
 	 * Start audio playback
 	 */
 	private async startPlayback(): Promise<void> {
-		if (!this.graphData || !this.depthMapper || !this.plugin.audioEngine) {
+		if (!this.graphData || !this.plugin.audioEngine) {
 			logger.warn('playback-start', 'Cannot start playback - missing required components', {
 				hasGraphData: !!this.graphData,
-				hasDepthMapper: !!this.depthMapper,
 				hasAudioEngine: !!this.plugin.audioEngine
 			});
 			new Notice('Audio engine not available');
 			return;
 		}
 
-		logger.info('playback-start', 'Starting soundscape playback');
+		// Determine playback mode
+		const playbackMode = this.plugin.settings.localSoundscape?.playbackMode || 'note-centric';
+
+		logger.info('playback-start', 'Starting soundscape playback', { mode: playbackMode });
 
 		try {
 			// Initialize audio engine first
@@ -2178,50 +2275,12 @@ export class LocalSoundscapeView extends ItemView {
 				logger.info('audio-init', 'Audio engine initialized successfully');
 			}
 
-			// Create depth-based musical mappings
-			this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
-
-			logger.info('mappings-created', 'Created depth-based musical mappings', {
-				count: this.currentMappings.length,
-				instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', ')
-			});
-
-			if (this.currentMappings.length === 0) {
-				new Notice('No mappings created - check that instruments are enabled in Control Center');
-				logger.warn('playback-start', 'No mappings created from graph data');
-				return;
+			// Route to appropriate playback system
+			if (playbackMode === 'note-centric') {
+				await this.startNoteCentricPlayback();
+			} else {
+				await this.startGraphCentricPlayback();
 			}
-
-			// Play notes individually using setTimeout (like Sonic Graph does)
-			// This bypasses the playback optimizer which was causing timing issues
-			this.isPlaying = true;
-			this.currentVoiceCount = this.currentMappings.length;
-			this.currentVolume = 0.7; // Average volume
-
-			this.updatePlaybackUI();
-
-			// Start visualization and time tracking
-			const playbackStartTime = Date.now();
-			if (this.visualizationManager) {
-				// For Local Soundscape, keep playback time fixed at 1.0s
-				// All notes are positioned around this time, so keeping cursor here keeps them visible
-				this.visualizationManager.start(1.0);
-				this.visualizationManager.updatePlaybackTime(1.0);
-
-				logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
-			}
-
-			logger.info('playback-started', 'Soundscape playback started - using real-time polling loop', {
-				voices: this.currentVoiceCount,
-				totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
-				firstNoteTiming: this.currentMappings[0].timing + 's',
-				lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + 's'
-			});
-
-			new Notice(`Playing ${this.currentVoiceCount} notes`);
-
-			// Start real-time playback using single polling loop (memory-efficient pattern like main Sonic Graph)
-			this.startRealtimePlayback();
 
 		} catch (error) {
 			logger.error('playback-error', 'Failed to start playback', error as Error);
@@ -2229,6 +2288,161 @@ export class LocalSoundscapeView extends ItemView {
 			this.isPlaying = false;
 			this.updatePlaybackUI();
 		}
+	}
+
+	/**
+	 * Start note-centric playback (generates musical phrases from prose)
+	 */
+	private async startNoteCentricPlayback(): Promise<void> {
+		// Initialize note-centric mapper if needed
+		if (!this.noteCentricMapper) {
+			this.noteCentricMapper = new NoteCentricMapper(this.app, this.plugin.settings);
+		}
+
+		// Initialize player if needed
+		if (!this.noteCentricPlayer) {
+			this.noteCentricPlayer = new NoteCentricPlayer(this.plugin.audioEngine, this.plugin.settings);
+		}
+
+		// Generate note-centric mapping
+		this.currentNoteCentricMapping = await this.noteCentricMapper.map(this.graphData);
+
+		if (!this.currentNoteCentricMapping) {
+			new Notice('Could not analyze center note for playback');
+			logger.warn('note-centric-playback', 'Failed to create note-centric mapping');
+			return;
+		}
+
+		logger.info('note-centric-mapping-created', 'Created note-centric mapping', {
+			phraseLength: this.currentNoteCentricMapping.centerPhrase.melody.length,
+			embellishments: this.currentNoteCentricMapping.embellishments.length,
+			contentType: this.currentNoteCentricMapping.proseAnalysis.contentType,
+			tempo: this.currentNoteCentricMapping.centerPhrase.tempo
+		});
+
+		// Start playback
+		this.isPlaying = true;
+		this.updatePlaybackUI();
+
+		// Play the note-centric mapping
+		await this.noteCentricPlayer.play(this.currentNoteCentricMapping);
+
+		// Start continuous layers if enabled
+		await this.startContinuousLayers();
+
+		// Start UI update loop for voice count tracking
+		this.startNoteCentricUIUpdateLoop();
+
+		new Notice(`Playing note-centric soundscape (${this.currentNoteCentricMapping.centerPhrase.melody.length} notes)`);
+	}
+
+	/**
+	 * Start UI update loop for note-centric playback
+	 */
+	private startNoteCentricUIUpdateLoop(): void {
+		logger.debug('ui-update-loop', 'Starting UI update loop for note-centric playback');
+
+		// Poll voice count every 100ms to keep UI synchronized
+		const updateInterval = setInterval(() => {
+			if (!this.isPlaying || !this.noteCentricPlayer) {
+				logger.debug('ui-update-loop', 'Stopping UI update loop (not playing or no player)');
+				clearInterval(updateInterval);
+				return;
+			}
+
+			// Update voice count from player
+			this.currentVoiceCount = this.noteCentricPlayer.getActiveVoiceCount();
+
+			// Log periodically for debugging
+			if (Math.random() < 0.1) {  // 10% of the time
+				logger.debug('ui-update-poll', 'UI update poll', {
+					voiceCount: this.currentVoiceCount,
+					isPlaying: this.noteCentricPlayer.getIsPlaying()
+				});
+			}
+
+			// Update UI
+			if (this.voiceCountDisplay) {
+				this.voiceCountDisplay.textContent = this.currentVoiceCount.toString();
+			}
+
+			// Check if playback finished (no more playing notes and player stopped)
+			if (this.currentVoiceCount === 0 && !this.noteCentricPlayer.getIsPlaying()) {
+				logger.info('note-centric-complete', 'Note-centric playback completed naturally');
+				clearInterval(updateInterval);
+				this.isPlaying = false;
+				this.updatePlaybackUI();
+			}
+		}, 100);
+	}
+
+	/**
+	 * Start graph-centric playback (traditional multi-node approach)
+	 */
+	private async startGraphCentricPlayback(): Promise<void> {
+		if (!this.depthMapper) {
+			logger.warn('graph-centric-playback', 'Depth mapper not initialized');
+			new Notice('Graph-centric playback not available');
+			return;
+		}
+
+		// Create depth-based musical mappings
+		this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
+
+		// Debug: Log detailed timing information
+		const timingDistribution = new Map<string, number>();
+		this.currentMappings.forEach(m => {
+			const roundedTiming = m.timing.toFixed(1);
+			timingDistribution.set(roundedTiming, (timingDistribution.get(roundedTiming) || 0) + 1);
+		});
+
+		logger.info('mappings-created', 'Created depth-based musical mappings', {
+			count: this.currentMappings.length,
+			instruments: [...new Set(this.currentMappings.map(m => m.instrument))].join(', '),
+			firstTenTimings: this.currentMappings.slice(0, 10).map(m => m.timing.toFixed(3)).join(', '),
+			firstTenPitches: this.currentMappings.slice(0, 10).map(m => m.pitch.toFixed(2)).join(', '),
+			timingDistribution: Array.from(timingDistribution.entries()).slice(0, 10).map(([t, count]) => `${t}s:${count}`).join(', ')
+		});
+
+		if (this.currentMappings.length === 0) {
+			new Notice('No mappings created - check that instruments are enabled in Control Center');
+			logger.warn('playback-start', 'No mappings created from graph data');
+			return;
+		}
+
+		// Play notes individually using setTimeout (like Sonic Graph does)
+		// This bypasses the playback optimizer which was causing timing issues
+		this.isPlaying = true;
+		this.currentVoiceCount = this.currentMappings.length;
+		this.currentVolume = 0.7; // Average volume
+
+		this.updatePlaybackUI();
+
+		// Start visualization and time tracking
+		const playbackStartTime = Date.now();
+		if (this.visualizationManager) {
+			// For Local Soundscape, keep playback time fixed at 1.0s
+			// All notes are positioned around this time, so keeping cursor here keeps them visible
+			this.visualizationManager.start(1.0);
+			this.visualizationManager.updatePlaybackTime(1.0);
+
+			logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
+		}
+
+		logger.info('playback-started', 'Soundscape playback started - using real-time polling loop', {
+			voices: this.currentVoiceCount,
+			totalDuration: this.currentMappings[this.currentMappings.length - 1].timing + 's',
+			firstNoteTiming: this.currentMappings[0].timing + 's',
+			lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + 's'
+		});
+
+		new Notice(`Playing ${this.currentVoiceCount} notes`);
+
+		// Start real-time playback using single polling loop (memory-efficient pattern like main Sonic Graph)
+		this.startRealtimePlayback();
+
+		// Start continuous layers if enabled
+		await this.startContinuousLayers();
 	}
 
 	/**
@@ -2275,7 +2489,12 @@ export class LocalSoundscapeView extends ItemView {
 
 		logger.info('playback-stop', 'Stopping soundscape playback');
 
-		// Clear the realtime polling loop
+		// Stop note-centric player if active
+		if (this.noteCentricPlayer && this.noteCentricPlayer.getIsPlaying()) {
+			this.noteCentricPlayer.stop();
+		}
+
+		// Clear the realtime polling loop (for graph-centric mode)
 		if (this.realtimeTimer !== null) {
 			clearInterval(this.realtimeTimer);
 			this.realtimeTimer = null;
@@ -2292,6 +2511,9 @@ export class LocalSoundscapeView extends ItemView {
 		// Stop audio engine playback
 		this.plugin.audioEngine.stop();
 
+		// Stop continuous layers if running
+		this.stopContinuousLayers();
+
 		// Clear mappings and reset state
 		this.currentMappings = [];
 		this.isPlaying = false;
@@ -2307,6 +2529,78 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		logger.info('playback-stopped', 'Soundscape playback stopped');
+	}
+
+	/**
+	 * Start continuous audio layers if enabled in settings
+	 */
+	private async startContinuousLayers(): Promise<void> {
+		// Check if continuous layers are enabled
+		const layersEnabled = this.plugin.settings.localSoundscape?.continuousLayers?.enabled;
+		if (!layersEnabled) {
+			logger.debug('layers', 'Continuous layers disabled in settings');
+			return;
+		}
+
+		logger.info('layers', 'Starting continuous layers for Local Soundscape');
+
+		try {
+			// Lazy-load ContinuousLayerManager
+			if (!this.continuousLayerManager) {
+				const { ContinuousLayerManager } = await import('../audio/layers/ContinuousLayerManager');
+
+				// Build config from Local Soundscape settings
+				const layerSettings = this.plugin.settings.localSoundscape.continuousLayers;
+				const musicalEnhancements = this.plugin.settings.localSoundscape.musicalEnhancements;
+
+				const layerConfig = {
+					enabled: layerSettings.enabled,
+					genre: 'ambient' as const, // Default to ambient for Local Soundscape
+					intensity: layerSettings.intensity || 0.5,
+					evolutionRate: 0.3,
+					baseVolume: layerSettings.volume || -12,
+					adaptiveIntensity: false, // Don't adapt to vault size for Local Soundscape
+					rhythmicEnabled: layerSettings.rhythmicEnabled || false,
+					harmonicEnabled: layerSettings.harmonicEnabled !== false, // Default true
+					ambientEnabled: layerSettings.ambientEnabled !== false, // Default true
+					// Pass musical context from Musical Enhancements
+					scale: musicalEnhancements?.scaleQuantization?.scale || 'major',
+					key: musicalEnhancements?.scaleQuantization?.rootNote || 'C'
+				};
+
+				this.continuousLayerManager = new ContinuousLayerManager(
+					this.plugin.settings,
+					layerConfig
+				);
+
+				await this.continuousLayerManager.initialize();
+				logger.info('layers', 'ContinuousLayerManager initialized', layerConfig);
+			}
+
+			// Start playback
+			await this.continuousLayerManager.start();
+			logger.info('layers', 'Continuous layers started successfully');
+
+		} catch (error) {
+			logger.error('layers', 'Failed to start continuous layers', error as Error);
+			// Don't block main playback if layers fail
+		}
+	}
+
+	/**
+	 * Stop continuous audio layers
+	 */
+	private stopContinuousLayers(): void {
+		if (!this.continuousLayerManager) {
+			return;
+		}
+
+		try {
+			this.continuousLayerManager.stop();
+			logger.info('layers', 'Continuous layers stopped');
+		} catch (error) {
+			logger.error('layers', 'Error stopping continuous layers', error as Error);
+		}
 	}
 
 	/**
@@ -2427,13 +2721,34 @@ export class LocalSoundscapeView extends ItemView {
 			// Add 1.0s offset so notes appear to the right of clefs
 			const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1.0;
 
-			// Play the note immediately (polling loop has already determined it's time to play)
-			await this.plugin.audioEngine.playNoteImmediate({
-				pitch: mapping.pitch,
-				duration: mapping.duration,
-				velocity: mapping.velocity,
-				instrument: mapping.instrument
-			}, visualTimestamp, mapping.nodeId);
+			// Check if this mapping has chord voicing (Phase 2)
+			if (mapping.isChordVoiced && mapping.chordFrequencies && mapping.chordFrequencies.length > 1) {
+				// Play all voices in the chord
+				const voiceVelocity = mapping.velocity * 0.8; // Reduce per-voice volume to prevent clipping
+
+				for (const voiceFrequency of mapping.chordFrequencies) {
+					await this.plugin.audioEngine.playNoteImmediate({
+						pitch: voiceFrequency,
+						duration: mapping.duration,
+						velocity: voiceVelocity,
+						instrument: mapping.instrument
+					}, visualTimestamp, mapping.nodeId);
+				}
+
+				logger.debug('polyphonic-playback', `Played chord with ${mapping.voiceCount} voices`, {
+					nodeId: mapping.nodeId,
+					rootPitch: mapping.pitch.toFixed(2),
+					voices: mapping.chordFrequencies.map(f => f.toFixed(2)).join(', ')
+				});
+			} else {
+				// Play single note (monophonic fallback)
+				await this.plugin.audioEngine.playNoteImmediate({
+					pitch: mapping.pitch,
+					duration: mapping.duration,
+					velocity: mapping.velocity,
+					instrument: mapping.instrument
+				}, visualTimestamp, mapping.nodeId);
+			}
 
 		} catch (error) {
 			logger.warn('note-playback-error', 'Failed to play note from polling loop', {
@@ -2485,9 +2800,12 @@ export class LocalSoundscapeView extends ItemView {
 			// Stop button should be disabled when not playing
 			this.stopButton.setAttribute('disabled', '');
 
-			// Export button enabled if we have mappings (can export last played soundscape)
+			// Export button enabled if we have mappings from either playback mode
 			if (this.exportAudioButton) {
-				if (this.currentMappings && this.currentMappings.length > 0) {
+				const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
+				const hasNoteCentricData = this.currentNoteCentricMapping !== null;
+
+				if (hasGraphCentricData || hasNoteCentricData) {
 					this.exportAudioButton.removeAttribute('disabled');
 				} else {
 					this.exportAudioButton.setAttribute('disabled', '');

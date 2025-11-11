@@ -292,6 +292,12 @@ export function getEffectIcon(effectName: string): string {
  */
 export const TAB_CONFIGS = [
   {
+    id: 'guide',
+    name: 'Guide',
+    icon: 'book-open',
+    description: 'Getting started guide and feature overview'
+  },
+  {
     id: 'status',
     name: 'Status',
     icon: 'bar-chart-3',

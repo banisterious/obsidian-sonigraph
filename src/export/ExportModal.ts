@@ -13,6 +13,7 @@ import { AudioExporter } from './AudioExporter';
 import { ExportConfig, ExportScope, AudioFormat, QualityPreset, ExportLocationType } from './types';
 import { ExportProgressModal } from './ExportProgressModal';
 import { CollisionResolution } from './FileCollisionModal';
+import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
 import { getLogger } from '../logging';
 
 const logger = getLogger('export-modal');
@@ -25,6 +26,7 @@ export class ExportModal extends Modal {
     private plugin: ObsidianSonigraphPlugin;
     private audioEngine: AudioEngine;
     private animator: TemporalGraphAnimator | null;
+    private noteCentricMapping: NoteCentricMapping | null;
     private exporter: AudioExporter;
 
     // Configuration state
@@ -55,16 +57,22 @@ export class ExportModal extends Modal {
         app: App,
         plugin: ObsidianSonigraphPlugin,
         audioEngine: AudioEngine,
-        animator: TemporalGraphAnimator | null
+        animator: TemporalGraphAnimator | null,
+        noteCentricMapping: NoteCentricMapping | null = null
     ) {
         super(app);
         this.plugin = plugin;
         this.audioEngine = audioEngine;
         this.animator = animator;
+        this.noteCentricMapping = noteCentricMapping;
         this.exporter = new AudioExporter(app, audioEngine, plugin.settings, plugin.manifest.version);
 
         if (animator) {
             this.exporter.setAnimator(animator);
+        }
+
+        if (noteCentricMapping) {
+            this.exporter.setNoteCentricMapping(noteCentricMapping);
         }
 
         // Initialize config with defaults
@@ -272,8 +280,11 @@ export class ExportModal extends Modal {
     private initializeConfig(): void {
         const exportSettings = this.plugin.settings.exportSettings;
 
+        // Default scope: use 'static-graph' if no animator (Local Soundscape), otherwise 'full-timeline'
+        const defaultScope: ExportScope = this.animator ? 'full-timeline' : 'static-graph';
+
         this.config = {
-            scope: 'full-timeline',
+            scope: defaultScope,
             format: exportSettings?.defaultFormat || 'wav',
             quality: this.getQualityForFormat(exportSettings?.defaultFormat || 'wav', exportSettings),
             locationType: exportSettings?.lastExportType || 'vault',
@@ -304,11 +315,18 @@ export class ExportModal extends Modal {
             .addDropdown(dropdown => {
                 this.scopeDropdown = dropdown;
 
+                // Only show timeline options if animator is available
+                if (this.animator) {
+                    dropdown
+                        .addOption('full-timeline', `Full Timeline Animation (${this.animator.config.duration}s)`)
+                        .addOption('custom-range', 'Custom Time Range');
+                }
+
+                // Always show static graph option
+                dropdown.addOption('static-graph', 'Current Static Graph');
+
                 dropdown
-                    .addOption('full-timeline', `Full Timeline Animation (${this.animator?.config.duration || 60}s)`)
-                    .addOption('custom-range', 'Custom Time Range')
-                    .addOption('static-graph', 'Current Static Graph')
-                    .setValue(this.config.scope || 'full-timeline')
+                    .setValue(this.config.scope || 'static-graph')
                     .onChange(value => {
                         this.config.scope = value as ExportScope;
                         this.updateCustomRangeVisibility();
@@ -678,14 +696,31 @@ export class ExportModal extends Modal {
                 metadata: this.config.metadata
             };
 
-            // Save metadata for next time if user wants to remember it
-            if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
-                if (!this.plugin.settings.exportSettings) {
-                    this.plugin.settings.exportSettings = {} as any;
-                }
-                this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
-                await this.plugin.saveSettings();
+            // Save export preferences for next time
+            if (!this.plugin.settings.exportSettings) {
+                this.plugin.settings.exportSettings = {} as any;
             }
+
+            // Save metadata if provided
+            if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
+                this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
+            }
+
+            // Save location preferences
+            if (this.config.location) {
+                this.plugin.settings.exportSettings.lastExportLocation = this.config.location;
+                this.plugin.settings.exportSettings.exportFolder = this.config.location;
+            }
+            if (this.config.locationType) {
+                this.plugin.settings.exportSettings.lastExportType = this.config.locationType;
+            }
+
+            // Save format preference
+            if (this.config.format) {
+                this.plugin.settings.exportSettings.defaultFormat = this.config.format;
+            }
+
+            await this.plugin.saveSettings();
 
             // Check for file collision before starting export
             const extension = exportConfig.format;

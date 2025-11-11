@@ -222,7 +222,271 @@ Access the Settings tab in the sidebar to configure the view:
 - **Show node labels**: Toggle visibility of note names below nodes
 
 ### Visual Effects
-- **Pulse playing nodes**: Enable/disable the pulse animation for playing notes
+- **Pulse playing nodes**: Enable/disable the pulse animation for playing nodes
+
+### Musical Enhancements
+
+Transform your soundscapes from basic sonification into rich, musical experiences with these advanced features:
+
+#### Scale Quantization
+Constrains all pitches to a selected musical scale for harmonic consonance.
+
+**Settings:**
+- **Enable**: Turn scale quantization on/off
+- **Root Note**: Select the tonic (C, D, E, etc.)
+- **Scale Type**: Choose from 11 scales:
+  - Major (bright, happy)
+  - Natural Minor (dark, melancholic)
+  - Harmonic Minor (exotic, dramatic)
+  - Melodic Minor (bright minor)
+  - Pentatonic Major (simple, folk)
+  - Pentatonic Minor (blues, rock)
+  - Blues (blue notes)
+  - Dorian (jazz, modern)
+  - Phrygian (Spanish, dark)
+  - Lydian (dreamy, floating)
+  - Mixolydian (folk, bluegrass)
+- **Quantization Strength**: How strictly pitches snap to scale (0-100%)
+
+**Use Case:** Makes dissonant soundscapes harmonious. Try C Major for bright soundscapes, D Minor for melancholic tones.
+
+#### Adaptive Pitch Ranges
+Automatically adjusts pitch ranges for each depth layer relative to your selected musical key.
+
+**Settings:**
+- **Enable**: Pitch ranges adapt to selected key
+
+**Use Case:** Ensures harmonic integration across depth layers. Works automatically with Scale Quantization.
+
+#### Chord Voicing
+Adds harmonic richness by generating polyphonic chord structures based on depth.
+
+**Settings:**
+- **Enable**: Turn chord voicing on/off
+- **Voicing Density**: How many harmonic notes to add (0-100%)
+  - 0% = Minimal (dyads)
+  - 50% = Moderate (triads)
+  - 100% = Full (seventh chords)
+
+**How it works:**
+- Center notes (depth 0): Melody only
+- Depth 1: Dyads (2 notes)
+- Depth 2: Triads (3 notes)
+- Depth 3+: Seventh chords (4 notes)
+
+**Use Case:** Creates richer, more complex harmonies. Start with 50% density.
+
+#### Rhythmic Patterns
+Organizes note timing into musical patterns instead of random spacing.
+
+**Settings:**
+- **Enable**: Turn rhythmic patterns on/off
+- **Tempo (BPM)**: Sets the speed (40-200 beats per minute)
+
+**Patterns by Depth:**
+- Center: Sequential (even spacing)
+- Depth 1: Arpeggio (rapid ascending notes)
+- Depth 2: Pulse (rhythmic accents)
+- Depth 3+: Sequential
+
+**Use Case:** Adds rhythmic momentum and organization. Try 60 BPM for contemplative, 120 BPM for energetic.
+
+#### Tension Tracking
+Creates emotional narrative arcs through pitch, velocity, and duration modulation.
+
+**Settings:**
+- **Enable**: Turn tension tracking on/off
+- **Arc Shape**: Choose the emotional journey:
+  - Rise-Fall: Builds to climax, then releases (classic dramatic arc)
+  - Build: Increasing tension (crescendo)
+  - Release: Decreasing tension (decrescendo)
+  - Wave: Multiple peaks (undulating)
+  - Plateau: Sustained high tension (dramatic)
+- **Peak Position**: Where tension peaks in the sequence (0-100%)
+  - Only shown for Rise-Fall and Wave shapes
+
+**How it works:**
+- Modulates pitch (higher = more tension)
+- Adjusts velocity (louder = more tension)
+- Changes duration (longer = more tension)
+
+**Use Case:** Adds musical storytelling. "Rise-Fall" with 60% peak position creates satisfying narrative arcs.
+
+#### Turn-Taking
+Creates musical dialogue by organizing instruments into conversational patterns instead of simultaneous playback.
+
+**Settings:**
+- **Enable**: Turn turn-taking on/off
+- **Turn-Taking Pattern**: Choose dialogue style:
+  - None: All together (traditional)
+  - Sequential: One instrument at a time
+  - Call-Response: Alternating groups (center vs periphery)
+  - Solos: Featured instrument with accompaniment
+  - Layered Entry: Progressive build-up
+  - Conversation: Graph-based dialogue
+  - Fugue: Imitative staggered entries
+  - Antiphonal: Stereo alternation (left vs right)
+- **Turn Length**: Duration of each turn in beats (1-16)
+- **Accompaniment Reduction**: Volume reduction for non-featured instruments (0-100%)
+
+**How it works:**
+- Reduces sonic congestion
+- Creates call-and-response musical dialogue
+- Guides listener attention
+- Adds rhythmic variety
+
+**Use Case:** Improves clarity in complex soundscapes. "Call-Response" with 4-beat turns creates engaging dialogue.
+
+#### Dynamic Panning
+Creates smooth spatial transitions for an immersive stereo field.
+
+**Settings:**
+- **Enable**: Turn dynamic panning on/off
+- **Smoothing Factor**: How gradual transitions are (0-100%)
+  - 0% = Instant position changes
+  - 100% = Very smooth transitions
+- **Animation Speed**: How fast stereo field evolves (0.5x-5x)
+  - 1x = Normal speed
+  - 2x = Twice as fast (default)
+
+**How it works:**
+- Smooth interpolation between pan positions
+- Temporal animation of stereo field over sequence
+- Depth-based spatial spread (deeper = wider placement)
+
+**Use Case:** Creates evolving spatial landscapes. 30% smoothing with 2x speed adds movement without distraction.
+
+### Musical Enhancement Presets
+
+**For Harmonic Beauty:**
+1. Enable Scale Quantization (C Major, 80% strength)
+2. Enable Adaptive Pitch Ranges
+3. Enable Chord Voicing (50% density)
+
+**For Rhythmic Interest:**
+1. Enable Rhythmic Patterns (60 BPM)
+2. Enable Tension Tracking (Rise-Fall arc)
+
+**For Spatial Clarity:**
+1. Enable Turn-Taking (Call-Response, 4 beats)
+2. Enable Dynamic Panning (30% smoothing, 2x speed)
+
+**For Full Musical Experience (all features):**
+- All of the above combined for maximum musicality
+
+### Note-Centric Playback Refinements
+
+The note-centric playback system (used when playing prose-heavy center notes) includes extensive musical refinements for organic, expressive performances. These refinements can now be customized through the Note-Centric Musicality settings in Control Center.
+
+#### Musicality Presets
+
+Access these settings in Control Center under "Local Soundscape" > "Note-centric musicality". Choose from three carefully balanced presets or customize individual parameters:
+
+**Conservative Preset** - Subtle, restrained musicality:
+- Minimal timing variation (50ms humanization)
+- Moderate harmonic exploration (50% adventurousness)
+- Subtle dynamic range
+- Sparse polyphonic density (4-7s delays between embellishments)
+- Moderate melodic independence (60%)
+- Smooth voice leading (stepwise motion preferred)
+
+**Balanced Preset** (Default) - Rich, expressive musicality:
+- Moderate timing variation (125ms humanization)
+- Adventurous harmonies (75% adventurousness)
+- Extreme dynamic range (whisper to fortissimo)
+- Maximum polyphonic density (0-4s delays, dense layering)
+- High melodic independence (80%)
+- Chromatic voice leading (jazz-influenced)
+
+**Adventurous Preset** - Experimental, maximalist approach:
+- Wide timing variation (250ms humanization)
+- Very adventurous harmonies (100% adventurousness)
+- Extreme dynamic range
+- Maximum polyphonic density
+- Very high melodic independence (95%)
+- Chromatic voice leading
+
+**Custom Mode** - Individual control over six parameters:
+
+1. **Timing Humanization (50-250ms)**: Controls micro-timing variation between notes. Higher values create looser, more organic groove. Lower values sound more precise and mechanical.
+
+2. **Harmonic Adventurousness (0-100%)**: Determines frequency of exotic chord colors. Higher values trigger more modal interchange, tritone substitutions, and augmented sixth chords. Lower values use simpler, more consonant harmonies.
+
+3. **Dynamic Range**: Controls velocity variation intensity:
+   - Subtle: Gentle volume variation (0.35-0.75)
+   - Moderate: Noticeable dynamics (0.25-0.85)
+   - Extreme: Dramatic contrasts from pianissimo whispers (0.08) to fortissimo accents (0.99)
+
+4. **Polyphonic Density**: Controls embellishment timing overlap:
+   - Sparse: 4-7s delays between layers, minimal overlap
+   - Moderate: 2-5s delays, moderate layering
+   - Maximum: 0-4s delays, rich polyphonic texture with immediate overlaps
+
+5. **Melodic Independence (0-100%)**: Controls how freely embellishments diverge from center melody. Higher values create more independent melodic voices (±8 semitones variation). Lower values keep embellishments closely coupled to center phrase.
+
+6. **Voice Leading Style**: Controls melodic motion preference:
+   - Smooth: Stepwise motion, minimal leaps
+   - Balanced: Mix of steps and moderate leaps
+   - Chromatic: Jazz-influenced with frequent chromatic approaches and larger intervals
+
+**Accessing Settings:**
+1. Open Control Center
+2. Navigate to Local Soundscape section
+3. Locate "Note-centric musicality" card
+4. Select preset from dropdown or choose "Custom" to reveal individual controls
+5. Changes apply immediately to subsequent playback
+
+#### Harmonic Sophistication
+- **Extremely adventurous harmony**: Low expressiveness thresholds (0.1-0.4) trigger exotic chord colors
+- **Frequent chromatic voice leading**: Every 2nd chord when expressiveness > 0.2
+- **Jazz harmony**: Tritone substitutions (5% frequency), augmented sixth chords (6% frequency)
+- **Modal interchange**: Borrows chords from parallel modes (major ↔ minor)
+- **10+ harmonic color options** per chord position for maximum variety
+
+#### Dynamic Expression
+- **Extreme velocity forcing**: Every 8th, 10th, and 12th notes forced to extremes
+- **Wide dynamic range**: 0.08-0.99 velocity (from whisper-soft to thundering)
+- **Forced dynamics**: Pianissimo (0.12), Fortissimo (0.95), Mezzo-piano (0.40)
+- **Dramatic embellishment contrasts**:
+  - Harmonic response: 0.35× (whispers) to 1.15× (accents)
+  - Rhythmic counterpoint: 0.40× (pedal tones) to 1.25× (bass thunder)
+
+#### Temporal Characteristics
+- **Extreme micro-timing**: ±100-150ms humanization per note (very loose groove)
+- **"Falling off the piano bench" effect**: Highly noticeable timing imperfections
+- **Immediate embellishment overlap** for rich polyphonic density:
+  - Harmonic response: 1-2s delays (overlaps immediately with center)
+  - Rhythmic counterpoint: 2.5-4s delays
+  - Ambient texture: 0-0.3s delays (essentially simultaneous)
+- **Dense polyphonic texture**: Small stagger delays create thick layering
+
+#### Melodic Independence
+- **High embellishment freedom**: ±8 semitones variation (not tightly coupled to center)
+- **Only 20% center influence**: Embellishments are largely independent melodies
+- **Strong directional motion**: 40% ascending, 40% descending tendencies
+- **Frequent leaps**: Melodic jumps every 3rd note, dramatic octave leaps every 7th
+- **Chromatic color**: Based on vocabulary diversity and prose complexity
+
+#### Musical Context
+- **Prose-driven variation**: All parameters seeded from prose analysis
+- **Reproducible randomness**: Same prose always generates same music
+- **Content-type awareness**: Different contours for research, creative, technical, etc.
+- **Phrase-based structure**: 4-8 note phrases with distinct musical shapes
+- **Natural cadences**: Proper musical phrase endings with harmonic resolution
+
+**What This Means:**
+When you play a center note with substantial prose content, you'll hear:
+- Rich, jazz-influenced harmony with unexpected chromatic colors
+- Dramatically varied dynamics from pianissimo whispers to fortissimo accents
+- Very loose, human-like timing that feels organic and improvisational
+- Multiple independent melodic voices creating dense polyphonic texture
+- Musical phrases that tell a story with clear beginnings, middles, and endings
+
+**Technical Notes:**
+- All refinements work automatically based on prose `musicalExpressiveness` value
+- Higher expressiveness (>0.4) unlocks the most exotic harmonies
+- Scale quantization (if enabled) is applied after all calculations
+- No user controls needed - the system adapts to your content automatically
 
 ### About
 - Feature description

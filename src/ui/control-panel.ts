@@ -330,8 +330,11 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private showTab(tabId: string): void {
 		this.contentContainer.empty();
-		
+
 		switch (tabId) {
+			case 'guide':
+				this.createGuideTab();
+				break;
 			case 'status':
 				this.createStatusTab();
 				break;
@@ -363,6 +366,195 @@ export class MaterialControlPanelModal extends Modal {
 			default:
 				this.createPlaceholderTab(tabId);
 		}
+	}
+
+	/**
+	 * Create Guide tab content - Getting started guide and feature overview
+	 */
+	private createGuideTab(): void {
+		// Welcome Card
+		const welcomeCard = new MaterialCard({
+			title: 'Welcome to Sonigraph',
+			iconName: 'book-open',
+			subtitle: 'Transform your Obsidian vault into an interactive soundscape',
+			elevation: 1
+		});
+
+		const welcomeContent = welcomeCard.getContent();
+		welcomeContent.createEl('p', {
+			text: 'Sonigraph brings your knowledge graph to life through sound. Notes become musical instruments, links create harmonies, and your vault transforms into an immersive audio experience.',
+			cls: 'osp-guide-text'
+		});
+
+		this.contentContainer.appendChild(welcomeCard.getElement());
+
+		// Quick Start Card
+		const quickStartCard = new MaterialCard({
+			title: 'Quick Start',
+			iconName: 'zap',
+			subtitle: 'Get up and running in 3 steps',
+			elevation: 1
+		});
+
+		const quickStartContent = quickStartCard.getContent();
+		const stepsList = quickStartContent.createEl('ol', { cls: 'osp-guide-steps' });
+
+		stepsList.createEl('li', {
+			text: 'Enable Instruments: Go to the Keyboard, Strings, or Electronic tabs and enable 3-5 instruments you like. Start with Piano, Strings, and Lead Synth for a balanced sound.'
+		});
+
+		stepsList.createEl('li', {
+			text: 'Configure Musical Settings: Visit the Musical tab to set your preferred scale (try C Major) and tempo (60-120 BPM works well for most vaults).'
+		});
+
+		stepsList.createEl('li', {
+			text: 'Try Local Soundscape: Right-click any note in your vault and select "Open in Local Soundscape" to hear how it connects to other notes.'
+		});
+
+		this.contentContainer.appendChild(quickStartCard.getElement());
+
+		// Key Features Card
+		const featuresCard = new MaterialCard({
+			title: 'Key Features',
+			iconName: 'star',
+			subtitle: 'What you can do with Sonigraph',
+			elevation: 1
+		});
+
+		const featuresContent = featuresCard.getContent();
+		const featuresList = featuresContent.createEl('div', { cls: 'osp-guide-features' });
+
+		// Local Soundscape feature
+		const lsFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
+		lsFeature.createEl('strong', { text: 'Local Soundscape' });
+		lsFeature.createEl('p', {
+			text: 'Visualize and sonify a single note and its connections. Notes at different depths play different instrument families, creating layers of harmony. Enable Musical Enhancements in the Local Soundscape tab for richer, more musical results.'
+		});
+
+		// Sonic Graph feature
+		const sgFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
+		sgFeature.createEl('strong', { text: 'Sonic Graph' });
+		sgFeature.createEl('p', {
+			text: 'See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion.'
+		});
+
+		// Musical Enhancements feature
+		const meFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
+		meFeature.createEl('strong', { text: 'Musical Enhancements' });
+		meFeature.createEl('p', {
+			text: 'Transform basic sonification into rich musical experiences with Scale Quantization, Chord Voicing, Rhythmic Patterns, Tension Tracking, Turn-Taking, and Dynamic Panning. Configure these in the Local Soundscape tab.'
+		});
+
+		// Continuous Layers feature
+		const clFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
+		clFeature.createEl('strong', { text: 'Continuous Layers' });
+		clFeature.createEl('p', {
+			text: 'Add ambient background soundscapes from curated audio libraries. Browse and preview samples from Freesound.org to create the perfect atmosphere for focused work.'
+		});
+
+		this.contentContainer.appendChild(featuresCard.getElement());
+
+		// Musical Enhancements Guide Card
+		const meGuideCard = new MaterialCard({
+			title: 'Musical Enhancements Guide',
+			iconName: 'music',
+			subtitle: 'Making your soundscapes more musical',
+			elevation: 1
+		});
+
+		const meGuideContent = meGuideCard.getContent();
+
+		meGuideContent.createEl('p', {
+			text: 'Musical Enhancements transform raw sonification into expressive, harmonic compositions. Here are recommended settings for different goals:',
+			cls: 'osp-guide-text'
+		});
+
+		// Preset 1: Harmonic Beauty
+		const preset1 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
+		preset1.createEl('strong', { text: 'For Harmonic Beauty:' });
+		const preset1List = preset1.createEl('ul');
+		preset1List.createEl('li', { text: 'Enable Scale Quantization (C Major, 80% strength)' });
+		preset1List.createEl('li', { text: 'Enable Adaptive Pitch Ranges' });
+		preset1List.createEl('li', { text: 'Enable Chord Voicing (50% density)' });
+
+		// Preset 2: Rhythmic Interest
+		const preset2 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
+		preset2.createEl('strong', { text: 'For Rhythmic Interest:' });
+		const preset2List = preset2.createEl('ul');
+		preset2List.createEl('li', { text: 'Enable Rhythmic Patterns (60 BPM)' });
+		preset2List.createEl('li', { text: 'Enable Tension Tracking (Rise-Fall arc, 60% peak)' });
+
+		// Preset 3: Spatial Clarity
+		const preset3 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
+		preset3.createEl('strong', { text: 'For Spatial Clarity:' });
+		const preset3List = preset3.createEl('ul');
+		preset3List.createEl('li', { text: 'Enable Turn-Taking (Call-Response, 4 beats)' });
+		preset3List.createEl('li', { text: 'Enable Dynamic Panning (30% smoothing, 2x speed)' });
+
+		// Full Experience
+		const preset4 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
+		preset4.createEl('strong', { text: 'For Full Musical Experience:' });
+		preset4.createEl('p', { text: 'Enable all of the above for maximum musicality and expressiveness.' });
+
+		this.contentContainer.appendChild(meGuideCard.getElement());
+
+		// Tips & Best Practices Card
+		const tipsCard = new MaterialCard({
+			title: 'Tips & Best Practices',
+			iconName: 'lightbulb',
+			subtitle: 'Get the most out of Sonigraph',
+			elevation: 1
+		});
+
+		const tipsContent = tipsCard.getContent();
+		const tipsList = tipsContent.createEl('ul', { cls: 'osp-guide-tips' });
+
+		tipsList.createEl('li', {
+			text: 'Start Simple: Enable 3-5 instruments initially. Too many instruments can create sonic clutter.'
+		});
+
+		tipsList.createEl('li', {
+			text: 'Mix Instrument Types: Combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound.'
+		});
+
+		tipsList.createEl('li', {
+			text: 'Use Scale Quantization: This is the single most impactful Musical Enhancement for making soundscapes harmonious.'
+		});
+
+		tipsList.createEl('li', {
+			text: 'Adjust Depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming.'
+		});
+
+		tipsList.createEl('li', {
+			text: 'Monitor Performance: Check the Status tab to see active voices and ensure your system isn\'t overloaded.'
+		});
+
+		tipsList.createEl('li', {
+			text: 'Experiment with Turn-Taking: Call-Response and Solos patterns dramatically reduce sonic congestion while adding musical dialogue.'
+		});
+
+		this.contentContainer.appendChild(tipsCard.getElement());
+
+		// Help & Resources Card
+		const helpCard = new MaterialCard({
+			title: 'Help & Resources',
+			iconName: 'help-circle',
+			subtitle: 'Need more information?',
+			elevation: 1
+		});
+
+		const helpContent = helpCard.getContent();
+		const helpList = helpContent.createEl('ul', { cls: 'osp-guide-help' });
+
+		helpList.createEl('li').innerHTML = '<strong>Documentation:</strong> Visit the <a href="https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides">GitHub repository</a> for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.';
+
+		helpList.createEl('li').innerHTML = '<strong>Settings:</strong> Each Control Center tab has configuration options. Hover over controls for tooltips.';
+
+		helpList.createEl('li').innerHTML = '<strong>Commands:</strong> Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.';
+
+		helpList.createEl('li').innerHTML = '<strong>Issues & Feedback:</strong> Report bugs or request features on <a href="https://github.com/banisterious/obsidian-sonigraph/issues">GitHub Issues</a>.';
+
+		this.contentContainer.appendChild(helpCard.getElement());
 	}
 
 	/**
@@ -501,14 +693,36 @@ export class MaterialControlPanelModal extends Modal {
 	 * Create Local Soundscape tab content
 	 */
 	private createLocalSoundscapeTab(): void {
-		// Depth-based instrument mapping card
-		this.createDepthInstrumentMappingCard();
+		// Import and render LocalSoundscapeSettings class (auto-play, key, context-aware, musical enhancements)
+		import('./settings/LocalSoundscapeSettings').then(({ LocalSoundscapeSettings }) => {
+			const lsSettings = new LocalSoundscapeSettings(this.app, this.plugin);
+			lsSettings.render(this.contentContainer);
 
-		// Volume and panning settings card
-		this.createDepthVolumeAndPanningCard();
+			// Render remaining cards AFTER LocalSoundscapeSettings (which calls container.empty())
+			// Depth-based instrument mapping card
+			this.createDepthInstrumentMappingCard();
 
-		// Performance settings card
-		this.createLocalSoundscapePerformanceCard();
+			// Volume and panning settings card
+			this.createDepthVolumeAndPanningCard();
+
+			// Continuous layers settings
+			import('./settings/LocalSoundscapeLayersSettings').then(({ LocalSoundscapeLayersSettings }) => {
+				const layersSettings = new LocalSoundscapeLayersSettings(this.app, this.plugin);
+				layersSettings.render(this.contentContainer);
+			});
+
+			// Performance settings card
+			this.createLocalSoundscapePerformanceCard();
+
+
+			// Note-centric musicality settings card
+			this.createNoteCentricMusicalityCard();
+			// Tips & Best Practices card
+			this.createLocalSoundscapeTipsCard();
+
+			// FAQ card
+			this.createLocalSoundscapeFAQCard();
+		});
 	}
 
 	/**
@@ -4586,6 +4800,381 @@ All whale samples are authentic recordings from marine research institutions and
 			cls: 'osp-info-message',
 			text: `⏱️ With all nodes enabled, larger graphs will create longer soundscapes. Notes play at 0.4 second intervals, so 227 nodes = ~90 seconds of audio.`
 		});
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create tips and best practices card for Local Soundscape
+	 */
+	/**
+	 * Create note-centric musicality settings card
+	 */
+	private createNoteCentricMusicalityCard(): void {
+		const card = new MaterialCard({
+			title: 'Note-centric musicality',
+			iconName: 'music',
+			subtitle: 'Control the musical character of note-centric playback',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Get current settings (with fallbacks for undefined)
+		const audioEnhancement = this.plugin.settings.audioEnhancement;
+		const musicality = audioEnhancement?.noteCentricMusicality || {};
+		const currentPreset = musicality.preset || 'balanced';
+
+		// Preset selector
+		new Setting(content)
+			.setName('Musicality preset')
+			.setDesc('Choose a pre-configured style, or select Custom to fine-tune individual parameters')
+			.addDropdown(dropdown => {
+				dropdown
+					.addOption('conservative', 'Conservative - Subtle, restrained expression')
+					.addOption('balanced', 'Balanced - Current default sound (recommended)')
+					.addOption('adventurous', 'Adventurous - Bold, experimental character')
+					.addOption('custom', 'Custom - Manual control')
+					.setValue(currentPreset)
+					.onChange(async (value) => {
+						// Initialize audioEnhancement if needed
+						if (!this.plugin.settings.audioEnhancement) {
+							this.plugin.settings.audioEnhancement = {} as any;
+						}
+						if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+						}
+
+						this.plugin.settings.audioEnhancement.noteCentricMusicality.preset = value as any;
+
+						// Apply preset values
+						if (value === 'conservative') {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 75;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 50;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = 'moderate';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = 'moderate';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 60;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = 'smooth';
+						} else if (value === 'balanced') {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = 'extreme';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = 'maximum';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = 'chromatic';
+						} else if (value === 'adventurous') {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 175;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 90;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = 'extreme';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = 'maximum';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 95;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = 'chromatic';
+						}
+
+						await this.plugin.saveSettings();
+
+						// Refresh the card to show/hide individual controls
+						this.contentContainer.empty();
+						this.createLocalSoundscapeTab();
+					});
+			});
+
+		// Individual controls container (only shown when preset is 'custom')
+		if (currentPreset === 'custom') {
+			const customControls = content.createDiv({ cls: 'osp-musicality-custom-controls' });
+
+			// Timing Humanization
+			new Setting(customControls)
+				.setName('Timing humanization')
+				.setDesc('Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.')
+				.addSlider(slider => {
+					slider
+						.setLimits(50, 250, 25)
+						.setValue(musicality.timingHumanization || 125)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton(button => {
+					button
+						.setIcon('reset')
+						.setTooltip('Reset to balanced (125ms)')
+						.onClick(async () => {
+							if (!this.plugin.settings.audioEnhancement?.noteCentricMusicality) return;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
+							await this.plugin.saveSettings();
+							this.contentContainer.empty();
+							this.createLocalSoundscapeTab();
+						});
+				});
+
+			// Harmonic Adventurousness
+			new Setting(customControls)
+				.setName('Harmonic adventurousness')
+				.setDesc('Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.')
+				.addSlider(slider => {
+					slider
+						.setLimits(0, 100, 5)
+						.setValue(musicality.harmonicAdventurousness || 75)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton(button => {
+					button
+						.setIcon('reset')
+						.setTooltip('Reset to balanced (75%)')
+						.onClick(async () => {
+							if (!this.plugin.settings.audioEnhancement?.noteCentricMusicality) return;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
+							await this.plugin.saveSettings();
+							this.contentContainer.empty();
+							this.createLocalSoundscapeTab();
+						});
+				});
+
+			// Dynamic Range
+			new Setting(customControls)
+				.setName('Dynamic range')
+				.setDesc('Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.')
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('subtle', 'Subtle - Even, balanced dynamics')
+						.addOption('moderate', 'Moderate - Noticeable variation')
+						.addOption('extreme', 'Extreme - Dramatic contrasts')
+						.setValue(musicality.dynamicRange || 'extreme')
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = value as any;
+							await this.plugin.saveSettings();
+						});
+				});
+
+			// Polyphonic Density
+			new Setting(customControls)
+				.setName('Polyphonic density')
+				.setDesc('How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.')
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('sparse', 'Sparse - Minimal overlap, clear separation')
+						.addOption('moderate', 'Moderate - Some overlap, balanced texture')
+						.addOption('maximum', 'Maximum - Dense overlap, rich polyphony')
+						.setValue(musicality.polyphonicDensity || 'maximum')
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = value as any;
+							await this.plugin.saveSettings();
+						});
+				});
+
+			// Melodic Independence
+			new Setting(customControls)
+				.setName('Melodic independence')
+				.setDesc('How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.')
+				.addSlider(slider => {
+					slider
+						.setLimits(0, 100, 5)
+						.setValue(musicality.melodicIndependence || 80)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton(button => {
+					button
+						.setIcon('reset')
+						.setTooltip('Reset to balanced (80%)')
+						.onClick(async () => {
+							if (!this.plugin.settings.audioEnhancement?.noteCentricMusicality) return;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
+							await this.plugin.saveSettings();
+							this.contentContainer.empty();
+							this.createLocalSoundscapeTab();
+						});
+				});
+
+			// Voice Leading Style
+			new Setting(customControls)
+				.setName('Voice leading style')
+				.setDesc('Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.')
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('smooth', 'Smooth - Minimal voice movement, consonant')
+						.addOption('balanced', 'Balanced - Mix of smooth and chromatic')
+						.addOption('chromatic', 'Chromatic - Adventurous, jazzy movement')
+						.setValue(musicality.voiceLeadingStyle || 'chromatic')
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = value as any;
+							await this.plugin.saveSettings();
+						});
+				});
+		} else {
+			// Show message when preset is not custom
+			const presetInfo = content.createDiv({ cls: 'osp-musicality-preset-info' });
+			presetInfo.createEl('p', {
+				text: `Using "${currentPreset}" preset. Select "Custom" above to adjust individual parameters.`,
+				cls: 'mod-muted'
+			});
+		}
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	private createLocalSoundscapeTipsCard(): void {
+		const card = new MaterialCard({
+			title: 'Tips & best practices',
+			iconName: 'lightbulb',
+			subtitle: 'Get the most out of Local Soundscape',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+		const tipsList = content.createEl('ul', { cls: 'osp-guide-tips' });
+
+		// Tip 1: Depth settings
+		tipsList.createEl('li').innerHTML = '<strong>Start with Depth 2:</strong> This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.';
+
+		// Tip 2: Musical Enhancements
+		tipsList.createEl('li').innerHTML = '<strong>Enable Scale Quantization:</strong> This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.';
+
+		// Tip 3: Clustering
+		tipsList.createEl('li').innerHTML = '<strong>Use Clustering to Discover Patterns:</strong> Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.';
+
+		// Tip 4: Turn-Taking
+		tipsList.createEl('li').innerHTML = '<strong>Reduce Sonic Congestion:</strong> Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.';
+
+		// Tip 5: Filtering
+		tipsList.createEl('li').innerHTML = '<strong>Filter by Tags/Folders:</strong> Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.';
+
+		// Tip 6: Performance
+		tipsList.createEl('li').innerHTML = '<strong>Manage Performance:</strong> For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.';
+
+		// Tip 7: Workflow integration
+		tipsList.createEl('li').innerHTML = '<strong>Daily Review Workflow:</strong> Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.';
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
+	/**
+	 * Create FAQ card for Local Soundscape
+	 */
+	private createLocalSoundscapeFAQCard(): void {
+		const card = new MaterialCard({
+			title: 'Frequently asked questions',
+			iconName: 'help-circle',
+			subtitle: 'Common questions about Local Soundscape',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// FAQ 1: Why does the music sound simplistic?
+		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
+		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
+		q1.innerHTML = '<strong>Q: Why does the music sound simplistic or repetitive?</strong>';
+
+		const a1 = faq1.createEl('div', { cls: 'osp-faq-answer' });
+		a1.innerHTML = `
+			<p><strong>A:</strong> By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:</p>
+			<ul>
+				<li><strong>All markdown syntax counts:</strong> Links, headings, callouts, and formatting inflate word counts</li>
+				<li><strong>Notes sound similar:</strong> Similar file sizes produce similar durations and pitches</li>
+				<li><strong>No content differentiation:</strong> Callouts, code blocks, and lists are treated the same as regular text</li>
+			</ul>
+			<p><strong>To get richer, more varied soundscapes:</strong></p>
+			<ol>
+				<li><strong>Enable Musical Enhancements</strong> (above) - This is the most impactful change:
+					<ul>
+						<li>Scale Quantization creates harmonic consonance</li>
+						<li>Chord Voicing adds polyphonic richness</li>
+						<li>Rhythmic Patterns organize timing musically</li>
+						<li>Tension Tracking creates emotional arcs</li>
+						<li>Turn-Taking reduces congestion through dialogue</li>
+					</ul>
+				</li>
+				<li><strong>Use diverse instruments</strong> - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type</li>
+				<li><strong>Apply filters</strong> - Focus on specific tags or folders to create more thematically coherent soundscapes</li>
+				<li><strong>Experiment with clustering</strong> - Different clustering methods reveal different organizational patterns in your vault</li>
+			</ol>
+			<p><em>Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.</em></p>
+		`;
+
+		// FAQ 2: Why only one node / sparse vault issue
+		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
+		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
+		q2.innerHTML = '<strong>Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?</strong>';
+
+		const a2 = faq2.createEl('div', { cls: 'osp-faq-answer' });
+		a2.innerHTML = `
+			<p><strong>A:</strong> Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.</p>
+
+			<p><strong>Why this happens:</strong></p>
+			<ul>
+				<li><strong>Sparse connections:</strong> Your note has few or no links to other notes at shallow depths (1-2)</li>
+				<li><strong>Low depth setting:</strong> The depth slider is set to 1, limiting the graph to immediate connections only</li>
+				<li><strong>Filters too restrictive:</strong> Tag/folder filters are excluding connected notes</li>
+			</ul>
+
+			<p><strong>What Musical Enhancements need to work:</strong></p>
+			<ul>
+				<li><strong>Turn-Taking:</strong> Needs 3+ notes at different depths to create call-response dialogue</li>
+				<li><strong>Chord Voicing:</strong> Needs 2+ notes at same depth to build harmonies</li>
+				<li><strong>Rhythmic Patterns:</strong> Needs 4+ notes to organize into musical patterns</li>
+				<li><strong>Tension Tracking:</strong> Needs 5+ notes to create narrative arcs</li>
+				<li><strong>Scale Quantization:</strong> Works with any number of notes, but more varied with higher counts</li>
+			</ul>
+
+			<p><strong>How to fix:</strong></p>
+			<ol>
+				<li><strong>Enable Continuous Layers:</strong> Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. <strong>Important:</strong> You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.</li>
+				<li><strong>Increase depth:</strong> Slide the depth control to 3-5 to explore more connection levels</li>
+				<li><strong>Choose more connected notes:</strong> Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"</li>
+				<li><strong>Build more connections:</strong> Add links between related notes in your vault to create richer graph structure</li>
+				<li><strong>Check filters:</strong> Ensure Include/Exclude filters aren't hiding connected notes</li>
+				<li><strong>Try bidirectional links:</strong> Notes with two-way connections create denser graphs than one-way links</li>
+			</ol>
+
+			<p><strong>For sparse vaults:</strong> If your vault generally has limited connections, <strong>Continuous Layers</strong> are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.</p>
+		`;
 
 		this.contentContainer.appendChild(card.getElement());
 	}

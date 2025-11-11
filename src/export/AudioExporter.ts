@@ -17,6 +17,7 @@ import {
 import { WavEncoder } from './WavEncoder';
 import { Mp3Encoder } from './Mp3Encoder';
 import { OfflineRenderer } from './OfflineRenderer';
+import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
 import { getLogger } from '../logging';
 
 const logger = getLogger('export');
@@ -28,6 +29,7 @@ export class AudioExporter {
     private app: App;
     private audioEngine: AudioEngine;
     private animator: TemporalGraphAnimator | null = null;
+    private noteCentricMapping: NoteCentricMapping | null = null;
     private isCancelled = false;
     private progressCallback?: (progress: ExportProgress) => void;
     private currentRenderer?: OfflineRenderer;
@@ -46,6 +48,13 @@ export class AudioExporter {
      */
     setAnimator(animator: TemporalGraphAnimator): void {
         this.animator = animator;
+    }
+
+    /**
+     * Set note-centric mapping for static graph exports
+     */
+    setNoteCentricMapping(mapping: NoteCentricMapping): void {
+        this.noteCentricMapping = mapping;
     }
 
     /**
@@ -186,6 +195,15 @@ export class AudioExporter {
                 // Try to create folder
                 await this.app.vault.createFolder(config.location);
             }
+        } else {
+            // System location - ensure directory exists
+            const fs = require('fs');
+            const path = require('path');
+            const dirPath = path.isAbsolute(config.location) ? config.location : path.resolve(config.location);
+
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
         }
 
         // Check for file collision
@@ -239,12 +257,257 @@ export class AudioExporter {
     }
 
     /**
-     * Render static graph state
+     * Render static graph state using note-centric playback
      */
     private async renderStaticGraph(config: ExportConfig): Promise<AudioBuffer> {
-        // TODO: Implement static graph rendering
-        // This will trigger all visible nodes at once
-        throw new Error('Static graph export not yet implemented');
+        if (!this.noteCentricMapping) {
+            throw new Error('Note-centric mapping not set for static graph export');
+        }
+
+        logger.info('offline-renderer', 'Starting note-centric static graph render');
+
+        // Import NoteCentricPlayer
+        const { NoteCentricPlayer } = require('../audio/playback/NoteCentricPlayer');
+        const player = new NoteCentricPlayer(this.audioEngine, this.pluginSettings);
+
+        // Calculate total duration from note-centric mapping
+        const duration = this.estimateNoteCentricDuration(this.noteCentricMapping);
+
+        const qualitySettings = config.quality as { sampleRate?: number };
+        const sampleRate = qualitySettings.sampleRate || 48000;
+
+        logger.info('offline-renderer', `Rendering note-centric audio: ${duration.toFixed(1)}s at ${sampleRate}Hz`);
+
+        try {
+            // Record the note-centric playback in real-time
+            const audioBuffer = await this.recordNoteCentricPlayback(
+                player,
+                this.noteCentricMapping,
+                duration,
+                sampleRate
+            );
+
+            logger.info('offline-renderer', 'Note-centric render complete');
+            return audioBuffer;
+        } catch (error) {
+            logger.error('offline-renderer', 'Note-centric render failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Estimate duration of note-centric mapping in seconds
+     */
+    private estimateNoteCentricDuration(mapping: NoteCentricMapping): number {
+        // Calculate center phrase duration with validation
+        const centerBeats = mapping.centerPhrase.totalBeats || 0;
+        const centerTempo = mapping.centerPhrase.tempo || 120;
+        const centerDuration = (centerBeats / centerTempo) * 60;
+
+        // Validate center duration
+        if (isNaN(centerDuration) || centerDuration <= 0) {
+            logger.warn('duration-estimate', 'Invalid center phrase duration, using default', {
+                totalBeats: centerBeats,
+                tempo: centerTempo
+            });
+            return 10; // Fallback to 10 seconds
+        }
+
+        // Find longest embellishment duration
+        let maxEmbellishmentDuration = 0;
+        for (const embellishment of mapping.embellishments) {
+            const beats = embellishment.phrase.totalBeats || 0;
+            const tempo = embellishment.phrase.tempo || 120;
+            const duration = (beats / tempo) * 60;
+
+            if (!isNaN(duration) && duration > 0) {
+                maxEmbellishmentDuration = Math.max(maxEmbellishmentDuration, duration);
+            }
+        }
+
+        // Total duration is the longer of the two, plus 2s buffer for reverb tails
+        const totalDuration = Math.max(centerDuration, maxEmbellishmentDuration) + 2;
+
+        logger.info('duration-estimate', 'Estimated note-centric duration', {
+            centerDuration: centerDuration.toFixed(1),
+            maxEmbellishmentDuration: maxEmbellishmentDuration.toFixed(1),
+            totalDuration: totalDuration.toFixed(1)
+        });
+
+        return totalDuration;
+    }
+
+    /**
+     * Record note-centric playback using MediaRecorder
+     */
+    private async recordNoteCentricPlayback(
+        player: any,
+        mapping: NoteCentricMapping,
+        duration: number,
+        targetSampleRate: number
+    ): Promise<AudioBuffer> {
+        // Get Tone.js audio context
+        const { getContext } = require('tone');
+        const audioContext = getContext().rawContext as BaseAudioContext;
+
+        if (!audioContext) {
+            throw new Error('Audio context not available');
+        }
+
+        if (!('createMediaStreamDestination' in audioContext)) {
+            throw new Error('Audio context does not support MediaStream recording');
+        }
+
+        const webAudioContext = audioContext as AudioContext;
+
+        // Access the audio engine's master volume node
+        const masterVolume = this.audioEngine.getMasterVolume();
+        if (!masterVolume) {
+            throw new Error('Could not access audio engine master volume');
+        }
+
+        // Create MediaStreamDestination to capture audio
+        const destination = webAudioContext.createMediaStreamDestination();
+
+        // Connect master volume to recording destination
+        const volumeNode = masterVolume.output;
+        volumeNode.connect(destination);
+
+        // Create MediaRecorder
+        const mediaRecorder = new MediaRecorder(destination.stream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+
+        const chunks: Blob[] = [];
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                chunks.push(event.data);
+            }
+        };
+
+        // Track recording state
+        const recordingPromise = new Promise<Blob>((resolve, reject) => {
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                logger.info('offline-renderer', `Recording stopped, captured ${blob.size} bytes`);
+                resolve(blob);
+            };
+
+            mediaRecorder.onerror = (error) => {
+                reject(new Error(`MediaRecorder error: ${error}`));
+            };
+        });
+
+        // Start recording
+        mediaRecorder.start(100);
+        logger.info('offline-renderer', 'Recording started');
+
+        // Progress tracking
+        const progressStartTime = Date.now();
+        const progressInterval = setInterval(() => {
+            if (this.isCancelled) {
+                clearInterval(progressInterval);
+                return;
+            }
+            const elapsed = (Date.now() - progressStartTime) / 1000;
+            // Ensure duration is valid to prevent NaN
+            const validDuration = Math.max(1, duration || 10);
+            const progress = Math.min(95, (elapsed / validDuration) * 50);
+            if (!isNaN(progress)) {
+                this.updateProgress('rendering', 10 + progress, 'Recording audio');
+            }
+        }, 100);
+
+        // Start playback
+        await player.play(mapping);
+        logger.info('offline-renderer', 'Note-centric playback started');
+
+        // Wait for playback to complete or cancellation
+        await new Promise<void>((resolve, reject) => {
+            const checkInterval = setInterval(() => {
+                // Check for cancellation
+                if (this.isCancelled) {
+                    clearInterval(checkInterval);
+                    player.stop();
+                    logger.info('offline-renderer', 'Render cancelled by user');
+                    reject(new Error('Export cancelled by user'));
+                    return;
+                }
+
+                // Check if playback finished
+                if (!player.getIsPlaying()) {
+                    clearInterval(checkInterval);
+                    logger.info('offline-renderer', 'Note-centric playback complete');
+                    resolve();
+                }
+            }, 100);
+
+            // Fallback timeout
+            setTimeout(() => {
+                if (!this.isCancelled) {
+                    clearInterval(checkInterval);
+                    logger.info('offline-renderer', 'Playback timeout reached');
+                    resolve();
+                }
+            }, (duration + 2) * 1000);
+        });
+
+        // Stop recording
+        clearInterval(progressInterval);
+        logger.info('offline-renderer', 'Stopping recording...');
+        mediaRecorder.stop();
+
+        // Wait for recording to finish
+        const blob = await recordingPromise;
+
+        // Disconnect from destination
+        volumeNode.disconnect(destination);
+
+        // Update progress
+        this.updateProgress('rendering', 70, 'Converting audio format');
+
+        // Convert blob to ArrayBuffer
+        logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
+        const arrayBuffer = await blob.arrayBuffer();
+
+        this.updateProgress('rendering', 80, 'Decoding audio data');
+
+        // Decode audio data
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        logger.info('offline-renderer', `Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.sampleRate}Hz`);
+
+        // Resample if needed
+        if (audioBuffer.sampleRate !== targetSampleRate) {
+            logger.info('offline-renderer', `Resampling from ${audioBuffer.sampleRate}Hz to ${targetSampleRate}Hz`);
+            return await this.resampleBuffer(audioBuffer, targetSampleRate);
+        }
+
+        return audioBuffer;
+    }
+
+    /**
+     * Resample audio buffer to target sample rate
+     */
+    private async resampleBuffer(sourceBuffer: AudioBuffer, targetSampleRate: number): Promise<AudioBuffer> {
+        // Create offline context with target sample rate
+        const offlineContext = new OfflineAudioContext(
+            sourceBuffer.numberOfChannels,
+            Math.ceil(sourceBuffer.duration * targetSampleRate),
+            targetSampleRate
+        );
+
+        // Create buffer source
+        const source = offlineContext.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineContext.destination);
+        source.start(0);
+
+        // Render
+        const resampled = await offlineContext.startRendering();
+        logger.info('offline-renderer', 'Resampling complete');
+
+        return resampled;
     }
 
     /**
@@ -309,9 +572,27 @@ export class AudioExporter {
             const uint8Array = new Uint8Array(data);
             await this.app.vault.createBinary(fullPath, uint8Array);
         } else {
-            // Write to system location
-            // TODO: Implement system file writing using Electron's fs
-            throw new Error('System location export not yet implemented');
+            // Write to system location using Node.js fs
+            const uint8Array = new Uint8Array(data);
+            const fs = require('fs');
+            const path = require('path');
+
+            // Ensure directory exists
+            const dirPath = path.dirname(fullPath);
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
+
+            // Write file
+            await new Promise<void>((resolve, reject) => {
+                fs.writeFile(fullPath, uint8Array, (err: Error | null) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
         }
 
         logger.info('export', `File written: ${fullPath} (${data.byteLength} bytes)`);
@@ -334,10 +615,22 @@ export class AudioExporter {
             };
 
             // Get file size from written file
-            const file = this.app.vault.getAbstractFileByPath(filePath);
-            if (file && 'stat' in file) {
-                const fileWithStat = file as TFile;
-                result.fileSize = fileWithStat.stat.size;
+            if (config.locationType === 'system') {
+                // System location - use fs.statSync
+                try {
+                    const fs = require('fs');
+                    const stats = fs.statSync(filePath);
+                    result.fileSize = stats.size;
+                } catch (error) {
+                    logger.warn('export', 'Could not get file size from system location', error);
+                }
+            } else {
+                // Vault location - use Obsidian API
+                const file = this.app.vault.getAbstractFileByPath(filePath);
+                if (file && 'stat' in file) {
+                    const fileWithStat = file as TFile;
+                    result.fileSize = fileWithStat.stat.size;
+                }
             }
 
             // Create the note with full plugin settings
@@ -374,15 +667,33 @@ export class AudioExporter {
      */
     private getFullPath(config: ExportConfig): string {
         const extension = config.format;
+
+        // Use path.join for system paths to handle path separators correctly
+        if (config.locationType === 'system') {
+            const path = require('path');
+            return path.join(config.location, `${config.filename}.${extension}`);
+        }
+
+        // Vault paths use forward slash
         return `${config.location}/${config.filename}.${extension}`;
     }
 
     /**
-     * Check if file exists
+     * Check if file exists (supports both vault and system paths)
      */
     private async fileExists(path: string): Promise<boolean> {
-        const file = this.app.vault.getAbstractFileByPath(path);
-        return file !== null;
+        // Check if it's a vault path (relative) or system path (absolute)
+        const isSystemPath = require('path').isAbsolute(path);
+
+        if (isSystemPath) {
+            // System path - use fs
+            const fs = require('fs');
+            return fs.existsSync(path);
+        } else {
+            // Vault path - use Obsidian API
+            const file = this.app.vault.getAbstractFileByPath(path);
+            return file !== null;
+        }
     }
 
     /**
@@ -395,6 +706,11 @@ export class AudioExporter {
 
         if (this.animator) {
             return this.animator.config.duration;
+        }
+
+        // Use note-centric mapping duration if available
+        if (this.noteCentricMapping) {
+            return this.estimateNoteCentricDuration(this.noteCentricMapping);
         }
 
         // Default estimate for static graph

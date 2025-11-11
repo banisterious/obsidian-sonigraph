@@ -43,8 +43,33 @@ export class ExportNoteCreator {
 
             // Determine note filename
             const noteName = `${config.filename}-export`;
-            const noteFolder = config.exportNoteFolder || config.location;
+
+            // Always create export note in vault, even if audio is exported to system location
+            // If exportNoteFolder is specified, use that; otherwise use default location
+            let noteFolder: string;
+            if (config.exportNoteFolder) {
+                noteFolder = config.exportNoteFolder;
+            } else if (config.locationType === 'system') {
+                // Audio exported to system - use default vault location for note
+                noteFolder = 'Sonigraph Exports';
+            } else {
+                // Audio exported to vault - use same location
+                noteFolder = config.location;
+            }
+
             const notePath = `${noteFolder}/${noteName}.md`;
+
+            // Ensure folder exists
+            const folderExists = this.app.vault.getAbstractFileByPath(noteFolder);
+            if (!folderExists) {
+                try {
+                    await this.app.vault.createFolder(noteFolder);
+                    logger.info('export-note', `Created folder: ${noteFolder}`);
+                } catch (error) {
+                    // Folder might already exist due to race condition
+                    logger.debug('export-note', `Folder creation failed (may already exist): ${noteFolder}`);
+                }
+            }
 
             // Check if note already exists
             let finalPath = notePath;

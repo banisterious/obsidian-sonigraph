@@ -9,7 +9,7 @@
  * GitHub: https://github.com/banisterious
  *
  * BUILD INFORMATION:
- * - Generated: 2025-11-07 22:31:34 UTC
+ * - Generated: 2025-11-11 02:07:02 UTC
  * - Components: 21 files
  * - Build System: Node.js CSS Build Script v1.0.0
  * 
@@ -2614,7 +2614,7 @@
    COMPONENT: CARDS.CSS
    ========================================================================== */
 
-/* Component Size: 658 lines, 15.11 KB */
+/* Component Size: 710 lines, 16.14 KB */
 
 /* ==========================================================================
    SONIGRAPH CARDS & CONTAINERS
@@ -3127,7 +3127,7 @@
 }
 
 .ospcc-card__content {
-  padding: var(--md-space-6);
+  padding: 0 var(--md-space-6) var(--md-space-6) var(--md-space-6);
 }
 
 /* ==========================================================================
@@ -3272,6 +3272,58 @@
   .sonigraph-content-grid--3-col {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   FAQ ITEMS
+   ========================================================================== */
+
+.osp-faq-item {
+  margin-bottom: var(--size-4-4);
+  padding-bottom: var(--size-4-4);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.osp-faq-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.osp-faq-question {
+  margin: 0 0 var(--size-4-2) 0;
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: 600;
+}
+
+.osp-faq-answer {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.osp-faq-answer p {
+  margin: 0 0 var(--size-4-2) 0;
+}
+
+.osp-faq-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.osp-faq-answer ul,
+.osp-faq-answer ol {
+  margin: var(--size-4-2) 0;
+  padding-left: var(--size-4-6);
+}
+
+.osp-faq-answer li {
+  margin-bottom: var(--size-4-1);
+}
+
+.osp-faq-answer em {
+  font-style: italic;
+  color: var(--text-faint);
+  font-size: var(--font-ui-small);
 }
 
 
@@ -10082,7 +10134,7 @@ details.osp-advanced-settings {
    COMPONENT: LOCAL-SOUNDSCAPE.CSS
    ========================================================================== */
 
-/* Component Size: 1180 lines, 25.02 KB */
+/* Component Size: 1183 lines, 25.08 KB */
 
 /* ================================================================
    Local Soundscape View Styles
@@ -10365,12 +10417,14 @@ details.osp-advanced-settings {
 /* Playback controls */
 .playback-buttons {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 10px;
 	margin-bottom: 20px;
 }
 
 .playback-button {
 	flex: 1;
+	min-width: 140px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -10453,6 +10507,7 @@ details.osp-advanced-settings {
 /* Variation controls - inline with playback buttons */
 .variation-controls {
 	flex: 1;
+	min-width: 200px;
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -12919,11 +12974,11 @@ details.osp-advanced-settings {
    ========================================================================== */
 
 /*
- * Build completed: 2025-11-07 22:31:34 UTC
+ * Build completed: 2025-11-11 02:07:02 UTC
  * Components processed: 21
- * Total lines: 12704
- * Total size: 270.1 KB
- * Build duration: 0.04 seconds
+ * Total lines: 12759
+ * Total size: 271.18 KB
+ * Build duration: 0.03 seconds
  * 
  * Component breakdown:
  * - variables.css: 77 lines, 1.91 KB
@@ -12932,7 +12987,7 @@ details.osp-advanced-settings {
  * - utilities.css: 290 lines, 3.68 KB
  * - buttons.css: 441 lines, 10.78 KB
  * - controls.css: 716 lines, 15.89 KB
- * - cards.css: 658 lines, 15.11 KB
+ * - cards.css: 710 lines, 16.14 KB
  * - lists.css: 136 lines, 3.11 KB
  * - navigation.css: 337 lines, 7.72 KB
  * - modals.css: 1071 lines, 21.53 KB
@@ -12941,7 +12996,7 @@ details.osp-advanced-settings {
  * - status.css: 146 lines, 3.54 KB
  * - controlcenter.css: 901 lines, 21.72 KB
  * - sonic-graph.css: 3365 lines, 72.4 KB
- * - local-soundscape.css: 1180 lines, 25.02 KB
+ * - local-soundscape.css: 1183 lines, 25.08 KB
  * - sample-table.css: 435 lines, 8.63 KB
  * - export.css: 630 lines, 15.16 KB
  * - animations.css: 237 lines, 4.81 KB
