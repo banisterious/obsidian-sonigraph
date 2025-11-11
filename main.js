@@ -18882,12 +18882,12 @@ var init_LocalSoundscapeSettings = __esm({
         modeDesc.style.borderRadius = "4px";
         modeDesc.style.fontSize = "12px";
         modeDesc.style.lineHeight = "1.5";
-        modeDesc.innerHTML = `
-			<strong>Note-Centric</strong> (recommended): Generates rich musical phrases from the center note's prose structure.
-			Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.<br><br>
-			<strong>Graph-Centric</strong> (traditional): Maps each connected node to individual notes.
-			Requires multiple connections for interesting audio. Best for dense, well-connected graphs.
-		`;
+        modeDesc.createEl("strong", { text: "Note-Centric" });
+        modeDesc.appendText(" (recommended): Generates rich musical phrases from the center note's prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.");
+        modeDesc.createEl("br");
+        modeDesc.createEl("br");
+        modeDesc.createEl("strong", { text: "Graph-Centric" });
+        modeDesc.appendText(" (traditional): Maps each connected node to individual notes. Requires multiple connections for interesting audio. Best for dense, well-connected graphs.");
         content.createEl("hr", { cls: "osp-settings-separator" });
         new import_obsidian12.Setting(content).setName("Auto-play when opening").setDesc("Automatically start playback when opening Local Soundscape view").addToggle(
           (toggle) => {
@@ -19522,7 +19522,10 @@ var init_LocalSoundscapeLayersSettings = __esm({
         const noteText = noteDiv.createSpan();
         noteText.style.fontSize = "12px";
         noteText.style.color = "var(--text-normal)";
-        noteText.innerHTML = "<strong>Important:</strong> Continuous layers require Freesound samples to be enabled. Go to the <strong>Layers</strong> tab and use the Sample Browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.";
+        noteText.createEl("strong", { text: "Important:" });
+        noteText.appendText(" Continuous layers require Freesound samples to be enabled. Go to the ");
+        noteText.createEl("strong", { text: "Layers" });
+        noteText.appendText(" tab and use the Sample Browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.");
         new import_obsidian13.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside note sonification").addToggle(
           (toggle) => {
             var _a, _b;
@@ -21516,10 +21519,28 @@ var init_control_panel = __esm({
         });
         const helpContent = helpCard.getContent();
         const helpList = helpContent.createEl("ul", { cls: "osp-guide-help" });
-        helpList.createEl("li").innerHTML = '<strong>Documentation:</strong> Visit the <a href="https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides">GitHub repository</a> for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.';
-        helpList.createEl("li").innerHTML = "<strong>Settings:</strong> Each Control Center tab has configuration options. Hover over controls for tooltips.";
-        helpList.createEl("li").innerHTML = `<strong>Commands:</strong> Search "Sonigraph" in Obsidian's command palette (Ctrl/Cmd + P) to see all available commands.`;
-        helpList.createEl("li").innerHTML = '<strong>Issues & Feedback:</strong> Report bugs or request features on <a href="https://github.com/banisterious/obsidian-sonigraph/issues">GitHub Issues</a>.';
+        const docLi = helpList.createEl("li");
+        docLi.createEl("strong", { text: "Documentation:" });
+        docLi.appendText(" Visit the ");
+        docLi.createEl("a", {
+          text: "GitHub repository",
+          attr: { href: "https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides" }
+        });
+        docLi.appendText(" for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.");
+        const settingsLi = helpList.createEl("li");
+        settingsLi.createEl("strong", { text: "Settings:" });
+        settingsLi.appendText(" Each Control Center tab has configuration options. Hover over controls for tooltips.");
+        const commandsLi = helpList.createEl("li");
+        commandsLi.createEl("strong", { text: "Commands:" });
+        commandsLi.appendText(` Search "Sonigraph" in Obsidian's command palette (Ctrl/Cmd + P) to see all available commands.`);
+        const feedbackLi = helpList.createEl("li");
+        feedbackLi.createEl("strong", { text: "Issues & Feedback:" });
+        feedbackLi.appendText(" Report bugs or request features on ");
+        feedbackLi.createEl("a", {
+          text: "GitHub Issues",
+          attr: { href: "https://github.com/banisterious/obsidian-sonigraph/issues" }
+        });
+        feedbackLi.appendText(".");
         this.contentContainer.appendChild(helpCard.getElement());
       }
       /**
@@ -24871,13 +24892,27 @@ All whale samples are authentic recordings from marine research institutions and
         });
         const content = card.getContent();
         const tipsList = content.createEl("ul", { cls: "osp-guide-tips" });
-        tipsList.createEl("li").innerHTML = "<strong>Start with Depth 2:</strong> This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.";
-        tipsList.createEl("li").innerHTML = "<strong>Enable Scale Quantization:</strong> This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.";
-        tipsList.createEl("li").innerHTML = "<strong>Use Clustering to Discover Patterns:</strong> Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.";
-        tipsList.createEl("li").innerHTML = "<strong>Reduce Sonic Congestion:</strong> Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.";
-        tipsList.createEl("li").innerHTML = "<strong>Filter by Tags/Folders:</strong> Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.";
-        tipsList.createEl("li").innerHTML = "<strong>Manage Performance:</strong> For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.";
-        tipsList.createEl("li").innerHTML = `<strong>Daily Review Workflow:</strong> Right-click your daily note and "Open in Local Soundscape" to hear what you're connecting to. This reveals emerging themes in your thinking.`;
+        const tip1 = tipsList.createEl("li");
+        tip1.createEl("strong", { text: "Start with Depth 2:" });
+        tip1.appendText(" This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.");
+        const tip2 = tipsList.createEl("li");
+        tip2.createEl("strong", { text: "Enable Scale Quantization:" });
+        tip2.appendText(" This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.");
+        const tip3 = tipsList.createEl("li");
+        tip3.createEl("strong", { text: "Use Clustering to Discover Patterns:" });
+        tip3.appendText(" Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.");
+        const tip4 = tipsList.createEl("li");
+        tip4.createEl("strong", { text: "Reduce Sonic Congestion:" });
+        tip4.appendText(" Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.");
+        const tip5 = tipsList.createEl("li");
+        tip5.createEl("strong", { text: "Filter by Tags/Folders:" });
+        tip5.appendText(" Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.");
+        const tip6 = tipsList.createEl("li");
+        tip6.createEl("strong", { text: "Manage Performance:" });
+        tip6.appendText(" For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.");
+        const tip7 = tipsList.createEl("li");
+        tip7.createEl("strong", { text: "Daily Review Workflow:" });
+        tip7.appendText(` Right-click your daily note and "Open in Local Soundscape" to hear what you're connecting to. This reveals emerging themes in your thinking.`);
         this.contentContainer.appendChild(card.getElement());
       }
       /**
@@ -24893,67 +24928,109 @@ All whale samples are authentic recordings from marine research institutions and
         const content = card.getContent();
         const faq1 = content.createEl("div", { cls: "osp-faq-item" });
         const q1 = faq1.createEl("h4", { cls: "osp-faq-question" });
-        q1.innerHTML = "<strong>Q: Why does the music sound simplistic or repetitive?</strong>";
+        q1.createEl("strong", { text: "Q: Why does the music sound simplistic or repetitive?" });
         const a1 = faq1.createEl("div", { cls: "osp-faq-answer" });
-        a1.innerHTML = `
-			<p><strong>A:</strong> By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:</p>
-			<ul>
-				<li><strong>All markdown syntax counts:</strong> Links, headings, callouts, and formatting inflate word counts</li>
-				<li><strong>Notes sound similar:</strong> Similar file sizes produce similar durations and pitches</li>
-				<li><strong>No content differentiation:</strong> Callouts, code blocks, and lists are treated the same as regular text</li>
-			</ul>
-			<p><strong>To get richer, more varied soundscapes:</strong></p>
-			<ol>
-				<li><strong>Enable Musical Enhancements</strong> (above) - This is the most impactful change:
-					<ul>
-						<li>Scale Quantization creates harmonic consonance</li>
-						<li>Chord Voicing adds polyphonic richness</li>
-						<li>Rhythmic Patterns organize timing musically</li>
-						<li>Tension Tracking creates emotional arcs</li>
-						<li>Turn-Taking reduces congestion through dialogue</li>
-					</ul>
-				</li>
-				<li><strong>Use diverse instruments</strong> - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type</li>
-				<li><strong>Apply filters</strong> - Focus on specific tags or folders to create more thematically coherent soundscapes</li>
-				<li><strong>Experiment with clustering</strong> - Different clustering methods reveal different organizational patterns in your vault</li>
-			</ol>
-			<p><em>Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.</em></p>
-		`;
+        const a1p1 = a1.createEl("p");
+        a1p1.createEl("strong", { text: "A:" });
+        a1p1.appendText(" By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:");
+        const a1ul1 = a1.createEl("ul");
+        const a1li1 = a1ul1.createEl("li");
+        a1li1.createEl("strong", { text: "All markdown syntax counts:" });
+        a1li1.appendText(" Links, headings, callouts, and formatting inflate word counts");
+        const a1li2 = a1ul1.createEl("li");
+        a1li2.createEl("strong", { text: "Notes sound similar:" });
+        a1li2.appendText(" Similar file sizes produce similar durations and pitches");
+        const a1li3 = a1ul1.createEl("li");
+        a1li3.createEl("strong", { text: "No content differentiation:" });
+        a1li3.appendText(" Callouts, code blocks, and lists are treated the same as regular text");
+        const a1p2 = a1.createEl("p");
+        a1p2.createEl("strong", { text: "To get richer, more varied soundscapes:" });
+        const a1ol = a1.createEl("ol");
+        const a1oli1 = a1ol.createEl("li");
+        a1oli1.createEl("strong", { text: "Enable Musical Enhancements" });
+        a1oli1.appendText(" (above) - This is the most impactful change:");
+        const a1oli1ul = a1oli1.createEl("ul");
+        a1oli1ul.createEl("li", { text: "Scale Quantization creates harmonic consonance" });
+        a1oli1ul.createEl("li", { text: "Chord Voicing adds polyphonic richness" });
+        a1oli1ul.createEl("li", { text: "Rhythmic Patterns organize timing musically" });
+        a1oli1ul.createEl("li", { text: "Tension Tracking creates emotional arcs" });
+        a1oli1ul.createEl("li", { text: "Turn-Taking reduces congestion through dialogue" });
+        const a1oli2 = a1ol.createEl("li");
+        a1oli2.createEl("strong", { text: "Use diverse instruments" });
+        a1oli2.appendText(" - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type");
+        const a1oli3 = a1ol.createEl("li");
+        a1oli3.createEl("strong", { text: "Apply filters" });
+        a1oli3.appendText(" - Focus on specific tags or folders to create more thematically coherent soundscapes");
+        const a1oli4 = a1ol.createEl("li");
+        a1oli4.createEl("strong", { text: "Experiment with clustering" });
+        a1oli4.appendText(" - Different clustering methods reveal different organizational patterns in your vault");
+        const a1p3 = a1.createEl("p");
+        a1p3.createEl("em", { text: "Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted." });
         const faq2 = content.createEl("div", { cls: "osp-faq-item" });
         const q2 = faq2.createEl("h4", { cls: "osp-faq-question" });
-        q2.innerHTML = "<strong>Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?</strong>";
+        q2.createEl("strong", { text: "Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?" });
         const a2 = faq2.createEl("div", { cls: "osp-faq-answer" });
-        a2.innerHTML = `
-			<p><strong>A:</strong> Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.</p>
-
-			<p><strong>Why this happens:</strong></p>
-			<ul>
-				<li><strong>Sparse connections:</strong> Your note has few or no links to other notes at shallow depths (1-2)</li>
-				<li><strong>Low depth setting:</strong> The depth slider is set to 1, limiting the graph to immediate connections only</li>
-				<li><strong>Filters too restrictive:</strong> Tag/folder filters are excluding connected notes</li>
-			</ul>
-
-			<p><strong>What Musical Enhancements need to work:</strong></p>
-			<ul>
-				<li><strong>Turn-Taking:</strong> Needs 3+ notes at different depths to create call-response dialogue</li>
-				<li><strong>Chord Voicing:</strong> Needs 2+ notes at same depth to build harmonies</li>
-				<li><strong>Rhythmic Patterns:</strong> Needs 4+ notes to organize into musical patterns</li>
-				<li><strong>Tension Tracking:</strong> Needs 5+ notes to create narrative arcs</li>
-				<li><strong>Scale Quantization:</strong> Works with any number of notes, but more varied with higher counts</li>
-			</ul>
-
-			<p><strong>How to fix:</strong></p>
-			<ol>
-				<li><strong>Enable Continuous Layers:</strong> Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. <strong>Important:</strong> You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.</li>
-				<li><strong>Increase depth:</strong> Slide the depth control to 3-5 to explore more connection levels</li>
-				<li><strong>Choose more connected notes:</strong> Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"</li>
-				<li><strong>Build more connections:</strong> Add links between related notes in your vault to create richer graph structure</li>
-				<li><strong>Check filters:</strong> Ensure Include/Exclude filters aren't hiding connected notes</li>
-				<li><strong>Try bidirectional links:</strong> Notes with two-way connections create denser graphs than one-way links</li>
-			</ol>
-
-			<p><strong>For sparse vaults:</strong> If your vault generally has limited connections, <strong>Continuous Layers</strong> are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.</p>
-		`;
+        const a2p1 = a2.createEl("p");
+        a2p1.createEl("strong", { text: "A:" });
+        a2p1.appendText(" Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.");
+        const a2p2 = a2.createEl("p");
+        a2p2.createEl("strong", { text: "Why this happens:" });
+        const a2ul1 = a2.createEl("ul");
+        const a2li1 = a2ul1.createEl("li");
+        a2li1.createEl("strong", { text: "Sparse connections:" });
+        a2li1.appendText(" Your note has few or no links to other notes at shallow depths (1-2)");
+        const a2li2 = a2ul1.createEl("li");
+        a2li2.createEl("strong", { text: "Low depth setting:" });
+        a2li2.appendText(" The depth slider is set to 1, limiting the graph to immediate connections only");
+        const a2li3 = a2ul1.createEl("li");
+        a2li3.createEl("strong", { text: "Filters too restrictive:" });
+        a2li3.appendText(" Tag/folder filters are excluding connected notes");
+        const a2p3 = a2.createEl("p");
+        a2p3.createEl("strong", { text: "What Musical Enhancements need to work:" });
+        const a2ul2 = a2.createEl("ul");
+        const a2li4 = a2ul2.createEl("li");
+        a2li4.createEl("strong", { text: "Turn-Taking:" });
+        a2li4.appendText(" Needs 3+ notes at different depths to create call-response dialogue");
+        const a2li5 = a2ul2.createEl("li");
+        a2li5.createEl("strong", { text: "Chord Voicing:" });
+        a2li5.appendText(" Needs 2+ notes at same depth to build harmonies");
+        const a2li6 = a2ul2.createEl("li");
+        a2li6.createEl("strong", { text: "Rhythmic Patterns:" });
+        a2li6.appendText(" Needs 4+ notes to organize into musical patterns");
+        const a2li7 = a2ul2.createEl("li");
+        a2li7.createEl("strong", { text: "Tension Tracking:" });
+        a2li7.appendText(" Needs 5+ notes to create narrative arcs");
+        const a2li8 = a2ul2.createEl("li");
+        a2li8.createEl("strong", { text: "Scale Quantization:" });
+        a2li8.appendText(" Works with any number of notes, but more varied with higher counts");
+        const a2p4 = a2.createEl("p");
+        a2p4.createEl("strong", { text: "How to fix:" });
+        const a2ol = a2.createEl("ol");
+        const a2oli1 = a2ol.createEl("li");
+        a2oli1.createEl("strong", { text: "Enable Continuous Layers:" });
+        a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
+        a2oli1.createEl("strong", { text: "Important:" });
+        a2oli1.appendText(" You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.");
+        const a2oli2 = a2ol.createEl("li");
+        a2oli2.createEl("strong", { text: "Increase depth:" });
+        a2oli2.appendText(" Slide the depth control to 3-5 to explore more connection levels");
+        const a2oli3 = a2ol.createEl("li");
+        a2oli3.createEl("strong", { text: "Choose more connected notes:" });
+        a2oli3.appendText(' Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"');
+        const a2oli4 = a2ol.createEl("li");
+        a2oli4.createEl("strong", { text: "Build more connections:" });
+        a2oli4.appendText(" Add links between related notes in your vault to create richer graph structure");
+        const a2oli5 = a2ol.createEl("li");
+        a2oli5.createEl("strong", { text: "Check filters:" });
+        a2oli5.appendText(" Ensure Include/Exclude filters aren't hiding connected notes");
+        const a2oli6 = a2ol.createEl("li");
+        a2oli6.createEl("strong", { text: "Try bidirectional links:" });
+        a2oli6.appendText(" Notes with two-way connections create denser graphs than one-way links");
+        const a2p5 = a2.createEl("p");
+        a2p5.createEl("strong", { text: "For sparse vaults:" });
+        a2p5.appendText(" If your vault generally has limited connections, ");
+        a2p5.createEl("strong", { text: "Continuous Layers" });
+        a2p5.appendText(" are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.");
         this.contentContainer.appendChild(card.getElement());
       }
     };
@@ -88440,15 +88517,13 @@ var LocalSoundscapeRenderer = class {
     if (!this.tooltip)
       return;
     const directionLabel = node.direction === "incoming" ? "Incoming" : node.direction === "outgoing" ? "Outgoing" : node.direction === "bidirectional" ? "Bidirectional" : "Center";
-    this.tooltip.innerHTML = `
-			<div class="tooltip-title">${node.basename}</div>
-			<div class="tooltip-info">
-				<div>Depth: ${node.depth}</div>
-				<div>Direction: ${directionLabel}</div>
-				<div>Links: ${node.linkCount}</div>
-				<div>Words: ${node.wordCount}</div>
-			</div>
-		`;
+    this.tooltip.empty();
+    this.tooltip.createDiv({ cls: "tooltip-title", text: node.basename });
+    const tooltipInfo = this.tooltip.createDiv({ cls: "tooltip-info" });
+    tooltipInfo.createDiv({ text: `Depth: ${node.depth}` });
+    tooltipInfo.createDiv({ text: `Direction: ${directionLabel}` });
+    tooltipInfo.createDiv({ text: `Links: ${node.linkCount}` });
+    tooltipInfo.createDiv({ text: `Words: ${node.wordCount}` });
     this.tooltip.style.left = `${event.clientX + 10}px`;
     this.tooltip.style.top = `${event.clientY + 10}px`;
     this.tooltip.style.display = "block";
@@ -90107,7 +90182,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "graph-section-toggle",
       attr: { "aria-label": "Toggle graph section" }
     });
-    toggleButton.innerHTML = "\u25BC";
+    toggleButton.textContent = "\u25BC";
     const graphContent = graphSection.createDiv({ cls: "graph-section-content collapsed" });
     this.graphContainer = graphContent.createDiv({ cls: "local-soundscape-graph" });
     const graphControls = graphContent.createDiv({ cls: "local-soundscape-graph-controls" });
@@ -90184,11 +90259,11 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       logger85.debug("graph-toggle", `Toggle clicked. Currently collapsed: ${isCollapsed}`);
       if (isCollapsed) {
         graphContent.classList.remove("collapsed");
-        toggleButton.innerHTML = "\u25B2";
+        toggleButton.textContent = "\u25B2";
         logger85.debug("graph-toggle", "Graph section expanded");
       } else {
         graphContent.classList.add("collapsed");
-        toggleButton.innerHTML = "\u25BC";
+        toggleButton.textContent = "\u25BC";
         logger85.debug("graph-toggle", "Graph section collapsed");
       }
     });
@@ -90311,36 +90386,25 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "playback-button play-button",
       attr: { "aria-label": "Play soundscape", "disabled": "" }
     });
-    this.playButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polygon points="5 3 19 12 5 21 5 3"></polygon>
-			</svg>
-			<span>Play</span>
-		`;
+    const playIcon = createLucideIcon("play", 20);
+    this.playButton.appendChild(playIcon);
+    this.playButton.appendChild(createSpan({ text: "Play" }));
     this.playButton.addEventListener("click", () => this.togglePlayback());
     this.stopButton = buttonSection.createEl("button", {
       cls: "playback-button stop-button",
       attr: { "aria-label": "Stop soundscape", "disabled": "" }
     });
-    this.stopButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<rect x="3" y="3" width="18" height="18"></rect>
-			</svg>
-			<span>Stop</span>
-		`;
+    const stopIcon = createLucideIcon("square", 20);
+    this.stopButton.appendChild(stopIcon);
+    this.stopButton.appendChild(createSpan({ text: "Stop" }));
     this.stopButton.addEventListener("click", () => this.stopPlayback());
     this.exportAudioButton = buttonSection.createEl("button", {
       cls: "playback-button export-audio-button",
       attr: { "aria-label": "Export soundscape as audio file", "disabled": "" }
     });
-    this.exportAudioButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-				<polyline points="7 10 12 15 17 10"></polyline>
-				<line x1="12" y1="15" x2="12" y2="3"></line>
-			</svg>
-			<span>Export audio</span>
-		`;
+    const exportIcon = createLucideIcon("download", 20);
+    this.exportAudioButton.appendChild(exportIcon);
+    this.exportAudioButton.appendChild(createSpan({ text: "Export audio" }));
     this.exportAudioButton.addEventListener("click", () => this.exportSoundscapeAudio());
     const playActiveNoteButton = buttonSection.createEl("button", {
       cls: "playback-button play-active-note-button",
@@ -90355,11 +90419,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "playback-button variation-button prev-variation",
       attr: { "aria-label": "Previous musical variation", "disabled": "" }
     });
-    this.prevVariationButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="15 18 9 12 15 6"></polyline>
-			</svg>
-		`;
+    const prevIcon = createLucideIcon("chevron-left", 16);
+    this.prevVariationButton.appendChild(prevIcon);
     this.prevVariationButton.addEventListener("click", () => this.previousVariation());
     this.variationDisplay = variationSection.createSpan({
       cls: "variation-display",
@@ -90369,38 +90430,26 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "playback-button variation-button reroll-button",
       attr: { "aria-label": "Re-roll musical variation", "disabled": "" }
     });
-    this.rerollButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="23 4 23 10 17 10"></polyline>
-				<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-			</svg>
-		`;
+    const rerollIcon = createLucideIcon("rotate-cw", 16);
+    this.rerollButton.appendChild(rerollIcon);
     this.rerollButton.addEventListener("click", () => this.rerollVariation());
     const statsSection = container.createDiv({ cls: "playback-stats" });
     const voiceCountContainer = statsSection.createDiv({ cls: "stat-item" });
     const voiceLabel = voiceCountContainer.createSpan({ cls: "stat-label" });
-    voiceLabel.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
-				<path d="M9 18V5l12-2v13"></path>
-				<circle cx="6" cy="18" r="3"></circle>
-				<circle cx="18" cy="16" r="3"></circle>
-			</svg>
-			<span>Active Voices</span>
-		`;
+    const voiceIcon = createLucideIcon("music", 14);
+    voiceIcon.addClass("stat-icon");
+    voiceLabel.appendChild(voiceIcon);
+    voiceLabel.appendChild(createSpan({ text: "Active Voices" }));
     this.voiceCountDisplay = voiceCountContainer.createSpan({
       text: "0",
       cls: "stat-value voice-count"
     });
     const volumeContainer = statsSection.createDiv({ cls: "stat-item" });
     const volumeLabel = volumeContainer.createSpan({ cls: "stat-label" });
-    volumeLabel.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
-				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-				<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-				<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-			</svg>
-			<span>Volume</span>
-		`;
+    const volumeIcon = createLucideIcon("volume-2", 14);
+    volumeIcon.addClass("stat-icon");
+    volumeLabel.appendChild(volumeIcon);
+    volumeLabel.appendChild(createSpan({ text: "Volume" }));
     this.volumeDisplay = volumeContainer.createSpan({
       text: "0%",
       cls: "stat-value volume-level"
@@ -91520,7 +91569,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "stats-toggle",
       attr: { "aria-label": "Toggle statistics" }
     });
-    toggleButton.innerHTML = "\u25BC";
+    toggleButton.textContent = "\u25BC";
     const statsContent = statsContainer.createDiv({ cls: "stats-content collapsed" });
     const statsList = statsContent.createEl("ul", { cls: "stats-list" });
     statsList.createEl("li", { text: `Nodes: ${this.graphData.stats.totalNodes}` });
@@ -91531,10 +91580,10 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       const isCollapsed = statsContent.classList.contains("collapsed");
       if (isCollapsed) {
         statsContent.classList.remove("collapsed");
-        toggleButton.innerHTML = "\u25B2";
+        toggleButton.textContent = "\u25B2";
       } else {
         statsContent.classList.add("collapsed");
-        toggleButton.innerHTML = "\u25BC";
+        toggleButton.textContent = "\u25BC";
       }
     });
   }
@@ -91542,7 +91591,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
    * Toggle playback state
    */
   async togglePlayback() {
-    console.log("\u{1F535} PLAY BUTTON CLICKED - togglePlayback called");
+    logger85.debug("ui-interaction", "Play button clicked, toggling playback");
     logger85.info("toggle-playback", "Play button clicked", {
       hasGraphData: !!this.graphData,
       hasCenterFile: !!this.centerFile,
@@ -91933,25 +91982,20 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     if (!this.playButton || !this.stopButton)
       return;
     if (this.isPlaying) {
-      this.playButton.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<rect x="6" y="4" width="4" height="16"></rect>
-					<rect x="14" y="4" width="4" height="16"></rect>
-				</svg>
-				<span>Pause</span>
-			`;
+      this.playButton.empty();
+      const pauseIcon = createLucideIcon("pause", 20);
+      this.playButton.appendChild(pauseIcon);
+      this.playButton.appendChild(createSpan({ text: "Pause" }));
       this.playButton.classList.add("playing");
       this.stopButton.removeAttribute("disabled");
       if (this.exportAudioButton) {
         this.exportAudioButton.removeAttribute("disabled");
       }
     } else {
-      this.playButton.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<polygon points="5 3 19 12 5 21 5 3"></polygon>
-				</svg>
-				<span>Play</span>
-			`;
+      this.playButton.empty();
+      const playIcon = createLucideIcon("play", 20);
+      this.playButton.appendChild(playIcon);
+      this.playButton.appendChild(createSpan({ text: "Play" }));
       this.playButton.classList.remove("playing");
       if (this.graphData && this.graphData.allNodes.length > 0) {
         this.playButton.removeAttribute("disabled");

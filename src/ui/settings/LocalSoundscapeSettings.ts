@@ -84,12 +84,12 @@ export class LocalSoundscapeSettings {
 		modeDesc.style.borderRadius = '4px';
 		modeDesc.style.fontSize = '12px';
 		modeDesc.style.lineHeight = '1.5';
-		modeDesc.innerHTML = `
-			<strong>Note-Centric</strong> (recommended): Generates rich musical phrases from the center note's prose structure.
-			Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.<br><br>
-			<strong>Graph-Centric</strong> (traditional): Maps each connected node to individual notes.
-			Requires multiple connections for interesting audio. Best for dense, well-connected graphs.
-		`;
+		modeDesc.createEl('strong', { text: 'Note-Centric' });
+		modeDesc.appendText(' (recommended): Generates rich musical phrases from the center note\'s prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.');
+		modeDesc.createEl('br');
+		modeDesc.createEl('br');
+		modeDesc.createEl('strong', { text: 'Graph-Centric' });
+		modeDesc.appendText(' (traditional): Maps each connected node to individual notes. Requires multiple connections for interesting audio. Best for dense, well-connected graphs.');
 
 		// Add visual separator
 		content.createEl('hr', { cls: 'osp-settings-separator' });

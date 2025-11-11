@@ -643,15 +643,13 @@ export class LocalSoundscapeRenderer {
 		                       node.direction === 'outgoing' ? 'Outgoing' :
 		                       node.direction === 'bidirectional' ? 'Bidirectional' : 'Center';
 
-		this.tooltip.innerHTML = `
-			<div class="tooltip-title">${node.basename}</div>
-			<div class="tooltip-info">
-				<div>Depth: ${node.depth}</div>
-				<div>Direction: ${directionLabel}</div>
-				<div>Links: ${node.linkCount}</div>
-				<div>Words: ${node.wordCount}</div>
-			</div>
-		`;
+		this.tooltip.empty();
+		this.tooltip.createDiv({ cls: 'tooltip-title', text: node.basename });
+		const tooltipInfo = this.tooltip.createDiv({ cls: 'tooltip-info' });
+		tooltipInfo.createDiv({ text: `Depth: ${node.depth}` });
+		tooltipInfo.createDiv({ text: `Direction: ${directionLabel}` });
+		tooltipInfo.createDiv({ text: `Links: ${node.linkCount}` });
+		tooltipInfo.createDiv({ text: `Words: ${node.wordCount}` });
 
 		// Position tooltip near cursor
 		this.tooltip.style.left = `${event.clientX + 10}px`;

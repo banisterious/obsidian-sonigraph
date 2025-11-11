@@ -337,7 +337,7 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'graph-section-toggle',
 			attr: { 'aria-label': 'Toggle graph section' }
 		});
-		toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+		toggleButton.textContent = '▼'; // Down arrow (collapsed state)
 
 		// Graph section content (collapsed by default)
 		const graphContent = graphSection.createDiv({ cls: 'graph-section-content collapsed' });
@@ -443,11 +443,11 @@ export class LocalSoundscapeView extends ItemView {
 
 			if (isCollapsed) {
 				graphContent.classList.remove('collapsed');
-				toggleButton.innerHTML = '▲'; // Up arrow (expanded state)
+				toggleButton.textContent = '▲'; // Up arrow (expanded state)
 				logger.debug('graph-toggle', 'Graph section expanded');
 			} else {
 				graphContent.classList.add('collapsed');
-				toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+				toggleButton.textContent = '▼'; // Down arrow (collapsed state)
 				logger.debug('graph-toggle', 'Graph section collapsed');
 			}
 		});
@@ -627,12 +627,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'playback-button play-button',
 			attr: { 'aria-label': 'Play soundscape', 'disabled': '' }
 		});
-		this.playButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polygon points="5 3 19 12 5 21 5 3"></polygon>
-			</svg>
-			<span>Play</span>
-		`;
+		const playIcon = createLucideIcon('play', 20);
+		this.playButton.appendChild(playIcon);
+		this.playButton.appendChild(createSpan({ text: 'Play' }));
 		this.playButton.addEventListener('click', () => this.togglePlayback());
 
 		// Stop button
@@ -640,12 +637,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'playback-button stop-button',
 			attr: { 'aria-label': 'Stop soundscape', 'disabled': '' }
 		});
-		this.stopButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<rect x="3" y="3" width="18" height="18"></rect>
-			</svg>
-			<span>Stop</span>
-		`;
+		const stopIcon = createLucideIcon('square', 20);
+		this.stopButton.appendChild(stopIcon);
+		this.stopButton.appendChild(createSpan({ text: 'Stop' }));
 		this.stopButton.addEventListener('click', () => this.stopPlayback());
 
 		// Export Audio button
@@ -653,14 +647,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'playback-button export-audio-button',
 			attr: { 'aria-label': 'Export soundscape as audio file', 'disabled': '' }
 		});
-		this.exportAudioButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-				<polyline points="7 10 12 15 17 10"></polyline>
-				<line x1="12" y1="15" x2="12" y2="3"></line>
-			</svg>
-			<span>Export audio</span>
-		`;
+		const exportIcon = createLucideIcon('download', 20);
+		this.exportAudioButton.appendChild(exportIcon);
+		this.exportAudioButton.appendChild(createSpan({ text: 'Export audio' }));
 		this.exportAudioButton.addEventListener('click', () => this.exportSoundscapeAudio());
 
 		// Play Active Note button
@@ -681,11 +670,8 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'playback-button variation-button prev-variation',
 			attr: { 'aria-label': 'Previous musical variation', 'disabled': '' }
 		});
-		this.prevVariationButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="15 18 9 12 15 6"></polyline>
-			</svg>
-		`;
+		const prevIcon = createLucideIcon('chevron-left', 16);
+		this.prevVariationButton.appendChild(prevIcon);
 		this.prevVariationButton.addEventListener('click', () => this.previousVariation());
 
 		// Variation display
@@ -699,12 +685,8 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'playback-button variation-button reroll-button',
 			attr: { 'aria-label': 'Re-roll musical variation', 'disabled': '' }
 		});
-		this.rerollButton.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="23 4 23 10 17 10"></polyline>
-				<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-			</svg>
-		`;
+		const rerollIcon = createLucideIcon('rotate-cw', 16);
+		this.rerollButton.appendChild(rerollIcon);
 		this.rerollButton.addEventListener('click', () => this.rerollVariation());
 
 		// Voice count and volume display
@@ -712,14 +694,10 @@ export class LocalSoundscapeView extends ItemView {
 
 		const voiceCountContainer = statsSection.createDiv({ cls: 'stat-item' });
 		const voiceLabel = voiceCountContainer.createSpan({ cls: 'stat-label' });
-		voiceLabel.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
-				<path d="M9 18V5l12-2v13"></path>
-				<circle cx="6" cy="18" r="3"></circle>
-				<circle cx="18" cy="16" r="3"></circle>
-			</svg>
-			<span>Active Voices</span>
-		`;
+		const voiceIcon = createLucideIcon('music', 14);
+		voiceIcon.addClass('stat-icon');
+		voiceLabel.appendChild(voiceIcon);
+		voiceLabel.appendChild(createSpan({ text: 'Active Voices' }));
 		this.voiceCountDisplay = voiceCountContainer.createSpan({
 			text: '0',
 			cls: 'stat-value voice-count'
@@ -727,14 +705,10 @@ export class LocalSoundscapeView extends ItemView {
 
 		const volumeContainer = statsSection.createDiv({ cls: 'stat-item' });
 		const volumeLabel = volumeContainer.createSpan({ cls: 'stat-label' });
-		volumeLabel.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
-				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-				<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-				<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-			</svg>
-			<span>Volume</span>
-		`;
+		const volumeIcon = createLucideIcon('volume-2', 14);
+		volumeIcon.addClass('stat-icon');
+		volumeLabel.appendChild(volumeIcon);
+		volumeLabel.appendChild(createSpan({ text: 'Volume' }));
 		this.volumeDisplay = volumeContainer.createSpan({
 			text: '0%',
 			cls: 'stat-value volume-level'
@@ -2201,7 +2175,7 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'stats-toggle',
 			attr: { 'aria-label': 'Toggle statistics' }
 		});
-		toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+		toggleButton.textContent = '▼'; // Down arrow (collapsed state)
 
 		const statsContent = statsContainer.createDiv({ cls: 'stats-content collapsed' });
 
@@ -2216,10 +2190,10 @@ export class LocalSoundscapeView extends ItemView {
 			const isCollapsed = statsContent.classList.contains('collapsed');
 			if (isCollapsed) {
 				statsContent.classList.remove('collapsed');
-				toggleButton.innerHTML = '▲'; // Up arrow (expanded state)
+				toggleButton.textContent = '▲'; // Up arrow (expanded state)
 			} else {
 				statsContent.classList.add('collapsed');
-				toggleButton.innerHTML = '▼'; // Down arrow (collapsed state)
+				toggleButton.textContent = '▼'; // Down arrow (collapsed state)
 			}
 		});
 	}
@@ -2228,7 +2202,7 @@ export class LocalSoundscapeView extends ItemView {
 	 * Toggle playback state
 	 */
 	private async togglePlayback(): Promise<void> {
-		console.log('🔵 PLAY BUTTON CLICKED - togglePlayback called');
+		logger.debug('ui-interaction', 'Play button clicked, toggling playback');
 		logger.info('toggle-playback', 'Play button clicked', {
 			hasGraphData: !!this.graphData,
 			hasCenterFile: !!this.centerFile,
@@ -2766,13 +2740,10 @@ export class LocalSoundscapeView extends ItemView {
 
 		if (this.isPlaying) {
 			// Update play button to show pause icon
-			this.playButton.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<rect x="6" y="4" width="4" height="16"></rect>
-					<rect x="14" y="4" width="4" height="16"></rect>
-				</svg>
-				<span>Pause</span>
-			`;
+			this.playButton.empty();
+			const pauseIcon = createLucideIcon('pause', 20);
+			this.playButton.appendChild(pauseIcon);
+			this.playButton.appendChild(createSpan({ text: 'Pause' }));
 			this.playButton.classList.add('playing');
 			this.stopButton.removeAttribute('disabled');
 
@@ -2782,12 +2753,10 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		} else {
 			// Update play button to show play icon
-			this.playButton.innerHTML = `
-				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<polygon points="5 3 19 12 5 21 5 3"></polygon>
-				</svg>
-				<span>Play</span>
-			`;
+			this.playButton.empty();
+			const playIcon = createLucideIcon('play', 20);
+			this.playButton.appendChild(playIcon);
+			this.playButton.appendChild(createSpan({ text: 'Play' }));
 			this.playButton.classList.remove('playing');
 
 			// Enable Play button if we have graph data with nodes, disable if no data

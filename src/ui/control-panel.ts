@@ -546,13 +546,31 @@ export class MaterialControlPanelModal extends Modal {
 		const helpContent = helpCard.getContent();
 		const helpList = helpContent.createEl('ul', { cls: 'osp-guide-help' });
 
-		helpList.createEl('li').innerHTML = '<strong>Documentation:</strong> Visit the <a href="https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides">GitHub repository</a> for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.';
+		const docLi = helpList.createEl('li');
+		docLi.createEl('strong', { text: 'Documentation:' });
+		docLi.appendText(' Visit the ');
+		docLi.createEl('a', {
+			text: 'GitHub repository',
+			attr: { href: 'https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides' }
+		});
+		docLi.appendText(' for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.');
 
-		helpList.createEl('li').innerHTML = '<strong>Settings:</strong> Each Control Center tab has configuration options. Hover over controls for tooltips.';
+		const settingsLi = helpList.createEl('li');
+		settingsLi.createEl('strong', { text: 'Settings:' });
+		settingsLi.appendText(' Each Control Center tab has configuration options. Hover over controls for tooltips.');
 
-		helpList.createEl('li').innerHTML = '<strong>Commands:</strong> Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.';
+		const commandsLi = helpList.createEl('li');
+		commandsLi.createEl('strong', { text: 'Commands:' });
+		commandsLi.appendText(' Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.');
 
-		helpList.createEl('li').innerHTML = '<strong>Issues & Feedback:</strong> Report bugs or request features on <a href="https://github.com/banisterious/obsidian-sonigraph/issues">GitHub Issues</a>.';
+		const feedbackLi = helpList.createEl('li');
+		feedbackLi.createEl('strong', { text: 'Issues & Feedback:' });
+		feedbackLi.appendText(' Report bugs or request features on ');
+		feedbackLi.createEl('a', {
+			text: 'GitHub Issues',
+			attr: { href: 'https://github.com/banisterious/obsidian-sonigraph/issues' }
+		});
+		feedbackLi.appendText('.');
 
 		this.contentContainer.appendChild(helpCard.getElement());
 	}
@@ -5071,25 +5089,39 @@ All whale samples are authentic recordings from marine research institutions and
 		const tipsList = content.createEl('ul', { cls: 'osp-guide-tips' });
 
 		// Tip 1: Depth settings
-		tipsList.createEl('li').innerHTML = '<strong>Start with Depth 2:</strong> This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.';
+		const tip1 = tipsList.createEl('li');
+		tip1.createEl('strong', { text: 'Start with Depth 2:' });
+		tip1.appendText(' This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.');
 
 		// Tip 2: Musical Enhancements
-		tipsList.createEl('li').innerHTML = '<strong>Enable Scale Quantization:</strong> This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.';
+		const tip2 = tipsList.createEl('li');
+		tip2.createEl('strong', { text: 'Enable Scale Quantization:' });
+		tip2.appendText(' This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.');
 
 		// Tip 3: Clustering
-		tipsList.createEl('li').innerHTML = '<strong>Use Clustering to Discover Patterns:</strong> Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.';
+		const tip3 = tipsList.createEl('li');
+		tip3.createEl('strong', { text: 'Use Clustering to Discover Patterns:' });
+		tip3.appendText(' Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.');
 
 		// Tip 4: Turn-Taking
-		tipsList.createEl('li').innerHTML = '<strong>Reduce Sonic Congestion:</strong> Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.';
+		const tip4 = tipsList.createEl('li');
+		tip4.createEl('strong', { text: 'Reduce Sonic Congestion:' });
+		tip4.appendText(' Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.');
 
 		// Tip 5: Filtering
-		tipsList.createEl('li').innerHTML = '<strong>Filter by Tags/Folders:</strong> Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.';
+		const tip5 = tipsList.createEl('li');
+		tip5.createEl('strong', { text: 'Filter by Tags/Folders:' });
+		tip5.appendText(' Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.');
 
 		// Tip 6: Performance
-		tipsList.createEl('li').innerHTML = '<strong>Manage Performance:</strong> For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.';
+		const tip6 = tipsList.createEl('li');
+		tip6.createEl('strong', { text: 'Manage Performance:' });
+		tip6.appendText(' For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.');
 
 		// Tip 7: Workflow integration
-		tipsList.createEl('li').innerHTML = '<strong>Daily Review Workflow:</strong> Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.';
+		const tip7 = tipsList.createEl('li');
+		tip7.createEl('strong', { text: 'Daily Review Workflow:' });
+		tip7.appendText(' Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.');
 
 		this.contentContainer.appendChild(card.getElement());
 	}
@@ -5110,71 +5142,134 @@ All whale samples are authentic recordings from marine research institutions and
 		// FAQ 1: Why does the music sound simplistic?
 		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
-		q1.innerHTML = '<strong>Q: Why does the music sound simplistic or repetitive?</strong>';
+		q1.createEl('strong', { text: 'Q: Why does the music sound simplistic or repetitive?' });
 
 		const a1 = faq1.createEl('div', { cls: 'osp-faq-answer' });
-		a1.innerHTML = `
-			<p><strong>A:</strong> By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:</p>
-			<ul>
-				<li><strong>All markdown syntax counts:</strong> Links, headings, callouts, and formatting inflate word counts</li>
-				<li><strong>Notes sound similar:</strong> Similar file sizes produce similar durations and pitches</li>
-				<li><strong>No content differentiation:</strong> Callouts, code blocks, and lists are treated the same as regular text</li>
-			</ul>
-			<p><strong>To get richer, more varied soundscapes:</strong></p>
-			<ol>
-				<li><strong>Enable Musical Enhancements</strong> (above) - This is the most impactful change:
-					<ul>
-						<li>Scale Quantization creates harmonic consonance</li>
-						<li>Chord Voicing adds polyphonic richness</li>
-						<li>Rhythmic Patterns organize timing musically</li>
-						<li>Tension Tracking creates emotional arcs</li>
-						<li>Turn-Taking reduces congestion through dialogue</li>
-					</ul>
-				</li>
-				<li><strong>Use diverse instruments</strong> - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type</li>
-				<li><strong>Apply filters</strong> - Focus on specific tags or folders to create more thematically coherent soundscapes</li>
-				<li><strong>Experiment with clustering</strong> - Different clustering methods reveal different organizational patterns in your vault</li>
-			</ol>
-			<p><em>Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.</em></p>
-		`;
+
+		const a1p1 = a1.createEl('p');
+		a1p1.createEl('strong', { text: 'A:' });
+		a1p1.appendText(' By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:');
+
+		const a1ul1 = a1.createEl('ul');
+		const a1li1 = a1ul1.createEl('li');
+		a1li1.createEl('strong', { text: 'All markdown syntax counts:' });
+		a1li1.appendText(' Links, headings, callouts, and formatting inflate word counts');
+		const a1li2 = a1ul1.createEl('li');
+		a1li2.createEl('strong', { text: 'Notes sound similar:' });
+		a1li2.appendText(' Similar file sizes produce similar durations and pitches');
+		const a1li3 = a1ul1.createEl('li');
+		a1li3.createEl('strong', { text: 'No content differentiation:' });
+		a1li3.appendText(' Callouts, code blocks, and lists are treated the same as regular text');
+
+		const a1p2 = a1.createEl('p');
+		a1p2.createEl('strong', { text: 'To get richer, more varied soundscapes:' });
+
+		const a1ol = a1.createEl('ol');
+		const a1oli1 = a1ol.createEl('li');
+		a1oli1.createEl('strong', { text: 'Enable Musical Enhancements' });
+		a1oli1.appendText(' (above) - This is the most impactful change:');
+		const a1oli1ul = a1oli1.createEl('ul');
+		a1oli1ul.createEl('li', { text: 'Scale Quantization creates harmonic consonance' });
+		a1oli1ul.createEl('li', { text: 'Chord Voicing adds polyphonic richness' });
+		a1oli1ul.createEl('li', { text: 'Rhythmic Patterns organize timing musically' });
+		a1oli1ul.createEl('li', { text: 'Tension Tracking creates emotional arcs' });
+		a1oli1ul.createEl('li', { text: 'Turn-Taking reduces congestion through dialogue' });
+
+		const a1oli2 = a1ol.createEl('li');
+		a1oli2.createEl('strong', { text: 'Use diverse instruments' });
+		a1oli2.appendText(' - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type');
+
+		const a1oli3 = a1ol.createEl('li');
+		a1oli3.createEl('strong', { text: 'Apply filters' });
+		a1oli3.appendText(' - Focus on specific tags or folders to create more thematically coherent soundscapes');
+
+		const a1oli4 = a1ol.createEl('li');
+		a1oli4.createEl('strong', { text: 'Experiment with clustering' });
+		a1oli4.appendText(' - Different clustering methods reveal different organizational patterns in your vault');
+
+		const a1p3 = a1.createEl('p');
+		a1p3.createEl('em', { text: 'Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.' });
 
 		// FAQ 2: Why only one node / sparse vault issue
 		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
-		q2.innerHTML = '<strong>Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?</strong>';
+		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?' });
 
 		const a2 = faq2.createEl('div', { cls: 'osp-faq-answer' });
-		a2.innerHTML = `
-			<p><strong>A:</strong> Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.</p>
 
-			<p><strong>Why this happens:</strong></p>
-			<ul>
-				<li><strong>Sparse connections:</strong> Your note has few or no links to other notes at shallow depths (1-2)</li>
-				<li><strong>Low depth setting:</strong> The depth slider is set to 1, limiting the graph to immediate connections only</li>
-				<li><strong>Filters too restrictive:</strong> Tag/folder filters are excluding connected notes</li>
-			</ul>
+		const a2p1 = a2.createEl('p');
+		a2p1.createEl('strong', { text: 'A:' });
+		a2p1.appendText(' Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.');
 
-			<p><strong>What Musical Enhancements need to work:</strong></p>
-			<ul>
-				<li><strong>Turn-Taking:</strong> Needs 3+ notes at different depths to create call-response dialogue</li>
-				<li><strong>Chord Voicing:</strong> Needs 2+ notes at same depth to build harmonies</li>
-				<li><strong>Rhythmic Patterns:</strong> Needs 4+ notes to organize into musical patterns</li>
-				<li><strong>Tension Tracking:</strong> Needs 5+ notes to create narrative arcs</li>
-				<li><strong>Scale Quantization:</strong> Works with any number of notes, but more varied with higher counts</li>
-			</ul>
+		const a2p2 = a2.createEl('p');
+		a2p2.createEl('strong', { text: 'Why this happens:' });
 
-			<p><strong>How to fix:</strong></p>
-			<ol>
-				<li><strong>Enable Continuous Layers:</strong> Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. <strong>Important:</strong> You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.</li>
-				<li><strong>Increase depth:</strong> Slide the depth control to 3-5 to explore more connection levels</li>
-				<li><strong>Choose more connected notes:</strong> Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"</li>
-				<li><strong>Build more connections:</strong> Add links between related notes in your vault to create richer graph structure</li>
-				<li><strong>Check filters:</strong> Ensure Include/Exclude filters aren't hiding connected notes</li>
-				<li><strong>Try bidirectional links:</strong> Notes with two-way connections create denser graphs than one-way links</li>
-			</ol>
+		const a2ul1 = a2.createEl('ul');
+		const a2li1 = a2ul1.createEl('li');
+		a2li1.createEl('strong', { text: 'Sparse connections:' });
+		a2li1.appendText(' Your note has few or no links to other notes at shallow depths (1-2)');
+		const a2li2 = a2ul1.createEl('li');
+		a2li2.createEl('strong', { text: 'Low depth setting:' });
+		a2li2.appendText(' The depth slider is set to 1, limiting the graph to immediate connections only');
+		const a2li3 = a2ul1.createEl('li');
+		a2li3.createEl('strong', { text: 'Filters too restrictive:' });
+		a2li3.appendText(' Tag/folder filters are excluding connected notes');
 
-			<p><strong>For sparse vaults:</strong> If your vault generally has limited connections, <strong>Continuous Layers</strong> are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.</p>
-		`;
+		const a2p3 = a2.createEl('p');
+		a2p3.createEl('strong', { text: 'What Musical Enhancements need to work:' });
+
+		const a2ul2 = a2.createEl('ul');
+		const a2li4 = a2ul2.createEl('li');
+		a2li4.createEl('strong', { text: 'Turn-Taking:' });
+		a2li4.appendText(' Needs 3+ notes at different depths to create call-response dialogue');
+		const a2li5 = a2ul2.createEl('li');
+		a2li5.createEl('strong', { text: 'Chord Voicing:' });
+		a2li5.appendText(' Needs 2+ notes at same depth to build harmonies');
+		const a2li6 = a2ul2.createEl('li');
+		a2li6.createEl('strong', { text: 'Rhythmic Patterns:' });
+		a2li6.appendText(' Needs 4+ notes to organize into musical patterns');
+		const a2li7 = a2ul2.createEl('li');
+		a2li7.createEl('strong', { text: 'Tension Tracking:' });
+		a2li7.appendText(' Needs 5+ notes to create narrative arcs');
+		const a2li8 = a2ul2.createEl('li');
+		a2li8.createEl('strong', { text: 'Scale Quantization:' });
+		a2li8.appendText(' Works with any number of notes, but more varied with higher counts');
+
+		const a2p4 = a2.createEl('p');
+		a2p4.createEl('strong', { text: 'How to fix:' });
+
+		const a2ol = a2.createEl('ol');
+		const a2oli1 = a2ol.createEl('li');
+		a2oli1.createEl('strong', { text: 'Enable Continuous Layers:' });
+		a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
+		a2oli1.createEl('strong', { text: 'Important:' });
+		a2oli1.appendText(' You must enable at least one Freesound sample in the Layers tab\'s Sample Browser for continuous layers to produce audio.');
+
+		const a2oli2 = a2ol.createEl('li');
+		a2oli2.createEl('strong', { text: 'Increase depth:' });
+		a2oli2.appendText(' Slide the depth control to 3-5 to explore more connection levels');
+
+		const a2oli3 = a2ol.createEl('li');
+		a2oli3.createEl('strong', { text: 'Choose more connected notes:' });
+		a2oli3.appendText(' Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"');
+
+		const a2oli4 = a2ol.createEl('li');
+		a2oli4.createEl('strong', { text: 'Build more connections:' });
+		a2oli4.appendText(' Add links between related notes in your vault to create richer graph structure');
+
+		const a2oli5 = a2ol.createEl('li');
+		a2oli5.createEl('strong', { text: 'Check filters:' });
+		a2oli5.appendText(' Ensure Include/Exclude filters aren\'t hiding connected notes');
+
+		const a2oli6 = a2ol.createEl('li');
+		a2oli6.createEl('strong', { text: 'Try bidirectional links:' });
+		a2oli6.appendText(' Notes with two-way connections create denser graphs than one-way links');
+
+		const a2p5 = a2.createEl('p');
+		a2p5.createEl('strong', { text: 'For sparse vaults:' });
+		a2p5.appendText(' If your vault generally has limited connections, ');
+		a2p5.createEl('strong', { text: 'Continuous Layers' });
+		a2p5.appendText(' are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.');
 
 		this.contentContainer.appendChild(card.getElement());
 	}

@@ -75,9 +75,10 @@ export class LocalSoundscapeLayersSettings {
 		const noteText = noteDiv.createSpan();
 		noteText.style.fontSize = '12px';
 		noteText.style.color = 'var(--text-normal)';
-		noteText.innerHTML = '<strong>Important:</strong> Continuous layers require Freesound samples to be enabled. ' +
-			'Go to the <strong>Layers</strong> tab and use the Sample Browser to enable at least one sample in each category ' +
-			'(Ambient, Harmonic, Rhythmic) you want to use.';
+		noteText.createEl('strong', { text: 'Important:' });
+		noteText.appendText(' Continuous layers require Freesound samples to be enabled. Go to the ');
+		noteText.createEl('strong', { text: 'Layers' });
+		noteText.appendText(' tab and use the Sample Browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.');
 
 		// Enable toggle
 		new Setting(content)
