@@ -268,7 +268,7 @@ export class AudioExporter {
 
         // Import NoteCentricPlayer
         const { NoteCentricPlayer } = require('../audio/playback/NoteCentricPlayer');
-        const player = new NoteCentricPlayer(this.audioEngine);
+        const player = new NoteCentricPlayer(this.audioEngine, this.pluginSettings);
 
         // Calculate total duration from note-centric mapping
         const duration = this.estimateNoteCentricDuration(this.noteCentricMapping);

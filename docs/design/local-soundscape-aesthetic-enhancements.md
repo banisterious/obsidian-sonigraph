@@ -22,7 +22,10 @@
 
 ## 1. Executive Summary
 
-This document outlines a comprehensive plan to enhance the musicality and aesthetic quality of the Local Soundscape feature in Sonigraph. The current system generates sonifications based on note graph structure using a depth-based mapping approach, but lacks harmonic coherence, melodic structure, and rhythmic organization.
+This document outlines a comprehensive plan to enhance the musicality and aesthetic quality of the Local Soundscape feature in Sonigraph. The current system generates sonifications based on note graph structure using both depth-based and note-centric mapping approaches.
+
+**Implementation Status Update (v0.17.0):**
+The note-centric playback system now includes configurable musicality settings with three presets (Conservative, Balanced, Adventurous) and six individual parameters: timing humanization (50-250ms), harmonic adventurousness (0-100%), dynamic range (subtle/moderate/extreme), polyphonic density (sparse/moderate/maximum), melodic independence (0-100%), and voice leading style (smooth/balanced/chromatic). These settings are accessible in Control Center under "Local Soundscape" > "Note-centric musicality" and apply to prose-heavy center notes that use the rich phrase-based generation system.
 
 ### Current Limitations
 
@@ -2299,22 +2302,125 @@ interface DepthMapping extends MusicalMapping {
 
 ---
 
+## Appendix C: Implementation Status
+
+### C.1. Note-Centric Musicality Settings (v0.17.0)
+
+**Status:** ✅ Implemented
+
+**Implementation Date:** v0.17.0
+
+**Overview:**
+Configurable musicality settings have been added to the note-centric playback system, allowing users to control the expressive characteristics of prose-based musical generation. This implementation provides preset-based configuration with custom override capabilities.
+
+**Components Modified:**
+
+1. **Settings Architecture** ([constants.ts](../../src/utils/constants.ts))
+   - Added `noteCentricMusicality` interface to `SonigraphSettings.audioEnhancement`
+   - Includes preset selection and six individual parameter controls
+   - Default preset: "Balanced"
+
+2. **UI Controls** ([control-panel.ts](../../src/ui/control-panel.ts))
+   - Created "Note-centric musicality" settings card in Control Center
+   - Preset dropdown with four options: Conservative, Balanced, Adventurous, Custom
+   - Six individual parameter controls visible when Custom preset is selected
+   - Real-time updates apply immediately to subsequent playback
+
+3. **Playback Integration** ([NoteCentricPlayer.ts](../../src/audio/playback/NoteCentricPlayer.ts))
+   - Timing humanization applied to note scheduling (lines 192-194)
+   - Polyphonic density controls embellishment delays (lines 331-382)
+   - Settings passed through constructor and accessed during playback
+
+4. **Musical Mapping Integration** ([NoteCentricMapper.ts](../../src/audio/mapping/NoteCentricMapper.ts))
+   - Four helper methods added for settings-driven parameters:
+     - `getHarmonicThreshold()` - Harmonic adventurousness
+     - `getMelodicIndependenceFactor()` - Melodic independence
+     - `getVoiceLeadingStyle()` - Voice leading style
+     - `getDynamicRangeMultipliers()` - Dynamic range
+   - Settings integrated at key decision points throughout mapping process
+
+**Parameters Implemented:**
+
+| Parameter | Range | Default | Effect |
+|-----------|-------|---------|--------|
+| Timing Humanization | 50-250ms | 125ms | Micro-timing variation |
+| Harmonic Adventurousness | 0-100% | 75% | Exotic chord frequency |
+| Dynamic Range | subtle/moderate/extreme | extreme | Velocity variation |
+| Polyphonic Density | sparse/moderate/maximum | maximum | Embellishment overlap |
+| Melodic Independence | 0-100% | 80% | Embellishment freedom |
+| Voice Leading Style | smooth/balanced/chromatic | chromatic | Melodic motion |
+
+**Preset Configurations:**
+
+**Conservative:**
+```typescript
+{
+  timingHumanization: 50,
+  harmonicAdventurousness: 50,
+  dynamicRange: 'subtle',
+  polyphonicDensity: 'sparse',
+  melodicIndependence: 60,
+  voiceLeadingStyle: 'smooth'
+}
+```
+
+**Balanced (Default):**
+```typescript
+{
+  timingHumanization: 125,
+  harmonicAdventurousness: 75,
+  dynamicRange: 'extreme',
+  polyphonicDensity: 'maximum',
+  melodicIndependence: 80,
+  voiceLeadingStyle: 'chromatic'
+}
+```
+
+**Adventurous:**
+```typescript
+{
+  timingHumanization: 250,
+  harmonicAdventurousness: 100,
+  dynamicRange: 'extreme',
+  polyphonicDensity: 'maximum',
+  melodicIndependence: 95,
+  voiceLeadingStyle: 'chromatic'
+}
+```
+
+**User Documentation:**
+- [User Guide](../user-guides/local-soundscape.md#musicality-presets) - Complete usage instructions
+- Settings accessible in Control Center > Local Soundscape > Note-centric musicality
+
+**Technical Details:**
+- Settings persist in plugin configuration
+- Changes apply immediately without requiring reload
+- Default values ensure backward compatibility
+- Custom mode unlocks individual parameter control
+- Preset selection automatically updates all six parameters
+
+**Future Enhancements:**
+This implementation provides the foundation for further musicality refinements described in this document. The preset/custom pattern can be extended to additional musical parameters as they are implemented in future phases.
+
+---
+
 ## Conclusion
 
 This design document provides a comprehensive roadmap for transforming Local Soundscape from a data sonification tool into a musically sophisticated experience. By leveraging the existing `MusicalTheoryEngine` infrastructure and adding targeted enhancements, we can achieve:
 
-- **Harmonic consonance** through scale quantization
-- **Polyphonic richness** through chord voicing
+- **Harmonic consonance** through scale quantization (already available via Musical Enhancements)
+- **Polyphonic richness** through chord voicing (implemented in note-centric system)
 - **Emotional narrative** through tension tracking
 - **Rhythmic organization** through pattern generation
 - **Timbral consistency** through smart instrument selection
 - **Spatial immersion** through dynamic panning
+- **Configurable musicality** through note-centric presets ✅ (v0.17.0)
 
-The phased implementation approach allows for incremental value delivery, with Phase 1 providing immediate improvements in just 6-10 hours of development time.
+The phased implementation approach allows for incremental value delivery. Note-centric musicality settings (v0.17.0) provide users with immediate control over expressive characteristics of prose-based playback.
 
 **Next Steps:**
-1. Review and approve this design document
-2. Implement Phase 1 enhancements
-3. Conduct perceptual testing
+1. ✅ Implement note-centric musicality settings (Completed in v0.17.0)
+2. Conduct perceptual testing of presets with users
+3. Evaluate implementation of Phase 1 enhancements for depth-based mapping
 4. Iterate based on user feedback
 5. Proceed to Phase 2 and 3 as resources permit

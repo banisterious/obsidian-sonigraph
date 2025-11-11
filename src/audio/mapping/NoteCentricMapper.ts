@@ -112,6 +112,51 @@ export class NoteCentricMapper {
 	}
 
 	/**
+	 * Get harmonic adventurousness threshold from settings
+	 * Converts 0-100 scale to threshold values used for chord color decisions
+	 */
+	private getHarmonicThreshold(baseThreshold: number): number {
+		const adventurousness = this.settings.audioEnhancement?.noteCentricMusicality?.harmonicAdventurousness ?? 75;
+		// Conservative (50): multiply by 1.5 (makes threshold higher = less adventurous)
+		// Balanced (75): multiply by 1.0 (use as-is)
+		// Adventurous (90): multiply by 0.6 (makes threshold lower = more adventurous)
+		const multiplier = 1.5 - (adventurousness / 100);
+		return baseThreshold * multiplier;
+	}
+
+	/**
+	 * Get melodic independence factor from settings
+	 * Returns how much embellishments should deviate from center melody (0-1 scale)
+	 */
+	private getMelodicIndependenceFactor(): number {
+		const independence = this.settings.audioEnhancement?.noteCentricMusicality?.melodicIndependence ?? 80;
+		return independence / 100; // Convert 0-100 to 0-1
+	}
+
+	/**
+	 * Get voice leading style from settings
+	 */
+	private getVoiceLeadingStyle(): 'smooth' | 'balanced' | 'chromatic' {
+		return this.settings.audioEnhancement?.noteCentricMusicality?.voiceLeadingStyle ?? 'chromatic';
+	}
+
+	/**
+	 * Get dynamic range multipliers from settings
+	 */
+	private getDynamicRangeMultipliers(): { whisper: number; accent: number; normal: number } {
+		const range = this.settings.audioEnhancement?.noteCentricMusicality?.dynamicRange ?? 'extreme';
+
+		if (range === 'subtle') {
+			return { whisper: 0.70, accent: 1.05, normal: 0.85 };
+		} else if (range === 'moderate') {
+			return { whisper: 0.50, accent: 1.10, normal: 0.75 };
+		} else {
+			// extreme (default)
+			return { whisper: 0.35, accent: 1.15, normal: 0.60 };
+		}
+	}
+
+	/**
 	 * Map a local soundscape to note-centric music
 	 */
 	public async map(data: LocalSoundscapeData): Promise<NoteCentricMapping | null> {
@@ -511,9 +556,9 @@ export class NoteCentricMapper {
 					chord = 0; // Fallback to tonic
 				}
 
-				// Add EXTREMELY ADVENTUROUS harmonic color (VERY low threshold)
+				// Add harmonic color based on adventurousness setting
 				// Only apply color variations if we have a valid chord value
-				if (prose.musicalExpressiveness > 0.1 && chord != null && !isNaN(chord)) { // DRASTICALLY LOWERED from 0.3
+				if (prose.musicalExpressiveness > this.getHarmonicThreshold(0.1) && chord != null && !isNaN(chord)) {
 					// More frequent color with more options
 					const colorOptions = [
 						chord,                                    // Original
@@ -564,8 +609,12 @@ export class NoteCentricMapper {
 							// Choose passing chord that creates CHROMATIC bass motion
 							let passingChord: number;
 
-							// ULTRA FREQUENT chromatic approaches (was % 2, now ALWAYS if expressiveness > 0.2)
-							if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) { // DRASTICALLY lowered from 0.4
+							// Chromatic approaches based on voice leading style and adventurousness
+							const voiceLeadingStyle = this.getVoiceLeadingStyle();
+							const chromaticThreshold = voiceLeadingStyle === 'chromatic' ? this.getHarmonicThreshold(0.2) :
+														voiceLeadingStyle === 'balanced' ? this.getHarmonicThreshold(0.35) :
+														this.getHarmonicThreshold(0.5);
+							if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > chromaticThreshold) {
 								// Chromatic approach from below or above
 								if (prevChord < chord) {
 									passingChord = chord - 1; // Chromatic approach from below
@@ -583,15 +632,15 @@ export class NoteCentricMapper {
 							fullProgression.push(passingChord);
 						}
 
-						// EXTREMELY FREQUENT TRITONE substitutions (was % 7, now % 5)
-						if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) { // MUCH lower: was 0.5
+						// Tritone substitutions based on adventurousness
+						if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > this.getHarmonicThreshold(0.3)) {
 							// Add tritone substitute (diminished 5th away)
 							const tritoneSubstitute = chord + 6;
 							fullProgression.push(tritoneSubstitute);
 						}
 
-						// MUCH MORE augmented sixth chords for EXTREME spice (was % 9, now % 6)
-						if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) { // Lower from 0.6
+						// Augmented sixth chords based on adventurousness
+						if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > this.getHarmonicThreshold(0.4)) {
 							const augSixth = chord - 1; // German sixth flavor
 							fullProgression.push(augSixth);
 						}
@@ -929,16 +978,19 @@ export class NoteCentricMapper {
 		for (let i = 0; i < length; i++) {
 			const centerPitch = centerPhrase.melody[Math.min(i, centerPhrase.melody.length - 1)];
 
-			// Start with VERY loose inversion (only 20% influence - mostly independent!)
+			// Apply melodic independence from settings
+			const independenceFactor = this.getMelodicIndependenceFactor();
+			const centerInfluence = 1.0 - independenceFactor; // Inverse relationship
 			const invertedPitch = centerAvg - (centerPitch - centerAvg);
-			let harmonicPitch = invertedPitch * 0.2 + centerPitch * 0.2; // Was 0.5 each
+			let harmonicPitch = invertedPitch * (centerInfluence * 0.5) + centerPitch * (centerInfluence * 0.5);
 
 			// Transpose up a third for harmonic support
 			harmonicPitch += 4;
 
-			// Add MUCH MORE melodic independence
-			// 1. HUGE random variations (±8 semitones instead of ±5)
-			const melodicFreedom = ((seed + i * 23) % 17) - 8; // -8 to +8
+			// Add melodic variation scaled by independence setting
+			// Conservative (60%): ±5 semitones, Balanced (80%): ±8 semitones, Adventurous (95%): ±10 semitones
+			const maxDeviation = Math.round(5 + independenceFactor * 5);
+			const melodicFreedom = ((seed + i * 23) % (maxDeviation * 2 + 1)) - maxDeviation;
 			harmonicPitch += melodicFreedom;
 
 			// 2. Add STRONG melodic direction independent of center (MORE LIKELY)
@@ -1001,16 +1053,17 @@ export class NoteCentricMapper {
 			}
 		}
 
-		// DRAMATIC velocity contrast - some harmonic responses MUCH quieter, some LOUDER
+		// Dynamic velocity contrast based on settings
+		const dynamicMultipliers = this.getDynamicRangeMultipliers();
 		const velocities: number[] = [];
 		for (let i = 0; i < length; i++) {
 			const v = centerPhrase.velocities[Math.min(i, centerPhrase.velocities.length - 1)];
 			if ((seed + i) % 7 === 0) {
-				velocities.push(v * 0.35); // VERY quiet whispers
+				velocities.push(v * dynamicMultipliers.whisper); // Quiet whispers
 			} else if ((seed + i) % 11 === 0) {
-				velocities.push(v * 1.15); // LOUDER than center for accent
+				velocities.push(v * dynamicMultipliers.accent); // Accent notes
 			} else {
-				velocities.push(v * 0.60); // Generally quieter
+				velocities.push(v * dynamicMultipliers.normal); // Normal level
 			}
 		}
 

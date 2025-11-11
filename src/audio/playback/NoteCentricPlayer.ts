@@ -8,6 +8,7 @@
 
 import type { MusicalPhrase, NoteCentricMapping } from '../mapping/NoteCentricMapper';
 import type { AudioEngine } from '../audio-engine';
+import type { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('NoteCentricPlayer');
@@ -23,6 +24,7 @@ interface PlayingNote {
  */
 export class NoteCentricPlayer {
 	private audioEngine: AudioEngine;
+	private settings: SonigraphSettings;
 	private isPlaying: boolean = false;
 	private playingNotes: PlayingNote[] = [];
 	private animationFrameId: number | null = null;
@@ -32,8 +34,9 @@ export class NoteCentricPlayer {
 	private scheduledNoteCount: number = 0;
 	private completedNoteCount: number = 0;
 
-	constructor(audioEngine: AudioEngine) {
+	constructor(audioEngine: AudioEngine, settings: SonigraphSettings) {
 		this.audioEngine = audioEngine;
+		this.settings = settings;
 	}
 
 	/**
@@ -185,9 +188,9 @@ export class NoteCentricPlayer {
 			const totalOffset = chordRoot + pitchOffset;
 			const frequency = baseFreq * Math.pow(2, totalOffset / 12);
 
-			// Add EXTREME micro-timing humanization (±100-150ms random offset)
-			// This creates VERY noticeable "falling off the piano bench" groove looseness
-			const humanization = (Math.random() * 150 - 75) + (Math.random() * 150 - 75); // ±100-150ms
+			// Apply timing humanization from settings
+			const timingMs = this.settings.audioEnhancement?.noteCentricMusicality?.timingHumanization || 125;
+			const humanization = (Math.random() * timingMs - timingMs/2) + (Math.random() * timingMs - timingMs/2);
 			const humanizedTime = currentTime + humanization;
 
 			logger.debug('schedule-note', 'Scheduling note', {
@@ -324,19 +327,50 @@ export class NoteCentricPlayer {
 			};
 		}
 
-		// VERY EARLY base delays for MAXIMUM overlap and polyphonic density
-		const baseDelays: Record<string, number> = {
-			'harmonic-response': 1000 + (Math.random() * 1000),      // 1-2s (IMMEDIATE overlap!)
-			'rhythmic-counterpoint': 2500 + (Math.random() * 1500),  // 2.5-4s (much earlier)
-			'ambient-texture': 0 + (Math.random() * 300)             // 0-0.3s (essentially immediate)
-		};
+		// Get polyphonic density setting
+		const density = this.settings.audioEnhancement?.noteCentricMusicality?.polyphonicDensity || 'maximum';
 
-		// VERY SMALL stagger delays for DENSE polyphonic texture
-		const staggerDelay: Record<string, number> = {
-			'harmonic-response': 1500 + (Math.random() * 1000),      // 1.5-2.5s more each time
-			'rhythmic-counterpoint': 2000 + (Math.random() * 1000),  // 2-3s more each time
-			'ambient-texture': 1000 + (Math.random() * 500)          // 1-1.5s for ambient
-		};
+		// Base delays vary by density setting
+		let baseDelays: Record<string, number>;
+		let staggerDelay: Record<string, number>;
+
+		if (density === 'sparse') {
+			// Sparse: 4-6s delays, minimal overlap
+			baseDelays = {
+				'harmonic-response': 4000 + (Math.random() * 2000),      // 4-6s
+				'rhythmic-counterpoint': 5000 + (Math.random() * 2000),  // 5-7s
+				'ambient-texture': 3000 + (Math.random() * 1000)         // 3-4s
+			};
+			staggerDelay = {
+				'harmonic-response': 3000 + (Math.random() * 1000),      // 3-4s more each time
+				'rhythmic-counterpoint': 4000 + (Math.random() * 1000),  // 4-5s more each time
+				'ambient-texture': 2500 + (Math.random() * 500)          // 2.5-3s for ambient
+			};
+		} else if (density === 'moderate') {
+			// Moderate: 2-4s delays, moderate overlap
+			baseDelays = {
+				'harmonic-response': 2000 + (Math.random() * 2000),      // 2-4s
+				'rhythmic-counterpoint': 3000 + (Math.random() * 2000),  // 3-5s
+				'ambient-texture': 1000 + (Math.random() * 1000)         // 1-2s
+			};
+			staggerDelay = {
+				'harmonic-response': 2000 + (Math.random() * 1000),      // 2-3s more each time
+				'rhythmic-counterpoint': 3000 + (Math.random() * 1000),  // 3-4s more each time
+				'ambient-texture': 1500 + (Math.random() * 500)          // 1.5-2s for ambient
+			};
+		} else {
+			// Maximum: 0-2s delays, dense overlap (current default)
+			baseDelays = {
+				'harmonic-response': 1000 + (Math.random() * 1000),      // 1-2s
+				'rhythmic-counterpoint': 2500 + (Math.random() * 1500),  // 2.5-4s
+				'ambient-texture': 0 + (Math.random() * 300)             // 0-0.3s
+			};
+			staggerDelay = {
+				'harmonic-response': 1500 + (Math.random() * 1000),      // 1.5-2.5s more each time
+				'rhythmic-counterpoint': 2000 + (Math.random() * 1000),  // 2-3s more each time
+				'ambient-texture': 1000 + (Math.random() * 500)          // 1-1.5s for ambient
+			};
+		}
 
 		const baseDelay = baseDelays[type] || 0;
 		const count = this.embellishmentCounts[type] || 0;

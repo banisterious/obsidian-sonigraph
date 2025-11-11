@@ -376,7 +376,65 @@ Creates smooth spatial transitions for an immersive stereo field.
 
 ### Note-Centric Playback Refinements
 
-The note-centric playback system (used when playing prose-heavy center notes) includes extensive musical refinements for organic, expressive performances:
+The note-centric playback system (used when playing prose-heavy center notes) includes extensive musical refinements for organic, expressive performances. These refinements can now be customized through the Note-Centric Musicality settings in Control Center.
+
+#### Musicality Presets
+
+Access these settings in Control Center under "Local Soundscape" > "Note-centric musicality". Choose from three carefully balanced presets or customize individual parameters:
+
+**Conservative Preset** - Subtle, restrained musicality:
+- Minimal timing variation (50ms humanization)
+- Moderate harmonic exploration (50% adventurousness)
+- Subtle dynamic range
+- Sparse polyphonic density (4-7s delays between embellishments)
+- Moderate melodic independence (60%)
+- Smooth voice leading (stepwise motion preferred)
+
+**Balanced Preset** (Default) - Rich, expressive musicality:
+- Moderate timing variation (125ms humanization)
+- Adventurous harmonies (75% adventurousness)
+- Extreme dynamic range (whisper to fortissimo)
+- Maximum polyphonic density (0-4s delays, dense layering)
+- High melodic independence (80%)
+- Chromatic voice leading (jazz-influenced)
+
+**Adventurous Preset** - Experimental, maximalist approach:
+- Wide timing variation (250ms humanization)
+- Very adventurous harmonies (100% adventurousness)
+- Extreme dynamic range
+- Maximum polyphonic density
+- Very high melodic independence (95%)
+- Chromatic voice leading
+
+**Custom Mode** - Individual control over six parameters:
+
+1. **Timing Humanization (50-250ms)**: Controls micro-timing variation between notes. Higher values create looser, more organic groove. Lower values sound more precise and mechanical.
+
+2. **Harmonic Adventurousness (0-100%)**: Determines frequency of exotic chord colors. Higher values trigger more modal interchange, tritone substitutions, and augmented sixth chords. Lower values use simpler, more consonant harmonies.
+
+3. **Dynamic Range**: Controls velocity variation intensity:
+   - Subtle: Gentle volume variation (0.35-0.75)
+   - Moderate: Noticeable dynamics (0.25-0.85)
+   - Extreme: Dramatic contrasts from pianissimo whispers (0.08) to fortissimo accents (0.99)
+
+4. **Polyphonic Density**: Controls embellishment timing overlap:
+   - Sparse: 4-7s delays between layers, minimal overlap
+   - Moderate: 2-5s delays, moderate layering
+   - Maximum: 0-4s delays, rich polyphonic texture with immediate overlaps
+
+5. **Melodic Independence (0-100%)**: Controls how freely embellishments diverge from center melody. Higher values create more independent melodic voices (±8 semitones variation). Lower values keep embellishments closely coupled to center phrase.
+
+6. **Voice Leading Style**: Controls melodic motion preference:
+   - Smooth: Stepwise motion, minimal leaps
+   - Balanced: Mix of steps and moderate leaps
+   - Chromatic: Jazz-influenced with frequent chromatic approaches and larger intervals
+
+**Accessing Settings:**
+1. Open Control Center
+2. Navigate to Local Soundscape section
+3. Locate "Note-centric musicality" card
+4. Select preset from dropdown or choose "Custom" to reveal individual controls
+5. Changes apply immediately to subsequent playback
 
 #### Harmonic Sophistication
 - **Extremely adventurous harmony**: Low expressiveness thresholds (0.1-0.4) trigger exotic chord colors

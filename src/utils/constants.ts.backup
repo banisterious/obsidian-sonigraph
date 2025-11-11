@@ -2887,19 +2887,20 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			progressionSpeed: 0.5, // Moderate progression speed
 			dissonanceLevel: 0.3, // Low-moderate dissonance
 			voicingStrategy: 'compact' // Compact voicings by default
-		},
-
-		// Note-centric musicality settings (default to 'balanced' preset)
-		noteCentricMusicality: {
-			preset: 'balanced', // Balanced preset matches current hardcoded implementation
-			// Individual control defaults (used when preset is 'custom')
-			timingHumanization: 125, // ±125ms matches current ±100-150ms average
-			harmonicAdventurousness: 75, // Moderate harmonic color frequency
-			dynamicRange: 'extreme', // Full 0.08-0.99 velocity range
-			polyphonicDensity: 'maximum', // Dense embellishment overlap (0-2s delays)
-			melodicIndependence: 80, // High independence with 20% center influence
-			voiceLeadingStyle: 'chromatic' // Chromatic voice leading by default
 		}
+	},
+
+	// Note-centric musicality settings (default to 'balanced' preset)
+	noteCentricMusicality: {
+		preset: 'balanced', // Balanced preset matches current hardcoded implementation
+		// Individual control defaults (used when preset is 'custom')
+		timingHumanization: 125, // ±125ms matches current ±100-150ms average
+		harmonicAdventurousness: 75, // Moderate harmonic color frequency
+		dynamicRange: 'extreme', // Full 0.08-0.99 velocity range
+		polyphonicDensity: 'maximum', // Dense embellishment overlap (0-2s delays)
+		melodicIndependence: 80, // High independence with 20% center influence
+		voiceLeadingStyle: 'chromatic' // Chromatic voice leading by default
+	}
 	},
 
 	// Kept for backward compatibility - use audioEnhancement.musicalTheory instead

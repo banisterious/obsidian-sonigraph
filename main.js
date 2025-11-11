@@ -2340,6 +2340,24 @@ var init_constants = __esm({
           // Low-moderate dissonance
           voicingStrategy: "compact"
           // Compact voicings by default
+        },
+        // Note-centric musicality settings (default to 'balanced' preset)
+        noteCentricMusicality: {
+          preset: "balanced",
+          // Balanced preset matches current hardcoded implementation
+          // Individual control defaults (used when preset is 'custom')
+          timingHumanization: 125,
+          // ±125ms matches current ±100-150ms average
+          harmonicAdventurousness: 75,
+          // Moderate harmonic color frequency
+          dynamicRange: "extreme",
+          // Full 0.08-0.99 velocity range
+          polyphonicDensity: "maximum",
+          // Dense embellishment overlap (0-2s delays)
+          melodicIndependence: 80,
+          // High independence with 20% center influence
+          voiceLeadingStyle: "chromatic"
+          // Chromatic voice leading by default
         }
       },
       // Kept for backward compatibility - use audioEnhancement.musicalTheory instead
@@ -21607,6 +21625,7 @@ var init_control_panel = __esm({
             layersSettings.render(this.contentContainer);
           });
           this.createLocalSoundscapePerformanceCard();
+          this.createNoteCentricMusicalityCard();
           this.createLocalSoundscapeTipsCard();
           this.createLocalSoundscapeFAQCard();
         });
@@ -24680,6 +24699,169 @@ All whale samples are authentic recordings from marine research institutions and
       /**
        * Create tips and best practices card for Local Soundscape
        */
+      /**
+       * Create note-centric musicality settings card
+       */
+      createNoteCentricMusicalityCard() {
+        const card = new MaterialCard({
+          title: "Note-centric musicality",
+          iconName: "music",
+          subtitle: "Control the musical character of note-centric playback",
+          elevation: 1
+        });
+        const content = card.getContent();
+        const audioEnhancement = this.plugin.settings.audioEnhancement;
+        const musicality = (audioEnhancement == null ? void 0 : audioEnhancement.noteCentricMusicality) || {};
+        const currentPreset = musicality.preset || "balanced";
+        new import_obsidian16.Setting(content).setName("Musicality preset").setDesc("Choose a pre-configured style, or select Custom to fine-tune individual parameters").addDropdown((dropdown) => {
+          dropdown.addOption("conservative", "Conservative - Subtle, restrained expression").addOption("balanced", "Balanced - Current default sound (recommended)").addOption("adventurous", "Adventurous - Bold, experimental character").addOption("custom", "Custom - Manual control").setValue(currentPreset).onChange(async (value) => {
+            if (!this.plugin.settings.audioEnhancement) {
+              this.plugin.settings.audioEnhancement = {};
+            }
+            if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+              this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+            }
+            this.plugin.settings.audioEnhancement.noteCentricMusicality.preset = value;
+            if (value === "conservative") {
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 75;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 50;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = "moderate";
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = "moderate";
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 60;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = "smooth";
+            } else if (value === "balanced") {
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = "extreme";
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = "maximum";
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = "chromatic";
+            } else if (value === "adventurous") {
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 175;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 90;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = "extreme";
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = "maximum";
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 95;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = "chromatic";
+            }
+            await this.plugin.saveSettings();
+            this.contentContainer.empty();
+            this.createLocalSoundscapeTab();
+          });
+        });
+        if (currentPreset === "custom") {
+          const customControls = content.createDiv({ cls: "osp-musicality-custom-controls" });
+          new import_obsidian16.Setting(customControls).setName("Timing humanization").setDesc("Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.").addSlider((slider) => {
+            slider.setLimits(50, 250, 25).setValue(musicality.timingHumanization || 125).setDynamicTooltip().onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+                this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+              }
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = value;
+              await this.plugin.saveSettings();
+            });
+          }).addExtraButton((button) => {
+            button.setIcon("reset").setTooltip("Reset to balanced (125ms)").onClick(async () => {
+              var _a;
+              if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality))
+                return;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
+              await this.plugin.saveSettings();
+              this.contentContainer.empty();
+              this.createLocalSoundscapeTab();
+            });
+          });
+          new import_obsidian16.Setting(customControls).setName("Harmonic adventurousness").setDesc("Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.").addSlider((slider) => {
+            slider.setLimits(0, 100, 5).setValue(musicality.harmonicAdventurousness || 75).setDynamicTooltip().onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+                this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+              }
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = value;
+              await this.plugin.saveSettings();
+            });
+          }).addExtraButton((button) => {
+            button.setIcon("reset").setTooltip("Reset to balanced (75%)").onClick(async () => {
+              var _a;
+              if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality))
+                return;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
+              await this.plugin.saveSettings();
+              this.contentContainer.empty();
+              this.createLocalSoundscapeTab();
+            });
+          });
+          new import_obsidian16.Setting(customControls).setName("Dynamic range").setDesc("Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.").addDropdown((dropdown) => {
+            dropdown.addOption("subtle", "Subtle - Even, balanced dynamics").addOption("moderate", "Moderate - Noticeable variation").addOption("extreme", "Extreme - Dramatic contrasts").setValue(musicality.dynamicRange || "extreme").onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+                this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+              }
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = value;
+              await this.plugin.saveSettings();
+            });
+          });
+          new import_obsidian16.Setting(customControls).setName("Polyphonic density").setDesc("How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.").addDropdown((dropdown) => {
+            dropdown.addOption("sparse", "Sparse - Minimal overlap, clear separation").addOption("moderate", "Moderate - Some overlap, balanced texture").addOption("maximum", "Maximum - Dense overlap, rich polyphony").setValue(musicality.polyphonicDensity || "maximum").onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+                this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+              }
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = value;
+              await this.plugin.saveSettings();
+            });
+          });
+          new import_obsidian16.Setting(customControls).setName("Melodic independence").setDesc("How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.").addSlider((slider) => {
+            slider.setLimits(0, 100, 5).setValue(musicality.melodicIndependence || 80).setDynamicTooltip().onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+                this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+              }
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = value;
+              await this.plugin.saveSettings();
+            });
+          }).addExtraButton((button) => {
+            button.setIcon("reset").setTooltip("Reset to balanced (80%)").onClick(async () => {
+              var _a;
+              if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality))
+                return;
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
+              await this.plugin.saveSettings();
+              this.contentContainer.empty();
+              this.createLocalSoundscapeTab();
+            });
+          });
+          new import_obsidian16.Setting(customControls).setName("Voice leading style").setDesc("Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.").addDropdown((dropdown) => {
+            dropdown.addOption("smooth", "Smooth - Minimal voice movement, consonant").addOption("balanced", "Balanced - Mix of smooth and chromatic").addOption("chromatic", "Chromatic - Adventurous, jazzy movement").setValue(musicality.voiceLeadingStyle || "chromatic").onChange(async (value) => {
+              if (!this.plugin.settings.audioEnhancement) {
+                this.plugin.settings.audioEnhancement = {};
+              }
+              if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+                this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+              }
+              this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = value;
+              await this.plugin.saveSettings();
+            });
+          });
+        } else {
+          const presetInfo = content.createDiv({ cls: "osp-musicality-preset-info" });
+          presetInfo.createEl("p", {
+            text: `Using "${currentPreset}" preset. Select "Custom" above to adjust individual parameters.`,
+            cls: "mod-muted"
+          });
+        }
+        this.contentContainer.appendChild(card.getElement());
+      }
       createLocalSoundscapeTipsCard() {
         const card = new MaterialCard({
           title: "Tips & best practices",
@@ -59747,7 +59929,7 @@ var init_NoteCentricPlayer = __esm({
     init_logging();
     logger72 = getLogger("NoteCentricPlayer");
     NoteCentricPlayer = class {
-      constructor(audioEngine) {
+      constructor(audioEngine, settings) {
         this.isPlaying = false;
         this.playingNotes = [];
         this.animationFrameId = null;
@@ -59757,6 +59939,7 @@ var init_NoteCentricPlayer = __esm({
         this.scheduledNoteCount = 0;
         this.completedNoteCount = 0;
         this.audioEngine = audioEngine;
+        this.settings = settings;
       }
       /**
        * Play a note-centric mapping
@@ -59829,6 +60012,7 @@ var init_NoteCentricPlayer = __esm({
        * Play a musical phrase
        */
       async playPhrase(phrase, role, startDelay) {
+        var _a, _b;
         const instrument = this.getInstrumentForRole(role);
         logger72.debug("phrase-play", "Playing phrase", {
           role,
@@ -59866,7 +60050,8 @@ var init_NoteCentricPlayer = __esm({
           const baseFreq = 261.63;
           const totalOffset = chordRoot + pitchOffset;
           const frequency = baseFreq * Math.pow(2, totalOffset / 12);
-          const humanization = Math.random() * 150 - 75 + (Math.random() * 150 - 75);
+          const timingMs = ((_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality) == null ? void 0 : _b.timingHumanization) || 125;
+          const humanization = Math.random() * timingMs - timingMs / 2 + (Math.random() * timingMs - timingMs / 2);
           const humanizedTime = currentTime + humanization;
           logger72.debug("schedule-note", "Scheduling note", {
             index: i,
@@ -59960,6 +60145,7 @@ var init_NoteCentricPlayer = __esm({
        * Get delay for embellishment type with phrase-sensitive timing and overlap
        */
       getDelayForEmbellishment(type2) {
+        var _a, _b;
         if (!this.embellishmentCounts) {
           this.embellishmentCounts = {
             "harmonic-response": 0,
@@ -59967,22 +60153,61 @@ var init_NoteCentricPlayer = __esm({
             "ambient-texture": 0
           };
         }
-        const baseDelays = {
-          "harmonic-response": 1e3 + Math.random() * 1e3,
-          // 1-2s (IMMEDIATE overlap!)
-          "rhythmic-counterpoint": 2500 + Math.random() * 1500,
-          // 2.5-4s (much earlier)
-          "ambient-texture": 0 + Math.random() * 300
-          // 0-0.3s (essentially immediate)
-        };
-        const staggerDelay = {
-          "harmonic-response": 1500 + Math.random() * 1e3,
-          // 1.5-2.5s more each time
-          "rhythmic-counterpoint": 2e3 + Math.random() * 1e3,
-          // 2-3s more each time
-          "ambient-texture": 1e3 + Math.random() * 500
-          // 1-1.5s for ambient
-        };
+        const density = ((_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality) == null ? void 0 : _b.polyphonicDensity) || "maximum";
+        let baseDelays;
+        let staggerDelay;
+        if (density === "sparse") {
+          baseDelays = {
+            "harmonic-response": 4e3 + Math.random() * 2e3,
+            // 4-6s
+            "rhythmic-counterpoint": 5e3 + Math.random() * 2e3,
+            // 5-7s
+            "ambient-texture": 3e3 + Math.random() * 1e3
+            // 3-4s
+          };
+          staggerDelay = {
+            "harmonic-response": 3e3 + Math.random() * 1e3,
+            // 3-4s more each time
+            "rhythmic-counterpoint": 4e3 + Math.random() * 1e3,
+            // 4-5s more each time
+            "ambient-texture": 2500 + Math.random() * 500
+            // 2.5-3s for ambient
+          };
+        } else if (density === "moderate") {
+          baseDelays = {
+            "harmonic-response": 2e3 + Math.random() * 2e3,
+            // 2-4s
+            "rhythmic-counterpoint": 3e3 + Math.random() * 2e3,
+            // 3-5s
+            "ambient-texture": 1e3 + Math.random() * 1e3
+            // 1-2s
+          };
+          staggerDelay = {
+            "harmonic-response": 2e3 + Math.random() * 1e3,
+            // 2-3s more each time
+            "rhythmic-counterpoint": 3e3 + Math.random() * 1e3,
+            // 3-4s more each time
+            "ambient-texture": 1500 + Math.random() * 500
+            // 1.5-2s for ambient
+          };
+        } else {
+          baseDelays = {
+            "harmonic-response": 1e3 + Math.random() * 1e3,
+            // 1-2s
+            "rhythmic-counterpoint": 2500 + Math.random() * 1500,
+            // 2.5-4s
+            "ambient-texture": 0 + Math.random() * 300
+            // 0-0.3s
+          };
+          staggerDelay = {
+            "harmonic-response": 1500 + Math.random() * 1e3,
+            // 1.5-2.5s more each time
+            "rhythmic-counterpoint": 2e3 + Math.random() * 1e3,
+            // 2-3s more each time
+            "ambient-texture": 1e3 + Math.random() * 500
+            // 1-1.5s for ambient
+          };
+        }
         const baseDelay = baseDelays[type2] || 0;
         const count = this.embellishmentCounts[type2] || 0;
         const stagger = (staggerDelay[type2] || 0) * count;
@@ -60662,7 +60887,7 @@ var init_AudioExporter = __esm({
         }
         logger74.info("offline-renderer", "Starting note-centric static graph render");
         const { NoteCentricPlayer: NoteCentricPlayer2 } = (init_NoteCentricPlayer(), __toCommonJS(NoteCentricPlayer_exports));
-        const player = new NoteCentricPlayer2(this.audioEngine);
+        const player = new NoteCentricPlayer2(this.audioEngine, this.pluginSettings);
         const duration = this.estimateNoteCentricDuration(this.noteCentricMapping);
         const qualitySettings = config.quality;
         const sampleRate = qualitySettings.sampleRate || 48e3;
@@ -88433,6 +88658,46 @@ var NoteCentricMapper = class {
     this.settings = settings;
   }
   /**
+   * Get harmonic adventurousness threshold from settings
+   * Converts 0-100 scale to threshold values used for chord color decisions
+   */
+  getHarmonicThreshold(baseThreshold) {
+    var _a, _b, _c;
+    const adventurousness = (_c = (_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality) == null ? void 0 : _b.harmonicAdventurousness) != null ? _c : 75;
+    const multiplier = 1.5 - adventurousness / 100;
+    return baseThreshold * multiplier;
+  }
+  /**
+   * Get melodic independence factor from settings
+   * Returns how much embellishments should deviate from center melody (0-1 scale)
+   */
+  getMelodicIndependenceFactor() {
+    var _a, _b, _c;
+    const independence = (_c = (_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality) == null ? void 0 : _b.melodicIndependence) != null ? _c : 80;
+    return independence / 100;
+  }
+  /**
+   * Get voice leading style from settings
+   */
+  getVoiceLeadingStyle() {
+    var _a, _b, _c;
+    return (_c = (_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality) == null ? void 0 : _b.voiceLeadingStyle) != null ? _c : "chromatic";
+  }
+  /**
+   * Get dynamic range multipliers from settings
+   */
+  getDynamicRangeMultipliers() {
+    var _a, _b, _c;
+    const range2 = (_c = (_b = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.noteCentricMusicality) == null ? void 0 : _b.dynamicRange) != null ? _c : "extreme";
+    if (range2 === "subtle") {
+      return { whisper: 0.7, accent: 1.05, normal: 0.85 };
+    } else if (range2 === "moderate") {
+      return { whisper: 0.5, accent: 1.1, normal: 0.75 };
+    } else {
+      return { whisper: 0.35, accent: 1.15, normal: 0.6 };
+    }
+  }
+  /**
    * Map a local soundscape to note-centric music
    */
   async map(data) {
@@ -88754,7 +89019,7 @@ var NoteCentricMapper = class {
           });
           chord = 0;
         }
-        if (prose.musicalExpressiveness > 0.1 && chord != null && !isNaN(chord)) {
+        if (prose.musicalExpressiveness > this.getHarmonicThreshold(0.1) && chord != null && !isNaN(chord)) {
           const colorOptions = [
             chord,
             // Original
@@ -88801,7 +89066,9 @@ var NoteCentricMapper = class {
             const interval2 = Math.abs(chord - prevChord);
             if (interval2 > 2 && interval2 < 12) {
               let passingChord;
-              if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > 0.2) {
+              const voiceLeadingStyle = this.getVoiceLeadingStyle();
+              const chromaticThreshold = voiceLeadingStyle === "chromatic" ? this.getHarmonicThreshold(0.2) : voiceLeadingStyle === "balanced" ? this.getHarmonicThreshold(0.35) : this.getHarmonicThreshold(0.5);
+              if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > chromaticThreshold) {
                 if (prevChord < chord) {
                   passingChord = chord - 1;
                 } else {
@@ -88816,11 +89083,11 @@ var NoteCentricMapper = class {
               }
               fullProgression.push(passingChord);
             }
-            if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > 0.3) {
+            if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > this.getHarmonicThreshold(0.3)) {
               const tritoneSubstitute = chord + 6;
               fullProgression.push(tritoneSubstitute);
             }
-            if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > 0.4) {
+            if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > this.getHarmonicThreshold(0.4)) {
               const augSixth = chord - 1;
               fullProgression.push(augSixth);
             }
@@ -89052,10 +89319,13 @@ var NoteCentricMapper = class {
     let seed = Math.floor(prose.linguistic.avgWordLength * 73);
     for (let i = 0; i < length; i++) {
       const centerPitch = centerPhrase.melody[Math.min(i, centerPhrase.melody.length - 1)];
+      const independenceFactor = this.getMelodicIndependenceFactor();
+      const centerInfluence = 1 - independenceFactor;
       const invertedPitch = centerAvg - (centerPitch - centerAvg);
-      let harmonicPitch = invertedPitch * 0.2 + centerPitch * 0.2;
+      let harmonicPitch = invertedPitch * (centerInfluence * 0.5) + centerPitch * (centerInfluence * 0.5);
       harmonicPitch += 4;
-      const melodicFreedom = (seed + i * 23) % 17 - 8;
+      const maxDeviation = Math.round(5 + independenceFactor * 5);
+      const melodicFreedom = (seed + i * 23) % (maxDeviation * 2 + 1) - maxDeviation;
       harmonicPitch += melodicFreedom;
       const directionSeed = (seed + i * 17) % 100;
       if (directionSeed < 40) {
@@ -89097,15 +89367,16 @@ var NoteCentricMapper = class {
         harmony.push(harmonyValue);
       }
     }
+    const dynamicMultipliers = this.getDynamicRangeMultipliers();
     const velocities = [];
     for (let i = 0; i < length; i++) {
       const v = centerPhrase.velocities[Math.min(i, centerPhrase.velocities.length - 1)];
       if ((seed + i) % 7 === 0) {
-        velocities.push(v * 0.35);
+        velocities.push(v * dynamicMultipliers.whisper);
       } else if ((seed + i) % 11 === 0) {
-        velocities.push(v * 1.15);
+        velocities.push(v * dynamicMultipliers.accent);
       } else {
-        velocities.push(v * 0.6);
+        velocities.push(v * dynamicMultipliers.normal);
       }
     }
     return {
@@ -91330,7 +91601,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       this.noteCentricMapper = new NoteCentricMapper(this.app, this.plugin.settings);
     }
     if (!this.noteCentricPlayer) {
-      this.noteCentricPlayer = new NoteCentricPlayer(this.plugin.audioEngine);
+      this.noteCentricPlayer = new NoteCentricPlayer(this.plugin.audioEngine, this.plugin.settings);
     }
     this.currentNoteCentricMapping = await this.noteCentricMapper.map(this.graphData);
     if (!this.currentNoteCentricMapping) {

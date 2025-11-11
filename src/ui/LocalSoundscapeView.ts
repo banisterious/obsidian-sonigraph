@@ -2301,7 +2301,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Initialize player if needed
 		if (!this.noteCentricPlayer) {
-			this.noteCentricPlayer = new NoteCentricPlayer(this.plugin.audioEngine);
+			this.noteCentricPlayer = new NoteCentricPlayer(this.plugin.audioEngine, this.plugin.settings);
 		}
 
 		// Generate note-centric mapping

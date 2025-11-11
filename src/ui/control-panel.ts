@@ -714,6 +714,9 @@ export class MaterialControlPanelModal extends Modal {
 			// Performance settings card
 			this.createLocalSoundscapePerformanceCard();
 
+
+			// Note-centric musicality settings card
+			this.createNoteCentricMusicalityCard();
 			// Tips & Best Practices card
 			this.createLocalSoundscapeTipsCard();
 
@@ -4804,6 +4807,258 @@ All whale samples are authentic recordings from marine research institutions and
 	/**
 	 * Create tips and best practices card for Local Soundscape
 	 */
+	/**
+	 * Create note-centric musicality settings card
+	 */
+	private createNoteCentricMusicalityCard(): void {
+		const card = new MaterialCard({
+			title: 'Note-centric musicality',
+			iconName: 'music',
+			subtitle: 'Control the musical character of note-centric playback',
+			elevation: 1
+		});
+
+		const content = card.getContent();
+
+		// Get current settings (with fallbacks for undefined)
+		const audioEnhancement = this.plugin.settings.audioEnhancement;
+		const musicality = audioEnhancement?.noteCentricMusicality || {};
+		const currentPreset = musicality.preset || 'balanced';
+
+		// Preset selector
+		new Setting(content)
+			.setName('Musicality preset')
+			.setDesc('Choose a pre-configured style, or select Custom to fine-tune individual parameters')
+			.addDropdown(dropdown => {
+				dropdown
+					.addOption('conservative', 'Conservative - Subtle, restrained expression')
+					.addOption('balanced', 'Balanced - Current default sound (recommended)')
+					.addOption('adventurous', 'Adventurous - Bold, experimental character')
+					.addOption('custom', 'Custom - Manual control')
+					.setValue(currentPreset)
+					.onChange(async (value) => {
+						// Initialize audioEnhancement if needed
+						if (!this.plugin.settings.audioEnhancement) {
+							this.plugin.settings.audioEnhancement = {} as any;
+						}
+						if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+						}
+
+						this.plugin.settings.audioEnhancement.noteCentricMusicality.preset = value as any;
+
+						// Apply preset values
+						if (value === 'conservative') {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 75;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 50;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = 'moderate';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = 'moderate';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 60;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = 'smooth';
+						} else if (value === 'balanced') {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = 'extreme';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = 'maximum';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = 'chromatic';
+						} else if (value === 'adventurous') {
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 175;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 90;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = 'extreme';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = 'maximum';
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 95;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = 'chromatic';
+						}
+
+						await this.plugin.saveSettings();
+
+						// Refresh the card to show/hide individual controls
+						this.contentContainer.empty();
+						this.createLocalSoundscapeTab();
+					});
+			});
+
+		// Individual controls container (only shown when preset is 'custom')
+		if (currentPreset === 'custom') {
+			const customControls = content.createDiv({ cls: 'osp-musicality-custom-controls' });
+
+			// Timing Humanization
+			new Setting(customControls)
+				.setName('Timing humanization')
+				.setDesc('Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.')
+				.addSlider(slider => {
+					slider
+						.setLimits(50, 250, 25)
+						.setValue(musicality.timingHumanization || 125)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton(button => {
+					button
+						.setIcon('reset')
+						.setTooltip('Reset to balanced (125ms)')
+						.onClick(async () => {
+							if (!this.plugin.settings.audioEnhancement?.noteCentricMusicality) return;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
+							await this.plugin.saveSettings();
+							this.contentContainer.empty();
+							this.createLocalSoundscapeTab();
+						});
+				});
+
+			// Harmonic Adventurousness
+			new Setting(customControls)
+				.setName('Harmonic adventurousness')
+				.setDesc('Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.')
+				.addSlider(slider => {
+					slider
+						.setLimits(0, 100, 5)
+						.setValue(musicality.harmonicAdventurousness || 75)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton(button => {
+					button
+						.setIcon('reset')
+						.setTooltip('Reset to balanced (75%)')
+						.onClick(async () => {
+							if (!this.plugin.settings.audioEnhancement?.noteCentricMusicality) return;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
+							await this.plugin.saveSettings();
+							this.contentContainer.empty();
+							this.createLocalSoundscapeTab();
+						});
+				});
+
+			// Dynamic Range
+			new Setting(customControls)
+				.setName('Dynamic range')
+				.setDesc('Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.')
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('subtle', 'Subtle - Even, balanced dynamics')
+						.addOption('moderate', 'Moderate - Noticeable variation')
+						.addOption('extreme', 'Extreme - Dramatic contrasts')
+						.setValue(musicality.dynamicRange || 'extreme')
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = value as any;
+							await this.plugin.saveSettings();
+						});
+				});
+
+			// Polyphonic Density
+			new Setting(customControls)
+				.setName('Polyphonic density')
+				.setDesc('How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.')
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('sparse', 'Sparse - Minimal overlap, clear separation')
+						.addOption('moderate', 'Moderate - Some overlap, balanced texture')
+						.addOption('maximum', 'Maximum - Dense overlap, rich polyphony')
+						.setValue(musicality.polyphonicDensity || 'maximum')
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = value as any;
+							await this.plugin.saveSettings();
+						});
+				});
+
+			// Melodic Independence
+			new Setting(customControls)
+				.setName('Melodic independence')
+				.setDesc('How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.')
+				.addSlider(slider => {
+					slider
+						.setLimits(0, 100, 5)
+						.setValue(musicality.melodicIndependence || 80)
+						.setDynamicTooltip()
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton(button => {
+					button
+						.setIcon('reset')
+						.setTooltip('Reset to balanced (80%)')
+						.onClick(async () => {
+							if (!this.plugin.settings.audioEnhancement?.noteCentricMusicality) return;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
+							await this.plugin.saveSettings();
+							this.contentContainer.empty();
+							this.createLocalSoundscapeTab();
+						});
+				});
+
+			// Voice Leading Style
+			new Setting(customControls)
+				.setName('Voice leading style')
+				.setDesc('Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.')
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('smooth', 'Smooth - Minimal voice movement, consonant')
+						.addOption('balanced', 'Balanced - Mix of smooth and chromatic')
+						.addOption('chromatic', 'Chromatic - Adventurous, jazzy movement')
+						.setValue(musicality.voiceLeadingStyle || 'chromatic')
+						.onChange(async (value) => {
+							if (!this.plugin.settings.audioEnhancement) {
+								this.plugin.settings.audioEnhancement = {} as any;
+							}
+							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							}
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = value as any;
+							await this.plugin.saveSettings();
+						});
+				});
+		} else {
+			// Show message when preset is not custom
+			const presetInfo = content.createDiv({ cls: 'osp-musicality-preset-info' });
+			presetInfo.createEl('p', {
+				text: `Using "${currentPreset}" preset. Select "Custom" above to adjust individual parameters.`,
+				cls: 'mod-muted'
+			});
+		}
+
+		this.contentContainer.appendChild(card.getElement());
+	}
+
 	private createLocalSoundscapeTipsCard(): void {
 		const card = new MaterialCard({
 			title: 'Tips & best practices',
