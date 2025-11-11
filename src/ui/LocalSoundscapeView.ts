@@ -1150,6 +1150,14 @@ export class LocalSoundscapeView extends ItemView {
 			// Start visualization render loop immediately (even when not playing, shows grid/empty state)
 			this.visualizationManager.start(0);
 
+			// Force resize to ensure proper canvas sizing after initialization
+			setTimeout(() => {
+				if (this.visualizationManager) {
+					this.visualizationManager.forceResize();
+					logger.debug('init-visualization', 'Forced visualization resize after initialization');
+				}
+			}, 100);
+
 			logger.info('init-visualization', 'Visualization manager initialized and started');
 		} catch (error) {
 			logger.error('init-visualization', 'Failed to initialize visualization', error);

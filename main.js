@@ -90823,6 +90823,12 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       }
       this.setupVisualizationAudioIntegration();
       this.visualizationManager.start(0);
+      setTimeout(() => {
+        if (this.visualizationManager) {
+          this.visualizationManager.forceResize();
+          logger85.debug("init-visualization", "Forced visualization resize after initialization");
+        }
+      }, 100);
       logger85.info("init-visualization", "Visualization manager initialized and started");
     } catch (error) {
       logger85.error("init-visualization", "Failed to initialize visualization", error);
