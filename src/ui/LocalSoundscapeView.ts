@@ -1147,7 +1147,10 @@ export class LocalSoundscapeView extends ItemView {
 			// Setup audio engine integration
 			this.setupVisualizationAudioIntegration();
 
-			logger.info('init-visualization', 'Visualization manager initialized successfully');
+			// Start visualization render loop immediately (even when not playing, shows grid/empty state)
+			this.visualizationManager.start(0);
+
+			logger.info('init-visualization', 'Visualization manager initialized and started');
 		} catch (error) {
 			logger.error('init-visualization', 'Failed to initialize visualization', error);
 			new Notice('Failed to initialize visualization');
@@ -1180,10 +1183,8 @@ export class LocalSoundscapeView extends ItemView {
 				}
 			}
 
-			// Restart visualization if currently playing
-			if (this.isPlaying) {
-				this.visualizationManager.start(0);
-			}
+			// Restart visualization (always restart to show the new mode)
+			this.visualizationManager.start(0);
 
 			logger.info('update-visualization', 'Visualization mode updated', {
 				mode: this.visualizationMode

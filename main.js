@@ -90822,7 +90822,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
         }
       }
       this.setupVisualizationAudioIntegration();
-      logger85.info("init-visualization", "Visualization manager initialized successfully");
+      this.visualizationManager.start(0);
+      logger85.info("init-visualization", "Visualization manager initialized and started");
     } catch (error) {
       logger85.error("init-visualization", "Failed to initialize visualization", error);
       new import_obsidian32.Notice("Failed to initialize visualization");
@@ -90848,9 +90849,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
           logger85.info("update-visualization", "Connected spectrum analyzer for spectrum mode");
         }
       }
-      if (this.isPlaying) {
-        this.visualizationManager.start(0);
-      }
+      this.visualizationManager.start(0);
       logger85.info("update-visualization", "Visualization mode updated", {
         mode: this.visualizationMode
       });
