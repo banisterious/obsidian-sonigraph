@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2025-11-11
+
+### Fixed
+- **Security**: Eliminated all unsafe `innerHTML`/`outerHTML` usage (26 instances) - replaced with safe Obsidian DOM helpers
+- **Type Safety**: Resolved ~70 TypeScript compilation errors
+  - Added missing `chordFusion` and `noteCentricMusicality` properties to `AudioMappingConfig` interface
+  - Implemented type-safe helper functions for instrument settings access
+  - Added public `getWhaleManager()` getter for whale integration
+- **Code Quality**: Reduced unsafe `as any` type casts from 83 to 81 instances
+- **Logging**: Removed debug console.log statement from production code
+
+### Technical
+- Added AUDIT-REPORT.md documenting compliance with Obsidian plugin review requirements
+- Overall compliance score: 6/7 categories (86%)
+- Build now passes with 0 TypeScript errors
+
 ## [0.17.1] - 2025-11-10
 
 ### Added
