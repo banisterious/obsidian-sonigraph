@@ -60178,12 +60178,13 @@ var init_NoteCentricPlayer = __esm({
                 finalFreq = this.audioEngine.musicalTheoryEngine.constrainPitchToScale(frequency);
               }
               const durationSeconds = duration * beatDuration / 1e3;
+              const elapsedTime = (Date.now() - this.startTime) / 1e3;
               await this.audioEngine.playNoteImmediate({
                 pitch: finalFreq,
                 duration: durationSeconds,
                 velocity,
                 instrument
-              });
+              }, elapsedTime);
               const stopTime = Date.now() + duration * beatDuration;
               this.playingNotes.push({
                 instrumentName: instrument,
@@ -60345,6 +60346,15 @@ var init_NoteCentricPlayer = __esm({
           this.animationFrameId = requestAnimationFrame(loop);
         };
         this.animationFrameId = requestAnimationFrame(loop);
+      }
+      /**
+       * Get elapsed time since playback started (in seconds)
+       */
+      getElapsedTime() {
+        if (!this.isPlaying || this.startTime === 0) {
+          return 0;
+        }
+        return (Date.now() - this.startTime) / 1e3;
       }
     };
   }
@@ -91713,6 +91723,10 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
         return;
       }
       this.currentVoiceCount = this.noteCentricPlayer.getActiveVoiceCount();
+      if (this.visualizationManager) {
+        const elapsedTime = this.noteCentricPlayer.getElapsedTime();
+        this.visualizationManager.updatePlaybackTime(elapsedTime);
+      }
       if (Math.random() < 0.1) {
         logger85.debug("ui-update-poll", "UI update poll", {
           voiceCount: this.currentVoiceCount,
@@ -91763,9 +91777,9 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     this.updatePlaybackUI();
     const playbackStartTime = Date.now();
     if (this.visualizationManager) {
-      this.visualizationManager.start(1);
-      this.visualizationManager.updatePlaybackTime(1);
-      logger85.debug("playback-start", "Visualization started with fixed playback cursor at 1.0s");
+      this.visualizationManager.start(0);
+      this.visualizationManager.updatePlaybackTime(0);
+      logger85.debug("playback-start", "Visualization started at time 0 (will track elapsed time in polling loop)");
     }
     logger85.info("playback-started", "Soundscape playback started - using real-time polling loop", {
       voices: this.currentVoiceCount,
@@ -91923,6 +91937,9 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       }
       const currentTime = getContext3().currentTime;
       const elapsedTime = currentTime - this.realtimeStartTime;
+      if (this.visualizationManager) {
+        this.visualizationManager.updatePlaybackTime(elapsedTime);
+      }
       while (this.nextNoteIndex < this.currentMappings.length) {
         const mapping = this.currentMappings[this.nextNoteIndex];
         const tolerance = 0.05;
@@ -91939,7 +91956,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
             instrument: mapping.instrument,
             pitch: mapping.pitch.toFixed(2)
           });
-          this.playNoteFromPollingLoop(mapping, currentTime);
+          this.playNoteFromPollingLoop(mapping, currentTime, elapsedTime);
         } else {
           break;
         }
@@ -91967,14 +91984,20 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
    * Play a single note from the polling loop (triggers immediately)
    * No setTimeout needed - polling loop handles unhighlighting!
    */
-  async playNoteFromPollingLoop(mapping, currentTime) {
+  async playNoteFromPollingLoop(mapping, currentTime, elapsedTime) {
     try {
       if (this.renderer && this.pulsePlayingNodes) {
         this.renderer.highlightPlayingNode(mapping.nodeId);
         const endTime = currentTime + mapping.duration;
         this.activeHighlights.set(mapping.nodeId, endTime);
       }
-      const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1;
+      const visualTimestamp = mapping.timing;
+      logger85.debug("viz-timestamp", "Note timestamp", {
+        mappingTiming: mapping.timing.toFixed(3),
+        elapsedTime: elapsedTime.toFixed(3),
+        visualTimestamp: visualTimestamp.toFixed(3),
+        pitch: mapping.pitch.toFixed(1)
+      });
       if (mapping.isChordVoiced && mapping.chordFrequencies && mapping.chordFrequencies.length > 1) {
         const voiceVelocity = mapping.velocity * 0.8;
         for (const voiceFrequency of mapping.chordFrequencies) {

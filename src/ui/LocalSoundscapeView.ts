@@ -2336,6 +2336,12 @@ export class LocalSoundscapeView extends ItemView {
 			// Update voice count from player
 			this.currentVoiceCount = this.noteCentricPlayer.getActiveVoiceCount();
 
+			// Update visualization playback time
+			if (this.visualizationManager) {
+				const elapsedTime = this.noteCentricPlayer.getElapsedTime();
+				this.visualizationManager.updatePlaybackTime(elapsedTime);
+			}
+
 			// Log periodically for debugging
 			if (Math.random() < 0.1) {  // 10% of the time
 				logger.debug('ui-update-poll', 'UI update poll', {
@@ -2404,12 +2410,11 @@ export class LocalSoundscapeView extends ItemView {
 		// Start visualization and time tracking
 		const playbackStartTime = Date.now();
 		if (this.visualizationManager) {
-			// For Local Soundscape, keep playback time fixed at 1.0s
-			// All notes are positioned around this time, so keeping cursor here keeps them visible
-			this.visualizationManager.start(1.0);
-			this.visualizationManager.updatePlaybackTime(1.0);
+			// Start visualization at time 0 - playback time will be updated in the polling loop
+			this.visualizationManager.start(0);
+			this.visualizationManager.updatePlaybackTime(0);
 
-			logger.debug('playback-start', 'Visualization started with fixed playback cursor at 1.0s');
+			logger.debug('playback-start', 'Visualization started at time 0 (will track elapsed time in polling loop)');
 		}
 
 		logger.info('playback-started', 'Soundscape playback started - using real-time polling loop', {
@@ -2629,6 +2634,11 @@ export class LocalSoundscapeView extends ItemView {
 			const currentTime = getContext().currentTime;
 			const elapsedTime = currentTime - this.realtimeStartTime;
 
+			// Update visualization playback time to track current audio time
+			if (this.visualizationManager) {
+				this.visualizationManager.updatePlaybackTime(elapsedTime);
+			}
+
 			// Find notes that should play NOW (trigger when their time has arrived)
 			while (this.nextNoteIndex < this.currentMappings.length) {
 				const mapping = this.currentMappings[this.nextNoteIndex];
@@ -2652,7 +2662,7 @@ export class LocalSoundscapeView extends ItemView {
 					});
 
 					// Trigger the note immediately (polling loop ensures we trigger "just in time")
-					this.playNoteFromPollingLoop(mapping, currentTime);
+					this.playNoteFromPollingLoop(mapping, currentTime, elapsedTime);
 				} else {
 					// No more notes ready to play yet, break until next poll
 					break;
@@ -2689,7 +2699,7 @@ export class LocalSoundscapeView extends ItemView {
 	 * Play a single note from the polling loop (triggers immediately)
 	 * No setTimeout needed - polling loop handles unhighlighting!
 	 */
-	private async playNoteFromPollingLoop(mapping: DepthMapping, currentTime: number): Promise<void> {
+	private async playNoteFromPollingLoop(mapping: DepthMapping, currentTime: number, elapsedTime: number): Promise<void> {
 		try {
 			// Highlight node as playing (only if pulse is enabled)
 			if (this.renderer && this.pulsePlayingNodes) {
@@ -2700,9 +2710,15 @@ export class LocalSoundscapeView extends ItemView {
 				this.activeHighlights.set(mapping.nodeId, endTime);
 			}
 
-			// Group all notes by 500ms windows for visualization
-			// Add 1.0s offset so notes appear to the right of clefs
-			const visualTimestamp = Math.floor(mapping.timing / 0.5) * 0.05 + 1.0;
+			// Use the note's scheduled timing for visualization so notes appear at their intended position
+			const visualTimestamp = mapping.timing;
+
+			logger.debug('viz-timestamp', 'Note timestamp', {
+				mappingTiming: mapping.timing.toFixed(3),
+				elapsedTime: elapsedTime.toFixed(3),
+				visualTimestamp: visualTimestamp.toFixed(3),
+				pitch: mapping.pitch.toFixed(1)
+			});
 
 			// Check if this mapping has chord voicing (Phase 2)
 			if (mapping.isChordVoiced && mapping.chordFrequencies && mapping.chordFrequencies.length > 1) {

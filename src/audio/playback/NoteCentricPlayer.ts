@@ -225,13 +225,16 @@ export class NoteCentricPlayer {
 					// Calculate note duration in seconds
 					const durationSeconds = (duration * beatDuration) / 1000;
 
-					// Play note using AudioEngine's playNoteImmediate
+					// Calculate elapsed time for visualization timestamp (in seconds)
+					const elapsedTime = (Date.now() - this.startTime) / 1000;
+
+					// Play note using AudioEngine's playNoteImmediate with timestamp
 					await this.audioEngine.playNoteImmediate({
 						pitch: finalFreq,
 						duration: durationSeconds,
 						velocity: velocity,
 						instrument: instrument
-					});
+					}, elapsedTime);
 
 					// Track playing note
 					const stopTime = Date.now() + duration * beatDuration;
@@ -425,5 +428,15 @@ export class NoteCentricPlayer {
 		};
 
 		this.animationFrameId = requestAnimationFrame(loop);
+	}
+
+	/**
+	 * Get elapsed time since playback started (in seconds)
+	 */
+	getElapsedTime(): number {
+		if (!this.isPlaying || this.startTime === 0) {
+			return 0;
+		}
+		return (Date.now() - this.startTime) / 1000;
 	}
 }
