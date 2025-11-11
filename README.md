@@ -4,6 +4,8 @@
 
 Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge graph to rich musical parameters, creating dynamic orchestral compositions with 30 instruments, continuous audio layers, advanced effects processing, and real-time audio synthesis. Features Freesound.org integration for high-quality environmental samples and intelligent content-aware mapping.
 
+**Latest (v0.17.1):** Note-centric musicality settings with configurable presets for prose-based musical generation. Control timing, harmony, dynamics, and voice leading through three presets or custom parameters.
+
 <table align="center">
 <tr>
 <td align="center" width="50%">

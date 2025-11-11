@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2025-11-10
+
+### Added
+- **Note-Centric Musicality Settings**: Configurable controls for prose-based musical generation
+  - Three presets: Conservative, Balanced (default), Adventurous
+  - Six individual parameters: timing humanization (50-250ms), harmonic adventurousness (0-100%), dynamic range, polyphonic density, melodic independence (0-100%), voice leading style
+  - Access via Control Center > Local Soundscape > Note-centric musicality
+  - Settings apply immediately to subsequent playback
+
+### Documentation
+- Updated Local Soundscape user guide with complete musicality preset documentation
+- Added implementation status section to design document with technical details
+
+## [0.17.0] - 2025-11-08
+
 ### Planned - Local Soundscape Aesthetic Enhancements 🎼
 
 A comprehensive set of musical enhancements to transform Local Soundscape into a fully musical experience. See [docs/design/local-soundscape-aesthetic-enhancements.md](docs/design/local-soundscape-aesthetic-enhancements.md) for complete design.
