@@ -1392,7 +1392,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		organ: {
-			enabled: true,
+			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
 			useHighQuality: true, // Use high-quality recordings
@@ -1457,10 +1457,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		flute: {
-			enabled: false, 
-			volume: 0.6, 
+			enabled: true,
+			volume: 0.6,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1489,8 +1489,8 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		clarinet: { 
-			enabled: true, 
+		clarinet: {
+			enabled: false, 
 			volume: 0.5, 
 			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
@@ -1784,11 +1784,11 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 				}
 			}
 		},
-		guitar: { 
-			enabled: false,
-			volume: 0.6, 
+		guitar: {
+			enabled: true,
+			volume: 0.6,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1818,7 +1818,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		guitarElectric: {
-			enabled: true,
+			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
 			useHighQuality: true, // Use high-quality recordings
