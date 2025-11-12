@@ -52,7 +52,7 @@ export class PlaybackOptimizer {
                 this.timeBuckets.set(bucketKey, []);
             }
             
-            this.timeBuckets.get(bucketKey)!.push(note);
+            const bucket = this.timeBuckets.get(bucketKey); if (bucket) bucket.push(note);
             
             // Track max end time
             const noteEndTime = note.timing + note.duration;

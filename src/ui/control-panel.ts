@@ -18,6 +18,7 @@ import { getWhaleIntegration } from '../external/whale-integration';
 import { FreesoundSearchModal } from './FreesoundSearchModal';
 import { SampleTableBrowser } from './SampleTableBrowser';
 import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
+import { AudioMappingConfig } from '../graph/types';
 
 const logger = getLogger('control-panel');
 
@@ -26,6 +27,45 @@ const logger = getLogger('control-panel');
  * Avoids unsafe 'as any' casts for dynamic property access
  */
 type InstrumentKey = keyof SonigraphPlugin['settings']['instruments'];
+
+/**
+ * Type definitions for dynamic effects configuration
+ */
+interface EffectConfig {
+	enabled: boolean;
+	params: Record<string, number>;
+}
+
+type EffectsMap = Record<string, EffectConfig>;
+
+/**
+ * Extended plugin interface for optional integrations
+ */
+interface PluginWithOptionalIntegrations extends SonigraphPlugin {
+	continuousLayerManager?: {
+		sampleLoader?: any;
+	};
+	whaleIntegration?: {
+		whaleManager?: any;
+		updateSettings?: (settings: any) => void;
+		cleanup?: () => void;
+	};
+}
+
+/**
+ * Musical setting types for dropdowns and selections
+ */
+type VoicingStrategy = 'close' | 'drop2' | 'drop3' | 'spread' | 'rootless';
+type DynamicRange = 'minimal' | 'moderate' | 'extreme';
+type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
+type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
+type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
+
+/**
+ * Type-safe partial initialization of AudioMappingConfig
+ * Used when initializing empty audioEnhancement settings
+ */
+type PartialAudioEnhancement = Partial<AudioMappingConfig>;
 
 function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
 	const instruments = plugin.settings.instruments;
@@ -45,7 +85,8 @@ function setInstrumentSetting<K extends keyof any>(
 	if (instrumentKey in instruments) {
 		const instrument = instruments[instrumentKey as InstrumentKey];
 		if (instrument && typeof instrument === 'object') {
-			(instrument as any)[settingKey] = value;
+			// Dynamic property assignment on known instrument settings object
+			(instrument as Record<string, any>)[settingKey as string] = value;
 			return true;
 		}
 	}
@@ -991,7 +1032,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Get sample loader - try from layer manager first, fallback to creating new instance
 		let sampleLoader;
-		const layerManager = (this.plugin as any).continuousLayerManager;
+		const layerManager = (this.plugin as PluginWithOptionalIntegrations).continuousLayerManager;
 
 		if (layerManager && layerManager.sampleLoader) {
 			sampleLoader = layerManager.sampleLoader;
@@ -1555,7 +1596,8 @@ export class MaterialControlPanelModal extends Modal {
 				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.enabled || false)
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement) {
-						this.plugin.settings.audioEnhancement = {} as any;
+						// Initialize with empty object, properties will be set individually
+						this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 					}
 					if (!this.plugin.settings.audioEnhancement.chordFusion) {
 						this.plugin.settings.audioEnhancement.chordFusion = {
@@ -1845,7 +1887,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		voicingSelect.addEventListener('change', async () => {
 			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
-			this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value as any;
+			this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value as VoicingStrategy;
 			await this.plugin.saveSettings();
 			if (this.plugin.audioEngine) {
 				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
@@ -2470,10 +2512,10 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Close Control Center first for smooth transition
 		this.close();
-		
-		// Open Plugin Settings
-		(this.app as any).setting.open();
-		(this.app as any).setting.openTabById(this.plugin.manifest.id);
+
+		// Open Plugin Settings (using extended Obsidian API defined in obsidian-extended.d.ts)
+		this.app.setting.open();
+		this.app.setting.openTabById(this.plugin.manifest.id);
 	}
 
 	/**
@@ -3792,14 +3834,15 @@ export class MaterialControlPanelModal extends Modal {
 			const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
 			const settings = this.plugin.settings.instruments[instrumentKey];
 			if (settings && settings.effects) {
+				const effectsMap = settings.effects as unknown as EffectsMap;
 				if (!settings.effects[effectType as keyof typeof settings.effects]) {
 					// Initialize effect if it doesn't exist
-					(settings.effects as any)[effectType] = {
+					effectsMap[effectType] = {
 						enabled: enabled,
 						params: this.getDefaultEffectParams(effectType)
 					};
 				} else {
-					(settings.effects as any)[effectType].enabled = enabled;
+					effectsMap[effectType].enabled = enabled;
 				}
 			}
 		});
@@ -3816,14 +3859,15 @@ export class MaterialControlPanelModal extends Modal {
 			const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
 			const settings = this.plugin.settings.instruments[instrumentKey];
 			if (settings && settings.effects) {
-				if (!(settings.effects as any)[effectType]) {
-					(settings.effects as any)[effectType] = {
+				const effectsMap = settings.effects as unknown as EffectsMap;
+				if (!effectsMap[effectType]) {
+					effectsMap[effectType] = {
 						enabled: true,
 						params: this.getDefaultEffectParams(effectType)
 					};
 				}
-				
-				(settings.effects as any)[effectType].params[parameter] = value;
+
+				effectsMap[effectType].params[parameter] = value;
 			}
 		});
 		
@@ -4192,8 +4236,8 @@ export class MaterialControlPanelModal extends Modal {
 	private checkIfSampleDownloaded(instrumentKey: string): boolean {
 		// Check if whale samples are downloaded for this species
 		try {
-			// Get whale integration instance
-			const whaleIntegration = (this.plugin as any).whaleIntegration;
+			// Get whale integration instance (optional plugin integration)
+			const whaleIntegration = (this.plugin as PluginWithOptionalIntegrations).whaleIntegration;
 			if (!whaleIntegration || !whaleIntegration.whaleManager) {
 				return false;
 			}
@@ -4889,13 +4933,15 @@ All whale samples are authentic recordings from marine research institutions and
 					.onChange(async (value) => {
 						// Initialize audioEnhancement if needed
 						if (!this.plugin.settings.audioEnhancement) {
-							this.plugin.settings.audioEnhancement = {} as any;
+							this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 						}
 						if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
+							// Unavoidable cast: Initialize with empty object, properties set individually below
+							// The noteCentricMusicality type requires all properties but we set them conditionally
 							this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
 						}
 
-						this.plugin.settings.audioEnhancement.noteCentricMusicality.preset = value as any;
+						this.plugin.settings.audioEnhancement.noteCentricMusicality.preset = value as NoteCentricPreset;
 
 						// Apply preset values
 						if (value === 'conservative') {
@@ -4944,7 +4990,7 @@ All whale samples are authentic recordings from marine research institutions and
 						.setDynamicTooltip()
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
-								this.plugin.settings.audioEnhancement = {} as any;
+								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
 								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
@@ -4977,7 +5023,7 @@ All whale samples are authentic recordings from marine research institutions and
 						.setDynamicTooltip()
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
-								this.plugin.settings.audioEnhancement = {} as any;
+								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
 								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
@@ -5011,12 +5057,12 @@ All whale samples are authentic recordings from marine research institutions and
 						.setValue(musicality.dynamicRange || 'extreme')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
-								this.plugin.settings.audioEnhancement = {} as any;
+								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
 								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
 							}
-							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = value as any;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = value as DynamicRange;
 							await this.plugin.saveSettings();
 						});
 				});
@@ -5033,12 +5079,12 @@ All whale samples are authentic recordings from marine research institutions and
 						.setValue(musicality.polyphonicDensity || 'maximum')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
-								this.plugin.settings.audioEnhancement = {} as any;
+								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
 								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
 							}
-							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = value as any;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = value as PolyphonicDensity;
 							await this.plugin.saveSettings();
 						});
 				});
@@ -5054,7 +5100,7 @@ All whale samples are authentic recordings from marine research institutions and
 						.setDynamicTooltip()
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
-								this.plugin.settings.audioEnhancement = {} as any;
+								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
 								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
@@ -5088,12 +5134,12 @@ All whale samples are authentic recordings from marine research institutions and
 						.setValue(musicality.voiceLeadingStyle || 'chromatic')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
-								this.plugin.settings.audioEnhancement = {} as any;
+								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
 								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
 							}
-							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = value as any;
+							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = value as VoiceLeadingStyle;
 							await this.plugin.saveSettings();
 						});
 				});

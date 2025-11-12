@@ -1244,10 +1244,14 @@ export class MusicalGenreEngine {
     }
     
     try {
+      if (!this.primarySynth) return;
+
       if (Array.isArray(notes)) {
         notes.forEach(note => {
-          this.primarySynth!.triggerAttackRelease(note, duration);
-          this.activeNotes.add(note);
+          if (this.primarySynth) {
+            this.primarySynth.triggerAttackRelease(note, duration);
+            this.activeNotes.add(note);
+          }
         });
         this.activeVoices += notes.length;
       } else {

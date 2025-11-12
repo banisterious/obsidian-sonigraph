@@ -281,7 +281,8 @@ export class GraphDemoModal extends Modal {
 			setTimeout(() => {
 				// Show the node
 				this.visibleNodes.add(node.id);
-				this.svg!.selectAll('.node')
+				if (!this.svg) return;
+				this.svg.selectAll('.node')
 					.filter((d: any) => d.id === node.id)
 					.transition()
 					.duration(500)
@@ -310,9 +311,10 @@ export class GraphDemoModal extends Modal {
 				const linkKey = `${sourceId}-${targetId}`;
 				if (!this.visibleLinks.has(linkKey)) {
 					this.visibleLinks.add(linkKey);
-					
+
 					// Show the link with animation
-					this.svg!.selectAll('.links line')
+					if (!this.svg) return;
+					this.svg.selectAll('.links line')
 						.filter((d: any) => {
 							const dSourceId = typeof d.source === 'string' ? d.source : d.source.id;
 							const dTargetId = typeof d.target === 'string' ? d.target : d.target.id;

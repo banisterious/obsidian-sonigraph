@@ -71,10 +71,10 @@ export class PlaybackEventEmitter {
 		if (!this.listeners.has(event)) {
 			this.listeners.set(event, []);
 		}
-		this.listeners.get(event)!.push(listener as unknown as PlaybackEventListener);
+		const eventListeners = this.listeners.get(event); if (eventListeners) eventListeners.push(listener as unknown as PlaybackEventListener);
 		
 		logger.debug('events', `Added listener for ${event}`, { 
-			listenerCount: this.listeners.get(event)!.length 
+			listenerCount: this.listeners.get(event)?.length || 0 
 		});
 	}
 

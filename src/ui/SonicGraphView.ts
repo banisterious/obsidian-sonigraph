@@ -19,6 +19,8 @@ import * as d3 from 'd3';
 import type SonigraphPlugin from '../main';
 import { ContinuousLayerManager } from '../audio/layers/ContinuousLayerManager';
 import { NoteVisualizationManager } from '../visualization/NoteVisualizationManager';
+import { ViewPendingState, ViewWithPendingState, DynamicSettings } from '../obsidian-extended';
+import { PanningMode, PanningCurve } from '../audio/spatial/types';
 
 const logger = getLogger('SonicGraphView');
 
@@ -45,7 +47,10 @@ export interface SonicGraphViewState {
     visualDisplayHeight: number;
 }
 
-export class SonicGraphView extends ItemView {
+export class SonicGraphView extends ItemView implements ViewWithPendingState {
+    // Pending state for view restoration
+    _pendingState?: ViewPendingState;
+
     private plugin: SonigraphPlugin;
     private graphDataExtractor: GraphDataExtractor;
     private graphRenderer: GraphRenderer | null = null;
@@ -211,7 +216,7 @@ export class SonicGraphView extends ItemView {
         if (viewState.currentTimelinePosition !== undefined || viewState.animationSpeed !== undefined) {
             // We'll apply these values after the UI is fully initialized
             // Store them temporarily for use in onOpen()
-            (this as any)._pendingState = {
+            this._pendingState = {
                 timelinePosition: viewState.currentTimelinePosition,
                 animationSpeed: viewState.animationSpeed
             };
@@ -389,7 +394,7 @@ export class SonicGraphView extends ItemView {
      * Apply pending state after view initialization
      */
     private async applyPendingState(): Promise<void> {
-        const pendingState = (this as any)._pendingState;
+        const pendingState = this._pendingState;
         if (!pendingState) {
             logger.debug('state', 'No pending state to apply');
             return;
@@ -444,7 +449,7 @@ export class SonicGraphView extends ItemView {
             logger.error('state', 'Failed to apply pending state', error);
         } finally {
             // Clear pending state
-            delete (this as any)._pendingState;
+            delete this._pendingState;
         }
     }
 
@@ -1271,9 +1276,11 @@ export class SonicGraphView extends ItemView {
                 const layoutSettings = this.getSonicGraphSettings().layout;
                 logger.info('sonic-graph-layout', 'Applying layout settings to renderer', layoutSettings);
                 await this.executeWhenIdle(() => {
-                    this.graphRenderer!.updateLayoutSettings(layoutSettings);
-                    this.graphRenderer!.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
-                    this.graphRenderer!.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
+                    if (this.graphRenderer) {
+                        this.graphRenderer.updateLayoutSettings(layoutSettings);
+                        this.graphRenderer.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
+                        this.graphRenderer.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
+                    }
                 });
                 logger.info('sonic-graph-layout', 'Layout settings applied successfully');
             } catch (layoutError) {
@@ -1646,10 +1653,10 @@ export class SonicGraphView extends ItemView {
      */
     private openPluginSettings(): void {
         // Note: Views don't need to be closed when opening other UI elements
-        
-        // Open Plugin Settings
-        (this.app as any).setting.open();
-        (this.app as any).setting.openTabById(this.plugin.manifest.id);
+
+        // Open Plugin Settings (using extended App interface)
+        this.app.setting.open();
+        this.app.setting.openTabById(this.plugin.manifest.id);
     }
 
     /**
@@ -2269,22 +2276,8 @@ export class SonicGraphView extends ItemView {
             }
         });
 
-        // Always add all the settings to the content area (no conditional logic)
-        const settings = this.getSonicGraphSettings().connectionTypeMapping || {
-            enabled: false,
-            independentFromContentAware: true,
-            mappings: {
-                wikilink: { enabled: true, instrumentFamily: 'strings' } as any,
-                embed: { enabled: true, instrumentFamily: 'percussion' } as any,
-                markdown: { enabled: true, instrumentFamily: 'woodwinds' } as any,
-                tag: { enabled: true, instrumentFamily: 'ambient' } as any
-            },
-            globalSettings: {
-                connectionVolumeMix: 0.7,
-                maxSimultaneousConnections: 25
-            } as any,
-            currentPreset: 'minimal'
-        } as any;
+        // Get connection type mapping settings (will use defaults from constants.ts if not set)
+        const settings = this.getSonicGraphSettings().connectionTypeMapping;
 
         // Main enable toggle (inside the collapsible content)
         new Setting(content)
@@ -2441,11 +2434,12 @@ export class SonicGraphView extends ItemView {
     /**
      * Update connection type mapping configuration
      */
-    private updateConnectionTypeMappingConfig(key: string, value: any): void {
+    private updateConnectionTypeMappingConfig(key: string, value: unknown): void {
         const settings = this.getSonicGraphSettings();
         if (!settings.connectionTypeMapping) return;
 
-        (settings.connectionTypeMapping as any)[key] = value;
+        // Dynamic property access for settings updates
+        (settings.connectionTypeMapping as DynamicSettings)[key] = value;
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
@@ -2457,11 +2451,12 @@ export class SonicGraphView extends ItemView {
     /**
      * Update connection type mapping global setting
      */
-    private updateConnectionTypeMappingGlobalSetting(key: string, value: any): void {
+    private updateConnectionTypeMappingGlobalSetting(key: string, value: unknown): void {
         const settings = this.getSonicGraphSettings();
         if (!settings.connectionTypeMapping?.globalSettings) return;
 
-        (settings.connectionTypeMapping.globalSettings as any)[key] = value;
+        // Dynamic property access for settings updates
+        (settings.connectionTypeMapping.globalSettings as DynamicSettings)[key] = value;
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
@@ -2473,11 +2468,11 @@ export class SonicGraphView extends ItemView {
     /**
      * Update specific connection type mapping
      */
-    private updateConnectionTypeMapping(connectionType: string, key: string, value: any): void {
+    private updateConnectionTypeMapping(connectionType: string, key: string, value: unknown): void {
         const settings = this.getSonicGraphSettings();
         if (!settings.connectionTypeMapping?.mappings) return;
 
-        const mapping = (settings.connectionTypeMapping.mappings as any)[connectionType];
+        const mapping = (settings.connectionTypeMapping.mappings as DynamicSettings)[connectionType] as DynamicSettings;
         if (!mapping) return;
 
         mapping[key] = value;
@@ -2686,7 +2681,7 @@ export class SonicGraphView extends ItemView {
         });
         
         timeWindowSelect.addEventListener('change', () => {
-            this.updateTimeWindow(timeWindowSelect.value as any);
+            this.updateTimeWindow(timeWindowSelect.value as 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour');
         });
 
         // Add tooltip to time window select
@@ -2726,7 +2721,7 @@ export class SonicGraphView extends ItemView {
         });
 
         granularitySelect.addEventListener('change', () => {
-            this.updateTimelineGranularity(granularitySelect.value as any);
+            this.updateTimelineGranularity(granularitySelect.value as 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom');
         });
 
         // Add tooltip to granularity select
@@ -2781,11 +2776,11 @@ export class SonicGraphView extends ItemView {
         });
 
         customValueInput.addEventListener('input', () => {
-            this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as any);
+            this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as 'years' | 'months' | 'weeks' | 'days' | 'hours');
         });
 
         customUnitSelect.addEventListener('change', () => {
-            this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as any);
+            this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value as 'years' | 'months' | 'weeks' | 'days' | 'hours');
         });
 
         // Add tooltips to custom range controls
@@ -2826,7 +2821,7 @@ export class SonicGraphView extends ItemView {
         });
 
         spreadingSelect.addEventListener('change', () => {
-            this.updateEventSpreadingMode(spreadingSelect.value as any);
+            this.updateEventSpreadingMode(spreadingSelect.value as 'none' | 'gentle' | 'aggressive');
         });
 
         // Add tooltip to event spreading dropdown (moved to left as requested)
@@ -3597,7 +3592,7 @@ export class SonicGraphView extends ItemView {
             }
         });
         modeSelect.addEventListener('change', async () => {
-            settings.orchestrationMode = modeSelect.value as any;
+            settings.orchestrationMode = modeSelect.value as 'hub-led' | 'democratic' | 'balanced';
             await this.plugin.saveSettings();
         });
 
@@ -4570,8 +4565,10 @@ export class SonicGraphView extends ItemView {
         timeSlider.value = settings.timeOfDayInfluence.toString();
         timeSlider.addEventListener('input', async () => {
             settings.timeOfDayInfluence = parseFloat(timeSlider.value);
-            timeOfDayItem.querySelector('.sonic-graph-setting-description')!.textContent =
-                `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+            const descriptionEl = timeOfDayItem.querySelector('.sonic-graph-setting-description');
+            if (descriptionEl) {
+                descriptionEl.textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+            }
             await this.plugin.saveSettings();
         });
 
@@ -4598,8 +4595,10 @@ export class SonicGraphView extends ItemView {
         seasonSlider.value = settings.seasonalInfluence.toString();
         seasonSlider.addEventListener('input', async () => {
             settings.seasonalInfluence = parseFloat(seasonSlider.value);
-            seasonalItem.querySelector('.sonic-graph-setting-description')!.textContent =
-                `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+            const descriptionEl = seasonalItem.querySelector('.sonic-graph-setting-description');
+            if (descriptionEl) {
+                descriptionEl.textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+            }
             await this.plugin.saveSettings();
         });
 
@@ -4626,8 +4625,10 @@ export class SonicGraphView extends ItemView {
         transitionSlider.value = settings.transitionDuration.toString();
         transitionSlider.addEventListener('input', async () => {
             settings.transitionDuration = parseFloat(transitionSlider.value);
-            transitionItem.querySelector('.sonic-graph-setting-description')!.textContent =
-                `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+            const descriptionEl = transitionItem.querySelector('.sonic-graph-setting-description');
+            if (descriptionEl) {
+                descriptionEl.textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+            }
             await this.plugin.saveSettings();
         });
 
@@ -4716,9 +4717,9 @@ export class SonicGraphView extends ItemView {
             if (!this.plugin.settings.spatialAudio) {
                 this.plugin.settings.spatialAudio = {
                     enabled: enabledToggle.checked,
-                    mode: 'hybrid' as any,
+                    mode: PanningMode.Hybrid,
                     graphPositionSettings: {
-                        curve: 'sigmoid' as any,
+                        curve: PanningCurve.Sigmoid,
                         intensity: 0.7,
                         smoothingFactor: 0.5,
                         updateThrottleMs: 100
@@ -4798,7 +4799,7 @@ export class SonicGraphView extends ItemView {
             }
         });
         modeSelect.addEventListener('change', async () => {
-            settings.mode = modeSelect.value as any;
+            settings.mode = modeSelect.value as PanningMode;
             await this.plugin.saveSettings();
         });
 
@@ -4825,8 +4826,10 @@ export class SonicGraphView extends ItemView {
         intensitySlider.value = settings.graphPositionSettings.intensity.toString();
         intensitySlider.addEventListener('input', async () => {
             settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
-            intensityItem.querySelector('.sonic-graph-setting-description')!.textContent =
-                `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+            const descriptionEl = intensityItem.querySelector('.sonic-graph-setting-description');
+            if (descriptionEl) {
+                descriptionEl.textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+            }
             await this.plugin.saveSettings();
         });
 
@@ -4860,7 +4863,7 @@ export class SonicGraphView extends ItemView {
             }
         });
         curveSelect.addEventListener('change', async () => {
-            settings.graphPositionSettings.curve = curveSelect.value as any;
+            settings.graphPositionSettings.curve = curveSelect.value as PanningCurve;
             await this.plugin.saveSettings();
         });
 
@@ -5801,8 +5804,10 @@ export class SonicGraphView extends ItemView {
             
             overlay.appendChild(optionEl);
         });
-        
-        searchInput.parentElement!.appendChild(overlay);
+
+        if (searchInput.parentElement) {
+            searchInput.parentElement.appendChild(overlay);
+        }
         
         // Remove overlay when clicking outside
         setTimeout(() => {
@@ -5865,8 +5870,9 @@ export class SonicGraphView extends ItemView {
      */
     private updateGroupProperty(groupIndex: number, property: string, value: string): void {
         const currentSettings = this.getSonicGraphSettings();
-        (currentSettings.layout.pathBasedGrouping.groups[groupIndex] as any)[property] = value;
-        
+        // Dynamic property access for group settings updates
+        (currentSettings.layout.pathBasedGrouping.groups[groupIndex] as DynamicSettings)[property] = value;
+
         this.plugin.settings.sonicGraphSettings = currentSettings;
         this.plugin.saveSettings();
         
@@ -7176,7 +7182,13 @@ export class SonicGraphView extends ItemView {
                     compressionEnabled: true
                 },
                 currentPreset: 'Default',
-                customPresets: [] as any[],
+                customPresets: [] as Array<{
+                    name: string;
+                    description: string;
+                    author?: string;
+                    version?: string;
+                    mappings: Record<string, unknown>;
+                }>,
                 advancedFeatures: {
                     connectionChords: false,
                     contextualHarmony: false,
@@ -7893,10 +7905,12 @@ export class SonicGraphView extends ItemView {
         this.pendingSettingsUpdates.forEach((value, key) => {
             if (key.startsWith('layout.')) {
                 const layoutKey = key.substring(7);
-                (currentSettings.layout as any)[layoutKey] = value;
+                // Dynamic property access for layout settings updates
+                (currentSettings.layout as DynamicSettings)[layoutKey] = value;
                 needsRendererUpdate = true;
             } else {
-                (currentSettings as any)[key] = value;
+                // Dynamic property access for settings updates
+                (currentSettings as DynamicSettings)[key] = value;
             }
         });
         
@@ -7918,7 +7932,8 @@ export class SonicGraphView extends ItemView {
     private executeWhenIdle<T>(callback: () => T): Promise<T> {
         return new Promise((resolve) => {
             if ('requestIdleCallback' in window) {
-                (window as any).requestIdleCallback(() => resolve(callback()));
+                // Use requestIdleCallback if available (defined in extended types)
+                window.requestIdleCallback(() => resolve(callback()));
             } else {
                 setTimeout(() => resolve(callback()), 0);
             }

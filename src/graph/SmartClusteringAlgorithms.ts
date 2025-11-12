@@ -516,7 +516,7 @@ export class SmartClusteringAlgorithms {
         if (!clusterMap.has(clusterId)) {
           clusterMap.set(clusterId, []);
         }
-        clusterMap.get(clusterId)!.push(node);
+        const cluster = clusterMap.get(clusterId); if (cluster) cluster.push(node);
       } else {
         orphanNodes.push(node);
       }

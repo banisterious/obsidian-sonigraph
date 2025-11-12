@@ -387,7 +387,14 @@ export class ObsidianMetadataMapper {
         }
 
         // Analyze heading levels for rhythm complexity
-        const levels = headings!.map(h => h.level);
+        if (!headings || headings.length === 0) {
+            return {
+                tempo: 1.0,
+                pattern: 'simple',
+                emphasis: 0.3
+            };
+        }
+        const levels = headings.map(h => h.level);
         const uniqueLevels = new Set(levels).size;
         const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
 

@@ -219,7 +219,7 @@ export class StaffRenderer implements VisualizationRenderer {
 
         chordGroups.forEach(group => {
             const isChord = group.length > 1;
-            const x = (group[0].timestamp / timelineDuration) * this.canvas!.width;
+            const x = (group[0].timestamp / timelineDuration) * this.canvas.width;
 
             // Check if any note in group is currently playing
             const noteEndTime = group[0].timestamp + group[0].duration;
@@ -235,29 +235,29 @@ export class StaffRenderer implements VisualizationRenderer {
                 const color = layerColors[event.layer] || '#888888';
 
                 // Draw note head (filled circle)
-                this.ctx!.fillStyle = isPlaying ? this.adjustBrightness(color, 40) : color;
-                this.ctx!.beginPath();
-                this.ctx!.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
-                this.ctx!.fill();
+                this.ctx.fillStyle = isPlaying ? this.adjustBrightness(color, 40) : color;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
+                this.ctx.fill();
 
                 // Add glow effect if playing
                 if (isPlaying) {
-                    this.ctx!.shadowColor = color;
-                    this.ctx!.shadowBlur = 10;
-                    this.ctx!.beginPath();
-                    this.ctx!.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
-                    this.ctx!.fill();
-                    this.ctx!.shadowBlur = 0;
+                    this.ctx.shadowColor = color;
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.shadowBlur = 0;
                 }
 
                 // Draw note stem (for quarter notes)
                 if (event.duration >= 0.25) {
-                    this.ctx!.strokeStyle = color;
-                    this.ctx!.lineWidth = 2;
-                    this.ctx!.beginPath();
-                    this.ctx!.moveTo(x + this.staffConfig.noteSize / 2, y);
-                    this.ctx!.lineTo(x + this.staffConfig.noteSize / 2, y - 30);
-                    this.ctx!.stroke();
+                    this.ctx.strokeStyle = color;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x + this.staffConfig.noteSize / 2, y);
+                    this.ctx.lineTo(x + this.staffConfig.noteSize / 2, y - 30);
+                    this.ctx.stroke();
                 }
             }
         });
@@ -326,19 +326,19 @@ export class StaffRenderer implements VisualizationRenderer {
 
         // Draw all note heads
         notePositions.forEach(({ y, color, note }) => {
-            this.ctx!.fillStyle = isPlaying ? this.adjustBrightness(color, 40) : color;
-            this.ctx!.beginPath();
-            this.ctx!.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
-            this.ctx!.fill();
+            this.ctx.fillStyle = isPlaying ? this.adjustBrightness(color, 40) : color;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
+            this.ctx.fill();
 
             // Add glow effect if playing
             if (isPlaying) {
-                this.ctx!.shadowColor = color;
-                this.ctx!.shadowBlur = 8;
-                this.ctx!.beginPath();
-                this.ctx!.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
-                this.ctx!.fill();
-                this.ctx!.shadowBlur = 0;
+                this.ctx.shadowColor = color;
+                this.ctx.shadowBlur = 8;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.staffConfig.noteSize / 2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
             }
         });
 
@@ -346,23 +346,23 @@ export class StaffRenderer implements VisualizationRenderer {
         if (sortedNotes[0].duration >= 0.25) {
             // Use the color of the most prominent layer
             const stemColor = notePositions[0].color;
-            this.ctx!.strokeStyle = isPlaying ? this.adjustBrightness(stemColor, 40) : stemColor;
-            this.ctx!.lineWidth = 2;
-            this.ctx!.beginPath();
-            this.ctx!.moveTo(x + this.staffConfig.noteSize / 2, lowestY);
-            this.ctx!.lineTo(x + this.staffConfig.noteSize / 2, highestY - 30);
-            this.ctx!.stroke();
+            this.ctx.strokeStyle = isPlaying ? this.adjustBrightness(stemColor, 40) : stemColor;
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x + this.staffConfig.noteSize / 2, lowestY);
+            this.ctx.lineTo(x + this.staffConfig.noteSize / 2, highestY - 30);
+            this.ctx.stroke();
         }
 
         // Optionally draw chord symbol above
         if (this.config.showLabels && notes.length >= 2) {
             const chordType = this.detectChordType(sortedNotes);
             if (chordType) {
-                this.ctx!.fillStyle = '#cccccc';
-                this.ctx!.font = '12px sans-serif';
-                this.ctx!.textAlign = 'center';
-                this.ctx!.fillText(chordType, x, highestY - 45);
-                this.ctx!.textAlign = 'left'; // Reset
+                this.ctx.fillStyle = '#cccccc';
+                this.ctx.font = '12px sans-serif';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(chordType, x, highestY - 45);
+                this.ctx.textAlign = 'left'; // Reset
             }
         }
     }

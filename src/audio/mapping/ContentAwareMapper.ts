@@ -1145,9 +1145,9 @@ export class ContentAwareMapper {
         }
 
         // Add folder hierarchy candidate if available
-        if (folderResult && folderResult.primaryFamily) {
-            const folderInstrument = this.folderHierarchyMapper!.selectInstrumentFromFamily(
-                folderResult.primaryFamily, 
+        if (folderResult && folderResult.primaryFamily && this.folderHierarchyMapper) {
+            const folderInstrument = this.folderHierarchyMapper.selectInstrumentFromFamily(
+                folderResult.primaryFamily,
                 folderResult
             );
             const folderConfig = this.availableInstruments.get(folderInstrument) || this.getDefaultInstrument();

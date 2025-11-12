@@ -180,7 +180,6 @@ class LoggerFactory {
 		if (config && config.logLevel) {
 			LoggerFactory.setLogLevel(config.logLevel);
 		}
-		console.log('Logger factory initialized');
 	}
 }
 

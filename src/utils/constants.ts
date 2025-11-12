@@ -3982,7 +3982,7 @@ export function migrateToEnhancedRouting(settings: SonigraphSettings): Sonigraph
 		sends: new Map(),
 		returns: new Map(),
 		groups: new Map(),
-		masterEffects: DEFAULT_SETTINGS.enhancedRouting!.routingMatrix.masterEffects,
+		masterEffects: DEFAULT_SETTINGS.enhancedRouting?.routingMatrix?.masterEffects || [],
 		automations: []
 	};
 

@@ -413,7 +413,7 @@ export class HubCentralityAnalyzer {
 
       // Update neighbors
       const neighbors = adjacencyList.get(minNode) || new Set();
-      const currentDistance = distances.get(minNode)!.distance;
+      const minNodeDist = distances.get(minNode); if (!minNodeDist) continue; const currentDistance = minNodeDist.distance;
 
       for (const neighborId of neighbors) {
         if (!unvisited.has(neighborId)) continue;

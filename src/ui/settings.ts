@@ -141,9 +141,11 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					.addOption('manual', 'Manual Control')
 					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode)
 					.onChange(async (value: 'automatic' | 'performance' | 'manual') => {
-						this.plugin.settings.sonicGraphSettings!.adaptiveDetail.mode = value;
-						await this.plugin.saveSettings();
-						logger.info('settings-change', 'Adaptive detail mode changed', { mode: value });
+						if (this.plugin.settings.sonicGraphSettings) {
+							this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode = value;
+							await this.plugin.saveSettings();
+							logger.info('settings-change', 'Adaptive detail mode changed', { mode: value });
+						}
 					})
 				);
 
@@ -154,7 +156,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.addToggle(toggle => toggle
 					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels)
 					.onChange(async (value) => {
-						this.plugin.settings.sonicGraphSettings!.adaptiveDetail.overrides.alwaysShowLabels = value;
+						if (this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.alwaysShowLabels = value;
+					}
 						await this.plugin.saveSettings();
 						logger.info('settings-change', 'Always show labels override changed', { enabled: value });
 					})
@@ -169,7 +173,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes === -1 ? 0 : this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						this.plugin.settings.sonicGraphSettings!.adaptiveDetail.overrides.maximumVisibleNodes = value === 0 ? -1 : value;
+						if (this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings.adaptiveDetail.overrides.maximumVisibleNodes = value === 0 ? -1 : value;
+					}
 						await this.plugin.saveSettings();
 						logger.info('settings-change', 'Maximum visible nodes changed', { maxNodes: value === 0 ? 'unlimited' : value });
 					})
@@ -262,7 +268,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					.addOption('hybrid', 'Hybrid (Recommended)')
 					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.algorithm)
 					.onChange(async (value: 'louvain' | 'modularity' | 'hybrid') => {
-						this.plugin.settings.sonicGraphSettings!.smartClustering.algorithm = value;
+						if (this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings.smartClustering.algorithm = value;
+					}
 						await this.plugin.saveSettings();
 						logger.info('settings-change', 'Clustering algorithm changed', { algorithm: value });
 					})
@@ -277,7 +285,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.clustering.minClusterSize)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						this.plugin.settings.sonicGraphSettings!.smartClustering.clustering.minClusterSize = value;
+						if (this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings.smartClustering.clustering.minClusterSize = value;
+					}
 						await this.plugin.saveSettings();
 						logger.info('settings-change', 'Minimum cluster size changed', { minSize: value });
 					})
@@ -292,7 +302,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.clustering.maxClusters)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						this.plugin.settings.sonicGraphSettings!.smartClustering.clustering.maxClusters = value;
+						if (this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings.smartClustering.clustering.maxClusters = value;
+					}
 						await this.plugin.saveSettings();
 						logger.info('settings-change', 'Maximum clusters changed', { maxClusters: value });
 					})
@@ -305,7 +317,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.addToggle(toggle => toggle
 					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.integration.respectExistingGroups)
 					.onChange(async (value) => {
-						this.plugin.settings.sonicGraphSettings!.smartClustering.integration.respectExistingGroups = value;
+						if (this.plugin.settings.sonicGraphSettings) {
+						this.plugin.settings.sonicGraphSettings.smartClustering.integration.respectExistingGroups = value;
+					}
 						await this.plugin.saveSettings();
 						logger.info('settings-change', 'Respect existing groups changed', { respectGroups: value });
 					})

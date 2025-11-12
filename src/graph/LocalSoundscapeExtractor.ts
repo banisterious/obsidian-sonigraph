@@ -222,7 +222,7 @@ export class LocalSoundscapeExtractor {
 					if (!nodesByDepth.has(depth + 1)) {
 						nodesByDepth.set(depth + 1, []);
 					}
-					nodesByDepth.get(depth + 1)!.push(node);
+					const depthNodes = nodesByDepth.get(depth + 1); if (depthNodes) depthNodes.push(node);
 
 					// Add to queue for further traversal
 					queue.push({
@@ -290,7 +290,7 @@ export class LocalSoundscapeExtractor {
 						if (!nodesByDepth.has(depth + 1)) {
 							nodesByDepth.set(depth + 1, []);
 						}
-						nodesByDepth.get(depth + 1)!.push(node);
+						const depthNodes = nodesByDepth.get(depth + 1); if (depthNodes) depthNodes.push(node);
 
 						// Add to queue for further traversal
 						queue.push({
@@ -656,7 +656,7 @@ export class LocalSoundscapeExtractor {
 			if (!clusterMap.has(folder)) {
 				clusterMap.set(folder, []);
 			}
-			clusterMap.get(folder)!.push(node.id);
+			const folderCluster = clusterMap.get(folder); if (folderCluster) folderCluster.push(node.id);
 			node.cluster = folder;
 		});
 
@@ -707,7 +707,7 @@ export class LocalSoundscapeExtractor {
 			if (!clusterMap.has(primaryTag)) {
 				clusterMap.set(primaryTag, []);
 			}
-			clusterMap.get(primaryTag)!.push(node.id);
+			const tagCluster = clusterMap.get(primaryTag); if (tagCluster) tagCluster.push(node.id);
 			node.cluster = primaryTag;
 		});
 
@@ -738,7 +738,7 @@ export class LocalSoundscapeExtractor {
 			if (!clusterMap.has(node.depth)) {
 				clusterMap.set(node.depth, []);
 			}
-			clusterMap.get(node.depth)!.push(node.id);
+			const depthCluster = clusterMap.get(node.depth); if (depthCluster) depthCluster.push(node.id);
 			node.cluster = `depth-${node.depth}`;
 		});
 
@@ -815,7 +815,7 @@ export class LocalSoundscapeExtractor {
 			if (!clusterMap.has(clusterId)) {
 				clusterMap.set(clusterId, []);
 			}
-			clusterMap.get(clusterId)!.push(nodeId);
+			const communityCluster = clusterMap.get(clusterId); if (communityCluster) communityCluster.push(nodeId);
 			const node = nodes.find(n => n.id === nodeId);
 			if (node) node.cluster = `community-${clusterId}`;
 		});

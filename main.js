@@ -161,7 +161,6 @@ var init_logging = __esm({
         if (config && config.logLevel) {
           _LoggerFactory.setLogLevel(config.logLevel);
         }
-        console.log("Logger factory initialized");
       }
     };
     LoggerFactory = _LoggerFactory;
@@ -315,7 +314,7 @@ function createDefaultInstrumentGroup(id2, name, instruments) {
   };
 }
 function migrateToEnhancedRouting(settings) {
-  var _a;
+  var _a, _b, _c;
   if ((_a = settings.enhancedRouting) == null ? void 0 : _a.enabled) {
     return settings;
   }
@@ -328,7 +327,7 @@ function migrateToEnhancedRouting(settings) {
     sends: /* @__PURE__ */ new Map(),
     returns: /* @__PURE__ */ new Map(),
     groups: /* @__PURE__ */ new Map(),
-    masterEffects: DEFAULT_SETTINGS.enhancedRouting.routingMatrix.masterEffects,
+    masterEffects: ((_c = (_b = DEFAULT_SETTINGS.enhancedRouting) == null ? void 0 : _b.routingMatrix) == null ? void 0 : _c.masterEffects) || [],
     automations: []
   };
   return {
@@ -10530,6 +10529,8 @@ var init_GraphDemoModal = __esm({
         sortedNodes.forEach((node, index2) => {
           setTimeout(() => {
             this.visibleNodes.add(node.id);
+            if (!this.svg)
+              return;
             this.svg.selectAll(".node").filter((d) => d.id === node.id).transition().duration(500).style("opacity", 1);
             this.updateVisibleLinks();
             this.playNodeSound(node);
@@ -10547,6 +10548,8 @@ var init_GraphDemoModal = __esm({
             const linkKey = `${sourceId}-${targetId}`;
             if (!this.visibleLinks.has(linkKey)) {
               this.visibleLinks.add(linkKey);
+              if (!this.svg)
+                return;
               this.svg.selectAll(".links line").filter((d) => {
                 const dSourceId = typeof d.source === "string" ? d.source : d.source.id;
                 const dTargetId = typeof d.target === "string" ? d.target : d.target.id;
@@ -10897,7 +10900,10 @@ var init_HubCentralityAnalyzer = __esm({
             break;
           unvisited.delete(minNode);
           const neighbors = adjacencyList.get(minNode) || /* @__PURE__ */ new Set();
-          const currentDistance = distances.get(minNode).distance;
+          const minNodeDist = distances.get(minNode);
+          if (!minNodeDist)
+            continue;
+          const currentDistance = minNodeDist.distance;
           for (const neighborId of neighbors) {
             if (!unvisited.has(neighborId))
               continue;
@@ -11323,7 +11329,9 @@ var init_GraphDataExtractor = __esm({
             if (!tagIndex.has(tag)) {
               tagIndex.set(tag, []);
             }
-            tagIndex.get(tag).push(node);
+            const tagNodes = tagIndex.get(tag);
+            if (tagNodes)
+              tagNodes.push(node);
           }
         }
         let tagLinksCreated = 0;
@@ -11365,7 +11373,9 @@ var init_GraphDataExtractor = __esm({
           if (!folderIndex.has(folderPath)) {
             folderIndex.set(folderPath, []);
           }
-          folderIndex.get(folderPath).push(node);
+          const folderNodes = folderIndex.get(folderPath);
+          if (folderNodes)
+            folderNodes.push(node);
         }
         let folderLinksCreated = 0;
         const MAX_FOLDER_LINKS = 200;
@@ -12221,7 +12231,9 @@ var init_SmartClusteringAlgorithms = __esm({
             if (!clusterMap.has(clusterId)) {
               clusterMap.set(clusterId, []);
             }
-            clusterMap.get(clusterId).push(node);
+            const cluster = clusterMap.get(clusterId);
+            if (cluster)
+              cluster.push(node);
           } else {
             orphanNodes.push(node);
           }
@@ -17948,6 +17960,8 @@ var init_FreesoundSearchModal = __esm({
           emptyState.createEl("span", { text: "Try different search terms or adjust your filters" });
           return;
         }
+        if (!this.resultsContainer)
+          return;
         this.searchResults.forEach((result) => {
           const resultItem = this.resultsContainer.createDiv({ cls: "freesound-result-item" });
           const thumbnail = resultItem.createDiv({ cls: "freesound-result-thumbnail" });
@@ -18709,6 +18723,8 @@ var init_SampleTableBrowser = __esm({
         });
         const suggestionsEl = inputContainer.createDiv({ cls: "sonigraph-tag-suggestions" });
         this.tagInput.addEventListener("input", () => {
+          if (!this.tagInput)
+            return;
           const value = this.tagInput.value.toLowerCase().trim();
           suggestionsEl.empty();
           if (value.length > 0) {
@@ -18720,14 +18736,15 @@ var init_SampleTableBrowser = __esm({
               });
               suggestion.addEventListener("click", () => {
                 this.addTag(tag);
-                this.tagInput.value = "";
+                if (this.tagInput)
+                  this.tagInput.value = "";
                 suggestionsEl.empty();
               });
             });
           }
         });
         this.tagInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
+          if (e.key === "Enter" && this.tagInput) {
             e.preventDefault();
             const value = this.tagInput.value.trim().toLowerCase();
             if (value) {
@@ -18810,6 +18827,8 @@ var init_SampleTableBrowser = __esm({
           return;
         }
         this.currentTags.forEach((tag) => {
+          if (!this.tagListEl)
+            return;
           const tagEl = this.tagListEl.createDiv({ cls: "sonigraph-tag-editor-item" });
           tagEl.createSpan({ text: tag, cls: "sonigraph-tag-editor-item-text" });
           const removeBtn = tagEl.createEl("button", {
@@ -19102,7 +19121,9 @@ var init_LocalSoundscapeSettings = __esm({
               (slider) => {
                 var _a2;
                 return slider.setLimits(0, 100, 5).setValue((((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.sensitivity) || 0.5) * 100).setDynamicTooltip().onChange(async (value) => {
-                  contextAware.proseStructure.sensitivity = value / 100;
+                  if (contextAware.proseStructure) {
+                    contextAware.proseStructure.sensitivity = value / 100;
+                  }
                   await this.plugin.saveSettings();
                   logger23.info("context-aware", `Prose sensitivity: ${value}%`);
                 });
@@ -19112,7 +19133,9 @@ var init_LocalSoundscapeSettings = __esm({
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectPitch) !== false).onChange(async (value) => {
-                  contextAware.proseStructure.affectPitch = value;
+                  if (contextAware.proseStructure) {
+                    contextAware.proseStructure.affectPitch = value;
+                  }
                   await this.plugin.saveSettings();
                   logger23.info("context-aware", `Prose affect pitch: ${value}`);
                 });
@@ -19122,7 +19145,9 @@ var init_LocalSoundscapeSettings = __esm({
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectDuration) !== false).onChange(async (value) => {
-                  contextAware.proseStructure.affectDuration = value;
+                  if (contextAware.proseStructure) {
+                    contextAware.proseStructure.affectDuration = value;
+                  }
                   await this.plugin.saveSettings();
                   logger23.info("context-aware", `Prose affect duration: ${value}`);
                 });
@@ -19132,7 +19157,9 @@ var init_LocalSoundscapeSettings = __esm({
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectVelocity) !== false).onChange(async (value) => {
-                  contextAware.proseStructure.affectVelocity = value;
+                  if (contextAware.proseStructure) {
+                    contextAware.proseStructure.affectVelocity = value;
+                  }
                   await this.plugin.saveSettings();
                   logger23.info("context-aware", `Prose affect velocity: ${value}`);
                 });
@@ -19142,7 +19169,9 @@ var init_LocalSoundscapeSettings = __esm({
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectTimbre) || false).onChange(async (value) => {
-                  contextAware.proseStructure.affectTimbre = value;
+                  if (contextAware.proseStructure) {
+                    contextAware.proseStructure.affectTimbre = value;
+                  }
                   await this.plugin.saveSettings();
                   logger23.info("context-aware", `Prose affect timbre: ${value}`);
                 });
@@ -19228,7 +19257,9 @@ var init_LocalSoundscapeSettings = __esm({
             const rootNotes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
             rootNotes.forEach((note) => dropdown.addOption(note, note));
             return dropdown.setValue(((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.rootNote) || "C").onChange(async (value) => {
-              enhancements.scaleQuantization.rootNote = value;
+              if (enhancements.scaleQuantization) {
+                enhancements.scaleQuantization.rootNote = value;
+              }
               await this.plugin.saveSettings();
               logger23.info("musical-enhancements", `Root note: ${value}`);
             });
@@ -19250,7 +19281,9 @@ var init_LocalSoundscapeSettings = __esm({
             ];
             scales.forEach((scale) => dropdown.addOption(scale.value, scale.label));
             return dropdown.setValue(((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.scale) || "major").onChange(async (value) => {
-              enhancements.scaleQuantization.scale = value;
+              if (enhancements.scaleQuantization) {
+                enhancements.scaleQuantization.scale = value;
+              }
               await this.plugin.saveSettings();
               logger23.info("musical-enhancements", `Scale type: ${value}`);
             });
@@ -19259,7 +19292,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.quantizationStrength) || 0.8) * 100).setDynamicTooltip().onChange(async (value) => {
-                enhancements.scaleQuantization.quantizationStrength = value / 100;
+                if (enhancements.scaleQuantization) {
+                  enhancements.scaleQuantization.quantizationStrength = value / 100;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Quantization strength: ${value}%`);
               });
@@ -19294,7 +19329,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 10).setValue((((_a2 = enhancements.chordVoicing) == null ? void 0 : _a2.voicingDensity) || 0.5) * 100).setDynamicTooltip().onChange(async (value) => {
-                enhancements.chordVoicing.voicingDensity = value / 100;
+                if (enhancements.chordVoicing) {
+                  enhancements.chordVoicing.voicingDensity = value / 100;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Voicing density: ${value}%`);
               });
@@ -19318,7 +19355,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(40, 200, 5).setValue(((_a2 = enhancements.rhythmicPatterns) == null ? void 0 : _a2.tempo) || 60).setDynamicTooltip().onChange(async (value) => {
-                enhancements.rhythmicPatterns.tempo = value;
+                if (enhancements.rhythmicPatterns) {
+                  enhancements.rhythmicPatterns.tempo = value;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Tempo: ${value} BPM`);
               });
@@ -19352,7 +19391,9 @@ var init_LocalSoundscapeSettings = __esm({
             ];
             shapes.forEach((shape) => dropdown.addOption(shape.value, shape.label));
             return dropdown.setValue(((_a2 = enhancements.tensionTracking) == null ? void 0 : _a2.arcShape) || "rise-fall").onChange(async (value) => {
-              enhancements.tensionTracking.arcShape = value;
+              if (enhancements.tensionTracking) {
+                enhancements.tensionTracking.arcShape = value;
+              }
               await this.plugin.saveSettings();
               logger23.info("musical-enhancements", `Arc shape: ${value}`);
             });
@@ -19362,7 +19403,9 @@ var init_LocalSoundscapeSettings = __esm({
               (slider) => {
                 var _a2;
                 return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.tensionTracking) == null ? void 0 : _a2.peakPosition) || 0.6) * 100).setDynamicTooltip().onChange(async (value) => {
-                  enhancements.tensionTracking.peakPosition = value / 100;
+                  if (enhancements.tensionTracking) {
+                    enhancements.tensionTracking.peakPosition = value / 100;
+                  }
                   await this.plugin.saveSettings();
                   logger23.info("musical-enhancements", `Peak position: ${value}%`);
                 });
@@ -19390,7 +19433,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.dynamicPanning) == null ? void 0 : _a2.smoothingFactor) || 0.3) * 100).setDynamicTooltip().onChange(async (value) => {
-                enhancements.dynamicPanning.smoothingFactor = value / 100;
+                if (enhancements.dynamicPanning) {
+                  enhancements.dynamicPanning.smoothingFactor = value / 100;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Smoothing factor: ${value}%`);
               });
@@ -19400,7 +19445,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(0.5, 5, 0.5).setValue(((_a2 = enhancements.dynamicPanning) == null ? void 0 : _a2.animationSpeed) || 2).setDynamicTooltip().onChange(async (value) => {
-                enhancements.dynamicPanning.animationSpeed = value;
+                if (enhancements.dynamicPanning) {
+                  enhancements.dynamicPanning.animationSpeed = value;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Animation speed: ${value}x`);
               });
@@ -19438,7 +19485,9 @@ var init_LocalSoundscapeSettings = __esm({
             ];
             patterns.forEach((pattern) => dropdown.addOption(pattern.value, pattern.label));
             return dropdown.setValue(((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.pattern) || "call-response").onChange(async (value) => {
-              enhancements.turnTaking.pattern = value;
+              if (enhancements.turnTaking) {
+                enhancements.turnTaking.pattern = value;
+              }
               await this.plugin.saveSettings();
               logger23.info("musical-enhancements", `Turn-taking pattern: ${value}`);
             });
@@ -19447,7 +19496,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(1, 16, 1).setValue(((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.turnLength) || 4).setDynamicTooltip().onChange(async (value) => {
-                enhancements.turnTaking.turnLength = value;
+                if (enhancements.turnTaking) {
+                  enhancements.turnTaking.turnLength = value;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Turn length: ${value} beats`);
               });
@@ -19457,7 +19508,9 @@ var init_LocalSoundscapeSettings = __esm({
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.accompanimentReduction) || 0.4) * 100).setDynamicTooltip().onChange(async (value) => {
-                enhancements.turnTaking.accompanimentReduction = value / 100;
+                if (enhancements.turnTaking) {
+                  enhancements.turnTaking.accompanimentReduction = value / 100;
+                }
                 await this.plugin.saveSettings();
                 logger23.info("musical-enhancements", `Accompaniment reduction: ${value}%`);
               });
@@ -19564,6 +19617,7 @@ var init_LocalSoundscapeLayersSettings = __esm({
        * Section 2: Layer Controls
        */
       renderLayerControlsSection(container) {
+        var _a;
         const card = new MaterialCard({
           title: "Layer settings",
           iconName: "sliders-horizontal",
@@ -19571,6 +19625,8 @@ var init_LocalSoundscapeLayersSettings = __esm({
           elevation: 1
         });
         const content = card.getContent();
+        if (!((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.continuousLayers))
+          return;
         const layers = this.plugin.settings.localSoundscape.continuousLayers;
         new import_obsidian13.Setting(content).setName("Overall intensity").setDesc("How prominent the layers are (0% = subtle, 100% = bold)").addSlider(
           (slider) => slider.setLimits(0, 100, 5).setValue((layers.intensity || 0.5) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -20469,10 +20525,12 @@ var init_FreesoundSampleLoader = __esm({
               if (!genreMap.has(genre)) {
                 genreMap.set(genre, []);
               }
-              genreMap.get(genre).push({
-                ...sample,
-                genre
-              });
+              const genreSamples = genreMap.get(genre);
+              if (genreSamples)
+                genreSamples.push({
+                  ...sample,
+                  genre
+                });
             });
           });
           this.sampleLibrary = genreMap;
@@ -23979,13 +24037,14 @@ var init_control_panel = __esm({
           const instrumentKey = instrument;
           const settings = this.plugin.settings.instruments[instrumentKey];
           if (settings && settings.effects) {
+            const effectsMap = settings.effects;
             if (!settings.effects[effectType]) {
-              settings.effects[effectType] = {
+              effectsMap[effectType] = {
                 enabled,
                 params: this.getDefaultEffectParams(effectType)
               };
             } else {
-              settings.effects[effectType].enabled = enabled;
+              effectsMap[effectType].enabled = enabled;
             }
           }
         });
@@ -23998,13 +24057,14 @@ var init_control_panel = __esm({
           const instrumentKey = instrument;
           const settings = this.plugin.settings.instruments[instrumentKey];
           if (settings && settings.effects) {
-            if (!settings.effects[effectType]) {
-              settings.effects[effectType] = {
+            const effectsMap = settings.effects;
+            if (!effectsMap[effectType]) {
+              effectsMap[effectType] = {
                 enabled: true,
                 params: this.getDefaultEffectParams(effectType)
               };
             }
-            settings.effects[effectType].params[parameter] = value;
+            effectsMap[effectType].params[parameter] = value;
           }
         });
         this.plugin.saveSettings();
@@ -58231,10 +58291,14 @@ var init_MusicalGenreEngine = __esm({
           return;
         }
         try {
+          if (!this.primarySynth)
+            return;
           if (Array.isArray(notes)) {
             notes.forEach((note) => {
-              this.primarySynth.triggerAttackRelease(note, duration);
-              this.activeNotes.add(note);
+              if (this.primarySynth) {
+                this.primarySynth.triggerAttackRelease(note, duration);
+                this.activeNotes.add(note);
+              }
             });
             this.activeVoices += notes.length;
           } else {
@@ -61961,7 +62025,9 @@ var init_ExportModal = __esm({
           metadata: this.config.metadata
         };
         if (!this.plugin.settings.exportSettings) {
-          this.plugin.settings.exportSettings = {};
+          this.plugin.settings.exportSettings = {
+            exportPresets: []
+          };
         }
         if (!this.plugin.settings.exportSettings.exportPresets) {
           this.plugin.settings.exportSettings.exportPresets = [];
@@ -62153,6 +62219,8 @@ var init_ExportModal = __esm({
         header.addClass("clickable");
         this.metadataContainer = section.createDiv("sonigraph-export-metadata-content");
         header.addEventListener("click", () => {
+          if (!this.metadataContainer)
+            return;
           const isVisible = this.metadataContainer.hasClass("sonigraph-export-metadata-content--visible");
           if (isVisible) {
             this.metadataContainer.removeClass("sonigraph-export-metadata-content--visible");
@@ -62267,7 +62335,9 @@ var init_ExportModal = __esm({
             metadata: this.config.metadata
           };
           if (!this.plugin.settings.exportSettings) {
-            this.plugin.settings.exportSettings = {};
+            this.plugin.settings.exportSettings = {
+              exportPresets: []
+            };
           }
           if (this.config.metadata && Object.keys(this.config.metadata).length > 0) {
             this.plugin.settings.exportSettings.lastMetadata = this.config.metadata;
@@ -66430,6 +66500,13 @@ var ObsidianMetadataMapper = class {
         emphasis: 0.3
       };
     }
+    if (!headings || headings.length === 0) {
+      return {
+        tempo: 1,
+        pattern: "simple",
+        emphasis: 0.3
+      };
+    }
     const levels = headings.map((h) => h.level);
     const uniqueLevels = new Set(levels).size;
     const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
@@ -67458,7 +67535,9 @@ var VaultMappingOptimizer = class {
       if (!familyGroups.has(family)) {
         familyGroups.set(family, []);
       }
-      familyGroups.get(family).push(instrument);
+      const familyInstruments = familyGroups.get(family);
+      if (familyInstruments)
+        familyInstruments.push(instrument);
     }
     for (const [family, instruments] of familyGroups) {
       if (instruments.length > 1) {
@@ -72941,6 +73020,8 @@ var DepthBasedMapper = class {
     });
     mappings.forEach((mapping, index2) => {
       const position = mapping.timing / totalDuration;
+      if (!this.tensionArcController)
+        return;
       const modulation = this.tensionArcController.getModulation(position);
       mapping.pitch += Math.round(modulation.pitchOffset);
       mapping.velocity *= modulation.velocityMultiplier;
@@ -73168,6 +73249,9 @@ var DepthBasedMapper = class {
    * Applies context-aware modifiers if enabled
    */
   calculatePitchOffset(node, range2, contextModifiers) {
+    if (!this.config.mappingWeights) {
+      throw new Error("Mapping weights not configured");
+    }
     const weights = this.config.mappingWeights.pitch;
     const wordCountFactor = Math.min(node.wordCount / 1e3, 1);
     const charCountFactor = node.charCount ? Math.min(node.charCount / 5e3, 1) : 0;
@@ -73307,6 +73391,9 @@ var DepthBasedMapper = class {
   calculateDuration(node) {
     const minDuration = 1;
     const maxDuration = 3;
+    if (!this.config.mappingWeights) {
+      throw new Error("Mapping weights not configured");
+    }
     const weights = this.config.mappingWeights.duration;
     const wordCountFactor = Math.min(node.wordCount / 500, 1);
     const charCountFactor = node.charCount ? Math.min(node.charCount / 2500, 1) : 0;
@@ -73322,6 +73409,9 @@ var DepthBasedMapper = class {
    * Applies context-aware multiplier if enabled
    */
   calculateVelocity(node, contextModifiers) {
+    if (!this.config.mappingWeights) {
+      throw new Error("Mapping weights not configured");
+    }
     const weights = this.config.mappingWeights.velocity;
     const now3 = Date.now();
     const daysSinceModified = (now3 - node.modified) / (1e3 * 60 * 60 * 24);
@@ -78368,7 +78458,9 @@ var SpatialAudioManager = class {
     if (!this.eventHandlers.has(type2)) {
       this.eventHandlers.set(type2, []);
     }
-    this.eventHandlers.get(type2).push(handler2);
+    const handlers = this.eventHandlers.get(type2);
+    if (handlers)
+      handlers.push(handler2);
   }
   removeEventListener(type2, handler2) {
     const handlers = this.eventHandlers.get(type2);
@@ -79975,6 +80067,8 @@ var PianoRollRenderer = class {
       cls: "piano-roll-legend"
     });
     Object.entries(LAYER_COLORS).forEach(([layer, color2]) => {
+      if (!this.legendContainer)
+        return;
       const legendItem = this.legendContainer.createDiv({
         cls: "piano-roll-legend-item"
       });
@@ -81216,6 +81310,7 @@ var NoteVisualizationManager = class {
 };
 
 // src/ui/SonicGraphView.ts
+init_types();
 var logger78 = getLogger("SonicGraphView");
 var VIEW_TYPE_SONIC_GRAPH = "sonic-graph-view";
 var SonicGraphView = class extends import_obsidian28.ItemView {
@@ -82123,9 +82218,11 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         const layoutSettings = this.getSonicGraphSettings().layout;
         logger78.info("sonic-graph-layout", "Applying layout settings to renderer", layoutSettings);
         await this.executeWhenIdle(() => {
-          this.graphRenderer.updateLayoutSettings(layoutSettings);
-          this.graphRenderer.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
-          this.graphRenderer.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
+          if (this.graphRenderer) {
+            this.graphRenderer.updateLayoutSettings(layoutSettings);
+            this.graphRenderer.updateContentAwareSettings(this.getSonicGraphSettings().contentAwarePositioning);
+            this.graphRenderer.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
+          }
         });
         logger78.info("sonic-graph-layout", "Layout settings applied successfully");
       } catch (layoutError) {
@@ -82870,21 +82967,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         toggleIcon.textContent = "\u25BC";
       }
     });
-    const settings = this.getSonicGraphSettings().connectionTypeMapping || {
-      enabled: false,
-      independentFromContentAware: true,
-      mappings: {
-        wikilink: { enabled: true, instrumentFamily: "strings" },
-        embed: { enabled: true, instrumentFamily: "percussion" },
-        markdown: { enabled: true, instrumentFamily: "woodwinds" },
-        tag: { enabled: true, instrumentFamily: "ambient" }
-      },
-      globalSettings: {
-        connectionVolumeMix: 0.7,
-        maxSimultaneousConnections: 25
-      },
-      currentPreset: "minimal"
-    };
+    const settings = this.getSonicGraphSettings().connectionTypeMapping;
     new import_obsidian28.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
       (toggle) => toggle.setValue(settings.enabled || false).onChange(async (value) => {
         try {
@@ -84676,7 +84759,10 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     timeSlider.value = settings.timeOfDayInfluence.toString();
     timeSlider.addEventListener("input", async () => {
       settings.timeOfDayInfluence = parseFloat(timeSlider.value);
-      timeOfDayItem.querySelector(".sonic-graph-setting-description").textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+      const descriptionEl = timeOfDayItem.querySelector(".sonic-graph-setting-description");
+      if (descriptionEl) {
+        descriptionEl.textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+      }
       await this.plugin.saveSettings();
     });
     const seasonalItem = container.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84700,7 +84786,10 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     seasonSlider.value = settings.seasonalInfluence.toString();
     seasonSlider.addEventListener("input", async () => {
       settings.seasonalInfluence = parseFloat(seasonSlider.value);
-      seasonalItem.querySelector(".sonic-graph-setting-description").textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+      const descriptionEl = seasonalItem.querySelector(".sonic-graph-setting-description");
+      if (descriptionEl) {
+        descriptionEl.textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+      }
       await this.plugin.saveSettings();
     });
     const transitionItem = container.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84724,7 +84813,10 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     transitionSlider.value = settings.transitionDuration.toString();
     transitionSlider.addEventListener("input", async () => {
       settings.transitionDuration = parseFloat(transitionSlider.value);
-      transitionItem.querySelector(".sonic-graph-setting-description").textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+      const descriptionEl = transitionItem.querySelector(".sonic-graph-setting-description");
+      if (descriptionEl) {
+        descriptionEl.textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+      }
       await this.plugin.saveSettings();
     });
     const autoAdjustItem = container.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84800,9 +84892,9 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       if (!this.plugin.settings.spatialAudio) {
         this.plugin.settings.spatialAudio = {
           enabled: enabledToggle.checked,
-          mode: "hybrid",
+          mode: "hybrid" /* Hybrid */,
           graphPositionSettings: {
-            curve: "sigmoid",
+            curve: "sigmoid" /* Sigmoid */,
             intensity: 0.7,
             smoothingFactor: 0.5,
             updateThrottleMs: 100
@@ -84900,7 +84992,10 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     intensitySlider.value = settings.graphPositionSettings.intensity.toString();
     intensitySlider.addEventListener("input", async () => {
       settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
-      intensityItem.querySelector(".sonic-graph-setting-description").textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+      const descriptionEl = intensityItem.querySelector(".sonic-graph-setting-description");
+      if (descriptionEl) {
+        descriptionEl.textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+      }
       await this.plugin.saveSettings();
     });
     const curveItem = container.createDiv({ cls: "sonic-graph-setting-item" });
@@ -85635,7 +85730,9 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
       });
       overlay.appendChild(optionEl);
     });
-    searchInput.parentElement.appendChild(overlay);
+    if (searchInput.parentElement) {
+      searchInput.parentElement.appendChild(overlay);
+    }
     setTimeout(() => {
       document.addEventListener("click", function handleClickOutside(e) {
         if (!overlay.contains(e.target) && e.target !== searchInput) {
@@ -87597,7 +87694,9 @@ var LocalSoundscapeExtractor = class {
           if (!nodesByDepth.has(depth + 1)) {
             nodesByDepth.set(depth + 1, []);
           }
-          nodesByDepth.get(depth + 1).push(node);
+          const depthNodes = nodesByDepth.get(depth + 1);
+          if (depthNodes)
+            depthNodes.push(node);
           queue.push({
             file: linkedFile,
             depth: depth + 1,
@@ -87648,7 +87747,9 @@ var LocalSoundscapeExtractor = class {
             if (!nodesByDepth.has(depth + 1)) {
               nodesByDepth.set(depth + 1, []);
             }
-            nodesByDepth.get(depth + 1).push(node);
+            const depthNodes = nodesByDepth.get(depth + 1);
+            if (depthNodes)
+              depthNodes.push(node);
             queue.push({
               file: backlinkFile,
               depth: depth + 1,
@@ -87944,7 +88045,9 @@ var LocalSoundscapeExtractor = class {
       if (!clusterMap.has(folder)) {
         clusterMap.set(folder, []);
       }
-      clusterMap.get(folder).push(node.id);
+      const folderCluster = clusterMap.get(folder);
+      if (folderCluster)
+        folderCluster.push(node.id);
       node.cluster = folder;
     });
     const colors = this.generateClusterColors(clusterMap.size);
@@ -87986,7 +88089,9 @@ var LocalSoundscapeExtractor = class {
       if (!clusterMap.has(primaryTag)) {
         clusterMap.set(primaryTag, []);
       }
-      clusterMap.get(primaryTag).push(node.id);
+      const tagCluster = clusterMap.get(primaryTag);
+      if (tagCluster)
+        tagCluster.push(node.id);
       node.cluster = primaryTag;
     });
     const colors = this.generateClusterColors(clusterMap.size);
@@ -88012,7 +88117,9 @@ var LocalSoundscapeExtractor = class {
       if (!clusterMap.has(node.depth)) {
         clusterMap.set(node.depth, []);
       }
-      clusterMap.get(node.depth).push(node.id);
+      const depthCluster = clusterMap.get(node.depth);
+      if (depthCluster)
+        depthCluster.push(node.id);
       node.cluster = `depth-${node.depth}`;
     });
     const colors = this.generateClusterColors(clusterMap.size);
@@ -88069,7 +88176,9 @@ var LocalSoundscapeExtractor = class {
       if (!clusterMap.has(clusterId)) {
         clusterMap.set(clusterId, []);
       }
-      clusterMap.get(clusterId).push(nodeId);
+      const communityCluster = clusterMap.get(clusterId);
+      if (communityCluster)
+        communityCluster.push(nodeId);
       const node = nodes.find((n) => n.id === nodeId);
       if (node)
         node.cluster = `community-${clusterId}`;
@@ -90118,9 +90227,9 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     this.plugin = plugin;
     this.extractor = new LocalSoundscapeExtractor(this.app);
     if (this.plugin.musicalMapper) {
+      const mappingConfig = this.plugin.settings.localSoundscape || {};
       this.depthMapper = new DepthBasedMapper(
-        this.plugin.settings.localSoundscape || {},
-        // Use settings from Control Center
+        mappingConfig,
         this.plugin.musicalMapper,
         this.app,
         this.plugin.audioEngine,
@@ -91352,6 +91461,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0);
         canvas.toBlob((blob) => {
+          var _a;
           if (!blob) {
             throw new Error("Failed to create PNG blob");
           }
@@ -91359,7 +91469,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
           const a2 = document.createElement("a");
           a2.href = url;
           const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-          const noteName = this.centerFile.basename;
+          const noteName = ((_a = this.centerFile) == null ? void 0 : _a.basename) || "unknown";
           a2.download = `local-soundscape-${noteName}-${timestamp}.png`;
           a2.click();
           URL.revokeObjectURL(url);
@@ -94399,12 +94509,15 @@ var PlaybackEventEmitter = class {
    * Add event listener
    */
   on(event, listener) {
+    var _a;
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
-    this.listeners.get(event).push(listener);
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners)
+      eventListeners.push(listener);
     logger91.debug("events", `Added listener for ${event}`, {
-      listenerCount: this.listeners.get(event).length
+      listenerCount: ((_a = this.listeners.get(event)) == null ? void 0 : _a.length) || 0
     });
   }
   /**
@@ -94516,7 +94629,9 @@ var PlaybackOptimizer = class {
       if (!this.timeBuckets.has(bucketKey)) {
         this.timeBuckets.set(bucketKey, []);
       }
-      this.timeBuckets.get(bucketKey).push(note);
+      const bucket = this.timeBuckets.get(bucketKey);
+      if (bucket)
+        bucket.push(note);
       const noteEndTime = note.timing + note.duration;
       if (noteEndTime > this.maxEndTime) {
         this.maxEndTime = noteEndTime;
@@ -98367,7 +98482,10 @@ var AudioEngine = class {
       if (!notesByLayer.has(layer)) {
         notesByLayer.set(layer, []);
       }
-      notesByLayer.get(layer).push(item);
+      const layerNotes = notesByLayer.get(layer);
+      if (layerNotes) {
+        layerNotes.push(item);
+      }
     });
     notesByLayer.forEach((notes, layer) => {
       var _a2;
@@ -98422,7 +98540,10 @@ var AudioEngine = class {
       if (!notesByLayer.has(layer)) {
         notesByLayer.set(layer, []);
       }
-      notesByLayer.get(layer).push(item);
+      const layerNotes = notesByLayer.get(layer);
+      if (layerNotes) {
+        layerNotes.push(item);
+      }
     });
     notesByLayer.forEach((notes, layer) => {
       var _a2;
@@ -99394,7 +99515,8 @@ var AudioEngine = class {
       const currentLatency = baseLatency + outputLatency;
       let estimatedCPU = 0;
       this.instruments.forEach((synth, instrumentName) => {
-        const activeVoices = synth.activeVoices || 0;
+        const synthWithTracking = synth;
+        const activeVoices = synthWithTracking.activeVoices || 0;
         estimatedCPU += activeVoices * 5;
         const effectMap = this.instrumentEffects.get(instrumentName);
         if (effectMap) {
@@ -99434,7 +99556,9 @@ var AudioEngine = class {
       return;
     }
     this.settings = migrateToEnhancedRouting(this.settings);
-    this.settings.enhancedRouting.enabled = true;
+    if (this.settings.enhancedRouting) {
+      this.settings.enhancedRouting.enabled = true;
+    }
     await this.initializeEnhancedRouting();
     logger97.info("enhanced-routing", "Enhanced routing enabled successfully");
   }
@@ -99447,7 +99571,9 @@ var AudioEngine = class {
       return;
     }
     this.enhancedRouting = false;
-    this.settings.enhancedRouting.enabled = false;
+    if (this.settings.enhancedRouting) {
+      this.settings.enhancedRouting.enabled = false;
+    }
     this.effectChains.clear();
     this.sendBuses.clear();
     this.returnBuses.clear();
@@ -99649,7 +99775,8 @@ var AudioEngine = class {
     try {
       const sampler = new Sampler(config);
       setTimeout(() => {
-        const buffers = sampler._buffers;
+        const samplerWithBuffers = sampler;
+        const buffers = samplerWithBuffers._buffers;
         let hasValidBuffers = false;
         if (buffers && buffers._buffers) {
           for (const [note, buffer] of Object.entries(buffers._buffers)) {

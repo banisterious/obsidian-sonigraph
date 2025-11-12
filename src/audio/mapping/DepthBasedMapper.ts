@@ -437,7 +437,7 @@ export class DepthBasedMapper {
 			tensionTracking: config.tensionTracking || {
 				// Use musicalEnhancements settings if available, otherwise defaults
 				enabled: this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.enabled || false,
-				arcShape: (this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.arcShape as any) || 'rise-fall',
+				arcShape: this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.arcShape || 'rise-fall',
 				peakPosition: this.settings?.localSoundscape?.musicalEnhancements?.tensionTracking?.peakPosition ?? 0.6,
 				pitchModulation: 5,
 				velocityModulation: 1.3,
@@ -446,7 +446,7 @@ export class DepthBasedMapper {
 			turnTaking: config.turnTaking || {
 				// Use musicalEnhancements settings if available, otherwise defaults
 				enabled: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.enabled || false,
-				pattern: (this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.pattern as any) || 'call-response',
+				pattern: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.pattern || 'call-response',
 				turnLength: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.turnLength ?? 4,
 				accompanimentReduction: this.settings?.localSoundscape?.musicalEnhancements?.turnTaking?.accompanimentReduction ?? 0.4
 			},
@@ -724,7 +724,8 @@ export class DepthBasedMapper {
 			const position = mapping.timing / totalDuration;
 
 			// Get modulation for this position
-			const modulation = this.tensionArcController!.getModulation(position);
+			if (!this.tensionArcController) return;
+			const modulation = this.tensionArcController.getModulation(position);
 
 			// Apply pitch modulation
 			mapping.pitch += Math.round(modulation.pitchOffset);
@@ -1035,7 +1036,10 @@ export class DepthBasedMapper {
 		range: { min: number; max: number },
 		contextModifiers?: ContextModifiers
 	): number {
-		const weights = this.config.mappingWeights!.pitch;
+		if (!this.config.mappingWeights) {
+			throw new Error('Mapping weights not configured');
+		}
+		const weights = this.config.mappingWeights.pitch;
 
 		// Calculate normalized factors (0-1 range)
 		const wordCountFactor = Math.min(node.wordCount / 1000, 1); // Cap at 1000 words
@@ -1226,7 +1230,10 @@ export class DepthBasedMapper {
 		const minDuration = 1.0;
 		const maxDuration = 3.0;
 
-		const weights = this.config.mappingWeights!.duration;
+		if (!this.config.mappingWeights) {
+			throw new Error('Mapping weights not configured');
+		}
+		const weights = this.config.mappingWeights.duration;
 
 		// Calculate normalized factors (0-1 range)
 		const wordCountFactor = Math.min(node.wordCount / 500, 1); // Cap at 500 words
@@ -1253,7 +1260,10 @@ export class DepthBasedMapper {
 	 * Applies context-aware multiplier if enabled
 	 */
 	private calculateVelocity(node: LocalSoundscapeNode, contextModifiers?: ContextModifiers): number {
-		const weights = this.config.mappingWeights!.velocity;
+		if (!this.config.mappingWeights) {
+			throw new Error('Mapping weights not configured');
+		}
+		const weights = this.config.mappingWeights.velocity;
 
 		// Calculate normalized factors (0-1 range)
 		// Recency factor (recently modified = higher velocity)
