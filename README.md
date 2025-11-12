@@ -2,171 +2,132 @@
 
 **Transform your knowledge graph into immersive orchestral soundscapes.**
 
-Sonigraph is an Obsidian plugin that maps the visual structure of your knowledge graph to rich musical parameters, creating dynamic orchestral compositions with 30 instruments, continuous audio layers, advanced effects processing, and real-time audio synthesis. Features Freesound.org integration for high-quality environmental samples and intelligent content-aware mapping.
-
-**Latest (v0.17.1):** Note-centric musicality settings with configurable presets for prose-based musical generation. Control timing, harmony, dynamics, and voice leading through three presets or custom parameters.
+Sonigraph is an Obsidian plugin that maps your vault's structure to music. Notes become instruments, connections become melodies, and your knowledge graph becomes an interactive orchestral composition you can explore, visualize, and export as audio.
 
 <table align="center">
 <tr>
 <td align="center" width="50%">
 <img src="docs/images/Obsidian-Sonigraph-Control-Center-v0.16.0.gif" alt="Animated demonstration of the Sonigraph Control Center" width="100%" style="max-width: 600px;"/>
 <br/>
-<em>Control Center: 30-Instrument Orchestra Management</em>
+<em>Control Center: 34-Instrument Orchestra Management</em>
 </td>
 <td align="center" width="50%">
 <img src="docs/images/Obsidian-Sonigraph-Sonic-Graph-v0.16.0.gif" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
 <br/>
-<em>Exploring the Sonic Graph interface</em>
+<em>Sonic Graph: Timeline Animation & Visual Display</em>
 </td>
 </tr>
 </table>
 
-## 🎼 Features
+---
 
-### Core Sonification
-- **Graph-to-Music Mapping**: Convert note connections into orchestral compositions
-- **34-Instrument Orchestra**: Full orchestral palette including strings, woodwinds, brass, percussion, vocals, and electronic synthesis
-- **Real-time Audio Synthesis**: Generate music directly within Obsidian using Tone.js Web Audio API
-- **Intelligent Musical Mapping**: Sophisticated algorithms that translate graph structure to musical elements
+## What is Sonigraph?
 
-### Continuous Audio Layers (v0.12.0)
-- **Ambient Layer System**: Genre-based continuous background soundscapes that evolve with vault state
-- **Rhythmic Layer Engine**: Activity-responsive percussion patterns that sync with vault interactions
-- **Harmonic Pad Layer**: Cluster-based harmony generation with chord progressions and musical theory
-- **13 Musical Genres**: Ambient Drone, Cinematic Orchestral, Jazz Lounge, Electronic Pulse, Nature Soundscape, and more
-- **Freesound.org Integration**: Curated high-quality audio samples with token-based API authentication
-- **Sample Management System**: Intelligent caching, preloading, and offline mode support
+Sonigraph turns your Obsidian vault into an interactive musical instrument. The plugin analyzes your vault's structure - notes, links, tags, and metadata - then generates real-time orchestral music that represents your knowledge graph.
 
-### Freesound Sample Browser (Unreleased)
-- **Professional Sample Library**: 114 curated Freesound samples with complete metadata
-- **Table-Based Browser**: Search, filter, and sort samples by name, author, tags, or license
-- **Real-Time Preview**: Instant audio playback directly from Freesound CDN
-- **Tag Management**: Organize samples with autocomplete tag editor and common tag suggestions
-- **Selective Activation**: Samples disabled by default - enable only the ones you want
-- **License Clarity**: CC0, CC-BY, CC-BY-NC licenses displayed in friendly format
-- **Smart Filtering**: Filter by multiple tags, license types, and show/hide disabled samples
+**Why Sonigraph?**
+- **Discover Patterns**: Hear the structure of your knowledge in ways visualization alone can't reveal
+- **Explore Context**: Navigate your vault through depth-based soundscapes
+- **Create Artifacts**: Export timeline animations as shareable audio files
+- **Enhance Focus**: Work with continuous ambient soundscapes that evolve with your vault
 
-### Content-Aware Mapping
-- **File Type Intelligence**: Automatic instrument assignment based on note types (markdown, images, PDFs, etc.)
-- **Tag-Based Semantics**: Musical mood and instrument selection driven by vault tags
-- **Folder Hierarchy Mapping**: Folder structure influences orchestral arrangement and grouping
-- **Frontmatter Support**: Explicit instrument and mood control via note metadata
-- **Connection Type Audio**: Different link types (wikilinks, embeds, tags) produce distinct musical elements
+---
 
-### Advanced Audio Engine
-- **Sample-Based Synthesis**: High-quality orchestral samples with realistic articulation
-- **Advanced Percussion Engine**: Physics-modeled timpani, mallet instruments, and resonant gongs
-- **Electronic Synthesis Suite**: Professional filter modulation, LFO control, and envelope shaping
-- **Master Effects Processing**: Orchestral reverb hall, 3-band EQ, and dynamic compression
+## Core Features
 
-### Professional Effects & Routing
-- **Per-Instrument Effect Chains**: Individual reverb, chorus, and filter processing for each instrument
-- **11 Professional Presets**: Optimized effect configurations (Concert Hall, Jazz Club, Cathedral, etc.)
-- **Smart Parameter Ranges**: Context-aware effect parameters that adapt to musical content
-- **Enhanced Effect Routing**: Advanced signal flow with send/return busses and parallel processing
+### 🎼 Two Listening Modes
 
-### Intelligent User Experience
-- **Family-Organized Interface**: Instruments grouped by orchestral families for intuitive control
-- **Performance Optimization**: Adaptive quality system with voice pooling and CPU monitoring
-- **Real-time Audio Feedback**: Visual and auditory feedback during graph playback
-- **Comprehensive Settings**: Detailed control over all 34 instruments and their parameters
+**Timeline Animation (Sonic Graph)**
+- Chronological playback of vault history with visual node animation
+- Multi-level time granularity (year/month/week/day/hour)
+- Piano roll, spectrum analyzer, and staff notation visualizations
+- Professional audio export (WAV, M4A, OGG)
 
-### 🚀 Production Features
+**Local Soundscape**
+- Depth-based exploration from any note as starting point
+- Context-aware modifiers (season, time of day, weather, theme)
+- Force-directed graph layout with smart clustering
+- Musical variation system to re-roll sonic interpretations
 
-- **Sonic Graph Visualization**: High-performance interactive graph visualization with temporal animation
-  - **Instant Loading Performance**: Optimized data processing using Obsidian's MetadataCache infrastructure
-  - **Static Graph View**: D3.js force simulation displaying all vault files and connections
-  - **Timeline Animation Mode**: Audio-synchronized chronological node appearance with intelligent spacing
-  - **Timeline Granularity Controls**: Multi-level time granularity (Year, Month, Week, Day, Hour) with custom ranges
-  - **Time Window Filtering**: Focus on specific time periods (All time, Past year, Past month, etc.)
-  - **Smart Event Spreading**: Intelligent audio event distribution to prevent crackling from simultaneous triggers
-  - **Professional Settings Panel**: Comprehensive configuration with 21+ settings, each with detailed tooltips
-  - **Advanced Filtering**: Content exclusion system with native Obsidian autocomplete for folders and files
-  - **Performance Optimizations**: Adaptive rendering modes and efficient data structures for large vaults
-- **Enhanced Modal Interface**: Full-screen overlay settings panel with smooth transitions and responsive layout
-- **Cross-Modal Navigation**: Seamless integration between Sonic Graph and Control Center interfaces
+### 🎹 34-Instrument Orchestra
 
-*Sonic Graph now delivers production-ready performance matching Obsidian's core Graph plugin.*
+Full orchestral palette with real-time synthesis:
+- **6 families**: Keyboard, Strings, Woodwinds, Brass, Vocals, Percussion, Electronic
+- **Sample-based synthesis** for realistic orchestral timbres
+- **Physics-modeled percussion** (timpani, mallet instruments, gongs)
+- **Electronic synthesis** (lead, bass, arpeggiators with modulation)
 
-### 🎵 Audio Export (v0.12.2)
+### 🎨 Content-Aware Mapping
 
-- **Professional Audio Export**: Export timeline animations as high-quality audio files
-  - **Multiple Formats**: WAV (lossless) and compressed audio (M4A/AAC, WebM/Opus, OGG/Vorbis)
-  - **Quality Presets**: High Quality, Standard, Small Size with configurable bitrates (128-320 kbps)
-  - **Custom Time Ranges**: Export specific portions of timeline animations
-  - **Metadata Support**: Add title, artist, album, year, genre, and comments to exports
-- **Export Presets**: Save and load custom export configurations for quick access
-- **Automatic Documentation**: Generate comprehensive markdown notes with all export settings
-- **Progress Tracking**: Real-time progress feedback with cancellation support
-- **File Management**: Intelligent file collision handling and automatic vault organization
+Intelligent instrument assignment based on:
+- **File types**: Markdown, images, PDFs, audio, video trigger specific instrument families
+- **Tags**: Vault tags drive musical mood (#contemplative, #energetic, #calm)
+- **Folder hierarchy**: Organizational structure influences orchestral grouping
+- **Frontmatter**: Explicit instrument and mood control via note metadata
+- **Link types**: Wikilinks, embeds, and tag connections produce distinct sounds
 
-*Export your sonic graphs as shareable audio files with professional quality settings.*
+### 🎚️ Professional Audio
 
-### 🎹 Visual Note Display (v0.15.0)
+- **Master effects**: Orchestral reverb hall, 3-band EQ, dynamic compression
+- **11 effect presets**: Concert Hall, Jazz Club, Cathedral, Studio Dry, and more
+- **Per-instrument chains**: Individual reverb, chorus, and filter for each instrument
+- **Continuous layers**: Ambient, rhythmic, and harmonic background layers (13 genres)
+- **Freesound.org integration**: Curated high-quality environmental samples
 
-- **Piano Roll Visualization**: Timeline-based scrolling display with real-time note tracking
-  - **Moving Playhead**: Video-editor style playhead sweeps across fixed note positions
-  - **MIDI Pitch Mapping**: Notes positioned vertically by pitch (C0 to C6+) with dynamic labels
-  - **Layer Color Coding**: Distinct colors for rhythmic, harmonic, melodic, ambient, and percussion layers
-  - **Live Note Highlighting**: Notes glow with increased brightness when actively playing
-  - **Adaptive Grid System**: Octave-based horizontal lines and time-based vertical markers
-  - **Timeline Markers**: MM:SS format time labels for easy navigation
+### 📊 Visual Feedback
 
-- **Spectrum Analyzer**: Real-time frequency visualization of audio output
-  - **64 Frequency Bars**: Logarithmic spacing across the frequency spectrum
-  - **Web Audio Integration**: Direct connection to Tone.js master output via AnalyserNode
-  - **Color Gradient**: Visual frequency representation from red (low) to blue (high)
-  - **Smooth Animation**: 60fps rendering for fluid real-time response
+- **Piano Roll**: Timeline-based scrolling display with moving playhead
+- **Spectrum Analyzer**: Real-time frequency visualization (64 bars, 60fps)
+- **Staff Notation**: Traditional treble/bass clef with MIDI pitch mapping
+- **Graph Highlighting**: Nodes pulse when their associated notes play
 
-- **Staff Notation**: Traditional musical staff with treble and bass clefs
-  - **Proper Note Positioning**: MIDI pitch automatically mapped to staff line positions
-  - **Musical Notation**: Note heads with stems for quarter notes
-  - **Dual Clefs**: Treble clef (high notes) and bass clef (low notes) with middle C reference
-  - **Layer Color Coding**: Consistent color scheme matching other visualization modes
+---
 
-- **Seamless Integration**
-  - **Resizable Split View**: Adjustable panel height via drag handle
-  - **Mode Switching**: Instant tab switching between Piano Roll, Spectrum, and Staff
-  - **Timeline Sync**: All visualizations synchronized with timeline playback position
-  - **Graph Node Highlighting**: Visual nodes pulse when their associated notes play
-  - **Collapsible Panel**: Toggle visibility to maximize graph viewing area
-
-*Experience your sonic graphs visually with three complementary real-time visualization modes.*
-
-### 🌐 Local Soundscape (v0.17.0)
-
-- **Context-Aware Exploration**: Interactive view for exploring notes and their connections
-  - **Depth-Based Visualization**: Radial layout showing connections at multiple depths (0-3)
-  - **Force-Directed Layout**: Physics-based graph arrangement with collision detection
-  - **Smart Clustering**: Automatic grouping by folder, tag, depth, or community detection
-  - **Rich Filtering**: Include/exclude by tags, folders, file types, and link directions
-  - **Musical Variation System**: Re-roll feature for exploring different sonic interpretations
-
-- **Context-Aware Modifiers**: Environmental influences on audio playback
-  - **Season-Based**: Spring (bright, +2 semitones), Summer (energetic, +3), Fall (mellow, -2), Winter (cold, -4)
-  - **Time-Based**: Dawn (+1), Day (neutral), Dusk (-1), Night (-2, ambient with heavy reverb)
-  - **Weather Modifiers**: Clear (bright), Cloudy (muted), Rain (rhythmic), Storm (dramatic), Snow (crystalline)
-  - **Theme Integration**: Light mode (+2, bright timbres), Dark mode (-2, warm tones)
-  - **Configurable Modes**: 'Influenced' (blend with note properties) or 'Only' (pure environmental)
-  - **Adjustable Influence**: 0-100% weight slider with individual factor toggles
-
-- **Advanced Features**
-  - **Auto-Play System**: Automatically play when opening or when focus changes
-  - **Musical Key Selection**: 6 modes (vault name, root folder, folder path, full path, file name, custom)
-  - **Depth-Based Mapping**: Sophisticated audio mapping using node properties and graph structure
-  - **Real-Time Settings**: Comprehensive settings panel with instant updates
-  - **Graph Highlighting**: Visual feedback showing which nodes are currently playing
-
-*Explore your knowledge graph's local context with adaptive, environment-aware soundscapes.*
-
-## 📦 Installation
+## Installation
 
 **Recommended:** Install via [BRAT Plugin](https://github.com/TfTHacker/obsidian42-brat)
+
 1. Install the BRAT plugin in Obsidian
 2. Use BRAT to install from GitHub: `banisterious/obsidian-sonigraph`
 3. Enable Sonigraph in Community Plugins settings
 
-**Manual Installation:** Download the latest release and extract to your vault's plugins folder
+**Manual Installation:** Download the latest release and extract to your vault's `.obsidian/plugins/` folder
+
+---
+
+## Quick Start
+
+### Basic Usage
+
+1. **Open Control Center**: Click the music note icon in the ribbon or use command palette
+2. **Configure Orchestra**: Visit instrument family tabs (Strings, Brass, Woodwinds, etc.)
+3. **Adjust Master Settings**: Set tempo, scale, and master effects in the **Master** tab
+4. **Play Timeline**: Open **Sonic Graph** tab and click Play to hear your vault's history
+
+### Continuous Layers (Optional)
+
+1. **Get API Token**: Create a free account at [Freesound.org](https://freesound.org) and apply for an [API token](https://freesound.org/apiv2/apply)
+2. **Configure Layers**: Go to **Continuous Layers** tab, enter your token
+3. **Select Genre**: Choose from 13 genres (Ambient Drone, Cinematic Orchestral, Jazz Lounge, etc.)
+4. **Download Samples**: Browse and download curated samples directly in the interface
+5. **Enable Layers**: Toggle ambient, rhythmic, and harmonic layers on/off
+
+### Local Soundscape
+
+1. **Open Note**: Navigate to any note in your vault
+2. **Context Menu**: Right-click in the editor → "Open in Local Soundscape"
+3. **Explore Context**: See connections at multiple depths with radial layout
+4. **Apply Modifiers**: Enable season, time, weather, or theme-based audio variations
+5. **Auto-Play**: Toggle auto-play to hear soundscapes when opening notes
+
+---
+
+## Documentation
+
+- **[Complete Feature List](docs/features.md)** - Detailed feature documentation
+- **[Architecture Overview](docs/architecture/overview.md)** - Technical design and system components
+- **[Development Roadmap](docs/planning/development-roadmap.md)** - Future features and milestones
+- **[Contributing Guide](contributing.md)** - Code quality standards and development workflow
 
 ---
 
@@ -178,171 +139,49 @@ If you find this plugin useful, please consider supporting its development!
 
 ---
 
-## 🎯 Current Status
+## Current Version
 
-**Current Version**: 0.17.0 (Production Ready)
+**v0.17.2** - Production Ready
 
-✅ **Latest Features (v0.17.0)**
-- **Local Soundscape**: Interactive depth-based graph exploration with context-aware audio
-- **Context-Aware Modifiers**: Environmental influences (season, time, weather, theme) on audio playback
-- **Auto-Play System**: Automatic soundscape playback when opening or switching notes
-- **Musical Key Selection**: 6 flexible modes for determining the musical key
-- **Musical Variation System**: Re-roll functionality for exploring different sonic interpretations
+**Latest Updates:**
+- Note-centric musicality settings with configurable presets (v0.17.1)
+- Local Soundscape with context-aware modifiers (v0.17.0)
+- Visual note display with piano roll, spectrum, and staff (v0.15.0)
+- Professional audio export system (v0.12.2)
+- Continuous audio layers with Freesound integration (v0.12.0)
 
-✅ **Complete Audio Enhancement System**
-- **Continuous Audio Layers**: Ambient, rhythmic, and harmonic background layers with 13 musical genres
-- **Freesound Integration**: Token-based API with curated sample library and intelligent caching
-- **Content-Aware Mapping**: File types, tags, folders, and frontmatter drive instrument selection
-- **Musical Theory Integration**: Scale systems, chord progressions, and harmonic relationships
-- **34 Orchestral Instruments**: Complete implementation across all families
-- **Advanced Synthesis Engines**: Percussion physics, electronic modulation, and sample-based orchestral voices
-- **Master Effects Processing**: Orchestral-grade reverb, EQ, and compression with 11 professional presets
-- **Performance Optimization**: Adaptive quality control, voice pooling, and resolved audio quality issues
-- **Audio Export**: Professional audio export with WAV and compressed formats, metadata, and presets
-- **Visual Note Display**: Piano roll, spectrum analyzer, and staff notation visualizations
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
+---
 
-## 🎼 Orchestral Instrument Families
+## Contributing
 
-### Strings (5 instruments)
-- **Violin**, **Cello** - Traditional bowed strings
-- **Harp** - Plucked strings with glissando effects
-- **Guitar** - Steel-string acoustic with fingerpicking and strumming
-- **Strings** - Full orchestral string section
+Contributions are welcome! Sonigraph has reached production status with comprehensive orchestral capabilities.
 
-### Woodwinds (4 instruments) 
-- **Flute** - Pure tone with breath control
-- **Clarinet** - Rich, woody timbre across registers
-- **Saxophone** - Jazz-influenced with vibrato and growl
-- **Oboe** - Piercing, nasal tone with expressiveness
-
-### Brass (4 instruments)
-- **Trumpet** - Brilliant, fanfare-capable lead voice
-- **French Horn** - Warm, noble hunting horn character
-- **Trombone** - Smooth glissando and powerful projection
-- **Tuba** - Foundation bass with deep resonance
-
-### Vocals (7 instruments)
-- **Soprano** - High female voice with lyrical purity
-- **Alto** - Rich contralto with warm chest tones
-- **Tenor** - Male lead voice with heroic quality
-- **Bass** - Deep male voice with authoritative presence
-- **Choir** - Mixed vocal ensemble
-- **Vocal Pads** - Sustained vocal textures
-- **Pad** - Ambient vocal synthesis
-
-### Percussion (4 instruments)
-- **Timpani** - Tuned kettle drums with pitch bending
-- **Xylophone** - Bright mallet percussion with wood resonance
-- **Vibraphone** - Metallic bars with motor tremolo
-- **Gongs** - Large suspended cymbals with extended resonance
-- **Rhythmic Percussion** - Kick drum, snare Drum, hi-hat
-
-### Electronic (3 instruments)
-- **Lead Synth** - Filter-swept lead with modulation
-- **Bass Synth** - Sub-oscillator bass with envelope control
-- **Arp Synth** - Arpeggiated patterns with sequencing
-
-## 🎛️ Advanced Audio Features
-
-### Master Effects Processing
-- **Orchestral Reverb Hall**: Simulated concert hall acoustics with adjustable decay
-- **3-Band EQ**: Bass boost, mid-range clarity, and treble enhancement
-- **Dynamic Compressor**: Automatic level control for orchestral balance
-
-### Performance Optimization
-- **Adaptive Quality System**: Automatically adjusts audio quality based on CPU load
-- **Voice Pooling**: Efficient voice management for complex orchestral arrangements  
-- **Emergency Performance Mode**: Fallback mode for resource-constrained systems
-
-### Enhanced Effect Routing
-- **Per-Instrument Chains**: Individual effect processing for each of 34 instruments
-- **Professional Presets**: 11 optimized configurations for different musical styles
-- **Smart Parameter Ranges**: Context-aware effect parameters that adapt to content
-
-## 🎯 Musical Mapping System
-
-### Graph-to-Music Translation
-- **Nodes → Instruments**: Map vault notes to orchestral instruments based on content analysis
-- **Connections → Harmony**: Link relationships create harmonic progressions and chord structures
-- **Graph Traversal → Composition**: Different algorithms generate musical sequences through connected notes
-- **Node Properties → Articulation**: Tags, metadata, and content influence playing style and dynamics
-
-### Content-Aware Intelligence
-- **File Type Recognition**: Markdown, images, PDFs, audio, and video files trigger appropriate instrument families
-- **Tag-Based Mapping**: Vault tags drive musical mood selection (contemplative, energetic, calm, etc.)
-- **Folder Hierarchy**: Organizational structure influences orchestral grouping and arrangement
-- **Frontmatter Control**: Explicit instrument and mood specification via note metadata
-- **Connection Type Differentiation**: Wikilinks, embeds, and tag connections produce distinct musical elements
-
-### Intelligent Sonification
-- **Frequency-Based Assignment**: Distribute instruments across pitch ranges for optimal orchestral balance
-- **Dynamic Voice Allocation**: Automatic instrument selection based on graph complexity and content type
-- **Temporal Mapping**: Connection strength influences note duration and rhythmic patterns
-- **Spatial Audio**: Graph layout translates to stereo positioning and reverb characteristics
-- **Continuous Layer Evolution**: Background soundscapes respond to vault state, activity, and cluster density
-
-## 🚀 Getting Started
-
-### Quick Start
-1. Install and enable the plugin in Obsidian
-2. (Optional) Obtain a [Freesound.org API token](https://freesound.org/apiv2/apply) for continuous layer samples
-3. Open the Audio Control Center from the ribbon or command palette
-4. Configure continuous layers in the **Continuous Layers** tab (select genre, adjust intensity)
-5. Set up content-aware mapping in the **Content Mapping** tab
-6. Configure instruments in the family tabs (Strings, Brass, Environmental, etc.)
-7. Adjust effects and presets in the **Master** tab
-8. Play your knowledge graph with the **Play** button
-
-### Freesound Integration Setup
-Continuous audio layers use high-quality samples from Freesound.org:
-1. Create a free account at [Freesound.org](https://freesound.org)
-2. Apply for an API token at [freesound.org/apiv2/apply](https://freesound.org/apiv2/apply)
-3. Enter your token in **Control Center → Freesound Integration** tab
-4. Browse and download samples directly from the interface
-5. Offline mode available after initial sample download
-
-### Audio Control Center Tabs
-- **Status**: Real-time system diagnostics and performance monitoring
-- **Musical**: Set scales, tempo, and musical parameters
-- **Layers**: Continuous audio layers (ambient/rhythmic/harmonic) with 13 genres and Freesound integration
-- **Master**: Global controls, master effects, and bulk operations
-- **Keyboard**: Keyboard family instruments (piano, organ, electric piano, harpsichord, accordion, celesta)
-- **Strings**: String family instruments (violin, cello, guitar, harp, strings, contrabass)
-- **Woodwinds**: Woodwind family (flute, clarinet, saxophone, oboe, bassoon)
-- **Brass**: Brass family (trumpet, french horn, trombone, tuba)
-- **Percussion**: Percussion family (timpani, xylophone, vibraphone, gongs)
-- **Electronic**: Electronic family (lead synth, bass synth, arp synth)
-- **Sonic Graph**: Knowledge graph visualization with temporal animation
-- **Local Soundscape**: Depth-based exploration view with context-aware modifiers (access via "Open in Local Soundscape" context menu)
-
-## 🤝 Contributing
-
-Sonigraph has reached production status with comprehensive orchestral capabilities. Contributions are welcome for:
-
+**Areas for contribution:**
 - New instrument synthesis methods
-- Additional effect processing algorithms  
+- Additional effect processing algorithms
 - Enhanced graph-to-music mapping strategies
 - Performance optimizations for large vaults
 - UI/UX improvements and accessibility features
 
-1. Review the [Development Roadmap](docs/planning/development-roadmap.md) for development roadmap
-2. Check the [implementation documentation](docs/architecture/overview.md)  
-3. Open an issue or submit a pull request
+See [contributing.md](contributing.md) for development setup, code quality standards, and audit workflow.
 
-## 📄 License
+---
+
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙏 Acknowledgments
+---
+
+## Acknowledgments
 
 - Built for [Obsidian](https://obsidian.md)
 - Audio synthesis powered by [Tone.js](https://tonejs.github.io/)
+- Samples provided by [Freesound.org](https://freesound.org)
 - Inspired by data sonification and knowledge visualization research
 
 ---
 
-**Note**: This plugin is not affiliated with or endorsed by Obsidian.md. 
-
-
-
+**Note**: This plugin is not affiliated with or endorsed by Obsidian.md.
