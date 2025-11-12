@@ -60,8 +60,8 @@
   },
   "lint-staged": {
     "src/**/*.ts": [
-      "npm run audit:innerHTML",
-      "npm run audit:console",
+      "bash -c 'npm run audit:innerHTML'",
+      "bash -c 'npm run audit:console'",
       "eslint --fix"
     ]
   }

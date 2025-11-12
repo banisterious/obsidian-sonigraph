@@ -301,8 +301,14 @@ export default class SonigraphPlugin extends Plugin {
 			}
 		}
 
-		// Reveal the leaf
+		// Reveal the leaf and ensure right sidebar is open
 		if (leaf) {
+			// Explicitly open the right sidebar if it's collapsed
+			const rightSplit = workspace.rightSplit;
+			if (rightSplit && rightSplit.collapsed) {
+				workspace.rightSplit.expand();
+			}
+
 			workspace.revealLeaf(leaf);
 			logger.info('ui', 'Local Soundscape view activated and revealed');
 		}
@@ -347,8 +353,14 @@ export default class SonigraphPlugin extends Plugin {
 			}
 		}
 
-		// Reveal the leaf
+		// Reveal the leaf and ensure right sidebar is open
 		if (leaf) {
+			// Explicitly open the right sidebar if it's collapsed
+			const rightSplit = workspace.rightSplit;
+			if (rightSplit && rightSplit.collapsed) {
+				workspace.rightSplit.expand();
+			}
+
 			workspace.revealLeaf(leaf);
 			logger.info('ui', 'Local Soundscape view activated and revealed for file', { file: file.path });
 		}
