@@ -33,6 +33,16 @@ Sonigraph turns your Obsidian vault into an interactive musical instrument. The 
 
 ---
 
+## Demo
+
+**Watch Sonigraph in Action:**
+
+[![Sonigraph Demo - Local Soundscape with Staff Notation](https://img.youtube.com/vi/LMd5SdYptYE/maxresdefault.jpg)](https://youtu.be/LMd5SdYptYE)
+
+*See Local Soundscape's depth-based exploration, real-time staff notation visualization, and the 34-instrument orchestral engine. Click to watch on YouTube.*
+
+---
+
 ## Core Features
 
 ### 🎼 Two Listening Modes
@@ -141,14 +151,14 @@ If you find this plugin useful, please consider supporting its development!
 
 ## Current Version
 
-**v0.17.2** - Production Ready
+**v0.17.3** - Production Ready
 
 **Latest Updates:**
+- Instrument selection fixes ensuring all enabled instruments are used (v0.17.3)
 - Note-centric musicality settings with configurable presets (v0.17.1)
 - Local Soundscape with context-aware modifiers (v0.17.0)
 - Visual note display with piano roll, spectrum, and staff (v0.15.0)
 - Professional audio export system (v0.12.2)
-- Continuous audio layers with Freesound integration (v0.12.0)
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 

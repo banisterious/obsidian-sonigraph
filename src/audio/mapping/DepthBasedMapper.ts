@@ -270,10 +270,16 @@ export class DepthBasedMapper {
 		// Get enabled instruments from audio engine
 		const enabledInstruments = this.audioEngine?.getEnabledInstrumentsForTesting() || [];
 
+		logger.info('depth-mapper-init', 'Initializing DepthBasedMapper with enabled instruments', {
+			enabledCount: enabledInstruments.length,
+			enabledInstruments: enabledInstruments
+		});
+
 		// Filter instruments for each depth, only using enabled ones
-		const getInstrumentsForDepth = (preferred: string[]): string[] => {
+		const getInstrumentsForDepth = (preferred: string[], depthName: string): string[] => {
 			if (enabledInstruments.length === 0) {
 				// Fallback to preferred list if no instruments enabled (shouldn't happen)
+				logger.warn('no-enabled-instruments', `No instruments enabled, using preferred for ${depthName}`);
 				return preferred;
 			}
 
@@ -281,15 +287,24 @@ export class DepthBasedMapper {
 			const available = preferred.filter(inst => enabledInstruments.includes(inst));
 
 			// If none of the preferred are enabled, use all enabled instruments
-			return available.length > 0 ? available : enabledInstruments;
+			const result = available.length > 0 ? available : enabledInstruments;
+
+			logger.info('depth-instruments-filtered', `Instruments for ${depthName}`, {
+				preferred,
+				available,
+				result,
+				usedFallback: available.length === 0
+			});
+
+			return result;
 		};
 
 		// Define default preferred instruments (will be filtered to enabled only)
 		const defaultInstrumentsByDepth = config.instrumentsByDepth || {
-			center: getInstrumentsForDepth(['piano', 'organ', 'leadSynth']),
-			depth1: getInstrumentsForDepth(['strings', 'electricPiano']),
-			depth2: getInstrumentsForDepth(['bassSynth', 'timpani', 'cello']),
-			depth3Plus: getInstrumentsForDepth(['arpSynth', 'vibraphone'])
+			center: getInstrumentsForDepth(['piano', 'organ', 'leadSynth'], 'center'),
+			depth1: getInstrumentsForDepth(['strings', 'electricPiano'], 'depth1'),
+			depth2: getInstrumentsForDepth(['bassSynth', 'timpani', 'cello'], 'depth2'),
+			depth3Plus: getInstrumentsForDepth(['arpSynth', 'vibraphone'], 'depth3Plus')
 		};
 
 		return {
@@ -1103,6 +1118,7 @@ export class DepthBasedMapper {
 	 * - All nodes at the same depth use the SAME primary instrument for timbral consistency
 	 * - When randomization is enabled, allows subtle variation within instrument pool (max ±1 instrument)
 	 * - Context-aware modifiers can shift the primary instrument choice
+	 * - Uses 70/30 mix: 70% depth-based, 30% varied to ensure all enabled instruments get used
 	 *
 	 * This creates coherent depth layers (e.g., all depth-1 nodes = strings) while allowing
 	 * slight variation when desired.
@@ -1113,9 +1129,18 @@ export class DepthBasedMapper {
 			return 'piano'; // Fallback
 		}
 
-		// Use depth as the primary factor for instrument selection (85% weight)
-		// This ensures all nodes at same depth get same instrument
-		let primaryIndex = Math.floor(node.depth % instruments.length);
+		// Use node hash for deterministic variety
+		const nodeHash = this.hashString(node.id + node.path);
+
+		// 70/30 distribution: 70% depth-based for consistency, 30% varied for coverage
+		let primaryIndex: number;
+		if (nodeHash % 10 < 7) {
+			// 70% chance: use depth-based selection for timbral consistency
+			primaryIndex = Math.floor(node.depth % instruments.length);
+		} else {
+			// 30% chance: use hash-based selection to ensure all instruments get used
+			primaryIndex = Math.floor(nodeHash % instruments.length);
+		}
 
 		// Apply context-aware bias if available (shifts instrument choice for all nodes at this depth)
 		if (contextModifiers && contextModifiers.instrumentBias !== 0) {
@@ -1154,11 +1179,15 @@ export class DepthBasedMapper {
 
 		const selectedInstrument = instruments[primaryIndex];
 
-		logger.debug('instrument-selection', `Selected instrument for node`, {
+		logger.info('instrument-selection', `Selected instrument for node`, {
 			nodeId: node.id.slice(0, 8),
 			depth: node.depth,
 			instrument: selectedInstrument,
+			primaryIndex,
+			instrumentPool: instruments,
 			poolSize: instruments.length,
+			nodeHash: nodeHash % 10,
+			usedVariety: (nodeHash % 10) >= 7,
 			hasRandomization: this.randomizationSeed !== null
 		});
 

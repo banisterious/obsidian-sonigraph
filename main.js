@@ -60040,6 +60040,7 @@ var init_NoteCentricPlayer = __esm({
         this.hasPlayedAnyNotes = false;
         this.scheduledNoteCount = 0;
         this.completedNoteCount = 0;
+        this.phraseCounter = 0;
         this.audioEngine = audioEngine;
         this.settings = settings;
       }
@@ -60062,6 +60063,7 @@ var init_NoteCentricPlayer = __esm({
         this.hasPlayedAnyNotes = false;
         this.scheduledNoteCount = 0;
         this.completedNoteCount = 0;
+        this.phraseCounter = 0;
         this.embellishmentCounts = {
           "harmonic-response": 0,
           "rhythmic-counterpoint": 0,
@@ -60115,7 +60117,7 @@ var init_NoteCentricPlayer = __esm({
        */
       async playPhrase(phrase, role, startDelay) {
         var _a, _b;
-        const instrument = this.getInstrumentForRole(role);
+        const instrument = this.getInstrumentForRole(role, this.phraseCounter++);
         logger72.debug("phrase-play", "Playing phrase", {
           role,
           instrument,
@@ -60220,7 +60222,7 @@ var init_NoteCentricPlayer = __esm({
       /**
        * Get instrument for a role
        */
-      getInstrumentForRole(role) {
+      getInstrumentForRole(role, phraseIndex = 0) {
         const enabledInstruments = this.audioEngine.getEnabledInstruments();
         if (enabledInstruments.length === 0) {
           logger72.warn("no-instruments", "No instruments enabled, cannot play note-centric audio");
@@ -60235,14 +60237,35 @@ var init_NoteCentricPlayer = __esm({
         const preferences = preferredInstruments[role] || preferredInstruments["center"];
         for (const preferred of preferences) {
           if (enabledInstruments.includes(preferred)) {
+            logger72.info("instrument-selected", "Selected preferred instrument for role", {
+              role,
+              instrument: preferred
+            });
             return preferred;
           }
         }
-        logger72.debug("instrument-fallback", "Using fallback instrument for role", {
+        const instrumentIndex = (this.hashString(role) + phraseIndex) % enabledInstruments.length;
+        const selectedInstrument = enabledInstruments[instrumentIndex];
+        logger72.info("instrument-fallback", "Using fallback instrument with round-robin", {
           role,
-          instrument: enabledInstruments[0]
+          phraseIndex,
+          instrument: selectedInstrument,
+          instrumentIndex,
+          enabledInstruments
         });
-        return enabledInstruments[0];
+        return selectedInstrument;
+      }
+      /**
+       * Hash a string to a number for deterministic selection
+       */
+      hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash = hash & hash;
+        }
+        return Math.abs(hash);
       }
       /**
        * Get delay for embellishment type with phrase-sensitive timing and overlap
@@ -72533,18 +72556,30 @@ var DepthBasedMapper = class {
   mergeWithDefaults(config) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X, _Y, _Z, __, _$, _aa, _ba, _ca, _da, _ea, _fa, _ga, _ha, _ia, _ja, _ka, _la, _ma, _na, _oa, _pa, _qa, _ra, _sa, _ta, _ua, _va, _wa, _xa, _ya, _za, _Aa, _Ba, _Ca, _Da;
     const enabledInstruments = ((_a = this.audioEngine) == null ? void 0 : _a.getEnabledInstrumentsForTesting()) || [];
-    const getInstrumentsForDepth = (preferred) => {
+    logger50.info("depth-mapper-init", "Initializing DepthBasedMapper with enabled instruments", {
+      enabledCount: enabledInstruments.length,
+      enabledInstruments
+    });
+    const getInstrumentsForDepth = (preferred, depthName) => {
       if (enabledInstruments.length === 0) {
+        logger50.warn("no-enabled-instruments", `No instruments enabled, using preferred for ${depthName}`);
         return preferred;
       }
       const available = preferred.filter((inst) => enabledInstruments.includes(inst));
-      return available.length > 0 ? available : enabledInstruments;
+      const result = available.length > 0 ? available : enabledInstruments;
+      logger50.info("depth-instruments-filtered", `Instruments for ${depthName}`, {
+        preferred,
+        available,
+        result,
+        usedFallback: available.length === 0
+      });
+      return result;
     };
     const defaultInstrumentsByDepth = config.instrumentsByDepth || {
-      center: getInstrumentsForDepth(["piano", "organ", "leadSynth"]),
-      depth1: getInstrumentsForDepth(["strings", "electricPiano"]),
-      depth2: getInstrumentsForDepth(["bassSynth", "timpani", "cello"]),
-      depth3Plus: getInstrumentsForDepth(["arpSynth", "vibraphone"])
+      center: getInstrumentsForDepth(["piano", "organ", "leadSynth"], "center"),
+      depth1: getInstrumentsForDepth(["strings", "electricPiano"], "depth1"),
+      depth2: getInstrumentsForDepth(["bassSynth", "timpani", "cello"], "depth2"),
+      depth3Plus: getInstrumentsForDepth(["arpSynth", "vibraphone"], "depth3Plus")
     };
     return {
       instrumentsByDepth: defaultInstrumentsByDepth,
@@ -73193,6 +73228,7 @@ var DepthBasedMapper = class {
    * - All nodes at the same depth use the SAME primary instrument for timbral consistency
    * - When randomization is enabled, allows subtle variation within instrument pool (max ±1 instrument)
    * - Context-aware modifiers can shift the primary instrument choice
+   * - Uses 70/30 mix: 70% depth-based, 30% varied to ensure all enabled instruments get used
    *
    * This creates coherent depth layers (e.g., all depth-1 nodes = strings) while allowing
    * slight variation when desired.
@@ -73203,7 +73239,13 @@ var DepthBasedMapper = class {
       logger50.warn("no-instruments", "No instruments available for depth", { depth: node.depth });
       return "piano";
     }
-    let primaryIndex = Math.floor(node.depth % instruments.length);
+    const nodeHash = this.hashString(node.id + node.path);
+    let primaryIndex;
+    if (nodeHash % 10 < 7) {
+      primaryIndex = Math.floor(node.depth % instruments.length);
+    } else {
+      primaryIndex = Math.floor(nodeHash % instruments.length);
+    }
     if (contextModifiers && contextModifiers.instrumentBias !== 0) {
       const biasShift = Math.round(contextModifiers.instrumentBias);
       primaryIndex = (primaryIndex + biasShift + instruments.length) % instruments.length;
@@ -73225,11 +73267,15 @@ var DepthBasedMapper = class {
       primaryIndex = (primaryIndex + shift + instruments.length) % instruments.length;
     }
     const selectedInstrument = instruments[primaryIndex];
-    logger50.debug("instrument-selection", `Selected instrument for node`, {
+    logger50.info("instrument-selection", `Selected instrument for node`, {
       nodeId: node.id.slice(0, 8),
       depth: node.depth,
       instrument: selectedInstrument,
+      primaryIndex,
+      instrumentPool: instruments,
       poolSize: instruments.length,
+      nodeHash: nodeHash % 10,
+      usedVariety: nodeHash % 10 >= 7,
       hasRandomization: this.randomizationSeed !== null
     });
     return selectedInstrument;
@@ -79350,8 +79396,17 @@ var MusicalMapper = class {
     const candidateInstruments = instrumentsByRange[rangeKey].filter(
       (instrument) => enabledInstruments.includes(instrument)
     );
-    const finalCandidates = candidateInstruments.length > 0 ? candidateInstruments : enabledInstruments;
     const nodeHash = this.hashString(node.id + node.name);
+    let finalCandidates;
+    if (candidateInstruments.length > 0) {
+      if (nodeHash % 10 < 7) {
+        finalCandidates = candidateInstruments;
+      } else {
+        finalCandidates = enabledInstruments;
+      }
+    } else {
+      finalCandidates = enabledInstruments;
+    }
     const instrumentIndex = nodeHash % finalCandidates.length;
     const selectedInstrument = finalCandidates[instrumentIndex];
     logger59.debug("instrument-assignment", `Assigned ${selectedInstrument} to node ${node.name}`, {
@@ -79360,9 +79415,10 @@ var MusicalMapper = class {
       connectionRatio: connectionRatio.toFixed(3),
       range: rangeKey,
       instrument: selectedInstrument,
-      candidateInstruments,
+      candidateInstruments: candidateInstruments.length,
       enabledInstruments: enabledInstruments.length,
-      finalCandidates
+      finalCandidates: finalCandidates.length,
+      usedVarietyMode: finalCandidates.length === enabledInstruments.length && candidateInstruments.length > 0
     });
     return selectedInstrument;
   }
@@ -100721,6 +100777,10 @@ var SonigraphPlugin = class extends import_obsidian33.Plugin {
       }
     }
     if (leaf) {
+      const rightSplit = workspace.rightSplit;
+      if (rightSplit && rightSplit.collapsed) {
+        workspace.rightSplit.expand();
+      }
       workspace.revealLeaf(leaf);
       logger99.info("ui", "Local Soundscape view activated and revealed");
     }
@@ -100755,6 +100815,10 @@ var SonigraphPlugin = class extends import_obsidian33.Plugin {
       }
     }
     if (leaf) {
+      const rightSplit = workspace.rightSplit;
+      if (rightSplit && rightSplit.collapsed) {
+        workspace.rightSplit.expand();
+      }
       workspace.revealLeaf(leaf);
       logger99.info("ui", "Local Soundscape view activated and revealed for file", { file: file.path });
     }

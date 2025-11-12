@@ -119,7 +119,7 @@ The project maintains these compliance targets based on [PR review #8036](https:
 
 ## Need Help?
 
-- Check [CLAUDE.md](CLAUDE.md) for project guidelines
+- Check [claude.md](claude.md) for project guidelines
 - Review [docs/architecture/overview.md](docs/architecture/overview.md) for architectural patterns
 - See existing code examples for recommended patterns
 - Open an issue if you're unsure about a specific pattern
@@ -130,6 +130,6 @@ The project maintains these compliance targets based on [PR review #8036](https:
 2. Build successfully (`npm run build`)
 3. Test your changes in a live Obsidian vault
 4. Update documentation if needed
-5. Write clear, concise commit messages (see [CLAUDE.md](CLAUDE.md) for guidelines)
+5. Write clear, concise commit messages (see [claude.md](claude.md) for guidelines)
 
 Thank you for helping maintain code quality! 🎵

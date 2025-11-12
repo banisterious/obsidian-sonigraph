@@ -83,6 +83,6 @@ git commit --no-verify -m "emergency fix"
 
 ## More Information
 
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Full code quality guidelines
-- [docs/AUDIT-WORKFLOW.md](AUDIT-WORKFLOW.md) - Detailed workflow documentation
-- [AUDIT-REPORT.md](../AUDIT-REPORT.md) - Latest audit findings
+- [contributing.md](../contributing.md) - Full code quality guidelines
+- [audit-workflow.md](audit-workflow.md) - Detailed workflow documentation
+- [audit-report.md](../audit-report.md) - Latest audit findings

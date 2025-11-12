@@ -33,6 +33,7 @@ export class NoteCentricPlayer {
 	private hasPlayedAnyNotes: boolean = false;
 	private scheduledNoteCount: number = 0;
 	private completedNoteCount: number = 0;
+	private phraseCounter: number = 0;
 
 	constructor(audioEngine: AudioEngine, settings: SonigraphSettings) {
 		this.audioEngine = audioEngine;
@@ -60,6 +61,7 @@ export class NoteCentricPlayer {
 		this.hasPlayedAnyNotes = false;
 		this.scheduledNoteCount = 0;
 		this.completedNoteCount = 0;
+		this.phraseCounter = 0;
 
 		// Reset embellishment counts for staggering
 		this.embellishmentCounts = {
@@ -135,7 +137,9 @@ export class NoteCentricPlayer {
 		startDelay: number
 	): Promise<void> {
 		// Get instrument once per phrase, not per note
-		const instrument = this.getInstrumentForRole(role);
+		// Increment counter to ensure each phrase can get a different instrument
+		const instrument = this.getInstrumentForRole(role, this.phraseCounter++);
+
 
 		logger.debug('phrase-play', 'Playing phrase', {
 			role,
@@ -282,7 +286,7 @@ export class NoteCentricPlayer {
 	/**
 	 * Get instrument for a role
 	 */
-	private getInstrumentForRole(role: string): string {
+	private getInstrumentForRole(role: string, phraseIndex: number = 0): string {
 		// Get list of enabled instruments from audio engine
 		const enabledInstruments = this.audioEngine.getEnabledInstruments();
 
@@ -304,16 +308,40 @@ export class NoteCentricPlayer {
 		// Find first preferred instrument that's enabled
 		for (const preferred of preferences) {
 			if (enabledInstruments.includes(preferred)) {
+				logger.info('instrument-selected', 'Selected preferred instrument for role', {
+					role,
+					instrument: preferred
+				});
 				return preferred;
 			}
 		}
 
-		// If no preferred instrument is enabled, use first available
-		logger.debug('instrument-fallback', 'Using fallback instrument for role', {
+		// If no preferred instrument is enabled, use round-robin distribution
+		// This ensures each phrase gets a different instrument for maximum variety
+		const instrumentIndex = (this.hashString(role) + phraseIndex) % enabledInstruments.length;
+		const selectedInstrument = enabledInstruments[instrumentIndex];
+
+		logger.info('instrument-fallback', 'Using fallback instrument with round-robin', {
 			role,
-			instrument: enabledInstruments[0]
+			phraseIndex,
+			instrument: selectedInstrument,
+			instrumentIndex,
+			enabledInstruments
 		});
-		return enabledInstruments[0];
+		return selectedInstrument;
+	}
+
+	/**
+	 * Hash a string to a number for deterministic selection
+	 */
+	private hashString(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i);
+			hash = ((hash << 5) - hash) + char;
+			hash = hash & hash; // Convert to 32bit integer
+		}
+		return Math.abs(hash);
 	}
 
 	/**

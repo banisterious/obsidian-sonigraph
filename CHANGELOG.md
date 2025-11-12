@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.3] - 2025-11-11
+
+### Fixed
+- **Instrument Selection**: All enabled instruments now properly used across all playback modes
+  - Fixed Timeline/Sonic Graph view to use 70/30 distribution instead of frequency-range selection
+  - Fixed Local Soundscape graph-centric mode to distribute instruments across depth layers
+  - Fixed Local Soundscape note-centric mode to use round-robin selection across phrases
+  - Ensures all enabled instrument combinations (not just default orchestral presets) are audible during playback
+
 ## [0.17.2] - 2025-11-11
 
 ### Fixed

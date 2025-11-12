@@ -150,9 +150,9 @@ chmod +x scripts/audit-report.sh
 
 ## Related Documentation
 
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Code quality standards for contributors
-- [AUDIT-REPORT.md](../AUDIT-REPORT.md) - Detailed audit findings
-- [CLAUDE.md](../CLAUDE.md) - Project guidelines and standards
+- [contributing.md](../contributing.md) - Code quality standards for contributors
+- [audit-report.md](../audit-report.md) - Detailed audit findings
+- [claude.md](../claude.md) - Project guidelines and standards
 
 ## Future Enhancements
 
