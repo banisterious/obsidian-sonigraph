@@ -4,13 +4,21 @@
   "description": "An Obsidian plugin that transforms the visual structure of your knowledge graph into music.",
   "main": "main.js",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && npm run build:css -- --no-fail-on-lint",
+    "dev": "npm run audit:quick && node esbuild.config.mjs",
+    "build": "npm run audit:quick && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && npm run build:css -- --no-fail-on-lint",
     "build:css": "node build-css.js",
     "build:css:watch": "node build-css.js --watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
     "lint:css": "stylelint \"styles/**/*.css\"",
     "lint:css:fix": "stylelint \"styles/**/*.css\" --fix",
     "format:css": "prettier --write \"styles/**/*.css\"",
+    "audit:quick": "npm run audit:innerHTML --silent && npm run audit:console --silent",
+    "audit:check": "npm run audit:innerHTML && npm run audit:console && npm run lint",
+    "audit:innerHTML": "! grep -rn --include='*.ts' --include='*.tsx' -E '\\.(innerHTML|outerHTML)\\s*=' src/ 2>/dev/null || (echo '❌ Found innerHTML/outerHTML usage' && exit 1)",
+    "audit:console": "! grep -rn --include='*.ts' --include='*.tsx' --exclude='logging.ts' 'console\\.(log|debug|info)' src/ 2>/dev/null || (echo '❌ Found console statements' && exit 1)",
+    "audit:report": "bash scripts/audit-report.sh",
+    "prepare": "husky install",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "clean:css": "rm -f styles.css.map",
     "deploy": "npm run build && cp main.js styles.css manifest.json /mnt/d/Vaults/Banister/.obsidian/plugins/sonigraph/ && echo '✅ Deployed to vault! Reload Obsidian (Ctrl+R) to see changes.'"
@@ -35,6 +43,8 @@
     "chalk": "^4.1.2",
     "chokidar": "^3.5.3",
     "esbuild": "0.17.3",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
     "obsidian": "latest",
     "prettier": "^3.0.0",
     "stylelint": "^14.16.1",
@@ -47,5 +57,12 @@
     "d3": "^7.9.0",
     "lamejs": "^1.2.1",
     "tone": "^14.8.49"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "npm run audit:innerHTML",
+      "npm run audit:console",
+      "eslint --fix"
+    ]
   }
 }
