@@ -8,14 +8,36 @@ Based on [PR review #8036](https://github.com/obsidianmd/obsidian-releases/pull/
 
 ## Components
 
-### 1. ESLint Configuration (`.eslintrc.json`)
+### 1. ESLint Configuration (`eslint.config.mjs`)
+
+**Updated to ESLint v9.x with flat config format**
 
 Enforces TypeScript best practices and Obsidian plugin requirements:
 
+#### TypeScript Rules
 - **`@typescript-eslint/no-explicit-any`** (error) - Blocks `as any` type casts
 - **`@typescript-eslint/no-non-null-assertion`** (error) - Blocks unsafe `!` assertions
 - **`@typescript-eslint/no-unsafe-*`** (warn) - Detects unsafe type operations
 - **`no-console`** (error) - Blocks console.log/debug/info (except in `logging.ts`)
+
+#### Obsidian Plugin Rules (via `eslint-plugin-obsidianmd`)
+
+The official [@obsidian/eslint-plugin](https://github.com/obsidianmd/eslint-plugin) provides 30+ Obsidian-specific linting rules:
+
+**UI & Styling**
+- **`obsidianmd/no-static-styles-assignment`** (error) - Prevents direct style assignments (use CSS classes or `setCssProps`)
+- **`obsidianmd/ui/sentence-case`** (error) - Enforces sentence case for UI text
+- **`obsidianmd/no-forbidden-elements`** (error) - Blocks problematic HTML elements
+
+**Code Quality**
+- **`obsidianmd/no-tfile-tfolder-cast`** (error) - Prevents unsafe TFile/TFolder type casts
+- **`obsidianmd/platform`** (error) - Ensures proper platform detection
+- **`obsidianmd/prefer-file-manager-trash-file`** (warn) - Recommends using FileManager.trashFile over vault.delete
+
+**Commands & Settings**
+- **`obsidianmd/commands/no-command-in-command-id`** (error) - Enforces proper command ID format
+- **`obsidianmd/settings-tab/no-manual-html-headings`** (error) - Prevents manual HTML headings in settings
+- And 20+ more rules for best practices
 
 ### 2. Pre-commit Hooks (`.husky/pre-commit`)
 
@@ -164,14 +186,23 @@ chmod +x scripts/audit-report.sh
 Potential improvements to consider:
 
 1. **GitHub Actions CI/CD** - Run audits on all PRs
-2. **Automated monthly reports** - Track `as any` reduction progress
-3. **Custom ESLint rules** - Block specific Obsidian antipatterns
-4. **Badge in README** - Show audit compliance status
+2. **Automated monthly reports** - Track progress on Obsidian-specific issues
+3. **Badge in README** - Show audit compliance status
+4. **Fix Obsidian plugin warnings** - Address 606 issues identified by `eslint-plugin-obsidianmd` (448 UI sentence case, 155 style assignments, 3 other)
 
 ---
 
 **Last updated:** 2025-11-12
-**Audit System Version:** 2.0.0
+**Audit System Version:** 2.1.0
+
+## Version 2.1.0 Updates (2025-11-12)
+
+- Integrated official `eslint-plugin-obsidianmd` for Obsidian-specific linting
+- Upgraded to ESLint v9.x with flat config format (`eslint.config.mjs`)
+- Upgraded TypeScript from 4.7.4 to 5.7.2 for compatibility
+- Upgraded typescript-eslint from 5.29.0 to 8.46.4
+- Added 30+ Obsidian-specific rules covering UI, commands, settings, and code quality
+- Identified 606 Obsidian-specific issues for future cleanup (non-blocking)
 
 ## Version 2.0.0 Updates (2025-11-12)
 
