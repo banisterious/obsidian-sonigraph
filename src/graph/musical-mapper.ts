@@ -1348,11 +1348,26 @@ export class MusicalMapper {
 			enabledInstruments.includes(instrument)
 		);
 
-		// If no enabled instruments in this range, fall back to any enabled instrument
-		const finalCandidates = candidateInstruments.length > 0 ? candidateInstruments : enabledInstruments;
-
-		// Use node characteristics to pick a specific instrument
+		// Use node characteristics for all decisions
 		const nodeHash = this.hashString(node.id + node.name);
+
+		// If no enabled instruments in this range, distribute across ALL enabled instruments
+		// This ensures every enabled instrument gets used, not just range-specific ones
+		let finalCandidates: string[];
+		if (candidateInstruments.length > 0) {
+			// Mix: 70% from matching range, 30% from all enabled
+			// This provides both musical coherence and variety
+			if (nodeHash % 10 < 7) {
+				// 70% chance: use range-specific instrument
+				finalCandidates = candidateInstruments;
+			} else {
+				// 30% chance: use any enabled instrument for variety
+				finalCandidates = enabledInstruments;
+			}
+		} else {
+			// No instruments in this range, use all enabled
+			finalCandidates = enabledInstruments;
+		}
 		const instrumentIndex = nodeHash % finalCandidates.length;
 		const selectedInstrument = finalCandidates[instrumentIndex];
 
@@ -1362,9 +1377,10 @@ export class MusicalMapper {
 			connectionRatio: connectionRatio.toFixed(3),
 			range: rangeKey,
 			instrument: selectedInstrument,
-			candidateInstruments,
+			candidateInstruments: candidateInstruments.length,
 			enabledInstruments: enabledInstruments.length,
-			finalCandidates
+			finalCandidates: finalCandidates.length,
+			usedVarietyMode: finalCandidates.length === enabledInstruments.length && candidateInstruments.length > 0
 		});
 
 		return selectedInstrument;
