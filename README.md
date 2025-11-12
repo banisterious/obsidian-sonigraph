@@ -151,9 +151,10 @@ If you find this plugin useful, please consider supporting its development!
 
 ## Current Version
 
-**v0.17.3** - Production Ready
+**v0.17.4** - Production Ready
 
 **Latest Updates:**
+- Code quality improvements for Obsidian plugin review compliance (v0.17.4)
 - Instrument selection fixes ensuring all enabled instruments are used (v0.17.3)
 - Note-centric musicality settings with configurable presets (v0.17.1)
 - Local Soundscape with context-aware modifiers (v0.17.0)

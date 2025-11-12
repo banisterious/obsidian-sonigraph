@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2025-11-12
+
+### Fixed
+- **Code Quality**: Obsidian plugin review compliance
+  - Removed console logging (1 instance eliminated)
+  - Fixed non-null assertion safety (137 instances across 32 files)
+  - Improved type safety (81 `as any` casts eliminated across 9 files)
+  - Created proper TypeScript definitions for Obsidian API extensions
+  - Added type definitions for Tone.js internals and musical settings
+
+### Changed
+- **Default Instruments**: Changed default enabled instruments to flute and acoustic guitar (sample-based) for simpler initial user experience
+
 ## [0.17.3] - 2025-11-11
 
 ### Fixed

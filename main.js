@@ -798,7 +798,7 @@ var init_constants = __esm({
           }
         },
         organ: {
-          enabled: true,
+          enabled: false,
           volume: 0.7,
           maxVoices: 4,
           useHighQuality: true,
@@ -864,11 +864,11 @@ var init_constants = __esm({
           }
         },
         flute: {
-          enabled: false,
+          enabled: true,
           volume: 0.6,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -898,7 +898,7 @@ var init_constants = __esm({
           }
         },
         clarinet: {
-          enabled: true,
+          enabled: false,
           volume: 0.5,
           maxVoices: 4,
           useHighQuality: false,
@@ -1198,11 +1198,11 @@ var init_constants = __esm({
           }
         },
         guitar: {
-          enabled: false,
+          enabled: true,
           volume: 0.6,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -1232,7 +1232,7 @@ var init_constants = __esm({
           }
         },
         guitarElectric: {
-          enabled: true,
+          enabled: false,
           volume: 0.7,
           maxVoices: 4,
           useHighQuality: true,
