@@ -15,6 +15,7 @@
     "format:css": "prettier --write \"styles/**/*.css\"",
     "audit:quick": "npm run audit:innerHTML --silent && npm run audit:console --silent",
     "audit:check": "npm run audit:innerHTML && npm run audit:console && npm run lint",
+    "audit:pr": "bash scripts/audit-pr-requirements.sh",
     "audit:innerHTML": "! grep -rn --include='*.ts' --include='*.tsx' -E '\\.(innerHTML|outerHTML)\\s*=' src/ 2>/dev/null || (echo '❌ Found innerHTML/outerHTML usage' && exit 1)",
     "audit:console": "! grep -rn --include='*.ts' --include='*.tsx' --exclude='logging.ts' 'console\\.(log|debug|info)' src/ 2>/dev/null || (echo '❌ Found console statements' && exit 1)",
     "audit:report": "bash scripts/audit-report.sh",

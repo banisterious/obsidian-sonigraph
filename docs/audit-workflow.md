@@ -12,7 +12,8 @@ Based on [PR review #8036](https://github.com/obsidianmd/obsidian-releases/pull/
 
 Enforces TypeScript best practices and Obsidian plugin requirements:
 
-- **`@typescript-eslint/no-explicit-any`** (warn) - Flags `as any` type casts
+- **`@typescript-eslint/no-explicit-any`** (error) - Blocks `as any` type casts
+- **`@typescript-eslint/no-non-null-assertion`** (error) - Blocks unsafe `!` assertions
 - **`@typescript-eslint/no-unsafe-*`** (warn) - Detects unsafe type operations
 - **`no-console`** (error) - Blocks console.log/debug/info (except in `logging.ts`)
 
@@ -31,6 +32,9 @@ Automatically runs before every commit via `lint-staged`:
 #### Quick Checks (exit on first failure)
 
 ```bash
+# Run comprehensive PR requirements audit
+npm run audit:pr
+
 # Run all checks (innerHTML + console + lint)
 npm run audit:check
 
@@ -146,7 +150,8 @@ chmod +x scripts/audit-report.sh
 |-------|--------|---------|--------|
 | innerHTML/outerHTML | 0 | 0 | ✅ |
 | console statements | 0 | 0 | ✅ |
-| `as any` casts | <50 | 81 | ⚠️ (acceptable: <85) |
+| `as any` casts | 0 | 0 | ✅ |
+| Non-null assertions | 0 | 0 | ✅ |
 
 ## Related Documentation
 
@@ -165,5 +170,12 @@ Potential improvements to consider:
 
 ---
 
-**Last updated:** 2025-11-11
-**Audit System Version:** 1.0.0
+**Last updated:** 2025-11-12
+**Audit System Version:** 2.0.0
+
+## Version 2.0.0 Updates (2025-11-12)
+
+- Upgraded ESLint rules from warnings to errors for `no-explicit-any` and added `no-non-null-assertion`
+- All PR review requirements now at 100% compliance (0 instances of all issues)
+- Added `npm run audit:pr` comprehensive check script
+- Updated pre-commit hooks to block all critical issues
