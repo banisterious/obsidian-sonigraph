@@ -20,6 +20,43 @@ import { ChordFusionEngine, NoteEvent as ChordNoteEvent, ChordGroup } from './Ch
 
 const logger = getLogger('audio-engine');
 
+/**
+ * Type definitions for Tone.js musical notes
+ */
+type MusicalNote = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
+type MusicalScale = 'major' | 'minor' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian' | 'aeolian' | 'locrian' | 'pentatonic-major' | 'pentatonic-minor';
+
+/**
+ * Extended Tone.js instrument interface with polyphony control
+ * Tone.js PolySynth and Sampler have maxPolyphony but it's not in their public types
+ */
+interface InstrumentWithPolyphony {
+	maxPolyphony: number;
+	[key: string]: any;
+}
+
+/**
+ * Extended Tone.js Sampler interface with internal buffer access
+ * Used for checking if samples are actually loaded
+ */
+interface SamplerWithBuffers {
+	_buffers?: {
+		_buffers?: Record<string, ToneBuffer>;
+	};
+}
+
+interface ToneBuffer {
+	loaded?: boolean;
+}
+
+/**
+ * Extended Tone.js synth interface with active voice tracking
+ * Used for performance monitoring
+ */
+interface SynthWithVoiceTracking {
+	activeVoices?: number;
+}
+
 // Instrument configurations now managed by modular system in ./configs/
 
 // VoiceAssignment interface moved to voice-management/types.ts
@@ -2524,8 +2561,8 @@ export class AudioEngine {
 			if (this.musicalTheoryEngine) {
 				const config: MusicalTheoryConfig = {
 					enabled: theorySettings.enforceHarmony ?? true,
-					rootNote: theorySettings.rootNote as any || 'C',
-					scale: theorySettings.scale as any || 'major',
+					rootNote: (theorySettings.rootNote as MusicalNote) || 'C',
+					scale: (theorySettings.scale as MusicalScale) || 'major',
 					enforceHarmony: theorySettings.enforceHarmony ?? true,
 					quantizationStrength: theorySettings.quantizationStrength ?? 0.8,
 					dissonanceThreshold: theorySettings.dissonanceThreshold ?? 0.5,
@@ -2774,7 +2811,7 @@ export class AudioEngine {
 		if (filter) {
 			// For filters, we can't use wet/dry, so we bypass by setting frequency very high or very low
 			if (enabled) {
-				const instrumentSettings = (this.settings.instruments as any)[instrument];
+				const instrumentSettings = this.settings.instruments[instrument as keyof typeof this.settings.instruments];
 				const cutoffFreq = instrumentSettings?.effects?.filter?.params?.frequency as number || 3500;
 				filter.frequency.value = cutoffFreq; // Restore saved cutoff
 			} else {
@@ -3762,7 +3799,10 @@ export class AudioEngine {
 			if (!notesByLayer.has(layer)) {
 				notesByLayer.set(layer, []);
 			}
-			notesByLayer.get(layer)!.push(item);
+			const layerNotes = notesByLayer.get(layer);
+			if (layerNotes) {
+				layerNotes.push(item);
+			}
 		});
 
 		// Trigger chord for each layer
@@ -3830,7 +3870,10 @@ export class AudioEngine {
 			if (!notesByLayer.has(layer)) {
 				notesByLayer.set(layer, []);
 			}
-			notesByLayer.get(layer)!.push(item);
+			const layerNotes = notesByLayer.get(layer);
+			if (layerNotes) {
+				layerNotes.push(item);
+			}
 		});
 
 		// Process each layer
@@ -5052,9 +5095,11 @@ export class AudioEngine {
 			
 			// Estimate CPU usage based on active voices and effects
 			let estimatedCPU = 0;
-			
+
 			this.instruments.forEach((synth, instrumentName) => {
-				const activeVoices = (synth as any).activeVoices || 0;
+				// Access undocumented activeVoices property for performance monitoring
+				const synthWithTracking = synth as unknown as SynthWithVoiceTracking;
+				const activeVoices = synthWithTracking.activeVoices || 0;
 				estimatedCPU += activeVoices * 5; // 5% per voice estimate
 				
 				// Add effect overhead
@@ -5100,7 +5145,9 @@ export class AudioEngine {
 
 		// Migrate settings and reinitialize
 		this.settings = migrateToEnhancedRouting(this.settings);
-		this.settings.enhancedRouting!.enabled = true;
+		if (this.settings.enhancedRouting) {
+			this.settings.enhancedRouting.enabled = true;
+		}
 
 		// Reinitialize with enhanced routing
 		await this.initializeEnhancedRouting();
@@ -5118,7 +5165,9 @@ export class AudioEngine {
 		}
 
 		this.enhancedRouting = false;
-		this.settings.enhancedRouting!.enabled = false;
+		if (this.settings.enhancedRouting) {
+			this.settings.enhancedRouting.enabled = false;
+		}
 
 		// Clear enhanced routing data
 		this.effectChains.clear();
@@ -5377,13 +5426,14 @@ export class AudioEngine {
 			
 			// Set up a timeout to check if samples loaded successfully
 			setTimeout(() => {
-				// Check if any buffers are actually loaded
-				const buffers = (sampler as any)._buffers;
+				// Check if any buffers are actually loaded (accessing Tone.js internal structure)
+				const samplerWithBuffers = sampler as unknown as SamplerWithBuffers;
+				const buffers = samplerWithBuffers._buffers;
 				let hasValidBuffers = false;
-				
+
 				if (buffers && buffers._buffers) {
 					for (const [note, buffer] of Object.entries(buffers._buffers)) {
-						if (buffer && (buffer as any).loaded) {
+						if (buffer && buffer.loaded) {
 							hasValidBuffers = true;
 							break;
 						}
@@ -6015,7 +6065,8 @@ export class AudioEngine {
 				// Restore full voice count
 				const instrument = this.instruments.get(instrumentName);
 				if (instrument && 'maxPolyphony' in instrument) {
-					(instrument as any).maxPolyphony = instrumentSettings.maxVoices || 8;
+					// Set maxPolyphony (Tone.js internal property not in public types)
+					(instrument as unknown as InstrumentWithPolyphony).maxPolyphony = instrumentSettings.maxVoices || 8;
 				}
 			}
 		});
@@ -6029,7 +6080,8 @@ export class AudioEngine {
 				// Reduce voice count
 				const instrument = this.instruments.get(instrumentName);
 				if (instrument && 'maxPolyphony' in instrument) {
-					(instrument as any).maxPolyphony = Math.max(Math.floor((instrumentSettings.maxVoices || 4) * 0.75), 2);
+					// Set maxPolyphony (Tone.js internal property not in public types)
+					(instrument as unknown as InstrumentWithPolyphony).maxPolyphony = Math.max(Math.floor((instrumentSettings.maxVoices || 4) * 0.75), 2);
 				}
 			}
 		});
@@ -6043,7 +6095,8 @@ export class AudioEngine {
 				// Minimize voice count
 				const instrument = this.instruments.get(instrumentName);
 				if (instrument && 'maxPolyphony' in instrument) {
-					(instrument as any).maxPolyphony = Math.max(Math.floor((instrumentSettings.maxVoices || 4) * 0.5), 1);
+					// Set maxPolyphony (Tone.js internal property not in public types)
+					(instrument as unknown as InstrumentWithPolyphony).maxPolyphony = Math.max(Math.floor((instrumentSettings.maxVoices || 4) * 0.5), 1);
 				}
 
 				// Temporarily disable chorus and filter effects for performance

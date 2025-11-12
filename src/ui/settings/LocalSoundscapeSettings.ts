@@ -168,8 +168,8 @@ export class LocalSoundscapeSettings {
 				.addOption('file-name', 'File name')
 				.addOption('custom', 'Custom key')
 				.setValue(keySelection.mode || 'vault-name')
-				.onChange(async (value: any) => {
-					keySelection.mode = value;
+				.onChange(async (value) => {
+					keySelection.mode = value as 'vault-name' | 'root-folder' | 'folder-path' | 'full-path' | 'file-name' | 'custom';
 					await this.plugin.saveSettings();
 					logger.info('key-selection', `Key mode: ${value}`);
 
@@ -284,8 +284,8 @@ export class LocalSoundscapeSettings {
 					.addOption('influenced', 'Influenced - Blend with base values')
 					.addOption('only', 'Only - Use context exclusively')
 					.setValue(contextAware.mode || 'influenced')
-					.onChange(async (value: any) => {
-						contextAware.mode = value;
+					.onChange(async (value) => {
+						contextAware.mode = value as 'influenced' | 'only';
 						await this.plugin.saveSettings();
 						logger.info('context-aware', `Mode: ${value}`);
 					})
@@ -412,7 +412,9 @@ export class LocalSoundscapeSettings {
 						.setValue((contextAware.proseStructure?.sensitivity || 0.5) * 100)
 						.setDynamicTooltip()
 						.onChange(async (value) => {
-							contextAware.proseStructure!.sensitivity = value / 100;
+							if (contextAware.proseStructure) {
+								contextAware.proseStructure.sensitivity = value / 100;
+							}
 							await this.plugin.saveSettings();
 							logger.info('context-aware', `Prose sensitivity: ${value}%`);
 						})
@@ -425,7 +427,9 @@ export class LocalSoundscapeSettings {
 					.addToggle(toggle => toggle
 						.setValue(contextAware.proseStructure?.affectPitch !== false)
 						.onChange(async (value) => {
-							contextAware.proseStructure!.affectPitch = value;
+							if (contextAware.proseStructure) {
+								contextAware.proseStructure.affectPitch = value;
+							}
 							await this.plugin.saveSettings();
 							logger.info('context-aware', `Prose affect pitch: ${value}`);
 						})
@@ -437,7 +441,9 @@ export class LocalSoundscapeSettings {
 					.addToggle(toggle => toggle
 						.setValue(contextAware.proseStructure?.affectDuration !== false)
 						.onChange(async (value) => {
-							contextAware.proseStructure!.affectDuration = value;
+							if (contextAware.proseStructure) {
+								contextAware.proseStructure.affectDuration = value;
+							}
 							await this.plugin.saveSettings();
 							logger.info('context-aware', `Prose affect duration: ${value}`);
 						})
@@ -449,7 +455,9 @@ export class LocalSoundscapeSettings {
 					.addToggle(toggle => toggle
 						.setValue(contextAware.proseStructure?.affectVelocity !== false)
 						.onChange(async (value) => {
-							contextAware.proseStructure!.affectVelocity = value;
+							if (contextAware.proseStructure) {
+								contextAware.proseStructure.affectVelocity = value;
+							}
 							await this.plugin.saveSettings();
 							logger.info('context-aware', `Prose affect velocity: ${value}`);
 						})
@@ -461,7 +469,9 @@ export class LocalSoundscapeSettings {
 					.addToggle(toggle => toggle
 						.setValue(contextAware.proseStructure?.affectTimbre || false)
 						.onChange(async (value) => {
-							contextAware.proseStructure!.affectTimbre = value;
+							if (contextAware.proseStructure) {
+								contextAware.proseStructure.affectTimbre = value;
+							}
 							await this.plugin.saveSettings();
 							logger.info('context-aware', `Prose affect timbre: ${value}`);
 						})
@@ -564,7 +574,9 @@ export class LocalSoundscapeSettings {
 					return dropdown
 						.setValue(enhancements.scaleQuantization?.rootNote || 'C')
 						.onChange(async (value) => {
-							enhancements.scaleQuantization!.rootNote = value as any;
+							if (enhancements.scaleQuantization) {
+								enhancements.scaleQuantization.rootNote = value as 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
+							}
 							await this.plugin.saveSettings();
 							logger.info('musical-enhancements', `Root note: ${value}`);
 						});
@@ -594,7 +606,9 @@ export class LocalSoundscapeSettings {
 					return dropdown
 						.setValue(enhancements.scaleQuantization?.scale || 'major')
 						.onChange(async (value) => {
-							enhancements.scaleQuantization!.scale = value as any;
+							if (enhancements.scaleQuantization) {
+								enhancements.scaleQuantization.scale = value as 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian';
+							}
 							await this.plugin.saveSettings();
 							logger.info('musical-enhancements', `Scale type: ${value}`);
 						});
@@ -609,7 +623,9 @@ export class LocalSoundscapeSettings {
 					.setValue((enhancements.scaleQuantization?.quantizationStrength || 0.8) * 100)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.scaleQuantization!.quantizationStrength = value / 100;
+						if (enhancements.scaleQuantization) {
+							enhancements.scaleQuantization.quantizationStrength = value / 100;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Quantization strength: ${value}%`);
 					})
@@ -657,7 +673,9 @@ export class LocalSoundscapeSettings {
 					.setValue((enhancements.chordVoicing?.voicingDensity || 0.5) * 100)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.chordVoicing!.voicingDensity = value / 100;
+						if (enhancements.chordVoicing) {
+							enhancements.chordVoicing.voicingDensity = value / 100;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Voicing density: ${value}%`);
 					})
@@ -691,7 +709,9 @@ export class LocalSoundscapeSettings {
 					.setValue(enhancements.rhythmicPatterns?.tempo || 60)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.rhythmicPatterns!.tempo = value;
+						if (enhancements.rhythmicPatterns) {
+							enhancements.rhythmicPatterns.tempo = value;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Tempo: ${value} BPM`);
 					})
@@ -738,7 +758,9 @@ export class LocalSoundscapeSettings {
 					return dropdown
 						.setValue(enhancements.tensionTracking?.arcShape || 'rise-fall')
 						.onChange(async (value) => {
-							enhancements.tensionTracking!.arcShape = value as any;
+							if (enhancements.tensionTracking) {
+								enhancements.tensionTracking.arcShape = value as 'rise-fall' | 'build' | 'release' | 'wave' | 'plateau';
+							}
 							await this.plugin.saveSettings();
 							logger.info('musical-enhancements', `Arc shape: ${value}`);
 						});
@@ -754,7 +776,9 @@ export class LocalSoundscapeSettings {
 						.setValue((enhancements.tensionTracking?.peakPosition || 0.6) * 100)
 						.setDynamicTooltip()
 						.onChange(async (value) => {
-							enhancements.tensionTracking!.peakPosition = value / 100;
+							if (enhancements.tensionTracking) {
+								enhancements.tensionTracking.peakPosition = value / 100;
+							}
 							await this.plugin.saveSettings();
 							logger.info('musical-enhancements', `Peak position: ${value}%`);
 						})
@@ -793,7 +817,9 @@ export class LocalSoundscapeSettings {
 					.setValue((enhancements.dynamicPanning?.smoothingFactor || 0.3) * 100)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.dynamicPanning!.smoothingFactor = value / 100;
+						if (enhancements.dynamicPanning) {
+							enhancements.dynamicPanning.smoothingFactor = value / 100;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Smoothing factor: ${value}%`);
 					})
@@ -808,7 +834,9 @@ export class LocalSoundscapeSettings {
 					.setValue(enhancements.dynamicPanning?.animationSpeed || 2.0)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.dynamicPanning!.animationSpeed = value;
+						if (enhancements.dynamicPanning) {
+							enhancements.dynamicPanning.animationSpeed = value;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Animation speed: ${value}x`);
 					})
@@ -859,7 +887,9 @@ export class LocalSoundscapeSettings {
 					return dropdown
 						.setValue(enhancements.turnTaking?.pattern || 'call-response')
 						.onChange(async (value) => {
-							enhancements.turnTaking!.pattern = value as any;
+							if (enhancements.turnTaking) {
+								enhancements.turnTaking.pattern = value as 'none' | 'sequential' | 'call-response' | 'solos' | 'layered-entry' | 'conversation' | 'fugue' | 'antiphonal';
+							}
 							await this.plugin.saveSettings();
 							logger.info('musical-enhancements', `Turn-taking pattern: ${value}`);
 						});
@@ -874,7 +904,9 @@ export class LocalSoundscapeSettings {
 					.setValue(enhancements.turnTaking?.turnLength || 4)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.turnTaking!.turnLength = value;
+						if (enhancements.turnTaking) {
+							enhancements.turnTaking.turnLength = value;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Turn length: ${value} beats`);
 					})
@@ -889,7 +921,9 @@ export class LocalSoundscapeSettings {
 					.setValue((enhancements.turnTaking?.accompanimentReduction || 0.4) * 100)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
-						enhancements.turnTaking!.accompanimentReduction = value / 100;
+						if (enhancements.turnTaking) {
+							enhancements.turnTaking.accompanimentReduction = value / 100;
+						}
 						await this.plugin.saveSettings();
 						logger.info('musical-enhancements', `Accompaniment reduction: ${value}%`);
 					})

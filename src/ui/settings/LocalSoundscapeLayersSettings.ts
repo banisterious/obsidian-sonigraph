@@ -128,7 +128,8 @@ export class LocalSoundscapeLayersSettings {
 
 		const content = card.getContent();
 
-		const layers = this.plugin.settings.localSoundscape!.continuousLayers!;
+		if (!this.plugin.settings.localSoundscape?.continuousLayers) return;
+		const layers = this.plugin.settings.localSoundscape.continuousLayers;
 
 		// Intensity slider
 		new Setting(content)

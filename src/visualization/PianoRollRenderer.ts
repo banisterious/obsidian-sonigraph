@@ -267,7 +267,8 @@ export class PianoRollRenderer implements VisualizationRenderer {
         });
 
         Object.entries(LAYER_COLORS).forEach(([layer, color]) => {
-            const legendItem = this.legendContainer!.createDiv({
+            if (!this.legendContainer) return;
+            const legendItem = this.legendContainer.createDiv({
                 cls: 'piano-roll-legend-item'
             });
 
@@ -472,11 +473,11 @@ export class PianoRollRenderer implements VisualizationRenderer {
         events.forEach(event => {
             // Calculate position - notes stay in fixed positions, playhead moves
             // Map note timestamp to canvas position
-            const x = (event.timestamp / timelineDuration) * this.canvas!.width;
-            const width = (event.duration / timelineDuration) * this.canvas!.width;
+            const x = (event.timestamp / timelineDuration) * this.canvas.width;
+            const width = (event.duration / timelineDuration) * this.canvas.width;
 
             // Skip if outside visible area
-            if (x + width < 0 || x > this.canvas!.width) return;
+            if (x + width < 0 || x > this.canvas.width) return;
 
             // Get pitch (convert MIDI number or note name to pitch)
             const pitch = typeof event.pitch === 'number' ? event.pitch : this.noteToPitch(event.pitch);
@@ -488,7 +489,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
                     calculatedPitch: pitch,
                     minPitch: this.pianoRollConfig.minPitch,
                     maxPitch: this.pianoRollConfig.maxPitch,
-                    canvasHeight: this.canvas!.height
+                    canvasHeight: this.canvas.height
                 });
                 this.noteCount++;
             }
@@ -502,8 +503,8 @@ export class PianoRollRenderer implements VisualizationRenderer {
             // Scale pitch to canvas height
             const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
             const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange; // 0 to 1
-            const y = (1 - pitchNormalized) * this.canvas!.height; // Invert so high pitches are at top
-            const height = Math.max(4, this.canvas!.height / pitchRange); // Scale height to canvas
+            const y = (1 - pitchNormalized) * this.canvas.height; // Invert so high pitches are at top
+            const height = Math.max(4, this.canvas.height / pitchRange); // Scale height to canvas
 
             // Debug logging for Y position
             if (this.noteCount <= 5) {
@@ -512,7 +513,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
                     pitchNormalized,
                     y,
                     height,
-                    canvasHeight: this.canvas!.height
+                    canvasHeight: this.canvas.height
                 });
             }
 
@@ -698,8 +699,8 @@ export class PianoRollRenderer implements VisualizationRenderer {
             const pitch = typeof note.pitch === 'number' ? note.pitch : this.noteToPitch(note.pitch);
             const pitchRange = this.pianoRollConfig.maxPitch - this.pianoRollConfig.minPitch;
             const pitchNormalized = (pitch - this.pianoRollConfig.minPitch) / pitchRange;
-            const y = (1 - pitchNormalized) * this.canvas!.height;
-            const x = (note.timestamp / timelineDuration) * this.canvas!.width;
+            const y = (1 - pitchNormalized) * this.canvas.height;
+            const x = (note.timestamp / timelineDuration) * this.canvas.width;
             return { x, y, note };
         });
 

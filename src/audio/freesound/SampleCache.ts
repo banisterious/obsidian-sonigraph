@@ -287,7 +287,7 @@ export class SampleCache {
         if (!this.db) return null;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readonly');
+            const transaction = this.db.transaction([this.storeName], 'readonly');
             const store = transaction.objectStore(this.storeName);
             const request = store.get(soundId);
 
@@ -323,7 +323,7 @@ export class SampleCache {
         };
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readwrite');
+            const transaction = this.db.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
             const request = store.put(sample);
 
@@ -346,7 +346,7 @@ export class SampleCache {
         if (!this.db) return false;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readonly');
+            const transaction = this.db.transaction([this.storeName], 'readonly');
             const store = transaction.objectStore(this.storeName);
             const request = store.count(soundId);
 
@@ -367,7 +367,7 @@ export class SampleCache {
         if (!this.db) return;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readwrite');
+            const transaction = this.db.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
             const request = store.delete(soundId);
 
@@ -383,7 +383,7 @@ export class SampleCache {
         if (!this.db) return;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readwrite');
+            const transaction = this.db.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
             const request = store.clear();
 
@@ -399,7 +399,7 @@ export class SampleCache {
         if (!this.db) return 0;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readonly');
+            const transaction = this.db.transaction([this.storeName], 'readonly');
             const store = transaction.objectStore(this.storeName);
             const request = store.count();
 
@@ -415,7 +415,7 @@ export class SampleCache {
         if (!this.db) return 0;
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([this.storeName], 'readonly');
+            const transaction = this.db.transaction([this.storeName], 'readonly');
             const store = transaction.objectStore(this.storeName);
             const request = store.getAll();
 

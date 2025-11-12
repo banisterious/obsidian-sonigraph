@@ -217,7 +217,9 @@ export class ExportModal extends Modal {
 
         // Save to settings
         if (!this.plugin.settings.exportSettings) {
-            this.plugin.settings.exportSettings = {} as any;
+            this.plugin.settings.exportSettings = {
+                exportPresets: []
+            };
         }
         if (!this.plugin.settings.exportSettings.exportPresets) {
             this.plugin.settings.exportSettings.exportPresets = [];
@@ -536,12 +538,13 @@ export class ExportModal extends Modal {
 
         // Toggle metadata section
         header.addEventListener('click', () => {
-            const isVisible = this.metadataContainer!.hasClass('sonigraph-export-metadata-content--visible');
+            if (!this.metadataContainer) return;
+            const isVisible = this.metadataContainer.hasClass('sonigraph-export-metadata-content--visible');
             if (isVisible) {
-                this.metadataContainer!.removeClass('sonigraph-export-metadata-content--visible');
+                this.metadataContainer.removeClass('sonigraph-export-metadata-content--visible');
                 header.textContent = 'Metadata (Optional) ▼';
             } else {
-                this.metadataContainer!.addClass('sonigraph-export-metadata-content--visible');
+                this.metadataContainer.addClass('sonigraph-export-metadata-content--visible');
                 header.textContent = 'Metadata (Optional) ▲';
             }
         });
@@ -698,7 +701,9 @@ export class ExportModal extends Modal {
 
             // Save export preferences for next time
             if (!this.plugin.settings.exportSettings) {
-                this.plugin.settings.exportSettings = {} as any;
+                this.plugin.settings.exportSettings = {
+                    exportPresets: []
+                };
             }
 
             // Save metadata if provided
@@ -915,7 +920,12 @@ export class ExportModal extends Modal {
      * Estimate file size in bytes
      */
     private estimateFileSize(duration: number): number {
-        const quality = this.config.quality as any;
+        interface QualitySettings {
+            sampleRate?: number;
+            bitDepth?: number;
+            bitRate?: number;
+        }
+        const quality = this.config.quality as QualitySettings | undefined;
         const format = this.config.format || 'wav';
 
         if (format === 'wav') {

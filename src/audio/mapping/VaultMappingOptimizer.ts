@@ -501,7 +501,7 @@ export class VaultMappingOptimizer {
             if (!familyGroups.has(family)) {
                 familyGroups.set(family, []);
             }
-            familyGroups.get(family)!.push(instrument);
+            const familyInstruments = familyGroups.get(family); if (familyInstruments) familyInstruments.push(instrument);
         }
 
         // Create neighborhoods within families

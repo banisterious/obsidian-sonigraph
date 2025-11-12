@@ -179,8 +179,8 @@ export class LocalSoundscapeRenderer {
 	 */
 	private renderLinks(links: LocalSoundscapeLink[]): void {
 		const linkSelection = this.linkGroup
-			.selectAll('line')
-			.data(links, (d: any) => d.id);
+			.selectAll<SVGLineElement, LocalSoundscapeLink>('line')
+			.data(links, (d) => d.id);
 
 		// Enter (new links)
 		const linkEnter = linkSelection.enter()
@@ -191,23 +191,23 @@ export class LocalSoundscapeRenderer {
 			.attr('stroke-opacity', 0); // Start invisible
 
 		// Update (enter + existing links)
-		linkEnter.merge(linkSelection as any)
+		linkEnter.merge(linkSelection)
 			.transition()
 			.duration(500)
 			.ease(d3.easeCubicInOut)
-			.attr('x1', (d: any) => {
+			.attr('x1', (d) => {
 				const source = this.findNode(d.source);
 				return source?.x || 0;
 			})
-			.attr('y1', (d: any) => {
+			.attr('y1', (d) => {
 				const source = this.findNode(d.source);
 				return source?.y || 0;
 			})
-			.attr('x2', (d: any) => {
+			.attr('x2', (d) => {
 				const target = this.findNode(d.target);
 				return target?.x || 0;
 			})
-			.attr('y2', (d: any) => {
+			.attr('y2', (d) => {
 				const target = this.findNode(d.target);
 				return target?.y || 0;
 			})
@@ -228,8 +228,8 @@ export class LocalSoundscapeRenderer {
 	 */
 	private renderNodes(nodes: LocalSoundscapeNode[]): void {
 		const nodeSelection = this.nodeGroup
-			.selectAll('circle')
-			.data(nodes, (d: any) => d.id);
+			.selectAll<SVGCircleElement, LocalSoundscapeNode>('circle')
+			.data(nodes, (d) => d.id);
 
 		// Enter (new nodes)
 		const nodeEnter = nodeSelection.enter()
@@ -249,15 +249,15 @@ export class LocalSoundscapeRenderer {
 			.on('mouseout', (event, d) => this.handleNodeMouseOut(event, d));
 
 		// Update (enter + existing nodes)
-		nodeEnter.merge(nodeSelection as any)
+		nodeEnter.merge(nodeSelection)
 			.transition()
 			.duration(500)
 			.ease(d3.easeCubicInOut)
-			.attr('cx', (d: any) => d.x || 0)
-			.attr('cy', (d: any) => d.y || 0)
-			.attr('r', (d: any) => this.getNodeRadius(d))
-			.attr('fill', (d: any) => this.getNodeColor(d))
-			.attr('stroke', (d: any) => this.getNodeStroke(d))
+			.attr('cx', (d) => d.x || 0)
+			.attr('cy', (d) => d.y || 0)
+			.attr('r', (d) => this.getNodeRadius(d))
+			.attr('fill', (d) => this.getNodeColor(d))
+			.attr('stroke', (d) => this.getNodeStroke(d))
 			.style('opacity', 1);
 
 		// Exit (removed nodes)
@@ -276,8 +276,8 @@ export class LocalSoundscapeRenderer {
 	 */
 	private renderLabels(nodes: LocalSoundscapeNode[]): void {
 		const labelSelection = this.labelGroup
-			.selectAll('text')
-			.data(nodes, (d: any) => d.id);
+			.selectAll<SVGTextElement, LocalSoundscapeNode>('text')
+			.data(nodes, (d) => d.id);
 
 		// Enter (new labels)
 		const labelEnter = labelSelection.enter()
@@ -292,12 +292,12 @@ export class LocalSoundscapeRenderer {
 			.text((d) => d.basename);
 
 		// Update (enter + existing labels)
-		labelEnter.merge(labelSelection as any)
+		labelEnter.merge(labelSelection)
 			.transition()
 			.duration(500)
 			.ease(d3.easeCubicInOut)
-			.attr('x', (d: any) => d.x || 0)
-			.attr('y', (d: any) => (d.y || 0) + this.config.nodeRadius + 12)
+			.attr('x', (d) => d.x || 0)
+			.attr('y', (d) => (d.y || 0) + this.config.nodeRadius + 12)
 			.style('opacity', 1);
 
 		// Exit (removed labels)
@@ -364,8 +364,8 @@ export class LocalSoundscapeRenderer {
 
 		// Render cluster backgrounds
 		const clusterSelection = this.clusterGroup
-			.selectAll('g.cluster')
-			.data(clusterBounds, (d: any) => d.cluster.id);
+			.selectAll<SVGGElement, ClusterBounds>('g.cluster')
+			.data(clusterBounds, (d) => d.cluster.id);
 
 		// Enter (new clusters)
 		const clusterEnter = clusterSelection.enter()
@@ -375,8 +375,8 @@ export class LocalSoundscapeRenderer {
 		// Add background rectangle with initial state
 		clusterEnter.append('rect')
 			.attr('class', 'cluster-background')
-			.attr('x', (d: ClusterBounds) => d.centerX)
-			.attr('y', (d: ClusterBounds) => d.centerY)
+			.attr('x', (d) => d.centerX)
+			.attr('y', (d) => d.centerY)
 			.attr('width', 0)
 			.attr('height', 0)
 			.attr('rx', 12)
@@ -390,37 +390,37 @@ export class LocalSoundscapeRenderer {
 			.style('opacity', 0);
 
 		// Update (both enter and existing)
-		const clusterUpdate = clusterEnter.merge(clusterSelection as any);
+		const clusterUpdate = clusterEnter.merge(clusterSelection);
 
 		// Update background with transition
-		clusterUpdate.select('rect.cluster-background')
+		clusterUpdate.select<SVGRectElement>('rect.cluster-background')
 			.transition()
 			.duration(500)
 			.ease(d3.easeCubicInOut)
-			.attr('x', (d: ClusterBounds) => d.minX)
-			.attr('y', (d: ClusterBounds) => d.minY)
-			.attr('width', (d: ClusterBounds) => d.maxX - d.minX)
-			.attr('height', (d: ClusterBounds) => d.maxY - d.minY)
-			.attr('fill', (d: ClusterBounds) => d.cluster.color)
+			.attr('x', (d) => d.minX)
+			.attr('y', (d) => d.minY)
+			.attr('width', (d) => d.maxX - d.minX)
+			.attr('height', (d) => d.maxY - d.minY)
+			.attr('fill', (d) => d.cluster.color)
 			.attr('fill-opacity', 0.15)
-			.attr('stroke', (d: ClusterBounds) => d.cluster.color)
+			.attr('stroke', (d) => d.cluster.color)
 			.attr('stroke-width', 2)
 			.attr('stroke-opacity', 0.4);
 
 		// Update label with transition
-		clusterUpdate.select('text.cluster-label')
+		clusterUpdate.select<SVGTextElement>('text.cluster-label')
 			.transition()
 			.duration(500)
 			.ease(d3.easeCubicInOut)
-			.attr('x', (d: ClusterBounds) => d.centerX)
-			.attr('y', (d: ClusterBounds) => d.minY - 8)
+			.attr('x', (d) => d.centerX)
+			.attr('y', (d) => d.minY - 8)
 			.attr('text-anchor', 'middle')
 			.attr('font-size', '13px')
 			.attr('font-weight', 'bold')
-			.attr('fill', (d: ClusterBounds) => d.cluster.color)
+			.attr('fill', (d) => d.cluster.color)
 			.attr('fill-opacity', 0.8)
 			.style('opacity', 1)
-			.text((d: ClusterBounds) => d.cluster.label);
+			.text((d) => d.cluster.label);
 
 		// Exit (removed clusters) with fade out
 		clusterSelection.exit()
@@ -552,11 +552,11 @@ export class LocalSoundscapeRenderer {
 	 */
 	private handleNodeHover(event: MouseEvent, node: LocalSoundscapeNode): void {
 		// Highlight node with smooth transition (increase size by 30%)
-		d3.select(event.target as any)
+		d3.select<SVGCircleElement, LocalSoundscapeNode>(event.target as SVGCircleElement)
 			.transition()
 			.duration(200)
 			.ease(d3.easeBackOut.overshoot(1.5))
-			.attr('r', (d: any) => this.getNodeRadius(d) * 1.3)
+			.attr('r', (d) => this.getNodeRadius(d) * 1.3)
 			.attr('stroke-width', 4);
 
 		// Show tooltip
@@ -570,12 +570,12 @@ export class LocalSoundscapeRenderer {
 	 */
 	private handleNodeMouseOut(event: MouseEvent, node: LocalSoundscapeNode): void {
 		// Reset node appearance with smooth transition
-		d3.select(event.target as any)
+		d3.select<SVGCircleElement, LocalSoundscapeNode>(event.target as SVGCircleElement)
 			.transition()
 			.duration(200)
 			.ease(d3.easeCubicOut)
-			.attr('r', (d: any) => this.getNodeRadius(d))
-			.attr('stroke-width', (d: any) => (d.depth === 0 ? 3 : 2));
+			.attr('r', (d) => this.getNodeRadius(d))
+			.attr('stroke-width', (d) => (d.depth === 0 ? 3 : 2));
 
 		// Hide tooltip
 		this.hideTooltip();
@@ -738,13 +738,13 @@ export class LocalSoundscapeRenderer {
 	highlightPlayingNode(nodeId: string): void {
 		// Find the node element and add playing class with smooth transition (increase size by 50%)
 		this.nodeGroup
-			.selectAll('circle')
-			.filter((d: any) => d.id === nodeId)
+			.selectAll<SVGCircleElement, LocalSoundscapeNode>('circle')
+			.filter((d) => d.id === nodeId)
 			.classed('playing', true)
 			.transition()
 			.duration(150)
 			.ease(d3.easeBackOut)
-			.attr('r', (d: any) => this.getNodeRadius(d) * 1.5);
+			.attr('r', (d) => this.getNodeRadius(d) * 1.5);
 
 		logger.debug('node-highlight', 'Node highlighted as playing', { nodeId });
 	}
@@ -755,13 +755,13 @@ export class LocalSoundscapeRenderer {
 	unhighlightPlayingNode(nodeId: string): void {
 		// Find the node element and remove playing class with smooth transition
 		this.nodeGroup
-			.selectAll('circle')
-			.filter((d: any) => d.id === nodeId)
+			.selectAll<SVGCircleElement, LocalSoundscapeNode>('circle')
+			.filter((d) => d.id === nodeId)
 			.classed('playing', false)
 			.transition()
 			.duration(200)
 			.ease(d3.easeCubicOut)
-			.attr('r', (d: any) => this.getNodeRadius(d));
+			.attr('r', (d) => this.getNodeRadius(d));
 
 		logger.debug('node-unhighlight', 'Node unhighlighted', { nodeId });
 	}
@@ -771,12 +771,12 @@ export class LocalSoundscapeRenderer {
 	 */
 	clearAllPlayingHighlights(): void {
 		this.nodeGroup
-			.selectAll('circle.playing')
+			.selectAll<SVGCircleElement, LocalSoundscapeNode>('circle.playing')
 			.classed('playing', false)
 			.transition()
 			.duration(200)
 			.ease(d3.easeCubicOut)
-			.attr('r', (d: any) => this.getNodeRadius(d));
+			.attr('r', (d) => this.getNodeRadius(d));
 
 		logger.debug('clear-highlights', 'Cleared all playing node highlights');
 	}

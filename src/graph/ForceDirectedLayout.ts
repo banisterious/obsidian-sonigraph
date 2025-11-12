@@ -53,9 +53,10 @@ export class ForceDirectedLayout {
 		});
 
 		// Create force simulation
-		const simulation = d3.forceSimulation(data.allNodes as any)
+		// D3's forceSimulation expects nodes with optional x, y, vx, vy properties
+		const simulation = d3.forceSimulation<LocalSoundscapeNode, undefined>(data.allNodes)
 			.force('link', d3.forceLink(data.links)
-				.id((d: any) => d.id)
+				.id((d: d3.SimulationNodeDatum) => (d as LocalSoundscapeNode).id)
 				.distance(this.config.linkDistance)
 				.strength(this.config.linkStrength))
 			.force('charge', d3.forceManyBody()

@@ -651,7 +651,8 @@ class TagEditorModal extends Modal {
 
 		// Show suggestions as user types
 		this.tagInput.addEventListener('input', () => {
-			const value = this.tagInput!.value.toLowerCase().trim();
+			if (!this.tagInput) return;
+			const value = this.tagInput.value.toLowerCase().trim();
 			suggestionsEl.empty();
 
 			if (value.length > 0) {
@@ -666,7 +667,7 @@ class TagEditorModal extends Modal {
 					});
 					suggestion.addEventListener('click', () => {
 						this.addTag(tag);
-						this.tagInput!.value = '';
+						if (this.tagInput) this.tagInput.value = '';
 						suggestionsEl.empty();
 					});
 				});
@@ -675,12 +676,12 @@ class TagEditorModal extends Modal {
 
 		// Add tag on Enter
 		this.tagInput.addEventListener('keydown', (e) => {
-			if (e.key === 'Enter') {
+			if (e.key === 'Enter' && this.tagInput) {
 				e.preventDefault();
-				const value = this.tagInput!.value.trim().toLowerCase();
+				const value = this.tagInput.value.trim().toLowerCase();
 				if (value) {
 					this.addTag(value);
-					this.tagInput!.value = '';
+					this.tagInput.value = '';
 					suggestionsEl.empty();
 				}
 			}
@@ -762,7 +763,8 @@ class TagEditorModal extends Modal {
 		}
 
 		this.currentTags.forEach(tag => {
-			const tagEl = this.tagListEl!.createDiv({ cls: 'sonigraph-tag-editor-item' });
+			if (!this.tagListEl) return;
+			const tagEl = this.tagListEl.createDiv({ cls: 'sonigraph-tag-editor-item' });
 			tagEl.createSpan({ text: tag, cls: 'sonigraph-tag-editor-item-text' });
 
 			const removeBtn = tagEl.createEl('button', {

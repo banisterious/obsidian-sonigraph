@@ -127,8 +127,10 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Initialize DepthBasedMapper if we have a musical mapper
 		if (this.plugin.musicalMapper) {
+			// Use settings from Control Center, cast to Partial<DepthMappingConfig> for compatibility
+			const mappingConfig = this.plugin.settings.localSoundscape as Partial<import('../audio/mapping/DepthBasedMapper').DepthMappingConfig> || {};
 			this.depthMapper = new DepthBasedMapper(
-				(this.plugin.settings.localSoundscape || {}) as any, // Use settings from Control Center
+				mappingConfig,
 				this.plugin.musicalMapper,
 				this.app,
 				this.plugin.audioEngine, // Pass audio engine for enabled instruments
@@ -810,7 +812,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		rootNoteSelect.addEventListener('change', async () => {
-			await this.updateMusicalScale(rootNoteSelect.value as any, undefined);
+			await this.updateMusicalScale(rootNoteSelect.value as 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B', undefined);
 		});
 
 		// Scale type selector
@@ -843,7 +845,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		scaleTypeSelect.addEventListener('change', async () => {
-			await this.updateMusicalScale(undefined, scaleTypeSelect.value as any);
+			await this.updateMusicalScale(undefined, scaleTypeSelect.value as 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian');
 		});
 
 		// Quantization strength slider
@@ -1777,7 +1779,7 @@ export class LocalSoundscapeView extends ItemView {
 
 					// Generate filename from center note name and timestamp
 					const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-					const noteName = this.centerFile!.basename;
+					const noteName = this.centerFile?.basename || 'unknown';
 					a.download = `local-soundscape-${noteName}-${timestamp}.png`;
 
 					// Trigger download

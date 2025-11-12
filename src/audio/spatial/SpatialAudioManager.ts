@@ -368,7 +368,7 @@ export class SpatialAudioManager {
         if (!this.eventHandlers.has(type)) {
             this.eventHandlers.set(type, []);
         }
-        this.eventHandlers.get(type)!.push(handler);
+        const handlers = this.eventHandlers.get(type); if (handlers) handlers.push(handler);
     }
 
     removeEventListener(type: string, handler: (event: SpatialAudioEvent) => void): void {

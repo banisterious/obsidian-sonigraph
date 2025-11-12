@@ -507,7 +507,7 @@ export class GraphDataExtractor {
         if (!tagIndex.has(tag)) {
           tagIndex.set(tag, []);
         }
-        tagIndex.get(tag)!.push(node);
+        const tagNodes = tagIndex.get(tag); if (tagNodes) tagNodes.push(node);
       }
     }
 
@@ -558,7 +558,7 @@ export class GraphDataExtractor {
       if (!folderIndex.has(folderPath)) {
         folderIndex.set(folderPath, []);
       }
-      folderIndex.get(folderPath)!.push(node);
+      const folderNodes = folderIndex.get(folderPath); if (folderNodes) folderNodes.push(node);
     }
 
     // Create sibling links within folders (but limit to prevent excessive connections)

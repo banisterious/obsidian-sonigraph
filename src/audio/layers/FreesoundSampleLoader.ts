@@ -466,7 +466,7 @@ export class FreesoundSampleLoader {
           if (!genreMap.has(genre)) {
             genreMap.set(genre, []);
           }
-          genreMap.get(genre)!.push({
+          const genreSamples = genreMap.get(genre); if (genreSamples) genreSamples.push({
             ...sample,
             genre
           });

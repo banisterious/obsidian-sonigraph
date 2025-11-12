@@ -412,6 +412,8 @@ export class FreesoundSearchModal extends Modal {
 			return;
 		}
 
+		if (!this.resultsContainer) return;
+
 		this.searchResults.forEach(result => {
 			const resultItem = this.resultsContainer!.createDiv({ cls: 'freesound-result-item' });
 
