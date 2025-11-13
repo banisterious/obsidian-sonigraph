@@ -11,7 +11,8 @@ import {
   CommunityEvolutionEvent,
   CommunityEvolutionType,
   CommunityEvolutionSettings,
-  CommunityLifecycleState
+  CommunityLifecycleState,
+  CommunityAudioTheme
 } from './types';
 import * as Tone from 'tone';
 
@@ -421,7 +422,7 @@ export class CommunityEvolutionTracker {
    */
   public async triggerEvolutionAudioEvent(
     event: CommunityEvolutionEvent,
-    theme: any
+    theme: CommunityAudioTheme
   ): Promise<void> {
     if (!this.settings.eventAudioEnabled || !this.settings.enabledEventTypes[event.type]) {
       return;
@@ -473,7 +474,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeEvolutionAudioEffect(
     event: CommunityEvolutionEvent,
-    theme: any
+    theme: CommunityAudioTheme
   ): Promise<void> {
     const duration = this.getEventDuration(event.type);
     const volume = this.settings.eventVolumes[event.type] * event.intensity;
@@ -508,7 +509,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeHarmonicConvergence(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -544,7 +545,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeDivergentHarmony(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -580,7 +581,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeExpandingOrchestration(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -605,7 +606,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeFadingVoices(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -640,7 +641,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeCrossFade(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -679,7 +680,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeHarmonicBuildup(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -711,7 +712,7 @@ export class CommunityEvolutionTracker {
    */
   private async executeHarmonicFadeout(
     event: CommunityEvolutionEvent,
-    theme: any,
+    theme: CommunityAudioTheme,
     duration: number,
     volume: number
   ): Promise<void> {
@@ -781,7 +782,7 @@ export class CommunityEvolutionTracker {
   /**
    * Get debug information
    */
-  public getDebugInfo(): any {
+  public getDebugInfo(): Record<string, unknown> {
     return {
       initialized: this.isInitialized,
       previousCommunityCount: this.previousCommunities.size,

@@ -20,16 +20,16 @@ export class EffectBusManager {
     private effectChains: Map<string, EffectNode[]> = new Map();
     private sendBuses: Map<string, SendBus> = new Map();
     private returnBuses: Map<string, ReturnBus> = new Map();
-    private masterEffectsNodes: Map<string, any> = new Map();
-    private effectNodeInstances: Map<string, any> = new Map();
-    
+    private masterEffectsNodes: Map<string, unknown> = new Map();
+    private effectNodeInstances: Map<string, unknown> = new Map();
+
     // Master effects
     private masterReverb: Reverb | null = null;
     private masterEQ: EQ3 | null = null;
     private masterCompressor: Compressor | null = null;
-    
+
     // Legacy per-instrument effects backup
-    private instrumentEffects: Map<string, Map<string, any>> = new Map();
+    private instrumentEffects: Map<string, Map<string, unknown>> = new Map();
     
     constructor() {
         logger.debug('initialization', 'EffectBusManager created');
@@ -187,7 +187,7 @@ export class EffectBusManager {
     /**
      * Create Tone.js effect instance
      */
-    private createEffectInstance(type: EffectType, parameters: EffectParameters): any {
+    private createEffectInstance(type: EffectType, parameters: EffectParameters): unknown {
         switch (type) {
             case 'reverb':
                 return new Reverb(parameters.decay || 1.5);
@@ -239,7 +239,7 @@ export class EffectBusManager {
     /**
      * Connect instrument through its effect chain
      */
-    connectInstrumentEnhanced(instrument: any, instrumentName: string): void {
+    connectInstrumentEnhanced(instrument: unknown, instrumentName: string): void {
         if (!this.enhancedRouting) return;
         
         const chain = this.effectChains.get(instrumentName);
@@ -270,7 +270,7 @@ export class EffectBusManager {
     /**
      * Connect to master effects chain
      */
-    private connectToMasterChain(node: any): any {
+    private connectToMasterChain(node: unknown): unknown {
         if (this.masterCompressor) {
             return node.connect(this.masterCompressor);
         } else {
@@ -405,7 +405,7 @@ export class EffectBusManager {
     /**
      * Apply parameters to effect instance
      */
-    private applyParametersToInstance(instance: any, type: EffectType, parameters: EffectParameters): void {
+    private applyParametersToInstance(instance: unknown, type: EffectType, parameters: EffectParameters): void {
         switch (type) {
             case 'reverb':
                 if (parameters.decay !== undefined) instance.decay = parameters.decay;

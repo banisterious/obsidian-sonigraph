@@ -4,7 +4,7 @@ export interface EffectNode {
     type: 'reverb' | 'chorus' | 'filter' | 'delay' | 'distortion' | 'compressor' | 'eq3';
     enabled: boolean;
     bypassed: boolean;
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
 }
 
 export interface SendBus {
@@ -88,7 +88,7 @@ export interface EffectParameters {
 }
 
 export interface EffectInstance {
-    node: any; // Tone.js effect instance
+    node: unknown; // Tone.js effect instance
     type: string;
     parameters: EffectParameters;
     enabled: boolean;

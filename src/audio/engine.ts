@@ -9,6 +9,7 @@ import { RhythmicPercussionEngine } from './percussion';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
 import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
+import type { InstrumentConfig } from './configs/types';
 import { getLogger, LoggerFactory } from '../logging';
 import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from './playback-events';
 import { PlaybackOptimizer } from './optimizations/PlaybackOptimizer';
@@ -32,7 +33,7 @@ type MusicalScale = 'major' | 'minor' | 'dorian' | 'phrygian' | 'lydian' | 'mixo
  */
 interface InstrumentWithPolyphony {
 	maxPolyphony: number;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 /**
@@ -64,6 +65,7 @@ interface SynthWithVoiceTracking {
 export class AudioEngine {
 	private instruments: Map<string, PolySynth | Sampler> = new Map();
 	private instrumentVolumes: Map<string, Volume> = new Map();
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private instrumentEffects: Map<string, Map<string, any>> = new Map(); // Per-instrument effects
 	private isInitialized = false;
 	private isPlaying = false;
@@ -85,15 +87,15 @@ export class AudioEngine {
 	private performanceMetrics: Map<string, { cpuUsage: number; latency: number }> = new Map();
 	private isPreviewMode: boolean = false;
 	private previewInstrument: string | null = null;
-	private previewNote: any = null;
+	private previewNote: MusicalMapping | null = null;
 
 	// Performance optimization properties - moved to VoiceManager
 	// Effect routing properties - moved to EffectBusManager
-	
+
 	// Phase 2.2: Integration layer optimization - cached enabled instruments
 	private cachedEnabledInstruments: string[] = [];
 	private instrumentCacheValid: boolean = false;
-	
+
 	// Memory optimization properties
 	private playbackOptimizer: PlaybackOptimizer;
 	private memoryMonitor: MemoryMonitor;
@@ -116,9 +118,9 @@ export class AudioEngine {
 	private chordFusionEngine: ChordFusionEngine | null = null;
 
 	// Real-time chord fusion buffer
-	private chordBuffer: Array<{ mapping: any; timestamp: number; elapsedTime?: number; nodeId?: string }> = [];
+	private chordBuffer: Array<{ mapping: MusicalMapping; timestamp: number; elapsedTime?: number; nodeId?: string }> = [];
 	private chordFlushTimer: number | null = null;
-	private temporalChordBuckets: Map<string, Array<{ mapping: any; timestamp: number; nodeId?: string }>> = new Map();
+	private temporalChordBuckets: Map<string, Array<{ mapping: MusicalMapping; timestamp: number; nodeId?: string }>> = new Map();
 
 	// Active note tracking for polyphony management (per-instrument)
 	private activeNotesPerInstrument: Map<string, number> = new Map();
@@ -168,10 +170,12 @@ export class AudioEngine {
 	/**
 	 * Effect chain management delegates
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getEffectChain(instrumentName: string): any[] {
 		return this.effectBusManager.getEffectChain(instrumentName);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	addEffectToChain(instrumentName: string, effectType: any, position?: number): string {
 		return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
 	}
@@ -188,6 +192,7 @@ export class AudioEngine {
 		return this.effectBusManager.toggleEffectBypass(instrumentName, effectId);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	updateEffectParameters(instrumentName: string, effectId: string, parameters: any): void {
 		return this.effectBusManager.updateEffectParameters(instrumentName, effectId, parameters);
 	}
@@ -195,10 +200,12 @@ export class AudioEngine {
 	/**
 	 * Bus management delegates
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getSendBuses(): Map<string, any> {
 		return this.effectBusManager.getSendBuses();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getReturnBuses(): Map<string, any> {
 		return this.effectBusManager.getReturnBuses();
 	}
@@ -218,6 +225,7 @@ export class AudioEngine {
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get effectChains(): Map<string, any[]> {
 		// Convert EffectBusManager chains to legacy format
 		const legacyChains = new Map();
@@ -225,44 +233,54 @@ export class AudioEngine {
 		return legacyChains;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get sendBuses(): Map<string, any> {
 		return this.effectBusManager.getSendBuses();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get returnBuses(): Map<string, any> {
 		return this.effectBusManager.getReturnBuses();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get masterEffectsNodes(): Map<string, any> {
 		// Legacy access to master effects - could be implemented if needed
 		return new Map();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get effectNodeInstances(): Map<string, any> {
 		// Legacy access to effect instances - could be implemented if needed
 		return new Map();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get masterReverb(): any {
 		return null; // Legacy property access
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	set masterReverb(value: any) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get masterEQ(): any {
 		return null; // Legacy property access
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	set masterEQ(value: any) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	get masterCompressor(): any {
 		return null; // Legacy property access
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	set masterCompressor(value: any) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
@@ -272,7 +290,7 @@ export class AudioEngine {
 	/**
 	 * Legacy voice management property getters
 	 */
-	get voicePool(): Map<string, any[]> {
+	get voicePool(): Map<string, unknown[]> {
 		// Legacy access - could delegate to VoiceManager if needed
 		return new Map();
 	}
@@ -582,6 +600,7 @@ export class AudioEngine {
 			this.instrumentVolumes.set(instrumentName, volume);
 			
 			// Create effects with settings from constants or defaults
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const effectMap = new Map<string, any>();
 			const effectSettings = instrumentSettings?.effects ?? DEFAULT_SETTINGS.instruments[instrumentName as keyof typeof DEFAULT_SETTINGS.instruments]?.effects;
 			
@@ -832,6 +851,7 @@ export class AudioEngine {
 		logger.debug('enhanced-routing', 'Enhanced instrument connections established');
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private connectToMasterChain(instrumentOutput: any): void {
 		let output = instrumentOutput;
 		
@@ -936,7 +956,7 @@ export class AudioEngine {
 		logger.info('instruments', `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
 	}
 	
-	private async initializeInstrumentWithSamples(instrumentName: string, config: any): Promise<void> {
+	private async initializeInstrumentWithSamples(instrumentName: string, config: Record<string, unknown>): Promise<void> {
 		try {
 			logger.debug('instruments', `Initializing ${instrumentName} with high-quality samples`);
 			
@@ -948,7 +968,7 @@ export class AudioEngine {
 						logger.debug('samples', `${instrumentName} samples loaded successfully`);
 						resolve(samplerInstance);
 					},
-					onerror: (error: any) => {
+					onerror: (error: unknown) => {
 						logger.error('samples', `${instrumentName} samples failed to load`, { 
 							error: error?.message || error,
 							config: {
@@ -1506,7 +1526,7 @@ export class AudioEngine {
 						onload: () => {
 							logger.debug('samples', `${instrumentName} samples loaded successfully`);
 						},
-						onerror: (error: any) => {
+						onerror: (error: unknown) => {
 							logger.warn('samples', `${instrumentName} samples failed to load, falling back to synthesis`, { error });
 							// Fallback handled by synthesis creation below
 						}

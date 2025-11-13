@@ -494,7 +494,7 @@ export class CommunityThemeGenerator {
   /**
    * Get debug information
    */
-  public getDebugInfo(): any {
+  public getDebugInfo(): Record<string, unknown> {
     return {
       initialized: this.isInitialized,
       themeCount: this.themes.size,

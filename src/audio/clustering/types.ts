@@ -138,8 +138,8 @@ export interface ActiveClusterAudio {
   theme: ClusterAudioTheme;
 
   // Audio instances (will be Tone.js objects)
-  audioSource: any; // Tone.Synth or similar
-  effectChain: any; // Tone effects chain
+  audioSource: unknown; // Tone.Synth or similar
+  effectChain: unknown; // Tone effects chain
 
   // Current audio parameters
   currentFrequency: number;

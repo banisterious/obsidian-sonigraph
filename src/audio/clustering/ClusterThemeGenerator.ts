@@ -440,7 +440,7 @@ export class ClusterThemeGenerator {
   /**
    * Get debug information about themes
    */
-  public getDebugInfo(): any {
+  public getDebugInfo(): Record<string, unknown> {
     return {
       initialized: this.isInitialized,
       themeCount: this.themes.size,

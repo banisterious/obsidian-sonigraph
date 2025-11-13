@@ -142,7 +142,7 @@ export class FreesoundSearchModal extends Modal {
 
 		setIcon(searchButton, 'search');
 		searchButton.createSpan({ text: 'Search' });
-		searchButton.addEventListener('click', () => this.performSearch());
+		searchButton.addEventListener('click', () => void this.performSearch());
 
 		// Quick search suggestions
 		const suggestionsEl = searchSection.createDiv({ cls: 'freesound-search-suggestions' });
@@ -470,7 +470,7 @@ export class FreesoundSearchModal extends Modal {
 			});
 			setIcon(previewBtn, 'play');
 			previewBtn.createSpan({ text: 'Preview' });
-			previewBtn.addEventListener('click', () => this.previewSample(result, previewBtn));
+			previewBtn.addEventListener('click', () => void this.previewSample(result, previewBtn));
 
 			// Add to library button
 			const addBtn = actionsSection.createEl('button', {
@@ -642,7 +642,7 @@ export class FreesoundSearchModal extends Modal {
 			text: 'Try Again',
 			cls: 'freesound-retry-btn'
 		});
-		retryBtn.addEventListener('click', () => this.performSearch());
+		retryBtn.addEventListener('click', () => void this.performSearch());
 	}
 
 	private updateSearchButton(text: string): void {

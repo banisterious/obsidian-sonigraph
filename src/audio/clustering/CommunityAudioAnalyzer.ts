@@ -401,7 +401,7 @@ export class CommunityAudioAnalyzer {
   /**
    * Get debug information
    */
-  public getDebugInfo(): any {
+  public getDebugInfo(): Record<string, unknown> {
     return {
       initialized: this.isInitialized,
       communityCount: this.detectedCommunities.size,

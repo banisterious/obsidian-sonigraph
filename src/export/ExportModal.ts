@@ -149,7 +149,7 @@ export class ExportModal extends Modal {
             text: '💾 Save Current as Preset',
             cls: 'sonigraph-export-preset-save'
         });
-        savePresetBtn.addEventListener('click', () => this.saveCurrentAsPreset());
+        savePresetBtn.addEventListener('click', () => void this.saveCurrentAsPreset());
     }
 
     /**

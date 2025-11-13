@@ -632,7 +632,7 @@ export class LocalSoundscapeView extends ItemView {
 		const playIcon = createLucideIcon('play', 20);
 		this.playButton.appendChild(playIcon);
 		this.playButton.appendChild(createSpan({ text: 'Play' }));
-		this.playButton.addEventListener('click', () => this.togglePlayback());
+		this.playButton.addEventListener('click', () => void this.togglePlayback());
 
 		// Stop button
 		this.stopButton = buttonSection.createEl('button', {
@@ -642,7 +642,7 @@ export class LocalSoundscapeView extends ItemView {
 		const stopIcon = createLucideIcon('square', 20);
 		this.stopButton.appendChild(stopIcon);
 		this.stopButton.appendChild(createSpan({ text: 'Stop' }));
-		this.stopButton.addEventListener('click', () => this.stopPlayback());
+		this.stopButton.addEventListener('click', () => void this.stopPlayback());
 
 		// Export Audio button
 		this.exportAudioButton = buttonSection.createEl('button', {
@@ -652,7 +652,7 @@ export class LocalSoundscapeView extends ItemView {
 		const exportIcon = createLucideIcon('download', 20);
 		this.exportAudioButton.appendChild(exportIcon);
 		this.exportAudioButton.appendChild(createSpan({ text: 'Export audio' }));
-		this.exportAudioButton.addEventListener('click', () => this.exportSoundscapeAudio());
+		this.exportAudioButton.addEventListener('click', () => void this.exportSoundscapeAudio());
 
 		// Play Active Note button
 		const playActiveNoteButton = buttonSection.createEl('button', {
@@ -662,7 +662,7 @@ export class LocalSoundscapeView extends ItemView {
 		const playActiveNoteIcon = createLucideIcon('music', 20);
 		playActiveNoteButton.appendChild(playActiveNoteIcon);
 		playActiveNoteButton.appendChild(createSpan({ text: 'Play active note' }));
-		playActiveNoteButton.addEventListener('click', () => this.playActiveNote());
+		playActiveNoteButton.addEventListener('click', () => void this.playActiveNote());
 
 		// Variation controls (Re-roll feature) - aligned as a button in the same row
 		const variationSection = buttonSection.createDiv({ cls: 'variation-controls' });
@@ -674,7 +674,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 		const prevIcon = createLucideIcon('chevron-left', 16);
 		this.prevVariationButton.appendChild(prevIcon);
-		this.prevVariationButton.addEventListener('click', () => this.previousVariation());
+		this.prevVariationButton.addEventListener('click', () => void this.previousVariation());
 
 		// Variation display
 		this.variationDisplay = variationSection.createSpan({
@@ -689,7 +689,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 		const rerollIcon = createLucideIcon('rotate-cw', 16);
 		this.rerollButton.appendChild(rerollIcon);
-		this.rerollButton.addEventListener('click', () => this.rerollVariation());
+		this.rerollButton.addEventListener('click', () => void this.rerollVariation());
 
 		// Voice count and volume display
 		const statsSection = container.createDiv({ cls: 'playback-stats' });
@@ -777,8 +777,8 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'musical-setting-checkbox'
 		});
 		enableCheckbox.checked = this.depthMapper?.getConfig().musicalTheory?.enabled || false;
-		enableCheckbox.addEventListener('change', async () => {
-			await this.toggleScaleQuantization(enableCheckbox.checked);
+		enableCheckbox.addEventListener('change', () => {
+			void this.toggleScaleQuantization(enableCheckbox.checked);
 		});
 
 		// Root note selector
@@ -811,8 +811,8 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		});
 
-		rootNoteSelect.addEventListener('change', async () => {
-			await this.updateMusicalScale(rootNoteSelect.value as 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B', undefined);
+		rootNoteSelect.addEventListener('change', () => {
+			void this.updateMusicalScale(rootNoteSelect.value as 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B', undefined);
 		});
 
 		// Scale type selector
@@ -844,8 +844,8 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		});
 
-		scaleTypeSelect.addEventListener('change', async () => {
-			await this.updateMusicalScale(undefined, scaleTypeSelect.value as 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian');
+		scaleTypeSelect.addEventListener('change', () => {
+			void this.updateMusicalScale(undefined, scaleTypeSelect.value as 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian');
 		});
 
 		// Quantization strength slider
@@ -870,10 +870,10 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'slider-value'
 		});
 
-		quantStrengthSlider.addEventListener('input', async () => {
+		quantStrengthSlider.addEventListener('input', () => {
 			const value = parseInt(quantStrengthSlider.value);
 			strengthValue.textContent = `${value}%`;
-			await this.updateQuantizationStrength(value / 100);
+			void this.updateQuantizationStrength(value / 100);
 		});
 
 		// Adaptive Pitch Ranges toggle (Phase 2)
@@ -885,8 +885,8 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'musical-setting-checkbox'
 		});
 		adaptivePitchCheckbox.checked = this.depthMapper?.getConfig().adaptivePitch?.enabled || false;
-		adaptivePitchCheckbox.addEventListener('change', async () => {
-			await this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
+		adaptivePitchCheckbox.addEventListener('change', () => {
+			void this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
 		});
 
 		const adaptivePitchDesc = container.createDiv({
@@ -903,8 +903,8 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'musical-setting-checkbox'
 		});
 		chordVoicingCheckbox.checked = this.depthMapper?.getConfig().chordVoicing?.enabled || false;
-		chordVoicingCheckbox.addEventListener('change', async () => {
-			await this.toggleChordVoicing(chordVoicingCheckbox.checked);
+		chordVoicingCheckbox.addEventListener('change', () => {
+			void this.toggleChordVoicing(chordVoicingCheckbox.checked);
 		});
 
 		const chordVoicingDesc = container.createDiv({
@@ -934,10 +934,10 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'slider-value'
 		});
 
-		densitySlider.addEventListener('input', async () => {
+		densitySlider.addEventListener('input', () => {
 			const value = parseInt(densitySlider.value);
 			densityValue.textContent = `${value}%`;
-			await this.updateVoicingDensity(value / 100);
+			void this.updateVoicingDensity(value / 100);
 		});
 
 		// Show/hide density slider based on chord voicing state
@@ -1813,15 +1813,17 @@ export class LocalSoundscapeView extends ItemView {
 		const modal = new LocalSoundscapeFilterModal(
 			this.plugin.app,
 			this.filters,
-			async (newFilters) => {
-				this.filters = newFilters;
-				logger.info('filters-changed', 'Filters updated', newFilters);
+			(newFilters) => {
+				void (async () => {
+					this.filters = newFilters;
+					logger.info('filters-changed', 'Filters updated', newFilters);
 
-				// Re-extract and render with new filters
-				if (this.centerFile) {
-					await this.extractAndRenderGraph();
-					new Notice('Filters applied');
-				}
+					// Re-extract and render with new filters
+					if (this.centerFile) {
+						await this.extractAndRenderGraph();
+						new Notice('Filters applied');
+					}
+				})();
 			}
 		);
 		modal.open();
@@ -2112,7 +2114,7 @@ export class LocalSoundscapeView extends ItemView {
 			// Set up node interaction callbacks
 			this.renderer.setCallbacks(
 				(node) => this.handleNodeOpen(node),
-				(node) => this.handleNodeRecenter(node)
+				(node) => void this.handleNodeRecenter(node)
 			);
 
 			// Apply layout based on selected type

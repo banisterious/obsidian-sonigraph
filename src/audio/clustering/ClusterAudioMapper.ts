@@ -17,7 +17,8 @@ import {
   ActiveClusterAudio,
   ClusterAudioAnalysis,
   CommunityDetectionSettings,
-  CommunityEvolutionSettings
+  CommunityEvolutionSettings,
+  CommunityAudioTheme
 } from './types';
 import { ClusterThemeGenerator } from './ClusterThemeGenerator';
 import { CommunityAudioAnalyzer } from './CommunityAudioAnalyzer';
@@ -198,8 +199,8 @@ export class ClusterAudioMapper {
       clearTimeout(this.updateThrottleTimer);
     }
 
-    this.updateThrottleTimer = setTimeout(async () => {
-      await this.processClustersCached(clusters);
+    this.updateThrottleTimer = setTimeout(() => {
+      void this.processClustersCached(clusters);
     }, this.settings.updateThrottleMs);
   }
 
@@ -491,7 +492,7 @@ export class ClusterAudioMapper {
   private async executeHarmonicBuildup(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
-    config: any,
+    config: GlissandoConfig,
     volume: number,
     startTime: number
   ): Promise<void> {
@@ -531,7 +532,7 @@ export class ClusterAudioMapper {
   private async executeFilterSweep(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
-    config: any,
+    config: GlissandoConfig,
     volume: number,
     startTime: number
   ): Promise<void> {
@@ -570,7 +571,7 @@ export class ClusterAudioMapper {
   private async executeGranularScatter(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
-    config: any,
+    config: GlissandoConfig,
     volume: number,
     startTime: number
   ): Promise<void> {
@@ -1045,7 +1046,7 @@ export class ClusterAudioMapper {
   /**
    * Phase 5.3: Get community audio analysis
    */
-  public getCommunityAnalysis(communityId: string): any {
+  public getCommunityAnalysis(communityId: string): { theme: CommunityAudioTheme | undefined; lifecycle: unknown; activeEvents: unknown[] } | null {
     if (!this.communityAnalyzer) {
       return null;
     }

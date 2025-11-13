@@ -210,7 +210,8 @@ export class NoteCentricPlayer {
 			this.scheduledNoteCount++;
 
 			// Schedule note to start with humanized timing
-			setTimeout(async () => {
+			setTimeout(() => {
+				void (async () => {
 				logger.debug('timeout-fired', 'Note timeout fired', {
 					index: i,
 					isPlaying: this.isPlaying
@@ -274,6 +275,7 @@ export class NoteCentricPlayer {
 						errorStack: error instanceof Error ? error.stack : undefined
 					});
 				}
+				})();
 			}, Math.max(0, humanizedTime)); // Use humanized time, ensure non-negative
 
 			currentTime += duration * beatDuration;
