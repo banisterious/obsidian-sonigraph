@@ -12,6 +12,16 @@ import { HarmonicEngine } from './harmonic-engine';
 
 const logger = getLogger('chord-fusion');
 
+interface ChordFusionSettings {
+	enabled: boolean;
+	mode: 'smart' | 'direct';
+	timingWindow: number;
+	minimumNotes: number;
+	chordComplexity?: number;
+	voicingStrategy?: string;
+	layerSettings?: Record<string, boolean>;
+}
+
 export interface NoteEvent {
 	note: string;
 	pitch: number;
@@ -115,7 +125,11 @@ export class ChordFusionEngine {
 			return null;
 		}
 
-		const chordSettings = this.settings.audioEnhancement?.chordFusion!;
+		const chordSettings = this.settings.audioEnhancement?.chordFusion;
+		if (!chordSettings) {
+			const note = this.pendingNotes.shift();
+			return note || null;
+		}
 		const minimumNotes = chordSettings.minimumNotes || 2;
 
 		// If we have fewer notes than the minimum, return them individually
@@ -138,7 +152,7 @@ export class ChordFusionEngine {
 	/**
 	 * Create a chord in "smart" mode - fit notes to proper chord patterns
 	 */
-	private createSmartChord(notes: NoteEvent[], settings: any): ChordGroup {
+	private createSmartChord(notes: NoteEvent[], settings: ChordFusionSettings): ChordGroup {
 		// Sort notes by pitch
 		const sortedNotes = notes.sort((a, b) => a.pitch - b.pitch);
 
@@ -308,7 +322,7 @@ export class ChordFusionEngine {
 	/**
 	 * Check if a layer has chord fusion enabled
 	 */
-	private isLayerEnabled(layer: string, settings: any): boolean {
+	private isLayerEnabled(layer: string, settings: ChordFusionSettings): boolean {
 		if (!settings.layerSettings) return false;
 
 		switch (layer) {

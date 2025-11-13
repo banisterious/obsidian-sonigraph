@@ -16,7 +16,6 @@ import {
   ClusterAudioState,
   ActiveClusterAudio,
   ClusterAudioAnalysis,
-  Community,
   CommunityDetectionSettings,
   CommunityEvolutionSettings
 } from './types';
@@ -25,12 +24,20 @@ import { CommunityAudioAnalyzer } from './CommunityAudioAnalyzer';
 import { CommunityEvolutionTracker } from './CommunityEvolutionTracker';
 import { HubOrchestrationManager } from '../orchestration/HubOrchestrationManager';
 import { HubTransitionHandler } from '../orchestration/HubTransitionHandler';
-import type { HubOrchestrationSettings, OrchestrationDecisions, HubMetrics } from '../orchestration/types';
+import type { HubOrchestrationSettings, OrchestrationDecisions } from '../orchestration/types';
 import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
-import type { MusicalTheoryConfig, NoteName, ScaleType, ModalScale } from '../theory/types';
+import type { MusicalTheoryConfig } from '../theory/types';
 import * as Tone from 'tone';
 
 const logger = getLogger('cluster-audio');
+
+interface GlissandoConfig {
+  pitchDirection: 'ascending' | 'descending' | 'stable';
+  pitchRange: number;
+  duration: number;
+  volumeFade?: 'in' | 'out' | 'cross' | 'none';
+  effectType?: 'glissando' | 'harmonic_buildup' | 'filter_sweep' | 'granular_scatter';
+}
 
 export class ClusterAudioMapper {
   private themeGenerator: ClusterThemeGenerator;
@@ -248,7 +255,8 @@ export class ClusterAudioMapper {
         transitions.push(this.createTransitionEvent('formation', cluster));
       } else {
         // Detect strength changes
-        const previousCluster = this.previousClusters.get(cluster.id)!;
+        const previousCluster = this.previousClusters.get(cluster.id);
+        if (!previousCluster) continue;
         const strengthDiff = Math.abs(cluster.strength - previousCluster.strength);
 
         if (strengthDiff > 0.1) { // Threshold for significant strength change
@@ -278,8 +286,10 @@ export class ClusterAudioMapper {
     // Detect cluster dissolutions
     for (const clusterId of previousClusterIds) {
       if (!currentClusterIds.has(clusterId)) {
-        const dissolvedCluster = this.previousClusters.get(clusterId)!;
-        transitions.push(this.createTransitionEvent('dissolution', dissolvedCluster));
+        const dissolvedCluster = this.previousClusters.get(clusterId);
+        if (dissolvedCluster) {
+          transitions.push(this.createTransitionEvent('dissolution', dissolvedCluster));
+        }
       }
     }
 
@@ -452,7 +462,7 @@ export class ClusterAudioMapper {
   private async executeGlissando(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
-    config: any,
+    config: GlissandoConfig,
     volume: number,
     startTime: number
   ): Promise<void> {

@@ -5,9 +5,8 @@
  * Uses preview URLs (no OAuth required) with local caching for performance.
  */
 
-import { Sampler, ToneAudioBuffer } from 'tone';
 import { requestUrl } from 'obsidian';
-import { MusicalGenre, FreesoundSample, ContinuousLayerError } from './types';
+import { MusicalGenre, FreesoundSample } from './types';
 import { getLogger } from '../../logging';
 import { SonigraphSettings } from '../../utils/constants';
 
