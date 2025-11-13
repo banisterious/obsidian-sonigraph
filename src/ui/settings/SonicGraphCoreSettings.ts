@@ -322,10 +322,12 @@ export class SonicGraphCoreSettings {
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
 		const descP = description.createEl('p');
-		descP.style.color = 'var(--text-muted)';
-		descP.style.fontSize = '13px';
-		descP.style.lineHeight = '1.5';
-		descP.style.marginBottom = '1rem';
+		descP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		descP.textContent = 'Content-aware mapping automatically selects instruments based on file types, tags, ' +
 			'folder structure, and frontmatter metadata. This creates semantic correlation between ' +
 			'your vault\'s content and its musical representation.';
@@ -430,10 +432,12 @@ export class SonicGraphCoreSettings {
 		// Info note about advanced settings
 		const advancedNote = content.createDiv({ cls: 'osp-settings-note' });
 		const advancedP = advancedNote.createEl('p');
-		advancedP.style.color = 'var(--text-muted)';
-		advancedP.style.fontSize = '12px';
-		advancedP.style.lineHeight = '1.5';
-		advancedP.style.marginTop = '1rem';
+		advancedP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			lineHeight: '1.5',
+			marginTop: '1rem'
+		});
 		advancedP.createEl('strong', { text: 'Note:' });
 		advancedP.appendText(' Advanced file type, tag, and folder mappings ' +
 			'can be configured in the instrument settings. Connection type audio differentiation ' +

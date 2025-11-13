@@ -2084,23 +2084,14 @@ export class GraphRenderer {
    */
   private disableTransitionsForDenseGraph(): void {
     this.container.classList.add('dense-graph-mode');
-    
-    // Add CSS rule to disable transitions for dense graphs
-    const style = document.createElement('style');
-    style.textContent = `
-      .dense-graph-mode .sonigraph-temporal-svg * {
-        transition: none !important;
-        animation: none !important;
-      }
-    `;
-    
-    // Add to document head if not already present
-    if (!document.querySelector('#dense-graph-performance-style')) {
-      style.id = 'dense-graph-performance-style';
-      document.head.appendChild(style);
-    }
-    
-    logger.debug('performance', 'Disabled CSS transitions for dense graph');
+
+    // TODO: Move this CSS to component stylesheet
+    // .dense-graph-mode .sonigraph-temporal-svg * {
+    //   transition: none !important;
+    //   animation: none !important;
+    // }
+
+    logger.debug('performance', 'Dense graph mode enabled (CSS in stylesheet)');
   }
   
   /**

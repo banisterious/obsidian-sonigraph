@@ -78,12 +78,14 @@ export class LocalSoundscapeSettings {
 
 		// Add description of each mode
 		const modeDesc = content.createDiv({ cls: 'osp-settings-description' });
-		modeDesc.style.marginBottom = '1rem';
-		modeDesc.style.padding = '8px 12px';
-		modeDesc.style.backgroundColor = 'var(--background-secondary)';
-		modeDesc.style.borderRadius = '4px';
-		modeDesc.style.fontSize = '12px';
-		modeDesc.style.lineHeight = '1.5';
+		modeDesc.setCssProps({
+			marginBottom: '1rem',
+			padding: '8px 12px',
+			backgroundColor: 'var(--background-secondary)',
+			borderRadius: '4px',
+			fontSize: '12px',
+			lineHeight: '1.5'
+		});
 		modeDesc.createEl('strong', { text: 'Note-Centric' });
 		modeDesc.appendText(' (recommended): Generates rich musical phrases from the center note\'s prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.');
 		modeDesc.createEl('br');
@@ -220,9 +222,11 @@ export class LocalSoundscapeSettings {
 			cls: 'setting-item-description',
 			text: `Current key will be determined dynamically based on the active note's ${keySelection.mode}.`
 		});
-		currentKeyDesc.style.marginTop = '10px';
-		currentKeyDesc.style.fontStyle = 'italic';
-		currentKeyDesc.style.opacity = '0.7';
+		currentKeyDesc.setCssProps({
+			marginTop: '10px',
+			fontStyle: 'italic',
+			opacity: '0.7'
+		});
 
 		container.appendChild(card.getElement());
 	}
@@ -362,16 +366,20 @@ export class LocalSoundscapeSettings {
 
 			// Prose structure header
 			const proseHeader = content.createEl('h4');
-			proseHeader.style.marginTop = 'var(--size-4-4)';
-			proseHeader.style.marginBottom = 'var(--size-4-2)';
-			proseHeader.style.fontSize = 'var(--font-ui-medium)';
-			proseHeader.style.fontWeight = '600';
+			proseHeader.setCssProps({
+				marginTop: 'var(--size-4-4)',
+				marginBottom: 'var(--size-4-2)',
+				fontSize: 'var(--font-ui-medium)',
+				fontWeight: '600'
+			});
 			proseHeader.textContent = 'Prose structure analysis';
 
 			const proseDesc = content.createEl('p');
-			proseDesc.style.color = 'var(--text-muted)';
-			proseDesc.style.fontSize = 'var(--font-ui-small)';
-			proseDesc.style.marginBottom = 'var(--size-4-3)';
+			proseDesc.setCssProps({
+				color: 'var(--text-muted)',
+				fontSize: 'var(--font-ui-small)',
+				marginBottom: 'var(--size-4-3)'
+			});
 			proseDesc.textContent = 'Analyze note content (density, structure, linguistic features) to create more expressive, content-aware soundscapes.';
 
 			// Prose structure toggle

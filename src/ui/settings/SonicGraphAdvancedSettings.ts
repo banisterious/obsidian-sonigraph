@@ -172,9 +172,11 @@ export class SonicGraphAdvancedSettings {
 			// Note about detailed settings
 			const note = content.createDiv({ cls: 'osp-settings-note' });
 			const noteP = note.createEl('p');
-			noteP.style.color = 'var(--text-muted)';
-			noteP.style.fontSize = '12px';
-			noteP.style.marginTop = '0.5rem';
+			noteP.setCssProps({
+				color: 'var(--text-muted)',
+				fontSize: '12px',
+				marginTop: '0.5rem'
+			});
 			noteP.createEl('strong', { text: 'Note:' });
 			noteP.appendText(' Detailed per-cluster-type settings (tag-based, temporal, link-dense, ' +
 				'community, topical) are available in the Sonic Graph modal\'s settings panel.');
@@ -529,10 +531,12 @@ export class SonicGraphAdvancedSettings {
 			// Hub instrument preference
 			const instrumentsNote = content.createDiv({ cls: 'osp-settings-note' });
 			const instrumentsP = instrumentsNote.createEl('p');
-			instrumentsP.style.color = 'var(--text-muted)';
-			instrumentsP.style.fontSize = '12px';
-			instrumentsP.style.lineHeight = '1.5';
-			instrumentsP.style.marginTop = '1rem';
+			instrumentsP.setCssProps({
+				color: 'var(--text-muted)',
+				fontSize: '12px',
+				lineHeight: '1.5',
+				marginTop: '1rem'
+			});
 			instrumentsP.createEl('strong', { text: 'Hub Instrument Preference:' });
 			instrumentsP.appendText(' Hub nodes will preferentially use piano, strings, ' +
 				'and brass instruments to emphasize their prominence in the network.');
@@ -685,10 +689,12 @@ export class SonicGraphAdvancedSettings {
 			// Info note about complexity tiers
 			const note = content.createDiv({ cls: 'osp-settings-note' });
 			const noteP = note.createEl('p');
-			noteP.style.color = 'var(--text-muted)';
-			noteP.style.fontSize = '12px';
-			noteP.style.lineHeight = '1.5';
-			noteP.style.marginTop = '1rem';
+			noteP.setCssProps({
+				color: 'var(--text-muted)',
+				fontSize: '12px',
+				lineHeight: '1.5',
+				marginTop: '1rem'
+			});
 			noteP.createEl('strong', { text: 'Complexity Tiers:' });
 			noteP.appendText(' The system automatically adjusts orchestration based on vault size:');
 			noteP.createEl('br');

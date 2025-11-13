@@ -53,25 +53,29 @@ export class SonicGraphFreesoundSettings {
 		// Info about Freesound
 		const infoDiv = content.createDiv({ cls: 'osp-settings-note' });
 		const infoP1 = infoDiv.createEl('p');
-		infoP1.style.color = 'var(--text-muted)';
-		infoP1.style.fontSize = '13px';
-		infoP1.style.lineHeight = '1.5';
-		infoP1.style.marginBottom = '1rem';
+		infoP1.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		infoP1.createEl('strong', { text: 'About Freesound:' });
 		infoP1.appendText(' Freesound.org is a collaborative database of Creative Commons ' +
 			'licensed sounds. An API key is required to download samples for the continuous layer system.');
 
 		const infoP2 = infoDiv.createEl('p');
-		infoP2.style.color = 'var(--text-muted)';
-		infoP2.style.fontSize = '13px';
-		infoP2.style.lineHeight = '1.5';
-		infoP2.style.marginBottom = '1rem';
+		infoP2.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		infoP2.appendText('Get your free API key at: ');
 		const apiLink = infoP2.createEl('a', {
 			text: 'https://freesound.org/apiv2/apply/',
 			href: 'https://freesound.org/apiv2/apply/'
 		});
-		apiLink.style.color = 'var(--text-accent)';
+		apiLink.setCssProps({ color: 'var(--text-accent)' });
 
 		// API key input with test button
 		new Setting(content)
@@ -156,10 +160,12 @@ export class SonicGraphFreesoundSettings {
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
 		const descP = description.createEl('p');
-		descP.style.color = 'var(--text-muted)';
-		descP.style.fontSize = '13px';
-		descP.style.lineHeight = '1.5';
-		descP.style.marginBottom = '1rem';
+		descP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		descP.textContent = 'Control how Freesound samples are cached and preloaded for optimal performance.';
 
 		// Predictive preload toggle
@@ -253,10 +259,12 @@ export class SonicGraphFreesoundSettings {
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
 		const descP = description.createEl('p');
-		descP.style.color = 'var(--text-muted)';
-		descP.style.fontSize = '13px';
-		descP.style.lineHeight = '1.5';
-		descP.style.marginBottom = '1rem';
+		descP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		descP.textContent = 'Presets allow you to save complete Sonic Graph configurations and quickly switch between ' +
 			'different setups for different vaults or workflows.';
 
@@ -275,9 +283,11 @@ export class SonicGraphFreesoundSettings {
 		const customPresetCount = settingsWithPresets?.customPresets?.length || 0;
 		const presetInfo = content.createDiv({ cls: 'osp-settings-note' });
 		const presetP = presetInfo.createEl('p');
-		presetP.style.color = 'var(--text-muted)';
-		presetP.style.fontSize = '12px';
-		presetP.style.marginTop = '0.5rem';
+		presetP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			marginTop: '0.5rem'
+		});
 		presetP.createEl('strong', { text: 'Custom Presets:' });
 		presetP.appendText(` ${customPresetCount} saved`);
 
@@ -287,9 +297,11 @@ export class SonicGraphFreesoundSettings {
 		// Note about preset management
 		const noteDiv = content.createDiv({ cls: 'osp-settings-note' });
 		const noteP = noteDiv.createEl('p');
-		noteP.style.color = 'var(--text-muted)';
-		noteP.style.fontSize = '12px';
-		noteP.style.marginTop = '1rem';
+		noteP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			marginTop: '1rem'
+		});
 		noteP.createEl('strong', { text: 'Note:' });
 		noteP.appendText(' Full preset management (save, load, export, import) is available ' +
 			'in the Sonic Graph modal\'s settings panel. This shows the currently active preset only.');

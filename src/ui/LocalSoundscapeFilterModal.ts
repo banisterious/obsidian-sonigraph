@@ -90,7 +90,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 							.map(t => t.trim())
 							.filter(t => t.length > 0);
 					});
-				text.inputEl.style.width = '100%';
+				text.inputEl.setCssProps({ width: '100%' });
 			});
 
 		// Exclude tags
@@ -106,7 +106,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 							.map(t => t.trim())
 							.filter(t => t.length > 0);
 					});
-				text.inputEl.style.width = '100%';
+				text.inputEl.setCssProps({ width: '100%' });
 			});
 
 		// Show available tags
@@ -149,7 +149,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 							.map(f => f.trim())
 							.filter(f => f.length > 0);
 					});
-				text.inputEl.style.width = '100%';
+				text.inputEl.setCssProps({ width: '100%' });
 			});
 
 		// Exclude folders
@@ -165,7 +165,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 							.map(f => f.trim())
 							.filter(f => f.length > 0);
 					});
-				text.inputEl.style.width = '100%';
+				text.inputEl.setCssProps({ width: '100%' });
 			});
 
 		// Show available folders

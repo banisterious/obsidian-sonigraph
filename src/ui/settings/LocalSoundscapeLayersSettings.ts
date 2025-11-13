@@ -52,29 +52,35 @@ export class LocalSoundscapeLayersSettings {
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
 		const descP = description.createEl('p');
-		descP.style.color = 'var(--text-muted)';
-		descP.style.fontSize = '13px';
-		descP.style.lineHeight = '1.5';
-		descP.style.marginBottom = '0.5rem';
+		descP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '0.5rem'
+		});
 		descP.textContent = 'Continuous layers add ambient background audio that plays alongside note-based sonification. ' +
 			'Perfect for sparse graphs with few connections - layers provide harmonic foundation, rhythmic pulse, ' +
 			'and ambient texture even when there are only a few notes.';
 
 		// Important note about Freesound samples
 		const noteDiv = description.createDiv({ cls: 'osp-settings-note' });
-		noteDiv.style.backgroundColor = 'var(--background-modifier-info)';
-		noteDiv.style.borderLeft = '3px solid var(--interactive-accent)';
-		noteDiv.style.padding = '8px 12px';
-		noteDiv.style.marginBottom = '1rem';
-		noteDiv.style.borderRadius = '4px';
+		noteDiv.setCssProps({
+			backgroundColor: 'var(--background-modifier-info)',
+			borderLeft: '3px solid var(--interactive-accent)',
+			padding: '8px 12px',
+			marginBottom: '1rem',
+			borderRadius: '4px'
+		});
 
 		const noteIcon = noteDiv.createSpan();
 		noteIcon.textContent = 'ℹ️ ';
-		noteIcon.style.marginRight = '6px';
+		noteIcon.setCssProps({ marginRight: '6px' });
 
 		const noteText = noteDiv.createSpan();
-		noteText.style.fontSize = '12px';
-		noteText.style.color = 'var(--text-normal)';
+		noteText.setCssProps({
+			fontSize: '12px',
+			color: 'var(--text-normal)'
+		});
 		noteText.createEl('strong', { text: 'Important:' });
 		noteText.appendText(' Continuous layers require Freesound samples to be enabled. Go to the ');
 		noteText.createEl('strong', { text: 'Layers' });
@@ -166,16 +172,20 @@ export class LocalSoundscapeLayersSettings {
 
 		// Layer type toggles header
 		const layerTypesHeader = content.createEl('h4');
-		layerTypesHeader.style.marginTop = 'var(--size-4-4)';
-		layerTypesHeader.style.marginBottom = 'var(--size-4-2)';
-		layerTypesHeader.style.fontSize = 'var(--font-ui-medium)';
-		layerTypesHeader.style.fontWeight = '600';
+		layerTypesHeader.setCssProps({
+			marginTop: 'var(--size-4-4)',
+			marginBottom: 'var(--size-4-2)',
+			fontSize: 'var(--font-ui-medium)',
+			fontWeight: '600'
+		});
 		layerTypesHeader.textContent = 'Layer types';
 
 		const layerTypesDesc = content.createEl('p');
-		layerTypesDesc.style.color = 'var(--text-muted)';
-		layerTypesDesc.style.fontSize = 'var(--font-ui-small)';
-		layerTypesDesc.style.marginBottom = 'var(--size-4-3)';
+		layerTypesDesc.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: 'var(--font-ui-small)',
+			marginBottom: 'var(--size-4-3)'
+		});
 		layerTypesDesc.textContent = 'Enable individual layer types to customize your soundscape texture.';
 
 		// Ambient layer toggle

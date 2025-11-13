@@ -6,7 +6,7 @@
  * Includes timeline controls, settings panel, and cross-navigation to Control Center.
  */
 
-import { ItemView, WorkspaceLeaf, ButtonComponent, Notice, setTooltip, Setting, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf, ButtonComponent, Notice, setTooltip, Setting, setIcon, Platform } from 'obsidian';
 import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
@@ -6066,7 +6066,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 excludeFolders: this.graphDataExtractor['excludeFolders'] || [],
                 excludeFiles: this.graphDataExtractor['excludeFiles'] || [],
                 vaultFileCount: this.app.vault.getFiles().length,
-                userAgent: navigator.userAgent
+                platform: Platform
             };
             
             navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2))

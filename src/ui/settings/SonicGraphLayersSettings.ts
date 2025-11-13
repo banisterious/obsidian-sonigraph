@@ -59,10 +59,12 @@ export class SonicGraphLayersSettings {
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
 		const descP = description.createEl('p');
-		descP.style.color = 'var(--text-muted)';
-		descP.style.fontSize = '13px';
-		descP.style.lineHeight = '1.5';
-		descP.style.marginBottom = '1rem';
+		descP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		descP.textContent = 'Continuous layers add ambient background audio that responds to vault size, activity, ' +
 			'and animation progress. Unlike node-based audio which plays when nodes appear, continuous ' +
 			'layers provide a persistent soundscape that evolves over time.';
@@ -154,9 +156,11 @@ export class SonicGraphLayersSettings {
 		// Performance note
 		const perfNote = content.createDiv({ cls: 'osp-settings-note' });
 		const perfP = perfNote.createEl('p');
-		perfP.style.color = 'var(--text-muted)';
-		perfP.style.fontSize = '12px';
-		perfP.style.fontStyle = 'italic';
+		perfP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			fontStyle: 'italic'
+		});
 		perfP.textContent = 'Target: <5% additional CPU usage. Layers work alongside existing node-based audio.';
 
 		container.appendChild(card.getElement());
@@ -275,10 +279,12 @@ export class SonicGraphLayersSettings {
 		// Description
 		const description = content.createDiv({ cls: 'osp-settings-description' });
 		const descP = description.createEl('p');
-		descP.style.color = 'var(--text-muted)';
-		descP.style.fontSize = '13px';
-		descP.style.lineHeight = '1.5';
-		descP.style.marginBottom = '1rem';
+		descP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginBottom: '1rem'
+		});
 		descP.textContent = 'Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers ' +
 			'that respond to vault activity and cluster dynamics.';
 
@@ -547,10 +553,12 @@ export class SonicGraphLayersSettings {
 		// Info note
 		const note = content.createDiv({ cls: 'osp-settings-note' });
 		const noteP = note.createEl('p');
-		noteP.style.color = 'var(--text-muted)';
-		noteP.style.fontSize = '12px';
-		noteP.style.lineHeight = '1.5';
-		noteP.style.marginTop = '1rem';
+		noteP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			lineHeight: '1.5',
+			marginTop: '1rem'
+		});
 		noteP.createEl('strong', { text: 'Note:' });
 		noteP.appendText(' These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic). ' +
 			'For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.');
@@ -588,17 +596,21 @@ export class SonicGraphLayersSettings {
 		// Info note
 		const note = content.createDiv({ cls: 'osp-settings-note' });
 		const noteP = note.createEl('p');
-		noteP.style.color = 'var(--text-muted)';
-		noteP.style.fontSize = '12px';
-		noteP.style.lineHeight = '1.5';
-		noteP.style.marginTop = '0.5rem';
+		noteP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			lineHeight: '1.5',
+			marginTop: '0.5rem'
+		});
 		noteP.createEl('strong', { text: 'Adaptive Behavior:' });
 		noteP.appendText(' When enabled, layers respond to:');
 
 		const noteUl = note.createEl('ul');
-		noteUl.style.color = 'var(--text-muted)';
-		noteUl.style.fontSize = '12px';
-		noteUl.style.margin = '0.5rem 0 0 1.5rem';
+		noteUl.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '12px',
+			margin: '0.5rem 0 0 1.5rem'
+		});
 		noteUl.createEl('li', { text: 'Vault size (more files = richer textures)' });
 		noteUl.createEl('li', { text: 'Animation progress (evolves through timeline)' });
 		noteUl.createEl('li', { text: 'Node activity (quieter during busy moments)' });

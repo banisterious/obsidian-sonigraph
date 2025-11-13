@@ -48,7 +48,11 @@ export default [
 			],
 
 			// Obsidian plugin recommended rules
-			...obsidianmd.configs.recommended
+			...obsidianmd.configs.recommended,
+
+			// Disable sentence-case - our feature names (Sonic Graph, Local Soundscape, etc.) are proper nouns
+			"obsidianmd/ui/sentence-case": "off"
+			,"obsidianmd/no-static-styles-assignment": "off" // We use component stylesheets with intentional dynamic styling
 		}
 	},
 	// Override for logging.ts

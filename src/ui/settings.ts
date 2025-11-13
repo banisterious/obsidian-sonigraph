@@ -52,19 +52,23 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		// Note about Sonic Graph settings
 		const sonicGraphNote = containerEl.createDiv({ cls: 'osp-settings-note' });
 		const noteP = sonicGraphNote.createEl('p');
-		noteP.style.color = 'var(--text-muted)';
-		noteP.style.fontSize = '13px';
-		noteP.style.lineHeight = '1.5';
-		noteP.style.marginTop = '1rem';
+		noteP.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			marginTop: '1rem'
+		});
 		noteP.createEl('strong', { text: 'Note:' });
 		noteP.appendText(' Sonic Graph settings (adaptive detail, content-aware positioning, smart clustering, animation duration) ' +
 			'are now available in:');
 
 		const noteUl = sonicGraphNote.createEl('ul');
-		noteUl.style.color = 'var(--text-muted)';
-		noteUl.style.fontSize = '13px';
-		noteUl.style.lineHeight = '1.5';
-		noteUl.style.margin = '0.5rem 0 0 1.5rem';
+		noteUl.setCssProps({
+			color: 'var(--text-muted)',
+			fontSize: '13px',
+			lineHeight: '1.5',
+			margin: '0.5rem 0 0 1.5rem'
+		});
 		const li1 = noteUl.createEl('li');
 		li1.createEl('strong', { text: 'Control Center > Sonic Graph tab' });
 		li1.appendText(' for comprehensive settings');

@@ -627,9 +627,8 @@ export class AudioExporter {
             } else {
                 // Vault location - use Obsidian API
                 const file = this.app.vault.getAbstractFileByPath(filePath);
-                if (file && 'stat' in file) {
-                    const fileWithStat = file as TFile;
-                    result.fileSize = fileWithStat.stat.size;
+                if (file instanceof TFile) {
+                    result.fileSize = file.stat.size;
                 }
             }
 
