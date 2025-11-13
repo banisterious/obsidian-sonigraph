@@ -39,10 +39,7 @@ export class ChordFusionEngine {
 	constructor(settings: SonigraphSettings) {
 		this.settings = settings;
 		this.harmonicEngine = new HarmonicEngine({
-			enableChordProgression: true,
-			scale: settings.audioEnhancement?.musicalTheory?.scale || 'major',
-			rootNote: settings.audioEnhancement?.musicalTheory?.rootNote || 'C',
-			mode: 'default'
+			enableChordProgression: true
 		});
 	}
 
@@ -55,10 +52,7 @@ export class ChordFusionEngine {
 		// Update harmonic engine settings
 		if (settings.audioEnhancement?.musicalTheory) {
 			this.harmonicEngine = new HarmonicEngine({
-				enableChordProgression: true,
-				scale: settings.audioEnhancement.musicalTheory.scale,
-				rootNote: settings.audioEnhancement.musicalTheory.rootNote,
-				mode: 'default'
+				enableChordProgression: true
 			});
 		}
 	}
@@ -151,12 +145,9 @@ export class ChordFusionEngine {
 		// Extract pitch classes (mod 12 for chromatic scale)
 		const pitches = sortedNotes.map(n => n.pitch);
 
-		// Use harmonic engine to analyze and harmonize
-		const harmonized = this.harmonicEngine.harmonizeSequence(pitches);
-
 		// Determine root note and chord type
-		const rootPitch = harmonized.length > 0 ? harmonized[0] : pitches[0];
-		const chordType = this.analyzeChordType(harmonized);
+		const rootPitch = pitches[0];
+		const chordType = this.analyzeChordType(pitches);
 
 		// Limit to chord complexity setting
 		const maxVoices = settings.chordComplexity || 3;

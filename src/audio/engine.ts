@@ -15,7 +15,7 @@ import { PlaybackOptimizer } from './optimizations/PlaybackOptimizer';
 import { MemoryMonitor } from './optimizations/MemoryMonitor';
 import { AudioGraphCleaner } from './optimizations/AudioGraphCleaner';
 import { MusicalTheoryEngine } from './theory/MusicalTheoryEngine';
-import { MusicalTheoryConfig } from './theory/types';
+import { MusicalTheoryConfig, NoteName, ScaleType } from './theory/types';
 import { ChordFusionEngine, NoteEvent as ChordNoteEvent, ChordGroup } from './ChordFusionEngine';
 
 const logger = getLogger('audio-engine');
@@ -118,7 +118,7 @@ export class AudioEngine {
 	// Real-time chord fusion buffer
 	private chordBuffer: Array<{ mapping: any; timestamp: number; elapsedTime?: number; nodeId?: string }> = [];
 	private chordFlushTimer: number | null = null;
-	private temporalChordBuckets: Map<string, Array<{ mapping: any; nodeId?: string }>> = new Map();
+	private temporalChordBuckets: Map<string, Array<{ mapping: any; timestamp: number; nodeId?: string }>> = new Map();
 
 	// Active note tracking for polyphony management (per-instrument)
 	private activeNotesPerInstrument: Map<string, number> = new Map();
@@ -2355,7 +2355,7 @@ export class AudioEngine {
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
 							// Convert frequency to MIDI note number for percussion mapping
-							const midiNote = new Frequency(frequency, 'hz').toMidi();
+							const midiNote = Frequency(frequency, 'hz').toMidi();
 							logger.debug('rhythmic-percussion', 'Triggering accent', { frequency, midiNote, velocity });
 							this.rhythmicPercussion.triggerAccent({
 								pitch: midiNote,
@@ -2779,8 +2779,11 @@ export class AudioEngine {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
 		const reverb = instrumentEffects?.get('reverb');
 		if (reverb) {
-			const instrumentSettings = (this.settings.instruments as Record<string, unknown>)[instrument];
-			const wetLevel = instrumentSettings?.effects?.reverb?.params?.wet as number || 0.25;
+			const instrumentSettings = (this.settings.instruments as Record<string, unknown>)[instrument] as Record<string, unknown>;
+			const effects = instrumentSettings?.effects as Record<string, unknown>;
+			const reverbSettings = effects?.reverb as Record<string, unknown>;
+			const params = reverbSettings?.params as Record<string, unknown>;
+			const wetLevel = params?.wet as number || 0.25;
 			reverb.wet.value = enabled ? wetLevel : 0;
 			logger.debug('effects', `Reverb ${enabled ? 'enabled' : 'disabled'} for ${instrument}`);
 		} else {
@@ -3570,7 +3573,7 @@ export class AudioEngine {
 			// Trigger rhythmic percussion accent if enabled
 			if (this.rhythmicPercussion) {
 				// Convert frequency to MIDI note number for percussion mapping
-				const midiNote = new Frequency(pitch, 'hz').toMidi();
+				const midiNote = Frequency(pitch, 'hz').toMidi();
 				logger.debug('rhythmic-percussion', 'Triggering accent (immediate playback)', { pitch, midiNote, velocity });
 				this.rhythmicPercussion.triggerAccent({
 					pitch: midiNote,
@@ -3633,7 +3636,7 @@ export class AudioEngine {
 		}
 
 		const bucket = this.temporalChordBuckets.get(bucketKey)!;
-		bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId });
+		bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId, timestamp: Date.now() });
 
 		logger.debug('chord-fusion', 'Note added to temporal bucket', {
 			pitch: mapping.pitch,
@@ -3743,10 +3746,11 @@ export class AudioEngine {
 			return null;
 		}
 
-		const date = new Date(file.stat.mtime);
+		const stat = file.stat as { mtime: number };
+		const date = new Date(stat.mtime);
 		logger.debug('chord-fusion', 'Got file modification date', {
 			nodeId,
-			mtime: file.stat.mtime,
+			mtime: stat.mtime,
 			date: date.toISOString()
 		});
 
@@ -3963,7 +3967,7 @@ export class AudioEngine {
 		const rootPitch = pitches[0];
 
 		// Convert to MIDI for chord analysis
-		const midiPitches = pitches.map(p => new Frequency(p, 'hz').toMidi());
+		const midiPitches = pitches.map(p => Frequency(p, 'hz').toMidi());
 		const rootMidi = Math.round(midiPitches[0]);
 
 		// Calculate intervals from root
@@ -5337,7 +5341,7 @@ export class AudioEngine {
 	): void {
 		try {
 			const layer = this.getLayerForInstrument(instrumentName);
-			const midiPitch = new Frequency(frequency, 'hz').toMidi();
+			const midiPitch = Frequency(frequency, 'hz').toMidi();
 
 			this.eventEmitter.emit('note-triggered', {
 				pitch: midiPitch,

@@ -114,8 +114,8 @@ export class FreesoundSampleLoader {
     
     // Load top samples for the genre
     const samplesToLoad = samples.slice(0, maxSamples);
-    const loadPromises = samplesToLoad.map(sample => 
-      this.loadSample(sample.id).catch(error => {
+    const loadPromises = samplesToLoad.map(sample =>
+      this.loadSample(sample.id).catch((error): AudioBuffer | null => {
         logger.warn('preload', `Failed to preload sample ${sample.id}`, error);
         return null;
       })
@@ -174,8 +174,7 @@ export class FreesoundSampleLoader {
     this.sampleLibrary.forEach((samples) => {
       samples.forEach(sample => {
         // Check if sample matches category (simplified search)
-        if (sample.title.toLowerCase().includes(category.toLowerCase()) ||
-            sample.genre.toLowerCase().includes(category.toLowerCase())) {
+        if (sample.title.toLowerCase().includes(category.toLowerCase())) {
           allSamples.push(sample);
         }
       });
@@ -234,13 +233,6 @@ export class FreesoundSampleLoader {
         winWithGC.gc();
       }
     }
-  }
-  
-  /**
-   * Get all samples for a specific genre (placeholder samples only)
-   */
-  getSamplesForGenre(genre: MusicalGenre): FreesoundSample[] {
-    return this.sampleLibrary.get(genre) || [];
   }
 
   /**
@@ -459,17 +451,14 @@ export class FreesoundSampleLoader {
 
       enabledSamples.forEach(sample => {
         // Map sample tags to genres
-        const tags = sample.tags || [];
+        const tags = (sample as FreesoundSample & { tags?: string[] }).tags || [];
         const genres = this.mapTagsToGenres(tags);
 
         genres.forEach(genre => {
           if (!genreMap.has(genre)) {
             genreMap.set(genre, []);
           }
-          const genreSamples = genreMap.get(genre); if (genreSamples) genreSamples.push({
-            ...sample,
-            genre
-          });
+          const genreSamples = genreMap.get(genre); if (genreSamples) genreSamples.push(sample);
         });
       });
 
@@ -497,7 +486,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC0',
         attribution: 'Placeholder',
-        genre: 'ambient',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -508,7 +496,6 @@ export class FreesoundSampleLoader {
         duration: 45,
         license: 'CC BY 3.0',
         attribution: 'ERH',
-        genre: 'ambient',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -519,7 +506,6 @@ export class FreesoundSampleLoader {
         duration: 30,
         license: 'CC0',
         attribution: 'ERH',
-        genre: 'ambient',
         fadeIn: 2,
         fadeOut: 3
       }
@@ -534,7 +520,6 @@ export class FreesoundSampleLoader {
         duration: 120,
         license: 'CC0',
         attribution: 'dronemaker',
-        genre: 'drone',
         fadeIn: 4,
         fadeOut: 6
       },
@@ -545,7 +530,6 @@ export class FreesoundSampleLoader {
         duration: 90,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'drone',
         fadeIn: 5,
         fadeOut: 5
       },
@@ -556,7 +540,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC BY 3.0',
         attribution: 'newagesoup',
-        genre: 'drone',
         fadeIn: 3,
         fadeOut: 4
       }
@@ -571,7 +554,6 @@ export class FreesoundSampleLoader {
         duration: 30,
         license: 'CC BY 3.0',
         attribution: 'synthuser',
-        genre: 'electronic',
         fadeIn: 1,
         fadeOut: 2
       },
@@ -582,7 +564,6 @@ export class FreesoundSampleLoader {
         duration: 45,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'electronic',
         fadeIn: 2,
         fadeOut: 2
       },
@@ -593,7 +574,6 @@ export class FreesoundSampleLoader {
         duration: 40,
         license: 'CC BY 3.0',
         attribution: 'plasterbrain',
-        genre: 'electronic',
         fadeIn: 1,
         fadeOut: 2
       }
@@ -608,7 +588,6 @@ export class FreesoundSampleLoader {
         duration: 90,
         license: 'CC0',
         attribution: 'industrialuser',
-        genre: 'industrial',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -619,7 +598,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC0',
         attribution: 'florianreichelt',
-        genre: 'industrial',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -630,7 +608,6 @@ export class FreesoundSampleLoader {
         duration: 75,
         license: 'CC BY 3.0',
         attribution: 'soundscalpel',
-        genre: 'industrial',
         fadeIn: 3,
         fadeOut: 4
       }
@@ -645,7 +622,6 @@ export class FreesoundSampleLoader {
         duration: 50,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'orchestral',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -656,7 +632,6 @@ export class FreesoundSampleLoader {
         duration: 40,
         license: 'CC BY 3.0',
         attribution: 'freesound_community',
-        genre: 'orchestral',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -667,7 +642,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC0',
         attribution: 'musiccomposer',
-        genre: 'orchestral',
         fadeIn: 2,
         fadeOut: 3
       }
@@ -682,7 +656,6 @@ export class FreesoundSampleLoader {
         duration: 45,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'minimal',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -693,7 +666,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC BY 3.0',
         attribution: 'minimalartist',
-        genre: 'minimal',
         fadeIn: 4,
         fadeOut: 5
       },
@@ -704,7 +676,6 @@ export class FreesoundSampleLoader {
         duration: 90,
         license: 'CC0',
         attribution: 'fieldrecorder',
-        genre: 'minimal',
         fadeIn: 5,
         fadeOut: 6
       }
@@ -719,7 +690,6 @@ export class FreesoundSampleLoader {
         duration: 80,
         license: 'CC0',
         attribution: 'acclivity',
-        genre: 'oceanic',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -730,7 +700,6 @@ export class FreesoundSampleLoader {
         duration: 70,
         license: 'CC BY 3.0',
         attribution: 'plasterbrain',
-        genre: 'oceanic',
         fadeIn: 4,
         fadeOut: 5
       },
@@ -741,7 +710,6 @@ export class FreesoundSampleLoader {
         duration: 90,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'oceanic',
         fadeIn: 5,
         fadeOut: 6
       }
@@ -756,7 +724,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC BY 3.0',
         attribution: 'sounddesigner',
-        genre: 'sci-fi',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -767,7 +734,6 @@ export class FreesoundSampleLoader {
         duration: 50,
         license: 'CC0',
         attribution: 'freesound_community',
-        genre: 'sci-fi',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -778,7 +744,6 @@ export class FreesoundSampleLoader {
         duration: 45,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'sci-fi',
         fadeIn: 2,
         fadeOut: 3
       }
@@ -793,7 +758,6 @@ export class FreesoundSampleLoader {
         duration: 40,
         license: 'CC BY 3.0',
         attribution: 'experimentalist',
-        genre: 'experimental',
         fadeIn: 1,
         fadeOut: 2
       },
@@ -804,7 +768,6 @@ export class FreesoundSampleLoader {
         duration: 35,
         license: 'CC BY 3.0',
         attribution: 'plasterbrain',
-        genre: 'experimental',
         fadeIn: 0.5,
         fadeOut: 1
       },
@@ -815,7 +778,6 @@ export class FreesoundSampleLoader {
         duration: 30,
         license: 'CC0',
         attribution: 'noisemachine',
-        genre: 'experimental',
         fadeIn: 1,
         fadeOut: 1.5
       }
@@ -830,7 +792,6 @@ export class FreesoundSampleLoader {
         duration: 75,
         license: 'CC0',
         attribution: 'klankbeeld',
-        genre: 'urban',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -841,7 +802,6 @@ export class FreesoundSampleLoader {
         duration: 90,
         license: 'CC BY 3.0',
         attribution: 'cityrecorder',
-        genre: 'urban',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -852,7 +812,6 @@ export class FreesoundSampleLoader {
         duration: 60,
         license: 'CC0',
         attribution: 'urbanambience',
-        genre: 'urban',
         fadeIn: 2,
         fadeOut: 3
       }
@@ -867,7 +826,6 @@ export class FreesoundSampleLoader {
         duration: 85,
         license: 'CC0',
         attribution: 'klankbeeld',
-        genre: 'nature',
         fadeIn: 3,
         fadeOut: 4
       },
@@ -878,7 +836,6 @@ export class FreesoundSampleLoader {
         duration: 70,
         license: 'CC BY 3.0',
         attribution: 'naturalist',
-        genre: 'nature',
         fadeIn: 4,
         fadeOut: 5
       },
@@ -889,7 +846,6 @@ export class FreesoundSampleLoader {
         duration: 95,
         license: 'CC0',
         attribution: 'fieldnaturalist',
-        genre: 'nature',
         fadeIn: 3,
         fadeOut: 4
       }
@@ -904,7 +860,6 @@ export class FreesoundSampleLoader {
         duration: 65,
         license: 'CC0',
         attribution: 'mechanicalsound',
-        genre: 'mechanical',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -915,7 +870,6 @@ export class FreesoundSampleLoader {
         duration: 50,
         license: 'CC BY 3.0',
         attribution: 'industrialsound',
-        genre: 'mechanical',
         fadeIn: 1,
         fadeOut: 2
       },
@@ -926,7 +880,6 @@ export class FreesoundSampleLoader {
         duration: 45,
         license: 'CC0',
         attribution: 'mechanicsoundlab',
-        genre: 'mechanical',
         fadeIn: 1.5,
         fadeOut: 2
       }
@@ -941,7 +894,6 @@ export class FreesoundSampleLoader {
         duration: 55,
         license: 'CC0',
         attribution: 'acousticartist',
-        genre: 'organic',
         fadeIn: 2,
         fadeOut: 3
       },
@@ -952,7 +904,6 @@ export class FreesoundSampleLoader {
         duration: 40,
         license: 'CC BY 3.0',
         attribution: 'guitarist',
-        genre: 'organic',
         fadeIn: 2,
         fadeOut: 2.5
       },
@@ -963,7 +914,6 @@ export class FreesoundSampleLoader {
         duration: 50,
         license: 'CC0',
         attribution: 'unfa',
-        genre: 'organic',
         fadeIn: 3,
         fadeOut: 3
       }

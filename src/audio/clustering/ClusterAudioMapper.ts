@@ -708,12 +708,10 @@ export class ClusterAudioMapper {
   private createClusterAudioSource(theme: ClusterAudioTheme): Tone.PolySynth {
     const oscillatorType = this.getOscillatorTypeForTexture(theme.timbreProfile.texture);
 
-    const polySynth = new Tone.PolySynth(Tone.MonoSynth);
-    polySynth.maxPolyphony = 4;
-
-    // Configure the voice options
-    polySynth.set({
-      oscillator: { type: oscillatorType as Tone.ToneOscillatorType },
+    const polySynth = new Tone.PolySynth(Tone.MonoSynth, {
+      oscillator: {
+        type: oscillatorType
+      },
       envelope: {
         attack: theme.dynamicsRange.attackTime,
         decay: theme.dynamicsRange.decayTime,
@@ -721,6 +719,7 @@ export class ClusterAudioMapper {
         release: theme.dynamicsRange.releaseTime
       }
     });
+    polySynth.maxPolyphony = 4;
 
     return polySynth;
   }
