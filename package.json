@@ -22,7 +22,8 @@
     "prepare": "husky install",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "clean:css": "rm -f styles.css.map",
-    "deploy": "npm run build && cp main.js styles.css manifest.json /mnt/d/Vaults/Banister/.obsidian/plugins/sonigraph/ && echo '✅ Deployed to vault! Reload Obsidian (Ctrl+R) to see changes.'"
+    "build:deploy": "npm run audit:quick && node esbuild.config.mjs production && npm run build:css -- --no-fail-on-lint",
+    "deploy": "npm run build:deploy && cp main.js styles.css manifest.json /mnt/d/Vaults/Banister/.obsidian/plugins/sonigraph/ && echo '✅ Deployed to vault! Reload Obsidian (Ctrl+R) to see changes.'"
   },
   "keywords": [
     "obsidian",
