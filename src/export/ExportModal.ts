@@ -155,7 +155,7 @@ export class ExportModal extends Modal {
     /**
      * Create a preset button
      */
-    private createPresetButton(container: HTMLElement, preset: any): void {
+    private createPresetButton(container: HTMLElement, preset: ExportPreset): void {
         const btn = container.createEl('button', {
             text: preset.name,
             cls: 'sonigraph-export-preset-btn'
@@ -169,7 +169,7 @@ export class ExportModal extends Modal {
     /**
      * Load a preset
      */
-    private loadPreset(preset: any): void {
+    private loadPreset(preset: ExportPreset): void {
         // Update config
         this.config.format = preset.format;
         this.config.quality = preset.quality;
@@ -866,7 +866,7 @@ export class ExportModal extends Modal {
     /**
      * Get quality settings for format from plugin settings
      */
-    private getQualityForFormat(format: AudioFormat, exportSettings: any): any {
+    private getQualityForFormat(format: AudioFormat, exportSettings: ExportSettings): WavQuality | Mp3Quality | OggQuality | FlacQuality {
         if (!exportSettings?.audioQuality) {
             return { sampleRate: 48000, bitDepth: 16 };
         }
@@ -876,7 +876,7 @@ export class ExportModal extends Modal {
     /**
      * Get quality settings from preset
      */
-    private getQualityFromPreset(preset: QualityPreset): any {
+    private getQualityFromPreset(preset: QualityPreset): WavQuality | Mp3Quality | OggQuality | FlacQuality {
         const format = this.config.format || 'wav';
 
         if (format === 'wav') {

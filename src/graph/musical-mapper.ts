@@ -609,6 +609,7 @@ export class MusicalMapper {
 	/**
 	 * Phase 6.3: Get panner node for audio routing
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public getPannerForNode(nodeId: string): any {
 		if (!this.spatialAudioManager || !this.isSpatialAudioEnabled) return null;
 
@@ -1021,7 +1022,7 @@ export class MusicalMapper {
 			analysisTime: string;
 			uniqueInstruments: number;
 		};
-		listenerStats?: any;
+		listenerStats?: Record<string, unknown>;
 	} {
 		const status: {
 			enabled: boolean;
@@ -1038,7 +1039,7 @@ export class MusicalMapper {
 				analysisTime: string;
 				uniqueInstruments: number;
 			};
-			listenerStats?: any;
+			listenerStats?: Record<string, unknown>;
 		} = {
 			enabled: this.isPhase2Enabled,
 			components: {
@@ -1057,7 +1058,7 @@ export class MusicalMapper {
 		};
 
 		if (this.metadataListener) {
-			status.listenerStats = this.metadataListener.getStats();
+			status.listenerStats = this.metadataListener.getStats() as unknown as Record<string, unknown>;
 		}
 
 		return status;

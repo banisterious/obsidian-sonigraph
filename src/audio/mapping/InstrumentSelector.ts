@@ -27,12 +27,12 @@ export interface InstrumentSelectionCriteria {
     };
     metadata: {
         hasAdvancedMetadata: boolean;
-        imageMetadata?: any;
+        imageMetadata?: { aspectRatio?: number; imageType?: string; fileSize?: number; width?: number; height?: number };
         mediaDuration?: number;
         pageCount?: number;
         wordCount?: number;
-        textMetadata?: any;
-        codeMetadata?: any;
+        textMetadata?: { contentType?: string };
+        codeMetadata?: { complexity?: string };
     };
     relationships: {
         connectionCount: number;

@@ -60,9 +60,9 @@ export class TemporalGraphAnimator {
   
   // Additional context for comprehensive logging
   private loggingContext: {
-    pluginSettings?: any;
-    audioSettings?: any;
-    visualSettings?: any;
+    pluginSettings?: Record<string, unknown>;
+    audioSettings?: Record<string, unknown>;
+    visualSettings?: Record<string, unknown>;
   } = {};
   private visibleNodes: Set<string> = new Set();
   
@@ -406,8 +406,10 @@ export class TemporalGraphAnimator {
   /**
    * Spread a cluster of simultaneous events
    */
-  private spreadEventCluster(events: TimelineEvent[], baseTime: number, config: any): TimelineEvent[] {
-    const spacingWindow = Math.min(config.maxSpacingWindow, events.length * config.minEventSpacing * 1.5);
+  private spreadEventCluster(events: TimelineEvent[], baseTime: number, config: Record<string, unknown>): TimelineEvent[] {
+    const maxSpacingWindow = config.maxSpacingWindow as number;
+    const minEventSpacing = config.minEventSpacing as number;
+    const spacingWindow = Math.min(maxSpacingWindow, events.length * minEventSpacing * 1.5);
     const spacing = events.length > 1 ? spacingWindow / (events.length - 1) : 0;
     
     // Sort by node ID for consistent ordering
@@ -422,15 +424,16 @@ export class TemporalGraphAnimator {
   /**
    * Process large clusters using batch approach
    */
-  private processBatchedEvents(events: TimelineEvent[], baseTime: number, config: any, batchSize: number): TimelineEvent[] {
+  private processBatchedEvents(events: TimelineEvent[], baseTime: number, config: Record<string, unknown>, batchSize: number): TimelineEvent[] {
     const result: TimelineEvent[] = [];
     const batches = this.createEventBatches(events, batchSize);
-    
+    const maxSpacingWindow = config.maxSpacingWindow as number;
+
     batches.forEach((batch, batchIndex) => {
-      const batchBaseTime = baseTime + (batchIndex * config.maxSpacingWindow * 0.2); // 20% of max spacing between batches
+      const batchBaseTime = baseTime + (batchIndex * maxSpacingWindow * 0.2); // 20% of max spacing between batches
       result.push(...this.spreadEventCluster(batch, batchBaseTime, {
         ...config,
-        maxSpacingWindow: config.maxSpacingWindow * 0.15 // Tighter spacing within batches
+        maxSpacingWindow: maxSpacingWindow * 0.15 // Tighter spacing within batches
       }));
     });
     
@@ -640,9 +643,12 @@ export class TemporalGraphAnimator {
       
       // Performance settings
       performance: {
-        adaptiveDetail: this.loggingContext.visualSettings?.adaptiveDetail?.enabled || false,
-        maxNodes: this.loggingContext.visualSettings?.adaptiveDetail?.overrides?.maximumVisibleNodes || -1,
-        temporalClustering: this.loggingContext.visualSettings?.temporalClustering || false
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        adaptiveDetail: (this.loggingContext.visualSettings as any)?.adaptiveDetail?.enabled || false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        maxNodes: (this.loggingContext.visualSettings as any)?.adaptiveDetail?.overrides?.maximumVisibleNodes || -1,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        temporalClustering: (this.loggingContext.visualSettings as any)?.temporalClustering || false
       },
       
       // Context information
@@ -1007,9 +1013,9 @@ export class TemporalGraphAnimator {
    * Set additional context for comprehensive logging
    */
   setLoggingContext(context: {
-    pluginSettings?: any;
-    audioSettings?: any;
-    visualSettings?: any;
+    pluginSettings?: Record<string, unknown>;
+    audioSettings?: Record<string, unknown>;
+    visualSettings?: Record<string, unknown>;
   }): void {
     this.loggingContext = { ...this.loggingContext, ...context };
     logger.debug('context', 'Logging context updated', { 

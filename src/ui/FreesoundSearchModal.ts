@@ -626,7 +626,7 @@ export class FreesoundSearchModal extends Modal {
 		logger.info('library', `Added sample ${result.id} to library`);
 	}
 
-	private displayError(error: any): void {
+	private displayError(error: unknown): void {
 		if (!this.resultsContainer) return;
 
 		this.resultsContainer.empty();
@@ -634,8 +634,9 @@ export class FreesoundSearchModal extends Modal {
 		const errorState = this.resultsContainer.createDiv({ cls: 'freesound-error-state' });
 		setIcon(errorState, 'alert-circle');
 		errorState.createEl('p', { text: 'Search Error' });
+		const errorMessage = error instanceof Error ? error.message : 'Failed to search Freesound. Please check your API key and connection.';
 		errorState.createEl('span', {
-			text: error.message || 'Failed to search Freesound. Please check your API key and connection.'
+			text: errorMessage
 		});
 
 		const retryBtn = errorState.createEl('button', {

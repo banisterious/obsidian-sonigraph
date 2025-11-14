@@ -7,7 +7,9 @@
 
 import { App, TFile } from 'obsidian';
 import { ExportConfig, ExportResult } from './types';
+import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { getLogger } from '../logging';
+import type { SonigraphSettings } from '../utils/constants';
 
 const logger = getLogger('export-note');
 
@@ -29,8 +31,8 @@ export class ExportNoteCreator {
     async createNote(
         config: ExportConfig,
         result: ExportResult,
-        animator: any,
-        pluginSettings?: any
+        animator: TemporalGraphAnimator,
+        pluginSettings?: SonigraphSettings
     ): Promise<string> {
         try {
             logger.info('export-note', 'Creating export note', {
@@ -97,8 +99,8 @@ export class ExportNoteCreator {
     private generateNoteContent(
         config: ExportConfig,
         result: ExportResult,
-        animator: any,
-        pluginSettings?: any
+        animator: TemporalGraphAnimator,
+        pluginSettings?: SonigraphSettings
     ): string {
         const timestamp = new Date().toISOString();
         const date = new Date().toLocaleDateString();
@@ -175,7 +177,7 @@ ${audioConfig}
     /**
      * Get timeline settings description
      */
-    private getTimelineSettings(animator: any): string {
+    private getTimelineSettings(animator: TemporalGraphAnimator): string {
         if (!animator) {
             return '- **Configuration:** Not available';
         }
@@ -318,7 +320,7 @@ ${audioConfig}
     /**
      * Get quality description
      */
-    private getQualityDescription(quality: any): string {
+    private getQualityDescription(quality: Record<string, unknown>): string {
         if (!quality) return 'Unknown';
 
         if (quality.sampleRate && quality.bitDepth) {
@@ -351,7 +353,7 @@ ${audioConfig}
     /**
      * Generate comprehensive settings section with all Sonic Graph settings
      */
-    private generateComprehensiveSettings(settings: any): string {
+    private generateComprehensiveSettings(settings: SonigraphSettings): string {
         let content = '\n## Sonic Graph Settings\n\n';
 
         // Core settings

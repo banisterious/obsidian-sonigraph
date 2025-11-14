@@ -283,7 +283,7 @@ export class MetadataListener {
     /**
      * Detect specific changes in metadata
      */
-    private detectSpecificChanges(file: TFile, currentCache: any): MetadataChangeEvent['changes'] {
+    private detectSpecificChanges(file: TFile, currentCache: unknown): MetadataChangeEvent['changes'] {
         // This would require storing previous state to compare
         // For now, assume all types of changes are possible
         return {

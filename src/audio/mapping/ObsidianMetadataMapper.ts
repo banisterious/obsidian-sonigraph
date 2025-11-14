@@ -331,7 +331,7 @@ export class ObsidianMetadataMapper {
     /**
      * Map tags to instrument suggestions
      */
-    private mapTagsToInstruments(tags?: Array<{ tag: string; position: any }>): InstrumentMapping[] {
+    private mapTagsToInstruments(tags?: Array<{ tag: string; position: unknown }>): InstrumentMapping[] {
         if (!tags || !this.config.contentAwareMapping.enabled) {
             return [];
         }
@@ -359,7 +359,7 @@ export class ObsidianMetadataMapper {
     /**
      * Map link density to harmony characteristics
      */
-    private mapLinkDensityToHarmony(links?: Array<any>): HarmonyMapping {
+    private mapLinkDensityToHarmony(links?: Array<unknown>): HarmonyMapping {
         const linkCount = links?.length || 0;
         
         // Logarithmic scaling for link density
@@ -375,7 +375,7 @@ export class ObsidianMetadataMapper {
     /**
      * Map heading structure to rhythm characteristics
      */
-    private mapHeadingsToRhythm(headings?: Array<any>): RhythmMapping {
+    private mapHeadingsToRhythm(headings?: Array<unknown>): RhythmMapping {
         const headingCount = headings?.length || 0;
         
         if (headingCount === 0) {

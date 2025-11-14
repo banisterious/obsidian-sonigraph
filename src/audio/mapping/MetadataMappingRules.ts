@@ -17,7 +17,7 @@ const logger = getLogger('metadata-mapping-rules');
 export interface MetadataCondition {
     type: 'tag' | 'frontmatter' | 'fileExtension' | 'pathPattern' | 'fileSize' | 'fileAge';
     operator: 'equals' | 'contains' | 'matches' | 'greaterThan' | 'lessThan' | 'between';
-    value: any;
+    value: string | number | [number, number];
     caseSensitive?: boolean;
 }
 
@@ -67,9 +67,9 @@ export interface FrontmatterSchema {
     [property: string]: {
         type: 'string' | 'number' | 'boolean' | 'array';
         description: string;
-        examples: any[];
-        defaultValue?: any;
-        validation?: (value: any) => boolean;
+        examples: unknown[];
+        defaultValue?: unknown;
+        validation?: (value: unknown) => boolean;
     };
 }
 
@@ -614,7 +614,7 @@ export class MetadataMappingRules {
     /**
      * Validate frontmatter property value
      */
-    validateFrontmatterProperty(property: string, value: any): { valid: boolean; error?: string } {
+    validateFrontmatterProperty(property: string, value: unknown): { valid: boolean; error?: string } {
         const schema = this.frontmatterSchema[property];
         if (!schema) {
             return { valid: true }; // Unknown properties are allowed

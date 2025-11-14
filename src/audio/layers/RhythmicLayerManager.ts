@@ -19,12 +19,13 @@ import {
   start 
 } from 'tone';
 
-import { 
-  RhythmicLayerConfig, 
-  ActivityMetrics, 
+import {
+  RhythmicLayerConfig,
+  ActivityMetrics,
   VaultState,
   ContinuousLayerError,
-  LayerPerformanceMetrics 
+  LayerPerformanceMetrics,
+  LayerState
 } from './types';
 import { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
@@ -72,7 +73,7 @@ export class RhythmicLayerManager {
   private cpuUsage = 0;
   
   // Callbacks
-  private onStateChange?: (state: any) => void;
+  private onStateChange?: (state: LayerState) => void;
   
   constructor(private settings: SonigraphSettings) {
     this.config = {
@@ -324,7 +325,7 @@ export class RhythmicLayerManager {
   /**
    * Set state change callback
    */
-  setStateChangeCallback(callback: (state: any) => void): void {
+  setStateChangeCallback(callback: (state: LayerState) => void): void {
     this.onStateChange = callback;
   }
   

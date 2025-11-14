@@ -1343,6 +1343,7 @@ export class AudioEngine {
 		const maxVoices = this.getInstrumentPolyphonyLimit(whaleType);
 
 		// Define whale-specific synthesis characteristics based on species
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		let config: any;
 		
 		switch (whaleType) {
@@ -3193,14 +3194,14 @@ export class AudioEngine {
 	/**
 	 * Check if a layer has chord fusion enabled
 	 */
-	private isLayerEnabledForChordFusion(layer: string, settings: any): boolean {
+	private isLayerEnabledForChordFusion(layer: string, settings: NonNullable<SonigraphSettings['audioEnhancement']>['chordFusion']): boolean {
 		return settings.layerSettings?.[layer] || false;
 	}
 
 	/**
 	 * Create a single note mapping that represents a chord
 	 */
-	private createChordNote(notes: MusicalMapping[], settings: any): MusicalMapping {
+	private createChordNote(notes: MusicalMapping[], settings: NonNullable<SonigraphSettings['audioEnhancement']>['chordFusion']): MusicalMapping {
 		// Use the first note as the base
 		const baseNote = notes[0];
 
@@ -3948,7 +3949,7 @@ export class AudioEngine {
 	/**
 	 * Play a single buffered note
 	 */
-	private playBufferedNote(mapping: any, elapsedTime?: number): void {
+	private playBufferedNote(mapping: MusicalMapping, elapsedTime?: number): void {
 		try {
 			const { pitch, duration, velocity, instrument, nodeId, nodeTitle } = mapping;
 
@@ -3981,7 +3982,7 @@ export class AudioEngine {
 	/**
 	 * Trigger a smart chord with harmonization
 	 */
-	private triggerSmartChord(notes: typeof this.chordBuffer, settings: any, elapsedTime?: number): void {
+	private triggerSmartChord(notes: typeof this.chordBuffer, settings: NonNullable<SonigraphSettings['audioEnhancement']>['chordFusion'], elapsedTime?: number): void {
 		// Extract pitches and find root (lowest pitch)
 		const pitches = notes.map(n => n.mapping.pitch).sort((a, b) => a - b);
 		const rootPitch = pitches[0];
@@ -5224,7 +5225,7 @@ export class AudioEngine {
 	/**
 	 * Get default effect settings for a given effect type
 	 */
-	private getDefaultEffectSettings(effectType: string): any {
+	private getDefaultEffectSettings(effectType: string): { enabled: boolean; params: Record<string, unknown> } {
 		switch (effectType) {
 			case 'reverb':
 				return {
@@ -5444,6 +5445,7 @@ export class AudioEngine {
 	/**
 	 * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private createSamplerWithFallback(config: any, instrumentName: string): PolySynth | Sampler {
 		try {
 			const sampler = new Sampler(config);
@@ -5518,6 +5520,7 @@ export class AudioEngine {
 	/**
 	 * Issue #012: Reconnect instrument to effects chain after fallback creation
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private reconnectInstrumentToEffects(instrumentName: string, instrument: PolySynth, volume: Volume, effects: Map<string, any>): void {
 		let output = instrument.connect(volume);
 		
@@ -5982,7 +5985,7 @@ export class AudioEngine {
 	}
 
 	private createVoicePool(instrumentName: string, poolSize: number): void {
-		const pool: any[] = [];
+		const pool: Array<{ available: boolean; lastUsed: number }> = [];
 		for (let i = 0; i < poolSize; i++) {
 			// Pre-allocate voice instances (simplified for now)
 			pool.push({ available: true, lastUsed: 0 });

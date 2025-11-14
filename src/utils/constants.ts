@@ -509,7 +509,7 @@ export interface SonicGraphSettings {
 			description: string;
 			author?: string;
 			version?: string;
-			mappings: Record<string, any>;
+			mappings: Record<string, unknown>;
 		}>;
 
 		// Advanced features
@@ -545,7 +545,7 @@ export interface SonigraphSettings {
 	effects?: {
 		[key: string]: {
 			enabled: boolean;
-			[param: string]: any;
+			[param: string]: unknown;
 		};
 	};
 	instruments: {
@@ -657,9 +657,9 @@ export interface SonigraphSettings {
 	contentAwareMapping?: {
 		enabled: boolean;
 		fileTypePreferences: Record<string, string[]>;
-		tagMappings: Record<string, any>;
-		folderMappings: Record<string, any>;
-		connectionTypeMappings: Record<string, any>;
+		tagMappings: Record<string, unknown>;
+		folderMappings: Record<string, unknown>;
+		connectionTypeMappings: Record<string, unknown>;
 		frontmatterPropertyName?: string;
 		moodPropertyName?: string;
 		distributionStrategy?: string;
@@ -3090,7 +3090,7 @@ export function getInstrumentFamily(instrumentKey: InstrumentKey): keyof typeof 
 	return null;
 }
 
-export function validateInstrumentSettings(settings: any): settings is Record<InstrumentKey, InstrumentSettings> {
+export function validateInstrumentSettings(settings: unknown): settings is Record<InstrumentKey, InstrumentSettings> {
 	const requiredKeys = getAllInstrumentKeys();
 	const providedKeys = Object.keys(settings);
 	

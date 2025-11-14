@@ -37,6 +37,7 @@ export interface MusicalMapping {
 			instrument?: string;
 		}>;
 		chordSize?: number;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		[key: string]: any; // Allow additional metadata
 	};
 }
@@ -55,7 +56,7 @@ export interface GraphStats {
 export interface EnhancedGraphNode extends GraphNode {
 	metadata: {
 		tags: string[];
-		frontmatter: Record<string, any>;
+		frontmatter: Record<string, unknown>;
 		wordCount?: number;
 		headingCount?: number;
 	};
@@ -119,8 +120,11 @@ export interface AudioMappingConfig {
 		harmonicEnabled?: boolean;
 		scale?: string;
 		key?: string;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		ambientDrone: any; // Will be defined when implementing layers
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		rhythmicLayer: any;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		harmonicPad: any;
 	};
 	musicalTheory: {

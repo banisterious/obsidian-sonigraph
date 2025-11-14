@@ -306,7 +306,7 @@ export class ContentAwarePositioning {
   /**
    * Get debug visualization data
    */
-  getDebugVisualization(): any {
+  getDebugVisualization(): Record<string, unknown> | null {
     if (!this.settings.debugVisualization) {
       return null;
     }

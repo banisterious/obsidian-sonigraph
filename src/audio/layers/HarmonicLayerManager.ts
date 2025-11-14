@@ -17,13 +17,14 @@ import {
   AMSynth
 } from 'tone';
 
-import { 
+import {
   HarmonicLayerConfig,
   VaultState,
   ClusterInfo,
   ChordProgression,
   MusicalScale,
-  ContinuousLayerError
+  ContinuousLayerError,
+  LayerState
 } from './types';
 import { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
@@ -74,7 +75,7 @@ export class HarmonicLayerManager {
   private cpuUsage = 0;
   
   // Callbacks
-  private onStateChange?: (state: any) => void;
+  private onStateChange?: (state: LayerState) => void;
   
   constructor(private settings: SonigraphSettings) {
     this.config = {
@@ -350,7 +351,7 @@ export class HarmonicLayerManager {
   /**
    * Set state change callback
    */
-  setStateChangeCallback(callback: (state: any) => void): void {
+  setStateChangeCallback(callback: (state: LayerState) => void): void {
     this.onStateChange = callback;
   }
   

@@ -12,6 +12,16 @@ import { FreesoundSample } from '../audio/layers/types';
 
 const logger = getLogger('SampleTableBrowser');
 
+/**
+ * Extended FreesoundSample with additional optional fields used in the UI
+ */
+interface ExtendedFreesoundSample extends FreesoundSample {
+	name?: string;
+	author?: string;
+	tags?: string[];
+	description?: string;
+}
+
 interface TableSortState {
 	column: string;
 	direction: 'asc' | 'desc';
@@ -130,8 +140,9 @@ export class SampleTableBrowser {
 		const tags = new Set<string>();
 
 		samples.forEach(sample => {
-			if (sample.tags && Array.isArray(sample.tags)) {
-				sample.tags.forEach(tag => tags.add(tag));
+			const extendedSample = sample as ExtendedFreesoundSample;
+			if (extendedSample.tags && Array.isArray(extendedSample.tags)) {
+				extendedSample.tags.forEach((tag: string) => tags.add(tag));
 			}
 		});
 
@@ -221,7 +232,7 @@ export class SampleTableBrowser {
 	/**
 	 * Render a single sample row
 	 */
-	private renderSampleRow(tbody: HTMLElement, sample: any): void {
+	private renderSampleRow(tbody: HTMLElement, sample: ExtendedFreesoundSample): void {
 		const row = tbody.createEl('tr', {
 			cls: sample.enabled === false ? 'disabled' : ''
 		});
@@ -244,7 +255,7 @@ export class SampleTableBrowser {
 		// Tags
 		const tagsCell = row.createEl('td', { cls: 'sonigraph-sample-tags' });
 		if (sample.tags && Array.isArray(sample.tags)) {
-			sample.tags.slice(0, 2).forEach(tag => {
+			sample.tags.slice(0, 2).forEach((tag: string) => {
 				tagsCell.createSpan({ text: tag, cls: 'sonigraph-tag-badge' });
 			});
 			if (sample.tags.length > 2) {
@@ -332,7 +343,7 @@ export class SampleTableBrowser {
 	/**
 	 * Get filtered and sorted samples
 	 */
-	private getFilteredSamples(): any[] {
+	private getFilteredSamples(): ExtendedFreesoundSample[] {
 		let samples = this.plugin.settings.freesoundSamples || [];
 
 		// Apply filters
@@ -392,7 +403,7 @@ export class SampleTableBrowser {
 	/**
 	 * Preview a sample
 	 */
-	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
+	private async previewSample(sample: ExtendedFreesoundSample, button: HTMLButtonElement): Promise<void> {
 		// Stop if already playing (check if button has stop icon)
 		if (this.currentPreviewButton === button && this.currentPreviewAudio) {
 			this.stopPreview();
@@ -571,7 +582,7 @@ export class SampleTableBrowser {
 	/**
 	 * Open tag editor modal
 	 */
-	private openTagEditor(sample: any): void {
+	private openTagEditor(sample: ExtendedFreesoundSample): void {
 		const modal = new TagEditorModal(
 			this.app,
 			this.plugin,
@@ -598,7 +609,7 @@ export class SampleTableBrowser {
  */
 class TagEditorModal extends Modal {
 	private plugin: SonigraphPlugin;
-	private sample: any;
+	private sample: ExtendedFreesoundSample;
 	private onSave: (tags: string[]) => Promise<void>;
 	private tagInput: HTMLInputElement | null = null;
 	private tagListEl: HTMLElement | null = null;
@@ -612,7 +623,7 @@ class TagEditorModal extends Modal {
 		'space', 'cinematic', 'synth', 'pad', 'texture', 'field-recording'
 	]);
 
-	constructor(app: App, plugin: SonigraphPlugin, sample: any, onSave: (tags: string[]) => Promise<void>) {
+	constructor(app: App, plugin: SonigraphPlugin, sample: ExtendedFreesoundSample, onSave: (tags: string[]) => Promise<void>) {
 		super(app);
 		this.plugin = plugin;
 		this.sample = sample;
@@ -622,8 +633,9 @@ class TagEditorModal extends Modal {
 		// Add tags from other samples
 		const allSamples = plugin.settings.freesoundSamples || [];
 		allSamples.forEach(s => {
-			if (s.tags && Array.isArray(s.tags)) {
-				s.tags.forEach(tag => this.availableTags.add(tag));
+			const extendedSample = s as ExtendedFreesoundSample;
+			if (extendedSample.tags && Array.isArray(extendedSample.tags)) {
+				extendedSample.tags.forEach((tag: string) => this.availableTags.add(tag));
 			}
 		});
 	}

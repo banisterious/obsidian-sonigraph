@@ -889,7 +889,7 @@ export class SmartClusteringAlgorithms {
   /**
    * Get debug information
    */
-  public getDebugInfo(): any {
+  public getDebugInfo(): Record<string, unknown> | null {
     if (!this.settings.debugMode || !this.lastClusteringResult) {
       return null;
     }

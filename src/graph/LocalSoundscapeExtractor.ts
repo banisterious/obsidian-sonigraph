@@ -36,7 +36,7 @@ export interface LocalSoundscapeNode {
 		outgoing: Array<{path: string; text: string}>;
 	};
 	tags?: string[];  // All tags (from body and frontmatter)
-	frontmatter?: Record<string, any>;  // Frontmatter properties
+	frontmatter?: Record<string, unknown>;  // Frontmatter properties
 }
 
 export interface LocalSoundscapeLink {

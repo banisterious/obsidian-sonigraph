@@ -391,8 +391,8 @@ export class ConnectionTypePresetManager {
     /**
      * Extract mappings from config for saving as preset
      */
-    private extractMappingsFromConfig(config: ConnectionTypeMappingConfig): Partial<Record<ConnectionType, any>> {
-        const mappings: Partial<Record<ConnectionType, any>> = {};
+    private extractMappingsFromConfig(config: ConnectionTypeMappingConfig): Partial<Record<ConnectionType, ConnectionTypeMapping>> {
+        const mappings: Partial<Record<ConnectionType, ConnectionTypeMapping>> = {};
 
         Object.entries(config.mappings).forEach(([connectionType, mapping]) => {
             if (mapping.enabled) {

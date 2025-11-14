@@ -193,7 +193,7 @@ export interface MusicalTheoryConfig {
  */
 export interface ScaleModulationRule {
     name: string;
-    condition: (vaultState: any) => boolean;
+    condition: (vaultState: Record<string, unknown>) => boolean;
     targetScale: ScaleType | ModalScale;
     targetRoot?: NoteName;
     description: string;

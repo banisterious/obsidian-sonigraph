@@ -176,7 +176,7 @@ export class WhaleIntegration {
     /**
      * Manual sample discovery (Phase 2)
      */
-    async discoverSamples(species: 'humpback' | 'blue' | 'orca' | 'gray' | 'sperm' | 'minke' | 'fin'): Promise<any> {
+    async discoverSamples(species: 'humpback' | 'blue' | 'orca' | 'gray' | 'sperm' | 'minke' | 'fin'): Promise<import('./freesound/types').SampleDiscoveryResult> {
         if (!this.whaleManager) {
             throw new Error('Whale manager not initialized');
         }

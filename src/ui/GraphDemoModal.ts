@@ -24,7 +24,9 @@ interface DemoLink {
 }
 
 export class GraphDemoModal extends Modal {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private svg: any | null = null;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private simulation: any | null = null;
 	private nodes: DemoNode[] = [];
 	private links: DemoLink[] = [];
@@ -144,10 +146,13 @@ export class GraphDemoModal extends Modal {
 			.attr('viewBox', `0 0 ${width} ${height}`);
 
 		// Create force simulation
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		this.simulation = d3.forceSimulation(this.nodes)
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.force('link', d3.forceLink(this.links).id((d: any) => d.id).distance(80))
 			.force('charge', d3.forceManyBody().strength(-300))
 			.force('center', d3.forceCenter(width / 2, height / 2))
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.force('collision', d3.forceCollide().radius((d: any) => d.radius + 5));
 
 		// Create links
@@ -185,11 +190,14 @@ export class GraphDemoModal extends Modal {
 			.style('transition', 'opacity 0.2s');
 
 		// Add hover effects
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		nodeGroup
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('mouseenter', function(event: any, d: DemoNode) {
 				d3.select(this).select('text').style('opacity', 1);
 				d3.select(this).select('circle').style('stroke-width', 3);
 			})
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('mouseleave', function(event: any, d: DemoNode) {
 				if (!this.showLabels) {
 					d3.select(this).select('text').style('opacity', 0);
@@ -198,16 +206,20 @@ export class GraphDemoModal extends Modal {
 			}.bind(this));
 
 		// Add drag behavior
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const drag = d3.drag<SVGGElement, DemoNode>()
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('start', (event: any, d: DemoNode) => {
 				if (!event.active && this.simulation) this.simulation.alphaTarget(0.3).restart();
 				d.fx = d.x;
 				d.fy = d.y;
 			})
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('drag', (event: any, d: DemoNode) => {
 				d.fx = event.x;
 				d.fy = event.y;
 			})
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('end', (event: any, d: DemoNode) => {
 				if (!event.active && this.simulation) this.simulation.alphaTarget(0);
 				d.fx = null;
@@ -218,10 +230,15 @@ export class GraphDemoModal extends Modal {
 
 		// Update positions on each tick
 		this.simulation.on('tick', () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			linkGroup
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				.attr('x1', (d: any) => (d.source as DemoNode).x!)
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				.attr('y1', (d: any) => (d.source as DemoNode).y!)
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				.attr('x2', (d: any) => (d.target as DemoNode).x!)
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				.attr('y2', (d: any) => (d.target as DemoNode).y!);
 
 			nodeGroup
@@ -282,7 +299,9 @@ export class GraphDemoModal extends Modal {
 				// Show the node
 				this.visibleNodes.add(node.id);
 				if (!this.svg) return;
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				this.svg.selectAll('.node')
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					.filter((d: any) => d.id === node.id)
 					.transition()
 					.duration(500)
@@ -314,7 +333,9 @@ export class GraphDemoModal extends Modal {
 
 					// Show the link with animation
 					if (!this.svg) return;
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					this.svg.selectAll('.links line')
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						.filter((d: any) => {
 							const dSourceId = typeof d.source === 'string' ? d.source : d.source.id;
 							const dTargetId = typeof d.target === 'string' ? d.target : d.target.id;

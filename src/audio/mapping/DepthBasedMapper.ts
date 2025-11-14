@@ -819,7 +819,7 @@ export class DepthBasedMapper {
 		node: LocalSoundscapeNode,
 		depth: number,
 		contextModifiers?: ContextModifiers,
-		proseAnalysis?: any
+		proseAnalysis?: { overallComplexity: number; density: { contentDensity: number }; musicalExpressiveness: number; structure: { complexityScore: number } }
 	): Promise<DepthMapping | null> {
 		try {
 			// Get file for metadata analysis
@@ -1008,7 +1008,7 @@ export class DepthBasedMapper {
 	 * Convert scale degree to semitone offset
 	 * Handles negative degrees (below root) and positive degrees (above root)
 	 */
-	private scaleDegreesToSemitones(degree: number, scale: any): number {
+	private scaleDegreesToSemitones(degree: number, scale: { definition: { intervals: number[] } }): number {
 		const scaleIntervals = scale.definition.intervals;
 		const scaleLength = scaleIntervals.length;
 
@@ -1127,7 +1127,7 @@ export class DepthBasedMapper {
 	 * This creates coherent depth layers (e.g., all depth-1 nodes = strings) while allowing
 	 * slight variation when desired.
 	 */
-	private selectInstrument(node: LocalSoundscapeNode, instruments: string[], contextModifiers?: ContextModifiers, proseAnalysis?: any): string {
+	private selectInstrument(node: LocalSoundscapeNode, instruments: string[], contextModifiers?: ContextModifiers, proseAnalysis?: { structure: { complexityScore: number } }): string {
 		if (instruments.length === 0) {
 			logger.warn('no-instruments', 'No instruments available for depth', { depth: node.depth });
 			return 'piano'; // Fallback

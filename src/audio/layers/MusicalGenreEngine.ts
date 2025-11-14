@@ -26,15 +26,17 @@ import {
   start
 } from 'tone';
 
-import { 
-  MusicalGenre, 
-  GenreParameters, 
+import {
+  MusicalGenre,
+  GenreParameters,
   ContinuousLayerConfig,
-  ContinuousLayerError 
+  ContinuousLayerError,
+  FreesoundSample
 } from './types';
 import { FreesoundSampleLoader } from './FreesoundSampleLoader';
 import { getLogger } from '../../logging';
 import { requestUrl } from 'obsidian';
+import type { SonigraphSettings } from '../../utils/constants';
 
 const logger = getLogger('MusicalGenreEngine');
 
@@ -58,21 +60,25 @@ type EffectType = 'reverb' | 'delay' | 'chorus' | 'distortion' | 'filter' | 'pha
 
 export class MusicalGenreEngine {
   private currentGenre: MusicalGenre;
-  private settings: any; // Settings for API access
+  private settings: SonigraphSettings | undefined;
   private isInitialized = false;
   private isPlaying = false;
 
   // Synthesis components
   private primarySynth: PolySynth | FMSynth | AMSynth | NoiseSynth | MetalSynth | Sampler | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private supportingSynths: Map<string, any> = new Map();
   private synthVolume: Volume;
 
   // Effects chain
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private effects: Map<string, any> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private effectsChain: any[] = [];
 
   // Modulation
   private lfos: Map<string, LFO> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private modulationTargets: Map<string, any> = new Map();
 
   // Sample integration
@@ -80,7 +86,7 @@ export class MusicalGenreEngine {
   private loadedSamples: Map<string, Sampler> = new Map();
   private activeSampleAudios: HTMLAudioElement[] = [];
   private sampleFadeOutTimers: number[] = [];
-  private userSamples: any[] = []; // Flat array of all user samples
+  private userSamples: FreesoundSample[] = [];
 
   // Playback state
   private activeNotes: Set<string> = new Set();
@@ -92,7 +98,7 @@ export class MusicalGenreEngine {
   private activeVoices = 0;
   private cpuUsage = 0;
 
-  constructor(genre: MusicalGenre, settings?: any) {
+  constructor(genre: MusicalGenre, settings?: SonigraphSettings) {
     this.currentGenre = genre;
     this.settings = settings;
     this.synthVolume = new Volume(-20); // Start quiet
@@ -306,6 +312,7 @@ export class MusicalGenreEngine {
   /**
    * Connect to audio destination
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   connect(destination: any): void {
     this.synthVolume.connect(destination);
   }
@@ -327,7 +334,7 @@ export class MusicalGenreEngine {
   /**
    * Set user samples from settings (flat array)
    */
-  setUserSamples(userSamples: any[]): void {
+  setUserSamples(userSamples: FreesoundSample[]): void {
     this.userSamples = userSamples || [];
     logger.debug('samples', 'User samples set', {
       count: this.userSamples.length
@@ -374,6 +381,7 @@ export class MusicalGenreEngine {
     }
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private createSynth(type: string, params: GenreParameters): any {
     switch (type) {
       case 'fm':
@@ -455,8 +463,9 @@ export class MusicalGenreEngine {
   private createEffectsChain(): void {
     const genreConfig = this.getGenreConfiguration();
     const params = genreConfig.parameters;
-    
+
     for (const effectType of genreConfig.effectChain) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let effect: any;
       
       switch (effectType) {
@@ -524,6 +533,7 @@ export class MusicalGenreEngine {
   }
   
   private connectAudioChain(): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let currentNode: any = this.primarySynth;
     
     // Connect supporting synths to a gain node first
@@ -1055,7 +1065,7 @@ export class MusicalGenreEngine {
    * @param sample - The sample to play
    * @param totalSamples - Total number of samples playing (for volume adjustment)
    */
-  private async playSample(sample: any, totalSamples: number = 1): Promise<void> {
+  private async playSample(sample: FreesoundSample, totalSamples: number = 1): Promise<void> {
     try {
       logger.info('playback', `Playing sample: ${sample.title}`, { id: sample.id });
 

@@ -1068,7 +1068,7 @@ export class ContentAwareMapper {
     /**
      * Create FolderHierarchyConfig from ContentAwareMappingConfig
      */
-    private createFolderHierarchyConfig(config: ContentAwareMappingConfig): any {
+    private createFolderHierarchyConfig(config: ContentAwareMappingConfig): Record<string, unknown> {
         const folderConfig = config.folderHierarchy;
         
         return {
@@ -1539,7 +1539,7 @@ export class ContentAwareMapper {
             nodeId: string;
             path: string;
             passed: boolean;
-            details: any;
+            details: Record<string, unknown>;
             error?: string;
         }> = [];
 

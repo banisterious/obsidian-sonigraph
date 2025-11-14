@@ -18,7 +18,9 @@ import { WavEncoder } from './WavEncoder';
 import { Mp3Encoder } from './Mp3Encoder';
 import { OfflineRenderer } from './OfflineRenderer';
 import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
+import { NoteCentricPlayer } from '../audio/playback/NoteCentricPlayer';
 import { getLogger } from '../logging';
+import type { SonigraphSettings } from '../utils/constants';
 
 const logger = getLogger('export');
 
@@ -33,10 +35,10 @@ export class AudioExporter {
     private isCancelled = false;
     private progressCallback?: (progress: ExportProgress) => void;
     private currentRenderer?: OfflineRenderer;
-    private pluginSettings?: any;
+    private pluginSettings?: SonigraphSettings;
     private pluginVersion: string;
 
-    constructor(app: App, audioEngine: AudioEngine, pluginSettings?: any, pluginVersion: string = '0.14.2') {
+    constructor(app: App, audioEngine: AudioEngine, pluginSettings?: SonigraphSettings, pluginVersion: string = '0.14.2') {
         this.app = app;
         this.audioEngine = audioEngine;
         this.pluginSettings = pluginSettings;
@@ -341,7 +343,7 @@ export class AudioExporter {
      * Record note-centric playback using MediaRecorder
      */
     private async recordNoteCentricPlayback(
-        player: any,
+        player: NoteCentricPlayer,
         mapping: NoteCentricMapping,
         duration: number,
         targetSampleRate: number
@@ -732,7 +734,7 @@ export class AudioExporter {
     /**
      * Create error object
      */
-    private createError(errorType: string, message: string, originalError?: any): ExportError {
+    private createError(errorType: string, message: string, originalError?: unknown): ExportError {
         return {
             timestamp: new Date().toISOString(),
             stage: 'rendering',

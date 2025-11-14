@@ -18,7 +18,7 @@ export default class SonigraphPlugin extends Plugin {
 	public audioEngine: AudioEngine | null = null;
 	private graphParser: GraphParser | null = null;
 	public musicalMapper: MusicalMapper | null = null;
-	private currentGraphData: any = null;
+	private currentGraphData: import('./graph/types').GraphData | null = null;
 
 	async onload() {
 		logger.info('lifecycle', 'Sonigraph plugin loading...');
@@ -481,8 +481,8 @@ export default class SonigraphPlugin extends Plugin {
 			hasGraphData: boolean;
 			lastProcessed: string | null;
 		};
-		audio: any;
-		graph: any;
+		audio: Record<string, unknown>;
+		graph: Record<string, unknown>;
 	} {
 		const audioStatus = this.audioEngine?.getStatus() || {
 			isInitialized: false,
@@ -591,7 +591,7 @@ export default class SonigraphPlugin extends Plugin {
 	 * Deep merge settings to preserve user configurations while adding new defaults
 	 * Issue #006: Prevents corruption of user-enabled instrument states
 	 */
-	private deepMergeSettings(defaults: SonigraphSettings, saved: any): SonigraphSettings {
+	private deepMergeSettings(defaults: SonigraphSettings, saved: Record<string, unknown>): SonigraphSettings {
 		// Start with a copy of defaults
 		const merged = JSON.parse(JSON.stringify(defaults)) as SonigraphSettings;
 		
@@ -999,8 +999,10 @@ export default class SonigraphPlugin extends Plugin {
 	/**
 	 * Get curated Freesound samples for initial library
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private getCuratedSamples(): any[] {
 		// Import the transformed curated samples
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const curatedSamples = require('../curated-samples-transformed.json');
 		return curatedSamples;
 	}
@@ -1010,7 +1012,7 @@ export default class SonigraphPlugin extends Plugin {
 		logger.debug('settings', 'Settings saved');
 	}
 
-	getLogs(): any[] {
+	getLogs(): import('./logging').LogEntry[] {
 		// Return all collected logs
 		return LoggerFactory.getLogs();
 	}

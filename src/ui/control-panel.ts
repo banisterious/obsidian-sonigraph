@@ -43,10 +43,13 @@ type EffectsMap = Record<string, EffectConfig>;
  */
 interface PluginWithOptionalIntegrations extends SonigraphPlugin {
 	continuousLayerManager?: {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		sampleLoader?: any;
 	};
 	whaleIntegration?: {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		whaleManager?: any;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		updateSettings?: (settings: any) => void;
 		cleanup?: () => void;
 	};
@@ -67,6 +70,7 @@ type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
  */
 type PartialAudioEnhancement = Partial<AudioMappingConfig>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
@@ -75,10 +79,12 @@ function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): 
 	return undefined;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function setInstrumentSetting<K extends keyof any>(
 	plugin: SonigraphPlugin,
 	instrumentKey: string,
 	settingKey: K,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	value: any
 ): boolean {
 	const instruments = plugin.settings.instruments;
@@ -86,6 +92,7 @@ function setInstrumentSetting<K extends keyof any>(
 		const instrument = instruments[instrumentKey as InstrumentKey];
 		if (instrument && typeof instrument === 'object') {
 			// Dynamic property assignment on known instrument settings object
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(instrument as Record<string, any>)[settingKey as string] = value;
 			return true;
 		}
@@ -1052,6 +1059,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Render the sample browser UI with table layout
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
 		// Use the new table-based browser
 		const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
@@ -1063,6 +1071,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private renderSampleItem(
 		container: HTMLElement,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		sample: any,
 		number: number,
 		isUserSample: boolean
@@ -1163,6 +1172,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Preview a Freesound sample
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.textContent === 'Stop') {
@@ -2234,6 +2244,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create horizontal effect section for Master Effects
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: any[]): void {
 		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
 		
@@ -2803,6 +2814,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family overview card with stats and bulk actions
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private createFamilyOverviewCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} family overview`,
@@ -2855,6 +2867,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create instruments card for family
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private createInstrumentsCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
 			title: 'Individual instruments',
@@ -3112,6 +3125,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family effects card
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private createFamilyEffectsCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} effects`,
@@ -3874,6 +3888,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.plugin.saveSettings();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private getDefaultEffectParams(effectType: string): any {
 		switch (effectType) {
 			case 'reverb':
