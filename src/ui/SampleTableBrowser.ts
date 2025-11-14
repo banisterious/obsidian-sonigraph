@@ -269,7 +269,7 @@ export class SampleTableBrowser {
 		// Preview button
 		const previewBtn = actionsCell.createEl('button', { cls: 'sonigraph-preview-btn', attr: { 'aria-label': 'Preview sample' } });
 		setIcon(previewBtn, 'play');
-		previewBtn.addEventListener('click', () => this.previewSample(sample, previewBtn));
+		previewBtn.addEventListener('click', () => void this.previewSample(sample, previewBtn));
 
 		// Info button
 		const infoBtn = actionsCell.createEl('button', { cls: 'sonigraph-info-btn', attr: { 'aria-label': 'View on Freesound' } });

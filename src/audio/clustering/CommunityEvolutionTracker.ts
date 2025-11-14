@@ -454,7 +454,7 @@ export class CommunityEvolutionTracker {
       this.activeEvolutionEvents.set(eventKey, event);
 
       // Execute the appropriate audio effect
-      await this.executeEvolutionAudioEffect(event, theme);
+      this.executeEvolutionAudioEffect(event, theme);
 
       // Clean up after event duration
       setTimeout(() => {
@@ -472,34 +472,34 @@ export class CommunityEvolutionTracker {
   /**
    * Execute the actual audio effect for evolution event
    */
-  private async executeEvolutionAudioEffect(
+  private executeEvolutionAudioEffect(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme
-  ): Promise<void> {
+  ): void {
     const duration = this.getEventDuration(event.type);
     const volume = this.settings.eventVolumes[event.type] * event.intensity;
 
     switch (event.type) {
       case 'merge':
-        await this.executeHarmonicConvergence(event, theme, duration, volume);
+        this.executeHarmonicConvergence(event, theme, duration, volume);
         break;
       case 'split':
-        await this.executeDivergentHarmony(event, theme, duration, volume);
+        this.executeDivergentHarmony(event, theme, duration, volume);
         break;
       case 'growth':
-        await this.executeExpandingOrchestration(event, theme, duration, volume);
+        this.executeExpandingOrchestration(event, theme, duration, volume);
         break;
       case 'decline':
-        await this.executeFadingVoices(event, theme, duration, volume);
+        this.executeFadingVoices(event, theme, duration, volume);
         break;
       case 'bridging':
-        await this.executeCrossFade(event, theme, duration, volume);
+        this.executeCrossFade(event, theme, duration, volume);
         break;
       case 'formation':
-        await this.executeHarmonicBuildup(event, theme, duration, volume);
+        this.executeHarmonicBuildup(event, theme, duration, volume);
         break;
       case 'dissolution':
-        await this.executeHarmonicFadeout(event, theme, duration, volume);
+        this.executeHarmonicFadeout(event, theme, duration, volume);
         break;
     }
   }
@@ -507,12 +507,12 @@ export class CommunityEvolutionTracker {
   /**
    * Harmonic convergence effect (community merge)
    */
-  private async executeHarmonicConvergence(
+  private executeHarmonicConvergence(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
     const voiceCount = Math.min(event.sourceCommunityIds?.length || 2, 4);
 
@@ -543,12 +543,12 @@ export class CommunityEvolutionTracker {
   /**
    * Divergent harmony effect (community split)
    */
-  private async executeDivergentHarmony(
+  private executeDivergentHarmony(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
     const voiceCount = Math.min(event.targetCommunityIds?.length || 2, 4);
 
@@ -579,12 +579,12 @@ export class CommunityEvolutionTracker {
   /**
    * Expanding orchestration effect (community growth)
    */
-  private async executeExpandingOrchestration(
+  private executeExpandingOrchestration(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
     const voiceCount = Math.min(Math.floor(event.intensity * 6), 6);
 
@@ -604,12 +604,12 @@ export class CommunityEvolutionTracker {
   /**
    * Fading voices effect (community decline)
    */
-  private async executeFadingVoices(
+  private executeFadingVoices(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
     const voiceCount = Math.min(4, theme.harmonicIntervals.length);
 
@@ -639,12 +639,12 @@ export class CommunityEvolutionTracker {
   /**
    * Cross-fade effect (community bridging)
    */
-  private async executeCrossFade(
+  private executeCrossFade(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
 
     // Create two synths that cross-fade
@@ -678,12 +678,12 @@ export class CommunityEvolutionTracker {
   /**
    * Harmonic buildup effect (community formation)
    */
-  private async executeHarmonicBuildup(
+  private executeHarmonicBuildup(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
     const harmonics = theme.harmonicIntervals.slice(0, 4);
 
@@ -710,12 +710,12 @@ export class CommunityEvolutionTracker {
   /**
    * Harmonic fadeout effect (community dissolution)
    */
-  private async executeHarmonicFadeout(
+  private executeHarmonicFadeout(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme,
     duration: number,
     volume: number
-  ): Promise<void> {
+  ): void {
     const now = Tone.now();
     const harmonics = theme.harmonicIntervals.slice(0, 3);
 

@@ -189,7 +189,7 @@ export class ClusterAudioMapper {
   /**
    * Process clusters and generate audio mapping
    */
-  public async processClusters(clusters: Cluster[]): Promise<void> {
+  public processClusters(clusters: Cluster[]): void {
     if (!this.isInitialized || !this.settings.enabled) {
       return;
     }
@@ -433,16 +433,16 @@ export class ClusterAudioMapper {
     try {
       switch (config.effectType) {
         case 'glissando':
-          await this.executeGlissando(transitionSynth, theme, config, volume, now);
+          this.executeGlissando(transitionSynth, theme, config, volume, now);
           break;
         case 'harmonic_buildup':
-          await this.executeHarmonicBuildup(transitionSynth, theme, config, volume, now);
+          this.executeHarmonicBuildup(transitionSynth, theme, config, volume, now);
           break;
         case 'filter_sweep':
-          await this.executeFilterSweep(transitionSynth, theme, config, volume, now);
+          this.executeFilterSweep(transitionSynth, theme, config, volume, now);
           break;
         case 'granular_scatter':
-          await this.executeGranularScatter(transitionSynth, theme, config, volume, now);
+          this.executeGranularScatter(transitionSynth, theme, config, volume, now);
           break;
       }
 
@@ -460,13 +460,13 @@ export class ClusterAudioMapper {
   /**
    * Execute glissando transition effect
    */
-  private async executeGlissando(
+  private executeGlissando(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
     config: GlissandoConfig,
     volume: number,
     startTime: number
-  ): Promise<void> {
+  ): void {
     const startFreq = theme.baseFrequency;
     const endFreq = config.pitchDirection === 'ascending'
       ? startFreq * Math.pow(2, config.pitchRange / 12)
@@ -489,13 +489,13 @@ export class ClusterAudioMapper {
   /**
    * Execute harmonic buildup transition effect
    */
-  private async executeHarmonicBuildup(
+  private executeHarmonicBuildup(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
     config: GlissandoConfig,
     volume: number,
     startTime: number
-  ): Promise<void> {
+  ): void {
     // Create multiple harmonics that build up over time
     const harmonics = theme.harmonicIntervals.slice(0, 4); // Use first 4 harmonics
 
@@ -529,13 +529,13 @@ export class ClusterAudioMapper {
   /**
    * Execute filter sweep transition effect
    */
-  private async executeFilterSweep(
+  private executeFilterSweep(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
     config: GlissandoConfig,
     volume: number,
     startTime: number
-  ): Promise<void> {
+  ): void {
     // Add a filter to the synth
     const filter = new Tone.Filter({
       frequency: theme.filterCutoff,
@@ -568,13 +568,13 @@ export class ClusterAudioMapper {
   /**
    * Execute granular scatter transition effect
    */
-  private async executeGranularScatter(
+  private executeGranularScatter(
     synth: Tone.MonoSynth,
     theme: ClusterAudioTheme,
     config: GlissandoConfig,
     volume: number,
     startTime: number
-  ): Promise<void> {
+  ): void {
     // Create scattered granular-like effect with multiple short notes
     const grainCount = 8;
     const grainDuration = config.duration / grainCount;
@@ -614,7 +614,7 @@ export class ClusterAudioMapper {
     // Stop audio for removed clusters
     for (const clusterId of activeClusterIds) {
       if (!currentClusterIds.has(clusterId)) {
-        await this.stopClusterAudio(clusterId);
+        this.stopClusterAudio(clusterId);
       }
     }
 
@@ -626,7 +626,7 @@ export class ClusterAudioMapper {
 
       if (this.state.activeClusters.has(cluster.id)) {
         // Update existing cluster audio
-        await this.updateClusterAudio(cluster);
+        this.updateClusterAudio(cluster);
       } else {
         // Start new cluster audio
         await this.startClusterAudio(cluster);
@@ -703,7 +703,7 @@ export class ClusterAudioMapper {
       this.state.activeClusters.set(cluster.id, activeCluster);
 
       // Start the audio
-      await this.playClusterAudio(activeCluster);
+      this.playClusterAudio(activeCluster);
 
     } catch (error) {
       logger.error('cluster-start', 'Error starting cluster audio', {
@@ -790,7 +790,7 @@ export class ClusterAudioMapper {
   /**
    * Play cluster audio
    */
-  private async playClusterAudio(activeCluster: ActiveClusterAudio): Promise<void> {
+  private playClusterAudio(activeCluster: ActiveClusterAudio): void {
     if (activeCluster.isPlaying) return;
 
     const theme = activeCluster.theme;
@@ -818,7 +818,7 @@ export class ClusterAudioMapper {
   /**
    * Update existing cluster audio
    */
-  private async updateClusterAudio(cluster: Cluster): Promise<void> {
+  private updateClusterAudio(cluster: Cluster): void {
     const activeCluster = this.state.activeClusters.get(cluster.id);
     if (!activeCluster) return;
 
@@ -848,7 +848,7 @@ export class ClusterAudioMapper {
   /**
    * Stop cluster audio
    */
-  private async stopClusterAudio(clusterId: string): Promise<void> {
+  private stopClusterAudio(clusterId: string): void {
     const activeCluster = this.state.activeClusters.get(clusterId);
     if (!activeCluster) return;
 
@@ -919,12 +919,12 @@ export class ClusterAudioMapper {
   /**
    * Stop all active cluster audio
    */
-  private async stopAllClusterAudio(): Promise<void> {
+  private stopAllClusterAudio(): void {
     logger.debug('shutdown', 'Stopping all cluster audio');
 
     const clusterIds = Array.from(this.state.activeClusters.keys());
     for (const clusterId of clusterIds) {
-      await this.stopClusterAudio(clusterId);
+      this.stopClusterAudio(clusterId);
     }
   }
 
