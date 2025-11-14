@@ -48,19 +48,24 @@ var init_logging = __esm({
       "debug": 4
     };
     Logger = class {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       constructor(component, context2) {
         this.component = component;
         this.context = context2;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       debug(category, message, data) {
         this.log("debug", category, message, data);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       info(category, message, data) {
         this.log("info", category, message, data);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       warn(category, message, data) {
         this.log("warn", category, message, data);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       error(category, message, error) {
         this.log("error", category, message, error);
       }
@@ -71,10 +76,12 @@ var init_logging = __esm({
           this.debug("Performance", `${operation} completed in ${duration.toFixed(2)}ms`);
         };
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       withContext(newContext) {
         const mergedContext = { ...this.context, ...newContext };
         return new ContextualLoggerImpl(this.component, mergedContext);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       enrichError(error, context2) {
         const enrichedError = new Error(error.message);
         enrichedError.name = error.name;
@@ -82,6 +89,7 @@ var init_logging = __esm({
         enrichedError.context = { ...this.context, ...context2 };
         return enrichedError;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       log(level, category, message, data) {
         if (level === "off")
           return;
@@ -120,10 +128,12 @@ var init_logging = __esm({
       }
     };
     ContextualLoggerImpl = class extends Logger {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       constructor(component, context2) {
         super(component, context2);
         this.context = context2;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getContext() {
         return { ...this.context };
       }
@@ -157,6 +167,7 @@ var init_logging = __esm({
         return LOG_LEVELS[_LoggerFactory.logLevel];
       }
       // For future configuration
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       initialize(config) {
         if (config && config.logLevel) {
           _LoggerFactory.setLogLevel(config.logLevel);
@@ -4035,6 +4046,7 @@ var init_material_components = __esm({
       constructor(options) {
         this.container = this.createButton(options);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createButton(options) {
         const button = document.createElement("button");
         button.className = `ospcc-button ospcc-button--${options.variant || "filled"} ${options.className || ""}`;
@@ -10374,7 +10386,9 @@ var init_GraphDemoModal = __esm({
     GraphDemoModal = class extends import_obsidian3.Modal {
       constructor(app) {
         super(app);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.svg = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.simulation = null;
         this.nodes = [];
         this.links = [];
@@ -12667,6 +12681,7 @@ var init_GraphRenderer = __esm({
         this.smartClustering = null;
         this.smartClusteringSettings = null;
         this.clusteringResult = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.clusterGroup = null;
         this.container = container;
         this.config = {
@@ -13267,6 +13282,7 @@ var init_GraphRenderer = __esm({
       /**
        * Public method to set zoom transform (called by SonicGraphView)
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setZoomTransform(transform2) {
         if (this.config.enableZoom && this.zoom) {
           this.svg.call(this.zoom.transform, transform2);
@@ -13299,6 +13315,7 @@ var init_GraphRenderer = __esm({
       /**
        * Generate consistent link ID for D3.js data binding
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getLinkId(link, index2) {
         const sourceId = typeof link.source === "string" ? link.source : link.source.id;
         const targetId = typeof link.target === "string" ? link.target : link.target.id;
@@ -13314,6 +13331,7 @@ var init_GraphRenderer = __esm({
       /**
        * Get offset position for path-based grouping
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getPathBasedOffset(filePath, groups) {
         const radius = 100;
         for (let i = 0; i < groups.length; i++) {
@@ -13706,7 +13724,7 @@ var init_GraphRenderer = __esm({
        * Update debug visualization elements based on content-aware positioning settings
        */
       updateDebugVisualization() {
-        var _a, _b, _c, _d;
+        var _a;
         if (!this.contentAwarePositioning || !((_a = this.contentAwareSettings) == null ? void 0 : _a.debugVisualization)) {
           this.clearDebugVisualization();
           return;
@@ -13716,22 +13734,26 @@ var init_GraphRenderer = __esm({
           this.clearDebugVisualization();
           return;
         }
+        const tagConnections = debugData.tagConnections || [];
+        const temporalZones = debugData.temporalZones || [];
+        const hubNodes = debugData.hubNodes || [];
         logger11.debug("debug-viz", "Updating debug visualization", {
-          tagConnections: ((_b = debugData.tagConnections) == null ? void 0 : _b.length) || 0,
-          temporalZones: ((_c = debugData.temporalZones) == null ? void 0 : _c.length) || 0,
-          hubNodes: ((_d = debugData.hubNodes) == null ? void 0 : _d.length) || 0
+          tagConnections: tagConnections.length || 0,
+          temporalZones: temporalZones.length || 0,
+          hubNodes: hubNodes.length || 0
         });
         let debugGroup = this.g.select(".debug-visualization");
         if (debugGroup.empty()) {
           debugGroup = this.g.append("g").attr("class", "debug-visualization");
         }
-        this.renderTemporalZones(debugGroup, debugData.temporalZones || []);
-        this.renderTagConnections(debugGroup, debugData.tagConnections || []);
-        this.renderHubIndicators(debugGroup, debugData.hubNodes || []);
+        this.renderTemporalZones(debugGroup, temporalZones);
+        this.renderTagConnections(debugGroup, tagConnections);
+        this.renderHubIndicators(debugGroup, hubNodes);
       }
       /**
        * Render temporal positioning zones
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       renderTemporalZones(debugGroup, zones) {
         const zoneSelection = debugGroup.selectAll(".temporal-zone").data(zones, (d) => d.name);
         const zoneEnter = zoneSelection.enter().append("circle").attr("class", "temporal-zone").attr("fill", "none").attr("stroke-dasharray", "5,5").attr("stroke-opacity", 0.3).attr("stroke-width", 2);
@@ -13767,6 +13789,7 @@ var init_GraphRenderer = __esm({
       /**
        * Render tag connection links
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       renderTagConnections(debugGroup, connections) {
         const connectionSelection = debugGroup.selectAll(".tag-connection").data(connections, (d) => `${d.sourceId}-${d.targetId}`);
         const connectionEnter = connectionSelection.enter().append("line").attr("class", "tag-connection").attr("stroke", "#f59e0b").attr("stroke-opacity", 0.4).attr("stroke-dasharray", "3,3");
@@ -13788,6 +13811,7 @@ var init_GraphRenderer = __esm({
       /**
        * Render hub node indicators
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       renderHubIndicators(debugGroup, hubs) {
         const hubSelection = debugGroup.selectAll(".hub-indicator").data(hubs, (d) => d.nodeId);
         const hubEnter = hubSelection.enter().append("circle").attr("class", "hub-indicator").attr("fill", "none").attr("stroke", "#ef4444").attr("stroke-opacity", 0.6).attr("stroke-width", 3);
@@ -14009,6 +14033,7 @@ var init_GraphRenderer = __esm({
       /**
        * Check if a node has valid coordinates (not NaN or undefined)
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       hasValidCoordinates(node) {
         return node && typeof node.x === "number" && typeof node.y === "number" && !isNaN(node.x) && !isNaN(node.y) && isFinite(node.x) && isFinite(node.y);
       }
@@ -14043,6 +14068,7 @@ var init_GraphRenderer = __esm({
       /**
        * Check if a node is within the viewport bounds
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       isNodeInViewport(node, bounds) {
         if (!this.hasValidCoordinates(node)) {
           return false;
@@ -14054,18 +14080,7 @@ var init_GraphRenderer = __esm({
        */
       disableTransitionsForDenseGraph() {
         this.container.classList.add("dense-graph-mode");
-        const style = document.createElement("style");
-        style.textContent = `
-      .dense-graph-mode .sonigraph-temporal-svg * {
-        transition: none !important;
-        animation: none !important;
-      }
-    `;
-        if (!document.querySelector("#dense-graph-performance-style")) {
-          style.id = "dense-graph-performance-style";
-          document.head.appendChild(style);
-        }
-        logger11.debug("performance", "Disabled CSS transitions for dense graph");
+        logger11.debug("performance", "Dense graph mode enabled (CSS in stylesheet)");
       }
       /**
        * Enable CSS transitions for normal graphs
@@ -14477,10 +14492,12 @@ var init_SonicGraphCoreSettings = __esm({
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
         const descP = description.createEl("p");
-        descP.style.color = "var(--text-muted)";
-        descP.style.fontSize = "13px";
-        descP.style.lineHeight = "1.5";
-        descP.style.marginBottom = "1rem";
+        descP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "13px",
+          lineHeight: "1.5",
+          marginBottom: "1rem"
+        });
         descP.textContent = "Content-aware mapping automatically selects instruments based on file types, tags, folder structure, and frontmatter metadata. This creates semantic correlation between your vault's content and its musical representation.";
         const detailsWrapper = content.createDiv({ cls: "osp-settings-details-wrapper" });
         new import_obsidian7.Setting(content).setName("Enable content-aware mapping").setDesc("Automatically map file properties to musical parameters").addToggle(
@@ -14563,10 +14580,12 @@ var init_SonicGraphCoreSettings = __esm({
         );
         const advancedNote = content.createDiv({ cls: "osp-settings-note" });
         const advancedP = advancedNote.createEl("p");
-        advancedP.style.color = "var(--text-muted)";
-        advancedP.style.fontSize = "12px";
-        advancedP.style.lineHeight = "1.5";
-        advancedP.style.marginTop = "1rem";
+        advancedP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "12px",
+          lineHeight: "1.5",
+          marginTop: "1rem"
+        });
         advancedP.createEl("strong", { text: "Note:" });
         advancedP.appendText(" Advanced file type, tag, and folder mappings can be configured in the instrument settings. Connection type audio differentiation is available in the Spatial Audio tab.");
       }
@@ -14706,9 +14725,11 @@ var init_SonicGraphAdvancedSettings = __esm({
           );
           const note = content.createDiv({ cls: "osp-settings-note" });
           const noteP = note.createEl("p");
-          noteP.style.color = "var(--text-muted)";
-          noteP.style.fontSize = "12px";
-          noteP.style.marginTop = "0.5rem";
+          noteP.setCssProps({
+            color: "var(--text-muted)",
+            fontSize: "12px",
+            marginTop: "0.5rem"
+          });
           noteP.createEl("strong", { text: "Note:" });
           noteP.appendText(" Detailed per-cluster-type settings (tag-based, temporal, link-dense, community, topical) are available in the Sonic Graph modal's settings panel.");
         }
@@ -14973,10 +14994,12 @@ var init_SonicGraphAdvancedSettings = __esm({
           );
           const instrumentsNote = content.createDiv({ cls: "osp-settings-note" });
           const instrumentsP = instrumentsNote.createEl("p");
-          instrumentsP.style.color = "var(--text-muted)";
-          instrumentsP.style.fontSize = "12px";
-          instrumentsP.style.lineHeight = "1.5";
-          instrumentsP.style.marginTop = "1rem";
+          instrumentsP.setCssProps({
+            color: "var(--text-muted)",
+            fontSize: "12px",
+            lineHeight: "1.5",
+            marginTop: "1rem"
+          });
           instrumentsP.createEl("strong", { text: "Hub Instrument Preference:" });
           instrumentsP.appendText(" Hub nodes will preferentially use piano, strings, and brass instruments to emphasize their prominence in the network.");
         }
@@ -15091,10 +15114,12 @@ var init_SonicGraphAdvancedSettings = __esm({
           );
           const note = content.createDiv({ cls: "osp-settings-note" });
           const noteP = note.createEl("p");
-          noteP.style.color = "var(--text-muted)";
-          noteP.style.fontSize = "12px";
-          noteP.style.lineHeight = "1.5";
-          noteP.style.marginTop = "1rem";
+          noteP.setCssProps({
+            color: "var(--text-muted)",
+            fontSize: "12px",
+            lineHeight: "1.5",
+            marginTop: "1rem"
+          });
           noteP.createEl("strong", { text: "Complexity Tiers:" });
           noteP.appendText(" The system automatically adjusts orchestration based on vault size:");
           noteP.createEl("br");
@@ -17758,7 +17783,7 @@ var init_FreesoundSearchModal = __esm({
         });
         (0, import_obsidian10.setIcon)(searchButton, "search");
         searchButton.createSpan({ text: "Search" });
-        searchButton.addEventListener("click", () => this.performSearch());
+        searchButton.addEventListener("click", () => void this.performSearch());
         const suggestionsEl = searchSection.createDiv({ cls: "freesound-search-suggestions" });
         suggestionsEl.createEl("span", { text: "Quick searches: ", cls: "freesound-suggestions-label" });
         const suggestions = this.getGenreSuggestions(this.currentGenre);
@@ -17998,7 +18023,7 @@ var init_FreesoundSearchModal = __esm({
           });
           (0, import_obsidian10.setIcon)(previewBtn, "play");
           previewBtn.createSpan({ text: "Preview" });
-          previewBtn.addEventListener("click", () => this.previewSample(result, previewBtn));
+          previewBtn.addEventListener("click", () => void this.previewSample(result, previewBtn));
           const addBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-add-btn",
             attr: { "aria-label": `Add ${result.name} to library` }
@@ -18142,14 +18167,15 @@ var init_FreesoundSearchModal = __esm({
         const errorState = this.resultsContainer.createDiv({ cls: "freesound-error-state" });
         (0, import_obsidian10.setIcon)(errorState, "alert-circle");
         errorState.createEl("p", { text: "Search Error" });
+        const errorMessage = error instanceof Error ? error.message : "Failed to search Freesound. Please check your API key and connection.";
         errorState.createEl("span", {
-          text: error.message || "Failed to search Freesound. Please check your API key and connection."
+          text: errorMessage
         });
         const retryBtn = errorState.createEl("button", {
           text: "Try Again",
           cls: "freesound-retry-btn"
         });
-        retryBtn.addEventListener("click", () => this.performSearch());
+        retryBtn.addEventListener("click", () => void this.performSearch());
       }
       updateSearchButton(text) {
         const button = this.contentEl.querySelector(".freesound-search-button");
@@ -18296,8 +18322,9 @@ var init_SampleTableBrowser = __esm({
         const samples = this.plugin.settings.freesoundSamples || [];
         const tags = /* @__PURE__ */ new Set();
         samples.forEach((sample) => {
-          if (sample.tags && Array.isArray(sample.tags)) {
-            sample.tags.forEach((tag) => tags.add(tag));
+          const extendedSample = sample;
+          if (extendedSample.tags && Array.isArray(extendedSample.tags)) {
+            extendedSample.tags.forEach((tag) => tags.add(tag));
           }
         });
         Array.from(tags).sort().forEach((tag) => {
@@ -18397,7 +18424,7 @@ var init_SampleTableBrowser = __esm({
         const actionsCell = row.createEl("td", { cls: "sonigraph-sample-actions" });
         const previewBtn = actionsCell.createEl("button", { cls: "sonigraph-preview-btn", attr: { "aria-label": "Preview sample" } });
         (0, import_obsidian11.setIcon)(previewBtn, "play");
-        previewBtn.addEventListener("click", () => this.previewSample(sample, previewBtn));
+        previewBtn.addEventListener("click", () => void this.previewSample(sample, previewBtn));
         const infoBtn = actionsCell.createEl("button", { cls: "sonigraph-info-btn", attr: { "aria-label": "View on Freesound" } });
         (0, import_obsidian11.setIcon)(infoBtn, "info");
         infoBtn.addEventListener("click", () => {
@@ -18702,8 +18729,9 @@ var init_SampleTableBrowser = __esm({
         this.currentTags = [...sample.tags || []];
         const allSamples = plugin.settings.freesoundSamples || [];
         allSamples.forEach((s) => {
-          if (s.tags && Array.isArray(s.tags)) {
-            s.tags.forEach((tag) => this.availableTags.add(tag));
+          const extendedSample = s;
+          if (extendedSample.tags && Array.isArray(extendedSample.tags)) {
+            extendedSample.tags.forEach((tag) => this.availableTags.add(tag));
           }
         });
       }
@@ -18901,12 +18929,14 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         const modeDesc = content.createDiv({ cls: "osp-settings-description" });
-        modeDesc.style.marginBottom = "1rem";
-        modeDesc.style.padding = "8px 12px";
-        modeDesc.style.backgroundColor = "var(--background-secondary)";
-        modeDesc.style.borderRadius = "4px";
-        modeDesc.style.fontSize = "12px";
-        modeDesc.style.lineHeight = "1.5";
+        modeDesc.setCssProps({
+          marginBottom: "1rem",
+          padding: "8px 12px",
+          backgroundColor: "var(--background-secondary)",
+          borderRadius: "4px",
+          fontSize: "12px",
+          lineHeight: "1.5"
+        });
         modeDesc.createEl("strong", { text: "Note-Centric" });
         modeDesc.appendText(" (recommended): Generates rich musical phrases from the center note's prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.");
         modeDesc.createEl("br");
@@ -18997,9 +19027,11 @@ var init_LocalSoundscapeSettings = __esm({
           cls: "setting-item-description",
           text: `Current key will be determined dynamically based on the active note's ${keySelection.mode}.`
         });
-        currentKeyDesc.style.marginTop = "10px";
-        currentKeyDesc.style.fontStyle = "italic";
-        currentKeyDesc.style.opacity = "0.7";
+        currentKeyDesc.setCssProps({
+          marginTop: "10px",
+          fontStyle: "italic",
+          opacity: "0.7"
+        });
         container.appendChild(card.getElement());
       }
       /**
@@ -19084,15 +19116,19 @@ var init_LocalSoundscapeSettings = __esm({
           );
           content.createEl("hr", { cls: "osp-settings-separator" });
           const proseHeader = content.createEl("h4");
-          proseHeader.style.marginTop = "var(--size-4-4)";
-          proseHeader.style.marginBottom = "var(--size-4-2)";
-          proseHeader.style.fontSize = "var(--font-ui-medium)";
-          proseHeader.style.fontWeight = "600";
+          proseHeader.setCssProps({
+            marginTop: "var(--size-4-4)",
+            marginBottom: "var(--size-4-2)",
+            fontSize: "var(--font-ui-medium)",
+            fontWeight: "600"
+          });
           proseHeader.textContent = "Prose structure analysis";
           const proseDesc = content.createEl("p");
-          proseDesc.style.color = "var(--text-muted)";
-          proseDesc.style.fontSize = "var(--font-ui-small)";
-          proseDesc.style.marginBottom = "var(--size-4-3)";
+          proseDesc.setCssProps({
+            color: "var(--text-muted)",
+            fontSize: "var(--font-ui-small)",
+            marginBottom: "var(--size-4-3)"
+          });
           proseDesc.textContent = "Analyze note content (density, structure, linguistic features) to create more expressive, content-aware soundscapes.";
           new import_obsidian12.Setting(content).setName("Enable prose analysis").setDesc("Analyze content structure to modulate musical parameters").addToggle(
             (toggle) => {
@@ -19564,23 +19600,29 @@ var init_LocalSoundscapeLayersSettings = __esm({
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
         const descP = description.createEl("p");
-        descP.style.color = "var(--text-muted)";
-        descP.style.fontSize = "13px";
-        descP.style.lineHeight = "1.5";
-        descP.style.marginBottom = "0.5rem";
+        descP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "13px",
+          lineHeight: "1.5",
+          marginBottom: "0.5rem"
+        });
         descP.textContent = "Continuous layers add ambient background audio that plays alongside note-based sonification. Perfect for sparse graphs with few connections - layers provide harmonic foundation, rhythmic pulse, and ambient texture even when there are only a few notes.";
         const noteDiv = description.createDiv({ cls: "osp-settings-note" });
-        noteDiv.style.backgroundColor = "var(--background-modifier-info)";
-        noteDiv.style.borderLeft = "3px solid var(--interactive-accent)";
-        noteDiv.style.padding = "8px 12px";
-        noteDiv.style.marginBottom = "1rem";
-        noteDiv.style.borderRadius = "4px";
+        noteDiv.setCssProps({
+          backgroundColor: "var(--background-modifier-info)",
+          borderLeft: "3px solid var(--interactive-accent)",
+          padding: "8px 12px",
+          marginBottom: "1rem",
+          borderRadius: "4px"
+        });
         const noteIcon = noteDiv.createSpan();
         noteIcon.textContent = "\u2139\uFE0F ";
-        noteIcon.style.marginRight = "6px";
+        noteIcon.setCssProps({ marginRight: "6px" });
         const noteText = noteDiv.createSpan();
-        noteText.style.fontSize = "12px";
-        noteText.style.color = "var(--text-normal)";
+        noteText.setCssProps({
+          fontSize: "12px",
+          color: "var(--text-normal)"
+        });
         noteText.createEl("strong", { text: "Important:" });
         noteText.appendText(" Continuous layers require Freesound samples to be enabled. Go to the ");
         noteText.createEl("strong", { text: "Layers" });
@@ -19644,15 +19686,19 @@ var init_LocalSoundscapeLayersSettings = __esm({
         );
         content.createEl("hr", { cls: "osp-settings-separator" });
         const layerTypesHeader = content.createEl("h4");
-        layerTypesHeader.style.marginTop = "var(--size-4-4)";
-        layerTypesHeader.style.marginBottom = "var(--size-4-2)";
-        layerTypesHeader.style.fontSize = "var(--font-ui-medium)";
-        layerTypesHeader.style.fontWeight = "600";
+        layerTypesHeader.setCssProps({
+          marginTop: "var(--size-4-4)",
+          marginBottom: "var(--size-4-2)",
+          fontSize: "var(--font-ui-medium)",
+          fontWeight: "600"
+        });
         layerTypesHeader.textContent = "Layer types";
         const layerTypesDesc = content.createEl("p");
-        layerTypesDesc.style.color = "var(--text-muted)";
-        layerTypesDesc.style.fontSize = "var(--font-ui-small)";
-        layerTypesDesc.style.marginBottom = "var(--size-4-3)";
+        layerTypesDesc.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "var(--font-ui-small)",
+          marginBottom: "var(--size-4-3)"
+        });
         layerTypesDesc.textContent = "Enable individual layer types to customize your soundscape texture.";
         new import_obsidian13.Setting(content).setName("Ambient drone").setDesc("Sustained atmospheric tones that provide harmonic foundation").addToggle(
           (toggle) => toggle.setValue(layers.ambientEnabled !== false).onChange(async (value) => {
@@ -19727,10 +19773,12 @@ var init_SonicGraphLayersSettings = __esm({
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
         const descP = description.createEl("p");
-        descP.style.color = "var(--text-muted)";
-        descP.style.fontSize = "13px";
-        descP.style.lineHeight = "1.5";
-        descP.style.marginBottom = "1rem";
+        descP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "13px",
+          lineHeight: "1.5",
+          marginBottom: "1rem"
+        });
         descP.textContent = "Continuous layers add ambient background audio that responds to vault size, activity, and animation progress. Unlike node-based audio which plays when nodes appear, continuous layers provide a persistent soundscape that evolves over time.";
         new import_obsidian14.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside node-based synthesis").addToggle(
           (toggle) => {
@@ -19809,9 +19857,11 @@ var init_SonicGraphLayersSettings = __esm({
         );
         const perfNote = content.createDiv({ cls: "osp-settings-note" });
         const perfP = perfNote.createEl("p");
-        perfP.style.color = "var(--text-muted)";
-        perfP.style.fontSize = "12px";
-        perfP.style.fontStyle = "italic";
+        perfP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "12px",
+          fontStyle: "italic"
+        });
         perfP.textContent = "Target: <5% additional CPU usage. Layers work alongside existing node-based audio.";
         container.appendChild(card.getElement());
       }
@@ -19916,10 +19966,12 @@ var init_SonicGraphLayersSettings = __esm({
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-settings-description" });
         const descP = description.createEl("p");
-        descP.style.color = "var(--text-muted)";
-        descP.style.fontSize = "13px";
-        descP.style.lineHeight = "1.5";
-        descP.style.marginBottom = "1rem";
+        descP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "13px",
+          lineHeight: "1.5",
+          marginBottom: "1rem"
+        });
         descP.textContent = "Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers that respond to vault activity and cluster dynamics.";
         new import_obsidian14.Setting(content).setName("Enable rhythmic layer").setDesc("Add activity-based percussion patterns").addToggle(
           (toggle) => {
@@ -20128,10 +20180,12 @@ var init_SonicGraphLayersSettings = __esm({
         );
         const note = content.createDiv({ cls: "osp-settings-note" });
         const noteP = note.createEl("p");
-        noteP.style.color = "var(--text-muted)";
-        noteP.style.fontSize = "12px";
-        noteP.style.lineHeight = "1.5";
-        noteP.style.marginTop = "1rem";
+        noteP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "12px",
+          lineHeight: "1.5",
+          marginTop: "1rem"
+        });
         noteP.createEl("strong", { text: "Note:" });
         noteP.appendText(" These musical settings apply to all continuous layers (ambient, rhythmic, and harmonic). For node-based synthesis, use the Musical Theory settings in the Advanced Features tab.");
         container.appendChild(card.getElement());
@@ -20162,16 +20216,20 @@ var init_SonicGraphLayersSettings = __esm({
         );
         const note = content.createDiv({ cls: "osp-settings-note" });
         const noteP = note.createEl("p");
-        noteP.style.color = "var(--text-muted)";
-        noteP.style.fontSize = "12px";
-        noteP.style.lineHeight = "1.5";
-        noteP.style.marginTop = "0.5rem";
+        noteP.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "12px",
+          lineHeight: "1.5",
+          marginTop: "0.5rem"
+        });
         noteP.createEl("strong", { text: "Adaptive Behavior:" });
         noteP.appendText(" When enabled, layers respond to:");
         const noteUl = note.createEl("ul");
-        noteUl.style.color = "var(--text-muted)";
-        noteUl.style.fontSize = "12px";
-        noteUl.style.margin = "0.5rem 0 0 1.5rem";
+        noteUl.setCssProps({
+          color: "var(--text-muted)",
+          fontSize: "12px",
+          margin: "0.5rem 0 0 1.5rem"
+        });
         noteUl.createEl("li", { text: "Vault size (more files = richer textures)" });
         noteUl.createEl("li", { text: "Animation progress (evolves through timeline)" });
         noteUl.createEl("li", { text: "Node activity (quieter during busy moments)" });
@@ -20308,7 +20366,7 @@ var init_FreesoundSampleLoader = __esm({
         const allSamples = [];
         this.sampleLibrary.forEach((samples) => {
           samples.forEach((sample) => {
-            if (sample.title.toLowerCase().includes(category.toLowerCase()) || sample.genre.toLowerCase().includes(category.toLowerCase())) {
+            if (sample.title.toLowerCase().includes(category.toLowerCase())) {
               allSamples.push(sample);
             }
           });
@@ -20356,12 +20414,6 @@ var init_FreesoundSampleLoader = __esm({
             winWithGC.gc();
           }
         }
-      }
-      /**
-       * Get all samples for a specific genre (placeholder samples only)
-       */
-      getSamplesForGenre(genre) {
-        return this.sampleLibrary.get(genre) || [];
       }
       /**
        * Get all available genres with sample counts
@@ -20527,10 +20579,7 @@ var init_FreesoundSampleLoader = __esm({
               }
               const genreSamples = genreMap.get(genre);
               if (genreSamples)
-                genreSamples.push({
-                  ...sample,
-                  genre
-                });
+                genreSamples.push(sample);
             });
           });
           this.sampleLibrary = genreMap;
@@ -20551,7 +20600,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC0",
             attribution: "Placeholder",
-            genre: "ambient",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20562,7 +20610,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 45,
             license: "CC BY 3.0",
             attribution: "ERH",
-            genre: "ambient",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20573,7 +20620,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 30,
             license: "CC0",
             attribution: "ERH",
-            genre: "ambient",
             fadeIn: 2,
             fadeOut: 3
           }
@@ -20586,7 +20632,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 120,
             license: "CC0",
             attribution: "dronemaker",
-            genre: "drone",
             fadeIn: 4,
             fadeOut: 6
           },
@@ -20597,7 +20642,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 90,
             license: "CC0",
             attribution: "unfa",
-            genre: "drone",
             fadeIn: 5,
             fadeOut: 5
           },
@@ -20608,7 +20652,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC BY 3.0",
             attribution: "newagesoup",
-            genre: "drone",
             fadeIn: 3,
             fadeOut: 4
           }
@@ -20621,7 +20664,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 30,
             license: "CC BY 3.0",
             attribution: "synthuser",
-            genre: "electronic",
             fadeIn: 1,
             fadeOut: 2
           },
@@ -20632,7 +20674,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 45,
             license: "CC0",
             attribution: "unfa",
-            genre: "electronic",
             fadeIn: 2,
             fadeOut: 2
           },
@@ -20643,7 +20684,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 40,
             license: "CC BY 3.0",
             attribution: "plasterbrain",
-            genre: "electronic",
             fadeIn: 1,
             fadeOut: 2
           }
@@ -20656,7 +20696,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 90,
             license: "CC0",
             attribution: "industrialuser",
-            genre: "industrial",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20667,7 +20706,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC0",
             attribution: "florianreichelt",
-            genre: "industrial",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20678,7 +20716,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 75,
             license: "CC BY 3.0",
             attribution: "soundscalpel",
-            genre: "industrial",
             fadeIn: 3,
             fadeOut: 4
           }
@@ -20691,7 +20728,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 50,
             license: "CC0",
             attribution: "unfa",
-            genre: "orchestral",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20702,7 +20738,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 40,
             license: "CC BY 3.0",
             attribution: "freesound_community",
-            genre: "orchestral",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20713,7 +20748,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC0",
             attribution: "musiccomposer",
-            genre: "orchestral",
             fadeIn: 2,
             fadeOut: 3
           }
@@ -20726,7 +20760,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 45,
             license: "CC0",
             attribution: "unfa",
-            genre: "minimal",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20737,7 +20770,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC BY 3.0",
             attribution: "minimalartist",
-            genre: "minimal",
             fadeIn: 4,
             fadeOut: 5
           },
@@ -20748,7 +20780,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 90,
             license: "CC0",
             attribution: "fieldrecorder",
-            genre: "minimal",
             fadeIn: 5,
             fadeOut: 6
           }
@@ -20761,7 +20792,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 80,
             license: "CC0",
             attribution: "acclivity",
-            genre: "oceanic",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20772,7 +20802,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 70,
             license: "CC BY 3.0",
             attribution: "plasterbrain",
-            genre: "oceanic",
             fadeIn: 4,
             fadeOut: 5
           },
@@ -20783,7 +20812,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 90,
             license: "CC0",
             attribution: "unfa",
-            genre: "oceanic",
             fadeIn: 5,
             fadeOut: 6
           }
@@ -20796,7 +20824,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC BY 3.0",
             attribution: "sounddesigner",
-            genre: "sci-fi",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20807,7 +20834,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 50,
             license: "CC0",
             attribution: "freesound_community",
-            genre: "sci-fi",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20818,7 +20844,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 45,
             license: "CC0",
             attribution: "unfa",
-            genre: "sci-fi",
             fadeIn: 2,
             fadeOut: 3
           }
@@ -20831,7 +20856,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 40,
             license: "CC BY 3.0",
             attribution: "experimentalist",
-            genre: "experimental",
             fadeIn: 1,
             fadeOut: 2
           },
@@ -20842,7 +20866,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 35,
             license: "CC BY 3.0",
             attribution: "plasterbrain",
-            genre: "experimental",
             fadeIn: 0.5,
             fadeOut: 1
           },
@@ -20853,7 +20876,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 30,
             license: "CC0",
             attribution: "noisemachine",
-            genre: "experimental",
             fadeIn: 1,
             fadeOut: 1.5
           }
@@ -20866,7 +20888,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 75,
             license: "CC0",
             attribution: "klankbeeld",
-            genre: "urban",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20877,7 +20898,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 90,
             license: "CC BY 3.0",
             attribution: "cityrecorder",
-            genre: "urban",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20888,7 +20908,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 60,
             license: "CC0",
             attribution: "urbanambience",
-            genre: "urban",
             fadeIn: 2,
             fadeOut: 3
           }
@@ -20901,7 +20920,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 85,
             license: "CC0",
             attribution: "klankbeeld",
-            genre: "nature",
             fadeIn: 3,
             fadeOut: 4
           },
@@ -20912,7 +20930,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 70,
             license: "CC BY 3.0",
             attribution: "naturalist",
-            genre: "nature",
             fadeIn: 4,
             fadeOut: 5
           },
@@ -20923,7 +20940,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 95,
             license: "CC0",
             attribution: "fieldnaturalist",
-            genre: "nature",
             fadeIn: 3,
             fadeOut: 4
           }
@@ -20936,7 +20952,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 65,
             license: "CC0",
             attribution: "mechanicalsound",
-            genre: "mechanical",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20947,7 +20962,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 50,
             license: "CC BY 3.0",
             attribution: "industrialsound",
-            genre: "mechanical",
             fadeIn: 1,
             fadeOut: 2
           },
@@ -20958,7 +20972,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 45,
             license: "CC0",
             attribution: "mechanicsoundlab",
-            genre: "mechanical",
             fadeIn: 1.5,
             fadeOut: 2
           }
@@ -20971,7 +20984,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 55,
             license: "CC0",
             attribution: "acousticartist",
-            genre: "organic",
             fadeIn: 2,
             fadeOut: 3
           },
@@ -20982,7 +20994,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 40,
             license: "CC BY 3.0",
             attribution: "guitarist",
-            genre: "organic",
             fadeIn: 2,
             fadeOut: 2.5
           },
@@ -20993,7 +21004,6 @@ var init_FreesoundSampleLoader = __esm({
             duration: 50,
             license: "CC0",
             attribution: "unfa",
-            genre: "organic",
             fadeIn: 3,
             fadeOut: 3
           }
@@ -21879,6 +21889,7 @@ var init_control_panel = __esm({
       /**
        * Render the sample browser UI with table layout
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       renderSampleBrowser(container, sampleLoader) {
         const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
         tableBrowser.render();
@@ -21959,6 +21970,7 @@ var init_control_panel = __esm({
       /**
        * Preview a Freesound sample
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async previewSample(sample, button) {
         if (button.textContent === "Stop") {
           this.stopPreview();
@@ -22833,6 +22845,7 @@ var init_control_panel = __esm({
       /**
        * Create horizontal effect section for Master Effects
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createHorizontalEffectSection(container, effectName, iconName, enabled, parameters) {
         const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
         const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
@@ -23249,6 +23262,7 @@ var init_control_panel = __esm({
       /**
        * Create family overview card with stats and bulk actions
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createFamilyOverviewCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: `${tabConfig.name} family overview`,
@@ -23288,6 +23302,7 @@ var init_control_panel = __esm({
       /**
        * Create instruments card for family
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createInstrumentsCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: "Individual instruments",
@@ -23478,6 +23493,7 @@ var init_control_panel = __esm({
       /**
        * Create family effects card
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createFamilyEffectsCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: `${tabConfig.name} effects`,
@@ -24069,6 +24085,7 @@ var init_control_panel = __esm({
         });
         this.plugin.saveSettings();
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getDefaultEffectParams(effectType) {
         switch (effectType) {
           case "reverb":
@@ -57338,17 +57355,20 @@ var init_MusicalGenreEngine = __esm({
     logger61 = getLogger("MusicalGenreEngine");
     MusicalGenreEngine = class {
       constructor(genre, settings) {
-        // Settings for API access
         this.isInitialized = false;
         this.isPlaying = false;
         // Synthesis components
         this.primarySynth = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.supportingSynths = /* @__PURE__ */ new Map();
         // Effects chain
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.effects = /* @__PURE__ */ new Map();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.effectsChain = [];
         // Modulation
         this.lfos = /* @__PURE__ */ new Map();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.modulationTargets = /* @__PURE__ */ new Map();
         // Sample integration
         this.sampleLoader = null;
@@ -57356,7 +57376,6 @@ var init_MusicalGenreEngine = __esm({
         this.activeSampleAudios = [];
         this.sampleFadeOutTimers = [];
         this.userSamples = [];
-        // Flat array of all user samples
         // Playback state
         this.activeNotes = /* @__PURE__ */ new Set();
         this.evolutionTimer = null;
@@ -57501,6 +57520,7 @@ var init_MusicalGenreEngine = __esm({
       /**
        * Connect to audio destination
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       connect(destination) {
         this.synthVolume.connect(destination);
       }
@@ -57553,6 +57573,7 @@ var init_MusicalGenreEngine = __esm({
           await this.loadGenreSamples(genreConfig.sampleCategories);
         }
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createSynth(type2, params) {
         switch (type2) {
           case "fm":
@@ -60230,55 +60251,57 @@ var init_NoteCentricPlayer = __esm({
             instrument
           });
           this.scheduledNoteCount++;
-          setTimeout(async () => {
-            logger72.debug("timeout-fired", "Note timeout fired", {
-              index: i,
-              isPlaying: this.isPlaying
-            });
-            if (!this.isPlaying) {
-              return;
-            }
-            try {
-              let finalFreq = frequency;
-              if (this.audioEngine.musicalTheoryEngine) {
-                finalFreq = this.audioEngine.musicalTheoryEngine.constrainPitchToScale(frequency);
+          setTimeout(() => {
+            void (async () => {
+              logger72.debug("timeout-fired", "Note timeout fired", {
+                index: i,
+                isPlaying: this.isPlaying
+              });
+              if (!this.isPlaying) {
+                return;
               }
-              const durationSeconds = duration * beatDuration / 1e3;
-              const elapsedTime = (Date.now() - this.startTime) / 1e3;
-              await this.audioEngine.playNoteImmediate({
-                pitch: finalFreq,
-                duration: durationSeconds,
-                velocity,
-                instrument
-              }, elapsedTime);
-              const stopTime = Date.now() + duration * beatDuration;
-              this.playingNotes.push({
-                instrumentName: instrument,
-                frequency: finalFreq,
-                stopTime
-              });
-              this.hasPlayedAnyNotes = true;
-              setTimeout(() => {
-                this.completedNoteCount++;
-                logger72.debug("note-complete", "Note completed", {
-                  completed: this.completedNoteCount,
-                  scheduled: this.scheduledNoteCount
+              try {
+                let finalFreq = frequency;
+                if (this.audioEngine.musicalTheoryEngine) {
+                  finalFreq = this.audioEngine.musicalTheoryEngine.constrainPitchToScale(frequency);
+                }
+                const durationSeconds = duration * beatDuration / 1e3;
+                const elapsedTime = (Date.now() - this.startTime) / 1e3;
+                await this.audioEngine.playNoteImmediate({
+                  pitch: finalFreq,
+                  duration: durationSeconds,
+                  velocity,
+                  instrument
+                }, elapsedTime);
+                const stopTime = Date.now() + duration * beatDuration;
+                this.playingNotes.push({
+                  instrumentName: instrument,
+                  frequency: finalFreq,
+                  stopTime
                 });
-              }, duration * beatDuration);
-              logger72.debug("note-play", "Note started", {
-                instrument,
-                frequency: finalFreq.toFixed(2),
-                velocity: velocity.toFixed(2),
-                duration: durationSeconds.toFixed(2)
-              });
-            } catch (error) {
-              logger72.warn("note-play-error", "Error playing note", {
-                instrument,
-                frequency: frequency.toFixed(2),
-                error: error instanceof Error ? error.message : String(error),
-                errorStack: error instanceof Error ? error.stack : void 0
-              });
-            }
+                this.hasPlayedAnyNotes = true;
+                setTimeout(() => {
+                  this.completedNoteCount++;
+                  logger72.debug("note-complete", "Note completed", {
+                    completed: this.completedNoteCount,
+                    scheduled: this.scheduledNoteCount
+                  });
+                }, duration * beatDuration);
+                logger72.debug("note-play", "Note started", {
+                  instrument,
+                  frequency: finalFreq.toFixed(2),
+                  velocity: velocity.toFixed(2),
+                  duration: durationSeconds.toFixed(2)
+                });
+              } catch (error) {
+                logger72.warn("note-play-error", "Error playing note", {
+                  instrument,
+                  frequency: frequency.toFixed(2),
+                  error: error instanceof Error ? error.message : String(error),
+                  errorStack: error instanceof Error ? error.stack : void 0
+                });
+              }
+            })();
           }, Math.max(0, humanizedTime));
           currentTime += duration * beatDuration;
         }
@@ -61337,9 +61360,8 @@ var init_AudioExporter = __esm({
             }
           } else {
             const file = this.app.vault.getAbstractFileByPath(filePath);
-            if (file && "stat" in file) {
-              const fileWithStat = file;
-              result.fileSize = fileWithStat.stat.size;
+            if (file instanceof import_obsidian24.TFile) {
+              result.fileSize = file.stat.size;
             }
           }
           const notePath = await noteCreator.createNote(config, result, this.animator, this.pluginSettings);
@@ -61965,7 +61987,7 @@ var init_ExportModal = __esm({
           text: "\u{1F4BE} Save Current as Preset",
           cls: "sonigraph-export-preset-save"
         });
-        savePresetBtn.addEventListener("click", () => this.saveCurrentAsPreset());
+        savePresetBtn.addEventListener("click", () => void this.saveCurrentAsPreset());
       }
       /**
        * Create a preset button
@@ -65335,17 +65357,21 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     }));
     const sonicGraphNote = containerEl.createDiv({ cls: "osp-settings-note" });
     const noteP = sonicGraphNote.createEl("p");
-    noteP.style.color = "var(--text-muted)";
-    noteP.style.fontSize = "13px";
-    noteP.style.lineHeight = "1.5";
-    noteP.style.marginTop = "1rem";
+    noteP.setCssProps({
+      color: "var(--text-muted)",
+      fontSize: "13px",
+      lineHeight: "1.5",
+      marginTop: "1rem"
+    });
     noteP.createEl("strong", { text: "Note:" });
     noteP.appendText(" Sonic Graph settings (adaptive detail, content-aware positioning, smart clustering, animation duration) are now available in:");
     const noteUl = sonicGraphNote.createEl("ul");
-    noteUl.style.color = "var(--text-muted)";
-    noteUl.style.fontSize = "13px";
-    noteUl.style.lineHeight = "1.5";
-    noteUl.style.margin = "0.5rem 0 0 1.5rem";
+    noteUl.setCssProps({
+      color: "var(--text-muted)",
+      fontSize: "13px",
+      lineHeight: "1.5",
+      margin: "0.5rem 0 0 1.5rem"
+    });
     const li1 = noteUl.createEl("li");
     li1.createEl("strong", { text: "Control Center > Sonic Graph tab" });
     li1.appendText(" for comprehensive settings");
@@ -65668,7 +65694,9 @@ var TemporalGraphAnimator = class {
    * Spread a cluster of simultaneous events
    */
   spreadEventCluster(events, baseTime, config) {
-    const spacingWindow = Math.min(config.maxSpacingWindow, events.length * config.minEventSpacing * 1.5);
+    const maxSpacingWindow = config.maxSpacingWindow;
+    const minEventSpacing = config.minEventSpacing;
+    const spacingWindow = Math.min(maxSpacingWindow, events.length * minEventSpacing * 1.5);
     const spacing = events.length > 1 ? spacingWindow / (events.length - 1) : 0;
     events.sort((a2, b) => this.hashString(a2.nodeId) - this.hashString(b.nodeId));
     return events.map((event, index2) => ({
@@ -65682,11 +65710,12 @@ var TemporalGraphAnimator = class {
   processBatchedEvents(events, baseTime, config, batchSize) {
     const result = [];
     const batches = this.createEventBatches(events, batchSize);
+    const maxSpacingWindow = config.maxSpacingWindow;
     batches.forEach((batch, batchIndex) => {
-      const batchBaseTime = baseTime + batchIndex * config.maxSpacingWindow * 0.2;
+      const batchBaseTime = baseTime + batchIndex * maxSpacingWindow * 0.2;
       result.push(...this.spreadEventCluster(batch, batchBaseTime, {
         ...config,
-        maxSpacingWindow: config.maxSpacingWindow * 0.15
+        maxSpacingWindow: maxSpacingWindow * 0.15
         // Tighter spacing within batches
       }));
     });
@@ -65848,8 +65877,11 @@ var TemporalGraphAnimator = class {
       },
       // Performance settings
       performance: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         adaptiveDetail: ((_f = (_e = this.loggingContext.visualSettings) == null ? void 0 : _e.adaptiveDetail) == null ? void 0 : _f.enabled) || false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         maxNodes: ((_i = (_h = (_g = this.loggingContext.visualSettings) == null ? void 0 : _g.adaptiveDetail) == null ? void 0 : _h.overrides) == null ? void 0 : _i.maximumVisibleNodes) || -1,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         temporalClustering: ((_j = this.loggingContext.visualSettings) == null ? void 0 : _j.temporalClustering) || false
       },
       // Context information
@@ -75260,7 +75292,7 @@ var CommunityEvolutionTracker = class {
     try {
       const eventKey = `${event.communityId}_${event.timestamp}`;
       this.activeEvolutionEvents.set(eventKey, event);
-      await this.executeEvolutionAudioEffect(event, theme);
+      this.executeEvolutionAudioEffect(event, theme);
       setTimeout(() => {
         this.activeEvolutionEvents.delete(eventKey);
       }, this.getEventDuration(event.type) * 1e3);
@@ -75274,37 +75306,37 @@ var CommunityEvolutionTracker = class {
   /**
    * Execute the actual audio effect for evolution event
    */
-  async executeEvolutionAudioEffect(event, theme) {
+  executeEvolutionAudioEffect(event, theme) {
     const duration = this.getEventDuration(event.type);
     const volume = this.settings.eventVolumes[event.type] * event.intensity;
     switch (event.type) {
       case "merge":
-        await this.executeHarmonicConvergence(event, theme, duration, volume);
+        this.executeHarmonicConvergence(event, theme, duration, volume);
         break;
       case "split":
-        await this.executeDivergentHarmony(event, theme, duration, volume);
+        this.executeDivergentHarmony(event, theme, duration, volume);
         break;
       case "growth":
-        await this.executeExpandingOrchestration(event, theme, duration, volume);
+        this.executeExpandingOrchestration(event, theme, duration, volume);
         break;
       case "decline":
-        await this.executeFadingVoices(event, theme, duration, volume);
+        this.executeFadingVoices(event, theme, duration, volume);
         break;
       case "bridging":
-        await this.executeCrossFade(event, theme, duration, volume);
+        this.executeCrossFade(event, theme, duration, volume);
         break;
       case "formation":
-        await this.executeHarmonicBuildup(event, theme, duration, volume);
+        this.executeHarmonicBuildup(event, theme, duration, volume);
         break;
       case "dissolution":
-        await this.executeHarmonicFadeout(event, theme, duration, volume);
+        this.executeHarmonicFadeout(event, theme, duration, volume);
         break;
     }
   }
   /**
    * Harmonic convergence effect (community merge)
    */
-  async executeHarmonicConvergence(event, theme, duration, volume) {
+  executeHarmonicConvergence(event, theme, duration, volume) {
     var _a;
     const now3 = now2();
     const voiceCount = Math.min(((_a = event.sourceCommunityIds) == null ? void 0 : _a.length) || 2, 4);
@@ -75330,7 +75362,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Divergent harmony effect (community split)
    */
-  async executeDivergentHarmony(event, theme, duration, volume) {
+  executeDivergentHarmony(event, theme, duration, volume) {
     var _a;
     const now3 = now2();
     const voiceCount = Math.min(((_a = event.targetCommunityIds) == null ? void 0 : _a.length) || 2, 4);
@@ -75356,7 +75388,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Expanding orchestration effect (community growth)
    */
-  async executeExpandingOrchestration(event, theme, duration, volume) {
+  executeExpandingOrchestration(event, theme, duration, volume) {
     const now3 = now2();
     const voiceCount = Math.min(Math.floor(event.intensity * 6), 6);
     for (let i = 0; i < voiceCount; i++) {
@@ -75371,7 +75403,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Fading voices effect (community decline)
    */
-  async executeFadingVoices(event, theme, duration, volume) {
+  executeFadingVoices(event, theme, duration, volume) {
     const now3 = now2();
     const voiceCount = Math.min(4, theme.harmonicIntervals.length);
     for (let i = 0; i < voiceCount; i++) {
@@ -75396,7 +75428,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Cross-fade effect (community bridging)
    */
-  async executeCrossFade(event, theme, duration, volume) {
+  executeCrossFade(event, theme, duration, volume) {
     const now3 = now2();
     const synth1 = new MonoSynth({
       oscillator: { type: "sine" }
@@ -75420,7 +75452,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Harmonic buildup effect (community formation)
    */
-  async executeHarmonicBuildup(event, theme, duration, volume) {
+  executeHarmonicBuildup(event, theme, duration, volume) {
     const now3 = now2();
     const harmonics = theme.harmonicIntervals.slice(0, 4);
     for (let i = 0; i < harmonics.length; i++) {
@@ -75443,7 +75475,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Harmonic fadeout effect (community dissolution)
    */
-  async executeHarmonicFadeout(event, theme, duration, volume) {
+  executeHarmonicFadeout(event, theme, duration, volume) {
     const now3 = now2();
     const harmonics = theme.harmonicIntervals.slice(0, 3);
     for (let i = 0; i < harmonics.length; i++) {
@@ -76370,15 +76402,15 @@ var ClusterAudioMapper = class {
   /**
    * Process clusters and generate audio mapping
    */
-  async processClusters(clusters) {
+  processClusters(clusters) {
     if (!this.isInitialized || !this.settings.enabled) {
       return;
     }
     if (this.updateThrottleTimer) {
       clearTimeout(this.updateThrottleTimer);
     }
-    this.updateThrottleTimer = setTimeout(async () => {
-      await this.processClustersCached(clusters);
+    this.updateThrottleTimer = setTimeout(() => {
+      void this.processClustersCached(clusters);
     }, this.settings.updateThrottleMs);
   }
   /**
@@ -76418,6 +76450,8 @@ var ClusterAudioMapper = class {
         transitions.push(this.createTransitionEvent("formation", cluster));
       } else {
         const previousCluster = this.previousClusters.get(cluster.id);
+        if (!previousCluster)
+          continue;
         const strengthDiff = Math.abs(cluster.strength - previousCluster.strength);
         if (strengthDiff > 0.1) {
           transitions.push(this.createTransitionEvent("strength_change", cluster, void 0, cluster.strength));
@@ -76439,7 +76473,9 @@ var ClusterAudioMapper = class {
     for (const clusterId of previousClusterIds) {
       if (!currentClusterIds.has(clusterId)) {
         const dissolvedCluster = this.previousClusters.get(clusterId);
-        transitions.push(this.createTransitionEvent("dissolution", dissolvedCluster));
+        if (dissolvedCluster) {
+          transitions.push(this.createTransitionEvent("dissolution", dissolvedCluster));
+        }
       }
     }
     logger57.debug("transitions", "Detected cluster transitions", {
@@ -76555,16 +76591,16 @@ var ClusterAudioMapper = class {
     try {
       switch (config.effectType) {
         case "glissando":
-          await this.executeGlissando(transitionSynth, theme, config, volume, now3);
+          this.executeGlissando(transitionSynth, theme, config, volume, now3);
           break;
         case "harmonic_buildup":
-          await this.executeHarmonicBuildup(transitionSynth, theme, config, volume, now3);
+          this.executeHarmonicBuildup(transitionSynth, theme, config, volume, now3);
           break;
         case "filter_sweep":
-          await this.executeFilterSweep(transitionSynth, theme, config, volume, now3);
+          this.executeFilterSweep(transitionSynth, theme, config, volume, now3);
           break;
         case "granular_scatter":
-          await this.executeGranularScatter(transitionSynth, theme, config, volume, now3);
+          this.executeGranularScatter(transitionSynth, theme, config, volume, now3);
           break;
       }
       setTimeout(() => {
@@ -76578,7 +76614,7 @@ var ClusterAudioMapper = class {
   /**
    * Execute glissando transition effect
    */
-  async executeGlissando(synth, theme, config, volume, startTime) {
+  executeGlissando(synth, theme, config, volume, startTime) {
     const startFreq = theme.baseFrequency;
     const endFreq = config.pitchDirection === "ascending" ? startFreq * Math.pow(2, config.pitchRange / 12) : startFreq / Math.pow(2, config.pitchRange / 12);
     synth.volume.value = gainToDb(volume * theme.dynamicsRange.baseVolume);
@@ -76592,7 +76628,7 @@ var ClusterAudioMapper = class {
   /**
    * Execute harmonic buildup transition effect
    */
-  async executeHarmonicBuildup(synth, theme, config, volume, startTime) {
+  executeHarmonicBuildup(synth, theme, config, volume, startTime) {
     const harmonics = theme.harmonicIntervals.slice(0, 4);
     for (let i = 0; i < harmonics.length; i++) {
       const harmonic = harmonics[i];
@@ -76618,7 +76654,7 @@ var ClusterAudioMapper = class {
   /**
    * Execute filter sweep transition effect
    */
-  async executeFilterSweep(synth, theme, config, volume, startTime) {
+  executeFilterSweep(synth, theme, config, volume, startTime) {
     const filter2 = new Filter({
       frequency: theme.filterCutoff,
       type: "lowpass",
@@ -76641,7 +76677,7 @@ var ClusterAudioMapper = class {
   /**
    * Execute granular scatter transition effect
    */
-  async executeGranularScatter(synth, theme, config, volume, startTime) {
+  executeGranularScatter(synth, theme, config, volume, startTime) {
     const grainCount = 8;
     const grainDuration = config.duration / grainCount;
     for (let i = 0; i < grainCount; i++) {
@@ -76672,7 +76708,7 @@ var ClusterAudioMapper = class {
     const activeClusterIds = new Set(this.state.activeClusters.keys());
     for (const clusterId of activeClusterIds) {
       if (!currentClusterIds.has(clusterId)) {
-        await this.stopClusterAudio(clusterId);
+        this.stopClusterAudio(clusterId);
       }
     }
     for (const cluster of clusters) {
@@ -76680,7 +76716,7 @@ var ClusterAudioMapper = class {
         continue;
       }
       if (this.state.activeClusters.has(cluster.id)) {
-        await this.updateClusterAudio(cluster);
+        this.updateClusterAudio(cluster);
       } else {
         await this.startClusterAudio(cluster);
       }
@@ -76739,7 +76775,7 @@ var ClusterAudioMapper = class {
         nodeCount: cluster.nodes.length
       };
       this.state.activeClusters.set(cluster.id, activeCluster);
-      await this.playClusterAudio(activeCluster);
+      this.playClusterAudio(activeCluster);
     } catch (error) {
       logger57.error("cluster-start", "Error starting cluster audio", {
         clusterId: cluster.id,
@@ -76752,10 +76788,10 @@ var ClusterAudioMapper = class {
    */
   createClusterAudioSource(theme) {
     const oscillatorType = this.getOscillatorTypeForTexture(theme.timbreProfile.texture);
-    const polySynth = new PolySynth(MonoSynth);
-    polySynth.maxPolyphony = 4;
-    polySynth.set({
-      oscillator: { type: oscillatorType },
+    const polySynth = new PolySynth(MonoSynth, {
+      oscillator: {
+        type: oscillatorType
+      },
       envelope: {
         attack: theme.dynamicsRange.attackTime,
         decay: theme.dynamicsRange.decayTime,
@@ -76763,6 +76799,7 @@ var ClusterAudioMapper = class {
         release: theme.dynamicsRange.releaseTime
       }
     });
+    polySynth.maxPolyphony = 4;
     return polySynth;
   }
   /**
@@ -76811,7 +76848,7 @@ var ClusterAudioMapper = class {
   /**
    * Play cluster audio
    */
-  async playClusterAudio(activeCluster) {
+  playClusterAudio(activeCluster) {
     if (activeCluster.isPlaying)
       return;
     const theme = activeCluster.theme;
@@ -76831,7 +76868,7 @@ var ClusterAudioMapper = class {
   /**
    * Update existing cluster audio
    */
-  async updateClusterAudio(cluster) {
+  updateClusterAudio(cluster) {
     const activeCluster = this.state.activeClusters.get(cluster.id);
     if (!activeCluster)
       return;
@@ -76852,7 +76889,7 @@ var ClusterAudioMapper = class {
   /**
    * Stop cluster audio
    */
-  async stopClusterAudio(clusterId) {
+  stopClusterAudio(clusterId) {
     const activeCluster = this.state.activeClusters.get(clusterId);
     if (!activeCluster)
       return;
@@ -76907,11 +76944,11 @@ var ClusterAudioMapper = class {
   /**
    * Stop all active cluster audio
    */
-  async stopAllClusterAudio() {
+  stopAllClusterAudio() {
     logger57.debug("shutdown", "Stopping all cluster audio");
     const clusterIds = Array.from(this.state.activeClusters.keys());
     for (const clusterId of clusterIds) {
-      await this.stopClusterAudio(clusterId);
+      this.stopClusterAudio(clusterId);
     }
   }
   /**
@@ -79001,6 +79038,7 @@ var MusicalMapper = class {
   /**
    * Phase 6.3: Get panner node for audio routing
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getPannerForNode(nodeId) {
     if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
       return null;
@@ -80521,6 +80559,7 @@ var SpectrumRenderer = class {
   /**
    * Connect to Web Audio API for real-time spectrum analysis
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   connectToAudioContext(audioContext, sourceNode) {
     if (!audioContext) {
       logger66.warn("audio", "No audio context provided for spectrum analyzer");
@@ -81388,6 +81427,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   getIcon() {
     return "chart-network";
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async setState(state, result) {
     var _a, _b, _c, _d, _e, _f;
     logger78.debug("state", "Restoring view state", state);
@@ -81436,6 +81476,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     logger78.info("state", "View state restoration complete");
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getState() {
     var _a, _b;
     logger78.info("state", "getState() called - capturing view state", {
@@ -85203,6 +85244,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Get default audio enhancement settings
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDefaultAudioEnhancementSettings() {
     return {
       contentAwareMapping: {
@@ -85540,6 +85582,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Phase 3.8: Update layout setting and apply to renderer
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateLayoutSetting(key, value) {
     this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
     logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
@@ -85628,6 +85671,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Format group label in type:name format
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formatGroupLabel(group) {
     let type2 = "path";
     if (group.name.toLowerCase().includes("file") || group.path.includes(".")) {
@@ -85934,7 +85978,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
         excludeFolders: this.graphDataExtractor["excludeFolders"] || [],
         excludeFiles: this.graphDataExtractor["excludeFiles"] || [],
         vaultFileCount: this.app.vault.getFiles().length,
-        userAgent: navigator.userAgent
+        platform: import_obsidian28.Platform
       };
       navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian28.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian28.Notice("Failed to copy debug info"));
     });
@@ -86055,6 +86099,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Update time markers along the timeline
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateTimeMarkers(timelineInfo) {
     const markersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-markers");
     if (!markersContainer)
@@ -86230,6 +86275,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Create a musical mapping for a graph node
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createMusicalMappingForNode(node) {
     const settings = this.getSonicGraphSettings();
     this.nodeAppearanceCounter++;
@@ -86312,6 +86358,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    * Calculate scale-aware pitch for a node
    * Uses scale degrees instead of chromatic hashing for more musical results
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculateScaleAwarePitch(node, settings) {
     var _a;
     const theorySettings = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory;
@@ -86439,6 +86486,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    * Calculate rhythmic duration with phrase-aware patterns
    * Creates rhythmic variety through phrase position and file properties
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculateRhythmicDuration(node, settings) {
     const baseDuration = settings.audio.noteDuration || 0.3;
     const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
@@ -86487,6 +86535,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    * Calculate dynamic velocity with phrase expression curves
    * Creates musical dynamics through crescendo/diminuendo and accents
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculateDynamicVelocity(node, settings) {
     const baseVelocity = 0.5;
     const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
@@ -87211,6 +87260,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Create fallback mapping when no instruments are enabled
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createFallbackMapping(node, fallbackInstrument) {
     const baseFreq = 261.63;
     const fileNameHash = this.hashString(node.title);
@@ -87406,6 +87456,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.resizeObserver.observe(canvasElement);
     logger78.debug("responsive-setup", "Resize observer set up for responsive graph sizing");
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   scheduleSettingsUpdate(key, value) {
     this.pendingSettingsUpdates.set(key, value);
     if (this.settingsUpdateTimeout) {
@@ -87565,6 +87616,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Update clustering visualization setting and save to plugin settings
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateClusteringVisualization(vizType, value) {
     this.scheduleSettingsUpdate(`smartClustering.visualization.${vizType}`, value);
     logger78.debug("smart-clustering", "Clustering visualization updated", { vizType, value });
@@ -89977,13 +90029,13 @@ var LocalSoundscapeFilterModal = class extends import_obsidian31.Modal {
       text.setPlaceholder("tag1, tag2, tag3").setValue(this.filters.includeTags.join(", ")).onChange((value) => {
         this.filters.includeTags = value.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
       });
-      text.inputEl.style.width = "100%";
+      text.inputEl.setCssProps({ width: "100%" });
     });
     new import_obsidian31.Setting(section).setName("Exclude tags").setDesc("Hide notes with these tags").addText((text) => {
       text.setPlaceholder("exclude1, exclude2").setValue(this.filters.excludeTags.join(", ")).onChange((value) => {
         this.filters.excludeTags = value.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
       });
-      text.inputEl.style.width = "100%";
+      text.inputEl.setCssProps({ width: "100%" });
     });
     if (this.allTags.length > 0) {
       const tagList = section.createDiv({ cls: "filter-tag-list" });
@@ -90013,13 +90065,13 @@ var LocalSoundscapeFilterModal = class extends import_obsidian31.Modal {
       text.setPlaceholder("folder1, folder2/subfolder").setValue(this.filters.includeFolders.join(", ")).onChange((value) => {
         this.filters.includeFolders = value.split(",").map((f) => f.trim()).filter((f) => f.length > 0);
       });
-      text.inputEl.style.width = "100%";
+      text.inputEl.setCssProps({ width: "100%" });
     });
     new import_obsidian31.Setting(section).setName("Exclude folders").setDesc("Hide notes from these folders").addText((text) => {
       text.setPlaceholder("archive, templates").setValue(this.filters.excludeFolders.join(", ")).onChange((value) => {
         this.filters.excludeFolders = value.split(",").map((f) => f.trim()).filter((f) => f.length > 0);
       });
-      text.inputEl.style.width = "100%";
+      text.inputEl.setCssProps({ width: "100%" });
     });
     if (this.allFolders.length > 0) {
       const folderList = section.createDiv({ cls: "filter-folder-list" });
@@ -90170,6 +90222,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     this.noteCentricPlayer = null;
     this.currentNoteCentricMapping = null;
     this.currentMappings = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.continuousLayerManager = null;
     // ContinuousLayerManager (lazily loaded)
     // Audio state
@@ -90589,7 +90642,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     const playIcon = createLucideIcon("play", 20);
     this.playButton.appendChild(playIcon);
     this.playButton.appendChild(createSpan({ text: "Play" }));
-    this.playButton.addEventListener("click", () => this.togglePlayback());
+    this.playButton.addEventListener("click", () => void this.togglePlayback());
     this.stopButton = buttonSection.createEl("button", {
       cls: "playback-button stop-button",
       attr: { "aria-label": "Stop soundscape", "disabled": "" }
@@ -90597,7 +90650,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     const stopIcon = createLucideIcon("square", 20);
     this.stopButton.appendChild(stopIcon);
     this.stopButton.appendChild(createSpan({ text: "Stop" }));
-    this.stopButton.addEventListener("click", () => this.stopPlayback());
+    this.stopButton.addEventListener("click", () => void this.stopPlayback());
     this.exportAudioButton = buttonSection.createEl("button", {
       cls: "playback-button export-audio-button",
       attr: { "aria-label": "Export soundscape as audio file", "disabled": "" }
@@ -90605,7 +90658,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     const exportIcon = createLucideIcon("download", 20);
     this.exportAudioButton.appendChild(exportIcon);
     this.exportAudioButton.appendChild(createSpan({ text: "Export audio" }));
-    this.exportAudioButton.addEventListener("click", () => this.exportSoundscapeAudio());
+    this.exportAudioButton.addEventListener("click", () => void this.exportSoundscapeAudio());
     const playActiveNoteButton = buttonSection.createEl("button", {
       cls: "playback-button play-active-note-button",
       attr: { "aria-label": "Play the currently active note" }
@@ -90613,7 +90666,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     const playActiveNoteIcon = createLucideIcon("music", 20);
     playActiveNoteButton.appendChild(playActiveNoteIcon);
     playActiveNoteButton.appendChild(createSpan({ text: "Play active note" }));
-    playActiveNoteButton.addEventListener("click", () => this.playActiveNote());
+    playActiveNoteButton.addEventListener("click", () => void this.playActiveNote());
     const variationSection = buttonSection.createDiv({ cls: "variation-controls" });
     this.prevVariationButton = variationSection.createEl("button", {
       cls: "playback-button variation-button prev-variation",
@@ -90621,7 +90674,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     });
     const prevIcon = createLucideIcon("chevron-left", 16);
     this.prevVariationButton.appendChild(prevIcon);
-    this.prevVariationButton.addEventListener("click", () => this.previousVariation());
+    this.prevVariationButton.addEventListener("click", () => void this.previousVariation());
     this.variationDisplay = variationSection.createSpan({
       cls: "variation-display",
       text: "Variation 1/1"
@@ -90632,7 +90685,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     });
     const rerollIcon = createLucideIcon("rotate-cw", 16);
     this.rerollButton.appendChild(rerollIcon);
-    this.rerollButton.addEventListener("click", () => this.rerollVariation());
+    this.rerollButton.addEventListener("click", () => void this.rerollVariation());
     const statsSection = container.createDiv({ cls: "playback-stats" });
     const voiceCountContainer = statsSection.createDiv({ cls: "stat-item" });
     const voiceLabel = voiceCountContainer.createSpan({ cls: "stat-label" });
@@ -90697,8 +90750,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "musical-setting-checkbox"
     });
     enableCheckbox.checked = ((_b = (_a = this.depthMapper) == null ? void 0 : _a.getConfig().musicalTheory) == null ? void 0 : _b.enabled) || false;
-    enableCheckbox.addEventListener("change", async () => {
-      await this.toggleScaleQuantization(enableCheckbox.checked);
+    enableCheckbox.addEventListener("change", () => {
+      void this.toggleScaleQuantization(enableCheckbox.checked);
     });
     const rootNoteRow = container.createDiv({ cls: "musical-setting-row" });
     rootNoteRow.createSpan({ text: "Root Note:", cls: "setting-label" });
@@ -90727,8 +90780,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
         option.selected = true;
       }
     });
-    rootNoteSelect.addEventListener("change", async () => {
-      await this.updateMusicalScale(rootNoteSelect.value, void 0);
+    rootNoteSelect.addEventListener("change", () => {
+      void this.updateMusicalScale(rootNoteSelect.value, void 0);
     });
     const scaleTypeRow = container.createDiv({ cls: "musical-setting-row" });
     scaleTypeRow.createSpan({ text: "Scale Type:", cls: "setting-label" });
@@ -90756,8 +90809,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
         option.selected = true;
       }
     });
-    scaleTypeSelect.addEventListener("change", async () => {
-      await this.updateMusicalScale(void 0, scaleTypeSelect.value);
+    scaleTypeSelect.addEventListener("change", () => {
+      void this.updateMusicalScale(void 0, scaleTypeSelect.value);
     });
     const quantStrengthRow = container.createDiv({ cls: "musical-setting-row slider-row" });
     quantStrengthRow.createSpan({ text: "Quantization Strength:", cls: "setting-label" });
@@ -90777,10 +90830,10 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       text: `${currentStrength}%`,
       cls: "slider-value"
     });
-    quantStrengthSlider.addEventListener("input", async () => {
+    quantStrengthSlider.addEventListener("input", () => {
       const value = parseInt(quantStrengthSlider.value);
       strengthValue.textContent = `${value}%`;
-      await this.updateQuantizationStrength(value / 100);
+      void this.updateQuantizationStrength(value / 100);
     });
     const adaptivePitchRow = container.createDiv({ cls: "musical-setting-row" });
     adaptivePitchRow.createSpan({ text: "Adaptive Pitch Ranges:", cls: "setting-label" });
@@ -90789,8 +90842,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "musical-setting-checkbox"
     });
     adaptivePitchCheckbox.checked = ((_f = (_e = this.depthMapper) == null ? void 0 : _e.getConfig().adaptivePitch) == null ? void 0 : _f.enabled) || false;
-    adaptivePitchCheckbox.addEventListener("change", async () => {
-      await this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
+    adaptivePitchCheckbox.addEventListener("change", () => {
+      void this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
     });
     const adaptivePitchDesc = container.createDiv({
       cls: "musical-setting-description",
@@ -90803,8 +90856,8 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       cls: "musical-setting-checkbox"
     });
     chordVoicingCheckbox.checked = ((_h = (_g = this.depthMapper) == null ? void 0 : _g.getConfig().chordVoicing) == null ? void 0 : _h.enabled) || false;
-    chordVoicingCheckbox.addEventListener("change", async () => {
-      await this.toggleChordVoicing(chordVoicingCheckbox.checked);
+    chordVoicingCheckbox.addEventListener("change", () => {
+      void this.toggleChordVoicing(chordVoicingCheckbox.checked);
     });
     const chordVoicingDesc = container.createDiv({
       cls: "musical-setting-description",
@@ -90828,10 +90881,10 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       text: `${currentDensity}%`,
       cls: "slider-value"
     });
-    densitySlider.addEventListener("input", async () => {
+    densitySlider.addEventListener("input", () => {
       const value = parseInt(densitySlider.value);
       densityValue.textContent = `${value}%`;
-      await this.updateVoicingDensity(value / 100);
+      void this.updateVoicingDensity(value / 100);
     });
     densityRow.style.display = chordVoicingCheckbox.checked ? "flex" : "none";
     chordVoicingCheckbox.addEventListener("change", () => {
@@ -91494,13 +91547,15 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     const modal = new LocalSoundscapeFilterModal(
       this.plugin.app,
       this.filters,
-      async (newFilters) => {
-        this.filters = newFilters;
-        logger85.info("filters-changed", "Filters updated", newFilters);
-        if (this.centerFile) {
-          await this.extractAndRenderGraph();
-          new import_obsidian32.Notice("Filters applied");
-        }
+      (newFilters) => {
+        void (async () => {
+          this.filters = newFilters;
+          logger85.info("filters-changed", "Filters updated", newFilters);
+          if (this.centerFile) {
+            await this.extractAndRenderGraph();
+            new import_obsidian32.Notice("Filters applied");
+          }
+        })();
       }
     );
     modal.open();
@@ -91723,7 +91778,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
       this.renderer = new LocalSoundscapeRenderer(this.graphContainer, rendererConfig);
       this.renderer.setCallbacks(
         (node) => this.handleNodeOpen(node),
-        (node) => this.handleNodeRecenter(node)
+        (node) => void this.handleNodeRecenter(node)
       );
       if (this.layoutType === "force") {
         logger85.info("apply-layout", "Applying force-directed layout");
@@ -92268,6 +92323,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
   /**
    * Restore view state from persistence
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async setState(state, result) {
     logger85.info("set-state", "Restoring view state", state);
     if (state.currentDepth) {
@@ -95234,13 +95290,9 @@ var ChordFusionEngine = class {
   constructor(settings) {
     this.pendingNotes = [];
     this.lastProcessTime = 0;
-    var _a, _b, _c, _d;
     this.settings = settings;
     this.harmonicEngine = new HarmonicEngine({
-      enableChordProgression: true,
-      scale: ((_b = (_a = settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.scale) || "major",
-      rootNote: ((_d = (_c = settings.audioEnhancement) == null ? void 0 : _c.musicalTheory) == null ? void 0 : _d.rootNote) || "C",
-      mode: "default"
+      enableChordProgression: true
     });
   }
   /**
@@ -95251,10 +95303,7 @@ var ChordFusionEngine = class {
     this.settings = settings;
     if ((_a = settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) {
       this.harmonicEngine = new HarmonicEngine({
-        enableChordProgression: true,
-        scale: settings.audioEnhancement.musicalTheory.scale,
-        rootNote: settings.audioEnhancement.musicalTheory.rootNote,
-        mode: "default"
+        enableChordProgression: true
       });
     }
   }
@@ -95302,6 +95351,10 @@ var ChordFusionEngine = class {
       return null;
     }
     const chordSettings = (_a = this.settings.audioEnhancement) == null ? void 0 : _a.chordFusion;
+    if (!chordSettings) {
+      const note = this.pendingNotes.shift();
+      return note || null;
+    }
     const minimumNotes = chordSettings.minimumNotes || 2;
     if (this.pendingNotes.length < minimumNotes) {
       const note = this.pendingNotes.shift();
@@ -95321,9 +95374,8 @@ var ChordFusionEngine = class {
   createSmartChord(notes, settings) {
     const sortedNotes = notes.sort((a2, b) => a2.pitch - b.pitch);
     const pitches = sortedNotes.map((n) => n.pitch);
-    const harmonized = this.harmonicEngine.harmonizeSequence(pitches);
-    const rootPitch = harmonized.length > 0 ? harmonized[0] : pitches[0];
-    const chordType = this.analyzeChordType(harmonized);
+    const rootPitch = pitches[0];
+    const chordType = this.analyzeChordType(pitches);
     const maxVoices = settings.chordComplexity || 3;
     const limitedNotes = sortedNotes.slice(0, maxVoices);
     const voicedNotes = this.applyVoicing(limitedNotes, settings.voicingStrategy || "compact");
@@ -95492,6 +95544,7 @@ var AudioEngine = class {
     this.app = app;
     this.instruments = /* @__PURE__ */ new Map();
     this.instrumentVolumes = /* @__PURE__ */ new Map();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.instrumentEffects = /* @__PURE__ */ new Map();
     // Per-instrument effects
     this.isInitialized = false;
@@ -95572,9 +95625,11 @@ var AudioEngine = class {
   /**
    * Effect chain management delegates
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getEffectChain(instrumentName) {
     return this.effectBusManager.getEffectChain(instrumentName);
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addEffectToChain(instrumentName, effectType, position) {
     return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
   }
@@ -95587,15 +95642,18 @@ var AudioEngine = class {
   toggleEnhancedEffectBypass(instrumentName, effectId) {
     return this.effectBusManager.toggleEffectBypass(instrumentName, effectId);
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateEffectParameters(instrumentName, effectId, parameters) {
     return this.effectBusManager.updateEffectParameters(instrumentName, effectId, parameters);
   }
   /**
    * Bus management delegates
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getSendBuses() {
     return this.effectBusManager.getSendBuses();
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getReturnBuses() {
     return this.effectBusManager.getReturnBuses();
   }
@@ -95612,35 +95670,46 @@ var AudioEngine = class {
       this.effectBusManager.disableEnhancedRouting();
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get effectChains() {
     const legacyChains = /* @__PURE__ */ new Map();
     return legacyChains;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get sendBuses() {
     return this.effectBusManager.getSendBuses();
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get returnBuses() {
     return this.effectBusManager.getReturnBuses();
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get masterEffectsNodes() {
     return /* @__PURE__ */ new Map();
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get effectNodeInstances() {
     return /* @__PURE__ */ new Map();
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get masterReverb() {
     return null;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set masterReverb(value) {
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get masterEQ() {
     return null;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set masterEQ(value) {
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get masterCompressor() {
     return null;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set masterCompressor(value) {
   }
   // === DELEGATE METHODS FOR VOICE MANAGEMENT ===
@@ -96077,6 +96146,7 @@ var AudioEngine = class {
     }
     logger97.debug("enhanced-routing", "Enhanced instrument connections established");
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   connectToMasterChain(instrumentOutput) {
     let output = instrumentOutput;
     if (this.masterEffectsNodes.has("compressor")) {
@@ -97327,7 +97397,7 @@ var AudioEngine = class {
             synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
             this.emitNoteEvent(instrumentName, detunedFrequency, duration, velocity, elapsedTime);
             if (this.rhythmicPercussion) {
-              const midiNote = new Frequency(frequency, "hz").toMidi();
+              const midiNote = Frequency(frequency, "hz").toMidi();
               logger97.debug("rhythmic-percussion", "Triggering accent", { frequency, midiNote, velocity });
               this.rhythmicPercussion.triggerAccent({
                 pitch: midiNote,
@@ -97651,12 +97721,14 @@ var AudioEngine = class {
    * Enable or disable reverb effect for a specific instrument
    */
   setReverbEnabled(enabled, instrument) {
-    var _a, _b, _c;
     const instrumentEffects = this.instrumentEffects.get(instrument);
     const reverb = instrumentEffects == null ? void 0 : instrumentEffects.get("reverb");
     if (reverb) {
       const instrumentSettings = this.settings.instruments[instrument];
-      const wetLevel = ((_c = (_b = (_a = instrumentSettings == null ? void 0 : instrumentSettings.effects) == null ? void 0 : _a.reverb) == null ? void 0 : _b.params) == null ? void 0 : _c.wet) || 0.25;
+      const effects = instrumentSettings == null ? void 0 : instrumentSettings.effects;
+      const reverbSettings = effects == null ? void 0 : effects.reverb;
+      const params = reverbSettings == null ? void 0 : reverbSettings.params;
+      const wetLevel = (params == null ? void 0 : params.wet) || 0.25;
       reverb.wet.value = enabled ? wetLevel : 0;
       logger97.debug("effects", `Reverb ${enabled ? "enabled" : "disabled"} for ${instrument}`);
     } else {
@@ -98301,7 +98373,7 @@ var AudioEngine = class {
         this.activeNotesPerInstrument.set(instrument, Math.max(0, current - 1));
       }, durationMs);
       if (this.rhythmicPercussion) {
-        const midiNote = new Frequency(pitch, "hz").toMidi();
+        const midiNote = Frequency(pitch, "hz").toMidi();
         logger97.debug("rhythmic-percussion", "Triggering accent (immediate playback)", { pitch, midiNote, velocity });
         this.rhythmicPercussion.triggerAccent({
           pitch: midiNote,
@@ -98349,7 +98421,7 @@ var AudioEngine = class {
       this.temporalChordBuckets.set(bucketKey, []);
     }
     const bucket = this.temporalChordBuckets.get(bucketKey);
-    bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId });
+    bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId, timestamp: Date.now() });
     logger97.debug("chord-fusion", "Note added to temporal bucket", {
       pitch: mapping.pitch,
       instrument: mapping.instrument,
@@ -98435,10 +98507,11 @@ var AudioEngine = class {
       });
       return null;
     }
-    const date = new Date(file.stat.mtime);
+    const stat = file.stat;
+    const date = new Date(stat.mtime);
     logger97.debug("chord-fusion", "Got file modification date", {
       nodeId,
-      mtime: file.stat.mtime,
+      mtime: stat.mtime,
       date: date.toISOString()
     });
     switch (mode) {
@@ -98607,7 +98680,7 @@ var AudioEngine = class {
   triggerSmartChord(notes, settings, elapsedTime) {
     const pitches = notes.map((n) => n.mapping.pitch).sort((a2, b) => a2 - b);
     const rootPitch = pitches[0];
-    const midiPitches = pitches.map((p) => new Frequency(p, "hz").toMidi());
+    const midiPitches = pitches.map((p) => Frequency(p, "hz").toMidi());
     const rootMidi = Math.round(midiPitches[0]);
     const intervals = midiPitches.map((p) => Math.round(p) - rootMidi);
     const chordType = this.detectChordTypeFromIntervals(intervals);
@@ -99694,7 +99767,7 @@ var AudioEngine = class {
   emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime, nodeId, nodeTitle) {
     try {
       const layer = this.getLayerForInstrument(instrumentName);
-      const midiPitch = new Frequency(frequency, "hz").toMidi();
+      const midiPitch = Frequency(frequency, "hz").toMidi();
       this.eventEmitter.emit("note-triggered", {
         pitch: midiPitch,
         velocity,
@@ -99771,6 +99844,7 @@ var AudioEngine = class {
   /**
    * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createSamplerWithFallback(config, instrumentName) {
     try {
       const sampler = new Sampler(config);
@@ -99826,6 +99900,7 @@ var AudioEngine = class {
   /**
    * Issue #012: Reconnect instrument to effects chain after fallback creation
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   reconnectInstrumentToEffects(instrumentName, instrument, volume, effects) {
     var _a, _b, _c;
     let output = instrument.connect(volume);
@@ -101455,6 +101530,7 @@ var SonigraphPlugin = class extends import_obsidian33.Plugin {
   /**
    * Get curated Freesound samples for initial library
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getCuratedSamples() {
     const curatedSamples = require_curated_samples_transformed();
     return curatedSamples;
