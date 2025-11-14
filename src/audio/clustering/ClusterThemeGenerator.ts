@@ -21,7 +21,7 @@ export class ClusterThemeGenerator {
   /**
    * Initialize the theme generator with predefined themes
    */
-  public async initialize(): Promise<void> {
+  public initialize(): Promise<void> {
     if (this.isInitialized) return;
 
     logger.debug('initialization', 'Initializing cluster theme generator');

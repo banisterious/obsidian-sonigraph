@@ -1002,7 +1002,7 @@ export default class SonigraphPlugin extends Plugin {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private getCuratedSamples(): any[] {
 		// Import the transformed curated samples
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		 
 		const curatedSamples = require('../curated-samples-transformed.json');
 		return curatedSamples;
 	}

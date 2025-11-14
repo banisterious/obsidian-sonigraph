@@ -476,7 +476,7 @@ export class HarmonicLayerManager {
     // Generate a chord based on current harmonic context
     const chordKeys = Array.from(this.harmonyMap.keys());
     const randomKey = chordKeys[Math.floor(Math.random() * chordKeys.length)];
-    return this.harmonyMap.get(randomKey)!;
+    return this.harmonyMap.get(randomKey);
   }
   
   private analyzeClusterHarmony(clusters: ClusterInfo[]): void {

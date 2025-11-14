@@ -217,7 +217,7 @@ export class ContentAwareMapper {
         // Check cache first
         if (this.isMappingCached(cacheKey)) {
             logger.debug('cache-hit', `Using cached mapping for ${node.path}`);
-            return this.mappingCache.get(cacheKey)!;
+            return this.mappingCache.get(cacheKey);
         }
 
         const overallStartTime = performance.now();
@@ -819,7 +819,7 @@ export class ContentAwareMapper {
             return false;
         }
 
-        const timestamp = this.cacheTimestamps.get(cacheKey)!;
+        const timestamp = this.cacheTimestamps.get(cacheKey);
         return (Date.now() - timestamp) < this.CACHE_TTL;
     }
 

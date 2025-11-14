@@ -110,7 +110,7 @@ export class EffectBusManager {
     /**
      * Initialize master effects chain
      */
-    private async initializeMasterEffects(): Promise<void> {
+    private initializeMasterEffects(): Promise<void> {
         // Master Reverb
         this.masterReverb = new Reverb(2.0).toDestination();
         this.masterEffectsNodes.set('master-reverb', this.masterReverb);
@@ -231,7 +231,7 @@ export class EffectBusManager {
                 });
                 
             default:
-                logger.warn('effects', `Unknown effect type: ${type}`);
+                logger.warn('effects', `Unknown effect type: ${type as string}`);
                 return null;
         }
     }

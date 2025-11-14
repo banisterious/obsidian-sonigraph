@@ -47,7 +47,7 @@ export class RhythmicPercussionEngine {
     /**
      * Initialize percussion synths and connect to audio output
      */
-    async initialize(destination: Tone.ToneAudioNode): Promise<void> {
+    initialize(destination: Tone.ToneAudioNode): Promise<void> {
         if (this.isInitialized) {
             logger.warn('rhythmic-percussion', 'Already initialized');
             return;

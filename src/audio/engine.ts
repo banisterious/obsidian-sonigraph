@@ -790,7 +790,7 @@ export class AudioEngine {
 					return compressor;
 					
 				default:
-					logger.warn('enhanced-routing', `Unknown effect type: ${node.type}`);
+					logger.warn('enhanced-routing', `Unknown effect type: ${node.type as string}`);
 					return null;
 			}
 		} catch (error) {
@@ -3656,7 +3656,7 @@ export class AudioEngine {
 			this.temporalChordBuckets.set(bucketKey, []);
 		}
 
-		const bucket = this.temporalChordBuckets.get(bucketKey)!;
+		const bucket = this.temporalChordBuckets.get(bucketKey);
 		bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId, timestamp: Date.now() });
 
 		logger.debug('chord-fusion', 'Note added to temporal bucket', {
@@ -5037,7 +5037,7 @@ export class AudioEngine {
 			this.bypassStates.set(instrumentName, new Map());
 		}
 
-		const instrumentBypasses = this.bypassStates.get(instrumentName)!;
+		const instrumentBypasses = this.bypassStates.get(instrumentName);
 		const currentBypass = instrumentBypasses.get(effectType) || false;
 		const newBypass = !currentBypass;
 		
@@ -5937,7 +5937,7 @@ export class AudioEngine {
 			// Disconnect from direct output and connect to master chain
 			try {
 				instrument.disconnect();
-				instrument.connect(this.masterEQ!);
+				instrument.connect(this.masterEQ);
 				logger.debug('master-effects', `Routed ${instrumentName} through master effects`);
 			} catch (error) {
 				logger.warn('master-effects', `Failed to route ${instrumentName} through master effects`, error);

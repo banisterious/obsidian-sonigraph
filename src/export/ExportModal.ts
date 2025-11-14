@@ -210,8 +210,8 @@ export class ExportModal extends Modal {
         const preset = {
             id: `preset-${Date.now()}`,
             name,
-            format: this.config.format!,
-            quality: this.config.quality!,
+            format: this.config.format,
+            quality: this.config.quality,
             metadata: this.config.metadata
         };
 
@@ -636,7 +636,7 @@ export class ExportModal extends Modal {
                         if (!this.config.metadata) this.config.metadata = {};
                         this.config.metadata.comment = value.trim() || undefined;
                     });
-                (text.inputEl as HTMLTextAreaElement).rows = 3;
+                (text.inputEl).rows = 3;
             });
     }
 
@@ -676,21 +676,21 @@ export class ExportModal extends Modal {
 
             // Build complete export config
             const exportConfig: ExportConfig = {
-                scope: this.config.scope!,
-                format: this.config.format!,
-                quality: this.config.quality!,
-                locationType: this.config.locationType!,
-                location: this.config.location!,
-                filename: this.config.filename!,
-                onCollision: this.config.onCollision!,
-                includeContinuousLayers: this.config.includeContinuousLayers!,
-                applyMasterVolume: this.config.applyMasterVolume!,
-                applyEffects: this.config.applyEffects!,
-                preserveSpatialAudio: this.config.preserveSpatialAudio!,
-                renderingMethod: this.config.renderingMethod!,
-                maxDurationMinutes: this.config.maxDurationMinutes!,
-                createNote: this.config.createNote!,
-                includeSettingsSummary: this.config.includeSettingsSummary!,
+                scope: this.config.scope,
+                format: this.config.format,
+                quality: this.config.quality,
+                locationType: this.config.locationType,
+                location: this.config.location,
+                filename: this.config.filename,
+                onCollision: this.config.onCollision,
+                includeContinuousLayers: this.config.includeContinuousLayers,
+                applyMasterVolume: this.config.applyMasterVolume,
+                applyEffects: this.config.applyEffects,
+                preserveSpatialAudio: this.config.preserveSpatialAudio,
+                renderingMethod: this.config.renderingMethod,
+                maxDurationMinutes: this.config.maxDurationMinutes,
+                createNote: this.config.createNote,
+                includeSettingsSummary: this.config.includeSettingsSummary,
                 // Capture actual audio engine state for note generation
                 masterVolume: this.plugin.settings.volume,
                 enabledEffects: this.getEnabledEffects(),

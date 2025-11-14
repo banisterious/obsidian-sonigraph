@@ -120,7 +120,7 @@ export class VaultMappingOptimizer {
         // Check cache first
         if (!forceRefresh && this.isAnalysisCached()) {
             logger.info('cache-hit', 'Using cached vault analysis');
-            return this.analysisCache.get('vault')!;
+            return this.analysisCache.get('vault');
         }
 
         const overallStartTime = performance.now();

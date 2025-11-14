@@ -28,7 +28,7 @@ export class CommunityThemeGenerator {
   /**
    * Initialize theme generator with predefined community themes
    */
-  public async initialize(): Promise<void> {
+  public initialize(): Promise<void> {
     if (this.isInitialized) return;
 
     logger.debug('initialization', 'Initializing community theme generator');

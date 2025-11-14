@@ -231,7 +231,7 @@ export class InstrumentDistributor {
             }
             
             // We'd need file path to get position - simplified for now
-            const positions = instrumentPositions.get(instrument)!;
+            const positions = instrumentPositions.get(instrument);
             // positions.push(filePosition); // Would need to match with file
         }
 

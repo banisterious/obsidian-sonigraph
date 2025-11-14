@@ -382,7 +382,7 @@ export class WhaleAudioManager {
     private async isSampleCached(url: string): Promise<boolean> {
         if (!this.vault || !this.fileCache.has(url)) return false;
 
-        const filePath = this.fileCache.get(url)!;
+        const filePath = this.fileCache.get(url);
         return await this.vault.adapter.exists(filePath);
     }
 
@@ -392,7 +392,7 @@ export class WhaleAudioManager {
     private async loadCachedSample(url: string): Promise<AudioBuffer | null> {
         if (!this.vault || !this.fileCache.has(url)) return null;
 
-        const filePath = this.fileCache.get(url)!;
+        const filePath = this.fileCache.get(url);
         try {
             if (await this.vault.adapter.exists(filePath)) {
                 const arrayBuffer = await this.vault.adapter.readBinary(filePath);

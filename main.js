@@ -17461,7 +17461,7 @@ var init_whale_integration = __esm({
       /**
        * Initialize whale integration (Phase 1: Seed Collection)
        */
-      async initialize() {
+      initialize() {
         logger20.info("init", "Starting whale integration initialization", {
           useWhaleExternal: this.settings.useWhaleExternal,
           settings: this.settings
@@ -73642,7 +73642,7 @@ var ClusterThemeGenerator = class {
   /**
    * Initialize the theme generator with predefined themes
    */
-  async initialize() {
+  initialize() {
     if (this.isInitialized)
       return;
     logger51.debug("initialization", "Initializing cluster theme generator");
@@ -74110,7 +74110,7 @@ var CommunityThemeGenerator = class {
   /**
    * Initialize theme generator with predefined community themes
    */
-  async initialize() {
+  initialize() {
     if (this.isInitialized)
       return;
     logger52.debug("initialization", "Initializing community theme generator");
@@ -74957,7 +74957,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Initialize the evolution tracker
    */
-  async initialize() {
+  initialize() {
     if (this.isInitialized)
       return;
     logger54.debug("initialization", "Initializing community evolution tracker");
@@ -75269,7 +75269,7 @@ var CommunityEvolutionTracker = class {
   /**
    * Trigger audio event for community evolution
    */
-  async triggerEvolutionAudioEvent(event, theme) {
+  triggerEvolutionAudioEvent(event, theme) {
     if (!this.settings.eventAudioEnabled || !this.settings.enabledEventTypes[event.type]) {
       return;
     }
@@ -76574,7 +76574,7 @@ var ClusterAudioMapper = class {
   /**
    * Execute the actual audio effect for a transition
    */
-  async executeTransitionEffect(transition2) {
+  executeTransitionEffect(transition2) {
     const theme = this.themeGenerator.getThemeForClusterType(transition2.clusterType);
     const config = transition2.audioConfig;
     const volume = this.settings.transitionVolume;
@@ -76725,7 +76725,7 @@ var ClusterAudioMapper = class {
   /**
    * Start audio for a new cluster
    */
-  async startClusterAudio(cluster) {
+  startClusterAudio(cluster) {
     var _a, _b;
     if (this.state.activeClusters.size >= this.settings.maxSimultaneousClusters) {
       logger57.debug("cluster-limit", "Maximum simultaneous clusters reached", {
@@ -92738,7 +92738,7 @@ var ElectronicEngine = class {
       throw error;
     }
   }
-  async initializeLeadSynth() {
+  initializeLeadSynth() {
     const leadSynth = new PolySynth({
       voice: Synth,
       maxPolyphony: 6,
@@ -92776,7 +92776,7 @@ var ElectronicEngine = class {
     this.filterInstances.set("lead", leadFilter);
     logger87.debug("lead-synth", "Lead synth initialization complete");
   }
-  async initializeBassSynth() {
+  initializeBassSynth() {
     const bassSynth = new PolySynth({
       voice: Synth,
       maxPolyphony: 4,
@@ -92822,7 +92822,7 @@ var ElectronicEngine = class {
     this.filterInstances.set("bass", bassFilter);
     logger87.debug("bass-synth", "Bass synth initialization complete");
   }
-  async initializeArpSynth() {
+  initializeArpSynth() {
     const arpSynth = new PolySynth({
       voice: Synth,
       maxPolyphony: 8,
@@ -93251,7 +93251,7 @@ var RhythmicPercussionEngine = class {
   /**
    * Initialize percussion synths and connect to audio output
    */
-  async initialize(destination) {
+  initialize(destination) {
     if (this.isInitialized) {
       logger88.warn("rhythmic-percussion", "Already initialized");
       return;
@@ -93926,7 +93926,7 @@ var EffectBusManager = class {
   /**
    * Initialize master effects chain
    */
-  async initializeMasterEffects() {
+  initializeMasterEffects() {
     this.masterReverb = new Reverb(2).toDestination();
     this.masterEffectsNodes.set("master-reverb", this.masterReverb);
     this.masterEQ = new EQ3({

@@ -72,7 +72,7 @@ export class HubOrchestrationManager {
       return this.createDemocraticOrchestration(cluster);
     }
 
-    const hubMetrics = this.hubMetrics.get(primaryHub.id)!;
+    const hubMetrics = this.hubMetrics.get(primaryHub.id);
 
     // Calculate role assignments for all nodes in cluster
     const roleAssignments = this.assignRoles(cluster, primaryHub, hubMetrics);
@@ -373,7 +373,7 @@ export class HubOrchestrationManager {
     const angleStep = (2 * Math.PI) / peripheralNodes.length;
 
     peripheralNodes.forEach((nodeId, index) => {
-      const assignment = roleAssignments.get(nodeId)!;
+      const assignment = roleAssignments.get(nodeId);
       const angle = index * angleStep;
 
       // Pan position based on angle (-1 to 1)
@@ -404,7 +404,7 @@ export class HubOrchestrationManager {
     distances.set(hub.id, 0);
 
     while (queue.length > 0) {
-      const current = queue.shift()!;
+      const current = queue.shift();
 
       // Find neighbors in cluster
       for (const link of links) {

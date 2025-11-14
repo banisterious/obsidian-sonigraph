@@ -103,7 +103,7 @@ export class InstrumentSelector {
         
         // Check cache first
         if (this.isSelectionCached(cacheKey)) {
-            const cached = this.selectionCache.get(cacheKey)!;
+            const cached = this.selectionCache.get(cacheKey);
             logger.debug('cache-hit', `Using cached instrument selection: ${cached.instrument}`);
             return cached.instrument;
         }
@@ -142,7 +142,7 @@ export class InstrumentSelector {
         
         // Check cache first
         if (this.isSelectionCached(cacheKey)) {
-            return this.selectionCache.get(cacheKey)!;
+            return this.selectionCache.get(cacheKey);
         }
 
         return await this.applyMappingRules(criteria, config);
@@ -703,7 +703,7 @@ export class InstrumentSelector {
             return false;
         }
 
-        const timestamp = this.cacheTimestamps.get(cacheKey)!;
+        const timestamp = this.cacheTimestamps.get(cacheKey);
         return (Date.now() - timestamp) < this.CACHE_TTL;
     }
 

@@ -42,7 +42,7 @@ export class CommunityEvolutionTracker {
   /**
    * Initialize the evolution tracker
    */
-  public async initialize(): Promise<void> {
+  public initialize(): Promise<void> {
     if (this.isInitialized) return;
 
     logger.debug('initialization', 'Initializing community evolution tracker');
@@ -420,7 +420,7 @@ export class CommunityEvolutionTracker {
   /**
    * Trigger audio event for community evolution
    */
-  public async triggerEvolutionAudioEvent(
+  public triggerEvolutionAudioEvent(
     event: CommunityEvolutionEvent,
     theme: CommunityAudioTheme
   ): Promise<void> {

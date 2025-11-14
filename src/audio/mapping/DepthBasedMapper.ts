@@ -644,7 +644,7 @@ export class DepthBasedMapper {
 
 		// Generate timings per depth layer
 		for (const depth of sortedDepths) {
-			const group = byDepth.get(depth)!;
+			const group = byDepth.get(depth);
 			const pattern = this.rhythmicPatternGenerator.getPatternForDepth(depth);
 
 			logger.debug('rhythmic-timing', `Generating rhythmic pattern for depth ${depth}`, {

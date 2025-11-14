@@ -41,7 +41,7 @@ export class WhaleIntegration {
     /**
      * Initialize whale integration (Phase 1: Seed Collection)
      */
-    async initialize(): Promise<void> {
+    initialize(): Promise<void> {
         logger.info('init', 'Starting whale integration initialization', {
             useWhaleExternal: this.settings.useWhaleExternal,
             settings: this.settings

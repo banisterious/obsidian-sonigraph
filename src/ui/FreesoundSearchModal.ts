@@ -176,7 +176,7 @@ export class FreesoundSearchModal extends Modal {
 	}
 
 	private updateClearButton(): void {
-		const clearBtn = this.contentEl.querySelector('.freesound-clear-btn') as HTMLElement;
+		const clearBtn = this.contentEl.querySelector('.freesound-clear-btn');
 		if (clearBtn && this.searchInput) {
 			if (this.searchInput.value) {
 				clearBtn.addClass('freesound-clear-btn--visible');
@@ -217,7 +217,7 @@ export class FreesoundSearchModal extends Modal {
 
 		headerButton.addEventListener('click', () => {
 			this.filtersCollapsed = !this.filtersCollapsed;
-			const filtersGrid = this.filtersSection?.querySelector('.freesound-filters-grid') as HTMLElement;
+			const filtersGrid = this.filtersSection?.querySelector('.freesound-filters-grid');
 
 			if (filtersGrid) {
 				if (this.filtersCollapsed) {
@@ -292,7 +292,7 @@ export class FreesoundSearchModal extends Modal {
 
 		this.activeFilterCount = count;
 
-		const badge = this.contentEl.querySelector('.freesound-filter-badge') as HTMLElement;
+		const badge = this.contentEl.querySelector('.freesound-filter-badge');
 		if (badge) {
 			badge.textContent = String(count);
 			if (count > 0) {
@@ -312,7 +312,7 @@ export class FreesoundSearchModal extends Modal {
 		};
 
 		// Update UI
-		const licenseDropdown = this.contentEl.querySelector('.freesound-filters-grid select') as HTMLSelectElement;
+		const licenseDropdown = this.contentEl.querySelector('.freesound-filters-grid select');
 		if (licenseDropdown) licenseDropdown.value = 'any';
 
 		const durationInputs = this.contentEl.querySelectorAll('.freesound-filters-grid input[type="text"]');
@@ -415,7 +415,7 @@ export class FreesoundSearchModal extends Modal {
 		if (!this.resultsContainer) return;
 
 		this.searchResults.forEach(result => {
-			const resultItem = this.resultsContainer!.createDiv({ cls: 'freesound-result-item' });
+			const resultItem = this.resultsContainer.createDiv({ cls: 'freesound-result-item' });
 
 			// Waveform/Thumbnail placeholder (visual indicator)
 			const thumbnail = resultItem.createDiv({ cls: 'freesound-result-thumbnail' });
@@ -647,7 +647,7 @@ export class FreesoundSearchModal extends Modal {
 	}
 
 	private updateSearchButton(text: string): void {
-		const button = this.contentEl.querySelector('.freesound-search-button') as HTMLButtonElement;
+		const button = this.contentEl.querySelector('.freesound-search-button');
 		if (button) {
 			button.empty();
 

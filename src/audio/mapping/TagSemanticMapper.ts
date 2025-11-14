@@ -100,7 +100,7 @@ export class TagSemanticMapper {
         const cacheKey = this.generateCacheKey(node, context);
         if (this.isMappingCached(cacheKey)) {
             logger.debug('semantic-cache-hit', `Using cached semantic mapping for ${node.path}`);
-            return this.mappingCache.get(cacheKey)!;
+            return this.mappingCache.get(cacheKey);
         }
 
         const startTime = performance.now();
@@ -771,7 +771,7 @@ export class TagSemanticMapper {
             return false;
         }
 
-        const timestamp = this.cacheTimestamps.get(cacheKey)!;
+        const timestamp = this.cacheTimestamps.get(cacheKey);
         return (Date.now() - timestamp) < this.CACHE_TTL;
     }
 
@@ -801,7 +801,7 @@ export class TagSemanticMapper {
     private createFallbackMapping(node: EnhancedGraphNode, startTime?: number): SemanticMappingResult {
         const analysisTime = startTime ? performance.now() - startTime : 0;
         const defaultInstrument = 'piano';
-        const defaultConfig = this.availableInstruments.get(defaultInstrument)!;
+        const defaultConfig = this.availableInstruments.get(defaultInstrument);
 
         return {
             analysis: {

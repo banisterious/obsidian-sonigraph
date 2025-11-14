@@ -412,7 +412,7 @@ export class ClusterAudioMapper {
   /**
    * Execute the actual audio effect for a transition
    */
-  private async executeTransitionEffect(transition: ClusterTransitionEvent): Promise<void> {
+  private executeTransitionEffect(transition: ClusterTransitionEvent): Promise<void> {
     const theme = this.themeGenerator.getThemeForClusterType(transition.clusterType);
     const config = transition.audioConfig;
     const volume = this.settings.transitionVolume;
@@ -637,7 +637,7 @@ export class ClusterAudioMapper {
   /**
    * Start audio for a new cluster
    */
-  private async startClusterAudio(cluster: Cluster): Promise<void> {
+  private startClusterAudio(cluster: Cluster): Promise<void> {
     if (this.state.activeClusters.size >= this.settings.maxSimultaneousClusters) {
       logger.debug('cluster-limit', 'Maximum simultaneous clusters reached', {
         max: this.settings.maxSimultaneousClusters,

@@ -170,7 +170,7 @@ export class LocalSoundscapeExtractor {
 
 		// Process queue (BFS)
 		while (queue.length > 0) {
-			const { file, depth, pathFromCenter } = queue.shift()!;
+			const { file, depth, pathFromCenter } = queue.shift();
 
 			if (depth >= maxDepth) continue;
 
@@ -786,7 +786,7 @@ export class LocalSoundscapeExtractor {
 
 			// BFS to find tightly connected nodes
 			while (queue.length > 0 && nodeClusters.size < nodes.length) {
-				const current = queue.shift()!;
+				const current = queue.shift();
 				const neighbors = adjacency.get(current) || new Set();
 
 				neighbors.forEach(neighbor => {

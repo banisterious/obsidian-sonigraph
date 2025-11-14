@@ -155,7 +155,7 @@ export class FileTypeAnalyzer {
         // Check cache first
         if (this.config.cacheResults && this.isCached(cacheKey)) {
             logger.debug('cache-hit', `Using cached analysis for ${file.path}`);
-            return this.analysisCache.get(cacheKey)!;
+            return this.analysisCache.get(cacheKey);
         }
 
         const startTime = performance.now();
@@ -698,7 +698,7 @@ export class FileTypeAnalyzer {
             return false;
         }
 
-        const timestamp = this.cacheTimestamps.get(cacheKey)!;
+        const timestamp = this.cacheTimestamps.get(cacheKey);
         return (Date.now() - timestamp) < this.CACHE_TTL;
     }
 

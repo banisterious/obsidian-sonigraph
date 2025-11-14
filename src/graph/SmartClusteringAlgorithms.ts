@@ -115,7 +115,7 @@ export class SmartClusteringAlgorithms {
 
       // For each node, try moving it to neighboring clusters
       for (const node of this.nodes) {
-        const currentClusterId = nodeClusters.get(node.id)!;
+        const currentClusterId = nodeClusters.get(node.id);
         const neighborClusters = this.getNeighborClusters(node, nodeClusters);
 
         let bestClusterId = currentClusterId;
@@ -262,7 +262,7 @@ export class SmartClusteringAlgorithms {
     const neighbors = new Set<string>();
     
     // Add current cluster
-    neighbors.add(nodeClusters.get(node.id)!);
+    neighbors.add(nodeClusters.get(node.id));
 
     // Add clusters of connected nodes
     for (const link of this.links) {
@@ -423,7 +423,7 @@ export class SmartClusteringAlgorithms {
 
     for (let i = 0; i < paths.length; i++) {
       for (let j = i + 1; j < paths.length; j++) {
-        const similarity = this.calculatePathSimilarity(paths[i]!, [paths[j]!]);
+        const similarity = this.calculatePathSimilarity(paths[i], [paths[j]]);
         totalSimilarity += similarity;
         comparisons++;
       }
@@ -757,9 +757,9 @@ export class SmartClusteringAlgorithms {
     if (paths.length === 0) return `Folder Cluster (${nodes.length})`;
 
     // Find common prefix
-    let commonPrefix = paths[0]!;
+    let commonPrefix = paths[0];
     for (let i = 1; i < paths.length; i++) {
-      commonPrefix = this.getCommonPathPrefix(commonPrefix, paths[i]!);
+      commonPrefix = this.getCommonPathPrefix(commonPrefix, paths[i]);
     }
 
     const folderName = commonPrefix.split('/').pop() || 'Root';

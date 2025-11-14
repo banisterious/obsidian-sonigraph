@@ -119,7 +119,7 @@ export class PlaybackOptimizer {
         for (const bucketKey of this.sortedBucketKeys) {
             if (bucketKey > currentBucket) break;
             
-            const notes = this.timeBuckets.get(bucketKey)!;
+            const notes = this.timeBuckets.get(bucketKey);
             for (const note of notes) {
                 if (note.timing <= elapsedTime && this.triggeredNotes.has(note)) {
                     triggeredCount++;

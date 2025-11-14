@@ -184,7 +184,7 @@ export class NoteVisualizationManager {
                 break;
 
             default:
-                logger.error('renderer', `Unknown visualization mode: ${this.config.mode}`);
+                logger.error('renderer', `Unknown visualization mode: ${this.config.mode as string}`);
         }
     }
 

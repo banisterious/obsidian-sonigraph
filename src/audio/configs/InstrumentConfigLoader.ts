@@ -101,7 +101,7 @@ export class InstrumentConfigLoader {
     public loadInstrument(instrumentName: string): LoadedInstrumentConfig | null {
         // Check cache first
         if (this.loadedInstruments.has(instrumentName)) {
-            return this.loadedInstruments.get(instrumentName)!;
+            return this.loadedInstruments.get(instrumentName);
         }
 
         // Search through all families

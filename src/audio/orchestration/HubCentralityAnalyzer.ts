@@ -419,7 +419,7 @@ export class HubCentralityAnalyzer {
         if (!unvisited.has(neighborId)) continue;
 
         const newDistance = currentDistance + 1; // Unweighted edges
-        const neighborData = distances.get(neighborId)!;
+        const neighborData = distances.get(neighborId);
 
         if (newDistance < neighborData.distance) {
           neighborData.distance = newDistance;

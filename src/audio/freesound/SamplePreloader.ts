@@ -293,7 +293,7 @@ export class SamplePreloader {
             }
 
             // Get next genre
-            const genre = this.preloadQueue.shift()!;
+            const genre = this.preloadQueue.shift();
             this.currentGenre = genre;
 
             // Get genre collection

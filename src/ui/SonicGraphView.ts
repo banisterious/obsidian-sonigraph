@@ -558,16 +558,16 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.visualDisplayHeight = constrainedHeight;
 
             // Update via CSS custom property using DOM API directly
-            (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${constrainedHeight}px`);
+            (this.visualDisplaySection).style.setProperty('--visual-display-height', `${constrainedHeight}px`);
 
             // Verify the property was set
-            const appliedValue = (this.visualDisplaySection as HTMLElement).style.getPropertyValue('--visual-display-height');
+            const appliedValue = (this.visualDisplaySection).style.getPropertyValue('--visual-display-height');
 
             logger.debug('visual-display', 'Divider dragged - new height', {
                 requested: constrainedHeight,
                 applied: appliedValue,
-                computedMinHeight: getComputedStyle(this.visualDisplaySection as HTMLElement).minHeight,
-                computedMaxHeight: getComputedStyle(this.visualDisplaySection as HTMLElement).maxHeight
+                computedMinHeight: getComputedStyle(this.visualDisplaySection).minHeight,
+                computedMaxHeight: getComputedStyle(this.visualDisplaySection).maxHeight
             });
         };
 
@@ -669,7 +669,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         // Update height via CSS custom property using DOM API
-        (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
+        (this.visualDisplaySection).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
 
         // Update visualization manager config if it exists
         if (this.visualizationManager) {
@@ -1042,7 +1042,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             logger.debug('visual-display', 'Visual display section created as expanded');
         }
         // Set height via CSS custom property using DOM API
-        (this.visualDisplaySection as HTMLElement).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
+        (this.visualDisplaySection).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
 
         // Visual display header
         const visualHeader = this.visualDisplaySection.createDiv({ cls: 'sonic-graph-visual-display-header' });
@@ -1445,7 +1445,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.timelineContainer.classList.add('timeline-visible');
             
             // Show current position indicator during animation
-            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
             if (currentIndicator) {
                 currentIndicator.addClass('sonigraph-current-indicator--visible');
             }
@@ -1477,7 +1477,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.playButton.setButtonText('Play');
 
             // Hide current position indicator when animation stops
-            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
             if (currentIndicator) {
                 currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
@@ -1598,7 +1598,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.playButton.setButtonText('Play');
             
             // Hide current position indicator in Static View
-            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+            const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
             if (currentIndicator) {
                 currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
@@ -1821,7 +1821,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (!this.statsContainer) return;
 
         // Create adaptive detail stats info if it doesn't exist
-        let adaptiveStatsEl = this.statsContainer.querySelector('.adaptive-detail-stats') as HTMLElement;
+        let adaptiveStatsEl = this.statsContainer.querySelector('.adaptive-detail-stats');
         if (!adaptiveStatsEl) {
             adaptiveStatsEl = this.statsContainer.createDiv({ cls: 'adaptive-detail-stats' });
         }
@@ -3300,7 +3300,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 5: Create detailed cluster audio settings
      */
     private createClusterAudioDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.clusterAudio!;
+        const settings = this.plugin.settings.clusterAudio;
 
         // Global Volume Slider
         new Setting(container)
@@ -3569,7 +3569,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 5.2: Create detailed hub orchestration settings
      */
     private createHubOrchestrationDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.hubOrchestration!;
+        const settings = this.plugin.settings.hubOrchestration;
 
         // Orchestration Mode Dropdown
         const modeItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -3840,7 +3840,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 5.3: Create detailed community detection audio settings
      */
     private createCommunityDetectionDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.communityDetection!;
+        const settings = this.plugin.settings.communityDetection;
 
         // Theme Intensity Slider
         new Setting(container)
@@ -4051,7 +4051,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 5.3: Create detailed community evolution audio settings
      */
     private createCommunityEvolutionDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.communityEvolution!;
+        const settings = this.plugin.settings.communityEvolution;
 
         // Evolution Event Types Header
         const eventTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -4224,7 +4224,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 6.1: Create detailed musical theory settings
      */
     private createMusicalTheoryDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.musicalTheory!;
+        const settings = this.plugin.settings.musicalTheory;
 
         // Root Note Dropdown
         const rootNoteItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -4522,7 +4522,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 6.2: Create detailed dynamic orchestration settings
      */
     private createDynamicOrchestrationDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.dynamicOrchestration!;
+        const settings = this.plugin.settings.dynamicOrchestration;
 
         // Temporal Influence Enable
         const temporalItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -4769,7 +4769,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Phase 6.3: Create detailed spatial audio settings
      */
     private createSpatialAudioDetailSettings(container: HTMLElement): void {
-        const settings = this.plugin.settings.spatialAudio!;
+        const settings = this.plugin.settings.spatialAudio;
 
         // Panning Mode
         const modeItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -5920,10 +5920,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Refresh the path groups settings UI
      */
     private refreshPathGroupsSettings(): void {
-        const groupsContainer = document.querySelector('.sonic-graph-groups-list') as HTMLElement;
+        const groupsContainer = document.querySelector('.sonic-graph-groups-list');
         if (groupsContainer) {
             groupsContainer.empty();
-            this.createPathGroupsSettings(groupsContainer.parentElement as HTMLElement);
+            this.createPathGroupsSettings(groupsContainer.parentElement);
         }
     }
 
@@ -6337,7 +6337,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.playButton.setButtonText('Play');
         
         // Hide current position indicator when animation completes
-        const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator') as HTMLElement;
+        const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
         if (currentIndicator) {
             currentIndicator.style.display = 'none';
         }
@@ -7298,7 +7298,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         logger.debug('settings', 'Updated timeline markers visibility', { show });
         
         // Update the timeline markers display
-        const markersContainer = this.timelineInfo?.querySelector('.sonic-graph-timeline-markers') as HTMLElement;
+        const markersContainer = this.timelineInfo?.querySelector('.sonic-graph-timeline-markers');
         if (markersContainer) {
             if (show) {
                 markersContainer.addClass('sonigraph-timeline-markers--visible');
@@ -7394,7 +7394,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         logger.debug('settings', 'Updated timeline granularity', { granularity });
         
         // Show/hide custom range controls based on selection
-        const customRangeElement = this.settingsPanel?.querySelector('.sonic-graph-custom-range') as HTMLElement;
+        const customRangeElement = this.settingsPanel?.querySelector('.sonic-graph-custom-range');
         if (customRangeElement) {
             if (granularity === 'custom') {
                 customRangeElement.addClass('sonigraph-custom-range--visible');

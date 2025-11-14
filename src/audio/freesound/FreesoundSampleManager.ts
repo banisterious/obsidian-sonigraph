@@ -100,7 +100,7 @@ export class FreesoundSampleManager {
                     if (result.success && result.audioBuffer && result.metadata) {
                         // Add to cache
                         this.cache.add(soundId, result.audioBuffer, result.metadata)
-                            .then(() => resolve(result.audioBuffer!))
+                            .then(() => resolve(result.audioBuffer))
                             .catch(reject);
                     } else {
                         reject(new Error(result.error || 'Download failed'));

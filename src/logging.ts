@@ -1,5 +1,5 @@
 // Core logging interfaces
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export interface ILogger {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	debug(category: string, message: string, data?: any): void;
@@ -184,7 +184,7 @@ class LoggerFactory {
 		if (!this.loggers.has(component)) {
 			this.loggers.set(component, new Logger(component));
 		}
-		return this.loggers.get(component)!;
+		return this.loggers.get(component);
 	}
 
 	static setLogLevel(level: LogLevel) {

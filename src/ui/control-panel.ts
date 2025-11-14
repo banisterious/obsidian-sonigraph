@@ -1048,7 +1048,7 @@ export class MaterialControlPanelModal extends Modal {
 			// Import FreesoundSampleLoader dynamically
 			import('../audio/layers/FreesoundSampleLoader').then(({ FreesoundSampleLoader }) => {
 				const tempLoader = new FreesoundSampleLoader(this.plugin.settings.freesoundApiKey);
-				this.renderSampleBrowser(this.sampleBrowserContainer!, tempLoader);
+				this.renderSampleBrowser(this.sampleBrowserContainer, tempLoader);
 			});
 			return;
 		}
@@ -2504,8 +2504,8 @@ export class MaterialControlPanelModal extends Modal {
 			});
 			const graphData = await extractor.extractGraphData();
 			
-			const filesValue = filesEl.querySelector('.osp-stat-value') as HTMLElement;
-			const linksValue = linksEl.querySelector('.osp-stat-value') as HTMLElement;
+			const filesValue = filesEl.querySelector('.osp-stat-value');
+			const linksValue = linksEl.querySelector('.osp-stat-value');
 			
 			if (filesValue) filesValue.textContent = graphData.nodes.length.toString();
 			if (linksValue) linksValue.textContent = graphData.links.length.toString();
@@ -2725,7 +2725,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// First section should be folders, second should be files
 		if (exclusionSections.length >= 1) {
-			const foldersContainer = exclusionSections[0].querySelector('.osp-exclusion-container') as HTMLElement;
+			const foldersContainer = exclusionSections[0].querySelector('.osp-exclusion-container');
 			if (foldersContainer) {
 				logger.debug('ui', 'Refreshing folders container');
 				foldersContainer.empty();
@@ -2734,7 +2734,7 @@ export class MaterialControlPanelModal extends Modal {
 		}
 		
 		if (exclusionSections.length >= 2) {
-			const filesContainer = exclusionSections[1].querySelector('.osp-exclusion-container') as HTMLElement;
+			const filesContainer = exclusionSections[1].querySelector('.osp-exclusion-container');
 			if (filesContainer) {
 				logger.debug('ui', 'Refreshing files container');
 				filesContainer.empty();
@@ -2754,8 +2754,8 @@ export class MaterialControlPanelModal extends Modal {
 			// Update stats
 			const statsContainer = this.contentContainer.querySelector('.osp-stats-row');
 			if (statsContainer) {
-				const filesStat = statsContainer.querySelector('.osp-stat-compact:first-child') as HTMLElement;
-				const linksStat = statsContainer.querySelector('.osp-stat-compact:last-child') as HTMLElement;
+				const filesStat = statsContainer.querySelector('.osp-stat-compact:first-child');
+				const linksStat = statsContainer.querySelector('.osp-stat-compact:last-child');
 				if (filesStat && linksStat) {
 					await this.updateSonicGraphStats(filesStat, linksStat);
 				}
@@ -2763,7 +2763,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Refresh graph preview if it exists
 			if (this.graphRenderer) {
-				const graphPreviewContainer = this.contentContainer.querySelector('.osp-graph-preview-container') as HTMLElement;
+				const graphPreviewContainer = this.contentContainer.querySelector('.osp-graph-preview-container');
 				if (graphPreviewContainer) {
 					// Clear current graph
 					this.graphRenderer.destroy();
@@ -3240,7 +3240,7 @@ export class MaterialControlPanelModal extends Modal {
 			'This tab is under development'
 		);
 		
-		const content = card.querySelector('.ospcc-card__content') as HTMLElement;
+		const content = card.querySelector('.ospcc-card__content');
 		content.textContent = `${tabConfig?.name || 'This'} tab functionality will be implemented soon...`;
 		
 		this.contentContainer.appendChild(card);
@@ -3637,7 +3637,7 @@ export class MaterialControlPanelModal extends Modal {
 		if (!this.progressElement || !this.progressBar || !this.progressText) return;
 
 		// Update progress bar
-		const progressFill = this.progressBar.querySelector('.osp-progress-fill') as HTMLElement;
+		const progressFill = this.progressBar.querySelector('.osp-progress-fill');
 		if (progressFill) {
 			progressFill.style.width = `${Math.min(progressData.percentComplete, 100)}%`;
 		}
@@ -4086,7 +4086,7 @@ export class MaterialControlPanelModal extends Modal {
 			if (this.instrumentRequiresHighQuality(instrumentName)) {
 				const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
 				if (!isDownloaded) {
-					const recordingOption = qualitySelect.querySelector('option[value="recording"]') as HTMLOptionElement;
+					const recordingOption = qualitySelect.querySelector('option[value="recording"]');
 					if (recordingOption) {
 						recordingOption.disabled = true;
 						recordingOption.text = 'Use recording (not downloaded)';

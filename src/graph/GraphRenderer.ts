@@ -1038,7 +1038,7 @@ export class GraphRenderer {
    * Get current zoom transform
    */
   getZoomTransform(): d3.ZoomTransform {
-    return d3.zoomTransform(this.svg.node()!);
+    return d3.zoomTransform(this.svg.node());
   }
 
   /**

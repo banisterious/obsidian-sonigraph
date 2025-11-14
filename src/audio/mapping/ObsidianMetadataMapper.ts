@@ -185,7 +185,7 @@ export class ObsidianMetadataMapper {
         // Check cache first
         if (this.isAnalysisCached(cacheKey)) {
             logger.debug('cache-hit', `Using cached analysis for ${file.path}`);
-            return this.analysisCache.get(cacheKey)!;
+            return this.analysisCache.get(cacheKey);
         }
 
         const overallStartTime = performance.now();
@@ -317,7 +317,7 @@ export class ObsidianMetadataMapper {
         
         // Use cached mapping or default
         if (this.instrumentFamilyMap.has(ext)) {
-            return this.instrumentFamilyMap.get(ext)!;
+            return this.instrumentFamilyMap.get(ext);
         }
 
         // Default mapping for unknown extensions
@@ -590,7 +590,7 @@ export class ObsidianMetadataMapper {
             return false;
         }
 
-        const timestamp = this.cacheTimestamps.get(cacheKey)!;
+        const timestamp = this.cacheTimestamps.get(cacheKey);
         return (Date.now() - timestamp) < this.CACHE_TTL;
     }
 

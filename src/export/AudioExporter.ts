@@ -543,7 +543,7 @@ export class AudioExporter {
                 throw new Error('FLAC encoding not yet implemented');
 
             default:
-                throw new Error(`Unsupported format: ${config.format}`);
+                throw new Error(`Unsupported format: ${config.format as string}`);
         }
     }
 

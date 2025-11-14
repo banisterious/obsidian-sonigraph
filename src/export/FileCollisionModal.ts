@@ -167,7 +167,7 @@ export class FileCollisionModal extends Modal {
             cls: 'mod-cta'
         });
         continueBtn.addEventListener('click', () => {
-            const selectedRadio = radioGroup.querySelector('input[name="collision-action"]:checked') as HTMLInputElement;
+            const selectedRadio = radioGroup.querySelector('input[name="collision-action"]:checked');
 
             if (!selectedRadio) {
                 new Notice('Please select an option');

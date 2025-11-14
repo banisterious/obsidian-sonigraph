@@ -82,7 +82,7 @@ export class ElectronicEngine {
 		}
 	}
 
-	private async initializeLeadSynth(): Promise<void> {
+	private initializeLeadSynth(): Promise<void> {
 		// Create lead synth with advanced filter modulation
 		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 		const leadSynth = new PolySynth({
@@ -132,7 +132,7 @@ export class ElectronicEngine {
 		logger.debug('lead-synth', 'Lead synth initialization complete');
 	}
 
-	private async initializeBassSynth(): Promise<void> {
+	private initializeBassSynth(): Promise<void> {
 		// Create bass synth with sub-oscillator and compression
 		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 		const bassSynth = new PolySynth({
@@ -190,7 +190,7 @@ export class ElectronicEngine {
 		logger.debug('bass-synth', 'Bass synth initialization complete');
 	}
 
-	private async initializeArpSynth(): Promise<void> {
+	private initializeArpSynth(): Promise<void> {
 		// Create arp synth with sequencing capabilities
 		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 		const arpSynth = new PolySynth({

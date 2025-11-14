@@ -908,7 +908,7 @@ export class ConnectionTypeMappingPanel {
         this.state.validationErrors = validation.errors;
 
         if (this.validationDisplay) {
-            this.createValidationSection(this.validationDisplay.parentElement!);
+            this.createValidationSection(this.validationDisplay.parentElement);
         }
     }
 

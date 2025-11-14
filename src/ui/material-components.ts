@@ -194,7 +194,7 @@ export class MaterialCard {
 	 * Update the card subtitle
 	 */
 	setSubtitle(subtitle: string): void {
-		let subtitleEl = this.header.querySelector('.ospcc-card__subtitle') as HTMLElement;
+		let subtitleEl = this.header.querySelector('.ospcc-card__subtitle');
 		if (!subtitleEl) {
 			subtitleEl = this.header.createDiv({ cls: 'ospcc-card__subtitle' });
 		}
@@ -260,7 +260,7 @@ export class StatCard {
 	}
 
 	setValue(value: string): void {
-		const valueEl = this.container.querySelector('div:nth-child(2)') as HTMLElement;
+		const valueEl = this.container.querySelector('div:nth-child(2)');
 		if (valueEl) {
 			valueEl.textContent = value;
 		}
@@ -418,7 +418,7 @@ export class InstrumentCard {
 		}
 
 		// Update status chip
-		const statusChip = this.container.querySelector('.status-chip') as HTMLElement;
+		const statusChip = this.container.querySelector('.status-chip');
 		if (statusChip) {
 			statusChip.textContent = enabled ? 'Enabled' : 'Disabled';
 			statusChip.classList.toggle('status-chip--enabled', enabled);
@@ -740,7 +740,7 @@ export class MaterialSlider {
 		// Update thumb and track position
 		this.thumb.style.left = `${percentage}%`;
 		
-		const activeTrack = this.track.querySelector('.ospcc-slider__track-active') as HTMLElement;
+		const activeTrack = this.track.querySelector('.ospcc-slider__track-active');
 		if (activeTrack) {
 			activeTrack.style.width = `${percentage}%`;
 		}

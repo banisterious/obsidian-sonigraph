@@ -1566,7 +1566,7 @@ export class LocalSoundscapeView extends ItemView {
 			this.variationHistory.set(centerPath, [0]);
 		}
 
-		const history = this.variationHistory.get(centerPath)!;
+		const history = this.variationHistory.get(centerPath);
 
 		// If we're not at the end of history, truncate everything after current index
 		if (this.currentVariationIndex < history.length - 1) {
@@ -1703,7 +1703,7 @@ export class LocalSoundscapeView extends ItemView {
 			this.currentVariationIndex = 0;
 		} else {
 			// Restore to last used variation for this note
-			const history = this.variationHistory.get(centerPath)!;
+			const history = this.variationHistory.get(centerPath);
 			this.currentVariationIndex = history.length - 1;
 		}
 
@@ -1723,7 +1723,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		try {
 			// Find the SVG element
-			const svgElement = this.graphContainer.querySelector('svg') as SVGSVGElement;
+			const svgElement = this.graphContainer.querySelector('svg');
 			if (!svgElement) {
 				throw new Error('No SVG element found');
 			}
@@ -2176,7 +2176,7 @@ export class LocalSoundscapeView extends ItemView {
 		if (!this.graphData) return;
 
 		// Find the stats container (created in createSidebar)
-		const statsContainer = this.sidebarContainer.querySelector('.sidebar-stats-container') as HTMLElement;
+		const statsContainer = this.sidebarContainer.querySelector('.sidebar-stats-container');
 		if (!statsContainer) return;
 
 		// Clear existing stats

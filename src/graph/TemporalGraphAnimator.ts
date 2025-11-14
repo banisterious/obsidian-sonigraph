@@ -355,7 +355,7 @@ export class TemporalGraphAnimator {
   private addAdvancedEventSpreading(events: TimelineEvent[]): TimelineEvent[] {
     if (events.length === 0) return events;
     
-    const mode = this.config.eventSpreadingMode!;
+    const mode = this.config.eventSpreadingMode;
     const maxEventSpacing = this.config.maxEventSpacing || 5.0;
     const simultaneousEventLimit = this.config.simultaneousEventLimit || 3;
     const eventBatchSize = this.config.eventBatchSize || 5;

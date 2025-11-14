@@ -218,7 +218,7 @@ export class ContentAwarePositioning {
 
     if (tagLinks.length > 0) {
       simulation.force('tagAttraction', d3.forceLink(tagLinks)
-        .strength(d => (d as TagLink).strength * this.settings.tagInfluence.weight)
+        .strength(d => (d).strength * this.settings.tagInfluence.weight)
         .distance(50) // Closer than default links
       );
     }

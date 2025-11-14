@@ -84,7 +84,7 @@ export class VoiceManager {
      * Create optimized voice pool with pre-allocated indices tracking
      */
     private createVoicePoolOptimized(instrumentName: string, poolSize?: number): void {
-        const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get('default')!;
+        const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get('default');
         const size = poolSize || config.maxVoices;
         
         // Pre-allocate pool array with known size
@@ -178,7 +178,7 @@ export class VoiceManager {
         let pool = this.voicePool.get(instrumentName);
         if (!pool) {
             this.createVoicePoolOptimized(instrumentName);
-            pool = this.voicePool.get(instrumentName)!;
+            pool = this.voicePool.get(instrumentName);
         }
 
         const availableIndices = this.availableVoiceIndices.get(instrumentName);
@@ -382,7 +382,7 @@ export class VoiceManager {
         this.currentQualityLevel = level;
         
         for (const [instrumentName, pool] of this.voicePool.entries()) {
-            const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get('default')!;
+            const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get('default');
             let maxVoices = config.maxVoices;
             
             switch (level) {

@@ -146,7 +146,7 @@ export class GraphDemoModal extends Modal {
 			.attr('viewBox', `0 0 ${width} ${height}`);
 
 		// Create force simulation
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		 
 		this.simulation = d3.forceSimulation(this.nodes)
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.force('link', d3.forceLink(this.links).id((d: any) => d.id).distance(80))
@@ -190,7 +190,7 @@ export class GraphDemoModal extends Modal {
 			.style('transition', 'opacity 0.2s');
 
 		// Add hover effects
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		 
 		nodeGroup
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('mouseenter', function(event: any, d: DemoNode) {
@@ -206,7 +206,7 @@ export class GraphDemoModal extends Modal {
 			}.bind(this));
 
 		// Add drag behavior
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		 
 		const drag = d3.drag<SVGGElement, DemoNode>()
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.on('start', (event: any, d: DemoNode) => {
@@ -230,16 +230,16 @@ export class GraphDemoModal extends Modal {
 
 		// Update positions on each tick
 		this.simulation.on('tick', () => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			 
 			linkGroup
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				.attr('x1', (d: any) => (d.source as DemoNode).x!)
+				.attr('x1', (d: any) => (d.source).x)
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				.attr('y1', (d: any) => (d.source as DemoNode).y!)
+				.attr('y1', (d: any) => (d.source).y)
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				.attr('x2', (d: any) => (d.target as DemoNode).x!)
+				.attr('x2', (d: any) => (d.target).x)
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				.attr('y2', (d: any) => (d.target as DemoNode).y!);
+				.attr('y2', (d: any) => (d.target).y);
 
 			nodeGroup
 				.attr('transform', (d: DemoNode) => `translate(${d.x},${d.y})`);
@@ -299,7 +299,7 @@ export class GraphDemoModal extends Modal {
 				// Show the node
 				this.visibleNodes.add(node.id);
 				if (!this.svg) return;
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				 
 				this.svg.selectAll('.node')
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					.filter((d: any) => d.id === node.id)
@@ -333,7 +333,7 @@ export class GraphDemoModal extends Modal {
 
 					// Show the link with animation
 					if (!this.svg) return;
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					 
 					this.svg.selectAll('.links line')
 						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						.filter((d: any) => {

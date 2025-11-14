@@ -178,7 +178,7 @@ export class MetadataMappingRules {
         // Check cache first
         if (this.isEvaluationCached(cacheKey)) {
             logger.debug('cache-hit', `Using cached rule evaluation for ${filePath}`);
-            return this.evaluationCache.get(cacheKey)!;
+            return this.evaluationCache.get(cacheKey);
         }
 
         const startTime = performance.now();
@@ -278,7 +278,7 @@ export class MetadataMappingRules {
                 return this.evaluateFileAgeCondition(condition, fileStats.ctime, fileStats.mtime);
             
             default:
-                return { matched: false, reason: `Unknown condition type: ${condition.type}` };
+                return { matched: false, reason: `Unknown condition type: ${condition.type as string}` };
         }
     }
 
@@ -591,7 +591,7 @@ export class MetadataMappingRules {
             return false;
         }
 
-        const timestamp = this.cacheTimestamps.get(cacheKey)!;
+        const timestamp = this.cacheTimestamps.get(cacheKey);
         return (Date.now() - timestamp) < this.CACHE_TTL;
     }
 
