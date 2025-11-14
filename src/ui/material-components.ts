@@ -16,7 +16,7 @@ export interface ComponentOptions {
 	className?: string;
 	disabled?: boolean;
 	onClick?: () => void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Component options support heterogeneous value types
 	[key: string]: any;
 }
 
@@ -790,7 +790,7 @@ export class MaterialButton {
 		this.container = this.createButton(options);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Component options support heterogeneous value types
 	private createButton(options: any): HTMLElement {
 		const button = document.createElement('button');
 		button.className = `ospcc-button ospcc-button--${options.variant || 'filled'} ${options.className || ''}`;

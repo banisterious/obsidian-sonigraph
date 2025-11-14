@@ -154,7 +154,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         return 'chart-network';
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     async setState(state: any, result: any): Promise<void> {
         logger.debug('state', 'Restoring view state', state);
 
@@ -227,7 +227,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         logger.info('state', 'View state restoration complete');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     getState(): any {
         logger.info('state', 'getState() called - capturing view state', {
             isTimelineView: this.isTimelineView,
@@ -754,7 +754,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         // Listen for note-triggered events from audio engine
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         this.plugin.audioEngine.on('note-triggered', (data: any) => {
             if (!this.visualizationManager) {
                 logger.warn('visual-display', 'Received note event but no visualization manager');
@@ -4927,7 +4927,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         communityType: keyof typeof this.plugin.settings.communityDetection.communityTypeEnabled,
         displayName: string,
         description: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         settings: any
     ): void {
         const communityContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
@@ -4969,7 +4969,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         eventType: keyof typeof this.plugin.settings.communityEvolution.enabledEventTypes,
         displayName: string,
         description: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         settings: any
     ): void {
         const eventContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
@@ -5055,7 +5055,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         clusterType: keyof typeof this.plugin.settings.clusterAudio.clusterTypeEnabled,
         displayName: string,
         description: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         settings: any
     ): void {
         const clusterContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
@@ -5133,7 +5133,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Get default audio enhancement settings
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private getDefaultAudioEnhancementSettings(): any {
         return {
             contentAwareMapping: {
@@ -5554,7 +5554,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Phase 3.8: Update layout setting and apply to renderer
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private updateLayoutSetting(key: keyof SonicGraphSettings['layout'], value: any): void {
         // Performance optimization: Use debounced settings updates
         this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
@@ -5676,7 +5676,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Format group label in type:name format
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private formatGroupLabel(group: any): string {
         // Determine type based on group properties
         let type = 'path'; // default
@@ -6244,7 +6244,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Update time markers along the timeline
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private updateTimeMarkers(timelineInfo: any): void {
         const markersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-markers');
         if (!markersContainer) return;
@@ -6472,7 +6472,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Create a musical mapping for a graph node
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private createMusicalMappingForNode(node: GraphNode): any {
         // Get settings for audio customization
         const settings = this.getSonicGraphSettings();
@@ -6596,7 +6596,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Calculate scale-aware pitch for a node
      * Uses scale degrees instead of chromatic hashing for more musical results
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private calculateScaleAwarePitch(node: GraphNode, settings: any): number {
         // Get musical theory settings
         const theorySettings = this.plugin.settings.audioEnhancement?.musicalTheory;
@@ -6759,7 +6759,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Calculate rhythmic duration with phrase-aware patterns
      * Creates rhythmic variety through phrase position and file properties
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private calculateRhythmicDuration(node: GraphNode, settings: any): number {
         const baseDuration = settings.audio.noteDuration || 0.3;
 
@@ -6830,7 +6830,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Calculate dynamic velocity with phrase expression curves
      * Creates musical dynamics through crescendo/diminuendo and accents
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private calculateDynamicVelocity(node: GraphNode, settings: any): number {
         const baseVelocity = 0.5;
 
@@ -7564,7 +7564,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             const instruments = this.plugin.settings.instruments;
             if (instruments) {
                 return Object.entries(instruments)
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
                     .filter(([_, config]: [string, any]) => config.enabled)
                     .map(([name, _]) => name);
             }
@@ -7690,7 +7690,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Create fallback mapping when no instruments are enabled
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private createFallbackMapping(node: GraphNode, fallbackInstrument: string): any {
         const baseFreq = 261.63; // C4
         const fileNameHash = this.hashString(node.title);
@@ -7899,7 +7899,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         logger.debug('responsive-setup', 'Resize observer set up for responsive graph sizing');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private scheduleSettingsUpdate(key: string, value: any): void {
         this.pendingSettingsUpdates.set(key, value);
         
@@ -8110,7 +8110,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Update clustering visualization setting and save to plugin settings
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     private updateClusteringVisualization(vizType: 'showClusterLabels' | 'clusterBoundaries' | 'colorScheme', value: any): void {
         this.scheduleSettingsUpdate(`smartClustering.visualization.${vizType}`, value);
         logger.debug('smart-clustering', 'Clustering visualization updated', { vizType, value });

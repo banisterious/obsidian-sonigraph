@@ -62,3 +62,7 @@ Thumbs.db
 *.mdZone.Identifier
 *.m4a
 obsidian-pr-review*.md
+
+# Wiki staging area and upload script
+wiki-content/
+upload-wiki.sh

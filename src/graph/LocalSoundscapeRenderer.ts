@@ -26,21 +26,21 @@ export interface RendererConfig {
 
 export class LocalSoundscapeRenderer {
 	private container: HTMLElement;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
 	private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
 	private g: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 	private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 	private config: RendererConfig;
 	private layoutAlgorithm: RadialLayoutAlgorithm;
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
 	private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
 	private linkGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
 	private nodeGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
 	private labelGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 
 	// Tooltip

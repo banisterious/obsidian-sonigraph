@@ -53,7 +53,7 @@ export class LocalSoundscapeView extends ItemView {
 	private noteCentricPlayer: NoteCentricPlayer | null = null;
 	private currentNoteCentricMapping: NoteCentricMapping | null = null;
 	private currentMappings: DepthMapping[] = [];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private continuousLayerManager: any = null; // ContinuousLayerManager (lazily loaded)
 
 	// Audio state
@@ -1215,7 +1215,7 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		// Listen to note events from audio engine
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 		this.plugin.audioEngine.on('note-triggered', (noteData: any) => {
 			logger.debug('viz-note-received', 'Received note-triggered event', {
 				pitch: noteData.pitch,
@@ -2852,7 +2852,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Restore view state from persistence
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	async setState(state: LocalSoundscapeViewState, result: any): Promise<void> {
 		logger.info('set-state', 'Restoring view state', state);
 

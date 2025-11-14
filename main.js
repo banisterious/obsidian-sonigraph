@@ -48,24 +48,24 @@ var init_logging = __esm({
       "debug": 4
     };
     Logger = class {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context accepts arbitrary metadata keys
       constructor(component, context2) {
         this.component = component;
         this.context = context2;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
       debug(category, message, data) {
         this.log("debug", category, message, data);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
       info(category, message, data) {
         this.log("info", category, message, data);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
       warn(category, message, data) {
         this.log("warn", category, message, data);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
       error(category, message, error) {
         this.log("error", category, message, error);
       }
@@ -76,12 +76,12 @@ var init_logging = __esm({
           this.debug("Performance", `${operation} completed in ${duration.toFixed(2)}ms`);
         };
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context accepts arbitrary metadata keys
       withContext(newContext) {
         const mergedContext = { ...this.context, ...newContext };
         return new ContextualLoggerImpl(this.component, mergedContext);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Error context allows arbitrary metadata
       enrichError(error, context2) {
         const enrichedError = new Error(error.message);
         enrichedError.name = error.name;
@@ -89,7 +89,7 @@ var init_logging = __esm({
         enrichedError.context = { ...this.context, ...context2 };
         return enrichedError;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Log data accepts any serializable value
       log(level, category, message, data) {
         if (level === "off")
           return;
@@ -128,12 +128,12 @@ var init_logging = __esm({
       }
     };
     ContextualLoggerImpl = class extends Logger {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context stores arbitrary metadata
       constructor(component, context2) {
         super(component, context2);
         this.context = context2;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context contains arbitrary metadata keys
       getContext() {
         return { ...this.context };
       }
@@ -167,7 +167,7 @@ var init_logging = __esm({
         return LOG_LEVELS[_LoggerFactory.logLevel];
       }
       // For future configuration
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Config structure varies by environment
       initialize(config) {
         if (config && config.logLevel) {
           _LoggerFactory.setLogLevel(config.logLevel);
@@ -4046,7 +4046,7 @@ var init_material_components = __esm({
       constructor(options) {
         this.container = this.createButton(options);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Component options support heterogeneous value types
       createButton(options) {
         const button = document.createElement("button");
         button.className = `ospcc-button ospcc-button--${options.variant || "filled"} ${options.className || ""}`;
@@ -10386,9 +10386,9 @@ var init_GraphDemoModal = __esm({
     GraphDemoModal = class extends import_obsidian3.Modal {
       constructor(app) {
         super(app);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         this.svg = null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         this.simulation = null;
         this.nodes = [];
         this.links = [];
@@ -12681,7 +12681,7 @@ var init_GraphRenderer = __esm({
         this.smartClustering = null;
         this.smartClusteringSettings = null;
         this.clusteringResult = null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
         this.clusterGroup = null;
         this.container = container;
         this.config = {
@@ -13282,7 +13282,7 @@ var init_GraphRenderer = __esm({
       /**
        * Public method to set zoom transform (called by SonicGraphView)
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js zoom transform has complex internal type structure
       setZoomTransform(transform2) {
         if (this.config.enableZoom && this.zoom) {
           this.svg.call(this.zoom.transform, transform2);
@@ -13315,7 +13315,7 @@ var init_GraphRenderer = __esm({
       /**
        * Generate consistent link ID for D3.js data binding
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js link data can be node objects or node IDs
       getLinkId(link, index2) {
         const sourceId = typeof link.source === "string" ? link.source : link.source.id;
         const targetId = typeof link.target === "string" ? link.target : link.target.id;
@@ -13331,7 +13331,7 @@ var init_GraphRenderer = __esm({
       /**
        * Get offset position for path-based grouping
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Folder groups have varying structures from graph analysis
       getPathBasedOffset(filePath, groups) {
         const radius = 100;
         for (let i = 0; i < groups.length; i++) {
@@ -13753,7 +13753,7 @@ var init_GraphRenderer = __esm({
       /**
        * Render temporal positioning zones
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and zone data have dynamic structures
       renderTemporalZones(debugGroup, zones) {
         const zoneSelection = debugGroup.selectAll(".temporal-zone").data(zones, (d) => d.name);
         const zoneEnter = zoneSelection.enter().append("circle").attr("class", "temporal-zone").attr("fill", "none").attr("stroke-dasharray", "5,5").attr("stroke-opacity", 0.3).attr("stroke-width", 2);
@@ -13789,7 +13789,7 @@ var init_GraphRenderer = __esm({
       /**
        * Render tag connection links
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and connection data have dynamic structures
       renderTagConnections(debugGroup, connections) {
         const connectionSelection = debugGroup.selectAll(".tag-connection").data(connections, (d) => `${d.sourceId}-${d.targetId}`);
         const connectionEnter = connectionSelection.enter().append("line").attr("class", "tag-connection").attr("stroke", "#f59e0b").attr("stroke-opacity", 0.4).attr("stroke-dasharray", "3,3");
@@ -13811,7 +13811,7 @@ var init_GraphRenderer = __esm({
       /**
        * Render hub node indicators
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and hub data have dynamic structures
       renderHubIndicators(debugGroup, hubs) {
         const hubSelection = debugGroup.selectAll(".hub-indicator").data(hubs, (d) => d.nodeId);
         const hubEnter = hubSelection.enter().append("circle").attr("class", "hub-indicator").attr("fill", "none").attr("stroke", "#ef4444").attr("stroke-opacity", 0.6).attr("stroke-width", 3);
@@ -14033,7 +14033,7 @@ var init_GraphRenderer = __esm({
       /**
        * Check if a node has valid coordinates (not NaN or undefined)
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Node can be GraphNode or D3 simulation node with partial data
       hasValidCoordinates(node) {
         return node && typeof node.x === "number" && typeof node.y === "number" && !isNaN(node.x) && !isNaN(node.y) && isFinite(node.x) && isFinite(node.y);
       }
@@ -14068,7 +14068,7 @@ var init_GraphRenderer = __esm({
       /**
        * Check if a node is within the viewport bounds
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Node can be GraphNode or D3 simulation node with partial data
       isNodeInViewport(node, bounds) {
         if (!this.hasValidCoordinates(node)) {
           return false;
@@ -21634,6 +21634,7 @@ var init_control_panel = __esm({
         });
         feedbackLi.appendText(".");
         this.contentContainer.appendChild(helpCard.getElement());
+        this.createFAQCard();
       }
       /**
        * Create Status tab content
@@ -21740,7 +21741,6 @@ var init_control_panel = __esm({
           this.createLocalSoundscapePerformanceCard();
           this.createNoteCentricMusicalityCard();
           this.createLocalSoundscapeTipsCard();
-          this.createLocalSoundscapeFAQCard();
         });
       }
       /**
@@ -21889,7 +21889,7 @@ var init_control_panel = __esm({
       /**
        * Render the sample browser UI with table layout
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       renderSampleBrowser(container, sampleLoader) {
         const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
         tableBrowser.render();
@@ -21970,7 +21970,7 @@ var init_control_panel = __esm({
       /**
        * Preview a Freesound sample
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       async previewSample(sample, button) {
         if (button.textContent === "Stop") {
           this.stopPreview();
@@ -22845,7 +22845,7 @@ var init_control_panel = __esm({
       /**
        * Create horizontal effect section for Master Effects
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createHorizontalEffectSection(container, effectName, iconName, enabled, parameters) {
         const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
         const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
@@ -23262,7 +23262,7 @@ var init_control_panel = __esm({
       /**
        * Create family overview card with stats and bulk actions
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createFamilyOverviewCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: `${tabConfig.name} family overview`,
@@ -23302,7 +23302,7 @@ var init_control_panel = __esm({
       /**
        * Create instruments card for family
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createInstrumentsCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: "Individual instruments",
@@ -23493,7 +23493,7 @@ var init_control_panel = __esm({
       /**
        * Create family effects card
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createFamilyEffectsCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: `${tabConfig.name} effects`,
@@ -24085,7 +24085,7 @@ var init_control_panel = __esm({
         });
         this.plugin.saveSettings();
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       getDefaultEffectParams(effectType) {
         switch (effectType) {
           case "reverb":
@@ -25018,19 +25018,21 @@ All whale samples are authentic recordings from marine research institutions and
         this.contentContainer.appendChild(card.getElement());
       }
       /**
-       * Create FAQ card for Local Soundscape
+       * Create FAQ card for Sonigraph
        */
-      createLocalSoundscapeFAQCard() {
+      createFAQCard() {
         const card = new MaterialCard({
           title: "Frequently asked questions",
           iconName: "help-circle",
-          subtitle: "Common questions about Local Soundscape",
+          subtitle: "Common questions about Sonigraph",
           elevation: 1
         });
         const content = card.getContent();
         const faq1 = content.createEl("div", { cls: "osp-faq-item" });
         const q1 = faq1.createEl("h4", { cls: "osp-faq-question" });
         q1.createEl("strong", { text: "Q: Why does the music sound simplistic or repetitive?" });
+        q1.appendText(" ");
+        q1.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a1 = faq1.createEl("div", { cls: "osp-faq-answer" });
         const a1p1 = a1.createEl("p");
         a1p1.createEl("strong", { text: "A:" });
@@ -25071,6 +25073,8 @@ All whale samples are authentic recordings from marine research institutions and
         const faq2 = content.createEl("div", { cls: "osp-faq-item" });
         const q2 = faq2.createEl("h4", { cls: "osp-faq-question" });
         q2.createEl("strong", { text: "Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?" });
+        q2.appendText(" ");
+        q2.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a2 = faq2.createEl("div", { cls: "osp-faq-answer" });
         const a2p1 = a2.createEl("p");
         a2p1.createEl("strong", { text: "A:" });
@@ -25133,6 +25137,44 @@ All whale samples are authentic recordings from marine research institutions and
         a2p5.appendText(" If your vault generally has limited connections, ");
         a2p5.createEl("strong", { text: "Continuous Layers" });
         a2p5.appendText(" are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.");
+        const faq3 = content.createEl("div", { cls: "osp-faq-item" });
+        const q3 = faq3.createEl("h4", { cls: "osp-faq-question" });
+        q3.createEl("strong", { text: "Q: How do I create musically rich notes for playback?" });
+        q3.appendText(" ");
+        q3.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
+        const a3 = faq3.createEl("div", { cls: "osp-faq-answer" });
+        const a3p1 = a3.createEl("p");
+        a3p1.createEl("strong", { text: "A:" });
+        a3p1.appendText(" The richness of your soundscape depends primarily on your note's link structure and network density. Here's what creates the most beautiful, harmonically rich playback:");
+        const a3p2 = a3.createEl("p");
+        a3p2.createEl("strong", { text: "The Depth slider and link structure:" });
+        const a3ul1 = a3.createEl("ul");
+        const a3li1 = a3ul1.createEl("li");
+        a3li1.createEl("strong", { text: "Depth = link-hop distance:" });
+        a3li1.appendText(' The Depth slider controls how many "hops" away from your center note the graph explores. Depth 1 = direct links only, Depth 2 = links of links, etc.');
+        const a3li2 = a3ul1.createEl("li");
+        a3li2.createEl("strong", { text: "Fully-connected notes:" });
+        a3li2.appendText(" If your notes all link to each other (like test notes that each link to all others), even Depth 1 creates dense harmonic texture because all notes are immediate neighbors.");
+        const a3li3 = a3ul1.createEl("li");
+        a3li3.createEl("strong", { text: "Bidirectional links:" });
+        a3li3.appendText(" Two-way connections between notes create denser, richer graphs than one-way links.");
+        const a3p3 = a3.createEl("p");
+        a3p3.createEl("strong", { text: "Additional ways to enrich your notes:" });
+        const a3ul2 = a3.createEl("ul");
+        const a3li4 = a3ul2.createEl("li");
+        a3li4.createEl("strong", { text: "Add meaningful tags:" });
+        a3li4.appendText(" Tags influence clustering and can create thematic groupings");
+        const a3li5 = a3ul2.createEl("li");
+        a3li5.createEl("strong", { text: "Vary content types:" });
+        a3li5.appendText(" Mix images, PDFs, audio files, and regular notes - different file types add variety");
+        const a3li6 = a3ul2.createEl("li");
+        a3li6.createEl("strong", { text: "Build hub notes:" });
+        a3li6.appendText(" MOCs (Maps of Content) and index notes with many links create rich soundscapes");
+        const a3li7 = a3ul2.createEl("li");
+        a3li7.createEl("strong", { text: "Use frontmatter:" });
+        a3li7.appendText(" Add custom metadata for explicit control over musical parameters (see documentation)");
+        const a3p4 = a3.createEl("p");
+        a3p4.createEl("em", { text: "Important: Heading levels (# vs ## vs ###) do NOT currently affect musical depth or layering - only the link network structure does. The Depth slider controls network exploration radius, not markdown hierarchy." });
         this.contentContainer.appendChild(card.getElement());
       }
     };
@@ -57359,16 +57401,16 @@ var init_MusicalGenreEngine = __esm({
         this.isPlaying = false;
         // Synthesis components
         this.primarySynth = null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supporting synths use heterogeneous Tone.js instrument types
         this.supportingSynths = /* @__PURE__ */ new Map();
         // Effects chain
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types without common interface
         this.effects = /* @__PURE__ */ new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effects chain contains heterogeneous Tone.js effect types
         this.effectsChain = [];
         // Modulation
         this.lfos = /* @__PURE__ */ new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Modulation targets vary by parameter type
         this.modulationTargets = /* @__PURE__ */ new Map();
         // Sample integration
         this.sampleLoader = null;
@@ -57520,7 +57562,7 @@ var init_MusicalGenreEngine = __esm({
       /**
        * Connect to audio destination
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js audio nodes use dynamic typing
       connect(destination) {
         this.synthVolume.connect(destination);
       }
@@ -57573,7 +57615,7 @@ var init_MusicalGenreEngine = __esm({
           await this.loadGenreSamples(genreConfig.sampleCategories);
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Returns various Tone.js synth types based on genre
       createSynth(type2, params) {
         switch (type2) {
           case "fm":
@@ -65877,11 +65919,11 @@ var TemporalGraphAnimator = class {
       },
       // Performance settings
       performance: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         adaptiveDetail: ((_f = (_e = this.loggingContext.visualSettings) == null ? void 0 : _e.adaptiveDetail) == null ? void 0 : _f.enabled) || false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         maxNodes: ((_i = (_h = (_g = this.loggingContext.visualSettings) == null ? void 0 : _g.adaptiveDetail) == null ? void 0 : _h.overrides) == null ? void 0 : _i.maximumVisibleNodes) || -1,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         temporalClustering: ((_j = this.loggingContext.visualSettings) == null ? void 0 : _j.temporalClustering) || false
       },
       // Context information
@@ -79038,7 +79080,7 @@ var MusicalMapper = class {
   /**
    * Phase 6.3: Get panner node for audio routing
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
   getPannerForNode(nodeId) {
     if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
       return null;
@@ -80559,7 +80601,7 @@ var SpectrumRenderer = class {
   /**
    * Connect to Web Audio API for real-time spectrum analysis
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Canvas rendering API uses dynamic types
   connectToAudioContext(audioContext, sourceNode) {
     if (!audioContext) {
       logger66.warn("audio", "No audio context provided for spectrum analyzer");
@@ -81427,7 +81469,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   getIcon() {
     return "chart-network";
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   async setState(state, result) {
     var _a, _b, _c, _d, _e, _f;
     logger78.debug("state", "Restoring view state", state);
@@ -81476,7 +81518,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     }
     logger78.info("state", "View state restoration complete");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   getState() {
     var _a, _b;
     logger78.info("state", "getState() called - capturing view state", {
@@ -85244,7 +85286,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Get default audio enhancement settings
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   getDefaultAudioEnhancementSettings() {
     return {
       contentAwareMapping: {
@@ -85582,7 +85624,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Phase 3.8: Update layout setting and apply to renderer
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   updateLayoutSetting(key, value) {
     this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
     logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
@@ -85671,7 +85713,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Format group label in type:name format
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   formatGroupLabel(group) {
     let type2 = "path";
     if (group.name.toLowerCase().includes("file") || group.path.includes(".")) {
@@ -86099,7 +86141,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Update time markers along the timeline
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   updateTimeMarkers(timelineInfo) {
     const markersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-markers");
     if (!markersContainer)
@@ -86275,7 +86317,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Create a musical mapping for a graph node
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   createMusicalMappingForNode(node) {
     const settings = this.getSonicGraphSettings();
     this.nodeAppearanceCounter++;
@@ -86358,7 +86400,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    * Calculate scale-aware pitch for a node
    * Uses scale degrees instead of chromatic hashing for more musical results
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   calculateScaleAwarePitch(node, settings) {
     var _a;
     const theorySettings = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory;
@@ -86486,7 +86528,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    * Calculate rhythmic duration with phrase-aware patterns
    * Creates rhythmic variety through phrase position and file properties
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   calculateRhythmicDuration(node, settings) {
     const baseDuration = settings.audio.noteDuration || 0.3;
     const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
@@ -86535,7 +86577,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
    * Calculate dynamic velocity with phrase expression curves
    * Creates musical dynamics through crescendo/diminuendo and accents
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   calculateDynamicVelocity(node, settings) {
     const baseVelocity = 0.5;
     const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
@@ -87260,7 +87302,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Create fallback mapping when no instruments are enabled
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   createFallbackMapping(node, fallbackInstrument) {
     const baseFreq = 261.63;
     const fileNameHash = this.hashString(node.title);
@@ -87456,7 +87498,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
     this.resizeObserver.observe(canvasElement);
     logger78.debug("responsive-setup", "Resize observer set up for responsive graph sizing");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   scheduleSettingsUpdate(key, value) {
     this.pendingSettingsUpdates.set(key, value);
     if (this.settingsUpdateTimeout) {
@@ -87616,7 +87658,7 @@ var SonicGraphView = class extends import_obsidian28.ItemView {
   /**
    * Update clustering visualization setting and save to plugin settings
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   updateClusteringVisualization(vizType, value) {
     this.scheduleSettingsUpdate(`smartClustering.visualization.${vizType}`, value);
     logger78.debug("smart-clustering", "Clustering visualization updated", { vizType, value });
@@ -90222,7 +90264,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
     this.noteCentricPlayer = null;
     this.currentNoteCentricMapping = null;
     this.currentMappings = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     this.continuousLayerManager = null;
     // ContinuousLayerManager (lazily loaded)
     // Audio state
@@ -92323,7 +92365,7 @@ var LocalSoundscapeView = class extends import_obsidian32.ItemView {
   /**
    * Restore view state from persistence
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   async setState(state, result) {
     logger85.info("set-state", "Restoring view state", state);
     if (state.currentDepth) {
@@ -95544,7 +95586,7 @@ var AudioEngine = class {
     this.app = app;
     this.instruments = /* @__PURE__ */ new Map();
     this.instrumentVolumes = /* @__PURE__ */ new Map();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types that don't share a common interface
     this.instrumentEffects = /* @__PURE__ */ new Map();
     // Per-instrument effects
     this.isInitialized = false;
@@ -95625,11 +95667,11 @@ var AudioEngine = class {
   /**
    * Effect chain management delegates
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect instances lack common type interface
   getEffectChain(instrumentName) {
     return this.effectBusManager.getEffectChain(instrumentName);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect types are heterogeneous constructor functions
   addEffectToChain(instrumentName, effectType, position) {
     return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
   }
@@ -95642,18 +95684,18 @@ var AudioEngine = class {
   toggleEnhancedEffectBypass(instrumentName, effectId) {
     return this.effectBusManager.toggleEffectBypass(instrumentName, effectId);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect parameters vary by effect type without unified schema
   updateEffectParameters(instrumentName, effectId, parameters) {
     return this.effectBusManager.updateEffectParameters(instrumentName, effectId, parameters);
   }
   /**
    * Bus management delegates
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Bus instances include various Tone.js audio nodes without common interface
   getSendBuses() {
     return this.effectBusManager.getSendBuses();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Return buses contain heterogeneous Tone.js audio node types
   getReturnBuses() {
     return this.effectBusManager.getReturnBuses();
   }
@@ -95670,46 +95712,46 @@ var AudioEngine = class {
       this.effectBusManager.disableEnhancedRouting();
     }
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect chains contain heterogeneous Tone.js types
   get effectChains() {
     const legacyChains = /* @__PURE__ */ new Map();
     return legacyChains;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: send buses use mixed Tone.js audio node types
   get sendBuses() {
     return this.effectBusManager.getSendBuses();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: return buses use mixed Tone.js audio node types
   get returnBuses() {
     return this.effectBusManager.getReturnBuses();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: master effects collection contains various effect types
   get masterEffectsNodes() {
     return /* @__PURE__ */ new Map();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect instances are heterogeneous Tone.js objects
   get effectNodeInstances() {
     return /* @__PURE__ */ new Map();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: reverb effect instance type varies
   get masterReverb() {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various reverb effect configurations
   set masterReverb(value) {
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: EQ effect instance type varies
   get masterEQ() {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various EQ effect configurations
   set masterEQ(value) {
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: compressor effect instance type varies
   get masterCompressor() {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various compressor configurations
   set masterCompressor(value) {
   }
   // === DELEGATE METHODS FOR VOICE MANAGEMENT ===
@@ -96146,7 +96188,7 @@ var AudioEngine = class {
     }
     logger97.debug("enhanced-routing", "Enhanced instrument connections established");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accepts any Tone.js audio node as instrument output
   connectToMasterChain(instrumentOutput) {
     let output = instrumentOutput;
     if (this.masterEffectsNodes.has("compressor")) {
@@ -99844,7 +99886,7 @@ var AudioEngine = class {
   /**
    * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Sampler configuration accepts heterogeneous Tone.js options
   createSamplerWithFallback(config, instrumentName) {
     try {
       const sampler = new Sampler(config);
@@ -99900,7 +99942,7 @@ var AudioEngine = class {
   /**
    * Issue #012: Reconnect instrument to effects chain after fallback creation
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Instrument can be any Tone.js synth or sampler type
   reconnectInstrumentToEffects(instrumentName, instrument, volume, effects) {
     var _a, _b, _c;
     let output = instrument.connect(volume);
@@ -101530,7 +101572,7 @@ var SonigraphPlugin = class extends import_obsidian33.Plugin {
   /**
    * Get curated Freesound samples for initial library
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Freesound API response structure varies
   getCuratedSamples() {
     const curatedSamples = require_curated_samples_transformed();
     return curatedSamples;

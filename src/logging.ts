@@ -1,23 +1,23 @@
 // Core logging interfaces
  
 export interface ILogger {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	debug(category: string, message: string, data?: any): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	info(category: string, message: string, data?: any): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	warn(category: string, message: string, data?: any): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	error(category: string, message: string, error?: any): void;
 	time(operation: string): () => void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context allows arbitrary metadata keys
 	withContext(context: Record<string, any>): ContextualLogger;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Error context allows arbitrary metadata
 	enrichError(error: Error, context: Record<string, any>): Error;
 }
 
 export interface ContextualLogger extends ILogger {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context contains arbitrary metadata keys
 	getContext(): Record<string, any>;
 }
 
@@ -27,9 +27,9 @@ export interface LogEntry {
 	component: string;
 	category: string;
 	message: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Log data can be any serializable value
 	data?: any;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context allows arbitrary metadata keys
 	context?: Record<string, any>;
 }
 
@@ -47,31 +47,31 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 // Simple Logger implementation
 class Logger implements ILogger {
 	private component: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context stores arbitrary metadata
 	private context?: Record<string, any>;
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context accepts arbitrary metadata keys
 	constructor(component: string, context?: Record<string, any>) {
 		this.component = component;
 		this.context = context;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	debug(category: string, message: string, data?: any): void {
 		this.log('debug', category, message, data);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	info(category: string, message: string, data?: any): void {
 		this.log('info', category, message, data);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	warn(category: string, message: string, data?: any): void {
 		this.log('warn', category, message, data);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	error(category: string, message: string, error?: any): void {
 		this.log('error', category, message, error);
 	}
@@ -84,17 +84,17 @@ class Logger implements ILogger {
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context accepts arbitrary metadata keys
 	withContext(newContext: Record<string, any>): ContextualLogger {
 		const mergedContext = { ...this.context, ...newContext };
 		return new ContextualLoggerImpl(this.component, mergedContext);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Error context allows arbitrary metadata
 	enrichError(error: Error, context: Record<string, any>): Error {
 		// Add context to error without modifying original
 		interface EnrichedError extends Error {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Error context stores arbitrary metadata
 			context?: Record<string, any>;
 		}
 		const enrichedError = new Error(error.message) as EnrichedError;
@@ -104,7 +104,7 @@ class Logger implements ILogger {
 		return enrichedError;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Log data accepts any serializable value
 	private log(level: LogLevel, category: string, message: string, data?: any): void {
 		if (level === 'off') return;
 		const entry: LogEntry = {
@@ -147,16 +147,16 @@ class Logger implements ILogger {
 }
 
 class ContextualLoggerImpl extends Logger implements ContextualLogger {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context stores arbitrary metadata
 	private context: Record<string, any>;
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context stores arbitrary metadata
 	constructor(component: string, context: Record<string, any>) {
 		super(component, context);
 		this.context = context;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Context contains arbitrary metadata keys
 	getContext(): Record<string, any> {
 		return { ...this.context };
 	}
@@ -198,7 +198,7 @@ class LoggerFactory {
 	}
 
 	// For future configuration
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Config structure varies by environment
 	initialize(config?: any): void {
 		// Future: Add configuration support
 		if (config && config.logLevel) {

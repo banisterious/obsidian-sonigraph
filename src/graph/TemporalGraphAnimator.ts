@@ -643,11 +643,11 @@ export class TemporalGraphAnimator {
       
       // Performance settings
       performance: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         adaptiveDetail: (this.loggingContext.visualSettings as any)?.adaptiveDetail?.enabled || false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         maxNodes: (this.loggingContext.visualSettings as any)?.adaptiveDetail?.overrides?.maximumVisibleNodes || -1,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         temporalClustering: (this.loggingContext.visualSettings as any)?.temporalClustering || false
       },
       

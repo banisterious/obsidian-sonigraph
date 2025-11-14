@@ -65,7 +65,7 @@ interface SynthWithVoiceTracking {
 export class AudioEngine {
 	private instruments: Map<string, PolySynth | Sampler> = new Map();
 	private instrumentVolumes: Map<string, Volume> = new Map();
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types that don't share a common interface
 	private instrumentEffects: Map<string, Map<string, any>> = new Map(); // Per-instrument effects
 	private isInitialized = false;
 	private isPlaying = false;
@@ -170,12 +170,12 @@ export class AudioEngine {
 	/**
 	 * Effect chain management delegates
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect instances lack common type interface
 	getEffectChain(instrumentName: string): any[] {
 		return this.effectBusManager.getEffectChain(instrumentName);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect types are heterogeneous constructor functions
 	addEffectToChain(instrumentName: string, effectType: any, position?: number): string {
 		return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
 	}
@@ -192,7 +192,7 @@ export class AudioEngine {
 		return this.effectBusManager.toggleEffectBypass(instrumentName, effectId);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect parameters vary by effect type without unified schema
 	updateEffectParameters(instrumentName: string, effectId: string, parameters: any): void {
 		return this.effectBusManager.updateEffectParameters(instrumentName, effectId, parameters);
 	}
@@ -200,12 +200,12 @@ export class AudioEngine {
 	/**
 	 * Bus management delegates
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Bus instances include various Tone.js audio nodes without common interface
 	getSendBuses(): Map<string, any> {
 		return this.effectBusManager.getSendBuses();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Return buses contain heterogeneous Tone.js audio node types
 	getReturnBuses(): Map<string, any> {
 		return this.effectBusManager.getReturnBuses();
 	}
@@ -225,7 +225,7 @@ export class AudioEngine {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect chains contain heterogeneous Tone.js types
 	get effectChains(): Map<string, any[]> {
 		// Convert EffectBusManager chains to legacy format
 		const legacyChains = new Map();
@@ -233,54 +233,54 @@ export class AudioEngine {
 		return legacyChains;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: send buses use mixed Tone.js audio node types
 	get sendBuses(): Map<string, any> {
 		return this.effectBusManager.getSendBuses();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: return buses use mixed Tone.js audio node types
 	get returnBuses(): Map<string, any> {
 		return this.effectBusManager.getReturnBuses();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: master effects collection contains various effect types
 	get masterEffectsNodes(): Map<string, any> {
 		// Legacy access to master effects - could be implemented if needed
 		return new Map();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect instances are heterogeneous Tone.js objects
 	get effectNodeInstances(): Map<string, any> {
 		// Legacy access to effect instances - could be implemented if needed
 		return new Map();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: reverb effect instance type varies
 	get masterReverb(): any {
 		return null; // Legacy property access
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various reverb effect configurations
 	set masterReverb(value: any) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: EQ effect instance type varies
 	get masterEQ(): any {
 		return null; // Legacy property access
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various EQ effect configurations
 	set masterEQ(value: any) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: compressor effect instance type varies
 	get masterCompressor(): any {
 		return null; // Legacy property access
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various compressor configurations
 	set masterCompressor(value: any) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
@@ -600,7 +600,7 @@ export class AudioEngine {
 			this.instrumentVolumes.set(instrumentName, volume);
 			
 			// Create effects with settings from constants or defaults
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect map stores heterogeneous Tone.js effect instances
 			const effectMap = new Map<string, any>();
 			const effectSettings = instrumentSettings?.effects ?? DEFAULT_SETTINGS.instruments[instrumentName as keyof typeof DEFAULT_SETTINGS.instruments]?.effects;
 			
@@ -851,7 +851,7 @@ export class AudioEngine {
 		logger.debug('enhanced-routing', 'Enhanced instrument connections established');
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accepts any Tone.js audio node as instrument output
 	private connectToMasterChain(instrumentOutput: any): void {
 		let output = instrumentOutput;
 		
@@ -1343,7 +1343,7 @@ export class AudioEngine {
 		const maxVoices = this.getInstrumentPolyphonyLimit(whaleType);
 
 		// Define whale-specific synthesis characteristics based on species
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Whale synthesis config varies by species without unified type
 		let config: any;
 		
 		switch (whaleType) {
@@ -5445,7 +5445,7 @@ export class AudioEngine {
 	/**
 	 * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Sampler configuration accepts heterogeneous Tone.js options
 	private createSamplerWithFallback(config: any, instrumentName: string): PolySynth | Sampler {
 		try {
 			const sampler = new Sampler(config);
@@ -5520,7 +5520,7 @@ export class AudioEngine {
 	/**
 	 * Issue #012: Reconnect instrument to effects chain after fallback creation
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Instrument can be any Tone.js synth or sampler type
 	private reconnectInstrumentToEffects(instrumentName: string, instrument: PolySynth, volume: Volume, effects: Map<string, any>): void {
 		let output = instrument.connect(volume);
 		

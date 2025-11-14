@@ -609,7 +609,7 @@ export class MusicalMapper {
 	/**
 	 * Phase 6.3: Get panner node for audio routing
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
 	public getPannerForNode(nodeId: string): any {
 		if (!this.spatialAudioManager || !this.isSpatialAudioEnabled) return null;
 

@@ -37,7 +37,7 @@ export interface MusicalMapping {
 			instrument?: string;
 		}>;
 		chordSize?: number;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
 		[key: string]: any; // Allow additional metadata
 	};
 }
@@ -120,11 +120,11 @@ export interface AudioMappingConfig {
 		harmonicEnabled?: boolean;
 		scale?: string;
 		key?: string;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
 		ambientDrone: any; // Will be defined when implementing layers
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
 		rhythmicLayer: any;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
 		harmonicPad: any;
 	};
 	musicalTheory: {

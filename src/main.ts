@@ -999,7 +999,7 @@ export default class SonigraphPlugin extends Plugin {
 	/**
 	 * Get curated Freesound samples for initial library
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Freesound API response structure varies
 	private getCuratedSamples(): any[] {
 		// Import the transformed curated samples
 		 

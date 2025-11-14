@@ -43,13 +43,13 @@ type EffectsMap = Record<string, EffectConfig>;
  */
 interface PluginWithOptionalIntegrations extends SonigraphPlugin {
 	continuousLayerManager?: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 		sampleLoader?: any;
 	};
 	whaleIntegration?: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 		whaleManager?: any;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 		updateSettings?: (settings: any) => void;
 		cleanup?: () => void;
 	};
@@ -70,7 +70,7 @@ type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
  */
 type PartialAudioEnhancement = Partial<AudioMappingConfig>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
@@ -79,12 +79,12 @@ function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): 
 	return undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 function setInstrumentSetting<K extends keyof any>(
 	plugin: SonigraphPlugin,
 	instrumentKey: string,
 	settingKey: K,
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	value: any
 ): boolean {
 	const instruments = plugin.settings.instruments;
@@ -92,7 +92,7 @@ function setInstrumentSetting<K extends keyof any>(
 		const instrument = instruments[instrumentKey as InstrumentKey];
 		if (instrument && typeof instrument === 'object') {
 			// Dynamic property assignment on known instrument settings object
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 			(instrument as Record<string, any>)[settingKey as string] = value;
 			return true;
 		}
@@ -652,6 +652,9 @@ export class MaterialControlPanelModal extends Modal {
 		feedbackLi.appendText('.');
 
 		this.contentContainer.appendChild(helpCard.getElement());
+
+		// FAQ Card
+		this.createFAQCard();
 	}
 
 	/**
@@ -816,9 +819,6 @@ export class MaterialControlPanelModal extends Modal {
 			this.createNoteCentricMusicalityCard();
 			// Tips & Best Practices card
 			this.createLocalSoundscapeTipsCard();
-
-			// FAQ card
-			this.createLocalSoundscapeFAQCard();
 		});
 	}
 
@@ -1059,7 +1059,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Render the sample browser UI with table layout
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
 		// Use the new table-based browser
 		const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
@@ -1071,7 +1071,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private renderSampleItem(
 		container: HTMLElement,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 		sample: any,
 		number: number,
 		isUserSample: boolean
@@ -1172,7 +1172,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Preview a Freesound sample
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.textContent === 'Stop') {
@@ -2244,7 +2244,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create horizontal effect section for Master Effects
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: any[]): void {
 		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
 		
@@ -2814,7 +2814,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family overview card with stats and bulk actions
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private createFamilyOverviewCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} family overview`,
@@ -2867,7 +2867,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create instruments card for family
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private createInstrumentsCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
 			title: 'Individual instruments',
@@ -3125,7 +3125,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family effects card
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private createFamilyEffectsCard(familyId: string, tabConfig: any): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} effects`,
@@ -3888,7 +3888,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.plugin.saveSettings();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	private getDefaultEffectParams(effectType: string): any {
 		switch (effectType) {
 			case 'reverb':
@@ -5220,13 +5220,13 @@ All whale samples are authentic recordings from marine research institutions and
 	}
 
 	/**
-	 * Create FAQ card for Local Soundscape
+	 * Create FAQ card for Sonigraph
 	 */
-	private createLocalSoundscapeFAQCard(): void {
+	private createFAQCard(): void {
 		const card = new MaterialCard({
 			title: 'Frequently asked questions',
 			iconName: 'help-circle',
-			subtitle: 'Common questions about Local Soundscape',
+			subtitle: 'Common questions about Sonigraph',
 			elevation: 1
 		});
 
@@ -5236,6 +5236,8 @@ All whale samples are authentic recordings from marine research institutions and
 		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
 		q1.createEl('strong', { text: 'Q: Why does the music sound simplistic or repetitive?' });
+		q1.appendText(' ');
+		q1.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
 		const a1 = faq1.createEl('div', { cls: 'osp-faq-answer' });
 
@@ -5287,6 +5289,8 @@ All whale samples are authentic recordings from marine research institutions and
 		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
 		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?' });
+		q2.appendText(' ');
+		q2.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
 		const a2 = faq2.createEl('div', { cls: 'osp-faq-answer' });
 
@@ -5363,6 +5367,58 @@ All whale samples are authentic recordings from marine research institutions and
 		a2p5.appendText(' If your vault generally has limited connections, ');
 		a2p5.createEl('strong', { text: 'Continuous Layers' });
 		a2p5.appendText(' are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.');
+
+		// FAQ 3: How to create musically rich notes
+		const faq3 = content.createEl('div', { cls: 'osp-faq-item' });
+		const q3 = faq3.createEl('h4', { cls: 'osp-faq-question' });
+		q3.createEl('strong', { text: 'Q: How do I create musically rich notes for playback?' });
+		q3.appendText(' ');
+		q3.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
+
+		const a3 = faq3.createEl('div', { cls: 'osp-faq-answer' });
+
+		const a3p1 = a3.createEl('p');
+		a3p1.createEl('strong', { text: 'A:' });
+		a3p1.appendText(' The richness of your soundscape depends primarily on your note\'s link structure and network density. Here\'s what creates the most beautiful, harmonically rich playback:');
+
+		const a3p2 = a3.createEl('p');
+		a3p2.createEl('strong', { text: 'The Depth slider and link structure:' });
+
+		const a3ul1 = a3.createEl('ul');
+		const a3li1 = a3ul1.createEl('li');
+		a3li1.createEl('strong', { text: 'Depth = link-hop distance:' });
+		a3li1.appendText(' The Depth slider controls how many "hops" away from your center note the graph explores. Depth 1 = direct links only, Depth 2 = links of links, etc.');
+
+		const a3li2 = a3ul1.createEl('li');
+		a3li2.createEl('strong', { text: 'Fully-connected notes:' });
+		a3li2.appendText(' If your notes all link to each other (like test notes that each link to all others), even Depth 1 creates dense harmonic texture because all notes are immediate neighbors.');
+
+		const a3li3 = a3ul1.createEl('li');
+		a3li3.createEl('strong', { text: 'Bidirectional links:' });
+		a3li3.appendText(' Two-way connections between notes create denser, richer graphs than one-way links.');
+
+		const a3p3 = a3.createEl('p');
+		a3p3.createEl('strong', { text: 'Additional ways to enrich your notes:' });
+
+		const a3ul2 = a3.createEl('ul');
+		const a3li4 = a3ul2.createEl('li');
+		a3li4.createEl('strong', { text: 'Add meaningful tags:' });
+		a3li4.appendText(' Tags influence clustering and can create thematic groupings');
+
+		const a3li5 = a3ul2.createEl('li');
+		a3li5.createEl('strong', { text: 'Vary content types:' });
+		a3li5.appendText(' Mix images, PDFs, audio files, and regular notes - different file types add variety');
+
+		const a3li6 = a3ul2.createEl('li');
+		a3li6.createEl('strong', { text: 'Build hub notes:' });
+		a3li6.appendText(' MOCs (Maps of Content) and index notes with many links create rich soundscapes');
+
+		const a3li7 = a3ul2.createEl('li');
+		a3li7.createEl('strong', { text: 'Use frontmatter:' });
+		a3li7.appendText(' Add custom metadata for explicit control over musical parameters (see documentation)');
+
+		const a3p4 = a3.createEl('p');
+		a3p4.createEl('em', { text: 'Important: Heading levels (# vs ## vs ###) do NOT currently affect musical depth or layering - only the link network structure does. The Depth slider controls network exploration radius, not markdown hierarchy.' });
 
 		this.contentContainer.appendChild(card.getElement());
 	}
