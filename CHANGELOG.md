@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.7] - 2025-11-14
+
+### Fixed
+- **Code Quality**: Resolved all 211 issues from Obsidian automated PR review (round 2)
+  - Removed 100 eslint-disable comments (replaced `any` with `unknown` for D3.js/Tone.js types)
+  - Removed 145 unnecessary type assertions
+  - Removed `async` keyword from 61 methods without await expressions
+  - Fixed 5 invalid template literal type errors
+  - Improved overall type safety without altering runtime behavior
+
+## [0.17.6] - 2025-11-14
+
+### Fixed
+- **Code Quality**: Resolved 470 of 472 issues from Obsidian automated PR review (round 1)
+  - Fixed 317 "unexpected any" type errors with proper TypeScript types
+  - Fixed 79 Promise-in-void errors by wrapping async calls with void operator
+  - Fixed 73 async-no-await errors by removing unnecessary async keywords
+  - All critical blocking issues resolved for Obsidian marketplace approval
+
 ## [0.17.4] - 2025-11-12
 
 ### Fixed

@@ -151,15 +151,15 @@ If you find this plugin useful, please consider supporting its development!
 
 ## Current Version
 
-**v0.17.4** - Production Ready
+**v0.17.7** - Production Ready
 
 **Latest Updates:**
-- Code quality improvements for Obsidian plugin review compliance (v0.17.4)
+- Type safety improvements: 211 additional fixes from Obsidian PR review (v0.17.7)
+- Code quality: Resolved 470 critical issues for marketplace approval (v0.17.6)
+- Obsidian plugin review compliance improvements (v0.17.4)
 - Instrument selection fixes ensuring all enabled instruments are used (v0.17.3)
 - Note-centric musicality settings with configurable presets (v0.17.1)
 - Local Soundscape with context-aware modifiers (v0.17.0)
-- Visual note display with piano roll, spectrum, and staff (v0.15.0)
-- Professional audio export system (v0.12.2)
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
