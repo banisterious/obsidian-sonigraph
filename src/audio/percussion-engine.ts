@@ -55,12 +55,12 @@ export class PercussionEngine {
 
 	async initializePercussion(): Promise<void> {
 		logger.info('initialization', 'Initializing advanced percussion synthesis');
-		
+
 		try {
-			await this.initializeTimpani();
-			await this.initializeXylophone();
-			await this.initializeVibraphone();
-			await this.initializeGongs();
+			this.initializeTimpani();
+			this.initializeXylophone();
+			this.initializeVibraphone();
+			this.initializeGongs();
 			
 			logger.info('initialization', 'Advanced percussion synthesis ready');
 		} catch (error) {
@@ -69,7 +69,7 @@ export class PercussionEngine {
 		}
 	}
 
-	private async initializeTimpani(): Promise<void> {
+	private initializeTimpani(): void {
 		// NOTE: Timpani is a synth-only instrument (no samples in nbrosowsky collection)
 		logger.debug('timpani', 'Initializing timpani with synthesis');
 		
@@ -113,7 +113,7 @@ export class PercussionEngine {
 		logger.debug('timpani', 'Timpani initialization complete');
 	}
 
-	private async initializeXylophone(): Promise<void> {
+	private initializeXylophone(): void {
 		// Xylophone with advanced mallet articulation
 		// Note: Only using notes that actually exist on nbrosowsky CDN
 		const sampler = new Sampler({
@@ -155,7 +155,7 @@ export class PercussionEngine {
 		logger.debug('xylophone', 'Xylophone initialization complete');
 	}
 
-	private async initializeVibraphone(): Promise<void> {
+	private initializeVibraphone(): void {
 		// NOTE: Vibraphone is a synth-only instrument (no samples in nbrosowsky collection)
 		logger.debug('vibraphone', 'Initializing vibraphone with synthesis');
 		
@@ -204,7 +204,7 @@ export class PercussionEngine {
 		logger.debug('vibraphone', 'Vibraphone initialization complete');
 	}
 
-	private async initializeGongs(): Promise<void> {
+	private initializeGongs(): void {
 		// NOTE: Gongs is a synth-only instrument (no samples in nbrosowsky collection)
 		logger.debug('gongs', 'Initializing gongs with synthesis');
 		
@@ -386,10 +386,10 @@ export class PercussionEngine {
 
 		// Re-initialize all instruments with new format
 		try {
-			await this.initializeTimpani();
-			await this.initializeXylophone();
-			await this.initializeVibraphone();
-			await this.initializeGongs();
+			this.initializeTimpani();
+			this.initializeXylophone();
+			this.initializeVibraphone();
+			this.initializeGongs();
 			
 			logger.info('format-update', `Successfully updated percussion engine to ${format} format`);
 		} catch (error) {

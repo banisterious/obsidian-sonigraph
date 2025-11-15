@@ -62,7 +62,7 @@ export class SampleCache {
     /**
      * Initialize IndexedDB connection
      */
-    async initialize(): Promise<void> {
+    initialize(): Promise<void> {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, this.dbVersion);
 
@@ -201,8 +201,8 @@ export class SampleCache {
     /**
      * Prune old samples from disk cache
      */
-    async pruneOldSamples(maxAgeMs: number): Promise<number> {
-        if (!this.db) return 0;
+    pruneOldSamples(maxAgeMs: number): Promise<number> {
+        if (!this.db) return Promise.resolve(0);
 
         const transaction = this.db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
@@ -283,8 +283,8 @@ export class SampleCache {
     /**
      * Private: Get sample from disk
      */
-    private async getFromDisk(soundId: number): Promise<IndexedDBSample | null> {
-        if (!this.db) return null;
+    private getFromDisk(soundId: number): Promise<IndexedDBSample | null> {
+        if (!this.db) return Promise.resolve(null);
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readonly');
@@ -305,12 +305,12 @@ export class SampleCache {
     /**
      * Private: Add sample to disk
      */
-    private async addToDisk(
+    private addToDisk(
         soundId: number,
         audioBuffer: AudioBuffer,
         metadata: CachedSample['metadata']
     ): Promise<void> {
-        if (!this.db) return;
+        if (!this.db) return Promise.resolve();
 
         // Convert AudioBuffer to ArrayBuffer
         const audioData = this.audioBufferToArrayBuffer(audioBuffer);
@@ -342,8 +342,8 @@ export class SampleCache {
     /**
      * Private: Check if sample exists on disk
      */
-    private async existsOnDisk(soundId: number): Promise<boolean> {
-        if (!this.db) return false;
+    private existsOnDisk(soundId: number): Promise<boolean> {
+        if (!this.db) return Promise.resolve(false);
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readonly');
@@ -363,8 +363,8 @@ export class SampleCache {
     /**
      * Private: Remove sample from disk
      */
-    private async removeFromDisk(soundId: number): Promise<void> {
-        if (!this.db) return;
+    private removeFromDisk(soundId: number): Promise<void> {
+        if (!this.db) return Promise.resolve();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -379,8 +379,8 @@ export class SampleCache {
     /**
      * Private: Clear disk cache
      */
-    private async clearDisk(): Promise<void> {
-        if (!this.db) return;
+    private clearDisk(): Promise<void> {
+        if (!this.db) return Promise.resolve();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -395,8 +395,8 @@ export class SampleCache {
     /**
      * Private: Get disk cache count
      */
-    private async getDiskCacheCount(): Promise<number> {
-        if (!this.db) return 0;
+    private getDiskCacheCount(): Promise<number> {
+        if (!this.db) return Promise.resolve(0);
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readonly');
@@ -411,8 +411,8 @@ export class SampleCache {
     /**
      * Private: Get disk cache size (approximate)
      */
-    private async getDiskCacheSize(): Promise<number> {
-        if (!this.db) return 0;
+    private getDiskCacheSize(): Promise<number> {
+        if (!this.db) return Promise.resolve(0);
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readonly');

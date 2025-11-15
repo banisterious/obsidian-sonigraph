@@ -289,18 +289,20 @@ export class MetadataMappingRules {
         const tags = metadata?.tags?.map(t => t.tag) || [];
         
         switch (condition.operator) {
-            case 'equals':
+            case 'equals': {
                 const hasTag = tags.includes(condition.value);
                 return { matched: hasTag, reason: hasTag ? `Has tag ${condition.value}` : `Missing tag ${condition.value}` };
-            
-            case 'contains':
-                const hasPartialTag = tags.some(tag => 
-                    condition.caseSensitive ? 
-                    tag.includes(condition.value) : 
+            }
+
+            case 'contains': {
+                const hasPartialTag = tags.some(tag =>
+                    condition.caseSensitive ?
+                    tag.includes(condition.value) :
                     tag.toLowerCase().includes(condition.value.toLowerCase())
                 );
                 return { matched: hasPartialTag, reason: hasPartialTag ? `Tag contains ${condition.value}` : `No tag contains ${condition.value}` };
-            
+            }
+
             default:
                 return { matched: false, reason: `Unsupported operator for tags: ${condition.operator}` };
         }
@@ -326,19 +328,21 @@ export class MetadataMappingRules {
         }
 
         switch (condition.operator) {
-            case 'equals':
+            case 'equals': {
                 const isEqual = actualValue === expectedValue;
                 return { matched: isEqual, reason: isEqual ? `${property} equals ${expectedValue}` : `${property} (${actualValue}) does not equal ${expectedValue}` };
-            
-            case 'contains':
+            }
+
+            case 'contains': {
                 if (typeof actualValue === 'string') {
-                    const contains = condition.caseSensitive ? 
-                        actualValue.includes(expectedValue) : 
+                    const contains = condition.caseSensitive ?
+                        actualValue.includes(expectedValue) :
                         actualValue.toLowerCase().includes(expectedValue.toLowerCase());
                     return { matched: contains, reason: contains ? `${property} contains ${expectedValue}` : `${property} does not contain ${expectedValue}` };
                 }
                 return { matched: false, reason: `${property} is not a string` };
-            
+            }
+
             default:
                 return { matched: false, reason: `Unsupported operator for frontmatter: ${condition.operator}` };
         }
@@ -349,10 +353,11 @@ export class MetadataMappingRules {
      */
     private evaluateFileExtensionCondition(condition: MetadataCondition, extension: string): { matched: boolean; reason: string } {
         switch (condition.operator) {
-            case 'equals':
+            case 'equals': {
                 const matches = extension.toLowerCase() === condition.value.toLowerCase();
                 return { matched: matches, reason: matches ? `Extension is ${extension}` : `Extension ${extension} does not match ${condition.value}` };
-            
+            }
+
             default:
                 return { matched: false, reason: `Unsupported operator for file extension: ${condition.operator}` };
         }
@@ -363,13 +368,14 @@ export class MetadataMappingRules {
      */
     private evaluatePathPatternCondition(condition: MetadataCondition, filePath: string): { matched: boolean; reason: string } {
         switch (condition.operator) {
-            case 'contains':
-                const contains = condition.caseSensitive ? 
-                    filePath.includes(condition.value) : 
+            case 'contains': {
+                const contains = condition.caseSensitive ?
+                    filePath.includes(condition.value) :
                     filePath.toLowerCase().includes(condition.value.toLowerCase());
                 return { matched: contains, reason: contains ? `Path contains ${condition.value}` : `Path does not contain ${condition.value}` };
-            
-            case 'matches':
+            }
+
+            case 'matches': {
                 try {
                     const regex = new RegExp(condition.value, condition.caseSensitive ? '' : 'i');
                     const matches = regex.test(filePath);
@@ -377,7 +383,8 @@ export class MetadataMappingRules {
                 } catch (error) {
                     return { matched: false, reason: `Invalid regex pattern: ${condition.value}` };
                 }
-            
+            }
+
             default:
                 return { matched: false, reason: `Unsupported operator for path pattern: ${condition.operator}` };
         }
@@ -388,19 +395,22 @@ export class MetadataMappingRules {
      */
     private evaluateFileSizeCondition(condition: MetadataCondition, fileSize: number): { matched: boolean; reason: string } {
         switch (condition.operator) {
-            case 'greaterThan':
+            case 'greaterThan': {
                 const isGreater = fileSize > condition.value;
                 return { matched: isGreater, reason: isGreater ? `File size ${fileSize} > ${condition.value}` : `File size ${fileSize} <= ${condition.value}` };
-            
-            case 'lessThan':
+            }
+
+            case 'lessThan': {
                 const isLess = fileSize < condition.value;
                 return { matched: isLess, reason: isLess ? `File size ${fileSize} < ${condition.value}` : `File size ${fileSize} >= ${condition.value}` };
-            
-            case 'between':
+            }
+
+            case 'between': {
                 const [min, max] = Array.isArray(condition.value) ? condition.value : [0, condition.value];
                 const isBetween = fileSize >= min && fileSize <= max;
                 return { matched: isBetween, reason: isBetween ? `File size ${fileSize} between ${min}-${max}` : `File size ${fileSize} not between ${min}-${max}` };
-            
+            }
+
             default:
                 return { matched: false, reason: `Unsupported operator for file size: ${condition.operator}` };
         }
@@ -418,14 +428,16 @@ export class MetadataMappingRules {
         const age = Math.min(daysSinceCreated, daysSinceModified);
 
         switch (condition.operator) {
-            case 'lessThan':
+            case 'lessThan': {
                 const isRecent = age < condition.value;
                 return { matched: isRecent, reason: isRecent ? `File age ${age.toFixed(1)} days < ${condition.value}` : `File age ${age.toFixed(1)} days >= ${condition.value}` };
-            
-            case 'greaterThan':
+            }
+
+            case 'greaterThan': {
                 const isOld = age > condition.value;
                 return { matched: isOld, reason: isOld ? `File age ${age.toFixed(1)} days > ${condition.value}` : `File age ${age.toFixed(1)} days <= ${condition.value}` };
-            
+            }
+
             default:
                 return { matched: false, reason: `Unsupported operator for file age: ${condition.operator}` };
         }

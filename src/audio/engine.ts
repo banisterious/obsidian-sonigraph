@@ -757,37 +757,43 @@ export class AudioEngine {
 
 		try {
 			switch (node.type) {
-				case 'reverb':
+				case 'reverb': {
 					const reverbSettings = node.settings as EffectSettings;
 					const reverb = new Reverb(reverbSettings.params);
 					await reverb.generate();
 					return reverb;
+				}
 
-				case 'chorus':
+				case 'chorus': {
 					const chorusSettings = node.settings as EffectSettings;
 					const chorus = new Chorus(chorusSettings.params);
 					chorus.start();
 					return chorus;
+				}
 
-				case 'filter':
+				case 'filter': {
 					const filterSettings = node.settings as EffectSettings;
 					const filter = new Filter(filterSettings.params);
 					return filter;
+				}
 
-				case 'delay':
+				case 'delay': {
 					const delaySettings = node.settings as EffectSettings;
 					const delay = new Delay(delaySettings.params);
 					return delay;
+				}
 
-				case 'distortion':
+				case 'distortion': {
 					const distortionSettings = node.settings as EffectSettings;
 					const distortion = new Distortion(distortionSettings.params);
 					return distortion;
+				}
 
-				case 'compressor':
+				case 'compressor': {
 					const compressorSettings = node.settings as EffectSettings;
 					const compressor = new Compressor(compressorSettings.params);
 					return compressor;
+				}
 					
 				default:
 					logger.warn('enhanced-routing', `Unknown effect type: ${node.type as string}`);

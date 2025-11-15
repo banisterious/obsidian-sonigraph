@@ -411,10 +411,11 @@ export class ContentAwareMapper {
                 }
                 break;
 
-            case 'text':
+            case 'text': {
                 const wordCount = characteristics.metadata.wordCount || 0;
                 baseDuration *= Math.min(1.8, 0.4 + wordCount / 1000);
                 break;
+            }
 
             case 'image':
                 // Images typically have shorter durations unless very complex

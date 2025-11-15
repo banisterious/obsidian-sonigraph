@@ -71,10 +71,10 @@ export class ElectronicEngine {
 		logger.info('initialization', 'Initializing advanced electronic synthesis');
 		
 		try {
-			await this.initializeLeadSynth();
-			await this.initializeBassSynth();
-			await this.initializeArpSynth();
-			
+			this.initializeLeadSynth();
+			this.initializeBassSynth();
+			this.initializeArpSynth();
+
 			logger.info('initialization', 'Advanced electronic synthesis ready');
 		} catch (error) {
 			logger.error('initialization', 'Failed to initialize electronic synthesis', error);
@@ -82,7 +82,7 @@ export class ElectronicEngine {
 		}
 	}
 
-	private initializeLeadSynth(): Promise<void> {
+	private initializeLeadSynth(): void {
 		// Create lead synth with advanced filter modulation
 		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 		const leadSynth = new PolySynth({
@@ -132,7 +132,7 @@ export class ElectronicEngine {
 		logger.debug('lead-synth', 'Lead synth initialization complete');
 	}
 
-	private initializeBassSynth(): Promise<void> {
+	private initializeBassSynth(): void {
 		// Create bass synth with sub-oscillator and compression
 		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 		const bassSynth = new PolySynth({
@@ -190,7 +190,7 @@ export class ElectronicEngine {
 		logger.debug('bass-synth', 'Bass synth initialization complete');
 	}
 
-	private initializeArpSynth(): Promise<void> {
+	private initializeArpSynth(): void {
 		// Create arp synth with sequencing capabilities
 		// Issue #010 Fix: Set appropriate polyphony limits to prevent crackling
 		const arpSynth = new PolySynth({

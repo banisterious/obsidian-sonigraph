@@ -243,17 +243,19 @@ export class SpatialAudioManager {
             case PanningMode.GraphPosition:
                 return this.panningSystem.calculatePanFromPosition(position, nodeId);
 
-            case PanningMode.FolderBased:
+            case PanningMode.FolderBased: {
                 const folderPan = folderPath ? this.panningSystem.calculateFolderPan(folderPath) :
                     state?.folderBasedPan;
                 return folderPan !== null && folderPan !== undefined ? folderPan : 0;
+            }
 
-            case PanningMode.ClusterBased:
+            case PanningMode.ClusterBased: {
                 const clusterPan = clusterId ? this.calculateClusterPan(clusterId, position) :
                     state?.clusterPan;
                 return clusterPan !== undefined ? clusterPan : 0;
+            }
 
-            case PanningMode.Hybrid:
+            case PanningMode.Hybrid: {
                 const graphPan = this.panningSystem.calculatePanFromPosition(position, nodeId);
                 const folderHybridPan = folderPath ? this.panningSystem.calculateFolderPan(folderPath) :
                     state?.folderBasedPan || null;
@@ -261,6 +263,7 @@ export class SpatialAudioManager {
                     state?.clusterPan !== undefined ? state.clusterPan : null;
 
                 return this.panningSystem.calculateHybridPan(graphPan, folderHybridPan, clusterHybridPan);
+            }
 
             case PanningMode.Disabled:
             default:

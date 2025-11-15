@@ -1,0 +1,374 @@
+
+> sonigraph@0.17.7 build
+> npm run audit:quick && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && npm run build:css -- --no-fail-on-lint
+
+
+> sonigraph@0.17.7 audit:quick
+> npm run audit:innerHTML --silent && npm run audit:console --silent
+
+src/audio/ChordFusionEngine.ts(83,54): error TS2345: Argument of type '{ enabled: boolean; mode: string; timingWindow: number; minimumNotes: number; temporalGrouping: string; maxChordNotes: number; layerSettings: { melodic: boolean; harmonic: boolean; rhythmic: boolean; ambient: boolean; }; ... 5 more ...; voicingStrategy: string; }' is not assignable to parameter of type 'ChordFusionSettings'.
+  Types of property 'mode' are incompatible.
+    Type 'string' is not assignable to type '"smart" | "direct"'.
+src/audio/ChordFusionEngine.ts(146,40): error TS2345: Argument of type '{ enabled: boolean; mode: string; timingWindow: number; minimumNotes: number; temporalGrouping: string; maxChordNotes: number; layerSettings: { melodic: boolean; harmonic: boolean; rhythmic: boolean; ambient: boolean; }; ... 5 more ...; voicingStrategy: string; }' is not assignable to parameter of type 'ChordFusionSettings'.
+  Types of property 'mode' are incompatible.
+    Type 'string' is not assignable to type '"smart" | "direct"'.
+src/audio/clustering/ClusterAudioMapper.ts(415,72): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.
+src/audio/clustering/ClusterAudioMapper.ts(724,9): error TS2322: Type 'string' is not assignable to type '"custom" | "pulse" | "pwm" | "fatcustom" | "fatsine" | "fatsquare" | "fatsawtooth" | "fattriangle" | FatTypeWithPartials | "fmcustom" | "fmsine" | "fmsquare" | ... 10 more ... | TypeWithPartials'.
+src/audio/clustering/ClusterAudioMapper.ts(805,31): error TS2339: Property 'volume' does not exist on type 'unknown'.
+src/audio/clustering/ClusterAudioMapper.ts(808,31): error TS2339: Property 'triggerAttack' does not exist on type 'unknown'.
+src/audio/clustering/ClusterAudioMapper.ts(833,35): error TS2339: Property 'frequency' does not exist on type 'unknown'.
+src/audio/clustering/ClusterAudioMapper.ts(859,35): error TS2339: Property 'triggerRelease' does not exist on type 'unknown'.
+src/audio/clustering/ClusterAudioMapper.ts(865,35): error TS2339: Property 'dispose' does not exist on type 'unknown'.
+src/audio/clustering/ClusterAudioMapper.ts(866,35): error TS2339: Property 'dispose' does not exist on type 'unknown'.
+src/audio/clustering/ClusterAudioMapper.ts(893,35): error TS2339: Property 'volume' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(113,40): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.
+src/audio/effects/EffectBusManager.ts(172,17): error TS2322: Type 'EffectParameters' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'EffectParameters'.
+src/audio/effects/EffectBusManager.ts(260,43): error TS2339: Property 'connect' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(275,25): error TS2339: Property 'connect' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(277,25): error TS2339: Property 'toDestination' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(300,13): error TS2322: Type 'EffectParameters' is not assignable to type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'EffectParameters'.
+src/audio/effects/EffectBusManager.ts(333,46): error TS2339: Property 'dispose' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(334,28): error TS2339: Property 'dispose' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(376,46): error TS2339: Property 'wet' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(377,28): error TS2339: Property 'wet' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(411,62): error TS2339: Property 'decay' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(412,65): error TS2339: Property 'preDelay' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(413,60): error TS2339: Property 'wet' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(417,66): error TS2339: Property 'frequency' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(418,66): error TS2339: Property 'delayTime' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(419,62): error TS2339: Property 'depth' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(423,66): error TS2339: Property 'frequency' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(424,58): error TS2339: Property 'Q' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(428,66): error TS2339: Property 'delayTime' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(429,60): error TS2339: Property 'wet' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(433,67): error TS2339: Property 'distortion' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(437,60): error TS2339: Property 'low' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(438,60): error TS2339: Property 'mid' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(439,61): error TS2339: Property 'high' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(513,50): error TS2339: Property 'dispose' does not exist on type 'unknown'.
+src/audio/effects/EffectBusManager.ts(514,32): error TS2339: Property 'dispose' does not exist on type 'unknown'.
+src/audio/electronic-engine.ts(85,33): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.
+src/audio/electronic-engine.ts(135,33): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.
+src/audio/electronic-engine.ts(193,32): error TS2355: A function whose declared type is neither 'undefined', 'void', nor 'any' must return a value.
+src/audio/engine.ts(949,64): error TS2345: Argument of type 'InstrumentConfig' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'InstrumentConfig'.
+src/audio/engine.ts(979,22): error TS2339: Property 'message' does not exist on type 'unknown'.
+src/audio/engine.ts(985,57): error TS2339: Property 'message' does not exist on type 'unknown'.
+src/audio/engine.ts(2722,63): error TS2345: Argument of type 'InstrumentConfig' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'InstrumentConfig'.
+src/audio/engine.ts(3204,10): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ melodic: boolean; harmonic: boolean; rhythmic: boolean; ambient: boolean; }'.
+  No index signature with a parameter of type 'string' was found on type '{ melodic: boolean; harmonic: boolean; rhythmic: boolean; ambient: boolean; }'.
+src/audio/engine.ts(3656,26): error TS2345: Argument of type '{ pitch: number; duration: number; velocity: number; instrument: string; }' is not assignable to parameter of type 'MusicalMapping'.
+  Type '{ pitch: number; duration: number; velocity: number; instrument: string; }' is missing the following properties from type 'MusicalMapping': nodeId, timing
+src/audio/engine.ts(3666,48): error TS2353: Object literal may only specify known properties, and 'nodeTitle' does not exist in type 'MusicalMapping'.
+src/audio/engine.ts(3713,35): error TS2353: Object literal may only specify known properties, and 'nodeTitle' does not exist in type 'MusicalMapping'.
+src/audio/engine.ts(3960,59): error TS2339: Property 'nodeTitle' does not exist on type 'MusicalMapping'.
+src/audio/engine.ts(4018,59): error TS2339: Property 'nodeTitle' does not exist on type 'MusicalMapping'.
+src/audio/engine.ts(4047,59): error TS2339: Property 'nodeTitle' does not exist on type 'MusicalMapping'.
+src/audio/engine.ts(4941,5): error TS2322: Type 'Sampler | PolySynth<Synth<SynthOptions>>' is not assignable to type 'MusicalMapping'.
+  Type 'Sampler' is missing the following properties from type 'MusicalMapping': nodeId, pitch, duration, velocity, timing
+src/audio/engine.ts(6200,15): error TS2339: Property 'lastUsed' does not exist on type 'unknown'.
+src/audio/engine.ts(6200,40): error TS2339: Property 'lastUsed' does not exist on type 'unknown'.
+src/audio/engine.ts(6201,12): error TS2339: Property 'available' does not exist on type 'unknown'.
+src/audio/layers/FreesoundSampleLoader.ts(938,7): error TS2353: Object literal may only specify known properties, and ''glitch'' does not exist in type 'Record<MusicalGenre, string[]>'.
+src/audio/layers/HarmonicLayerManager.ts(108,7): error TS2353: Object literal may only specify known properties, and 'maxPolyphony' does not exist in type 'RecursivePartial<OmitMonophonicOptions<FMSynthOptions>>'.
+src/audio/layers/HarmonicLayerManager.ts(121,7): error TS2353: Object literal may only specify known properties, and 'maxPolyphony' does not exist in type 'RecursivePartial<OmitMonophonicOptions<ModulationSynthOptions>>'.
+src/audio/layers/HarmonicLayerManager.ts(617,26): error TS2345: Argument of type '{ isPlaying: boolean; enabled: boolean; currentChord: string; scale: string; activeVoices: number; cpuUsage: number; clusterInfluence: number; }' is not assignable to parameter of type 'LayerState'.
+  Type '{ isPlaying: boolean; enabled: boolean; currentChord: string; scale: string; activeVoices: number; cpuUsage: number; clusterInfluence: number; }' is missing the following properties from type 'LayerState': currentGenre, intensity, lastParameterUpdate, memoryUsage
+src/audio/layers/RhythmicLayerManager.ts(114,7): error TS2353: Object literal may only specify known properties, and 'maxPolyphony' does not exist in type 'RecursivePartial<OmitMonophonicOptions<FMSynthOptions>>'.
+src/audio/layers/RhythmicLayerManager.ts(523,26): error TS2345: Argument of type '{ isPlaying: boolean; enabled: boolean; tempo: number; activeVoices: number; cpuUsage: number; activePatterns: string[]; }' is not assignable to parameter of type 'LayerState'.
+  Type '{ isPlaying: boolean; enabled: boolean; tempo: number; activeVoices: number; cpuUsage: number; activePatterns: string[]; }' is missing the following properties from type 'LayerState': currentGenre, intensity, lastParameterUpdate, memoryUsage
+src/audio/mapping/ConnectionTypeMapper.ts(272,93): error TS2345: Argument of type 'TAbstractFile' is not assignable to parameter of type 'TFile'.
+  Type 'TAbstractFile' is missing the following properties from type 'TFile': stat, basename, extension
+src/audio/mapping/ConnectionTypeMapper.ts(277,17): error TS2739: Type 'TAbstractFile' is missing the following properties from type 'TFile': stat, basename, extension
+src/audio/mapping/ConnectionTypeMapper.ts(288,64): error TS2345: Argument of type 'TAbstractFile' is not assignable to parameter of type 'TFile'.
+  Type 'TAbstractFile' is missing the following properties from type 'TFile': stat, basename, extension
+src/audio/mapping/ConnectionTypeMapper.ts(294,74): error TS2345: Argument of type 'TAbstractFile' is not assignable to parameter of type 'TFile'.
+  Type 'TAbstractFile' is missing the following properties from type 'TFile': stat, basename, extension
+src/audio/mapping/ConnectionTypeMappingConfig.ts(331,21): error TS7018: Object literal's property 'instrumentNames' implicitly has an 'any[]' type.
+src/audio/mapping/ConnectionTypeMappingConfig.ts(507,17): error TS7018: Object literal's property 'instrumentNames' implicitly has an 'any[]' type.
+src/audio/mapping/ConnectionTypePresetManager.ts(394,108): error TS2552: Cannot find name 'ConnectionTypeMapping'. Did you mean 'ConnectionTypeMappingConfig'?
+src/audio/mapping/ConnectionTypePresetManager.ts(395,56): error TS2552: Cannot find name 'ConnectionTypeMapping'. Did you mean 'ConnectionTypeMappingConfig'?
+src/audio/mapping/DepthBasedMapper.ts(485,54): error TS2345: Argument of type 'TAbstractFile & Record<"cachedRead", unknown>' is not assignable to parameter of type 'TFile'.
+  Type 'TAbstractFile & Record<"cachedRead", unknown>' is missing the following properties from type 'TFile': stat, basename, extension
+src/audio/mapping/DepthBasedMapper.ts(805,63): error TS2339: Property 'pan' does not exist on type 'DepthMapping'.
+src/audio/mapping/MetadataMappingRules.ts(293,46): error TS2345: Argument of type 'string | number | [number, number]' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/audio/mapping/MetadataMappingRules.ts(300,34): error TS2345: Argument of type 'string | number | [number, number]' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/audio/mapping/MetadataMappingRules.ts(301,64): error TS2339: Property 'toLowerCase' does not exist on type 'string | number | [number, number]'.
+  Property 'toLowerCase' does not exist on type 'number'.
+src/audio/mapping/MetadataMappingRules.ts(321,59): error TS2339: Property 'split' does not exist on type 'string | number | [number, number]'.
+  Property 'split' does not exist on type 'number'.
+src/audio/mapping/MetadataMappingRules.ts(357,77): error TS2339: Property 'toLowerCase' does not exist on type 'string | number | [number, number]'.
+  Property 'toLowerCase' does not exist on type 'number'.
+src/audio/mapping/MetadataMappingRules.ts(373,39): error TS2345: Argument of type 'string | number | [number, number]' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/audio/mapping/MetadataMappingRules.ts(374,69): error TS2339: Property 'toLowerCase' does not exist on type 'string | number | [number, number]'.
+  Property 'toLowerCase' does not exist on type 'number'.
+src/audio/mapping/MetadataMappingRules.ts(380,46): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(pattern: string | RegExp, flags?: string): RegExp', gave the following error.
+    Argument of type 'string | number | [number, number]' is not assignable to parameter of type 'string | RegExp'.
+      Type 'number' is not assignable to type 'string | RegExp'.
+  Overload 2 of 3, '(pattern: string, flags?: string): RegExp', gave the following error.
+    Argument of type 'string | number | [number, number]' is not assignable to parameter of type 'string'.
+      Type 'number' is not assignable to type 'string'.
+src/audio/mapping/MetadataMappingRules.ts(399,35): error TS2365: Operator '>' cannot be applied to types 'number' and 'string | number | [number, number]'.
+src/audio/mapping/MetadataMappingRules.ts(404,32): error TS2365: Operator '<' cannot be applied to types 'number' and 'string | number | [number, number]'.
+src/audio/mapping/MetadataMappingRules.ts(410,54): error TS2365: Operator '<=' cannot be applied to types 'number' and 'string | number'.
+src/audio/mapping/MetadataMappingRules.ts(432,34): error TS2365: Operator '<' cannot be applied to types 'number' and 'string | number | [number, number]'.
+src/audio/mapping/MetadataMappingRules.ts(437,31): error TS2365: Operator '>' cannot be applied to types 'number' and 'string | number | [number, number]'.
+src/audio/mapping/MetadataMappingRules.ts(551,75): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/audio/mapping/MetadataMappingRules.ts(557,132): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/audio/mapping/NoteCentricMapper.ts(140,3): error TS2322: Type 'string' is not assignable to type '"balanced" | "smooth" | "chromatic"'.
+src/audio/mapping/NoteCentricMapper.ts(533,16): error TS2339: Property 'generateSimpleCenterPhrase' does not exist on type 'NoteCentricMapper'.
+src/audio/mapping/ObsidianMetadataMapper.ts(397,44): error TS2339: Property 'level' does not exist on type 'unknown'.
+src/audio/percussion/DrumSynths.ts(110,9): error TS2353: Object literal may only specify known properties, and 'frequency' does not exist in type 'RecursivePartial<MetalSynthOptions>'.
+src/audio/playback/NoteCentricPlayer.ts(10,34): error TS2307: Cannot find module '../audio-engine' or its corresponding type declarations.
+src/audio/theory/MusicalTheoryEngine.ts(305,32): error TS2345: Argument of type 'MusicalContext' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'MusicalContext'.
+src/export/AudioExporter.ts(522,63): error TS2345: Argument of type '{ sampleRate: number; bitDepth: number; }' is not assignable to parameter of type 'WavQuality'.
+  Types of property 'sampleRate' are incompatible.
+    Type 'number' is not assignable to type '44100 | 48000 | 96000'.
+src/export/AudioExporter.ts(527,21): error TS2345: Argument of type '{ sampleRate: number; bitRate: number; }' is not assignable to parameter of type 'Mp3Quality'.
+  Types of property 'sampleRate' are incompatible.
+    Type 'number' is not assignable to type '44100 | 48000'.
+src/export/AudioExporter.ts(709,34): error TS2341: Property 'config' is private and only accessible within class 'TemporalGraphAnimator'.
+src/export/AudioExporter.ts(743,40): error TS2339: Property 'stack' does not exist on type 'unknown'.
+src/export/ExportModal.ts(158,64): error TS2304: Cannot find name 'ExportPreset'.
+src/export/ExportModal.ts(172,32): error TS2304: Cannot find name 'ExportPreset'.
+src/export/ExportModal.ts(220,13): error TS2740: Type '{ exportPresets: undefined[]; }' is missing the following properties from type 'ExportSettings': defaultFormat, defaultQuality, audioQuality, lastExportLocation, and 13 more.
+src/export/ExportModal.ts(323,95): error TS2341: Property 'config' is private and only accessible within class 'TemporalGraphAnimator'.
+src/export/ExportModal.ts(359,52): error TS2341: Property 'config' is private and only accessible within class 'TemporalGraphAnimator'.
+src/export/ExportModal.ts(704,17): error TS2740: Type '{ exportPresets: undefined[]; }' is missing the following properties from type 'ExportSettings': defaultFormat, defaultQuality, audioQuality, lastExportLocation, and 13 more.
+src/export/ExportModal.ts(869,70): error TS2304: Cannot find name 'ExportSettings'.
+src/export/ExportModal.ts(869,87): error TS2304: Cannot find name 'WavQuality'.
+src/export/ExportModal.ts(869,100): error TS2304: Cannot find name 'Mp3Quality'.
+src/export/ExportModal.ts(869,113): error TS2304: Cannot find name 'OggQuality'.
+src/export/ExportModal.ts(869,126): error TS2304: Cannot find name 'FlacQuality'.
+src/export/ExportModal.ts(879,58): error TS2304: Cannot find name 'WavQuality'.
+src/export/ExportModal.ts(879,71): error TS2304: Cannot find name 'Mp3Quality'.
+src/export/ExportModal.ts(879,84): error TS2304: Cannot find name 'OggQuality'.
+src/export/ExportModal.ts(879,97): error TS2304: Cannot find name 'FlacQuality'.
+src/export/ExportModal.ts(916,31): error TS2341: Property 'config' is private and only accessible within class 'TemporalGraphAnimator'.
+src/export/ExportModal.ts(1073,44): error TS2341: Property 'config' is private and only accessible within class 'TemporalGraphAnimator'.
+src/export/ExportNoteCreator.ts(52,24): error TS2339: Property 'exportNoteFolder' does not exist on type 'ExportConfig'.
+src/export/ExportNoteCreator.ts(53,37): error TS2339: Property 'exportNoteFolder' does not exist on type 'ExportConfig'.
+src/export/ExportNoteCreator.ts(138,43): error TS2345: Argument of type 'WavQuality | Mp3Quality | OggQuality | FlacQuality' is not assignable to parameter of type 'Record<string, unknown>'.
+  Type 'WavQuality' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'WavQuality'.
+src/export/ExportNoteCreator.ts(185,33): error TS2341: Property 'config' is private and only accessible within class 'TemporalGraphAnimator'.
+src/export/ExportNoteCreator.ts(189,20): error TS2339: Property 'duration' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(190,61): error TS2339: Property 'duration' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(194,20): error TS2339: Property 'speed' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(195,48): error TS2339: Property 'speed' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(199,20): error TS2339: Property 'loop' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(200,47): error TS2339: Property 'loop' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(204,20): error TS2339: Property 'timeWindow' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(205,54): error TS2339: Property 'timeWindow' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(209,20): error TS2339: Property 'granularity' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(210,54): error TS2339: Property 'granularity' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(214,20): error TS2339: Property 'eventSpreadingMode' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(215,58): error TS2339: Property 'eventSpreadingMode' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(218,20): error TS2339: Property 'maxEventSpacing' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(219,60): error TS2339: Property 'maxEventSpacing' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(222,20): error TS2339: Property 'simultaneousEventLimit' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(223,67): error TS2339: Property 'simultaneousEventLimit' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(226,20): error TS2339: Property 'simultaneousThresholdMs' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(227,65): error TS2339: Property 'simultaneousThresholdMs' does not exist on type '{}'.
+src/export/ExportNoteCreator.ts(328,23): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/export/ExportNoteCreator.ts(331,23): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/export/FileCollisionModal.ts(177,42): error TS2339: Property 'value' does not exist on type 'Element'.
+src/graph/LocalSoundscapeExtractor.ts(164,44): error TS2339: Property 'getBacklinksForFile' does not exist on type 'MetadataCache'.
+src/graph/LocalSoundscapeExtractor.ts(248,52): error TS2339: Property 'getBacklinksForFile' does not exist on type 'MetadataCache'.
+src/graph/LocalSoundscapeExtractor.ts(427,45): error TS2339: Property 'getBacklinksForFile' does not exist on type 'MetadataCache'.
+src/graph/musical-mapper.ts(248,5): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'Record<string, InstrumentMapping>'.
+  'string' index signatures are incompatible.
+    Type '{}' is missing the following properties from type 'InstrumentMapping': instrument, priority
+src/graph/musical-mapper.ts(249,5): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'Record<string, InstrumentMapping>'.
+  'string' index signatures are incompatible.
+    Type '{}' is missing the following properties from type 'InstrumentMapping': instrument, priority
+src/graph/musical-mapper.ts(250,5): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'Record<string, InstrumentMapping>'.
+  'string' index signatures are incompatible.
+    Type '{}' is missing the following properties from type 'InstrumentMapping': instrument, priority
+src/logging.ts(149,7): error TS2415: Class 'ContextualLoggerImpl' incorrectly extends base class 'Logger'.
+  Types have separate declarations of a private property 'context'.
+src/main.ts(48,14): error TS2322: Type 'LocalSoundscapeView' is not assignable to type 'View'.
+  Property 'containerEl' is private in type 'LocalSoundscapeView' but not in type 'View'.
+src/main.ts(395,5): error TS2353: Object literal may only specify known properties, and 'graphData' does not exist in type 'GraphData'.
+src/main.ts(423,31): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(428,31): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(434,42): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(435,37): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(436,36): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(436,67): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(441,38): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(442,39): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(458,62): error TS2339: Property 'sequence' does not exist on type 'GraphData'.
+src/main.ts(495,46): error TS2339: Property 'stats' does not exist on type 'GraphData'.
+src/main.ts(607,30): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+src/main.ts(630,6): error TS2352: Conversion of type 'SonigraphSettings' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'SonigraphSettings'.
+src/main.ts(645,26): error TS2352: Conversion of type 'SonigraphSettings' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'SonigraphSettings'.
+src/main.ts(660,36): error TS2339: Property 'enabled' does not exist on type 'unknown'.
+src/main.ts(661,70): error TS2339: Property 'wetness' does not exist on type 'unknown'.
+src/main.ts(677,36): error TS2339: Property 'enabled' does not exist on type 'unknown'.
+src/main.ts(678,70): error TS2339: Property 'wetness' does not exist on type 'unknown'.
+src/main.ts(681,36): error TS2339: Property 'enabled' does not exist on type 'unknown'.
+src/main.ts(694,36): error TS2339: Property 'enabled' does not exist on type 'unknown'.
+src/main.ts(695,70): error TS2339: Property 'wetness' does not exist on type 'unknown'.
+src/main.ts(702,36): error TS2339: Property 'enabled' does not exist on type 'unknown'.
+src/main.ts(703,48): error TS2339: Property 'frequency' does not exist on type 'unknown'.
+src/main.ts(703,90): error TS2339: Property 'Q' does not exist on type 'unknown'.
+src/main.ts(703,126): error TS2339: Property 'type' does not exist on type 'unknown'.
+src/main.ts(910,21): error TS2352: Conversion of type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }[]' to type 'Record<string, unknown[]>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }[]'.
+src/main.ts(922,3): error TS2322: Type 'unknown[]' is not assignable to type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }[]'.
+  Type '{}' is missing the following properties from type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }': id, title, previewUrl, duration, and 4 more.
+src/main.ts(962,4): error TS2740: Type '{}' is missing the following properties from type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }[]': length, pop, push, concat, and 36 more.
+src/main.ts(975,64): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+src/main.ts(985,57): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/main.ts(988,36): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+src/main.ts(992,151): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+src/ui/FreesoundSearchModal.ts(316,40): error TS2339: Property 'value' does not exist on type 'Element'.
+src/ui/FreesoundSearchModal.ts(655,13): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 141 more.
+src/ui/FreesoundSearchModal.ts(659,13): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 141 more.
+src/ui/FreesoundSearchModal.ts(663,11): error TS2339: Property 'disabled' does not exist on type 'Element'.
+src/ui/GraphDemoModal.ts(359,54): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithWebkit' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'webkitAudioContext' is missing in type 'Window & typeof globalThis' but required in type 'WindowWithWebkit'.
+src/ui/LocalSoundscapeView.ts(609,16): error TS2339: Property 'openControlCenter' does not exist on type 'SonigraphPlugin'.
+src/ui/LocalSoundscapeView.ts(972,15): error TS2339: Property 'generateMappingsFromGraph' does not exist on type 'LocalSoundscapeView'.
+src/ui/LocalSoundscapeView.ts(1002,15): error TS2339: Property 'generateMappingsFromGraph' does not exist on type 'LocalSoundscapeView'.
+src/ui/LocalSoundscapeView.ts(1032,15): error TS2339: Property 'generateMappingsFromGraph' does not exist on type 'LocalSoundscapeView'.
+src/ui/LocalSoundscapeView.ts(1057,15): error TS2339: Property 'generateMappingsFromGraph' does not exist on type 'LocalSoundscapeView'.
+src/ui/LocalSoundscapeView.ts(1083,15): error TS2339: Property 'generateMappingsFromGraph' does not exist on type 'LocalSoundscapeView'.
+src/ui/LocalSoundscapeView.ts(1109,15): error TS2339: Property 'generateMappingsFromGraph' does not exist on type 'LocalSoundscapeView'.
+src/ui/LocalSoundscapeView.ts(1145,55): error TS2345: Argument of type 'BaseContext' is not assignable to parameter of type 'AudioContext'.
+  Type 'BaseContext' is missing the following properties from type 'AudioContext': baseLatency, outputLatency, close, getOutputTimestamp, and 7 more.
+src/ui/LocalSoundscapeView.ts(1192,55): error TS2345: Argument of type 'BaseContext' is not assignable to parameter of type 'AudioContext'.
+  Type 'BaseContext' is missing the following properties from type 'AudioContext': baseLatency, outputLatency, close, getOutputTimestamp, and 7 more.
+src/ui/LocalSoundscapeView.ts(2010,31): error TS2552: Cannot find name 'LocalSoundscapeNode'. Did you mean 'LocalSoundscapeData'?
+src/ui/LocalSoundscapeView.ts(2023,41): error TS2552: Cannot find name 'LocalSoundscapeNode'. Did you mean 'LocalSoundscapeData'?
+src/ui/LocalSoundscapeView.ts(2844,8): error TS2416: Property 'getState' in type 'LocalSoundscapeView' is not assignable to the same property in base type 'ItemView'.
+  Type '() => Promise<LocalSoundscapeViewState>' is not assignable to type '() => Record<string, unknown>'.
+    Type 'Promise<LocalSoundscapeViewState>' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type 'Promise<LocalSoundscapeViewState>'.
+src/ui/SampleTableBrowser.ts(358,8): error TS2339: Property 'name' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(359,8): error TS2339: Property 'author' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(361,8): error TS2339: Property 'description' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(367,7): error TS2339: Property 'tags' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(367,31): error TS2339: Property 'tags' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(367,42): error TS2339: Property 'tags' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(377,15): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+  No index signature with a parameter of type 'string' was found on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(378,15): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+  No index signature with a parameter of type 'string' was found on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(540,49): error TS2339: Property 'name' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SampleTableBrowser.ts(597,21): error TS2339: Property 'tags' does not exist on type '{ id: number; title: string; previewUrl: string; duration: number; license: string; attribution: string; fadeIn: number; fadeOut: number; enabled?: boolean; }'.
+src/ui/SonicGraphView.ts(502,21): error TS2345: Argument of type '{ enabled: boolean; genre?: string; intensity?: number; evolutionRate?: number; adaptiveIntensity?: boolean; rhythmicEnabled?: boolean; harmonicEnabled?: boolean; scale?: string; key?: string; ambientDrone: any; rhythmicLayer: any; harmonicPad: any; }' is not assignable to parameter of type 'Partial<ContinuousLayerConfig>'.
+  Types of property 'genre' are incompatible.
+    Type 'string' is not assignable to type 'MusicalGenre'.
+src/ui/SonicGraphView.ts(642,66): error TS2345: Argument of type 'BaseContext' is not assignable to parameter of type 'AudioContext'.
+  Type 'BaseContext' is missing the following properties from type 'AudioContext': baseLatency, outputLatency, close, getOutputTimestamp, and 7 more.
+src/ui/SonicGraphView.ts(725,70): error TS2345: Argument of type 'BaseContext' is not assignable to parameter of type 'AudioContext'.
+  Type 'BaseContext' is missing the following properties from type 'AudioContext': baseLatency, outputLatency, close, getOutputTimestamp, and 7 more.
+src/ui/SonicGraphView.ts(2448,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(2465,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(2484,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(5574,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(5858,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(5885,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(5906,9): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(6342,30): error TS2339: Property 'style' does not exist on type 'Element'.
+src/ui/SonicGraphView.ts(6874,13): error TS2367: This comparison appears to be unintentional because the types '"audio" | "video" | "image" | "note" | "pdf" | "other"' and '"md"' have no overlap.
+src/ui/SonicGraphView.ts(6874,35): error TS2367: This comparison appears to be unintentional because the types '"audio" | "video" | "image" | "note" | "pdf" | "other"' and '"txt"' have no overlap.
+src/ui/SonicGraphView.ts(7242,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7257,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7272,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7292,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7317,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7337,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7369,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7388,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7417,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/SonicGraphView.ts(7436,13): error TS2741: Property 'visualDisplay' is missing in type '{ timeline: { duration: number; spacing: "auto" | "dense" | "even" | "custom"; loop: boolean; showMarkers: boolean; timeWindow: "all-time" | "past-year" | "past-month" | "past-week" | "past-day" | "past-hour"; ... 5 more ...; eventBatchSize: number; }; ... 7 more ...; connectionTypeMapping: { ...; }; }' but required in type 'SonicGraphSettings'.
+src/ui/control-panel.ts(738,76): error TS2322: Type 'unknown' is not assignable to type 'string | DocumentFragment'.
+src/ui/control-panel.ts(1613,7): error TS2739: Type '{ enabled: boolean; mode: string; timingWindow: number; minimumNotes: number; layerSettings: { melodic: false; harmonic: true; rhythmic: true; ambient: true; }; connectionChords: false; contextualHarmony: false; chordComplexity: number; progressionSpeed: number; dissonanceLevel: number; voicingStrategy: string; }' is missing the following properties from type '{ enabled: boolean; mode: string; timingWindow: number; minimumNotes: number; temporalGrouping: string; maxChordNotes: number; layerSettings: { melodic: boolean; harmonic: boolean; rhythmic: boolean; ambient: boolean; }; ... 5 more ...; voicingStrategy: string; }': temporalGrouping, maxChordNotes
+src/ui/control-panel.ts(1877,34): error TS2345: Argument of type '"1-col"' is not assignable to parameter of type '"auto-fit" | "auto-fill" | "2-col" | "3-col"'.
+src/ui/control-panel.ts(2415,4): error TS2353: Object literal may only specify known properties, and 'icon' does not exist in type '{ text: string; variant?: "text" | "outlined" | "filled" | "tonal"; iconName?: string; disabled?: boolean; onClick?: () => void; className?: string; }'.
+src/ui/control-panel.ts(2732,30): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 141 more.
+src/ui/control-panel.ts(2741,30): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 141 more.
+src/ui/control-panel.ts(2760,39): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 141 more.
+src/ui/control-panel.ts(2778,40): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 141 more.
+src/ui/control-panel.ts(3642,17): error TS2339: Property 'style' does not exist on type 'Element'.
+src/ui/control-panel.ts(3935,56): error TS2345: Argument of type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }' is not assignable to parameter of type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; }'.
+  Type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }' is missing the following properties from type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; }': name, icon, description, defaultFrequencyRange
+src/ui/control-panel.ts(3939,73): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(3940,66): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(3958,67): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(3959,60): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(4069,36): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(4082,34): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(4091,23): error TS2339: Property 'disabled' does not exist on type 'Element'.
+src/ui/control-panel.ts(4092,23): error TS2339: Property 'text' does not exist on type 'Element'.
+src/ui/control-panel.ts(4110,91): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(4111,84): error TS2339: Property 'name' does not exist on type '{ name: string; icon: string; description: string; defaultFrequencyRange: string; } | { defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { ...; }; ogg: { ...; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+  Property 'name' does not exist on type '{ defaultFormat: string; defaultQuality: string; audioQuality: { wav: { sampleRate: number; bitDepth: number; }; mp3: { sampleRate: number; bitRate: number; }; ogg: { sampleRate: number; quality: number; }; flac: { ...; }; }; ... 14 more ...; exportPresets: ({ ...; } | { ...; })[]; }'.
+src/ui/control-panel.ts(4935,36): error TS2339: Property 'preset' does not exist on type '{}'.
+src/ui/control-panel.ts(4956,8): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/control-panel.ts(5004,28): error TS2339: Property 'timingHumanization' does not exist on type '{}'.
+src/ui/control-panel.ts(5011,9): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/control-panel.ts(5037,28): error TS2339: Property 'harmonicAdventurousness' does not exist on type '{}'.
+src/ui/control-panel.ts(5044,9): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/control-panel.ts(5072,28): error TS2339: Property 'dynamicRange' does not exist on type '{}'.
+src/ui/control-panel.ts(5078,9): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/control-panel.ts(5094,28): error TS2339: Property 'polyphonicDensity' does not exist on type '{}'.
+src/ui/control-panel.ts(5100,9): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/control-panel.ts(5114,28): error TS2339: Property 'melodicIndependence' does not exist on type '{}'.
+src/ui/control-panel.ts(5121,9): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/control-panel.ts(5149,28): error TS2339: Property 'voiceLeadingStyle' does not exist on type '{}'.
+src/ui/control-panel.ts(5155,9): error TS2740: Type '{}' is missing the following properties from type '{ preset: string; timingHumanization: number; harmonicAdventurousness: number; dynamicRange: string; polyphonicDensity: string; melodicIndependence: number; voiceLeadingStyle: string; }': preset, timingHumanization, harmonicAdventurousness, dynamicRange, and 3 more.
+src/ui/material-components.ts(745,16): error TS2339: Property 'style' does not exist on type 'Element'.
+src/ui/settings.ts(45,16): error TS2430: Interface 'AppWithSettings' incorrectly extends interface 'App'.
+  Types of property 'setting' are incompatible.
+    Type '{ close(): void; }' is missing the following properties from type '{ open(): void; openTabById(id: string): void; }': open, openTabById
+src/ui/settings.ts(48,7): error TS2352: Conversion of type 'App' to type 'AppWithSettings' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'setting' are incompatible.
+    Property 'close' is missing in type '{ open(): void; openTabById(id: string): void; }' but required in type '{ close(): void; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(256,5): error TS2559: Type 'true' has no properties in common with type '{ enabled?: boolean; override?: "spring" | "summer" | "winter" | "fall"; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(257,5): error TS2559: Type 'true' has no properties in common with type '{ enabled?: boolean; override?: "night" | "day" | "dawn" | "dusk"; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(258,5): error TS2559: Type 'false' has no properties in common with type '{ enabled?: boolean; override?: "clear" | "cloudy" | "rain" | "storm" | "snow"; apiKey?: string; location?: string; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(259,5): error TS2559: Type 'false' has no properties in common with type '{ enabled?: boolean; override?: "light" | "dark"; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(320,16): error TS2367: This comparison appears to be unintentional because the types '{ enabled?: boolean; override?: "spring" | "summer" | "winter" | "fall"; }' and 'boolean' have no overlap.
+src/ui/settings/LocalSoundscapeSettings.ts(322,7): error TS2559: Type 'boolean' has no properties in common with type '{ enabled?: boolean; override?: "spring" | "summer" | "winter" | "fall"; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(332,16): error TS2367: This comparison appears to be unintentional because the types '{ enabled?: boolean; override?: "night" | "day" | "dawn" | "dusk"; }' and 'boolean' have no overlap.
+src/ui/settings/LocalSoundscapeSettings.ts(334,7): error TS2559: Type 'boolean' has no properties in common with type '{ enabled?: boolean; override?: "night" | "day" | "dawn" | "dusk"; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(344,16): error TS2345: Argument of type 'false | { enabled?: boolean; override?: "clear" | "cloudy" | "rain" | "storm" | "snow"; apiKey?: string; location?: string; }' is not assignable to parameter of type 'boolean'.
+  Type '{ enabled?: boolean; override?: "clear" | "cloudy" | "rain" | "storm" | "snow"; apiKey?: string; location?: string; }' is not assignable to type 'boolean'.
+src/ui/settings/LocalSoundscapeSettings.ts(346,7): error TS2559: Type 'boolean' has no properties in common with type '{ enabled?: boolean; override?: "clear" | "cloudy" | "rain" | "storm" | "snow"; apiKey?: string; location?: string; }'.
+src/ui/settings/LocalSoundscapeSettings.ts(356,16): error TS2345: Argument of type 'false | { enabled?: boolean; override?: "light" | "dark"; }' is not assignable to parameter of type 'boolean'.
+  Type '{ enabled?: boolean; override?: "light" | "dark"; }' is not assignable to type 'boolean'.
+src/ui/settings/LocalSoundscapeSettings.ts(358,7): error TS2559: Type 'boolean' has no properties in common with type '{ enabled?: boolean; override?: "light" | "dark"; }'.
+src/ui/settings/SonicGraphCoreSettings.ts(346,7): error TS2739: Type 'Record<string, unknown>' is missing the following properties from type 'AudioMappingConfig': contentAwareMapping, continuousLayers, musicalTheory, externalServices
+src/utils/constants.ts(2848,2): error TS2739: Type '{ musicalTheory: { enabled: false; scale: string; rootNote: string; enforceHarmony: true; allowChromaticPassing: false; dissonanceThreshold: number; quantizationStrength: number; preferredChordProgression: string; dynamicScaleModulation: false; }; chordFusion: { ...; }; noteCentricMusicality: { ...; }; }' is missing the following properties from type 'AudioMappingConfig': contentAwareMapping, continuousLayers, externalServices
+src/utils/constants.ts(3985,3): error TS2322: Type 'undefined[] | MasterEffects' is not assignable to type 'MasterEffects'.
+  Type 'undefined[]' is missing the following properties from type 'MasterEffects': reverb, eq, compressor, limiter, enabled
+src/visualization/PianoRollRenderer.ts(278,37): error TS2353: Object literal may only specify known properties, and ''--legend-color'' does not exist in type 'Partial<CSSStyleDeclaration>'.
+src/visualization/StaffRenderer.ts(382,46): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.

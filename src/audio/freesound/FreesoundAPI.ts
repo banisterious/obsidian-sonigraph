@@ -191,7 +191,7 @@ export class FreesoundAPI {
 	async searchByTags(tags: string[], options?: Partial<FreesoundSearchFilters>): Promise<FreesoundSearchResults> {
 		const tagFilter = tags.map(tag => `tag:${tag}`).join(' ');
 
-		return this.searchSounds({
+		return await this.searchSounds({
 			filter: tagFilter,
 			sort: options?.sort || 'rating_desc',
 			page: options?.page || 1,
@@ -210,7 +210,7 @@ export class FreesoundAPI {
 			? `${options.filter} ${durationFilter}`
 			: durationFilter;
 
-		return this.searchSounds({
+		return await this.searchSounds({
 			...options,
 			filter: combinedFilter
 		});
