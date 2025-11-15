@@ -151,15 +151,15 @@ If you find this plugin useful, please consider supporting its development!
 
 ## Current Version
 
-**v0.17.7** - Production Ready
+**v0.17.8** - Production Ready
 
 **Latest Updates:**
+- Final Obsidian plugin store compliance: All required PR review issues resolved (v0.17.8)
+- Enhanced linting: Pre-commit hooks now catch all plugin store requirements (v0.17.8)
 - Type safety improvements: 211 additional fixes from Obsidian PR review (v0.17.7)
 - Code quality: Resolved 470 critical issues for marketplace approval (v0.17.6)
 - Obsidian plugin review compliance improvements (v0.17.4)
 - Instrument selection fixes ensuring all enabled instruments are used (v0.17.3)
-- Note-centric musicality settings with configurable presets (v0.17.1)
-- Local Soundscape with context-aware modifiers (v0.17.0)
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
