@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.8] - 2025-11-15
+
+### Fixed
+- **Code Quality**: Final cleanup for Obsidian plugin store compliance
+  - Added eslint-disable directive descriptions to all 197 instances
+  - Fixed 62 case block lexical declaration errors (wrapped with braces)
+  - Fixed 53 async-no-await errors (removed unnecessary async keywords)
+  - Fixed 17 direct style manipulation errors (replaced with CSS classes)
+  - Fixed 2 Node.js import errors (replaced with Obsidian APIs)
+  - Converted 2 require() calls to ES6 imports
+  - Removed unused imports and variables across multiple files
+
+### Changed
+- **Linting**: Enhanced ESLint configuration with stricter rules
+  - Added `require-await`, `no-require-imports`, `no-case-declarations`, `no-unnecessary-type-assertion`
+  - Pre-commit hooks now catch all Obsidian plugin store requirements
+  - Updated .gitignore to exclude PR review and build output files
+
 ## [0.17.7] - 2025-11-14
 
 ### Fixed
