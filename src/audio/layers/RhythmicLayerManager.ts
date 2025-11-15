@@ -5,26 +5,24 @@
  * Provides subtle percussion and arpeggiator patterns that respond to vault activity.
  */
 
-import { 
-  PolySynth, 
-  MembraneSynth, 
+import {
+  PolySynth,
+  MembraneSynth,
   MetalSynth,
   FMSynth,
-  Sequence, 
+  Sequence,
   Pattern,
-  Transport,
+  getTransport,
   Volume,
   Filter,
   Reverb,
-  start 
+  start
 } from 'tone';
 
 import {
   RhythmicLayerConfig,
   ActivityMetrics,
-  VaultState,
   ContinuousLayerError,
-  LayerPerformanceMetrics,
   LayerState
 } from './types';
 import { SonigraphSettings } from '../../utils/constants';
@@ -175,7 +173,7 @@ export class RhythmicLayerManager {
       logger.info('playback', 'Starting rhythmic layer playback');
       
       // Set initial tempo
-      Transport.bpm.value = this.config.baseTempo;
+      getTransport().bpm.value = this.config.baseTempo;
       
       // Start with a simple pattern
       this.startPattern('gentle');
@@ -248,7 +246,7 @@ export class RhythmicLayerManager {
       const targetTempo = this.config.tempoRange[0] + (activityRatio * tempoRange);
       
       // Smooth tempo changes
-      Transport.bpm.rampTo(targetTempo, 2);
+      getTransport().bpm.rampTo(targetTempo, 2);
       
       // Handle intensity spikes
       if (metrics.intensitySpikes) {
@@ -315,7 +313,7 @@ export class RhythmicLayerManager {
     return {
       isPlaying: this.isPlaying,
       enabled: this.config.enabled,
-      tempo: Transport.bpm.value,
+      tempo: getTransport().bpm.value,
       activeVoices: this.activeVoices,
       cpuUsage: this.cpuUsage,
       activePatterns: Array.from(this.activePatterns)
