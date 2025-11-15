@@ -4250,10 +4250,10 @@ export class AudioEngine {
 				logger.info('audio', '🎹 SYNTHESIS MODE: No samples required - using minimal initialization');
 				
 				// Initialize only basic piano for test notes (no CDN samples)
-				await this.initializeBasicPiano();
-				
+				this.initializeBasicPiano();
+
 				// Initialize lightweight synthesis for common instruments (no CDN samples)
-				await this.initializeLightweightSynthesis();
+				this.initializeLightweightSynthesis();
 				
 				// Mark as initialized but keep it minimal
 				this.isInitialized = true;
@@ -4337,7 +4337,7 @@ export class AudioEngine {
 	/**
 	 * Initialize basic piano synth for test notes - no external samples
 	 */
-	private async initializeBasicPiano(): Promise<void> {
+	private initializeBasicPiano(): void {
 		try {
 			// Create a simple polyphonic synthesizer for piano test notes
 			const pianoPoly = new PolySynth({
@@ -4375,7 +4375,7 @@ export class AudioEngine {
 	 * Initialize lightweight synthesis for common instruments - no external samples
 	 * Issue #010 Fix: Provides clean sounds without CDN sample processing spikes that cause crackling
 	 */
-	private async initializeLightweightSynthesis(): Promise<void> {
+	private initializeLightweightSynthesis(): void {
 		try {
 			// Timpani - Deep, resonant synthetic drums
 			const timpaniPoly = new PolySynth({
@@ -5271,7 +5271,7 @@ export class AudioEngine {
 	/**
 	 * Reconnect an instrument with its current effect chain
 	 */
-	private async reconnectInstrument(instrumentName: string): Promise<void> {
+	private reconnectInstrument(instrumentName: string): void {
 		const instrument = this.instruments.get(instrumentName);
 		const volume = this.instrumentVolumes.get(instrumentName);
 		const effectNodes = this.effectChains.get(instrumentName);
