@@ -1587,7 +1587,7 @@ export class AudioEngine {
 	 * Re-initialize specific instruments that have corrupted volume nodes
 	 * Issue #006 Fix: Targeted re-initialization to avoid affecting healthy instruments
 	 */
-	private async reinitializeSpecificInstruments(instrumentNames: string[]): Promise<void> {
+	private reinitializeSpecificInstruments(instrumentNames: string[]): void {
 		logger.info('issue-006-debug', 'Starting targeted instrument re-initialization', {
 			instrumentCount: instrumentNames.length,
 			instruments: instrumentNames,
@@ -1975,7 +1975,7 @@ export class AudioEngine {
 					corruptedInstruments: corruptedVolumeInstruments,
 					action: 'start-targeted-reinitialization'
 				});
-				await this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
+				this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
 				
 				// Verify re-initialization success - only check instruments that should be enabled
 				const stillCorrupted = corruptedVolumeInstruments.filter(instrumentName => {
