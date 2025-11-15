@@ -3,14 +3,13 @@
  * Implements the whale discovery strategy based on research findings
  */
 
-import { 
-    FreesoundSample, 
-    FreesoundSearchResult, 
-    WhaleSearchQuery, 
+import { requestUrl } from 'obsidian';
+import {
+    FreesoundSample,
+    FreesoundSearchResult,
+    WhaleSearchQuery,
     SampleDiscoveryResult,
     WhaleSpecies,
-    QualityThreshold,
-    FreesoundApiError,
     FreesoundAuthResponse
 } from './types';
 import { getLogger } from '../../logging';
@@ -62,7 +61,7 @@ export class FreesoundAPIClient {
      * Priority: Trusted institutions > Scientific terms > General search
      */
     private buildSearchQueries(query: WhaleSearchQuery): string[] {
-        const { species, duration, excludeTerms, trustedSources } = query;
+        const { species } = query;
         
         // Tier 1: Trusted research institutions (highest priority)
         const institutionQueries = this.buildInstitutionQueries(species);
@@ -266,8 +265,10 @@ export class FreesoundAPIClient {
         });
 
         const url = `${FreesoundAPIClient.BASE_URL}/search/text/?${params}`;
-        
-        const response = await fetch(url, {
+
+        const response = await requestUrl({
+            url,
+            method: 'GET',
             headers: {
                 'Authorization': this.accessToken ? `Bearer ${this.accessToken}` : '',
                 'Content-Type': 'application/json'
@@ -276,12 +277,7 @@ export class FreesoundAPIClient {
 
         this.updateRateLimit(response);
 
-        if (!response.ok) {
-            const error: FreesoundApiError = await response.json();
-            throw new Error(`Freesound API error: ${error.detail}`);
-        }
-
-        return await response.json();
+        return response.json;
     }
 
     /**
@@ -475,17 +471,14 @@ export class FreesoundAPIClient {
             client_secret: this.clientSecret
         });
 
-        const response = await fetch(`${FreesoundAPIClient.BASE_URL}/oauth2/access_token/`, {
+        const response = await requestUrl({
+            url: `${FreesoundAPIClient.BASE_URL}/oauth2/access_token/`,
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params
+            body: params.toString()
         });
 
-        if (!response.ok) {
-            throw new Error(`Authentication failed: ${response.status}`);
-        }
-
-        const auth: FreesoundAuthResponse = await response.json();
+        const auth: FreesoundAuthResponse = response.json;
         this.accessToken = auth.access_token;
         
         logger.info('auth', 'Freesound authentication successful');
@@ -499,16 +492,14 @@ export class FreesoundAPIClient {
             await this.authenticate();
         }
 
-        const response = await fetch(`${FreesoundAPIClient.BASE_URL}/sounds/${sampleId}/download/`, {
+        const response = await requestUrl({
+            url: `${FreesoundAPIClient.BASE_URL}/sounds/${sampleId}/download/`,
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${this.accessToken}`
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Download failed: ${response.status}`);
-        }
-
-        return await response.arrayBuffer();
+        return response.arrayBuffer;
     }
 }

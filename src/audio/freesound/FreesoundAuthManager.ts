@@ -9,6 +9,7 @@
  * This is transparent to users and follows Obsidian plugin standards.
  */
 
+import { requestUrl } from 'obsidian';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('freesound-auth');
@@ -96,45 +97,16 @@ export class FreesoundAuthManager {
 			logger.debug('freesound-auth', `API key first 8 chars: ${trimmedKey.substring(0, 8)}...`);
 			logger.debug('freesound-auth', `API key last 4 chars: ...${trimmedKey.substring(trimmedKey.length - 4)}`);
 
-			const response = await fetch(url, {
+			const response = await requestUrl({
+				url,
 				method: 'GET',
-				headers: this.getAuthHeaders(),
-				// Obsidian/Electron should handle CORS, but be explicit
-				mode: 'cors',
-				cache: 'no-cache'
+				headers: this.getAuthHeaders()
 			});
 
-			logger.info('freesound-auth', `Response status: ${response.status} ${response.statusText}`);
-
-			if (!response.ok) {
-				const errorText = await response.text();
-				logger.warn('freesound-auth', `Error response: ${errorText}`);
-
-				if (response.status === 401) {
-					this.lastTestResult = {
-						success: false,
-						message: 'Invalid API key. Please check your key and try again.',
-						error: 'INVALID_API_KEY'
-					};
-				} else if (response.status === 429) {
-					this.lastTestResult = {
-						success: false,
-						message: 'Rate limit exceeded. Please try again later.',
-						error: 'RATE_LIMIT'
-					};
-				} else {
-					this.lastTestResult = {
-						success: false,
-						message: `Connection failed: ${response.status} ${response.statusText}`,
-						error: 'CONNECTION_FAILED'
-					};
-				}
-
-				return this.lastTestResult;
-			}
+			logger.info('freesound-auth', `Response status: ${response.status}`);
 
 			// Parse search results to verify API key works
-			const searchResults = await response.json();
+			const searchResults = response.json;
 			logger.info('freesound-auth', `Search successful, found ${searchResults.count} results`);
 			logger.debug('freesound-auth', `Search response: ${JSON.stringify(searchResults)}`);
 

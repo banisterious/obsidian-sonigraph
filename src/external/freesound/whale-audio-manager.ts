@@ -3,16 +3,16 @@
  * Integrates Freesound API with Sonigraph's audio engine for whale sounds
  */
 
+import { Vault } from 'obsidian';
 import { FreesoundAPIClient } from './client';
-import { 
-    WhaleIntegrationSettings, 
-    WhaleSpecies, 
+import {
+    WhaleIntegrationSettings,
+    WhaleSpecies,
     SampleDiscoveryResult,
     FreesoundSample,
     WhaleSearchQuery
 } from './types';
 import { getLogger } from '../../logging';
-import { Vault } from 'obsidian';
 
 const logger = getLogger('whale-audio-manager');
 
@@ -825,7 +825,7 @@ export class WhaleAudioManager {
                     method: 'GET',
                     headers: headers
                 });
-                
+
                 if (proxyResponse.ok) {
                     const arrayBuffer = await proxyResponse.arrayBuffer();
                     const arrayBufferSize = arrayBuffer.byteLength; // Store size before detachment
@@ -858,10 +858,10 @@ export class WhaleAudioManager {
                 } else if (proxyResponse.status === 429) {
                     // Rate limited - implement exponential backoff with jitter
                     // For 6 retries: 1s, 2s, 4s, 8s, 16s, 32s (with jitter)
-                    const baseBackoff = Math.pow(2, retry) * 1000; 
+                    const baseBackoff = Math.pow(2, retry) * 1000;
                     const jitter = Math.random() * 500; // Add 0-500ms random jitter
                     const backoffMs = Math.min(baseBackoff + jitter, 30000); // Cap at 30s
-                    
+
                     logger.warn('download', 'CORS proxy rate limited, retrying with backoff', {
                         proxy: proxyService,
                         status: proxyResponse.status,
@@ -871,7 +871,7 @@ export class WhaleAudioManager {
                         baseBackoff,
                         jitter: Math.round(jitter)
                     });
-                    
+
                     if (retry < maxRetries - 1) {
                         await this.delay(backoffMs);
                         continue; // Retry this proxy

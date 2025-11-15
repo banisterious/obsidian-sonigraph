@@ -5,7 +5,7 @@
  * Allows users to search, filter, preview, and add samples to their library.
  */
 
-import { App, Modal, Setting, Notice, setIcon } from 'obsidian';
+import { App, Modal, Setting, Notice, setIcon, requestUrl } from 'obsidian';
 import { getLogger } from '../logging';
 import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
 
@@ -356,13 +356,9 @@ export class FreesoundSearchModal extends Modal {
 
 			// Build API request
 			const url = this.buildSearchUrl();
-			const response = await fetch(url);
+			const response = await requestUrl({ url });
 
-			if (!response.ok) {
-				throw new Error(`Freesound API error: ${response.status}`);
-			}
-
-			const data = await response.json();
+			const data = response.json;
 			this.searchResults = data.results || [];
 
 			logger.info('search', `Found ${this.searchResults.length} results`);
@@ -448,7 +444,7 @@ export class FreesoundSearchModal extends Modal {
 			if (result.tags && result.tags.length > 0) {
 				const tagsEl = contentSection.createDiv({ cls: 'freesound-result-tags' });
 				result.tags.slice(0, 5).forEach(tag => {
-					const tagEl = tagsEl.createEl('span', { cls: 'freesound-tag', text: tag });
+					tagsEl.createEl('span', { cls: 'freesound-tag', text: tag });
 				});
 				if (result.tags.length > 5) {
 					tagsEl.createEl('span', { cls: 'freesound-tag-more', text: `+${result.tags.length - 5}` });

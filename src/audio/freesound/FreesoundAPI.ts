@@ -13,6 +13,7 @@
  * API Documentation: https://freesound.org/docs/api/
  */
 
+import { requestUrl } from 'obsidian';
 import { FreesoundAuthManager } from './FreesoundAuthManager';
 
 /**
@@ -130,17 +131,13 @@ export class FreesoundAPI {
 		params.append('fields', filters.fields || defaultFields);
 
 		try {
-			const response = await fetch(`${this.baseUrl}/search/text/?${params.toString()}`, {
+			const response = await requestUrl({
+				url: `${this.baseUrl}/search/text/?${params.toString()}`,
 				method: 'GET',
 				headers: this.authManager.getAuthHeaders()
 			});
 
-			if (!response.ok) {
-				const errorData: FreesoundError = await response.json().catch(() => ({}));
-				throw new Error(errorData.detail || errorData.error || `Search failed: ${response.status} ${response.statusText}`);
-			}
-
-			const results: FreesoundSearchResults = await response.json();
+			const results: FreesoundSearchResults = response.json;
 			return results;
 
 		} catch (error) {
@@ -157,17 +154,13 @@ export class FreesoundAPI {
 		}
 
 		try {
-			const response = await fetch(`${this.baseUrl}/sounds/${soundId}/`, {
+			const response = await requestUrl({
+				url: `${this.baseUrl}/sounds/${soundId}/`,
 				method: 'GET',
 				headers: this.authManager.getAuthHeaders()
 			});
 
-			if (!response.ok) {
-				const errorData: FreesoundError = await response.json().catch(() => ({}));
-				throw new Error(errorData.detail || errorData.error || `Failed to get sound: ${response.status} ${response.statusText}`);
-			}
-
-			const sound: FreesoundSound = await response.json();
+			const sound: FreesoundSound = response.json;
 			return sound;
 
 		} catch (error) {
@@ -229,17 +222,13 @@ export class FreesoundAPI {
 			const params = new URLSearchParams();
 			params.append('page_size', Math.min(limit, 150).toString());
 
-			const response = await fetch(`${this.baseUrl}/sounds/${soundId}/similar/?${params.toString()}`, {
+			const response = await requestUrl({
+				url: `${this.baseUrl}/sounds/${soundId}/similar/?${params.toString()}`,
 				method: 'GET',
 				headers: this.authManager.getAuthHeaders()
 			});
 
-			if (!response.ok) {
-				const errorData: FreesoundError = await response.json().catch(() => ({}));
-				throw new Error(errorData.detail || errorData.error || `Failed to get similar sounds: ${response.status} ${response.statusText}`);
-			}
-
-			const results = await response.json();
+			const results = response.json;
 			return results.results || [];
 
 		} catch (error) {
