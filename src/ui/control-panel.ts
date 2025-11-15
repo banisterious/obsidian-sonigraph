@@ -736,7 +736,7 @@ export class MaterialControlPanelModal extends Modal {
 		const contextValue = status.audio.audioContext || 'Suspended';
 		const contextColor = contextValue === 'running' ? 'var(--text-success)' : 'var(--text-warning)';
 		const contextValueSpan = contextStat.createSpan({ cls: 'osp-stat-value', text: contextValue });
-		contextValueSpan.style.color = contextColor;
+		contextValueSpan.setCssProps({ color: contextColor });
 		contextStat.createSpan({ cls: 'osp-stat-label', text: 'Context' });
 
 		this.contentContainer.appendChild(card.getElement());

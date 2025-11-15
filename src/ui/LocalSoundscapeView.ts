@@ -169,7 +169,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Ensure container has height (ItemView sometimes doesn't set this automatically)
 		if (!container.style.height) {
-			container.style.height = '100%';
+			container.setCssProps({ height: '100%' });
 		}
 
 		// Create main layout structure

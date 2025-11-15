@@ -538,8 +538,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const onMouseDown = (e: MouseEvent) => {
             logger.debug('visual-display', 'Divider mousedown event triggered');
             this.isDraggingDivider = true;
-            document.body.style.cursor = 'ns-resize';
-            document.body.style.userSelect = 'none';
+            document.body.setCssProps({
+                cursor: 'ns-resize',
+                userSelect: 'none'
+            });
             e.preventDefault();
         };
 
@@ -5613,23 +5615,27 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             colorDot.style.backgroundColor = group.color;
             
             // Group label (type:name format)
-            const groupLabel = groupItem.createEl('span', { 
+            const groupLabel = groupItem.createEl('span', {
                 text: this.formatGroupLabel(group),
                 cls: 'sonic-graph-group-label'
             });
             groupLabel.addClass('sonigraph-group-label');
-            groupLabel.style.flex = '1';
-            groupLabel.style.fontSize = '12px';
+            groupLabel.setCssProps({
+                flex: '1',
+                fontSize: '12px'
+            });
             
             // Remove button
             const removeButton = groupItem.createEl('button', {
                 text: '×',
                 cls: 'sonic-graph-group-remove-btn sonigraph-group-remove-btn'
             });
-            removeButton.style.background = 'none';
-            removeButton.style.border = 'none';
-            removeButton.style.fontSize = '14px';
-            removeButton.style.cursor = 'pointer';
+            removeButton.setCssProps({
+                background: 'none',
+                border: 'none',
+                fontSize: '14px',
+                cursor: 'pointer'
+            });
             
             // Event listeners
             colorDot.addEventListener('click', () => {
@@ -5650,9 +5656,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         searchInput.addClass('sonigraph-group-search-input');
         searchInput.addClass('sonigraph-group-search-input--highlighted');
-        searchInput.style.border = '1px solid #fbbf24'; // Yellow border
-        searchInput.style.borderRadius = '4px';
-        searchInput.style.fontSize = '12px';
+        searchInput.setCssProps({
+            border: '1px solid #fbbf24', // Yellow border
+            borderRadius: '4px',
+            fontSize: '12px'
+        });
         
         // Add tooltip to groups search input
         setTooltip(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
@@ -5779,14 +5787,16 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const overlay = document.createElement('div');
         overlay.className = 'sonic-graph-search-overlay';
         overlay.addClass('sonigraph-autocomplete-overlay');
-        overlay.style.top = (searchInput.offsetTop + searchInput.offsetHeight + 4) + 'px';
-        overlay.style.left = searchInput.offsetLeft + 'px';
-        overlay.style.width = searchInput.offsetWidth + 'px';
-        overlay.style.border = '1px solid var(--background-modifier-border)';
-        overlay.style.borderRadius = '4px';
-        overlay.style.fontSize = '12px';
-        overlay.style.zIndex = '1000';
-        overlay.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        overlay.setCssProps({
+            top: (searchInput.offsetTop + searchInput.offsetHeight + 4) + 'px',
+            left: searchInput.offsetLeft + 'px',
+            width: searchInput.offsetWidth + 'px',
+            border: '1px solid var(--background-modifier-border)',
+            borderRadius: '4px',
+            fontSize: '12px',
+            zIndex: '1000',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        });
         
         const options = [
             'path: match path of the file',
@@ -7968,12 +7978,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.progressIndicator.empty();
 
         const spinner = this.progressIndicator.createDiv({ cls: 'sonic-graph-spinner' });
-        spinner.style.width = '20px';
-        spinner.style.height = '20px';
-        spinner.style.border = '2px solid var(--background-modifier-border)';
-        spinner.style.borderTop = '2px solid var(--interactive-accent)';
-        spinner.style.borderRadius = '50%';
-        spinner.style.animation = 'spin 1s linear infinite';
+        spinner.setCssProps({
+            width: '20px',
+            height: '20px',
+            border: '2px solid var(--background-modifier-border)',
+            borderTop: '2px solid var(--interactive-accent)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+        });
 
         this.progressIndicator.createSpan({ text: message });
         this.progressIndicator.addClass('sonigraph-progress-indicator--visible');

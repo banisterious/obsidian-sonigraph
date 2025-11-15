@@ -191,7 +191,7 @@ export class PlayButtonManager {
 		// Create icon
 		const icon = createLucideIcon(config.icon, 16);
 		if (config.animation) {
-			icon.style.animation = config.animation;
+			icon.setCssProps({ animation: config.animation });
 		}
 		button.appendChild(icon);
 

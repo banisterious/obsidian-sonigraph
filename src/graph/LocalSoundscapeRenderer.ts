@@ -632,10 +632,12 @@ export class LocalSoundscapeRenderer {
 	private createTooltip(): void {
 		// Create tooltip at body level to avoid container overflow issues
 		this.tooltip = document.body.createDiv({ cls: 'local-soundscape-tooltip' });
-		this.tooltip.style.position = 'fixed';
-		this.tooltip.style.display = 'none';
-		this.tooltip.style.pointerEvents = 'none';
-		this.tooltip.style.zIndex = '10000';
+		this.tooltip.setCssProps({
+			position: 'fixed',
+			display: 'none',
+			pointerEvents: 'none',
+			zIndex: '10000'
+		});
 	}
 
 	/**
