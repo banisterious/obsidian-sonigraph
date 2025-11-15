@@ -771,7 +771,7 @@ export class ExportModal extends Modal {
             }
 
             // No collision, proceed directly
-            await this.proceedWithExport(exportConfig);
+            this.proceedWithExport(exportConfig);
 
         } catch (error) {
             logger.error('export-modal', 'Export start failed:', error);
@@ -782,7 +782,7 @@ export class ExportModal extends Modal {
     /**
      * Proceed with export after collision resolution (if any)
      */
-    private async proceedWithExport(exportConfig: ExportConfig): Promise<void> {
+    private proceedWithExport(exportConfig: ExportConfig): void {
         logger.info('export-modal', 'Starting export with config:', exportConfig);
 
         // Close this modal

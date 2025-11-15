@@ -83,13 +83,13 @@ export class SmartClusteringAlgorithms {
     // Choose clustering algorithm based on settings
     switch (this.settings.algorithm) {
       case 'louvain':
-        return await this.louvainClustering();
+        return this.louvainClustering();
       case 'modularity':
-        return await this.modularityClustering();
+        return this.modularityClustering();
       case 'hybrid':
-        return await this.hybridClustering();
+        return this.hybridClustering();
       default:
-        return await this.louvainClustering();
+        return this.louvainClustering();
     }
   }
 
@@ -97,7 +97,7 @@ export class SmartClusteringAlgorithms {
    * Louvain algorithm for community detection
    * Fast, high-quality clustering for most use cases
    */
-  private async louvainClustering(): Promise<ClusteringResult> {
+  private louvainClustering(): ClusteringResult {
     // Initialize each node as its own cluster
     const nodeClusters = new Map<string, string>();
     this.nodes.forEach(node => {
@@ -151,7 +151,7 @@ export class SmartClusteringAlgorithms {
    * Pure modularity-based clustering
    * Slower but potentially higher quality for academic use cases
    */
-  private async modularityClustering(): Promise<ClusteringResult> {
+  private modularityClustering(): ClusteringResult {
     // Start with all nodes in separate clusters
     const clusters = this.nodes.map((node, index) => ({
       id: `cluster_${index}`,
@@ -204,12 +204,12 @@ export class SmartClusteringAlgorithms {
    * Hybrid clustering combining multiple approaches
    * Uses Louvain for initial clustering, then refines with multi-factor weights
    */
-  private async hybridClustering(): Promise<ClusteringResult> {
+  private hybridClustering(): ClusteringResult {
     // Start with Louvain clustering
-    const louvainResult = await this.louvainClustering();
-    
+    const louvainResult = this.louvainClustering();
+
     // Apply multi-factor refinement
-    const refinedClusters = await this.applyMultiFactorRefinement(louvainResult.clusters);
+    const refinedClusters = this.applyMultiFactorRefinement(louvainResult.clusters);
     
     // Recalculate metrics
     const nodeClusters = new Map<string, string>();
@@ -225,7 +225,7 @@ export class SmartClusteringAlgorithms {
   /**
    * Apply multi-factor weights to refine clustering
    */
-  private async applyMultiFactorRefinement(clusters: Cluster[]): Promise<Cluster[]> {
+  private applyMultiFactorRefinement(clusters: Cluster[]): Cluster[] {
     const refinedClusters: Cluster[] = [];
 
     for (const cluster of clusters) {

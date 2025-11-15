@@ -109,7 +109,7 @@ export default class SonigraphPlugin extends Plugin {
 		});
 	}
 
-	async onunload() {
+	onunload() {
 		logger.info('lifecycle', 'Sonigraph plugin unloading...');
 
 		// Note: We don't detach leaves here - Obsidian handles that automatically
@@ -528,9 +528,9 @@ export default class SonigraphPlugin extends Plugin {
 		}
 
 		// Update whale integration if high-quality settings or whale instrument settings changed
-		if ('useHighQualitySamples' in newSettings || 
+		if ('useHighQualitySamples' in newSettings ||
 			(newSettings.instruments && 'whaleHumpback' in newSettings.instruments)) {
-			await this.updateWhaleIntegration();
+			this.updateWhaleIntegration();
 		}
 
 		// Save settings
@@ -545,7 +545,7 @@ export default class SonigraphPlugin extends Plugin {
 	/**
 	 * Update whale integration when settings change
 	 */
-	private async updateWhaleIntegration(): Promise<void> {
+	private updateWhaleIntegration(): void {
 		try {
 			const whaleIntegration = getWhaleIntegration();
 			if (whaleIntegration) {
@@ -561,9 +561,9 @@ export default class SonigraphPlugin extends Plugin {
 					trustedInstitutions: ['MBARI_MARS', 'NOAA_fisheries', 'listeningtowhales'],
 					maxSamples: 50
 				};
-				
+
 				whaleIntegration.updateSettings(whaleSettings);
-				
+
 				logger.info('whale-integration', 'Whale integration settings updated', {
 					enabled: whaleSettings.useWhaleExternal,
 					whaleUseHighQuality: this.settings.instruments.whaleHumpback?.useHighQuality,

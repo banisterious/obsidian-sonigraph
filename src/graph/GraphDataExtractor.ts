@@ -127,7 +127,7 @@ export class GraphDataExtractor {
 
     try {
       logger.info('graph-extraction-nodes', 'Starting node extraction');
-      const nodes = await this.extractNodes();
+      const nodes = this.extractNodes();
       logger.info('graph-extraction-nodes', `Node extraction completed: ${nodes.length} nodes`);
       
       logger.info('graph-extraction-links', 'Starting link extraction');
@@ -205,7 +205,7 @@ export class GraphDataExtractor {
    * Extract all files as nodes with optimized metadata access
    * Phase 3.9: Use batch metadata access and reduce file system calls
    */
-  private async extractNodes(): Promise<GraphNode[]> {
+  private extractNodes(): GraphNode[] {
     const files = this.vault.getFiles();
     const nodes: GraphNode[] = [];
     
@@ -309,7 +309,7 @@ export class GraphDataExtractor {
       modificationDate: new Date(stat.mtime),
       fileSize: stat.size,
       connections: [],
-      metadata: await this.extractFileMetadata(file, metadata)
+      metadata: this.extractFileMetadata(file, metadata)
     };
 
     return node;
@@ -367,7 +367,7 @@ export class GraphDataExtractor {
   /**
    * Extract additional metadata from file (legacy method)
    */
-  private async extractFileMetadata(file: TFile, metadata: CachedMetadata | null): Promise<GraphNode['metadata']> {
+  private extractFileMetadata(file: TFile, metadata: CachedMetadata | null): GraphNode['metadata'] {
     const result: GraphNode['metadata'] = {};
 
     // Extract tags
@@ -678,7 +678,7 @@ export class GraphDataExtractor {
   /**
    * Phase 1.2: Extract enhanced metadata for advanced audio mapping
    */
-  async extractEnhancedNodes(): Promise<EnhancedGraphNode[]> {
+  extractEnhancedNodes(): EnhancedGraphNode[] {
     const files = this.vault.getFiles();
     const enhancedNodes: EnhancedGraphNode[] = [];
     

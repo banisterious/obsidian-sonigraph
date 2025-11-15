@@ -210,7 +210,7 @@ export class AudioExporter {
 
         // Check for file collision
         const fullPath = this.getFullPath(config);
-        const exists = await this.fileExists(fullPath);
+        const exists = this.fileExists(fullPath);
         if (exists && config.onCollision === 'cancel') {
             throw new Error(`File already exists: ${fullPath}`);
         }
@@ -554,7 +554,7 @@ export class AudioExporter {
         const fullPath = this.getFullPath(config);
 
         // Handle collision
-        if (await this.fileExists(fullPath)) {
+        if (this.fileExists(fullPath)) {
             switch (config.onCollision) {
                 case 'cancel':
                     throw new Error(`File already exists: ${fullPath}`);
@@ -682,7 +682,7 @@ export class AudioExporter {
     /**
      * Check if file exists (supports both vault and system paths)
      */
-    private async fileExists(path: string): Promise<boolean> {
+    private fileExists(path: string): boolean {
         // Check if it's a vault path (relative) or system path (absolute)
         const isSystemPath = require('path').isAbsolute(path);
 
