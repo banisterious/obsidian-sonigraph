@@ -831,7 +831,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Cleanup continuous layers
             logger.debug('ui', 'Stopping continuous layers');
             if (this.continuousLayerManager) {
-                this.continuousLayerManager.stop();
+                void this.continuousLayerManager.stop();
                 this.continuousLayerManager = null;
             }
         } catch (error) {
@@ -1496,7 +1496,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             
             // Stop continuous layers if running
             if (this.continuousLayerManager) {
-                this.continuousLayerManager.stop();
+                void this.continuousLayerManager.stop();
             }
             
             logger.info('ui', 'Pausing Sonic Graph animation');

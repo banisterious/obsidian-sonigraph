@@ -50,7 +50,7 @@ export default class SonigraphPlugin extends Plugin {
 
 		// Add ribbon icon - opens Sonic Graph view
 		this.addRibbonIcon('chart-network', 'Sonigraph: Open Sonic Graph', () => {
-			this.activateSonicGraphView();
+			void this.activateSonicGraphView();
 		});
 
 		// Add command to open Sonic Graph view
@@ -58,7 +58,7 @@ export default class SonigraphPlugin extends Plugin {
 			id: 'open-sonic-graph-view',
 			name: 'Open Sonic Graph',
 			callback: () => {
-				this.activateSonicGraphView();
+				void this.activateSonicGraphView();
 			}
 		});
 
@@ -67,7 +67,7 @@ export default class SonigraphPlugin extends Plugin {
 			id: 'open-local-soundscape',
 			name: 'Open Local Soundscape',
 			callback: () => {
-				this.activateLocalSoundscapeView();
+				void this.activateLocalSoundscapeView();
 			}
 		});
 
@@ -897,7 +897,7 @@ export default class SonigraphPlugin extends Plugin {
 
 		// Save migrated settings if any changes were made
 		if (migrationNeeded) {
-			this.saveSettings();
+			void this.saveSettings();
 			logger.info('settings', 'Settings migration completed');
 		}
 	}

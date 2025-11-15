@@ -84,7 +84,7 @@ export class DownloadQueue {
 
         this.queue.set(soundId, task);
         this.logger.debug('download-queue', `Download task added to queue - soundId: ${soundId}, priority: ${priority}`);
-        this.processQueue();
+        void this.processQueue();
     }
 
     /**
@@ -194,9 +194,9 @@ export class DownloadQueue {
             this.notifyProgress();
 
             // Start download (don't await - process in parallel)
-            this.downloadTask(nextTask).then(() => {
+            void this.downloadTask(nextTask).then(() => {
                 this.activeDownloads.delete(nextTask.soundId);
-                this.processQueue(); // Continue processing
+                void this.processQueue(); // Continue processing
             });
         }
 

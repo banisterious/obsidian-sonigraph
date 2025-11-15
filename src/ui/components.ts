@@ -86,7 +86,7 @@ export function createObsidianToggle(
 	// Handle state changes
 	checkbox.addEventListener('change', async (event) => {
 		const originalDisabled = checkbox.disabled;
-		const checkboxId = Math.random().toString(36).substr(2, 9); // Generate unique ID for tracking
+		const checkboxId = Math.random().toString(36).substring(2, 11); // Generate unique ID for tracking
 		
 		try {
 			const newValue = checkbox.checked;

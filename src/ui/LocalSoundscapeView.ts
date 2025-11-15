@@ -2590,7 +2590,7 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		try {
-			this.continuousLayerManager.stop();
+			void this.continuousLayerManager.stop();
 			logger.info('layers', 'Continuous layers stopped');
 		} catch (error) {
 			logger.error('layers', 'Error stopping continuous layers', error as Error);
