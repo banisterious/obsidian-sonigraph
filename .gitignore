@@ -30,6 +30,7 @@ marketing
 main.js
 styles.css
 *.zip
+build-output.txt
 
 # CSS build system temporary files
 styles.css.backup
@@ -61,7 +62,10 @@ Thumbs.db
 *.Zone.Identifier
 *.mdZone.Identifier
 *.m4a
+
+# PR review files
 obsidian-pr-review*.md
+pr-review-*.md
 
 # Wiki staging area and upload script
 wiki-content/
