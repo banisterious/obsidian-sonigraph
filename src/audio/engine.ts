@@ -1,23 +1,22 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, Frequency } from 'tone';
+import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, Frequency } from 'tone';
 import { App } from 'obsidian';
 import { MusicalMapping } from '../graph/types';
-import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, SendBus, ReturnBus, migrateToEnhancedRouting } from '../utils/constants';
+import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, migrateToEnhancedRouting, isValidInstrumentKey } from '../utils/constants';
 import { PercussionEngine } from './percussion-engine';
 import { ElectronicEngine } from './electronic-engine';
 import { RhythmicPercussionEngine } from './percussion';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
-import { InstrumentConfigLoader, LoadedInstrumentConfig } from './configs/InstrumentConfigLoader';
-import type { InstrumentConfig } from './configs/types';
+import { InstrumentConfigLoader } from './configs/InstrumentConfigLoader';
 import { getLogger, LoggerFactory } from '../logging';
-import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from './playback-events';
+import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackErrorData } from './playback-events';
 import { PlaybackOptimizer } from './optimizations/PlaybackOptimizer';
 import { MemoryMonitor } from './optimizations/MemoryMonitor';
 import { AudioGraphCleaner } from './optimizations/AudioGraphCleaner';
 import { MusicalTheoryEngine } from './theory/MusicalTheoryEngine';
 import { MusicalTheoryConfig, NoteName, ScaleType } from './theory/types';
-import { ChordFusionEngine, NoteEvent as ChordNoteEvent, ChordGroup } from './ChordFusionEngine';
+import { ChordFusionEngine } from './ChordFusionEngine';
 
 const logger = getLogger('audio-engine');
 
@@ -811,7 +810,7 @@ export class AudioEngine {
 		if (!routingMatrix) return;
 
 		// Initialize send buses
-		for (const [busId, sendBusArray] of routingMatrix.sends) {
+		for (const [, sendBusArray] of routingMatrix.sends) {
 			for (const sendBus of sendBusArray) {
 				this.sendBuses.set(sendBus.id, sendBus);
 			}
@@ -883,7 +882,7 @@ export class AudioEngine {
 	private connectSynthesisInstruments(): void {
 		logger.debug('synthesis', 'Connecting synthesis instruments to master output');
 
-		for (const [instrumentName, instrument] of this.instruments) {
+		for (const [instrumentName] of this.instruments) {
 			const volume = this.instrumentVolumes.get(instrumentName);
 			
 			if (!volume) {
@@ -2201,7 +2200,7 @@ export class AudioEngine {
 			if (getContext().latencyHint !== 'playback') {
 				logger.debug('context', 'Optimizing audio context for playback latency');
 			}
-		} catch (e) {
+		} catch {
 			// Ignore if latencyHint is not supported
 		}
 
@@ -2943,9 +2942,6 @@ export class AudioEngine {
 	 * Enable or disable an instrument
 	 */
 	setInstrumentEnabled(instrumentKey: string, enabled: boolean): void {
-		// Import validation function at runtime to avoid circular dependency
-		const { isValidInstrumentKey } = require('../utils/constants');
-		
 		if (!isValidInstrumentKey(instrumentKey)) {
 			logger.error('instrument-control', `Invalid instrument key: ${instrumentKey}. This may indicate a missing instrument in the settings definition.`);
 			return;
@@ -3175,7 +3171,6 @@ export class AudioEngine {
 	private getNoteLayer(note: MusicalMapping): 'melodic' | 'harmonic' | 'rhythmic' | 'ambient' | null {
 		// This is a heuristic - in the future, we might want to add explicit layer tagging
 		const instrument = note.instrument || '';
-		const pitch = note.pitch;
 		const duration = note.duration;
 
 		// Ambient layer: long sustained notes, typically pads/strings
@@ -5464,7 +5459,7 @@ export class AudioEngine {
 				let hasValidBuffers = false;
 
 				if (buffers && buffers._buffers) {
-					for (const [note, buffer] of Object.entries(buffers._buffers)) {
+					for (const [, buffer] of Object.entries(buffers._buffers)) {
 						if (buffer && buffer.loaded) {
 							hasValidBuffers = true;
 							break;
@@ -5804,8 +5799,7 @@ export class AudioEngine {
 	private frequencyToNoteName(frequency: number): string {
 		const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 		const referenceFreq = 440; // A4
-		const semitoneRatio = Math.pow(2, 1/12);
-		
+
 		// Calculate semitones from A4
 		const semitones = Math.round(12 * Math.log2(frequency / referenceFreq));
 		

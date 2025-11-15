@@ -4,7 +4,7 @@
  * Coordinates the export process: validation, rendering, encoding, and file writing.
  */
 
-import { App, Notice, TFile } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import { AudioEngine } from '../audio/engine';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import {
@@ -268,8 +268,6 @@ export class AudioExporter {
 
         logger.info('offline-renderer', 'Starting note-centric static graph render');
 
-        // Import NoteCentricPlayer
-        const { NoteCentricPlayer } = require('../audio/playback/NoteCentricPlayer');
         const player = new NoteCentricPlayer(this.audioEngine, this.pluginSettings);
 
         // Calculate total duration from note-centric mapping
