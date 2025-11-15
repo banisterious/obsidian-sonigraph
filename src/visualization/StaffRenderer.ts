@@ -386,9 +386,6 @@ export class StaffRenderer implements VisualizationRenderer {
         const root = pitches[0];
         const intervals = pitches.map(p => (p - root) % 12);
 
-        // Simple chord detection
-        const intervalsStr = intervals.join(',');
-
         // Note names
         const noteNames = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
         const rootName = noteNames[root % 12];
