@@ -339,39 +339,39 @@ export class FileTypeAnalyzer {
             switch (fileType) {
                 case 'image':
                     if (this.config.enableImageAnalysis) {
-                        metadata.imageMetadata = await this.analyzeImageMetadata(file);
+                        metadata.imageMetadata = this.analyzeImageMetadata(file);
                         metadata.hasAdvancedMetadata = !!metadata.imageMetadata;
                     }
                     break;
-                    
+
                 case 'audio':
                 case 'video':
                     if (this.config.enableAudioAnalysis) {
-                        metadata.mediaDuration = await this.estimateMediaDuration(file);
-                        metadata.mediaMetadata = await this.analyzeMediaMetadata(file);
+                        metadata.mediaDuration = this.estimateMediaDuration(file);
+                        metadata.mediaMetadata = this.analyzeMediaMetadata(file);
                         metadata.hasAdvancedMetadata = !!metadata.mediaDuration;
                     }
                     break;
-                    
+
                 case 'document':
                     if (this.config.enableDocumentAnalysis) {
-                        metadata.pageCount = await this.estimatePageCount(file);
-                        metadata.documentMetadata = await this.analyzeDocumentMetadata(file, cache);
+                        metadata.pageCount = this.estimatePageCount(file);
+                        metadata.documentMetadata = this.analyzeDocumentMetadata(file, cache);
                         metadata.hasAdvancedMetadata = !!metadata.pageCount;
                     }
                     break;
-                    
+
                 case 'text':
                     if (this.config.enableTextAnalysis) {
                         metadata.wordCount = node.wordCount || 0;
-                        metadata.textMetadata = await this.analyzeTextMetadata(file, node, cache);
+                        metadata.textMetadata = this.analyzeTextMetadata(file, node, cache);
                         metadata.hasAdvancedMetadata = !!metadata.textMetadata;
                     }
                     break;
-                    
+
                 case 'code':
                     if (this.config.enableCodeAnalysis) {
-                        metadata.codeMetadata = await this.analyzeCodeMetadata(file);
+                        metadata.codeMetadata = this.analyzeCodeMetadata(file);
                         metadata.hasAdvancedMetadata = !!metadata.codeMetadata;
                     }
                     break;
@@ -386,7 +386,7 @@ export class FileTypeAnalyzer {
     /**
      * Analyze image metadata (simulated - real implementation would read EXIF data)
      */
-    private async analyzeImageMetadata(file: TFile): Promise<FileCharacteristics['metadata']['imageMetadata']> {
+    private analyzeImageMetadata(file: TFile): FileCharacteristics['metadata']['imageMetadata'] {
         // In a real implementation, this would read actual image metadata
         // For now, we'll estimate based on file size and extension
         
@@ -442,7 +442,7 @@ export class FileTypeAnalyzer {
     /**
      * Estimate media duration (simulated)
      */
-    private async estimateMediaDuration(file: TFile): Promise<number> {
+    private estimateMediaDuration(file: TFile): number {
         // Rough estimation based on file size and format
         const sizeMB = file.stat.size / (1024 * 1024);
         const extension = file.extension.toLowerCase();
@@ -463,7 +463,7 @@ export class FileTypeAnalyzer {
     /**
      * Analyze media metadata (simulated)
      */
-    private async analyzeMediaMetadata(file: TFile): Promise<FileCharacteristics['metadata']['mediaMetadata']> {
+    private analyzeMediaMetadata(file: TFile): FileCharacteristics['metadata']['mediaMetadata'] {
         const sizeMB = file.stat.size / (1024 * 1024);
         const extension = file.extension.toLowerCase();
         
@@ -485,7 +485,7 @@ export class FileTypeAnalyzer {
     /**
      * Estimate page count for documents (simulated)
      */
-    private async estimatePageCount(file: TFile): Promise<number> {
+    private estimatePageCount(file: TFile): number {
         const sizeMB = file.stat.size / (1024 * 1024);
         
         // Rough estimation: PDF pages are typically 100-500KB each
@@ -500,7 +500,7 @@ export class FileTypeAnalyzer {
     /**
      * Analyze document metadata (simulated)
      */
-    private async analyzeDocumentMetadata(file: TFile, cache: CachedMetadata | null): Promise<FileCharacteristics['metadata']['documentMetadata']> {
+    private analyzeDocumentMetadata(file: TFile, cache: CachedMetadata | null): FileCharacteristics['metadata']['documentMetadata'] {
         const sizeMB = file.stat.size / (1024 * 1024);
         
         let estimatedComplexity: 'simple' | 'moderate' | 'complex' = 'moderate';
@@ -520,7 +520,7 @@ export class FileTypeAnalyzer {
     /**
      * Analyze text metadata comprehensively
      */
-    private async analyzeTextMetadata(file: TFile, node: EnhancedGraphNode, cache: CachedMetadata | null): Promise<FileCharacteristics['metadata']['textMetadata']> {
+    private analyzeTextMetadata(file: TFile, node: EnhancedGraphNode, cache: CachedMetadata | null): FileCharacteristics['metadata']['textMetadata'] {
         const wordCount = node.wordCount || 0;
         
         // Estimate reading time (average 200 words per minute)
@@ -564,7 +564,7 @@ export class FileTypeAnalyzer {
     /**
      * Analyze code metadata (simulated)
      */
-    private async analyzeCodeMetadata(file: TFile): Promise<FileCharacteristics['metadata']['codeMetadata']> {
+    private analyzeCodeMetadata(file: TFile): FileCharacteristics['metadata']['codeMetadata'] {
         const extension = file.extension.toLowerCase();
         const sizeMB = file.stat.size / (1024 * 1024);
         
