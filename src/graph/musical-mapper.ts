@@ -59,75 +59,75 @@ export class MusicalMapper {
 	constructor(settings: SonigraphSettings, app?: App) {
 		this.settings = settings;
 		this.app = app || null;
-		this.updateMusicalParams();
+		void this.updateMusicalParams();
 
 		// Initialize Phase 2 components if app is provided
 		if (this.app && this.settings.contentAwareMapping?.enabled) {
-			this.initializePhase2Components();
+			void this.initializePhase2Components();
 		}
 
 		// Initialize Phase 5 cluster audio if enabled
 		if (this.settings.clusterAudio?.enabled) {
-			this.initializeClusterAudio();
+			void this.initializeClusterAudio();
 		}
 
 		// Initialize Phase 6.2 dynamic orchestration if enabled
 		if (this.settings.dynamicOrchestration?.enabled) {
-			this.initializeDynamicOrchestration();
+			void this.initializeDynamicOrchestration();
 		}
 
 		// Initialize Phase 6.3 spatial audio if enabled
 		if (this.settings.spatialAudio?.enabled) {
-			this.initializeSpatialAudio();
+			void this.initializeSpatialAudio();
 		}
 	}
 
 	updateSettings(settings: SonigraphSettings): void {
 		this.settings = settings;
-		this.updateMusicalParams();
+		void this.updateMusicalParams();
 
 		// Phase 2: Update metadata mapping components if enabled
 		if (this.app && this.settings.contentAwareMapping?.enabled) {
 			if (!this.isPhase2Enabled) {
-				this.initializePhase2Components();
+				void this.initializePhase2Components();
 			} else {
-				this.updatePhase2Components();
+				void this.updatePhase2Components();
 			}
 		} else if (this.isPhase2Enabled) {
-			this.disablePhase2Components();
+			void this.disablePhase2Components();
 		}
 
 		// Phase 5: Update cluster audio components if enabled
 		if (this.settings.clusterAudio?.enabled) {
 			if (!this.isClusterAudioEnabled) {
-				this.initializeClusterAudio();
+				void this.initializeClusterAudio();
 			} else {
-				this.updateClusterAudioSettings();
+				void this.updateClusterAudioSettings();
 			}
 		} else if (this.isClusterAudioEnabled) {
-			this.disableClusterAudio();
+			void this.disableClusterAudio();
 		}
 
 		// Phase 6.2: Update dynamic orchestration if enabled
 		if (this.settings.dynamicOrchestration?.enabled) {
 			if (!this.isDynamicOrchestrationEnabled) {
-				this.initializeDynamicOrchestration();
+				void this.initializeDynamicOrchestration();
 			} else {
-				this.updateDynamicOrchestrationSettings();
+				void this.updateDynamicOrchestrationSettings();
 			}
 		} else if (this.isDynamicOrchestrationEnabled) {
-			this.disableDynamicOrchestration();
+			void this.disableDynamicOrchestration();
 		}
 
 		// Phase 6.3: Update spatial audio if enabled
 		if (this.settings.spatialAudio?.enabled) {
 			if (!this.isSpatialAudioEnabled) {
-				this.initializeSpatialAudio();
+				void this.initializeSpatialAudio();
 			} else {
-				this.updateSpatialAudioSettings();
+				void this.updateSpatialAudioSettings();
 			}
 		} else if (this.isSpatialAudioEnabled) {
-			this.disableSpatialAudio();
+			void this.disableSpatialAudio();
 		}
 	}
 
@@ -137,7 +137,7 @@ export class MusicalMapper {
 	private initializePhase2Components(): void {
 		if (!this.app || this.isPhase2Enabled) return;
 
-		logger.info('phase2-init', 'Initializing Phase 2 metadata-driven mapping components');
+		void logger.info('phase2-init', 'Initializing Phase 2 metadata-driven mapping components');
 
 		try {
 			// Initialize metadata mapper with audio mapping config
@@ -179,11 +179,11 @@ export class MusicalMapper {
 			this.metadataListener.startListening();
 
 			this.isPhase2Enabled = true;
-			logger.info('phase2-enabled', 'Phase 2 metadata-driven mapping enabled successfully');
+			void logger.info('phase2-enabled', 'Phase 2 metadata-driven mapping enabled successfully');
 
 		} catch (error) {
-			logger.error('phase2-init-error', 'Failed to initialize Phase 2 components', error as Error);
-			this.disablePhase2Components();
+			void logger.error('phase2-init-error', 'Failed to initialize Phase 2 components', error as Error);
+			void this.disablePhase2Components();
 		}
 	}
 
@@ -193,7 +193,7 @@ export class MusicalMapper {
 	private updatePhase2Components(): void {
 		if (!this.isPhase2Enabled) return;
 
-		logger.debug('phase2-update', 'Updating Phase 2 component configurations');
+		void logger.debug('phase2-update', 'Updating Phase 2 component configurations');
 
 		try {
 			const audioConfig = this.getAudioMappingConfig();
@@ -202,10 +202,10 @@ export class MusicalMapper {
 			this.metadataMapper?.updateConfig(audioConfig);
 			this.vaultOptimizer?.updateConfig(audioConfig);
 
-			logger.debug('phase2-updated', 'Phase 2 components updated successfully');
+			void logger.debug('phase2-updated', 'Phase 2 components updated successfully');
 
 		} catch (error) {
-			logger.error('phase2-update-error', 'Failed to update Phase 2 components', error as Error);
+			void logger.error('phase2-update-error', 'Failed to update Phase 2 components', error as Error);
 		}
 	}
 
@@ -215,7 +215,7 @@ export class MusicalMapper {
 	private disablePhase2Components(): void {
 		if (!this.isPhase2Enabled) return;
 
-		logger.info('phase2-disable', 'Disabling Phase 2 metadata-driven mapping');
+		void logger.info('phase2-disable', 'Disabling Phase 2 metadata-driven mapping');
 
 		try {
 			// Stop metadata listener
@@ -230,10 +230,10 @@ export class MusicalMapper {
 			this.lastVaultAnalysis = null;
 
 			this.isPhase2Enabled = false;
-			logger.info('phase2-disabled', 'Phase 2 components disabled and cleaned up');
+			void logger.info('phase2-disabled', 'Phase 2 components disabled and cleaned up');
 
 		} catch (error) {
-			logger.error('phase2-disable-error', 'Error during Phase 2 cleanup', error as Error);
+			void logger.error('phase2-disable-error', 'Error during Phase 2 cleanup', error as Error);
 		}
 	}
 
@@ -294,7 +294,7 @@ export class MusicalMapper {
 	private async initializeClusterAudio(): Promise<void> {
 		if (!this.settings.clusterAudio || this.isClusterAudioEnabled) return;
 
-		logger.info('phase5-init', 'Initializing Phase 5 cluster audio mapping components');
+		void logger.info('phase5-init', 'Initializing Phase 5 cluster audio mapping components');
 
 		try {
 			// Convert settings to ClusterAudioSettings
@@ -319,10 +319,10 @@ export class MusicalMapper {
 			await this.clusterAudioMapper.initialize();
 
 			this.isClusterAudioEnabled = true;
-			logger.info('phase5-init', 'Phase 5 cluster audio components initialized successfully');
+			void logger.info('phase5-init', 'Phase 5 cluster audio components initialized successfully');
 
 		} catch (error) {
-			logger.error('phase5-init-error', 'Error initializing Phase 5 cluster audio', error as Error);
+			void logger.error('phase5-init-error', 'Error initializing Phase 5 cluster audio', error as Error);
 			this.isClusterAudioEnabled = false;
 		}
 	}
@@ -333,7 +333,7 @@ export class MusicalMapper {
 	private updateClusterAudioSettings(): void {
 		if (!this.clusterAudioMapper || !this.settings.clusterAudio) return;
 
-		logger.debug('phase5-update', 'Updating cluster audio settings');
+		void logger.debug('phase5-update', 'Updating cluster audio settings');
 
 		const clusterAudioSettings: ClusterAudioSettings = {
 			enabled: this.settings.clusterAudio.enabled,
@@ -360,7 +360,7 @@ export class MusicalMapper {
 	private disableClusterAudio(): void {
 		if (!this.isClusterAudioEnabled) return;
 
-		logger.info('phase5-cleanup', 'Disabling Phase 5 cluster audio components');
+		void logger.info('phase5-cleanup', 'Disabling Phase 5 cluster audio components');
 
 		try {
 			if (this.clusterAudioMapper) {
@@ -369,10 +369,10 @@ export class MusicalMapper {
 			}
 
 			this.isClusterAudioEnabled = false;
-			logger.info('phase5-disabled', 'Phase 5 cluster audio components disabled and cleaned up');
+			void logger.info('phase5-disabled', 'Phase 5 cluster audio components disabled and cleaned up');
 
 		} catch (error) {
-			logger.error('phase5-disable-error', 'Error during Phase 5 cleanup', error as Error);
+			void logger.error('phase5-disable-error', 'Error during Phase 5 cleanup', error as Error);
 		}
 	}
 
@@ -391,7 +391,7 @@ export class MusicalMapper {
 	private initializeDynamicOrchestration(): void {
 		if (this.isDynamicOrchestrationEnabled) return;
 
-		logger.info('phase6.2-init', 'Initializing Phase 6.2 dynamic orchestration');
+		void logger.info('phase6.2-init', 'Initializing Phase 6.2 dynamic orchestration');
 
 		try {
 			const orchestrationSettings: DynamicOrchestrationSettings = {
@@ -413,10 +413,10 @@ export class MusicalMapper {
 			}
 
 			this.isDynamicOrchestrationEnabled = true;
-			logger.info('phase6.2-initialized', 'Phase 6.2 dynamic orchestration initialized successfully');
+			void logger.info('phase6.2-initialized', 'Phase 6.2 dynamic orchestration initialized successfully');
 
 		} catch (error) {
-			logger.error('phase6.2-init-error', 'Error initializing Phase 6.2 dynamic orchestration', error as Error);
+			void logger.error('phase6.2-init-error', 'Error initializing Phase 6.2 dynamic orchestration', error as Error);
 			this.isDynamicOrchestrationEnabled = false;
 		}
 	}
@@ -427,7 +427,7 @@ export class MusicalMapper {
 	private updateDynamicOrchestrationSettings(): void {
 		if (!this.dynamicOrchestrationManager || !this.settings.dynamicOrchestration) return;
 
-		logger.debug('phase6.2-update', 'Updating Phase 6.2 dynamic orchestration settings');
+		void logger.debug('phase6.2-update', 'Updating Phase 6.2 dynamic orchestration settings');
 
 		const orchestrationSettings: Partial<DynamicOrchestrationSettings> = {
 			customThresholds: this.settings.dynamicOrchestration.customThresholds,
@@ -447,7 +447,7 @@ export class MusicalMapper {
 	private disableDynamicOrchestration(): void {
 		if (!this.isDynamicOrchestrationEnabled) return;
 
-		logger.info('phase6.2-cleanup', 'Disabling Phase 6.2 dynamic orchestration');
+		void logger.info('phase6.2-cleanup', 'Disabling Phase 6.2 dynamic orchestration');
 
 		try {
 			if (this.dynamicOrchestrationManager) {
@@ -456,10 +456,10 @@ export class MusicalMapper {
 			}
 
 			this.isDynamicOrchestrationEnabled = false;
-			logger.info('phase6.2-disabled', 'Phase 6.2 dynamic orchestration disabled and cleaned up');
+			void logger.info('phase6.2-disabled', 'Phase 6.2 dynamic orchestration disabled and cleaned up');
 
 		} catch (error) {
-			logger.error('phase6.2-disable-error', 'Error during Phase 6.2 cleanup', error as Error);
+			void logger.error('phase6.2-disable-error', 'Error during Phase 6.2 cleanup', error as Error);
 		}
 	}
 
@@ -469,7 +469,7 @@ export class MusicalMapper {
 	private initializeSpatialAudio(): void {
 		if (this.isSpatialAudioEnabled) return;
 
-		logger.info('phase6.3-init', 'Initializing Phase 6.3 spatial audio and panning');
+		void logger.info('phase6.3-init', 'Initializing Phase 6.3 spatial audio and panning');
 
 		try {
 			const spatialConfig: SpatialAudioConfig = this.settings.spatialAudio || {
@@ -510,10 +510,10 @@ export class MusicalMapper {
 			this.spatialAudioManager = new SpatialAudioManager(spatialConfig);
 
 			this.isSpatialAudioEnabled = true;
-			logger.info('phase6.3-initialized', 'Phase 6.3 spatial audio initialized successfully');
+			void logger.info('phase6.3-initialized', 'Phase 6.3 spatial audio initialized successfully');
 
 		} catch (error) {
-			logger.error('phase6.3-init-error', 'Error initializing Phase 6.3 spatial audio', error as Error);
+			void logger.error('phase6.3-init-error', 'Error initializing Phase 6.3 spatial audio', error as Error);
 			this.isSpatialAudioEnabled = false;
 		}
 	}
@@ -524,7 +524,7 @@ export class MusicalMapper {
 	private updateSpatialAudioSettings(): void {
 		if (!this.spatialAudioManager || !this.settings.spatialAudio) return;
 
-		logger.debug('phase6.3-update', 'Updating Phase 6.3 spatial audio settings');
+		void logger.debug('phase6.3-update', 'Updating Phase 6.3 spatial audio settings');
 
 		this.spatialAudioManager.updateConfig(this.settings.spatialAudio);
 	}
@@ -535,7 +535,7 @@ export class MusicalMapper {
 	private disableSpatialAudio(): void {
 		if (!this.isSpatialAudioEnabled) return;
 
-		logger.info('phase6.3-cleanup', 'Disabling Phase 6.3 spatial audio');
+		void logger.info('phase6.3-cleanup', 'Disabling Phase 6.3 spatial audio');
 
 		try {
 			if (this.spatialAudioManager) {
@@ -544,10 +544,10 @@ export class MusicalMapper {
 			}
 
 			this.isSpatialAudioEnabled = false;
-			logger.info('phase6.3-disabled', 'Phase 6.3 spatial audio disabled and cleaned up');
+			void logger.info('phase6.3-disabled', 'Phase 6.3 spatial audio disabled and cleaned up');
 
 		} catch (error) {
-			logger.error('phase6.3-disable-error', 'Error during Phase 6.3 cleanup', error as Error);
+			void logger.error('phase6.3-disable-error', 'Error during Phase 6.3 cleanup', error as Error);
 		}
 	}
 
@@ -571,7 +571,7 @@ export class MusicalMapper {
 			}
 
 		} catch (error) {
-			logger.error('phase6.3-update-error', 'Error updating spatial audio', error as Error);
+			void logger.error('phase6.3-update-error', 'Error updating spatial audio', error as Error);
 		}
 	}
 
@@ -589,7 +589,7 @@ export class MusicalMapper {
 		try {
 			this.spatialAudioManager.registerNode(nodeId, position, folderPath, clusterId);
 		} catch (error) {
-			logger.error('phase6.3-register-error', 'Error registering node for spatial audio', error as Error);
+			void logger.error('phase6.3-register-error', 'Error registering node for spatial audio', error as Error);
 		}
 	}
 
@@ -602,7 +602,7 @@ export class MusicalMapper {
 		try {
 			this.spatialAudioManager.unregisterNode(nodeId);
 		} catch (error) {
-			logger.error('phase6.3-unregister-error', 'Error unregistering node from spatial audio', error as Error);
+			void logger.error('phase6.3-unregister-error', 'Error unregistering node from spatial audio', error as Error);
 		}
 	}
 
@@ -670,7 +670,7 @@ export class MusicalMapper {
 		for (let i = 0; i < nodes.length; i++) {
 			const node = nodes[i];
 			const mapping = this.createNodeMapping(node, i, nodes.length, stats);
-			mappings.push(mapping);
+			void mappings.push(mapping);
 		}
 
 		startTime();
@@ -689,7 +689,7 @@ export class MusicalMapper {
 	 */
 	private createEnhancedMappings(nodes: GraphNode[], stats: GraphStats): MusicalMapping[] {
 		if (!this.app || !this.metadataMapper || !this.vaultOptimizer) {
-			logger.warn('enhanced-mapping-unavailable', 'Phase 2 components not available, falling back to legacy mapping');
+			void logger.warn('enhanced-mapping-unavailable', 'Phase 2 components not available, falling back to legacy mapping');
 			return this.createLegacyMappings(nodes, stats);
 		}
 
@@ -704,9 +704,9 @@ export class MusicalMapper {
 				try {
 					this.lastVaultAnalysis = this.vaultOptimizer.analyzeVault();
 					vaultAnalysis = this.lastVaultAnalysis;
-					logger.debug('vault-analysis-cached', 'Vault analysis cached for future use');
+					void logger.debug('vault-analysis-cached', 'Vault analysis cached for future use');
 				} catch (error) {
-					logger.warn('vault-analysis-error', 'Vault analysis failed', error as Error);
+					void logger.warn('vault-analysis-error', 'Vault analysis failed', error as Error);
 					// Use simplified analysis for immediate mapping
 					vaultAnalysis = this.createSimplifiedVaultAnalysis(nodes);
 				}
@@ -719,11 +719,11 @@ export class MusicalMapper {
 			for (const node of nodes) {
 				const file = this.app.vault.getAbstractFileByPath(node.path);
 				if (file && file instanceof TFile) {
-					files.push(file);
+					void files.push(file);
 					
 					// Analyze file metadata
 					const analysis = this.metadataMapper.analyzeFile(file);
-					analysisResults.push(analysis);
+					void analysisResults.push(analysis);
 				}
 			}
 
@@ -748,7 +748,7 @@ export class MusicalMapper {
 				const analysisResult = analysisResults.find(r => r.analysisTime !== undefined); // Simplified matching
 				
 				const mapping = this.createEnhancedNodeMapping(node, analysisResult, i, nodes.length, stats);
-				mappings.push(mapping);
+				void mappings.push(mapping);
 			}
 
 			const enhancedTime = performance.now() - startTime;
@@ -763,7 +763,7 @@ export class MusicalMapper {
 			return mappings;
 
 		} catch (error) {
-			logger.error('enhanced-mapping-error', 'Enhanced mapping failed, falling back to legacy', error as Error);
+			void logger.error('enhanced-mapping-error', 'Enhanced mapping failed, falling back to legacy', error as Error);
 			return this.createLegacyMappings(nodes, stats);
 		}
 	}
@@ -780,7 +780,7 @@ export class MusicalMapper {
 		for (let i = 0; i < nodes.length; i++) {
 			const node = nodes[i];
 			const mapping = this.createNodeMapping(node, i, nodes.length, stats);
-			mappings.push(mapping);
+			void mappings.push(mapping);
 		}
 
 		return mappings;
@@ -1072,9 +1072,9 @@ export class MusicalMapper {
 			throw new Error('Phase 2 components not enabled');
 		}
 
-		logger.info('vault-analysis-refresh', 'Manually refreshing vault analysis');
+		void logger.info('vault-analysis-refresh', 'Manually refreshing vault analysis');
 		this.lastVaultAnalysis = this.vaultOptimizer.refreshAnalysis();
-		logger.info('vault-analysis-refreshed', 'Vault analysis refreshed successfully');
+		void logger.info('vault-analysis-refreshed', 'Vault analysis refreshed successfully');
 	}
 
 	/**
@@ -1082,18 +1082,18 @@ export class MusicalMapper {
 	 */
 	dispose(): void {
 		if (this.isPhase2Enabled) {
-			this.disablePhase2Components();
+			void this.disablePhase2Components();
 		}
 		if (this.isClusterAudioEnabled) {
-			this.disableClusterAudio();
+			void this.disableClusterAudio();
 		}
 		if (this.isDynamicOrchestrationEnabled) {
-			this.disableDynamicOrchestration();
+			void this.disableDynamicOrchestration();
 		}
 		if (this.isSpatialAudioEnabled) {
-			this.disableSpatialAudio();
+			void this.disableSpatialAudio();
 		}
-		logger.debug('musical-mapper-disposed', 'MusicalMapper disposed');
+		void logger.debug('musical-mapper-disposed', 'MusicalMapper disposed');
 	}
 
 	private createNodeMapping(

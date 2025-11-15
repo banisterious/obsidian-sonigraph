@@ -30,7 +30,7 @@ export class GraphParser {
 		for (const file of markdownFiles) {
 			const node = await this.createNodeFromFile(file);
 			if (node) {
-				nodes.set(file.path, node);
+				void nodes.set(file.path, node);
 			}
 		}
 
@@ -106,12 +106,12 @@ export class GraphParser {
 
 			// Extract wikilinks from content
 			const wikiLinks = this.extractLinksFromContent(fileContent);
-			connections.push(...wikiLinks);
+			void connections.push(...wikiLinks);
 
 			// Extract links from metadata cache (more reliable)
 			if (metadata?.links) {
 				const metadataLinks = metadata.links.map(link => link.link);
-				connections.push(...metadataLinks);
+				void connections.push(...metadataLinks);
 			}
 
 			// Remove duplicates and clean up

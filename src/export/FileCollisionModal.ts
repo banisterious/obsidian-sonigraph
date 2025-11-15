@@ -45,8 +45,8 @@ export class FileCollisionModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.empty();
-        contentEl.addClass('sonigraph-file-collision-modal');
+        void contentEl.empty();
+        void contentEl.addClass('sonigraph-file-collision-modal');
 
         // Header
         contentEl.createEl('h2', { text: 'File Already Exists' });
@@ -139,8 +139,8 @@ export class FileCollisionModal extends Modal {
         renameRadio.addEventListener('change', () => {
             renameInput.disabled = !renameRadio.checked;
             if (renameRadio.checked) {
-                renameInput.focus();
-                renameInput.select();
+                void renameInput.focus();
+                void renameInput.select();
             }
         });
 
@@ -158,7 +158,7 @@ export class FileCollisionModal extends Modal {
             text: 'Cancel',
             cls: 'mod-cancel'
         }).addEventListener('click', () => {
-            this.resolve(null);
+            void this.resolve(null);
         });
 
         // Continue button
@@ -180,14 +180,14 @@ export class FileCollisionModal extends Modal {
                 const newName = renameInput.value.trim();
                 if (!newName) {
                     new Notice('Please enter a filename');
-                    renameInput.focus();
+                    void renameInput.focus();
                     return;
                 }
 
                 // Validate filename
                 if (this.containsInvalidCharacters(newName)) {
                     new Notice('Filename contains invalid characters');
-                    renameInput.focus();
+                    void renameInput.focus();
                     return;
                 }
 
@@ -203,7 +203,7 @@ export class FileCollisionModal extends Modal {
 
     onClose() {
         const { contentEl } = this;
-        contentEl.empty();
+        void contentEl.empty();
     }
 
     /**
@@ -246,8 +246,8 @@ export class FileCollisionModal extends Modal {
      */
     private resolve(resolution: CollisionResolution | null): void {
         logger.info('file-collision', 'Collision resolved', { resolution });
-        this.resolveCallback(resolution);
-        this.close();
+        void this.resolveCallback(resolution);
+        void this.close();
     }
 
     /**
@@ -298,7 +298,7 @@ export class FileCollisionModal extends Modal {
      */
     private getDirectory(filePath: string): string {
         const parts = filePath.split('/');
-        parts.pop();
+        void parts.pop();
         return parts.join('/');
     }
 

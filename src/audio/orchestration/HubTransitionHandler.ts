@@ -206,7 +206,7 @@ export class HubTransitionHandler {
       synth.volume.value = Tone.gainToDb(0.1);
 
       // Trigger all harmonics
-      synth.triggerAttack(harmonics, now);
+      void synth.triggerAttack(harmonics, now);
 
       // Crescendo with exponential curve
       if (config.volumeCurve === 'exponential') {
@@ -216,14 +216,14 @@ export class HubTransitionHandler {
       }
 
       // Release
-      synth.triggerRelease(harmonics, now + config.duration);
+      void synth.triggerRelease(harmonics, now + config.duration);
 
       // Store active transition
       this.activeTransitions.set(event.nodeId, event);
 
       // Clean up
       setTimeout(() => {
-        synth.dispose();
+        void synth.dispose();
         this.activeTransitions.delete(event.nodeId);
       }, (config.duration + 1) * 1000);
 
@@ -271,7 +271,7 @@ export class HubTransitionHandler {
       synth.volume.value = Tone.gainToDb(0.6);
 
       // Trigger chord
-      synth.triggerAttack(initialHarmonics, now);
+      void synth.triggerAttack(initialHarmonics, now);
 
       // Decrescendo with logarithmic curve
       if (config.volumeCurve === 'logarithmic') {
@@ -290,14 +290,14 @@ export class HubTransitionHandler {
       }
 
       // Graceful release
-      synth.triggerRelease(initialHarmonics, now + config.duration);
+      void synth.triggerRelease(initialHarmonics, now + config.duration);
 
       // Store active transition
       this.activeTransitions.set(event.nodeId, event);
 
       // Clean up
       setTimeout(() => {
-        synth.dispose();
+        void synth.dispose();
         this.activeTransitions.delete(event.nodeId);
       }, (config.duration + 2) * 1000);
 
@@ -345,15 +345,15 @@ export class HubTransitionHandler {
         Q: 5
       }).connect(this.masterVolume);
 
-      synth.disconnect();
-      synth.connect(filter);
+      void synth.disconnect();
+      void synth.connect(filter);
 
       // Start frequency
       const startFreq = baseFrequency * (1 + event.previousScore * 0.5);
       const endFreq = baseFrequency * (1 + event.newScore * 0.5);
 
       synth.volume.value = Tone.gainToDb(0.5);
-      synth.triggerAttack(startFreq, now);
+      void synth.triggerAttack(startFreq, now);
 
       // Frequency sweep
       synth.frequency.rampTo(endFreq, config.duration, now);
@@ -370,15 +370,15 @@ export class HubTransitionHandler {
       }
 
       // Release
-      synth.triggerRelease(now + config.duration);
+      void synth.triggerRelease(now + config.duration);
 
       // Store active transition
       this.activeTransitions.set(event.nodeId, event);
 
       // Clean up
       setTimeout(() => {
-        synth.dispose();
-        filter.dispose();
+        void synth.dispose();
+        void filter.dispose();
         this.activeTransitions.delete(event.nodeId);
       }, (config.duration + 1) * 1000);
 
@@ -396,13 +396,13 @@ export class HubTransitionHandler {
   ): void {
     switch (event.type) {
       case 'hub-emergence':
-        this.triggerHubEmergence(event, baseFrequency);
+        void this.triggerHubEmergence(event, baseFrequency);
         break;
       case 'hub-demise':
-        this.triggerHubDemise(event, baseFrequency);
+        void this.triggerHubDemise(event, baseFrequency);
         break;
       case 'hub-shift':
-        this.triggerHubShift(event, baseFrequency);
+        void this.triggerHubShift(event, baseFrequency);
         break;
     }
   }
@@ -416,7 +416,7 @@ export class HubTransitionHandler {
     for (let i = 1; i <= count; i++) {
       // Add octave and fifth harmonics for musical richness
       if (i === 1) {
-        harmonics.push(fundamental);
+        void harmonics.push(fundamental);
       } else if (i === 2) {
         harmonics.push(fundamental * 2); // Octave
       } else if (i === 3) {
@@ -461,7 +461,7 @@ export class HubTransitionHandler {
    * Dispose resources
    */
   public dispose(): void {
-    this.stopAllTransitions();
-    logger.debug('disposal', 'Hub transition handler disposed');
+    void this.stopAllTransitions();
+    void logger.debug('disposal', 'Hub transition handler disposed');
   }
 }

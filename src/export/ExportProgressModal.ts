@@ -36,8 +36,8 @@ export class ExportProgressModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.empty();
-        contentEl.addClass('sonigraph-export-progress-modal');
+        void contentEl.empty();
+        void contentEl.addClass('sonigraph-export-progress-modal');
 
         // Header
         contentEl.createEl('h2', { text: 'Exporting...' });
@@ -65,16 +65,16 @@ export class ExportProgressModal extends Modal {
             cls: 'mod-warning'
         });
         this.cancelButton.addEventListener('click', () => {
-            this.cancelExport();
+            void this.cancelExport();
         });
 
         // Start export
-        this.startExport();
+        void this.startExport();
     }
 
     onClose() {
         const { contentEl } = this;
-        contentEl.empty();
+        void contentEl.empty();
     }
 
     /**
@@ -84,7 +84,7 @@ export class ExportProgressModal extends Modal {
         try {
             // Set progress callback
             this.exporter.setProgressCallback((progress: ExportProgress) => {
-                this.updateProgress(progress);
+                void this.updateProgress(progress);
             });
 
             // Execute export
@@ -93,21 +93,21 @@ export class ExportProgressModal extends Modal {
             // Handle result
             if (this.isCancelled) {
                 new Notice('Export cancelled');
-                logger.info('export-progress', 'Export cancelled by user');
+                void logger.info('export-progress', 'Export cancelled by user');
             } else if (result.success) {
-                this.showSuccess(result);
+                void this.showSuccess(result);
             } else {
-                this.showError(result);
+                void this.showError(result);
             }
 
         } catch (error) {
-            logger.error('export-progress', 'Export failed:', error);
+            void logger.error('export-progress', 'Export failed:', error);
             new Notice(`Export failed: ${error.message}`);
         } finally {
             // Close modal after a short delay
             setTimeout(() => {
                 if (!this.isCancelled) {
-                    this.close();
+                    void this.close();
                 }
             }, 2000);
         }
@@ -196,7 +196,7 @@ export class ExportProgressModal extends Modal {
 
         new Notice(`Export failed: ${result.error?.message || 'Unknown error'}`);
 
-        logger.error('export-progress', 'Export failed:', result.error);
+        void logger.error('export-progress', 'Export failed:', result.error);
     }
 
     /**
@@ -217,7 +217,7 @@ export class ExportProgressModal extends Modal {
             this.cancelButton.textContent = 'Cancelling...';
         }
 
-        logger.info('export-progress', 'User requested export cancellation');
+        void logger.info('export-progress', 'User requested export cancellation');
     }
 
     /**

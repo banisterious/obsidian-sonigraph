@@ -122,14 +122,14 @@ export class MetadataListener {
      */
     startListening(): void {
         if (this.isActive) {
-            logger.warn('listener-already-active', 'MetadataListener is already active');
+            void logger.warn('listener-already-active', 'MetadataListener is already active');
             return;
         }
 
-        this.registerEventHandlers();
+        void this.registerEventHandlers();
         this.isActive = true;
         
-        logger.info('listener-started', 'MetadataListener started listening for changes');
+        void logger.info('listener-started', 'MetadataListener started listening for changes');
     }
 
     /**
@@ -137,15 +137,15 @@ export class MetadataListener {
      */
     stopListening(): void {
         if (!this.isActive) {
-            logger.warn('listener-not-active', 'MetadataListener is not active');
+            void logger.warn('listener-not-active', 'MetadataListener is not active');
             return;
         }
 
-        this.unregisterEventHandlers();
-        this.clearPendingChanges();
+        void this.unregisterEventHandlers();
+        void this.clearPendingChanges();
         this.isActive = false;
         
-        logger.info('listener-stopped', 'MetadataListener stopped listening');
+        void logger.info('listener-stopped', 'MetadataListener stopped listening');
     }
 
     /**
@@ -155,7 +155,7 @@ export class MetadataListener {
         // Listen for metadata changes
         if (this.config.enableMetadataChanges) {
             const metadataRef = this.app.metadataCache.on('changed', (file: TFile) => {
-                this.handleMetadataChange(file);
+                void this.handleMetadataChange(file);
             });
             this.eventRefs.push(metadataRef);
         }
@@ -163,7 +163,7 @@ export class MetadataListener {
         // Listen for file renames
         if (this.config.enableFileRenames) {
             const renameRef = this.app.vault.on('rename', (file: TFile, oldPath: string) => {
-                this.handleFileRename(file, oldPath);
+                void this.handleFileRename(file, oldPath);
             });
             this.eventRefs.push(renameRef);
         }
@@ -171,7 +171,7 @@ export class MetadataListener {
         // Listen for file creation
         if (this.config.enableFileCreation) {
             const createRef = this.app.vault.on('create', (file: TFile) => {
-                this.handleFileCreate(file);
+                void this.handleFileCreate(file);
             });
             this.eventRefs.push(createRef);
         }
@@ -179,7 +179,7 @@ export class MetadataListener {
         // Listen for file deletion
         if (this.config.enableFileDeletion) {
             const deleteRef = this.app.vault.on('delete', (file: TFile) => {
-                this.handleFileDelete(file);
+                void this.handleFileDelete(file);
             });
             this.eventRefs.push(deleteRef);
         }
@@ -196,7 +196,7 @@ export class MetadataListener {
         }
         this.eventRefs = [];
         
-        logger.debug('event-handlers-unregistered', 'All event handlers unregistered');
+        void logger.debug('event-handlers-unregistered', 'All event handlers unregistered');
     }
 
     /**
@@ -218,7 +218,7 @@ export class MetadataListener {
             changes
         };
 
-        this.queueChange(file.path, changeEvent);
+        void this.queueChange(file.path, changeEvent);
         this.updateStats('metadata', performance.now() - startTime);
     }
 
@@ -238,7 +238,7 @@ export class MetadataListener {
             changes: {}
         };
 
-        this.queueChange(file.path, changeEvent);
+        void this.queueChange(file.path, changeEvent);
         this.updateStats('rename', performance.now() - startTime);
     }
 
@@ -257,7 +257,7 @@ export class MetadataListener {
             changes: {}
         };
 
-        this.queueChange(file.path, changeEvent);
+        void this.queueChange(file.path, changeEvent);
         this.updateStats('create', performance.now() - startTime);
     }
 
@@ -276,7 +276,7 @@ export class MetadataListener {
             changes: {}
         };
 
-        this.queueChange(file.path, changeEvent);
+        void this.queueChange(file.path, changeEvent);
         this.updateStats('delete', performance.now() - startTime);
     }
 
@@ -309,7 +309,7 @@ export class MetadataListener {
 
         // Set new debounce timeout
         const timeout = setTimeout(() => {
-            this.processChange(filePath);
+            void this.processChange(filePath);
             this.debounceTimeouts.delete(filePath);
         }, this.config.debounceDelay);
 
@@ -317,11 +317,11 @@ export class MetadataListener {
 
         // Check if we should trigger batch processing
         if (this.pendingChanges.size >= this.config.batchUpdateThreshold) {
-            this.triggerBatchUpdate();
+            void this.triggerBatchUpdate();
         } else if (!this.batchTimeout) {
             // Set maximum batch delay timeout
             this.batchTimeout = setTimeout(() => {
-                this.triggerBatchUpdate();
+                void this.triggerBatchUpdate();
             }, this.config.maxBatchDelay);
         }
 
@@ -411,7 +411,7 @@ export class MetadataListener {
 
             // Trigger vault-wide re-analysis if many changes
             if (changes.length > 10) {
-                logger.info('vault-reanalysis', 'Triggering vault-wide re-analysis due to many changes');
+                void logger.info('vault-reanalysis', 'Triggering vault-wide re-analysis due to many changes');
                 this.vaultOptimizer.clearCache();
             }
 
@@ -424,7 +424,7 @@ export class MetadataListener {
             });
 
         } catch (error) {
-            logger.error('batch-update-error', 'Batch update failed', error as Error);
+            void logger.error('batch-update-error', 'Batch update failed', error as Error);
         }
 
         this.pendingChanges.clear();
@@ -440,7 +440,7 @@ export class MetadataListener {
             try {
                 await handler(changeEvent);
             } catch (error) {
-                logger.error('handler-error', 'Change handler failed', error as Error);
+                void logger.error('handler-error', 'Change handler failed', error as Error);
             }
         });
 
@@ -492,7 +492,7 @@ export class MetadataListener {
 
         this.pendingChanges.clear();
         
-        logger.debug('pending-changes-cleared', 'All pending changes cleared');
+        void logger.debug('pending-changes-cleared', 'All pending changes cleared');
     }
 
     /**
@@ -521,13 +521,13 @@ export class MetadataListener {
         const wasActive = this.isActive;
         
         if (wasActive) {
-            this.stopListening();
+            void this.stopListening();
         }
 
         this.config = { ...this.config, ...config };
 
         if (wasActive) {
-            this.startListening();
+            void this.startListening();
         }
 
         logger.info('config-updated', 'MetadataListener configuration updated', {
@@ -576,13 +576,13 @@ export class MetadataListener {
      */
     async flush(): Promise<void> {
         if (this.pendingChanges.size === 0) {
-            logger.debug('flush-empty', 'No pending changes to flush');
+            void logger.debug('flush-empty', 'No pending changes to flush');
             return;
         }
 
         logger.info('flush-started', `Flushing ${this.pendingChanges.size} pending changes`);
         await this.triggerBatchUpdate();
-        logger.info('flush-complete', 'All pending changes flushed');
+        void logger.info('flush-complete', 'All pending changes flushed');
     }
 
     /**
@@ -600,6 +600,6 @@ export class MetadataListener {
             avgProcessingTime: 0
         };
 
-        logger.info('stats-reset', 'MetadataListener statistics reset');
+        void logger.info('stats-reset', 'MetadataListener statistics reset');
     }
 }

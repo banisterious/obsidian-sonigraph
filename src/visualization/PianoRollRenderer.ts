@@ -92,7 +92,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
             timelineHeight: 25 // Height of timeline row
         };
 
-        logger.debug('initialization', 'PianoRollRenderer created');
+        void logger.debug('initialization', 'PianoRollRenderer created');
     }
 
     /**
@@ -111,27 +111,27 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Get 2D context
         const ctx = this.canvas.getContext('2d');
         if (!ctx) {
-            logger.error('initialization', 'Failed to get 2D context');
+            void logger.error('initialization', 'Failed to get 2D context');
             return;
         }
         this.ctx = ctx;
 
         // Create pitch labels
-        this.createPitchLabels();
+        void this.createPitchLabels();
 
         // Create timeline
-        this.createTimeline();
+        void this.createTimeline();
 
         // Create legend
-        this.createLegend();
+        void this.createLegend();
 
         // Setup canvas sizing - use requestAnimationFrame and retry until container has size
-        this.waitForContainerAndResize();
+        void this.waitForContainerAndResize();
 
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
 
-        logger.info('initialization', 'PianoRollRenderer initialized');
+        void logger.info('initialization', 'PianoRollRenderer initialized');
     }
 
     /**
@@ -148,7 +148,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
                 width: rect.width,
                 height: rect.height
             });
-            this.resizeCanvas();
+            void this.resizeCanvas();
         } else if (attempts < 20) {
             // Container still has no dimensions, wait and retry
             logger.debug('initialization', `Container has no dimensions yet (attempt ${attempts + 1}/20), retrying...`);
@@ -288,8 +288,8 @@ export class PianoRollRenderer implements VisualizationRenderer {
      * Force resize (public method for when container visibility changes)
      */
     public forceResize(): void {
-        logger.info('resize', 'Force resize requested');
-        this.resizeCanvas();
+        void logger.info('resize', 'Force resize requested');
+        void this.resizeCanvas();
     }
 
     /**
@@ -315,13 +315,13 @@ export class PianoRollRenderer implements VisualizationRenderer {
         });
 
         // Update pitch labels to match new canvas height
-        this.updatePitchLabels();
+        void this.updatePitchLabels();
 
         // Draw background immediately after resize to test visibility
         if (this.ctx && this.canvas.width > 0 && this.canvas.height > 0) {
             this.ctx.fillStyle = '#1a1a1a';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            logger.debug('resize', 'Drew background after resize');
+            void logger.debug('resize', 'Drew background after resize');
         }
     }
 
@@ -338,21 +338,21 @@ export class PianoRollRenderer implements VisualizationRenderer {
         const timelineDuration = Math.max(maxTimestamp, currentTime + this.pianoRollConfig.timeWindow);
 
         // Update timeline markers
-        this.updateTimelineMarkers(timelineDuration);
+        void this.updateTimelineMarkers(timelineDuration);
 
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Draw grid if enabled
         if (this.config.showGrid) {
-            this.drawGrid(currentTime, events);
+            void this.drawGrid(currentTime, events);
         }
 
         // Draw notes
-        this.drawNotes(events, currentTime);
+        void this.drawNotes(events, currentTime);
 
         // Draw playhead (pass events to calculate timeline duration)
-        this.drawPlayhead(currentTime, events);
+        void this.drawPlayhead(currentTime, events);
     }
 
     /**
@@ -384,10 +384,10 @@ export class PianoRollRenderer implements VisualizationRenderer {
             // Draw octave line (slightly thicker)
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
             ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(this.canvas.width, y);
-            ctx.stroke();
+            void ctx.beginPath();
+            void ctx.moveTo(0, y);
+            void ctx.lineTo(this.canvas.width, y);
+            void ctx.stroke();
 
             // Draw individual semitone lines within octave
             if (octave < octaveCount) {
@@ -397,10 +397,10 @@ export class PianoRollRenderer implements VisualizationRenderer {
                     const semitonePitchNormalized = (semitonePitch - this.pianoRollConfig.minPitch) / pitchRange;
                     const semitoneY = (1 - semitonePitchNormalized) * this.canvas.height;
 
-                    ctx.beginPath();
-                    ctx.moveTo(0, semitoneY);
-                    ctx.lineTo(this.canvas.width, semitoneY);
-                    ctx.stroke();
+                    void ctx.beginPath();
+                    void ctx.moveTo(0, semitoneY);
+                    void ctx.lineTo(this.canvas.width, semitoneY);
+                    void ctx.stroke();
                 }
             }
         }
@@ -425,10 +425,10 @@ export class PianoRollRenderer implements VisualizationRenderer {
             // Major grid lines (every gridInterval)
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
             ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, this.canvas.height);
-            ctx.stroke();
+            void ctx.beginPath();
+            void ctx.moveTo(x, 0);
+            void ctx.lineTo(x, this.canvas.height);
+            void ctx.stroke();
 
             // Minor grid lines (subdivisions)
             if (i < gridCount) {
@@ -436,10 +436,10 @@ export class PianoRollRenderer implements VisualizationRenderer {
                 for (let j = 1; j < 5; j++) {
                     const subTime = time + (j * gridInterval / 5);
                     const subX = (subTime / timelineDuration) * this.canvas.width;
-                    ctx.beginPath();
-                    ctx.moveTo(subX, 0);
-                    ctx.lineTo(subX, this.canvas.height);
-                    ctx.stroke();
+                    void ctx.beginPath();
+                    void ctx.moveTo(subX, 0);
+                    void ctx.lineTo(subX, this.canvas.height);
+                    void ctx.stroke();
                 }
             }
         }
@@ -465,7 +465,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Draw chord brackets first (so they're behind notes)
         chordGroups.forEach(group => {
             if (group.length > 1) {
-                this.drawChordBracket(group, timelineDuration, currentTime);
+                void this.drawChordBracket(group, timelineDuration, currentTime);
             }
         });
 
@@ -531,22 +531,22 @@ export class PianoRollRenderer implements VisualizationRenderer {
 
             // Draw note bar with gradient
             const gradient = ctx.createLinearGradient(x, y, x + width, y);
-            gradient.addColorStop(0, color);
+            void gradient.addColorStop(0, color);
             gradient.addColorStop(1, this.adjustBrightness(color, -20));
 
             ctx.fillStyle = gradient;
-            ctx.fillRect(x, y + 1, width, height);
+            void ctx.fillRect(x, y + 1, width, height);
 
             // Add border
             ctx.strokeStyle = color;
             ctx.lineWidth = 1;
-            ctx.strokeRect(x, y + 1, width, height);
+            void ctx.strokeRect(x, y + 1, width, height);
 
             // Add glow effect if playing
             if (isPlaying) {
                 ctx.shadowBlur = 8;
                 ctx.shadowColor = color;
-                ctx.strokeRect(x, y + 1, width, height);
+                void ctx.strokeRect(x, y + 1, width, height);
                 ctx.shadowBlur = 0;
             }
         });
@@ -572,19 +572,19 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Draw playhead line
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, this.canvas.height);
-        ctx.stroke();
+        void ctx.beginPath();
+        void ctx.moveTo(x, 0);
+        void ctx.lineTo(x, this.canvas.height);
+        void ctx.stroke();
 
         // Draw playhead triangle at top
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x - 5, 8);
-        ctx.lineTo(x + 5, 8);
-        ctx.closePath();
-        ctx.fill();
+        void ctx.beginPath();
+        void ctx.moveTo(x, 0);
+        void ctx.lineTo(x - 5, 8);
+        void ctx.lineTo(x + 5, 8);
+        void ctx.closePath();
+        void ctx.fill();
     }
 
     /**
@@ -625,14 +625,14 @@ export class PianoRollRenderer implements VisualizationRenderer {
      */
     public updateConfig(config: Partial<VisualizationConfig>): void {
         this.config = { ...this.config, ...config };
-        logger.debug('config', 'Configuration updated', config);
+        void logger.debug('config', 'Configuration updated', config);
     }
 
     /**
      * Clean up resources
      */
     public destroy(): void {
-        logger.info('lifecycle', 'Destroying PianoRollRenderer');
+        void logger.info('lifecycle', 'Destroying PianoRollRenderer');
 
         // Remove event listeners
         window.removeEventListener('resize', () => this.resizeCanvas());
@@ -650,7 +650,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
         this.timelineContainer = null;
         this.legendContainer = null;
 
-        logger.debug('lifecycle', 'PianoRollRenderer destroyed');
+        void logger.debug('lifecycle', 'PianoRollRenderer destroyed');
     }
 
     /**
@@ -673,14 +673,14 @@ export class PianoRollRenderer implements VisualizationRenderer {
                 currentGroup.push(sorted[i]);
             } else {
                 // Save current group and start new one
-                groups.push(currentGroup);
+                void groups.push(currentGroup);
                 currentGroup = [sorted[i]];
             }
         }
 
         // Don't forget the last group
         if (currentGroup.length > 0) {
-            groups.push(currentGroup);
+            void groups.push(currentGroup);
         }
 
         return groups;
@@ -716,29 +716,29 @@ export class PianoRollRenderer implements VisualizationRenderer {
         // Draw subtle background highlight for chord area
         ctx.fillStyle = isPlaying ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
         const bracketWidth = 3;
-        ctx.fillRect(x - bracketWidth, topY - 4, bracketWidth, bottomY - topY + 8);
+        void ctx.fillRect(x - bracketWidth, topY - 4, bracketWidth, bottomY - topY + 8);
 
         // Draw bracket connecting the notes
         ctx.strokeStyle = isPlaying ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)';
         ctx.lineWidth = 2;
 
         // Left bracket line
-        ctx.beginPath();
-        ctx.moveTo(x - bracketWidth, topY);
-        ctx.lineTo(x - bracketWidth, bottomY);
-        ctx.stroke();
+        void ctx.beginPath();
+        void ctx.moveTo(x - bracketWidth, topY);
+        void ctx.lineTo(x - bracketWidth, bottomY);
+        void ctx.stroke();
 
         // Top horizontal cap
-        ctx.beginPath();
-        ctx.moveTo(x - bracketWidth, topY);
-        ctx.lineTo(x - bracketWidth / 2, topY);
-        ctx.stroke();
+        void ctx.beginPath();
+        void ctx.moveTo(x - bracketWidth, topY);
+        void ctx.lineTo(x - bracketWidth / 2, topY);
+        void ctx.stroke();
 
         // Bottom horizontal cap
-        ctx.beginPath();
-        ctx.moveTo(x - bracketWidth, bottomY);
-        ctx.lineTo(x - bracketWidth / 2, bottomY);
-        ctx.stroke();
+        void ctx.beginPath();
+        void ctx.moveTo(x - bracketWidth, bottomY);
+        void ctx.lineTo(x - bracketWidth / 2, bottomY);
+        void ctx.stroke();
 
         // Optionally show chord label (if enabled)
         if (this.config.showLabels && notes.length >= 2) {
@@ -747,7 +747,7 @@ export class PianoRollRenderer implements VisualizationRenderer {
                 ctx.fillStyle = isPlaying ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)';
                 ctx.font = '11px sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText(chordType, x - bracketWidth - 4, topY - 4);
+                void ctx.fillText(chordType, x - bracketWidth - 4, topY - 4);
                 ctx.textAlign = 'left'; // Reset
             }
         }

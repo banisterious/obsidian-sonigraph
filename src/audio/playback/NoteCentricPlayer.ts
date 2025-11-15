@@ -45,8 +45,8 @@ export class NoteCentricPlayer {
 	 */
 	public async play(mapping: NoteCentricMapping): Promise<void> {
 		if (this.isPlaying) {
-			logger.warn('already-playing', 'Already playing, stopping first');
-			this.stop();
+			void logger.warn('already-playing', 'Already playing, stopping first');
+			void this.stop();
 		}
 
 		logger.info('playback-start', 'Starting note-centric playback', {
@@ -71,7 +71,7 @@ export class NoteCentricPlayer {
 		};
 
 		// Play center phrase with lead instrument
-		logger.debug('play-center', 'Playing center phrase');
+		void logger.debug('play-center', 'Playing center phrase');
 		await this.playPhrase(mapping.centerPhrase, 'center', 0);
 
 		// Play embellishments with appropriate instruments
@@ -84,8 +84,8 @@ export class NoteCentricPlayer {
 		}
 
 		// Start animation loop to clean up finished notes
-		logger.debug('start-animation', 'Starting animation loop');
-		this.startAnimationLoop();
+		void logger.debug('start-animation', 'Starting animation loop');
+		void this.startAnimationLoop();
 
 		logger.info('playback-scheduled', 'All notes scheduled', {
 			scheduledNotes: this.scheduledNoteCount,
@@ -101,7 +101,7 @@ export class NoteCentricPlayer {
 			return;
 		}
 
-		logger.info('playback-stop', 'Stopping note-centric playback');
+		void logger.info('playback-stop', 'Stopping note-centric playback');
 
 		// Notes stop automatically after their duration in AudioEngine
 		// Just clear tracking and stop scheduling new notes
@@ -293,7 +293,7 @@ export class NoteCentricPlayer {
 		const enabledInstruments = this.audioEngine.getEnabledInstruments();
 
 		if (enabledInstruments.length === 0) {
-			logger.warn('no-instruments', 'No instruments enabled, cannot play note-centric audio');
+			void logger.warn('no-instruments', 'No instruments enabled, cannot play note-centric audio');
 			return 'piano'; // Fallback (will fail gracefully)
 		}
 

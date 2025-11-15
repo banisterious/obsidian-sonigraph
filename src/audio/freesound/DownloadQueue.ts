@@ -92,7 +92,7 @@ export class DownloadQueue {
      */
     addBulkTasks(soundIds: number[], priority: number = 0): void {
         for (const soundId of soundIds) {
-            this.addTask(soundId, priority);
+            void this.addTask(soundId, priority);
         }
         this.logger.info('download-queue', 'Bulk download tasks added - ' + JSON.stringify({ count: soundIds.length }));
     }
@@ -105,7 +105,7 @@ export class DownloadQueue {
         if (task && task.status === 'pending') {
             this.queue.delete(soundId);
             this.logger.debug('download-queue', 'Download task removed from queue - ' + JSON.stringify({ soundId }));
-            this.notifyProgress();
+            void this.notifyProgress();
         }
     }
 
@@ -121,7 +121,7 @@ export class DownloadQueue {
         }
 
         this.logger.info('download-queue', 'Download queue cleared - ' + JSON.stringify({ clearedCount: pendingTasks.length }));
-        this.notifyProgress();
+        void this.notifyProgress();
     }
 
     /**
@@ -191,7 +191,7 @@ export class DownloadQueue {
 
             this.activeDownloads.add(nextTask.soundId);
             nextTask.status = 'downloading';
-            this.notifyProgress();
+            void this.notifyProgress();
 
             // Start download (don't await - process in parallel)
             void this.downloadTask(nextTask).then(() => {
@@ -202,7 +202,7 @@ export class DownloadQueue {
 
         // Check if queue is complete
         if (this.activeDownloads.size === 0 && this.getPendingTaskCount() === 0) {
-            this.notifyQueueComplete();
+            void this.notifyQueueComplete();
         }
     }
 
@@ -239,7 +239,7 @@ export class DownloadQueue {
 
             const audioBuffer = await this.downloadAudio(previewUrl, (progress) => {
                 task.progress = progress;
-                this.notifyProgress();
+                void this.notifyProgress();
             });
 
             // Task complete
@@ -260,7 +260,7 @@ export class DownloadQueue {
             };
 
             this.logger.info('download-queue', 'Sample downloaded successfully - ' + JSON.stringify({ soundId: task.soundId, name: sound.name }));
-            this.notifyTaskComplete(result);
+            void this.notifyTaskComplete(result);
 
         } catch (error) {
             task.retryCount++;
@@ -282,11 +282,11 @@ export class DownloadQueue {
                 };
 
                 this.logger.error('download-queue', `Download failed permanently - soundId: ${task.soundId}, error: ${error.message}`);
-                this.notifyTaskComplete(result);
+                void this.notifyTaskComplete(result);
             }
         }
 
-        this.notifyProgress();
+        void this.notifyProgress();
     }
 
     /**
@@ -298,7 +298,7 @@ export class DownloadQueue {
     ): Promise<AudioBuffer> {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
+            void xhr.open('GET', url, true);
             xhr.responseType = 'arraybuffer';
 
             xhr.onprogress = (event) => {
@@ -325,7 +325,7 @@ export class DownloadQueue {
                 reject(new Error('Network error during download'));
             };
 
-            xhr.send();
+            void xhr.send();
         });
     }
 
@@ -366,7 +366,7 @@ export class DownloadQueue {
      */
     private notifyTaskComplete(result: DownloadResult): void {
         if (this.onTaskComplete) {
-            this.onTaskComplete(result);
+            void this.onTaskComplete(result);
         }
     }
 
@@ -376,7 +376,7 @@ export class DownloadQueue {
     private notifyQueueComplete(): void {
         if (this.onQueueComplete) {
             this.logger.info('download-queue', 'Download queue completed');
-            this.onQueueComplete();
+            void this.onQueueComplete();
         }
     }
 
@@ -384,7 +384,7 @@ export class DownloadQueue {
      * Dispose of resources
      */
     dispose(): void {
-        this.clearQueue();
+        void this.clearQueue();
         this.activeDownloads.clear();
         if (this.audioContext.state !== 'closed') {
             this.audioContext.close();

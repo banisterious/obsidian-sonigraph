@@ -145,8 +145,8 @@ export class GraphRenderer {
       debugMode: false
     });
 
-    this.initializeSVG();
-    this.initializeSimulation();
+    void this.initializeSVG();
+    void this.initializeSimulation();
     // Tooltip initialization removed - using native browser tooltips
     
     logger.debug('renderer', 'GraphRenderer initialized', { config: this.config });
@@ -174,7 +174,7 @@ export class GraphRenderer {
     this.g.append('g').attr('class', 'sonigraph-temporal-nodes');
     
     // Performance optimization: Initialize viewport bounds
-    this.initializeViewportBounds();
+    void this.initializeViewportBounds();
 
     // Setup zoom behavior
     if (this.config.enableZoom) {
@@ -183,12 +183,12 @@ export class GraphRenderer {
         .on('zoom', (event) => {
           this.g.attr('transform', event.transform);
           // Performance optimization: Update viewport bounds for culling
-          this.updateViewportBounds(event.transform);
-          this.scheduleViewportUpdate();
+          void this.updateViewportBounds(event.transform);
+          void this.scheduleViewportUpdate();
           
           // Adaptive detail levels: Notify zoom change callback
           if (this.onZoomChangeCallback) {
-            this.onZoomChangeCallback(event.transform.k);
+            void this.onZoomChangeCallback(event.transform.k);
           }
         });
 
@@ -256,7 +256,7 @@ export class GraphRenderer {
       });
 
     // Apply Content-Aware Positioning forces
-    this.applyContentAwareForces();
+    void this.applyContentAwareForces();
 
     this.simulation.on('tick', () => {
         // Performance optimization: Frame skipping for dense graphs
@@ -270,14 +270,14 @@ export class GraphRenderer {
         
         // Performance optimization: Only constrain coordinates occasionally
         if (this.simulation.alpha() > 0.3 || Math.random() < 0.1) {
-          this.constrainNodeCoordinates();
+          void this.constrainNodeCoordinates();
         }
         
         // Optimized position updates
-        this.updatePositions();
+        void this.updatePositions();
         
         // Update debug visualization if enabled (Content-Aware Positioning debug overlay)
-        this.updateDebugVisualization();
+        void this.updateDebugVisualization();
       })
       .alphaDecay(this.getAlphaDecay()) // Adaptive convergence based on performance mode
       .velocityDecay(this.getVelocityDecay()) // Adaptive velocity decay
@@ -306,35 +306,35 @@ export class GraphRenderer {
     this.links = links;
     
     // Performance optimization: Initialize node coordinates to prevent invalid positions
-    this.initializeNodeCoordinates();
+    void this.initializeNodeCoordinates();
     
     // Performance optimization: Detect graph complexity and set performance mode
-    this.detectPerformanceMode(nodes.length, links.length);
+    void this.detectPerformanceMode(nodes.length, links.length);
     this.isDenseGraph = this.performanceMode === 'performance';
     
     if (this.isDenseGraph) {
       logger.info('renderer', `Performance mode: ${this.performanceMode} (${nodes.length} nodes, ${links.length} links)`);
-      this.disableTransitionsForDenseGraph();
+      void this.disableTransitionsForDenseGraph();
     } else {
-      this.enableTransitionsForNormalGraph();
+      void this.enableTransitionsForNormalGraph();
     }
     
     // Phase 3.8: Apply adaptive performance scaling
-    this.applyAdaptiveScaling(nodes.length);
+    void this.applyAdaptiveScaling(nodes.length);
     
     // Phase 3.8: Apply initial clustering positioning (one-time)
-    this.applyInitialClustering();
+    void this.applyInitialClustering();
     
     // Apply Smart Clustering analysis and visualization
-    this.applySmartClustering();
+    void this.applySmartClustering();
     
     // Initialize all nodes as visible for static rendering
     this.visibleNodes = new Set(nodes.map(n => n.id));
     this.visibleLinks = new Set(links.map((l, i) => this.getLinkId(l, i)));
     
-    this.updateSimulation();
-    this.renderLinks();
-    this.renderNodes();
+    void this.updateSimulation();
+    void this.renderLinks();
+    void this.renderNodes();
     
     // Note: Initial view/zoom is now controlled by the calling component (SonicGraphView)
     // this.setInitialView(); // Removed to prevent zoom conflicts
@@ -357,8 +357,8 @@ export class GraphRenderer {
       }
     });
     
-    this.updateNodeVisibility();
-    this.updateLinkVisibility();
+    void this.updateNodeVisibility();
+    void this.updateLinkVisibility();
   }
 
   /**
@@ -753,38 +753,38 @@ export class GraphRenderer {
     selection
       .on('mouseover', (event, d) => {
         // Highlight connected links
-        this.highlightConnectedLinks(d.id, true);
+        void this.highlightConnectedLinks(d.id, true);
         
         // Hub highlighting: Add special hover effects for hubs
         const hubTier = this.getHubTier(d);
         const nodeElement = d3.select(event.currentTarget);
         
         // Add hover class for CSS styling
-        nodeElement.classed('hub-hovered', true);
+        void nodeElement.classed('hub-hovered', true);
         
         // For major and mega hubs, temporarily boost their visual prominence
         if (hubTier.name === 'major-hub' || hubTier.name === 'mega-hub') {
-          this.temporaryHubBoost(nodeElement, d);
+          void this.temporaryHubBoost(nodeElement, d);
         }
         
         // Enhanced tooltip for hubs
         if (d.connections.length >= 5) {
-          this.showHubTooltip(d, event);
+          void this.showHubTooltip(d, event);
         }
       })
       .on('mouseout', (event, d) => {
         // Remove highlight from connected links
-        this.highlightConnectedLinks(d.id, false);
+        void this.highlightConnectedLinks(d.id, false);
         
         // Remove hover effects
         const nodeElement = d3.select(event.currentTarget);
-        nodeElement.classed('hub-hovered', false);
+        void nodeElement.classed('hub-hovered', false);
         
         // Remove temporary boost
-        this.removeHubBoost(nodeElement);
+        void this.removeHubBoost(nodeElement);
         
         // Hide hub tooltip
-        this.hideHubTooltip();
+        void this.hideHubTooltip();
       })
       .on('click', (_, d) => {
         // Enhanced logging for hubs
@@ -840,9 +840,9 @@ export class GraphRenderer {
   private updatePositions(): void {
     // Performance optimization: Batch position updates for dense graphs
     if (this.isDenseGraph) {
-      this.updatePositionsBatched();
+      void this.updatePositionsBatched();
     } else {
-      this.updatePositionsStandard();
+      void this.updatePositionsStandard();
     }
     
     // Update cluster positions if clustering is enabled
@@ -850,13 +850,13 @@ export class GraphRenderer {
       // Only update occasionally for performance
       if (Math.random() < 0.1) { // 10% of ticks
         this.smartClustering.recalculateClusterPositions();
-        this.renderClusterVisualization();
+        void this.renderClusterVisualization();
       }
     }
     
     // Performance optimization: Much less frequent cleanup for better performance
     if (Math.random() < 0.02) { // Only 2% of the time for much better performance
-      this.forceRemoveInvalidLinks();
+      void this.forceRemoveInvalidLinks();
     }
   }
   
@@ -1098,7 +1098,7 @@ export class GraphRenderer {
    * Handle simulation end
    */
   private onSimulationEnd(): void {
-    logger.debug('renderer', 'Force simulation ended');
+    void logger.debug('renderer', 'Force simulation ended');
   }
 
   /**
@@ -1191,13 +1191,13 @@ export class GraphRenderer {
    * Phase 3.8: Update layout settings and apply changes
    */
   updateLayoutSettings(settings: SonicGraphSettings['layout']): void {
-    logger.debug('layout-settings', 'Updating layout settings', settings);
+    void logger.debug('layout-settings', 'Updating layout settings', settings);
     
     this.layoutSettings = settings;
     
     // Apply layout preset if specified
     if (settings.layoutPreset) {
-      this.applyLayoutPreset(settings.layoutPreset);
+      void this.applyLayoutPreset(settings.layoutPreset);
     }
     
     // Update force parameters based on settings
@@ -1206,18 +1206,18 @@ export class GraphRenderer {
     
     // Update simulation forces if simulation exists
     if (this.simulation) {
-      this.updateSimulationForces();
+      void this.updateSimulationForces();
       this.simulation.alpha(0.3).restart(); // Gentle restart to apply changes
     }
     
-    logger.debug('layout-settings', 'Layout settings applied', settings);
+    void logger.debug('layout-settings', 'Layout settings applied', settings);
   }
 
   /**
    * Update Content-Aware Positioning settings
    */
   updateContentAwareSettings(settings: SonicGraphSettings['contentAwarePositioning']): void {
-    logger.debug('content-aware-settings', 'Updating content-aware positioning settings', settings);
+    void logger.debug('content-aware-settings', 'Updating content-aware positioning settings', settings);
     
     this.contentAwareSettings = settings;
     
@@ -1228,18 +1228,18 @@ export class GraphRenderer {
     
     // Re-apply forces if simulation exists and content-aware positioning is enabled
     if (this.simulation && settings.enabled) {
-      this.applyContentAwareForces();
+      void this.applyContentAwareForces();
       this.simulation.alpha(0.3).restart(); // Gentle restart to apply changes
     }
     
-    logger.debug('content-aware-settings', 'Content-aware positioning settings applied', settings);
+    void logger.debug('content-aware-settings', 'Content-aware positioning settings applied', settings);
   }
 
   /**
    * Update Smart Clustering settings
    */
   updateSmartClusteringSettings(settings: SonicGraphSettings['smartClustering']): void {
-    logger.debug('smart-clustering-settings', 'Updating smart clustering settings', settings);
+    void logger.debug('smart-clustering-settings', 'Updating smart clustering settings', settings);
     
     this.smartClusteringSettings = settings;
     
@@ -1263,10 +1263,10 @@ export class GraphRenderer {
     if (this.simulation && settings.enabled && this.nodes.length > 0) {
       this.applySmartClustering(); // Async call, no need to await here
     } else if (!settings.enabled) {
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
     }
     
-    logger.debug('smart-clustering-settings', 'Smart clustering settings applied', settings);
+    void logger.debug('smart-clustering-settings', 'Smart clustering settings applied', settings);
   }
 
   /**
@@ -1316,7 +1316,7 @@ export class GraphRenderer {
    * Phase 3.8: Apply initial clustering positioning (one-time optimization)
    */
   private applyInitialClustering(): void {
-    logger.debug('clustering', 'Applying initial clustering positioning');
+    void logger.debug('clustering', 'Applying initial clustering positioning');
     
     const layoutSettings = this.layoutSettings;
     if (!layoutSettings) return;
@@ -1345,7 +1345,7 @@ export class GraphRenderer {
       }
     });
     
-    logger.debug('clustering', 'Initial clustering positioning applied');
+    void logger.debug('clustering', 'Initial clustering positioning applied');
   }
 
   // Phase 3.8: Clustering methods removed - now using one-time initial positioning
@@ -1480,7 +1480,7 @@ export class GraphRenderer {
     
     // Update simulation with new parameters if it exists
     if (this.simulation) {
-      this.updateSimulationForces();
+      void this.updateSimulationForces();
     }
   }
 
@@ -1510,7 +1510,7 @@ export class GraphRenderer {
       })
       ?.strength((d: GraphLink) => d.strength * this.forceConfig.linkStrength * 1.5);
     
-    logger.debug('adaptive-scaling', 'Updated simulation forces with new parameters');
+    void logger.debug('adaptive-scaling', 'Updated simulation forces with new parameters');
   }
 
   /**
@@ -1540,7 +1540,7 @@ export class GraphRenderer {
     this.contentAwarePositioning.applyForcesToSimulation(this.simulation);
     
     // Update debug visualization if enabled
-    this.updateDebugVisualization();
+    void this.updateDebugVisualization();
   }
 
   /**
@@ -1548,7 +1548,7 @@ export class GraphRenderer {
    */
   private async applySmartClustering(): Promise<void> {
     if (!this.smartClustering || !this.smartClusteringSettings?.enabled) {
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
       return;
     }
     
@@ -1572,11 +1572,11 @@ export class GraphRenderer {
       });
       
       // Render cluster visualization
-      this.renderClusterVisualization();
+      void this.renderClusterVisualization();
       
     } catch (error) {
       logger.error('smart-clustering', 'Failed to apply smart clustering', (error as Error).message);
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
     }
   }
 
@@ -1585,13 +1585,13 @@ export class GraphRenderer {
    */
   private updateDebugVisualization(): void {
     if (!this.contentAwarePositioning || !this.contentAwareSettings?.debugVisualization) {
-      this.clearDebugVisualization();
+      void this.clearDebugVisualization();
       return;
     }
 
     const debugData = this.contentAwarePositioning.getDebugVisualization();
     if (!debugData) {
-      this.clearDebugVisualization();
+      void this.clearDebugVisualization();
       return;
     }
 
@@ -1615,13 +1615,13 @@ export class GraphRenderer {
     }
 
     // Render temporal zones
-    this.renderTemporalZones(debugGroup, temporalZones);
+    void this.renderTemporalZones(debugGroup, temporalZones);
 
     // Render tag connections
-    this.renderTagConnections(debugGroup, tagConnections);
+    void this.renderTagConnections(debugGroup, tagConnections);
 
     // Render hub indicators
-    this.renderHubIndicators(debugGroup, hubNodes);
+    void this.renderHubIndicators(debugGroup, hubNodes);
   }
 
   /**
@@ -1785,7 +1785,7 @@ export class GraphRenderer {
   private clearDebugVisualization(): void {
     const debugGroup = this.g.select('.debug-visualization');
     if (!debugGroup.empty()) {
-      debugGroup.remove();
+      void debugGroup.remove();
     }
   }
 
@@ -1794,7 +1794,7 @@ export class GraphRenderer {
    */
   private renderClusterVisualization(): void {
     if (!this.clusteringResult || !this.smartClusteringSettings?.visualization.enableVisualization) {
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
       return;
     }
 
@@ -1812,11 +1812,11 @@ export class GraphRenderer {
     }
 
     // Render cluster boundaries
-    this.renderClusterBoundaries();
+    void this.renderClusterBoundaries();
     
     // Render cluster labels if enabled
     if (this.smartClusteringSettings.visualization.showClusterLabels) {
-      this.renderClusterLabels();
+      void this.renderClusterLabels();
     }
   }
 
@@ -1918,26 +1918,26 @@ export class GraphRenderer {
     (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)?.links(this.links);
     
     // Re-render with new data
-    this.renderNodes();
-    this.renderLinks();
+    void this.renderNodes();
+    void this.renderLinks();
     
     // Restart simulation to apply spacing changes
-    this.restartSimulation();
+    void this.restartSimulation();
     
-    logger.debug('renderer', 'Graph data updated and simulation restarted');
+    void logger.debug('renderer', 'Graph data updated and simulation restarted');
   }
 
   /**
    * Restart simulation with current configuration
    */
   restartSimulation(): void {
-    logger.debug('renderer', 'Restarting simulation with updated spacing parameters');
+    void logger.debug('renderer', 'Restarting simulation with updated spacing parameters');
     
     // Update all forces with current configuration
-    this.updateSimulationForces();
+    void this.updateSimulationForces();
     
     // Apply Content-Aware Positioning forces if enabled
-    this.applyContentAwareForces();
+    void this.applyContentAwareForces();
     
     // Restart with medium alpha for visible movement but not chaos
     this.simulation.alpha(0.5).restart();
@@ -1954,7 +1954,7 @@ export class GraphRenderer {
    * Force apply better spacing immediately
    */
   applyBetterSpacing(): void {
-    logger.debug('renderer', 'Applying better spacing configuration');
+    void logger.debug('renderer', 'Applying better spacing configuration');
     
     // Update force configuration with better spacing
     this.forceConfig.collisionRadius = 24;  // One node-sized space between nodes
@@ -1963,9 +1963,9 @@ export class GraphRenderer {
     this.forceConfig.weakLinkDistance = 80;
     
     // Apply changes immediately
-    this.restartSimulation();
+    void this.restartSimulation();
     
-    logger.debug('renderer', 'Better spacing applied and simulation restarted');
+    void logger.debug('renderer', 'Better spacing applied and simulation restarted');
   }
 
   // Performance optimization: Viewport culling methods
@@ -1975,7 +1975,7 @@ export class GraphRenderer {
    */
   private initializeViewportBounds(): void {
     const identity = d3.zoomIdentity;
-    this.updateViewportBounds(identity);
+    void this.updateViewportBounds(identity);
   }
   
   /**
@@ -2005,14 +2005,14 @@ export class GraphRenderer {
         cancelAnimationFrame(this.pendingUpdate);
       }
       this.pendingUpdate = requestAnimationFrame(() => {
-        this.updateVisibleElements();
+        void this.updateVisibleElements();
         this.lastUpdateTime = performance.now();
         this.pendingUpdate = null;
       });
       return;
     }
     
-    this.updateVisibleElements();
+    void this.updateVisibleElements();
     this.lastUpdateTime = now;
   }
   
@@ -2177,7 +2177,7 @@ export class GraphRenderer {
    */
   private enableTransitionsForNormalGraph(): void {
     this.container.classList.remove('dense-graph-mode');
-    logger.debug('performance', 'Enabled CSS transitions for normal graph');
+    void logger.debug('performance', 'Enabled CSS transitions for normal graph');
   }
   
   /**
@@ -2256,7 +2256,7 @@ export class GraphRenderer {
     const color = layerColors[layer] || '#888888';
 
     // Add active class for CSS animations
-    nodeElement.classed('note-active', true);
+    void nodeElement.classed('note-active', true);
     nodeElement.classed(`note-active-${layer}`, true);
 
     // Apply glow effect
@@ -2271,7 +2271,7 @@ export class GraphRenderer {
       .attr('stroke-width', 1.5)
       .style('filter', null)
       .on('end', () => {
-        nodeElement.classed('note-active', false);
+        void nodeElement.classed('note-active', false);
         nodeElement.classed(`note-active-${layer}`, false);
       });
   }
@@ -2316,6 +2316,6 @@ export class GraphRenderer {
     // Remove all DOM elements
     d3.select(this.container).selectAll('*').remove();
 
-    logger.debug('renderer', 'GraphRenderer destroyed and memory released');
+    void logger.debug('renderer', 'GraphRenderer destroyed and memory released');
   }
 } 

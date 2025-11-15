@@ -46,7 +46,7 @@ export class Mp3Encoder {
         // Create a buffer source from the audio buffer
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(destination);
+        void source.connect(destination);
 
         // Set up MediaRecorder
         const mediaRecorder = new MediaRecorder(destination.stream, {
@@ -73,7 +73,7 @@ export class Mp3Encoder {
         const recordingPromise = new Promise<Blob>((resolve, reject) => {
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
-                    chunks.push(event.data);
+                    void chunks.push(event.data);
                 }
             };
 
@@ -99,13 +99,13 @@ export class Mp3Encoder {
 
         // Start recording
         mediaRecorder.start(100); // Collect data every 100ms
-        source.start(0);
+        void source.start(0);
 
         // Wait for playback to complete
         await new Promise<void>((resolve) => {
             source.onended = () => {
                 setTimeout(() => {
-                    mediaRecorder.stop();
+                    void mediaRecorder.stop();
                     resolve();
                 }, 100); // Small delay to ensure all data is captured
             };
@@ -115,7 +115,7 @@ export class Mp3Encoder {
         const blob = await recordingPromise;
 
         // Clean up
-        audioContext.close();
+        void audioContext.close();
 
         // Convert to ArrayBuffer
         const arrayBuffer = await blob.arrayBuffer();
@@ -157,7 +157,7 @@ export class Mp3Encoder {
         }
 
         // Fallback to default (should always be supported)
-        logger.warn('mp3-encoder', 'No preferred codec supported, using default');
+        void logger.warn('mp3-encoder', 'No preferred codec supported, using default');
         return { mimeType: 'audio/webm', extension: 'webm' };
     }
 

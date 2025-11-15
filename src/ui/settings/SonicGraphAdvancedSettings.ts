@@ -26,22 +26,22 @@ export class SonicGraphAdvancedSettings {
 	 * Render all advanced features settings
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('advanced-settings', 'Rendering advanced features settings');
+		void logger.debug('advanced-settings', 'Rendering advanced features settings');
 
 		// Smart Clustering Audio
-		this.renderClusteringSection(container);
+		void this.renderClusteringSection(container);
 
 		// Hub Node Orchestration
-		this.renderHubOrchestrationSection(container);
+		void this.renderHubOrchestrationSection(container);
 
 		// Musical Theory
-		this.renderMusicalTheorySection(container);
+		void this.renderMusicalTheorySection(container);
 
 		// Dynamic Orchestration
-		this.renderDynamicOrchestrationSection(container);
+		void this.renderDynamicOrchestrationSection(container);
 
 		// Spatial Audio & Panning
-		this.renderSpatialAudioSection(container);
+		void this.renderSpatialAudioSection(container);
 	}
 
 	/**
@@ -50,11 +50,11 @@ export class SonicGraphAdvancedSettings {
 	public renderClusteringSection(container: HTMLElement): void {
 		// Create a wrapper for this card so we can re-render just this section
 		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderClusteringCard(cardContainer);
+		void this.renderClusteringCard(cardContainer);
 	}
 
 	private renderClusteringCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		const card = new MaterialCard({
 			title: 'Smart clustering audio',
@@ -133,7 +133,7 @@ export class SonicGraphAdvancedSettings {
 					logger.info('advanced-settings', `Cluster audio: ${value}`);
 
 					// Re-render only this card
-					this.renderClusteringCard(cardContainer);
+					void this.renderClusteringCard(cardContainer);
 				})
 			);
 
@@ -344,11 +344,11 @@ export class SonicGraphAdvancedSettings {
 	public renderHubOrchestrationSection(container: HTMLElement): void {
 		// Create a wrapper for this card so we can re-render just this section
 		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderHubOrchestrationCard(cardContainer);
+		void this.renderHubOrchestrationCard(cardContainer);
 	}
 
 	private renderHubOrchestrationCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		const card = new MaterialCard({
 			title: 'Hub node orchestration',
@@ -388,7 +388,7 @@ export class SonicGraphAdvancedSettings {
 					logger.info('advanced-settings', `Hub orchestration: ${value}`);
 
 					// Re-render only this card
-					this.renderHubOrchestrationCard(cardContainer);
+					void this.renderHubOrchestrationCard(cardContainer);
 				})
 			);
 
@@ -551,11 +551,11 @@ export class SonicGraphAdvancedSettings {
 	public renderDynamicOrchestrationSection(container: HTMLElement): void {
 		// Create a wrapper for this card so we can re-render just this section
 		const cardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderDynamicOrchestrationCard(cardContainer);
+		void this.renderDynamicOrchestrationCard(cardContainer);
 	}
 
 	private renderDynamicOrchestrationCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		const card = new MaterialCard({
 			title: 'Dynamic orchestration',
@@ -590,7 +590,7 @@ export class SonicGraphAdvancedSettings {
 					logger.info('advanced-settings', `Dynamic orchestration: ${value}`);
 
 					// Re-render only this card
-					this.renderDynamicOrchestrationCard(cardContainer);
+					void this.renderDynamicOrchestrationCard(cardContainer);
 				})
 			);
 
@@ -696,16 +696,16 @@ export class SonicGraphAdvancedSettings {
 				marginTop: '1rem'
 			});
 			noteP.createEl('strong', { text: 'Complexity Tiers:' });
-			noteP.appendText(' The system automatically adjusts orchestration based on vault size:');
-			noteP.createEl('br');
+			void noteP.appendText(' The system automatically adjusts orchestration based on vault size:');
+			void noteP.createEl('br');
 			noteP.appendText('• Minimal (0-100 nodes): Basic instruments only');
-			noteP.createEl('br');
+			void noteP.createEl('br');
 			noteP.appendText('• Simple (100-500): Add rhythmic layers');
-			noteP.createEl('br');
+			void noteP.createEl('br');
 			noteP.appendText('• Moderate (500-1000): Add harmonic pads');
-			noteP.createEl('br');
+			void noteP.createEl('br');
 			noteP.appendText('• Complex (1000-5000): Full orchestral arrangement');
-			noteP.createEl('br');
+			void noteP.createEl('br');
 			noteP.appendText('• Extensive (5000+): Maximum complexity');
 		}
 
@@ -718,27 +718,27 @@ export class SonicGraphAdvancedSettings {
 	public renderSpatialAudioSection(container: HTMLElement): void {
 		// Core spatial audio settings
 		const spatialCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderSpatialAudioCard(spatialCardContainer);
+		void this.renderSpatialAudioCard(spatialCardContainer);
 
 		// Hybrid mode weights (conditionally rendered when hybrid mode is selected)
 		const hybridCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderHybridModeWeightsCard(hybridCardContainer);
+		void this.renderHybridModeWeightsCard(hybridCardContainer);
 
 		// Folder-based panning (conditionally rendered when spatial audio is enabled)
 		const folderCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderFolderPanningCard(folderCardContainer);
+		void this.renderFolderPanningCard(folderCardContainer);
 
 		// Cluster-based panning (conditionally rendered when spatial audio is enabled)
 		const clusterCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderClusterPanningCard(clusterCardContainer);
+		void this.renderClusterPanningCard(clusterCardContainer);
 
 		// Advanced spatial settings (conditionally rendered when spatial audio is enabled)
 		const advancedCardContainer = container.createDiv({ cls: 'osp-settings-card-container' });
-		this.renderAdvancedSpatialCard(advancedCardContainer);
+		void this.renderAdvancedSpatialCard(advancedCardContainer);
 	}
 
 	private renderSpatialAudioCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		const card = new MaterialCard({
 			title: 'Spatial audio and panning',
@@ -798,7 +798,7 @@ export class SonicGraphAdvancedSettings {
 					logger.info('advanced-settings', `Spatial audio: ${value}`);
 
 					// Re-render only this card
-					this.renderSpatialAudioCard(cardContainer);
+					void this.renderSpatialAudioCard(cardContainer);
 				})
 			);
 
@@ -822,8 +822,8 @@ export class SonicGraphAdvancedSettings {
 							// Re-render spatial audio section to show/hide hybrid weights card
 							const container = cardContainer.parentElement;
 							if (container) {
-								container.empty();
-								this.renderSpatialAudioSection(container);
+								void container.empty();
+								void this.renderSpatialAudioSection(container);
 							}
 						}
 					})
@@ -903,7 +903,7 @@ export class SonicGraphAdvancedSettings {
 	 * Folder-Based Panning Card
 	 */
 	private renderFolderPanningCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		// Only render if spatial audio is enabled
 		if (!this.plugin.settings.spatialAudio?.enabled) {
@@ -967,7 +967,7 @@ export class SonicGraphAdvancedSettings {
 	 * Cluster-Based Panning Card
 	 */
 	private renderClusterPanningCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		// Only render if spatial audio is enabled
 		if (!this.plugin.settings.spatialAudio?.enabled) {
@@ -1046,7 +1046,7 @@ export class SonicGraphAdvancedSettings {
 	 * Advanced Spatial Settings Card
 	 */
 	private renderAdvancedSpatialCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		// Only render if spatial audio is enabled
 		if (!this.plugin.settings.spatialAudio?.enabled) {
@@ -1075,8 +1075,8 @@ export class SonicGraphAdvancedSettings {
 						// Re-render to show/hide depth influence slider
 						const container = cardContainer.parentElement;
 						if (container) {
-							container.empty();
-							this.renderSpatialAudioSection(container);
+							void container.empty();
+							void this.renderSpatialAudioSection(container);
 						}
 					}
 				})
@@ -1150,7 +1150,7 @@ export class SonicGraphAdvancedSettings {
 	 * Hybrid Mode Weights Card - Conditionally rendered when hybrid panning mode is selected
 	 */
 	private renderHybridModeWeightsCard(cardContainer: HTMLElement): void {
-		cardContainer.empty();
+		void cardContainer.empty();
 
 		// Only render if spatial audio is enabled and mode is hybrid
 		if (!this.plugin.settings.spatialAudio?.enabled ||

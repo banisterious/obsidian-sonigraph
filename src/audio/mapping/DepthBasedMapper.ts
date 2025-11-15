@@ -496,7 +496,7 @@ export class DepthBasedMapper {
 					});
 				}
 			} catch (error) {
-				logger.error('prose-analysis', 'Failed to analyze prose structure', error as Error);
+				void logger.error('prose-analysis', 'Failed to analyze prose structure', error as Error);
 			}
 		}
 
@@ -516,7 +516,7 @@ export class DepthBasedMapper {
 		// Map center node
 		const centerMapping = await this.mapNode(data.centerNode, 0, contextModifiers, proseAnalysis);
 		if (centerMapping) {
-			mappings.push(centerMapping);
+			void mappings.push(centerMapping);
 		}
 
 		// Map nodes at each depth level
@@ -534,28 +534,28 @@ export class DepthBasedMapper {
 			for (const node of limitedNodes) {
 				const mapping = await this.mapNode(node, depth, contextModifiers, proseAnalysis);
 				if (mapping) {
-					mappings.push(mapping);
+					void mappings.push(mapping);
 				}
 			}
 		}
 
 		// Calculate timing for each mapping based on depth
 		// Center note plays first, then spread each depth level's notes
-		this.calculateTimingForMappings(mappings);
+		void this.calculateTimingForMappings(mappings);
 
 		// Apply tension arc modulation if enabled
 		if (this.tensionArcController) {
-			this.applyTensionModulation(mappings);
+			void this.applyTensionModulation(mappings);
 		}
 
 		// Apply turn-taking patterns if enabled
 		if (this.turnTakingEngine) {
-			this.applyTurnTakingPattern(mappings);
+			void this.applyTurnTakingPattern(mappings);
 		}
 
 		// Apply dynamic panning if enabled
 		if (this.dynamicPanningController) {
-			this.applyDynamicPanning(mappings);
+			void this.applyDynamicPanning(mappings);
 		}
 
 		const duration = performance.now() - startTime;
@@ -579,7 +579,7 @@ export class DepthBasedMapper {
 	private calculateTimingForMappings(mappings: DepthMapping[]): void {
 		// Use rhythmic patterns if enabled
 		if (this.rhythmicPatternGenerator) {
-			this.calculateTimingWithRhythmicPatterns(mappings);
+			void this.calculateTimingWithRhythmicPatterns(mappings);
 			return;
 		}
 
@@ -633,8 +633,8 @@ export class DepthBasedMapper {
 		const byDepth = new Map<number, DepthMapping[]>();
 		mappings.forEach(m => {
 			const group = byDepth.get(m.depth) || [];
-			group.push(m);
-			byDepth.set(m.depth, group);
+			void group.push(m);
+			void byDepth.set(m.depth, group);
 		});
 
 		// Sort depths numerically
@@ -1406,12 +1406,12 @@ export class DepthBasedMapper {
 						this.config.chordVoicing,
 						this.musicalTheoryEngine
 					);
-					logger.info('chord-voicing-updated', 'Chord voicing strategy updated');
+					void logger.info('chord-voicing-updated', 'Chord voicing strategy updated');
 				}
 			} else {
 				this.musicalTheoryEngine = null;
 				this.chordVoicingStrategy = null;
-				logger.info('music-theory-disabled', 'Musical theory engine disabled');
+				void logger.info('music-theory-disabled', 'Musical theory engine disabled');
 			}
 		}
 
@@ -1429,7 +1429,7 @@ export class DepthBasedMapper {
 				});
 			} else {
 				this.chordVoicingStrategy = null;
-				logger.info('chord-voicing-disabled', 'Chord voicing disabled');
+				void logger.info('chord-voicing-disabled', 'Chord voicing disabled');
 			}
 		}
 
@@ -1446,7 +1446,7 @@ export class DepthBasedMapper {
 				});
 			} else {
 				this.rhythmicPatternGenerator = null;
-				logger.info('rhythmic-patterns-disabled', 'Rhythmic pattern generator disabled');
+				void logger.info('rhythmic-patterns-disabled', 'Rhythmic pattern generator disabled');
 			}
 		}
 
@@ -1462,7 +1462,7 @@ export class DepthBasedMapper {
 				});
 			} else {
 				this.tensionArcController = null;
-				logger.info('tension-tracking-disabled', 'Tension arc controller disabled');
+				void logger.info('tension-tracking-disabled', 'Tension arc controller disabled');
 			}
 		}
 
@@ -1478,7 +1478,7 @@ export class DepthBasedMapper {
 				});
 			} else {
 				this.turnTakingEngine = null;
-				logger.info('turn-taking-disabled', 'Turn-taking engine disabled');
+				void logger.info('turn-taking-disabled', 'Turn-taking engine disabled');
 			}
 		}
 
@@ -1494,11 +1494,11 @@ export class DepthBasedMapper {
 				});
 			} else {
 				this.dynamicPanningController = null;
-				logger.info('dynamic-panning-disabled', 'Dynamic panning controller disabled');
+				void logger.info('dynamic-panning-disabled', 'Dynamic panning controller disabled');
 			}
 		}
 
-		logger.info('config-updated', 'DepthBasedMapper config updated');
+		void logger.info('config-updated', 'DepthBasedMapper config updated');
 	}
 
 	/**

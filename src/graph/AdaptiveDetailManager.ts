@@ -207,7 +207,7 @@ export class AdaptiveDetailManager {
         // Trigger callback to update the graph
         if (this.onDetailLevelChanged) {
           const filteredData = this.filterDataForLevel(newLevel);
-          this.onDetailLevelChanged(filteredData);
+          void this.onDetailLevelChanged(filteredData);
         }
       }
     }, this.zoomChangeDebounceMs);
@@ -486,6 +486,6 @@ export class AdaptiveDetailManager {
     // Clear callback
     this.onDetailLevelChanged = null;
 
-    logger.debug('cleanup', 'AdaptiveDetailManager destroyed and memory released');
+    void logger.debug('cleanup', 'AdaptiveDetailManager destroyed and memory released');
   }
 }

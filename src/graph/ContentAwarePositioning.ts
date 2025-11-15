@@ -80,9 +80,9 @@ export class ContentAwarePositioning {
     this.height = height;
     
     // Analyze data for semantic relationships
-    this.analyzeTagConnections();
-    this.setupTemporalZones();
-    this.identifyHubNodes();
+    void this.analyzeTagConnections();
+    void this.setupTemporalZones();
+    void this.identifyHubNodes();
     
     logger.debug('content-aware', 'Graph data updated', {
       nodeCount: nodes.length,
@@ -102,17 +102,17 @@ export class ContentAwarePositioning {
 
     // Add tag-based attraction force
     if (this.settings.tagInfluence.weight > 0) {
-      this.addTagAttractionForce(simulation);
+      void this.addTagAttractionForce(simulation);
     }
 
     // Add temporal positioning force
     if (this.settings.temporalPositioning.enabled && this.settings.temporalPositioning.weight > 0) {
-      this.addTemporalPositioningForce(simulation);
+      void this.addTemporalPositioningForce(simulation);
     }
 
     // Add hub centrality force
     if (this.settings.hubCentrality.enabled && this.settings.hubCentrality.weight > 0) {
-      this.addHubCentralityForce(simulation);
+      void this.addHubCentralityForce(simulation);
     }
 
     logger.debug('content-aware', 'Forces applied to simulation', {

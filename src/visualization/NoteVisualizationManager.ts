@@ -122,7 +122,7 @@ export class NoteVisualizationManager {
             ...config
         };
 
-        logger.debug('initialization', 'NoteVisualizationManager created', this.config);
+        void logger.debug('initialization', 'NoteVisualizationManager created', this.config);
     }
 
     /**
@@ -130,15 +130,15 @@ export class NoteVisualizationManager {
      */
     public initialize(container: HTMLElement): void {
         if (this.container) {
-            logger.warn('initialization', 'Manager already initialized, cleaning up first');
-            this.destroy();
+            void logger.warn('initialization', 'Manager already initialized, cleaning up first');
+            void this.destroy();
         }
 
         this.container = container;
-        logger.info('initialization', 'Manager initialized with container');
+        void logger.info('initialization', 'Manager initialized with container');
 
         // Initialize renderer based on mode
-        this.initializeRenderer();
+        void this.initializeRenderer();
     }
 
     /**
@@ -146,7 +146,7 @@ export class NoteVisualizationManager {
      */
     private initializeRenderer(): void {
         if (!this.container) {
-            logger.error('initialization', 'Cannot initialize renderer without container');
+            void logger.error('initialization', 'Cannot initialize renderer without container');
             return;
         }
 
@@ -229,7 +229,7 @@ export class NoteVisualizationManager {
     clearNotes(): void {
         this.noteEvents = [];
         this.activeNotes.clear();
-        logger.debug('events', 'Cleared all note events');
+        void logger.debug('events', 'Cleared all note events');
     }
 
     /**
@@ -237,7 +237,7 @@ export class NoteVisualizationManager {
      */
     public start(initialTime: number = 0): void {
         if (this.isRunning) {
-            logger.warn('lifecycle', 'Visualization already running');
+            void logger.warn('lifecycle', 'Visualization already running');
             return;
         }
 
@@ -251,7 +251,7 @@ export class NoteVisualizationManager {
             mode: this.config.mode
         });
 
-        this.renderLoop();
+        void this.renderLoop();
     }
 
     /**
@@ -269,7 +269,7 @@ export class NoteVisualizationManager {
             this.animationFrameId = null;
         }
 
-        logger.info('lifecycle', 'Visualization stopped');
+        void logger.info('lifecycle', 'Visualization stopped');
     }
 
     /**
@@ -279,7 +279,7 @@ export class NoteVisualizationManager {
     public connectSpectrumToAudio(audioContext: AudioContext, sourceNode?: AudioNode): void {
         if (this.renderer instanceof SpectrumRenderer) {
             this.renderer.connectToAudioContext(audioContext, sourceNode);
-            logger.info('audio', 'Spectrum analyzer connected to audio context');
+            void logger.info('audio', 'Spectrum analyzer connected to audio context');
         } else {
             logger.warn('audio', `Cannot connect audio to ${this.config.mode} renderer - only spectrum supports audio connection`);
         }
@@ -313,7 +313,7 @@ export class NoteVisualizationManager {
 
         // Frame rate limiting
         if (deltaTime >= targetFrameTime) {
-            this.render();
+            void this.render();
             this.lastRenderTime = now - (deltaTime % targetFrameTime);
         }
 
@@ -336,7 +336,7 @@ export class NoteVisualizationManager {
             this.renderer.render(visibleEvents, this.currentPlaybackTime);
 
         } catch (error) {
-            logger.error('rendering', 'Render error', error);
+            void logger.error('rendering', 'Render error', error);
         }
     }
 
@@ -362,12 +362,12 @@ export class NoteVisualizationManager {
         const oldMode = this.config.mode;
         this.config = { ...this.config, ...config };
 
-        logger.info('config', 'Configuration updated', config);
+        void logger.info('config', 'Configuration updated', config);
 
         // Reinitialize renderer if mode changed
         if (config.mode !== undefined && config.mode !== oldMode) {
-            logger.info('config', 'Visualization mode changed, reinitializing renderer');
-            this.initializeRenderer();
+            void logger.info('config', 'Visualization mode changed, reinitializing renderer');
+            void this.initializeRenderer();
         }
 
         // Update renderer config
@@ -382,7 +382,7 @@ export class NoteVisualizationManager {
     public clearEvents(): void {
         this.noteEvents = [];
         this.activeNotes.clear();
-        logger.debug('events', 'All note events cleared');
+        void logger.debug('events', 'All note events cleared');
     }
 
     /**
@@ -412,7 +412,7 @@ export class NoteVisualizationManager {
      */
     public forceResize(): void {
         if (this.renderer && this.renderer.forceResize) {
-            logger.debug('lifecycle', 'Forcing renderer resize');
+            void logger.debug('lifecycle', 'Forcing renderer resize');
             this.renderer.forceResize();
         }
     }
@@ -421,18 +421,18 @@ export class NoteVisualizationManager {
      * Clean up resources
      */
     public destroy(): void {
-        logger.info('lifecycle', 'Destroying visualization manager');
+        void logger.info('lifecycle', 'Destroying visualization manager');
 
-        this.stop();
+        void this.stop();
 
         if (this.renderer) {
             this.renderer.destroy();
             this.renderer = null;
         }
 
-        this.clearEvents();
+        void this.clearEvents();
         this.container = null;
 
-        logger.debug('lifecycle', 'Visualization manager destroyed');
+        void logger.debug('lifecycle', 'Visualization manager destroyed');
     }
 }

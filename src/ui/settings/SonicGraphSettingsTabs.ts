@@ -83,7 +83,7 @@ export class SonicGraphSettingsTabs {
 			}
 		];
 
-		this.render();
+		void this.render();
 	}
 
 	/**
@@ -102,8 +102,8 @@ export class SonicGraphSettingsTabs {
 
 			// Tab icon
 			const icon = createLucideIcon(tab.icon);
-			icon.addClass('osp-sonic-tab-icon');
-			tabButton.appendChild(icon);
+			void icon.addClass('osp-sonic-tab-icon');
+			void tabButton.appendChild(icon);
 
 			// Tab label
 			const label = tabButton.createSpan({
@@ -119,7 +119,7 @@ export class SonicGraphSettingsTabs {
 		this.tabContent = this.container.createDiv({ cls: 'osp-sonic-tabs-content' });
 
 		// Render initial tab
-		this.renderActiveTab();
+		void this.renderActiveTab();
 	}
 
 	/**
@@ -134,9 +134,9 @@ export class SonicGraphSettingsTabs {
 		this.tabNavigation.querySelectorAll('.osp-sonic-tab-button').forEach(button => {
 			const buttonTabId = button.getAttribute('data-tab-id');
 			if (buttonTabId === tabId) {
-				button.addClass('active');
+				void button.addClass('active');
 			} else {
-				button.removeClass('active');
+				void button.removeClass('active');
 			}
 		});
 
@@ -144,7 +144,7 @@ export class SonicGraphSettingsTabs {
 		this.activeTabId = tabId;
 
 		// Re-render content
-		this.renderActiveTab();
+		void this.renderActiveTab();
 	}
 
 	/**
@@ -173,76 +173,76 @@ export class SonicGraphSettingsTabs {
 		const contentScroll = this.tabContent.createDiv({ cls: 'osp-sonic-tab-content-scroll' });
 
 		// Render tab-specific content
-		activeTab.renderContent(contentScroll);
+		void activeTab.renderContent(contentScroll);
 	}
 
 	/**
 	 * Core Settings Tab Content
 	 */
 	private renderCoreSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Core Settings tab');
+		void logger.debug('tabs', 'Rendering Core Settings tab');
 
 		// Render actual core settings
 		const coreSettings = new SonicGraphCoreSettings(this.app, this.plugin);
-		coreSettings.render(container);
+		void coreSettings.render(container);
 	}
 
 	/**
 	 * Visual Display Tab Content
 	 */
 	private renderVisualDisplaySettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Visual Display tab');
+		void logger.debug('tabs', 'Rendering Visual Display tab');
 
 		// Render visual display settings
 		const visualDisplaySettings = new SonicGraphVisualDisplaySettings(this.app, this.plugin);
-		visualDisplaySettings.render(container);
+		void visualDisplaySettings.render(container);
 	}
 
 	/**
 	 * Smart Clustering Tab Content
 	 */
 	private renderClusteringSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Smart Clustering tab');
+		void logger.debug('tabs', 'Rendering Smart Clustering tab');
 
 		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
-		advancedSettings.renderClusteringSection(container);
-		advancedSettings.renderHubOrchestrationSection(container);
+		void advancedSettings.renderClusteringSection(container);
+		void advancedSettings.renderHubOrchestrationSection(container);
 	}
 
 	/**
 	 * Musical Features Tab Content
 	 */
 	private renderMusicalSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Musical Features tab');
+		void logger.debug('tabs', 'Rendering Musical Features tab');
 
 		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
-		advancedSettings.renderMusicalTheorySection(container);
-		advancedSettings.renderDynamicOrchestrationSection(container);
+		void advancedSettings.renderMusicalTheorySection(container);
+		void advancedSettings.renderDynamicOrchestrationSection(container);
 	}
 
 	/**
 	 * Spatial Audio Tab Content
 	 */
 	private renderSpatialSettings(container: HTMLElement): void {
-		logger.debug('tabs', 'Rendering Spatial Audio tab');
+		void logger.debug('tabs', 'Rendering Spatial Audio tab');
 
 		const advancedSettings = new SonicGraphAdvancedSettings(this.app, this.plugin);
-		advancedSettings.renderSpatialAudioSection(container);
+		void advancedSettings.renderSpatialAudioSection(container);
 	}
 
 	/**
 	 * Public API: Switch to a specific tab programmatically
 	 */
 	public showTab(tabId: 'core' | 'clustering' | 'musical' | 'spatial' | 'visual-display'): void {
-		this.switchTab(tabId);
+		void this.switchTab(tabId);
 	}
 
 	/**
 	 * Public API: Refresh the current tab (re-render)
 	 */
 	public refresh(): void {
-		logger.debug('tabs', 'Refreshing active tab');
-		this.renderActiveTab();
+		void logger.debug('tabs', 'Refreshing active tab');
+		void this.renderActiveTab();
 	}
 
 	/**
@@ -256,7 +256,7 @@ export class SonicGraphSettingsTabs {
 	 * Cleanup method
 	 */
 	public destroy(): void {
-		logger.debug('tabs', 'Destroying SonicGraphSettingsTabs');
+		void logger.debug('tabs', 'Destroying SonicGraphSettingsTabs');
 		this.container.empty();
 	}
 }

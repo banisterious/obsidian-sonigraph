@@ -137,7 +137,7 @@ export class SmartClusteringAlgorithms {
 
         // Move node if improvement found
         if (bestClusterId !== currentClusterId) {
-          nodeClusters.set(node.id, bestClusterId);
+          void nodeClusters.set(node.id, bestClusterId);
           improved = true;
         }
       }
@@ -183,7 +183,7 @@ export class SmartClusteringAlgorithms {
       // Perform best merge if improvement found
       if (bestMergeGain > 0) {
         const [i, j] = bestMergeIndices;
-        this.mergeClusters(clusters, i, j);
+        void this.mergeClusters(clusters, i, j);
         improved = true;
         bestModularity += bestMergeGain;
       }
@@ -240,7 +240,7 @@ export class SmartClusteringAlgorithms {
       // Split weak clusters
       if (totalCohesion < 0.3 && cluster.nodes.length > this.settings.minClusterSize * 2) {
         const splitClusters = this.splitCluster(cluster);
-        refinedClusters.push(...splitClusters);
+        void refinedClusters.push(...splitClusters);
       } else {
         // Update cluster strength and type
         const updatedCluster = {
@@ -248,7 +248,7 @@ export class SmartClusteringAlgorithms {
           strength: totalCohesion,
           type: this.determineClusterType(cluster) as Cluster['type']
         };
-        refinedClusters.push(updatedCluster);
+        void refinedClusters.push(updatedCluster);
       }
     }
 
@@ -392,7 +392,7 @@ export class SmartClusteringAlgorithms {
 
     cluster.nodes.forEach(node => {
       const tags = node.metadata?.tags || [];
-      nodeTags.push(tags);
+      void nodeTags.push(tags);
       tags.forEach((tag: string) => allTags.add(tag));
     });
 
@@ -518,7 +518,7 @@ export class SmartClusteringAlgorithms {
         }
         const cluster = clusterMap.get(clusterId); if (cluster) cluster.push(node);
       } else {
-        orphanNodes.push(node);
+        void orphanNodes.push(node);
       }
     });
 
@@ -527,9 +527,9 @@ export class SmartClusteringAlgorithms {
     clusterMap.forEach((nodes, clusterId) => {
       if (nodes.length >= this.settings.minClusterSize) {
         const cluster = this.createCluster(clusterId, nodes);
-        validClusters.push(cluster);
+        void validClusters.push(cluster);
       } else {
-        orphanNodes.push(...nodes);
+        void orphanNodes.push(...nodes);
       }
     });
 
@@ -971,7 +971,7 @@ export class SmartClusteringAlgorithms {
     const cluster2 = clusters[j];
     
     cluster1.nodeIds.push(...cluster2.nodeIds);
-    clusters.splice(j, 1);
+    void clusters.splice(j, 1);
   }
 
   private splitCluster(cluster: Cluster): Cluster[] {
@@ -1018,7 +1018,7 @@ export class SmartClusteringAlgorithms {
   public recalculateClusterPositions(): void {
     if (!this.lastClusteringResult) return;
 
-    logger.debug('smart-clustering', 'Recalculating cluster positions after force simulation');
+    void logger.debug('smart-clustering', 'Recalculating cluster positions after force simulation');
 
     this.lastClusteringResult.clusters.forEach(cluster => {
       // Recalculate centroid with actual node positions

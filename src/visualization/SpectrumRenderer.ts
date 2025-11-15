@@ -31,7 +31,7 @@ export class SpectrumRenderer implements VisualizationRenderer {
             enableTrails: false
         };
 
-        logger.debug('initialization', 'SpectrumRenderer created');
+        void logger.debug('initialization', 'SpectrumRenderer created');
     }
 
     /**
@@ -50,18 +50,18 @@ export class SpectrumRenderer implements VisualizationRenderer {
         // Get 2D context
         const ctx = this.canvas.getContext('2d');
         if (!ctx) {
-            logger.error('initialization', 'Failed to get 2D context');
+            void logger.error('initialization', 'Failed to get 2D context');
             return;
         }
         this.ctx = ctx;
 
         // Setup canvas sizing
-        this.resizeCanvas();
+        void this.resizeCanvas();
 
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
 
-        logger.info('initialization', 'SpectrumRenderer initialized');
+        void logger.info('initialization', 'SpectrumRenderer initialized');
     }
 
     /**
@@ -70,7 +70,7 @@ export class SpectrumRenderer implements VisualizationRenderer {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Canvas rendering API uses dynamic types
     public connectToAudioContext(audioContext: AudioContext, sourceNode?: any): void {
         if (!audioContext) {
-            logger.warn('audio', 'No audio context provided for spectrum analyzer');
+            void logger.warn('audio', 'No audio context provided for spectrum analyzer');
             return;
         }
 
@@ -87,10 +87,10 @@ export class SpectrumRenderer implements VisualizationRenderer {
         if (sourceNode) {
             try {
                 // Tone.js nodes have a 'connect' method that works with native Web Audio nodes
-                sourceNode.connect(this.analyser);
-                logger.info('audio', 'Connected source node to spectrum analyzer');
+                void sourceNode.connect(this.analyser);
+                void logger.info('audio', 'Connected source node to spectrum analyzer');
             } catch (error) {
-                logger.error('audio', 'Failed to connect source to analyzer', error);
+                void logger.error('audio', 'Failed to connect source to analyzer', error);
             }
         }
 
@@ -105,8 +105,8 @@ export class SpectrumRenderer implements VisualizationRenderer {
      * Force resize (public method for when container visibility changes)
      */
     public forceResize(): void {
-        logger.info('resize', 'Force resize requested');
-        this.resizeCanvas();
+        void logger.info('resize', 'Force resize requested');
+        void this.resizeCanvas();
     }
 
     /**
@@ -143,7 +143,7 @@ export class SpectrumRenderer implements VisualizationRenderer {
             this.analyser.getByteFrequencyData(this.dataArray);
 
             // Draw frequency bars
-            this.drawFrequencyBars();
+            void this.drawFrequencyBars();
         } else {
             // Draw placeholder message if not connected
             this.ctx.fillStyle = '#888888';
@@ -189,7 +189,7 @@ export class SpectrumRenderer implements VisualizationRenderer {
      */
     public updateConfig(config: Partial<VisualizationConfig>): void {
         this.config = { ...this.config, ...config };
-        logger.debug('config', 'Spectrum analyzer config updated', config);
+        void logger.debug('config', 'Spectrum analyzer config updated', config);
     }
 
     /**
@@ -208,6 +208,6 @@ export class SpectrumRenderer implements VisualizationRenderer {
         this.ctx = null;
         this.dataArray = null;
 
-        logger.debug('lifecycle', 'SpectrumRenderer destroyed');
+        void logger.debug('lifecycle', 'SpectrumRenderer destroyed');
     }
 }

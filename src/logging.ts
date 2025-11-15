@@ -58,22 +58,22 @@ class Logger implements ILogger {
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	debug(category: string, message: string, data?: any): void {
-		this.log('debug', category, message, data);
+		void this.log('debug', category, message, data);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	info(category: string, message: string, data?: any): void {
-		this.log('info', category, message, data);
+		void this.log('info', category, message, data);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	warn(category: string, message: string, data?: any): void {
-		this.log('warn', category, message, data);
+		void this.log('warn', category, message, data);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Console methods accept variadic arguments of any type
 	error(category: string, message: string, error?: any): void {
-		this.log('error', category, message, error);
+		void this.log('error', category, message, error);
 	}
 
 	time(operation: string): () => void {
@@ -116,12 +116,12 @@ class Logger implements ILogger {
 			data,
 			context: this.context
 		};
-		this.output(entry);
+		void this.output(entry);
 	}
 
 	private output(entry: LogEntry): void {
 		// Always collect logs for export regardless of current log level
-		LoggerFactory.collectLog(entry);
+		void LoggerFactory.collectLog(entry);
 		
 		// Only output to console if the log level is appropriate
 		if (LOG_LEVELS[entry.level] <= LoggerFactory.getLogLevelValue()) {
@@ -130,16 +130,16 @@ class Logger implements ILogger {
 			const logMessage = `[${entry.timestamp.toISOString()}] [${entry.level.toUpperCase()}] [${entry.component}/${entry.category}]${contextStr} ${entry.message}${dataStr}`;
 			switch (entry.level) {
 				case 'debug':
-					console.debug(logMessage);
+					void console.debug(logMessage);
 					break;
 				case 'info':
-					console.info(logMessage);
+					void console.info(logMessage);
 					break;
 				case 'warn':
-					console.warn(logMessage);
+					void console.warn(logMessage);
 					break;
 				case 'error':
-					console.error(logMessage);
+					void console.error(logMessage);
 					break;
 			}
 		}
@@ -202,7 +202,7 @@ class LoggerFactory {
 	initialize(config?: any): void {
 		// Future: Add configuration support
 		if (config && config.logLevel) {
-			LoggerFactory.setLogLevel(config.logLevel);
+			void LoggerFactory.setLogLevel(config.logLevel);
 		}
 	}
 }

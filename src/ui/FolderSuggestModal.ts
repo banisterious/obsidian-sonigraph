@@ -9,7 +9,7 @@ export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
 	constructor(app: App, onChooseFolder: (folder: TFolder) => void) {
 		super(app);
 		this.onChooseFolder = onChooseFolder;
-		this.setPlaceholder('Type to search folders...');
+		void this.setPlaceholder('Type to search folders...');
 		this.setInstructions([
 			{ command: '↑↓', purpose: 'to navigate' },
 			{ command: '↵', purpose: 'to select folder' },
@@ -23,7 +23,7 @@ export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
 		// Get all folders from the vault
 		this.app.vault.getAllLoadedFiles().forEach(file => {
 			if (file instanceof TFolder) {
-				folders.push(file);
+				void folders.push(file);
 			}
 		});
 
@@ -37,6 +37,6 @@ export class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
 
 	onChooseItem(folder: TFolder, evt: MouseEvent | KeyboardEvent): void {
 		logger.debug('ui', `Folder selected: ${folder.path}`);
-		this.onChooseFolder(folder);
+		void this.onChooseFolder(folder);
 	}
 } 

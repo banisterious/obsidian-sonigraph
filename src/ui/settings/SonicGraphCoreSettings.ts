@@ -25,16 +25,16 @@ export class SonicGraphCoreSettings {
 	 * Render all core settings sections
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('core-settings', 'Rendering core settings');
+		void logger.debug('core-settings', 'Rendering core settings');
 
 		// Section 1: Graph & Layout
-		this.renderGraphLayoutSettings(container);
+		void this.renderGraphLayoutSettings(container);
 
 		// Section 2: Audio Core
-		this.renderAudioCoreSettings(container);
+		void this.renderAudioCoreSettings(container);
 
 		// Section 3: Content-Aware Mapping
-		this.renderContentMappingSettings(container);
+		void this.renderContentMappingSettings(container);
 	}
 
 	/**
@@ -363,16 +363,16 @@ export class SonicGraphCoreSettings {
 					logger.info('core-settings', `Content-aware mapping: ${value}`);
 
 					// Re-render only the details wrapper
-					detailsWrapper.empty();
+					void detailsWrapper.empty();
 					if (value) {
-						this.renderContentMappingDetails(detailsWrapper);
+						void this.renderContentMappingDetails(detailsWrapper);
 					}
 				})
 			);
 
 		// Show detailed settings only if enabled
 		if (this.plugin.settings.audioEnhancement?.contentAwareMapping?.enabled) {
-			this.renderContentMappingDetails(detailsWrapper);
+			void this.renderContentMappingDetails(detailsWrapper);
 		}
 
 		container.appendChild(card.getElement());

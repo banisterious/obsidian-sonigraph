@@ -105,7 +105,7 @@ export class ProseAnalyzer {
 	 */
 	public static analyze(content: string): ProseAnalysis {
 		if (!content || content.trim().length === 0) {
-			logger.debug('analyze', 'Empty content, returning defaults');
+			void logger.debug('analyze', 'Empty content, returning defaults');
 			return DEFAULT_PROSE_ANALYSIS;
 		}
 

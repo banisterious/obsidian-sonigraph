@@ -292,15 +292,15 @@ export class ConnectionTypePresetManager {
 
         // Basic structure validation
         if (!preset.name || preset.name.trim().length === 0) {
-            errors.push('Preset name is required');
+            void errors.push('Preset name is required');
         }
 
         if (!preset.description || preset.description.trim().length === 0) {
-            warnings.push('Preset description is empty');
+            void warnings.push('Preset description is empty');
         }
 
         if (!preset.mappings || Object.keys(preset.mappings).length === 0) {
-            errors.push('Preset must have at least one connection type mapping');
+            void errors.push('Preset must have at least one connection type mapping');
         }
 
         // Validate individual mappings
@@ -506,7 +506,7 @@ export class ConnectionTypePresetManager {
             this.config = this.applyPresetToConfig(defaultPreset, this.config);
             this.config.currentPreset = 'Default';
 
-            logger.info('connection-type-preset-manager', 'Configuration reset to defaults');
+            void logger.info('connection-type-preset-manager', 'Configuration reset to defaults');
 
             new Notice('Connection Type Mapping reset to default configuration');
 
@@ -547,7 +547,7 @@ export class ConnectionTypePresetManager {
             this.customPresets.set(preset.name, preset);
         });
 
-        logger.debug('connection-type-preset-manager', 'Configuration updated');
+        void logger.debug('connection-type-preset-manager', 'Configuration updated');
     }
 
     /**

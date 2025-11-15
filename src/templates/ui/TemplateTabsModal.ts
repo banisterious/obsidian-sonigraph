@@ -58,8 +58,8 @@ export class TemplateTabsModal extends Modal {
     onOpen() {
         try {
             const { contentEl } = this;
-            contentEl.empty();
-            contentEl.addClass('template-tabs-modal');
+            void contentEl.empty();
+            void contentEl.addClass('template-tabs-modal');
             
             // Create header
             contentEl.createEl('h1', { 
@@ -87,10 +87,10 @@ export class TemplateTabsModal extends Modal {
             });
             
             // Build tabs
-            this.createTabs();
+            void this.createTabs();
             
             // Select Dashboard tab by default
-            this.selectTab('dashboard');
+            void this.selectTab('dashboard');
             
         } catch (error) {
             this.logger.error('Error opening template tabs modal', (error as Error).message);
@@ -99,23 +99,23 @@ export class TemplateTabsModal extends Modal {
     
     onClose() {
         const { contentEl } = this;
-        contentEl.empty();
+        void contentEl.empty();
     }
     
     // Create all tabs
     private createTabs() {
         // Main functional tabs
-        this.createDashboardTab();
-        this.createDataTab();
-        this.createSettingsTab();
-        this.createToolsTab();
+        void this.createDashboardTab();
+        void this.createDataTab();
+        void this.createSettingsTab();
+        void this.createToolsTab();
         
         // Category groups (example of grouped tabs)
         this.createTabGroup('Category A Items', this.getItemsByCategory('Category A'));
         this.createTabGroup('Category B Items', this.getItemsByCategory('Category B'));
         
         // Additional tabs
-        this.createHelpTab();
+        void this.createHelpTab();
     }
     
     // Create Dashboard tab
@@ -131,7 +131,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         dashboardTab.addEventListener('click', () => {
-            this.selectTab('dashboard');
+            void this.selectTab('dashboard');
         });
     }
     
@@ -148,7 +148,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         dataTab.addEventListener('click', () => {
-            this.selectTab('data');
+            void this.selectTab('data');
         });
     }
     
@@ -165,7 +165,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         settingsTab.addEventListener('click', () => {
-            this.selectTab('settings');
+            void this.selectTab('settings');
         });
     }
     
@@ -182,7 +182,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         toolsTab.addEventListener('click', () => {
-            this.selectTab('tools');
+            void this.selectTab('tools');
         });
     }
     
@@ -199,7 +199,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         helpTab.addEventListener('click', () => {
-            this.selectTab('help');
+            void this.selectTab('help');
         });
     }
     
@@ -238,31 +238,31 @@ export class TemplateTabsModal extends Modal {
     public selectTab(tabId: string) {
         // Clear previous selection
         this.tabsContainer.querySelectorAll('.vertical-tab-nav-item').forEach(el => {
-            el.removeClass('is-active');
+            void el.removeClass('is-active');
         });
         
         // Mark selected tab
         const selectedEl = this.tabsContainer.querySelector(`[data-tab-id="${tabId}"]`);
         if (selectedEl) {
-            selectedEl.addClass('is-active');
+            void selectedEl.addClass('is-active');
         }
         
         // Load appropriate content
         if (tabId === 'dashboard') {
-            this.loadDashboardContent();
+            void this.loadDashboardContent();
         } else if (tabId === 'data') {
-            this.loadDataContent();
+            void this.loadDataContent();
         } else if (tabId === 'settings') {
-            this.loadSettingsContent();
+            void this.loadSettingsContent();
         } else if (tabId === 'tools') {
-            this.loadToolsContent();
+            void this.loadToolsContent();
         } else if (tabId === 'help') {
-            this.loadHelpContent();
+            void this.loadHelpContent();
         } else if (tabId.startsWith('item-')) {
             const itemId = tabId.replace('item-', '');
             const item = this.items.find(i => i.id === itemId);
             if (item) {
-                this.loadItemContent(item);
+                void this.loadItemContent(item);
             }
         }
         
@@ -287,23 +287,23 @@ export class TemplateTabsModal extends Modal {
         const statsContainer = this.contentContainer.createDiv({ cls: 'template-dashboard-stats' });
         
         this.createStatWidget(statsContainer, 'Total Items', this.items.length.toString());
-        this.createStatWidget(statsContainer, 'Processing Status', this.isProcessing ? 'Active' : 'Idle');
-        this.createStatWidget(statsContainer, 'Current Setting', this.settings.selectedOption);
+        void this.createStatWidget(statsContainer, 'Processing Status', this.isProcessing ? 'Active' : 'Idle');
+        void this.createStatWidget(statsContainer, 'Current Setting', this.settings.selectedOption);
         
         // Quick actions
         const actionsContainer = this.contentContainer.createDiv({ cls: 'template-dashboard-actions' });
         actionsContainer.createEl('h3', { text: 'Quick Actions' });
         
         this.createActionButton(actionsContainer, 'Process Data', 'gear', () => {
-            this.handleProcessData();
+            void this.handleProcessData();
         });
         
         this.createActionButton(actionsContainer, 'Export Items', 'download', () => {
-            this.handleExportItems();
+            void this.handleExportItems();
         });
         
         this.createActionButton(actionsContainer, 'Reset Settings', 'refresh-cw', () => {
-            this.handleResetSettings();
+            void this.handleResetSettings();
         });
     }
     
@@ -380,7 +380,7 @@ export class TemplateTabsModal extends Modal {
                 .setValue(this.settings.enableFeatureA)
                 .onChange(value => {
                     this.settings.enableFeatureA = value;
-                    this.saveSettings();
+                    void this.saveSettings();
                 }));
         
         // Dropdown selection
@@ -394,7 +394,7 @@ export class TemplateTabsModal extends Modal {
                 .setValue(this.settings.selectedOption)
                 .onChange(value => {
                     this.settings.selectedOption = value;
-                    this.saveSettings();
+                    void this.saveSettings();
                 }));
         
         // Text input
@@ -406,7 +406,7 @@ export class TemplateTabsModal extends Modal {
                 .setValue(this.settings.customText)
                 .onChange(value => {
                     this.settings.customText = value;
-                    this.saveSettings();
+                    void this.saveSettings();
                 }));
         
         // Numeric input
@@ -419,7 +419,7 @@ export class TemplateTabsModal extends Modal {
                 .setDynamicTooltip()
                 .onChange(value => {
                     this.settings.numericValue = value;
-                    this.saveSettings();
+                    void this.saveSettings();
                 }));
     }
     
@@ -644,7 +644,7 @@ The template uses consistent CSS class naming:
             new Notice('Data processing complete!');
             // Refresh dashboard if currently selected
             if (this.selectedTab === 'dashboard') {
-                this.loadDashboardContent();
+                void this.loadDashboardContent();
             }
         }, 2000);
     }
@@ -662,12 +662,12 @@ The template uses consistent CSS class naming:
             customText: 'Sample text',
             numericValue: 42
         };
-        this.saveSettings();
+        void this.saveSettings();
         new Notice('Settings reset to defaults!');
         
         // Refresh settings tab if currently selected
         if (this.selectedTab === 'settings') {
-            this.loadSettingsContent();
+            void this.loadSettingsContent();
         }
     }
     
@@ -684,11 +684,11 @@ The template uses consistent CSS class naming:
         
         // Refresh data tab if currently selected
         if (this.selectedTab === 'data') {
-            this.loadDataContent();
+            void this.loadDataContent();
         }
         
         // Recreate tabs to include new item
-        this.createTabs();
+        void this.createTabs();
     }
     
     private handleEditItem(item: TemplateItem) {
@@ -707,11 +707,11 @@ The template uses consistent CSS class naming:
         
         // Refresh current view
         if (this.selectedTab === 'data') {
-            this.loadDataContent();
+            void this.loadDataContent();
         }
         
         // Recreate tabs to include duplicated item
-        this.createTabs();
+        void this.createTabs();
     }
     
     private handleDeleteItem(item: TemplateItem) {
@@ -722,16 +722,16 @@ The template uses consistent CSS class naming:
             
             // If we're currently viewing the deleted item, switch to dashboard
             if (this.selectedTab === `item-${item.id}`) {
-                this.selectTab('dashboard');
+                void this.selectTab('dashboard');
             }
             
             // Refresh data tab if currently selected
             if (this.selectedTab === 'data') {
-                this.loadDataContent();
+                void this.loadDataContent();
             }
             
             // Recreate tabs to remove deleted item
-            this.createTabs();
+            void this.createTabs();
         }
     }
     

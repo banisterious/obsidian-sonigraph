@@ -50,28 +50,28 @@ export class PercussionEngine {
 	constructor(masterVolume: Volume, audioFormat: 'wav' | 'ogg' | 'mp3' = 'wav') {
 		this.masterVolume = masterVolume;
 		this.audioFormat = audioFormat;
-		logger.debug('initialization', 'PercussionEngine created');
+		void logger.debug('initialization', 'PercussionEngine created');
 	}
 
 	async initializePercussion(): Promise<void> {
-		logger.info('initialization', 'Initializing advanced percussion synthesis');
+		void logger.info('initialization', 'Initializing advanced percussion synthesis');
 
 		try {
-			this.initializeTimpani();
-			this.initializeXylophone();
-			this.initializeVibraphone();
-			this.initializeGongs();
+			void this.initializeTimpani();
+			void this.initializeXylophone();
+			void this.initializeVibraphone();
+			void this.initializeGongs();
 			
-			logger.info('initialization', 'Advanced percussion synthesis ready');
+			void logger.info('initialization', 'Advanced percussion synthesis ready');
 		} catch (error) {
-			logger.error('initialization', 'Failed to initialize percussion', error);
+			void logger.error('initialization', 'Failed to initialize percussion', error);
 			throw error;
 		}
 	}
 
 	private initializeTimpani(): void {
 		// NOTE: Timpani is a synth-only instrument (no samples in nbrosowsky collection)
-		logger.debug('timpani', 'Initializing timpani with synthesis');
+		void logger.debug('timpani', 'Initializing timpani with synthesis');
 		
 		// Create synthetic timpani using FMSynth for deep, resonant tones
 		const timpaniSizes = ['small', 'medium', 'large'];
@@ -104,13 +104,13 @@ export class PercussionEngine {
 			});
 
 			// Chain: Synth -> PitchShift -> Reverb -> Master
-			synth.chain(pitchShifter, hallReverb, this.masterVolume);
+			void synth.chain(pitchShifter, hallReverb, this.masterVolume);
 
 			this.timpaniSamplers.set(size, synth as unknown as Sampler);
 			this.timpaniPitchShifters.set(size, pitchShifter);
 		}
 
-		logger.debug('timpani', 'Timpani initialization complete');
+		void logger.debug('timpani', 'Timpani initialization complete');
 	}
 
 	private initializeXylophone(): void {
@@ -147,17 +147,17 @@ export class PercussionEngine {
 			wet: 0.35
 		});
 
-		sampler.chain(resonanceFilter, brightReverb, this.masterVolume);
+		void sampler.chain(resonanceFilter, brightReverb, this.masterVolume);
 		
 		this.xylophoneSamplers.set('main', sampler);
 		this.malletEnvelopes.set('xylophone', attackEnvelope);
 
-		logger.debug('xylophone', 'Xylophone initialization complete');
+		void logger.debug('xylophone', 'Xylophone initialization complete');
 	}
 
 	private initializeVibraphone(): void {
 		// NOTE: Vibraphone is a synth-only instrument (no samples in nbrosowsky collection)
-		logger.debug('vibraphone', 'Initializing vibraphone with synthesis');
+		void logger.debug('vibraphone', 'Initializing vibraphone with synthesis');
 		
 		// Create synthetic vibraphone using metallic synthesis
 		const synth = new PolySynth({
@@ -189,7 +189,7 @@ export class PercussionEngine {
 
 		// Connect motor to volume for tremolo effect
 		const motorGain = new Volume(0);
-		motorLFO.connect(motorGain.volume);
+		void motorLFO.connect(motorGain.volume);
 
 		// Warm reverb for metallic sustain
 		const metallicReverb = new Reverb({
@@ -198,15 +198,15 @@ export class PercussionEngine {
 			wet: 0.5
 		});
 
-		synth.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
+		void synth.chain(motorGain, metallicFilter, metallicReverb, this.masterVolume);
 		this.vibraphoneMotors.set('main', motorLFO);
 
-		logger.debug('vibraphone', 'Vibraphone initialization complete');
+		void logger.debug('vibraphone', 'Vibraphone initialization complete');
 	}
 
 	private initializeGongs(): void {
 		// NOTE: Gongs is a synth-only instrument (no samples in nbrosowsky collection)
-		logger.debug('gongs', 'Initializing gongs with synthesis');
+		void logger.debug('gongs', 'Initializing gongs with synthesis');
 		
 		// Create synthetic gongs using complex metallic synthesis
 		const synth = new PolySynth({
@@ -239,10 +239,10 @@ export class PercussionEngine {
 		// Shimmer delay for metallic texture
 		const shimmerDelay = new Delay(0.3);
 
-		synth.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
+		void synth.chain(resonator, shimmerDelay, massiveReverb, this.masterVolume);
 		this.gongResonators.set('main', resonator);
 
-		logger.debug('gongs', 'Gongs initialization complete');
+		void logger.debug('gongs', 'Gongs initialization complete');
 	}
 
 	// Advanced timpani with pitch bending
@@ -251,7 +251,7 @@ export class PercussionEngine {
 		const pitchShifter = this.timpaniPitchShifters.get('medium');
 		
 		if (!sampler || !pitchShifter) {
-			logger.warn('timpani', 'Timpani sampler not initialized');
+			void logger.warn('timpani', 'Timpani sampler not initialized');
 			return;
 		}
 
@@ -296,7 +296,7 @@ export class PercussionEngine {
 		const resonator = this.gongResonators.get('main');
 		
 		if (!sampler || !resonator) {
-			logger.warn('gongs', 'Gong sampler not initialized');
+			void logger.warn('gongs', 'Gong sampler not initialized');
 			return;
 		}
 
@@ -324,9 +324,9 @@ export class PercussionEngine {
 		const motor = this.vibraphoneMotors.get('main');
 		if (motor) {
 			if (enabled) {
-				motor.start();
+				void motor.start();
 			} else {
-				motor.stop();
+				void motor.stop();
 			}
 		}
 	}
@@ -370,9 +370,9 @@ export class PercussionEngine {
 		[this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers]
 			.forEach(map => {
 				for (const [key, sampler] of map) {
-					sampler.dispose();
+					void sampler.dispose();
 				}
-				map.clear();
+				void map.clear();
 			});
 
 		// Clear processors that depend on samplers
@@ -381,15 +381,15 @@ export class PercussionEngine {
 				for (const [key, processor] of map) {
 					if (processor.dispose) processor.dispose();
 				}
-				map.clear();
+				void map.clear();
 			});
 
 		// Re-initialize all instruments with new format
 		try {
-			this.initializeTimpani();
-			this.initializeXylophone();
-			this.initializeVibraphone();
-			this.initializeGongs();
+			void this.initializeTimpani();
+			void this.initializeXylophone();
+			void this.initializeVibraphone();
+			void this.initializeGongs();
 			
 			logger.info('format-update', `Successfully updated percussion engine to ${format} format`);
 		} catch (error) {
@@ -403,9 +403,9 @@ export class PercussionEngine {
 		[this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers]
 			.forEach(map => {
 				for (const [key, sampler] of map) {
-					sampler.dispose();
+					void sampler.dispose();
 				}
-				map.clear();
+				void map.clear();
 			});
 
 		[this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators]
@@ -413,9 +413,9 @@ export class PercussionEngine {
 				for (const [key, processor] of map) {
 					if (processor.dispose) processor.dispose();
 				}
-				map.clear();
+				void map.clear();
 			});
 
-		logger.debug('cleanup', 'PercussionEngine disposed');
+		void logger.debug('cleanup', 'PercussionEngine disposed');
 	}
 }

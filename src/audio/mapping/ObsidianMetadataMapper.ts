@@ -116,10 +116,10 @@ export class ObsidianMetadataMapper {
         this.analysisCache = new Map();
         this.cacheTimestamps = new Map();
         
-        this.initializeInstrumentMappings();
-        this.initializeAgeMappings();
+        void this.initializeInstrumentMappings();
+        void this.initializeAgeMappings();
         
-        logger.info('metadata-mapper-init', 'ObsidianMetadataMapper initialized');
+        void logger.info('metadata-mapper-init', 'ObsidianMetadataMapper initialized');
     }
 
     /**
@@ -348,7 +348,7 @@ export class ObsidianMetadataMapper {
                 // Apply default semantic mappings
                 const defaultMapping = this.getDefaultTagMapping(tag);
                 if (defaultMapping) {
-                    mappings.push(defaultMapping);
+                    void mappings.push(defaultMapping);
                 }
             }
         }
@@ -604,7 +604,7 @@ export class ObsidianMetadataMapper {
         this.analysisCache.clear();
         this.cacheTimestamps.clear();
         
-        logger.info('config-update', 'Configuration updated, cache cleared');
+        void logger.info('config-update', 'Configuration updated, cache cleared');
     }
 
     /**
@@ -629,6 +629,6 @@ export class ObsidianMetadataMapper {
     clearCaches(): void {
         this.analysisCache.clear();
         this.cacheTimestamps.clear();
-        logger.info('cache-clear', 'All caches cleared');
+        void logger.info('cache-clear', 'All caches cleared');
     }
 }

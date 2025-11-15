@@ -364,23 +364,23 @@ export class AudioEngine {
 
 	async initialize(): Promise<void> {
 		if (this.isInitialized) {
-			logger.warn('audio-engine', 'AudioEngine already initialized');
+			void logger.warn('audio-engine', 'AudioEngine already initialized');
 			return;
 		}
 
 		// Issue #011: Generate comprehensive CDN sample loading diagnostic report
-		this.generateCDNDiagnosticReport();
+		void this.generateCDNDiagnosticReport();
 
 		try {
-			logger.debug('audio', 'Initializing AudioEngine');
+			void logger.debug('audio', 'Initializing AudioEngine');
 			
 			// Start Tone.js
 			await start();
-			logger.debug('audio', 'Tone.js started successfully');
+			void logger.debug('audio', 'Tone.js started successfully');
 
 			// Create master volume control
 			this.volume = new Volume(this.settings.volume).toDestination();
-			logger.debug('audio', 'Master volume created');
+			void logger.debug('audio', 'Master volume created');
 
 			// Initialize effects first to ensure volume/effects maps are populated
 			await this.initializeEffects();
@@ -392,23 +392,23 @@ export class AudioEngine {
 			await this.initializeAdvancedSynthesis();
 
 			// Initialize musical theory engine for harmonic constraints
-			this.initializeMusicalTheory();
+			void this.initializeMusicalTheory();
 
 			// Check if enhanced routing is enabled
 			if (this.settings.enhancedRouting?.enabled) {
 				await this.initializeEnhancedRouting();
 			} else {
-				this.applyEffectSettings();
+				void this.applyEffectSettings();
 			}
 
 			this.isInitialized = true;
 			
 			// Issue #007 Fix: Generate comprehensive initialization report
-			this.generateInitializationReport();
+			void this.generateInitializationReport();
 			
-			logger.info('audio', 'AudioEngine initialized successfully');
+			void logger.info('audio', 'AudioEngine initialized successfully');
 		} catch (error) {
-			logger.error('audio', 'Failed to initialize AudioEngine', error);
+			void logger.error('audio', 'Failed to initialize AudioEngine', error);
 			throw error;
 		}
 	}
@@ -459,7 +459,7 @@ export class AudioEngine {
 	}
 
 	private async initializeAdvancedSynthesis(): Promise<void> {
-		logger.info('advanced-synthesis', 'Initializing Phase 8 advanced synthesis engines');
+		void logger.info('advanced-synthesis', 'Initializing Phase 8 advanced synthesis engines');
 		
 		try {
 			// Issue #010 Fix: Only initialize percussion engine if percussion instruments are enabled
@@ -475,10 +475,10 @@ export class AudioEngine {
 			});
 			
 			if (this.volume && hasPercussionEnabled) {
-				logger.debug('percussion', 'Percussion instruments enabled, initializing percussion engine');
+				void logger.debug('percussion', 'Percussion instruments enabled, initializing percussion engine');
 				this.percussionEngine = new PercussionEngine(this.volume, 'ogg');
 				await this.percussionEngine.initializePercussion();
-				logger.debug('percussion', 'Advanced percussion synthesis initialized');
+				void logger.debug('percussion', 'Advanced percussion synthesis initialized');
 			} else {
 				logger.info('percussion', '🚀 ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)');
 			}
@@ -486,20 +486,20 @@ export class AudioEngine {
 			// Initialize electronic synthesis engine only if electronic instruments are enabled
 			const hasElectronicEnabled = this.hasElectronicInstrumentsEnabled();
 			if (this.volume && hasElectronicEnabled) {
-				logger.debug('electronic', 'Electronic instruments enabled, initializing electronic engine');
+				void logger.debug('electronic', 'Electronic instruments enabled, initializing electronic engine');
 				this.electronicEngine = new ElectronicEngine(this.volume);
 				await this.electronicEngine.initializeElectronic();
-				logger.debug('electronic', 'Advanced electronic synthesis initialized');
+				void logger.debug('electronic', 'Advanced electronic synthesis initialized');
 			} else {
 				logger.info('electronic', 'Skipping electronic engine initialization (no electronic instruments enabled)');
 			}
 
 			// Initialize rhythmic percussion accent layer
 			if (this.volume && this.settings.percussionAccents?.enabled) {
-				logger.debug('rhythmic-percussion', 'Initializing rhythmic percussion accent layer');
+				void logger.debug('rhythmic-percussion', 'Initializing rhythmic percussion accent layer');
 				this.rhythmicPercussion = new RhythmicPercussionEngine(this.settings.percussionAccents);
 				await this.rhythmicPercussion.initialize(this.volume);
-				logger.debug('rhythmic-percussion', 'Rhythmic percussion initialized');
+				void logger.debug('rhythmic-percussion', 'Rhythmic percussion initialized');
 			} else {
 				logger.info('rhythmic-percussion', 'Skipping rhythmic percussion initialization (disabled in settings)');
 			}
@@ -508,11 +508,11 @@ export class AudioEngine {
 			await this.initializeMasterEffects();
 			
 			// Initialize performance optimization
-			this.initializePerformanceOptimization();
+			void this.initializePerformanceOptimization();
 			
-			logger.info('advanced-synthesis', 'Advanced synthesis engines ready');
+			void logger.info('advanced-synthesis', 'Advanced synthesis engines ready');
 		} catch (error) {
-			logger.error('advanced-synthesis', 'Failed to initialize advanced synthesis', error);
+			void logger.error('advanced-synthesis', 'Failed to initialize advanced synthesis', error);
 			// Don't throw - fall back to basic synthesis
 		}
 	}
@@ -523,7 +523,7 @@ export class AudioEngine {
 	private initializeMusicalTheory(): void {
 		try {
 			if (!this.settings.audioEnhancement?.musicalTheory) {
-				logger.warn('musical-theory', 'Musical theory settings not found, skipping initialization');
+				void logger.warn('musical-theory', 'Musical theory settings not found, skipping initialization');
 				return;
 			}
 
@@ -551,7 +551,7 @@ export class AudioEngine {
 				quantizationStrength: config.quantizationStrength
 			});
 		} catch (error) {
-			logger.error('musical-theory', 'Failed to initialize Musical Theory Engine', error);
+			void logger.error('musical-theory', 'Failed to initialize Musical Theory Engine', error);
 			// Don't throw - continue without harmonic constraints
 		}
 	}
@@ -582,7 +582,7 @@ export class AudioEngine {
 
 			return quantized;
 		} catch (error) {
-			logger.warn('musical-theory', 'Failed to quantize frequency, using original', error);
+			void logger.warn('musical-theory', 'Failed to quantize frequency, using original', error);
 			return frequency;
 		}
 	}
@@ -611,7 +611,7 @@ export class AudioEngine {
 				wet: reverbSettings.wet        
 			});
 			await reverb.generate();
-			effectMap.set('reverb', reverb);
+			void effectMap.set('reverb', reverb);
 
 			// Create chorus for this instrument
 			const chorusSettings = effectSettings?.chorus?.params ?? { frequency: 0.8, delayTime: 4.0, depth: 0.5, feedback: 0.05 };
@@ -622,8 +622,8 @@ export class AudioEngine {
 				feedback: chorusSettings.feedback,   
 				spread: 120       
 			});
-			chorus.start();
-			effectMap.set('chorus', chorus);
+			void chorus.start();
+			void effectMap.set('chorus', chorus);
 
 			// Create filter for this instrument
 			const filterSettings = effectSettings?.filter?.params ?? { frequency: 3500, type: 'lowpass' as const, Q: 0.8 };
@@ -633,13 +633,13 @@ export class AudioEngine {
 				rolloff: -24,     
 				Q: filterSettings.Q           
 			});
-			effectMap.set('filter', filter);
+			void effectMap.set('filter', filter);
 			
 			this.instrumentEffects.set(instrumentName, effectMap);
 		}
 
 		// Validate configuration coverage
-		this.validateInstrumentConfigurations(instruments);
+		void this.validateInstrumentConfigurations(instruments);
 		
 		logger.info('initialization', 'Per-instrument volume controls and effects initialized', {
 			instrumentCount: instruments.length,
@@ -662,11 +662,11 @@ export class AudioEngine {
 			const hasDefaults = DEFAULT_SETTINGS.instruments[instrumentName as keyof typeof DEFAULT_SETTINGS.instruments];
 			
 			if (!hasVolume || !hasEffects) {
-				missingConfigurations.push(instrumentName);
+				void missingConfigurations.push(instrumentName);
 			}
 			
 			if (!hasSettings && hasDefaults) {
-				defaultsApplied.push(instrumentName);
+				void defaultsApplied.push(instrumentName);
 			}
 		}
 		
@@ -694,7 +694,7 @@ export class AudioEngine {
 
 	// Phase 3.5: Enhanced Effect Routing initialization
 	private async initializeEnhancedRouting(): Promise<void> {
-		logger.debug('enhanced-routing', 'Initializing enhanced effect routing');
+		void logger.debug('enhanced-routing', 'Initializing enhanced effect routing');
 		
 		this.enhancedRouting = true;
 		
@@ -712,10 +712,10 @@ export class AudioEngine {
 		// Initialize master effects
 		
 		// Initialize send/return buses
-		this.initializeSendReturnBuses();
+		void this.initializeSendReturnBuses();
 		
 		// Connect instruments with enhanced routing
-		this.connectInstrumentsEnhanced();
+		void this.connectInstrumentsEnhanced();
 		
 		logger.info('enhanced-routing', 'Enhanced effect routing initialized', {
 			instrumentCount: instruments.length,
@@ -737,7 +737,7 @@ export class AudioEngine {
 			const effectInstance = await this.createEffectInstance(node);
 			if (effectInstance) {
 				this.effectNodeInstances.set(node.id, effectInstance);
-				effectNodes.push(node);
+				void effectNodes.push(node);
 			}
 		}
 		
@@ -766,7 +766,7 @@ export class AudioEngine {
 				case 'chorus': {
 					const chorusSettings = node.settings as EffectSettings;
 					const chorus = new Chorus(chorusSettings.params);
-					chorus.start();
+					void chorus.start();
 					return chorus;
 				}
 
@@ -850,10 +850,10 @@ export class AudioEngine {
 			}
 			
 			// Connect to master effects chain or directly to output
-			this.connectToMasterChain(output);
+			void this.connectToMasterChain(output);
 		}
 		
-		logger.debug('enhanced-routing', 'Enhanced instrument connections established');
+		void logger.debug('enhanced-routing', 'Enhanced instrument connections established');
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accepts any Tone.js audio node as instrument output
@@ -875,12 +875,12 @@ export class AudioEngine {
 		
 		// Finally connect to master volume
 		if (this.volume) {
-			output.connect(this.volume);
+			void output.connect(this.volume);
 		}
 	}
 
 	private connectSynthesisInstruments(): void {
-		logger.debug('synthesis', 'Connecting synthesis instruments to master output');
+		void logger.debug('synthesis', 'Connecting synthesis instruments to master output');
 
 		for (const [instrumentName] of this.instruments) {
 			const volume = this.instrumentVolumes.get(instrumentName);
@@ -893,7 +893,7 @@ export class AudioEngine {
 			// In synthesis mode, connect directly to master for clean audio path
 			// Effects processing can be added later as needed
 			if (this.volume) {
-				volume.connect(this.volume);
+				void volume.connect(this.volume);
 				logger.debug('synthesis', `Connected ${instrumentName} directly to master output (synthesis mode)`);
 			} else {
 				logger.error('synthesis', `Master volume not available when connecting ${instrumentName}`);
@@ -905,7 +905,7 @@ export class AudioEngine {
 		const configs = this.getSamplerConfigs();
 		
 		// Per-instrument quality control - each instrument decides synthesis vs samples individually
-		logger.info('instruments', 'Initializing instruments with per-instrument quality control');
+		void logger.info('instruments', 'Initializing instruments with per-instrument quality control');
 		
 		// Get all instruments that are enabled in settings
 		const allInstruments = [
@@ -951,12 +951,12 @@ export class AudioEngine {
 				if (useHighQuality && !hasSamples) {
 					logger.warn('instruments', `${instrumentName} requested high-quality samples but none available, using synthesis`);
 				}
-				this.initializeInstrumentWithSynthesis(instrumentName);
+				void this.initializeInstrumentWithSynthesis(instrumentName);
 			}
 		}
 		
 		// Apply instrument settings and connect effects
-		this.applyInstrumentSettings();
+		void this.applyInstrumentSettings();
 		
 		logger.info('instruments', `Successfully initialized ${enabledInstruments.length} instruments with per-instrument quality control`);
 	}
@@ -1015,7 +1015,7 @@ export class AudioEngine {
 				}
 			}
 			
-			output.connect(this.volume);
+			void output.connect(this.volume);
 			this.instruments.set(instrumentName, sampler);
 			
 			logger.info('instruments', `Successfully initialized ${instrumentName} with samples`);
@@ -1031,7 +1031,7 @@ export class AudioEngine {
 					firstSample: Object.keys(config.urls || {})[0]
 				}
 			});
-			this.initializeInstrumentWithSynthesis(instrumentName);
+			void this.initializeInstrumentWithSynthesis(instrumentName);
 		}
 	}
 	
@@ -1235,7 +1235,7 @@ export class AudioEngine {
 			}
 		}
 		
-		output.connect(this.volume);
+		void output.connect(this.volume);
 		this.instruments.set(instrumentName, synth);
 	}
 
@@ -1247,7 +1247,7 @@ export class AudioEngine {
 	 * Enhanced whale initialization to handle all whale instruments consistently
 	 */
 	private initializeWhaleSynthesizer(): void {
-		logger.debug('environmental', 'Initializing whale synthesizers for all species');
+		void logger.debug('environmental', 'Initializing whale synthesizers for all species');
 
 		// Define all whale instruments that need initialization
 		const whaleInstruments = [
@@ -1313,8 +1313,8 @@ export class AudioEngine {
 				}
 				const whaleEffects = this.instrumentEffects.get(whaleType);
 				if (whaleEffects) {
-					whaleEffects.set('reverb', whaleReverb);
-					whaleEffects.set('chorus', whaleChorus);
+					void whaleEffects.set('reverb', whaleReverb);
+					void whaleEffects.set('chorus', whaleChorus);
 				}
 
 				initializedWhales++;
@@ -1494,7 +1494,7 @@ export class AudioEngine {
 		});
 
 		// Create synthesizers for missing instruments (per-instrument quality control)
-		logger.info('instruments', 'Creating synthesizers for missing instruments');
+		void logger.info('instruments', 'Creating synthesizers for missing instruments');
 		// Issue #014 Fix: Only initialize instruments that are enabled in family settings
 		const settings = this.settings; // Capture for arrow function
 			
@@ -1541,9 +1541,9 @@ export class AudioEngine {
 					const volume = new Volume(-6);
 					this.instrumentVolumes.set(instrumentName, volume);
 					
-					sampler.connect(volume);
+					void sampler.connect(volume);
 					if (this.volume) {
-						volume.connect(this.volume);
+						void volume.connect(this.volume);
 					}
 					
 					this.instruments.set(instrumentName, sampler);
@@ -1570,9 +1570,9 @@ export class AudioEngine {
 			this.instrumentVolumes.set(instrumentName, volume);
 			
 			// Connect synth → volume → master
-			synth.connect(volume);
+			void synth.connect(volume);
 			if (this.volume) {
-				volume.connect(this.volume);
+				void volume.connect(this.volume);
 			}
 			
 			// Add to instruments map
@@ -1655,8 +1655,8 @@ export class AudioEngine {
 				const volume = new Volume(-6);
 				
 				// Connect synth → volume → master
-				synth.connect(volume);
-				volume.connect(this.volume);
+				void synth.connect(volume);
+				void volume.connect(this.volume);
 				
 				// Store references
 				this.instruments.set(instrumentName, synth);
@@ -1685,10 +1685,10 @@ export class AudioEngine {
 					const volume = new Volume(-6);
 					
 					// Connect sampler to volume
-					sampler.connect(volume);
+					void sampler.connect(volume);
 					
 					// Connect to master volume
-					volume.connect(this.volume);
+					void volume.connect(this.volume);
 					
 					// Store references
 					this.instruments.set(instrumentName, sampler);
@@ -1723,8 +1723,8 @@ export class AudioEngine {
 		instrumentNames.forEach(instrumentName => {
 			const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 			if (instrumentSettings) {
-				this.updateInstrumentVolume(instrumentName, instrumentSettings.volume);
-				this.setInstrumentEnabled(instrumentName, instrumentSettings.enabled);
+				void this.updateInstrumentVolume(instrumentName, instrumentSettings.volume);
+				void this.setInstrumentEnabled(instrumentName, instrumentSettings.enabled);
 			}
 		});
 
@@ -1759,7 +1759,7 @@ export class AudioEngine {
 			});
 			
 			if (!this.isInitialized || !this.instruments.size) {
-				logger.warn('playback', '🚀 ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!');
+				void logger.warn('playback', '🚀 ISSUE #010 FIX: AudioEngine not initialized, using FAST-PATH initialization!');
 				await this.initializeEssentials();
 				logger.info('debug', 'Step 2: FAST-PATH initialization completed', {
 					isInitialized: this.isInitialized,
@@ -1784,7 +1784,7 @@ export class AudioEngine {
 			// Future-proof upgrade logic: Any time we're in minimal mode during playback, upgrade to full mode
 			// This is independent of the number of instruments currently loaded and will work with any minimal initialization strategy
 			if (this.isMinimalMode) {
-				logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
+				void logger.info('playback', '🚀 ISSUE #010 FIX: Upgrading from minimal to full initialization for sequence playback');
 				
 				// Check if any enabled instruments require high quality samples
 				const requiresSamples = enabledInstrumentsList.some(instrumentName => {
@@ -1820,11 +1820,11 @@ export class AudioEngine {
 
 				// Issue #010 Critical Fix: In synthesis mode, skip CDN sample loading entirely
 				if (isSynthesisMode) {
-					logger.warn('playbook', '🚀 ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments');
+					void logger.warn('playbook', '🚀 ISSUE #010 FIX: Synthesis mode detected - initializing full synthesis for all enabled instruments');
 					
 					// Ensure master volume exists before synthesis initialization
 					if (!this.volume) {
-						logger.debug('playbook', 'Creating master volume for synthesis mode');
+						void logger.debug('playbook', 'Creating master volume for synthesis mode');
 						this.volume = new Volume(this.settings.volume).toDestination();
 					}
 					
@@ -1854,9 +1854,9 @@ export class AudioEngine {
 					});
 				} else {
 					// Sample-based mode: use CDN samples
-					logger.info('debug', 'Step 5: Upgrading to full initialization with samples');
+					void logger.info('debug', 'Step 5: Upgrading to full initialization with samples');
 					await this.forceFullInitialization();
-					logger.info('debug', 'Step 6: Full initialization completed');
+					void logger.info('debug', 'Step 6: Full initialization completed');
 				}
 				
 				// Issue #010 Fix: Log state after upgrade to confirm instruments are loaded
@@ -1867,7 +1867,7 @@ export class AudioEngine {
 					isMinimalMode: this.isMinimalMode
 				});
 			} else {
-				logger.info('debug', 'Step 3: No upgrade needed - not in minimal mode');
+				void logger.info('debug', 'Step 3: No upgrade needed - not in minimal mode');
 			}
 
 			// Issue #010 Fix: Debug sequence instrument requirements vs available instruments
@@ -1880,7 +1880,7 @@ export class AudioEngine {
 				instrumentMapSize: this.instruments.size
 			});
 
-			logger.info('debug', 'Step 7: Starting volume node inspection');
+			void logger.info('debug', 'Step 7: Starting volume node inspection');
 
 			// Issue #006 Fix: Ensure enabled instruments have properly functioning volume nodes
 			// Check for both missing volume nodes and corrupted volume nodes (null value, muted)
@@ -1974,7 +1974,7 @@ export class AudioEngine {
 					corruptedInstruments: corruptedVolumeInstruments,
 					action: 'start-targeted-reinitialization'
 				});
-				this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
+				void this.reinitializeSpecificInstruments(corruptedVolumeInstruments);
 				
 				// Verify re-initialization success - only check instruments that should be enabled
 				const stillCorrupted = corruptedVolumeInstruments.filter(instrumentName => {
@@ -2023,16 +2023,16 @@ export class AudioEngine {
 				}
 			}
 
-			logger.info('debug', 'Step 9: Continuing with playback logic...');
+			void logger.info('debug', 'Step 9: Continuing with playback logic...');
 
 			if (this.isPlaying) {
-				logger.info('playback', 'Stopping current sequence before starting new one');
-				this.stop();
+				void logger.info('playback', 'Stopping current sequence before starting new one');
+				void this.stop();
 			}
 
 			// Detailed sequence validation
 			if (sequence.length === 0) {
-				logger.error('playback', 'Empty sequence provided');
+				void logger.error('playback', 'Empty sequence provided');
 				throw new Error('No musical sequence to play');
 			}
 
@@ -2125,7 +2125,7 @@ export class AudioEngine {
 				});
 
 				// Real-time scheduling - start playback timer
-				this.startRealtimePlayback(processedSequence);
+				void this.startRealtimePlayback(processedSequence);
 
 				logger.info('playback', 'Real-time playback system started', {
 					noteCount: processedSequence.length,
@@ -2192,13 +2192,13 @@ export class AudioEngine {
 		// Start the audio context if suspended and optimize for latency
 		if (getContext().state === 'suspended') {
 			getContext().resume();
-			logger.debug('context', 'Resumed suspended audio context for real-time playback');
+			void logger.debug('context', 'Resumed suspended audio context for real-time playback');
 		}
 		
 		// Set audio context to reduce latency and improve stability
 		try {
 			if (getContext().latencyHint !== 'playback') {
-				logger.debug('context', 'Optimizing audio context for playback latency');
+				void logger.debug('context', 'Optimizing audio context for playback latency');
 			}
 		} catch {
 			// Ignore if latencyHint is not supported
@@ -2284,7 +2284,7 @@ export class AudioEngine {
 						const quantizedFreq = this.quantizeFrequency(chordNote.pitch);
 						const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
 
-						synth.triggerAttackRelease(detunedFreq, mapping.duration, triggerTime, chordNote.velocity);
+						void synth.triggerAttackRelease(detunedFreq, mapping.duration, triggerTime, chordNote.velocity);
 
 						logger.debug('chord-fusion', 'Chord note triggered', {
 							pitch: chordNote.pitch,
@@ -2294,7 +2294,7 @@ export class AudioEngine {
 					});
 
 					// Emit visualization event for the chord
-					this.emitNoteEvent(instrumentName, mapping.pitch, mapping.duration, mapping.velocity, elapsedTime, mapping.nodeId);
+					void this.emitNoteEvent(instrumentName, mapping.pitch, mapping.duration, mapping.velocity, elapsedTime, mapping.nodeId);
 				}
 
 				return; // Don't process as single note
@@ -2348,17 +2348,17 @@ export class AudioEngine {
 
 			// Use specialized synthesis engines if available
 			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
-				this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
-				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
+				void this.triggerAdvancedPercussion(instrumentName, frequency, duration, velocity, currentTime);
+				void this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else if (this.electronicEngine && this.isElectronicInstrument(instrumentName)) {
-				this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
-				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
+				void this.triggerAdvancedElectronic(instrumentName, frequency, duration, velocity, currentTime);
+				void this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else if (this.isEnvironmentalInstrument(instrumentName)) {
 				// Fire and forget - don't block the sequence for external sample loading
 				this.triggerEnvironmentalSound(instrumentName, frequency, duration, velocity, currentTime).catch(error => {
 					logger.debug('environmental-sound', `Environmental sound failed for ${instrumentName}`, error);
 				});
-				this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
+				void this.emitNoteEvent(instrumentName, frequency, duration, velocity, elapsedTime);
 			} else {
 				const synth = this.instruments.get(instrumentName);
 
@@ -2373,10 +2373,10 @@ export class AudioEngine {
 						// Add pre-trigger audio context state logging
 						const audioContext = getContext();
 
-						synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
+						void synth.triggerAttackRelease(detunedFrequency, duration, currentTime, velocity);
 
 						// Emit note-triggered event for visualization
-						this.emitNoteEvent(instrumentName, detunedFrequency, duration, velocity, elapsedTime);
+						void this.emitNoteEvent(instrumentName, detunedFrequency, duration, velocity, elapsedTime);
 
 						// Trigger rhythmic percussion accent if enabled
 						if (this.rhythmicPercussion) {
@@ -2390,7 +2390,7 @@ export class AudioEngine {
 								time: currentTime
 							});
 						} else {
-							logger.debug('rhythmic-percussion', 'No percussion engine available');
+							void logger.debug('rhythmic-percussion', 'No percussion engine available');
 						}
 
 						// Schedule cleanup for this note
@@ -2459,29 +2459,29 @@ export class AudioEngine {
 				
 				// Check memory pressure and adapt if needed
 				if (this.memoryMonitor.shouldTriggerGC()) {
-					this.adaptToMemoryPressure();
+					void this.adaptToMemoryPressure();
 				}
 			}
 
 			// Check if sequence is complete
 			const maxEndTime = this.playbackOptimizer.getProgress(elapsedTime).estimatedTotalTime;
 			if (elapsedTime > maxEndTime + 1.0) { // Add 1 second buffer
-				logger.info('playback', 'Real-time sequence completed');
+				void logger.info('playback', 'Real-time sequence completed');
 				
 				// Enhanced Play Button: Emit completion before stopping
 				this.eventEmitter.emit('playback-ended', null);
-				this.stop();
+				void this.stop();
 			}
 		}, 400); // Check every 400ms to minimize CPU load and timing conflicts
 	}
 
 	stop(): void {
 		if (!this.isPlaying) {
-			logger.debug('playback', 'Stop called but no sequence is playing');
+			void logger.debug('playback', 'Stop called but no sequence is playing');
 			return;
 		}
 
-		logger.info('playback', 'Stopping sequence playback');
+		void logger.info('playback', 'Stopping sequence playback');
 
 		this.isPlaying = false;
 		
@@ -2510,7 +2510,7 @@ export class AudioEngine {
 		this.instruments.forEach((synth, instrumentName) => {
 			synth.releaseAll();
 			// Temporarily disconnect to clean up audio graph
-			synth.disconnect();
+			void synth.disconnect();
 		});
 
 		this.currentSequence = [];
@@ -2525,12 +2525,12 @@ export class AudioEngine {
 		this.audioGraphCleaner.cancelAll();
 		
 		// Reconnect instruments to their volume nodes for future playback
-		this.reconnectInstruments();
+		void this.reconnectInstruments();
 		
 		// Log final memory stats
 		this.memoryMonitor.logStats();
 
-		logger.info('playback', 'Sequence stopped and Transport reset');
+		void logger.info('playback', 'Sequence stopped and Transport reset');
 	}
 
 	async updateSettings(settings: SonigraphSettings): Promise<void> {
@@ -2541,7 +2541,7 @@ export class AudioEngine {
 
 		// Issue #006 Fix: Invalidate instruments cache when settings change
 		// This ensures that instrument enable/disable changes are reflected in playback
-		this.onInstrumentSettingsChanged();
+		void this.onInstrumentSettingsChanged();
 
 		// Hot-swap instruments when enabled/disabled or quality settings change
 		if (this.isInitialized && oldSettings) {
@@ -2563,18 +2563,18 @@ export class AudioEngine {
 		if (this.volume) {
 			if (settings.percussionAccents?.enabled && !this.rhythmicPercussion) {
 				// Percussion just enabled - initialize it
-				logger.info('rhythmic-percussion', 'Initializing percussion engine from settings update');
+				void logger.info('rhythmic-percussion', 'Initializing percussion engine from settings update');
 				this.rhythmicPercussion = new RhythmicPercussionEngine(settings.percussionAccents);
 				await this.rhythmicPercussion.initialize(this.volume);
-				logger.info('rhythmic-percussion', 'Percussion engine initialized');
+				void logger.info('rhythmic-percussion', 'Percussion engine initialized');
 			} else if (!settings.percussionAccents?.enabled && this.rhythmicPercussion) {
 				// Percussion just disabled - dispose it
-				logger.info('rhythmic-percussion', 'Disposing percussion engine from settings update');
+				void logger.info('rhythmic-percussion', 'Disposing percussion engine from settings update');
 				this.rhythmicPercussion.dispose();
 				this.rhythmicPercussion = null;
 			} else if (settings.percussionAccents?.enabled && this.rhythmicPercussion) {
 				// Percussion still enabled - update configuration
-				logger.debug('rhythmic-percussion', 'Updating percussion config', settings.percussionAccents);
+				void logger.debug('rhythmic-percussion', 'Updating percussion config', settings.percussionAccents);
 				this.rhythmicPercussion.updateConfig(settings.percussionAccents);
 			}
 		}
@@ -2605,21 +2605,21 @@ export class AudioEngine {
 				});
 			} else if (theorySettings.enforceHarmony) {
 				// Initialize if enforce harmony was just enabled
-				this.initializeMusicalTheory();
+				void this.initializeMusicalTheory();
 			}
 		}
 
 		// Update chord fusion engine if it exists
 		if (this.chordFusionEngine) {
 			this.chordFusionEngine.updateSettings(settings);
-			logger.debug('chord-fusion', 'Chord fusion engine settings updated');
+			void logger.debug('chord-fusion', 'Chord fusion engine settings updated');
 		}
 
-		this.updateVolume();
+		void this.updateVolume();
 
 		// Apply effect settings if engine is initialized
 		if (this.isInitialized) {
-			this.applyEffectSettings();
+			void this.applyEffectSettings();
 		}
 
 		logger.debug('settings', 'Audio settings updated', {
@@ -2652,17 +2652,17 @@ export class AudioEngine {
 
 			// Instrument newly enabled
 			if (!wasEnabled && isEnabled) {
-				instrumentsToAdd.push(instrumentName);
+				void instrumentsToAdd.push(instrumentName);
 				logger.info('hot-swap', `Instrument enabled: ${instrumentName}`);
 			}
 			// Instrument newly disabled
 			else if (wasEnabled && !isEnabled) {
-				instrumentsToRemove.push(instrumentName);
+				void instrumentsToRemove.push(instrumentName);
 				logger.info('hot-swap', `Instrument disabled: ${instrumentName}`);
 			}
 			// Quality setting changed (and instrument is enabled)
 			else if (isEnabled && wasHighQuality !== isHighQuality) {
-				instrumentsToReinitialize.push(instrumentName);
+				void instrumentsToReinitialize.push(instrumentName);
 				logger.info('hot-swap', `Quality changed for ${instrumentName}: ${wasHighQuality} → ${isHighQuality}`);
 			}
 		});
@@ -2671,7 +2671,7 @@ export class AudioEngine {
 		for (const instrumentName of instrumentsToRemove) {
 			const instrument = this.instruments.get(instrumentName);
 			if (instrument) {
-				instrument.dispose();
+				void instrument.dispose();
 				this.instruments.delete(instrumentName);
 				logger.info('hot-swap', `Removed instrument: ${instrumentName}`);
 			}
@@ -2681,7 +2681,7 @@ export class AudioEngine {
 		for (const instrumentName of instrumentsToReinitialize) {
 			const instrument = this.instruments.get(instrumentName);
 			if (instrument) {
-				instrument.dispose();
+				void instrument.dispose();
 				this.instruments.delete(instrumentName);
 			}
 			await this.initializeSingleInstrument(instrumentName);
@@ -2720,7 +2720,7 @@ export class AudioEngine {
 		if (useHighQuality && hasSamples) {
 			await this.initializeInstrumentWithSamples(instrumentName, config);
 		} else {
-			this.initializeInstrumentWithSynthesis(instrumentName);
+			void this.initializeInstrumentWithSynthesis(instrumentName);
 		}
 
 		logger.info('hot-swap', `Initialized ${instrumentName} successfully`);
@@ -2970,7 +2970,7 @@ export class AudioEngine {
 				
 				const instrumentSettings = this.settings.instruments[instrumentKey as keyof SonigraphSettings['instruments']];
 				if (instrumentSettings) {
-					this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
+					void this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
 					logger.info('issue-006-debug', `${instrumentKey} re-enabled successfully`, {
 						newMute: instrumentVolume.mute,
 						newVolume: instrumentVolume.volume.value,
@@ -3009,29 +3009,29 @@ export class AudioEngine {
 		}
 		
 		// Issue #006 Fix: Invalidate cache when instrument enabled state changes
-		this.onInstrumentSettingsChanged();
+		void this.onInstrumentSettingsChanged();
 	}
 
 	/**
 	 * Apply initial instrument settings from plugin configuration
 	 */
 	private applyInstrumentSettings(): void {
-		logger.debug('instrument-settings', 'Applying initial instrument settings', this.settings.instruments);
+		void logger.debug('instrument-settings', 'Applying initial instrument settings', this.settings.instruments);
 		
 		Object.entries(this.settings.instruments).forEach(([instrumentKey, instrumentSettings]) => {
 			logger.debug('instrument-settings', `Processing ${instrumentKey}:`, instrumentSettings);
 			
 			// Apply volume setting
-			this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
+			void this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
 			
 			// Apply voice limit
-			this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
+			void this.updateInstrumentVoices(instrumentKey, instrumentSettings.maxVoices);
 			
 			// Apply enabled/disabled state
-			this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
+			void this.setInstrumentEnabled(instrumentKey, instrumentSettings.enabled);
 		});
 		
-		logger.debug('instrument-settings', 'Applied initial instrument settings', this.settings.instruments);
+		void logger.debug('instrument-settings', 'Applied initial instrument settings', this.settings.instruments);
 	}
 
 	/**
@@ -3056,7 +3056,7 @@ export class AudioEngine {
 	}
 
 	private handleSequenceComplete(): void {
-		logger.info('playback', 'Sequence playback completed');
+		void logger.info('playback', 'Sequence playback completed');
 		this.isPlaying = false;
 		this.currentSequence = [];
 		this.scheduledEvents = [];
@@ -3101,10 +3101,10 @@ export class AudioEngine {
 
 				if (timeDiff <= timingWindow) {
 					// Add to current group
-					currentGroup.push(note);
+					void currentGroup.push(note);
 				} else {
 					// Save current group and start new one
-					groups.push(currentGroup);
+					void groups.push(currentGroup);
 					currentGroup = [note];
 					currentGroupStart = note.timing;
 				}
@@ -3113,7 +3113,7 @@ export class AudioEngine {
 
 		// Don't forget the last group
 		if (currentGroup.length > 0) {
-			groups.push(currentGroup);
+			void groups.push(currentGroup);
 		}
 
 		logger.debug('chord-fusion', 'Grouped notes by timing', {
@@ -3129,7 +3129,7 @@ export class AudioEngine {
 		for (const group of groups) {
 			if (group.length < minimumNotes) {
 				// Not enough notes for a chord - keep individual notes
-				processed.push(...group);
+				void processed.push(...group);
 				continue;
 			}
 
@@ -3141,13 +3141,13 @@ export class AudioEngine {
 
 			if (!hasEnabledLayer) {
 				// No enabled layers in this group - keep individual notes
-				processed.push(...group);
+				void processed.push(...group);
 				continue;
 			}
 
 			// Create a chord from this group
 			const chordNote = this.createChordNote(group, chordSettings);
-			processed.push(chordNote);
+			void processed.push(chordNote);
 
 			logger.debug('chord-fusion', 'Created chord', {
 				notesInChord: group.length,
@@ -3277,7 +3277,7 @@ export class AudioEngine {
 		}
 
 		// O(n) cache miss - rebuild cache
-		logger.debug('optimization', 'Building enabled instruments cache - should be rare after first call');
+		void logger.debug('optimization', 'Building enabled instruments cache - should be rare after first call');
 		const enabled: string[] = [];
 
 		// Load all instrument configs to check requiresHighQuality flag
@@ -3290,14 +3290,14 @@ export class AudioEngine {
 				if (instrumentConfig?.requiresHighQuality) {
 					// Only enable if useHighQuality is also enabled for this instrument
 					if (settings.useHighQuality) {
-						enabled.push(instrumentKey);
+						void enabled.push(instrumentKey);
 						logger.debug('optimization', `High-quality instrument enabled: ${instrumentKey}`);
 					} else {
 						logger.debug('optimization', `High-quality instrument skipped (useHighQuality=false): ${instrumentKey}`);
 					}
 				} else {
 					// Regular instrument - just check enabled flag
-					enabled.push(instrumentKey);
+					void enabled.push(instrumentKey);
 				}
 			}
 		});
@@ -3322,10 +3322,10 @@ export class AudioEngine {
 	 * Phase 2.2: Call this whenever instrument enabled/disabled state changes
 	 */
 	public onInstrumentSettingsChanged(): void {
-		this.invalidateInstrumentCache();
+		void this.invalidateInstrumentCache();
 		// Also clear the InstrumentConfigLoader cache so configs are reloaded
 		this.instrumentConfigLoader.clearCache();
-		logger.debug('optimization', 'Instrument cache invalidated due to settings change');
+		void logger.debug('optimization', 'Instrument cache invalidated due to settings change');
 	}
 
 	/**
@@ -3515,13 +3515,13 @@ export class AudioEngine {
 		nodeTitle?: string
 	): Promise<void> {
 		if (!this.isInitialized) {
-			logger.warn('audio', 'Audio engine not initialized for immediate note playback');
+			void logger.warn('audio', 'Audio engine not initialized for immediate note playback');
 			await this.initialize();
 		}
 
 		// Check if chord fusion is enabled for real-time playback
 		if (this.settings.audioEnhancement?.chordFusion?.enabled) {
-			this.bufferNoteForChordFusion(mapping, nodeId, nodeTitle, elapsedTime);
+			void this.bufferNoteForChordFusion(mapping, nodeId, nodeTitle, elapsedTime);
 			return; // Note will be played when buffer is flushed
 		}
 
@@ -3556,7 +3556,7 @@ export class AudioEngine {
 				// Fallback to piano if requested instrument not available
 				const pianoSynth = this.instruments.get('piano');
 				if (pianoSynth) {
-					pianoSynth.triggerAttackRelease(pitch, duration, undefined, velocity);
+					void pianoSynth.triggerAttackRelease(pitch, duration, undefined, velocity);
 					return;
 				}
 				throw new Error(`Instrument ${instrument} not available and piano fallback failed`);
@@ -3577,12 +3577,12 @@ export class AudioEngine {
 			const triggerTime = getContext().currentTime + microDelay;
 
 			// Trigger the note with micro-stagger
-			synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
+			void synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
 
 			// Emit note event for visualization
 			// Use provided elapsedTime if available, otherwise fall back to audio context time
 			const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
-			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
+			void this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
 
 			// Schedule counter decrement when note ends
 			// Convert duration to milliseconds (Tone.js uses seconds)
@@ -3634,7 +3634,7 @@ export class AudioEngine {
 
 		// Real-time mode: use millisecond-based buffering
 		if (temporalMode === 'realtime') {
-			this.bufferNoteRealtime(mapping, nodeId, nodeTitle, elapsedTime);
+			void this.bufferNoteRealtime(mapping, nodeId, nodeTitle, elapsedTime);
 			return;
 		}
 
@@ -3648,7 +3648,7 @@ export class AudioEngine {
 				hasNodeId: !!nodeId,
 				hasApp: !!this.app
 			});
-			this.playBufferedNote(mapping, elapsedTime);
+			void this.playBufferedNote(mapping, elapsedTime);
 			return;
 		}
 
@@ -3677,7 +3677,7 @@ export class AudioEngine {
 				temporalMode
 			});
 			// Trigger chord from this bucket
-			this.triggerTemporalChord(bucketKey, elapsedTime);
+			void this.triggerTemporalChord(bucketKey, elapsedTime);
 		} else if (bucket.length === 1) {
 			// First note in bucket - play it immediately, more may come
 			this.playBufferedNote(bucket[0].mapping, elapsedTime);
@@ -3688,7 +3688,7 @@ export class AudioEngine {
 				noteCount: bucket.length,
 				maxNotes
 			});
-			this.triggerTemporalChord(bucketKey, elapsedTime);
+			void this.triggerTemporalChord(bucketKey, elapsedTime);
 		}
 	}
 
@@ -3730,7 +3730,7 @@ export class AudioEngine {
 				clearTimeout(this.chordFlushTimer);
 				this.chordFlushTimer = null;
 			}
-			this.flushChordBuffer(elapsedTime);
+			void this.flushChordBuffer(elapsedTime);
 			return;
 		}
 
@@ -3742,7 +3742,7 @@ export class AudioEngine {
 		// Set new timer based on timing window setting
 		const timingWindow = this.settings.audioEnhancement?.chordFusion?.timingWindow || 50;
 		this.chordFlushTimer = window.setTimeout(() => {
-			this.flushChordBuffer(elapsedTime);
+			void this.flushChordBuffer(elapsedTime);
 		}, timingWindow);
 	}
 
@@ -3827,7 +3827,7 @@ export class AudioEngine {
 			}
 			const layerNotes = notesByLayer.get(layer);
 			if (layerNotes) {
-				layerNotes.push(item);
+				void layerNotes.push(item);
 			}
 		});
 
@@ -3848,9 +3848,9 @@ export class AudioEngine {
 			});
 
 			if (settings.mode === 'smart') {
-				this.triggerSmartChord(notes, settings, elapsedTime);
+				void this.triggerSmartChord(notes, settings, elapsedTime);
 			} else {
-				this.triggerDirectChord(notes, elapsedTime);
+				void this.triggerDirectChord(notes, elapsedTime);
 			}
 		});
 
@@ -3868,7 +3868,7 @@ export class AudioEngine {
 
 		const settings = this.settings.audioEnhancement?.chordFusion;
 		if (!settings) {
-			logger.warn('chord-fusion', 'Chord fusion settings not found during buffer flush');
+			void logger.warn('chord-fusion', 'Chord fusion settings not found during buffer flush');
 			this.chordBuffer = [];
 			return;
 		}
@@ -3898,7 +3898,7 @@ export class AudioEngine {
 			}
 			const layerNotes = notesByLayer.get(layer);
 			if (layerNotes) {
-				layerNotes.push(item);
+				void layerNotes.push(item);
 			}
 		});
 
@@ -3935,10 +3935,10 @@ export class AudioEngine {
 
 			if (settings.mode === 'smart') {
 				// Smart mode: analyze and harmonize
-				this.triggerSmartChord(notes, settings, elapsedTime);
+				void this.triggerSmartChord(notes, settings, elapsedTime);
 			} else {
 				// Direct mode: play all notes as-is
-				this.triggerDirectChord(notes, elapsedTime);
+				void this.triggerDirectChord(notes, elapsedTime);
 			}
 		});
 
@@ -3965,18 +3965,18 @@ export class AudioEngine {
 			const detunedFrequency = this.applyFrequencyDetuning(quantizedFrequency);
 
 			// Trigger the note
-			synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
+			void synth.triggerAttackRelease(detunedFrequency, duration, undefined, velocity);
 
 			// Emit visualization event
 			const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
-			this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
+			void this.emitNoteEvent(instrument, detunedFrequency, duration, velocity, timestamp, nodeId, nodeTitle);
 
 			logger.debug('chord-fusion', 'Buffered note played', {
 				instrument,
 				pitch: detunedFrequency.toFixed(2)
 			});
 		} catch (error) {
-			logger.error('chord-fusion', 'Failed to play buffered note', error);
+			void logger.error('chord-fusion', 'Failed to play buffered note', error);
 		}
 	}
 
@@ -4021,11 +4021,11 @@ export class AudioEngine {
 				const quantizedFreq = this.quantizeFrequency(pitch);
 				const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
 
-				synth.triggerAttackRelease(detunedFreq, duration, triggerTime, velocity);
+				void synth.triggerAttackRelease(detunedFreq, duration, triggerTime, velocity);
 
 				// Emit visualization event
 				const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
-				this.emitNoteEvent(instrument, detunedFreq, duration, velocity, timestamp, nodeId, nodeTitle);
+				void this.emitNoteEvent(instrument, detunedFreq, duration, velocity, timestamp, nodeId, nodeTitle);
 			}
 		});
 	}
@@ -4050,11 +4050,11 @@ export class AudioEngine {
 				const quantizedFreq = this.quantizeFrequency(pitch);
 				const detunedFreq = this.applyFrequencyDetuning(quantizedFreq);
 
-				synth.triggerAttackRelease(detunedFreq, duration, triggerTime, velocity);
+				void synth.triggerAttackRelease(detunedFreq, duration, triggerTime, velocity);
 
 				// Emit visualization event
 				const timestamp = elapsedTime !== undefined ? elapsedTime : getContext().currentTime;
-				this.emitNoteEvent(instrument, detunedFreq, duration, velocity, timestamp, nodeId, nodeTitle);
+				void this.emitNoteEvent(instrument, detunedFreq, duration, velocity, timestamp, nodeId, nodeTitle);
 			}
 		});
 	}
@@ -4168,7 +4168,7 @@ export class AudioEngine {
 			logger.debug('test', 'Playing test note', { frequency });
 			this.instruments.forEach((synth, instrumentName) => {
 				if (instrumentName === 'piano') {
-					synth.triggerAttackRelease(frequency, '4n');
+					void synth.triggerAttackRelease(frequency, '4n');
 				}
 			});
 		}
@@ -4184,7 +4184,7 @@ export class AudioEngine {
 		}
 
 		try {
-			logger.debug('audio', 'Fast-path initialization for test notes');
+			void logger.debug('audio', 'Fast-path initialization for test notes');
 			
 			// Start Tone.js
 			await start();
@@ -4210,7 +4210,7 @@ export class AudioEngine {
 			
 			if (requiresSamples) {
 				// Force immediate upgrade to full initialization with samples
-				logger.info('audio', '🎵 SAMPLE MODE: High-quality samples required - upgrading to full initialization');
+				void logger.info('audio', '🎵 SAMPLE MODE: High-quality samples required - upgrading to full initialization');
 				
 				// Initialize effects first to ensure volume/effects maps are populated
 				await this.initializeEffects();
@@ -4225,11 +4225,11 @@ export class AudioEngine {
 				if (this.settings.enhancedRouting?.enabled) {
 					await this.initializeEnhancedRouting();
 				} else {
-					this.applyEffectSettings();
+					void this.applyEffectSettings();
 				}
 				
 				// Generate comprehensive initialization report
-				this.generateInitializationReport();
+				void this.generateInitializationReport();
 				
 				// Mark as fully initialized (not minimal mode)
 				this.isInitialized = true;
@@ -4242,13 +4242,13 @@ export class AudioEngine {
 				});
 			} else {
 				// No samples required - use minimal synthesis initialization
-				logger.info('audio', '🎹 SYNTHESIS MODE: No samples required - using minimal initialization');
+				void logger.info('audio', '🎹 SYNTHESIS MODE: No samples required - using minimal initialization');
 				
 				// Initialize only basic piano for test notes (no CDN samples)
-				this.initializeBasicPiano();
+				void this.initializeBasicPiano();
 
 				// Initialize lightweight synthesis for common instruments (no CDN samples)
-				this.initializeLightweightSynthesis();
+				void this.initializeLightweightSynthesis();
 				
 				// Mark as initialized but keep it minimal
 				this.isInitialized = true;
@@ -4258,7 +4258,7 @@ export class AudioEngine {
 			}
 			
 		} catch (error) {
-			logger.error('audio', 'Failed to initialize essential components', error);
+			void logger.error('audio', 'Failed to initialize essential components', error);
 			throw error;
 		}
 	}
@@ -4269,7 +4269,7 @@ export class AudioEngine {
 	 */
 	async forceFullInitialization(): Promise<void> {
 		try {
-			logger.debug('audio', 'Upgrading to full initialization');
+			void logger.debug('audio', 'Upgrading to full initialization');
 			
 			// Issue #010 Fix: Store existing working instruments to preserve them
 			const existingInstruments = new Map(this.instruments);
@@ -4290,7 +4290,7 @@ export class AudioEngine {
 			existingInstruments.forEach((instrument, instrumentName) => {
 				if (instrumentName === 'piano') {
 					// Keep the working piano from minimal mode
-					logger.info('audio', '🚀 ISSUE #010 FIX: Restoring working piano from minimal mode');
+					void logger.info('audio', '🚀 ISSUE #010 FIX: Restoring working piano from minimal mode');
 					this.instruments.set(instrumentName, instrument);
 					
 					// Also restore its volume if it was working
@@ -4308,11 +4308,11 @@ export class AudioEngine {
 			if (this.settings.enhancedRouting?.enabled) {
 				await this.initializeEnhancedRouting();
 			} else {
-				this.applyEffectSettings();
+				void this.applyEffectSettings();
 			}
 			
 			// Issue #007 Fix: Generate comprehensive initialization report
-			this.generateInitializationReport();
+			void this.generateInitializationReport();
 			
 			// Issue #010 Fix: Clear minimal mode flag after full initialization
 			this.isMinimalMode = false;
@@ -4324,7 +4324,7 @@ export class AudioEngine {
 				instrumentMapSize: this.instruments.size
 			});
 		} catch (error) {
-			logger.error('audio', 'Failed to upgrade to full initialization', error);
+			void logger.error('audio', 'Failed to upgrade to full initialization', error);
 			throw error;
 		}
 	}
@@ -4353,15 +4353,15 @@ export class AudioEngine {
 			this.instrumentVolumes.set('piano', pianoVolume);
 
 			// Connect piano directly to master volume (no effects for test notes)
-			pianoPoly.connect(pianoVolume);
-			pianoVolume.connect(this.volume);
+			void pianoPoly.connect(pianoVolume);
+			void pianoVolume.connect(this.volume);
 			
 			this.instruments.set('piano', pianoPoly);
 			
-			logger.debug('audio', 'Basic piano synthesizer initialized');
+			void logger.debug('audio', 'Basic piano synthesizer initialized');
 			
 		} catch (error) {
-			logger.error('audio', 'Failed to initialize basic piano', error);
+			void logger.error('audio', 'Failed to initialize basic piano', error);
 			throw error;
 		}
 	}
@@ -4498,80 +4498,80 @@ export class AudioEngine {
 			if (this.settings.instruments.timpani?.enabled) {
 				const timpaniVolume = new Volume(this.settings.instruments.timpani.volume);
 				this.instrumentVolumes.set('timpani', timpaniVolume);
-				timpaniPoly.connect(timpaniVolume);
-				timpaniVolume.connect(this.volume);
+				void timpaniPoly.connect(timpaniVolume);
+				void timpaniVolume.connect(this.volume);
 				this.instruments.set('timpani', timpaniPoly);
 			}
 
 			if (this.settings.instruments.xylophone?.enabled) {
 				const xylophoneVolume = new Volume(this.settings.instruments.xylophone.volume);
 				this.instrumentVolumes.set('xylophone', xylophoneVolume);
-				xylophonePoly.connect(xylophoneVolume);
-				xylophoneVolume.connect(this.volume);
+				void xylophonePoly.connect(xylophoneVolume);
+				void xylophoneVolume.connect(this.volume);
 				this.instruments.set('xylophone', xylophonePoly);
 			}
 
 			if (this.settings.instruments.strings?.enabled) {
 				const stringsVolume = new Volume(this.settings.instruments.strings.volume);
 				this.instrumentVolumes.set('strings', stringsVolume);
-				stringsPoly.connect(stringsVolume);
-				stringsVolume.connect(this.volume);
+				void stringsPoly.connect(stringsVolume);
+				void stringsVolume.connect(this.volume);
 				this.instruments.set('strings', stringsPoly);
 			}
 
 			if (this.settings.instruments.flute?.enabled) {
 				const fluteVolume = new Volume(this.settings.instruments.flute.volume);
 				this.instrumentVolumes.set('flute', fluteVolume);
-				flutePoly.connect(fluteVolume);
-				fluteVolume.connect(this.volume);
+				void flutePoly.connect(fluteVolume);
+				void fluteVolume.connect(this.volume);
 				this.instruments.set('flute', flutePoly);
 			}
 
 			if (this.settings.instruments.clarinet?.enabled) {
 				const clarinetVolume = new Volume(this.settings.instruments.clarinet.volume);
 				this.instrumentVolumes.set('clarinet', clarinetVolume);
-				clarinetPoly.connect(clarinetVolume);
-				clarinetVolume.connect(this.volume);
+				void clarinetPoly.connect(clarinetVolume);
+				void clarinetVolume.connect(this.volume);
 				this.instruments.set('clarinet', clarinetPoly);
 			}
 
 			if (this.settings.instruments.trumpet?.enabled) {
 				const trumpetVolume = new Volume(this.settings.instruments.trumpet.volume);
 				this.instrumentVolumes.set('trumpet', trumpetVolume);
-				trumpetPoly.connect(trumpetVolume);
-				trumpetVolume.connect(this.volume);
+				void trumpetPoly.connect(trumpetVolume);
+				void trumpetVolume.connect(this.volume);
 				this.instruments.set('trumpet', trumpetPoly);
 			}
 
 			if (this.settings.instruments.saxophone?.enabled) {
 				const saxophoneVolume = new Volume(this.settings.instruments.saxophone.volume);
 				this.instrumentVolumes.set('saxophone', saxophoneVolume);
-				saxophonePoly.connect(saxophoneVolume);
-				saxophoneVolume.connect(this.volume);
+				void saxophonePoly.connect(saxophoneVolume);
+				void saxophoneVolume.connect(this.volume);
 				this.instruments.set('saxophone', saxophonePoly);
 			}
 
 			if (this.settings.instruments.tuba?.enabled) {
 				const tubaVolume = new Volume(this.settings.instruments.tuba.volume);
 				this.instrumentVolumes.set('tuba', tubaVolume);
-				tubaPoly.connect(tubaVolume);
-				tubaVolume.connect(this.volume);
+				void tubaPoly.connect(tubaVolume);
+				void tubaVolume.connect(this.volume);
 				this.instruments.set('tuba', tubaPoly);
 			}
 
 			if (this.settings.instruments.bassoon?.enabled) {
 				const bassoonVolume = new Volume(this.settings.instruments.bassoon.volume);
 				this.instrumentVolumes.set('bassoon', bassoonVolume);
-				bassoonPoly.connect(bassoonVolume);
-				bassoonVolume.connect(this.volume);
+				void bassoonPoly.connect(bassoonVolume);
+				void bassoonVolume.connect(this.volume);
 				this.instruments.set('bassoon', bassoonPoly);
 			}
 
 			if (this.settings.instruments.guitarNylon?.enabled) {
 				const guitarNylonVolume = new Volume(this.settings.instruments.guitarNylon.volume);
 				this.instrumentVolumes.set('guitarNylon', guitarNylonVolume);
-				guitarNylonPoly.connect(guitarNylonVolume);
-				guitarNylonVolume.connect(this.volume);
+				void guitarNylonPoly.connect(guitarNylonVolume);
+				void guitarNylonVolume.connect(this.volume);
 				this.instruments.set('guitarNylon', guitarNylonPoly);
 			}
 			
@@ -4581,7 +4581,7 @@ export class AudioEngine {
 			});
 			
 		} catch (error) {
-			logger.error('audio', 'Failed to initialize lightweight percussion', error);
+			void logger.error('audio', 'Failed to initialize lightweight percussion', error);
 			throw error;
 		}
 	}
@@ -4634,9 +4634,9 @@ export class AudioEngine {
 	 * Clean up resources
 	 */
 	dispose(): void {
-		logger.info('cleanup', 'Disposing AudioEngine');
+		void logger.info('cleanup', 'Disposing AudioEngine');
 
-		this.stop();
+		void this.stop();
 
 		this.instruments.forEach((synth, instrumentName) => {
 			synth.dispose();
@@ -4685,7 +4685,7 @@ export class AudioEngine {
 
 		this.isInitialized = false;
 
-		logger.info('cleanup', 'AudioEngine disposed');
+		void logger.info('cleanup', 'AudioEngine disposed');
 	}
 
 	private applyEffectSettings(): void {
@@ -4707,7 +4707,7 @@ export class AudioEngine {
 				// Apply reverb settings
 				const reverbSettings = instrumentSettings.effects.reverb;
 				if (reverbSettings) {
-					this.setReverbEnabled(reverbSettings.enabled, instrumentName);
+					void this.setReverbEnabled(reverbSettings.enabled, instrumentName);
 					if (reverbSettings.params.decay) {
 						this.updateReverbSettings({ decay: reverbSettings.params.decay as number }, instrumentName);
 					}
@@ -4722,7 +4722,7 @@ export class AudioEngine {
 				// Apply chorus settings
 				const chorusSettings = instrumentSettings.effects.chorus;
 				if (chorusSettings) {
-					this.setChorusEnabled(chorusSettings.enabled, instrumentName);
+					void this.setChorusEnabled(chorusSettings.enabled, instrumentName);
 					if (chorusSettings.params.frequency) {
 						this.updateChorusSettings({ frequency: chorusSettings.params.frequency as number }, instrumentName);
 					}
@@ -4740,7 +4740,7 @@ export class AudioEngine {
 				// Apply filter settings
 				const filterSettings = instrumentSettings.effects.filter;
 				if (filterSettings) {
-					this.setFilterEnabled(filterSettings.enabled, instrumentName);
+					void this.setFilterEnabled(filterSettings.enabled, instrumentName);
 					if (filterSettings.params.frequency) {
 						this.updateFilterSettings({ frequency: filterSettings.params.frequency as number }, instrumentName);
 					}
@@ -4758,7 +4758,7 @@ export class AudioEngine {
 			});
 
 		} catch (error) {
-			logger.error('effects', 'Failed to apply effect settings', error);
+			void logger.error('effects', 'Failed to apply effect settings', error);
 		}
 	}
 
@@ -4793,21 +4793,21 @@ export class AudioEngine {
 			// Apply to audio engine if initialized
 			if (this.isInitialized) {
 				// Apply reverb
-				this.setReverbEnabled(preset.effects.reverb.enabled, instrumentName);
+				void this.setReverbEnabled(preset.effects.reverb.enabled, instrumentName);
 				if (preset.effects.reverb.enabled) {
-					this.updateReverbSettings(preset.effects.reverb.params, instrumentName);
+					void this.updateReverbSettings(preset.effects.reverb.params, instrumentName);
 				}
 
 				// Apply chorus
-				this.setChorusEnabled(preset.effects.chorus.enabled, instrumentName);
+				void this.setChorusEnabled(preset.effects.chorus.enabled, instrumentName);
 				if (preset.effects.chorus.enabled) {
-					this.updateChorusSettings(preset.effects.chorus.params, instrumentName);
+					void this.updateChorusSettings(preset.effects.chorus.params, instrumentName);
 				}
 
 				// Apply filter  
-				this.setFilterEnabled(preset.effects.filter.enabled, instrumentName);
+				void this.setFilterEnabled(preset.effects.filter.enabled, instrumentName);
 				if (preset.effects.filter.enabled) {
-					this.updateFilterSettings(preset.effects.filter.params, instrumentName);
+					void this.updateFilterSettings(preset.effects.filter.params, instrumentName);
 				}
 			}
 		}
@@ -4827,7 +4827,7 @@ export class AudioEngine {
 		Object.keys(this.settings.instruments).forEach(instrumentName => {
 			const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 			if (instrumentSettings?.enabled) {
-				this.applyEffectPreset(presetKey, instrumentName);
+				void this.applyEffectPreset(presetKey, instrumentName);
 			}
 		});
 	}
@@ -4881,21 +4881,21 @@ export class AudioEngine {
 			// Apply to audio engine if initialized
 			if (this.isInitialized) {
 				// Apply reverb
-				this.setReverbEnabled(defaultInstrumentSettings.effects.reverb.enabled, instrumentName);
+				void this.setReverbEnabled(defaultInstrumentSettings.effects.reverb.enabled, instrumentName);
 				if (defaultInstrumentSettings.effects.reverb.enabled) {
-					this.updateReverbSettings(defaultInstrumentSettings.effects.reverb.params, instrumentName);
+					void this.updateReverbSettings(defaultInstrumentSettings.effects.reverb.params, instrumentName);
 				}
 
 				// Apply chorus
-				this.setChorusEnabled(defaultInstrumentSettings.effects.chorus.enabled, instrumentName);
+				void this.setChorusEnabled(defaultInstrumentSettings.effects.chorus.enabled, instrumentName);
 				if (defaultInstrumentSettings.effects.chorus.enabled) {
-					this.updateChorusSettings(defaultInstrumentSettings.effects.chorus.params, instrumentName);
+					void this.updateChorusSettings(defaultInstrumentSettings.effects.chorus.params, instrumentName);
 				}
 
 				// Apply filter  
-				this.setFilterEnabled(defaultInstrumentSettings.effects.filter.enabled, instrumentName);
+				void this.setFilterEnabled(defaultInstrumentSettings.effects.filter.enabled, instrumentName);
 				if (defaultInstrumentSettings.effects.filter.enabled) {
-					this.updateFilterSettings(defaultInstrumentSettings.effects.filter.params, instrumentName);
+					void this.updateFilterSettings(defaultInstrumentSettings.effects.filter.params, instrumentName);
 				}
 			}
 		}
@@ -4909,7 +4909,7 @@ export class AudioEngine {
 		this.previewInstrument = instrumentName;
 		
 		// Play a sustained preview note for this instrument
-		this.startPreviewNote(instrumentName);
+		void this.startPreviewNote(instrumentName);
 	}
 
 	/**
@@ -4920,7 +4920,7 @@ export class AudioEngine {
 		this.previewInstrument = null;
 		
 		// Stop the preview note
-		this.stopPreviewNote();
+		void this.stopPreviewNote();
 	}
 
 	/**
@@ -4937,11 +4937,11 @@ export class AudioEngine {
 				
 				// Auto-stop after 10 seconds
 				setTimeout(() => {
-					this.stopPreviewNote();
+					void this.stopPreviewNote();
 				}, 10000);
 			}
 		} catch (error) {
-			logger.warn('audio-engine', 'Failed to start preview note:', error);
+			void logger.warn('audio-engine', 'Failed to start preview note:', error);
 		}
 	}
 
@@ -4953,10 +4953,10 @@ export class AudioEngine {
 			try {
 				const synth = this.instruments.get(this.previewInstrument);
 				if (synth) {
-					synth.triggerRelease('C4');
+					void synth.triggerRelease('C4');
 				}
 			} catch (error) {
-				logger.warn('audio-engine', 'Failed to stop preview note:', error);
+				void logger.warn('audio-engine', 'Failed to stop preview note:', error);
 			}
 		}
 		this.previewNote = null;
@@ -4974,11 +4974,11 @@ export class AudioEngine {
 		}
 
 		// Apply change immediately for real-time feedback
-		this.applyParameterChangeImmediate(instrumentName, effectType, paramName, value);
+		void this.applyParameterChangeImmediate(instrumentName, effectType, paramName, value);
 
 		// Set debounced timeout for final commit
 		const timeout = window.setTimeout(() => {
-			this.commitParameterChange(instrumentName, effectType, paramName, value);
+			void this.commitParameterChange(instrumentName, effectType, paramName, value);
 			this.previewTimeouts.delete(timeoutKey);
 		}, delay);
 
@@ -5018,7 +5018,7 @@ export class AudioEngine {
 					break;
 			}
 		} catch (error) {
-			logger.warn('audio-engine', 'Failed to apply immediate parameter change:', error);
+			void logger.warn('audio-engine', 'Failed to apply immediate parameter change:', error);
 		}
 	}
 
@@ -5042,10 +5042,10 @@ export class AudioEngine {
 		const currentBypass = instrumentBypasses.get(effectType) || false;
 		const newBypass = !currentBypass;
 		
-		instrumentBypasses.set(effectType, newBypass);
+		void instrumentBypasses.set(effectType, newBypass);
 
 		// Apply bypass state to audio engine
-		this.applyEffectBypass(instrumentName, effectType, newBypass);
+		void this.applyEffectBypass(instrumentName, effectType, newBypass);
 
 		return newBypass;
 	}
@@ -5089,7 +5089,7 @@ export class AudioEngine {
 				}
 			}
 		} catch (error) {
-			logger.warn('audio-engine', 'Failed to apply effect bypass:', error);
+			void logger.warn('audio-engine', 'Failed to apply effect bypass:', error);
 		}
 	}
 
@@ -5147,7 +5147,7 @@ export class AudioEngine {
 				latency: currentLatency * 1000 // Convert to milliseconds
 			});
 		} catch (error) {
-			logger.warn('audio-engine', 'Failed to update performance metrics:', error);
+			void logger.warn('audio-engine', 'Failed to update performance metrics:', error);
 		}
 	}
 
@@ -5165,7 +5165,7 @@ export class AudioEngine {
 	 */
 	async enableEnhancedRouting(): Promise<void> {
 		if (this.enhancedRouting) {
-			logger.warn('enhanced-routing', 'Enhanced routing already enabled');
+			void logger.warn('enhanced-routing', 'Enhanced routing already enabled');
 			return;
 		}
 
@@ -5178,7 +5178,7 @@ export class AudioEngine {
 		// Reinitialize with enhanced routing
 		await this.initializeEnhancedRouting();
 		
-		logger.info('enhanced-routing', 'Enhanced routing enabled successfully');
+		void logger.info('enhanced-routing', 'Enhanced routing enabled successfully');
 	}
 
 	/**
@@ -5186,7 +5186,7 @@ export class AudioEngine {
 	 */
 	async disableEnhancedRouting(): Promise<void> {
 		if (!this.enhancedRouting) {
-			logger.warn('enhanced-routing', 'Enhanced routing already disabled');
+			void logger.warn('enhanced-routing', 'Enhanced routing already disabled');
 			return;
 		}
 
@@ -5204,9 +5204,9 @@ export class AudioEngine {
 
 		// Reinitialize with classic effects
 		await this.initializeEffects();
-		this.applyEffectSettings();
+		void this.applyEffectSettings();
 
-		logger.info('enhanced-routing', 'Enhanced routing disabled, reverted to classic mode');
+		void logger.info('enhanced-routing', 'Enhanced routing disabled, reverted to classic mode');
 	}
 
 	// Legacy getEffectChain method removed - now delegated to EffectBusManager
@@ -5277,7 +5277,7 @@ export class AudioEngine {
 		}
 
 		// Disconnect existing connections
-		instrument.disconnect();
+		void instrument.disconnect();
 
 		// Reconnect through the effect chain
 		let output = instrument.connect(volume);
@@ -5294,7 +5294,7 @@ export class AudioEngine {
 		}
 
 		// Connect to master chain
-		this.connectToMasterChain(output);
+		void this.connectToMasterChain(output);
 
 		logger.debug('enhanced-routing', `Reconnected ${instrumentName} with updated effect chain`);
 	}
@@ -5481,14 +5481,14 @@ export class AudioEngine {
 					const existingEffects = this.instrumentEffects.get(instrumentName);
 					
 					// Dispose the failed sampler
-					sampler.dispose();
+					void sampler.dispose();
 					
 					// Replace in instruments map
 					this.instruments.set(instrumentName, synthReplacement);
 					
 					// Reconnect to effects chain
 					if (existingVolume && existingEffects) {
-						this.reconnectInstrumentToEffects(instrumentName, synthReplacement, existingVolume, existingEffects);
+						void this.reconnectInstrumentToEffects(instrumentName, synthReplacement, existingVolume, existingEffects);
 					}
 				}
 			}, 5000); // Wait 5 seconds for loading
@@ -5546,7 +5546,7 @@ export class AudioEngine {
 		}
 		
 		// Connect to master volume
-		output.connect(this.volume);
+		void output.connect(this.volume);
 	}
 
 	/**
@@ -5556,7 +5556,7 @@ export class AudioEngine {
 		// Issue #007 Fix: Enhanced percussion validation and error handling
 		if (!this.percussionEngine) {
 			logger.debug('advanced-percussion', `Percussion engine not initialized, falling back to standard synthesis for ${instrumentName}`);
-			this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+			void this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
 			return;
 		}
 
@@ -5565,7 +5565,7 @@ export class AudioEngine {
 			logger.debug('advanced-percussion', `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
 				frequency, duration, velocity
 			});
-			this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+			void this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
 			return;
 		}
 
@@ -5613,7 +5613,7 @@ export class AudioEngine {
 				frequency: detunedFrequency,
 				note
 			});
-			this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+			void this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
 		}
 	}
 
@@ -5636,7 +5636,7 @@ export class AudioEngine {
 		const synth = this.instruments.get(instrumentName);
 		if (synth) {
 			try {
-				synth.triggerAttackRelease(frequency, duration, time, velocity);
+				void synth.triggerAttackRelease(frequency, duration, time, velocity);
 			} catch (fallbackError) {
 				logger.warn('synthesis-fallback', `Even standard synthesis failed for ${instrumentName}`, {
 					error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
@@ -5654,7 +5654,7 @@ export class AudioEngine {
 		// Issue #007 Fix: Enhanced electronic validation and error handling  
 		if (!this.electronicEngine) {
 			logger.debug('advanced-electronic', `Electronic engine not initialized, falling back to standard synthesis for ${instrumentName}`);
-			this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+			void this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
 			return;
 		}
 		
@@ -5663,7 +5663,7 @@ export class AudioEngine {
 			logger.debug('advanced-electronic', `Invalid parameters for ${instrumentName}, falling back to standard synthesis`, {
 				frequency, duration, velocity
 			});
-			this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+			void this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
 			return;
 		}
 
@@ -5703,7 +5703,7 @@ export class AudioEngine {
 				frequency: detunedFrequency,
 				note
 			});
-			this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
+			void this.triggerStandardSynthesisFallback(instrumentName, frequency, duration, velocity, time);
 		}
 	}
 
@@ -5727,7 +5727,7 @@ export class AudioEngine {
 					// Fallback to persistent whale synthesizer
 					const whaleSynth = this.instruments.get('whaleHumpback') as PolySynth;
 					if (!whaleSynth) {
-						logger.warn('environmental-sound', 'Persistent whale synthesizer not found');
+						void logger.warn('environmental-sound', 'Persistent whale synthesizer not found');
 						return;
 					}
 
@@ -5770,16 +5770,16 @@ export class AudioEngine {
 				
 				// Apply volume scaling similar to synthesis
 				const volume = new Volume(-6);
-				player.connect(volume);
-				volume.connect(this.volume);
+				void player.connect(volume);
+				void volume.connect(this.volume);
 				
 				// Trigger the sample
-				player.start(time);
+				void player.start(time);
 				
 				// Clean up after playback
 				setTimeout(() => {
-					player.dispose();
-					volume.dispose();
+					void player.dispose();
+					void volume.dispose();
 				}, (duration + 1) * 1000); // Add 1 second buffer for cleanup
 				
 				logger.debug('whale-external', `External whale sample played: ${instrumentName}, freq: ${frequency.toFixed(1)}Hz`);
@@ -5850,7 +5850,7 @@ export class AudioEngine {
 			const staleEntries: number[] = [];
 			for (const [freq, time] of this.frequencyHistory.entries()) {
 				if (currentTime - time > 200) { // Reduced cleanup threshold to 200ms
-					staleEntries.push(freq);
+					void staleEntries.push(freq);
 				}
 			}
 			staleEntries.forEach(freq => this.frequencyHistory.delete(freq));
@@ -5918,12 +5918,12 @@ export class AudioEngine {
 	}
 
 	private async initializeMasterEffects(): Promise<void> {
-		logger.debug('master-effects', 'Initializing master effects chain via EffectBusManager');
+		void logger.debug('master-effects', 'Initializing master effects chain via EffectBusManager');
 		
 		try {
 			// Initialize master effects through enhanced routing
 			await this.effectBusManager.enableEnhancedRouting();
-			logger.info('master-effects', 'Master effects chain initialized via EffectBusManager');
+			void logger.info('master-effects', 'Master effects chain initialized via EffectBusManager');
 		} catch (error) {
 			logger.error('master-effects', 'Failed to initialize master effects', { error });
 		}
@@ -5936,8 +5936,8 @@ export class AudioEngine {
 		this.instruments.forEach((instrument, instrumentName) => {
 			// Disconnect from direct output and connect to master chain
 			try {
-				instrument.disconnect();
-				instrument.connect(this.masterEQ);
+				void instrument.disconnect();
+				void instrument.connect(this.masterEQ);
 				logger.debug('master-effects', `Routed ${instrumentName} through master effects`);
 			} catch (error) {
 				logger.warn('master-effects', `Failed to route ${instrumentName} through master effects`, error);
@@ -5961,27 +5961,27 @@ export class AudioEngine {
 			this.masterCompressor = null;
 		}
 		
-		logger.debug('master-effects', 'Master effects disposed');
+		void logger.debug('master-effects', 'Master effects disposed');
 	}
 
 	/**
 	 * Performance optimization methods for 34-instrument orchestral load
 	 */
 	private initializePerformanceOptimization(): void {
-		logger.debug('performance', 'Initializing performance optimization systems');
+		void logger.debug('performance', 'Initializing performance optimization systems');
 		
 		// Pre-allocate voice pools for enabled instruments
 		Object.keys(this.settings.instruments).forEach(instrumentName => {
 			const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
 			if (instrumentSettings?.enabled) {
-				this.createVoicePool(instrumentName, instrumentSettings.maxVoices || 4);
+				void this.createVoicePool(instrumentName, instrumentSettings.maxVoices || 4);
 			}
 		});
 
 		// Start adaptive quality monitoring
-		this.startPerformanceMonitoring();
+		void this.startPerformanceMonitoring();
 		
-		logger.info('performance', 'Performance optimization initialized');
+		void logger.info('performance', 'Performance optimization initialized');
 	}
 
 	private createVoicePool(instrumentName: string, poolSize: number): void {
@@ -6002,7 +6002,7 @@ export class AudioEngine {
 		
 		// Monitor performance every 5 seconds
 		this.performanceMonitoringInterval = setInterval(() => {
-			this.checkPerformanceAndAdapt();
+			void this.checkPerformanceAndAdapt();
 		}, 5000);
 	}
 
@@ -6022,9 +6022,9 @@ export class AudioEngine {
 
 		// Adaptive quality adjustment
 		if (cpuUsage > 80 && this.currentQualityLevel !== 'low') {
-			this.reduceQuality();
+			void this.reduceQuality();
 		} else if (cpuUsage < 40 && this.currentQualityLevel !== 'high') {
-			this.increaseQuality();
+			void this.increaseQuality();
 		}
 
 		this.lastCPUCheck = now;
@@ -6060,11 +6060,11 @@ export class AudioEngine {
 		switch (this.currentQualityLevel) {
 			case 'high':
 				this.currentQualityLevel = 'medium';
-				this.applyMediumQuality();
+				void this.applyMediumQuality();
 				break;
 			case 'medium':
 				this.currentQualityLevel = 'low';
-				this.applyLowQuality();
+				void this.applyLowQuality();
 				break;
 		}
 		logger.info('performance', `Reduced quality to ${this.currentQualityLevel} due to high CPU usage`);
@@ -6074,11 +6074,11 @@ export class AudioEngine {
 		switch (this.currentQualityLevel) {
 			case 'low':
 				this.currentQualityLevel = 'medium';
-				this.applyMediumQuality();
+				void this.applyMediumQuality();
 				break;
 			case 'medium':
 				this.currentQualityLevel = 'high';
-				this.applyHighQuality();
+				void this.applyHighQuality();
 				break;
 		}
 		logger.info('performance', `Increased quality to ${this.currentQualityLevel} due to low CPU usage`);
@@ -6128,10 +6128,10 @@ export class AudioEngine {
 
 				// Temporarily disable chorus and filter effects for performance
 				if (instrumentSettings.effects.chorus.enabled) {
-					this.setChorusEnabled(false, instrumentName);
+					void this.setChorusEnabled(false, instrumentName);
 				}
 				if (instrumentSettings.effects.filter.enabled) {
-					this.setFilterEnabled(false, instrumentName);
+					void this.setFilterEnabled(false, instrumentName);
 				}
 			}
 		});
@@ -6159,7 +6159,7 @@ export class AudioEngine {
 			const staleEntries: number[] = [];
 			for (const [freq, time] of this.frequencyHistory.entries()) {
 				if (currentTime - time > 100) { // More aggressive - 100ms instead of 200ms
-					staleEntries.push(freq);
+					void staleEntries.push(freq);
 				}
 			}
 			staleEntries.forEach(freq => this.frequencyHistory.delete(freq));
@@ -6203,7 +6203,7 @@ export class AudioEngine {
 		}
 		const winWithGC = window as WindowWithGC;
 		if ('gc' in window && typeof winWithGC.gc === 'function') {
-			winWithGC.gc();
+			void winWithGC.gc();
 		}
 
 		// Get memory stats for monitoring
@@ -6268,7 +6268,7 @@ export class AudioEngine {
 			const volume = this.instrumentVolumes.get(instrumentName);
 			if (volume && !synth.disposed) {
 				try {
-					synth.connect(volume);
+					void synth.connect(volume);
 				} catch (error) {
 					logger.debug('reconnect', `Failed to reconnect ${instrumentName}:`, error);
 				}
@@ -6280,7 +6280,7 @@ export class AudioEngine {
 	 * Emergency performance recovery
 	 */
 	enablePerformanceEmergencyMode(): void {
-		logger.warn('performance', 'Activating emergency performance mode');
+		void logger.warn('performance', 'Activating emergency performance mode');
 		
 		// Disable all non-essential instruments (keep only the 5 defaults)
 		const essentialInstruments = ['piano', 'strings', 'flute', 'clarinet', 'saxophone'];
@@ -6294,19 +6294,19 @@ export class AudioEngine {
 
 		// Apply low quality settings
 		this.currentQualityLevel = 'low';
-		this.applyLowQuality();
+		void this.applyLowQuality();
 
 		// Disable adaptive quality to prevent thrashing
 		this.adaptiveQuality = false;
 
-		logger.info('performance', 'Emergency performance mode activated - disabled non-essential instruments');
+		void logger.info('performance', 'Emergency performance mode activated - disabled non-essential instruments');
 	}
 
 	disablePerformanceEmergencyMode(): void {
 		this.adaptiveQuality = true;
 		this.currentQualityLevel = 'high';
-		this.applyHighQuality();
-		logger.info('performance', 'Emergency performance mode deactivated');
+		void this.applyHighQuality();
+		void logger.info('performance', 'Emergency performance mode deactivated');
 	}
 
 	// Public getters for test suite

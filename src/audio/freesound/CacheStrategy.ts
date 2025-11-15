@@ -210,7 +210,7 @@ export class CacheStrategy {
         // Step 1: Identify stale items
         const staleItems = this.identifyStaleItems();
         for (const item of staleItems) {
-            this.unregisterItem(item.soundId);
+            void this.unregisterItem(item.soundId);
             itemsEvicted++;
             spaceFreedMB += item.sizeBytes / (1024 * 1024);
         }
@@ -224,11 +224,11 @@ export class CacheStrategy {
 
         // Step 3: Apply priority adjustments
         for (const item of promotionCandidates) {
-            this.promotePriority(item);
+            void this.promotePriority(item);
         }
 
         for (const item of demotionCandidates) {
-            this.demotePriority(item);
+            void this.demotePriority(item);
         }
 
         const duration = Date.now() - startTime;
@@ -262,7 +262,7 @@ export class CacheStrategy {
         const totalCount = items.length;
 
         if (lowPriorityCount / totalCount > 0.5) {
-            recommendations.push('Consider evicting low-priority items to free up space');
+            void recommendations.push('Consider evicting low-priority items to free up space');
         }
 
         // Check for stale items
@@ -274,7 +274,7 @@ export class CacheStrategy {
         // Check genre diversity
         const genreCount = this.genreFrequency.size;
         if (genreCount < 3) {
-            recommendations.push('Cache has low genre diversity - consider preloading more genres');
+            void recommendations.push('Cache has low genre diversity - consider preloading more genres');
         }
 
         // Check access patterns
@@ -284,7 +284,7 @@ export class CacheStrategy {
         });
 
         if (recentlyAccessed.length / totalCount < 0.2) {
-            recommendations.push('Low cache hit rate - consider different preloading strategy');
+            void recommendations.push('Low cache hit rate - consider different preloading strategy');
         }
 
         return recommendations;
@@ -401,7 +401,7 @@ export class CacheStrategy {
         for (const item of this.cacheItems.values()) {
             const timeSinceAccess = now - item.lastAccessed;
             if (timeSinceAccess > this.config.staleThresholdMs) {
-                staleItems.push(item);
+                void staleItems.push(item);
             }
         }
 
@@ -421,7 +421,7 @@ export class CacheStrategy {
 
                 const score = this.calculatePriorityScore(item);
                 if (score > 5) { // Arbitrary threshold
-                    candidates.push(item);
+                    void candidates.push(item);
                 }
             }
         }
@@ -442,7 +442,7 @@ export class CacheStrategy {
             if (timeSinceAccess > this.config.staleThresholdMs / 2 &&
                 (item.priority === 'critical' || item.priority === 'high')) {
 
-                candidates.push(item);
+                void candidates.push(item);
             }
         }
 

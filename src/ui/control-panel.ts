@@ -147,9 +147,9 @@ export class MaterialControlPanelModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 
-		logger.debug('ui', 'Opening Sonigraph Control Center');
+		void logger.debug('ui', 'Opening Sonigraph Control Center');
 
 		// Add OSP-prefixed class to the modal
 		this.modalEl.addClass('osp-control-center-modal');
@@ -157,24 +157,24 @@ export class MaterialControlPanelModal extends Modal {
 		// Issue #006 Fix: Reset play button manager state on open
 		if (this.playButtonManager) {
 			this.playButtonManager.forceReset();
-			logger.debug('ui', 'Play button manager state reset on modal open');
+			void logger.debug('ui', 'Play button manager state reset on modal open');
 		}
 
 		// Material Design CSS is loaded via styles.css
 
 		// Create modal structure
-		this.createModalContainer();
+		void this.createModalContainer();
 		
 		// Start status updates
-		this.startStatusUpdates();
+		void this.startStatusUpdates();
 	}
 
 	onClose() {
-		logger.debug('ui', 'Closing Sonigraph Control Center');
-		this.stopStatusUpdates();
+		void logger.debug('ui', 'Closing Sonigraph Control Center');
+		void this.stopStatusUpdates();
 		
 		// Enhanced Play Button: Cleanup audio engine event listeners
-		this.cleanupAudioEngineEventListeners();
+		void this.cleanupAudioEngineEventListeners();
 		
 		// Cleanup play button manager
 		if (this.playButtonManager) {
@@ -209,19 +209,19 @@ export class MaterialControlPanelModal extends Modal {
 		const modalContainer = contentEl.createDiv({ cls: 'osp-modal-container' });
 		
 		// Sticky header
-		this.createStickyHeader(modalContainer);
+		void this.createStickyHeader(modalContainer);
 		
 		// Main content area with drawer and content
 		const mainContainer = modalContainer.createDiv({ cls: 'osp-main-container' });
 		
 		// Navigation drawer
-		this.createNavigationDrawer(mainContainer);
+		void this.createNavigationDrawer(mainContainer);
 		
 		// Content area
 		this.contentContainer = mainContainer.createDiv({ cls: 'osp-content-area' });
 		
 		// Show initial tab
-		this.showTab(this.activeTab);
+		void this.showTab(this.activeTab);
 	}
 
 	/**
@@ -233,12 +233,12 @@ export class MaterialControlPanelModal extends Modal {
 		// Title section
 		const titleSection = this.appBar.createDiv({ cls: 'osp-header-title' });
 		const titleIcon = createLucideIcon('music', 20);
-		titleSection.appendChild(titleIcon);
-		titleSection.appendText('Sonigraph Control Center');
+		void titleSection.appendChild(titleIcon);
+		void titleSection.appendText('Sonigraph Control Center');
 		
 		// Action buttons section
 		const actionsSection = this.appBar.createDiv({ cls: 'osp-header-actions' });
-		this.createHeaderActions(actionsSection);
+		void this.createHeaderActions(actionsSection);
 	}
 
 	/**
@@ -248,7 +248,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Volume control
 		const volumeContainer = container.createDiv({ cls: 'osp-header-volume' });
 		const volumeIcon = createLucideIcon('volume-2', 14);
-		volumeContainer.appendChild(volumeIcon);
+		void volumeContainer.appendChild(volumeIcon);
 		
 		const volumeSlider = new MaterialSlider({
 			value: this.plugin.settings.volume || 0.5,
@@ -274,36 +274,36 @@ export class MaterialControlPanelModal extends Modal {
 		});
 		
 		// Enhanced Play Button: Connect to audio engine events
-		this.setupAudioEngineEventListeners();
+		void this.setupAudioEngineEventListeners();
 		
 		playBtn.addEventListener('click', () => this.handlePlay());
 
 		// Stop button (second)
 		const stopBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
 		const stopIcon = createLucideIcon('square', 16);
-		stopBtn.appendChild(stopIcon);
-		stopBtn.appendText('Stop');
+		void stopBtn.appendChild(stopIcon);
+		void stopBtn.appendText('Stop');
 		stopBtn.addEventListener('click', () => this.handleStop());
 
 		// Pause button (third)
 		const pauseBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
 		const pauseIcon = createLucideIcon('pause', 16);
-		pauseBtn.appendChild(pauseIcon);
-		pauseBtn.appendText('Pause');
+		void pauseBtn.appendChild(pauseIcon);
+		void pauseBtn.appendText('Pause');
 		pauseBtn.addEventListener('click', () => this.handlePause());
 
 		// Plugin Settings button (fourth)
 		const pluginSettingsBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
 		const pluginSettingsIcon = createLucideIcon('cog', 16);
-		pluginSettingsBtn.appendChild(pluginSettingsIcon);
-		pluginSettingsBtn.appendText('Plugin Settings');
+		void pluginSettingsBtn.appendChild(pluginSettingsIcon);
+		void pluginSettingsBtn.appendText('Plugin Settings');
 		pluginSettingsBtn.addEventListener('click', () => this.openPluginSettings());
 
 		// Sonic Graph button (fifth)
 		const sonicGraphBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--accent' });
 		const sonicGraphIcon = createLucideIcon('chart-network', 16);
-		sonicGraphBtn.appendChild(sonicGraphIcon);
-		sonicGraphBtn.appendText('Sonic Graph');
+		void sonicGraphBtn.appendChild(sonicGraphIcon);
+		void sonicGraphBtn.appendText('Sonic Graph');
 		sonicGraphBtn.addEventListener('click', () => this.launchSonicGraphView());
 	}
 
@@ -320,7 +320,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Drawer content
 		const content = this.drawer.createDiv({ cls: 'osp-drawer__content' });
-		this.createNavigationList(content);
+		void this.createNavigationList(content);
 	}
 
 	/**
@@ -333,7 +333,7 @@ export class MaterialControlPanelModal extends Modal {
 			const listItem = list.createEl('li', { 
 				cls: `osp-nav-item ${tabConfig.id === this.activeTab ? 'osp-nav-item--active' : ''}` 
 			});
-			listItem.setAttribute('data-tab', tabConfig.id);
+			void listItem.setAttribute('data-tab', tabConfig.id);
 			
 			// Icon
 			const graphic = listItem.createDiv({ cls: 'osp-nav-item__icon' });
@@ -359,7 +359,7 @@ export class MaterialControlPanelModal extends Modal {
 			
 			// Click handler
 			listItem.addEventListener('click', () => {
-				this.switchTab(tabConfig.id);
+				void this.switchTab(tabConfig.id);
 			});
 		});
 	}
@@ -401,7 +401,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Update active tab and show content
 		this.activeTab = tabId;
-		this.showTab(tabId);
+		void this.showTab(tabId);
 	}
 
 	/**
@@ -412,25 +412,25 @@ export class MaterialControlPanelModal extends Modal {
 
 		switch (tabId) {
 			case 'guide':
-				this.createGuideTab();
+				void this.createGuideTab();
 				break;
 			case 'status':
-				this.createStatusTab();
+				void this.createStatusTab();
 				break;
 			case 'musical':
-				this.createMusicalTab();
+				void this.createMusicalTab();
 				break;
 			case 'master':
-				this.createMasterTab();
+				void this.createMasterTab();
 				break;
 			case 'layers':
-				this.createLayersTab();
+				void this.createLayersTab();
 				break;
 			case 'sonic-graph':
-				this.createSonicGraphTab();
+				void this.createSonicGraphTab();
 				break;
 			case 'local-soundscape':
-				this.createLocalSoundscapeTab();
+				void this.createLocalSoundscapeTab();
 				break;
 			case 'keyboard':
 			case 'strings':
@@ -440,10 +440,10 @@ export class MaterialControlPanelModal extends Modal {
 			case 'percussion':
 			case 'electronic':
 			case 'experimental':
-				this.createFamilyTab(tabId);
+				void this.createFamilyTab(tabId);
 				break;
 			default:
-				this.createPlaceholderTab(tabId);
+				void this.createPlaceholderTab(tabId);
 		}
 	}
 
@@ -627,16 +627,16 @@ export class MaterialControlPanelModal extends Modal {
 
 		const docLi = helpList.createEl('li');
 		docLi.createEl('strong', { text: 'Documentation:' });
-		docLi.appendText(' Visit the ');
+		void docLi.appendText(' Visit the ');
 		docLi.createEl('a', {
 			text: 'GitHub repository',
 			attr: { href: 'https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides' }
 		});
-		docLi.appendText(' for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.');
+		void docLi.appendText(' for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.');
 
 		const settingsLi = helpList.createEl('li');
 		settingsLi.createEl('strong', { text: 'Settings:' });
-		settingsLi.appendText(' Each Control Center tab has configuration options. Hover over controls for tooltips.');
+		void settingsLi.appendText(' Each Control Center tab has configuration options. Hover over controls for tooltips.');
 
 		const commandsLi = helpList.createEl('li');
 		commandsLi.createEl('strong', { text: 'Commands:' });
@@ -644,17 +644,17 @@ export class MaterialControlPanelModal extends Modal {
 
 		const feedbackLi = helpList.createEl('li');
 		feedbackLi.createEl('strong', { text: 'Issues & Feedback:' });
-		feedbackLi.appendText(' Report bugs or request features on ');
+		void feedbackLi.appendText(' Report bugs or request features on ');
 		feedbackLi.createEl('a', {
 			text: 'GitHub Issues',
 			attr: { href: 'https://github.com/banisterious/obsidian-sonigraph/issues' }
 		});
-		feedbackLi.appendText('.');
+		void feedbackLi.appendText('.');
 
 		this.contentContainer.appendChild(helpCard.getElement());
 
 		// FAQ Card
-		this.createFAQCard();
+		void this.createFAQCard();
 	}
 
 	/**
@@ -662,16 +662,16 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createStatusTab(): void {
 		// Active Instruments Card
-		this.createActiveInstrumentsCard();
+		void this.createActiveInstrumentsCard();
 		
 		// Performance Metrics Card
-		this.createPerformanceMetricsCard();
+		void this.createPerformanceMetricsCard();
 		
 		// Global Settings Card (moved from Master tab)
-		this.createGlobalSettingsCard();
+		void this.createGlobalSettingsCard();
 		
 		// Logging Card
-		this.createLoggingCard();
+		void this.createLoggingCard();
 	}
 
 	private createActiveInstrumentsCard(): void {
@@ -695,7 +695,7 @@ export class MaterialControlPanelModal extends Modal {
 				const instrumentRow = content.createDiv({ cls: 'osp-instrument-status-row' });
 				
 				const icon = createLucideIcon('music', 16);
-				instrumentRow.appendChild(icon);
+				void instrumentRow.appendChild(icon);
 				
 				const name = instrumentRow.createSpan({ cls: 'osp-instrument-name' });
 				name.textContent = this.capitalizeWords(instrument.name);
@@ -766,16 +766,16 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createMusicalTab(): void {
 		// Scale & Key Settings Card
-		this.createScaleKeyCard();
+		void this.createScaleKeyCard();
 
 		// Chord Fusion Card
-		this.createChordFusionCard();
+		void this.createChordFusionCard();
 
 		// Tempo & Timing Card
-		this.createTempoTimingCard();
+		void this.createTempoTimingCard();
 
 		// Master Tuning Card
-		this.createMasterTuningCard();
+		void this.createMasterTuningCard();
 	}
 
 	/**
@@ -783,10 +783,10 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createSonicGraphTab(): void {
 		// Graph Preview Card
-		this.createGraphPreviewCard();
+		void this.createGraphPreviewCard();
 
 		// Sonic Graph Settings Tabs (Phase 8.1)
-		this.createSonicGraphSettingsTabs();
+		void this.createSonicGraphSettingsTabs();
 	}
 
 	/**
@@ -796,29 +796,29 @@ export class MaterialControlPanelModal extends Modal {
 		// Import and render LocalSoundscapeSettings class (auto-play, key, context-aware, musical enhancements)
 		import('./settings/LocalSoundscapeSettings').then(({ LocalSoundscapeSettings }) => {
 			const lsSettings = new LocalSoundscapeSettings(this.app, this.plugin);
-			lsSettings.render(this.contentContainer);
+			void lsSettings.render(this.contentContainer);
 
 			// Render remaining cards AFTER LocalSoundscapeSettings (which calls container.empty())
 			// Depth-based instrument mapping card
-			this.createDepthInstrumentMappingCard();
+			void this.createDepthInstrumentMappingCard();
 
 			// Volume and panning settings card
-			this.createDepthVolumeAndPanningCard();
+			void this.createDepthVolumeAndPanningCard();
 
 			// Continuous layers settings
 			import('./settings/LocalSoundscapeLayersSettings').then(({ LocalSoundscapeLayersSettings }) => {
 				const layersSettings = new LocalSoundscapeLayersSettings(this.app, this.plugin);
-				layersSettings.render(this.contentContainer);
+				void layersSettings.render(this.contentContainer);
 			});
 
 			// Performance settings card
-			this.createLocalSoundscapePerformanceCard();
+			void this.createLocalSoundscapePerformanceCard();
 
 
 			// Note-centric musicality settings card
-			this.createNoteCentricMusicalityCard();
+			void this.createNoteCentricMusicalityCard();
 			// Tips & Best Practices card
-			this.createLocalSoundscapeTipsCard();
+			void this.createLocalSoundscapeTipsCard();
 		});
 	}
 
@@ -831,24 +831,24 @@ export class MaterialControlPanelModal extends Modal {
 			// Callback to re-render entire tab when toggle changes
 			const onToggle = () => {
 				this.contentContainer.empty();
-				this.createLayersTab();
+				void this.createLayersTab();
 			};
 
 			// Callback to refresh sample browser when genre changes
 			const onGenreChange = () => {
-				this.refreshSampleBrowser();
+				void this.refreshSampleBrowser();
 			};
 
 			const layersSettings = new SonicGraphLayersSettings(this.app, this.plugin, onToggle, onGenreChange);
-			layersSettings.render(this.contentContainer);
+			void layersSettings.render(this.contentContainer);
 
 			// Freesound Integration Card - only show when continuous layers are enabled
 			if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
-				this.createFreesoundIntegrationCard();
+				void this.createFreesoundIntegrationCard();
 
 				// Sample Browser Card - only show when Freesound is enabled
 				if (this.plugin.settings.enableFreesoundSamples) {
-					this.createSampleBrowserCard();
+					void this.createSampleBrowserCard();
 				}
 			}
 		});
@@ -881,7 +881,7 @@ export class MaterialControlPanelModal extends Modal {
 
 					// Re-render the entire Layers tab to show/hide settings
 					this.contentContainer.empty();
-					this.createLayersTab();
+					void this.createLayersTab();
 				})
 			);
 
@@ -905,7 +905,7 @@ export class MaterialControlPanelModal extends Modal {
 						.onChange(async (value) => {
 							this.plugin.settings.freesoundApiKey = value;
 							await this.plugin.saveSettings();
-							logger.info('freesound', 'Freesound API key updated');
+							void logger.info('freesound', 'Freesound API key updated');
 						});
 					text.inputEl.style.fontSize = '13px';
 				})
@@ -1023,7 +1023,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.sampleBrowserContainer = browserSection;
 
 		// Initial render
-		this.refreshSampleBrowser();
+		void this.refreshSampleBrowser();
 
 		this.contentContainer.appendChild(card.getElement());
 	}
@@ -1048,12 +1048,12 @@ export class MaterialControlPanelModal extends Modal {
 			// Import FreesoundSampleLoader dynamically
 			import('../audio/layers/FreesoundSampleLoader').then(({ FreesoundSampleLoader }) => {
 				const tempLoader = new FreesoundSampleLoader(this.plugin.settings.freesoundApiKey);
-				this.renderSampleBrowser(this.sampleBrowserContainer, tempLoader);
+				void this.renderSampleBrowser(this.sampleBrowserContainer, tempLoader);
 			});
 			return;
 		}
 
-		this.renderSampleBrowser(this.sampleBrowserContainer, sampleLoader);
+		void this.renderSampleBrowser(this.sampleBrowserContainer, sampleLoader);
 	}
 
 	/**
@@ -1063,7 +1063,7 @@ export class MaterialControlPanelModal extends Modal {
 	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
 		// Use the new table-based browser
 		const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
-		tableBrowser.render();
+		void tableBrowser.render();
 	}
 
 	/**
@@ -1176,13 +1176,13 @@ export class MaterialControlPanelModal extends Modal {
 	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.textContent === 'Stop') {
-			this.stopPreview();
+			void this.stopPreview();
 			return;
 		}
 
 		// Stop any currently playing preview
 		if (this.currentPreviewAudio) {
-			this.stopPreview();
+			void this.stopPreview();
 		}
 
 		const originalText = button.textContent || 'Preview';
@@ -1248,7 +1248,7 @@ export class MaterialControlPanelModal extends Modal {
 				audio.addEventListener('canplay', () => resolve(), { once: true });
 				audio.addEventListener('error', (e) => reject(e), { once: true });
 				audio.src = blobUrl;
-				audio.load();
+				void audio.load();
 			});
 
 			// Start playback with fade in
@@ -1280,7 +1280,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Clean up blob URL when audio ends
 			audio.addEventListener('ended', () => {
-				URL.revokeObjectURL(blobUrl);
+				void URL.revokeObjectURL(blobUrl);
 			});
 
 			// Auto-stop when audio ends
@@ -1324,11 +1324,11 @@ export class MaterialControlPanelModal extends Modal {
 				if (audio) {
 					audio.volume = (i / fadeOutSteps) * currentVolume;
 					if (i === 0) {
-						audio.pause();
+						void audio.pause();
 						audio.currentTime = 0;
 						// Clean up blob URL if it was used
 						if (audio.src.startsWith('blob:')) {
-							URL.revokeObjectURL(audio.src);
+							void URL.revokeObjectURL(audio.src);
 						}
 					}
 				}
@@ -1357,7 +1357,7 @@ export class MaterialControlPanelModal extends Modal {
 			(sample: FreesoundSample) => this.addSampleToLibrary(sample)
 		);
 
-		modal.open();
+		void modal.open();
 	}
 
 	/**
@@ -1384,7 +1384,7 @@ export class MaterialControlPanelModal extends Modal {
 		logger.info('library', `Added sample ${sample.id} to library`);
 
 		// Refresh the sample browser to show the new sample
-		this.refreshSampleBrowser();
+		void this.refreshSampleBrowser();
 	}
 
 	/**
@@ -1412,7 +1412,7 @@ export class MaterialControlPanelModal extends Modal {
 		new Notice(`${wasEnabled ? 'Disabled' : 'Enabled'} "${sample.title}"`);
 
 		// Refresh the sample browser to reflect the change
-		this.refreshSampleBrowser();
+		void this.refreshSampleBrowser();
 	}
 
 	/**
@@ -1442,7 +1442,7 @@ export class MaterialControlPanelModal extends Modal {
 		new Notice(`Removed "${sampleTitle}" from library`);
 
 		// Refresh the sample browser to reflect the removal
-		this.refreshSampleBrowser();
+		void this.refreshSampleBrowser();
 	}
 
 	private createScaleKeyCard(): void {
@@ -1515,7 +1515,7 @@ export class MaterialControlPanelModal extends Modal {
 			}
 		});
 
-		content.appendChild(settingsGrid);
+		void content.appendChild(settingsGrid);
 
 		// Enforce harmony toggle
 		new Setting(content)
@@ -1637,14 +1637,14 @@ export class MaterialControlPanelModal extends Modal {
 					}
 
 					// Refresh to show/hide detailed settings
-					content.empty();
-					this.createChordFusionSettings(content);
+					void content.empty();
+					void this.createChordFusionSettings(content);
 				})
 			);
 
 		// Show detailed settings only if enabled
 		if (this.plugin.settings.audioEnhancement?.chordFusion?.enabled) {
-			this.createChordFusionSettings(content);
+			void this.createChordFusionSettings(content);
 		}
 
 		this.contentContainer.appendChild(card.getElement());
@@ -1666,8 +1666,8 @@ export class MaterialControlPanelModal extends Modal {
 					}
 
 					// Refresh to show/hide detailed settings
-					container.empty();
-					this.createChordFusionSettings(container);
+					void container.empty();
+					void this.createChordFusionSettings(container);
 				})
 			);
 
@@ -1676,7 +1676,7 @@ export class MaterialControlPanelModal extends Modal {
 		}
 
 		const settingsGrid = createGrid('2-col');
-		container.appendChild(settingsGrid);
+		void container.appendChild(settingsGrid);
 
 		// Chord mode
 		const modeGroup = settingsGrid.createDiv({ cls: 'osp-control-group' });
@@ -1875,7 +1875,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Voicing strategy
 		const voicingGrid = createGrid('1-col');
-		container.appendChild(voicingGrid);
+		void container.appendChild(voicingGrid);
 
 		const voicingGroup = voicingGrid.createDiv({ cls: 'osp-control-group' });
 		voicingGroup.createEl('label', { text: 'Voicing strategy', cls: 'osp-control-label' });
@@ -2011,7 +2011,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const controlWrapper = microtuningGroup.createDiv({ cls: 'control-wrapper' });
 		const switchContainer = controlWrapper.createDiv({ cls: 'ospcc-switch' });
-		switchContainer.setAttribute('title', 'Toggle microtuning precision on/off');
+		void switchContainer.setAttribute('title', 'Toggle microtuning precision on/off');
 		
 		const microtuningToggle = switchContainer.createEl('input', { 
 			type: 'checkbox', 
@@ -2020,7 +2020,7 @@ export class MaterialControlPanelModal extends Modal {
 		microtuningToggle.checked = this.plugin.settings.microtuning ?? false;
 		microtuningToggle.addEventListener('change', () => {
 			logger.debug('ui', 'Microtuning toggle changed', { enabled: microtuningToggle.checked });
-			this.handleMicrotuningChange(microtuningToggle.checked);
+			void this.handleMicrotuningChange(microtuningToggle.checked);
 		});
 		
 		const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
@@ -2029,7 +2029,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Make the entire switch container clickable
 		switchContainer.addEventListener('click', (e) => {
 			if (e.target !== microtuningToggle) {
-				e.preventDefault();
+				void e.preventDefault();
 				microtuningToggle.checked = !microtuningToggle.checked;
 				microtuningToggle.dispatchEvent(new Event('change'));
 			}
@@ -2150,7 +2150,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		logLevelSelect.addEventListener('change', async () => {
 			const newLevel = logLevelSelect.value as LogLevel;
-			LoggerFactory.setLogLevel(newLevel);
+			void LoggerFactory.setLogLevel(newLevel);
 			
 			// Save to plugin settings for persistence
 			await this.plugin.updateSettings({ logLevel: newLevel });
@@ -2253,8 +2253,8 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const titleArea = header.createDiv({ cls: 'osp-effect-title-area' });
 		const icon = createLucideIcon(iconName, 16);
-		titleArea.appendChild(icon);
-		titleArea.appendText(effectName);
+		void titleArea.appendChild(icon);
+		void titleArea.appendText(effectName);
 		
 		// Toggle switch
 		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
@@ -2276,7 +2276,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
 			if (e.target !== toggleInput) {
-				e.preventDefault();
+				void e.preventDefault();
 				toggleInput.checked = !toggleInput.checked;
 				toggleInput.dispatchEvent(new Event('change'));
 			}
@@ -2331,7 +2331,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 
 		// Initialize graph preview asynchronously
-		this.initializeGraphPreview(graphContainer, loadingDiv);
+		void this.initializeGraphPreview(graphContainer, loadingDiv);
 
 		this.contentContainer.appendChild(card.getElement());
 	}
@@ -2367,14 +2367,14 @@ export class MaterialControlPanelModal extends Modal {
 				description: 'Display file names as labels on graph nodes'
 			}
 		);
-		logger.debug('ui', 'Show file names toggle created');
+		void logger.debug('ui', 'Show file names toggle created');
 
 		// Note: Freesound Integration moved to Layers tab for better UX
 		// Add some spacing before exclusion settings
 		settingsSection.createDiv({ cls: 'osp-settings-spacer' });
 
 		// Exclusion settings
-		this.createExclusionFields(settingsSection);
+		void this.createExclusionFields(settingsSection);
 
 		// Note: Launch functionality moved to header Sonic Graph button
 
@@ -2390,7 +2390,7 @@ export class MaterialControlPanelModal extends Modal {
 		linksStat.createSpan({ cls: 'osp-stat-label', text: 'Links' });
 
 		// Update stats asynchronously
-		this.updateSonicGraphStats(filesStat, linksStat);
+		void this.updateSonicGraphStats(filesStat, linksStat);
 
 		this.contentContainer.appendChild(card.getElement());
 	}
@@ -2455,9 +2455,9 @@ export class MaterialControlPanelModal extends Modal {
 			// Show confirmation notice
 			new Notice('Sonic Graph settings reset to defaults');
 
-			logger.info('ui', 'Sonic Graph settings reset to defaults');
+			void logger.info('ui', 'Sonic Graph settings reset to defaults');
 		} catch (error) {
-			logger.error('ui', 'Failed to reset Sonic Graph settings:', error);
+			void logger.error('ui', 'Failed to reset Sonic Graph settings:', error);
 			new Notice('Failed to reset settings');
 		}
 	}
@@ -2474,7 +2474,7 @@ export class MaterialControlPanelModal extends Modal {
 			const graphData = await extractor.extractGraphData();
 			
 			// Remove loading indicator
-			loadingDiv.remove();
+			void loadingDiv.remove();
 			
 			// Create graph renderer
 			this.graphRenderer = new GraphRenderer(container, {
@@ -2488,7 +2488,7 @@ export class MaterialControlPanelModal extends Modal {
 			logger.debug('ui', `Graph renderer initialized with showLabels: ${this.showFileNames}`);
 			
 		} catch (error) {
-			logger.error('ui', 'Failed to initialize graph preview:', error);
+			void logger.error('ui', 'Failed to initialize graph preview:', error);
 			loadingDiv.textContent = 'Failed to load graph preview';
 		}
 	}
@@ -2511,7 +2511,7 @@ export class MaterialControlPanelModal extends Modal {
 			if (linksValue) linksValue.textContent = graphData.links.length.toString();
 			
 		} catch (error) {
-			logger.error('ui', 'Failed to update Sonic Graph stats:', error);
+			void logger.error('ui', 'Failed to update Sonic Graph stats:', error);
 		}
 	}
 
@@ -2519,10 +2519,10 @@ export class MaterialControlPanelModal extends Modal {
 	 * Open Plugin Settings
 	 */
 	private openPluginSettings(): void {
-		logger.debug('ui', 'Opening Plugin Settings');
+		void logger.debug('ui', 'Opening Plugin Settings');
 		
 		// Close Control Center first for smooth transition
-		this.close();
+		void this.close();
 
 		// Open Plugin Settings (using extended Obsidian API defined in obsidian-extended.d.ts)
 		this.app.setting.open();
@@ -2533,15 +2533,15 @@ export class MaterialControlPanelModal extends Modal {
 	 * Launch the full Sonic Graph view
 	 */
 	private launchSonicGraphView(): void {
-		logger.debug('ui', 'Launching Sonic Graph view from Control Center');
+		void logger.debug('ui', 'Launching Sonic Graph view from Control Center');
 
 		// Close Control Center first for smooth transition
-		this.close();
+		void this.close();
 
 		try {
 			// Open Sonic Graph view (primary interface)
 			this.plugin.activateSonicGraphView();
-			logger.debug('ui', 'Sonic Graph view activated');
+			void logger.debug('ui', 'Sonic Graph view activated');
 		} catch (error) {
 			logger.error('ui', 'Failed to launch Sonic Graph view:', (error as Error).message);
 			logger.error('ui', 'Error stack:', (error as Error).stack);
@@ -2563,7 +2563,7 @@ export class MaterialControlPanelModal extends Modal {
 			this.graphRenderer.updateConfig({ showLabels: enabled });
 			logger.debug('ui', `Graph file names visibility updated: ${enabled}`);
 		} else {
-			logger.debug('ui', 'Graph renderer not yet initialized, will apply setting when created');
+			void logger.debug('ui', 'Graph renderer not yet initialized, will apply setting when created');
 		}
 	}
 
@@ -2581,7 +2581,7 @@ export class MaterialControlPanelModal extends Modal {
 		foldersDescription.textContent = 'Folders to exclude from the graph visualization';
 		
 		const foldersContainer = excludeFoldersSection.createDiv({ cls: 'osp-exclusion-container' });
-		this.createExclusionList(foldersContainer, 'folders');
+		void this.createExclusionList(foldersContainer, 'folders');
 		
 		const addFolderBtn = excludeFoldersSection.createEl('button', { 
 			cls: 'osp-exclusion-add-btn',
@@ -2599,7 +2599,7 @@ export class MaterialControlPanelModal extends Modal {
 		filesDescription.textContent = 'Files to exclude from the graph visualization';
 		
 		const filesContainer = excludeFilesSection.createDiv({ cls: 'osp-exclusion-container' });
-		this.createExclusionList(filesContainer, 'files');
+		void this.createExclusionList(filesContainer, 'files');
 		
 		const addFileBtn = excludeFilesSection.createEl('button', { 
 			cls: 'osp-exclusion-add-btn',
@@ -2644,9 +2644,9 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private openFolderSuggestModal(): void {
 		const modal = new FolderSuggestModal(this.app, (folder) => {
-			this.addExclusionItem('folders', folder.path);
+			void this.addExclusionItem('folders', folder.path);
 		});
-		modal.open();
+		void modal.open();
 	}
 
 	/**
@@ -2654,9 +2654,9 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private openFileSuggestModal(): void {
 		const modal = new FileSuggestModal(this.app, (file) => {
-			this.addExclusionItem('files', file.path);
+			void this.addExclusionItem('files', file.path);
 		});
-		modal.open();
+		void modal.open();
 	}
 
 	/**
@@ -2675,18 +2675,18 @@ export class MaterialControlPanelModal extends Modal {
 		}
 		
 		// Add to list
-		currentList.push(path);
+		void currentList.push(path);
 		this.plugin.settings[settingKey] = currentList;
 		
 		logger.debug('ui', `Updated settings`, { newList: currentList });
 		
 		// Save settings
 		this.plugin.saveSettings().then(() => {
-			logger.debug('ui', 'Settings saved successfully');
+			void logger.debug('ui', 'Settings saved successfully');
 			// Refresh the UI after settings are saved
-			this.refreshExclusionLists();
+			void this.refreshExclusionLists();
 		}).catch(error => {
-			logger.error('ui', 'Failed to save settings', error);
+			void logger.error('ui', 'Failed to save settings', error);
 		});
 		
 		logger.debug('ui', `Added ${type === 'folders' ? 'folder' : 'file'} exclusion: ${path}`);
@@ -2706,7 +2706,7 @@ export class MaterialControlPanelModal extends Modal {
 			this.plugin.saveSettings();
 			
 			// Refresh the UI
-			this.refreshExclusionLists();
+			void this.refreshExclusionLists();
 			
 			logger.debug('ui', `Removed ${type === 'folders' ? 'folder' : 'file'} exclusion: ${removedItem}`);
 			new Notice(`${type === 'folders' ? 'Folder' : 'File'} exclusion removed: ${removedItem}`);
@@ -2717,7 +2717,7 @@ export class MaterialControlPanelModal extends Modal {
 	 * Refresh exclusion lists display
 	 */
 	private refreshExclusionLists(): void {
-		logger.debug('ui', 'Refreshing exclusion lists');
+		void logger.debug('ui', 'Refreshing exclusion lists');
 		
 		// Find and refresh both exclusion containers
 		const exclusionSections = this.contentContainer.querySelectorAll('.osp-exclusion-section');
@@ -2727,23 +2727,23 @@ export class MaterialControlPanelModal extends Modal {
 		if (exclusionSections.length >= 1) {
 			const foldersContainer = exclusionSections[0].querySelector('.osp-exclusion-container');
 			if (foldersContainer) {
-				logger.debug('ui', 'Refreshing folders container');
-				foldersContainer.empty();
-				this.createExclusionList(foldersContainer, 'folders');
+				void logger.debug('ui', 'Refreshing folders container');
+				void foldersContainer.empty();
+				void this.createExclusionList(foldersContainer, 'folders');
 			}
 		}
 		
 		if (exclusionSections.length >= 2) {
 			const filesContainer = exclusionSections[1].querySelector('.osp-exclusion-container');
 			if (filesContainer) {
-				logger.debug('ui', 'Refreshing files container');
-				filesContainer.empty();
-				this.createExclusionList(filesContainer, 'files');
+				void logger.debug('ui', 'Refreshing files container');
+				void filesContainer.empty();
+				void this.createExclusionList(filesContainer, 'files');
 			}
 		}
 
 		// Refresh graph preview and stats with new exclusion settings
-		this.refreshGraphWithExclusions();
+		void this.refreshGraphWithExclusions();
 	}
 
 	/**
@@ -2770,7 +2770,7 @@ export class MaterialControlPanelModal extends Modal {
 					this.graphRenderer = null;
 					
 					// Show loading indicator
-					graphPreviewContainer.empty();
+					void graphPreviewContainer.empty();
 					const loadingDiv = graphPreviewContainer.createDiv({ cls: 'osp-graph-loading' });
 					loadingDiv.textContent = 'Updating graph...';
 					
@@ -2779,7 +2779,7 @@ export class MaterialControlPanelModal extends Modal {
 				}
 			}
 		} catch (error) {
-			logger.error('ui', 'Failed to refresh graph with exclusions:', error);
+			void logger.error('ui', 'Failed to refresh graph with exclusions:', error);
 		}
 	}
 
@@ -2791,7 +2791,7 @@ export class MaterialControlPanelModal extends Modal {
 		if (!tabConfig) return;
 
 		// Family Overview Card
-		this.createFamilyOverviewCard(familyId, tabConfig);
+		void this.createFamilyOverviewCard(familyId, tabConfig);
 
 		// Whale integration temporarily disabled due to CORS download issues
 		// TODO: Re-enable when we have a reliable sample delivery method (bundled samples or backend)
@@ -2800,15 +2800,15 @@ export class MaterialControlPanelModal extends Modal {
 		// }
 
 		// Individual Instruments Card
-		this.createInstrumentsCard(familyId, tabConfig);
+		void this.createInstrumentsCard(familyId, tabConfig);
 
 		// Rhythmic Percussion Accent Layer (percussion family only)
 		if (familyId === 'percussion') {
-			this.createRhythmicPercussionCard();
+			void this.createRhythmicPercussionCard();
 		}
 
 		// Family Effects Card
-		this.createFamilyEffectsCard(familyId, tabConfig);
+		void this.createFamilyEffectsCard(familyId, tabConfig);
 	}
 
 	/**
@@ -3225,7 +3225,7 @@ export class MaterialControlPanelModal extends Modal {
 		effectsGrid.appendChild(chorusSection.getElement());
 		effectsGrid.appendChild(filterSection.getElement());
 		
-		content.appendChild(effectsGrid);
+		void content.appendChild(effectsGrid);
 		this.contentContainer.appendChild(card.getElement());
 	}
 
@@ -3380,13 +3380,13 @@ export class MaterialControlPanelModal extends Modal {
 
 	// Event handlers
 	private handlePause(): void {
-		logger.info('ui', 'Pause clicked');
+		void logger.info('ui', 'Pause clicked');
 		this.playButtonManager.setState('paused');
 		this.plugin.stopPlayback();
 	}
 
 	private async handleResume(): Promise<void> {
-		logger.info('ui', 'Resume clicked');
+		void logger.info('ui', 'Resume clicked');
 		
 		// TODO: Implement actual resume functionality in audio engine
 		// For now, just restart playback from the beginning
@@ -3396,14 +3396,14 @@ export class MaterialControlPanelModal extends Modal {
 			// Audio engine will emit 'playback-started' event on success
 			await this.plugin.playSequence();
 		} catch (error) {
-			logger.error('ui', 'Failed to resume sequence', error);
+			void logger.error('ui', 'Failed to resume sequence', error);
 			// Audio engine should emit 'playback-error' event, but fallback to idle if not
 			this.playButtonManager.setState('idle');
 		}
 	}
 
 	private handleStop(): void {
-		logger.info('ui', 'Stop clicked');
+		void logger.info('ui', 'Stop clicked');
 		this.playButtonManager.setState('stopping');
 		
 		// Audio engine will emit 'playback-stopped' event which will transition to idle
@@ -3411,24 +3411,24 @@ export class MaterialControlPanelModal extends Modal {
 	}
 
 	private handleDemo(): void {
-		logger.debug('ui', 'Demo button clicked');
+		void logger.debug('ui', 'Demo button clicked');
 		const demoModal = new GraphDemoModal(this.app);
-		demoModal.open();
+		void demoModal.open();
 	}
 
 	private async handlePlay(): Promise<void> {
-		logger.info('ui', 'Play clicked');
+		void logger.info('ui', 'Play clicked');
 		
 		const currentState = this.playButtonManager.getCurrentState();
 		
 		// Handle different states
 		if (currentState === 'playing') {
 			// If playing, pause the playback
-			this.handlePause();
+			void this.handlePause();
 			return;
 		} else if (currentState === 'paused') {
 			// If paused, resume playback
-			this.handleResume();
+			void this.handleResume();
 			return;
 		} else if (currentState === 'loading' || currentState === 'stopping') {
 			// Ignore clicks during loading or stopping
@@ -3456,7 +3456,7 @@ export class MaterialControlPanelModal extends Modal {
 			await this.plugin.playSequence();
 			
 		} catch (error) {
-			logger.error('ui', 'Failed to play sequence', error);
+			void logger.error('ui', 'Failed to play sequence', error);
 			// Reset to idle state on error (if audio engine doesn't emit error event)
 			this.playButtonManager.setState('idle');
 			// TODO: Show user notification about the error
@@ -3476,13 +3476,13 @@ export class MaterialControlPanelModal extends Modal {
 	
 	private setupAudioEngineEventListeners(): void {
 		if (!this.plugin.audioEngine) {
-			logger.warn('ui', 'Cannot setup audio event listeners: AudioEngine not available');
+			void logger.warn('ui', 'Cannot setup audio event listeners: AudioEngine not available');
 			return;
 		}
 
 		// Issue #006 Fix: Prevent double-setup of event listeners
 		if (this.boundEventHandlers) {
-			logger.debug('ui', 'Audio engine event listeners already configured, skipping setup');
+			void logger.debug('ui', 'Audio engine event listeners already configured, skipping setup');
 			return;
 		}
 
@@ -3502,7 +3502,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.plugin.audioEngine.on('playback-error', this.boundEventHandlers.handlePlaybackError);
 		this.plugin.audioEngine.on('sequence-progress', this.boundEventHandlers.handleSequenceProgress);
 
-		logger.debug('ui', 'Audio engine event listeners configured with bound handlers');
+		void logger.debug('ui', 'Audio engine event listeners configured with bound handlers');
 	}
 
 	private cleanupAudioEngineEventListeners(): void {
@@ -3524,27 +3524,27 @@ export class MaterialControlPanelModal extends Modal {
 	}
 
 	private handlePlaybackStarted(): void {
-		logger.debug('ui', 'Audio engine playback started - switching to playing state');
+		void logger.debug('ui', 'Audio engine playback started - switching to playing state');
 		this.playButtonManager.setState('playing');
 		
 		// Phase 3: Show progress indication
-		this.showProgressIndication();
+		void this.showProgressIndication();
 	}
 
 	private handlePlaybackEnded(): void {
-		logger.debug('ui', 'Audio engine playback ended - switching to idle state');
+		void logger.debug('ui', 'Audio engine playback ended - switching to idle state');
 		this.playButtonManager.setState('idle');
 		
 		// Phase 3: Hide progress indication
-		this.hideProgressIndication();
+		void this.hideProgressIndication();
 	}
 
 	private handlePlaybackStopped(): void {
-		logger.debug('ui', 'Audio engine playback stopped - switching to idle state');
+		void logger.debug('ui', 'Audio engine playback stopped - switching to idle state');
 		this.playButtonManager.setState('idle');
 		
 		// Phase 3: Hide progress indication
-		this.hideProgressIndication();
+		void this.hideProgressIndication();
 	}
 
 	private handlePlaybackError(data?: PlaybackEventData): void {
@@ -3558,7 +3558,7 @@ export class MaterialControlPanelModal extends Modal {
 		this.playButtonManager.setState('idle');
 		
 		// Phase 3: Hide progress indication on error
-		this.hideProgressIndication();
+		void this.hideProgressIndication();
 		
 		// TODO: Show user notification about the error
 		// Could use Obsidian's Notice API or a custom error display
@@ -3574,7 +3574,7 @@ export class MaterialControlPanelModal extends Modal {
 			});
 			
 			// Phase 3: Update progress indication in UI
-			this.updateProgressIndication(progressData);
+			void this.updateProgressIndication(progressData);
 		}
 	}
 
@@ -3612,7 +3612,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Show with smooth transition
 		this.progressElement.addClass('osp-progress--visible');
-		logger.debug('ui', 'Progress indication shown');
+		void logger.debug('ui', 'Progress indication shown');
 	}
 
 	private hideProgressIndication(): void {
@@ -3630,7 +3630,7 @@ export class MaterialControlPanelModal extends Modal {
 				}
 			}, 300); // Match CSS transition duration
 		}
-		logger.debug('ui', 'Progress indication hidden');
+		void logger.debug('ui', 'Progress indication hidden');
 	}
 
 	private updateProgressIndication(progressData: PlaybackProgressData): void {
@@ -3802,7 +3802,7 @@ export class MaterialControlPanelModal extends Modal {
 		}
 		
 		// Update navigation counts immediately
-		this.updateNavigationCounts();
+		void this.updateNavigationCounts();
 		
 		// Update audio engine if available
 		if (this.plugin.audioEngine) {
@@ -3927,12 +3927,12 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const title = header.createDiv({ cls: 'osp-effect-title-area' });
 		const icon = createLucideIcon(getInstrumentIcon(instrumentName), 20);
-		title.appendChild(icon);
+		void title.appendChild(icon);
 		
 		// Use proper instrument name from INSTRUMENT_INFO instead of capitalizeWords
 		const instrumentInfo = INSTRUMENT_INFO[instrumentName as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
 		const titleSpan = title.createSpan();
-		this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo, titleSpan);
+		void this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo, titleSpan);
 		
 		// Enable toggle
 		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
@@ -3962,7 +3962,7 @@ export class MaterialControlPanelModal extends Modal {
 		toggleInput.addEventListener('change', () => {
 			if (canToggle) {
 				logger.debug('ui', 'Instrument toggle changed', { instrumentName, enabled: toggleInput.checked });
-				this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
+				void this.handleInstrumentEnabledChange(instrumentName, toggleInput.checked);
 			}
 		});
 		
@@ -3973,7 +3973,7 @@ export class MaterialControlPanelModal extends Modal {
 		if (canToggle) {
 			toggleContainer.addEventListener('click', (e) => {
 				if (e.target !== toggleInput) {
-					e.preventDefault();
+					void e.preventDefault();
 					toggleInput.checked = !toggleInput.checked;
 					toggleInput.dispatchEvent(new Event('change'));
 				}
@@ -4026,13 +4026,13 @@ export class MaterialControlPanelModal extends Modal {
 		const instrumentSettings = getInstrumentSettings(this.plugin, instrumentName);
 		
 		// Reverb toggle
-		this.createEffectToggle(effectsContainer, 'Reverb', 'reverb', instrumentName, instrumentSettings?.effects?.reverb?.enabled || false);
+		void this.createEffectToggle(effectsContainer, 'Reverb', 'reverb', instrumentName, instrumentSettings?.effects?.reverb?.enabled || false);
 		
 		// Chorus toggle  
-		this.createEffectToggle(effectsContainer, 'Chorus', 'chorus', instrumentName, instrumentSettings?.effects?.chorus?.enabled || false);
+		void this.createEffectToggle(effectsContainer, 'Chorus', 'chorus', instrumentName, instrumentSettings?.effects?.chorus?.enabled || false);
 		
 		// Filter toggle
-		this.createEffectToggle(effectsContainer, 'Filter', 'filter', instrumentName, instrumentSettings?.effects?.filter?.enabled || false);
+		void this.createEffectToggle(effectsContainer, 'Filter', 'filter', instrumentName, instrumentSettings?.effects?.filter?.enabled || false);
 		
 		// Add quality dropdown for instruments that support both synthesis and recordings
 		if (this.instrumentSupportsQualityChoice(instrumentName)) {
@@ -4116,7 +4116,7 @@ export class MaterialControlPanelModal extends Modal {
 		}) as HTMLInputElement;
 		toggleInput.checked = enabled;
 		toggleInput.addEventListener('change', (e) => {
-			this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
+			void this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
 		});
 		
 		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
@@ -4125,7 +4125,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
 			if (e.target !== toggleInput) {
-				e.preventDefault();
+				void e.preventDefault();
 				toggleInput.checked = !toggleInput.checked;
 				toggleInput.dispatchEvent(new Event('change'));
 			}
@@ -4243,7 +4243,7 @@ export class MaterialControlPanelModal extends Modal {
 		if (this.instrumentRequiresHighQuality(instrumentKey)) {
 			const isDownloaded = this.checkIfSampleDownloaded(instrumentKey);
 			const statusText = isDownloaded ? '(downloaded)' : '(not downloaded)';
-			container.appendText(' ');
+			void container.appendText(' ');
 			container.createEl('em', { text: statusText });
 		}
 	}
@@ -4306,13 +4306,13 @@ export class MaterialControlPanelModal extends Modal {
 		if (selected) {
 			this.plugin.saveSettings();
 			// Refresh current tab to show updated state
-			this.showTab(this.activeTab);
+			void this.showTab(this.activeTab);
 		}
 	}
 
 	private handleExportLogs(selected: boolean): void {
 		if (selected) {
-			logger.info('ui', 'Exporting logs from Control Center');
+			void logger.info('ui', 'Exporting logs from Control Center');
 			
 			const now = new Date();
 			const pad = (n: number) => n.toString().padStart(2, '0');
@@ -4324,9 +4324,9 @@ export class MaterialControlPanelModal extends Modal {
 			a.href = url;
 			a.download = filename;
 			document.body.appendChild(a);
-			a.click();
+			void a.click();
 			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
+			void URL.revokeObjectURL(url);
 			logger.info('export', 'Logs exported from Control Center', { filename });
 		}
 	}
@@ -4395,7 +4395,7 @@ export class MaterialControlPanelModal extends Modal {
 		}
 
 		// Refresh the current tab to update status
-		this.showTab('experimental');
+		void this.showTab('experimental');
 	}
 
 	/**
@@ -4405,7 +4405,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Play a test whale sound using the audio engine
 		if (!this.plugin.audioEngine) {
 			new Notice('⚠️ Audio engine not available');
-			logger.warn('whale-ui', 'Cannot preview whale sample: audio engine not available');
+			void logger.warn('whale-ui', 'Cannot preview whale sample: audio engine not available');
 			return;
 		}
 
@@ -4415,7 +4415,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			if (!whaleEnabled) {
 				new Notice('⚠️ Please enable whale sounds first');
-				logger.warn('whale-ui', 'Cannot preview whale: instrument not enabled');
+				void logger.warn('whale-ui', 'Cannot preview whale: instrument not enabled');
 				return;
 			}
 
@@ -4425,7 +4425,7 @@ export class MaterialControlPanelModal extends Modal {
 
 			if (!hasSamples) {
 				new Notice('ℹ️ No whale samples downloaded yet. Click "Download samples" first to hear authentic whale recordings. Playing synthesized preview...');
-				logger.info('whale-ui', 'No cached whale samples available, playing synthesis');
+				void logger.info('whale-ui', 'No cached whale samples available, playing synthesis');
 			}
 
 			// Play a low frequency note (typical whale range: 40-200 Hz)
@@ -4489,9 +4489,9 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// For now, just log the attribution info
 		// In a full implementation, this could open a modal with formatted attribution
-		logger.debug('whale-ui', 'Whale attribution info:', attributionInfo);
+		void logger.debug('whale-ui', 'Whale attribution info:', attributionInfo);
 
-		logger.info('whale-ui', 'Whale attribution info displayed');
+		void logger.info('whale-ui', 'Whale attribution info displayed');
 
 		// Show a simple notice for now
 		new Notice('Whale sample attribution information logged to console. Check developer tools for details.');
@@ -4507,13 +4507,13 @@ All whale samples are authentic recordings from marine research institutions and
 		const whaleManager = whaleIntegration?.getWhaleManager();
 		if (!whaleIntegration || !whaleManager) {
 			new Notice('⚠️ Whale integration not initialized. Please enable whale sounds first.');
-			logger.warn('whale-ui', 'Cannot download samples - whale integration not initialized');
+			void logger.warn('whale-ui', 'Cannot download samples - whale integration not initialized');
 			return;
 		}
 
 		try {
 			new Notice('📥 Starting whale sample download... This may take a few minutes.');
-			logger.info('whale-ui', 'Manual whale sample download initiated by user');
+			void logger.info('whale-ui', 'Manual whale sample download initiated by user');
 
 			const before = whaleManager.getCachedSampleCount();
 
@@ -4529,7 +4529,7 @@ All whale samples are authentic recordings from marine research institutions and
 				});
 			} else {
 				new Notice('⚠️ No whale samples could be downloaded. This may be due to network issues or CORS restrictions. Whale sounds will use synthesis as fallback.');
-				logger.warn('whale-ui', 'Whale sample download completed but no samples were cached');
+				void logger.warn('whale-ui', 'Whale sample download completed but no samples were cached');
 			}
 		} catch (error) {
 			new Notice('❌ Failed to download whale samples. Check console for details.');
@@ -4563,7 +4563,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 			// Create auth manager and test connection
 			const authManager = new FreesoundAuthManager({ apiKey: apiKey.trim() });
-			logger.debug('freesound', 'FreesoundAuthManager created, testing connection...');
+			void logger.debug('freesound', 'FreesoundAuthManager created, testing connection...');
 
 			const result = await authManager.testConnection();
 			logger.debug('freesound', `Connection test result: ${JSON.stringify(result)}`);
@@ -4781,7 +4781,7 @@ All whale samples are authentic recordings from marine research institutions and
 						await this.plugin.saveSettings();
 
 						// Refresh tab to show/hide panning controls
-						this.showTab('local-soundscape');
+						void this.showTab('local-soundscape');
 
 						logger.info('local-soundscape', 'Updated panning enabled', { value });
 					});
@@ -4898,7 +4898,7 @@ All whale samples are authentic recordings from marine research institutions and
 						await this.plugin.saveSettings();
 
 						// Refresh tab to update slider state
-						this.showTab('local-soundscape');
+						void this.showTab('local-soundscape');
 
 						logger.info('local-soundscape', 'Updated maxNodesPerDepth to all', { value });
 					});
@@ -4986,7 +4986,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 						// Refresh the card to show/hide individual controls
 						this.contentContainer.empty();
-						this.createLocalSoundscapeTab();
+						void this.createLocalSoundscapeTab();
 					});
 			});
 
@@ -5023,7 +5023,7 @@ All whale samples are authentic recordings from marine research institutions and
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = 125;
 							await this.plugin.saveSettings();
 							this.contentContainer.empty();
-							this.createLocalSoundscapeTab();
+							void this.createLocalSoundscapeTab();
 						});
 				});
 
@@ -5056,7 +5056,7 @@ All whale samples are authentic recordings from marine research institutions and
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = 75;
 							await this.plugin.saveSettings();
 							this.contentContainer.empty();
-							this.createLocalSoundscapeTab();
+							void this.createLocalSoundscapeTab();
 						});
 				});
 
@@ -5133,7 +5133,7 @@ All whale samples are authentic recordings from marine research institutions and
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = 80;
 							await this.plugin.saveSettings();
 							this.contentContainer.empty();
-							this.createLocalSoundscapeTab();
+							void this.createLocalSoundscapeTab();
 						});
 				});
 
@@ -5184,7 +5184,7 @@ All whale samples are authentic recordings from marine research institutions and
 		// Tip 1: Depth settings
 		const tip1 = tipsList.createEl('li');
 		tip1.createEl('strong', { text: 'Start with Depth 2:' });
-		tip1.appendText(' This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.');
+		void tip1.appendText(' This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.');
 
 		// Tip 2: Musical Enhancements
 		const tip2 = tipsList.createEl('li');
@@ -5194,7 +5194,7 @@ All whale samples are authentic recordings from marine research institutions and
 		// Tip 3: Clustering
 		const tip3 = tipsList.createEl('li');
 		tip3.createEl('strong', { text: 'Use Clustering to Discover Patterns:' });
-		tip3.appendText(' Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.');
+		void tip3.appendText(' Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.');
 
 		// Tip 4: Turn-Taking
 		const tip4 = tipsList.createEl('li');
@@ -5204,17 +5204,17 @@ All whale samples are authentic recordings from marine research institutions and
 		// Tip 5: Filtering
 		const tip5 = tipsList.createEl('li');
 		tip5.createEl('strong', { text: 'Filter by Tags/Folders:' });
-		tip5.appendText(' Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.');
+		void tip5.appendText(' Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.');
 
 		// Tip 6: Performance
 		const tip6 = tipsList.createEl('li');
 		tip6.createEl('strong', { text: 'Manage Performance:' });
-		tip6.appendText(' For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.');
+		void tip6.appendText(' For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.');
 
 		// Tip 7: Workflow integration
 		const tip7 = tipsList.createEl('li');
 		tip7.createEl('strong', { text: 'Daily Review Workflow:' });
-		tip7.appendText(' Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.');
+		void tip7.appendText(' Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.');
 
 		this.contentContainer.appendChild(card.getElement());
 	}
@@ -5236,25 +5236,25 @@ All whale samples are authentic recordings from marine research institutions and
 		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
 		q1.createEl('strong', { text: 'Q: Why does the music sound simplistic or repetitive?' });
-		q1.appendText(' ');
+		void q1.appendText(' ');
 		q1.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
 		const a1 = faq1.createEl('div', { cls: 'osp-faq-answer' });
 
 		const a1p1 = a1.createEl('p');
 		a1p1.createEl('strong', { text: 'A:' });
-		a1p1.appendText(' By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:');
+		void a1p1.appendText(' By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:');
 
 		const a1ul1 = a1.createEl('ul');
 		const a1li1 = a1ul1.createEl('li');
 		a1li1.createEl('strong', { text: 'All markdown syntax counts:' });
-		a1li1.appendText(' Links, headings, callouts, and formatting inflate word counts');
+		void a1li1.appendText(' Links, headings, callouts, and formatting inflate word counts');
 		const a1li2 = a1ul1.createEl('li');
 		a1li2.createEl('strong', { text: 'Notes sound similar:' });
-		a1li2.appendText(' Similar file sizes produce similar durations and pitches');
+		void a1li2.appendText(' Similar file sizes produce similar durations and pitches');
 		const a1li3 = a1ul1.createEl('li');
 		a1li3.createEl('strong', { text: 'No content differentiation:' });
-		a1li3.appendText(' Callouts, code blocks, and lists are treated the same as regular text');
+		void a1li3.appendText(' Callouts, code blocks, and lists are treated the same as regular text');
 
 		const a1p2 = a1.createEl('p');
 		a1p2.createEl('strong', { text: 'To get richer, more varied soundscapes:' });
@@ -5276,11 +5276,11 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a1oli3 = a1ol.createEl('li');
 		a1oli3.createEl('strong', { text: 'Apply filters' });
-		a1oli3.appendText(' - Focus on specific tags or folders to create more thematically coherent soundscapes');
+		void a1oli3.appendText(' - Focus on specific tags or folders to create more thematically coherent soundscapes');
 
 		const a1oli4 = a1ol.createEl('li');
 		a1oli4.createEl('strong', { text: 'Experiment with clustering' });
-		a1oli4.appendText(' - Different clustering methods reveal different organizational patterns in your vault');
+		void a1oli4.appendText(' - Different clustering methods reveal different organizational patterns in your vault');
 
 		const a1p3 = a1.createEl('p');
 		a1p3.createEl('em', { text: 'Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.' });
@@ -5289,7 +5289,7 @@ All whale samples are authentic recordings from marine research institutions and
 		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
 		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?' });
-		q2.appendText(' ');
+		void q2.appendText(' ');
 		q2.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
 		const a2 = faq2.createEl('div', { cls: 'osp-faq-answer' });
@@ -5307,10 +5307,10 @@ All whale samples are authentic recordings from marine research institutions and
 		a2li1.appendText(' Your note has few or no links to other notes at shallow depths (1-2)');
 		const a2li2 = a2ul1.createEl('li');
 		a2li2.createEl('strong', { text: 'Low depth setting:' });
-		a2li2.appendText(' The depth slider is set to 1, limiting the graph to immediate connections only');
+		void a2li2.appendText(' The depth slider is set to 1, limiting the graph to immediate connections only');
 		const a2li3 = a2ul1.createEl('li');
 		a2li3.createEl('strong', { text: 'Filters too restrictive:' });
-		a2li3.appendText(' Tag/folder filters are excluding connected notes');
+		void a2li3.appendText(' Tag/folder filters are excluding connected notes');
 
 		const a2p3 = a2.createEl('p');
 		a2p3.createEl('strong', { text: 'What Musical Enhancements need to work:' });
@@ -5318,19 +5318,19 @@ All whale samples are authentic recordings from marine research institutions and
 		const a2ul2 = a2.createEl('ul');
 		const a2li4 = a2ul2.createEl('li');
 		a2li4.createEl('strong', { text: 'Turn-Taking:' });
-		a2li4.appendText(' Needs 3+ notes at different depths to create call-response dialogue');
+		void a2li4.appendText(' Needs 3+ notes at different depths to create call-response dialogue');
 		const a2li5 = a2ul2.createEl('li');
 		a2li5.createEl('strong', { text: 'Chord Voicing:' });
-		a2li5.appendText(' Needs 2+ notes at same depth to build harmonies');
+		void a2li5.appendText(' Needs 2+ notes at same depth to build harmonies');
 		const a2li6 = a2ul2.createEl('li');
 		a2li6.createEl('strong', { text: 'Rhythmic Patterns:' });
-		a2li6.appendText(' Needs 4+ notes to organize into musical patterns');
+		void a2li6.appendText(' Needs 4+ notes to organize into musical patterns');
 		const a2li7 = a2ul2.createEl('li');
 		a2li7.createEl('strong', { text: 'Tension Tracking:' });
-		a2li7.appendText(' Needs 5+ notes to create narrative arcs');
+		void a2li7.appendText(' Needs 5+ notes to create narrative arcs');
 		const a2li8 = a2ul2.createEl('li');
 		a2li8.createEl('strong', { text: 'Scale Quantization:' });
-		a2li8.appendText(' Works with any number of notes, but more varied with higher counts');
+		void a2li8.appendText(' Works with any number of notes, but more varied with higher counts');
 
 		const a2p4 = a2.createEl('p');
 		a2p4.createEl('strong', { text: 'How to fix:' });
@@ -5338,13 +5338,13 @@ All whale samples are authentic recordings from marine research institutions and
 		const a2ol = a2.createEl('ol');
 		const a2oli1 = a2ol.createEl('li');
 		a2oli1.createEl('strong', { text: 'Enable Continuous Layers:' });
-		a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
+		void a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
 		a2oli1.createEl('strong', { text: 'Important:' });
-		a2oli1.appendText(' You must enable at least one Freesound sample in the Layers tab\'s Sample Browser for continuous layers to produce audio.');
+		void a2oli1.appendText(' You must enable at least one Freesound sample in the Layers tab\'s Sample Browser for continuous layers to produce audio.');
 
 		const a2oli2 = a2ol.createEl('li');
 		a2oli2.createEl('strong', { text: 'Increase depth:' });
-		a2oli2.appendText(' Slide the depth control to 3-5 to explore more connection levels');
+		void a2oli2.appendText(' Slide the depth control to 3-5 to explore more connection levels');
 
 		const a2oli3 = a2ol.createEl('li');
 		a2oli3.createEl('strong', { text: 'Choose more connected notes:' });
@@ -5352,19 +5352,19 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a2oli4 = a2ol.createEl('li');
 		a2oli4.createEl('strong', { text: 'Build more connections:' });
-		a2oli4.appendText(' Add links between related notes in your vault to create richer graph structure');
+		void a2oli4.appendText(' Add links between related notes in your vault to create richer graph structure');
 
 		const a2oli5 = a2ol.createEl('li');
 		a2oli5.createEl('strong', { text: 'Check filters:' });
-		a2oli5.appendText(' Ensure Include/Exclude filters aren\'t hiding connected notes');
+		void a2oli5.appendText(' Ensure Include/Exclude filters aren\'t hiding connected notes');
 
 		const a2oli6 = a2ol.createEl('li');
 		a2oli6.createEl('strong', { text: 'Try bidirectional links:' });
-		a2oli6.appendText(' Notes with two-way connections create denser graphs than one-way links');
+		void a2oli6.appendText(' Notes with two-way connections create denser graphs than one-way links');
 
 		const a2p5 = a2.createEl('p');
 		a2p5.createEl('strong', { text: 'For sparse vaults:' });
-		a2p5.appendText(' If your vault generally has limited connections, ');
+		void a2p5.appendText(' If your vault generally has limited connections, ');
 		a2p5.createEl('strong', { text: 'Continuous Layers' });
 		a2p5.appendText(' are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.');
 
@@ -5372,14 +5372,14 @@ All whale samples are authentic recordings from marine research institutions and
 		const faq3 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q3 = faq3.createEl('h4', { cls: 'osp-faq-question' });
 		q3.createEl('strong', { text: 'Q: How do I create musically rich notes for playback?' });
-		q3.appendText(' ');
+		void q3.appendText(' ');
 		q3.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
 		const a3 = faq3.createEl('div', { cls: 'osp-faq-answer' });
 
 		const a3p1 = a3.createEl('p');
 		a3p1.createEl('strong', { text: 'A:' });
-		a3p1.appendText(' The richness of your soundscape depends primarily on your note\'s link structure and network density. Here\'s what creates the most beautiful, harmonically rich playback:');
+		void a3p1.appendText(' The richness of your soundscape depends primarily on your note\'s link structure and network density. Here\'s what creates the most beautiful, harmonically rich playback:');
 
 		const a3p2 = a3.createEl('p');
 		a3p2.createEl('strong', { text: 'The Depth slider and link structure:' });
@@ -5395,7 +5395,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a3li3 = a3ul1.createEl('li');
 		a3li3.createEl('strong', { text: 'Bidirectional links:' });
-		a3li3.appendText(' Two-way connections between notes create denser, richer graphs than one-way links.');
+		void a3li3.appendText(' Two-way connections between notes create denser, richer graphs than one-way links.');
 
 		const a3p3 = a3.createEl('p');
 		a3p3.createEl('strong', { text: 'Additional ways to enrich your notes:' });
@@ -5403,11 +5403,11 @@ All whale samples are authentic recordings from marine research institutions and
 		const a3ul2 = a3.createEl('ul');
 		const a3li4 = a3ul2.createEl('li');
 		a3li4.createEl('strong', { text: 'Add meaningful tags:' });
-		a3li4.appendText(' Tags influence clustering and can create thematic groupings');
+		void a3li4.appendText(' Tags influence clustering and can create thematic groupings');
 
 		const a3li5 = a3ul2.createEl('li');
 		a3li5.createEl('strong', { text: 'Vary content types:' });
-		a3li5.appendText(' Mix images, PDFs, audio files, and regular notes - different file types add variety');
+		void a3li5.appendText(' Mix images, PDFs, audio files, and regular notes - different file types add variety');
 
 		const a3li6 = a3ul2.createEl('li');
 		a3li6.createEl('strong', { text: 'Build hub notes:' });

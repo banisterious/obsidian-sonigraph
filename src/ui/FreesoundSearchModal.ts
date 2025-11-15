@@ -68,8 +68,8 @@ export class FreesoundSearchModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.empty();
-		contentEl.addClass('freesound-search-modal');
+		void contentEl.empty();
+		void contentEl.addClass('freesound-search-modal');
 
 		// Modal header
 		contentEl.createEl('h2', {
@@ -78,13 +78,13 @@ export class FreesoundSearchModal extends Modal {
 		});
 
 		// Search section
-		this.createSearchSection(contentEl);
+		void this.createSearchSection(contentEl);
 
 		// Filters section
-		this.createFiltersSection(contentEl);
+		void this.createFiltersSection(contentEl);
 
 		// Results section
-		this.createResultsSection(contentEl);
+		void this.createResultsSection(contentEl);
 	}
 
 	private createSearchSection(container: HTMLElement): void {
@@ -108,13 +108,13 @@ export class FreesoundSearchModal extends Modal {
 		this.searchInput.addEventListener('input', () => {
 			clearTimeout(inputTimeout);
 			inputTimeout = setTimeout(() => {
-				this.updateClearButton();
+				void this.updateClearButton();
 			}, 150);
 		});
 
 		this.searchInput.addEventListener('keypress', (e) => {
 			if (e.key === 'Enter') {
-				this.performSearch();
+				void this.performSearch();
 			}
 		});
 
@@ -130,7 +130,7 @@ export class FreesoundSearchModal extends Modal {
 			if (this.searchInput) {
 				this.searchInput.value = '';
 				this.searchInput.focus();
-				this.updateClearButton();
+				void this.updateClearButton();
 			}
 		});
 
@@ -164,12 +164,12 @@ export class FreesoundSearchModal extends Modal {
 			suggestionBtn.createSpan({ text: suggestion });
 
 			suggestionBtn.addEventListener('click', () => {
-				suggestionBtn.addClass('freesound-suggestion-active');
+				void suggestionBtn.addClass('freesound-suggestion-active');
 				setTimeout(() => suggestionBtn.removeClass('freesound-suggestion-active'), 300);
 
 				if (this.searchInput) {
 					this.searchInput.value = suggestion;
-					this.performSearch();
+					void this.performSearch();
 				}
 			});
 		});
@@ -179,9 +179,9 @@ export class FreesoundSearchModal extends Modal {
 		const clearBtn = this.contentEl.querySelector('.freesound-clear-btn');
 		if (clearBtn && this.searchInput) {
 			if (this.searchInput.value) {
-				clearBtn.addClass('freesound-clear-btn--visible');
+				void clearBtn.addClass('freesound-clear-btn--visible');
 			} else {
-				clearBtn.removeClass('freesound-clear-btn--visible');
+				void clearBtn.removeClass('freesound-clear-btn--visible');
 			}
 		}
 	}
@@ -221,13 +221,13 @@ export class FreesoundSearchModal extends Modal {
 
 			if (filtersGrid) {
 				if (this.filtersCollapsed) {
-					filtersGrid.addClass('freesound-filters-grid--hidden');
+					void filtersGrid.addClass('freesound-filters-grid--hidden');
 					this.filtersSection?.addClass('freesound-filters-collapsed');
-					headerButton.setAttribute('aria-expanded', 'false');
+					void headerButton.setAttribute('aria-expanded', 'false');
 				} else {
-					filtersGrid.removeClass('freesound-filters-grid--hidden');
+					void filtersGrid.removeClass('freesound-filters-grid--hidden');
 					this.filtersSection?.removeClass('freesound-filters-collapsed');
-					headerButton.setAttribute('aria-expanded', 'true');
+					void headerButton.setAttribute('aria-expanded', 'true');
 				}
 			}
 		});
@@ -254,7 +254,7 @@ export class FreesoundSearchModal extends Modal {
 				.setValue(this.filters.license)
 				.onChange(value => {
 					this.filters.license = value;
-					this.updateFilterCount();
+					void this.updateFilterCount();
 				})
 			);
 
@@ -267,7 +267,7 @@ export class FreesoundSearchModal extends Modal {
 				.setValue(String(this.filters.minDuration))
 				.onChange(value => {
 					this.filters.minDuration = parseInt(value) || 10;
-					this.updateFilterCount();
+					void this.updateFilterCount();
 				})
 			);
 
@@ -279,7 +279,7 @@ export class FreesoundSearchModal extends Modal {
 				.setValue(String(this.filters.maxDuration))
 				.onChange(value => {
 					this.filters.maxDuration = parseInt(value) || 300;
-					this.updateFilterCount();
+					void this.updateFilterCount();
 				})
 			);
 	}
@@ -296,9 +296,9 @@ export class FreesoundSearchModal extends Modal {
 		if (badge) {
 			badge.textContent = String(count);
 			if (count > 0) {
-				badge.addClass('freesound-filter-badge--visible');
+				void badge.addClass('freesound-filter-badge--visible');
 			} else {
-				badge.removeClass('freesound-filter-badge--visible');
+				void badge.removeClass('freesound-filter-badge--visible');
 			}
 		}
 	}
@@ -319,7 +319,7 @@ export class FreesoundSearchModal extends Modal {
 		if (durationInputs[0]) (durationInputs[0] as HTMLInputElement).value = '10';
 		if (durationInputs[1]) (durationInputs[1] as HTMLInputElement).value = '300';
 
-		this.updateFilterCount();
+		void this.updateFilterCount();
 		new Notice('Filters cleared');
 	}
 
@@ -346,10 +346,10 @@ export class FreesoundSearchModal extends Modal {
 
 		this.filters.query = query;
 		this.isSearching = true;
-		this.updateSearchButton('Searching...');
+		void this.updateSearchButton('Searching...');
 
 		// Show loading skeleton
-		this.showLoadingSkeleton();
+		void this.showLoadingSkeleton();
 
 		try {
 			logger.info('search', `Searching Freesound for: ${query}`);
@@ -362,15 +362,15 @@ export class FreesoundSearchModal extends Modal {
 			this.searchResults = data.results || [];
 
 			logger.info('search', `Found ${this.searchResults.length} results`);
-			this.displayResults();
+			void this.displayResults();
 
 		} catch (error) {
-			logger.error('search', 'Search failed', error);
+			void logger.error('search', 'Search failed', error);
 			new Notice('Search failed. Check your API key and connection.');
-			this.displayError(error);
+			void this.displayError(error);
 		} finally {
 			this.isSearching = false;
-			this.updateSearchButton('Search');
+			void this.updateSearchButton('Search');
 		}
 	}
 
@@ -509,34 +509,34 @@ export class FreesoundSearchModal extends Modal {
 	}
 
 	private updatePreviewButton(button: HTMLButtonElement, state: 'play' | 'stop' | 'loading' | 'error'): void {
-		button.empty();
+		void button.empty();
 
 		switch (state) {
 			case 'play':
 				setIcon(button, 'play');
 				button.createSpan({ text: 'Preview' });
 				button.disabled = false;
-				button.removeClass('freesound-btn-loading');
-				button.removeClass('freesound-btn-playing');
-				button.removeClass('freesound-btn-error');
+				void button.removeClass('freesound-btn-loading');
+				void button.removeClass('freesound-btn-playing');
+				void button.removeClass('freesound-btn-error');
 				break;
 			case 'stop':
 				setIcon(button, 'square');
 				button.createSpan({ text: 'Stop' });
 				button.disabled = false;
-				button.removeClass('freesound-btn-loading');
-				button.addClass('freesound-btn-playing');
+				void button.removeClass('freesound-btn-loading');
+				void button.addClass('freesound-btn-playing');
 				break;
 			case 'loading':
 				setIcon(button, 'loader-2');
 				button.createSpan({ text: 'Loading...' });
 				button.disabled = true;
-				button.addClass('freesound-btn-loading');
+				void button.addClass('freesound-btn-loading');
 				break;
 			case 'error':
 				setIcon(button, 'alert-circle');
 				button.createSpan({ text: 'Error' });
-				button.addClass('freesound-btn-error');
+				void button.addClass('freesound-btn-error');
 				break;
 		}
 	}
@@ -544,18 +544,18 @@ export class FreesoundSearchModal extends Modal {
 	private async previewSample(result: FreesoundSearchResult, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.hasClass('freesound-btn-playing')) {
-			this.stopPreview();
+			void this.stopPreview();
 			return;
 		}
 
 		// Stop any currently playing preview
 		if (this.currentAudio) {
-			this.stopPreview();
+			void this.stopPreview();
 		}
 
 		try {
 			// Show loading
-			this.updatePreviewButton(button, 'loading');
+			void this.updatePreviewButton(button, 'loading');
 
 			// Create and play audio
 			const audio = new Audio(result.previews['preview-lq-mp3']);
@@ -565,16 +565,16 @@ export class FreesoundSearchModal extends Modal {
 			await new Promise<void>((resolve, reject) => {
 				audio.addEventListener('canplay', () => resolve(), { once: true });
 				audio.addEventListener('error', (e) => reject(e), { once: true });
-				audio.load();
+				void audio.load();
 			});
 
 			await audio.play();
 
-			this.updatePreviewButton(button, 'stop');
+			void this.updatePreviewButton(button, 'stop');
 
 			audio.addEventListener('ended', () => {
 				if (this.currentPreviewButton) {
-					this.updatePreviewButton(this.currentPreviewButton, 'play');
+					void this.updatePreviewButton(this.currentPreviewButton, 'play');
 				}
 				this.currentAudio = null;
 				this.currentPreviewButton = null;
@@ -582,10 +582,10 @@ export class FreesoundSearchModal extends Modal {
 
 		} catch (error) {
 			logger.error('preview', `Failed to preview sample ${result.id}`, error);
-			this.updatePreviewButton(button, 'error');
+			void this.updatePreviewButton(button, 'error');
 
 			setTimeout(() => {
-				this.updatePreviewButton(button, 'play');
+				void this.updatePreviewButton(button, 'play');
 			}, 2000);
 			this.currentAudio = null;
 			this.currentPreviewButton = null;
@@ -600,7 +600,7 @@ export class FreesoundSearchModal extends Modal {
 		}
 
 		if (this.currentPreviewButton) {
-			this.updatePreviewButton(this.currentPreviewButton, 'play');
+			void this.updatePreviewButton(this.currentPreviewButton, 'play');
 			this.currentPreviewButton = null;
 		}
 	}
@@ -617,7 +617,7 @@ export class FreesoundSearchModal extends Modal {
 			fadeOut: 3
 		};
 
-		this.onAddSample(sample);
+		void this.onAddSample(sample);
 		new Notice(`Added "${result.name}" to library`);
 		logger.info('library', `Added sample ${result.id} to library`);
 	}
@@ -645,16 +645,16 @@ export class FreesoundSearchModal extends Modal {
 	private updateSearchButton(text: string): void {
 		const button = this.contentEl.querySelector('.freesound-search-button');
 		if (button) {
-			button.empty();
+			void button.empty();
 
 			if (this.isSearching) {
 				setIcon(button, 'loader-2');
 				button.createSpan({ text });
-				button.addClass('freesound-btn-loading');
+				void button.addClass('freesound-btn-loading');
 			} else {
 				setIcon(button, 'search');
 				button.createSpan({ text });
-				button.removeClass('freesound-btn-loading');
+				void button.removeClass('freesound-btn-loading');
 			}
 			button.disabled = this.isSearching;
 		}
@@ -705,6 +705,6 @@ export class FreesoundSearchModal extends Modal {
 		}
 
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 	}
 }

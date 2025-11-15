@@ -124,13 +124,13 @@ export class MusicalGenreEngine {
       await this.createSynthesisChain();
       
       // Setup effects chain
-      this.createEffectsChain();
+      void this.createEffectsChain();
       
       // Setup modulation
-      this.createModulation();
+      void this.createModulation();
       
       // Connect audio chain
-      this.connectAudioChain();
+      void this.connectAudioChain();
       
       this.isInitialized = true;
       
@@ -157,13 +157,13 @@ export class MusicalGenreEngine {
       logger.info('playback', `Starting genre playback: ${this.currentGenre}`);
       
       // Apply configuration
-      this.applyConfiguration(config);
+      void this.applyConfiguration(config);
       
       // Start LFOs
       this.lfos.forEach(lfo => lfo.start());
       
       // Begin evolution cycle
-      this.startEvolution();
+      void this.startEvolution();
       
       // Play initial chord/drone based on genre
       await this.playInitialSound();
@@ -189,16 +189,16 @@ export class MusicalGenreEngine {
       logger.info('playback', `Stopping genre playback: ${this.currentGenre}`);
 
       // Stop evolution
-      this.stopEvolution();
+      void this.stopEvolution();
 
       // Stop all LFOs
       this.lfos.forEach(lfo => lfo.stop());
 
       // Release all active notes
-      this.releaseAllNotes();
+      void this.releaseAllNotes();
 
       // Stop any active sample playback
-      this.stopActiveSample();
+      void this.stopActiveSample();
 
       // Fade out volume
       this.synthVolume.volume.rampTo(-60, 2);
@@ -290,22 +290,22 @@ export class MusicalGenreEngine {
         this.synthVolume.volume.rampTo(targetVolume, 2);
         
         // Update brightness if applicable
-        this.updateBrightness(params.intensity);
+        void this.updateBrightness(params.intensity);
       }
       
       // Update evolution rate based on activity
       if (params.activityLevel !== undefined) {
-        this.updateEvolutionRate(params.activityLevel);
+        void this.updateEvolutionRate(params.activityLevel);
       }
       
       // Update modulation based on animation progress
       if (params.animationProgress !== undefined) {
-        this.updateModulation(params.animationProgress);
+        void this.updateModulation(params.animationProgress);
       }
       
-      logger.debug('parameters', `Updated genre parameters`, params);
+      void logger.debug('parameters', `Updated genre parameters`, params);
     } catch (error) {
-      logger.error('parameters', 'Error updating genre parameters', error);
+      void logger.error('parameters', 'Error updating genre parameters', error);
     }
   }
   
@@ -355,7 +355,7 @@ export class MusicalGenreEngine {
       
       logger.info('cleanup', `Genre engine disposed: ${this.currentGenre}`);
     } catch (error) {
-      logger.error('cleanup', 'Error disposing genre engine', error);
+      void logger.error('cleanup', 'Error disposing genre engine', error);
     }
   }
   
@@ -541,12 +541,12 @@ export class MusicalGenreEngine {
     
     // Connect through effects chain
     for (const effect of this.effectsChain) {
-      currentNode.connect(effect);
+      void currentNode.connect(effect);
       currentNode = effect;
     }
     
     // Connect to volume control
-    currentNode.connect(this.synthVolume);
+    void currentNode.connect(this.synthVolume);
   }
   
   private async loadGenreSamples(categories: string[]): Promise<void> {
@@ -1056,7 +1056,7 @@ export class MusicalGenreEngine {
           this.triggerNote(['C3', 'E3'], 8);
       }
     } catch (error) {
-      logger.error('playback', 'Error playing initial sound', error);
+      void logger.error('playback', 'Error playing initial sound', error);
     }
   }
 
@@ -1073,7 +1073,7 @@ export class MusicalGenreEngine {
       // This ensures we always have a valid, non-expired URL
       const apiKey = this.settings?.freesoundApiKey;
       if (!apiKey) {
-        logger.error('playback', 'Freesound API key not configured');
+        void logger.error('playback', 'Freesound API key not configured');
         return;
       }
 
@@ -1156,7 +1156,7 @@ export class MusicalGenreEngine {
 
       // Clean up blob URL when audio ends
       audio.addEventListener('ended', () => {
-        URL.revokeObjectURL(blobUrl);
+        void URL.revokeObjectURL(blobUrl);
       }, { once: true });
 
       // Fade in over fadeIn duration
@@ -1199,10 +1199,10 @@ export class MusicalGenreEngine {
               if (audio && this.activeSampleAudios.includes(audio)) {
                 audio.volume = (i / fadeOutSteps) * currentVolume;
                 if (i === 0) {
-                  audio.pause();
+                  void audio.pause();
                   // Clean up blob URL
                   if (audio.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(audio.src);
+                    void URL.revokeObjectURL(audio.src);
                   }
                   // Remove from active list
                   const audioIndex = this.activeSampleAudios.indexOf(audio);
@@ -1234,7 +1234,7 @@ export class MusicalGenreEngine {
       audio.currentTime = 0;
       // Clean up blob URLs
       if (audio.src.startsWith('blob:')) {
-        URL.revokeObjectURL(audio.src);
+        void URL.revokeObjectURL(audio.src);
       }
     });
     this.activeSampleAudios = [];
@@ -1245,7 +1245,7 @@ export class MusicalGenreEngine {
     });
     this.sampleFadeOutTimers = [];
 
-    logger.debug('playback', 'Stopped all active samples');
+    void logger.debug('playback', 'Stopped all active samples');
   }
   
   private triggerNote(notes: string | string[], duration: number): void {
@@ -1282,7 +1282,7 @@ export class MusicalGenreEngine {
       }, duration * 1000);
       
     } catch (error) {
-      logger.error('playback', 'Error triggering note', error);
+      void logger.error('playback', 'Error triggering note', error);
     }
   }
   
@@ -1296,7 +1296,7 @@ export class MusicalGenreEngine {
 
     this.supportingSynths.forEach(synth => {
       if ('releaseAll' in synth) {
-        synth.releaseAll();
+        void synth.releaseAll();
       }
     });
 
@@ -1307,7 +1307,7 @@ export class MusicalGenreEngine {
   private startEvolution(): void {
     // Start evolution timer for genre-specific patterns
     this.evolutionTimer = window.setInterval(() => {
-      this.evolvePattern();
+      void this.evolvePattern();
     }, 5000); // Evolve every 5 seconds
   }
   
@@ -1324,7 +1324,7 @@ export class MusicalGenreEngine {
     if (this.currentGenre === 'ambient' || this.currentGenre === 'drone') {
       // Occasionally add a subtle harmonic
       if (Math.random() < 0.3) {
-        this.triggerNote('G3', 4);
+        void this.triggerNote('G3', 4);
       }
     }
   }
@@ -1346,7 +1346,7 @@ export class MusicalGenreEngine {
       const baseRate = 5000;
       const adjustedRate = baseRate / Math.max(0.5, activityLevel);
       this.evolutionTimer = window.setInterval(() => {
-        this.evolvePattern();
+        void this.evolvePattern();
       }, adjustedRate);
     }
   }
@@ -1394,6 +1394,6 @@ export class MusicalGenreEngine {
     });
     this.loadedSamples.clear();
     
-    this.stopEvolution();
+    void this.stopEvolution();
   }
 }

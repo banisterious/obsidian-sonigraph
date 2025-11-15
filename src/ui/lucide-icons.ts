@@ -226,7 +226,7 @@ export function setLucideIcon(
   size: number = 20
 ): void {
   // Clear any existing content
-  element.empty();
+  void element.empty();
 
   // Get the actual icon name from our mapping or use the provided name directly
   const actualIconName = (LUCIDE_ICONS as Record<string, string>)[iconName] || iconName;
@@ -235,7 +235,7 @@ export function setLucideIcon(
   setIcon(element, actualIconName);
 
   // Add classes for styling (layout handled by CSS)
-  element.addClass('lucide-icon');
+  void element.addClass('lucide-icon');
 
   // Set size dynamically (must remain in JS)
   element.style.width = `${size}px`;

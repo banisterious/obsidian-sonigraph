@@ -97,7 +97,7 @@ export class SampleCache {
         const memorySample = this.memoryCache.get(soundId);
         if (memorySample) {
             this.hits++;
-            this.updateAccessOrder(soundId);
+            void this.updateAccessOrder(soundId);
             memorySample.accessCount++;
             memorySample.lastAccessed = Date.now();
             this.logger.debug('cache', 'Sample retrieved from memory cache - ' + JSON.stringify({ soundId }));
@@ -138,8 +138,8 @@ export class SampleCache {
         };
 
         this.memoryCache.set(soundId, sample);
-        this.updateAccessOrder(soundId);
-        this.enforceLRU();
+        void this.updateAccessOrder(soundId);
+        void this.enforceLRU();
 
         // Add to disk cache
         await this.addToDisk(soundId, audioBuffer, metadata);
@@ -218,10 +218,10 @@ export class SampleCache {
                 if (cursor) {
                     const sample = cursor.value as IndexedDBSample;
                     if (sample.timestamp < cutoffTime) {
-                        cursor.delete();
+                        void cursor.delete();
                         prunedCount++;
                     }
-                    cursor.continue();
+                    void cursor.continue();
                 } else {
                     this.logger.info('cache', 'Pruned old samples from disk cache - ' + JSON.stringify({ count: prunedCount }));
                     resolve(prunedCount);
@@ -254,8 +254,8 @@ export class SampleCache {
         };
 
         this.memoryCache.set(soundId, sample);
-        this.updateAccessOrder(soundId);
-        this.enforceLRU();
+        void this.updateAccessOrder(soundId);
+        void this.enforceLRU();
     }
 
     /**
@@ -463,8 +463,8 @@ export class SampleCache {
 
         // Store metadata in the first few bytes (hacky but works)
         const metadataView = new DataView(interleavedBuffer.buffer, 0, 8);
-        metadataView.setUint32(0, numberOfChannels, true);
-        metadataView.setUint32(4, sampleRate, true);
+        void metadataView.setUint32(0, numberOfChannels, true);
+        void metadataView.setUint32(4, sampleRate, true);
 
         return interleavedBuffer.buffer;
     }

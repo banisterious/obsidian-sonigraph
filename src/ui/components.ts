@@ -80,7 +80,7 @@ export function createObsidianToggle(
 	checkbox.checked = initialValue;
 	if (options?.disabled) {
 		checkbox.disabled = true;
-		checkboxContainer.addClass('is-disabled');
+		void checkboxContainer.addClass('is-disabled');
 	}
 	
 	// Handle state changes
@@ -102,9 +102,9 @@ export function createObsidianToggle(
 			
 			// Update visual state immediately
 			if (newValue) {
-				checkboxContainer.addClass('is-enabled');
+				void checkboxContainer.addClass('is-enabled');
 			} else {
-				checkboxContainer.removeClass('is-enabled');
+				void checkboxContainer.removeClass('is-enabled');
 			}
 			
 			// Call the onChange callback
@@ -116,9 +116,9 @@ export function createObsidianToggle(
 			// Revert the checkbox state if the callback failed
 			checkbox.checked = !checkbox.checked;
 			if (checkbox.checked) {
-				checkboxContainer.addClass('is-enabled');
+				void checkboxContainer.addClass('is-enabled');
 			} else {
-				checkboxContainer.removeClass('is-enabled');
+				void checkboxContainer.removeClass('is-enabled');
 			}
 		} finally {
 			// Re-enable the checkbox
@@ -132,8 +132,8 @@ export function createObsidianToggle(
 		// If the click wasn't on the checkbox itself, forward it to the checkbox
 		if (event.target !== checkbox && !checkbox.disabled) {
 			logger.debug('ui', 'Container clicked, forwarding to checkbox', { target: event.target });
-			event.preventDefault();
-			event.stopPropagation();
+			void event.preventDefault();
+			void event.stopPropagation();
 			checkbox.click(); // This will trigger the change event
 		}
 	});
@@ -171,16 +171,16 @@ export function createSimpleToggle(
 	checkbox.checked = initialValue;
 	if (options?.disabled) {
 		checkbox.disabled = true;
-		checkboxContainer.addClass('is-disabled');
+		void checkboxContainer.addClass('is-disabled');
 	}
 	
 	checkbox.addEventListener('change', () => {
 		const newValue = checkbox.checked;
 		
 		if (newValue) {
-			checkboxContainer.addClass('is-enabled');
+			void checkboxContainer.addClass('is-enabled');
 		} else {
-			checkboxContainer.removeClass('is-enabled');
+			void checkboxContainer.removeClass('is-enabled');
 		}
 		
 		onChange(newValue);
@@ -199,9 +199,9 @@ export function updateToggleValue(checkbox: HTMLElement, value: boolean): void {
 		const container = checkbox.parentElement;
 		if (container?.hasClass('checkbox-container')) {
 			if (value) {
-				container.addClass('is-enabled');
+				void container.addClass('is-enabled');
 			} else {
-				container.removeClass('is-enabled');
+				void container.removeClass('is-enabled');
 			}
 		}
 	}
@@ -217,9 +217,9 @@ export function setToggleDisabled(checkbox: HTMLElement, disabled: boolean): voi
 		const container = checkbox.parentElement;
 		if (container?.hasClass('checkbox-container')) {
 			if (disabled) {
-				container.addClass('is-disabled');
+				void container.addClass('is-disabled');
 			} else {
-				container.removeClass('is-disabled');
+				void container.removeClass('is-disabled');
 			}
 		}
 	}

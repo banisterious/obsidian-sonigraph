@@ -419,8 +419,8 @@ export class TurnTakingEngine {
 		mappings.forEach(m => {
 			const instrument = m.instrument || 'unknown';
 			const group = groups.get(instrument) || [];
-			group.push(m);
-			groups.set(instrument, group);
+			void group.push(m);
+			void groups.set(instrument, group);
 		});
 
 		return groups;
@@ -435,8 +435,8 @@ export class TurnTakingEngine {
 		mappings.forEach(m => {
 			const depth = m.depth ?? 0;
 			const group = groups.get(depth) || [];
-			group.push(m);
-			groups.set(depth, group);
+			void group.push(m);
+			void groups.set(depth, group);
 		});
 
 		return groups;

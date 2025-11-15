@@ -42,7 +42,7 @@ export class HubCentralityAnalyzer {
     // Check cache
     const now = Date.now();
     if (this.metricsCache.size > 0 && (now - this.cacheTimestamp) < this.CACHE_DURATION_MS) {
-      logger.debug('cache-hit', 'Using cached hub metrics');
+      void logger.debug('cache-hit', 'Using cached hub metrics');
       return this.metricsCache;
     }
 
@@ -79,7 +79,7 @@ export class HubCentralityAnalyzer {
       hubMetrics.compositeScore = this.calculateCompositeScore(hubMetrics);
       hubMetrics.isHub = hubMetrics.compositeScore >= this.hubThreshold;
 
-      metrics.set(node.id, hubMetrics);
+      void metrics.set(node.id, hubMetrics);
     }
 
     // Update cache
@@ -144,7 +144,7 @@ export class HubCentralityAnalyzer {
     for (const node of nodes) {
       const degree = adjacencyList.get(node.id)?.size || 0;
       const normalized = degree / maxPossibleDegree;
-      centralities.set(node.id, normalized);
+      void centralities.set(node.id, normalized);
     }
 
     return centralities;
@@ -409,7 +409,7 @@ export class HubCentralityAnalyzer {
 
       if (minNode === null || minDistance === Infinity) break;
 
-      unvisited.delete(minNode);
+      void unvisited.delete(minNode);
 
       // Update neighbors
       const neighbors = adjacencyList.get(minNode) || new Set();
@@ -443,7 +443,7 @@ export class HubCentralityAnalyzer {
     let current: string | null = targetId;
 
     while (current !== null) {
-      path.unshift(current);
+      void path.unshift(current);
       if (current === sourceId) break;
       current = distances.get(current)?.previous || null;
     }
@@ -466,7 +466,7 @@ export class HubCentralityAnalyzer {
   public updateSettings(weights: CentralityWeights, threshold: number): void {
     this.centralityWeights = { ...weights };
     this.hubThreshold = threshold;
-    this.invalidateCache();
+    void this.invalidateCache();
 
     logger.debug('settings-updated', 'Hub centrality settings updated', {
       weights,

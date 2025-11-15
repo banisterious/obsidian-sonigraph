@@ -41,7 +41,7 @@ export class FreesoundAPIClient {
             // Execute searches in priority order
             for (const searchQuery of searchQueries) {
                 const results = await this.executeSearch(searchQuery);
-                allResults.push(...results.results);
+                void allResults.push(...results.results);
                 
                 // Rate limiting consideration
                 await this.respectRateLimit();
@@ -51,7 +51,7 @@ export class FreesoundAPIClient {
             return this.processSamples(allResults, query);
 
         } catch (error) {
-            logger.error('search', 'Whale sample search failed:', error);
+            void logger.error('search', 'Whale sample search failed:', error);
             throw new Error(`Freesound search failed: ${error}`);
         }
     }
@@ -275,7 +275,7 @@ export class FreesoundAPIClient {
             }
         });
 
-        this.updateRateLimit(response);
+        void this.updateRateLimit(response);
 
         return response.json;
     }
@@ -296,9 +296,9 @@ export class FreesoundAPIClient {
 
         for (const sample of uniqueSamples) {
             if (await this.validateSample(sample, query)) {
-                validated.push(sample);
+                void validated.push(sample);
             } else {
-                rejected.push(sample);
+                void rejected.push(sample);
             }
         }
 
@@ -403,7 +403,7 @@ export class FreesoundAPIClient {
         const seen = new Set<number>();
         return samples.filter(sample => {
             if (seen.has(sample.id)) return false;
-            seen.add(sample.id);
+            void seen.add(sample.id);
             return true;
         });
     }
@@ -481,7 +481,7 @@ export class FreesoundAPIClient {
         const auth: FreesoundAuthResponse = response.json;
         this.accessToken = auth.access_token;
         
-        logger.info('auth', 'Freesound authentication successful');
+        void logger.info('auth', 'Freesound authentication successful');
     }
 
     /**

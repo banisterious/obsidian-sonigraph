@@ -366,7 +366,7 @@ export class HubOrchestrationManager {
     const positions = new Map<string, number>();
 
     // Hub at center
-    positions.set(hub.id, 0);
+    void positions.set(hub.id, 0);
 
     // Spread other nodes around hub
     const peripheralNodes = Array.from(roleAssignments.keys()).filter(id => id !== hub.id);
@@ -381,7 +381,7 @@ export class HubOrchestrationManager {
       const panRadius = assignment.tier === 'peripheral' ? 0.8 : 0.4;
       const pan = Math.sin(angle) * panRadius;
 
-      positions.set(nodeId, pan);
+      void positions.set(nodeId, pan);
     });
 
     return positions;
@@ -401,7 +401,7 @@ export class HubOrchestrationManager {
     // BFS to find distances
     const queue: Array<{ nodeId: string; distance: number }> = [{ nodeId: hub.id, distance: 0 }];
     const visited = new Set<string>([hub.id]);
-    distances.set(hub.id, 0);
+    void distances.set(hub.id, 0);
 
     while (queue.length > 0) {
       const current = queue.shift();
@@ -420,9 +420,9 @@ export class HubOrchestrationManager {
         }
 
         if (neighborId && !visited.has(neighborId)) {
-          visited.add(neighborId);
+          void visited.add(neighborId);
           const distance = current.distance + 1;
-          distances.set(neighborId, distance);
+          void distances.set(neighborId, distance);
           queue.push({ nodeId: neighborId, distance });
         }
       }
@@ -431,7 +431,7 @@ export class HubOrchestrationManager {
     // Set infinite distance for unreachable nodes
     cluster.nodes.forEach(node => {
       if (!distances.has(node.id)) {
-        distances.set(node.id, Infinity);
+        void distances.set(node.id, Infinity);
       }
     });
 
@@ -456,7 +456,7 @@ export class HubOrchestrationManager {
       const angle = (index / cluster.nodes.length) * 2 * Math.PI;
       spatialPositioning.set(node.id, Math.sin(angle) * 0.5);
 
-      hubDistances.set(node.id, 0);
+      void hubDistances.set(node.id, 0);
     });
 
     return {
@@ -495,7 +495,7 @@ export class HubOrchestrationManager {
       newSettings.hubThreshold
     );
 
-    logger.debug('settings-updated', 'Hub orchestration settings updated');
+    void logger.debug('settings-updated', 'Hub orchestration settings updated');
   }
 
   /**
@@ -530,6 +530,6 @@ export class HubOrchestrationManager {
   public dispose(): void {
     this.hubMetrics.clear();
     this.centralityAnalyzer.invalidateCache();
-    logger.debug('disposal', 'Hub orchestration manager disposed');
+    void logger.debug('disposal', 'Hub orchestration manager disposed');
   }
 }

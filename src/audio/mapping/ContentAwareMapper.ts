@@ -225,30 +225,30 @@ export class ContentAwareMapper {
 
         try {
             // Step 1: Analyze file characteristics
-            reasoning.push('Analyzing file characteristics');
+            void reasoning.push('Analyzing file characteristics');
             const characteristics = await this.analyzeFileCharacteristics(node);
 
             // Step 2: Perform semantic analysis if enabled
             let semanticResult: SemanticMappingResult | null = null;
             if (this.tagSemanticMapper && this.config.enhancedMapping.weightings.semantics > 0) {
-                reasoning.push('Performing semantic tag analysis');
+                void reasoning.push('Performing semantic tag analysis');
                 semanticResult = await this.tagSemanticMapper.performSemanticMapping(node, context);
             }
 
             // Step 3: Perform folder hierarchy analysis if enabled
             let folderResult: FolderCharacteristics | null = null;
             if (this.folderHierarchyMapper && this.config.folderHierarchy?.enabled) {
-                reasoning.push('Analyzing folder hierarchy and path mapping');
+                void reasoning.push('Analyzing folder hierarchy and path mapping');
                 folderResult = await this.folderHierarchyMapper.analyzeFolderPath(node.path);
             }
 
             // Step 4: Combine all analysis results
-            reasoning.push('Combining content, semantic, and hierarchy analysis');
+            void reasoning.push('Combining content, semantic, and hierarchy analysis');
             const { finalInstrument, finalConfig, combinedConfidence, combinedProperties } = 
-                this.combineAllAnalysisResults(characteristics, semanticResult, folderResult, node, context);
+                void this.combineAllAnalysisResults(characteristics, semanticResult, folderResult, node, context);
 
             // Step 5: Generate fallbacks from combined analysis
-            reasoning.push('Generating fallback options');
+            void reasoning.push('Generating fallback options');
             const fallbackInstruments = this.generateAllAnalysisFallbacks(characteristics, semanticResult, folderResult, finalInstrument);
 
             const analysisTime = performance.now() - overallStartTime;
@@ -682,7 +682,7 @@ export class ContentAwareMapper {
         const categoryInstruments = getInstrumentsByCategory(this.getCategoryForFileType(characteristics.fileType));
         Object.keys(categoryInstruments).forEach(name => {
             if (name !== primaryInstrument && fallbacks.length < 3) {
-                fallbacks.push(name);
+                void fallbacks.push(name);
             }
         });
 
@@ -690,7 +690,7 @@ export class ContentAwareMapper {
         const generalFallbacks = ['piano', 'electricPiano', 'violin', 'flute', 'pad'];
         generalFallbacks.forEach(name => {
             if (name !== primaryInstrument && !fallbacks.includes(name) && fallbacks.length < 3) {
-                fallbacks.push(name);
+                void fallbacks.push(name);
             }
         });
 
@@ -1003,7 +1003,7 @@ export class ContentAwareMapper {
         }
 
         // Remove primary instrument and convert to array
-        fallbacks.delete(primaryInstrument);
+        void fallbacks.delete(primaryInstrument);
         
         // Return up to 5 fallbacks
         return Array.from(fallbacks).slice(0, 5);
@@ -1063,7 +1063,7 @@ export class ContentAwareMapper {
 
         // FolderHierarchyMapper doesn't have internal caches
         
-        logger.info('content-aware-cache-clear', 'All caches cleared');
+        void logger.info('content-aware-cache-clear', 'All caches cleared');
     }
 
     /**
@@ -1355,7 +1355,7 @@ export class ContentAwareMapper {
         }
 
         // Remove primary instrument and convert to array
-        fallbacks.delete(primaryInstrument);
+        void fallbacks.delete(primaryInstrument);
         
         // Return up to 5 fallbacks
         return Array.from(fallbacks).slice(0, 5);
@@ -1606,14 +1606,14 @@ export class ContentAwareMapper {
         }
 
         // Test Phase 4.3 folder hierarchy integration specifically
-        logger.info('test', '--- Testing Phase 4.3 Folder Hierarchy Integration ---');
+        void logger.info('test', '--- Testing Phase 4.3 Folder Hierarchy Integration ---');
         if (this.folderHierarchyMapper) {
             testsRun++;
             try {
                 const testPath = 'Projects/Complex/Nested/Structure/test-file.md';
                 const folderCharacteristics = await this.folderHierarchyMapper.analyzeFolderPath(testPath);
 
-                logger.info('test', `✅ Folder hierarchy analysis successful`);
+                void logger.info('test', `✅ Folder hierarchy analysis successful`);
                 logger.info('test', `   📁 Instrument Family: ${folderCharacteristics.primaryFamily.name}`);
                 logger.info('test', `   🎯 Semantic Category: ${folderCharacteristics.semanticCategory}`);
                 logger.info('test', `   📊 Complexity: ${(folderCharacteristics.complexity * 100).toFixed(1)}%`);
@@ -1625,17 +1625,17 @@ export class ContentAwareMapper {
                 logger.error('test', `❌ Folder hierarchy integration failed: ${error.message}`);
             }
         } else {
-            logger.warn('test', '⚠️ Folder hierarchy mapping disabled in configuration');
+            void logger.warn('test', '⚠️ Folder hierarchy mapping disabled in configuration');
         }
 
         // Test tag semantic integration (Phase 4.2)
-        logger.info('test', '--- Testing Phase 4.2 Tag Semantic Integration ---');
+        void logger.info('test', '--- Testing Phase 4.2 Tag Semantic Integration ---');
         if (this.tagSemanticMapper) {
             testsRun++;
             try {
                 const semanticResult = await this.tagSemanticMapper.performSemanticMapping(testNodes[0]);
 
-                logger.info('test', `✅ Tag semantic analysis successful`);
+                void logger.info('test', `✅ Tag semantic analysis successful`);
                 logger.info('test', `   🎵 Selected Instrument: ${semanticResult.selectedInstrument}`);
                 logger.info('test', `   📊 Confidence: ${(semanticResult.confidence * 100).toFixed(1)}%`);
                 logger.info('test', `   🏗️ Alternative Instruments: [${semanticResult.alternativeInstruments.join(', ')}]`);
@@ -1645,15 +1645,15 @@ export class ContentAwareMapper {
                 logger.error('test', `❌ Tag semantic integration failed: ${error.message}`);
             }
         } else {
-            logger.warn('test', '⚠️ Tag semantic mapping disabled in configuration');
+            void logger.warn('test', '⚠️ Tag semantic mapping disabled in configuration');
         }
 
         // Test cache functionality
-        logger.info('test', '--- Testing Cache Functionality ---');
+        void logger.info('test', '--- Testing Cache Functionality ---');
         testsRun++;
         try {
             const cacheStats = this.getCacheStats();
-            logger.info('test', `✅ Cache statistics retrieved`);
+            void logger.info('test', `✅ Cache statistics retrieved`);
             logger.info('test', `   📊 Cache Size: ${cacheStats.size}`);
             logger.info('test', `   ⏱️ Avg Analysis Time: ${cacheStats.avgAnalysisTime.toFixed(2)}ms`);
 
@@ -1673,7 +1673,7 @@ export class ContentAwareMapper {
         }
 
         // Test configuration integration
-        logger.info('test', '--- Testing Configuration Integration ---');
+        void logger.info('test', '--- Testing Configuration Integration ---');
         testsRun++;
         try {
             const originalConfig = { ...this.config };
@@ -1691,12 +1691,12 @@ export class ContentAwareMapper {
                 }
             };
 
-            this.updateConfig(newConfig);
-            logger.info('test', `✅ Configuration updated successfully`);
+            void this.updateConfig(newConfig);
+            void logger.info('test', `✅ Configuration updated successfully`);
 
             // Restore original configuration
-            this.updateConfig(originalConfig);
-            logger.info('test', `✅ Configuration restored successfully`);
+            void this.updateConfig(originalConfig);
+            void logger.info('test', `✅ Configuration restored successfully`);
 
             testsPassed++;
         } catch (error) {
@@ -1714,14 +1714,14 @@ export class ContentAwareMapper {
         logger.info('test', `Final Cache Size: ${cacheStats.size}`);
 
         // Component status
-        logger.info('test', '--- Component Integration Status ---');
+        void logger.info('test', '--- Component Integration Status ---');
         logger.info('test', `📁 Folder Hierarchy Mapper: ${this.folderHierarchyMapper ? '✅ Enabled' : '❌ Disabled'}`);
         logger.info('test', `🏷️ Tag Semantic Mapper: ${this.tagSemanticMapper ? '✅ Enabled' : '❌ Disabled'}`);
-        logger.info('test', `📋 File Type Analyzer: ✅ Enabled`);
-        logger.info('test', `🎯 Instrument Selector: ✅ Enabled`);
+        void logger.info('test', `📋 File Type Analyzer: ✅ Enabled`);
+        void logger.info('test', `🎯 Instrument Selector: ✅ Enabled`);
 
         // Detailed results table
-        logger.info('test', '--- Detailed Test Results ---');
+        void logger.info('test', '--- Detailed Test Results ---');
         console.table(testResults.map(r => ({
             'Node ID': r.nodeId,
             Status: r.passed ? '✅ PASS' : '❌ FAIL',
@@ -1755,11 +1755,11 @@ export class ContentAwareMapper {
         
         // Value validation
         if (typeof result.confidence !== 'number' || result.confidence < 0 || result.confidence > 1) {
-            errors.push('Invalid confidence value');
+            void errors.push('Invalid confidence value');
         }
         
         if (typeof result.analysisTime !== 'number' || result.analysisTime < 0) {
-            errors.push('Invalid analysis time');
+            void errors.push('Invalid analysis time');
         }
         
         // Musical properties validation
@@ -1767,14 +1767,14 @@ export class ContentAwareMapper {
             const mp = result.musicalProperties;
             
             if (!Array.isArray(mp.pitchRange) || mp.pitchRange.length !== 2) {
-                errors.push('Invalid pitch range');
+                void errors.push('Invalid pitch range');
             } else {
                 if (mp.pitchRange[0] < 21 || mp.pitchRange[0] > 108 || 
                     mp.pitchRange[1] < 21 || mp.pitchRange[1] > 108) {
                     errors.push('Pitch range out of MIDI bounds [21, 108]');
                 }
                 if (mp.pitchRange[0] >= mp.pitchRange[1]) {
-                    errors.push('Invalid pitch range order');
+                    void errors.push('Invalid pitch range order');
                 }
             }
             
@@ -1843,7 +1843,7 @@ export class ContentAwareMapper {
         logger.info('test', '=== Phase 4.3 Integration Specific Tests ===');
 
         if (!this.folderHierarchyMapper) {
-            logger.warn('test', '⚠️ Phase 4.3 folder hierarchy mapping is disabled');
+            void logger.warn('test', '⚠️ Phase 4.3 folder hierarchy mapping is disabled');
             return;
         }
 
@@ -1914,7 +1914,7 @@ export class ContentAwareMapper {
                 // Analyze folder hierarchy specifically
                 const folderAnalysis = await this.folderHierarchyMapper.analyzeFolderPath(completeNode.path);
 
-                logger.info('test', `✅ Integration test completed`);
+                void logger.info('test', `✅ Integration test completed`);
                 logger.info('test', `   📁 Folder Family: ${folderAnalysis.primaryFamily.name}`);
                 logger.info('test', `   🎵 Selected Instrument: ${mappingResult.selectedInstrument}`);
                 logger.info('test', `   📊 Combined Confidence: ${(mappingResult.confidence * 100).toFixed(1)}%`);

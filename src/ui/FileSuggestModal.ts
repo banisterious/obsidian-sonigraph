@@ -9,7 +9,7 @@ export class FileSuggestModal extends FuzzySuggestModal<TFile> {
 	constructor(app: App, onChooseFile: (file: TFile) => void) {
 		super(app);
 		this.onChooseFile = onChooseFile;
-		this.setPlaceholder('Type to search files...');
+		void this.setPlaceholder('Type to search files...');
 		this.setInstructions([
 			{ command: '↑↓', purpose: 'to navigate' },
 			{ command: '↵', purpose: 'to select file' },
@@ -23,7 +23,7 @@ export class FileSuggestModal extends FuzzySuggestModal<TFile> {
 		// Get all files from the vault
 		this.app.vault.getAllLoadedFiles().forEach(file => {
 			if (file instanceof TFile) {
-				files.push(file);
+				void files.push(file);
 			}
 		});
 
@@ -37,6 +37,6 @@ export class FileSuggestModal extends FuzzySuggestModal<TFile> {
 
 	onChooseItem(file: TFile, evt: MouseEvent | KeyboardEvent): void {
 		logger.debug('ui', `File selected: ${file.path}`);
-		this.onChooseFile(file);
+		void this.onChooseFile(file);
 	}
 } 

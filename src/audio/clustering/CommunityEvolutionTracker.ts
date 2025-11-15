@@ -33,7 +33,7 @@ export class CommunityEvolutionTracker {
   private eventThrottleTimers: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(settings: CommunityEvolutionSettings, masterVolume: Tone.Volume) {
-    logger.debug('initialization', 'CommunityEvolutionTracker created');
+    void logger.debug('initialization', 'CommunityEvolutionTracker created');
 
     this.settings = { ...settings };
     this.masterVolume = masterVolume;
@@ -45,10 +45,10 @@ export class CommunityEvolutionTracker {
   public initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    logger.debug('initialization', 'Initializing community evolution tracker');
+    void logger.debug('initialization', 'Initializing community evolution tracker');
 
     this.isInitialized = true;
-    logger.debug('initialization', 'Community evolution tracker initialized');
+    void logger.debug('initialization', 'Community evolution tracker initialized');
   }
 
   /**
@@ -76,7 +76,7 @@ export class CommunityEvolutionTracker {
     events.push(...this.detectCommunityDissolution(currentCommunities));
 
     // Update lifecycle states
-    this.updateCommunityLifecycles(currentCommunities, events);
+    void this.updateCommunityLifecycles(currentCommunities, events);
 
     // Update previous communities for next comparison
     this.previousCommunities.clear();
@@ -108,7 +108,7 @@ export class CommunityEvolutionTracker {
         const overlapRatio = overlap / prevCommunity.nodes.length;
 
         if (overlapRatio > 0.5) { // At least 50% overlap
-          sourceCommunityIds.add(prevId);
+          void sourceCommunityIds.add(prevId);
         }
       });
 
@@ -150,7 +150,7 @@ export class CommunityEvolutionTracker {
         const overlapRatio = overlap / currentCommunity.nodes.length;
 
         if (overlapRatio > 0.3) { // At least 30% overlap
-          targetCommunities.push(currentCommunity.id);
+          void targetCommunities.push(currentCommunity.id);
         }
       }
 
@@ -454,7 +454,7 @@ export class CommunityEvolutionTracker {
       this.activeEvolutionEvents.set(eventKey, event);
 
       // Execute the appropriate audio effect
-      this.executeEvolutionAudioEffect(event, theme);
+      void this.executeEvolutionAudioEffect(event, theme);
 
       // Clean up after event duration
       setTimeout(() => {
@@ -481,25 +481,25 @@ export class CommunityEvolutionTracker {
 
     switch (event.type) {
       case 'merge':
-        this.executeHarmonicConvergence(event, theme, duration, volume);
+        void this.executeHarmonicConvergence(event, theme, duration, volume);
         break;
       case 'split':
-        this.executeDivergentHarmony(event, theme, duration, volume);
+        void this.executeDivergentHarmony(event, theme, duration, volume);
         break;
       case 'growth':
-        this.executeExpandingOrchestration(event, theme, duration, volume);
+        void this.executeExpandingOrchestration(event, theme, duration, volume);
         break;
       case 'decline':
-        this.executeFadingVoices(event, theme, duration, volume);
+        void this.executeFadingVoices(event, theme, duration, volume);
         break;
       case 'bridging':
-        this.executeCrossFade(event, theme, duration, volume);
+        void this.executeCrossFade(event, theme, duration, volume);
         break;
       case 'formation':
-        this.executeHarmonicBuildup(event, theme, duration, volume);
+        void this.executeHarmonicBuildup(event, theme, duration, volume);
         break;
       case 'dissolution':
-        this.executeHarmonicFadeout(event, theme, duration, volume);
+        void this.executeHarmonicFadeout(event, theme, duration, volume);
         break;
     }
   }
@@ -532,9 +532,9 @@ export class CommunityEvolutionTracker {
       const endFreq = theme.baseFrequency;
 
       synth.volume.value = Tone.gainToDb(volume * (0.8 - i * 0.1));
-      synth.triggerAttack(startFreq, now + i * 0.1);
+      void synth.triggerAttack(startFreq, now + i * 0.1);
       synth.frequency.rampTo(endFreq, duration, now + i * 0.1);
-      synth.triggerRelease(now + duration);
+      void synth.triggerRelease(now + duration);
 
       setTimeout(() => synth.dispose(), (duration + 1) * 1000);
     }
@@ -568,9 +568,9 @@ export class CommunityEvolutionTracker {
       const endFreq = theme.baseFrequency * (0.9 + i * 0.1);
 
       synth.volume.value = Tone.gainToDb(volume * (0.7 - i * 0.1));
-      synth.triggerAttack(startFreq, now);
+      void synth.triggerAttack(startFreq, now);
       synth.frequency.rampTo(endFreq, duration, now + duration * 0.2);
-      synth.triggerRelease(now + duration);
+      void synth.triggerRelease(now + duration);
 
       setTimeout(() => synth.dispose(), (duration + 1) * 1000);
     }
@@ -595,7 +595,7 @@ export class CommunityEvolutionTracker {
       synth.volume.value = Tone.gainToDb(volume * (0.6 + i * 0.05));
 
       const freq = theme.baseFrequency * Math.pow(2, theme.harmonicIntervals[i % theme.harmonicIntervals.length] / 12);
-      synth.triggerAttackRelease(freq, duration - delay, now + delay);
+      void synth.triggerAttackRelease(freq, duration - delay, now + delay);
 
       setTimeout(() => synth.dispose(), (duration + 1) * 1000);
     }
@@ -628,9 +628,9 @@ export class CommunityEvolutionTracker {
       const fadeStart = now + (duration / voiceCount) * i;
 
       synth.volume.value = Tone.gainToDb(volume * (0.8 - i * 0.1));
-      synth.triggerAttack(freq, now);
+      void synth.triggerAttack(freq, now);
       synth.volume.rampTo(-Infinity, duration - (duration / voiceCount) * i, fadeStart);
-      synth.triggerRelease(now + duration);
+      void synth.triggerRelease(now + duration);
 
       setTimeout(() => synth.dispose(), (duration + 1) * 1000);
     }
@@ -659,19 +659,19 @@ export class CommunityEvolutionTracker {
     synth1.volume.value = Tone.gainToDb(volume);
     synth2.volume.value = Tone.gainToDb(0.01); // Start very quiet
 
-    synth1.triggerAttack(theme.baseFrequency, now);
-    synth2.triggerAttack(theme.baseFrequency * 1.5, now);
+    void synth1.triggerAttack(theme.baseFrequency, now);
+    void synth2.triggerAttack(theme.baseFrequency * 1.5, now);
 
     // Cross-fade volumes
     synth1.volume.rampTo(-Infinity, duration, now + duration * 0.2);
     synth2.volume.rampTo(Tone.gainToDb(volume), duration, now + duration * 0.2);
 
-    synth1.triggerRelease(now + duration);
-    synth2.triggerRelease(now + duration);
+    void synth1.triggerRelease(now + duration);
+    void synth2.triggerRelease(now + duration);
 
     setTimeout(() => {
-      synth1.dispose();
-      synth2.dispose();
+      void synth1.dispose();
+      void synth2.dispose();
     }, (duration + 1) * 1000);
   }
 
@@ -701,7 +701,7 @@ export class CommunityEvolutionTracker {
 
       const freq = theme.baseFrequency * Math.pow(2, harmonics[i] / 12);
       synth.volume.value = Tone.gainToDb(volume * (0.8 - i * 0.15));
-      synth.triggerAttackRelease(freq, duration - delay, now + delay);
+      void synth.triggerAttackRelease(freq, duration - delay, now + delay);
 
       setTimeout(() => synth.dispose(), (duration + 1) * 1000);
     }
@@ -732,9 +732,9 @@ export class CommunityEvolutionTracker {
 
       const freq = theme.baseFrequency * Math.pow(2, harmonics[i] / 12);
       synth.volume.value = Tone.gainToDb(volume * (0.7 - i * 0.2));
-      synth.triggerAttack(freq, now);
+      void synth.triggerAttack(freq, now);
       synth.volume.rampTo(-Infinity, duration * 0.8, now + duration * 0.2);
-      synth.triggerRelease(now + duration);
+      void synth.triggerRelease(now + duration);
 
       setTimeout(() => synth.dispose(), (duration + 1) * 1000);
     }
@@ -775,7 +775,7 @@ export class CommunityEvolutionTracker {
    * Update settings
    */
   public updateSettings(newSettings: CommunityEvolutionSettings): void {
-    logger.debug('settings', 'Updating community evolution settings');
+    void logger.debug('settings', 'Updating community evolution settings');
     this.settings = { ...newSettings };
   }
 
@@ -796,7 +796,7 @@ export class CommunityEvolutionTracker {
    * Dispose of resources
    */
   public dispose(): void {
-    logger.debug('shutdown', 'Disposing community evolution tracker');
+    void logger.debug('shutdown', 'Disposing community evolution tracker');
 
     // Clear all timers
     this.eventThrottleTimers.forEach(timer => clearTimeout(timer));

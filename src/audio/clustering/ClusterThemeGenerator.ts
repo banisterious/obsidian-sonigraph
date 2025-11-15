@@ -24,7 +24,7 @@ export class ClusterThemeGenerator {
   public initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    logger.debug('initialization', 'Initializing cluster theme generator');
+    void logger.debug('initialization', 'Initializing cluster theme generator');
 
     // Generate themes for each cluster type
     this.themes.set('tag-based', this.createTagBasedTheme());
@@ -458,7 +458,7 @@ export class ClusterThemeGenerator {
    * Dispose of resources
    */
   public dispose(): void {
-    logger.debug('shutdown', 'Disposing cluster theme generator');
+    void logger.debug('shutdown', 'Disposing cluster theme generator');
     this.themes.clear();
     this.isInitialized = false;
   }

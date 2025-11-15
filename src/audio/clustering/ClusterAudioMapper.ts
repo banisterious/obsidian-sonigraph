@@ -78,7 +78,7 @@ export class ClusterAudioMapper {
     hubOrchestrationSettings?: HubOrchestrationSettings,
     musicalTheoryConfig?: MusicalTheoryConfig
   ) {
-    logger.debug('initialization', 'ClusterAudioMapper created');
+    void logger.debug('initialization', 'ClusterAudioMapper created');
 
     this.settings = { ...settings };
     this.themeGenerator = new ClusterThemeGenerator();
@@ -116,7 +116,7 @@ export class ClusterAudioMapper {
           this.masterVolume,
           hubOrchestrationSettings.transitionsEnabled
         );
-        logger.debug('initialization', 'Hub orchestration initialized');
+        void logger.debug('initialization', 'Hub orchestration initialized');
       }
     }
 
@@ -140,7 +140,7 @@ export class ClusterAudioMapper {
     if (this.isInitialized) return;
 
     try {
-      logger.debug('initialization', 'Initializing cluster audio system');
+      void logger.debug('initialization', 'Initializing cluster audio system');
 
       // Initialize theme generator
       await this.themeGenerator.initialize();
@@ -148,19 +148,19 @@ export class ClusterAudioMapper {
       // Phase 5.3: Initialize community detection components
       if (this.communityAnalyzer) {
         await this.communityAnalyzer.initialize();
-        logger.debug('initialization', 'Community audio analyzer initialized');
+        void logger.debug('initialization', 'Community audio analyzer initialized');
       }
 
       if (this.communityEvolutionTracker) {
         await this.communityEvolutionTracker.initialize();
-        logger.debug('initialization', 'Community evolution tracker initialized');
+        void logger.debug('initialization', 'Community evolution tracker initialized');
       }
 
       // Set up performance monitoring
-      this.startPerformanceMonitoring();
+      void this.startPerformanceMonitoring();
 
       this.isInitialized = true;
-      logger.debug('initialization', 'Cluster audio system initialized successfully');
+      void logger.debug('initialization', 'Cluster audio system initialized successfully');
     } catch (error) {
       logger.error('initialization', 'Failed to initialize cluster audio system', { error });
       throw error;
@@ -181,7 +181,7 @@ export class ClusterAudioMapper {
       // Detect and trigger hub transitions
       if (this.hubTransitionHandler && this.hubOrchestrationSettings.transitionsEnabled) {
         // This will be called from the orchestration manager when metrics are updated
-        logger.debug('hub-transitions', 'Hub metrics updated, transitions will be detected on next orchestration');
+        void logger.debug('hub-transitions', 'Hub metrics updated, transitions will be detected on next orchestration');
       }
     }
   }
@@ -226,7 +226,7 @@ export class ClusterAudioMapper {
 
       // Update cluster strength modulation
       if (this.settings.strengthModulation) {
-        this.updateClusterStrengthModulation(clusters);
+        void this.updateClusterStrengthModulation(clusters);
       }
 
       // Update previous clusters for next transition detection
@@ -433,27 +433,27 @@ export class ClusterAudioMapper {
     try {
       switch (config.effectType) {
         case 'glissando':
-          this.executeGlissando(transitionSynth, theme, config, volume, now);
+          void this.executeGlissando(transitionSynth, theme, config, volume, now);
           break;
         case 'harmonic_buildup':
-          this.executeHarmonicBuildup(transitionSynth, theme, config, volume, now);
+          void this.executeHarmonicBuildup(transitionSynth, theme, config, volume, now);
           break;
         case 'filter_sweep':
-          this.executeFilterSweep(transitionSynth, theme, config, volume, now);
+          void this.executeFilterSweep(transitionSynth, theme, config, volume, now);
           break;
         case 'granular_scatter':
-          this.executeGranularScatter(transitionSynth, theme, config, volume, now);
+          void this.executeGranularScatter(transitionSynth, theme, config, volume, now);
           break;
       }
 
       // Clean up the temporary synth
       setTimeout(() => {
-        transitionSynth.dispose();
+        void transitionSynth.dispose();
       }, (config.duration + 1) * 1000);
 
     } catch (error) {
       logger.error('transition-effect', 'Error executing transition effect', { error });
-      transitionSynth.dispose();
+      void transitionSynth.dispose();
     }
   }
 
@@ -473,7 +473,7 @@ export class ClusterAudioMapper {
       : startFreq / Math.pow(2, config.pitchRange / 12);
 
     synth.volume.value = Tone.gainToDb(volume * theme.dynamicsRange.baseVolume);
-    synth.triggerAttack(startFreq, startTime);
+    void synth.triggerAttack(startFreq, startTime);
 
     // Create glissando by sweeping frequency
     synth.frequency.rampTo(endFreq, config.duration, startTime);
@@ -483,7 +483,7 @@ export class ClusterAudioMapper {
       synth.volume.rampTo(-Infinity, config.duration, startTime + config.duration * 0.3);
     }
 
-    synth.triggerRelease(startTime + config.duration);
+    void synth.triggerRelease(startTime + config.duration);
   }
 
   /**
@@ -517,11 +517,11 @@ export class ClusterAudioMapper {
       const harmonicVolume = volume * theme.dynamicsRange.baseVolume * (0.8 - i * 0.15); // Decreasing volume
       harmonicSynth.volume.value = Tone.gainToDb(harmonicVolume);
 
-      harmonicSynth.triggerAttackRelease(freq, config.duration - delay, startTime + delay);
+      void harmonicSynth.triggerAttackRelease(freq, config.duration - delay, startTime + delay);
 
       // Clean up
       setTimeout(() => {
-        harmonicSynth.dispose();
+        void harmonicSynth.dispose();
       }, (config.duration + 1) * 1000);
     }
   }
@@ -543,11 +543,11 @@ export class ClusterAudioMapper {
       Q: theme.resonance * 10
     }).connect(this.masterVolume);
 
-    synth.disconnect();
-    synth.connect(filter);
+    void synth.disconnect();
+    void synth.connect(filter);
 
     synth.volume.value = Tone.gainToDb(volume * theme.dynamicsRange.baseVolume);
-    synth.triggerAttack(theme.baseFrequency, startTime);
+    void synth.triggerAttack(theme.baseFrequency, startTime);
 
     // Sweep filter frequency
     const endFilterFreq = config.pitchDirection === 'ascending' ? 8000 : 200;
@@ -557,11 +557,11 @@ export class ClusterAudioMapper {
       synth.volume.rampTo(-Infinity, config.duration * 0.8, startTime + config.duration * 0.2);
     }
 
-    synth.triggerRelease(startTime + config.duration);
+    void synth.triggerRelease(startTime + config.duration);
 
     // Clean up filter
     setTimeout(() => {
-      filter.dispose();
+      void filter.dispose();
     }, (config.duration + 1) * 1000);
   }
 
@@ -595,11 +595,11 @@ export class ClusterAudioMapper {
       const grainVol = volume * theme.dynamicsRange.baseVolume * (0.3 + Math.random() * 0.4);
 
       grainSynth.volume.value = Tone.gainToDb(grainVol);
-      grainSynth.triggerAttackRelease(grainFreq, grainDuration * 0.3, grainTime);
+      void grainSynth.triggerAttackRelease(grainFreq, grainDuration * 0.3, grainTime);
 
       // Clean up
       setTimeout(() => {
-        grainSynth.dispose();
+        void grainSynth.dispose();
       }, (config.duration + 1) * 1000);
     }
   }
@@ -614,7 +614,7 @@ export class ClusterAudioMapper {
     // Stop audio for removed clusters
     for (const clusterId of activeClusterIds) {
       if (!currentClusterIds.has(clusterId)) {
-        this.stopClusterAudio(clusterId);
+        void this.stopClusterAudio(clusterId);
       }
     }
 
@@ -626,7 +626,7 @@ export class ClusterAudioMapper {
 
       if (this.state.activeClusters.has(cluster.id)) {
         // Update existing cluster audio
-        this.updateClusterAudio(cluster);
+        void this.updateClusterAudio(cluster);
       } else {
         // Start new cluster audio
         await this.startClusterAudio(cluster);
@@ -678,8 +678,8 @@ export class ClusterAudioMapper {
       const effectChain = this.createClusterEffectChain(theme);
 
       // Connect audio chain
-      audioSource.connect(effectChain);
-      effectChain.connect(this.masterVolume);
+      void audioSource.connect(effectChain);
+      void effectChain.connect(this.masterVolume);
 
       // Calculate initial parameters
       const frequency = this.calculateClusterFrequency(cluster, theme);
@@ -703,7 +703,7 @@ export class ClusterAudioMapper {
       this.state.activeClusters.set(cluster.id, activeCluster);
 
       // Start the audio
-      this.playClusterAudio(activeCluster);
+      void this.playClusterAudio(activeCluster);
 
     } catch (error) {
       logger.error('cluster-start', 'Error starting cluster audio', {
@@ -902,7 +902,7 @@ export class ClusterAudioMapper {
    * Update settings
    */
   public updateSettings(newSettings: ClusterAudioSettings): void {
-    logger.debug('settings', 'Updating cluster audio settings');
+    void logger.debug('settings', 'Updating cluster audio settings');
 
     const wasEnabled = this.settings.enabled;
     this.settings = { ...newSettings };
@@ -912,7 +912,7 @@ export class ClusterAudioMapper {
 
     // If disabled, stop all active clusters
     if (!this.settings.enabled && wasEnabled) {
-      this.stopAllClusterAudio();
+      void this.stopAllClusterAudio();
     }
   }
 
@@ -920,11 +920,11 @@ export class ClusterAudioMapper {
    * Stop all active cluster audio
    */
   private stopAllClusterAudio(): void {
-    logger.debug('shutdown', 'Stopping all cluster audio');
+    void logger.debug('shutdown', 'Stopping all cluster audio');
 
     const clusterIds = Array.from(this.state.activeClusters.keys());
     for (const clusterId of clusterIds) {
-      this.stopClusterAudio(clusterId);
+      void this.stopClusterAudio(clusterId);
     }
   }
 
@@ -1080,7 +1080,7 @@ export class ClusterAudioMapper {
       this.communityEvolutionSettings = evolutionSettings;
     }
 
-    logger.debug('settings', 'Community settings updated');
+    void logger.debug('settings', 'Community settings updated');
   }
 
   /**
@@ -1092,10 +1092,10 @@ export class ClusterAudioMapper {
     if (settings.enabled) {
       if (!this.hubOrchestrationManager) {
         this.hubOrchestrationManager = new HubOrchestrationManager(settings);
-        logger.debug('settings', 'Hub orchestration manager created');
+        void logger.debug('settings', 'Hub orchestration manager created');
       } else {
         this.hubOrchestrationManager.updateSettings(settings);
-        logger.debug('settings', 'Hub orchestration settings updated');
+        void logger.debug('settings', 'Hub orchestration settings updated');
       }
 
       if (!this.hubTransitionHandler) {
@@ -1103,10 +1103,10 @@ export class ClusterAudioMapper {
           this.masterVolume,
           settings.transitionsEnabled
         );
-        logger.debug('settings', 'Hub transition handler created');
+        void logger.debug('settings', 'Hub transition handler created');
       } else {
         this.hubTransitionHandler.updateSettings(settings.transitionsEnabled);
-        logger.debug('settings', 'Hub transition settings updated');
+        void logger.debug('settings', 'Hub transition settings updated');
       }
     } else {
       // Dispose if disabled
@@ -1118,7 +1118,7 @@ export class ClusterAudioMapper {
         this.hubTransitionHandler.dispose();
         this.hubTransitionHandler = null;
       }
-      logger.debug('settings', 'Hub orchestration disabled and disposed');
+      void logger.debug('settings', 'Hub orchestration disabled and disposed');
     }
   }
 
@@ -1134,7 +1134,7 @@ export class ClusterAudioMapper {
         logger.debug('settings', `Musical theory engine created: ${config.rootNote} ${config.scale}`);
       } else {
         this.musicalTheoryEngine.updateConfig(config);
-        logger.debug('settings', 'Musical theory settings updated');
+        void logger.debug('settings', 'Musical theory settings updated');
       }
     } else {
       // Dispose if disabled
@@ -1142,7 +1142,7 @@ export class ClusterAudioMapper {
         this.musicalTheoryEngine.dispose();
         this.musicalTheoryEngine = null;
       }
-      logger.debug('settings', 'Musical theory disabled and disposed');
+      void logger.debug('settings', 'Musical theory disabled and disposed');
     }
   }
 
@@ -1150,9 +1150,9 @@ export class ClusterAudioMapper {
    * Dispose of all resources
    */
   public dispose(): void {
-    logger.debug('shutdown', 'Disposing cluster audio mapper');
+    void logger.debug('shutdown', 'Disposing cluster audio mapper');
 
-    this.stopAllClusterAudio();
+    void this.stopAllClusterAudio();
 
     if (this.updateThrottleTimer) {
       clearTimeout(this.updateThrottleTimer);

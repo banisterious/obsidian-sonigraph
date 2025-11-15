@@ -108,7 +108,7 @@ export class TagSemanticMapper {
 
         try {
             // Step 1: Extract and normalize tags
-            reasoning.push('Extracting and normalizing tags');
+            void reasoning.push('Extracting and normalizing tags');
             const tags = this.extractTags(node);
             
             if (tags.length === 0) {
@@ -117,16 +117,16 @@ export class TagSemanticMapper {
             }
 
             // Step 2: Perform semantic analysis
-            reasoning.push('Performing semantic tag analysis');
+            void reasoning.push('Performing semantic tag analysis');
             const analysis = this.performSemanticAnalysis(tags, node, context);
 
             // Step 3: Select instrument based on semantic analysis
-            reasoning.push('Selecting instrument based on semantic analysis');
+            void reasoning.push('Selecting instrument based on semantic analysis');
             const { instrument, instrumentConfig, confidence, alternativeInstruments } =
-                this.selectInstrumentFromSemantics(analysis, tags);
+                void this.selectInstrumentFromSemantics(analysis, tags);
 
             // Step 4: Generate musical properties
-            reasoning.push('Generating musical properties from semantic analysis');
+            void reasoning.push('Generating musical properties from semantic analysis');
             const musicalProperties = this.generateMusicalPropertiesFromSemantics(analysis, node, context);
 
             // Step 5: Identify semantic matches
@@ -420,9 +420,9 @@ export class TagSemanticMapper {
         // Generate harmonic intervals based on tag relationships
         const harmonicIntervals: number[] = [];
         if (semanticRelationships > 0) {
-            harmonicIntervals.push(...config.harmonicIntervalMapping.relatedTags);
+            void harmonicIntervals.push(...config.harmonicIntervalMapping.relatedTags);
         } else {
-            harmonicIntervals.push(...config.harmonicIntervalMapping.neutralTags);
+            void harmonicIntervals.push(...config.harmonicIntervalMapping.neutralTags);
         }
 
         return {
@@ -495,21 +495,21 @@ export class TagSemanticMapper {
         // Get instruments based on emotional context
         if (weightings.emotional > 0) {
             const emotionalInstruments = this.getEmotionalInstruments(analysis.emotionalContext);
-            candidateInstruments.push(...emotionalInstruments);
+            void candidateInstruments.push(...emotionalInstruments);
             confidence += weightings.emotional * 0.8;
         }
 
         // Get instruments based on functional context  
         if (weightings.functional > 0) {
             const functionalInstruments = this.getFunctionalInstruments(analysis.functionalContext);
-            candidateInstruments.push(...functionalInstruments);
+            void candidateInstruments.push(...functionalInstruments);
             confidence += weightings.functional * 0.9;
         }
 
         // Get instruments based on topical context
         if (weightings.topical > 0) {
             const topicalInstruments = this.getTopicalInstruments(analysis.topicalContext);
-            candidateInstruments.push(...topicalInstruments);
+            void candidateInstruments.push(...topicalInstruments);
             confidence += weightings.topical * 0.7;
         }
 
@@ -848,7 +848,7 @@ export class TagSemanticMapper {
         this.mappingCache.clear();
         this.cacheTimestamps.clear();
         
-        logger.info('tag-semantic-config-update', 'Configuration updated, cache cleared');
+        void logger.info('tag-semantic-config-update', 'Configuration updated, cache cleared');
     }
 
     /**
@@ -872,6 +872,6 @@ export class TagSemanticMapper {
     clearCaches(): void {
         this.mappingCache.clear();
         this.cacheTimestamps.clear();
-        logger.info('tag-semantic-cache-clear', 'Cache cleared');
+        void logger.info('tag-semantic-cache-clear', 'Cache cleared');
     }
 }

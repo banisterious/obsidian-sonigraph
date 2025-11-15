@@ -36,7 +36,7 @@ export class CommunityAudioAnalyzer {
     settings: CommunityDetectionSettings,
     clusteringAlgorithms: SmartClusteringAlgorithms
   ) {
-    logger.debug('initialization', 'CommunityAudioAnalyzer created');
+    void logger.debug('initialization', 'CommunityAudioAnalyzer created');
 
     this.settings = { ...settings };
     this.clusteringAlgorithms = clusteringAlgorithms;
@@ -50,13 +50,13 @@ export class CommunityAudioAnalyzer {
     if (this.isInitialized) return;
 
     try {
-      logger.debug('initialization', 'Initializing community audio analyzer');
+      void logger.debug('initialization', 'Initializing community audio analyzer');
 
       // Initialize theme generator
       await this.themeGenerator.initialize();
 
       this.isInitialized = true;
-      logger.debug('initialization', 'Community audio analyzer initialized');
+      void logger.debug('initialization', 'Community audio analyzer initialized');
     } catch (error) {
       logger.error('initialization', 'Failed to initialize community audio analyzer', { error });
       throw error;
@@ -94,7 +94,7 @@ export class CommunityAudioAnalyzer {
       );
 
       // Update community tracking
-      this.updateCommunityTracking(communities);
+      void this.updateCommunityTracking(communities);
 
       logger.debug('detection', 'Communities detected', {
         communityCount: communities.length,
@@ -391,7 +391,7 @@ export class CommunityAudioAnalyzer {
    * Update settings
    */
   public updateSettings(newSettings: CommunityDetectionSettings): void {
-    logger.debug('settings', 'Updating community detection settings');
+    void logger.debug('settings', 'Updating community detection settings');
     this.settings = { ...newSettings };
 
     // Update theme generator settings if needed
@@ -421,7 +421,7 @@ export class CommunityAudioAnalyzer {
    * Dispose of resources
    */
   public dispose(): void {
-    logger.debug('shutdown', 'Disposing community audio analyzer');
+    void logger.debug('shutdown', 'Disposing community audio analyzer');
 
     this.detectedCommunities.clear();
     this.communityThemes.clear();

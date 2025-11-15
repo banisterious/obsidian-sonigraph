@@ -139,11 +139,11 @@ export class WhaleAudioManager {
             this.cacheDir = `${vault.configDir}/plugins/sonigraph/cache/whale-samples`;
         }
         
-        this.initializeSeedCollection();
+        void this.initializeSeedCollection();
         
         // Initialize cache directory if vault is available
         if (this.vault) {
-            this.initializeCacheDirectory();
+            void this.initializeCacheDirectory();
         }
 
         // Note: Automatic downloads disabled to reduce console errors on startup
@@ -159,7 +159,7 @@ export class WhaleAudioManager {
             this.sampleUrls.set(species as WhaleSpecies, urls);
         });
         
-        logger.info('init', 'Initialized whale audio manager with seed collection');
+        void logger.info('init', 'Initialized whale audio manager with seed collection');
     }
 
     /**
@@ -529,20 +529,20 @@ export class WhaleAudioManager {
      */
     async manuallyDownloadSamples(): Promise<void> {
         if (!this.initializationPromise) {
-            logger.info('manual-download', 'Starting manual whale sample download');
+            void logger.info('manual-download', 'Starting manual whale sample download');
 
             // Add timeout to prevent hanging
             const downloadPromise = this.downloadAndCacheSamples();
             const timeoutPromise = new Promise<void>((resolve) => {
                 setTimeout(() => {
-                    logger.warn('manual-download', 'Download timeout after 60 seconds');
+                    void logger.warn('manual-download', 'Download timeout after 60 seconds');
                     resolve();
                 }, 60000); // 60 second timeout
             });
 
             this.initializationPromise = Promise.race([downloadPromise, timeoutPromise]);
         } else {
-            logger.info('manual-download', 'Download already in progress or completed');
+            void logger.info('manual-download', 'Download already in progress or completed');
         }
         return this.initializationPromise;
     }
@@ -591,7 +591,7 @@ export class WhaleAudioManager {
 
             // Download samples for this species
             const speciesPromise = this.downloadSpeciesSamples(species, directUrls);
-            downloadPromises.push(speciesPromise);
+            void downloadPromises.push(speciesPromise);
         }
 
         try {
@@ -645,7 +645,7 @@ export class WhaleAudioManager {
                     
                     const cachedBuffer = await this.loadCachedSample(url);
                     if (cachedBuffer) {
-                        buffers.push(cachedBuffer);
+                        void buffers.push(cachedBuffer);
                         logger.debug('cache-download', 'Successfully loaded from disk cache', {
                             species,
                             bufferLength: cachedBuffer.length,
@@ -658,7 +658,7 @@ export class WhaleAudioManager {
                 // Download if not cached
                 const audioBuffer = await this.downloadAndDecodeAudio(url, species);
                 if (audioBuffer) {
-                    buffers.push(audioBuffer);
+                    void buffers.push(audioBuffer);
                     
                     logger.debug('cache-download', 'Successfully downloaded and cached sample', {
                         species,
@@ -1128,7 +1128,7 @@ export class WhaleAudioManager {
 
         // Check discovery frequency limits
         if (!manual && !this.shouldRunDiscovery()) {
-            logger.info('discovery', 'Skipping discovery due to frequency limits');
+            void logger.info('discovery', 'Skipping discovery due to frequency limits');
             return {
                 samples: [],
                 validated: [],
@@ -1244,8 +1244,8 @@ export class WhaleAudioManager {
      */
     resetToSeedCollection(): void {
         this.sampleUrls.clear();
-        this.initializeSeedCollection();
-        logger.info('samples', 'Reset to seed collection');
+        void this.initializeSeedCollection();
+        void logger.info('samples', 'Reset to seed collection');
     }
 
     /**
@@ -1271,7 +1271,7 @@ export class WhaleAudioManager {
             this.sampleUrls.set(species as WhaleSpecies, urls);
         });
         
-        logger.info('settings', 'Imported sample URLs from settings');
+        void logger.info('settings', 'Imported sample URLs from settings');
     }
 
     /**

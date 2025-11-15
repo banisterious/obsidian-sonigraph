@@ -74,11 +74,11 @@ export class AudioExporter {
 
         try {
             // Stage 1: Validation
-            this.updateProgress('validating', 0, 'Validating export configuration');
+            void this.updateProgress('validating', 0, 'Validating export configuration');
             await this.validate(config);
 
             // Stage 2: Rendering
-            this.updateProgress('rendering', 10, 'Rendering audio');
+            void this.updateProgress('rendering', 10, 'Rendering audio');
             const audioBuffer = await this.render(config);
 
             if (this.isCancelled) {
@@ -100,7 +100,7 @@ export class AudioExporter {
             }
 
             // Stage 4: Writing
-            this.updateProgress('writing', 90, 'Writing file');
+            void this.updateProgress('writing', 90, 'Writing file');
             const filePath = await this.writeFile(encodeResult.data, config);
 
             if (this.isCancelled) {
@@ -114,7 +114,7 @@ export class AudioExporter {
                 notePath = await this.createExportNote(config, filePath);
             }
 
-            this.updateProgress('complete', 100, 'Export complete');
+            void this.updateProgress('complete', 100, 'Export complete');
 
             return {
                 success: true,
@@ -125,7 +125,7 @@ export class AudioExporter {
             };
 
         } catch (error) {
-            logger.error('export', 'Export failed:', error);
+            void logger.error('export', 'Export failed:', error);
             return {
                 success: false,
                 error: this.createError('unknown', error.message, error)
@@ -144,7 +144,7 @@ export class AudioExporter {
             this.currentRenderer.cancel();
         }
 
-        logger.info('export', 'Export cancelled by user');
+        void logger.info('export', 'Export cancelled by user');
     }
 
     /**
@@ -154,7 +154,7 @@ export class AudioExporter {
         // Check if audio engine is initialized
         const masterVolume = this.audioEngine.getMasterVolume();
         if (!masterVolume) {
-            logger.info('export', 'Audio engine not initialized, initializing now');
+            void logger.info('export', 'Audio engine not initialized, initializing now');
             try {
                 await this.audioEngine.initialize();
             } catch (error) {
@@ -215,7 +215,7 @@ export class AudioExporter {
             throw new Error(`File already exists: ${fullPath}`);
         }
 
-        logger.info('export', 'Export configuration validated');
+        void logger.info('export', 'Export configuration validated');
     }
 
     /**
@@ -252,7 +252,7 @@ export class AudioExporter {
         renderer.setProgressCallback((percentage: number) => {
             // Map rendering progress to 10-60% of total progress
             const mappedPercentage = 10 + (percentage * 0.5);
-            this.updateProgress('rendering', mappedPercentage, 'Rendering audio');
+            void this.updateProgress('rendering', mappedPercentage, 'Rendering audio');
         });
 
         return renderer.render(config);
@@ -266,7 +266,7 @@ export class AudioExporter {
             throw new Error('Note-centric mapping not set for static graph export');
         }
 
-        logger.info('offline-renderer', 'Starting note-centric static graph render');
+        void logger.info('offline-renderer', 'Starting note-centric static graph render');
 
         const player = new NoteCentricPlayer(this.audioEngine, this.pluginSettings);
 
@@ -287,10 +287,10 @@ export class AudioExporter {
                 sampleRate
             );
 
-            logger.info('offline-renderer', 'Note-centric render complete');
+            void logger.info('offline-renderer', 'Note-centric render complete');
             return audioBuffer;
         } catch (error) {
-            logger.error('offline-renderer', 'Note-centric render failed:', error);
+            void logger.error('offline-renderer', 'Note-centric render failed:', error);
             throw error;
         }
     }
@@ -371,7 +371,7 @@ export class AudioExporter {
 
         // Connect master volume to recording destination
         const volumeNode = masterVolume.output;
-        volumeNode.connect(destination);
+        void volumeNode.connect(destination);
 
         // Create MediaRecorder
         const mediaRecorder = new MediaRecorder(destination.stream, {
@@ -381,7 +381,7 @@ export class AudioExporter {
         const chunks: Blob[] = [];
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
-                chunks.push(event.data);
+                void chunks.push(event.data);
             }
         };
 
@@ -399,8 +399,8 @@ export class AudioExporter {
         });
 
         // Start recording
-        mediaRecorder.start(100);
-        logger.info('offline-renderer', 'Recording started');
+        void mediaRecorder.start(100);
+        void logger.info('offline-renderer', 'Recording started');
 
         // Progress tracking
         const progressStartTime = Date.now();
@@ -414,13 +414,13 @@ export class AudioExporter {
             const validDuration = Math.max(1, duration || 10);
             const progress = Math.min(95, (elapsed / validDuration) * 50);
             if (!isNaN(progress)) {
-                this.updateProgress('rendering', 10 + progress, 'Recording audio');
+                void this.updateProgress('rendering', 10 + progress, 'Recording audio');
             }
         }, 100);
 
         // Start playback
         await player.play(mapping);
-        logger.info('offline-renderer', 'Note-centric playback started');
+        void logger.info('offline-renderer', 'Note-centric playback started');
 
         // Wait for playback to complete or cancellation
         await new Promise<void>((resolve, reject) => {
@@ -428,8 +428,8 @@ export class AudioExporter {
                 // Check for cancellation
                 if (this.isCancelled) {
                     clearInterval(checkInterval);
-                    player.stop();
-                    logger.info('offline-renderer', 'Render cancelled by user');
+                    void player.stop();
+                    void logger.info('offline-renderer', 'Render cancelled by user');
                     reject(new Error('Export cancelled by user'));
                     return;
                 }
@@ -437,7 +437,7 @@ export class AudioExporter {
                 // Check if playback finished
                 if (!player.getIsPlaying()) {
                     clearInterval(checkInterval);
-                    logger.info('offline-renderer', 'Note-centric playback complete');
+                    void logger.info('offline-renderer', 'Note-centric playback complete');
                     resolve();
                 }
             }, 100);
@@ -446,7 +446,7 @@ export class AudioExporter {
             setTimeout(() => {
                 if (!this.isCancelled) {
                     clearInterval(checkInterval);
-                    logger.info('offline-renderer', 'Playback timeout reached');
+                    void logger.info('offline-renderer', 'Playback timeout reached');
                     resolve();
                 }
             }, (duration + 2) * 1000);
@@ -454,23 +454,23 @@ export class AudioExporter {
 
         // Stop recording
         clearInterval(progressInterval);
-        logger.info('offline-renderer', 'Stopping recording...');
-        mediaRecorder.stop();
+        void logger.info('offline-renderer', 'Stopping recording...');
+        void mediaRecorder.stop();
 
         // Wait for recording to finish
         const blob = await recordingPromise;
 
         // Disconnect from destination
-        volumeNode.disconnect(destination);
+        void volumeNode.disconnect(destination);
 
         // Update progress
-        this.updateProgress('rendering', 70, 'Converting audio format');
+        void this.updateProgress('rendering', 70, 'Converting audio format');
 
         // Convert blob to ArrayBuffer
-        logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
+        void logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
         const arrayBuffer = await blob.arrayBuffer();
 
-        this.updateProgress('rendering', 80, 'Decoding audio data');
+        void this.updateProgress('rendering', 80, 'Decoding audio data');
 
         // Decode audio data
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -500,12 +500,12 @@ export class AudioExporter {
         // Create buffer source
         const source = offlineContext.createBufferSource();
         source.buffer = sourceBuffer;
-        source.connect(offlineContext.destination);
-        source.start(0);
+        void source.connect(offlineContext.destination);
+        void source.start(0);
 
         // Render
         const resampled = await offlineContext.startRendering();
-        logger.info('offline-renderer', 'Resampling complete');
+        void logger.info('offline-renderer', 'Resampling complete');
 
         return resampled;
     }
@@ -526,7 +526,7 @@ export class AudioExporter {
                     (percentage) => {
                         // Map encoding progress to 60-90% of total progress
                         const mappedPercentage = 60 + (percentage * 0.3);
-                        this.updateProgress('encoding', mappedPercentage, 'Encoding to compressed audio');
+                        void this.updateProgress('encoding', mappedPercentage, 'Encoding to compressed audio');
                     }
                 );
                 return { data: result.data, extension: result.extension };
@@ -622,7 +622,7 @@ export class AudioExporter {
                     const stats = fs.statSync(filePath);
                     result.fileSize = stats.size;
                 } catch (error) {
-                    logger.warn('export', 'Could not get file size from system location', error);
+                    void logger.warn('export', 'Could not get file size from system location', error);
                 }
             } else {
                 // Vault location - use Obsidian API
@@ -638,7 +638,7 @@ export class AudioExporter {
             return notePath;
 
         } catch (error) {
-            logger.error('export', 'Failed to create export note:', error);
+            void logger.error('export', 'Failed to create export note:', error);
             // Don't fail the export if note creation fails
             return '';
         }

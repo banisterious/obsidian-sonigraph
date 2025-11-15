@@ -61,7 +61,7 @@ export class ContinuousLayerManager {
     private settings: SonigraphSettings,
     config?: Partial<ContinuousLayerConfig>
   ) {
-    logger.debug('initialization', 'Creating ContinuousLayerManager');
+    void logger.debug('initialization', 'Creating ContinuousLayerManager');
 
     this.config = {
       enabled: false, // Disabled by default for gradual rollout
@@ -127,12 +127,12 @@ export class ContinuousLayerManager {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      logger.warn('initialization', 'ContinuousLayerManager already initialized');
+      void logger.warn('initialization', 'ContinuousLayerManager already initialized');
       return;
     }
     
     try {
-      logger.info('initialization', 'Initializing continuous layer system');
+      void logger.info('initialization', 'Initializing continuous layer system');
       
       // Ensure Tone.js is started
       await start();
@@ -162,11 +162,11 @@ export class ContinuousLayerManager {
       }
       
       this.isInitialized = true;
-      this.startPerformanceMonitoring();
+      void this.startPerformanceMonitoring();
       
-      logger.info('initialization', 'Continuous layer system initialized successfully');
+      void logger.info('initialization', 'Continuous layer system initialized successfully');
     } catch (error) {
-      logger.error('initialization', 'Failed to initialize continuous layer system', error);
+      void logger.error('initialization', 'Failed to initialize continuous layer system', error);
       throw new ContinuousLayerError('Initialization failed', 'ambient');
     }
   }
@@ -189,12 +189,12 @@ export class ContinuousLayerManager {
     // Validate that we have enabled samples before starting
     const enabledSamples = this.settings.freesoundSamples?.filter(s => s.enabled !== false) || [];
     if (enabledSamples.length === 0) {
-      logger.warn('playback', 'No enabled Freesound samples available - continuous layers require at least one enabled sample to function properly. Please enable samples in the Sample Browser.');
+      void logger.warn('playback', 'No enabled Freesound samples available - continuous layers require at least one enabled sample to function properly. Please enable samples in the Sample Browser.');
       return;
     }
 
     if (this.isPlaying) {
-      logger.warn('playback', 'Continuous layers already playing');
+      void logger.warn('playback', 'Continuous layers already playing');
       return;
     }
 
@@ -214,16 +214,16 @@ export class ContinuousLayerManager {
       }
       
       // Start modulation timer
-      this.startModulation();
+      void this.startModulation();
       
       this.isPlaying = true;
       this.currentState.isPlaying = true;
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
-      logger.info('playback', 'Continuous layer playback started successfully');
+      void logger.info('playback', 'Continuous layer playback started successfully');
     } catch (error) {
-      logger.error('playback', 'Failed to start continuous layer playback', error);
+      void logger.error('playback', 'Failed to start continuous layer playback', error);
       throw new ContinuousLayerError('Playback start failed', 'ambient', this.config.genre);
     }
   }
@@ -233,15 +233,15 @@ export class ContinuousLayerManager {
    */
   async stop(): Promise<void> {
     if (!this.isPlaying) {
-      logger.debug('playback', 'Continuous layers not playing, skipping stop');
+      void logger.debug('playback', 'Continuous layers not playing, skipping stop');
       return;
     }
     
     try {
-      logger.info('playback', 'Stopping continuous layer playback');
+      void logger.info('playback', 'Stopping continuous layer playback');
       
       // Stop modulation
-      this.stopModulation();
+      void this.stopModulation();
       
       // Stop sub-layers
       await this.rhythmicLayer.stop();
@@ -254,11 +254,11 @@ export class ContinuousLayerManager {
       this.currentState.isPlaying = false;
       this.currentState.activeVoices = 0;
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
-      logger.info('playback', 'Continuous layer playback stopped');
+      void logger.info('playback', 'Continuous layer playback stopped');
     } catch (error) {
-      logger.error('playback', 'Error stopping continuous layer playback', error);
+      void logger.error('playback', 'Error stopping continuous layer playback', error);
     }
   }
   
@@ -317,7 +317,7 @@ export class ContinuousLayerManager {
       );
       
     } catch (error) {
-      logger.error('modulation', 'Error updating vault state parameters', error);
+      void logger.error('modulation', 'Error updating vault state parameters', error);
     }
   }
   
@@ -358,7 +358,7 @@ export class ContinuousLayerManager {
         await this.start();
       }
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
       logger.info('configuration', `Genre changed to ${genre} successfully`);
     } catch (error) {
@@ -397,16 +397,16 @@ export class ContinuousLayerManager {
     if (newConfig.enabled !== undefined && newConfig.enabled !== oldConfig.enabled) {
       if (newConfig.enabled && !this.isPlaying) {
         this.start().catch(error => {
-          logger.error('configuration', 'Failed to start after enabling', error);
+          void logger.error('configuration', 'Failed to start after enabling', error);
         });
       } else if (!newConfig.enabled && this.isPlaying) {
         this.stop().catch(error => {
-          logger.error('configuration', 'Failed to stop after disabling', error);
+          void logger.error('configuration', 'Failed to stop after disabling', error);
         });
       }
     }
     
-    this.notifyStateChange();
+    void this.notifyStateChange();
   }
   
   /**
@@ -441,11 +441,11 @@ export class ContinuousLayerManager {
    * Cleanup resources
    */
   async dispose(): Promise<void> {
-    logger.info('cleanup', 'Disposing ContinuousLayerManager');
+    void logger.info('cleanup', 'Disposing ContinuousLayerManager');
     
     try {
       await this.stop();
-      this.stopPerformanceMonitoring();
+      void this.stopPerformanceMonitoring();
       
       // Dispose audio components
       this.masterVolume.dispose();
@@ -462,9 +462,9 @@ export class ContinuousLayerManager {
       
       this.isInitialized = false;
       
-      logger.info('cleanup', 'ContinuousLayerManager disposed');
+      void logger.info('cleanup', 'ContinuousLayerManager disposed');
     } catch (error) {
-      logger.error('cleanup', 'Error during cleanup', error);
+      void logger.error('cleanup', 'Error during cleanup', error);
     }
   }
   
@@ -477,7 +477,7 @@ export class ContinuousLayerManager {
     
     this.modulationTimer = window.setInterval(() => {
       if (this.isPlaying && this.lastVaultState) {
-        this.updateVaultState(this.lastVaultState);
+        void this.updateVaultState(this.lastVaultState);
       }
     }, 100); // Update every 100ms
   }
@@ -521,7 +521,7 @@ export class ContinuousLayerManager {
         this.currentState.memoryUsage = metrics.memoryUsage;
         this.currentState.activeVoices = metrics.activeVoices;
         
-        this.onPerformanceUpdate(metrics);
+        void this.onPerformanceUpdate(metrics);
       }
     }, this.PERFORMANCE_CHECK_INTERVAL);
   }
@@ -553,7 +553,7 @@ export class ContinuousLayerManager {
   
   private notifyStateChange(): void {
     if (this.onStateChange) {
-      this.onStateChange(this.currentState);
+      void this.onStateChange(this.currentState);
     }
   }
 }

@@ -39,8 +39,8 @@ export class VoiceManager {
     
     constructor(adaptiveQuality: boolean = true) {
         this.adaptiveQuality = adaptiveQuality;
-        this.initializeDefaultConfigs();
-        this.preAllocateCommonInstruments();
+        void this.initializeDefaultConfigs();
+        void this.preAllocateCommonInstruments();
     }
 
     /**
@@ -68,7 +68,7 @@ export class VoiceManager {
         const commonInstruments = ['piano', 'strings', 'timpani', 'harp', 'tuba'];
         
         for (const instrument of commonInstruments) {
-            this.createVoicePoolOptimized(instrument);
+            void this.createVoicePoolOptimized(instrument);
             this.preAllocatedInstruments.add(instrument);
         }
     }
@@ -77,7 +77,7 @@ export class VoiceManager {
      * Create voice pool for an instrument
      */
     createVoicePool(instrumentName: string, poolSize?: number): void {
-        this.createVoicePoolOptimized(instrumentName, poolSize);
+        void this.createVoicePoolOptimized(instrumentName, poolSize);
     }
 
     /**
@@ -99,7 +99,7 @@ export class VoiceManager {
                 instrumentName,
                 voiceIndex: i
             };
-            availableIndices.add(i);
+            void availableIndices.add(i);
         }
         
         this.voicePool.set(instrumentName, pool);
@@ -177,7 +177,7 @@ export class VoiceManager {
     allocateVoice(instrumentName: string, nodeId: string): VoiceAssignment | null {
         let pool = this.voicePool.get(instrumentName);
         if (!pool) {
-            this.createVoicePoolOptimized(instrumentName);
+            void this.createVoicePoolOptimized(instrumentName);
             pool = this.voicePool.get(instrumentName);
         }
 
@@ -198,7 +198,7 @@ export class VoiceManager {
         voice.lastUsed = Date.now();
         
         // Remove from available indices (O(1) - Set.delete)
-        availableIndices.delete(voiceIndex);
+        void availableIndices.delete(voiceIndex);
         
         const assignment: VoiceAssignment = {
             nodeId,
@@ -284,11 +284,11 @@ export class VoiceManager {
                 voice.lastUsed = Date.now();
                 
                 // Add voice index back to available indices (Set prevents duplicates)
-                availableIndices.add(assignment.voiceIndex);
+                void availableIndices.add(assignment.voiceIndex);
                 
                 // Prevent memory leak: cleanup if availableIndices grows too large
                 if (availableIndices.size > this.maxAvailableIndicesSize) {
-                    this.compactAvailableIndices(assignment.instrument);
+                    void this.compactAvailableIndices(assignment.instrument);
                 }
             }
         }
@@ -311,10 +311,10 @@ export class VoiceManager {
                 // Update available indices
                 const availableIndices = this.availableVoiceIndices.get(instrumentName);
                 if (availableIndices) {
-                    availableIndices.clear();
+                    void availableIndices.clear();
                     for (let i = 0; i < maxVoices; i++) {
                         if (pool[i] && pool[i].available) {
-                            availableIndices.add(i);
+                            void availableIndices.add(i);
                         }
                     }
                 }
@@ -399,7 +399,7 @@ export class VoiceManager {
             }
             
             // Resize pool if needed
-            this.resizeVoicePool(instrumentName, maxVoices);
+            void this.resizeVoicePool(instrumentName, maxVoices);
         }
     }
 
@@ -423,16 +423,16 @@ export class VoiceManager {
                     voiceIndex: i
                 });
                 // Add new indices to available set (prevents duplicates)
-                availableIndices.add(i);
+                void availableIndices.add(i);
             }
         } else if (newSize < pool.length) {
             // Shrink pool - remove excess voices and their indices
             for (let i = newSize; i < pool.length; i++) {
-                availableIndices.delete(i);
+                void availableIndices.delete(i);
             }
             
             // Shrink the pool
-            pool.splice(newSize);
+            void pool.splice(newSize);
             
             // Update next available index if it's out of bounds
             const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
@@ -482,7 +482,7 @@ export class VoiceManager {
                 
                 // Rebuild available indices (Set prevents duplicates)
                 if (availableIndices) {
-                    availableIndices.add(i);
+                    void availableIndices.add(i);
                 }
             }
             
@@ -505,7 +505,7 @@ export class VoiceManager {
         
         for (let i = 0; i < pool.length; i++) {
             if (pool[i].available) {
-                validIndices.add(i);
+                void validIndices.add(i);
             }
         }
         
@@ -545,7 +545,7 @@ export class VoiceManager {
      */
     performPeriodicCleanup(): void {
         for (const instrumentName of this.voicePool.keys()) {
-            this.compactAvailableIndices(instrumentName);
+            void this.compactAvailableIndices(instrumentName);
         }
         
         // Clean up old voice assignments
@@ -557,7 +557,7 @@ export class VoiceManager {
             if (pool) {
                 const voice = pool[assignment.voiceIndex];
                 if (voice && voice.lastUsed && (now - voice.lastUsed) > cleanupThreshold) {
-                    this.releaseVoice(nodeId);
+                    void this.releaseVoice(nodeId);
                 }
             }
         }

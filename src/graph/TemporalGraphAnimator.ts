@@ -94,7 +94,7 @@ export class TemporalGraphAnimator {
     this.links = links;
 
     // Setup visibility change listener to handle tab/window focus loss
-    this.setupVisibilityHandling();
+    void this.setupVisibilityHandling();
     
     // Set default configuration
     const now = new Date();
@@ -121,12 +121,12 @@ export class TemporalGraphAnimator {
     };
     
     // Calculate date range based on granularity settings
-    this.calculateDateRangeFromGranularity();
+    void this.calculateDateRangeFromGranularity();
     
-    this.buildTimeline();
+    void this.buildTimeline();
     
     // Performance optimization: Adjust animation frame rate based on graph size
-    this.setAdaptiveFrameRate(this.nodes.length, this.timeline.length);
+    void this.setAdaptiveFrameRate(this.nodes.length, this.timeline.length);
     
     logger.debug('animator', 'TemporalGraphAnimator created', {
       nodeCount: this.nodes.length,
@@ -146,26 +146,26 @@ export class TemporalGraphAnimator {
       if (document.hidden) {
         // Tab became hidden
         if (this.isPlaying && !this.isPaused) {
-          logger.debug('visibility', 'Tab hidden while animation playing - switching to background mode');
+          void logger.debug('visibility', 'Tab hidden while animation playing - switching to background mode');
           // Cancel the current animation frame and restart with setTimeout
           if (this.animationId !== null) {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
           }
           // Restart animation loop with setTimeout for background operation
-          this.scheduleNextFrame();
+          void this.scheduleNextFrame();
         }
       } else {
         // Tab became visible again
         if (this.isPlaying && !this.isPaused) {
-          logger.debug('visibility', 'Tab visible again - switching to foreground mode');
+          void logger.debug('visibility', 'Tab visible again - switching to foreground mode');
           // Already running with setTimeout, will naturally switch to requestAnimationFrame
           // on next iteration since document.hidden will be false
         }
       }
     };
 
-    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+    void document.addEventListener('visibilitychange', this.visibilityChangeHandler);
   }
 
   /**
@@ -290,7 +290,7 @@ export class TemporalGraphAnimator {
     const timeRange = endTime - startTime;
     
     if (timeRange <= 0) {
-      logger.warn('timeline', 'Invalid date range for timeline');
+      void logger.warn('timeline', 'Invalid date range for timeline');
       return;
     }
     
@@ -463,7 +463,7 @@ export class TemporalGraphAnimator {
       const event = events[i];
       
       if (result.length === 0) {
-        result.push(event);
+        void result.push(event);
       } else {
         const lastEvent = result[result.length - 1];
         const timeDiff = event.timestamp - lastEvent.timestamp;
@@ -471,9 +471,9 @@ export class TemporalGraphAnimator {
         if (timeDiff < minSpacing) {
           const adjustedEvent = { ...event };
           adjustedEvent.timestamp = lastEvent.timestamp + minSpacing;
-          result.push(adjustedEvent);
+          void result.push(adjustedEvent);
         } else {
-          result.push(event);
+          void result.push(event);
         }
       }
     }
@@ -533,7 +533,7 @@ export class TemporalGraphAnimator {
             // Subsequent events are spaced out
             spacedEvent.timestamp = currentTime + (spacing * index);
           }
-          spacedEvents.push(spacedEvent);
+          void spacedEvents.push(spacedEvent);
         });
         
         logger.debug('timeline', 'Applied spacing to simultaneous events', {
@@ -556,7 +556,7 @@ export class TemporalGraphAnimator {
       
       if (finalEvents.length === 0) {
         // First event, no adjustment needed
-        finalEvents.push(event);
+        void finalEvents.push(event);
       } else {
         const lastEvent = finalEvents[finalEvents.length - 1];
         const timeDiff = event.timestamp - lastEvent.timestamp;
@@ -565,7 +565,7 @@ export class TemporalGraphAnimator {
           // Adjust this event to maintain minimum spacing
           const adjustedEvent = { ...event };
           adjustedEvent.timestamp = lastEvent.timestamp + minSpacing;
-          finalEvents.push(adjustedEvent);
+          void finalEvents.push(adjustedEvent);
           
           logger.debug('timeline', 'Applied minimum spacing adjustment', {
             originalTime: event.timestamp.toFixed(3),
@@ -574,7 +574,7 @@ export class TemporalGraphAnimator {
           });
         } else {
           // Sufficient spacing, no adjustment needed
-          finalEvents.push(event);
+          void finalEvents.push(event);
         }
       }
     }
@@ -600,7 +600,7 @@ export class TemporalGraphAnimator {
    */
   play(): void {
     if (this.isPlaying && !this.isPaused) {
-      logger.debug('playback', 'Animation already playing');
+      void logger.debug('playback', 'Animation already playing');
       return;
     }
     
@@ -668,7 +668,7 @@ export class TemporalGraphAnimator {
     this.isPaused = false;
     this.animationStartTime = performance.now() - (this.currentTime * 1000 / this.config.speed);
     
-    this.animate();
+    void this.animate();
   }
 
   /**
@@ -676,7 +676,7 @@ export class TemporalGraphAnimator {
    */
   pause(): void {
     if (!this.isPlaying || this.isPaused) {
-      logger.debug('playback', 'Animation not playing or already paused');
+      void logger.debug('playback', 'Animation not playing or already paused');
       return;
     }
 
@@ -722,7 +722,7 @@ export class TemporalGraphAnimator {
     }
     
     // Reset to initial state (no nodes visible)
-    this.updateVisibility();
+    void this.updateVisibility();
   }
 
   /**
@@ -731,7 +731,7 @@ export class TemporalGraphAnimator {
   seekTo(time: number): void {
     const previousTime = this.currentTime;
     this.currentTime = Math.max(0, Math.min(time, this.config.duration));
-    this.updateVisibility();
+    void this.updateVisibility();
     
     if (this.isPlaying && !this.isPaused) {
       // Restart animation from new position
@@ -813,7 +813,7 @@ export class TemporalGraphAnimator {
     
     // Performance optimization: Frame rate limiting
     if (now - this.lastAnimationTime < this.frameInterval) {
-      this.scheduleNextFrame();
+      void this.scheduleNextFrame();
       return;
     }
     this.lastAnimationTime = now;
@@ -823,12 +823,12 @@ export class TemporalGraphAnimator {
     // Check if animation is complete
     if (this.currentTime >= this.config.duration) {
       this.currentTime = this.config.duration;
-      this.updateVisibility();
+      void this.updateVisibility();
       
       // Check if looping is enabled
       if (this.config.loop) {
         // Reset for loop
-        logger.debug('playback', 'Animation completed, looping...');
+        void logger.debug('playback', 'Animation completed, looping...');
         this.currentTime = 0;
         this.animationStartTime = performance.now();
         this.visibleNodes.clear();
@@ -837,7 +837,7 @@ export class TemporalGraphAnimator {
         this.onVisibilityChange?.(this.visibleNodes);
 
         // Continue the loop
-        this.scheduleNextFrame();
+        void this.scheduleNextFrame();
         return;
       } else {
         // Animation complete, no loop
@@ -856,10 +856,10 @@ export class TemporalGraphAnimator {
       }
     }
     
-    this.updateVisibility();
+    void this.updateVisibility();
 
     // Continue animation
-    this.scheduleNextFrame();
+    void this.scheduleNextFrame();
   }
 
   /**
@@ -873,13 +873,13 @@ export class TemporalGraphAnimator {
     this.timeline.forEach(event => {
       if (event.timestamp <= this.currentTime && event.type === 'appear') {
         const wasVisible = this.visibleNodes.has(event.nodeId);
-        visibleNodeIds.add(event.nodeId);
+        void visibleNodeIds.add(event.nodeId);
         
         // If node just became visible, trigger appearance callback
         if (!wasVisible) {
           const node = this.nodes.find(n => n.id === event.nodeId);
           if (node) {
-            newlyAppearedNodes.push(node);
+            void newlyAppearedNodes.push(node);
           }
         }
       }
@@ -934,12 +934,12 @@ export class TemporalGraphAnimator {
     // Phase 3: Update continuous layers with vault state and activity metrics
     if (this.onVaultStateChange) {
       const vaultState = this.generateVaultState();
-      this.onVaultStateChange(vaultState);
+      void this.onVaultStateChange(vaultState);
     }
     
     if (this.onActivityChange) {
       const activityMetrics = this.generateActivityMetrics();
-      this.onActivityChange(activityMetrics);
+      void this.onActivityChange(activityMetrics);
     }
   }
 
@@ -1032,7 +1032,7 @@ export class TemporalGraphAnimator {
     const wasPlaying = this.isPlaying && !this.isPaused;
     
     if (wasPlaying) {
-      this.pause();
+      void this.pause();
     }
     
     // Check if granularity or time window settings changed
@@ -1052,13 +1052,13 @@ export class TemporalGraphAnimator {
     
     // Recalculate date range if granularity or time window changed
     if (granularityChanged && (newConfig.timeWindow || newConfig.granularity || newConfig.customRange)) {
-      this.calculateDateRangeFromGranularity();
+      void this.calculateDateRangeFromGranularity();
     }
     
-    this.buildTimeline();
+    void this.buildTimeline();
     
     if (wasPlaying) {
-      this.play();
+      void this.play();
     }
     
     logger.debug('config', 'Animation config updated', {
@@ -1098,7 +1098,7 @@ export class TemporalGraphAnimator {
    */
   setVaultStateCallback(callback: (vaultState: VaultState) => void): void {
     this.onVaultStateChange = callback;
-    logger.debug('callback', 'Vault state callback registered');
+    void logger.debug('callback', 'Vault state callback registered');
   }
 
   /**
@@ -1106,7 +1106,7 @@ export class TemporalGraphAnimator {
    */
   setActivityCallback(callback: (metrics: ActivityMetrics) => void): void {
     this.onActivityChange = callback;
-    logger.debug('callback', 'Activity callback registered');
+    void logger.debug('callback', 'Activity callback registered');
   }
 
   /**
@@ -1170,11 +1170,11 @@ export class TemporalGraphAnimator {
    * Cleanup resources
    */
   destroy(): void {
-    this.stop();
+    void this.stop();
 
     // Remove visibility change listener
     if (this.visibilityChangeHandler) {
-      document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+      void document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
       this.visibilityChangeHandler = undefined;
     }
 
@@ -1192,6 +1192,6 @@ export class TemporalGraphAnimator {
     this.onVaultStateChange = undefined;
     this.onActivityChange = undefined;
 
-    logger.debug('cleanup', 'TemporalGraphAnimator destroyed and memory released');
+    void logger.debug('cleanup', 'TemporalGraphAnimator destroyed and memory released');
   }
 } 

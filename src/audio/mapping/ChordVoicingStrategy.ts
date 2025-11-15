@@ -473,7 +473,7 @@ export class ChordVoicingStrategy {
 
 		for (const extension of extensions) {
 			if (intervals.length >= targetVoices) break;
-			intervals.push(extension);
+			void intervals.push(extension);
 		}
 
 		return intervals;

@@ -87,7 +87,7 @@ export class InstrumentSelector {
         this.selectionCache = new Map();
         this.cacheTimestamps = new Map();
         
-        this.initializeMappingRules();
+        void this.initializeMappingRules();
         
         logger.info('instrument-selector-init', 'InstrumentSelector initialized', {
             availableInstruments: this.availableInstruments.size,
@@ -171,7 +171,7 @@ export class InstrumentSelector {
 
         // If no rules matched, use default selection
         if (!bestMatch) {
-            reasoning.push('No specific rules matched, using default selection');
+            void reasoning.push('No specific rules matched, using default selection');
             bestMatch = {
                 rule: this.getDefaultRule(criteria),
                 score: 0.5
@@ -672,7 +672,7 @@ export class InstrumentSelector {
             const categoryInstruments = getInstrumentsByCategory(selectedConfig.category);
             Object.keys(categoryInstruments).forEach(name => {
                 if (name !== selectedInstrument && fallbacks.length < 2) {
-                    fallbacks.push(name);
+                    void fallbacks.push(name);
                 }
             });
         }
@@ -681,7 +681,7 @@ export class InstrumentSelector {
         const generalFallbacks = ['piano', 'electricPiano', 'violin', 'flute'];
         generalFallbacks.forEach(name => {
             if (name !== selectedInstrument && !fallbacks.includes(name) && fallbacks.length < 3) {
-                fallbacks.push(name);
+                void fallbacks.push(name);
             }
         });
 
@@ -722,7 +722,7 @@ export class InstrumentSelector {
         this.selectionCache.clear();
         this.cacheTimestamps.clear();
         
-        logger.info('instrument-selector-config-update', 'Configuration updated, cache cleared');
+        void logger.info('instrument-selector-config-update', 'Configuration updated, cache cleared');
     }
 
     /**
@@ -743,7 +743,7 @@ export class InstrumentSelector {
         this.selectionCache.clear();
         this.cacheTimestamps.clear();
         
-        logger.info('instrument-selector-cache-clear', 'Selection cache cleared');
+        void logger.info('instrument-selector-cache-clear', 'Selection cache cleared');
     }
 
     /**

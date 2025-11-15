@@ -75,13 +75,13 @@ export class GraphDataExtractor {
     hubCentralityWeights?: CentralityWeights;
     hubThreshold?: number;
   }) {
-    logger.debug('extraction', 'GraphDataExtractor constructor started');
+    void logger.debug('extraction', 'GraphDataExtractor constructor started');
     
     this.vault = vault;
-    logger.debug('extraction', 'Vault assigned');
+    void logger.debug('extraction', 'Vault assigned');
     
     this.metadataCache = metadataCache;
-    logger.debug('extraction', 'MetadataCache assigned');
+    void logger.debug('extraction', 'MetadataCache assigned');
     
     this.excludeFolders = options?.excludeFolders || [];
     this.excludeFiles = options?.excludeFiles || [];
@@ -97,7 +97,7 @@ export class GraphDataExtractor {
         options?.hubCentralityWeights,
         options?.hubThreshold
       );
-      logger.debug('extraction', 'Hub centrality analyzer initialized');
+      void logger.debug('extraction', 'Hub centrality analyzer initialized');
     }
 
     logger.debug('extraction', 'Exclusions and filters set:', {
@@ -107,7 +107,7 @@ export class GraphDataExtractor {
       hubCentralityEnabled: this.enableHubCentrality
     });
 
-    logger.debug('extraction', 'GraphDataExtractor constructor completed');
+    void logger.debug('extraction', 'GraphDataExtractor constructor completed');
   }
 
   /**
@@ -118,37 +118,37 @@ export class GraphDataExtractor {
     
     // Return cached data if still valid and not forcing refresh
     if (!forceRefresh && this.cachedData && (now - this.lastCacheTime) < this.CACHE_DURATION) {
-      logger.debug('extraction', 'Returning cached graph data');
+      void logger.debug('extraction', 'Returning cached graph data');
       return this.cachedData;
     }
 
-    logger.info('graph-extraction', 'Starting graph data extraction');
+    void logger.info('graph-extraction', 'Starting graph data extraction');
     const startTime = logger.time('graphExtraction');
 
     try {
-      logger.info('graph-extraction-nodes', 'Starting node extraction');
+      void logger.info('graph-extraction-nodes', 'Starting node extraction');
       const nodes = this.extractNodes();
       logger.info('graph-extraction-nodes', `Node extraction completed: ${nodes.length} nodes`);
       
-      logger.info('graph-extraction-links', 'Starting link extraction');
+      void logger.info('graph-extraction-links', 'Starting link extraction');
       let links: GraphLink[] = [];
       try {
         links = this.extractLinks(nodes);
         logger.info('graph-extraction-links', `Link extraction completed: ${links.length} links`);
       } catch (error) {
-        logger.error('graph-extraction-links', 'Link extraction failed:', error);
+        void logger.error('graph-extraction-links', 'Link extraction failed:', error);
         links = []; // Empty links array as fallback
         logger.info('graph-extraction-links', `Link extraction completed with fallback: ${links.length} links`);
       }
       
       // Always populate node connections for hub highlighting
-      logger.info('graph-extraction-connections', 'Populating node connections for hub highlighting');
-      this.populateNodeConnections(nodes, links);
-      logger.info('graph-extraction-connections', 'Node connections populated');
+      void logger.info('graph-extraction-connections', 'Populating node connections for hub highlighting');
+      void this.populateNodeConnections(nodes, links);
+      void logger.info('graph-extraction-connections', 'Node connections populated');
 
       // Phase 5.2: Calculate hub centrality if enabled
       if (this.enableHubCentrality && this.hubCentralityAnalyzer) {
-        logger.info('graph-extraction-hub-centrality', 'Calculating hub centrality metrics');
+        void logger.info('graph-extraction-hub-centrality', 'Calculating hub centrality metrics');
         const hubMetrics = this.hubCentralityAnalyzer.calculateHubMetrics(nodes, links);
 
         // Populate hubCentrality on each node
@@ -166,12 +166,12 @@ export class GraphDataExtractor {
       // Filter orphans if showOrphans is disabled
       let filteredNodes = nodes;
       if (!this.filterSettings.showOrphans) {
-        logger.info('graph-extraction-orphan-filter', 'Filtering orphan nodes');
+        void logger.info('graph-extraction-orphan-filter', 'Filtering orphan nodes');
         filteredNodes = this.filterOrphans(nodes, links);
         logger.info('graph-extraction-orphan-filter', `Orphan filtering completed: ${filteredNodes.length} nodes remaining (${nodes.length - filteredNodes.length} orphans removed)`);
       }
       
-      logger.info('graph-extraction-time', 'Calculating time range');
+      void logger.info('graph-extraction-time', 'Calculating time range');
       const timeRange = this.calculateTimeRange(filteredNodes);
       logger.info('graph-extraction-time', 'Time range calculated', { 
         start: timeRange.start.toISOString(), 
@@ -196,7 +196,7 @@ export class GraphDataExtractor {
       return this.cachedData;
     } catch (error) {
       startTime();
-      logger.error('extraction', 'Failed to extract graph data', error as Error);
+      void logger.error('extraction', 'Failed to extract graph data', error as Error);
       throw error;
     }
   }
@@ -228,11 +228,11 @@ export class GraphDataExtractor {
       try {
         // Cache metadata lookup result
         const metadata = this.metadataCache.getFileCache(file);
-        metadataCache.set(file.path, metadata);
+        void metadataCache.set(file.path, metadata);
         
         const node = this.createOptimizedNodeFromFile(file, metadata);
         if (node) {
-          nodes.push(node);
+          void nodes.push(node);
           processedCount++;
         }
       } catch (error) {
@@ -421,7 +421,7 @@ export class GraphDataExtractor {
         const linkId = this.generateLinkId(sourcePath, targetPath);
         
         if (!linkSet.has(linkId)) {
-          linkSet.add(linkId);
+          void linkSet.add(linkId);
           links.push({
             source: sourcePath,
             target: targetPath,
@@ -435,12 +435,12 @@ export class GraphDataExtractor {
 
     // Phase 3.9: Add tag-based connections if enabled (optimized approach)
     if (this.filterSettings.showTags) {
-      this.createOptimizedTagBasedLinks(nodes, links, linkSet);
+      void this.createOptimizedTagBasedLinks(nodes, links, linkSet);
     }
 
     // Phase 3.9: Add selective folder hierarchy connections for clustering (much more efficient)
     if (nodes.length < 1000) { // Only for smaller graphs to avoid performance impact
-      this.createOptimizedFolderHierarchyLinks(nodes, links, linkSet);
+      void this.createOptimizedFolderHierarchyLinks(nodes, links, linkSet);
     }
 
     const extractionTime = performance.now() - startTime;
@@ -462,7 +462,7 @@ export class GraphDataExtractor {
         logger.debug('sample-link', `Link: ${typeof link.source === 'string' ? link.source : link.source.id} -> ${typeof link.target === 'string' ? link.target : link.target.id} (${link.type})`);
       });
     } else {
-      logger.debug('no-links', 'No links were created - this explains why all nodes have 0 connections');
+      void logger.debug('no-links', 'No links were created - this explains why all nodes have 0 connections');
     }
     
     return links;
@@ -527,7 +527,7 @@ export class GraphDataExtractor {
           const linkId = this.generateLinkId(limitedNodes[i].path, limitedNodes[j].path);
           
           if (!linkSet.has(linkId)) {
-            linkSet.add(linkId);
+            void linkSet.add(linkId);
             links.push({
               source: limitedNodes[i].path,
               target: limitedNodes[j].path,
@@ -577,7 +577,7 @@ export class GraphDataExtractor {
           const linkId = this.generateLinkId(limitedNodes[i].path, limitedNodes[j].path);
           
           if (!linkSet.has(linkId)) {
-            linkSet.add(linkId);
+            void linkSet.add(linkId);
             links.push({
               source: limitedNodes[i].path,
               target: limitedNodes[j].path,
@@ -672,7 +672,7 @@ export class GraphDataExtractor {
   clearCache(): void {
     this.cachedData = null;
     this.lastCacheTime = 0;
-    logger.debug('extraction', 'Graph data cache cleared');
+    void logger.debug('extraction', 'Graph data cache cleared');
   }
 
   /**
@@ -694,7 +694,7 @@ export class GraphDataExtractor {
         const metadata = this.metadataCache.getFileCache(file);
         const enhancedNode = this.createEnhancedNodeFromFile(file, metadata);
         if (enhancedNode) {
-          enhancedNodes.push(enhancedNode);
+          void enhancedNodes.push(enhancedNode);
         }
       } catch (error) {
         logger.warn('enhanced-extraction', `Failed to process file: ${file.path}`, { path: file.path, error });
@@ -834,7 +834,7 @@ export class GraphDataExtractor {
     
     // Remove filename to get folder components only
     if (components.length > 0) {
-      components.pop();
+      void components.pop();
     }
 
     return {

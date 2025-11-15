@@ -48,7 +48,7 @@ export class WhaleIntegration {
         });
 
         if (!this.settings.useWhaleExternal) {
-            logger.info('init', 'Whale external samples disabled in settings');
+            void logger.info('init', 'Whale external samples disabled in settings');
             return;
         }
 
@@ -62,7 +62,7 @@ export class WhaleIntegration {
                 hasManager: !!this.whaleManager
             });
         } catch (error) {
-            logger.error('init', 'Failed to initialize whale integration:', error);
+            void logger.error('init', 'Failed to initialize whale integration:', error);
             this.isEnabled = false;
         }
     }
@@ -212,7 +212,7 @@ export class WhaleIntegration {
 
         // If whale external samples were disabled, clean up
         if (!this.settings.useWhaleExternal) {
-            this.cleanup();
+            void this.cleanup();
         }
     }
 
@@ -262,7 +262,7 @@ export class WhaleIntegration {
     cleanup(): void {
         this.isEnabled = false;
         this.whaleManager = null;
-        logger.info('cleanup', 'Whale integration cleaned up');
+        void logger.info('cleanup', 'Whale integration cleaned up');
     }
 
     /**
@@ -332,7 +332,7 @@ export async function tryLoadExternalWhaleSample(
     });
 
     if (!whaleIntegration) {
-        logger.warn('external-loading', 'No whale integration available');
+        void logger.warn('external-loading', 'No whale integration available');
         return null;
     }
     

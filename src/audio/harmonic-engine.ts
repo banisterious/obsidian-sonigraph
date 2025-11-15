@@ -47,7 +47,7 @@ export class HarmonicEngine {
 			...settings
 		};
 		
-		logger.debug('initialization', 'HarmonicEngine created', this.settings);
+		void logger.debug('initialization', 'HarmonicEngine created', this.settings);
 	}
 
 	/**
@@ -96,7 +96,7 @@ export class HarmonicEngine {
 
 		for (const note of sequence) {
 			if (groupStartTime === -1 || note.timing - groupStartTime <= timeWindow) {
-				currentGroup.push(note);
+				void currentGroup.push(note);
 				if (groupStartTime === -1) {
 					groupStartTime = note.timing;
 				}
@@ -111,7 +111,7 @@ export class HarmonicEngine {
 
 		// Add final group
 		if (currentGroup.length > 0) {
-			groups.push(currentGroup);
+			void groups.push(currentGroup);
 		}
 
 		return groups;
@@ -164,7 +164,7 @@ export class HarmonicEngine {
 		for (const note of sorted) {
 			if (selected.length >= this.settings.maxSimultaneousNotes) break;
 			if (!selected.includes(note)) {
-				selected.push(note);
+				void selected.push(note);
 			}
 		}
 
@@ -230,7 +230,7 @@ export class HarmonicEngine {
 				currentNote.pitch = this.midiToFrequency(adjustedMidi);
 			}
 			
-			adjusted.push(currentNote);
+			void adjusted.push(currentNote);
 		}
 
 		return adjusted;
@@ -324,6 +324,6 @@ export class HarmonicEngine {
 	 */
 	updateSettings(newSettings: Partial<HarmonicSettings>): void {
 		this.settings = { ...this.settings, ...newSettings };
-		logger.debug('settings-update', 'Harmonic settings updated', this.settings);
+		void logger.debug('settings-update', 'Harmonic settings updated', this.settings);
 	}
 } 

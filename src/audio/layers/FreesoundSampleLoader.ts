@@ -51,7 +51,7 @@ export class FreesoundSampleLoader {
   constructor(apiKey?: string, settings?: SonigraphSettings) {
     this.apiKey = apiKey || '';
     this.settings = settings;
-    this.initializeSampleLibrary();
+    void this.initializeSampleLibrary();
 
     logger.debug('initialization', 'FreesoundSampleLoader created', {
       hasApiKey: !!this.apiKey,
@@ -69,7 +69,7 @@ export class FreesoundSampleLoader {
     }
     
     try {
-      logger.info('initialization', 'Initializing FreesoundSampleLoader');
+      void logger.info('initialization', 'Initializing FreesoundSampleLoader');
       
       // Test API connection if key is provided
       if (this.apiKey) {
@@ -77,7 +77,7 @@ export class FreesoundSampleLoader {
       }
       
       // Start cache cleanup timer
-      this.startCacheCleanup();
+      void this.startCacheCleanup();
       
       this.isInitialized = true;
       
@@ -86,7 +86,7 @@ export class FreesoundSampleLoader {
         totalGenres: this.sampleLibrary.size
       });
     } catch (error) {
-      logger.error('initialization', 'Failed to initialize FreesoundSampleLoader', error);
+      void logger.error('initialization', 'Failed to initialize FreesoundSampleLoader', error);
       // Continue without throwing - fallback to synthesized sounds
     }
   }
@@ -174,7 +174,7 @@ export class FreesoundSampleLoader {
       samples.forEach(sample => {
         // Check if sample matches category (simplified search)
         if (sample.title.toLowerCase().includes(category.toLowerCase())) {
-          allSamples.push(sample);
+          void allSamples.push(sample);
         }
       });
     });
@@ -229,7 +229,7 @@ export class FreesoundSampleLoader {
       }
       const winWithGC = window as WindowWithGC;
       if (winWithGC.gc) {
-        winWithGC.gc();
+        void winWithGC.gc();
       }
     }
   }
@@ -261,10 +261,10 @@ export class FreesoundSampleLoader {
    * Clean up resources
    */
   async dispose(): Promise<void> {
-    logger.info('cleanup', 'Disposing FreesoundSampleLoader');
+    void logger.info('cleanup', 'Disposing FreesoundSampleLoader');
 
-    this.stopCacheCleanup();
-    this.clearCache();
+    void this.stopCacheCleanup();
+    void this.clearCache();
 
     // Cancel any pending load operations
     this.loadingOperations.clear();
@@ -331,7 +331,7 @@ export class FreesoundSampleLoader {
       this.memoryUsage += bufferSize / (1024 * 1024); // Convert to MB
       
       // Enforce cache size limit
-      this.enforceCacheLimit();
+      void this.enforceCacheLimit();
       
       // Update statistics
       this.totalDownloads++;
@@ -398,7 +398,7 @@ export class FreesoundSampleLoader {
     }
     
     this.cacheCleanupTimer = window.setInterval(() => {
-      this.performCacheCleanup();
+      void this.performCacheCleanup();
     }, this.CACHE_CLEANUP_INTERVAL);
   }
   
@@ -415,7 +415,7 @@ export class FreesoundSampleLoader {
     
     this.sampleCache.forEach((entry, id) => {
       if (now - entry.lastAccessed > this.MAX_CACHE_AGE) {
-        entriesToRemove.push(id);
+        void entriesToRemove.push(id);
       }
     });
     
@@ -474,7 +474,7 @@ export class FreesoundSampleLoader {
     }
 
     // Fallback: Use placeholder samples (these are now just for reference/testing)
-    logger.warn('initialization', 'No settings provided, using placeholder sample library');
+    void logger.warn('initialization', 'No settings provided, using placeholder sample library');
 
     // 1. Ambient - Ethereal atmospheric textures
     this.sampleLibrary.set('ambient', [
@@ -951,13 +951,13 @@ export class FreesoundSampleLoader {
     // Check each genre's associated tags
     for (const [genre, keywords] of Object.entries(genreTagMap)) {
       if (keywords.some(keyword => lowerTags.some(tag => tag.includes(keyword)))) {
-        genres.add(genre as MusicalGenre);
+        void genres.add(genre as MusicalGenre);
       }
     }
 
     // Default to ambient if no genres matched
     if (genres.size === 0) {
-      genres.add('ambient');
+      void genres.add('ambient');
     }
 
     return Array.from(genres);
