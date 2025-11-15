@@ -112,8 +112,8 @@ export class InstrumentSelector {
         
         try {
             // Apply mapping rules to find the best instrument
-            const result = await this.applyMappingRules(criteria, config);
-            
+            const result = this.applyMappingRules(criteria, config);
+
             // Cache the result
             this.selectionCache.set(cacheKey, result);
             this.cacheTimestamps.set(cacheKey, Date.now());
@@ -137,21 +137,21 @@ export class InstrumentSelector {
     /**
      * Get detailed selection result with reasoning
      */
-    async selectInstrumentWithDetails(criteria: InstrumentSelectionCriteria, config: AudioMappingConfig): Promise<InstrumentSelectionResult> {
+    selectInstrumentWithDetails(criteria: InstrumentSelectionCriteria, config: AudioMappingConfig): InstrumentSelectionResult {
         const cacheKey = this.createCacheKey(criteria);
-        
+
         // Check cache first
         if (this.isSelectionCached(cacheKey)) {
             return this.selectionCache.get(cacheKey);
         }
 
-        return await this.applyMappingRules(criteria, config);
+        return this.applyMappingRules(criteria, config);
     }
 
     /**
      * Apply mapping rules to select the best instrument
      */
-    private async applyMappingRules(criteria: InstrumentSelectionCriteria, config: AudioMappingConfig): Promise<InstrumentSelectionResult> {
+    private applyMappingRules(criteria: InstrumentSelectionCriteria, config: AudioMappingConfig): InstrumentSelectionResult {
         const reasoning: string[] = [];
         let bestMatch: { rule: MappingRule; score: number } | null = null;
         let highestScore = 0;

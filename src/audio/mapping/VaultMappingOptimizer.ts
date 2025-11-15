@@ -116,7 +116,7 @@ export class VaultMappingOptimizer {
     /**
      * Perform instant vault-wide analysis using cached data only
      */
-    async analyzeVault(forceRefresh: boolean = false): Promise<VaultMappingAnalysis> {
+    analyzeVault(forceRefresh: boolean = false): VaultMappingAnalysis {
         // Check cache first
         if (!forceRefresh && this.isAnalysisCached()) {
             logger.info('cache-hit', 'Using cached vault analysis');
@@ -150,7 +150,7 @@ export class VaultMappingOptimizer {
             };
 
             // Process files in batches for performance
-            const results = await this.processBatches(files);
+            const results = this.processBatches(files);
             
             // Aggregate results
             this.aggregateResults(results, analysis);
@@ -186,7 +186,7 @@ export class VaultMappingOptimizer {
     /**
      * Process files in optimized batches
      */
-    private async processBatches(files: TFile[]): Promise<MetadataAnalysisResult[]> {
+    private processBatches(files: TFile[]): MetadataAnalysisResult[] {
         const results: MetadataAnalysisResult[] = [];
         const batchSize = this.batchConfig.batchSize;
         
@@ -564,7 +564,7 @@ export class VaultMappingOptimizer {
     /**
      * Force refresh of vault analysis
      */
-    async refreshAnalysis(): Promise<VaultMappingAnalysis> {
+    refreshAnalysis(): VaultMappingAnalysis {
         logger.info('force-refresh', 'Forcing vault analysis refresh');
         return this.analyzeVault(true);
     }

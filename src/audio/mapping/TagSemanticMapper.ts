@@ -122,8 +122,8 @@ export class TagSemanticMapper {
 
             // Step 3: Select instrument based on semantic analysis
             reasoning.push('Selecting instrument based on semantic analysis');
-            const { instrument, instrumentConfig, confidence, alternativeInstruments } = 
-                await this.selectInstrumentFromSemantics(analysis, tags);
+            const { instrument, instrumentConfig, confidence, alternativeInstruments } =
+                this.selectInstrumentFromSemantics(analysis, tags);
 
             // Step 4: Generate musical properties
             reasoning.push('Generating musical properties from semantic analysis');
@@ -479,15 +479,15 @@ export class TagSemanticMapper {
     /**
      * Select instrument based on semantic analysis
      */
-    private async selectInstrumentFromSemantics(
-        analysis: TagSemanticAnalysis, 
+    private selectInstrumentFromSemantics(
+        analysis: TagSemanticAnalysis,
         tags: string[]
-    ): Promise<{
+    ): {
         instrument: string;
         instrumentConfig: InstrumentConfig;
         confidence: number;
         alternativeInstruments: string[];
-    }> {
+    } {
         const weightings = this.config.tagSemantics.weightings;
         let candidateInstruments: string[] = [];
         let confidence = 0.5; // Base confidence

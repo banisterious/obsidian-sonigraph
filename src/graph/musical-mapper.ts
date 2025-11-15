@@ -700,16 +700,16 @@ export class MusicalMapper {
 			// Get vault-wide analysis for intelligent distribution (use cached if available)
 			let vaultAnalysis = this.lastVaultAnalysis;
 			if (!vaultAnalysis) {
-				// If no cached analysis, start async analysis but don't wait for it
-				this.vaultOptimizer.analyzeVault().then(analysis => {
-					this.lastVaultAnalysis = analysis;
+				// If no cached analysis, perform synchronous analysis
+				try {
+					this.lastVaultAnalysis = this.vaultOptimizer.analyzeVault();
+					vaultAnalysis = this.lastVaultAnalysis;
 					logger.debug('vault-analysis-cached', 'Vault analysis cached for future use');
-				}).catch(error => {
-					logger.warn('vault-analysis-background-error', 'Background vault analysis failed', error as Error);
-				});
-				
-				// Use simplified analysis for immediate mapping
-				vaultAnalysis = this.createSimplifiedVaultAnalysis(nodes);
+				} catch (error) {
+					logger.warn('vault-analysis-error', 'Vault analysis failed', error as Error);
+					// Use simplified analysis for immediate mapping
+					vaultAnalysis = this.createSimplifiedVaultAnalysis(nodes);
+				}
 			}
 
 			// Convert nodes to files for analysis
@@ -1067,13 +1067,13 @@ export class MusicalMapper {
 	/**
 	 * Phase 2: Force refresh of vault analysis
 	 */
-	async refreshVaultAnalysis(): Promise<void> {
+	refreshVaultAnalysis(): void {
 		if (!this.isPhase2Enabled || !this.vaultOptimizer) {
 			throw new Error('Phase 2 components not enabled');
 		}
 
 		logger.info('vault-analysis-refresh', 'Manually refreshing vault analysis');
-		this.lastVaultAnalysis = await this.vaultOptimizer.refreshAnalysis();
+		this.lastVaultAnalysis = this.vaultOptimizer.refreshAnalysis();
 		logger.info('vault-analysis-refreshed', 'Vault analysis refreshed successfully');
 	}
 

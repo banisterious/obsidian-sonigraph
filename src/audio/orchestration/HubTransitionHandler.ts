@@ -170,10 +170,10 @@ export class HubTransitionHandler {
   /**
    * Trigger hub emergence audio
    */
-  public async triggerHubEmergence(
+  public triggerHubEmergence(
     event: HubTransitionEvent,
     baseFrequency: number = 440
-  ): Promise<void> {
+  ): void {
     if (!this.transitionsEnabled) return;
 
     logger.debug('emergence', 'Triggering hub emergence audio', {
@@ -235,10 +235,10 @@ export class HubTransitionHandler {
   /**
    * Trigger hub demise audio
    */
-  public async triggerHubDemise(
+  public triggerHubDemise(
     event: HubTransitionEvent,
     baseFrequency: number = 440
-  ): Promise<void> {
+  ): void {
     if (!this.transitionsEnabled) return;
 
     logger.debug('demise', 'Triggering hub demise audio', {
@@ -309,10 +309,10 @@ export class HubTransitionHandler {
   /**
    * Trigger hub shift audio (hub score changed significantly)
    */
-  public async triggerHubShift(
+  public triggerHubShift(
     event: HubTransitionEvent,
     baseFrequency: number = 440
-  ): Promise<void> {
+  ): void {
     if (!this.transitionsEnabled) return;
 
     logger.debug('shift', 'Triggering hub shift audio', {
@@ -390,19 +390,19 @@ export class HubTransitionHandler {
   /**
    * Trigger appropriate transition based on event type
    */
-  public async triggerTransition(
+  public triggerTransition(
     event: HubTransitionEvent,
     baseFrequency: number = 440
-  ): Promise<void> {
+  ): void {
     switch (event.type) {
       case 'hub-emergence':
-        await this.triggerHubEmergence(event, baseFrequency);
+        this.triggerHubEmergence(event, baseFrequency);
         break;
       case 'hub-demise':
-        await this.triggerHubDemise(event, baseFrequency);
+        this.triggerHubDemise(event, baseFrequency);
         break;
       case 'hub-shift':
-        await this.triggerHubShift(event, baseFrequency);
+        this.triggerHubShift(event, baseFrequency);
         break;
     }
   }
