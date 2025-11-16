@@ -42,6 +42,7 @@ Plans currently in progress or ready to start:
 - **[Note Journey](active/note-journey-plan.md)** - Dynamic navigation-based sonification mode (v0.18-19)
 - **[Effect Presets Implementation](active/effect-presets-implementation-plan.md)** - Backend complete, UI needed
 - **[User Experience Improvements](active/user-experience-improvements-plan.md)** - Documentation, tutorials, and preset library
+- **[Sample Expansion Plan](sample-expansion-plan.md)** - Replace synthesis-only instruments with real samples + add human voices (NEW)
 
 ### ✅ Completed Implementation Plans
 Successfully implemented features (kept for reference):
@@ -121,21 +122,31 @@ Superseded or experimental plans (historical reference):
 
 #### 📋 Planned Features
 
-**Sample Manager & Audio Infrastructure**  
-**Priority**: High | **Effort**: 3-4 weeks | **User Impact**: High  
-**Status**: 📋 Planned | **Backend**: ⚠️ Partial | **UI**: ❌ Needed  
+**Sample Expansion: Replace Synthesis-Only Instruments + Human Voices**
+**Priority**: Medium | **Effort**: 8-12 weeks (phased) | **User Impact**: High
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ✅ Existing
+**Description**: Replace 6 synthesis-only instruments with real samples + add choir/vocal instruments
+- Phase 1-6: Oboe, Electric Piano, Harpsichord, Accordion, Celesta, Strings (optional)
+- Phase 7: Human voices (choir, solo male/female) via Freesound curation or sample libraries
+- Leverage existing Freesound integration for vocal samples
+- Utilize VSCO2 CE, Musical Artifacts, and soundfont extraction
+👉 [Implementation Plan](sample-expansion-plan.md)
+
+**Sample Manager & Audio Infrastructure**
+**Priority**: High | **Effort**: 3-4 weeks | **User Impact**: High
+**Status**: 📋 Planned | **Backend**: ⚠️ Partial | **UI**: ❌ Needed
 **Description**: Comprehensive sample management with smart downloading and storage control
 👉 [Technical Specifications](feature-catalog.md#sample-manager)
 
-**Audio Export & Recording**  
-**Priority**: High | **Effort**: 4-5 weeks | **User Impact**: Very High  
-**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Audio Export & Recording**
+**Priority**: High | **Effort**: 4-5 weeks | **User Impact**: Very High
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed
 **Description**: Multi-format export with cloud integration and real-time recording capabilities
 👉 [Technical Specifications](feature-catalog.md#audio-export-recording)
 
-**Natural Soundscapes Expansion**  
-**Priority**: Medium | **Effort**: 6-8 weeks | **User Impact**: High  
-**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed  
+**Natural Soundscapes Expansion**
+**Priority**: Medium | **Effort**: 6-8 weeks | **User Impact**: High
+**Status**: 📋 Planned | **Backend**: ❌ Needed | **UI**: ❌ Needed
 **Description**: Expand to 55+ instruments with animal sounds, environmental atmospheres, and world instruments
 👉 [Technical Specifications](feature-catalog.md#natural-soundscapes)
 
